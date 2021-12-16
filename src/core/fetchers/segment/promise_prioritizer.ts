@@ -1,15 +1,17 @@
 import log from "../../../log";
 import arrayFindIndex from "../../../utils/array_find_index";
-import TaskCanceller from "../../../utils/task_canceller";
+import PPromise from "../../../utils/promise";
+import {
+  CancellationError,
+  CancellationSignal,
+} from "../../../utils/task_canceller";
 
 export default class PromisePrioritizer<T> {
-  private _minPendingPriority: number | null;
   private _waitingQueue: Array<IPrioritizerTask<T>>;
   private _pendingTasks: Array<IPrioritizerTask<T>>;
   private _prioritySteps: IPrioritizerPrioritySteps;
 
   constructor({ prioritySteps }: IPrioritizerOptions) {
-    this._minPendingPriority = null;
     this._waitingQueue = [];
     this._pendingTasks = [];
     this._prioritySteps = prioritySteps;
@@ -22,59 +24,47 @@ export default class PromisePrioritizer<T> {
     }
   }
 
+  private get _minPendingPriority(): number | null {
+    if (this._pendingTasks.length === 0) {
+      return null;
+    }
+    return Math.min(...this._pendingTasks.map((t) => t.priority));
+  }
+
   public create(
     promise: () => Promise<T>,
     priority: number,
-    canceller: TaskCanceller
+    cancellationSignal: CancellationSignal
   ) {
     let newTask: IPrioritizerTask<T>;
-    return new Promise<T>((resolve, reject) => {
+    return new PPromise<T>((resolve, reject) => {
+      const unregisterCancelSignal = cancellationSignal.register(
+        (cancellationError: CancellationError) => {
+          // cancel task if running, remove from all queues etc.
+          this._cleanUpTask(newTask);
+          reject(cancellationError);
+        }
+      );
+
+      const onResponse = (value: T) => {
+        unregisterCancelSignal();
+        resolve(value);
+      };
+
+      const onError = (err: unknown) => {
+        unregisterCancelSignal();
+        reject(err);
+      };
+
       const trigger = (shouldRun: boolean) => {
         if (!shouldRun) return;
-        this._minPendingPriority =
-          this._minPendingPriority === null
-            ? newTask.priority
-            : Math.min(this._minPendingPriority, newTask.priority);
         this._pendingTasks.push(newTask);
         newTask
           .promise()
-          .then(resolve)
-          .catch(reject)
+          .then(onResponse)
+          .catch(onError)
           .finally(() => {
-            newTask.finished = true;
-            this._onTaskEnd(newTask);
-            const waitingQueueIndex = arrayFindIndex(
-              this._waitingQueue,
-              (elt) => elt.promise === newTask.promise
-            );
-
-            if (waitingQueueIndex >= 0) {
-              // If it was still waiting for its turn
-              this._waitingQueue.splice(waitingQueueIndex, 1);
-            } else {
-              // remove it from pending queue if in it
-              const pendingTasksIndex = arrayFindIndex(
-                this._pendingTasks,
-                (elt) => elt.promise === newTask.promise
-              );
-              if (pendingTasksIndex < 0) {
-                log.warn("FP: unsubscribing non-existent task");
-                return;
-              }
-              const pendingTask = this._pendingTasks.splice(
-                pendingTasksIndex,
-                1
-              )[0];
-              if (this._pendingTasks.length === 0) {
-                this._minPendingPriority = null;
-                this._loopThroughWaitingQueue();
-              } else if (this._minPendingPriority === pendingTask.priority) {
-                this._minPendingPriority = Math.min(
-                  ...this._pendingTasks.map((t) => t.priority)
-                );
-                this._loopThroughWaitingQueue();
-              }
-            }
+            this._cleanUpTask(newTask);
           });
       };
       newTask = {
@@ -82,7 +72,6 @@ export default class PromisePrioritizer<T> {
         priority,
         trigger,
         promise,
-        cancel: canceller.cancel,
       };
 
       if (!this._canBeStartedNow(newTask)) {
@@ -104,10 +93,41 @@ export default class PromisePrioritizer<T> {
     });
   }
 
+  private _findPromiseIndex(
+    promise: () => Promise<T>,
+    queue: IPrioritizerTask<T>[]
+  ): number {
+    return arrayFindIndex(queue, (elt) => elt.promise === promise);
+  }
+
+  private _cleanUpTask(task: IPrioritizerTask<T>): void {
+    task.finished = true;
+    this._onTaskEnd(task);
+    const waitingQueueIndex = this._findPromiseIndex(
+      task.promise,
+      this._waitingQueue
+    );
+
+    if (waitingQueueIndex >= 0) {
+      // If it was still waiting for its turn
+      this._waitingQueue.splice(waitingQueueIndex, 1);
+    } else {
+      // remove it from pending queue if in it
+      const pendingTasksIndex = this._findPromiseIndex(
+        task.promise,
+        this._pendingTasks
+      );
+      if (pendingTasksIndex < 0) {
+        log.warn("cancelling non-existent task");
+        return;
+      }
+      this._loopThroughWaitingQueue();
+    }
+  }
   public updatePriority(promise: () => Promise<T>, priority: number): void {
-    const waitingQueueIndex = arrayFindIndex(
-      this._waitingQueue,
-      (elt) => elt.promise === promise
+    const waitingQueueIndex = this._findPromiseIndex(
+      promise,
+      this._waitingQueue
     );
 
     if (waitingQueueIndex >= 0) {
@@ -149,10 +169,9 @@ export default class PromisePrioritizer<T> {
       }
       return;
     }
-
-    const pendingTasksIndex = arrayFindIndex(
-      this._pendingTasks,
-      (elt) => elt.promise === promise
+    const pendingTasksIndex = this._findPromiseIndex(
+      promise,
+      this._pendingTasks
     );
     if (pendingTasksIndex < 0) {
       log.warn("FP: request to update the priority of a non-existent task");
@@ -166,21 +185,7 @@ export default class PromisePrioritizer<T> {
 
     const prevPriority = task.priority;
     task.priority = priority;
-
-    if (
-      this._minPendingPriority === null ||
-      priority < this._minPendingPriority
-    ) {
-      this._minPendingPriority = priority;
-    } else if (this._minPendingPriority === prevPriority) {
-      // was highest priority
-      if (this._pendingTasks.length === 1) {
-        this._minPendingPriority = priority;
-      } else {
-        this._minPendingPriority = Math.min(
-          ...this._pendingTasks.map((t) => t.priority)
-        );
-      }
+    if (this._minPendingPriority === prevPriority) {
       this._loopThroughWaitingQueue();
     } else {
       // We updated a task which already had a priority value higher than the
@@ -195,13 +200,13 @@ export default class PromisePrioritizer<T> {
     }
   }
 
+  private _getMinPriority(queue: IPrioritizerTask<T>[]): null | number {
+    return queue.reduce((acc: number | null, elt) => {
+      return acc === null || acc > elt.priority ? elt.priority : acc;
+    }, null);
+  }
   private _loopThroughWaitingQueue(): void {
-    const minWaitingPriority = this._waitingQueue.reduce(
-      (acc: number | null, elt) => {
-        return acc === null || acc > elt.priority ? elt.priority : acc;
-      },
-      null
-    );
+    const minWaitingPriority = this._getMinPriority(this._waitingQueue);
     if (
       minWaitingPriority === null ||
       (this._minPendingPriority !== null &&
@@ -209,11 +214,11 @@ export default class PromisePrioritizer<T> {
     ) {
       return;
     }
+    const priorityToCheck =
+      this._minPendingPriority === null
+        ? minWaitingPriority
+        : Math.min(this._minPendingPriority, minWaitingPriority);
     for (let i = 0; i < this._waitingQueue.length; i++) {
-      const priorityToCheck =
-        this._minPendingPriority === null
-          ? minWaitingPriority
-          : Math.min(this._minPendingPriority, minWaitingPriority);
       const elt = this._waitingQueue[i];
       if (elt.priority <= priorityToCheck) {
         this._startWaitingQueueTask(i);
@@ -238,9 +243,9 @@ export default class PromisePrioritizer<T> {
   }
 
   private _interruptPendingTask(task: IPrioritizerTask<T>): void {
-    const pendingTasksIndex = arrayFindIndex(
-      this._pendingTasks,
-      (elt) => elt.promise === task.promise
+    const pendingTasksIndex = this._findPromiseIndex(
+      task.promise,
+      this._pendingTasks
     );
     if (pendingTasksIndex < 0) {
       log.warn("FP: Interrupting a non-existent pending task. Aborting...");
@@ -250,21 +255,13 @@ export default class PromisePrioritizer<T> {
     // Stop task and put it back in the waiting queue
     this._pendingTasks.splice(pendingTasksIndex, 1);
     this._waitingQueue.push(task);
-    if (this._pendingTasks.length === 0) {
-      this._minPendingPriority = null;
-    } else if (this._minPendingPriority === task.priority) {
-      this._minPendingPriority = Math.min(
-        ...this._pendingTasks.map((t) => t.priority)
-      );
-    }
-    task.cancel();
     task.trigger(false); // Interrupt at last step because it calls external code
   }
 
   private _onTaskEnd(task: IPrioritizerTask<T>): void {
-    const pendingTasksIndex = arrayFindIndex(
-      this._pendingTasks,
-      (elt) => elt.promise === task.promise
+    const pendingTasksIndex = this._findPromiseIndex(
+      task.promise,
+      this._pendingTasks
     );
     if (pendingTasksIndex < 0) {
       return; // Happen for example when the task has been interrupted
@@ -273,15 +270,9 @@ export default class PromisePrioritizer<T> {
     this._pendingTasks.splice(pendingTasksIndex, 1);
 
     if (this._pendingTasks.length > 0) {
-      if (this._minPendingPriority === task.priority) {
-        this._minPendingPriority = Math.min(
-          ...this._pendingTasks.map((t) => t.priority)
-        );
-      }
       return; // still waiting for Observables to finish
     }
 
-    this._minPendingPriority = null;
     this._loopThroughWaitingQueue();
   }
 
@@ -307,7 +298,6 @@ interface IPrioritizerTask<T> {
   priority: number;
   /** `true` if the underlying wrapped Observable either errored of completed. */
   finished: boolean;
-  cancel: () => void;
 }
 
 export interface IPrioritizerPrioritySteps {
