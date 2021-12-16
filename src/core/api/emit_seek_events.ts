@@ -45,10 +45,15 @@ export default function emitSeekEvents(
       return EMPTY;
     }
 
-    const isSeeking$ = observation$.pipe(
+    let isSeeking$ = observation$.pipe(
       filter((observation : IPlaybackObservation) => observation.event === "seeking"),
       mapTo("seeking" as const)
     );
+
+    if (mediaElement.seeking) {
+      isSeeking$ = isSeeking$.pipe(startWith("seeking" as const));
+    }
+
     const hasSeeked$ = isSeeking$.pipe(
       switchMapTo(
         observation$.pipe(
@@ -56,8 +61,6 @@ export default function emitSeekEvents(
           mapTo("seeked" as const),
           take(1)))
     );
-    const seekingEvents$ = observableMerge(isSeeking$, hasSeeked$);
-    return mediaElement.seeking ? seekingEvents$.pipe(startWith("seeking" as const)) :
-                                  seekingEvents$;
+    return observableMerge(isSeeking$, hasSeeked$);
   });
 }
