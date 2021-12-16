@@ -41,6 +41,7 @@ export default class PromisePrioritizer<T> {
       const unregisterCancelSignal = cancellationSignal.register(
         (cancellationError: CancellationError) => {
           // cancel task if running, remove from all queues etc.
+          newTask.trigger(false)
           this._cleanUpTask(newTask);
           reject(cancellationError);
         }
