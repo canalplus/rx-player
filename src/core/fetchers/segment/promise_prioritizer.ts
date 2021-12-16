@@ -59,7 +59,9 @@ export default class PromisePrioritizer<T> {
       
 
       const trigger = (shouldRun: boolean) => {
-        if (!shouldRun) return;
+        if (!shouldRun) {
+          return
+        };
         this._pendingTasks.push(newTask);
         newTask
           .promise(taskCanceller.signal)
