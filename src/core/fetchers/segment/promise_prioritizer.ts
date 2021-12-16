@@ -1,7 +1,7 @@
 import log from "../../../log";
 import arrayFindIndex from "../../../utils/array_find_index";
 import PPromise from "../../../utils/promise";
-import {
+import TaskCanceller, {
   CancellationError,
   CancellationSignal,
 } from "../../../utils/task_canceller";
@@ -34,11 +34,11 @@ export default class PromisePrioritizer<T> {
   public create(
     promise: () => Promise<T>,
     priority: number,
-    cancellationSignal: CancellationSignal
   ): Promise<T> {
     let newTask: IPrioritizerTask<T>;
     return new PPromise<T>((resolve, reject) => {
-      const unregisterCancelSignal = cancellationSignal.register(
+      const taskCanceller = new TaskCanceller()
+      const unregisterCancelSignal = taskCanceller.signal.register(
         (cancellationError: CancellationError) => {
           // cancel task if running, remove from all queues etc.
           newTask.trigger(false)
@@ -56,12 +56,13 @@ export default class PromisePrioritizer<T> {
         unregisterCancelSignal();
         reject(err);
       };
+      
 
       const trigger = (shouldRun: boolean) => {
         if (!shouldRun) return;
         this._pendingTasks.push(newTask);
         newTask
-          .promise()
+          .promise(taskCanceller.signal)
           .then(onResponse)
           .catch(onError)
           .finally(() => {
@@ -73,6 +74,7 @@ export default class PromisePrioritizer<T> {
         priority,
         trigger,
         promise,
+        canceller: taskCanceller,
       };
 
       if (!this._canBeStartedNow(newTask)) {
@@ -95,7 +97,7 @@ export default class PromisePrioritizer<T> {
   }
 
   private _findPromiseIndex(
-    promise: () => Promise<T>,
+    promise: (c: CancellationSignal) => Promise<T>,
     queue: IPrioritizerTask<T>[]
   ): number {
     return arrayFindIndex(queue, (elt) => elt.promise === promise);
@@ -256,6 +258,7 @@ export default class PromisePrioritizer<T> {
     // Stop task and put it back in the waiting queue
     this._pendingTasks.splice(pendingTasksIndex, 1);
     this._waitingQueue.push(task);
+    task.canceller.cancel()
     task.trigger(false); // Interrupt at last step because it calls external code
   }
 
@@ -293,12 +296,13 @@ export default class PromisePrioritizer<T> {
 }
 
 interface IPrioritizerTask<T> {
-  promise: () => Promise<T>;
+  promise: (cancellationSignal: CancellationSignal) => Promise<T>;
   trigger: (shouldRun: boolean) => void;
   /** Priority of the task. Lower that number is, higher is the priority. */
   priority: number;
   /** `true` if the underlying wrapped Observable either errored of completed. */
   finished: boolean;
+  canceller: TaskCanceller
 }
 
 export interface IPrioritizerPrioritySteps {
