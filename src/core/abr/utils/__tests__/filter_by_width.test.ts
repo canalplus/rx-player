@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../../manifest";
+import { Representation } from "../../../../manifest";
 import filterByWidth from "../filter_by_width";
 
 describe("ABR - filterByWidth", () => {

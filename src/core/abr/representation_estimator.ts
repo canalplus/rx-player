@@ -37,12 +37,19 @@ import {
 import { getLeftSizeOfRange } from "../../utils/ranges";
 import BandwidthEstimator from "./bandwidth_estimator";
 import BufferBasedChooser from "./buffer_based_chooser";
-import filterByBitrate from "./filter_by_bitrate";
-import filterByWidth from "./filter_by_width";
+import GuessBasedChooser from "./guess_based_chooser";
+import LastEstimateStorage, {
+  ABRAlgorithmType,
+} from "./last_estimate_storage";
 import NetworkAnalyzer from "./network_analyzer";
-import PendingRequestsStore from "./pending_requests_store";
+import PendingRequestsStore, {
+  IPendingRequestStoreBegin,
+  IPendingRequestStoreProgress,
+} from "./pending_requests_store";
 import RepresentationScoreCalculator from "./representation_score_calculator";
-import selectOptimalRepresentation from "./select_optimal_representation";
+import filterByBitrate from "./utils/filter_by_bitrate";
+import filterByWidth from "./utils/filter_by_width";
+import selectOptimalRepresentation from "./utils/select_optimal_representation";
 
 /**
  * Adaptive BitRate estimate object.
@@ -128,6 +135,12 @@ export interface IRepresentationEstimatorPlaybackObservation {
   speed : number;
   /** `duration` property of the HTMLMediaElement on which the content plays. */
   duration : number;
+  /**
+   * For live contents only, difference between the maximum playable position
+   * and the current position.
+   * `undefined` for non-live contents.
+   */
+  liveGap : number | undefined;
 }
 
 /** Content of the `IABRMetricsEvent` event's payload. */
@@ -177,21 +190,6 @@ export interface IABRRequestBeginEvent {
   value: IABRRequestBeginEventValue;
 }
 
-/** Value associated with a `IABRRequestBeginEvent`. */
-export interface IABRRequestBeginEventValue {
-  /**
-   * String identifying this request.
-   *
-   * Only one request communicated to the current `RepresentationEstimator`
-   * should have this `id` at the same time.
-   */
-  id: string;
-  /** Metadata on the requested segment. */
-  segment: ISegment;
-  /** Value of `performance.now` at the time the request began.  */
-  requestTimestamp: number;
-}
-
 /**
  * Event emitted when progression information is available on a segment request.
  *
@@ -201,26 +199,6 @@ export interface IABRRequestBeginEventValue {
 export interface IABRRequestProgressEvent {
   type: "progress";
   value: IABRRequestProgressEventValue;
-}
-
-/** Value associated with a `IABRRequestProgressEvent`. */
-export interface IABRRequestProgressEventValue {
-  /** Amount of time since the request has started, in seconds. */
-  duration : number;
-  /**
-   * Same `id` value used to identify that request at the time the corresponding
-   * `IABRRequestBeginEvent` event was sent.
-   */
-  id: string;
-  /** Current downloaded size, in bytes. */
-  size : number;
-  /** Value of `performance.now` at the time this progression report was available. */
-  timestamp : number;
-  /**
-   * Total size of the segment to download (including already-loaded data),
-   * in bytes.
-   */
-  totalSize : number;
 }
 
 /**
@@ -234,7 +212,13 @@ export interface IABRRequestEndEvent {
   value: IABRRequestEndEventValue;
 }
 
+/** Value associated with a `IABRRequestBeginEvent`. */
+export type IABRRequestBeginEventValue = IPendingRequestStoreBegin;
+
 /** Value associated with a `IABRRequestProgressEvent`. */
+export type IABRRequestProgressEventValue = IPendingRequestStoreProgress;
+
+/** Value associated with a `IABRRequestEndEvent`. */
 export interface IABRRequestEndEventValue {
   /**
    * Same `id` value used to identify that request at the time the corresponding
@@ -377,17 +361,17 @@ function getFilteredRepresentations(
   representations : Representation[],
   filters : IABRFiltersObject
 ) : Representation[] {
-  let _representations = representations;
+  let filteredReps = representations;
 
   if (filters.bitrate != null) {
-    _representations = filterByBitrate(_representations, filters.bitrate);
+    filteredReps = filterByBitrate(filteredReps, filters.bitrate);
   }
 
   if (filters.width != null) {
-    _representations = filterByWidth(_representations, filters.width);
+    filteredReps = filterByWidth(filteredReps, filters.width);
   }
 
-  return _representations;
+  return filteredReps;
 }
 
 /**
@@ -430,11 +414,10 @@ export default function RepresentationEstimator({
     // calculate bandwidth
     bandwidthEstimator.addSample(duration, size);
 
-    // calculate "maintainability score"
     const { segment } = content;
-    const requestDuration = duration / 1000;
-
-    if (segment.complete) {
+    if (segment.complete && !segment.isInit) {
+      // calculate "maintainability score"
+      const requestDuration = duration / 1000;
       const segmentDuration = segment.duration;
       const { representation } = content;
       scoreCalculator.addSample(representation, requestDuration, segmentDuration);
@@ -497,8 +480,12 @@ export default function RepresentationEstimator({
       }
 
       // -- AUTO mode --
-      let lastEstimatedBitrate : number | undefined;
-      let forceBandwidthMode = true;
+
+      /** Store the previous estimate made here. */
+      const prevEstimate = new LastEstimateStorage();
+
+      let allowBufferBasedEstimates = false;
+      const guessBasedChooser = new GuessBasedChooser(scoreCalculator, prevEstimate);
 
       // Emit each time a buffer-based estimation should be actualized (each
       // time a segment is added).
@@ -509,7 +496,8 @@ export default function RepresentationEstimator({
           const timeRanges = evtValue.buffered;
           const bufferGap = getLeftSizeOfRange(timeRanges, position);
           const { representation } = evtValue.content;
-          const currentScore = scoreCalculator.getEstimate(representation);
+          const scoreData = scoreCalculator.getEstimate(representation);
+          const currentScore = scoreData?.[0];
           const currentBitrate = representation.bitrate;
           return { bufferGap, currentBitrate, currentScore, speed };
         })
@@ -533,52 +521,130 @@ export default function RepresentationEstimator({
                  bufferBasedBitrate ],
                currentRepresentation ]
         ) : IABREstimate => {
-          const _representations = getFilteredRepresentations(representations,
-                                                              filters);
+          const { bufferGap, liveGap } = observation;
+
+          const filteredReps = getFilteredRepresentations(representations,
+                                                          filters);
           const requests = requestsStore.getRequests();
           const { bandwidthEstimate, bitrateChosen } = networkAnalyzer
             .getBandwidthEstimate(observation,
                                   bandwidthEstimator,
                                   currentRepresentation,
                                   requests,
-                                  lastEstimatedBitrate);
-
-          lastEstimatedBitrate = bandwidthEstimate;
+                                  prevEstimate.bandwidth);
 
           const stableRepresentation = scoreCalculator.getLastStableRepresentation();
-          const knownStableBitrate = stableRepresentation == null ?
+          const knownStableBitrate = stableRepresentation === null ?
             undefined :
             stableRepresentation.bitrate / (observation.speed > 0 ? observation.speed :
                                                                     1);
 
-          const { bufferGap } = observation;
-          if (!forceBandwidthMode && bufferGap <= 5) {
-            forceBandwidthMode = true;
-          } else if (forceBandwidthMode && isFinite(bufferGap) && bufferGap > 10) {
-            forceBandwidthMode = false;
+          if (allowBufferBasedEstimates && bufferGap <= 5) {
+            allowBufferBasedEstimates = false;
+          } else if (!allowBufferBasedEstimates &&
+                     isFinite(bufferGap) &&
+                      bufferGap > 10)
+          {
+            allowBufferBasedEstimates = true;
           }
 
-          const chosenRepFromBandwidth = selectOptimalRepresentation(_representations,
+          /**
+           * Representation chosen when considering only [pessimist] bandwidth
+           * calculation.
+           * This is a safe enough choice but might be lower than what the user
+           * could actually profit from.
+           */
+          const chosenRepFromBandwidth = selectOptimalRepresentation(filteredReps,
                                                                      bitrateChosen,
                                                                      minAutoBitrate,
                                                                      maxAutoBitrate);
-          if (forceBandwidthMode) {
-            log.debug("ABR: Choosing representation with bandwidth estimation.",
-                      chosenRepFromBandwidth);
-            return { bitrate: bandwidthEstimate,
-                     representation: chosenRepFromBandwidth,
-                     urgent: networkAnalyzer.isUrgent(chosenRepFromBandwidth.bitrate,
-                                                      currentRepresentation,
-                                                      requests,
-                                                      observation),
-                     manual: false,
-                     knownStableBitrate };
-          }
-          if (bufferBasedBitrate == null ||
-              chosenRepFromBandwidth.bitrate >= bufferBasedBitrate)
+
+          let currentBestBitrate = chosenRepFromBandwidth.bitrate;
+
+          /**
+           * Representation chosen when considering the current buffer size.
+           * If defined, takes precedence over `chosenRepFromBandwidth`.
+           *
+           * This is a very safe choice, yet it is very slow and might not be
+           * adapted to cases where a buffer cannot be build, such as live contents.
+           *
+           * `null` if this buffer size mode is not enabled or if we don't have a
+           * choice from it yet.
+           */
+          let chosenRepFromBufferSize : Representation | null = null;
+          if (allowBufferBasedEstimates &&
+              bufferBasedBitrate !== undefined &&
+              bufferBasedBitrate > currentBestBitrate)
           {
+
+            chosenRepFromBufferSize = selectOptimalRepresentation(filteredReps,
+                                                                  bufferBasedBitrate,
+                                                                  minAutoBitrate,
+                                                                  maxAutoBitrate);
+            currentBestBitrate = chosenRepFromBufferSize.bitrate;
+          }
+
+          /**
+           * Representation chosen by the more adventurous `GuessBasedChooser`,
+           * which iterates through Representations one by one until finding one
+           * that cannot be "maintained".
+           *
+           * If defined, takes precedence over both `chosenRepFromBandwidth` and
+           * `chosenRepFromBufferSize`.
+           *
+           * This is the riskiest choice (in terms of rebuffering chances) but is
+           * only enabled when no other solution is adapted (for now, this just
+           * applies for low-latency contents when playing close to the live
+           * edge).
+           *
+           * `null` if not enabled or if there's currently no guess.
+           */
+          let chosenRepFromGuessMode : Representation | null = null;
+          if (lowLatencyMode &&
+              currentRepresentation !== null &&
+              liveGap !== undefined &&
+              liveGap < 40)
+          {
+            chosenRepFromGuessMode = guessBasedChooser.getGuess(representations,
+                                                                observation,
+                                                                currentRepresentation,
+                                                                currentBestBitrate,
+                                                                requests);
+          }
+
+          if (chosenRepFromGuessMode !== null &&
+              chosenRepFromGuessMode.bitrate > currentBestBitrate) {
+            log.debug("ABR: Choosing representation with guess-based estimation.",
+                      chosenRepFromGuessMode);
+            prevEstimate.update(chosenRepFromGuessMode,
+                                bandwidthEstimate,
+                                ABRAlgorithmType.GuessBased);
+            return { bitrate: bandwidthEstimate,
+                     representation: chosenRepFromGuessMode,
+                     urgent: currentRepresentation === null ||
+                       chosenRepFromGuessMode.bitrate < currentRepresentation.bitrate,
+                     manual: false,
+                     knownStableBitrate };
+          } else if (chosenRepFromBufferSize !== null) {
+            log.debug("ABR: Choosing representation with buffer-based estimation.",
+                      chosenRepFromBufferSize);
+            prevEstimate.update(chosenRepFromBufferSize,
+                                bandwidthEstimate,
+                                ABRAlgorithmType.BufferBased);
+            return { bitrate: bandwidthEstimate,
+                     representation: chosenRepFromBufferSize,
+                     urgent: networkAnalyzer.isUrgent(chosenRepFromBufferSize.bitrate,
+                                                      currentRepresentation,
+                                                      requests,
+                                                      observation),
+                     manual: false,
+                     knownStableBitrate };
+          } else {
             log.debug("ABR: Choosing representation with bandwidth estimation.",
                       chosenRepFromBandwidth);
+            prevEstimate.update(chosenRepFromBandwidth,
+                                bandwidthEstimate,
+                                ABRAlgorithmType.BandwidthBased);
             return { bitrate: bandwidthEstimate,
                      representation: chosenRepFromBandwidth,
                      urgent: networkAnalyzer.isUrgent(chosenRepFromBandwidth.bitrate,
@@ -588,22 +654,6 @@ export default function RepresentationEstimator({
                      manual: false,
                      knownStableBitrate };
           }
-          const chosenRepresentation = selectOptimalRepresentation(_representations,
-                                                                   bufferBasedBitrate,
-                                                                   minAutoBitrate,
-                                                                   maxAutoBitrate);
-          if (bufferBasedBitrate <= maxAutoBitrate) {
-            log.debug("ABR: Choosing representation with buffer based bitrate ceiling.",
-                      chosenRepresentation);
-          }
-          return { bitrate: bandwidthEstimate,
-                   representation: chosenRepresentation,
-                   urgent: networkAnalyzer.isUrgent(bufferBasedBitrate,
-                                                    currentRepresentation,
-                                                    requests,
-                                                    observation),
-                   manual: false,
-                   knownStableBitrate };
         })
       );
     }));

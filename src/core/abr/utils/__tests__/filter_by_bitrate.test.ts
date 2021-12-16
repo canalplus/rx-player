@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../../manifest";
+import { Representation } from "../../../../manifest";
 import filterByBitrate from "../filter_by_bitrate";
 
 describe("ABR - filterByBitrate", () => {

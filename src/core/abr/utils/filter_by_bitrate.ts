@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../manifest";
-import arrayFindIndex from "../../utils/array_find_index";
+import { Representation } from "../../../manifest";
+import arrayFindIndex from "../../../utils/array_find_index";
 
 /**
  * Get only representations lower or equal to a given bitrate.

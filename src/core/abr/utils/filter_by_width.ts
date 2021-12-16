@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../manifest";
-import arrayFind from "../../utils/array_find";
-import takeFirstSet from "../../utils/take_first_set";
+import { Representation } from "../../../manifest";
+import arrayFind from "../../../utils/array_find";
+import takeFirstSet from "../../../utils/take_first_set";
 
 /**
  * Filter representations based on their width:

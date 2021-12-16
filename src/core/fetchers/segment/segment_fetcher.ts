@@ -117,9 +117,9 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
       }
 
       const id = generateRequestID();
-      callbacks.onRequestBegin?.({ segment,
-                                   requestTimestamp: performance.now(),
-                                   id });
+      callbacks.onRequestBegin?.({ requestTimestamp: performance.now(),
+                                   id,
+                                   content });
       const canceller = new TaskCanceller();
       let hasRequestEnded = false;
 

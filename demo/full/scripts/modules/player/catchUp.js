@@ -11,7 +11,7 @@ import fromPlayerEvent from "./fromPlayerEvent";
 
 // Distance from live edge we try to reach when the catching up button
 // is enabled.
-const LIVE_GAP_GOAL_WHEN_CATCHING_UP = 3;
+const LIVE_GAP_GOAL_WHEN_CATCHING_UP = 3.5;
 
 // Distance from live edge from which we begin to update the playback rate, as
 // we're considered too far from the live edge.
@@ -24,7 +24,7 @@ const CATCH_UP_CHANGE_RATE_STEP = 6;
 const CATCH_UP_SEEKING_STEP = 15;
 
 // Maximum playback rate we can set when catching up.
-const MAX_RATE = 10;
+const MAX_RATE = 5;
 
 /**
  * Perform actions when catch-up mode is enabled/disabled.
