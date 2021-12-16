@@ -1,5 +1,29 @@
 # Changelog
 
+## v3.26.2 (2021/12/XX)
+
+### Bug fixes
+
+ - API: re-switch to SEEKING state instead of BUFFERING when seeking to already-buffered data [#1015]
+ - DASH: provide default startNumber attribute for number-based SegmentTemplate indexes with a SegmentTimeline (only those without had one) [#1009]
+ - TTML (subtitles): interpret percentages as relative to the computed cell size and not as the percentage of the inherited font size in the page [#1013]
+ - API: Fix rare unknown active Period bug happening when switching rapidly between Representation, which led to multiple APIs such as `getAvailableVideoBitrate` or `getAvailableAudioTracks` returning either incorrect or empty results [#1018]
+
+### Other improvements
+
+  - DASH-LL: Improve adaptive bitrate logic on low-latency contents by implementing a specific algorithm for those [#1025]
+  - DASH-LL: Improve handling of $Time$-based DASH-LL contents [#1020]
+  - DASH: Support UTCTiming element with the `urn:mpeg:dash:utc:http-xsdate:2014` scheme [#1021]
+  - DOC: Important refactoring of the RxPlayer API documentation to improve readability, discoverability and to add search capability to it [#1016]
+  - DASH: handle ContentProtection elements that have been defined at the Representation-level (and not at the AdaptationSet-level, as defined by the DASH-IF IOP) [#1027]
+  - DASH: Be resilient when the resource behind an UTCTiming element leads to an error (usually due to an HTTP-related issue) - instead of failing with an error like now [#1026]
+  - EME: Add hex-encoded key id to the `KEY_STATUS_CHANGE_ERROR` error message so we can know which key we're talking about when debugging [#1033]
+  - dev/scripts: for the "modular" (a.k.a. minimal) RxPlayer build now rely on TypeScript's const enums, instead of uglily using sed, to replace compile-time constants. [#1014]
+  - dev/scripts: remove reliance on environment variables when running the RxPlayer build scripts [#1004]
+  - dev/scripts: add esbuid devdependency and add "s" script to allow faster checks for RxPlayer developpers [#1003]
+  - code/refacto: replace central `Clock` concept (Observable bringing media-related updates to the RxPlayer at a regular pace) by a more flexible `PlaybackObserver` class [#1002]
+
+
 ## v3.26.1 (2021/09/14)
 
 ### Bug fixes
