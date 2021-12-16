@@ -35,7 +35,7 @@ export default class PromisePrioritizer<T> {
     promise: () => Promise<T>,
     priority: number,
     cancellationSignal: CancellationSignal
-  ) {
+  ): Promise<T> {
     let newTask: IPrioritizerTask<T>;
     return new PPromise<T>((resolve, reject) => {
       const unregisterCancelSignal = cancellationSignal.register(
