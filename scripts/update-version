@@ -32,7 +32,7 @@ npm install
 npm run build
 npm run build:min
 npm run build:wasm:release
-./scripts/generate_builds
+npm run build:modular
 
 echo "creating types for legacy code bases..."
 rm -f dist/rx-player.d.ts rx-player.min.d.ts
