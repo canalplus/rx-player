@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
+import isNullOrUndefined from "../utils/is_null_or_undefined";
 import Adaptation from "./adaptation";
 import Period from "./period";
 import Representation from "./representation";
 import { ISegment } from "./representation_index";
 
-/**
- * All information needed for a given chunk to know if it has the same content
- * than another chunk.
- */
-interface IBufferedChunkInfos { adaptation : Adaptation;
-                                period : Period;
-                                representation : Representation;
-                                segment : ISegment; }
+/** All information needed to identify a given segment. */
+export interface IBufferedChunkInfos { adaptation : Adaptation;
+                                       period : Period;
+                                       representation : Representation;
+                                       segment : ISegment; }
 
 /**
  * Check if two contents are the same
@@ -34,7 +32,7 @@ interface IBufferedChunkInfos { adaptation : Adaptation;
  * @param {Object} content2
  * @returns {boolean}
  */
-export default function areSameContent(
+export function areSameContent(
   content1: IBufferedChunkInfos,
   content2: IBufferedChunkInfos
 ): boolean {
@@ -42,4 +40,23 @@ export default function areSameContent(
           content1.representation.id === content2.representation.id &&
           content1.adaptation.id === content2.adaptation.id &&
           content1.period.id === content2.period.id);
+}
+
+/**
+ * Get string describing a given ISegment, useful for log functions.
+ * @param {Object} content
+ * @returns {string|null|undefined}
+ */
+export function getLoggableSegmentId(
+  content : IBufferedChunkInfos | null | undefined
+) : string {
+  if (isNullOrUndefined(content)) {
+    return "";
+  }
+  const { period, adaptation, representation, segment } = content;
+  return `${adaptation.type} P: ${period.id} A: ${adaptation.id} ` +
+         `R: ${representation.id} S: ` +
+         (segment.isInit   ? "init" :
+          segment.complete ? `${segment.time}-${segment.duration}` :
+                             `${segment.time}`);
 }

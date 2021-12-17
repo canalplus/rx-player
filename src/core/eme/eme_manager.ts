@@ -134,8 +134,8 @@ export default function EMEManager(
 
   /** Parsed `encrypted` events coming from the HTMLMediaElement. */
   const mediaEncryptedEvents$ = onEncrypted$(mediaElement).pipe(
-    tap((evt) => {
-      log.debug("EME: Encrypted event received from media element.", evt);
+    tap(() => {
+      log.debug("EME: Encrypted event received from media element.");
     }),
     filterMap<MediaEncryptedEvent, IInitializationDataInfo, null>(
       (evt) => getInitData(evt), null),
@@ -144,7 +144,7 @@ export default function EMEManager(
 
   /** Encryption events coming from the `contentProtections$` argument. */
   const externalEvents$ = contentProtections$.pipe(
-    tap((evt) => { log.debug("EME: Encrypted event received from Player", evt); }));
+    tap(() => { log.debug("EME: Encrypted event received from Player"); }));
 
   /** Emit events signaling that an encryption initialization data is encountered. */
   const initializationData$ = observableMerge(externalEvents$, mediaEncryptedEvents$);

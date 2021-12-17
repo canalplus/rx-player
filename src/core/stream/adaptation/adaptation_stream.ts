@@ -376,7 +376,10 @@ export default function AdaptationStream({
         map((wba) => wba * bufferGoalRatio)
       );
 
-      log.info("Stream: changing representation", adaptation.type, representation);
+      log.info("Stream: changing representation",
+               adaptation.type,
+               representation.id,
+               representation.bitrate);
       return RepresentationStream({ playbackObserver,
                                     content: { representation,
                                                adaptation,

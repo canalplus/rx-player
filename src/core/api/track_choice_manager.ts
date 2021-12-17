@@ -325,7 +325,8 @@ export default class TrackChoiceManager {
     const adaptations = period.getSupportedAdaptations(bufferType);
     if (periodItem !== undefined) {
       if (periodItem[bufferType] !== undefined) {
-        log.warn(`TrackChoiceManager: ${bufferType} already added for period`, period);
+        log.warn(`TrackChoiceManager: ${bufferType} already added for period`,
+                 period.start);
         return;
       } else {
         periodItem[bufferType] = { adaptations, adaptation$ };
@@ -348,13 +349,15 @@ export default class TrackChoiceManager {
   ) : void {
     const periodIndex = findPeriodIndex(this._periods, period);
     if (periodIndex === undefined) {
-      log.warn(`TrackChoiceManager: ${bufferType} not found for period`, period);
+      log.warn(`TrackChoiceManager: ${bufferType} not found for period`,
+               period.start);
       return;
     }
 
     const periodItem = this._periods.get(periodIndex);
     if (periodItem[bufferType] === undefined) {
-      log.warn(`TrackChoiceManager: ${bufferType} already removed for period`, period);
+      log.warn(`TrackChoiceManager: ${bufferType} already removed for period`,
+               period.start);
       return;
     }
     delete periodItem[bufferType];

@@ -52,7 +52,7 @@ function resetMediaSource(
       const sourceBuffer = sourceBuffers[i];
       try {
         if (readyState === "open") {
-          log.info("Init: Removing SourceBuffer from mediaSource", sourceBuffer);
+          log.info("Init: Removing SourceBuffer from mediaSource");
           sourceBuffer.abort();
         }
         mediaSource.removeSourceBuffer(sourceBuffer);

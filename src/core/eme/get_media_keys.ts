@@ -110,7 +110,7 @@ export default function getMediaKeysInfos(
       }
 
       return createMediaKeys(mediaKeySystemAccess).pipe(map((mediaKeys) => {
-        log.info("EME: MediaKeys created with success", mediaKeys);
+        log.info("EME: MediaKeys created with success");
         const loadedSessionsStore = new LoadedSessionsStore(mediaKeys);
         return { mediaKeys,
                  mediaKeySystemAccess,

@@ -183,7 +183,7 @@ export default class PersistentSessionsStore {
       this.delete(initData);
     }
 
-    log.info("EME-PSS: Add new session", sessionId, session);
+    log.info("EME-PSS: Add new session", sessionId);
 
     this._entries.push({ version: 3,
                          sessionId,
@@ -205,7 +205,7 @@ export default class PersistentSessionsStore {
       return;
     }
     const entry = this._entries[index];
-    log.warn("EME-PSS: Delete session from store", entry);
+    log.warn("EME-PSS: Delete session from store", entry.sessionId);
     this._entries.splice(index, 1);
     this._save();
   }

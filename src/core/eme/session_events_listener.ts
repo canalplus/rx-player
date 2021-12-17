@@ -106,7 +106,7 @@ export default function SessionEventsListener(
                IKeysUpdateEvent |
                ISessionUpdatedEvent>
 {
-  log.info("EME: Binding session events", session);
+  log.info("EME: Binding session events", session.sessionId);
   const sessionWarningSubject$ = new Subject<IEMEWarningEvent>();
   const { getLicenseConfig = {} } = keySystemOptions;
 
@@ -129,7 +129,9 @@ export default function SessionEventsListener(
         messageEvent.messageType :
         "license-request";
 
-      log.info(`EME: Received message event, type ${messageType}`, session, messageEvent);
+      log.info(`EME: Received message event, type ${messageType}`,
+               session.sessionId,
+               messageEvent);
       const getLicense$ = observableDefer(() => {
         const getLicense = keySystemOptions.getLicense(message, messageType);
         const getLicenseTimeout = isNullOrUndefined(getLicenseConfig.timeout) ?
@@ -303,7 +305,7 @@ function handleKeyStatusesChangeEvent(
   keySystem : string,
   keyStatusesEvent : Event
 ) : Observable<IKeyStatusChangeHandledEvent | IKeysUpdateEvent | IEMEWarningEvent> {
-  log.info("EME: keystatuseschange event received", session, keyStatusesEvent);
+  log.info("EME: keystatuseschange event received", session.sessionId);
   const callback$ = observableDefer(() => {
     return tryCatch(() => {
       if (typeof keySystemOptions.onKeyStatusesChange !== "function") {

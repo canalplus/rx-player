@@ -23,6 +23,7 @@ import {
 import log from "../../../log";
 import Manifest, {
   Adaptation,
+  getLoggableSegmentId,
   ISegment,
   Period,
   Representation,
@@ -109,7 +110,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
     const { segment } = content;
 
     // used by logs
-    const segmentIdString = getIdString(content);
+    const segmentIdString = getLoggableSegmentId(content);
 
     return new Observable((obs) => {
       const requestId = generateRequestID();
@@ -195,6 +196,8 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
                          objectAssign({ onRetry }, options),
                          canceller.signal)
         .then((res) => {
+          log.debug("SF: Segment request ended with success", segmentIdString);
+
           if (res.resultType === "segment-loaded") {
             const loadedData = res.resultData.responseData;
             if (cache !== undefined) {
@@ -447,14 +450,4 @@ export function getSegmentFetcherOptions(
                                        INITIAL_BACKOFF_DELAY_BASE.REGULAR,
            maxDelay: lowLatencyMode ? MAX_BACKOFF_DELAY_BASE.LOW_LATENCY :
                                       MAX_BACKOFF_DELAY_BASE.REGULAR };
-}
-
-function getIdString(
-  { period, adaptation, representation, segment } : ISegmentLoaderContent
-) : string {
-  return `${adaptation.type} P: ${period.id} A: ${adaptation.id} ` +
-         `R: ${representation.id} S: ` +
-         (segment.isInit   ? "init" :
-          segment.complete ? `${segment.time}-${segment.duration}` :
-                             `${segment.time}`);
 }
