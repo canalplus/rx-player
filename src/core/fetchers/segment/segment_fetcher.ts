@@ -20,6 +20,7 @@ import {
   formatError,
   ICustomError,
 } from "../../../errors";
+import log from "../../../log";
 import Manifest, {
   Adaptation,
   ISegment,
@@ -104,11 +105,16 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
     content : ISegmentLoaderContent
   ) : Observable<ISegmentFetcherEvent<TSegmentDataType>> {
     const { segment } = content;
+
+    // used by logs
+    const segmentIdString = getIdString(content);
+
     return new Observable((obs) => {
       // Retrieve from cache if it exists
       const cached = cache !== undefined ? cache.get(content) :
                                            null;
       if (cached !== null) {
+        log.debug("SF: Found wanted segment in cache", segmentIdString);
         obs.next({ type: "chunk" as const,
                    parse: generateParserFunction(cached, false) });
         obs.next({ type: "chunk-complete" as const });
@@ -117,6 +123,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
       }
 
       const id = generateRequestID();
+      log.debug("SF: Beginning request", segmentIdString);
       callbacks.onRequestBegin?.({ requestTimestamp: performance.now(),
                                    id,
                                    content });
@@ -169,6 +176,8 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
                        parse: generateParserFunction(res.resultData, false) });
           }
 
+          log.debug("SF: Segment request ended with success", segmentIdString);
+
           hasRequestEnded = true;
           obs.next({ type: "chunk-complete" as const });
 
@@ -196,12 +205,14 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
           obs.complete();
         })
         .catch((err) => {
+          log.debug("SF: Segment request failed", segmentIdString);
           hasRequestEnded = true;
           obs.error(errorSelector(err));
         });
 
       return () => {
         if (!hasRequestEnded) {
+          log.debug("SF: Segment request cancelled", segmentIdString);
           canceller.cancel();
           callbacks.onRequestEnd?.({ id });
         }
@@ -373,4 +384,14 @@ export function getSegmentFetcherOptions(
                                        INITIAL_BACKOFF_DELAY_BASE.REGULAR,
            maxDelay: lowLatencyMode ? MAX_BACKOFF_DELAY_BASE.LOW_LATENCY :
                                       MAX_BACKOFF_DELAY_BASE.REGULAR };
+}
+
+function getIdString(
+  { period, adaptation, representation, segment } : ISegmentLoaderContent
+) : string {
+  return `${adaptation.type} P: ${period.id} A: ${adaptation.id} ` +
+         `R: ${representation.id} S: ` +
+         (segment.isInit   ? "init" :
+          segment.complete ? `${segment.time}-${segment.duration}` :
+                             `${segment.time}`);
 }
