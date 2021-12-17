@@ -44,12 +44,12 @@ import {
 import getWebKitMediaKeysCallbacks from "./webkit_media_keys";
 import { WebKitMediaKeysConstructor } from "./webkit_media_keys_constructor";
 
-let requestMediaKeySystemAccess : null |
-                                  ((keyType : string,
-                                    config : MediaKeySystemConfiguration[])
-                                      => Observable<MediaKeySystemAccess |
-                                                    CustomMediaKeySystemAccess>)
-                                = null;
+/** Generic implementation of the navigator.requestMediaKeySystemAccess API. */
+type ICompatRequestMediaKeySystemAccessFn =
+  (keyType : string, config : MediaKeySystemConfiguration[]) =>
+    Observable<MediaKeySystemAccess | CustomMediaKeySystemAccess>;
+
+let requestMediaKeySystemAccess : null | ICompatRequestMediaKeySystemAccessFn = null;
 
 let _setMediaKeys :
 ((elt: HTMLMediaElement, mediaKeys: MediaKeys | ICustomMediaKeys | null) => void) =

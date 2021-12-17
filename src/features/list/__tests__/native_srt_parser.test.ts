@@ -15,6 +15,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 import srtParser from "../../../parsers/texttracks/srt/native";
 import addNativesrtFeature from "../native_srt_parser";

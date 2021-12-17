@@ -18,11 +18,11 @@ import {
   defer as observableDefer,
   EMPTY,
   filter,
-  mapTo,
+  map,
   merge as observableMerge,
   Observable,
   startWith,
-  switchMapTo,
+  switchMap,
   take,
 } from "rxjs";
 import { IPlaybackObservation } from "./playback_observer";
@@ -47,7 +47,7 @@ export default function emitSeekEvents(
 
     let isSeeking$ = observation$.pipe(
       filter((observation : IPlaybackObservation) => observation.event === "seeking"),
-      mapTo("seeking" as const)
+      map(() => "seeking" as const)
     );
 
     if (mediaElement.seeking) {
@@ -55,10 +55,10 @@ export default function emitSeekEvents(
     }
 
     const hasSeeked$ = isSeeking$.pipe(
-      switchMapTo(
+      switchMap(() =>
         observation$.pipe(
           filter((observation : IPlaybackObservation) => observation.event === "seeked"),
-          mapTo("seeked" as const),
+          map(() => "seeked" as const),
           take(1)))
     );
     return observableMerge(isSeeking$, hasSeeked$);

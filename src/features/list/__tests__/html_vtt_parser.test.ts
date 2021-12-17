@@ -15,6 +15,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 import vttParser from "../../../parsers/texttracks/webvtt/html";
 import addHTMLVTTFeature from "../html_vtt_parser";

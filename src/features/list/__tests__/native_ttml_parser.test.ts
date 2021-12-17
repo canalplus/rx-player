@@ -15,6 +15,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 import ttmlParser from "../../../parsers/texttracks/ttml/native";
 import addNativettmlFeature from "../native_ttml_parser";

@@ -22,7 +22,6 @@ import {
   EMPTY,
   identity,
   map,
-  mapTo,
   merge as observableMerge,
   mergeMap,
   Observable,
@@ -287,8 +286,8 @@ function updateSessionWithMessage(
       throw new EncryptedMediaError("KEY_UPDATE_ERROR", reason);
     }),
     tap(() => { log.info("EME: MediaKeySession update succeeded."); }),
-    mapTo({ type: "session-updated" as const,
-            value: { session, license: message, initializationData } })
+    map(() => ({ type: "session-updated" as const,
+                 value: { session, license: message, initializationData } }))
   );
 }
 

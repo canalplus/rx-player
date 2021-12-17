@@ -16,7 +16,7 @@
 
 import {
   defer as observableDefer,
-  mapTo,
+  map,
   mergeMap,
   Observable,
   of as observableOf,
@@ -66,6 +66,6 @@ export default function loadSession(
     return observableRace(
       observableTimer(EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES),
       onKeyStatusesChange$(session)
-    ).pipe(take(1), mapTo(isLoaded));
+    ).pipe(take(1), map(() => isLoaded));
   }));
 }

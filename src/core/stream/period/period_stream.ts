@@ -21,7 +21,6 @@ import {
   EMPTY,
   ignoreElements,
   map,
-  mapTo,
   merge as observableMerge,
   mergeMap,
   Observable,
@@ -190,7 +189,7 @@ export default function PeriodStream({
         }
 
         return observableConcat(
-          cleanBuffer$.pipe(mapTo(EVENTS.adaptationChange(bufferType, null, period))),
+          cleanBuffer$.pipe(map(() => EVENTS.adaptationChange(bufferType, null, period))),
           createEmptyStream(playbackObserver, wantedBufferAhead, bufferType, { period })
         );
       }
@@ -234,6 +233,11 @@ export default function PeriodStream({
           strategy.type === "clean-buffer" || strategy.type === "flush-buffer" ?
             observableConcat(...strategy.value.map(({ start, end }) =>
               segmentBuffer.removeBuffer(start, end))
+            // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
+            // first type parameter as `any` instead of the perfectly fine `unknown`,
+            // leading to linter issues, as it forbids the usage of `any`.
+            // This is why we're disabling the eslint rule.
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
             ).pipe(ignoreElements()) : EMPTY;
 
         const bufferGarbageCollector$ = garbageCollectors.get(segmentBuffer);

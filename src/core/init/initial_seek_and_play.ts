@@ -18,7 +18,7 @@ import {
   catchError,
   concat as observableConcat,
   filter,
-  mapTo,
+  map,
   mergeMap,
   Observable,
   of as observableOf,
@@ -77,7 +77,7 @@ export function waitUntilPlayable(
                                                      rebuffering === null &&
                                                      readyState >= 1),
     take(1),
-    mapTo(undefined)
+    map(() => undefined)
   );
 }
 
@@ -90,7 +90,7 @@ function autoPlay(
   mediaElement: HTMLMediaElement
 ): Observable<"autoplay"|"autoplay-blocked"> {
   return play(mediaElement).pipe(
-    mapTo("autoplay" as const),
+    map(() => "autoplay" as const),
     catchError((error : unknown) => {
       if (error instanceof Error && error.name === "NotAllowedError") {
         // auto-play was probably prevented.

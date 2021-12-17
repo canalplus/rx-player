@@ -15,6 +15,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 import bifParser from "../../../parsers/images/bif";
 import addBIFParserFeature from "../bif_parser";

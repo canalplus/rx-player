@@ -29,7 +29,6 @@ import {
   fromEvent as observableFromEvent,
   interval as observableInterval,
   map,
-  mapTo,
   merge as observableMerge,
   of as observableOf,
   startWith,
@@ -269,7 +268,7 @@ function onPictureInPictureEvent$(
           }).pictureInPictureWindow ?? null,
         }))),
       observableFromEvent(mediaElement, "leavepictureinpicture")
-        .pipe(mapTo({ isEnabled: false, pipWindow: null }))
+        .pipe(map(() => ({ isEnabled: false, pipWindow: null })))
     ).pipe(startWith(initialState));
   });
 }

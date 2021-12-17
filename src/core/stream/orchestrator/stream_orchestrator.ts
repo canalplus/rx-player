@@ -70,6 +70,12 @@ import ActivePeriodEmitter from "./active_period_emitter";
 import areStreamsComplete from "./are_streams_complete";
 import getBlacklistedRanges from "./get_blacklisted_ranges";
 
+// NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
+// first type parameter as `any` instead of the perfectly fine `unknown`,
+// leading to linter issues, as it forbids the usage of `any`.
+// This is why we're disabling the eslint rule.
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+
 export type IStreamOrchestratorPlaybackObservation = IPeriodStreamPlaybackObservation;
 
 const { MAXIMUM_MAX_BUFFER_AHEAD,

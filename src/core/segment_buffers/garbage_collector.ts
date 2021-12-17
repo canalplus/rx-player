@@ -154,7 +154,13 @@ function clearBuffer(
       log.debug("GC: cleaning range from SegmentBuffer", range);
       return segmentBuffer.removeBuffer(range.start, range.end);
     })
-  ).pipe(concatAll(), ignoreElements());
+  ).pipe(concatAll(),
+        // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
+        // first type parameter as `any` instead of the perfectly fine `unknown`,
+        // leading to linter issues, as it forbids the usage of `any`.
+        // This is why we're disabling the eslint rule.
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
+         ignoreElements());
 
   return clean$;
 }

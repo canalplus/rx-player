@@ -28,10 +28,8 @@ import {
   EMPTY,
   filter,
   map,
-  mapTo,
   merge as observableMerge,
   mergeMap,
-  mergeMapTo,
   Observable,
   of as observableOf,
   ReplaySubject,
@@ -41,7 +39,7 @@ import {
   startWith,
   Subject,
   Subscription,
-  switchMapTo,
+  switchMap,
   take,
   takeUntil,
 } from "rxjs";
@@ -1028,7 +1026,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       observableOf(PLAYER_STATES.LOADING), // Begin with LOADING
 
       // LOADED as soon as the first "loaded" event is sent
-      loaded$.pipe(take(1), mapTo(PLAYER_STATES.LOADED)),
+      loaded$.pipe(take(1), map(() => PLAYER_STATES.LOADED)),
 
       observableMerge(
         loadedStateUpdates$
@@ -1040,10 +1038,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
         // when reloading
         reloading$.pipe(
-          switchMapTo(
+          switchMap(() =>
             loaded$.pipe(
               take(1), // wait for the next loaded event
-              mergeMapTo(loadedStateUpdates$), // to update the state as usual
+              mergeMap(() => loadedStateUpdates$), // to update the state as usual
               startWith(PLAYER_STATES.RELOADING) // Starts with "RELOADING" state
             )
           )
@@ -1074,7 +1072,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     // Link "seeking" and "seeked" events (once the content is loaded)
     loaded$.pipe(
-      switchMapTo(emitSeekEvents(this.videoElement, observation$)),
+      switchMap(() => emitSeekEvents(this.videoElement, observation$)),
       takeUntil(stopContent$)
     ).subscribe((evt : "seeking" | "seeked") => {
       log.info(`API: Triggering "${evt}" event`);

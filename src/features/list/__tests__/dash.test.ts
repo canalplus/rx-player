@@ -15,6 +15,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 import dashJsParser from "../../../parsers/manifest/dash/js-parser";
 import DASHFeature from "../../../transports/dash";
