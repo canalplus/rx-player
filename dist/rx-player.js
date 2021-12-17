@@ -46633,6 +46633,7 @@ var InitializationSegmentCache = /*#__PURE__*/function () {
 
 
 
+
 var DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR = config/* default.DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR */.Z.DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
     segment_fetcher_DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE = config/* default.DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE */.Z.DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
     segment_fetcher_INITIAL_BACKOFF_DELAY_BASE = config/* default.INITIAL_BACKOFF_DELAY_BASE */.Z.INITIAL_BACKOFF_DELAY_BASE,
@@ -46677,7 +46678,9 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
    */
 
   return function fetchSegment(content) {
-    var segment = content.segment;
+    var segment = content.segment; // used by logs
+
+    var segmentIdString = getIdString(content);
     return new Observable/* Observable */.y(function (obs) {
       var _a, _b; // Retrieve from cache if it exists
 
@@ -46685,6 +46688,7 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
       var cached = cache !== undefined ? cache.get(content) : null;
 
       if (cached !== null) {
+        log/* default.debug */.Z.debug("SF: Found wanted segment in cache", segmentIdString);
         obs.next({
           type: "chunk",
           parse: generateParserFunction(cached, false)
@@ -46697,6 +46701,7 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
       }
 
       var id = generateRequestID();
+      log/* default.debug */.Z.debug("SF: Beginning request", segmentIdString);
       (_a = callbacks.onRequestBegin) === null || _a === void 0 ? void 0 : _a.call(callbacks, {
         requestTimestamp: performance.now(),
         id: id,
@@ -46760,6 +46765,7 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
           });
         }
 
+        log/* default.debug */.Z.debug("SF: Segment request ended with success", segmentIdString);
         hasRequestEnded = true;
         obs.next({
           type: "chunk-complete"
@@ -46789,6 +46795,7 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
 
         obs.complete();
       })["catch"](function (err) {
+        log/* default.debug */.Z.debug("SF: Segment request failed", segmentIdString);
         hasRequestEnded = true;
         obs.error(errorSelector(err));
       });
@@ -46796,6 +46803,7 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
         var _a;
 
         if (!hasRequestEnded) {
+          log/* default.debug */.Z.debug("SF: Segment request cancelled", segmentIdString);
           canceller.cancel();
           (_a = callbacks.onRequestEnd) === null || _a === void 0 ? void 0 : _a.call(callbacks, {
             id: id
@@ -46868,6 +46876,14 @@ function getSegmentFetcherOptions(bufferType, _ref) {
     baseDelay: lowLatencyMode ? segment_fetcher_INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY : segment_fetcher_INITIAL_BACKOFF_DELAY_BASE.REGULAR,
     maxDelay: lowLatencyMode ? segment_fetcher_MAX_BACKOFF_DELAY_BASE.LOW_LATENCY : segment_fetcher_MAX_BACKOFF_DELAY_BASE.REGULAR
   };
+}
+
+function getIdString(_ref2) {
+  var period = _ref2.period,
+      adaptation = _ref2.adaptation,
+      representation = _ref2.representation,
+      segment = _ref2.segment;
+  return adaptation.type + " P: " + period.id + " A: " + adaptation.id + " " + ("R: " + representation.id + " S: ") + (segment.isInit ? "init" : segment.complete ? segment.time + "-" + segment.duration : "" + segment.time);
 }
 ;// CONCATENATED MODULE: ./src/core/fetchers/segment/segment_fetcher_creator.ts
 /**
