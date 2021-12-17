@@ -180,7 +180,7 @@ export default function StreamOrchestrator(
   const activePeriodChanged$ = ActivePeriodEmitter(streamsArray).pipe(
     filter((period) : period is Period => period !== null),
     map(period => {
-      log.info("Stream: New active period", period);
+      log.info("Stream: New active period", period.start);
       return EVENTS.activePeriodChanged(period);
     }));
 
@@ -403,7 +403,7 @@ export default function StreamOrchestrator(
     basePeriod : Period,
     destroy$ : Observable<void>
   ) : Observable<IMultiplePeriodStreamsEvent> {
-    log.info("SO: Creating new Stream for", bufferType, basePeriod);
+    log.info("SO: Creating new Stream for", bufferType, basePeriod.start);
 
     // Emits the Period of the next Period Stream when it can be created.
     const createNextPeriodStream$ = new Subject<Period>();
@@ -481,7 +481,7 @@ export default function StreamOrchestrator(
         periodStream$.pipe(takeUntil(killCurrentStream$)),
         observableOf(EVENTS.periodStreamCleared(bufferType, basePeriod))
           .pipe(tap(() => {
-            log.info("SO: Destroying Stream for", bufferType, basePeriod);
+            log.info("SO: Destroying Stream for", bufferType, basePeriod.start);
           })));
 
     return observableMerge(currentStream$,

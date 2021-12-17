@@ -625,7 +625,8 @@ export default function RepresentationEstimator({
           if (chosenRepFromGuessMode !== null &&
               chosenRepFromGuessMode.bitrate > currentBestBitrate) {
             log.debug("ABR: Choosing representation with guess-based estimation.",
-                      chosenRepFromGuessMode);
+                      chosenRepFromGuessMode.bitrate,
+                      chosenRepFromGuessMode.id);
             prevEstimate.update(chosenRepFromGuessMode,
                                 bandwidthEstimate,
                                 ABRAlgorithmType.GuessBased);
@@ -637,7 +638,8 @@ export default function RepresentationEstimator({
                      knownStableBitrate };
           } else if (chosenRepFromBufferSize !== null) {
             log.debug("ABR: Choosing representation with buffer-based estimation.",
-                      chosenRepFromBufferSize);
+                      chosenRepFromBufferSize.bitrate,
+                      chosenRepFromBufferSize.id);
             prevEstimate.update(chosenRepFromBufferSize,
                                 bandwidthEstimate,
                                 ABRAlgorithmType.BufferBased);
@@ -651,7 +653,8 @@ export default function RepresentationEstimator({
                      knownStableBitrate };
           } else {
             log.debug("ABR: Choosing representation with bandwidth estimation.",
-                      chosenRepFromBandwidth);
+                      chosenRepFromBandwidth.bitrate,
+                      chosenRepFromBandwidth.id);
             prevEstimate.update(chosenRepFromBandwidth,
                                 bandwidthEstimate,
                                 ABRAlgorithmType.BandwidthBased);

@@ -167,7 +167,7 @@ export default class LoadedSessionsStore {
         });
     }
 
-    log.debug("EME-LSS: Add MediaKeySession", entry);
+    log.debug("EME-LSS: Add MediaKeySession", entry.sessionType);
     this._storage.store(initializationData, entry);
     return mediaKeySession;
   }

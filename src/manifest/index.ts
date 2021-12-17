@@ -19,7 +19,6 @@ import Adaptation, {
   IRepresentationInfos,
   SUPPORTED_ADAPTATIONS_TYPE,
 } from "./adaptation";
-import areSameContent from "./are_same_content";
 import Manifest, {
   IManifestParsingOptions,
   ISupplementaryImageTrack,
@@ -38,12 +37,19 @@ import {
   IAdaptationType,
   IHDRInformation,
 } from "./types";
+import {
+  areSameContent,
+  getLoggableSegmentId,
+  IBufferedChunkInfos,
+} from "./utils";
 
 export default Manifest;
 export * from "./types";
 export {
   // utils
   areSameContent,
+  getLoggableSegmentId,
+  IBufferedChunkInfos,
 
   // classes
   Period,

@@ -41,7 +41,7 @@ export default function isSessionUsable(
 
   if (keyStatuses.length <= 0) {
     log.debug("EME: isSessionUsable: MediaKeySession given has an empty keyStatuses",
-              loadedSession);
+              loadedSession.sessionId);
     return false;
   }
 
