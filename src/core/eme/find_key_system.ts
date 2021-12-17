@@ -264,7 +264,7 @@ export default function getMediaKeySystemAccess(
                                         currentState.mediaKeySystemAccess,
                                         currentState.keySystemOptions);
       if (cachedKeySystemAccess !== null) {
-        log.info("EME: Found cached compatible keySystem", cachedKeySystemAccess);
+        log.info("EME: Found cached compatible keySystem");
         return observableOf({
           type: "reuse-media-key-system-access" as const,
           value: { mediaKeySystemAccess: cachedKeySystemAccess.keySystemAccess,

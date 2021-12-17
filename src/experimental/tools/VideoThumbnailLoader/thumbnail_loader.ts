@@ -260,7 +260,7 @@ export default class VideoThumbnailLoader {
                                   videoSourceBuffer)
                     .pipe(tap(() => {
                       freeRequest(getCompleteSegmentId(inventoryInfos, segment));
-                      log.debug("VTL: Appended segment.", data);
+                      log.debug("VTL: Appended segment.");
                     }));
                 })
               );

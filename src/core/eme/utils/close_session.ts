@@ -60,7 +60,9 @@ export default function safelyCloseMediaKeySession(
   function recursivelyTryToCloseMediaKeySession(
     retryNb : number
   ) : Observable<unknown> {
-    log.debug("EME: Trying to close a MediaKeySession", mediaKeySession, retryNb);
+    log.debug("EME: Trying to close a MediaKeySession",
+              mediaKeySession.sessionId,
+              retryNb);
     return closeSession(mediaKeySession).pipe(
       tap(() => { log.debug("EME: Succeeded to close MediaKeySession"); }),
       catchError((err : unknown) => {
