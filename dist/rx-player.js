@@ -4943,7 +4943,7 @@ function isSessionUsable(loadedSession) {
   });
 
   if (keyStatuses.length <= 0) {
-    log/* default.debug */.Z.debug("EME: isSessionUsable: MediaKeySession given has an empty keyStatuses", loadedSession);
+    log/* default.debug */.Z.debug("EME: isSessionUsable: MediaKeySession given has an empty keyStatuses", loadedSession.sessionId);
     return false;
   }
 
@@ -5560,7 +5560,7 @@ function getMediaKeySystemAccess(mediaElement, keySystemsConfigs) {
       var cachedKeySystemAccess = checkCachedMediaKeySystemAccess(keySystemsConfigs, currentState.mediaKeySystemAccess, currentState.keySystemOptions);
 
       if (cachedKeySystemAccess !== null) {
-        log/* default.info */.Z.info("EME: Found cached compatible keySystem", cachedKeySystemAccess);
+        log/* default.info */.Z.info("EME: Found cached compatible keySystem");
         return (0,of.of)({
           type: "reuse-media-key-system-access",
           value: {
@@ -5874,7 +5874,7 @@ function safelyCloseMediaKeySession(mediaKeySession) {
    */
 
   function recursivelyTryToCloseMediaKeySession(retryNb) {
-    log/* default.debug */.Z.debug("EME: Trying to close a MediaKeySession", mediaKeySession, retryNb);
+    log/* default.debug */.Z.debug("EME: Trying to close a MediaKeySession", mediaKeySession.sessionId, retryNb);
     return closeSession$(mediaKeySession).pipe((0,tap/* tap */.b)(function () {
       log/* default.debug */.Z.debug("EME: Succeeded to close MediaKeySession");
     }), (0,catchError/* catchError */.K)(function (err) {
@@ -6475,7 +6475,7 @@ var LoadedSessionsStore = /*#__PURE__*/function () {
       });
     }
 
-    log/* default.debug */.Z.debug("EME-LSS: Add MediaKeySession", entry);
+    log/* default.debug */.Z.debug("EME-LSS: Add MediaKeySession", entry.sessionType);
 
     this._storage.store(initializationData, entry);
 
@@ -6747,7 +6747,7 @@ var PersistentSessionsStore = /*#__PURE__*/function () {
       this["delete"](initData);
     }
 
-    log/* default.info */.Z.info("EME-PSS: Add new session", sessionId, session);
+    log/* default.info */.Z.info("EME-PSS: Add new session", sessionId);
 
     this._entries.push({
       version: 3,
@@ -6775,7 +6775,7 @@ var PersistentSessionsStore = /*#__PURE__*/function () {
     }
 
     var entry = this._entries[index];
-    log/* default.warn */.Z.warn("EME-PSS: Delete session from store", entry);
+    log/* default.warn */.Z.warn("EME-PSS: Delete session from store", entry.sessionId);
 
     this._entries.splice(index, 1);
 
@@ -7001,7 +7001,7 @@ function getMediaKeysInfos(mediaElement, keySystemsConfigs) {
     }
 
     return createMediaKeys(mediaKeySystemAccess).pipe((0,map/* map */.U)(function (mediaKeys) {
-      log/* default.info */.Z.info("EME: MediaKeys created with success", mediaKeys);
+      log/* default.info */.Z.info("EME: MediaKeys created with success");
       var loadedSessionsStore = new LoadedSessionsStore(mediaKeys);
       return {
         mediaKeys: mediaKeys,
@@ -7520,7 +7520,7 @@ var BlacklistedSessionError = /*#__PURE__*/function (_Error) {
  */
 
 function SessionEventsListener(session, keySystemOptions, keySystem, initializationData) {
-  log/* default.info */.Z.info("EME: Binding session events", session);
+  log/* default.info */.Z.info("EME: Binding session events", session.sessionId);
   var sessionWarningSubject$ = new Subject/* Subject */.x();
   var _keySystemOptions$get = keySystemOptions.getLicenseConfig,
       getLicenseConfig = _keySystemOptions$get === void 0 ? {} : _keySystemOptions$get;
@@ -7533,7 +7533,7 @@ function SessionEventsListener(session, keySystemOptions, keySystem, initializat
   var keyMessages$ = onKeyMessage$(session).pipe((0,mergeMap/* mergeMap */.z)(function (messageEvent) {
     var message = new Uint8Array(messageEvent.message);
     var messageType = (0,is_non_empty_string/* default */.Z)(messageEvent.messageType) ? messageEvent.messageType : "license-request";
-    log/* default.info */.Z.info("EME: Received message event, type " + messageType, session, messageEvent);
+    log/* default.info */.Z.info("EME: Received message event, type " + messageType, session.sessionId, messageEvent);
     var getLicense$ = (0,defer/* defer */.P)(function () {
       var getLicense = keySystemOptions.getLicense(message, messageType);
       var getLicenseTimeout = (0,is_null_or_undefined/* default */.Z)(getLicenseConfig.timeout) ? 10 * 1000 : getLicenseConfig.timeout;
@@ -7689,7 +7689,7 @@ function updateSessionWithMessage(session, message, initializationData) {
 
 
 function handleKeyStatusesChangeEvent(session, keySystemOptions, keySystem, keyStatusesEvent) {
-  log/* default.info */.Z.info("EME: keystatuseschange event received", session, keyStatusesEvent);
+  log/* default.info */.Z.info("EME: keystatuseschange event received", session.sessionId);
   var callback$ = (0,defer/* defer */.P)(function () {
     return (0,rx_try_catch/* default */.Z)(function () {
       if (typeof keySystemOptions.onKeyStatusesChange !== "function") {
@@ -7930,8 +7930,8 @@ function EMEManager(mediaElement, keySystemsConfigs, contentProtections$) {
   }), (0,take/* take */.q)(1));
   /** Parsed `encrypted` events coming from the HTMLMediaElement. */
 
-  var mediaEncryptedEvents$ = onEncrypted$(mediaElement).pipe((0,tap/* tap */.b)(function (evt) {
-    log/* default.debug */.Z.debug("EME: Encrypted event received from media element.", evt);
+  var mediaEncryptedEvents$ = onEncrypted$(mediaElement).pipe((0,tap/* tap */.b)(function () {
+    log/* default.debug */.Z.debug("EME: Encrypted event received from media element.");
   }), (0,filter_map/* default */.Z)(function (evt) {
     return getInitData(evt);
   }, null), (0,shareReplay/* shareReplay */.d)({
@@ -7941,8 +7941,8 @@ function EMEManager(mediaElement, keySystemsConfigs, contentProtections$) {
 
   /** Encryption events coming from the `contentProtections$` argument. */
 
-  var externalEvents$ = contentProtections$.pipe((0,tap/* tap */.b)(function (evt) {
-    log/* default.debug */.Z.debug("EME: Encrypted event received from Player", evt);
+  var externalEvents$ = contentProtections$.pipe((0,tap/* tap */.b)(function () {
+    log/* default.debug */.Z.debug("EME: Encrypted event received from Player");
   }));
   /** Emit events signaling that an encryption initialization data is encountered. */
 
@@ -8974,7 +8974,7 @@ var clear_element_src = __webpack_require__(5767);
 
 function setElementSrc$(mediaElement, url) {
   return new Observable/* Observable */.y(function (observer) {
-    log/* default.info */.Z.info("Setting URL to Element", url, mediaElement);
+    log/* default.info */.Z.info("Setting URL to HTMLMediaElement", url);
     mediaElement.src = url;
     observer.next(undefined);
     return function () {
@@ -11697,8 +11697,8 @@ __webpack_require__.d(__webpack_exports__, {
 var config = __webpack_require__(944);
 // EXTERNAL MODULE: ./src/log.ts + 1 modules
 var log = __webpack_require__(3887);
-// EXTERNAL MODULE: ./src/manifest/are_same_content.ts
-var are_same_content = __webpack_require__(5952);
+// EXTERNAL MODULE: ./src/manifest/utils.ts
+var utils = __webpack_require__(520);
 // EXTERNAL MODULE: ./src/utils/take_first_set.ts
 var take_first_set = __webpack_require__(5278);
 ;// CONCATENATED MODULE: ./src/core/segment_buffers/inventory/buffered_history.ts
@@ -11784,7 +11784,7 @@ var BufferedHistory = /*#__PURE__*/function () {
 
   _proto.getHistoryFor = function getHistoryFor(context) {
     return this._history.filter(function (el) {
-      return (0,are_same_content/* default */.Z)(el.context, context);
+      return (0,utils/* areSameContent */.z)(el.context, context);
     });
   }
   /**
@@ -12385,7 +12385,7 @@ var SegmentInventory = /*#__PURE__*/function () {
     var resSegments = [];
 
     for (var i = 0; i < inventory.length; i++) {
-      if ((0,are_same_content/* default */.Z)(inventory[i].infos, content)) {
+      if ((0,utils/* areSameContent */.z)(inventory[i].infos, content)) {
         var splitted = false;
 
         if (resSegments.length > 0) {
@@ -12400,7 +12400,7 @@ var SegmentInventory = /*#__PURE__*/function () {
         var firstI = i;
         i += 1;
 
-        while (i < inventory.length && (0,are_same_content/* default */.Z)(inventory[i].infos, content)) {
+        while (i < inventory.length && (0,utils/* areSameContent */.z)(inventory[i].infos, content)) {
           i++;
         }
 
@@ -14518,41 +14518,6 @@ var Adaptation = /*#__PURE__*/function () {
 
 /***/ }),
 
-/***/ 5952:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Z": function() { return /* binding */ areSameContent; }
-/* harmony export */ });
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * Check if two contents are the same
- * @param {Object} content1
- * @param {Object} content2
- * @returns {boolean}
- */
-function areSameContent(content1, content2) {
-  return content1.segment.id === content2.segment.id && content1.representation.id === content2.representation.id && content1.adaptation.id === content2.adaptation.id && content1.period.id === content2.period.id;
-}
-
-/***/ }),
-
 /***/ 1989:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
@@ -14563,7 +14528,7 @@ __webpack_require__.d(__webpack_exports__, {
   "ZP": function() { return /* binding */ manifest; }
 });
 
-// UNUSED EXPORTS: Adaptation, MANIFEST_UPDATE_TYPE, Period, Representation, SUPPORTED_ADAPTATIONS_TYPE, StaticRepresentationIndex, areSameContent
+// UNUSED EXPORTS: Adaptation, MANIFEST_UPDATE_TYPE, Period, Representation, SUPPORTED_ADAPTATIONS_TYPE, StaticRepresentationIndex, areSameContent, getLoggableSegmentId
 
 // EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/inheritsLoose.js
 var inheritsLoose = __webpack_require__(4578);
@@ -15782,6 +15747,61 @@ function updateDeciperability(manifest, isDecipherable) {
 /* harmony default export */ var manifest = (Manifest);
 
 
+
+/***/ }),
+
+/***/ 520:
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "z": function() { return /* binding */ areSameContent; },
+/* harmony export */   "K": function() { return /* binding */ getLoggableSegmentId; }
+/* harmony export */ });
+/* harmony import */ var _utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1946);
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * Check if two contents are the same
+ * @param {Object} content1
+ * @param {Object} content2
+ * @returns {boolean}
+ */
+
+function areSameContent(content1, content2) {
+  return content1.segment.id === content2.segment.id && content1.representation.id === content2.representation.id && content1.adaptation.id === content2.adaptation.id && content1.period.id === content2.period.id;
+}
+/**
+ * Get string describing a given ISegment, useful for log functions.
+ * @param {Object} content
+ * @returns {string|null|undefined}
+ */
+
+function getLoggableSegmentId(content) {
+  if ((0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z)(content)) {
+    return "";
+  }
+
+  var period = content.period,
+      adaptation = content.adaptation,
+      representation = content.representation,
+      segment = content.segment;
+  return adaptation.type + " P: " + period.id + " A: " + adaptation.id + " " + ("R: " + representation.id + " S: ") + (segment.isInit ? "init" : segment.complete ? segment.time + "-" + segment.duration : "" + segment.time);
+}
 
 /***/ }),
 
@@ -18032,8 +18052,8 @@ function flattenOverlappingPeriods(parsedPeriods) {
     var parsedPeriod = parsedPeriods[i];
     var lastFlattenedPeriod = flattenedPeriods[flattenedPeriods.length - 1];
 
-    while (lastFlattenedPeriod.duration == null || lastFlattenedPeriod.start + lastFlattenedPeriod.duration > parsedPeriod.start) {
-      log/* default.warn */.Z.warn("DASH: Updating overlapping Periods.", lastFlattenedPeriod, parsedPeriod);
+    while (lastFlattenedPeriod.duration === undefined || lastFlattenedPeriod.start + lastFlattenedPeriod.duration > parsedPeriod.start) {
+      log/* default.warn */.Z.warn("DASH: Updating overlapping Periods.", lastFlattenedPeriod === null || lastFlattenedPeriod === void 0 ? void 0 : lastFlattenedPeriod.start, parsedPeriod.start);
       lastFlattenedPeriod.duration = parsedPeriod.start - lastFlattenedPeriod.start;
       lastFlattenedPeriod.end = parsedPeriod.start;
 
@@ -46536,6 +46556,8 @@ var ObservablePrioritizer = /*#__PURE__*/function () {
 }();
 
 
+// EXTERNAL MODULE: ./src/manifest/utils.ts
+var utils = __webpack_require__(520);
 // EXTERNAL MODULE: ./src/utils/array_includes.ts
 var array_includes = __webpack_require__(7714);
 // EXTERNAL MODULE: ./src/utils/id_generator.ts
@@ -46634,6 +46656,7 @@ var InitializationSegmentCache = /*#__PURE__*/function () {
 
 
 
+
 var DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR = config/* default.DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR */.Z.DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
     segment_fetcher_DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE = config/* default.DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE */.Z.DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
     segment_fetcher_INITIAL_BACKOFF_DELAY_BASE = config/* default.INITIAL_BACKOFF_DELAY_BASE */.Z.INITIAL_BACKOFF_DELAY_BASE,
@@ -46680,7 +46703,7 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
   return function fetchSegment(content) {
     var segment = content.segment; // used by logs
 
-    var segmentIdString = getIdString(content);
+    var segmentIdString = (0,utils/* getLoggableSegmentId */.K)(content);
     return new Observable/* Observable */.y(function (obs) {
       var _a, _b; // Retrieve from cache if it exists
 
@@ -46746,6 +46769,8 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
         onRetry: onRetry
       }, options), canceller.signal).then(function (res) {
         var _a, _b;
+
+        log/* default.debug */.Z.debug("SF: Segment request ended with success", segmentIdString);
 
         if (res.resultType === "segment-loaded") {
           var loadedData = res.resultData.responseData;
@@ -46876,14 +46901,6 @@ function getSegmentFetcherOptions(bufferType, _ref) {
     baseDelay: lowLatencyMode ? segment_fetcher_INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY : segment_fetcher_INITIAL_BACKOFF_DELAY_BASE.REGULAR,
     maxDelay: lowLatencyMode ? segment_fetcher_MAX_BACKOFF_DELAY_BASE.LOW_LATENCY : segment_fetcher_MAX_BACKOFF_DELAY_BASE.REGULAR
   };
-}
-
-function getIdString(_ref2) {
-  var period = _ref2.period,
-      adaptation = _ref2.adaptation,
-      representation = _ref2.representation,
-      segment = _ref2.segment;
-  return adaptation.type + " P: " + period.id + " A: " + adaptation.id + " " + ("R: " + representation.id + " S: ") + (segment.isInit ? "init" : segment.complete ? segment.time + "-" + segment.duration : "" + segment.time);
 }
 ;// CONCATENATED MODULE: ./src/core/fetchers/segment/segment_fetcher_creator.ts
 /**
@@ -47311,6 +47328,11 @@ function getBufferLevels(bitrates) {
     }
 
     var boundedIndex = Math.min(Math.max(1, index), bitrates.length - 1);
+
+    if (bitrates[boundedIndex] === bitrates[boundedIndex - 1]) {
+      return minBufferLevelForBitrate(index - 1);
+    }
+
     return Vp * (gp + (bitrates[boundedIndex] * utilities[boundedIndex - 1] - bitrates[boundedIndex - 1] * utilities[boundedIndex]) / (bitrates[boundedIndex] - bitrates[boundedIndex - 1])) + 4;
   }
 }
@@ -48351,7 +48373,7 @@ var RepresentationScoreCalculator = /*#__PURE__*/function () {
     }
 
     if (currentEWMA.getEstimate() > 1 && this._lastRepresentationWithGoodScore !== representation) {
-      log/* default.debug */.Z.debug("ABR: New last stable representation", representation);
+      log/* default.debug */.Z.debug("ABR: New last stable representation", representation.bitrate);
       this._lastRepresentationWithGoodScore = representation;
     }
   }
@@ -48798,7 +48820,7 @@ function RepresentationEstimator(_ref) {
         }
 
         if (chosenRepFromGuessMode !== null && chosenRepFromGuessMode.bitrate > currentBestBitrate) {
-          log/* default.debug */.Z.debug("ABR: Choosing representation with guess-based estimation.", chosenRepFromGuessMode);
+          log/* default.debug */.Z.debug("ABR: Choosing representation with guess-based estimation.", chosenRepFromGuessMode.bitrate, chosenRepFromGuessMode.id);
           prevEstimate.update(chosenRepFromGuessMode, bandwidthEstimate, 2
           /* GuessBased */
           );
@@ -48810,7 +48832,7 @@ function RepresentationEstimator(_ref) {
             knownStableBitrate: knownStableBitrate
           };
         } else if (chosenRepFromBufferSize !== null) {
-          log/* default.debug */.Z.debug("ABR: Choosing representation with buffer-based estimation.", chosenRepFromBufferSize);
+          log/* default.debug */.Z.debug("ABR: Choosing representation with buffer-based estimation.", chosenRepFromBufferSize.bitrate, chosenRepFromBufferSize.id);
           prevEstimate.update(chosenRepFromBufferSize, bandwidthEstimate, 0
           /* BufferBased */
           );
@@ -48822,7 +48844,7 @@ function RepresentationEstimator(_ref) {
             knownStableBitrate: knownStableBitrate
           };
         } else {
-          log/* default.debug */.Z.debug("ABR: Choosing representation with bandwidth estimation.", chosenRepFromBandwidth);
+          log/* default.debug */.Z.debug("ABR: Choosing representation with bandwidth estimation.", chosenRepFromBandwidth.bitrate, chosenRepFromBandwidth.id);
           prevEstimate.update(chosenRepFromBandwidth, bandwidthEstimate, 1
           /* BandwidthBased */
           );
@@ -49054,7 +49076,7 @@ function resetMediaSource(mediaElement, mediaSource, mediaSourceURL) {
 
       try {
         if (readyState === "open") {
-          log/* default.info */.Z.info("Init: Removing SourceBuffer from mediaSource", sourceBuffer);
+          log/* default.info */.Z.info("Init: Removing SourceBuffer from mediaSource");
           sourceBuffer.abort();
         }
 
@@ -49168,8 +49190,6 @@ var DEFAULT_LIVE_GAP = config/* default.DEFAULT_LIVE_GAP */.Z.DEFAULT_LIVE_GAP;
  */
 
 function getInitialTime(manifest, lowLatencyMode, startAt) {
-  log/* default.debug */.Z.debug("Init: calculating initial time");
-
   if (startAt != null) {
     var min = manifest.getMinimumPosition();
     var max = manifest.getMaximumPosition();
@@ -49317,6 +49337,7 @@ var types = __webpack_require__(9612);
 
 
 
+
 var SOURCE_BUFFER_FLUSHING_INTERVAL = config/* default.SOURCE_BUFFER_FLUSHING_INTERVAL */.Z.SOURCE_BUFFER_FLUSHING_INTERVAL;
 /**
  * Allows to push and remove new segments to a SourceBuffer in a FIFO queue (not
@@ -49400,7 +49421,7 @@ var AudioVideoSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
 
   _proto.pushChunk = function pushChunk(infos) {
     assertPushedDataIsBufferSource(infos);
-    log/* default.debug */.Z.debug("AVSB: receiving order to push data to the SourceBuffer", this.bufferType, infos);
+    log/* default.debug */.Z.debug("AVSB: receiving order to push data to the SourceBuffer", this.bufferType, (0,utils/* getLoggableSegmentId */.K)(infos.inventoryInfos));
     return this._addToQueue({
       type: types/* SegmentBufferOperation.Push */.f.Push,
       value: infos
@@ -49436,7 +49457,7 @@ var AudioVideoSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
   ;
 
   _proto.endOfSegment = function endOfSegment(infos) {
-    log/* default.debug */.Z.debug("AVSB: receiving order for validating end of segment", this.bufferType, infos.segment);
+    log/* default.debug */.Z.debug("AVSB: receiving order for validating end of segment", this.bufferType, (0,utils/* getLoggableSegmentId */.K)(infos));
     return this._addToQueue({
       type: types/* SegmentBufferOperation.EndOfSegment */.f.EndOfSegment,
       value: infos
@@ -49666,7 +49687,7 @@ var AudioVideoSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
       switch (this._pendingTask.type) {
         case types/* SegmentBufferOperation.EndOfSegment */.f.EndOfSegment:
           // nothing to do, we will just acknowledge the segment.
-          log/* default.debug */.Z.debug("AVSB: Acknowledging complete segment", this._pendingTask.value);
+          log/* default.debug */.Z.debug("AVSB: Acknowledging complete segment", (0,utils/* getLoggableSegmentId */.K)(this._pendingTask.value));
 
           this._flush();
 
@@ -49680,6 +49701,8 @@ var AudioVideoSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
 
             return;
           }
+
+          log/* default.debug */.Z.debug("AVSB: pushing segment", this.bufferType, (0,utils/* getLoggableSegmentId */.K)(this._pendingTask.inventoryData));
 
           this._sourceBuffer.appendBuffer(segmentData);
 
@@ -51371,8 +51394,6 @@ function getIndexOfLastChunkInPeriod(bufferedChunks, periodEnd) {
 
   return null;
 }
-// EXTERNAL MODULE: ./src/manifest/are_same_content.ts
-var are_same_content = __webpack_require__(5952);
 ;// CONCATENATED MODULE: ./src/core/stream/representation/get_needed_segments.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -51464,7 +51485,7 @@ function getNeededSegments(_ref) {
 
     if (segmentsBeingPushed.length > 0) {
       var isAlreadyBeingPushed = segmentsBeingPushed.some(function (pendingSegment) {
-        return (0,are_same_content/* default */.Z)(contentObject, pendingSegment);
+        return (0,utils/* areSameContent */.z)(contentObject, pendingSegment);
       });
 
       if (isAlreadyBeingPushed) {
@@ -52922,7 +52943,7 @@ function AdaptationStream(_ref) {
       var bufferGoal$ = wantedBufferAhead.asObservable().pipe((0,map/* map */.U)(function (wba) {
         return wba * bufferGoalRatio;
       }));
-      log/* default.info */.Z.info("Stream: changing representation", adaptation.type, representation);
+      log/* default.info */.Z.info("Stream: changing representation", adaptation.type, representation.id, representation.bitrate);
       return stream_representation({
         playbackObserver: playbackObserver,
         content: {
@@ -53437,7 +53458,7 @@ function PeriodStream(_ref) {
 
     if (adaptation === null) {
       // Current type is disabled for that Period
-      log/* default.info */.Z.info("Stream: Set no " + bufferType + " Adaptation", period);
+      log/* default.info */.Z.info("Stream: Set no " + bufferType + " Adaptation. P:", period.start);
       var segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
       var cleanBuffer$;
 
@@ -53468,7 +53489,7 @@ function PeriodStream(_ref) {
       return reloadAfterSwitch(period, bufferType, playbackObserver, relativePosAfterSwitch);
     }
 
-    log/* default.info */.Z.info("Stream: Updating " + bufferType + " adaptation", adaptation, period);
+    log/* default.info */.Z.info("Stream: Updating " + bufferType + " adaptation", "A: " + adaptation.id, "P: " + period.start);
     var newStream$ = (0,defer/* defer */.P)(function () {
       var readyState = playbackObserver.getReadyState();
       var segmentBuffer = createOrReuseSegmentBuffer(segmentBuffersStore, bufferType, adaptation, options);
@@ -54011,7 +54032,7 @@ function StreamOrchestrator(content, playbackObserver, abrManager, segmentBuffer
   var activePeriodChanged$ = ActivePeriodEmitter(streamsArray).pipe((0,filter/* filter */.h)(function (period) {
     return period !== null;
   }), (0,map/* map */.U)(function (period) {
-    log/* default.info */.Z.info("Stream: New active period", period);
+    log/* default.info */.Z.info("Stream: New active period", period.start);
     return stream_events_generators/* default.activePeriodChanged */.Z.activePeriodChanged(period);
   }));
   var isLastPeriodKnown$ = (0,event_emitter/* fromEvent */.R)(manifest, "manifestUpdate").pipe((0,map/* map */.U)(function () {
@@ -54212,7 +54233,7 @@ function StreamOrchestrator(content, playbackObserver, abrManager, segmentBuffer
 
 
   function manageConsecutivePeriodStreams(bufferType, basePeriod, destroy$) {
-    log/* default.info */.Z.info("SO: Creating new Stream for", bufferType, basePeriod); // Emits the Period of the next Period Stream when it can be created.
+    log/* default.info */.Z.info("SO: Creating new Stream for", bufferType, basePeriod.start); // Emits the Period of the next Period Stream when it can be created.
 
     var createNextPeriodStream$ = new Subject/* Subject */.x(); // Emits when the Streams for the next Periods should be destroyed, if
     // created.
@@ -54276,7 +54297,7 @@ function StreamOrchestrator(content, playbackObserver, abrManager, segmentBuffer
     }), (0,share/* share */.B)()); // Stream for the current Period.
 
     var currentStream$ = (0,concat/* concat */.z)(periodStream$.pipe((0,takeUntil/* takeUntil */.R)(killCurrentStream$)), (0,of.of)(stream_events_generators/* default.periodStreamCleared */.Z.periodStreamCleared(bufferType, basePeriod)).pipe((0,tap/* tap */.b)(function () {
-      log/* default.info */.Z.info("SO: Destroying Stream for", bufferType, basePeriod);
+      log/* default.info */.Z.info("SO: Destroying Stream for", bufferType, basePeriod.start);
     })));
     return (0,merge/* merge */.T)(currentStream$, nextPeriodStream$, destroyAll$.pipe((0,ignoreElements/* ignoreElements */.l)()));
   }
@@ -55615,6 +55636,8 @@ function InitializeOnMediaSource(_ref) {
           evt.value.canAttachMediaKeys.setValue(true); // If the `disableMediaKeysAttachmentLock` option has been set to
           // `true`, we should not wait until the MediaKeys instance has been
           // attached to start loading the content.
+          // TODO we may want to keep keySystems option knowledge in the EME
+          // code
 
           var shouldDisableLock = evt.value.options.disableMediaKeysAttachmentLock === true;
           return shouldDisableLock ? (0,of.of)({
@@ -57066,7 +57089,7 @@ var TrackChoiceManager = /*#__PURE__*/function () {
 
     if (periodItem !== undefined) {
       if (periodItem[bufferType] !== undefined) {
-        log/* default.warn */.Z.warn("TrackChoiceManager: " + bufferType + " already added for period", period);
+        log/* default.warn */.Z.warn("TrackChoiceManager: " + bufferType + " already added for period", period.start);
         return;
       } else {
         periodItem[bufferType] = {
@@ -57097,14 +57120,14 @@ var TrackChoiceManager = /*#__PURE__*/function () {
     var periodIndex = findPeriodIndex(this._periods, period);
 
     if (periodIndex === undefined) {
-      log/* default.warn */.Z.warn("TrackChoiceManager: " + bufferType + " not found for period", period);
+      log/* default.warn */.Z.warn("TrackChoiceManager: " + bufferType + " not found for period", period.start);
       return;
     }
 
     var periodItem = this._periods.get(periodIndex);
 
     if (periodItem[bufferType] === undefined) {
-      log/* default.warn */.Z.warn("TrackChoiceManager: " + bufferType + " already removed for period", period);
+      log/* default.warn */.Z.warn("TrackChoiceManager: " + bufferType + " already removed for period", period.start);
       return;
     }
 
