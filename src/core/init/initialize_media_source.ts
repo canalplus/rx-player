@@ -257,6 +257,8 @@ export default function InitializeOnMediaSource(
               // If the `disableMediaKeysAttachmentLock` option has been set to
               // `true`, we should not wait until the MediaKeys instance has been
               // attached to start loading the content.
+              // TODO we may want to keep keySystems option knowledge in the EME
+              // code
               const shouldDisableLock = evt.value.options
                 .disableMediaKeysAttachmentLock === true;
               return shouldDisableLock ? observableOf({ isEmeReady: true,
