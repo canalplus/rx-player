@@ -44,7 +44,6 @@ export default function getInitialTime(
   lowLatencyMode : boolean,
   startAt? : IInitialTimeOptions
 ) : number {
-  log.debug("Init: calculating initial time");
   if (startAt != null) {
     const min = manifest.getMinimumPosition();
     const max = manifest.getMaximumPosition();
