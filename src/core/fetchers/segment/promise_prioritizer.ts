@@ -41,8 +41,13 @@ export default class PromisePrioritizer<T> {
     const returnedPromise = new PPromise<T>((resolve, reject) => {
       const unregisterCancelSignal = taskCanceller.signal.register(
         (cancellationError: CancellationError) => {
-          this._cleanUpTask(newTask);
-          reject(cancellationError);
+          const pendingTasksIndex = this._findPromiseIndex(
+            newTask.promise,
+            this._pendingTasks
+          );
+          this._pendingTasks.splice(pendingTasksIndex, 1);
+          this._waitingQueue.push(newTask);
+          this._loopThroughWaitingQueue();
         }
       );
 
