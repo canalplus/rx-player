@@ -34,12 +34,14 @@ export default class PromisePrioritizer<T> {
   public create(
     promise: () => Promise<T>,
     priority: number,
+    cancelSignal : CancellationSignal,
     retryOptions?: IRetryOptions
-  ): ITaskPayload<T> {
+  ): Promise<T> {
     let newTask: IPrioritizerTask<T>;
-    const taskCanceller = new TaskCanceller();
-    const returnedPromise = new PPromise<T>((resolve, reject) => {
-      const unregisterCancelSignal = taskCanceller.signal.register(
+
+    return new PPromise<T>((resolve, reject) => {
+      const interrupter = new TaskCanceller();
+      const unregisterInterruptSignal = interrupter.signal.register(
         (cancellationError: CancellationError) => {
           const pendingTasksIndex = this._findPromiseIndex(
             newTask.promise,
@@ -50,11 +52,19 @@ export default class PromisePrioritizer<T> {
           this._loopThroughWaitingQueue();
         }
       );
+      const clean = () => {
+        newTask.finished = true
+        unregisterCancelSignal()
+        unregisterInterruptSignal()
+        this._cleanUpTask(newTask)
+      }
+      const unregisterCancelSignal = cancelSignal.register((cancellationError:CancellationError) => {
+        this._cleanUpTask(newTask);
+        reject(cancellationError)
+      })
 
       const onResponse = (value: T) => {
-        newTask.finished = true
-        unregisterCancelSignal();
-        this._cleanUpTask(newTask);
+        clean()
         resolve(value);
       };
 
@@ -79,20 +89,18 @@ export default class PromisePrioritizer<T> {
           this._waitingQueue.push(newTask);
           this._loopThroughWaitingQueue();
         } else {
-          newTask.finished = true
-          unregisterCancelSignal();
-          this._cleanUpTask(newTask)
+          clean()
           reject(err);
         }
       };
 
       const trigger = () => {
         if (newTask.finished) {
-          unregisterCancelSignal();
-          this._cleanUpTask(newTask);
+          clean()
+          return;
         }
         this._pendingTasks.push(newTask);
-        newTask.promise(taskCanceller.signal).then(onResponse).catch(onError);
+        newTask.promise(interrupter.signal).then(onResponse).catch(onError);
       };
 
       newTask = {
@@ -100,7 +108,7 @@ export default class PromisePrioritizer<T> {
         priority,
         trigger,
         promise,
-        canceller: taskCanceller,
+        interrupt: interrupter.cancel,
         tries: 0,
       };
 
@@ -121,10 +129,6 @@ export default class PromisePrioritizer<T> {
         }
       }
     });
-    return {
-      promise: returnedPromise,
-      cancel: taskCanceller.cancel,
-    };
   }
 
   private _findPromiseIndex(
@@ -290,7 +294,7 @@ export default class PromisePrioritizer<T> {
     // Stop task and put it back in the waiting queue
     this._pendingTasks.splice(pendingTasksIndex, 1);
     this._waitingQueue.push(task);
-    task.canceller.cancel(); // Interrupt at last step because it calls external code
+    task.interrupt() // Interrupt at last step because it calls external code
   }
 
   private _onTaskEnd(task: IPrioritizerTask<T>): void {
@@ -333,18 +337,13 @@ interface IPrioritizerTask<T> {
   priority: number;
   /** `true` if the underlying wrapped promise is either errored or completed. */
   finished: boolean;
-  canceller: TaskCanceller;
+  interrupt: () => void;
   tries: number;
 }
 
 export interface IPrioritizerPrioritySteps {
   low: number;
   high: number;
-}
-
-export interface ITaskPayload<T> {
-  promise: Promise<T>;
-  cancel: () => void;
 }
 
 export interface IRetryOptions {
