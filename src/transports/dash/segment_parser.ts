@@ -62,11 +62,13 @@ export default function generateAudioVideoSegmentParser(
       if (segment.isInit) {
         return { segmentType: "init",
                  initializationData: null,
+                 initializationDataSize: 0,
                  protectionDataUpdate: false,
                  initTimescale: undefined };
       }
       return { segmentType: "media",
                chunkData: null,
+               chunkSize: 0,
                chunkInfos: null,
                chunkOffset: 0,
                protectionDataUpdate: false,
@@ -113,6 +115,7 @@ export default function generateAudioVideoSegmentParser(
             const { needsManifestRefresh, inbandEvents } = events;
             return { segmentType: "media",
                      chunkData,
+                     chunkSize: chunkData.length,
                      chunkInfos,
                      chunkOffset,
                      appendWindow,
@@ -125,6 +128,7 @@ export default function generateAudioVideoSegmentParser(
 
       return { segmentType: "media",
                chunkData,
+               chunkSize: chunkData.length,
                chunkInfos,
                chunkOffset,
                protectionDataUpdate,
@@ -175,6 +179,7 @@ export default function generateAudioVideoSegmentParser(
 
     return { segmentType: "init",
              initializationData: chunkData,
+             initializationDataSize: chunkData.length,
              protectionDataUpdate,
              initTimescale: parsedTimescale };
   };
