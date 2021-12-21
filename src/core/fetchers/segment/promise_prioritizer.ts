@@ -18,13 +18,13 @@ export default class PromisePrioritizer<T> {
 
     if (this._prioritySteps.high >= this._prioritySteps.low) {
       throw new Error(
-        "FP Error: the max high level priority should be given a lower" +
+        "[TS][Error]: the max high level priority should be given a lower" +
           "priority number than the min low priority."
       );
     }
   }
 
-  private get _minPendingPriority(): number | null {
+  private _getMinPendingPriority(): number | null {
     if (this._pendingTasks.length === 0) {
       return null;
     }
@@ -34,55 +34,76 @@ export default class PromisePrioritizer<T> {
   public create(
     promise: () => Promise<T>,
     priority: number,
-  ): Promise<T> {
+    retryOptions?: IRetryOptions
+  ): ITaskPayload<T> {
     let newTask: IPrioritizerTask<T>;
-    return new PPromise<T>((resolve, reject) => {
-      const taskCanceller = new TaskCanceller()
+    const taskCanceller = new TaskCanceller();
+    const returnedPromise = new PPromise<T>((resolve, reject) => {
       const unregisterCancelSignal = taskCanceller.signal.register(
         (cancellationError: CancellationError) => {
-          // cancel task if running, remove from all queues etc.
-          newTask.trigger(false)
           this._cleanUpTask(newTask);
           reject(cancellationError);
         }
       );
 
       const onResponse = (value: T) => {
+        newTask.finished = true
         unregisterCancelSignal();
+        this._cleanUpTask(newTask);
         resolve(value);
       };
 
       const onError = (err: unknown) => {
-        unregisterCancelSignal();
-        reject(err);
+        if (
+          retryOptions &&
+          retryOptions.retryCount !== 0 &&
+          newTask.tries < retryOptions.retryCount
+        ) {
+          newTask.tries = newTask.tries + 1
+          const pendingTasksIndex = this._findPromiseIndex(
+            newTask.promise,
+            this._pendingTasks
+          );
+          this._pendingTasks.splice(pendingTasksIndex, 1);
+          if (retryOptions.shouldChangePriority) {
+            newTask.priority = Math.max(
+              this._prioritySteps.low,
+              newTask.priority + 1
+            );
+          }
+          this._waitingQueue.push(newTask);
+          this._loopThroughWaitingQueue();
+        } else {
+          newTask.finished = true
+          unregisterCancelSignal();
+          this._cleanUpTask(newTask)
+          reject(err);
+        }
       };
-      
 
-      const trigger = (shouldRun: boolean) => {
-        if (!shouldRun) {
-          return
-        };
+      const trigger = () => {
+        if (newTask.finished) {
+          unregisterCancelSignal();
+          this._cleanUpTask(newTask);
+        }
         this._pendingTasks.push(newTask);
-        newTask
-          .promise(taskCanceller.signal)
-          .then(onResponse)
-          .catch(onError)
-          .finally(() => {
-            this._cleanUpTask(newTask);
-          });
+        newTask.promise(taskCanceller.signal).then(onResponse).catch(onError);
       };
+
       newTask = {
         finished: false,
         priority,
         trigger,
         promise,
         canceller: taskCanceller,
+        tries: 0,
       };
 
       if (!this._canBeStartedNow(newTask)) {
         this._waitingQueue.push(newTask);
       } else {
-        newTask.trigger(true);
+        // We can start the task right away
+        newTask.trigger();
         if (this._isRunningHighPriorityTasks()) {
           // Note: we want to begin interrupting low-priority tasks just
           // after starting the current one because the interrupting
@@ -90,16 +111,19 @@ export default class PromisePrioritizer<T> {
           // This would mean re-entrancy, itself meaning that some weird
           // half-state could be reached unless we're very careful.
           // To be sure no harm is done, we put that code at the last
-          // possible position (the previous Observable sould be
-          // performing all its initialization synchronously).
+          // possible position.
           this._interruptCancellableTasks();
         }
       }
     });
+    return {
+      promise: returnedPromise,
+      cancel: taskCanceller.cancel,
+    };
   }
 
   private _findPromiseIndex(
-    promise: (c: CancellationSignal) => Promise<T>,
+    promise: ITaskPromise<T>,
     queue: IPrioritizerTask<T>[]
   ): number {
     return arrayFindIndex(queue, (elt) => elt.promise === promise);
@@ -123,13 +147,13 @@ export default class PromisePrioritizer<T> {
         this._pendingTasks
       );
       if (pendingTasksIndex < 0) {
-        log.warn("cancelling non-existent task");
+        log.warn("[TS][WARN] Cancelling non-existent task");
         return;
       }
       this._loopThroughWaitingQueue();
     }
   }
-  public updatePriority(promise: () => Promise<T>, priority: number): void {
+  public updatePriority(promise: ITaskPromise<T>, priority: number): void {
     const waitingQueueIndex = this._findPromiseIndex(
       promise,
       this._waitingQueue
@@ -158,14 +182,11 @@ export default class PromisePrioritizer<T> {
         // Because both `_startWaitingQueueTask` and
         // `_interruptCancellableTasks` can emit events and thus call external
         // code, we could retrieve ourselves in a very weird state at this point
-        // (for example, the different Observable priorities could all be
-        // shuffled up, new Observables could have been started in the
-        // meantime, etc.).
         //
         // By starting the task first, we ensure that this is manageable:
-        // `_minPendingPriority` has already been updated to the right value at
+        // `_getMinPendingPriority()` has already been updated to the right value at
         // the time we reached external code, the priority of the current
-        // Observable has just been updated, and `_interruptCancellableTasks`
+        // Task has just been updated, and `_interruptCancellableTasks`
         // will ensure that we're basing ourselves on the last `priority` value
         // each time.
         // Doing it in the reverse order is an order of magnitude more difficult
@@ -179,7 +200,9 @@ export default class PromisePrioritizer<T> {
       this._pendingTasks
     );
     if (pendingTasksIndex < 0) {
-      log.warn("FP: request to update the priority of a non-existent task");
+      log.warn(
+        "[TS][WARN] request to update the priority of a non-existent task"
+      );
       return;
     }
 
@@ -190,7 +213,7 @@ export default class PromisePrioritizer<T> {
 
     const prevPriority = task.priority;
     task.priority = priority;
-    if (this._minPendingPriority === prevPriority) {
+    if (this._getMinPendingPriority() === prevPriority) {
       this._loopThroughWaitingQueue();
     } else {
       // We updated a task which already had a priority value higher than the
@@ -212,17 +235,17 @@ export default class PromisePrioritizer<T> {
   }
   private _loopThroughWaitingQueue(): void {
     const minWaitingPriority = this._getMinPriority(this._waitingQueue);
+    const minPendingPriority = this._getMinPendingPriority();
     if (
       minWaitingPriority === null ||
-      (this._minPendingPriority !== null &&
-        this._minPendingPriority < minWaitingPriority)
+      (minPendingPriority !== null && minPendingPriority < minWaitingPriority)
     ) {
       return;
     }
     const priorityToCheck =
-      this._minPendingPriority === null
+      minPendingPriority === null
         ? minWaitingPriority
-        : Math.min(this._minPendingPriority, minWaitingPriority);
+        : Math.min(minPendingPriority, minWaitingPriority);
     for (let i = 0; i < this._waitingQueue.length; i++) {
       const elt = this._waitingQueue[i];
       if (elt.priority <= priorityToCheck) {
@@ -244,7 +267,7 @@ export default class PromisePrioritizer<T> {
 
   private _startWaitingQueueTask(index: number): void {
     const task = this._waitingQueue.splice(index, 1)[0];
-    task.trigger(true);
+    task.trigger();
   }
 
   private _interruptPendingTask(task: IPrioritizerTask<T>): void {
@@ -253,15 +276,16 @@ export default class PromisePrioritizer<T> {
       this._pendingTasks
     );
     if (pendingTasksIndex < 0) {
-      log.warn("FP: Interrupting a non-existent pending task. Aborting...");
+      log.warn(
+        "[TS][WARN] Interrupting a non-existent pending task. Aborting..."
+      );
       return;
     }
 
     // Stop task and put it back in the waiting queue
     this._pendingTasks.splice(pendingTasksIndex, 1);
     this._waitingQueue.push(task);
-    task.canceller.cancel()
-    task.trigger(false); // Interrupt at last step because it calls external code
+    task.canceller.cancel(); // Interrupt at last step because it calls external code
   }
 
   private _onTaskEnd(task: IPrioritizerTask<T>): void {
@@ -276,40 +300,53 @@ export default class PromisePrioritizer<T> {
     this._pendingTasks.splice(pendingTasksIndex, 1);
 
     if (this._pendingTasks.length > 0) {
-      return; // still waiting for Observables to finish
+      return;
     }
 
     this._loopThroughWaitingQueue();
   }
 
   private _canBeStartedNow(task: IPrioritizerTask<T>): boolean {
-    return (
-      this._minPendingPriority === null ||
-      task.priority <= this._minPendingPriority
-    );
+    const minPendingPriority = this._getMinPendingPriority();
+    return minPendingPriority === null || task.priority <= minPendingPriority;
   }
 
   private _isRunningHighPriorityTasks(): boolean {
+    const minPendingPriority = this._getMinPendingPriority();
     return (
-      this._minPendingPriority !== null &&
-      this._minPendingPriority <= this._prioritySteps.high
+      minPendingPriority !== null &&
+      minPendingPriority <= this._prioritySteps.high
     );
   }
 }
 
+type ITaskPromise<T> = (cancellationSignal: CancellationSignal) => Promise<T>
 interface IPrioritizerTask<T> {
-  promise: (cancellationSignal: CancellationSignal) => Promise<T>;
-  trigger: (shouldRun: boolean) => void;
+  promise: ITaskPromise<T>;
+  trigger: () => void;
   /** Priority of the task. Lower that number is, higher is the priority. */
   priority: number;
-  /** `true` if the underlying wrapped Observable either errored of completed. */
+  /** `true` if the underlying wrapped promise is either errored or completed. */
   finished: boolean;
-  canceller: TaskCanceller
+  canceller: TaskCanceller;
+  tries: number;
 }
 
 export interface IPrioritizerPrioritySteps {
   low: number;
   high: number;
+}
+
+export interface ITaskPayload<T> {
+  promise: Promise<T>;
+  cancel: () => void;
+}
+
+export interface IRetryOptions {
+  /** Should we lower the priority of the task when retrying */
+  shouldChangePriority: boolean;
+  /** How many times should we restart the task , -1 : till we succeed, 0 : no retry*/
+  retryCount: number;
 }
 
 export interface IPrioritizerOptions {
