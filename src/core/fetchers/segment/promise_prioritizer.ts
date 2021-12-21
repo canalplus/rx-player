@@ -43,11 +43,13 @@ export default class PromisePrioritizer<T> {
 
       const clean = () => {
         unregisterCancelSignal();
-        this._cleanUpTask(newTask);
+        this._cleanUpTask(newTask d);
+        this._loopThroughWaitingQueue();
       };
       const unregisterCancelSignal = cancelSignal.register(
         (cancellationError: CancellationError) => {
           this._cleanUpTask(newTask);
+          this._loopThroughWaitingQueue();
           reject(cancellationError);
         }
       );
@@ -116,11 +118,12 @@ export default class PromisePrioritizer<T> {
         task.promise,
         this._pendingTasks
       );
+      
       if (pendingTasksIndex < 0) {
         log.warn("TS: Cancelling non-existent task");
         return;
       }
-      this._loopThroughWaitingQueue();
+      this._pendingTasks.splice(pendingTasksIndex, 1)
     }
   }
   public updatePriority(promise: ITaskPromise<T>, priority: number): void {
