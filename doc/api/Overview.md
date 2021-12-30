@@ -1,25 +1,14 @@
 # RxPlayer API
 
-Welcome to the RxPlayer API documentation.
+The API documentation is a thorough guide through every feature exposed
+by the RxPlayer, in a logical order.
 
-The RxPlayer is a media player library allowing to play adaptive streaming
-contents such as DASH, Smooth Streaming and others.
-In the following pages, you will find the description of the full RxPlayer API,
-allowing you to:
+If you are already familiar with the API, you might prefer the concisenes of
+[the API reference](../reference/API_Reference.md) instead.
 
-  - load and stop contents containing video and/or audio media data
-
-  - control playback (play, pause, seek, etc.) when a content is loaded.
-
-  - get multiple information on the current content and on the player’s state.
-
-  - choose a specific audio language, subtitles track video track
-
-  - force a given video or audio bitrate
-
-  - update the wanted buffer length to reach
-
-  - and more
+Conversely, If you are very new to the RxPlayer and don't want to dive deep in
+the API for the moment, you might want to check [the Getting Started
+pages](../Getting_Started/Welcome.md) instead.
 
 <div class="warning">
 Only variables and methods defined here are considered as part of the API. Any

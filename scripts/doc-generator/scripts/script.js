@@ -420,20 +420,32 @@ const hamburgerOpenerElt = document.getElementsByClassName("hamburger-opener")[0
 const hamburgerBarElt = document.getElementsByClassName("hamburger-bar")[0];
 const hamburgerCloserElt = document.getElementsByClassName("hamburger-bar-closer")[0];
 
-hamburgerOpenerElt.onclick = function() {
+hamburgerOpenerElt.onclick = openMenu;
+hamburgerCloserElt.onclick = closeMenu;
+
+let isOverlayVisible = false;
+overlay.onclick = function() {
+  if (isOverlayVisible) {
+    closeMenu();
+  }
+}
+
+function openMenu() {
   clearTimeout(opacityTimeout);
   document.body.style.overflowY = "hidden";
   document.body.appendChild(overlay);
   opacityTimeout = setTimeout(() => {
     overlay.style.opacity = "1";
+    isOverlayVisible = true;
   });
   hamburgerBarElt.classList.add("opened");
-};
+}
 
-hamburgerCloserElt.onclick = function() {
+function closeMenu() {
   clearTimeout(opacityTimeout);
   document.body.style.overflowY = "auto";
   overlay.style.opacity = "0";
+  isOverlayVisible = false;
   document.body.removeChild(overlay);
   hamburgerBarElt.classList.remove("opened");
-};
+}

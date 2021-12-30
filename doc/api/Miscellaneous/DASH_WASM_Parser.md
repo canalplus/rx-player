@@ -32,7 +32,7 @@ periods.
 If you encouter large MPDs and/or you noticed poor performance when playing DASH
 contents, you may have a better experience with this parser.
 
-Note however that your browser has to be compatible to WebAssembly.
+Note however that your browser has to be compatible with WebAssembly.
 In case WebAssembly is not supported on the current platform and both the
 WebAssembly and default JavaScript DASH parsers are imported through their
 respective features, the RxPlayer will automatically fallback on the latter.
@@ -58,7 +58,7 @@ future, in case they necessitate some incompatible API change.
 To use the WebAssembly-based parser you will need to do two things:
 
 - the WebAssembly file will have to be stored somewhere, accessible through an
-  URL that can be then shared to the RxPlayer.
+  URL that can be then communicated to the RxPlayer.
 
 - the `DASH_WASM` experimental feature has to be initialized with it and
   added to the RxPlayer
