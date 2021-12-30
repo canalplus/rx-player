@@ -566,7 +566,7 @@ properties, methods, events and so on.
   - [`MEDIA_ERROR`](../api/Player_Errors.md#media_error):
     A media-related error.
 
-  - [`ENCRYPTED_MEDIA_ERROR`](../api/Player_Errors.md#encryped_media_error):
+  - [`ENCRYPTED_MEDIA_ERROR`](../api/Player_Errors.md#encrypted_media_error):
     An error related to media decryption.
 
   - [`OTHER_ERROR`](../api/Player_Errors.md#other_error):

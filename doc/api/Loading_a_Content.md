@@ -43,8 +43,9 @@ Can be either:
    - the `DASH_WASM` experimental feature (backed by a WebAssembly parser, more
      efficient when handling very large MPDs).
      More information in the [`DASH_WASM` experimental feature
-     documentation](./Miscellaneous/DASH_WASM_Parser.md). - or both (which will
-     use the latter only when available)
+     documentation](./Miscellaneous/DASH_WASM_Parser.md).
+
+   - or both (which will use the latter only when available)
 
 - **`"smooth"` - for Microsoft Smooth Streaming contents**
 
@@ -79,7 +80,7 @@ Can be either:
   for example).
 
   If you're using the [minimal build of the player](../Getting_Started/Minimal_Player.md), you
-  will need to add at least the `METAPLAYLIST` experimental feature to be able
+  will need to add at least the `LOCAL_MANIFEST` experimental feature to be able
   to play those contents.
 
 Example:
