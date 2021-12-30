@@ -86,8 +86,12 @@ if (versions.length <= 0) {
   const sortedVersions = sortVersions(versions);
   for (let i = 0; i < sortedVersions.length; i++) {
     const version = sortedVersions[i];
-    // const versionAsNumber = +version.split(".").join();
-    const dirPath = path.join(INITIAL_PATH, version, "doc/pages/index.html");
+
+    // documentation homepage changed for the v3.26.1
+    const dirPath = semver.gte(version, "3.26.1") ?
+      path.join(INITIAL_PATH, version, "doc/api/Overview.html") :
+      path.join(INITIAL_PATH, version, "doc/pages/index.html");
+
     body += `<li><a href=${sanitizeHTML(dirPath)}>` +
       sanitizeHTML(version) +
       "</a></li>";
