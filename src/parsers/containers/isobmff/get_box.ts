@@ -15,6 +15,7 @@
  */
 
 import log from "../../../log";
+import assert from "../../../utils/assert";
 import {
   be4toi,
   be8toi,
@@ -23,8 +24,8 @@ import {
 /**
  * Returns the content of a box based on its name.
  * `null` if not found.
- * @param {Uint8Array} buf - the isobmff structure
- * @param {Number} boxName - the 4-letter 'name' of the box as a 4 bit integer
+ * @param {Uint8Array} buf - the isobmff data
+ * @param {Number} boxName - the 4-letter 'name' of the box as a 4 byte integer
  * generated from encoding the corresponding ASCII in big endian.
  * @returns {UInt8Array|null}
  */
@@ -35,10 +36,35 @@ function getBoxContent(buf : Uint8Array, boxName : number) : Uint8Array|null {
 }
 
 /**
+ * Reads the whole ISOBMFF and returns the content of all boxes with the given
+ * name, in order.
+ * @param {Uint8Array} buf - the isobmff data
+ * @param {Number} boxName - the 4-letter 'name' of the box as a 4 byte integer
+ * generated from encoding the corresponding ASCII in big endian.
+ * @returns {Array.<Uint8Array>}
+ */
+function getBoxesContent(buf : Uint8Array, boxName : number) : Uint8Array[] {
+  const ret = [];
+  let currentBuf = buf;
+  while (true) {
+    const offsets = getBoxOffsets(currentBuf, boxName);
+    if (offsets === null) {
+      return ret;
+    }
+
+    // Guard against a (very highly improbable) infinite loop
+    assert(offsets[2] !== 0 && currentBuf.length !== 0);
+
+    ret.push(currentBuf.subarray(offsets[1], offsets[2]));
+    currentBuf = currentBuf.subarray(offsets[2]);
+  }
+}
+
+/**
  * Returns an ISOBMFF box - size and name included - based on its name.
  * `null` if not found.
- * @param {Uint8Array} buf - the isobmff structure
- * @param {Number} boxName - the 4-letter 'name' of the box as a 4 bit integer
+ * @param {Uint8Array} buf - the isobmff data
+ * @param {Number} boxName - the 4-letter 'name' of the box as a 4 byte integer
  * generated from encoding the corresponding ASCII in big endian.
  * @returns {UInt8Array|null}
  */
@@ -60,8 +86,8 @@ function getBox(buf : Uint8Array, boxName : number) : Uint8Array|null {
  *      size and the name of the box.
  *   3. The first byte after the end of the box, might be equal to `buf`'s
  *      length if we're considering the last box.
- * @param {Uint8Array} buf - the isobmff structure
- * @param {Number} boxName - the 4-letter 'name' of the box as a 4 bit integer
+ * @param {Uint8Array} buf - the isobmff data
+ * @param {Number} boxName - the 4-letter 'name' of the box as a 4 byte integer
  * generated from encoding the corresponding ASCII in big endian.
  * @returns {Array.<number>|null}
  */
@@ -176,8 +202,8 @@ function getUuidContent(
  *      length if we're considering the last box.
  *
  * `null` if no box is found.
- * @param {Uint8Array} buf - the isobmff structure
- * @param {Number} boxName - the 4-letter 'name' of the box as a 4 bit integer
+ * @param {Uint8Array} buf - the isobmff data
+ * @param {Number} boxName - the 4-letter 'name' of the box as a 4 byte integer
  * generated from encoding the corresponding ASCII in big endian.
  */
 function getNextBoxOffsets(buf : Uint8Array
@@ -221,6 +247,7 @@ function getNextBoxOffsets(buf : Uint8Array
 export {
   getBox,
   getBoxContent,
+  getBoxesContent,
   getBoxOffsets,
   getNextBoxOffsets,
   getUuidContent,
