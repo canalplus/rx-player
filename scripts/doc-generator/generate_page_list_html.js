@@ -72,7 +72,7 @@ function generatePageListHtml(
       case "github-link":
         const cleanedHref = encodeHtmlAttributeValue(l.link);
         return `<li class="page-list-item">` +
-          `<a href="${cleanedHref}">` +
+          `<a aria-label="Link to repository" href="${cleanedHref}">` +
             getGithubSvg() +
             "</a></li>";
 

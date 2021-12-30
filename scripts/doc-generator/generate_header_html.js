@@ -57,7 +57,7 @@ function generateHeaderHtml(config, currentLinkIdx, currentPath, logoInfo) {
 }
 
 function constructHamburgerMenuHtmlInHeaderBar() {
-  return `<button class="hamburger-opener">` +
+  return `<button aria-label="Open website index" class="hamburger-opener">` +
     `<svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">` +
     `<path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" ` +
     `stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg>` +
@@ -102,7 +102,7 @@ function constructVersionLinkHtmlInHeaderBar(versionInfo, customClass) {
  */
 function constructGithubLinkHtmlInHeaderBar(githubLnk, customClass) {
   const cleanedHref = encodeHtmlAttributeValue(githubLnk);
-  return `<a class="navbar-item${customClass} hideable" href="${cleanedHref}">` +
+  return `<a aria-label="Link to repository" class="navbar-item${customClass} hideable" href="${cleanedHref}">` +
     getGithubSvg() +
     "</a>";
 }
@@ -136,7 +136,7 @@ function constructLogoHtmlInHeaderBar(logoInfo) {
     logoHtml += `<a href="${encodeHtmlAttributeValue(logoInfo.link)}">`;
   }
   if (typeof logoInfo.url === "string") {
-    logoHtml += `<img class="navbar-item navbar-item-logo"` +
+    logoHtml += `<img alt="Logo" class="navbar-item navbar-item-logo"` +
       ` src="${encodeHtmlAttributeValue(logoInfo.url)}" />`;
   }
   if (hasLink) {

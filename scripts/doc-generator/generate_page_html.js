@@ -46,7 +46,7 @@ function generatePageHtml(
     "";
   const hamburgerHtml = constructHamburgerBarHtml(pageListHtml);
 
-  return "<head>" +
+  return "<!DOCTYPE html><html lang=\"en\"><head>" +
            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" +
            "<meta charset=\"utf-8\">" +
            styles +
@@ -75,14 +75,14 @@ function generatePageHtml(
            "</div>" +
            hamburgerHtml +
            scripts +
-         "</body>";
+           "</body></html>";
 };
 
 function constructHamburgerBarHtml(pageListHtml) {
   return `<div class="hamburger-bar">` +
     `<div class="hamburger-header">` +
     `<span class="hamburger-title">Page List</span>` +
-    `<button type="button" class="hamburger-bar-closer">` +
+    `<button aria-label="Close website index" type="button" class="hamburger-bar-closer">` +
     `<svg viewBox="0 0 15 15" width="21" height="21">` +
     `<g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g>` +
     `</svg></button>` +

@@ -19,5 +19,5 @@ part of the API and can thus change without notice.
 <div class="note">
 As some terms used here might be too foreign or slightly different than the one
 you’re used to, we also wrote a list of terms and definitions used by the
-RxPlayer <a href="../Getting_Started/Glossary.md">here</a>.
+RxPlayer <a href="../Getting_Started/Glossary.md">in a "Glossary" page</a>.
 </div>
