@@ -3,7 +3,7 @@
 The API documentation is a thorough guide through every feature exposed
 by the RxPlayer, in a logical order.
 
-If you are already familiar with the API, you might prefer the concisenes of
+If you are already familiar with the API, you might prefer the conciseness of
 [the API reference](../reference/API_Reference.md) instead.
 
 Conversely, If you are very new to the RxPlayer and don't want to dive deep in
