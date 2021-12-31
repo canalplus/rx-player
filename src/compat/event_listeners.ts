@@ -186,19 +186,12 @@ function visibilityChange() : Observable<boolean> {
 }
 
 /**
- * @returns {Observable}
- */
-function videoSizeChange() : Observable<unknown> {
-  return observableFromEvent(window, "resize");
-}
-
-/**
  * Emit `true` if the page is considered active.
  * `false` when considered inactive.
  * Emit the original value on subscription.
  * @returns {Observable}
  */
-function isActive() : Observable<boolean> {
+function isPageActive() : Observable<boolean> {
   return visibilityChange().pipe(
     switchMap((x) => {
       if (!x) {
@@ -298,6 +291,7 @@ function isVideoVisible(
  * Get video width from HTML video element, or video estimated dimensions
  * when Picture-in-Picture is activated.
  * @param {HTMLMediaElement} mediaElement
+ * @param {Observable} pip$
  * @returns {Observable}
  */
 function videoWidth$(
@@ -307,7 +301,7 @@ function videoWidth$(
   return observableCombineLatest([
     pip$,
     observableInterval(20000).pipe(startWith(null)),
-    videoSizeChange().pipe(throttleTime(500), startWith(null)),
+    observableFromEvent(window, "resize").pipe(throttleTime(500), startWith(null)),
   ]).pipe(
     switchMap(([ pip ]) : Observable<number> => {
       if (!pip.isEnabled) {
@@ -448,7 +442,7 @@ const onKeyError$ = compatibleListener(["keyerror", "error"]);
 const onKeyStatusesChange$ = compatibleListener(["keystatuseschange"]);
 
 export {
-  isActive,
+  isPageActive,
   isVideoVisible,
   videoWidth$,
   onPlayPause$,

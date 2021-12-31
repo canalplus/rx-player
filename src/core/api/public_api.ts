@@ -142,7 +142,7 @@ import TrackChoiceManager, {
 
 const { DEFAULT_UNMUTED_VOLUME } = config;
 
-const { isActive,
+const { isPageActive,
         isVideoVisible,
         onEnded$,
         onFullscreenChange$,
@@ -825,7 +825,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                    "browser can't be trusted for visibility.");
         } else {
           throttlers.throttle = {
-            video: isActive().pipe(
+            video: isPageActive().pipe(
               map(active => active ? Infinity :
                                        0),
               takeUntil(stopContent$)),
