@@ -152,9 +152,11 @@ export interface IRepresentationEstimatorPlaybackObservation {
 /** Content of the `IABRMetricsEvent` event's payload. */
 export interface IABRMetricsEventValue {
   /** Time the request took to perform the request, in milliseconds. */
-  duration: number;
+  requestDuration: number;
   /** Amount of bytes downloaded with this request. */
   size: number;
+  /** Duration of the loaded segment, in seconds. */
+  segmentDuration: number | undefined;
   /** Context about the segment downloaded. */
   content: { representation: Representation;
              adaptation: Adaptation;
@@ -415,18 +417,20 @@ export default function RepresentationEstimator({
    * @param {Object} value
    */
   function onMetric(value : IABRMetricsEventValue) : void {
-    const { duration, size, content } = value;
+    const { requestDuration, segmentDuration, size, content } = value;
 
     // calculate bandwidth
-    bandwidthEstimator.addSample(duration, size);
+    bandwidthEstimator.addSample(requestDuration, size);
 
-    const { segment } = content;
-    if (segment.complete && !segment.isInit) {
+    if (!content.segment.isInit) {
       // calculate "maintainability score"
-      const requestDuration = duration / 1000;
-      const segmentDuration = segment.duration;
-      const { representation } = content;
-      scoreCalculator.addSample(representation, requestDuration, segmentDuration);
+      const { segment, representation } = content;
+      if (segmentDuration === undefined && !segment.complete) {
+        // We cannot know the real duration of the segment
+        return;
+      }
+      const segDur = segmentDuration ?? segment.duration;
+      scoreCalculator.addSample(representation, requestDuration / 1000, segDur);
     }
   }
 
