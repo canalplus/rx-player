@@ -11,12 +11,13 @@
 
 ### Other improvements
 
-  - DASH-LL: Improve adaptive bitrate logic on low-latency contents by implementing a specific algorithm for those [#1025]
+  - DASH-LL: Improve adaptive bitrate logic on low-latency contents by implementing a specific algorithm for those [#1025, #1036]
   - DASH-LL: Improve handling of $Time$-based DASH-LL contents [#1020]
   - DASH: Support UTCTiming element with the `urn:mpeg:dash:utc:http-xsdate:2014` scheme [#1021]
   - DOC: Important refactoring of the RxPlayer API documentation to improve readability, discoverability and to add search capability to it [#1016]
   - DASH: handle ContentProtection elements that have been defined at the Representation-level (and not at the AdaptationSet-level, as defined by the DASH-IF IOP) [#1027]
   - DASH: Be resilient when the resource behind an UTCTiming element leads to an error (usually due to an HTTP-related issue) - instead of failing with an error like now [#1026]
+  - Better estimate the duration of ISOBMFF segments with multiple moof boxes [#1037]
   - EME: Add hex-encoded key id to the `KEY_STATUS_CHANGE_ERROR` error message so we can know which key we're talking about when debugging [#1033]
   - dev/scripts: for the "modular" (a.k.a. minimal) RxPlayer build now rely on TypeScript's const enums, instead of uglily using sed, to replace compile-time constants. [#1014]
   - dev/scripts: remove reliance on environment variables when running the RxPlayer build scripts [#1004]
