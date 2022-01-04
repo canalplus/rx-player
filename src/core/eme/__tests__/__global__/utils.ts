@@ -21,12 +21,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable no-restricted-properties */
 
-import {
-  Observable,
-  Subject,
-} from "rxjs";
+import { Subject } from "rxjs";
 import { IEncryptedEventData } from "../../../../compat/eme";
 import {
   base64ToBytes,
@@ -182,7 +182,7 @@ export class MediaKeySessionImpl extends EventEmitter<Record<string, unknown>> {
       if (this.onmessage !== null && this.onmessage !== undefined) {
         this.onmessage(event);
       }
-    }, 10);
+    }, 5);
     return Promise.resolve();
   }
 
@@ -305,9 +305,7 @@ export function mockCompat(exportedFunctions = {}) {
 }
 
 /**
- * Check that the EMEManager, when called with those arguments, throws
- * directly without any event emitted.
- *
+ * Check that the ContentDecryptor, when called with those arguments, throws.
  * If that's the case, resolve with the corresponding error.
  * Else, reject.
  * @param {HTMLMediaElement} mediaElement
@@ -315,77 +313,20 @@ export function mockCompat(exportedFunctions = {}) {
  * @param {Observable} contentProtections$
  * @returns {Promise}
  */
-export function testEMEManagerImmediateError(
-  /* eslint-disable @typescript-eslint/naming-convention */
-  /* eslint-disable @typescript-eslint/no-explicit-any */
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  EMEManager : any,
-  /* eslint-enable @typescript-eslint/no-explicit-any */
-  /* eslint-enable @typescript-eslint/naming-convention */
+export function testContentDecryptorError(
+  ContentDecryptor : any,
   mediaElement : HTMLMediaElement,
-  keySystemsConfigs : unknown[],
-  contentProtections$ : Observable<unknown>
+  keySystemsConfigs : unknown[]
 ) : Promise<unknown> {
   return new Promise((res, rej) => {
-    EMEManager(mediaElement, keySystemsConfigs, contentProtections$)
-      .subscribe(
-        (evt : unknown) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const eventStr = JSON.stringify(evt as any);
-          rej(new Error("Received an EMEManager event: " + eventStr));
-        },
-        (err : unknown) => { res(err); },
-        () => rej(new Error("EMEManager completed."))
-      );
+    const contentDecryptor = new ContentDecryptor(mediaElement, keySystemsConfigs);
+    contentDecryptor.addEventListener("error", (error: any) => {
+      res(error);
+    });
+    setTimeout(() => {
+      rej(new Error("Timeout exceeded"));
+    }, 10);
   });
-}
-
-/**
- * Check that the event received corresponds to the session-message event for a
- * license request.
- * @param {Object} evt
- * @param {Object} initDataVal
- */
-export function expectLicenseRequestMessage(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  evt : { type : string; value : any },
-  initDataVal : { type : string | undefined;
-                  values : Array<{ systemId : string | unknown;
-                                   data : Uint8Array; }>; }
-) : void {
-  expect(evt.type).toEqual("session-message");
-  expect(evt.value.messageType).toEqual("license-request");
-  expect(evt.value.initializationData).toEqual(initDataVal);
-}
-
-/**
- * @param {Object} evt
- * @param {Uint8Array} initData
- * @param {string|undefined} initDataType
- */
-export function expectInitDataIgnored(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  evt : { type : string; value : any },
-  initDataVal : { type : string | undefined;
-                  values : Array<{ systemId : string | undefined;
-                                   data : Uint8Array; }>; }
-) : void {
-  expect(evt.type).toEqual("init-data-ignored");
-  expect(evt.value.initializationData).toEqual(initDataVal);
-}
-
-/**
- * @param {Object} evt
- * @param {Uint8Array} initData
- * @param {string|undefined} initDataType
- */
-export function expectEncryptedEventReceived(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  evt : { type : string; value : any },
-  initData : IEncryptedEventData
-) : void {
-  expect(evt.type).toEqual("encrypted-event-received");
-  expect(evt.value).toEqual(initData);
 }
 
 /**

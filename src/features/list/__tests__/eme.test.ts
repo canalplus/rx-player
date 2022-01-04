@@ -17,7 +17,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 
-import emeManager from "../../../core/eme";
+import ContentDecryptor from "../../../core/eme";
 import addEMEFeature from "../eme";
 
 jest.mock("../../../core/eme", () => ({
@@ -30,7 +30,7 @@ describe("Features list - EME", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = {};
     addEMEFeature(featureObject);
-    expect(featureObject).toEqual({ emeManager });
-    expect(featureObject.emeManager).toBe(emeManager);
+    expect(featureObject).toEqual({ ContentDecryptor });
+    expect(featureObject.ContentDecryptor).toBe(ContentDecryptor);
   });
 });

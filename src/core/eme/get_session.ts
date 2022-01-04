@@ -56,10 +56,10 @@ export interface ILoadedPersistentSessionEvent {
   value : IMediaKeySessionContext;
 }
 
-/** Every possible events sent by `getSession`. */
-export type IGetSessionEvent = ICreatedSession |
-                               ILoadedOpenSession |
-                               ILoadedPersistentSessionEvent;
+/** Every possible result returned by `getSession`. */
+export type IGetSessionResult = ICreatedSession |
+                                ILoadedOpenSession |
+                                ILoadedPersistentSessionEvent;
 
 /**
  * Handle MediaEncryptedEvents sent by a HTMLMediaElement:
@@ -86,7 +86,7 @@ export default async function getSession(
   maxSessionCacheSize : number,
   onCleaningSession : (arg : ICleaningOldSessionDataPayload) => void,
   cancelSignal : CancellationSignal
-) : Promise<IGetSessionEvent> {
+) : Promise<IGetSessionResult> {
   /**
    * Store previously-loaded MediaKeySession with the same initialization data, if one.
    */

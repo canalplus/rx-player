@@ -23,13 +23,8 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable no-restricted-properties */
 
-import {
-  Subject,
-  takeUntil,
-} from "rxjs";
 import { ICustomError } from "../../../../errors";
 import { concat } from "../../../../utils/byte_parsing";
-import { IContentProtection } from "../../types";
 import {
   formatFakeChallengeFromInitData,
   MediaKeySessionImpl,
@@ -48,193 +43,193 @@ describe("core - eme - global tests - getLicense", () => {
     jest.restoreAllMocks();
   });
 
-  it("should update the session after getLicense resolves with a license", (done) => {
-    checkGetLicense({ isGetLicensePromiseBased: true,
-                      configuredRetries: undefined,
-                      configuredTimeout: undefined,
-                      getTimeout: () => undefined,
-                      nbRetries: 0,
-                      ignoreLicenseRequests: false }, done);
+  it("should update the session after getLicense resolves with a license", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: true,
+                            configuredRetries: undefined,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 0,
+                            ignoreLicenseRequests: false });
   });
 
-  it("should update the session after getLicense returns a license directly", (done) => {
-    checkGetLicense({ isGetLicensePromiseBased: false,
-                      configuredRetries: undefined,
-                      configuredTimeout: undefined,
-                      getTimeout: () => undefined,
-                      nbRetries: 0,
-                      ignoreLicenseRequests: false }, done);
+  it("should update the session after getLicense returns a license directly", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: false,
+                            configuredRetries: undefined,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 0,
+                            ignoreLicenseRequests: false });
   });
 
-  it("should not update the session after getLicense resolves with null", (done) => {
-    checkGetLicense({ isGetLicensePromiseBased: true,
-                      configuredRetries: undefined,
-                      configuredTimeout: undefined,
-                      getTimeout: () => undefined,
-                      nbRetries: 0,
-                      ignoreLicenseRequests: true }, done);
+  it("should not update the session after getLicense resolves with null", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: true,
+                            configuredRetries: undefined,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 0,
+                            ignoreLicenseRequests: true });
   });
 
-  it("should not update the session after getLicense returns null directly", (done) => {
-    checkGetLicense({ isGetLicensePromiseBased: false,
-                      configuredRetries: undefined,
-                      configuredTimeout: undefined,
-                      getTimeout: () => undefined,
-                      nbRetries: 0,
-                      ignoreLicenseRequests: true }, done);
+  it("should not update the session after getLicense returns null directly", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: false,
+                            configuredRetries: undefined,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 0,
+                            ignoreLicenseRequests: true });
   });
 
-  it("should be able to retry maximum two times and fail after 3 tries with a rejected promise", (done) => {
-    checkGetLicense({ isGetLicensePromiseBased: true,
-                      configuredRetries: undefined,
-                      configuredTimeout: undefined,
-                      getTimeout: () => undefined,
-                      nbRetries: 3,
-                      ignoreLicenseRequests: false }, done);
+  it("should be able to retry maximum two times and fail after 3 tries with a rejected promise", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: true,
+                            configuredRetries: undefined,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 3,
+                            ignoreLicenseRequests: false });
   });
 
-  it("should be able to retry maximum two times and fail after 3 tries with a thrown error", (done) => {
-    checkGetLicense({ isGetLicensePromiseBased: false,
-                      configuredRetries: undefined,
-                      configuredTimeout: undefined,
-                      getTimeout: () => undefined,
-                      nbRetries: 3,
-                      ignoreLicenseRequests: true }, done);
+  it("should be able to retry maximum two times and fail after 3 tries with a thrown error", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: false,
+                            configuredRetries: undefined,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 3,
+                            ignoreLicenseRequests: true });
   });
 
-  it("should be able to retry two times and succeed after a time with a resolved license", (done) => {
-    checkGetLicense({ isGetLicensePromiseBased: true,
-                      configuredRetries: undefined,
-                      configuredTimeout: undefined,
-                      getTimeout: () => undefined,
-                      nbRetries: 2,
-                      ignoreLicenseRequests: false }, done);
+  it("should be able to retry two times and succeed after a time with a resolved license", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: true,
+                            configuredRetries: undefined,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 2,
+                            ignoreLicenseRequests: false });
   });
 
-  it("should be able to retry two times and succeed after a time with a returned license", (done) => {
-    checkGetLicense({ isGetLicensePromiseBased: false,
-                      configuredRetries: undefined,
-                      configuredTimeout: undefined,
-                      getTimeout: () => undefined,
-                      nbRetries: 2,
-                      ignoreLicenseRequests: false }, done);
+  it("should be able to retry two times and succeed after a time with a returned license", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: false,
+                            configuredRetries: undefined,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 2,
+                            ignoreLicenseRequests: false });
   });
 
-  it("should be able to retry two times and succeed after a time with a resolved null", (done) => {
-    checkGetLicense({ isGetLicensePromiseBased: true,
-                      configuredRetries: undefined,
-                      configuredTimeout: undefined,
-                      getTimeout: () => undefined,
-                      nbRetries: 2,
-                      ignoreLicenseRequests: true }, done);
+  it("should be able to retry two times and succeed after a time with a resolved null", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: true,
+                            configuredRetries: undefined,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 2,
+                            ignoreLicenseRequests: true });
   });
 
-  it("should be able to retry two times and succeed after a time with a returned null", (done) => {
-    checkGetLicense({ isGetLicensePromiseBased: false,
-                      configuredRetries: undefined,
-                      configuredTimeout: undefined,
-                      getTimeout: () => undefined,
-                      nbRetries: 2,
-                      ignoreLicenseRequests: true }, done);
+  it("should be able to retry two times and succeed after a time with a returned null", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: false,
+                            configuredRetries: undefined,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 2,
+                            ignoreLicenseRequests: true });
   });
 
-  it("should be able to retry one time and succeed after a time with a resolved license", (done) => {
-    checkGetLicense({ isGetLicensePromiseBased: true,
-                      configuredRetries: undefined,
-                      configuredTimeout: undefined,
-                      getTimeout: () => undefined,
-                      nbRetries: 1,
-                      ignoreLicenseRequests: false }, done);
+  it("should be able to retry one time and succeed after a time with a resolved license", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: true,
+                            configuredRetries: undefined,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 1,
+                            ignoreLicenseRequests: false });
   });
 
-  it("should be able to retry one time and succeed after a time with a returned license", (done) => {
-    checkGetLicense({ isGetLicensePromiseBased: false,
-                      configuredRetries: undefined,
-                      configuredTimeout: undefined,
-                      getTimeout: () => undefined,
-                      nbRetries: 1,
-                      ignoreLicenseRequests: false }, done);
+  it("should be able to retry one time and succeed after a time with a returned license", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: false,
+                            configuredRetries: undefined,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 1,
+                            ignoreLicenseRequests: false });
   });
 
-  it("should be able to retry two times and succeed after a time with a resolved null", (done) => {
-    checkGetLicense({ isGetLicensePromiseBased: true,
-                      configuredRetries: undefined,
-                      configuredTimeout: undefined,
-                      getTimeout: () => undefined,
-                      nbRetries: 1,
-                      ignoreLicenseRequests: true }, done);
+  it("should be able to retry two times and succeed after a time with a resolved null", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: true,
+                            configuredRetries: undefined,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 1,
+                            ignoreLicenseRequests: true });
   });
 
-  it("should be able to retry two times and succeed after a time with a returned null", (done) => {
-    checkGetLicense({ isGetLicensePromiseBased: false,
-                      configuredRetries: undefined,
-                      configuredTimeout: undefined,
-                      getTimeout: () => undefined,
-                      nbRetries: 1,
-                      ignoreLicenseRequests: true }, done);
+  it("should be able to retry two times and succeed after a time with a returned null", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: false,
+                            configuredRetries: undefined,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 1,
+                            ignoreLicenseRequests: true });
   });
 
-  it("should be able to fetch a license directly even when getLicenseConfig.retry is set to `0`", (done) => {
-    checkGetLicense({ isGetLicensePromiseBased: true,
-                      configuredRetries: 0,
-                      configuredTimeout: undefined,
-                      getTimeout: () => undefined,
-                      nbRetries: 0,
-                      ignoreLicenseRequests: false }, done);
+  it("should be able to fetch a license directly even when getLicenseConfig.retry is set to `0`", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: true,
+                            configuredRetries: 0,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 0,
+                            ignoreLicenseRequests: false });
   });
 
-  it("should fail after first failure when getLicenseConfig.retry is set to `0`", (done) => {
-    checkGetLicense({ isGetLicensePromiseBased: true,
-                      configuredRetries: 1,
-                      configuredTimeout: undefined,
-                      getTimeout: () => undefined,
-                      nbRetries: 0,
-                      ignoreLicenseRequests: false }, done);
+  it("should fail after first failure when getLicenseConfig.retry is set to `0`", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: true,
+                            configuredRetries: 1,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 0,
+                            ignoreLicenseRequests: false });
   });
 
-  it("should fail after two failures when getLicenseConfig.retry is set to `1`", (done) => {
-    checkGetLicense({ isGetLicensePromiseBased: true,
-                      configuredRetries: 2,
-                      configuredTimeout: undefined,
-                      getTimeout: () => undefined,
-                      nbRetries: 2,
-                      ignoreLicenseRequests: false }, done);
+  it("should fail after two failures when getLicenseConfig.retry is set to `1`", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: true,
+                            configuredRetries: 2,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 2,
+                            ignoreLicenseRequests: false });
   });
 
-  it("should not fail after one failure when getLicenseConfig.retry is set to `1`", (done) => {
-    checkGetLicense({ isGetLicensePromiseBased: true,
-                      configuredRetries: 2,
-                      configuredTimeout: undefined,
-                      getTimeout: () => undefined,
-                      nbRetries: 1,
-                      ignoreLicenseRequests: false }, done);
+  it("should not fail after one failure when getLicenseConfig.retry is set to `1`", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: true,
+                            configuredRetries: 2,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 1,
+                            ignoreLicenseRequests: false });
   });
 
-  it("should not fail after 5 failures when getLicenseConfig.retry is set to `6`", (done) => {
-    checkGetLicense({ isGetLicensePromiseBased: true,
-                      configuredRetries: 6,
-                      configuredTimeout: undefined,
-                      getTimeout: () => undefined,
-                      nbRetries: 5,
-                      ignoreLicenseRequests: false }, done);
+  it("should not fail after 5 failures when getLicenseConfig.retry is set to `6`", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: true,
+                            configuredRetries: 6,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 5,
+                            ignoreLicenseRequests: false });
   }, 15000);
 
-  it("should fail after 6 failures when getLicenseConfig.retry is set to `6`", (done) => {
-    checkGetLicense({ isGetLicensePromiseBased: true,
-                      configuredRetries: 6,
-                      configuredTimeout: undefined,
-                      getTimeout: () => undefined,
-                      nbRetries: 6,
-                      ignoreLicenseRequests: false }, done);
+  it("should fail after 6 failures when getLicenseConfig.retry is set to `6`", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: true,
+                            configuredRetries: 6,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 6,
+                            ignoreLicenseRequests: false });
   }, 15000);
 
-  it("should not fail after 5 failures when getLicenseConfig.retry is set to `Infinity`", (done) => {
-    checkGetLicense({ isGetLicensePromiseBased: true,
-                      configuredRetries: Infinity,
-                      configuredTimeout: undefined,
-                      getTimeout: () => undefined,
-                      nbRetries: 5,
-                      ignoreLicenseRequests: false }, done);
+  it("should not fail after 5 failures when getLicenseConfig.retry is set to `Infinity`", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: true,
+                            configuredRetries: Infinity,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 5,
+                            ignoreLicenseRequests: false });
   }, 15000);
 
 });
@@ -282,133 +277,142 @@ function checkGetLicense(
        * If `true`, getLicense will return `null` - to ignore a request - when
        * it succeed.
        */
-    ignoreLicenseRequests : boolean; },
-  done : () => void
-) {
-  // == mocks ==
-  mockCompat();
-  const mediaKeySession = new MediaKeySessionImpl();
-  jest.spyOn(MediaKeysImpl.prototype, "createSession").mockReturnValue(mediaKeySession);
-  const updateSpy = jest.spyOn(mediaKeySession, "update");
-  let remainingRetries = nbRetries;
-  const getLicenseSpy = jest.fn(() => {
-    const callIdx = nbRetries - remainingRetries;
-    const timeout = getTimeout(callIdx);
-    if (remainingRetries === 0) {
-      const challengeU8 = new Uint8Array(challenge);
-      const result = ignoreLicenseRequests ? null :
-                                             concat(challengeU8, challengeU8);
+    ignoreLicenseRequests : boolean; }
+) : Promise<void> {
+  return new Promise((res, rej) => {
+    // == mocks ==
+    mockCompat();
+    const mediaKeySession = new MediaKeySessionImpl();
+    jest.spyOn(MediaKeysImpl.prototype, "createSession").mockReturnValue(mediaKeySession);
+    const updateSpy = jest.spyOn(mediaKeySession, "update");
+    let remainingRetries = nbRetries;
+    const getLicenseSpy = jest.fn(() => {
+      const callIdx = nbRetries - remainingRetries;
+      const timeout = getTimeout(callIdx);
+      if (remainingRetries === 0) {
+        const challengeU8 = new Uint8Array(challenge);
+        const result = ignoreLicenseRequests ? null :
+                                               concat(challengeU8, challengeU8);
+        if (timeout !== undefined) {
+          return new Promise(resolve => {
+            setTimeout(() => resolve(result), timeout);
+          });
+        }
+        return isGetLicensePromiseBased ? Promise.resolve(result) :
+                                          result;
+      }
+      remainingRetries--;
       if (timeout !== undefined) {
-        return new Promise(resolve => {
-          setTimeout(() => resolve(result), timeout);
+        return new Promise((_, reject) => {
+          setTimeout(() => {
+            reject("AAAA");
+          }, timeout);
         });
       }
-      return isGetLicensePromiseBased ? Promise.resolve(result) :
-                                        result;
-    }
-    remainingRetries--;
-    if (timeout !== undefined) {
-      return new Promise((_, reject) => {
-        setTimeout(() => {
-          reject("AAAA");
-        }, timeout);
-      });
-    }
-    if (!isGetLicensePromiseBased) {
-      throw new Error("AAAA");
-    }
-    return Promise.reject(new Error("AAAA"));
-  });
-
-  // == vars ==
-  /** Default keySystems configuration used in our tests. */
-  const maxRetries = configuredRetries === undefined ? 3 :
-                                                       configuredRetries;
-  const shouldFail = nbRetries >= maxRetries;
-  let warningsLeft = nbRetries;
-  const ksConfig = [{ type: "com.widevine.alpha",
-                      getLicense: getLicenseSpy,
-                      getLicenseConfig: configuredRetries !== undefined ||
-                                        configuredTimeout !== undefined ?
-                                          { retry: configuredRetries,
-                                            timeout: configuredTimeout } :
-                                          undefined }];
-  let eventsReceived = 0;
-  let licenseReceived = false;
-  const initDataSubject = new Subject<IContentProtection>();
-  const initData = new Uint8Array([54, 55, 75]);
-  const initDataEvent = { type: "cenc", values: [ { systemId: "15", data: initData } ] };
-  const kill$ = new Subject<void>();
-  const challenge = formatFakeChallengeFromInitData(initData, "cenc");
-  function checkKeyLoadError(error : unknown) {
-    expect(error).toBeInstanceOf(Error);
-    expect((error as ICustomError).name).toEqual("EncryptedMediaError");
-    expect((error as ICustomError).type).toEqual("ENCRYPTED_MEDIA_ERROR");
-    expect((error as ICustomError).code).toEqual("KEY_LOAD_ERROR");
-    expect((error as ICustomError).message).toEqual("AAAA");
-  }
-
-  // == test ==
-  const EMEManager = require("../../eme_manager").default;
-  EMEManager(videoElt, ksConfig, initDataSubject)
-    .pipe(takeUntil(kill$))
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .subscribe((evt : any) => {
-      if (evt.type === "created-media-keys") {
-        evt.value.canAttachMediaKeys.setValue(true);
+      if (!isGetLicensePromiseBased) {
+        throw new Error("AAAA");
       }
-      eventsReceived++;
-      // Those first three have been tested enough
-      if (eventsReceived <= 3) {
-        return;
+      return Promise.reject(new Error("AAAA"));
+    });
+
+    // == vars ==
+    /** Default keySystems configuration used in our tests. */
+    const maxRetries = configuredRetries === undefined ? 3 :
+                                                         configuredRetries;
+    const shouldFail = nbRetries >= maxRetries;
+    let warningsLeft = nbRetries;
+    const ksConfig = [{ type: "com.widevine.alpha",
+                        getLicense: getLicenseSpy,
+                        getLicenseConfig: configuredRetries !== undefined ||
+                                          configuredTimeout !== undefined ?
+                                            { retry: configuredRetries,
+                                              timeout: configuredTimeout } :
+                                            undefined }];
+    const initData = new Uint8Array([54, 55, 75]);
+    const initDataEvent = { type: "cenc", values: [ { systemId: "15", data: initData } ] };
+    const challenge = formatFakeChallengeFromInitData(initData, "cenc");
+    function checkKeyLoadError(error : unknown) {
+      try {
+        expect(error).toBeInstanceOf(Error);
+        expect((error as ICustomError).name).toEqual("EncryptedMediaError");
+        expect((error as ICustomError).type).toEqual("ENCRYPTED_MEDIA_ERROR");
+        expect((error as ICustomError).code).toEqual("KEY_LOAD_ERROR");
+        expect((error as ICustomError).message).toEqual("AAAA");
+      } catch (e) {
+        rej(e);
       }
-      if (warningsLeft-- === 0) {
-        if (!licenseReceived) {
-          if (ignoreLicenseRequests) {
-            expect(evt.type).toEqual("no-update");
-            expect(evt.value.initializationData).toEqual(initDataEvent);
-            expect(evt.value.initializationData.type).toEqual("cenc");
-            expect(updateSpy).toHaveBeenCalledTimes(0);
-          } else {
-            const license = concat(challenge, challenge);
-            expect(evt.type).toEqual("session-updated");
-            expect(evt.value.session).toEqual(mediaKeySession);
-            expect(evt.value.license).toEqual(license);
-            expect(evt.value.initializationData).toEqual(initDataEvent);
-            expect(updateSpy).toHaveBeenCalledTimes(1);
-            expect(updateSpy).toHaveBeenCalledWith(license);
-          }
-          expect(getLicenseSpy).toHaveBeenCalledTimes(nbRetries + 1);
-          for (let i = 1; i <= nbRetries + 1; i++) {
-            expect(getLicenseSpy).toHaveBeenNthCalledWith(i, challenge, "license-request");
-          }
-          licenseReceived = true;
-          setTimeout(() => {
-            kill$.next();
-            done();
-          }, 5);
-          return;
+    }
+
+    // == test ==
+    const { ContentDecryptorState } = require("../../eme_manager");
+    const ContentDecryptor = require("../../eme_manager").default;
+    const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+
+    contentDecryptor.addEventListener("stateChange", (newState: number) => {
+      if (newState !== ContentDecryptorState.WaitingForAttachment) {
+        rej(new Error(`Unexpected state: ${newState}`));
+      }
+      contentDecryptor.removeEventListener("stateChange");
+      contentDecryptor.attach();
+    });
+
+    contentDecryptor.addEventListener("error", (error: unknown) => {
+      if (shouldFail) {
+        try {
+          checkKeyLoadError(error);
+          expect(getLicenseSpy).toHaveBeenCalledTimes(maxRetries);
+          expect(getLicenseSpy).toHaveBeenNthCalledWith(maxRetries, challenge, "license-request");
+          expect(updateSpy).toHaveBeenCalledTimes(0);
+          res();
+        } catch (e) {
+          rej(e);
         }
       } else {
-        expect(evt.type).toEqual("warning");
-        checkKeyLoadError(evt.value);
-        const requestIdx = nbRetries - remainingRetries;
-        expect(getLicenseSpy).toHaveBeenCalledTimes(requestIdx);
-        expect(getLicenseSpy).toHaveBeenNthCalledWith(requestIdx, challenge, "license-request");
-        return;
-      }
-      throw new Error(`Unexpected event: ${evt.type}`);
-    }, (error : unknown) => {
-      if (shouldFail) {
-        checkKeyLoadError(error);
-        expect(eventsReceived).toEqual(5);
-        expect(getLicenseSpy).toHaveBeenCalledTimes(maxRetries);
-        expect(getLicenseSpy).toHaveBeenNthCalledWith(maxRetries, challenge, "license-request");
-        expect(updateSpy).toHaveBeenCalledTimes(0);
-        done();
-      } else {
-        throw new Error(`Unexpected error: ${error}`);
+        rej(new Error(`Unexpected error: ${error}`));
       }
     });
-  initDataSubject.next(initDataEvent);
+
+    contentDecryptor.addEventListener("warning", (warning: Error) => {
+      if (warningsLeft-- > 0) {
+        try {
+          checkKeyLoadError(warning);
+          const requestIdx = nbRetries - remainingRetries;
+          expect(getLicenseSpy).toHaveBeenCalledTimes(requestIdx);
+          expect(getLicenseSpy).toHaveBeenNthCalledWith(requestIdx, challenge, "license-request");
+        } catch (e) {
+          rej(e);
+        }
+      } else {
+        rej(new Error(`Unexpected warning: ${warning}`));
+      }
+    });
+
+    contentDecryptor.onInitializationData(initDataEvent);
+
+    const timeout = nbRetries === 0 ? 100 :
+                    nbRetries === 1 ? 300 :
+                    nbRetries === 2 ? 800 :
+                    nbRetries === 3 ? 1200 :
+                    nbRetries === 4 ? 3000 :
+                                      10000;
+    setTimeout(() => {
+      try {
+        if (ignoreLicenseRequests) {
+          expect(updateSpy).toHaveBeenCalledTimes(0);
+        } else {
+          const license = concat(challenge, challenge);
+          expect(updateSpy).toHaveBeenCalledTimes(1);
+          expect(updateSpy).toHaveBeenCalledWith(license);
+        }
+        expect(getLicenseSpy).toHaveBeenCalledTimes(nbRetries + 1);
+        for (let i = 1; i <= nbRetries + 1; i++) {
+          expect(getLicenseSpy).toHaveBeenNthCalledWith(i, challenge, "license-request");
+        }
+        contentDecryptor.dispose();
+        res();
+      } catch (e) {
+        rej(e);
+      }
+    }, timeout);
+  });
 }

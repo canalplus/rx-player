@@ -24,15 +24,9 @@
 /* eslint-disable no-restricted-properties */
 
 import {
-  EMPTY,
-  Subject,
-  takeUntil,
-} from "rxjs";
-import {
   MediaKeysImpl,
-  MediaKeySystemAccessImpl,
   mockCompat,
-  testEMEManagerImmediateError,
+  testContentDecryptorError,
 } from "./utils";
 
 describe("core - eme - global tests - media key system access", () => {
@@ -69,9 +63,9 @@ describe("core - eme - global tests - media key system access", () => {
     mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessBadMediaKeys });
 
     // == test ==
-    const EMEManager = require("../../eme_manager").default;
+    const ContentDecryptor = require("../../eme_manager").default;
     const error : any =
-      await testEMEManagerImmediateError(EMEManager, videoElt, ksConfig, EMPTY);
+      await testContentDecryptorError(ContentDecryptor, videoElt, ksConfig);
     expect(error).toBeInstanceOf(Error);
     expect(error.message).toEqual(
       "EncryptedMediaError (CREATE_MEDIA_KEYS_ERROR) No non no"
@@ -95,9 +89,9 @@ describe("core - eme - global tests - media key system access", () => {
     mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessRejMediaKeys });
 
     // == test ==
-    const EMEManager = require("../../eme_manager").default;
+    const ContentDecryptor = require("../../eme_manager").default;
     const error : any =
-      await testEMEManagerImmediateError(EMEManager, videoElt, ksConfig, EMPTY);
+      await testContentDecryptorError(ContentDecryptor, videoElt, ksConfig);
     expect(error).toBeInstanceOf(Error);
     expect(error.message).toEqual(
       "EncryptedMediaError (CREATE_MEDIA_KEYS_ERROR) No non no"
@@ -107,18 +101,30 @@ describe("core - eme - global tests - media key system access", () => {
   });
 
   /* eslint-disable max-len */
-  it("should emit a created-media-keys event if createMediaKeys resolves", (done) => {
+  it("should go into the WaitingForAttachment state if createMediaKeys resolves", () => {
   /* eslint-enable max-len */
-    mockCompat({});
-    const EMEManager = require("../../eme_manager").default;
-    const kill$ = new Subject<void>();
-    EMEManager(videoElt, ksConfig, EMPTY)
-      .pipe(takeUntil(kill$))
-      .subscribe((evt : any) => {
-        expect(evt.type).toEqual("created-media-keys");
-        kill$.next();
-        done();
+    return new Promise<void>((res, rej) => {
+      mockCompat({});
+      const { ContentDecryptorState } = require("../../eme_manager");
+      const ContentDecryptor = require("../../eme_manager").default;
+      const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+      let receivedStateChange = 0;
+      contentDecryptor.addEventListener("stateChange", (newState: any) => {
+        receivedStateChange++;
+        try {
+          expect(newState).toEqual(ContentDecryptorState.WaitingForAttachment);
+        } catch (err) { rej(err); }
+        setTimeout(() => {
+          try {
+            expect(receivedStateChange).toEqual(1);
+            expect(contentDecryptor.getState())
+              .toEqual(ContentDecryptorState.WaitingForAttachment);
+            contentDecryptor.dispose();
+          } catch (err) { rej(err); }
+          res();
+        });
       });
+    });
   });
 
   /* eslint-disable max-len */
@@ -131,140 +137,20 @@ describe("core - eme - global tests - media key system access", () => {
     const createSessionSpy = jest.spyOn(MediaKeysImpl.prototype, "createSession");
 
     // == test ==
-    let eventsReceived = 0;
-    const kill$ = new Subject<void>();
-    const EMEManager = require("../../eme_manager").default;
-    EMEManager(videoElt, ksConfig, EMPTY)
-      .pipe(takeUntil(kill$))
-      .subscribe((evt : any) => {
-        if (eventsReceived > 0) {
-          expect(evt.type).toEqual("attached-media-keys");
-          kill$.next();
-          kill$.complete();
-          return;
-        }
-        eventsReceived++;
-        expect(evt.type).toEqual("created-media-keys");
-        evt.value.canAttachMediaKeys.setValue(true);
+    const { ContentDecryptorState } = require("../../eme_manager");
+    const ContentDecryptor = require("../../eme_manager").default;
+    const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+    contentDecryptor.addEventListener("stateChange", (newState: any) => {
+      if (newState === ContentDecryptorState.WaitingForAttachment) {
+        contentDecryptor.removeEventListener("stateChange");
+        contentDecryptor.attach();
         setTimeout(() => {
-          expect(eventsReceived).toEqual(1);
           expect(setMediaKeysSpy).toHaveBeenCalledTimes(1);
           expect(setMediaKeysSpy).toHaveBeenCalledWith(videoElt, new MediaKeysImpl());
           expect(createSessionSpy).not.toHaveBeenCalled();
           done();
-        }, 10);
-      });
-  });
-
-  /* eslint-disable max-len */
-  it("should emit \"attached-media-keys\" event when the MediaKeys is attached", (done) => {
-  /* eslint-enable max-len */
-
-    // == mocks ==
-    const setMediaKeysSpy = jest.fn(() => Promise.resolve(null));
-    mockCompat({ setMediaKeys: setMediaKeysSpy });
-
-    // == test ==
-    let eventsReceived = 0;
-    const kill$ = new Subject<void>();
-    const EMEManager = require("../../eme_manager").default;
-    EMEManager(videoElt, ksConfig, EMPTY)
-      .pipe(takeUntil(kill$))
-      .subscribe((evt : any) => {
-        switch (++eventsReceived) {
-          case 1:
-            expect(evt.type).toEqual("created-media-keys");
-            evt.value.canAttachMediaKeys.setValue(true);
-            break;
-          case 2:
-            expect(evt.type).toEqual("attached-media-keys");
-            kill$.next();
-            expect(setMediaKeysSpy).toHaveBeenCalledTimes(1);
-            expect(setMediaKeysSpy).toHaveBeenCalledWith(videoElt, new MediaKeysImpl());
-            done();
-            break;
-          default:
-            throw new Error("Unexpected event");
-        }
-      });
-  });
-
-  /* eslint-disable max-len */
-  it("should not create any session until if no encrypted event was received", (done) => {
-  /* eslint-enable max-len */
-
-    // == mocks ==
-    const setMediaKeysSpy = jest.fn(() => Promise.resolve(null));
-    mockCompat({ setMediaKeys: setMediaKeysSpy });
-    const createSessionSpy = jest.spyOn(MediaKeysImpl.prototype, "createSession");
-
-    // == test ==
-    let eventsReceived = 0;
-    const kill$ = new Subject<void>();
-    const EMEManager = require("../../eme_manager").default;
-    EMEManager(videoElt, ksConfig, EMPTY)
-      .pipe(takeUntil(kill$))
-      .subscribe((evt : any) => {
-        switch (++eventsReceived) {
-          case 1:
-            expect(evt.type).toEqual("created-media-keys");
-            evt.value.canAttachMediaKeys.setValue(true);
-            break;
-          case 2:
-            expect(evt.type).toEqual("attached-media-keys");
-            setTimeout(() => {
-              kill$.next();
-              expect(createSessionSpy).not.toHaveBeenCalled();
-              done();
-            }, 10);
-            break;
-          default:
-            throw new Error("Unexpected event");
-        }
-      });
-  });
-
-  /* eslint-disable max-len */
-  it("should not attach the MediaKeys but still emit the \"attached-media-keys\" event if already attached", (done) => {
-  /* eslint-enable max-len */
-
-    // == mocks ==
-    const mediaElement = document.createElement("video");
-    const defaultMediaKeys = new MediaKeysImpl();
-    const setMediaKeysSpy = jest.fn(() => Promise.resolve(null));
-    mockCompat({ setMediaKeys: setMediaKeysSpy });
-    jest.spyOn(MediaKeySystemAccessImpl.prototype, "createMediaKeys")
-      .mockReturnValue(Promise.resolve(defaultMediaKeys));
-    Object.defineProperty(mediaElement, "mediaKeys", {
-      get: jest.fn(() => defaultMediaKeys),
-      set: jest.fn(() => { throw new Error("Should not set MediaKeys manually."); }),
+        }, 5);
+      }
     });
-    const createSessionSpy = jest.spyOn(MediaKeysImpl.prototype, "createSession");
-
-    // == test ==
-    let eventsReceived = 0;
-    const kill$ = new Subject<void>();
-    const EMEManager = require("../../eme_manager").default;
-    EMEManager(mediaElement, ksConfig, new Subject())
-      .pipe(takeUntil(kill$))
-      .subscribe((evt : any) => {
-        switch (++eventsReceived) {
-          case 1:
-            expect(evt.type).toEqual("created-media-keys");
-            evt.value.canAttachMediaKeys.setValue(true);
-            break;
-          case 2:
-            expect(evt.type).toEqual("attached-media-keys");
-            setTimeout(() => {
-              kill$.next();
-              expect(setMediaKeysSpy).not.toHaveBeenCalled();
-              expect(createSessionSpy).not.toHaveBeenCalled();
-              done();
-            }, 10);
-            break;
-          default:
-            throw new Error("Unexpected event");
-        }
-      });
   });
 });

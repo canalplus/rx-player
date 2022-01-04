@@ -17,11 +17,7 @@
 import { Observable } from "rxjs";
 // eslint-disable-next-line max-len
 import MediaElementTrackChoiceManager from "../core/api/media_element_track_choice_manager";
-import {
-  IContentProtection,
-  IEMEManagerEvent,
-  IKeySystemOption,
-} from "../core/eme";
+import type ContentDecryptor from "../core/eme";
 import {
   IDirectfileEvent,
   IDirectFileOptions,
@@ -41,10 +37,7 @@ import { ITransportFunction } from "../transports";
 export type IDirectFileInit = (args : IDirectFileOptions) =>
                                 Observable<IDirectfileEvent>;
 
-export type IEMEManager = (mediaElement : HTMLMediaElement,
-                           keySystems: IKeySystemOption[],
-                           contentProtections$ : Observable<IContentProtection>) =>
-                             Observable<IEMEManagerEvent>;
+export type IContentDecryptorClass = typeof ContentDecryptor;
 
 export type IHTMLTextTracksBuffer =
   new(mediaElement : HTMLMediaElement,
@@ -89,7 +82,7 @@ export interface IFeaturesObject {
   directfile : { initDirectFile: IDirectFileInit;
                  mediaElementTrackChoiceManager : IMediaElementTrackChoiceManager; } |
                null;
-  emeManager : IEMEManager|null;
+  ContentDecryptor : IContentDecryptorClass|null;
   htmlTextTracksBuffer : IHTMLTextTracksBuffer|null;
   htmlTextTracksParsers : Partial<Record<string, IHTMLTextTracksParserFn>>;
   imageBuffer : IImageBuffer|null;

@@ -34,8 +34,8 @@ To better understand the player's architecture, you can find below a
   switching for           +---------------+            | ~     protocol               | ~
   the API                 |               |            | V                            | ~
  +--------------+         |               |         +--------------------------+      | ~
- |              |         |     Init      | ------> |                          |      | ~
- |  EMEManager  | <------ | (./core/init) | <~~~~~~ |     Manifest Fetcher     |      | ~
+ |   Content    |         |     Init      | ------> |                          |      | ~
+ |  Decryptor   | <------ | (./core/init) | <~~~~~~ |     Manifest Fetcher     |      | ~
  | (./core/eme) | ~~~~~~> |               |         |(./core/fetchers/manifest)|      | ~
  |              |         |               |         |                          |      | ~
  +--------------+         +---------------+         +--------------------------+      | ~
