@@ -21,15 +21,18 @@
 
 import clearEMESession from "./clear_eme_session";
 import disposeEME from "./dispose_eme";
-import EMEManager from "./eme_manager";
+import ContentDecryptor, {
+  ContentDecryptorState,
+  IContentDecryptorEvent,
+} from "./eme_manager";
 import getCurrentKeySystem from "./get_current_key_system";
-import { IEMEManagerEvent } from "./types";
 export * from "./types";
 
-export default EMEManager;
+export default ContentDecryptor;
 export {
   clearEMESession,
+  ContentDecryptorState,
   disposeEME,
   getCurrentKeySystem,
-  IEMEManagerEvent,
+  IContentDecryptorEvent,
 };

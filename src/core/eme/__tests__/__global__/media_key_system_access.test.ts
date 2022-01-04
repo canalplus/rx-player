@@ -24,17 +24,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-restricted-properties */
 
-import {
-  EMPTY,
-  Subject,
-  takeUntil,
-} from "rxjs";
 import { ICustomMediaKeySystemAccess } from "../../../../compat";
 import {
   defaultKSConfig,
   defaultWidevineConfig,
   mockCompat,
-  testEMEManagerImmediateError,
+  testContentDecryptorError,
 } from "./utils";
 
 export function requestMediaKeySystemAccessNoMediaKeys(
@@ -56,7 +51,7 @@ const incompatibleMKSAErrorMessage =
   "with your wanted configuration has been found in the current browser.";
 
 /**
- * Check that the given `keySystemsConfigs` lead directly to an
+ * Check that the given `keySystemsConfigs` lead to an
  * `INCOMPATIBLE_KEYSYSTEMS` error.
  * @param {Array.<Object>} keySystemsConfigs
  * @returns {Promise}
@@ -65,12 +60,11 @@ async function checkIncompatibleKeySystemsErrorMessage(
   keySystemsConfigs : unknown[]
 ) : Promise<void> {
   const mediaElement = document.createElement("video");
-  const EMEManager = require("../../eme_manager").default;
+  const ContentDecryptor = require("../../eme_manager").default;
 
-  const error : any = await testEMEManagerImmediateError(EMEManager,
-                                                         mediaElement,
-                                                         keySystemsConfigs,
-                                                         EMPTY);
+  const error : any = await testContentDecryptorError(ContentDecryptor,
+                                                      mediaElement,
+                                                      keySystemsConfigs);
   expect(error).not.toBe(null);
   expect(error.message).toEqual(incompatibleMKSAErrorMessage);
   expect(error.name).toEqual("EncryptedMediaError");
@@ -128,13 +122,12 @@ describe("core - eme - global tests - media key system access", () => {
   /* eslint-enable max-len */
     mockCompat({ requestMediaKeySystemAccess: undefined });
     const mediaElement = document.createElement("video");
-    const EMEManager = require("../../eme_manager").default;
+    const ContentDecryptor = require("../../eme_manager").default;
 
     const config = [{ type: "foo", getLicense: neverCalledFn }];
-    const error : any = await testEMEManagerImmediateError(EMEManager,
-                                                           mediaElement,
-                                                           config,
-                                                           EMPTY);
+    const error : any = await testContentDecryptorError(ContentDecryptor,
+                                                        mediaElement,
+                                                        config);
     expect(error).not.toBe(null);
     expect(error.message)
       .toEqual("requestMediaKeySystemAccess is not implemented in your browser.");
@@ -414,20 +407,17 @@ describe("core - eme - global tests - media key system access", () => {
                         getLicense: neverCalledFn }];
 
       const mediaElement = document.createElement("video");
-      const EMEManager = require("../../eme_manager").default;
-      EMEManager(mediaElement, config, new Subject<void>())
-        .subscribe(
-          (evt : unknown) => {
-            const eventStr = JSON.stringify(evt as any);
-            rej(new Error("Received an EMEManager event: " + eventStr));
-          },
-          (err : unknown) => { rej(err); },
-          () => rej(new Error("EMEManager completed."))
-        );
-      expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(1);
-      expect(requestMediaKeySystemAccessSpy)
-        .toHaveBeenCalledWith("com.widevine.alpha", defaultWidevineConfig);
-      res();
+      const ContentDecryptor = require("../../eme_manager").default;
+      const contentDecryptor = new ContentDecryptor(mediaElement, config);
+      contentDecryptor.addEventListener("error", (error: any) => {
+        rej(error);
+      });
+      setTimeout(() => {
+        expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(1);
+        expect(requestMediaKeySystemAccessSpy)
+          .toHaveBeenCalledWith("com.widevine.alpha", defaultWidevineConfig);
+        res();
+      }, 10);
     });
   });
 
@@ -449,16 +439,11 @@ describe("core - eme - global tests - media key system access", () => {
                         getLicense: neverCalledFn }];
 
       const mediaElement = document.createElement("video");
-      const EMEManager = require("../../eme_manager").default;
-      EMEManager(mediaElement, config, new Subject<void>())
-        .subscribe(
-          (evt : unknown) => {
-            const eventStr = JSON.stringify(evt as any);
-            rej(new Error("Received an EMEManager event: " + eventStr));
-          },
-          (err : unknown) => { rej(err); },
-          () => rej(new Error("EMEManager completed."))
-        );
+      const ContentDecryptor = require("../../eme_manager").default;
+      const contentDecryptor = new ContentDecryptor(mediaElement, config);
+      contentDecryptor.addEventListener("error", (error: any) => {
+        rej(error);
+      });
       setTimeout(() => {
         expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(2);
         expect(requestMediaKeySystemAccessSpy)
@@ -470,36 +455,58 @@ describe("core - eme - global tests - media key system access", () => {
     });
   });
 
-  xit("should not continue to check if the observable is unsubscribed from", () => {
+  it("should not continue to check if the ContentDecryptor is disposed from", () => {
     return new Promise<void>((res, rej) => {
-      const killSubject$ = new Subject<void>();
+      let contentDecryptor : any = null;
       let rmksHasBeenCalled = false;
       const requestMediaKeySystemAccessSpy = jest.fn(() => {
-        if (rmksHasBeenCalled) {
-          rej("requestMediaKeySystemAccess has already been called.");
-        }
-        rmksHasBeenCalled = true;
-        killSubject$.next();
-        killSubject$.complete();
-        return Promise.reject("nope");
+        return Promise.resolve().then(() => {
+          rmksHasBeenCalled = true;
+          contentDecryptor.dispose();
+          return Promise.reject("nope");
+        });
       });
       mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessSpy });
       const mediaElement = document.createElement("video");
-      const EMEManager = require("../../eme_manager").default;
+      const ContentDecryptor = require("../../eme_manager").default;
 
       const config = [ { type: "foo", getLicense: neverCalledFn },
                        { type: "bar", getLicense: neverCalledFn },
                        { type: "baz", getLicense: neverCalledFn } ];
-      EMEManager(mediaElement, config, EMPTY)
-        .pipe(takeUntil(killSubject$))
-        .subscribe(
-          () => { rej("We should not have received an event"); },
-          () => { rej("We should not have received an error."); },
-          () =>  {
-            expect(rmksHasBeenCalled).toBe(true);
-            setTimeout(() => { res(); }, 10);
-          }
-        );
+      contentDecryptor = new ContentDecryptor(mediaElement, config);
+      contentDecryptor.addEventListener("error", (error: any) => {
+        rej(error);
+      });
+      setTimeout(() => {
+        expect(rmksHasBeenCalled).toEqual(true);
+        expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(1);
+        expect(requestMediaKeySystemAccessSpy)
+          .toHaveBeenNthCalledWith(1, "foo", defaultKSConfig);
+        res();
+      }, 10);
+    });
+  });
+
+  it("should trigger error even if requestMediaKeySystemAccess throws", () => {
+    return new Promise<void>((res, rej) => {
+      let rmksHasBeenCalled = false;
+      const requestMediaKeySystemAccessSpy = jest.fn(() => {
+        rmksHasBeenCalled = true;
+        throw new Error("nope");
+      });
+      mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessSpy });
+      const mediaElement = document.createElement("video");
+      const ContentDecryptor = require("../../eme_manager").default;
+
+      const config = [{ type: "foo", getLicense: neverCalledFn }];
+      const contentDecryptor = new ContentDecryptor(mediaElement, config);
+      contentDecryptor.addEventListener("error", () => {
+        expect(rmksHasBeenCalled).toEqual(true);
+        res();
+      });
+      setTimeout(() => {
+        rej(new Error("timeout exceeded"));
+      }, 10);
     });
   });
 });

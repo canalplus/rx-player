@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-import EMEManager from "../../core/eme";
+import ContentDecryptor from "../../core/eme";
 import { IFeaturesObject } from "../types";
 
 /**
  * Add ability to play encrypted contents
  * @param {Object} features
  */
-function addEMEManagerFeature(features : IFeaturesObject) : void {
-  features.emeManager = EMEManager;
+function addEMEFeature(features : IFeaturesObject) : void {
+  features.ContentDecryptor = ContentDecryptor;
 }
 
-export { addEMEManagerFeature as EME };
-export default addEMEManagerFeature;
+export { addEMEFeature as EME };
+export default addEMEFeature;

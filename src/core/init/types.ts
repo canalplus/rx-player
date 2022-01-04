@@ -20,17 +20,6 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import {
-  IAttachedMediaKeysEvent,
-  IBlacklistProtectionDataEvent,
-  ICreatedMediaKeysEvent,
-  IEncryptedEvent,
-  IInitDataIgnoredEvent,
-  IKeysUpdateEvent,
-  INoUpdateEvent,
-  ISessionMessageEvent,
-  ISessionUpdatedEvent,
-} from "../eme";
 import SegmentBuffersStore from "../segment_buffers";
 import {
   IActivePeriodChangedEvent,
@@ -49,7 +38,6 @@ import {
   IStreamManifestMightBeOutOfSync,
   IStreamNeedsManifestRefresh,
 } from "../stream";
-import { IEMEDisabledEvent } from "./create_eme_manager";
 import {
   IStreamEventEvent,
   IStreamEventSkipEvent,
@@ -154,19 +142,6 @@ export type IInitEvent = IManifestReadyEvent |
                          IReloadingMediaSourceEvent |
                          IDecipherabilityUpdateEvent |
                          IWarningEvent |
-                         IEMEDisabledEvent |
-
-                         // Coming from the `EMEManager`
-
-                         IEncryptedEvent |
-                         ICreatedMediaKeysEvent |
-                         IAttachedMediaKeysEvent |
-                         IInitDataIgnoredEvent |
-                         ISessionMessageEvent |
-                         IKeysUpdateEvent |
-                         INoUpdateEvent |
-                         ISessionUpdatedEvent |
-                         IBlacklistProtectionDataEvent |
 
                          // Coming from the `MediaSourceLoader`
 
@@ -192,17 +167,4 @@ export type IInitEvent = IManifestReadyEvent |
 export type IDirectfileEvent = IStalledEvent |
                                IUnstalledEvent |
                                ILoadedEvent |
-                               IWarningEvent |
-                               IEMEDisabledEvent |
-
-                               // Coming from the `EMEManager`
-
-                               IEncryptedEvent |
-                               ICreatedMediaKeysEvent |
-                               IAttachedMediaKeysEvent |
-                               IInitDataIgnoredEvent |
-                               ISessionMessageEvent |
-                               IKeysUpdateEvent |
-                               INoUpdateEvent |
-                               ISessionUpdatedEvent |
-                               IBlacklistProtectionDataEvent;
+                               IWarningEvent;
