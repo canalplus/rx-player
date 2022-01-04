@@ -20,16 +20,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-restricted-properties */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 
 import {
-  Subject,
-  takeUntil,
-} from "rxjs";
-import { IContentProtection } from "../../types";
-import {
-  expectLicenseRequestMessage,
   MediaKeysImpl,
   MediaKeySystemAccessImpl,
   mockCompat,
@@ -56,244 +51,171 @@ describe("core - eme - global tests - server certificate", () => {
     jest.restoreAllMocks();
   });
 
-  /* eslint-disable max-len */
   it("should set the serverCertificate only after the MediaKeys is attached", (done) => {
-  /* eslint-enable max-len */
-
-    // == mocks ==
-    mockCompat();
+    const { setMediaKeysSpy } = mockCompat();
+    setMediaKeysSpy.mockImplementation(() => {
+      expect(createSessionSpy).not.toHaveBeenCalled();
+      expect(serverCertificateSpy).not.toHaveBeenCalled();
+    });
     const createSessionSpy = jest.spyOn(MediaKeysImpl.prototype, "createSession");
     const serverCertificateSpy =
       jest.spyOn(MediaKeysImpl.prototype, "setServerCertificate")
         .mockImplementation((_serverCertificate : BufferSource) => {
+          expect(setMediaKeysSpy).toHaveBeenCalledTimes(1);
           expect(createSessionSpy).not.toHaveBeenCalled();
           return Promise.resolve(true);
         });
 
-    // == vars ==
-    let eventsReceived = 0;
-    const initDataSubject = new Subject<IContentProtection>();
-    const initData = new Uint8Array([54, 55, 75]);
-    const kill$ = new Subject<void>();
+    const { ContentDecryptorState } = require("../../eme_manager");
+    const ContentDecryptor = require("../../eme_manager").default;
+    const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
-    // == test ==
-    const EMEManager = require("../../eme_manager").default;
-    EMEManager(videoElt, ksConfigCert, initDataSubject)
-      .pipe(takeUntil(kill$))
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .subscribe((evt : { type : string; value : any }) => {
+    contentDecryptor.addEventListener("stateChange", (state: any) => {
+      if (state === ContentDecryptorState.WaitingForAttachment) {
+        contentDecryptor.removeEventListener("stateChange");
+        setTimeout(() => {
+          expect(setMediaKeysSpy).not.toHaveBeenCalled();
+          expect(createSessionSpy).not.toHaveBeenCalled();
+          expect(serverCertificateSpy).not.toHaveBeenCalled();
+          contentDecryptor.attach();
+        }, 5);
+      }
+    });
+    setTimeout(() => {
+      contentDecryptor.dispose();
+      expect(setMediaKeysSpy).toHaveBeenCalledTimes(1);
+      expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
+      expect(createSessionSpy).not.toHaveBeenCalled();
+      done();
+    }, 10);
+  });
 
-        switch (++eventsReceived) {
-          case 1:
-            expect(evt.type).toEqual("created-media-keys");
-            evt.value.canAttachMediaKeys.setValue(true);
-            break;
-          case 2:
-            expect(evt.type).toEqual("attached-media-keys");
-            expect(createSessionSpy).not.toHaveBeenCalled();
-            expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
-            expect(serverCertificateSpy).toHaveBeenCalledWith(serverCertificate);
-            initDataSubject.next({ type: "cenc",
-                                   values: [ { systemId: "15", data: initData } ] });
-            break;
-          case 3:
-            expectLicenseRequestMessage(evt,
-                                        { type: "cenc",
-                                          values: [ { systemId: "15",
-                                                      data: initData } ] });
-            setTimeout(() => {
-              expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
-              expect(createSessionSpy).toHaveBeenCalledTimes(1);
-              initDataSubject.next({ type: "cenc2",
-                                     values: [ { systemId: "15", data: initData } ] });
-            }, 10);
-            break;
-          case 4:
-            expectLicenseRequestMessage(evt,
-                                        { type: "cenc2",
-                                          values: [ { systemId: "15",
-                                                      data: initData } ] });
-            setTimeout(() => {
-              kill$.next();
-              expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
-              expect(createSessionSpy).toHaveBeenCalledTimes(2);
-              done();
-            }, 10);
-            break;
-          default:
-            throw new Error(`Unexpected event: ${evt.type}`);
-        }
-      });
+  it("should not call serverCertificate multiple times on init data", (done) => {
+    const { setMediaKeysSpy } = mockCompat();
+    setMediaKeysSpy.mockImplementation(() => {
+      expect(createSessionSpy).not.toHaveBeenCalled();
+      expect(serverCertificateSpy).not.toHaveBeenCalled();
+    });
+    const createSessionSpy = jest.spyOn(MediaKeysImpl.prototype, "createSession");
+    const serverCertificateSpy =
+      jest.spyOn(MediaKeysImpl.prototype, "setServerCertificate")
+        .mockImplementation((_serverCertificate : BufferSource) => {
+          expect(setMediaKeysSpy).toHaveBeenCalledTimes(1);
+          expect(createSessionSpy).not.toHaveBeenCalled();
+          return Promise.resolve(true);
+        });
+
+    const { ContentDecryptorState } = require("../../eme_manager");
+    const ContentDecryptor = require("../../eme_manager").default;
+    const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
+
+    contentDecryptor.addEventListener("stateChange", (state: any) => {
+      if (state === ContentDecryptorState.WaitingForAttachment) {
+        contentDecryptor.removeEventListener("stateChange");
+        setTimeout(() => {
+          expect(setMediaKeysSpy).not.toHaveBeenCalled();
+          expect(createSessionSpy).not.toHaveBeenCalled();
+          expect(serverCertificateSpy).not.toHaveBeenCalled();
+          const initData = new Uint8Array([54, 55, 75]);
+          contentDecryptor.onInitializationData({
+            type: "cenc2",
+            values: [ { systemId: "15", data: initData } ],
+          });
+          contentDecryptor.attach();
+        }, 5);
+      }
+    });
+    setTimeout(() => {
+      contentDecryptor.dispose();
+      expect(setMediaKeysSpy).toHaveBeenCalledTimes(1);
+      expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
+      expect(createSessionSpy).toHaveBeenCalledTimes(1);
+      done();
+    }, 10);
   });
 
   /* eslint-disable max-len */
   it("should emit warning if serverCertificate call rejects but still continue", (done) => {
   /* eslint-enable max-len */
 
-    // == mocks ==
-    mockCompat();
+    const { setMediaKeysSpy } = mockCompat();
     const createSessionSpy = jest.spyOn(MediaKeysImpl.prototype, "createSession");
     const serverCertificateSpy =
       jest.spyOn(MediaKeysImpl.prototype, "setServerCertificate")
         .mockImplementation((_serverCertificate : BufferSource) => {
-          expect(createSessionSpy).not.toHaveBeenCalled();
-          return Promise.reject("some error");
+          throw new Error("some error");
         });
 
-    // == vars ==
-    let eventsReceived = 0;
-    const initDataSubject = new Subject<IContentProtection>();
-    const initData = new Uint8Array([54, 55, 75]);
-    const kill$ = new Subject<void>();
+    const { ContentDecryptorState } = require("../../eme_manager");
+    const ContentDecryptor = require("../../eme_manager").default;
+    const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
-    // == test ==
-    const EMEManager = require("../../eme_manager").default;
-    EMEManager(videoElt, ksConfigCert, initDataSubject)
-      .pipe(takeUntil(kill$))
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .subscribe((evt : { type : string; value : any }) => {
-        switch (++eventsReceived) {
-          case 1:
-            expect(evt.type).toEqual("created-media-keys");
-            evt.value.canAttachMediaKeys.setValue(true);
-            break;
-          case 2:
-            expect(evt.type).toEqual("warning");
-            expect(createSessionSpy).not.toHaveBeenCalled();
-            expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
-            expect(serverCertificateSpy).toHaveBeenCalledWith(serverCertificate);
-            expect(evt.value.name).toEqual("EncryptedMediaError");
-            expect(evt.value.type).toEqual("ENCRYPTED_MEDIA_ERROR");
-            expect(evt.value.code).toEqual("LICENSE_SERVER_CERTIFICATE_ERROR");
-            expect(evt.value.message)
-              .toEqual(
-                "EncryptedMediaError (LICENSE_SERVER_CERTIFICATE_ERROR) " +
-                "`setServerCertificate` error");
-            break;
-          case 3:
-            expect(evt.type).toEqual("attached-media-keys");
-            expect(createSessionSpy).not.toHaveBeenCalled();
-            expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
-            initDataSubject.next({ type: "cenc",
-                                   values: [ { systemId: "15", data: initData } ] });
-            break;
-          case 4:
-            expectLicenseRequestMessage(evt,
-                                        { type: "cenc",
-                                          values: [ { systemId: "15",
-                                                      data: initData } ] });
-            setTimeout(() => {
-              expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
-              expect(createSessionSpy).toHaveBeenCalledTimes(1);
-              initDataSubject.next({ type: "cenc2",
-                                     values: [ { systemId: "15", data: initData } ] });
-            }, 10);
-            break;
-          case 5:
-            expectLicenseRequestMessage(evt,
-                                        { type: "cenc2",
-                                          values: [ { systemId: "15",
-                                                      data: initData } ] });
-            setTimeout(() => {
-              kill$.next();
-              expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
-              expect(createSessionSpy).toHaveBeenCalledTimes(2);
-              done();
-            }, 10);
-            break;
-          default:
-            throw new Error(`Unexpected event: ${evt.type}`);
-        }
-      });
+    contentDecryptor.addEventListener("stateChange", (state: any) => {
+      if (state === ContentDecryptorState.WaitingForAttachment) {
+        contentDecryptor.removeEventListener("stateChange");
+        contentDecryptor.attach();
+      }
+    });
+
+    let warningsReceived = 0;
+    contentDecryptor.addEventListener("warning", (w: any) => {
+      expect(w.code).toEqual("LICENSE_SERVER_CERTIFICATE_ERROR");
+      expect(w.type).toEqual("ENCRYPTED_MEDIA_ERROR");
+      warningsReceived++;
+    });
+    setTimeout(() => {
+      contentDecryptor.dispose();
+      expect(setMediaKeysSpy).toHaveBeenCalledTimes(1);
+      expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
+      expect(createSessionSpy).not.toHaveBeenCalled();
+      expect(warningsReceived).toEqual(1);
+      done();
+    }, 10);
   });
 
   /* eslint-disable max-len */
   it("should emit warning if serverCertificate call throws but still continue", (done) => {
   /* eslint-enable max-len */
 
-    // == mocks ==
-    mockCompat();
+    const { setMediaKeysSpy } = mockCompat();
     const createSessionSpy = jest.spyOn(MediaKeysImpl.prototype, "createSession");
     const serverCertificateSpy =
       jest.spyOn(MediaKeysImpl.prototype, "setServerCertificate")
         .mockImplementation((_serverCertificate : BufferSource) => {
-          expect(createSessionSpy).not.toHaveBeenCalled();
-          throw new Error("some error");
+          return Promise.reject(new Error("some error"));
         });
 
-    // == vars ==
-    let eventsReceived = 0;
-    const initDataSubject = new Subject<IContentProtection>();
-    const initData = new Uint8Array([54, 55, 75]);
-    const kill$ = new Subject<void>();
+    const { ContentDecryptorState } = require("../../eme_manager");
+    const ContentDecryptor = require("../../eme_manager").default;
+    const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
-    // == test ==
-    const EMEManager = require("../../eme_manager").default;
-    EMEManager(videoElt, ksConfigCert, initDataSubject)
-      .pipe(takeUntil(kill$))
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .subscribe((evt : { type : string; value : any }) => {
-        switch (++eventsReceived) {
-          case 1:
-            expect(evt.type).toEqual("created-media-keys");
-            evt.value.canAttachMediaKeys.setValue(true);
-            break;
-          case 2:
-            expect(evt.type).toEqual("warning");
-            expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
-            expect(serverCertificateSpy).toHaveBeenCalledWith(serverCertificate);
-            expect(evt.value.name).toEqual("EncryptedMediaError");
-            expect(evt.value.type).toEqual("ENCRYPTED_MEDIA_ERROR");
-            expect(evt.value.code).toEqual("LICENSE_SERVER_CERTIFICATE_ERROR");
-            expect(evt.value.message)
-              .toEqual(
-                "EncryptedMediaError (LICENSE_SERVER_CERTIFICATE_ERROR) Error: some error"
-              );
-            break;
-          case 3:
-            expect(evt.type).toEqual("attached-media-keys");
-            expect(createSessionSpy).not.toHaveBeenCalled();
-            expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
-            initDataSubject.next({ type: "cenc",
-                                   values: [ { systemId: "15", data: initData } ] });
-            break;
-          case 4:
-            expectLicenseRequestMessage(evt,
-                                        { type: "cenc",
-                                          values: [ { systemId: "15",
-                                                      data: initData } ] });
-            setTimeout(() => {
-              expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
-              expect(createSessionSpy).toHaveBeenCalledTimes(1);
-              initDataSubject.next({ type: "cenc2",
-                                     values: [ { systemId: "15", data: initData } ] });
-            }, 10);
-            break;
-          case 5:
-            expectLicenseRequestMessage(evt,
-                                        { type: "cenc2",
-                                          values: [ { systemId: "15",
-                                                      data: initData } ] });
-            setTimeout(() => {
-              kill$.next();
-              expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
-              expect(createSessionSpy).toHaveBeenCalledTimes(2);
-              done();
-            }, 10);
-            break;
-          default:
-            throw new Error(`Unexpected event: ${evt.type}`);
-        }
-      });
+    contentDecryptor.addEventListener("stateChange", (state: any) => {
+      if (state === ContentDecryptorState.WaitingForAttachment) {
+        contentDecryptor.removeEventListener("stateChange");
+        contentDecryptor.attach();
+      }
+    });
+
+    let warningsReceived = 0;
+    contentDecryptor.addEventListener("warning", (w: any) => {
+      expect(w.code).toEqual("LICENSE_SERVER_CERTIFICATE_ERROR");
+      expect(w.type).toEqual("ENCRYPTED_MEDIA_ERROR");
+      warningsReceived++;
+    });
+    setTimeout(() => {
+      contentDecryptor.dispose();
+      expect(setMediaKeysSpy).toHaveBeenCalledTimes(1);
+      expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
+      expect(createSessionSpy).not.toHaveBeenCalled();
+      expect(warningsReceived).toEqual(1);
+      done();
+    }, 10);
   });
 
   /* eslint-disable max-len */
-  it("should just continue if serverCertificate is undefined", (done) => {
+  it("should just continue if setServerCertificate is undefined", (done) => {
   /* eslint-enable max-len */
-
-    // == mocks ==
-    mockCompat();
-    const createSessionSpy = jest.spyOn(MediaKeysImpl.prototype, "createSession");
+    const { setMediaKeysSpy } = mockCompat();
     jest.spyOn(MediaKeySystemAccessImpl.prototype, "createMediaKeys")
       .mockImplementation(() => {
         const mediaKeys = new MediaKeysImpl();
@@ -301,64 +223,40 @@ describe("core - eme - global tests - server certificate", () => {
           .setServerCertificate = undefined;
         return Promise.resolve(mediaKeys);
       });
-    const serverCertificateSpy =
-      jest.spyOn(MediaKeysImpl.prototype, "setServerCertificate")
-        .mockImplementation((_serverCertificate : BufferSource) => {
+    setMediaKeysSpy.mockImplementation(() => {
+      expect(createSessionSpy).not.toHaveBeenCalled();
+      expect(serverCertificateSpy).not.toHaveBeenCalled();
+    });
+    const createSessionSpy = jest.spyOn(MediaKeysImpl.prototype, "createSession");
+    const serverCertificateSpy = jest.spyOn(MediaKeysImpl.prototype,
+                                            "setServerCertificate");
+    const { ContentDecryptorState } = require("../../eme_manager");
+    const ContentDecryptor = require("../../eme_manager").default;
+    const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
+
+    contentDecryptor.addEventListener("stateChange", (state: any) => {
+      if (state === ContentDecryptorState.WaitingForAttachment) {
+        contentDecryptor.removeEventListener("stateChange");
+        setTimeout(() => {
+          expect(setMediaKeysSpy).not.toHaveBeenCalled();
           expect(createSessionSpy).not.toHaveBeenCalled();
-          return Promise.resolve(true);
-        });
+          expect(serverCertificateSpy).not.toHaveBeenCalled();
+          const initData = new Uint8Array([54, 55, 75]);
+          contentDecryptor.onInitializationData({
+            type: "cenc2",
+            values: [ { systemId: "15", data: initData } ],
+          });
 
-    // == vars ==
-    let eventsReceived = 0;
-    const initDataSubject = new Subject<IContentProtection>();
-    const initData = new Uint8Array([54, 55, 75]);
-    const kill$ = new Subject<void>();
-
-    // == test ==
-    const EMEManager = require("../../eme_manager").default;
-    EMEManager(videoElt, ksConfigCert, initDataSubject)
-      .pipe(takeUntil(kill$))
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .subscribe((evt : { type : string; value : any }) => {
-        switch (++eventsReceived) {
-          case 1:
-            expect(evt.type).toEqual("created-media-keys");
-            evt.value.canAttachMediaKeys.setValue(true);
-            break;
-          case 2:
-            expect(evt.type).toEqual("attached-media-keys");
-            expect(createSessionSpy).not.toHaveBeenCalled();
-            expect(serverCertificateSpy).toHaveBeenCalledTimes(0);
-            initDataSubject.next({ type: "cenc",
-                                   values: [ { systemId: "15", data: initData } ] });
-            break;
-          case 3:
-            expectLicenseRequestMessage(evt,
-                                        { type: "cenc",
-                                          values: [ { systemId: "15",
-                                                      data: initData } ] });
-            setTimeout(() => {
-              expect(serverCertificateSpy).toHaveBeenCalledTimes(0);
-              expect(createSessionSpy).toHaveBeenCalledTimes(1);
-              initDataSubject.next({ type: "cenc2",
-                                     values: [ { systemId: "15", data: initData } ] });
-            }, 10);
-            break;
-          case 4:
-            expectLicenseRequestMessage(evt,
-                                        { type: "cenc2",
-                                          values: [ { systemId: "15",
-                                                      data: initData } ] });
-            setTimeout(() => {
-              kill$.next();
-              expect(serverCertificateSpy).toHaveBeenCalledTimes(0);
-              expect(createSessionSpy).toHaveBeenCalledTimes(2);
-              done();
-            }, 10);
-            break;
-          default:
-            throw new Error(`Unexpected event: ${evt.type}`);
-        }
-      });
+          contentDecryptor.attach();
+        }, 5);
+      }
+    });
+    setTimeout(() => {
+      contentDecryptor.dispose();
+      expect(setMediaKeysSpy).toHaveBeenCalledTimes(1);
+      expect(serverCertificateSpy).not.toHaveBeenCalled();
+      expect(createSessionSpy).toHaveBeenCalledTimes(1);
+      done();
+    }, 10);
   });
 });

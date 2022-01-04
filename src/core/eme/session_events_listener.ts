@@ -21,15 +21,15 @@ import {
   defer as observableDefer,
   EMPTY,
   identity,
+  ignoreElements,
   map,
   merge as observableMerge,
   mergeMap,
   Observable,
   of as observableOf,
-  startWith,
   Subject,
-  takeUntil,
   tap,
+  takeUntil,
   timeout,
   TimeoutError,
 } from "rxjs";
@@ -53,15 +53,11 @@ import checkKeyStatuses, {
   IKeyStatusesCheckingOptions,
 } from "./check_key_statuses";
 import {
-  IInitializationDataInfo,
   IEMEWarningEvent,
   IKeyMessageHandledEvent,
   IKeyStatusChangeHandledEvent,
   IKeySystemOption,
   IKeysUpdateEvent,
-  INoUpdateEvent,
-  ISessionMessageEvent,
-  ISessionUpdatedEvent,
 } from "./types";
 
 const { onKeyError$,
@@ -91,27 +87,20 @@ export class BlacklistedSessionError extends Error {
  * @param {MediaKeySession} session - The MediaKeySession concerned.
  * @param {Object} keySystemOptions - The key system options.
  * @param {String} keySystem - The configuration keySystem used for deciphering
- * @param {Object} initializationData - The initialization data linked to that
- * session.
  * @returns {Observable}
  */
 export default function SessionEventsListener(
   session: MediaKeySession | ICustomMediaKeySession,
   keySystemOptions: IKeySystemOption,
-  keySystem: string,
-  initializationData : IInitializationDataInfo
-) : Observable<IEMEWarningEvent |
-               ISessionMessageEvent |
-               INoUpdateEvent |
-               IKeysUpdateEvent |
-               ISessionUpdatedEvent>
-{
+  keySystem: string
+) : Observable<IEMEWarningEvent | IKeysUpdateEvent> {
   log.info("EME: Binding session events", session.sessionId);
   const sessionWarningSubject$ = new Subject<IEMEWarningEvent>();
   const { getLicenseConfig = {} } = keySystemOptions;
 
-  const keyErrors : Observable<never> = onKeyError$(session)
-    .pipe(map((error) => { throw new EncryptedMediaError("KEY_ERROR", error.type); }));
+  const keyErrors = onKeyError$(session).pipe(map((error) : never => {
+    throw new EncryptedMediaError("KEY_ERROR", error.type);
+  }));
 
   const keyStatusesChange$ = onKeyStatusesChange$(session)
     .pipe(mergeMap((keyStatusesEvent: Event) =>
@@ -121,7 +110,6 @@ export default function SessionEventsListener(
                                    keyStatusesEvent)));
 
   const keyMessages$ : Observable<IEMEWarningEvent |
-                                  ISessionMessageEvent |
                                   IKeyMessageHandledEvent > =
     onKeyMessage$(session).pipe(mergeMap((messageEvent: MediaKeyMessageEvent) => {
       const message = new Uint8Array(messageEvent.message);
@@ -162,30 +150,26 @@ export default function SessionEventsListener(
             }
           }
           throw formattedError;
-        }),
-        startWith({ type: "session-message" as const,
-                    value: { messageType, initializationData } })
-      );
+        }));
     }));
 
   const sessionUpdates = observableMerge(keyMessages$, keyStatusesChange$)
     .pipe(concatMap((
       evt : IEMEWarningEvent |
-            ISessionMessageEvent |
             IKeyMessageHandledEvent |
             IKeysUpdateEvent |
             IKeyStatusChangeHandledEvent
     ) : Observable< IEMEWarningEvent |
-                    ISessionMessageEvent |
-                    INoUpdateEvent |
-                    ISessionUpdatedEvent |
                     IKeysUpdateEvent > => {
       switch (evt.type) {
         case "key-message-handled":
         case "key-status-change-handled":
-          return updateSessionWithMessage(session,
-                                          evt.value.license,
-                                          initializationData);
+          if (isNullOrUndefined(evt.value.license)) {
+            log.info("EME: No message given, skipping session.update");
+            return EMPTY;
+          }
+
+          return updateSessionWithMessage(session, evt.value.license);
         default:
           return observableOf(evt);
       }
@@ -266,20 +250,12 @@ function formatGetLicenseError(error: unknown) : ICustomError {
  * Returns the right event depending on the action taken.
  * @param {MediaKeySession} session
  * @param {ArrayBuffer|TypedArray|null} message
- * @param {Object} initializationData
  * @returns {Observable}
  */
 function updateSessionWithMessage(
   session : MediaKeySession | ICustomMediaKeySession,
-  message : BufferSource | null,
-  initializationData : IInitializationDataInfo
-) : Observable<INoUpdateEvent | ISessionUpdatedEvent> {
-  if (isNullOrUndefined(message)) {
-    log.info("EME: No message given, skipping session.update");
-    return observableOf({ type: "no-update" as const,
-                          value: { initializationData } });
-  }
-
+  message : BufferSource
+) : Observable<never> {
   log.info("EME: Updating MediaKeySession with message");
   return castToObservable(session.update(message)).pipe(
     catchError((error: unknown) => {
@@ -288,9 +264,12 @@ function updateSessionWithMessage(
       throw new EncryptedMediaError("KEY_UPDATE_ERROR", reason);
     }),
     tap(() => { log.info("EME: MediaKeySession update succeeded."); }),
-    map(() => ({ type: "session-updated" as const,
-                 value: { session, license: message, initializationData } }))
-  );
+    // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
+    // first type parameter as `any` instead of the perfectly fine `unknown`,
+    // leading to linter issues, as it forbids the usage of `any`.
+    // This is why we're disabling the eslint rule.
+    /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
+    ignoreElements());
 }
 
 /**
