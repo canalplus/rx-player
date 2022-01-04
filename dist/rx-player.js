@@ -1372,7 +1372,7 @@ if (!_is_node__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z) {
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
-  "zh": function() { return /* binding */ isActive; },
+  "Nh": function() { return /* binding */ isPageActive; },
   "_K": function() { return /* binding */ isVideoVisible; },
   "Oh": function() { return /* binding */ onEncrypted$; },
   "C1": function() { return /* binding */ onEnded$; },
@@ -1462,9 +1462,10 @@ var defaultThrottleConfig = {
     leading: true,
     trailing: false,
 };
-function throttle(durationSelector, _a) {
-    var _b = _a === void 0 ? defaultThrottleConfig : _a, leading = _b.leading, trailing = _b.trailing;
+function throttle(durationSelector, config) {
+    if (config === void 0) { config = defaultThrottleConfig; }
     return (0,lift/* operate */.e)(function (source, subscriber) {
+        var leading = config.leading, trailing = config.trailing;
         var hasValue = false;
         var sendValue = null;
         var throttled = null;
@@ -1684,14 +1685,6 @@ function visibilityChange() {
   });
 }
 /**
- * @returns {Observable}
- */
-
-
-function videoSizeChange() {
-  return (0,fromEvent/* fromEvent */.R)(window, "resize");
-}
-/**
  * Emit `true` if the page is considered active.
  * `false` when considered inactive.
  * Emit the original value on subscription.
@@ -1699,7 +1692,7 @@ function videoSizeChange() {
  */
 
 
-function isActive() {
+function isPageActive() {
   return visibilityChange().pipe((0,switchMap/* switchMap */.w)(function (x) {
     if (!x) {
       return (0,of.of)(x).pipe(delay(INACTIVITY_DELAY));
@@ -1791,12 +1784,13 @@ function isVideoVisible(pip$) {
  * Get video width from HTML video element, or video estimated dimensions
  * when Picture-in-Picture is activated.
  * @param {HTMLMediaElement} mediaElement
+ * @param {Observable} pip$
  * @returns {Observable}
  */
 
 
 function videoWidth$(mediaElement, pip$) {
-  return (0,combineLatest/* combineLatest */.a)([pip$, (0,interval/* interval */.F)(20000).pipe((0,startWith/* startWith */.O)(null)), videoSizeChange().pipe(throttleTime(500), (0,startWith/* startWith */.O)(null))]).pipe((0,switchMap/* switchMap */.w)(function (_ref2) {
+  return (0,combineLatest/* combineLatest */.a)([pip$, (0,interval/* interval */.F)(20000).pipe((0,startWith/* startWith */.O)(null)), (0,fromEvent/* fromEvent */.R)(window, "resize").pipe(throttleTime(500), (0,startWith/* startWith */.O)(null))]).pipe((0,switchMap/* switchMap */.w)(function (_ref2) {
     var pip = _ref2[0];
 
     if (!pip.isEnabled) {
@@ -15846,12 +15840,14 @@ var MAX_32_BIT_INT = Math.pow(2, 32) - 1;
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "iz": function() { return /* binding */ getBox; },
 /* harmony export */   "t_": function() { return /* binding */ getBoxContent; },
+/* harmony export */   "lp": function() { return /* binding */ getBoxesContent; },
 /* harmony export */   "Qy": function() { return /* binding */ getBoxOffsets; },
 /* harmony export */   "Xj": function() { return /* binding */ getNextBoxOffsets; },
 /* harmony export */   "nR": function() { return /* binding */ getUuidContent; }
 /* harmony export */ });
-/* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3887);
-/* harmony import */ var _utils_byte_parsing__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6968);
+/* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3887);
+/* harmony import */ var _utils_assert__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(811);
+/* harmony import */ var _utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6968);
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -15869,11 +15865,12 @@ var MAX_32_BIT_INT = Math.pow(2, 32) - 1;
  */
 
 
+
 /**
  * Returns the content of a box based on its name.
  * `null` if not found.
- * @param {Uint8Array} buf - the isobmff structure
- * @param {Number} boxName - the 4-letter 'name' of the box as a 4 bit integer
+ * @param {Uint8Array} buf - the isobmff data
+ * @param {Number} boxName - the 4-letter 'name' of the box as a 4 byte integer
  * generated from encoding the corresponding ASCII in big endian.
  * @returns {UInt8Array|null}
  */
@@ -15883,10 +15880,37 @@ function getBoxContent(buf, boxName) {
   return offsets !== null ? buf.subarray(offsets[1], offsets[2]) : null;
 }
 /**
+ * Reads the whole ISOBMFF and returns the content of all boxes with the given
+ * name, in order.
+ * @param {Uint8Array} buf - the isobmff data
+ * @param {Number} boxName - the 4-letter 'name' of the box as a 4 byte integer
+ * generated from encoding the corresponding ASCII in big endian.
+ * @returns {Array.<Uint8Array>}
+ */
+
+
+function getBoxesContent(buf, boxName) {
+  var ret = [];
+  var currentBuf = buf;
+
+  while (true) {
+    var offsets = getBoxOffsets(currentBuf, boxName);
+
+    if (offsets === null) {
+      return ret;
+    } // Guard against a (very highly improbable) infinite loop
+
+
+    (0,_utils_assert__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z)(offsets[2] !== 0 && currentBuf.length !== 0);
+    ret.push(currentBuf.subarray(offsets[1], offsets[2]));
+    currentBuf = currentBuf.subarray(offsets[2]);
+  }
+}
+/**
  * Returns an ISOBMFF box - size and name included - based on its name.
  * `null` if not found.
- * @param {Uint8Array} buf - the isobmff structure
- * @param {Number} boxName - the 4-letter 'name' of the box as a 4 bit integer
+ * @param {Uint8Array} buf - the isobmff data
+ * @param {Number} boxName - the 4-letter 'name' of the box as a 4 byte integer
  * generated from encoding the corresponding ASCII in big endian.
  * @returns {UInt8Array|null}
  */
@@ -15908,8 +15932,8 @@ function getBox(buf, boxName) {
  *      size and the name of the box.
  *   3. The first byte after the end of the box, might be equal to `buf`'s
  *      length if we're considering the last box.
- * @param {Uint8Array} buf - the isobmff structure
- * @param {Number} boxName - the 4-letter 'name' of the box as a 4 bit integer
+ * @param {Uint8Array} buf - the isobmff data
+ * @param {Number} boxName - the 4-letter 'name' of the box as a 4 byte integer
  * generated from encoding the corresponding ASCII in big endian.
  * @returns {Array.<number>|null}
  */
@@ -15924,9 +15948,9 @@ function getBoxOffsets(buf, boxName) {
 
   while (boxBaseOffset + 8 <= len) {
     lastOffset = boxBaseOffset;
-    lastBoxSize = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_0__/* .be4toi */ .pX)(buf, lastOffset);
+    lastBoxSize = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(buf, lastOffset);
     lastOffset += 4;
-    name = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_0__/* .be4toi */ .pX)(buf, lastOffset);
+    name = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(buf, lastOffset);
     lastOffset += 4;
 
     if (lastBoxSize === 0) {
@@ -15936,7 +15960,7 @@ function getBoxOffsets(buf, boxName) {
         return null;
       }
 
-      lastBoxSize = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_0__/* .be8toi */ .pV)(buf, lastOffset);
+      lastBoxSize = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be8toi */ .pV)(buf, lastOffset);
       lastOffset += 8;
     }
 
@@ -15980,9 +16004,9 @@ function getUuidContent(buf, id1, id2, id3, id4) {
 
   for (var boxBaseOffset = 0; boxBaseOffset < len; boxBaseOffset += boxSize) {
     var currentOffset = boxBaseOffset;
-    boxSize = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_0__/* .be4toi */ .pX)(buf, currentOffset);
+    boxSize = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(buf, currentOffset);
     currentOffset += 4;
-    var boxName = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_0__/* .be4toi */ .pX)(buf, currentOffset);
+    var boxName = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(buf, currentOffset);
     currentOffset += 4;
 
     if (boxSize === 0) {
@@ -15992,13 +16016,13 @@ function getUuidContent(buf, id1, id2, id3, id4) {
         return undefined;
       }
 
-      boxSize = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_0__/* .be8toi */ .pV)(buf, currentOffset);
+      boxSize = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be8toi */ .pV)(buf, currentOffset);
       currentOffset += 8;
     }
 
     if (boxName === 0x75756964
     /* === "uuid" */
-    && currentOffset + 16 <= len && (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_0__/* .be4toi */ .pX)(buf, currentOffset) === id1 && (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_0__/* .be4toi */ .pX)(buf, currentOffset + 4) === id2 && (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_0__/* .be4toi */ .pX)(buf, currentOffset + 8) === id3 && (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_0__/* .be4toi */ .pX)(buf, currentOffset + 12) === id4) {
+    && currentOffset + 16 <= len && (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(buf, currentOffset) === id1 && (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(buf, currentOffset + 4) === id2 && (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(buf, currentOffset + 8) === id3 && (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(buf, currentOffset + 12) === id4) {
       currentOffset += 16;
       return buf.subarray(currentOffset, boxBaseOffset + boxSize);
     }
@@ -16014,8 +16038,8 @@ function getUuidContent(buf, id1, id2, id3, id4) {
  *      length if we're considering the last box.
  *
  * `null` if no box is found.
- * @param {Uint8Array} buf - the isobmff structure
- * @param {Number} boxName - the 4-letter 'name' of the box as a 4 bit integer
+ * @param {Uint8Array} buf - the isobmff data
+ * @param {Number} boxName - the 4-letter 'name' of the box as a 4 byte integer
  * generated from encoding the corresponding ASCII in big endian.
  */
 
@@ -16024,25 +16048,25 @@ function getNextBoxOffsets(buf) {
   var len = buf.length;
 
   if (len < 8) {
-    _log__WEBPACK_IMPORTED_MODULE_1__/* ["default"].warn */ .Z.warn("ISOBMFF: box inferior to 8 bytes, cannot find offsets");
+    _log__WEBPACK_IMPORTED_MODULE_2__/* ["default"].warn */ .Z.warn("ISOBMFF: box inferior to 8 bytes, cannot find offsets");
     return null;
   }
 
   var lastOffset = 0;
-  var boxSize = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_0__/* .be4toi */ .pX)(buf, lastOffset);
+  var boxSize = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(buf, lastOffset);
   lastOffset += 4;
-  var name = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_0__/* .be4toi */ .pX)(buf, lastOffset);
+  var name = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(buf, lastOffset);
   lastOffset += 4;
 
   if (boxSize === 0) {
     boxSize = len;
   } else if (boxSize === 1) {
     if (lastOffset + 8 > len) {
-      _log__WEBPACK_IMPORTED_MODULE_1__/* ["default"].warn */ .Z.warn("ISOBMFF: box too short, cannot find offsets");
+      _log__WEBPACK_IMPORTED_MODULE_2__/* ["default"].warn */ .Z.warn("ISOBMFF: box too short, cannot find offsets");
       return null;
     }
 
-    boxSize = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_0__/* .be8toi */ .pV)(buf, lastOffset);
+    boxSize = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be8toi */ .pV)(buf, lastOffset);
     lastOffset += 8;
   }
 
@@ -16069,6 +16093,7 @@ function getNextBoxOffsets(buf) {
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "XA": function() { return /* binding */ getTRAF; },
+/* harmony export */   "uq": function() { return /* binding */ getTRAFs; },
 /* harmony export */   "Le": function() { return /* binding */ getMDAT; },
 /* harmony export */   "fs": function() { return /* binding */ getMDIA; },
 /* harmony export */   "E3": function() { return /* binding */ getEMSG; }
@@ -16091,7 +16116,8 @@ function getNextBoxOffsets(buf) {
  */
 
 /**
- * Returns TRAF Box from the whole ISOBMFF File.
+ * Returns the content of the first "traf" box encountered in the given ISOBMFF
+ * data.
  * Returns null if not found.
  * @param {Uint8Array} buffer
  * @returns {Uint8Array|null}
@@ -16111,7 +16137,34 @@ function getTRAF(buffer) {
   );
 }
 /**
- * Returns MDAT Box from the whole ISOBMFF File.
+ * Returns the content of all "traf" boxes encountered in the given ISOBMFF
+ * data.
+ * Might be preferred to just `getTRAF` if you suspect that your ISOBMFF may
+ * have multiple "moof" boxes.
+ * @param {Uint8Array} buffer
+ * @returns {Array.<Uint8Array>}
+ */
+
+
+function getTRAFs(buffer) {
+  var moofs = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxesContent */ .lp)(buffer, 0x6D6F6F66
+  /* moof */
+  );
+  return moofs.reduce(function (acc, moof) {
+    var traf = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .t_)(moof, 0x74726166
+    /* traf */
+    );
+
+    if (traf !== null) {
+      acc.push(traf);
+    }
+
+    return acc;
+  }, []);
+}
+/**
+ * Returns the content of the first "moof" box encountered in the given ISOBMFF
+ * data.
  * Returns null if not found.
  * @param {Uint8Array} buffer
  * @returns {Uint8Array|null}
@@ -16124,7 +16177,8 @@ function getMDAT(buf) {
   );
 }
 /**
- * Returns MDIA Box from the whole ISOBMFF File.
+ * Returns the content of the first "mdia" box encountered in the given ISOBMFF
+ * data.
  * Returns null if not found.
  * @param {Uint8Array} buffer
  * @returns {Uint8Array|null}
@@ -16153,7 +16207,8 @@ function getMDIA(buf) {
   );
 }
 /**
- * Returns EMSG Box from the while ISOBMFF File.
+ * Returns the content of the first "emsg" box encountered in the given ISOBMFF
+ * data.
  * Returns null if not found.
  * @param {Uint8Array} buffer
  * @returns {Uint8Array|null}
@@ -16361,6 +16416,12 @@ function getPsshSystemID(buff, initialDataOffset) {
 /* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(2689);
 /* harmony import */ var _get_box__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2297);
 /* harmony import */ var _read__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6807);
+function _createForOfIteratorHelperLoose(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (it) return (it = it.call(o)).next.bind(it); if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -16571,82 +16632,89 @@ function getDefaultDurationFromTFHDInTRAF(traf) {
 
 
 function getDurationFromTrun(buffer) {
-  var traf = (0,_read__WEBPACK_IMPORTED_MODULE_2__/* .getTRAF */ .XA)(buffer);
+  var trafs = (0,_read__WEBPACK_IMPORTED_MODULE_2__/* .getTRAFs */ .uq)(buffer);
 
-  if (traf === null) {
+  if (trafs.length === 0) {
     return undefined;
   }
 
-  var trun = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .t_)(traf, 0x7472756E
-  /* trun */
-  );
+  var completeDuration = 0;
 
-  if (trun === null) {
-    return undefined;
-  }
+  for (var _iterator = _createForOfIteratorHelperLoose(trafs), _step; !(_step = _iterator()).done;) {
+    var traf = _step.value;
+    var trun = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .t_)(traf, 0x7472756E
+    /* trun */
+    );
 
-  var cursor = 0;
-  var version = trun[cursor];
-  cursor += 1;
-
-  if (version > 1) {
-    return undefined;
-  }
-
-  var flags = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be3toi */ .QI)(trun, cursor);
-  cursor += 3;
-  var hasSampleDuration = (flags & 0x000100) > 0;
-  var defaultDuration = 0;
-
-  if (!hasSampleDuration) {
-    defaultDuration = getDefaultDurationFromTFHDInTRAF(traf);
-
-    if (defaultDuration === undefined) {
+    if (trun === null) {
       return undefined;
     }
-  }
 
-  var hasDataOffset = (flags & 0x000001) > 0;
-  var hasFirstSampleFlags = (flags & 0x000004) > 0;
-  var hasSampleSize = (flags & 0x000200) > 0;
-  var hasSampleFlags = (flags & 0x000400) > 0;
-  var hasSampleCompositionOffset = (flags & 0x000800) > 0;
-  var sampleCounts = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(trun, cursor);
-  cursor += 4;
+    var cursor = 0;
+    var version = trun[cursor];
+    cursor += 1;
 
-  if (hasDataOffset) {
+    if (version > 1) {
+      return undefined;
+    }
+
+    var flags = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be3toi */ .QI)(trun, cursor);
+    cursor += 3;
+    var hasSampleDuration = (flags & 0x000100) > 0;
+    var defaultDuration = 0;
+
+    if (!hasSampleDuration) {
+      defaultDuration = getDefaultDurationFromTFHDInTRAF(traf);
+
+      if (defaultDuration === undefined) {
+        return undefined;
+      }
+    }
+
+    var hasDataOffset = (flags & 0x000001) > 0;
+    var hasFirstSampleFlags = (flags & 0x000004) > 0;
+    var hasSampleSize = (flags & 0x000200) > 0;
+    var hasSampleFlags = (flags & 0x000400) > 0;
+    var hasSampleCompositionOffset = (flags & 0x000800) > 0;
+    var sampleCounts = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(trun, cursor);
     cursor += 4;
+
+    if (hasDataOffset) {
+      cursor += 4;
+    }
+
+    if (hasFirstSampleFlags) {
+      cursor += 4;
+    }
+
+    var i = sampleCounts;
+    var duration = 0;
+
+    while (i-- > 0) {
+      if (hasSampleDuration) {
+        duration += (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(trun, cursor);
+        cursor += 4;
+      } else {
+        duration += defaultDuration;
+      }
+
+      if (hasSampleSize) {
+        cursor += 4;
+      }
+
+      if (hasSampleFlags) {
+        cursor += 4;
+      }
+
+      if (hasSampleCompositionOffset) {
+        cursor += 4;
+      }
+    }
+
+    completeDuration += duration;
   }
 
-  if (hasFirstSampleFlags) {
-    cursor += 4;
-  }
-
-  var i = sampleCounts;
-  var duration = 0;
-
-  while (i-- > 0) {
-    if (hasSampleDuration) {
-      duration += (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .pX)(trun, cursor);
-      cursor += 4;
-    } else {
-      duration += defaultDuration;
-    }
-
-    if (hasSampleSize) {
-      cursor += 4;
-    }
-
-    if (hasSampleFlags) {
-      cursor += 4;
-    }
-
-    if (hasSampleCompositionOffset) {
-      cursor += 4;
-    }
-  }
-
-  return duration;
+  return completeDuration;
 }
 /**
  * Get timescale information from a movie header box. Found in init segments.
@@ -36524,7 +36592,7 @@ var AsapAction = (function (_super) {
         if ((delay != null && delay > 0) || (delay == null && this.delay > 0)) {
             return _super.prototype.recycleAsyncId.call(this, scheduler, id, delay);
         }
-        if (scheduler.actions.length === 0) {
+        if (!scheduler.actions.some(function (action) { return action.id === id; })) {
             immediateProvider.clearImmediate(id);
             scheduler._scheduled = undefined;
         }
@@ -36546,20 +36614,19 @@ var AsapScheduler = (function (_super) {
     }
     AsapScheduler.prototype.flush = function (action) {
         this._active = true;
+        var flushId = this._scheduled;
         this._scheduled = undefined;
         var actions = this.actions;
         var error;
-        var index = -1;
         action = action || actions.shift();
-        var count = actions.length;
         do {
             if ((error = action.execute(action.state, action.delay))) {
                 break;
             }
-        } while (++index < count && (action = actions.shift()));
+        } while ((action = actions[0]) && action.id === flushId && actions.shift());
         this._active = false;
         if (error) {
-            while (++index < count && (action = actions.shift())) {
+            while ((action = actions[0]) && action.id === flushId && actions.shift()) {
                 action.unsubscribe();
             }
             throw error;
@@ -40952,16 +41019,20 @@ var Observable = (function () {
         var _this = this;
         promiseCtor = getPromiseCtor(promiseCtor);
         return new promiseCtor(function (resolve, reject) {
-            var subscription;
-            subscription = _this.subscribe(function (value) {
-                try {
-                    next(value);
-                }
-                catch (err) {
-                    reject(err);
-                    subscription === null || subscription === void 0 ? void 0 : subscription.unsubscribe();
-                }
-            }, reject, resolve);
+            var subscriber = new Subscriber/* SafeSubscriber */.Hp({
+                next: function (value) {
+                    try {
+                        next(value);
+                    }
+                    catch (err) {
+                        reject(err);
+                        subscriber.unsubscribe();
+                    }
+                },
+                error: reject,
+                complete: resolve,
+            });
+            _this.subscribe(subscriber);
         });
     };
     Observable.prototype._subscribe = function (subscriber) {
@@ -46657,6 +46728,7 @@ var InitializationSegmentCache = /*#__PURE__*/function () {
 
 
 
+
 var DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR = config/* default.DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR */.Z.DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
     segment_fetcher_DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE = config/* default.DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE */.Z.DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
     segment_fetcher_INITIAL_BACKOFF_DELAY_BASE = config/* default.INITIAL_BACKOFF_DELAY_BASE */.Z.INITIAL_BACKOFF_DELAY_BASE,
@@ -46705,33 +46777,40 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
 
     var segmentIdString = (0,utils/* getLoggableSegmentId */.K)(content);
     return new Observable/* Observable */.y(function (obs) {
-      var _a, _b; // Retrieve from cache if it exists
+      var _a, _b;
 
-
-      var cached = cache !== undefined ? cache.get(content) : null;
-
-      if (cached !== null) {
-        log/* default.debug */.Z.debug("SF: Found wanted segment in cache", segmentIdString);
-        obs.next({
-          type: "chunk",
-          parse: generateParserFunction(cached, false)
-        });
-        obs.next({
-          type: "chunk-complete"
-        });
-        obs.complete();
-        return undefined;
-      }
-
-      var id = generateRequestID();
-      log/* default.debug */.Z.debug("SF: Beginning request", segmentIdString);
-      (_a = callbacks.onRequestBegin) === null || _a === void 0 ? void 0 : _a.call(callbacks, {
-        requestTimestamp: performance.now(),
-        id: id,
-        content: content
-      });
+      var requestId = generateRequestID();
       var canceller = new task_canceller/* default */.ZP();
-      var hasRequestEnded = false;
+      /**
+       * If the request succeeded, set to the corresponding
+       * `IChunkCompleteInformation` object.
+       * If the request failed or was cancelled, set to `null`.
+       *
+       * Stays to `undefined` when the request is still pending.
+       */
+
+      var requestInfo;
+      /**
+       * Array containing one entry per loaded chunk, in chronological order.
+       * The boolean indicates if the chunk has been parsed at least once.
+       *
+       * This is used to know when all loaded chunks have been parsed, which
+       * can be useful to e.g. construct metrics about the loaded segment.
+       */
+
+      var parsedChunks = [];
+      /**
+       * Addition of the duration of each encountered and parsed chunks.
+       * Allows to have an idea of the real duration of the full segment once
+       * all chunks have been parsed.
+       *
+       * `undefined` if at least one of the parsed chunks has unknown duration.
+       */
+
+      var segmentDurationAcc = 0;
+      /** Set to `true` once network metrics have been sent. */
+
+      var metricsSent = false;
       var loaderCallbacks = {
         /**
          * Callback called when the segment loader has progress information on
@@ -46747,7 +46826,7 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
               size: info.size,
               totalSize: info.totalSize,
               timestamp: performance.now(),
-              id: id
+              id: requestId
             });
           }
         },
@@ -46764,11 +46843,33 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
             parse: generateParserFunction(chunkData, true)
           });
         }
-      };
+      }; // Retrieve from cache if it exists
+
+      var cached = cache !== undefined ? cache.get(content) : null;
+
+      if (cached !== null) {
+        log/* default.debug */.Z.debug("SF: Found wanted segment in cache", segmentIdString);
+        obs.next({
+          type: "chunk",
+          parse: generateParserFunction(cached, false)
+        });
+        obs.next({
+          type: "chunk-complete"
+        });
+        obs.complete();
+        return undefined;
+      }
+
+      log/* default.debug */.Z.debug("SF: Beginning request", segmentIdString);
+      (_a = callbacks.onRequestBegin) === null || _a === void 0 ? void 0 : _a.call(callbacks, {
+        requestTimestamp: performance.now(),
+        id: requestId,
+        content: content
+      });
       tryURLsWithBackoff((_b = segment.mediaURLs) !== null && _b !== void 0 ? _b : [null], callLoaderWithUrl, (0,object_assign/* default */.Z)({
         onRetry: onRetry
       }, options), canceller.signal).then(function (res) {
-        var _a, _b;
+        var _a;
 
         log/* default.debug */.Z.debug("SF: Segment request ended with success", segmentIdString);
 
@@ -46791,17 +46892,13 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
         }
 
         log/* default.debug */.Z.debug("SF: Segment request ended with success", segmentIdString);
-        hasRequestEnded = true;
         obs.next({
           type: "chunk-complete"
         });
 
-        if ((res.resultType === "segment-loaded" || res.resultType === "chunk-complete") && res.resultData.size !== undefined && res.resultData.requestDuration !== undefined) {
-          (_a = callbacks.onMetrics) === null || _a === void 0 ? void 0 : _a.call(callbacks, {
-            size: res.resultData.size,
-            duration: res.resultData.requestDuration,
-            content: content
-          });
+        if (res.resultType !== "segment-created") {
+          requestInfo = res.resultData;
+          sendNetworkMetricsIfAvailable();
         }
 
         if (!canceller.isUsed) {
@@ -46813,27 +46910,30 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
           // purpose. Observable's events should have been ignored by RxJS if
           // the Observable has already been canceled and we don't care if
           // `"metrics"` is sent there.
-          (_b = callbacks.onRequestEnd) === null || _b === void 0 ? void 0 : _b.call(callbacks, {
-            id: id
+          (_a = callbacks.onRequestEnd) === null || _a === void 0 ? void 0 : _a.call(callbacks, {
+            id: requestId
           });
         }
 
         obs.complete();
       })["catch"](function (err) {
         log/* default.debug */.Z.debug("SF: Segment request failed", segmentIdString);
-        hasRequestEnded = true;
+        requestInfo = null;
         obs.error(errorSelector(err));
       });
       return function () {
         var _a;
 
-        if (!hasRequestEnded) {
-          log/* default.debug */.Z.debug("SF: Segment request cancelled", segmentIdString);
-          canceller.cancel();
-          (_a = callbacks.onRequestEnd) === null || _a === void 0 ? void 0 : _a.call(callbacks, {
-            id: id
-          });
+        if (requestInfo !== undefined) {
+          return; // Request already terminated
         }
+
+        log/* default.debug */.Z.debug("SF: Segment request cancelled", segmentIdString);
+        requestInfo = null;
+        canceller.cancel();
+        (_a = callbacks.onRequestEnd) === null || _a === void 0 ? void 0 : _a.call(callbacks, {
+          id: requestId
+        });
       };
       /**
        * Call a segment loader for the given URL with the right arguments.
@@ -46854,6 +46954,8 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
 
 
       function generateParserFunction(data, isChunked) {
+        parsedChunks.push(false);
+        var parsedChunkId = parsedChunks.length - 1;
         return function parse(initTimescale) {
           var loaded = {
             data: data,
@@ -46861,7 +46963,15 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
           };
 
           try {
-            return parseSegment(loaded, content, initTimescale);
+            var parsed = parseSegment(loaded, content, initTimescale);
+
+            if (!parsedChunks[parsedChunkId]) {
+              segmentDurationAcc = segmentDurationAcc !== undefined && parsed.segmentType === "media" && parsed.chunkInfos !== null && parsed.chunkInfos.duration !== undefined ? segmentDurationAcc + parsed.chunkInfos.duration : undefined;
+              parsedChunks[parsedChunkId] = true;
+              sendNetworkMetricsIfAvailable();
+            }
+
+            return parsed;
           } catch (error) {
             throw (0,format_error/* default */.Z)(error, {
               defaultCode: "PIPELINE_PARSE_ERROR",
@@ -46881,6 +46991,31 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
           type: "retry",
           value: errorSelector(err)
         });
+      }
+      /**
+       * Send netork metrics if they haven't yet been sent and if all data to
+       * define them is available.
+       */
+
+
+      function sendNetworkMetricsIfAvailable() {
+        var _a;
+
+        if (metricsSent) {
+          return;
+        }
+
+        if (!(0,is_null_or_undefined/* default */.Z)(requestInfo) && requestInfo.size !== undefined && requestInfo.requestDuration !== undefined && parsedChunks.length > 0 && parsedChunks.every(function (isParsed) {
+          return isParsed;
+        })) {
+          metricsSent = true;
+          (_a = callbacks.onMetrics) === null || _a === void 0 ? void 0 : _a.call(callbacks, {
+            size: requestInfo.size,
+            requestDuration: requestInfo.requestDuration,
+            content: content,
+            segmentDuration: segmentDurationAcc
+          });
+        }
       }
     });
   };
@@ -48641,19 +48776,25 @@ function RepresentationEstimator(_ref) {
    */
 
   function onMetric(value) {
-    var duration = value.duration,
+    var requestDuration = value.requestDuration,
+        segmentDuration = value.segmentDuration,
         size = value.size,
         content = value.content; // calculate bandwidth
 
-    bandwidthEstimator.addSample(duration, size);
-    var segment = content.segment;
+    bandwidthEstimator.addSample(requestDuration, size);
 
-    if (segment.complete && !segment.isInit) {
+    if (!content.segment.isInit) {
       // calculate "maintainability score"
-      var requestDuration = duration / 1000;
-      var segmentDuration = segment.duration;
-      var representation = content.representation;
-      scoreCalculator.addSample(representation, requestDuration, segmentDuration);
+      var segment = content.segment,
+          representation = content.representation;
+
+      if (segmentDuration === undefined && !segment.complete) {
+        // We cannot know the real duration of the segment
+        return;
+      }
+
+      var segDur = segmentDuration !== null && segmentDuration !== void 0 ? segmentDuration : segment.duration;
+      scoreCalculator.addSample(representation, requestDuration / 1000, segDur);
     }
   }
 
@@ -58319,7 +58460,7 @@ function getRightVideoTrack(adaptation, isTrickModeEnabled) {
 /* eslint-disable @typescript-eslint/naming-convention */
 
 var DEFAULT_UNMUTED_VOLUME = config/* default.DEFAULT_UNMUTED_VOLUME */.Z.DEFAULT_UNMUTED_VOLUME;
-var isActive = event_listeners/* isActive */.zh,
+var isPageActive = event_listeners/* isPageActive */.Nh,
     isVideoVisible = event_listeners/* isVideoVisible */._K,
     onEnded$ = event_listeners/* onEnded$ */.C1,
     onFullscreenChange$ = event_listeners/* onFullscreenChange$ */.Q1,
@@ -58746,7 +58887,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
           log/* default.warn */.Z.warn("API: Can't apply throttleWhenHidden because " + "browser can't be trusted for visibility.");
         } else {
           throttlers.throttle = {
-            video: isActive().pipe((0,map/* map */.U)(function (active) {
+            video: isPageActive().pipe((0,map/* map */.U)(function (active) {
               return active ? Infinity : 0;
             }), (0,takeUntil/* takeUntil */.R)(stopContent$))
           };
