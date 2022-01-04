@@ -93,7 +93,7 @@ describe("Features - initializeFeaturesObject", () => {
       nativeTextTracksParsers: {},
       htmlTextTracksBuffer: null,
       htmlTextTracksParsers: {},
-      emeManager: null,
+      ContentDecryptor: null,
       directfile: null,
     };
     jest.mock("../features_object", () => ({
@@ -113,7 +113,7 @@ describe("Features - initializeFeaturesObject", () => {
         js: require("../../parsers/manifest/dash/js-parser").default,
         wasm: null,
       },
-      emeManager: require("../../core/eme/index").default,
+      ContentDecryptor: require("../../core/eme/index").default,
       directfile: {
         initDirectFile: require("../../core/init/initialize_directfile").default,
         mediaElementTrackChoiceManager:

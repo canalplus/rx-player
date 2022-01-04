@@ -96,7 +96,7 @@ export interface ICreatedMediaKeysEvent {
      * https://dashif.org/identifiers/content_protection/
      *
      * This ID can be used to select the encryption initialization data to send
-     * to the EMEManager.
+     * to the `ContentDecryptor`.
      *
      * Note that this is only for optimization purposes (e.g. to not
      * unnecessarily wait for new encryption initialization data to arrive when
@@ -140,62 +140,17 @@ export interface ICreatedMediaKeysEvent {
  * Because this event is sent after a MediaKeys is created, you will always have
  * a "created-media-keys" event before an "attached-media-keys" event.
  */
-export interface IAttachedMediaKeysEvent {
-  type: "attached-media-keys";
-  value: {
-    /** The MediaKeySystemAccess which allowed to create the MediaKeys instance. */
-    mediaKeySystemAccess: MediaKeySystemAccess |
-                          ICustomMediaKeySystemAccess;
-    /** The MediaKeys instance. */
-    mediaKeys : MediaKeys |
-                ICustomMediaKeys;
-    stores : IMediaKeySessionStores;
-    options : IKeySystemOption;
-  };
+export interface IAttachedMediaKeysData {
+  /** The MediaKeySystemAccess which allowed to create the MediaKeys instance. */
+  mediaKeySystemAccess: MediaKeySystemAccess |
+                        ICustomMediaKeySystemAccess;
+  /** The MediaKeys instance. */
+  mediaKeys : MediaKeys |
+              ICustomMediaKeys;
+  stores : IMediaKeySessionStores;
+  options : IKeySystemOption;
 }
 
-/**
- * Emitted when the initialization data received through an encrypted event or
- * through the EMEManager argument can already be decipherable without going
- * through the usual license-fetching logic.
- * This is usually because the MediaKeySession for this encryption key has
- * already been created.
- */
-export interface IInitDataIgnoredEvent {
-  type: "init-data-ignored";
-  value : { initializationData : IInitializationDataInfo };
-}
-
-/**
- * Emitted when a "message" event is sent.
- * Those events generally allows the CDM to ask for data such as the license or
- * a server certificate.
- * As such, we will call the corresponding `getLicense` callback immediately
- * after this event is sent.
- *
- * Depending on the return of the getLicense call, we will then either emit a
- * "warning" event and retry the call (for when it failed but will be retried),
- * throw (when it failed with no retry left and no fallback policy is set), emit
- * a "blacklist-protection-data-event" (for when it failed with no retry left
- * but a fallback policy is set), emit a "session-updated" event (for when the
- * call resolved with some data) or emit a "no-update" event (for when the call
- * resolved with `null`).
- */
-export interface ISessionMessageEvent {
-  type: "session-message";
-  value : { messageType : string;
-            initializationData : IInitializationDataInfo; };
-}
-
-/**
- * Emitted when a `getLicense` call resolves with null.
- * In that case, we do not call `MediaKeySession.prototype.update` and no
- * `session-updated` event will be sent.
- */
-export interface INoUpdateEvent {
-  type : "no-update";
-  value : { initializationData: IInitializationDataInfo };
-}
 
 /**
  * Some key ids have updated their status.
@@ -242,46 +197,10 @@ export interface IKeyUpdateValue {
   whitelistedKeyIds : Uint8Array[];
 }
 
-/**
- * Emitted after the `MediaKeySession.prototype.update` function resolves.
- * This function is called when the `getLicense` callback resolves with a data
- * different than `null`.
- */
-export interface ISessionUpdatedEvent {
-  type: "session-updated";
-  value: { session: MediaKeySession |
-                    ICustomMediaKeySession;
-           license: ILicense |
-                    null;
-           initializationData : IInitializationDataInfo; };
-}
-
-/**
- * Event Emitted when specific "protection data" cannot be deciphered and is thus
- * blacklisted.
- *
- * The linked value is the initialization data linked to the content that cannot
- * be deciphered.
- */
-export interface IBlacklistProtectionDataEvent { type: "blacklist-protection-data";
-                                                 value: IInitializationDataInfo; }
-
-// Every event sent by the EMEManager
-export type IEMEManagerEvent = IEMEWarningEvent | // minor error
-                               IEncryptedEvent | // browser's "encrypted" event
-                               ICreatedMediaKeysEvent |
-                               IAttachedMediaKeysEvent |
-                               IInitDataIgnoredEvent | // initData already handled
-                               ISessionMessageEvent | // MediaKeySession event
-                               INoUpdateEvent | // `getLicense` returned `null`
-                               IKeysUpdateEvent | // Status of keys changed
-                               ISessionUpdatedEvent | // `update` call resolved
-                               IBlacklistProtectionDataEvent; // initData undecipherable
-
 export type ILicense = BufferSource |
                        ArrayBuffer;
 
-/** Segment protection sent by the RxPlayer to the EMEManager. */
+/** Segment protection sent by the RxPlayer to the `ContentDecryptor`. */
 export interface IContentProtection {
   /**
    * Initialization data type.
