@@ -80,7 +80,7 @@
   "dependencies": {
     "next-tick": "1.1.0",
     "pinkie": "2.0.4",
-    "rxjs": "7.5.1"
+    "rxjs": "7.4.0"
   },
   "devDependencies": {
     "@babel/core": "7.16.7",
