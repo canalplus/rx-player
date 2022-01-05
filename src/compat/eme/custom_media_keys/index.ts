@@ -92,7 +92,8 @@ let setMediaKeys :
 if (isNode ||
     (navigator.requestMediaKeySystemAccess != null && !shouldFavourCustomSafariEME())
 ) {
-  requestMediaKeySystemAccess = navigator.requestMediaKeySystemAccess.bind(navigator);
+  requestMediaKeySystemAccess = (...args) =>
+    navigator.requestMediaKeySystemAccess(...args);
 } else {
   let isTypeSupported: (keyType: string) => boolean;
   let createCustomMediaKeys: (keyType: string) => ICustomMediaKeys;
