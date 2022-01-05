@@ -280,6 +280,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     maxBufferAhead : ISharedReference<number>;
     /** Maximum kept buffer behind in the current position, in seconds. */
     maxBufferBehind : ISharedReference<number>;
+    /** Maximum size of buffer , in bits */
+    wantedBufferSize : ISharedReference<number>;
   };
 
   /** Information on the current bitrate settings. */
@@ -488,6 +490,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             throttleVideoBitrateWhenHidden,
             videoElement,
             wantedBufferAhead,
+            wantedBufferSize,
             stopAtEnd } = parseConstructorOptions(options);
 
     // Workaround to support Firefox autoplay on FF 42.
@@ -554,6 +557,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       wantedBufferAhead: createSharedReference(wantedBufferAhead),
       maxBufferAhead: createSharedReference(maxBufferAhead),
       maxBufferBehind: createSharedReference(maxBufferBehind),
+      wantedBufferSize: createSharedReference(wantedBufferSize),
     };
 
     this._priv_bitrateInfos = {
@@ -627,6 +631,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_speed.finish();
     this._priv_contentLock.finish();
     this._priv_bufferOptions.wantedBufferAhead.finish();
+    this._priv_bufferOptions.wantedBufferSize.finish();
     this._priv_bufferOptions.maxBufferAhead.finish();
     this._priv_bufferOptions.maxBufferBehind.finish();
     this._priv_bitrateInfos.manualBitrates.video.finish();
@@ -1866,6 +1871,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Set the max buffer size the buffer should take in memory
+   * The player . will stop downloading chunks when this size is reached.
+   * @param {Number} sizeInBits
+   */
+  setWantedBufferSize(sizeInBits : number) : void {
+    this._priv_bufferOptions.wantedBufferSize.setValue(sizeInBits);
+  }
+
+  /**
    * Returns the max buffer size for the buffer behind the current position.
    * @returns {Number}
    */
@@ -1887,6 +1901,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   getWantedBufferAhead() : number {
     return this._priv_bufferOptions.wantedBufferAhead.getValue();
+  }
+
+  /**
+   * Returns the max buffer memory size for the buffer
+   * @returns {Number}
+   */
+  getWantedBufferSize() : number {
+    return this._priv_bufferOptions.wantedBufferSize.getValue();
   }
 
   /**

@@ -181,6 +181,15 @@ export default {
   DEFAULT_WANTED_BUFFER_AHEAD: 30,
 
   /**
+   * Default buffer memory limit in bits..
+   * Once enough content has been downloaded to fill the buffer up to
+   * DEFAULT_WANTED_BUFFER_SIZE , we will stop downloading
+   * content.
+   * @type {Number}
+   */
+  DEFAULT_WANTED_BUFFER_SIZE: Infinity,
+
+  /**
    * Default max buffer size ahead of the current position in seconds.
    * The buffer _after_ this limit will be garbage collected.
    * Set to Infinity for no limit.

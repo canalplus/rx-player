@@ -30,6 +30,7 @@ class Settings extends React.Component {
       maxVideoBr,
       maxAudioBr,
       wantedBufferAhead,
+      wantedBufferSize,
       maxBufferAhead,
       maxBufferBehind,
       limitVideoWidth,
@@ -53,6 +54,7 @@ class Settings extends React.Component {
         maxVideoBitrate: parseFloat(maxVideoBr),
         maxAudioBitrate: parseFloat(maxAudioBr),
         wantedBufferAhead: parseFloat(wantedBufferAhead),
+        wantedBufferSize: parseFloat(wantedBufferSize),
         maxBufferAhead: parseFloat(maxBufferAhead),
         maxBufferBehind: parseFloat(maxBufferBehind),
         limitVideoWidth,
@@ -129,6 +131,9 @@ class Settings extends React.Component {
 
   onWantedBufferAheadInput = (value) =>
     this.setState({ wantedBufferAhead: value });
+  
+  onWantedBufferSizeInput = (value) => 
+    this.setState({ wantedBufferSize: value});
 
   onMaxBufferBehindInput = (value) =>
     this.setState({ maxBufferBehind: value });
@@ -156,6 +161,7 @@ class Settings extends React.Component {
       audioTrackSwitchingMode,
       onCodecSwitch,
       wantedBufferAhead,
+      wantedBufferSize,
       maxBufferAhead,
       maxBufferBehind,
     } = this.state;
@@ -232,11 +238,13 @@ class Settings extends React.Component {
           <Option title="Buffer Options">
             <BufferOptions
               wantedBufferAhead={wantedBufferAhead}
+              wantedBufferSize={wantedBufferSize}
               maxBufferAhead={maxBufferAhead}
               maxBufferBehind={maxBufferBehind}
               onWantedBufferAheadInput={this.onWantedBufferAheadInput}
               onMaxBufferAheadInput={this.onMaxBufferAheadInput}
               onMaxBufferBehindInput={this.onMaxBufferBehindInput}
+              onWantedBufferSizeInput={this.onWantedBufferSizeInput}
             />
           </Option>
         </div>
