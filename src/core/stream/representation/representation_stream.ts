@@ -145,6 +145,14 @@ export interface IRepresentationStreamOptions {
    * goes below that size again.
    */
   bufferGoal$ : Observable<number>;
+
+  /**
+   *  The buffer size limit in memory that we can reach.
+   *  Once reached, no segments will be loaded until it
+   *  goes below that size again
+   */
+  bufferSizeGoal$ : Observable<number>;
+
   /**
    * Hex-encoded DRM "system ID" as found in:
    * https://dashif.org/identifiers/content_protection/
@@ -221,6 +229,7 @@ export default function RepresentationStream<TSegmentDataType>({
           adaptation,
           representation } = content;
   const { bufferGoal$,
+          bufferSizeGoal$,
           drmSystemId,
           fastSwitchThreshold$ } = options;
   const bufferType = adaptation.type;
@@ -277,13 +286,14 @@ export default function RepresentationStream<TSegmentDataType>({
   const status$ = observableCombineLatest([
     playbackObserver.observe(true),
     bufferGoal$,
+    bufferSizeGoal$,
     terminate$.pipe(take(1),
                     startWith(null)),
     reCheckNeededSegments$.pipe(startWith(undefined)),
   ]).pipe(
     withLatestFrom(fastSwitchThreshold$),
     mergeMap(function (
-      [ [ observation, bufferGoal, terminate ],
+      [ [ observation, bufferGoal, bufferSizeGoal, terminate ],
         fastSwitchThreshold ]
     ) : Observable<IStreamStatusEvent |
                    IStreamNeedsManifestRefresh |
@@ -295,6 +305,7 @@ export default function RepresentationStream<TSegmentDataType>({
                                      playbackObserver,
                                      fastSwitchThreshold,
                                      bufferGoal,
+                                     bufferSizeGoal,
                                      segmentBuffer);
       const { neededSegments } = status;
 

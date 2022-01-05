@@ -11,9 +11,11 @@ import DEFAULT_VALUES from "../../lib/defaultOptionsValues";
  */
 function BufferOptions({
   wantedBufferAhead,
+  wantedBufferSize,
   maxBufferAhead,
   maxBufferBehind,
   onWantedBufferAheadInput,
+  onWantedBufferSizeInput,
   onMaxBufferAheadInput,
   onMaxBufferBehindInput,
 }) {
@@ -22,6 +24,10 @@ function BufferOptions({
   );
   const [isMaxBufferBehindLimited, setMaxBufferBehindLimit] = useState(
     maxBufferBehind !== Infinity
+  );
+
+  const [isWantedBufferSizeLimited, setWantedBufferSizeLimited] = useState(
+    wantedBufferSize !== Infinity
   );
 
   const onChangeLimitMaxBufferAHead = (evt) => {
@@ -45,6 +51,17 @@ function BufferOptions({
       onMaxBufferAheadInput(DEFAULT_VALUES.maxBufferBehind);
     }
   };
+
+  const onChangeLimitWantedBufferSize = (evt) => {
+    const isNotLimited = getCheckBoxValue(evt.target);
+    if (isNotLimited){
+      setWantedBufferSizeLimited(false);
+      onWantedBufferSizeInput(Infinity)
+    } else {
+      setWantedBufferSizeLimited(true);
+      onWantedBufferSizeInput(DEFAULT_VALUES.wantedBufferSize)
+    }
+  }
 
   return (
     <Fragment>
@@ -79,6 +96,49 @@ function BufferOptions({
             />
           </span>
         </div>
+      </li>
+      <li>
+        <div className="playerOptionInput">
+          <label htmlFor="wantedBufferSize">Wanted Buffer Size</label>
+          <span className="wrapperInputWithResetBtn">
+            <input
+              type="text"
+              step="10"
+              aria-label="Wanted buffer size option"
+              name="wantedBufferSize"
+              id="wantedBufferSize"
+              placeholder="Number"
+              onChange={(evt) => onWantedBufferSizeInput(evt.target.value)}
+              value={wantedBufferSize}
+              className="optionInput"
+            />
+            <Button
+              className={
+                parseFloat(wantedBufferSize) ===
+                  DEFAULT_VALUES.wantedBufferSize
+                  ? "resetBtn disabledResetBtn"
+                  : "resetBtn"
+              }
+              ariaLabel="Reset option to default value"
+              title="Reset option to default value"
+              onClick={() => {
+                setWantedBufferSizeLimited(DEFAULT_VALUES.wantedBufferSize !== 
+                  Infinity);
+                onWantedBufferAheadInput(DEFAULT_VALUES.wantedBufferSize);
+              }}
+              value={String.fromCharCode(0xf021)}
+            />
+          </span>
+        </div>
+        <Checkbox
+          className="playerOptionsCheckBox"
+          ariaLabel="Do not limit wanted buffer size option"
+          name="wantedBufferSizeLimit"
+          checked={isWantedBufferSizeLimited === false}
+          onChange={onChangeLimitWantedBufferSize}
+        >
+          Do not limit
+        </Checkbox>
       </li>
       <li>
         <div className="playerOptionInput">

@@ -16,7 +16,6 @@
 import DEFAULT_CONFIG, { IDefaultConfig } from "./default_config";
 import deepMerge from "./utils/deep_merge";
 
-
 class ConfigHandler {
   _config = DEFAULT_CONFIG;
 

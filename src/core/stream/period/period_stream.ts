@@ -98,6 +98,7 @@ export interface IPeriodStreamArguments {
   playbackObserver : IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>;
   options: IPeriodStreamOptions;
   wantedBufferAhead : IReadOnlySharedReference<number>;
+  wantedBufferSize : IReadOnlySharedReference<number>;
 }
 
 /** Options tweaking the behavior of the PeriodStream. */
@@ -142,6 +143,7 @@ export default function PeriodStream({
   segmentBuffersStore,
   options,
   wantedBufferAhead,
+  wantedBufferSize,
 } : IPeriodStreamArguments) : Observable<IPeriodStreamEvent> {
   const { period } = content;
 
@@ -190,7 +192,11 @@ export default function PeriodStream({
 
         return observableConcat(
           cleanBuffer$.pipe(map(() => EVENTS.adaptationChange(bufferType, null, period))),
-          createEmptyStream(playbackObserver, wantedBufferAhead, bufferType, { period })
+          createEmptyStream(playbackObserver,
+                            wantedBufferAhead,
+                            wantedBufferSize,
+                            bufferType,
+                            { period })
         );
       }
 
@@ -279,7 +285,8 @@ export default function PeriodStream({
                               playbackObserver: adaptationPlaybackObserver,
                               segmentBuffer,
                               segmentFetcherCreator,
-                              wantedBufferAhead }).pipe(
+                              wantedBufferAhead,
+                              wantedBufferSize }).pipe(
       catchError((error : unknown) => {
         // Stream linked to a non-native media buffer should not impact the
         // stability of the player. ie: if a text buffer sends an error, we want
@@ -294,7 +301,11 @@ export default function PeriodStream({
           });
           return observableConcat(
             observableOf(EVENTS.warning(formattedError)),
-            createEmptyStream(playbackObserver, wantedBufferAhead, bufferType, { period })
+            createEmptyStream(playbackObserver,
+                              wantedBufferAhead,
+                              wantedBufferSize,
+                              bufferType,
+                              { period })
           );
         }
         log.error(`Stream: ${bufferType} Stream crashed. Stopping playback.`, error);

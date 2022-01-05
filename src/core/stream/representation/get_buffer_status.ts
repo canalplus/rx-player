@@ -86,11 +86,11 @@ export default function getBufferStatus(
   playbackObserver : IReadOnlyPlaybackObserver<unknown>,
   fastSwitchThreshold : number | undefined,
   bufferGoal : number,
+  bufferSizeGoal : number,
   segmentBuffer : SegmentBuffer
 ) : IBufferStatus {
   const { period, representation } = content;
   segmentBuffer.synchronizeInventory();
-  const bufferSizeGoal = 50 * 1000 * 1000; // 50 Mbit
   const wantedEndPosition = wantedStartPosition + bufferGoal;
   const neededRange = { start: Math.max(wantedStartPosition, period.start),
                         end: Math.min(wantedEndPosition, period.end ?? Infinity) };
