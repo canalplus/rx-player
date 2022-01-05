@@ -91,7 +91,7 @@ export default function getBufferStatus(
 ) : IBufferStatus {
   const { period, representation } = content;
   segmentBuffer.synchronizeInventory();
-
+  const bufferSizeGoal = 50 * 1000 * 1000; // 50 Mbit
   const wantedEndPosition = wantedStartPosition + bufferGoal;
   const neededRange = { start: Math.max(wantedStartPosition, period.start),
                         end: Math.min(wantedEndPosition, period.end ?? Infinity) };
@@ -125,7 +125,8 @@ export default function getBufferStatus(
                                              fastSwitchThreshold,
                                              getBufferedHistory,
                                              neededRange,
-                                             segmentsBeingPushed })
+                                             segmentsBeingPushed,
+                                             bufferSizeGoal })
     .map((segment) => ({ priority: getSegmentPriority(segment.time, wantedStartPosition),
                          segment }));
 

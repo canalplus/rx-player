@@ -17,15 +17,16 @@
 // eslint-disable-next-line max-len
 import config from "../../../config";
 import log from "../../../log";
-import Manifest, {
+import {
   Adaptation,
   areSameContent,
   ISegment,
   Period,
   Representation,
+  IContentContext,
 } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
-import { IBufferedChunk } from "../../segment_buffers";
+import { IBufferedChunk, IEndOfSegmentInfos } from "../../segment_buffers";
 import {
   IBufferedHistoryEntry,
   IChunkContext,
@@ -36,13 +37,14 @@ const { CONTENT_REPLACEMENT_PADDING,
         MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT,
         MINIMUM_SEGMENT_SIZE } = config;
 
+
+type ISegmentMixedWithContent = IContentContext & {segment: ISegment};
+
+
 /** Arguments for `getNeededSegments`. */
 export interface IGetNeededSegmentsArguments {
   /** The content we want to load segments for */
-  content: { adaptation : Adaptation;
-             manifest : Manifest;
-             period : Period;
-             representation : Representation; };
+  content: IContentContext;
   /**
    * The current playing position.
    * Important to avoid asking for segments on the same exact position, which
@@ -61,10 +63,7 @@ export interface IGetNeededSegmentsArguments {
   /** The range we want to fill with segments. */
   neededRange : { start: number; end: number };
   /** The list of segments that are already in the process of being pushed. */
-  segmentsBeingPushed : Array<{ adaptation : Adaptation;
-                                period : Period;
-                                representation : Representation;
-                                segment : ISegment; }>;
+  segmentsBeingPushed : IEndOfSegmentInfos[];
   /**
    * Information on the segments already in the buffer, in chronological order.
    *
@@ -75,6 +74,11 @@ export interface IGetNeededSegmentsArguments {
    * re-requested.
    */
   bufferedSegments : IBufferedChunk[];
+
+  /**
+   * bufferSizeGoal is the maximum memory in bits that the buffer should take
+   */
+  bufferSizeGoal: number;
 
   getBufferedHistory : (context : IChunkContext) => IBufferedHistoryEntry[];
 }
@@ -103,8 +107,26 @@ export default function getNeededSegments({
   getBufferedHistory,
   neededRange,
   segmentsBeingPushed,
+  bufferSizeGoal,
 } : IGetNeededSegmentsArguments) : ISegment[] {
   const { representation } = content;
+
+  const estimateSizeBeingPushed = segmentsBeingPushed.reduce((size, segment) => {
+    const { bitrate } = segment.representation;
+    // Not taking into account the fact that the segment
+    // can still be generated and the duration not fully exact
+    const { duration } = segment.segment;
+    return size + (bitrate * duration);
+  }, 0);
+  let availableBufferSize = bufferedSegments.reduce((size, chunk) => {
+    if (chunk.chunkSize !== undefined) {
+      return size - chunk.chunkSize;
+    } else {
+      return size;
+    }
+
+  } , bufferSizeGoal) - estimateSizeBeingPushed;
+
 
   const availableSegmentsForRange = representation.index
     .getSegments(neededRange.start, neededRange.end - neededRange.start);
@@ -143,19 +165,14 @@ export default function getNeededSegments({
       return true;
     });
 
-  const segmentsToDownload = availableSegmentsForRange.filter(segment => {
-    const contentObject = objectAssign({ segment }, content);
-
+  return availableSegmentsForRange.filter(segment => {
+    const contentObject: ISegmentMixedWithContent = objectAssign({ segment }, content);
+    const { duration } = segment;
     // First, check that the segment is not already being pushed
-    if (segmentsBeingPushed.length > 0) {
-      const isAlreadyBeingPushed = segmentsBeingPushed
-        .some((pendingSegment) => areSameContent(contentObject, pendingSegment));
-      if (isAlreadyBeingPushed) {
-        return false;
-      }
+    if (isSegmentBeingPushed(segmentsBeingPushed, contentObject)) {
+      return false;
     }
 
-    const { duration, time, end } = segment;
     if (segment.isInit) {
       return true; // never skip initialization segments
     }
@@ -166,63 +183,109 @@ export default function getNeededSegments({
 
     // Check if the same segment from another Representation is not already
     // being pushed.
-    if (segmentsBeingPushed.length > 0) {
-      const waitForPushedSegment = segmentsBeingPushed.some((pendingSegment) => {
-        if (pendingSegment.period.id !== content.period.id ||
-            pendingSegment.adaptation.id !== content.adaptation.id)
-        {
-          return false;
-        }
-        const { segment: oldSegment } = pendingSegment;
-        if ((oldSegment.time - ROUNDING_ERROR) > time) {
-          return false;
-        }
-        if ((oldSegment.end + ROUNDING_ERROR) < end) {
-          return false;
-        }
-        return !shouldContentBeReplaced(pendingSegment,
-                                        contentObject,
-                                        currentPlaybackTime,
-                                        fastSwitchThreshold);
-      });
-      if (waitForPushedSegment) {
-        return false;
-      }
+    if (isSegmentPushedInOtherRepr(segmentsBeingPushed,
+                                   contentObject,
+                                   currentPlaybackTime,
+                                   fastSwitchThreshold)) {
+      return false;
     }
 
-    // check if the segment is already downloaded
-    for (let i = 0; i < segmentsToKeep.length; i++) {
-      const completeSeg = segmentsToKeep[i];
-      const areFromSamePeriod = completeSeg.infos.period.id === content.period.id;
-      // Check if content are from same period, as there can't be overlapping
+    if (isSegmentAlreadyDownloaded(segment, segmentsToKeep, content)) {
+      return false;
+    }
+    if (isHoleInPlaceOfSegment(segment, segmentsToKeep)) {
+      return false;
+    }
+
+    const estimatedSizeSegment = (duration * content.representation.bitrate) / 1000;
+    if (availableBufferSize - estimatedSizeSegment < 0) {
+      return false;
+    }
+    availableBufferSize -= estimatedSizeSegment;
+    return true;
+  });
+}
+
+const isSegmentAlreadyDownloaded = (
+  segment: ISegment,
+  segmentsToKeep: IBufferedChunk[],
+  content: IContentContext) => {
+  // check if the segment is already downloaded
+  const { time, end } = segment;
+  return segmentsToKeep.some((completeSeg) => {
+    const areFromSamePeriod = completeSeg.infos.period.id === content.period.id;
+    // Check if content are from same period, as there can't be overlapping
       // periods, we should consider a segment as already downloaded if
       // it is from same period (but can be from different adaptation or
       // representation)
-      if (areFromSamePeriod) {
-        const completeSegInfos = completeSeg.infos.segment;
-        if (time - completeSegInfos.time > -ROUNDING_ERROR &&
-            completeSegInfos.end - end > -ROUNDING_ERROR)
-        {
-          return false; // already downloaded
-        }
+    if (areFromSamePeriod) {
+      const completeSegInfos = completeSeg.infos.segment;
+      if (time - completeSegInfos.time > -ROUNDING_ERROR &&
+          completeSegInfos.end - end > -ROUNDING_ERROR)
+      {
+        return true; // already downloaded
       }
     }
-
-    // check if there is an hole in place of the segment currently
-    for (let i = 0; i < segmentsToKeep.length; i++) {
-      const completeSeg = segmentsToKeep[i];
-      if (completeSeg.end > time) {
-        // `true` if `completeSeg` starts too far after `time`
-        return completeSeg.start > time + ROUNDING_ERROR ||
-          // `true` if `completeSeg` ends too soon before `end`
-          getLastContiguousSegment(segmentsToKeep, i).end < end - ROUNDING_ERROR;
-      }
-    }
-    return true;
+    return false;
   });
+};
 
-  return segmentsToDownload;
-}
+const isHoleInPlaceOfSegment = (segment: ISegment, segmentsToKeep: IBufferedChunk[]) => {
+  // check if there is an hole in place of the segment currently
+  const { time, end } = segment;
+  return (segmentsToKeep.some((completeSeg, i) => {
+      // `true` if `completeSeg` starts too far after `time`
+    return completeSeg.end > time && (completeSeg.start > time + ROUNDING_ERROR ||
+      // `true` if `completeSeg` ends too soon before `end`
+      getLastContiguousSegment(segmentsToKeep, i).end < end - ROUNDING_ERROR);
+  }));
+};
+
+const isSegmentBeingPushed = (
+  segmentsBeingPushed: IEndOfSegmentInfos[],
+  contentObject: ISegmentMixedWithContent) => {
+  if (segmentsBeingPushed.length > 0) {
+    const isAlreadyBeingPushed = segmentsBeingPushed
+      .some((pendingSegment) => areSameContent(contentObject, pendingSegment));
+    if (isAlreadyBeingPushed) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const isSegmentPushedInOtherRepr = (segmentsBeingPushed: IEndOfSegmentInfos[],
+                                    contentObject: ISegmentMixedWithContent,
+                                    currentPlaybackTime: number,
+                                    fastSwitchThreshold?: number) => {
+  // Check if the same segment from another Representation is not already
+    // being pushed.
+  const { time, end } = contentObject.segment;
+  if (segmentsBeingPushed.length > 0) {
+    const waitForPushedSegment = segmentsBeingPushed.some((pendingSegment) => {
+      if (pendingSegment.period.id !== contentObject.period.id ||
+            pendingSegment.adaptation.id !== contentObject.adaptation.id)
+      {
+        return true;
+      }
+      const { segment: oldSegment } = pendingSegment;
+      if ((oldSegment.time - ROUNDING_ERROR) > time) {
+        return true;
+      }
+      if ((oldSegment.end + ROUNDING_ERROR) < end) {
+        return true;
+      }
+      return !shouldContentBeReplaced(pendingSegment,
+                                      contentObject,
+                                      currentPlaybackTime,
+                                      fastSwitchThreshold);
+    });
+    if (waitForPushedSegment) {
+      return  true;
+    }
+  }
+  return false;
+};
 
 /**
  * From the given array of buffered chunks (`bufferedSegments`) returns the last
@@ -258,10 +321,7 @@ function getLastContiguousSegment(
  * @returns {boolean}
  */
 function shouldContentBeReplaced(
-  oldContent : { adaptation : Adaptation;
-                 period : Period;
-                 representation : Representation;
-                 segment : ISegment; },
+  oldContent : IEndOfSegmentInfos,
   currentContent : { adaptation : Adaptation;
                      period : Period;
                      representation : Representation; },
