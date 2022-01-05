@@ -5,9 +5,10 @@
 ### Bug fixes
 
  - API: re-switch to SEEKING state instead of BUFFERING when seeking to already-buffered data [#1015]
- - DASH: provide default startNumber attribute for number-based SegmentTemplate indexes with a SegmentTimeline (only those without had one) [#1009]
+ - DASH: provide default startNumber attribute for number-based SegmentTemplate indexes with a SegmentTimeline [#1009]
  - TTML (subtitles): interpret percentages as relative to the computed cell size and not as the percentage of the inherited font size in the page [#1013]
- - API: Fix rare unknown active Period bug happening when switching rapidly between Representation, which led to multiple APIs such as `getAvailableVideoBitrate` or `getAvailableAudioTracks` returning either incorrect or empty results [#1018]
+ - subtitles: Work-around recent Chrome issue where the content of a native `<track>` element would still be visible despite being removed from the DOM (issue only reproducible in the `"native"` `textTrackMode`) [#1039]
+ - API: Fix rare issue happening when switching rapidly between Representations, which led to multiple APIs such as `getAvailableVideoBitrate` or `getAvailableAudioTracks` returning either incorrect or empty results [#1018]
 
 ### Other improvements
 
