@@ -34,22 +34,24 @@ import {
   ISegment,
   StaticRepresentationIndex,
 } from "./representation_index";
-import {
-  IAdaptationType,
-  IHDRInformation,
-} from "./types";
+import { IAdaptationType, IHDRInformation } from "./types";
+
+interface IContentContext {
+  adaptation: Adaptation;
+  manifest: Manifest;
+  period: Period;
+  representation: Representation;
+}
 
 export default Manifest;
 export * from "./types";
 export {
   // utils
   areSameContent,
-
   // classes
   Period,
   Adaptation,
   Representation,
-
   // types
   IAdaptationType,
   IBaseContentInfos,
@@ -64,4 +66,5 @@ export {
   ISupplementaryTextTrack,
   StaticRepresentationIndex,
   SUPPORTED_ADAPTATIONS_TYPE,
+  IContentContext
 };
