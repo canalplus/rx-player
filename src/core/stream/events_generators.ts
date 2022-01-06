@@ -22,7 +22,7 @@ import {
   Period,
   Representation,
 } from "../../manifest";
-import { IContentProtection } from "../eme";
+import { IContentProtection } from "../decrypt";
 import { IBufferType } from "../segment_buffers";
 import {
   IActivePeriodChangedEvent,

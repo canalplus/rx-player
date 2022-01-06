@@ -49,7 +49,7 @@ import {
   getCurrentKeySystem,
   IContentProtection,
   IKeySystemOption,
-} from "../eme";
+} from "../decrypt";
 import {
   IManifestFetcherParsedResult,
   IManifestFetcherWarningEvent,
@@ -57,15 +57,15 @@ import {
   SegmentFetcherCreator,
 } from "../fetchers";
 import { ITextTrackSegmentBufferOptions } from "../segment_buffers";
-import linkDrmAndContent, {
-  IDecryptionDisabledEvent,
-  IDecryptionReadyEvent,
-} from "./create_eme_manager";
 import openMediaSource from "./create_media_source";
 import EVENTS from "./events_generators";
 import getInitialTime, {
   IInitialTimeOptions,
 } from "./get_initial_time";
+import linkDrmAndContent, {
+  IDecryptionDisabledEvent,
+  IDecryptionReadyEvent,
+} from "./link_drm_and_content";
 import createMediaSourceLoader from "./load_on_media_source";
 import manifestUpdateScheduler, {
   IManifestRefreshSchedulerEvent,

@@ -70,7 +70,7 @@ export default function closeSession(
       const message = err instanceof Error ?
         err.message :
         "Unknown error made it impossible to close the session";
-      log.error(`EME: ${message}`);
+      log.error(`DRM: ${message}`);
     }
   }
 
