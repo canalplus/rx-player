@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IInitializationDataInfo } from "../core/eme";
+import { IInitializationDataInfo } from "../core/decrypt";
 import {
   ICustomError,
   MediaError,

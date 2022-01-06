@@ -33,12 +33,12 @@ To better understand the player's architecture, you can find below a
   Facilitate track                V ~                  | ~     Abstract the streaming ^ ~
   switching for           +---------------+            | ~     protocol               | ~
   the API                 |               |            | V                            | ~
- +--------------+         |               |         +--------------------------+      | ~
- |   Content    |         |     Init      | ------> |                          |      | ~
- |  Decryptor   | <------ | (./core/init) | <~~~~~~ |     Manifest Fetcher     |      | ~
- | (./core/eme) | ~~~~~~> |               |         |(./core/fetchers/manifest)|      | ~
- |              |         |               |         |                          |      | ~
- +--------------+         +---------------+         +--------------------------+      | ~
+ +----------------+       |               |         +--------------------------+      | ~
+ |    Content     |       |     Init      | ------> |                          |      | ~
+ |   Decryptor    | <---- | (./core/init) | <~~~~~~ |     Manifest Fetcher     |      | ~
+ |(./core/decrypt)| ~~~~> |               |         |(./core/fetchers/manifest)|      | ~
+ |                |       |               |         |                          |      | ~
+ +----------------+       +---------------+         +--------------------------+      | ~
  Negotiate content               | ^  Initialize     Load and refresh the Manifest    | ~
  decryption                      | ~  playback and                                    | ~
                                  | ~  create/connect                                  | ~

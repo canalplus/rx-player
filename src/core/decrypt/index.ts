@@ -14,16 +14,25 @@
  * limitations under the License.
  */
 
-import ContentDecryptor from "../../core/decrypt";
-import { IFeaturesObject } from "../types";
-
 /**
- * Add ability to play encrypted contents
- * @param {Object} features
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
  */
-function addEMEFeature(features : IFeaturesObject) : void {
-  features.ContentDecryptor = ContentDecryptor;
-}
 
-export { addEMEFeature as EME };
-export default addEMEFeature;
+import clearEMESession from "./clear_eme_session";
+import ContentDecryptor, {
+  ContentDecryptorState,
+  IContentDecryptorEvent,
+} from "./content_decryptor";
+import disposeEME from "./dispose_eme";
+import getCurrentKeySystem from "./get_current_key_system";
+export * from "./types";
+
+export default ContentDecryptor;
+export {
+  clearEMESession,
+  ContentDecryptorState,
+  disposeEME,
+  getCurrentKeySystem,
+  IContentDecryptorEvent,
+};
