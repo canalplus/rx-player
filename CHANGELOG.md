@@ -1,6 +1,6 @@
 # Changelog
 
-## v3.26.2 (2022/01/XX)
+## v3.26.2 (2022-01-XX)
 
 ### Bug fixes
 
@@ -26,7 +26,7 @@
   - code/refacto: replace central `Clock` concept (Observable bringing media-related updates to the RxPlayer at a regular pace) by a more flexible `PlaybackObserver` class [#1002]
 
 
-## v3.26.1 (2021/09/14)
+## v3.26.1 (2021-09-14)
 
 ### Bug fixes
 
@@ -52,7 +52,7 @@
   - dev/code: Remove RxJS from the transports code [#962]
 
 
-## v3.26.0 (2021/06/10)
+## v3.26.0 (2021-06-10)
 
 ### Features
 
@@ -86,7 +86,7 @@
   - demo: remove Chart.js dependency (we found that its new API documentation and errors were too impenetrable) and replace the "Buffer Size" chart by a homemade one. [#955, #957]
 
 
-## v3.24.0 (2021/04/01)
+## v3.24.0 (2021-04-01)
 
 ### Features
 
@@ -127,14 +127,14 @@
   - Doc: add "Quick links" to the top of the API documentation [#909]
 
 
-## v3.23.1 (2021/02/01)
+## v3.23.1 (2021-02-01)
 
 ### Bug fixes
 
   - Fix support of encrypted contents on Safari (v3.23.0 regression)
 
 
-## v3.23.0 (2021/02/01)
+## v3.23.0 (2021-02-01)
 
 ### Features
 
@@ -167,7 +167,7 @@
   - lint/code: Use eslint code linter even for the TypeScript code [#842]
 
 
-## v3.22.0 (2020/11/17)
+## v3.22.0 (2020-11-17)
 
 ### Features
 
@@ -207,7 +207,7 @@
   - dev: Remove all enforced git-hooks (on pre-commit and pre-push) [#808]
 
 
-## v3.21.1 (2020/09/21)
+## v3.21.1 (2020-09-21)
 
 ### Bug fixes
 
@@ -236,7 +236,7 @@
   - tests: add "global" unit tests for a more a module-oriented testing strategy (when compared to our existing function-oriented unit tests) to our EME (DRM) related code [#753]
 
 
-## v3.21.0 (2020/06/17)
+## v3.21.0 (2020-06-17)
 
 ### Features
 
@@ -268,7 +268,7 @@
   - eme/persistent sessions: Limit the maximum of stored persistent MediaKeySessions to 1000 to avoid the storage to grow indefinitely (higher than that, the least-recently used will be evicted)
 
 
-## v3.20.1 (2020/05/06)
+## v3.20.1 (2020-05-06)
 
 ### Bug fixes
 
@@ -280,7 +280,7 @@
   - eme: fix typo which conflated an EME "internal-error" key status and an "output-restricted" one.
 
 
-## v3.20.0 (2020/04/22)
+## v3.20.0 (2020-04-22)
 
 ### Features
 
@@ -308,7 +308,7 @@
   - dash/perf: improve parsing efficiency for very large MPDs, at the expense of a very small risk of de-synchronization. Mechanisms still allow for regular re-synchronization.
 
 
-## v3.19.0 (2020/03/11)
+## v3.19.0 (2020-03-11)
 
 ### Features
 
@@ -335,7 +335,7 @@
   - build: remove Object.assign dependency
 
 
-## v3.18.0 (2020/01/30)
+## v3.18.0 (2020-01-30)
 
 ### Features
 
@@ -369,7 +369,7 @@
   - demo: avoid re-rendering multiple ui components when unnecessary
 
 
-## v3.17.1 (2019/12/20)
+## v3.17.1 (2019-12-20)
 
 ### Bug fixes
 
@@ -383,7 +383,7 @@
   - demo: add "Other" key system to allow specifying a custom key system in the demo page
 
 
-## v3.17.0 (2019/12/09)
+## v3.17.0 (2019-12-09)
 
 ### Features
 
@@ -421,7 +421,7 @@
 
 
 
-## v3.16.1 (2019/10/03)
+## v3.16.1 (2019-10-03)
 
 ### Bug fixes
 
@@ -451,7 +451,7 @@
   - demo: reset playback rate before loading a content
 
 
-## v3.16.0 (2019/09/16)
+## v3.16.0 (2019-09-16)
 
 ### Features
 
@@ -478,7 +478,7 @@
   - ci: run integration tests with Travis and appveyor again
 
 
-## v3.15.1 (2019/08/07)
+## v3.15.1 (2019-08-07)
 
 ### Bug fixes
 
@@ -494,7 +494,7 @@
   - demo: authorize to play stored contents with an HTTP Manifest in the HTTPS demo
 
 
-## v3.15.0 (2019/07/24)
+## v3.15.0 (2019-07-24)
 
 ### Features
 
@@ -525,7 +525,7 @@
   - scripts: make our build script compatible with MacOS (handle BSD sed)
 
 
-## v3.14.0 (2019/06/26)
+## v3.14.0 (2019-06-26)
 
 ### Features
 
@@ -545,7 +545,7 @@
   - tests: use web server (local by default) instead of stubbed XHRs to serve tests contents to our integration and memory tests
 
 
-## v3.13.0 (2019/05/15)
+## v3.13.0 (2019-05-15)
 
 ### Features
 
@@ -564,7 +564,7 @@
   - code: change indentation style of a big chunk of the code to increase readability
 
 
-## v3.12.0 (2019/04/10)
+## v3.12.0 (2019-04-10)
 
 ### Features
 
@@ -583,14 +583,14 @@
   - misc: add new RxPlayer logo to README.md and the demo
 
 
-## v3.11.1 (2019/03/11)
+## v3.11.1 (2019-03-11)
 
 ### Bug fixes
 
   - npm: publish package again. An error in the previous release led to some files missing on npm
 
 
-## v3.11.0 (2019/03/07)
+## v3.11.0 (2019-03-07)
 
 ### Features
 
@@ -621,7 +621,7 @@
   - types: provide type safety to `addEventListener` and `removeEventListener`
 
 
-## v3.10.3 (2019/01/30)
+## v3.10.3 (2019-01-30)
 
 ### Bug fixes
 
@@ -646,7 +646,7 @@
   - demo: fix initial text-track selection
 
 
-## v3.10.2 (2019/01/08)
+## v3.10.2 (2019-01-08)
 
 ### Bug fixes
 
@@ -664,7 +664,7 @@
   - npm: reduce size of the npm package
 
 
-## v3.10.1 (2019/01/03)
+## v3.10.1 (2019-01-03)
 
 ### Bug fixes
 
@@ -683,7 +683,7 @@
   - tests: add appveyor countinous integration service for unit tests
 
 
-## v3.10.0 (2018/12/11)
+## v3.10.0 (2018-12-11)
 
 ### Features
 
@@ -719,7 +719,7 @@
   - demo: fix time indication for non-live contents
 
 
-## v3.9.3 (2018/11/23)
+## v3.9.3 (2018-11-23)
 
 ### Bug fixes
 
@@ -734,14 +734,14 @@
   - tests/smooth: reinforce our Smooth Streaming integration tests
 
 
-## v3.9.2 (2018/11/14)
+## v3.9.2 (2018-11-14)
 
 ### Bug fixes
 
   - smooth: authorize empty tracks ("StreamIndex") in Smooth manifests
 
 
-## v3.9.1 (2018/11/13)
+## v3.9.1 (2018-11-13)
 
 ### Bug fixes
 
@@ -754,7 +754,7 @@
   - smooth: when updating segment information, perform garbage-collection of those concerning unreachable segments
 
 
-## v3.9.0 (2018/11/08)
+## v3.9.0 (2018-11-08)
 
 ### Features
 
@@ -782,7 +782,7 @@
   - demo: add 'favicon' to the demo page
 
 
-## v3.8.1 (2018/10/17)
+## v3.8.1 (2018-10-17)
 
 ### Bug fixes
 
@@ -799,7 +799,7 @@
  - demo: fix standalone demo and add possibility to launch it via HTTPS
 
 
-## v3.8.0 (2018/10/11)
+## v3.8.0 (2018-10-11)
 
 ### Features
 
@@ -820,7 +820,7 @@
   - typescript: update typescript to 3.1.2
 
 
-## v3.7.0 (2018/09/21)
+## v3.7.0 (2018-09-21)
 
 ### Features
 
@@ -853,7 +853,7 @@
   - tests: consolidate our integration tests.
 
 
-## v3.6.1 (2018/09/03)
+## v3.6.1 (2018-09-03)
 
 ### Bug fixes
 
@@ -870,7 +870,7 @@
   - rxjs: update to RxJS 6.3.1
 
 
-## v3.6.0 (2018/08/24)
+## v3.6.0 (2018-08-24)
 
 ### Features
   - api: add video track switching
@@ -906,7 +906,7 @@
   - doc: improve architecture documentation
 
 
-## v3.5.2 (2018/08/06)
+## v3.5.2 (2018-08-06)
 
 ### Bug fixes
 
@@ -924,14 +924,14 @@
 - typescript: update typescript to v3.0.1
 
 
-## v3.5.1 (2018/07/11)
+## v3.5.1 (2018-07-11)
 
 ### Bug fixes
 
   - parsers: fix wrong computation of segment time in template index
   - abr: get concerned request in starvation mode
 
-## v3.5.0 (2018/07/03)
+## v3.5.0 (2018-07-03)
 
 ### Added
 
@@ -963,7 +963,7 @@
   - misc: moved webpack configs to the root of the project
 
 
-## v3.4.1 (2018/05/31)
+## v3.4.1 (2018-05-31)
 
 ### Bug fixes
 
@@ -980,7 +980,7 @@
   - misc: move some dev dependencies from ``dependencies`` to ``devDependencies`` in ``package.json``
 
 
-## v3.4.0 (2018/05/17)
+## v3.4.0 (2018-05-17)
 
 ### Added
 
@@ -1002,7 +1002,7 @@
   - tools: update to typescript v2.8.3
 
 
-## v3.3.2 (2018/04/17)
+## v3.3.2 (2018-04-17)
 
 ### Bug Fixes
 
@@ -1019,7 +1019,7 @@
   - demo: fix "Big Buck Bunny WEBM"'s URL
 
 
-## v3.3.1 (2018/03/13)
+## v3.3.1 (2018-03-13)
 
 ### Bug Fixes
 
@@ -1031,7 +1031,7 @@
  - tools: support development on windows
 
 
-## v3.3.0 (2018/03/05)
+## v3.3.0 (2018-03-05)
 
 ### Added
 
@@ -1044,7 +1044,7 @@
  - text: clean-up custom HTML text track SourceBuffer's buffered when the text track is disabled
 
 
-## v3.2.0 (2018/02/23)
+## v3.2.0 (2018-02-23)
 
 ### Added
 
@@ -1068,7 +1068,7 @@
   - update TypeScript to v2.7.2
 
 
-## v3.1.0 (2018/01/30)
+## v3.1.0 (2018-01-30)
 
 ### Added
 
@@ -1081,14 +1081,14 @@
   - smooth: allows smooth Manifests for non-live contents to begin at a timestamp != 0
 
 
-## v3.0.7 (2018/01/19)
+## v3.0.7 (2018-01-19)
 
 ### Bug fixes
 
   - eme: fix bug which prevented to play encrypted contents on IE11
 
 
-## v3.0.6 (2018/01/11)
+## v3.0.6 (2018-01-11)
 
 ### Bug Fixes
 
@@ -1102,14 +1102,14 @@
   - demo: set "html" textTrackMode by default to have a better stylization of closed captions.
 
 
-## v3.0.5 (2017/12/11)
+## v3.0.5 (2017-12-11)
 
 ### Bug Fixes
 
   - eme: consider unknown errors (e.g. errors coming from the user of the library) as fatal eme errors
 
 
-## v3.0.4 (2017/12/05)
+## v3.0.4 (2017-12-05)
 
 ### Bug Fixes
 
@@ -1122,7 +1122,7 @@
   - misc: update DEV mode default debug level from DEBUG to INFO
 
 
-## v3.0.3 (2017/11/24)
+## v3.0.3 (2017-11-24)
 
 ### Bug Fixes
 
@@ -1137,14 +1137,14 @@
   - tools: add more logs in DEBUG mode
 
 
-## v3.0.2 (2017/11/17)
+## v3.0.2 (2017-11-17)
 
 ### Bug Fixes
 
   - misc: work around typescript issue [20104](https://github.com/Microsoft/TypeScript/issues/20104) temporarly to launch in Chrome in HTTP
 
 
-## v3.0.1 (2017/11/17)
+## v3.0.1 (2017-11-17)
 
 ### Bug Fixes
 
@@ -1157,7 +1157,7 @@
   - Add Travis CI
 
 
-## v3.0.0 (2017/11/10)
+## v3.0.0 (2017-11-10)
 
 ### Added
 
@@ -1287,21 +1287,21 @@
   - demo: the demo now manages most languages defined by in the ISO 639-3 standard
 
 
-## v2.3.2 (2017/07/25)
+## v2.3.2 (2017-07-25)
 
 ### Bug Fixes
 
   - eme: update EME workflow to improve support (especially chromebooks)
 
 
-## v2.3.1 (2017/07/10)
+## v2.3.1 (2017-07-10)
 
 ### Bug Fixes
 
   - buffer: improve buffer ranges "bookeeping" logic to avoid re-downloading the same segments
 
 
-## v2.3.0 (2017/07/07)
+## v2.3.0 (2017-07-07)
 
 ### Added
 
@@ -1327,14 +1327,14 @@
   - general: use Object.assign ponyfill instead of the previous polyfill to avoid malicious interferences with other codebases
 
 
-## v2.2.1 (2017/06/27)
+## v2.2.1 (2017-06-27)
 
 ### Bug fixes
 
   - adaptive: fix width limitation bug. Impacted limitVideoWidth + setMaxVideoBitrate APIs
 
 
-## v2.2.0 (2017/06/19)
+## v2.2.0 (2017-06-19)
 
 ### Added
 
@@ -1346,14 +1346,14 @@
   - position: "liveGap" from currentTimeChange event now means the difference to the maximum "bufferisable" position to keep compatibility with the old API
 
 
-## v2.1.3 (2017/06/15)
+## v2.1.3 (2017-06-15)
 
 ### Bug fixes
 
   - api: fix timeFragment.start handling
 
 
-## v2.1.2 (2017/06/14)
+## v2.1.2 (2017-06-14)
 
 ### Bug fixes
 
@@ -1366,7 +1366,7 @@
   - adaptive: take the lowest bitrate (instead of the initial/default one) when the player is not displayed/too small
 
 
-## v2.1.1 (2017/06/02)
+## v2.1.1 (2017-06-02)
 
 ### Bug fixes
 
@@ -1388,7 +1388,7 @@
   - manifest: the manifest object and the management of its index has been refactored for future improvements
 
 
-## v2.1.0 (2017/05/29)
+## v2.1.0 (2017-05-29)
 
 ### Added
 
@@ -1492,7 +1492,7 @@
 - demo: The bundle has been removed from the code committed.
 
 
-## v2.0.0-alpha1 (2016/02/09)
+## v2.0.0-alpha1 (2016-02-09)
 
 - RxJS: use RxJS5.beta1
 - Promise: remove es6-promise dependency and stop relying completely
@@ -1511,7 +1511,7 @@
 - lint: add new rules (no-var, prefer-const, enforce brackets)
 
 
-## v1.4.0 (2016/01/26)
+## v1.4.0 (2016-01-26)
 
 ### Added
 
@@ -1536,14 +1536,14 @@ Demo
 - allow to pass query parameters
 
 
-## v1.3.1 (2015/10/14)
+## v1.3.1 (2015-10-14)
 
 ### Bug fixes
 
 - smooth: fix parseBoolean causing isLive to be always true
 
 
-## v1.3.0 (2015/10/14)
+## v1.3.0 (2015-10-14)
 
 ### Added
 
@@ -1552,14 +1552,14 @@ Demo
 - compat: add firefox workaround for autoplay
 
 
-## v1.2.1 (2015/09/23)
+## v1.2.1 (2015-09-23)
 
 ### Bug fixes
 
 - stream: do not stall on loadedmetadata event
 
 
-## v1.2.0 (2015/09/23)
+## v1.2.0 (2015-09-23)
 
 This release introduces the use of ES6 classes for all modules that
 depends on a sort of class hierarchy. It comes with an upgrade of
@@ -1588,7 +1588,7 @@ We also started using eslint as our main linter instead of jshint.
 - manifest: enforce id setting to parsers (927d275)
 
 
-## v1.1.0 (2015/08/14)
+## v1.1.0 (2015-08-14)
 
 ### Added
 
@@ -1605,6 +1605,6 @@ We also started using eslint as our main linter instead of jshint.
 - fix quota error with MediaKeys attached to multiple video elements on Chrome
 
 
-## v1.0.0 (2015/06/16)
+## v1.0.0 (2015-06-16)
 
 Initial public release.
