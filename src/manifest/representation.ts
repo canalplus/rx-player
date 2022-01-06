@@ -15,7 +15,7 @@
  */
 
 import { isCodecSupported } from "../compat";
-import { IContentProtection } from "../core/eme";
+import { IContentProtection } from "../core/decrypt";
 import log from "../log";
 import {
   IContentProtections,

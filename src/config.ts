@@ -920,7 +920,7 @@ export default {
 
   /**
    * Robustnesses used in the {audio,video}Capabilities of the
-   * MediaKeySystemConfiguration (EME).
+   * MediaKeySystemConfiguration (DRM).
    *
    * Only used for widevine keysystems.
    *

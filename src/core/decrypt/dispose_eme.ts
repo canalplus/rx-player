@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-import ContentDecryptor from "../../core/decrypt";
-import { IFeaturesObject } from "../types";
+import disposeMediaKeys from "./dispose_media_keys";
 
 /**
- * Add ability to play encrypted contents
- * @param {Object} features
+ * Free up all ressources taken by the content decryption logic.
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Promise}
  */
-function addEMEFeature(features : IFeaturesObject) : void {
-  features.ContentDecryptor = ContentDecryptor;
+export default function disposeEME(
+  mediaElement : HTMLMediaElement
+) : Promise<void> {
+  return disposeMediaKeys(mediaElement);
 }
-
-export { addEMEFeature as EME };
-export default addEMEFeature;

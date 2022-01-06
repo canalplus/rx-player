@@ -51,7 +51,7 @@ export {
 export {
   IPersistentSessionInfo,
   IPersistentSessionStorage,
-} from "./core/eme";
+} from "./core/decrypt";
 export { ICustomError as IPlayerError } from "./errors";
 export {
   IExposedAdaptation as IAdaptation,

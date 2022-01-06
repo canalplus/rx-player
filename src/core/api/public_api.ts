@@ -90,7 +90,7 @@ import {
   clearEMESession,
   disposeEME,
   getCurrentKeySystem,
-} from "../eme";
+} from "../decrypt";
 import {
   IManifestFetcherParsedResult,
   IManifestFetcherWarningEvent,
@@ -613,12 +613,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this.stop();
 
     if (this.videoElement !== null) {
-      // free resources used for EME management
+      // free resources used for decryption management
       disposeEME(this.videoElement)
         .catch((err : unknown) => {
           const message = err instanceof Error ? err.message :
                                                  "Unknown error";
-          log.error("API: Could not dispose EME resources: " + message);
+          log.error("API: Could not dispose decryption resources: " + message);
         });
     }
 
@@ -2341,7 +2341,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_contentEventsMemory = {};
 
-    // EME cleaning
+    // DRM-related clean-up
     const freeUpContentLock = () => {
       log.debug("Unlocking `contentLock`. Next content can begin.");
       this._priv_contentLock.setValue(false);
@@ -2350,11 +2350,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (!isNullOrUndefined(this.videoElement)) {
       clearEMESession(this.videoElement).then(
         () => {
-          log.debug("API: EME session cleaned-up with success!");
+          log.debug("API: DRM session cleaned-up with success!");
           freeUpContentLock();
         },
         (err : unknown) => {
-          log.error("API: An error arised when trying to clean-up the EME session:" +
+          log.error("API: An error arised when trying to clean-up the DRM session:" +
                     (err instanceof Error ? err.toString() :
                                             "Unknown Error"));
           freeUpContentLock();
