@@ -32,10 +32,6 @@ describe("Compat - clearElementSrc", () => {
       src: "foo",
       removeAttribute() { return null; },
     };
-    jest.mock("../browser_detection.ts", () => ({
-      __esModule: true as const,
-      isFirefox: false,
-    }));
     const clearElementSrc = require("../clear_element_src").default;
 
     const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
@@ -50,10 +46,6 @@ describe("Compat - clearElementSrc", () => {
       src: "foo",
       removeAttribute() { throw new Error("Oups, can't remove attribute."); },
     };
-    jest.mock("../browser_detection.ts", () => ({
-      __esModule: true as const,
-      isFirefox: false,
-    }));
     const clearElementSrc = require("../clear_element_src").default;
     const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
 
@@ -63,7 +55,7 @@ describe("Compat - clearElementSrc", () => {
     expect(spyRemoveAttribute).toHaveBeenCalledTimes(1);
   });
 
-  it("should disable text tracks and remove childs if on firefox", () => {
+  it("should disable text tracks and remove childs", () => {
     const fakeElement = {
       src: "foo",
       removeAttribute() { return null; },
@@ -84,10 +76,6 @@ describe("Compat - clearElementSrc", () => {
       },
     };
 
-    jest.mock("../browser_detection.ts", () => ({
-      __esModule: true as const,
-      isFirefox: true,
-    }));
     const clearElementSrc = require("../clear_element_src").default;
 
     const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
@@ -107,7 +95,7 @@ describe("Compat - clearElementSrc", () => {
     expect(spyRemoveChild).toHaveBeenCalledWith({ nodeName: "track" });
   });
 
-  it("should log when failed to remove text track child node if on firefox", () => {
+  it("should log when failed to remove text track child node", () => {
     const fakeElement = {
       src: "foo",
       removeAttribute() { return null; },
@@ -125,11 +113,6 @@ describe("Compat - clearElementSrc", () => {
         throw new Error();
       },
     };
-
-    jest.mock("../browser_detection", () => ({
-      __esModule: true as const,
-      isFirefox: true,
-    }));
 
     const mockLogWarn = jest.fn((message) => message);
     jest.mock("../../log", () => ({
@@ -173,10 +156,6 @@ describe("Compat - clearElementSrc", () => {
       removeChild: () => null,
     };
 
-    jest.mock("../browser_detection.ts", () => ({
-      __esModule: true as const,
-      isFirefox: true,
-    }));
     const clearElementSrc = require("../clear_element_src").default;
 
     const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
@@ -193,7 +172,7 @@ describe("Compat - clearElementSrc", () => {
     expect(spyRemoveChild).not.toHaveBeenCalled();
   });
 
-  it("should not handle text tracks nodes is has no child nodes if on firefox", () => {
+  it("should not handle text tracks nodes is has no child nodes", () => {
     const fakeElement = {
       src: "foo",
       removeAttribute() { return null; },
@@ -203,10 +182,6 @@ describe("Compat - clearElementSrc", () => {
       removeChild: () => null,
     };
 
-    jest.mock("../browser_detection.ts", () => ({
-      __esModule: true as const,
-      isFirefox: true,
-    }));
     const clearElementSrc = require("../clear_element_src").default;
 
     const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
@@ -220,6 +195,58 @@ describe("Compat - clearElementSrc", () => {
     expect(spyRemoveAttribute).toHaveBeenCalledTimes(1);
     expect(spyRemoveAttribute).toHaveBeenCalledWith("src");
     expect(spyHasChildNodes).toHaveBeenCalledTimes(1);
+    expect(spyRemoveChild).not.toHaveBeenCalled();
+  });
+
+  it("should not throw if the textTracks attribute is `null`", () => {
+    const fakeElement = {
+      src: "foo",
+      removeAttribute() { return null; },
+      textTracks: null,
+      childNodes: [],
+      hasChildNodes: () => false,
+      removeChild: () => null,
+    };
+
+    const clearElementSrc = require("../clear_element_src").default;
+
+    const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
+    const spyHasChildNodes = jest.spyOn(fakeElement, "hasChildNodes");
+    const spyRemoveChild = jest.spyOn(fakeElement, "removeChild");
+
+    clearElementSrc(fakeElement);
+
+    expect(fakeElement.src).toBe("");
+    expect(fakeElement.childNodes).toEqual([]);
+    expect(spyRemoveAttribute).toHaveBeenCalledTimes(1);
+    expect(spyRemoveAttribute).toHaveBeenCalledWith("src");
+    expect(spyHasChildNodes).toHaveBeenCalledTimes(0);
+    expect(spyRemoveChild).not.toHaveBeenCalled();
+  });
+
+  it("should not throw if the textTracks attribute is `undefined`", () => {
+    const fakeElement = {
+      src: "foo",
+      removeAttribute() { return null; },
+      textTracks: undefined,
+      childNodes: [],
+      hasChildNodes: () => false,
+      removeChild: () => null,
+    };
+
+    const clearElementSrc = require("../clear_element_src").default;
+
+    const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
+    const spyHasChildNodes = jest.spyOn(fakeElement, "hasChildNodes");
+    const spyRemoveChild = jest.spyOn(fakeElement, "removeChild");
+
+    clearElementSrc(fakeElement);
+
+    expect(fakeElement.src).toBe("");
+    expect(fakeElement.childNodes).toEqual([]);
+    expect(spyRemoveAttribute).toHaveBeenCalledTimes(1);
+    expect(spyRemoveAttribute).toHaveBeenCalledWith("src");
+    expect(spyHasChildNodes).toHaveBeenCalledTimes(0);
     expect(spyRemoveChild).not.toHaveBeenCalled();
   });
 });
