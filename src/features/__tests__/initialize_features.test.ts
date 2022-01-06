@@ -113,7 +113,7 @@ describe("Features - initializeFeaturesObject", () => {
         js: require("../../parsers/manifest/dash/js-parser").default,
         wasm: null,
       },
-      ContentDecryptor: require("../../core/eme/index").default,
+      ContentDecryptor: require("../../core/decrypt/index").default,
       directfile: {
         initDirectFile: require("../../core/init/initialize_directfile").default,
         mediaElementTrackChoiceManager:

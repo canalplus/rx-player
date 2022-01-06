@@ -23,7 +23,7 @@ import {
   Representation,
 } from "../../manifest";
 import { IEMSG } from "../../parsers/containers/isobmff";
-import { IContentProtection } from "../eme";
+import { IContentProtection } from "../decrypt";
 import { IBufferType } from "../segment_buffers";
 
 /** Information about a Segment waiting to be loaded by the Stream. */

@@ -16,7 +16,7 @@ Those modules are:
     Initialize playback and connects different modules between one another.
 
 
-  - __the `ContentDecryptor` (./eme)__
+  - __the `ContentDecryptor` (./decrypt)__
 
     Negotiate content decryption.
     Only used for contents with DRM (Digital Right Management).

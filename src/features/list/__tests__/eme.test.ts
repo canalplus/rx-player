@@ -17,16 +17,16 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 
-import ContentDecryptor from "../../../core/eme";
+import ContentDecryptor from "../../../core/decrypt";
 import addEMEFeature from "../eme";
 
-jest.mock("../../../core/eme", () => ({
+jest.mock("../../../core/decrypt", () => ({
   __esModule: true as const,
   default: jest.fn(),
 }));
 
 describe("Features list - EME", () => {
-  it("should add EME in the current features", () => {
+  it("should add the ContentDecryptor in the current features", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = {};
     addEMEFeature(featureObject);

@@ -27,7 +27,7 @@ import features from "./features_object";
  */
 export default function initializeFeaturesObject() : void {
   if (__FEATURES__.EME === __FEATURES__.IS_ENABLED as number) {
-    features.ContentDecryptor = require("../core/eme/index.ts").default;
+    features.ContentDecryptor = require("../core/decrypt/index.ts").default;
   }
 
   if (__FEATURES__.BIF_PARSER === __FEATURES__.IS_ENABLED as number) {

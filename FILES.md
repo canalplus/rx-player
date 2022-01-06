@@ -25,7 +25,7 @@ a single directory or subdirectory, in alphabetical order.
   - [src/core/abr/: The adaptive bitrate code](#core-abr)
   - [src/core/api/: The API definition](#core-api)
   - [src/core/stream/: Load the right segments](#core-stream)
-  - [src/core/eme/: Encryption management](#core-eme)
+  - [src/core/decrypt/: Decryption management](#core-decrypt)
   - [src/core/fetchers/: The fetchers](#core-fetchers)
   - [src/core/segment_buffers/: The Media buffers](#core-sb)
   - [src/core/init/: Media streaming logic](#core-init)
@@ -240,10 +240,11 @@ The code there calculate which segments should be downloaded, ask for their
 download and push the segments into the `SegmentBuffers`.
 
 
-<a name="core-eme"></a>
-### src/core/eme/: Encryption management #######################################
+<a name="core-decrypt"></a>
+### src/core/decrypt/: Decryption management ###################################
 
-Defines functions allowing to handle encrypted contents through the EME APIs.
+Defines functions allowing to handle encrypted contents through the EME browser
+APIs.
 
 
 <a name="core-fetchers"></a>
