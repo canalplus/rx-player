@@ -15,7 +15,7 @@
  */
 
 import areArraysOfNumbersEqual from "../../../utils/are_arrays_of_numbers_equal";
-import InitDataContainer from "./init_data_container";
+import SerializableBytes from "./serializable_bytes";
 
 /**
  * Returns `true` if both values are compatible initialization data, which
@@ -29,10 +29,10 @@ import InitDataContainer from "./init_data_container";
 export default function areInitializationValuesCompatible(
   stored : Array<{ systemId : string | undefined;
                    hash : number;
-                   data : Uint8Array | InitDataContainer; }>,
+                   data : Uint8Array | SerializableBytes | string; }>,
   newElts : Array<{ systemId : string | undefined;
                     hash : number;
-                    data : Uint8Array | InitDataContainer; }>
+                    data : Uint8Array | SerializableBytes | string; }>
 ) : boolean {
   return _isAInB(stored, newElts) ??
          _isAInB(newElts, stored) ??
@@ -62,10 +62,10 @@ export default function areInitializationValuesCompatible(
 function _isAInB(
   a : Array<{ systemId : string | undefined;
               hash : number;
-              data : Uint8Array | InitDataContainer; }>,
+              data : Uint8Array | SerializableBytes | string; }>,
   b : Array<{ systemId : string | undefined;
               hash : number;
-              data : Uint8Array | InitDataContainer; }>
+              data : Uint8Array | SerializableBytes | string; }>
 ) : boolean | null {
   if (a.length === 0) {
     return false;
@@ -89,11 +89,11 @@ function _isAInB(
 
     const aData : Uint8Array =
       firstAElt.data instanceof Uint8Array ? firstAElt.data :
-      typeof firstAElt.data === "string"   ? InitDataContainer.decode(firstAElt.data) :
+      typeof firstAElt.data === "string"   ? SerializableBytes.decode(firstAElt.data) :
                                              firstAElt.data.initData;
     const bData : Uint8Array =
       bElt.data instanceof Uint8Array ? bElt.data :
-      typeof bElt.data === "string"   ? InitDataContainer.decode(bElt.data) :
+      typeof bElt.data === "string"   ? SerializableBytes.decode(bElt.data) :
                                              bElt.data.initData;
     if (!areArraysOfNumbersEqual(aData, bData)) {
       return false;
@@ -117,11 +117,11 @@ function _isAInB(
         }
         const aNewData : Uint8Array =
           aElt.data instanceof Uint8Array ? aElt.data :
-          typeof aElt.data === "string"   ? InitDataContainer.decode(aElt.data) :
+          typeof aElt.data === "string"   ? SerializableBytes.decode(aElt.data) :
                                                  aElt.data.initData;
         const bNewData : Uint8Array =
           bNewElt.data instanceof Uint8Array ? bNewElt.data :
-          typeof bNewElt.data === "string"   ? InitDataContainer.decode(bNewElt.data) :
+          typeof bNewElt.data === "string"   ? SerializableBytes.decode(bNewElt.data) :
                                                bNewElt.data.initData;
         if (!areArraysOfNumbersEqual(aNewData, bNewData)) {
           return false;

@@ -18,20 +18,19 @@ import { ICustomMediaKeySession } from "../../../compat";
 import log from "../../../log";
 import areArraysOfNumbersEqual from "../../../utils/are_arrays_of_numbers_equal";
 import { assertInterface } from "../../../utils/assert";
-import {
-  base64ToBytes,
-  bytesToBase64,
-} from "../../../utils/base64";
-import { concat } from "../../../utils/byte_parsing";
+import { bytesToBase64 } from "../../../utils/base64";
 import hashBuffer from "../../../utils/hash_buffer";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import {
-  IInitializationDataInfo,
+  IProcessedProtectionData,
   IPersistentSessionInfo,
   IPersistentSessionStorage,
 } from "../types";
 import areInitializationValuesCompatible from "./are_init_values_compatible";
+import { IFormattedInitDataValue } from "./init_data_values_container";
+import { areKeyIdsEqual } from "./key_id_comparison";
+import SerializableBytes from "./serializable_bytes";
 
 /**
  * Throw if the given storage does not respect the right interface.
@@ -41,42 +40,6 @@ function checkStorage(storage : IPersistentSessionStorage) : void {
   assertInterface(storage,
                   { save: "function", load: "function" },
                   "licenseStorage");
-}
-
-/** Wrap initialization data and allow serialization of it into base64. */
-class InitDataContainer {
-  /** The initData itself. */
-  public initData : Uint8Array;
-
-  /**
-   * Create a new container, wrapping the initialization data given and allowing
-   * linearization into base64.
-   * @param {Uint8Array}
-   */
-  constructor(initData : Uint8Array) {
-    this.initData = initData;
-  }
-
-  /**
-   * Convert it to base64.
-   * `toJSON` is specially interpreted by JavaScript engines to be able to rely
-   * on it when calling `JSON.stringify` on it or any of its parent objects:
-   * https://tc39.es/ecma262/#sec-serializejsonproperty
-   * @returns {string}
-   */
-  toJSON() : string {
-    return bytesToBase64(this.initData);
-  }
-
-  /**
-   * Decode a base64 sequence representing an initialization data back to an
-   * Uint8Array.
-   * @param {string}
-   * @returns {Uint8Array}
-   */
-  static decode(base64 : string) : Uint8Array {
-    return base64ToBytes(base64);
-  }
 }
 
 /**
@@ -101,10 +64,11 @@ export default class PersistentSessionsStore {
     this._entries = [];
     this._storage = storage;
     try {
-      this._entries = this._storage.load();
-      if (!Array.isArray(this._entries)) {
-        this._entries = [];
+      let entries = this._storage.load();
+      if (!Array.isArray(entries)) {
+        entries = [];
       }
+      this._entries = entries;
     } catch (e) {
       log.warn("DRM-PSS: Could not get entries from license storage", e);
       this.dispose();
@@ -130,11 +94,11 @@ export default class PersistentSessionsStore {
 
   /**
    * Retrieve an entry based on its initialization data.
-   * @param {Uint8Array}  initData
+   * @param {Object}  initData
    * @param {string|undefined} initDataType
    * @returns {Object|null}
    */
-  public get(initData : IInitializationDataInfo) : IPersistentSessionInfo | null {
+  public get(initData : IProcessedProtectionData) : IPersistentSessionInfo | null {
     const index = this._getIndex(initData);
     return index === -1 ? null :
                           this._entries[index];
@@ -151,7 +115,9 @@ export default class PersistentSessionsStore {
    * @param {string|undefined} initDataType
    * @returns {*}
    */
-  public getAndReuse(initData : IInitializationDataInfo) : IPersistentSessionInfo | null {
+  public getAndReuse(
+    initData : IProcessedProtectionData
+  ) : IPersistentSessionInfo | null {
     const index = this._getIndex(initData);
     if (index === -1) {
       return null;
@@ -168,7 +134,8 @@ export default class PersistentSessionsStore {
    * @param {MediaKeySession} session
    */
   public add(
-    initData : IInitializationDataInfo,
+    initData : IProcessedProtectionData,
+    keyIds : Uint8Array[] | undefined,
     session : MediaKeySession|ICustomMediaKeySession
   ) : void {
     if (isNullOrUndefined(session) || !isNonEmptyString(session.sessionId)) {
@@ -180,26 +147,41 @@ export default class PersistentSessionsStore {
     if (currentEntry !== null && currentEntry.sessionId === sessionId) {
       return;
     } else if (currentEntry !== null) { // currentEntry has a different sessionId
-      this.delete(initData);
+      this.delete(currentEntry.sessionId);
     }
 
     log.info("DRM-PSS: Add new session", sessionId);
 
-    this._entries.push({ version: 3,
-                         sessionId,
-                         values: this._formatValuesForStore(initData.values),
-                         initDataType: initData.type });
+    const storedValues = prepareValuesForStore(initData.values.getFormattedValues());
+    if (keyIds === undefined) {
+      this._entries.push({ version: 3,
+                           sessionId,
+                           values: storedValues,
+                           initDataType: initData.type });
+    } else {
+      this._entries.push({ version: 4,
+                           sessionId,
+                           keyIds: keyIds.map((k) => new SerializableBytes(k)),
+                           values: storedValues,
+                           initDataType: initData.type });
+    }
     this._save();
   }
 
   /**
-   * Delete stored MediaKeySession information based on its initialization
-   * data.
+   * Delete stored MediaKeySession information based on its session id.
    * @param {Uint8Array}  initData
    * @param {string|undefined} initDataType
    */
-  public delete(initData : IInitializationDataInfo) : void {
-    const index = this._getIndex(initData);
+  public delete(sessionId : string) : void {
+    let index = -1;
+    for (let i = 0; i < this._entries.length; i++) {
+      const entry = this._entries[i];
+      if (entry.sessionId === sessionId) {
+        index = i;
+        break;
+      }
+    }
     if (index === -1) {
       log.warn("DRM-PSS: initData to delete not found.");
       return;
@@ -237,34 +219,70 @@ export default class PersistentSessionsStore {
   /**
    * Retrieve index of an entry.
    * Returns `-1` if not found.
-   * @param {Uint8Array}  initData
-   * @param {string|undefined} initDataType
+   * @param {Object} initData
    * @returns {number}
    */
-  private _getIndex(initData : IInitializationDataInfo) : number {
-    const formatted = this._formatValuesForStore(initData.values);
-
+  private _getIndex(initData : IProcessedProtectionData) : number {
     // Older versions of the format include a concatenation of all
     // initialization data and its hash.
-    const concatInitData = concat(...initData.values.map(i => i.data));
-    const concatInitDataHash = hashBuffer(concatInitData);
+    // This is only computed lazily, the first time it is needed.
+    let lazyConcatenatedData : null | { initData : Uint8Array;
+                                        initDataHash : number; } = null;
+    function getConcatenatedInitDataInfo() {
+      if (lazyConcatenatedData === null) {
+        const concatInitData = initData.values.constructRequestData();
+        lazyConcatenatedData = { initData: concatInitData,
+                                 initDataHash: hashBuffer(concatInitData) };
+      }
+      return lazyConcatenatedData;
+    }
 
     for (let i = 0; i < this._entries.length; i++) {
       const entry = this._entries[i];
       if (entry.initDataType === initData.type) {
         switch (entry.version) {
+          case 4:
+            if (initData.keyIds !== undefined) {
+              const foundCompatible = initData.keyIds.every(keyId => {
+                const keyIdB64 = bytesToBase64(keyId);
+                for (const entryKid of entry.keyIds) {
+                  if (typeof entryKid === "string") {
+                    if (keyIdB64 === entryKid) {
+                      return true;
+                    }
+                  } else if (areKeyIdsEqual(entryKid.initData,
+                                            keyId))
+                  {
+                    return true;
+                  }
+                }
+                return false;
+              });
+              if (foundCompatible) {
+                return i;
+              }
+            } else {
+              const formatted = initData.values.getFormattedValues();
+              if (areInitializationValuesCompatible(formatted, entry.values)) {
+                return i;
+              }
+            }
+            break;
 
           case 3:
+            const formatted = initData.values.getFormattedValues();
             if (areInitializationValuesCompatible(formatted, entry.values)) {
               return i;
             }
             break;
 
-          case 2:
-            if (entry.initDataHash === concatInitDataHash) {
+          case 2: {
+            const { initData: concatInitData,
+                    initDataHash: concatHash } = getConcatenatedInitDataInfo();
+            if (entry.initDataHash === concatHash) {
               try {
                 const decodedInitData : Uint8Array = typeof entry.initData === "string" ?
-                  InitDataContainer.decode(entry.initData) :
+                  SerializableBytes.decode(entry.initData) :
                   entry.initData.initData;
                 if (areArraysOfNumbersEqual(decodedInitData, concatInitData)) {
                   return i;
@@ -274,9 +292,12 @@ export default class PersistentSessionsStore {
               }
             }
             break;
+          }
 
-          case 1:
-            if (entry.initDataHash === concatInitDataHash) {
+          case 1: {
+            const { initData: concatInitData,
+                    initDataHash: concatHash } = getConcatenatedInitDataInfo();
+            if (entry.initDataHash === concatHash) {
               if (typeof entry.initData.length === "undefined") {
                 // If length is undefined, it has been linearized. We could still
                 // convert it back to an Uint8Array but this would necessitate some
@@ -288,11 +309,14 @@ export default class PersistentSessionsStore {
               }
             }
             break;
+          }
 
-          default:
-            if (entry.initData === concatInitDataHash) {
+          default: {
+            const { initDataHash: concatHash } = getConcatenatedInitDataInfo();
+            if (entry.initData === concatHash) {
               return i;
             }
+          }
         }
       }
     }
@@ -309,28 +333,22 @@ export default class PersistentSessionsStore {
       log.warn("DRM-PSS: Could not save licenses in localStorage");
     }
   }
+}
 
-  /**
-   * Format given initializationData's values so they are ready to be stored:
-   *   - sort them by systemId, so they are faster to compare
-   *   - add hash for each initialization data encountered.
-   * @param {Array.<Object>} initialValues
-   * @returns {Array.<Object>}
-   */
-  private _formatValuesForStore(
-    initialValues : Array<{ systemId : string | undefined;
-                            data : Uint8Array; }>
-  ) : Array<{ systemId : string | undefined;
-              hash : number;
-              data : InitDataContainer; }> {
-    return initialValues.slice()
-      .sort((a, b) => a.systemId === b.systemId ? 0 :
-                      a.systemId === undefined  ? 1 :
-                      b.systemId === undefined  ? -1 :
-                      a.systemId < b.systemId   ? -1 :
-                      1)
-      .map(({ systemId, data }) => ({ systemId,
-                                      data : new InitDataContainer(data),
-                                      hash : hashBuffer(data) }));
-  }
+/**
+ * Format given initializationData's values so they are ready to be stored:
+ *   - sort them by systemId, so they are faster to compare
+ *   - add hash for each initialization data encountered.
+ * @param {Array.<Object>} initialValues
+ * @returns {Array.<Object>}
+ */
+function prepareValuesForStore(
+  initialValues : IFormattedInitDataValue[]
+) : Array<{ systemId : string | undefined;
+            hash : number;
+            data : SerializableBytes; }> {
+  return initialValues
+    .map(({ systemId, data, hash }) => ({ systemId,
+                                          hash,
+                                          data : new SerializableBytes(data) }));
 }

@@ -29,9 +29,7 @@ import features from "../../features";
 import log from "../../log";
 import {
   IContentProtection,
-  IInitializationDataInfo,
   IKeySystemOption,
-  IKeysUpdateEvent,
   ContentDecryptorState,
 } from "../decrypt";
 import { IWarningEvent } from "./types";
@@ -117,20 +115,12 @@ export default function linkDrmAndContent<T>(
       }
     });
 
-    contentDecryptor.addEventListener("keyUpdate", (e) => {
-      obs.next({ type: "keys-update", value: e });
-    });
-
     contentDecryptor.addEventListener("error", (e) => {
       obs.error(e);
     });
 
     contentDecryptor.addEventListener("warning", (w) => {
       obs.next({ type: "warning", value: w });
-    });
-
-    contentDecryptor.addEventListener("blacklistProtectionData", (e) => {
-      obs.next({ type: "blacklist-protection-data", value: e });
     });
 
     const protectionDataSub = contentProtections$.subscribe(data => {
@@ -147,8 +137,6 @@ export default function linkDrmAndContent<T>(
 
 export type IContentDecryptorInitEvent<T> = IDecryptionDisabledEvent<T> |
                                             IDecryptionReadyEvent<T> |
-                                            IKeysUpdateEvent |
-                                            IBlacklistProtectionDataEvent |
                                             IWarningEvent;
 
 /**
@@ -185,16 +173,4 @@ export interface IDecryptionReadyEvent<T> {
     /** The value outputed by the `linkingMedia$` Observable. */
     mediaSource: T;
   };
-}
-
-/**
- * Event Emitted when specific "protection data" cannot be deciphered and is thus
- * blacklisted.
- *
- * The linked value is the initialization data linked to the content that cannot
- * be deciphered.
- */
-export interface IBlacklistProtectionDataEvent {
-  type: "blacklist-protection-data";
-  value: IInitializationDataInfo;
 }
