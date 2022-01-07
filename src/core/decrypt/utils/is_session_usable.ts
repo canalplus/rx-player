@@ -22,7 +22,6 @@ import arrayIncludes from "../../../utils/array_includes";
  * If all key statuses attached to session are valid (either not
  * "expired" or "internal-error"), return true.
  * If not, return false.
- * @param {Uint8Array} initData
  * @param {MediaKeySession} loadedSession
  * @returns {MediaKeySession}
  */

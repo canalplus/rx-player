@@ -16,13 +16,14 @@
 
 import { Subject } from "rxjs";
 import { ICustomError } from "../../errors";
-import {
+import Manifest, {
   Adaptation,
   ISegment,
   Period,
   Representation,
 } from "../../manifest";
-import { IContentProtection } from "../decrypt";
+import { IRepresentationProtectionData } from "../../manifest/representation";
+import objectAssign from "../../utils/object_assign";
 import { IBufferType } from "../segment_buffers";
 import {
   IActivePeriodChangedEvent,
@@ -169,10 +170,14 @@ const EVENTS = {
   },
 
   encryptionDataEncountered(
-    initDataInfo : IContentProtection
+    reprProtData : IRepresentationProtectionData,
+    content : { manifest : Manifest;
+                period : Period;
+                adaptation : Adaptation;
+                representation : Representation; }
   ) : IEncryptionDataEncounteredEvent {
     return { type: "encryption-data-encountered",
-             value: initDataInfo };
+             value: objectAssign({ content }, reprProtData) };
   },
 
   representationChange(

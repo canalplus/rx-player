@@ -27,17 +27,17 @@ import LoadedSessionsStore from "../loaded_sessions_store";
 
 const entry1 = { initializationData: { data: new Uint8Array([1, 6, 9]),
                                        type: "test" },
-                 mediaKeySession: {},
+                 mediaKeySession: { sessionId: "toto" },
                  sessionType: "" };
 
 const entry2 = { initializationData: { data: new Uint8Array([4, 8]),
                                        type: "foo" },
-                 mediaKeySession: {},
+                 mediaKeySession: { sessionId: "titi" },
                  sessionType: "" };
 
 const entry3 = { initializationData: { data: new Uint8Array([7, 3, 121, 87]),
                                        type: "bar" },
-                 mediaKeySession: {},
+                 mediaKeySession: { sessionId: "tutu" },
                  sessionType: "" };
 
 function createLoadedSessionsStore() : LoadedSessionsStore {
@@ -78,11 +78,7 @@ async function checkNothingHappen(
   limit : number
 ) : Promise<void> {
   const closeSessionSpy = jest.spyOn(loadedSessionsStore, "closeSession");
-  let itemNb = 0;
-  await cleanOldLoadedSessions(loadedSessionsStore, limit, () => {
-    itemNb++;
-  });
-  expect(itemNb).toEqual(0);
+  await cleanOldLoadedSessions(loadedSessionsStore, limit);
   expect(closeSessionSpy).not.toHaveBeenCalled();
   closeSessionSpy.mockRestore();
 }
@@ -91,32 +87,27 @@ async function checkNothingHappen(
  * Call `cleanOldLoadedSessions` with the given loadedSessionsStore, limit and
  * entries and make sure that:
  *   - closeSession is called on the specific entries a single time
- *   - all right events are received in the right order each a single time
  *   - it completes without an error
  * Call `done` when done.
  * @param {Object} loadedSessionsStore
  * @param {number} limit
  * @param {Array.<Object>} entries
  */
-function checkEntriesCleaned(
+async function checkEntriesCleaned(
   loadedSessionsStore : LoadedSessionsStore,
   limit : number,
-  entries : Array<{ initializationData: unknown }>
+  entries : Array<{ sessionId: string }>
 ) : Promise<void> {
   const closeSessionSpy = jest.spyOn(loadedSessionsStore, "closeSession");
-  let itemNb = 0;
-  const prom = cleanOldLoadedSessions(loadedSessionsStore, limit, (evt) => {
-    itemNb++;
-    expect(evt).toEqual(entries[itemNb - 1]);
-  }).then(() => {
-    expect(itemNb).toEqual(entries.length);
+  const prom = cleanOldLoadedSessions(loadedSessionsStore, limit).then(() => {
+    expect(closeSessionSpy).toHaveBeenCalledTimes(entries.length);
+    closeSessionSpy.mockRestore();
   });
   expect(closeSessionSpy).toHaveBeenCalledTimes(entries.length);
   for (let i = 0; i < entries.length; i++) {
     expect(closeSessionSpy)
-      .toHaveBeenNthCalledWith(i + 1, entries[i].initializationData);
+      .toHaveBeenNthCalledWith(i + 1, entries[i]);
   }
-  closeSessionSpy.mockRestore();
   return prom;
 }
 
@@ -155,11 +146,14 @@ describe("core - decrypt - cleanOldLoadedSessions", () => {
   });
 
   it("should remove some if the limit is inferior to the current length", async () => {
-    await checkEntriesCleaned(createLoadedSessionsStore(), 1, [ entry1, entry2 ]);
-    await checkEntriesCleaned(createLoadedSessionsStore(), 2, [ entry1 ]);
+    await checkEntriesCleaned(createLoadedSessionsStore(), 1, [ entry1.mediaKeySession,
+                                                                entry2.mediaKeySession ]);
+    await checkEntriesCleaned(createLoadedSessionsStore(), 2, [ entry1.mediaKeySession ]);
   });
 
   it("should remove all if the limit is equal to 0", async () => {
-    await checkEntriesCleaned(createLoadedSessionsStore(), 0, [ entry1, entry2, entry3 ]);
+    await checkEntriesCleaned(createLoadedSessionsStore(), 0, [ entry1.mediaKeySession,
+                                                                entry2.mediaKeySession,
+                                                                entry3.mediaKeySession ]);
   });
 });

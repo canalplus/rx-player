@@ -51,10 +51,8 @@ import retryObsWithBackoff, {
 import tryCatch from "../../utils/rx-try_catch";
 import {
   IEMEWarningEvent,
-  IKeyMessageHandledEvent,
-  IKeyStatusChangeHandledEvent,
   IKeySystemOption,
-  IKeysUpdateEvent,
+  ILicense,
 } from "./types";
 import checkKeyStatuses, {
   IKeyStatusesCheckingOptions,
@@ -334,4 +332,65 @@ function getLicenseBackoffOptions(
       sessionWarningSubject$.next({ type: "warning",
                                     value: formatGetLicenseError(error) }),
   };
+}
+
+/**
+ * Some key ids have updated their status.
+ *
+ * We put them in two different list:
+ *
+ *   - `blacklistedKeyIDs`: Those key ids won't be used for decryption and the
+ *     corresponding media it decrypts should not be pushed to the buffer
+ *     Note that a blacklisted key id can become whitelisted in the future.
+ *
+ *   - `whitelistedKeyIds`: Those key ids were found and their corresponding
+ *     keys are now being considered for decryption.
+ *     Note that a whitelisted key id can become blacklisted in the future.
+ *
+ * Note that each `IKeysUpdateEvent` is independent of any other.
+ *
+ * A new `IKeysUpdateEvent` does not completely replace a previously emitted
+ * one, as it can for example be linked to a whole other decryption session.
+ *
+ * However, if a key id is encountered in both an older and a newer
+ * `IKeysUpdateEvent`, only the older status should be considered.
+ */
+export interface IKeysUpdateEvent {
+  type: "keys-update";
+  value: IKeyUpdateValue;
+}
+
+/** Information on key ids linked to a MediaKeySession. */
+export interface IKeyUpdateValue {
+  /**
+   * The list of key ids that are blacklisted.
+   * As such, their corresponding keys won't be used by that session, despite
+   * the fact that they were part of the pushed license.
+   *
+   * Reasons for blacklisting a keys depend on options, but mainly involve unmet
+   * output restrictions and CDM internal errors linked to that key id.
+   */
+  blacklistedKeyIDs : Uint8Array[];
+  /*
+   * The list of key id linked to that session which are not blacklisted.
+   * Together with `blacklistedKeyIDs` it regroups all key ids linked to the
+   * session.
+   */
+  whitelistedKeyIds : Uint8Array[];
+}
+
+/** Emitted after the `onKeyStatusesChange` callback has been called. */
+interface IKeyStatusChangeHandledEvent {
+  type: "key-status-change-handled";
+  value: { session: MediaKeySession |
+                    ICustomMediaKeySession;
+           license: ILicense|null; };
+}
+
+/** Emitted after the `getLicense` callback has been called */
+interface IKeyMessageHandledEvent {
+  type: "key-message-handled";
+  value: { session: MediaKeySession |
+                    ICustomMediaKeySession;
+           license: ILicense|null; };
 }
