@@ -15,7 +15,6 @@
  */
 
 import { isCodecSupported } from "../compat";
-import { IContentProtection } from "../core/decrypt";
 import log from "../log";
 import {
   IContentProtections,
@@ -166,7 +165,7 @@ class Representation {
    * @param {string} drmSystemId - The hexa-encoded DRM system ID
    * @returns {Array.<Object>}
    */
-  public getEncryptionData(drmSystemId : string) : IContentProtection[] {
+  public getEncryptionData(drmSystemId : string) : IRepresentationProtectionData[] {
     const allInitData = this.getAllEncryptionData();
     const filtered = [];
     for (let i = 0; i < allInitData.length; i++) {
@@ -216,7 +215,7 @@ class Representation {
    * after parsing this Representation's initialization segment, if one exists.
    * @returns {Array.<Object>}
    */
-  public getAllEncryptionData() : IContentProtection[] {
+  public getAllEncryptionData() : IRepresentationProtectionData[] {
     if (this.contentProtections === undefined ||
         this.contentProtections.initData.length === 0)
     {
@@ -295,6 +294,40 @@ class Representation {
                                             values: data });
     return true;
   }
+}
+
+/** Protection data as returned by a Representation. */
+export interface IRepresentationProtectionData {
+  /**
+   * Initialization data type.
+   * String describing the format of the initialization data sent through this
+   * event.
+   * https://www.w3.org/TR/eme-initdata-registry/
+   */
+  type: string;
+  /**
+   * The key ids linked to those initialization data.
+   * This should be the key ids for the key concerned by the media which have
+   * the present initialization data.
+   *
+   * `undefined` when not known (different from an empty array - which would
+   * just mean that there's no key id involved).
+   */
+  keyIds : Uint8Array[] | undefined;
+  /** Every initialization data for that type. */
+  values: Array<{
+    /**
+     * Hex encoded system id, which identifies the key system.
+     * https://dashif.org/identifiers/content_protection/
+     */
+    systemId: string;
+    /**
+     * The initialization data itself for that type and systemId.
+     * For example, with "cenc" initialization data found in an ISOBMFF file,
+     * this will be the whole PSSH box.
+     */
+     data: Uint8Array;
+  }>;
 }
 
 export default Representation;

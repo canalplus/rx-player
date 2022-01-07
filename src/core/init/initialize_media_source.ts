@@ -31,7 +31,6 @@ import {
   switchMap,
   take,
   takeUntil,
-  tap,
 } from "rxjs";
 import { shouldReloadMediaSourceOnDecipherabilityUpdate } from "../../compat";
 import config from "../../config";
@@ -272,20 +271,8 @@ export default function InitializeOnMediaSource(
         fromEvent(manifest, "decipherabilityUpdate")
           .pipe(map(EVENTS.decipherabilityUpdate)));
 
-      const setUndecipherableRepresentations$ = drmEvents$.pipe(
-        tap((evt) => {
-          if (evt.type === "keys-update") {
-            manifest.updateDeciperabilitiesBasedOnKeyIds(evt.value);
-          } else if (evt.type === "blacklist-protection-data") {
-            log.info("Init: blacklisting Representations based on protection data.");
-            manifest.addUndecipherableProtectionData(evt.value);
-          }
-        }),
-        ignoreElements());
-
       return observableMerge(manifestEvents$,
                              manifestUpdate$,
-                             setUndecipherableRepresentations$,
                              recursiveLoad$)
         .pipe(startWith(EVENTS.manifestReady(manifest)),
               finalize(() => { scheduleRefresh$.complete(); }));

@@ -26,31 +26,10 @@ import {
   onKeyStatusesChange$,
 } from "../../../compat/event_listeners";
 import config from "../../../config";
-import { EncryptedMediaError } from "../../../errors";
 import log from "../../../log";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import { IInitializationDataInfo } from "../types";
-import InitDataStore from "./init_data_store";
-
-/** Stored MediaKeySession data assiociated to an initialization data. */
-interface IStoredSessionEntry {
-  /** The initialization data linked to the MediaKeySession. */
-  initializationData : IInitializationDataInfo;
-  /** The MediaKeySession created. */
-  mediaKeySession : MediaKeySession |
-                    ICustomMediaKeySession;
-  /** The MediaKeySessionType (e.g. "temporary" or "persistent-license"). */
-  sessionType : MediaKeySessionType;
-}
-
-/** MediaKeySession information. */
-export interface IStoredSessionData {
-  /** The MediaKeySession created. */
-  mediaKeySession : MediaKeySession |
-                    ICustomMediaKeySession;
-  /** The MediaKeySessionType (e.g. "temporary" or "persistent-license"). */
-  sessionType : MediaKeySessionType;
-}
+import { IProcessedProtectionData } from "../types";
+import KeySessionRecord from "./key_session_record";
 
 /**
  * Create and store MediaKeySessions linked to a single MediaKeys
@@ -65,7 +44,7 @@ export default class LoadedSessionsStore {
   private readonly _mediaKeys : MediaKeys|ICustomMediaKeys;
 
   /** Store unique MediaKeySession information per initialization data. */
-  private _storage : InitDataStore<IStoredSessionEntry>;
+  private _storage : IStoredSessionEntry[];
 
   /**
    * Create a new LoadedSessionsStore, which will store information about
@@ -74,89 +53,30 @@ export default class LoadedSessionsStore {
    */
   constructor(mediaKeys : MediaKeys|ICustomMediaKeys) {
     this._mediaKeys = mediaKeys;
-    this._storage = new InitDataStore<IStoredSessionEntry>();
-  }
-
-  /**
-   * Returns the stored MediaKeySession information related to the
-   * given initDataType and initData if found.
-   * Returns `null` if no such MediaKeySession is stored.
-   * @param {Object} initializationData
-   * @returns {Object|null}
-   */
-  public get(initializationData : IInitializationDataInfo) : IStoredSessionData | null {
-    const entry = this._storage.get(initializationData);
-    return entry === undefined ? null :
-                                 { mediaKeySession: entry.mediaKeySession,
-                                   sessionType: entry.sessionType };
-  }
-
-  /**
-   * Like `get` but also moves the corresponding MediaKeySession to the end of
-   * its internal storage, as returned by the `getAll` method.
-   *
-   * This can be used for example to tell when a previously-stored
-   * initialization data is re-used to then be able to implement a caching
-   * replacement algorithm based on the least-recently-used values by just
-   * evicting the first values returned by `getAll`.
-   * @param {Object} initializationData
-   * @returns {Object|null}
-   */
-  public getAndReuse(
-    initializationData : IInitializationDataInfo
-  ) : IStoredSessionData | null {
-    const entry = this._storage.getAndReuse(initializationData);
-    return entry === undefined ? null :
-                                 { mediaKeySession: entry.mediaKeySession,
-                                   sessionType: entry.sessionType };
-  }
-
-  /**
-   * Moves the corresponding MediaKeySession to the end of its internal storage,
-   * as returned by the `getAll` method.
-   *
-   * This can be used to signal that a previously-stored initialization data is
-   * re-used to then be able to implement a caching replacement algorithm based
-   * on the least-recently-used values by just evicting the first values
-   * returned by `getAll`.
-   *
-   * Returns `true` if the corresponding session was found in the store, `false`
-   * otherwise.
-   * @param {Object} initializationData
-   * @returns {boolean}
-   */
-  public reuse(
-    initializationData : IInitializationDataInfo
-  ) : boolean {
-    return this._storage.getAndReuse(initializationData) !== undefined;
+    this._storage = [];
   }
 
   /**
    * Create a new MediaKeySession and store it in this store.
-   * @throws {EncryptedMediaError}
    * @param {Object} initializationData
    * @param {string} sessionType
-   * @returns {MediaKeySession}
+   * @returns {Object}
    */
   public createSession(
-    initializationData : IInitializationDataInfo,
+    initData : IProcessedProtectionData,
     sessionType : MediaKeySessionType
-  ) : MediaKeySession|ICustomMediaKeySession {
-    if (this._storage.get(initializationData) !== undefined) {
-      throw new EncryptedMediaError("MULTIPLE_SESSIONS_SAME_INIT_DATA",
-                                    "This initialization data was already stored.");
-    }
-
+  ) : IStoredSessionEntry {
+    const keySessionRecord = new KeySessionRecord(initData);
     const mediaKeySession = this._mediaKeys.createSession(sessionType);
-    const entry = { mediaKeySession, sessionType, initializationData };
+    const entry = { mediaKeySession, sessionType, keySessionRecord };
     if (!isNullOrUndefined(mediaKeySession.closed)) {
       mediaKeySession.closed
         .then(() => {
-          const currentEntry = this._storage.get(initializationData);
-          if (currentEntry !== undefined &&
-              currentEntry.mediaKeySession === mediaKeySession)
+          const index = this.getIndex(keySessionRecord);
+          if (index >= 0 &&
+              this._storage[index].mediaKeySession === mediaKeySession)
           {
-            this._storage.remove(initializationData);
+            this._storage.splice(index, 1);
           }
         })
         .catch((e : unknown) => {
@@ -166,21 +86,55 @@ export default class LoadedSessionsStore {
     }
 
     log.debug("DRM-LSS: Add MediaKeySession", entry.sessionType);
-    this._storage.store(initializationData, entry);
-    return mediaKeySession;
+    this._storage.push({ keySessionRecord, mediaKeySession, sessionType });
+    return entry;
   }
 
   /**
-   * Close a MediaKeySession corresponding to an initialization data and remove
-   * its related stored information from the LoadedSessionsStore.
-   * Emit when done.
+   * Find a stored entry compatible with the initialization data given and moves
+   * this entry at the end of the `LoadedSessionsStore`''s storage, returned by
+   * its `getAll` method.
+   *
+   * This can be used for example to tell when a previously-stored
+   * entry is re-used to then be able to implement a caching replacement
+   * algorithm based on the least-recently-used values by just evicting the first
+   * values returned by `getAll`.
    * @param {Object} initializationData
-   * @returns {Observable}
+   * @returns {Object|null}
+   */
+  public reuse(
+    initializationData : IProcessedProtectionData
+  ) : IStoredSessionEntry | null {
+    for (let i = this._storage.length - 1; i >= 0; i--) {
+      const stored = this._storage[i];
+      if (stored.keySessionRecord.isCompatibleWith(initializationData)) {
+        this._storage.splice(i, 1);
+        this._storage.push(stored);
+        return { keySessionRecord: stored.keySessionRecord,
+                 mediaKeySession: stored.mediaKeySession,
+                 sessionType: stored.sessionType };
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Close a MediaKeySession and remove its related stored information from the
+   * `LoadedSessionsStore`.
+   * Emit when done.
+   * @param {Object} mediaKeySession
+   * @returns {Promise}
    */
   public async closeSession(
-    initializationData : IInitializationDataInfo
+    mediaKeySession : MediaKeySession | ICustomMediaKeySession
   ) : Promise<boolean> {
-    const entry = this._storage.remove(initializationData);
+    let entry;
+    for (const stored of this._storage) {
+      if (stored.mediaKeySession === mediaKeySession) {
+        entry = stored;
+        break;
+      }
+    }
     if (entry === undefined) {
       log.warn("DRM-LSS: No MediaKeySession found with " +
                "the given initData and initDataType");
@@ -195,7 +149,7 @@ export default class LoadedSessionsStore {
    * @returns {number}
    */
   public getLength() : number {
-    return this._storage.getLength();
+    return this._storage.length;
   }
 
   /**
@@ -204,27 +158,65 @@ export default class LoadedSessionsStore {
    * @returns {Array.<Object>}
    */
   public getAll() : IStoredSessionEntry[] {
-    return this._storage.getAll();
+    return this._storage;
   }
 
   /**
    * Close all sessions in this store.
    * Emit `null` when done.
-   * @returns {PPromise}
+   * @returns {Promise}
    */
   public async closeAllSessions() : Promise<void> {
-    const allEntries = this._storage.getAll();
+    const allEntries = this._storage;
     log.debug("DRM-LSS: Closing all current MediaKeySessions", allEntries.length);
 
     // re-initialize the storage, so that new interactions with the
     // `LoadedSessionsStore` do not rely on MediaKeySessions we're in the
     // process of removing
-    this._storage = new InitDataStore<IStoredSessionEntry>();
+    this._storage = [];
 
     const closingProms = allEntries
       .map((entry) => safelyCloseMediaKeySession(entry.mediaKeySession));
     await PPromise.all(closingProms);
   }
+
+  private getIndex(record : KeySessionRecord) : number {
+    for (let i = 0; i < this._storage.length; i++) {
+      const stored = this._storage[i];
+      if (stored.keySessionRecord === record) {
+        return i;
+      }
+    }
+    return -1;
+  }
+}
+
+/** Information linked to a `MediaKeySession` created by the `LoadedSessionsStore`. */
+export interface IStoredSessionEntry {
+  /**
+   * The `KeySessionRecord` linked to the MediaKeySession.
+   * It keeps track of all key ids that are currently known to be associated to
+   * the MediaKeySession.
+   *
+   * Initially only assiociated with the initialization data given, you may want
+   * to add to it other key ids if you find out that there are also linked to
+   * that session.
+   *
+   * Regrouping all those key ids into the `KeySessionRecord` in that way allows
+   * the `LoadedSessionsStore` to perform compatibility checks when future
+   * initialization data is encountered.
+   */
+  keySessionRecord : KeySessionRecord;
+
+  /** The MediaKeySession created. */
+  mediaKeySession : MediaKeySession |
+                    ICustomMediaKeySession;
+
+  /**
+   * The MediaKeySessionType (e.g. "temporary" or "persistent-license") with
+   * which the MediaKeySession was created.
+   */
+  sessionType : MediaKeySessionType;
 }
 
 /**
