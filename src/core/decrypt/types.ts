@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-import {
-  ICustomMediaKeys,
-  ICustomMediaKeySession,
-  ICustomMediaKeySystemAccess,
-} from "../../compat";
+import { ICustomMediaKeySession } from "../../compat";
 import { ICustomError } from "../../errors";
-import { ISharedReference } from "../../utils/reference";
+import Manifest, {
+  Adaptation,
+  Period,
+  Representation,
+} from "../../manifest";
+import InitDataValuesContainer from "./utils/init_data_values_container";
 import LoadedSessionsStore from "./utils/loaded_sessions_store";
 import PersistentSessionsStore from "./utils/persistent_sessions_store";
 
 /** Information about the encryption initialization data. */
-export interface IInitializationDataInfo {
+export interface IProtectionData {
   /**
    * The initialization data type - or the format of the `data` attribute (e.g.
    * "cenc").
@@ -41,167 +42,50 @@ export interface IInitializationDataInfo {
    * just mean that there's no key id involved).
    */
   keyIds? : Uint8Array[];
+  /** The content linked to that segment protection data. */
+  content? : IContent;
   /** Every initialization data for that type. */
-  values: Array<{
-    /**
-     * Hex encoded system id, which identifies the key system.
-     * https://dashif.org/identifiers/content_protection/
-     *
-     * If `undefined`, we don't know the system id for that initialization data.
-     * In that case, the initialization data might even be a concatenation of
-     * the initialization data from multiple system ids.
-     */
-    systemId: string | undefined;
-    /**
-     * The initialization data itself for that type and systemId.
-     * For example, with "cenc" initialization data found in an ISOBMFF file,
-     * this will be the whole PSSH box.
-     */
-     data: Uint8Array;
-  }>;
+  values: IInitDataValue[];
+}
+
+/** Protection initialization data actually processed by the `ContentDecryptor`. */
+export interface IProcessedProtectionData extends Omit<IProtectionData, "values"> {
+  values: InitDataValuesContainer;
+}
+
+/**
+ * Represent the initialization data linked to a key system that can be used to
+ * generate the license request.
+ */
+export interface IInitDataValue {
+  /**
+   * Hex encoded system id, which identifies the key system.
+   * https://dashif.org/identifiers/content_protection/
+   *
+   * If `undefined`, we don't know the system id for that initialization data.
+   * In that case, the initialization data might even be a concatenation of
+   * the initialization data from multiple system ids.
+   */
+  systemId: string | undefined;
+  /**
+   * The initialization data itself for that type and systemId.
+   * For example, with "cenc" initialization data found in an ISOBMFF file,
+   * this will be the whole PSSH box.
+   */
+   data: Uint8Array;
 }
 
 /** Event emitted when a minor - recoverable - error happened. */
 export interface IEMEWarningEvent { type : "warning";
                                     value : ICustomError; }
 
-/**
- * Event emitted when we receive an "encrypted" event from the browser.
- * This is usually sent when pushing an initialization segment, if it stores
- * encryption information.
- */
-export interface IEncryptedEvent { type: "encrypted-event-received";
-                                   value: IInitializationDataInfo; }
-
-/**
- * Sent when a MediaKeys has been created (or is already created) for the
- * current content.
- * This is necessary before creating a MediaKeySession which will allow
- * encryption keys to be communicated.
- *
- * It carries a shared reference (`canAttachMediaKeys`) that should be setted to
- * `true` to indicate that RxPlayer's EME logic can start to attach the
- * `MediaKeys` instance to the HTMLMediaElement.
- */
-export interface ICreatedMediaKeysEvent {
-  type: "created-media-keys";
-  value: {
-    /** The MediaKeySystemAccess which allowed to create the MediaKeys instance. */
-    mediaKeySystemAccess: MediaKeySystemAccess |
-                          ICustomMediaKeySystemAccess;
-
-    /**
-     * Hex-encoded identifier for the key system used.
-     * A list of available IDs can be found here:
-     * https://dashif.org/identifiers/content_protection/
-     *
-     * This ID can be used to select the encryption initialization data to send
-     * to the `ContentDecryptor`.
-     *
-     * Note that this is only for optimization purposes (e.g. to not
-     * unnecessarily wait for new encryption initialization data to arrive when
-     * those linked to the right key system is already available) as sending all
-     * available encryption initialization data should also work in all cases.
-     *
-     * Can be `undefined` in two cases:
-     *
-     *   - the current system ID is not known
-     *
-     *   - the current system ID is known, but we don't want to communicate it
-     *     to ensure all encryption initialization data is still sent.
-     *     This is usually done to work-around retro-compatibility issues with
-     *     older persisted decryption session.
-     */
-    initializationDataSystemId : string | undefined;
-
-    /** The MediaKeys instance. */
-    mediaKeys : MediaKeys |
-                ICustomMediaKeys;
-
-    /** Stores allowing to cache MediaKeySession instances. */
-    stores : IMediaKeySessionStores;
-
-    /** key system options considered. */
-    options : IKeySystemOption;
-
-    /**
-     * Shared reference that should be set to `true` once the `MediaKeys`
-     * instance can be attached to the HTMLMediaElement.
-     */
-    canAttachMediaKeys: ISharedReference<boolean>;
-  };
-}
-
-/**
- * Sent when the created (or already created) MediaKeys is attached to the
- * current HTMLMediaElement element.
- * On some peculiar devices, we have to wait for that step before the first
- * media segments are to be pushed to avoid issues.
- * Because this event is sent after a MediaKeys is created, you will always have
- * a "created-media-keys" event before an "attached-media-keys" event.
- */
-export interface IAttachedMediaKeysData {
-  /** The MediaKeySystemAccess which allowed to create the MediaKeys instance. */
-  mediaKeySystemAccess: MediaKeySystemAccess |
-                        ICustomMediaKeySystemAccess;
-  /** The MediaKeys instance. */
-  mediaKeys : MediaKeys |
-              ICustomMediaKeys;
-  stores : IMediaKeySessionStores;
-  options : IKeySystemOption;
-}
-
-
-/**
- * Some key ids have updated their status.
- *
- * We put them in two different list:
- *
- *   - `blacklistedKeyIDs`: Those key ids won't be used for decryption and the
- *     corresponding media it decrypts should not be pushed to the buffer
- *     Note that a blacklisted key id can become whitelisted in the future.
- *
- *   - `whitelistedKeyIds`: Those key ids were found and their corresponding
- *     keys are now being considered for decryption.
- *     Note that a whitelisted key id can become blacklisted in the future.
- *
- * Note that each `IKeysUpdateEvent` is independent of any other.
- *
- * A new `IKeysUpdateEvent` does not completely replace a previously emitted
- * one, as it can for example be linked to a whole other decryption session.
- *
- * However, if a key id is encountered in both an older and a newer
- * `IKeysUpdateEvent`, only the older status should be considered.
- */
-export interface IKeysUpdateEvent {
-  type: "keys-update";
-  value: IKeyUpdateValue;
-}
-
-/** Information on key ids linked to a MediaKeySession. */
-export interface IKeyUpdateValue {
-  /**
-   * The list of key ids that are blacklisted.
-   * As such, their corresponding keys won't be used by that session, despite
-   * the fact that they were part of the pushed license.
-   *
-   * Reasons for blacklisting a keys depend on options, but mainly involve unmet
-   * output restrictions and CDM internal errors linked to that key id.
-   */
-  blacklistedKeyIDs : Uint8Array[];
-  /*
-   * The list of key id linked to that session which are not blacklisted.
-   * Together with `blacklistedKeyIDs` it regroups all key ids linked to the
-   * session.
-   */
-  whitelistedKeyIds : Uint8Array[];
-}
-
 export type ILicense = BufferSource |
                        ArrayBuffer;
 
 /** Segment protection sent by the RxPlayer to the `ContentDecryptor`. */
 export interface IContentProtection {
+  /** The content linked to that segment protection data. */
+  content : IContent;
   /**
    * Initialization data type.
    * String describing the format of the initialization data sent through this
@@ -217,7 +101,7 @@ export interface IContentProtection {
    * `undefined` when not known (different from an empty array - which would
    * just mean that there's no key id involved).
    */
-  keyIds? : Uint8Array[];
+  keyIds : Uint8Array[] | undefined;
   /** Every initialization data for that type. */
   values: Array<{
     /**
@@ -234,23 +118,16 @@ export interface IContentProtection {
   }>;
 }
 
-// Emitted after the `onKeyStatusesChange` callback has been called
-export interface IKeyStatusChangeHandledEvent { type: "key-status-change-handled";
-                                                value: { session: MediaKeySession |
-                                                                  ICustomMediaKeySession;
-                                                         license: ILicense|null; }; }
-
-// Emitted after the `getLicense` callback has been called
-export interface IKeyMessageHandledEvent { type: "key-message-handled";
-                                           value: { session: MediaKeySession |
-                                                             ICustomMediaKeySession;
-                                                    license: ILicense|null; }; }
-
-// Infos indentifying a MediaKeySystemAccess
-export interface IKeySystemAccessInfos {
-  keySystemAccess: MediaKeySystemAccess |
-                   ICustomMediaKeySystemAccess;
-  keySystemOptions: IKeySystemOption;
+/** Content linked to protection data. */
+export interface IContent {
+  /** Manifest object associated to the protection data. */
+  manifest : Manifest;
+  /** Period object associated to the protection data. */
+  period : Period;
+  /** Adaptation object associated to the protection data. */
+  adaptation : Adaptation;
+  /** Representation object associated to the protection data. */
+  representation : Representation;
 }
 
 /** Stores helping to create and retrieve MediaKeySessions. */
@@ -262,19 +139,46 @@ export interface IMediaKeySessionStores {
                             null;
 }
 
+/** Enum identifying the way a new MediaKeySession has been loaded. */
+export const enum MediaKeySessionLoadingType {
+  /**
+   * This MediaKeySession has just been created.
+   * This means that it will necessitate a new license request to be generated
+   * and performed.
+   */
+  Created = "created-session",
+  /**
+   * This MediaKeySession was an already-opened one that is being reused.
+   * Such session had already their license loaded and pushed.
+   */
+  LoadedOpenSession = "loaded-open-session",
+  /**
+   * This MediaKeySession was a persistent MediaKeySession that has been
+   * re-loaded.
+   * Such session are linked to a persistent license which should have already
+   * been fetched.
+   */
+  LoadedPersistentSession = "loaded-persistent-session",
+}
+
 /**
  * Data stored in a persistent MediaKeySession storage.
  * Has to be versioned to be able to play MediaKeySessions persisted in an old
  * RxPlayer version when in a new one.
  */
-export type IPersistentSessionInfo = IPersistentSessionInfoV3 |
+export type IPersistentSessionInfo = IPersistentSessionInfoV4 |
+                                     IPersistentSessionInfoV3 |
                                      IPersistentSessionInfoV2 |
                                      IPersistentSessionInfoV1 |
                                      IPersistentSessionInfoV0;
 
-/** Wrap initialization data and allow linearization of it into base64. */
-interface IInitDataContainer {
-  /** The initData itself. */
+/** Wrap an Uint8Array and allow serialization of it into base64. */
+interface ByteArrayContainer {
+  /**
+   * The wrapped data.
+   * Here named `initData` even when it's not always initialization data for
+   * backward-compatible reasons.
+   */
   initData : Uint8Array;
 
   /**
@@ -288,7 +192,53 @@ interface IInitDataContainer {
 
 /**
  * Stored information about a single persistent `MediaKeySession`, when created
- * since the v3.24.0 RxPlayer version included.
+ * since the v3.27.0 RxPlayer version included.
+ */
+export interface IPersistentSessionInfoV4 {
+  /** Version for this object. */
+  version : 4;
+
+  /** The persisted MediaKeySession's `id`. Used to load it at a later time. */
+  sessionId : string;
+
+  /** Type giving information about the format of the initialization data. */
+  initDataType : string | undefined;
+
+  /** All key ids linked to that `MediaKeySession`. */
+  keyIds: Array<ByteArrayContainer | string>;
+
+  /**
+   * Every saved initialization data for that session, used as IDs.
+   * Elements are sorted in systemId alphabetical order (putting the `undefined`
+   * ones last).
+   */
+  values: Array<{
+    /**
+     * Hex encoded system id, which identifies the key system.
+     * https://dashif.org/identifiers/content_protection/
+     *
+     * If `undefined`, we don't know the system id for that initialization data.
+     * In that case, the initialization data might even be a concatenation of
+     * the initialization data from multiple system ids.
+     */
+    systemId : string | undefined;
+    /**
+     * A hash of the initialization data (generated by the `hashBuffer` function,
+     * at the time of v3.20.1 at least). Allows for a faster comparison than just
+     * comparing initialization data multiple times.
+     */
+    hash : number;
+    /**
+     * The initialization data associated to the systemId, wrapped in a
+     * container to allow efficient serialization.
+     */
+    data : ByteArrayContainer | string;
+  }>;
+}
+
+/**
+ * Stored information about a single persistent `MediaKeySession`, when created
+ * from the v3.24.0 RxPlayer version included to the v3.26.2 included.
  */
 export interface IPersistentSessionInfoV3 {
   /** Version for this object. */
@@ -325,14 +275,14 @@ export interface IPersistentSessionInfoV3 {
      * The initialization data associated to the systemId, wrapped in a
      * container to allow efficient serialization.
      */
-    data : IInitDataContainer;
+    data : ByteArrayContainer | string;
   }>;
 }
 
 /**
  * Stored information about a single persistent `MediaKeySession`, when created
  * between the RxPlayer versions v3.21.0 and v3.21.1 included.
- * The previous implementation (version 1) was fine enough but did not linearize
+ * The previous implementation (version 1) was fine enough but did not serialize
  * well due to it containing an Uint8Array. This data is now wrapped into a
  * container which will convert it to base64 when linearized through
  * `JSON.stringify`.
@@ -346,7 +296,7 @@ export interface IPersistentSessionInfoV2 {
    * The initialization data associated to the `MediaKeySession`, wrapped in a
    * container to allow efficient linearization.
    */
-  initData : IInitDataContainer;
+  initData : ByteArrayContainer;
   /**
    * A hash of the initialization data (generated by the `hashBuffer` function,
    * at the time of v3.20.1 at least). Allows for a faster comparison than just
@@ -404,7 +354,7 @@ export interface IPersistentSessionInfoV0 {
 /** Persistent MediaKeySession storage interface. */
 export interface IPersistentSessionStorage {
   /** Load persistent MediaKeySessions previously saved through the `save` callback. */
-  load() : IPersistentSessionInfo[];
+  load() : IPersistentSessionInfo[] | undefined | null;
   /**
    * Save new persistent MediaKeySession information.
    * The given argument should be returned by the next `load` call.

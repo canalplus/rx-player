@@ -4,7 +4,7 @@
 ## Overview ####################################################################
 
 This directory exports the `ContentDecryptor`, which allows to easily interface
-with the browser APIs for decrypting a crypted content, it follows the
+with the browser APIs for decrypting an encrypted content, it follows the
 [Encrypted Media Extensions recommandations](https://www.w3.org/TR/encrypted-media/).
 
 The `ContentDecryptor` is a module isolated from the rest of the player taking

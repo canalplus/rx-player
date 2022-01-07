@@ -19,6 +19,7 @@ import {
   events,
   generateKeyRequest,
   getInitData,
+  ICustomMediaKeys,
   ICustomMediaKeySystemAccess,
 } from "../../compat/";
 import config from "../../config";
@@ -28,14 +29,15 @@ import {
   OtherError,
 } from "../../errors";
 import log from "../../log";
+import Manifest, {
+  Period,
+} from "../../manifest";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
+import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
-import { concat } from "../../utils/byte_parsing";
 import EventEmitter from "../../utils/event_emitter";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import createSharedReference, {
-  ISharedReference,
-} from "../../utils/reference";
+import { bytesToHex } from "../../utils/string_parsing";
 import TaskCanceller from "../../utils/task_canceller";
 import attachMediaKeys from "./attach_media_keys";
 import createOrLoadSession from "./create_or_load_session";
@@ -46,15 +48,21 @@ import SessionEventsListener, {
 } from "./session_events_listener";
 import setServerCertificate from "./set_server_certificate";
 import {
-  IAttachedMediaKeysData,
-  IInitializationDataInfo,
+  IProtectionData,
   IKeySystemOption,
-  IKeyUpdateValue,
+  IMediaKeySessionStores,
+  MediaKeySessionLoadingType,
+  IProcessedProtectionData,
 } from "./types";
-import { ICleaningOldSessionDataPayload } from "./utils/clean_old_loaded_sessions";
 import cleanOldStoredPersistentInfo from "./utils/clean_old_stored_persistent_info";
 import getDrmSystemId from "./utils/get_drm_system_id";
-import InitDataStore from "./utils/init_data_store";
+import InitDataValuesContainer from "./utils/init_data_values_container";
+import {
+  areAllKeyIdsContainedIn,
+  areKeyIdsEqual,
+  areSomeKeyIdsContainedIn,
+} from "./utils/key_id_comparison";
+import KeySessionRecord from "./utils/key_session_record";
 
 const { EME_DEFAULT_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS,
         EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION } = config;
@@ -106,20 +114,12 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
   private _stateData : IContentDecryptorStateData;
 
   /**
-   * Keep track of all decryption keys handled by this instance of the
-   * `ContentDecryptor`.
-   * This allows to avoid creating multiple MediaKeySessions handling the same
-   * decryption keys.
+   * Contains information about all key sessions loaded for this current
+   * content.
+   * This object is most notably used to check which keys are already obtained,
+   * thus avoiding to perform new unnecessary license requests and CDM interactions.
    */
-  private _contentSessions : InitDataStore<IContentSessionInfo>;
-
-  /**
-   * Keep track of which initialization data have been blacklisted in the
-   * current instance of the `ContentDecryptor`.
-   * If the same initialization data is encountered again, we can directly emit
-   * the same `BlacklistedSessionError`.
-   */
-  private _blacklistedInitData : InitDataStore<BlacklistedSessionError>;
+  private _currentSessions : IActiveSessionInfo[];
 
   /**
    * Allows to dispose the resources taken by the current instance of the
@@ -132,6 +132,16 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    * Allows to avoid calling multiple times that function.
    */
   private _wasAttachCalled : boolean;
+
+  /**
+   * This queue stores initialization data which hasn't been processed yet,
+   * probably because the "queue is locked" for now. (@see _stateData private
+   * property).
+   *
+   * For example, this queue stores initialization data communicated while
+   * initializing so it can be processed when the initialization is done.
+   */
+  private _initDataQueue : IProtectionData[];
 
   /**
    * Create a new `ContentDecryptor`, and initialize its decryption capabilities
@@ -152,12 +162,14 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     log.debug("DRM: Starting ContentDecryptor logic.");
 
     const canceller = new TaskCanceller();
-    this._contentSessions = new InitDataStore<IContentSessionInfo>();
-    this._blacklistedInitData = new InitDataStore<BlacklistedSessionError>();
+    this._currentSessions = [];
     this._canceller = canceller;
     this._wasAttachCalled = false;
+    this._initDataQueue = [];
     this._stateData = { state: ContentDecryptorState.Initializing,
-                        data: { initDataQueue: [] } };
+                        isMediaKeysAttached: false,
+                        isInitDataQueueLocked: true,
+                        data: null };
     this.error = null;
 
     const listenerSub = onEncrypted$(mediaElement).subscribe(evt => {
@@ -193,10 +205,10 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
 
         this.systemId = systemId;
         if (this._stateData.state === ContentDecryptorState.Initializing) {
-          const prevInitDataQueue = this._stateData.data.initDataQueue;
           this._stateData = { state: ContentDecryptorState.WaitingForAttachment,
-                              data: { initDataQueue: prevInitDataQueue,
-                                      mediaKeysInfo,
+                              isInitDataQueueLocked: true,
+                              isMediaKeysAttached: false,
+                              data: { mediaKeysInfo,
                                       mediaElement } };
 
           this.trigger("stateChange", this._stateData.state);
@@ -231,6 +243,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       throw new Error("`attach` should only be called when " +
                       "in the WaitingForAttachment state");
     } else if (this._wasAttachCalled) {
+      log.warn("DRM: ContentDecryptor's `attach` method called more than once.");
       return;
     }
     this._wasAttachCalled = true;
@@ -244,12 +257,12 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
 
     const shouldDisableLock = options.disableMediaKeysAttachmentLock === true;
     if (shouldDisableLock) {
-      const currentInitDataQueue = this._stateData.data.initDataQueue;
       this._stateData = { state: ContentDecryptorState.ReadyForContent,
-                          data: { isAttached: false,
-                                  initDataQueue: currentInitDataQueue } };
+                          isInitDataQueueLocked: true,
+                          isMediaKeysAttached: false,
+                          data: null };
       this.trigger("stateChange", this._stateData.state);
-      if (this._isStopped()) {
+      if (this._isStopped()) { // previous trigger might have lead to disposal
         return ;
       }
     }
@@ -266,43 +279,20 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
           }
         }
 
-        if (this._isStopped()) {
+        if (this._isStopped()) { // We might be stopped since then
           return;
         }
 
         const prevState = this._stateData.state;
-        let initDataQueue : IInitializationDataInfo[];
-        switch (prevState) {
-          case ContentDecryptorState.Initializing:
-          case ContentDecryptorState.WaitingForAttachment:
-            initDataQueue = this._stateData.data.initDataQueue;
-            break;
-          case ContentDecryptorState.ReadyForContent:
-            initDataQueue = this._stateData.data.isAttached ?
-              [] :
-              this._stateData.data.initDataQueue;
-            break;
-          default:
-            initDataQueue = [];
-        }
-
         this._stateData = { state: ContentDecryptorState.ReadyForContent,
-                            data: { isAttached: true,
-                                    mediaKeysData: mediaKeysInfo } };
+                            isMediaKeysAttached: true,
+                            isInitDataQueueLocked: false,
+                            data: { mediaKeysData: mediaKeysInfo } };
         if (prevState !== ContentDecryptorState.ReadyForContent) {
           this.trigger("stateChange", ContentDecryptorState.ReadyForContent);
         }
-
-        while (true) {
-          // Side-effects might have provoked a stop/dispose
-          if (this._isStopped()) {
-            return;
-          }
-          const initData = initDataQueue.shift();
-          if (initData === undefined) {
-            return;
-          }
-          this.onInitializationData(initData);
+        if (!this._isStopped()) {
+          this._processCurrentInitDataQueue();
         }
       })
 
@@ -320,7 +310,10 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    */
   public dispose() {
     this.removeEventListener();
-    this._stateData = { state: ContentDecryptorState.Disposed, data: null };
+    this._stateData = { state: ContentDecryptorState.Disposed,
+                        isMediaKeysAttached: undefined,
+                        isInitDataQueueLocked: undefined,
+                        data: null };
     this._canceller.cancel();
     this.trigger("stateChange", this._stateData.state);
   }
@@ -335,9 +328,22 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    * @param {Object} initializationData
    */
   public onInitializationData(
-    initializationData : IInitializationDataInfo
+    initializationData : IProtectionData
   ) : void {
-    this._processInitializationData(initializationData)
+    if (this._stateData.isInitDataQueueLocked !== false) {
+      if (this._isStopped()) {
+        throw new Error("ContentDecryptor either disposed or stopped.");
+      }
+      this._initDataQueue.push(initializationData);
+      return;
+    }
+
+    const { mediaKeysData } = this._stateData.data;
+    const processedInitializationData = {
+      ...initializationData,
+      values: new InitDataValuesContainer(initializationData.values),
+    };
+    this._processInitializationData(processedInitializationData, mediaKeysData)
       .catch(err => { this._onFatalError(err); });
   }
 
@@ -351,84 +357,54 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    * @returns {Promise.<void>}
    */
   private async _processInitializationData(
-    initializationData: IInitializationDataInfo
+    initializationData: IProcessedProtectionData,
+    mediaKeysData: IAttachedMediaKeysData
   ) : Promise<void> {
-    if (this._stateData.state !== ContentDecryptorState.ReadyForContent) {
-      if (this._stateData.state === ContentDecryptorState.Disposed ||
-          this._stateData.state === ContentDecryptorState.Error)
-      {
-        throw new Error("ContentDecryptor either disposed or stopped.");
-      }
-      this._stateData.data.initDataQueue.push(initializationData);
-      return ;
-    } else if (!this._stateData.data.isAttached) {
-      this._stateData.data.initDataQueue.push(initializationData);
-      return ;
-    }
-
-    const mediaKeysData = this._stateData.data.mediaKeysData;
-    const contentSessions = this._contentSessions;
     const { mediaKeySystemAccess, stores, options } = mediaKeysData;
-    const blacklistError = this._blacklistedInitData.get(initializationData);
 
-    if (blacklistError !== undefined) {
-      if (initializationData.type === undefined) {
-        log.error("DRM: The current session has already been blacklisted " +
-                  "but the current content is not known. Throwing.");
-        const { sessionError } = blacklistError;
-        sessionError.fatal = true;
-        throw sessionError;
-      }
-      log.warn("DRM: The current session has already been blacklisted. " +
-               "Blacklisting content.");
-      this.trigger("blacklistProtectionData", initializationData);
-      return ;
+    if (this._tryToUseAlreadyCreatedSession(initializationData, mediaKeysData) ||
+        this._isStopped()) // _isStopped is voluntarly checked after here
+    {
+      return;
     }
 
-    const lastKeyUpdate = createSharedReference<IKeyUpdateValue | null>(null);
+    if (options.singleLicensePer === "content") {
+      const firstCreatedSession = arrayFind(this._currentSessions, (x) =>
+        x.source === MediaKeySessionLoadingType.Created);
 
-    // First, check that this initialization data is not already handled
-    if (options.singleLicensePer === "content" && !contentSessions.isEmpty()) {
-      const keyIds = initializationData.keyIds;
-      if (keyIds === undefined) {
-        log.warn("DRM: Initialization data linked to unknown key id, we'll " +
-                 "not able to fallback from it.");
-        return ;
-      }
-
-      const firstSession = contentSessions.getAll()[0];
-      firstSession.lastKeyUpdate.onUpdate((val) => {
-        if (val === null) {
-          return;
-        }
-        const hasAllNeededKeyIds = keyIds.every(keyId => {
-          for (let i = 0; i < val.whitelistedKeyIds.length; i++) {
-            if (areArraysOfNumbersEqual(val.whitelistedKeyIds[i], keyId)) {
-              return true;
-            }
+      if (firstCreatedSession !== undefined) {
+        // We already fetched a `singleLicensePer: "content"` license, yet we
+        // could not use the already-created MediaKeySession with it.
+        // It means that we'll never handle it and we should thus blacklist it.
+        const keyIds = initializationData.keyIds;
+        if (keyIds === undefined) {
+          if (initializationData.content === undefined) {
+            log.warn("DRM: Unable to fallback from a non-decipherable quality.");
+          } else {
+            blackListProtectionData(initializationData.content.manifest,
+                                    initializationData);
           }
-        });
-
-        if (!hasAllNeededKeyIds) {
-          // Not all keys are available in the current session, blacklist those
-          this.trigger("keyUpdate", { blacklistedKeyIDs: keyIds,
-                                      whitelistedKeyIds: [] });
-          return;
+          return ;
         }
 
-        // Already handled by the current session.
-        // Move corresponding session on top of the cache if it exists
-        const { loadedSessionsStore } = mediaKeysData.stores;
-        loadedSessionsStore.reuse(firstSession.initializationData);
+        firstCreatedSession.record.associateKeyIds(keyIds);
+        if (initializationData.content !== undefined) {
+          if (log.getLevel() === "DEBUG") {
+            const hexKids = keyIds
+              .reduce((acc, kid) => `${acc}, ${bytesToHex(kid)}`, "");
+            log.debug("DRM: Blacklisting new key ids", hexKids);
+          }
+          updateDecipherability(initializationData.content.manifest, [], keyIds);
+        }
         return ;
-      }, { clearSignal: this._canceller.signal, emitCurrentValue: true });
-
-      return ;
-    } else if (!contentSessions.storeIfNone(initializationData, { initializationData,
-                                                                  lastKeyUpdate })) {
-      log.debug("DRM: Init data already received. Skipping it.");
-      return ;
+      }
     }
+
+    // /!\ Do not forget to unlock when done
+    // TODO this is error-prone and can lead to performance issue when loading
+    // persistent sessions.
+    // Can we find a better strategy?
+    this._lockInitDataQueue();
 
     let wantedSessionType : MediaKeySessionType;
     if (options.persistentLicense !== true) {
@@ -448,8 +424,19 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
                                                  stores,
                                                  wantedSessionType,
                                                  maxSessionCacheSize,
-                                                 onCleaningSession,
                                                  this._canceller.signal);
+    if (this._isStopped()) {
+      return;
+    }
+
+    const sessionInfo : IActiveSessionInfo = {
+      record: sessionRes.value.keySessionRecord,
+      source: sessionRes.type,
+      keyStatuses: { whitelisted: [], blacklisted: [] },
+      blacklistedSessionError: null,
+    };
+    this._currentSessions.push(sessionInfo);
+
     const { mediaKeySession, sessionType } = sessionRes.value;
 
     /**
@@ -463,6 +450,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
                                       options,
                                       mediaKeySystemAccess.keySystem)
       .subscribe({
+
         next: (evt) : void => {
           switch (evt.type) {
             case "warning":
@@ -470,96 +458,86 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
               return;
           }
 
-          // We want to add the current key ids in the blacklist if it is
-          // not already there.
-          //
-          // We only do that when `singleLicensePer` is set to something
-          // else than the default `"init-data"` because this logic:
-          //   1. might result in a quality fallback, which is a v3.x.x
-          //      breaking change if some APIs (like `singleLicensePer`)
-          //      aren't used.
-          //   2. Rely on the DRM spec regarding key statuses being well
-          //      implemented on all supported devices, which we're not
-          //      sure yet. Because in any other `singleLicensePer`, we
-          //      need a good implementation anyway, it doesn't matter
-          //      there.
-          const expectedKeyIds = initializationData.keyIds;
-          if (expectedKeyIds !== undefined &&
-              options.singleLicensePer !== "init-data")
-          {
-            const missingKeyIds = expectedKeyIds.filter(expected => {
-              return (
-                !evt.value.whitelistedKeyIds.some(whitelisted =>
-                  areArraysOfNumbersEqual(whitelisted, expected)) &&
-                !evt.value.blacklistedKeyIDs.some(blacklisted =>
-                  areArraysOfNumbersEqual(blacklisted, expected))
-              );
-            });
-            if (missingKeyIds.length > 0) {
-              evt.value.blacklistedKeyIDs.push(...missingKeyIds) ;
-            }
+          let linkedKeys;
+          if (sessionInfo.source === MediaKeySessionLoadingType.Created) {
+            // When the license has been fetched, there might be implicit key ids
+            // linked to the session depending on the `singleLicensePer` option.
+            linkedKeys = getFetchedLicenseKeysInfo(initializationData,
+                                                   options.singleLicensePer,
+                                                   evt.value.whitelistedKeyIds,
+                                                   evt.value.blacklistedKeyIDs);
+          } else {
+            // When the MediaKeySession is just a cached/persisted one, we don't
+            // have any concept of "implicit key id".
+            linkedKeys = { whitelisted: evt.value.whitelistedKeyIds,
+                           blacklisted: evt.value.blacklistedKeyIDs };
           }
 
-          lastKeyUpdate.setValue(evt.value);
+          sessionInfo.record.associateKeyIds(linkedKeys.whitelisted);
+          sessionInfo.record.associateKeyIds(linkedKeys.blacklisted);
+          sessionInfo.keyStatuses = { whitelisted: linkedKeys.whitelisted,
+                                      blacklisted: linkedKeys.blacklisted };
 
-          if ((evt.value.whitelistedKeyIds.length === 0 &&
-               evt.value.blacklistedKeyIDs.length === 0) ||
-              sessionType === "temporary" ||
-              stores.persistentSessionsStore === null ||
-              isSessionPersisted)
+          if (sessionInfo.record.getAssociatedKeyIds().length !== 0 &&
+              sessionType === "persistent-license" &&
+              stores.persistentSessionsStore !== null &&
+              !isSessionPersisted)
           {
-            this.trigger("keyUpdate", evt.value);
-            return;
+            const { persistentSessionsStore } = stores;
+            cleanOldStoredPersistentInfo(
+              persistentSessionsStore,
+              EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION - 1);
+            persistentSessionsStore.add(initializationData,
+                                        sessionInfo.record.getAssociatedKeyIds(),
+                                        mediaKeySession);
+            isSessionPersisted = true;
           }
-          const { persistentSessionsStore } = stores;
-          cleanOldStoredPersistentInfo(
-            persistentSessionsStore,
-            EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION - 1);
-          persistentSessionsStore.add(initializationData, mediaKeySession);
-          isSessionPersisted = true;
 
-          this.trigger("keyUpdate", evt.value);
-          return;
+          if (initializationData.content !== undefined) {
+            updateDecipherability(initializationData.content.manifest,
+                                  linkedKeys.whitelisted,
+                                  linkedKeys.blacklisted);
+          }
+
+          this._unlockInitDataQueue();
         },
+
         error: (err) => {
           if (!(err instanceof BlacklistedSessionError)) {
             this._onFatalError(err);
             return ;
           }
 
-          this._blacklistedInitData.store(initializationData, err);
+          sessionInfo.blacklistedSessionError = err;
 
-          const { sessionError } = err;
-          if (initializationData.type === undefined) {
-            log.error("DRM: Current session blacklisted and content not known. " +
-                      "Throwing.");
-            sessionError.fatal = true;
-            throw sessionError;
+          if (initializationData.content !== undefined) {
+            const { manifest } = initializationData.content;
+            log.info("DRM: blacklisting Representations based on " +
+                     "protection data.");
+            blackListProtectionData(manifest, initializationData);
           }
 
-          log.warn("DRM: Current session blacklisted. Blacklisting content.");
-          this.trigger("warning", sessionError);
+          this._unlockInitDataQueue();
 
-          // The previous trigger might have lead to a disposal of the `ContentDecryptor`.
-          if (this._stateData.state !== ContentDecryptorState.Error &&
-              this._stateData.state !== ContentDecryptorState.Disposed)
-          {
-            this.trigger("blacklistProtectionData", initializationData);
-          }
+          // TODO warning for blacklisted session?
         },
       });
     this._canceller.signal.register(() => {
       sub.unsubscribe();
     });
 
-    if (sessionRes.type === "created-session") {
-      // `generateKeyRequest` awaits a single Uint8Array containing all
-      // initialization data.
-      const concatInitData = concat(...initializationData.values.map(i => i.data));
+    if (options.singleLicensePer === undefined ||
+        options.singleLicensePer === "init-data")
+    {
+      this._unlockInitDataQueue();
+    }
+
+    if (sessionRes.type === MediaKeySessionLoadingType.Created) {
+      const requestData = initializationData.values.constructRequestData();
       try {
         await generateKeyRequest(mediaKeySession,
                                  initializationData.type,
-                                 concatInitData);
+                                 requestData);
       } catch (error) {
         throw new EncryptedMediaError("KEY_GENERATE_REQUEST_ERROR",
                                       error instanceof Error ? error.toString() :
@@ -568,10 +546,113 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     }
 
     return PPromise.resolve();
+  }
 
-    function onCleaningSession(evt : ICleaningOldSessionDataPayload) {
-      contentSessions.remove(evt.initializationData);
+  private _tryToUseAlreadyCreatedSession(
+    initializationData : IProcessedProtectionData,
+    mediaKeysData : IAttachedMediaKeysData
+  ) : boolean {
+    const { stores, options } = mediaKeysData;
+
+    /**
+     * If set, a currently-used key session is already compatible to this
+     * initialization data.
+     */
+    const compatibleSessionInfo = arrayFind(
+      this._currentSessions,
+      (x) => x.record.isCompatibleWith(initializationData));
+
+    if (compatibleSessionInfo === undefined) {
+      return false;
     }
+
+    // Check if the compatible session is blacklisted
+    const blacklistedSessionError = compatibleSessionInfo.blacklistedSessionError;
+    if (!isNullOrUndefined(blacklistedSessionError)) {
+      if (initializationData.type === undefined ||
+          initializationData.content === undefined)
+      {
+        log.error("DRM: This initialization data has already been blacklisted " +
+                  "but the current content is not known.");
+        return true;
+      } else {
+        log.info("DRM: This initialization data has already been blacklisted. " +
+                 "Blacklisting the related content.");
+        const { manifest } = initializationData.content;
+        blackListProtectionData(manifest, initializationData);
+        return true;
+      }
+    }
+
+    // Check if the current key id(s) has been blacklisted by this session
+    if (initializationData.keyIds !== undefined) {
+      /**
+       * If set to `true`, the Representation(s) linked to this
+       * initialization data's key id should be marked as "not decipherable".
+       */
+      let isUndecipherable : boolean;
+
+      if (options.singleLicensePer === undefined ||
+          options.singleLicensePer === "init-data")
+      {
+        // Note: In the default "init-data" mode, we only avoid a
+        // Representation if the key id was originally explicitely
+        // blacklisted (and not e.g. if its key was just not present in
+        // the license).
+        //
+        // This is to enforce v3.x.x retro-compatibility: we cannot
+        // fallback from a Representation unless some RxPlayer option
+        // documentating this behavior has been set.
+        const { blacklisted } = compatibleSessionInfo.keyStatuses;
+        isUndecipherable = areSomeKeyIdsContainedIn(initializationData.keyIds,
+                                                    blacklisted);
+      } else {
+        // In any other mode, as soon as not all of this initialization
+        // data's linked key ids are explicitely whitelisted, we can mark
+        // the corresponding Representation as "not decipherable".
+        // This is because we've no such retro-compatibility guarantee to
+        // make there.
+        const { whitelisted } = compatibleSessionInfo.keyStatuses;
+        isUndecipherable = !areAllKeyIdsContainedIn(initializationData.keyIds,
+                                                    whitelisted);
+      }
+
+      if (isUndecipherable) {
+        if (initializationData.content === undefined) {
+          log.error("DRM: Cannot forbid key id, the content is unknown.");
+          return true;
+        }
+        log.info("DRM: Current initialization data is linked to blacklisted keys. " +
+                 "Marking Representations as not decipherable");
+        updateDecipherability(initializationData.content.manifest,
+                              [],
+                              initializationData.keyIds);
+        return true;
+      }
+    }
+
+    // If we reached here, it means that this initialization data is not
+    // blacklisted in any way.
+    // Search loaded session and put it on top of the cache if it exists.
+    const entry = stores.loadedSessionsStore.reuse(initializationData);
+    if (entry !== null) {
+      // TODO update decipherability to `true` if not?
+      log.debug("DRM: Init data already processed. Skipping it.");
+      return true;
+    }
+
+    // Session not found in `loadedSessionsStore`, it might have been closed
+    // since.
+    // Remove from `this._currentSessions` and start again.
+    const indexOf = this._currentSessions.indexOf(compatibleSessionInfo);
+    if (indexOf === -1) {
+      log.error("DRM: Unable to remove processed init data: not found.");
+    } else {
+      log.debug("DRM: A session from a processed init data is not available " +
+                "anymore. Re-processing it.");
+      this._currentSessions.splice(indexOf, 1);
+    }
+    return false;
   }
 
   private _onFatalError(err : unknown) {
@@ -582,7 +663,11 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       err :
       new OtherError("NONE", "Unknown encryption error");
     this.error = formattedErr;
-    this._stateData = { state: ContentDecryptorState.Error, data: null };
+    this._initDataQueue.length = 0;
+    this._stateData = { state: ContentDecryptorState.Error,
+                        isMediaKeysAttached: undefined,
+                        isInitDataQueueLocked: undefined,
+                        data: null };
     this._canceller.cancel();
     this.trigger("error", formattedErr);
 
@@ -601,6 +686,31 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     return this._stateData.state === ContentDecryptorState.Disposed ||
            this._stateData.state === ContentDecryptorState.Error;
   }
+
+  private _processCurrentInitDataQueue() {
+    while (this._stateData.isInitDataQueueLocked === false) {
+      const initData = this._initDataQueue.shift();
+      if (initData === undefined) {
+        return;
+      }
+      this.onInitializationData(initData);
+    }
+  }
+
+  private _lockInitDataQueue() {
+    if (this._stateData.isInitDataQueueLocked === false) {
+      this._stateData.isInitDataQueueLocked = true;
+    }
+  }
+
+  private _unlockInitDataQueue() {
+    if (this._stateData.isMediaKeysAttached !== true) {
+      log.error("DRM: Trying to unlock in the wrong state");
+      return;
+    }
+    this._stateData.isInitDataQueueLocked = false;
+    this._processCurrentInitDataQueue();
+  }
 }
 
 /**
@@ -615,6 +725,64 @@ function canCreatePersistentSession(
   const { sessionTypes } = mediaKeySystemAccess.getConfiguration();
   return sessionTypes !== undefined &&
          arrayIncludes(sessionTypes, "persistent-license");
+}
+
+function updateDecipherability(
+  manifest : Manifest,
+  whitelistedKeyIds : Uint8Array[],
+  blacklistedKeyIDs : Uint8Array[]
+) : void {
+  manifest.updateRepresentationsDeciperability((representation) => {
+    if (representation.contentProtections === undefined) {
+      return representation.decipherable;
+    }
+    const contentKIDs = representation.contentProtections.keyIds;
+    for (let i = 0; i < contentKIDs.length; i++) {
+      const elt = contentKIDs[i];
+      for (let j = 0; j < blacklistedKeyIDs.length; j++) {
+        if (areKeyIdsEqual(blacklistedKeyIDs[j], elt.keyId)) {
+          return false;
+        }
+      }
+      for (let j = 0; j < whitelistedKeyIds.length; j++) {
+        if (areKeyIdsEqual(whitelistedKeyIds[j], elt.keyId)) {
+          return true;
+        }
+      }
+    }
+    return representation.decipherable;
+  });
+}
+
+function blackListProtectionData(
+  manifest : Manifest,
+  initData : IProcessedProtectionData
+) : void {
+  manifest.updateRepresentationsDeciperability((representation) => {
+    if (representation.decipherable === false) {
+      return false;
+    }
+    const segmentProtections = representation.contentProtections?.initData ?? [];
+    for (let i = 0; i < segmentProtections.length; i++) {
+      if (initData.type === undefined ||
+          segmentProtections[i].type === initData.type)
+      {
+        const containedInitData = initData.values.getFormattedValues()
+          .every(undecipherableVal => {
+            return segmentProtections[i].values.some(currVal => {
+              return (undecipherableVal.systemId === undefined ||
+                      currVal.systemId === undecipherableVal.systemId) &&
+                      areArraysOfNumbersEqual(currVal.data,
+                                              undecipherableVal.data);
+            });
+          });
+        if (containedInitData) {
+          return false;
+        }
+      }
+    }
+    return representation.decipherable;
+  });
 }
 
 /** Events sent by the `ContentDecryptor`, in a `{ event: payload }` format. */
@@ -632,21 +800,6 @@ export interface IContentDecryptorEvent {
    * recover from.
    */
   warning : ICustomError;
-
-  /**
-   * Event emitted when we have an update on whitelisted keys (which can be
-   * used) and blacklisted keys (which cannot be used right now).
-   */
-  keyUpdate : IKeyUpdateValue;
-
-  /**
-   * Event Emitted when specific "protection data" cannot be deciphered and is
-   * thus blacklisted.
-   *
-   * The linked value is the initialization data linked to the content that
-   * cannot be deciphered.
-   */
-  blacklistProtectionData: IInitializationDataInfo;
 
   /**
    * Event emitted when the `ContentDecryptor`'s state changed.
@@ -708,65 +861,72 @@ type IContentDecryptorStateData = IInitializingStateData |
                                   IDisposeStateData |
                                   IErrorStateData;
 
-/** ContentDecryptor's internal data when in the `Initializing` state. */
-interface IInitializingStateData {
-  state: ContentDecryptorState.Initializing;
-  data: {
-    /**
-     * This queue stores initialization data communicated while initializing so
-     * it can be processed when the initialization is done.
-     * This same queue is used while in the `Initializing` state, the
-     * `WaitingForAttachment` state and the `ReadyForContent` until the
-     * `MediaKeys` instance is actually attached to the HTMLMediaElement.
-     */
-    initDataQueue : IInitializationDataInfo[];
-  };
+/** Skeleton that all variants of `IContentDecryptorStateData` use. */
+interface IContentDecryptorStateBase<
+  TStateName extends ContentDecryptorState,
+  TIsQueueLocked extends boolean | undefined,
+  TIsMediaKeyAttached extends boolean | undefined,
+  TData
+> {
+  /** Identify the ContentDecryptor's state. */
+  state: TStateName;
+  /**
+   * If `true`, the `ContentDecryptor` will wait before processing
+   * newly-received initialization data.
+   * If `false`, it will process them right away.
+   * Set to undefined when it won't ever process them like for example in a
+   * disposed or errored state.
+   */
+  isInitDataQueueLocked: TIsQueueLocked;
+  /**
+   * If `true`, the `MediaKeys` instance has been attached to the HTMLMediaElement.
+   * If `false`, it hasn't happened yet.
+   * If uncertain or unimportant (for example if the `ContentDecryptor` is an
+   * disposed/errored state, set to `undefined`).
+   */
+  isMediaKeysAttached: TIsMediaKeyAttached;
+  /** Data stored relative to that state. */
+  data: TData;
 }
 
+/** ContentDecryptor's internal data when in the `Initializing` state. */
+type IInitializingStateData = IContentDecryptorStateBase<
+  ContentDecryptorState.Initializing,
+  true, // isInitDataQueueLocked
+  false, // isMediaKeysAttached
+  null // data
+>;
+
 /** ContentDecryptor's internal data when in the `WaitingForAttachment` state. */
-interface IWaitingForAttachmentStateData {
-  state: ContentDecryptorState.WaitingForAttachment;
-  data: {
-    /**
-     * This queue stores initialization data communicated while initializing so
-     * it can be processed when the initialization is done.
-     * This same queue is used while in the `Initializing` state, the
-     * `WaitingForAttachment` state and the `ReadyForContent` until the
-     * `MediaKeys` instance is actually attached to the HTMLMediaElement.
-     */
-    initDataQueue : IInitializationDataInfo[];
-    mediaKeysInfo : IMediaKeysInfos;
-    mediaElement : HTMLMediaElement;
-  };
-}
+type IWaitingForAttachmentStateData = IContentDecryptorStateBase<
+  ContentDecryptorState.WaitingForAttachment,
+  true, // isInitDataQueueLocked
+  false, // isMediaKeysAttached
+  // data
+  { mediaKeysInfo : IMediaKeysInfos;
+    mediaElement : HTMLMediaElement; }
+>;
 
 /**
  * ContentDecryptor's internal data when in the `ReadyForContent` state before
  * it has attached the `MediaKeys` to the media element.
  */
-interface IReadyForContentStateDataUnattached {
-  state: ContentDecryptorState.ReadyForContent;
-  data: {
-    isAttached: false;
-    /**
-     * This queue stores initialization data communicated while initializing so
-     * it can be processed when the initialization is done.
-     * This same queue is used while in the `Initializing` state, the
-     * `WaitingForAttachment` state and the `ReadyForContent` until the
-     * `MediaKeys` instance is actually attached to the HTMLMediaElement.
-     */
-    initDataQueue : IInitializationDataInfo[];
-  };
-}
+type IReadyForContentStateDataUnattached = IContentDecryptorStateBase<
+  ContentDecryptorState.ReadyForContent,
+  true, // isInitDataQueueLocked
+  false, // isMediaKeysAttached
+  null // data
+>;
 
 /**
  * ContentDecryptor's internal data when in the `ReadyForContent` state once
  * it has attached the `MediaKeys` to the media element.
  */
-interface IReadyForContentStateDataAttached {
-  state: ContentDecryptorState.ReadyForContent;
-  data: {
-    isAttached: true;
+type IReadyForContentStateDataAttached = IContentDecryptorStateBase<
+  ContentDecryptorState.ReadyForContent,
+  boolean, // isInitDataQueueLocked
+  true, // isMediaKeysAttached
+  {
     /**
      * MediaKeys-related information linked to this instance of the
      * `ContentDecryptor`.
@@ -775,24 +935,170 @@ interface IReadyForContentStateDataAttached {
      * Initialized state (@see ContentDecryptorState).
      */
     mediaKeysData : IAttachedMediaKeysData;
-  };
-}
+  }
+>;
 
-/** ContentDecryptor's internal data when in the `ReadyForContent` state. */
-interface IDisposeStateData {
-  state: ContentDecryptorState.Disposed;
-  data: null;
-}
+/** ContentDecryptor's internal data when in the `Disposed` state. */
+type IDisposeStateData = IContentDecryptorStateBase<
+  ContentDecryptorState.Disposed,
+  undefined, // isInitDataQueueLocked
+  undefined, // isMediaKeysAttached
+  null // data
+>;
 
 /** ContentDecryptor's internal data when in the `Error` state. */
-interface IErrorStateData {
-  state: ContentDecryptorState.Error;
-  data: null;
+type IErrorStateData = IContentDecryptorStateBase<
+  ContentDecryptorState.Error,
+  undefined, // isInitDataQueueLocked
+  undefined, // isMediaKeysAttached
+  null // data
+>;
+
+/** Information linked to a session created by the `ContentDecryptor`. */
+interface IActiveSessionInfo {
+  /**
+   * Record associated to the session.
+   * Most notably, it allows both to identify the session as well as to
+   * anounce and find out which key ids are already handled.
+   */
+  record : KeySessionRecord;
+
+  /** Current keys' statuses linked that session. */
+  keyStatuses : {
+    /** Key ids linked to keys that are "usable". */
+    whitelisted : Uint8Array[];
+    /**
+     * Key ids linked to keys that are not considered "usable".
+     * Content linked to those keys are not decipherable and may thus be
+     * fallbacked from.
+     */
+    blacklisted : Uint8Array[];
+  };
+
+  /** Source of the MediaKeySession linked to that record. */
+  source : MediaKeySessionLoadingType;
+
+  /**
+   * If different than `null`, all initialization data compatible with this
+   * processed initialization data has been blacklisted with this corresponding
+   * error.
+   */
+  blacklistedSessionError : BlacklistedSessionError | null;
 }
 
-interface IContentSessionInfo {
-  /** Initialization data which triggered the creation of this session. */
-  initializationData : IInitializationDataInfo;
-  /** Last key update event received for that session. */
-  lastKeyUpdate : ISharedReference<IKeyUpdateValue | null>;
+/**
+ * Sent when the created (or already created) MediaKeys is attached to the
+ * current HTMLMediaElement element.
+ * On some peculiar devices, we have to wait for that step before the first
+ * media segments are to be pushed to avoid issues.
+ * Because this event is sent after a MediaKeys is created, you will always have
+ * a "created-media-keys" event before an "attached-media-keys" event.
+ */
+interface IAttachedMediaKeysData {
+  /** The MediaKeySystemAccess which allowed to create the MediaKeys instance. */
+  mediaKeySystemAccess: MediaKeySystemAccess |
+                        ICustomMediaKeySystemAccess;
+  /** The MediaKeys instance. */
+  mediaKeys : MediaKeys |
+              ICustomMediaKeys;
+  stores : IMediaKeySessionStores;
+  options : IKeySystemOption;
+}
+
+/**
+ * Returns information on all keys - explicit or implicit - that are linked to
+ * a loaded license.
+ *
+ * In the RxPlayer, there is a concept of "explicit" key ids, which are key ids
+ * found in a license whose status can be known through the `keyStatuses`
+ * property from a `MediaKeySession`, and of "implicit" key ids, which are key
+ * ids which were expected to be in a fetched license, but apparently weren't.
+ * @param {Object} initializationData
+ * @param {string|undefined} singleLicensePer
+ * @param {Array.<Uint8Array>} usableKeyIds
+ * @param {Array.<Uint8Array>} unusableKeyIds
+ * @returns {Object}
+ */
+function getFetchedLicenseKeysInfo(
+  initializationData : IProcessedProtectionData,
+  singleLicensePer : undefined | "init-data" | "content",
+  usableKeyIds : Uint8Array[],
+  unusableKeyIds : Uint8Array[]
+) : { whitelisted : Uint8Array[];
+      blacklisted : Uint8Array[]; }
+{
+  /**
+   * Every key id associated with the MediaKeySession, starting with
+   * whitelisted ones.
+   */
+  const associatedKeyIds = [...usableKeyIds,
+                            ...unusableKeyIds];
+
+  if (singleLicensePer !== undefined && singleLicensePer !== "init-data") {
+    // We want to add the current key ids in the blacklist if it is
+    // not already there.
+    //
+    // We only do that when `singleLicensePer` is set to something
+    // else than the default `"init-data"` because this logic:
+    //   1. might result in a quality fallback, which is a v3.x.x
+    //      breaking change if some APIs (like `singleLicensePer`)
+    //      aren't used.
+    //   2. Rely on the EME spec regarding key statuses being well
+    //      implemented on all supported devices, which we're not
+    //      sure yet. Because in any other `singleLicensePer`, we
+    //      need a good implementation anyway, it doesn't matter
+    //      there.
+    const { keyIds: expectedKeyIds,
+            content } = initializationData;
+    if (expectedKeyIds !== undefined) {
+      const missingKeyIds = expectedKeyIds.filter(expected => {
+        return !associatedKeyIds.some(k => areKeyIdsEqual(k, expected));
+      });
+      if (missingKeyIds.length > 0) {
+        associatedKeyIds.push(...missingKeyIds) ;
+      }
+    }
+
+    if (content !== undefined) {
+      // Put it in a Set to automatically filter out duplicates (by ref)
+      const contentKeys = new Set<Uint8Array>();
+      const { manifest } = content;
+      for (const period of manifest.periods) {
+        addKeyIdsFromPeriod(contentKeys, period);
+      }
+      mergeKeyIdSetIntoArray(contentKeys, associatedKeyIds);
+    }
+  }
+  return { whitelisted: usableKeyIds,
+           /** associatedKeyIds starts with the whitelisted one. */
+           blacklisted: associatedKeyIds.slice(usableKeyIds.length) };
+}
+
+function mergeKeyIdSetIntoArray(
+  set : Set<Uint8Array>,
+  arr : Uint8Array[]
+) {
+  for (const kid of set.values()) {
+    const isFound = arr.some(k => areKeyIdsEqual(k, kid));
+    if (!isFound) {
+      arr.push(kid);
+    }
+  }
+}
+
+function addKeyIdsFromPeriod(
+  set : Set<Uint8Array>,
+  period : Period
+) {
+  for (const adaptation of period.getAdaptations()) {
+    for (const representation of adaptation.representations) {
+      if (representation.contentProtections !== undefined &&
+          representation.contentProtections.keyIds.length >= - 1)
+      {
+        for (const kidInf of representation.contentProtections.keyIds) {
+          set.add(kidInf.keyId);
+        }
+      }
+    }
+  }
 }

@@ -14,24 +14,8 @@
  * limitations under the License.
  */
 
-import { ICustomMediaKeySession } from "../../../compat";
 import PPromise from "../../../utils/promise";
-import { IInitializationDataInfo } from "../types";
 import LoadedSessionsStore from "./loaded_sessions_store";
-
-/**
- * Data emitted when we are beginning to close an old MediaKeySession to
- * respect the maximum limit of concurrent MediaKeySession active.
- */
-export interface ICleaningOldSessionDataPayload {
-  /** The MediaKeySession that we are currently cleaning. */
-  mediaKeySession : MediaKeySession |
-                    ICustomMediaKeySession;
-  /** The type of MediaKeySession (e.g. "temporary"). */
-  sessionType : MediaKeySessionType;
-  /** Initialization data assiociated to this MediaKeySession. */
-  initializationData : IInitializationDataInfo;
-}
 
 /**
  * Close sessions from the loadedSessionsStore to allow at maximum `limit`
@@ -44,8 +28,7 @@ export interface ICleaningOldSessionDataPayload {
  */
 export default async function cleanOldLoadedSessions(
   loadedSessionsStore : LoadedSessionsStore,
-  limit : number,
-  onCleaningSession : (arg : ICleaningOldSessionDataPayload) => void
+  limit : number
 ) : Promise<void> {
   if (limit < 0 || limit >= loadedSessionsStore.getLength()) {
     return ;
@@ -56,8 +39,7 @@ export default async function cleanOldLoadedSessions(
   const toDelete = entries.length - limit;
   for (let i = 0; i < toDelete; i++) {
     const entry = entries[i];
-    onCleaningSession(entry);
-    proms.push(loadedSessionsStore.closeSession(entry.initializationData));
+    proms.push(loadedSessionsStore.closeSession(entry.mediaKeySession));
   }
   await PPromise.all(proms);
 }

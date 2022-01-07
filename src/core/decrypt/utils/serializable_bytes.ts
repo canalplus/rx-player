@@ -19,14 +19,17 @@ import {
   bytesToBase64,
 } from "../../../utils/base64";
 
-/** Wrap initialization data and allow serialization of it into base64. */
-export default class InitDataContainer {
-  /** The initData itself. */
+/** Wrap byte-based data and allow serialization of it into base64. */
+export default class SerializableBytes {
+  /**
+   * The data itself. Named `initData` for legacy reasons (cannot be changed
+   * because it has an impact on saved persistent session information.
+   */
   public initData : Uint8Array;
 
   /**
-   * Create a new container, wrapping the initialization data given and allowing
-   * linearization into base64.
+   * Create a new `SerializableBytes`, wrapping the initialization data
+   * given and allowing serialization into base64.
    * @param {Uint8Array}
    */
   constructor(initData : Uint8Array) {
