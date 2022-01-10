@@ -37,7 +37,7 @@
     "build:wasm:debug": "cd ./src/parsers/manifest/dash/wasm-parser && cargo build --target wasm32-unknown-unknown && cp target/wasm32-unknown-unknown/debug/mpd_node_parser.wasm ../../../../../dist/mpd-parser.wasm",
     "build:wasm:release": "cd ./src/parsers/manifest/dash/wasm-parser && cargo build --target wasm32-unknown-unknown --release && wasm-opt -O3 -o ../../../../../dist/mpd-parser.wasm target/wasm32-unknown-unknown/release/mpd_node_parser.wasm && cd ../../../../../ && npm run wasm-strip",
     "certificate": "./scripts/generate_certificate",
-    "check": "npm run check:types && npm run lint && npm run test:unit",
+    "check": "npm run check:types && npm run lint",
     "check:all": "npm run check:types && npm run lint && npm run lint:demo && npm run lint:tests && npm run test && npm run test:memory && node -r esm ./scripts/check_nodejs_import_compatibility.js",
     "check:appveyor": "npm run check:types && npm run lint && npm run lint:demo && npm run lint:tests && npm run test:appveyor",
     "check:types": "tsc --noEmit --project .",
@@ -145,7 +145,7 @@
       "certificate": "Generate a certificate to be able to use HTTPS locally for the demo pages (`npm run start` and `npm run standalone` will then listen to HTTPS requests through a communicated port)"
     },
     "Type-check or lint the current code": {
-      "check": "Check the validity of the src directory by running the linter, type checker and unit tests",
+      "check": "Check the validity of the src directory by running the type checker and linter on it",
       "check:all": "Check the validity of the whole project by running linters, type checkers and every tests",
       "check:types": "Check TypeScript typings in src",
       "check:types:watch": "Check TypeScript typings in src each time files change",
