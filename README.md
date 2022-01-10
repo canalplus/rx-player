@@ -12,8 +12,8 @@
   <a href="https://github.com/canalplus/rx-player/releases">
     <img src="https://img.shields.io/badge/dynamic/json.svg?label=Latest%20release&url=https://api.github.com/repos/canalplus/rx-player/releases/latest&query=$.tag_name&colorB=blue" />
   </a>
-  <a href="https://travis-ci.org/canalplus/rx-player">
-    <img src="https://travis-ci.org/canalplus/rx-player.svg?branch=master" />
+  <a href="https://sonarcloud.io/summary/new_code?id=rx-player">
+    <img src="https://sonarcloud.io/api/project_badges/measure?project=rx-player&metric=alert_status" />
   </a>
   <a href="https://gitter.im/canalplus/rx-player">
     <img src="https://img.shields.io/gitter/room/canalplus/rx-player.svg" />
