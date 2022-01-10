@@ -12,6 +12,9 @@
   <a href="https://github.com/canalplus/rx-player/releases">
     <img src="https://img.shields.io/badge/dynamic/json.svg?label=Latest%20release&url=https://api.github.com/repos/canalplus/rx-player/releases/latest&query=$.tag_name&colorB=blue" />
   </a>
+  <a href="https://github.com/canalplus/rx-player/actions/workflows/checks.yml">
+    <img src="https://github.com/canalplus/rx-player/actions/workflows/checks.yml/badge.svg" />
+  </a>
   <a href="https://sonarcloud.io/summary/new_code?id=rx-player">
     <img src="https://sonarcloud.io/api/project_badges/measure?project=rx-player&metric=alert_status" />
   </a>
