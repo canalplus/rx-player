@@ -150,14 +150,13 @@ export default function generateManifestParser(
 
       const externalResources = value.urls.map(resourceUrl => {
         return scheduleRequest(() => {
-          const req = value.format === "string" ?
-            request({ url: resourceUrl,
-                      responseType: "text" as const,
-                      cancelSignal }) :
-            request({ url: resourceUrl,
-                      responseType: "arraybuffer" as const,
-                      cancelSignal });
-          return req;
+          return value.format === "string" ? request({ url: resourceUrl,
+                                                       responseType: "text",
+                                                       cancelSignal }) :
+
+                                             request({ url: resourceUrl,
+                                                       responseType: "arraybuffer",
+                                                       cancelSignal });
         }).then((res) => {
           if (value.format === "string") {
             if (typeof res.responseData !== "string") {

@@ -30,19 +30,19 @@ function Select({
     undefined;
 
   const optionsEl = options.map((val, index) => {
-    let name;
-    let disabled = false;
+    let optName;
+    let optDisabled = false;
     if (typeof val === "object") {
-      name = val.name;
-      disabled = val.disabled;
+      optName = val.name;
+      optDisabled = val.disabled;
     } else {
-      name = val;
+      optName = val;
     }
-    if (selectedIndex === undefined && selected.value === name) {
+    if (selectedIndex === undefined && selected.value === optName) {
       selectedIndex = index;
     }
-    return <option key={index} value={index} disabled={disabled}>
-      {name}
+    return <option key={index} value={index} disabled={optDisabled}>
+      {optName}
     </option>;
   });
 

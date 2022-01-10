@@ -152,8 +152,7 @@ export default class GuessBasedChooser {
       this._consecutiveWrongGuesses++;
       this._blockGuessesUntil = performance.now() +
         Math.min(this._consecutiveWrongGuesses * 15000, 120000);
-      const prev = getPreviousRepresentation(representations, currentRepresentation);
-      return prev;
+      return getPreviousRepresentation(representations, currentRepresentation);
     } else if (scoreData === undefined) {
       return currentRepresentation;
     }
@@ -213,8 +212,7 @@ export default class GuessBasedChooser {
     });
 
     const now = performance.now();
-    for (let i = 0; i < guessedRepresentationRequests.length; i++) {
-      const req = guessedRepresentationRequests[i];
+    for (const req of guessedRepresentationRequests) {
       const requestElapsedTime = now - req.requestTimestamp;
       if (req.content.segment.isInit) {
         if (requestElapsedTime > 1000) {

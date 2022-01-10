@@ -97,8 +97,16 @@ function Player() {
         }
       });
     if (videoContent) {
-      loadVideoPlayer(videoContent, playerMod);
-    }
+      const { loadVideoOpts } = optionsComp.current.getOptions();
+      if (videoContent.lowLatencyMode) {
+        playerMod.dispatch("ENABLE_LIVE_CATCH_UP");
+      } else {
+        playerMod.dispatch("DISABLE_LIVE_CATCH_UP");
+      }
+      playerMod.dispatch("SET_PLAYBACK_RATE", 1);
+      playerMod.dispatch("LOAD", { ...videoContent,
+                                   ...loadVideoOpts });
+      }
     setPlayer(playerMod);
   }
 
@@ -112,18 +120,6 @@ function Player() {
     }
     setPlayer(null);
   }
-
-  const loadVideoPlayer = (videoContent, player) => {
-    const { loadVideoOpts } = optionsComp.current.getOptions();
-    if (videoContent.lowLatencyMode) {
-      player.dispatch("ENABLE_LIVE_CATCH_UP");
-    } else {
-      player.dispatch("DISABLE_LIVE_CATCH_UP");
-    }
-    player.dispatch("SET_PLAYBACK_RATE", 1);
-    player.dispatch("LOAD", { ...videoContent,
-                              ...loadVideoOpts });
-  };
 
   useEffect(() => {
     createNewPlayerModule();
