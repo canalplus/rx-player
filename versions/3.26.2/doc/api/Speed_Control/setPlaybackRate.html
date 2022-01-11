@@ -1,0 +1,226 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>setPlaybackRate - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "../..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../../static/img/logo.png" /></a><a class="navbar-item hideable"href="../../Getting_Started/Welcome.html">Getting Started</a>
+<a class="navbar-item navbar-active hideable"href="../Overview.html">API</a>
+<a class="navbar-item hideable"href="../../reference/API_Reference.html">Reference</a>
+<a class="navbar-item hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
+<span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
+<a aria-label="Link to repository" class="navbar-item first-right hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 3.26.2</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="../Overview.html">Overview</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Creating_a_Player.html">Creating a Player</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Loading_a_Content.html">Loading a Content</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Decryption_Options.html">Decryption Options</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Basic Methods</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getPlayerState.html">getPlayerState</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/addEventListener.html">addEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/removeEventListener.html">removeEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/play.html">play</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/pause.html">pause</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/stop.html">stop</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getPosition.html">getPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getWallClockTime.html">getWallClockTime</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/seekTo.html">seekTo</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getVideoDuration.html">getVideoDuration</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getError.html">getError</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getVideoElement.html">getVideoElement</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/dispose.html">dispose</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/reload.html">reload</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_States.html">Player States</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_Events.html">Player Events</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_Errors.html">Player Errors</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Track Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAudioTrack.html">getAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getTextTrack.html">getTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getVideoTrack.html">getVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setAudioTrack.html">setAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setTextTrack.html">setTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setVideoTrack.html">setVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/disableTextTrack.html">disableTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setPreferredAudioTracks.html">setPreferredAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setPreferredTextTracks.html">setPreferredTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setPreferredVideoTracks.html">setPreferredVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getPreferredAudioTracks.html">getPreferredAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getPreferredTextTracks.html">getPreferredTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getPreferredVideoTracks.html">getPreferredVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Bitrate Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getVideoBitrate.html">getVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getAudioBitrate.html">getAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getAvailableVideoBitrates.html">getAvailableVideoBitrates</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getAvailableAudioBitrates.html">getAvailableAudioBitrates</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/setVideoBitrate.html">setVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/setAudioBitrate.html">setAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getManualVideoBitrate.html">getManualVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getManualAudioBitrate.html">getManualAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/setMinVideoBitrate.html">setMinVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/setMinAudioBitrate.html">setMinAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/setMaxVideoBitrate.html">setMaxVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/setMaxAudioBitrate.html">setMaxAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getMinVideoBitrate.html">getMinVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getMinAudioBitrate.html">getMinAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getMaxVideoBitrate.html">getMaxVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getMaxAudioBitrate.html">getMaxAudioBitrate</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group active opened">Speed Control</div><ul><li class="sidebar-item"><a class="sidebar-link active" href="./setPlaybackRate.html">setPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./getPlaybackRate.html">getPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Volume Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/setVolume.html">setVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/getVolume.html">getVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/mute.html">mute</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/isMute.html">isMute</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/unMute.html">unMute</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Information/getVideoBufferGap.html">getVideoBufferGap</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Information/getVideoLoadedTime.html">getVideoLoadedTime</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Information/getVideoPlayedTime.html">getVideoPlayedTime</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Content Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/getUrl.html">getUrl</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/isLive.html">isLive</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/getCurrentKeySystem.html">getCurrentKeySystem</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="../Static_Properties.html">RxPlayer Static Properties</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Typescript_Types.html">Typescript Types</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Tools</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Tools/TextTrackRenderer.html">TextTrackRenderer</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/StringUtils.html">StringUtils</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/parseBifThumbnails.html">parseBifThumbnails</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Miscellaneous</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/plugins.html">Plugins</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Low_Latency.html">Low Latency</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/hdr.html">HDR</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Local_Contents.html">Local Contents</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Text_Tracks.html">Text Tracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/images.html">Images</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Manifest_Object.html">Manifest Object</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Deprecated_APIs.html">Deprecated APIs</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Initial_Position.html">Initial Position</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Deprecated Methods</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/getManifest.html">getManifest</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/getCurrentAdaptations.html">getCurrentAdaptations</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/getCurrentRepresentations.html">getCurrentRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/setFullscreen.html">setFullscreen</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/isFullscreen.html">isFullscreen</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/exitFullscreen.html">exitFullscreen</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/getImageTrackData.html">getImageTrackData</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/getNativeTextTrack.html">getNativeTextTrack</a></li></ul></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="setplaybackrate"></a></p>
+<h1>setPlaybackRate</h1>
+<p><a name="description"></a></p>
+<h2>Description</h2>
+<p>Updates the current playback rate, i.e. the speed at which contents are played.</p>
+<p>As its name hints at, the value indicates the rate at which contents play:</p>
+<ul>
+<li>
+<p>Setting it to <code>2</code> allows to play at a speed multiplied by 2 relatively to
+regular playback.</p>
+</li>
+<li>
+<p>Setting that value to <code>1</code> reset the playback rate to its “normal” rythm.</p>
+</li>
+<li>
+<p>Setting it to <code>0.5</code> allows to play at half the speed relatively to regular
+playback.</p>
+</li>
+<li>
+<p>etc.</p>
+</li>
+</ul>
+<p>This method’s effect is persisted from content to content, and can be called
+even when no content is playing (it will still have an effect for the next
+contents).</p>
+<p>If you want to reverse effects provoked by <code>setPlaybackRate</code> before playing
+another content, you will have to call <code>setPlaybackRate</code> first with the
+default settings you want to set.</p>
+<p>As an example, to reset the speed to “normal” (x1) speed and to disable
+trickMode video tracks (which may have been enabled by a previous
+<code>setPlaybackRate</code> call), you can call:</p>
+<pre><code class="language-js">player.<span class="hljs-title function_">setPlaybackRate</span>(<span class="hljs-number">1</span>, { <span class="hljs-attr">preferTrickModeTracks</span>: <span class="hljs-literal">false</span> });
+</code></pre>
+<p>–</p>
+<p>This method can be used to switch to or exit from “trickMode” video tracks,
+which are tracks specifically defined to mimic the visual aspect of a VCR’s
+fast forward/rewind feature, by only displaying a few video frames during
+playback.</p>
+<p>This behavior is configurable through the second argument, by adding a
+property named <code>preferTrickModeTracks</code> to that object.</p>
+<p>You can set that value to <code>true</code> to switch to trickMode video tracks when
+available, and set it to <code>false</code> when you want to disable that logic.
+Note that like any configuration given to <code>setPlaybackRate</code>, this setting
+is persisted through all future contents played by the player.</p>
+<p>If you want to stop enabling trickMode tracks, you will have to call
+<code>setPlaybackRate</code> again with <code>preferTrickModeTracks</code> set to <code>false</code>.</p>
+<p>You can know at any moment whether this behavior is enabled by calling
+the <code>areTrickModeTracksEnabled</code> method. This will only means that the
+RxPlayer will select in priority trickmode video tracks, not that the
+currently chosen video tracks is a trickmode track (for example, some
+contents may have no trickmode tracks available).</p>
+<p>If you want to know about the latter instead, you can call <code>getVideoTrack</code>
+and/or listen to <code>videoTrackChange</code> events. The track returned may have an
+<code>isTrickModeTrack</code> property set to <code>true</code>, indicating that it is a
+trickmode track.</p>
+<p>Note that switching to or getting out of a trickmode video track may
+lead to the player being a brief instant in a <code>"RELOADING"</code> state (notified
+through <code>playerStateChange</code> events and the <code>getPlayerState</code> method). When in
+that state, a black screen may be displayed and multiple RxPlayer APIs will
+not be usable.</p>
+<p>This method can be called at any time, even when no content is loaded and is
+persisted from content to content.</p>
+<p>You can set it to <code>1</code> to reset its value to the “regular” default.</p>
+<p>It is possible to try to enable the trick mode track by setting the second
+argument to <code>true</code> (and disable it when setting <code>false</code>). If available, the
+RxPlayer will switch the current video track to the trick mode one. The trick
+mode track proposes video content that is often encoded with a very low
+framerate because the content is not intended to be played at regular framerate
+and because the chunks must be faster to load for the client.</p>
+<h4>Examples</h4>
+<pre><code class="language-js"><span class="hljs-comment">// plays three times faster than normal</span>
+player.<span class="hljs-title function_">setPlaybackRate</span>(<span class="hljs-number">3</span>);
+</code></pre>
+<pre><code class="language-js"><span class="hljs-comment">// plays five times faster than normal, and enable trickmode tracks if they exist</span>
+player.<span class="hljs-title function_">setPlaybackRate</span>(<span class="hljs-number">5</span>, { <span class="hljs-attr">preferTrickModeTracks</span>: <span class="hljs-literal">true</span> });
+</code></pre>
+<pre><code class="language-js"><span class="hljs-comment">// reset the speed to "normal" (x1) speed and to disable trickMode video tracks</span>
+player.<span class="hljs-title function_">setPlaybackRate</span>(<span class="hljs-number">1</span>, { <span class="hljs-attr">preferTrickModeTracks</span>: <span class="hljs-literal">false</span> });
+</code></pre>
+<p><a name="syntax"></a></p>
+<h2>Syntax</h2>
+<pre><code class="language-js">player.<span class="hljs-title function_">setPlaybackRate</span>(speed);
+
+<span class="hljs-comment">// or, with trickmode settings</span>
+player.<span class="hljs-title function_">setPlaybackRate</span>(speed, { preferTrickModeTracks });
+</code></pre>
+<ul>
+<li>
+<p><strong>arguments</strong>:</p>
+<ol>
+<li><em>speed</em> <code>number</code>: The speed / playback rate you want to set.</li>
+<li><em>options</em> (optional) <code>Object|undefined</code>: Options related to the speed
+update.</li>
+</ol>
+</li>
+</ul>
+</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="../Bitrate_Selection/getVideoBitrate.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">getVideoBitrate</div></a></div><div class="next-or-previous-page next-page"><a class="next-or-previous-page-link" href="./getPlaybackRate.html"><div class="next-or-previous-page-link-label">Next</div><div class="next-or-previous-page-link-name">getPlaybackRate</div></a></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#setplaybackrate">setPlaybackRate</a></p>
+<ul>
+<li><a href="#description">Description</a></li>
+<li><a href="#syntax">Syntax</a></li>
+</ul>
+</div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../Getting_Started/Welcome.html">Welcome</a></li>
+<li><div class="page-list-item page-list-group">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../Getting_Started/Tutorials/Quick_Start.html">Quick Start</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/Content_with_DRM.html">Contents with DRM</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/Selecting_a_Track.html">Selecting a Track</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li>
+<li class="page-list-item"><a href="../../Getting_Started/Minimal_Player.html">Importing a minimal RxPlayer</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Glossary.html">Glossary</a></li></ul></li>
+<li class="page-list-item"><div class="page-list-group opened active">API</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../Creating_a_Player.html">Creating a Player</a></li>
+<li class="page-list-item"><a href="../Loading_a_Content.html">Loading a Content</a></li>
+<li class="page-list-item"><a href="../Decryption_Options.html">Decryption Options</a></li>
+<li><div class="page-list-item page-list-group">Basic Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Basic_Methods/getPlayerState.html">getPlayerState</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/addEventListener.html">addEventListener</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/removeEventListener.html">removeEventListener</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/play.html">play</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/pause.html">pause</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/stop.html">stop</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getPosition.html">getPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getWallClockTime.html">getWallClockTime</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/seekTo.html">seekTo</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getVideoDuration.html">getVideoDuration</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getError.html">getError</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getVideoElement.html">getVideoElement</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/dispose.html">dispose</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/reload.html">reload</a></li></ul></li>
+<li class="page-list-item"><a href="../Player_States.html">Player States</a></li>
+<li class="page-list-item"><a href="../Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../Player_Errors.html">Player Errors</a></li>
+<li><div class="page-list-item page-list-group">Track Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Track_Selection/getAudioTrack.html">getAudioTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getTextTrack.html">getTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getVideoTrack.html">getVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setAudioTrack.html">setAudioTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setTextTrack.html">setTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setVideoTrack.html">setVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/disableTextTrack.html">disableTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setPreferredAudioTracks.html">setPreferredAudioTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setPreferredTextTracks.html">setPreferredTextTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setPreferredVideoTracks.html">setPreferredVideoTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getPreferredAudioTracks.html">getPreferredAudioTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getPreferredTextTracks.html">getPreferredTextTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getPreferredVideoTracks.html">getPreferredVideoTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Bitrate Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Bitrate_Selection/getVideoBitrate.html">getVideoBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getAudioBitrate.html">getAudioBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getAvailableVideoBitrates.html">getAvailableVideoBitrates</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getAvailableAudioBitrates.html">getAvailableAudioBitrates</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/setVideoBitrate.html">setVideoBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/setAudioBitrate.html">setAudioBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getManualVideoBitrate.html">getManualVideoBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getManualAudioBitrate.html">getManualAudioBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/setMinVideoBitrate.html">setMinVideoBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/setMinAudioBitrate.html">setMinAudioBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/setMaxVideoBitrate.html">setMaxVideoBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/setMaxAudioBitrate.html">setMaxAudioBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getMinVideoBitrate.html">getMinVideoBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getMinAudioBitrate.html">getMinAudioBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getMaxVideoBitrate.html">getMaxVideoBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getMaxAudioBitrate.html">getMaxAudioBitrate</a></li></ul></li>
+<li><div class="page-list-item page-list-group opened active">Speed Control</div><ul class="page-list-group-group"><li class="page-list-item active"><a href="./setPlaybackRate.html">setPlaybackRate</a></li>
+<li class="page-list-item"><a href="./getPlaybackRate.html">getPlaybackRate</a></li>
+<li class="page-list-item"><a href="./areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Volume Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Volume_Control/setVolume.html">setVolume</a></li>
+<li class="page-list-item"><a href="../Volume_Control/getVolume.html">getVolume</a></li>
+<li class="page-list-item"><a href="../Volume_Control/mute.html">mute</a></li>
+<li class="page-list-item"><a href="../Volume_Control/isMute.html">isMute</a></li>
+<li class="page-list-item"><a href="../Volume_Control/unMute.html">unMute</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Buffer_Information/getVideoBufferGap.html">getVideoBufferGap</a></li>
+<li class="page-list-item"><a href="../Buffer_Information/getVideoLoadedTime.html">getVideoLoadedTime</a></li>
+<li class="page-list-item"><a href="../Buffer_Information/getVideoPlayedTime.html">getVideoPlayedTime</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Content Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Content_Information/getUrl.html">getUrl</a></li>
+<li class="page-list-item"><a href="../Content_Information/isLive.html">isLive</a></li>
+<li class="page-list-item"><a href="../Content_Information/getCurrentKeySystem.html">getCurrentKeySystem</a></li></ul></li>
+<li class="page-list-item"><a href="../Static_Properties.html">RxPlayer Static Properties</a></li>
+<li class="page-list-item"><a href="../Typescript_Types.html">Typescript Types</a></li>
+<li><div class="page-list-item page-list-group">Tools</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Tools/TextTrackRenderer.html">TextTrackRenderer</a></li>
+<li class="page-list-item"><a href="../Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li>
+<li class="page-list-item"><a href="../Tools/StringUtils.html">StringUtils</a></li>
+<li class="page-list-item"><a href="../Tools/parseBifThumbnails.html">parseBifThumbnails</a></li>
+<li class="page-list-item"><a href="../Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li>
+<li class="page-list-item"><a href="../Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Miscellaneous</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Miscellaneous/plugins.html">Plugins</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Low_Latency.html">Low Latency</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/hdr.html">HDR</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Local_Contents.html">Local Contents</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Text_Tracks.html">Text Tracks</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/images.html">Images</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Manifest_Object.html">Manifest Object</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Deprecated_APIs.html">Deprecated APIs</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Initial_Position.html">Initial Position</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Deprecated Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Deprecated/getManifest.html">getManifest</a></li>
+<li class="page-list-item"><a href="../Deprecated/getCurrentAdaptations.html">getCurrentAdaptations</a></li>
+<li class="page-list-item"><a href="../Deprecated/getCurrentRepresentations.html">getCurrentRepresentations</a></li>
+<li class="page-list-item"><a href="../Deprecated/setFullscreen.html">setFullscreen</a></li>
+<li class="page-list-item"><a href="../Deprecated/isFullscreen.html">isFullscreen</a></li>
+<li class="page-list-item"><a href="../Deprecated/exitFullscreen.html">exitFullscreen</a></li>
+<li class="page-list-item"><a href="../Deprecated/getImageTrackData.html">getImageTrackData</a></li>
+<li class="page-list-item"><a href="../Deprecated/getNativeTextTrack.html">getNativeTextTrack</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">Reference</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../reference/API_Reference.html">API Reference</a></li></ul></li>
+<li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
+
+<li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
+</ul></div><script type="text/javascript" src="../../scripts/lunr.js" charset="utf-8"></script><script type="text/javascript" src="../../scripts/script.js" charset="utf-8"></script></body></html>

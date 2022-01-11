@@ -1,0 +1,413 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>EventStream handling - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "../..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../../static/img/logo.png" /></a><a class="navbar-item navbar-active hideable"href="../Welcome.html">Getting Started</a>
+<a class="navbar-item hideable"href="../../api/Overview.html">API</a>
+<a class="navbar-item hideable"href="../../reference/API_Reference.html">Reference</a>
+<a class="navbar-item hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
+<span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
+<a aria-label="Link to repository" class="navbar-item first-right hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 3.26.2</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="../Welcome.html">Welcome</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group active opened">Tutorials</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Quick_Start.html">Quick Start</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Content_with_DRM.html">Contents with DRM</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Selecting_a_Track.html">Selecting a Track</a></li><li class="sidebar-item"><a class="sidebar-link active" href="./EventStream_Handling.html">EventStream handling</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="../Minimal_Player.html">Importing a minimal RxPlayer</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Glossary.html">Glossary</a></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="tutorial:_listening_to_stream_events"></a></p>
+<h1>Tutorial: Listening to stream events</h1>
+<p>Some contents contain events a player will need to send at a particular point
+in time. We call those in the RxPlayer “stream events”.</p>
+<p>For example, stream events are often used jointly with ad-insertion, to allow a
+player to notify when an user begin to see a particular ad.</p>
+<p>Stream events are not only restrained to ad-related usages though. Any event
+you want to synchronize with the played content can be inserted.</p>
+<p><a name="event_formats_understood_by_the_rxplayer"></a></p>
+<h2>Event Formats understood by the RxPlayer</h2>
+<p><a name="dash_eventstream_elements"></a></p>
+<h3>DASH EventStream elements</h3>
+<p>For now, the RxPlayer only make use of DASH’ EventStream elements.</p>
+<p>Such elements are defined in a DASH MPD in the concerned <code>Period</code>.
+Here is an example of such element in an MPD:</p>
+<pre><code class="language-xml"><span class="hljs-meta">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">MPD</span>
+  <span class="hljs-attr">xmlns:xsi</span>=<span class="hljs-string">"http://www.w3.org/2001/XMLSchema-instance"</span>
+  <span class="hljs-attr">xmlns</span>=<span class="hljs-string">"urn:mpeg:dash:schema:mpd:2011"</span>
+  <span class="hljs-attr">xsi:schemaLocation</span>=<span class="hljs-string">"urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd"</span>
+  <span class="hljs-attr">type</span>=<span class="hljs-string">"dynamic"</span>
+  <span class="hljs-attr">minimumUpdatePeriod</span>=<span class="hljs-string">"PT2S"</span>
+  <span class="hljs-attr">timeShiftBufferDepth</span>=<span class="hljs-string">"PT30M"</span>
+  <span class="hljs-attr">availabilityStartTime</span>=<span class="hljs-string">"2011-12-25T12:30:00"</span>
+  <span class="hljs-attr">minBufferTime</span>=<span class="hljs-string">"PT4S"</span>
+  <span class="hljs-attr">profiles</span>=<span class="hljs-string">"urn:mpeg:dash:profile:isoff-live:2011"</span>&gt;</span>
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">Period</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"1"</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">EventStream</span> <span class="hljs-attr">schemeIdUri</span>=<span class="hljs-string">"urn:uuid:XYZY"</span> <span class="hljs-attr">timescale</span>=<span class="hljs-string">"1000"</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"call"</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">Event</span> <span class="hljs-attr">presentationTime</span>=<span class="hljs-string">"0"</span> <span class="hljs-attr">duration</span>=<span class="hljs-string">"10000"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"0"</span>&gt;</span>
+          1 800 10101010
+        <span class="hljs-tag">&lt;/<span class="hljs-name">Event</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">Event</span> <span class="hljs-attr">presentationTime</span>=<span class="hljs-string">"20000"</span> <span class="hljs-attr">duration</span>=<span class="hljs-string">"10000"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"1"</span>&gt;</span>
+          1 800 10101011
+        <span class="hljs-tag">&lt;/<span class="hljs-name">Event</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">Event</span> <span class="hljs-attr">presentationTime</span>=<span class="hljs-string">"40000"</span> <span class="hljs-attr">duration</span>=<span class="hljs-string">"10000"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"2"</span>&gt;</span>
+          1 800 10101012
+        <span class="hljs-tag">&lt;/<span class="hljs-name">Event</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">Event</span> <span class="hljs-attr">presentationTime</span>=<span class="hljs-string">"60000"</span> <span class="hljs-attr">duration</span>=<span class="hljs-string">"10000"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"3"</span>&gt;</span>
+          1 800 10101013
+        <span class="hljs-tag">&lt;/<span class="hljs-name">Event</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">EventStream</span>&gt;</span>
+      <span class="hljs-comment">&lt;!-- ... --&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">Period</span>&gt;</span>
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">MPD</span>&gt;</span>
+</code></pre>
+<p>Here the <code>&lt;EventStream /&gt;</code> elements and its <code>&lt;Event /&gt;</code> children elements will
+be parsed by the RxPlayer.</p>
+<p>Each <code>&lt;Event /&gt;</code> element can then be sent through a single RxPlayer events.</p>
+<p><a name="how_to_listen_to_stream_events"></a></p>
+<h2>How to listen to stream events</h2>
+<p>The RxPlayer notify of such events through the usual RxPlayer events.</p>
+<p><em>As a reminder (or if you didn’t know), the RxPlayer can send a multitude of
+<a href="../../api/Player_Events.html">events</a> that can be listened to by the usage of the
+<a href="../../api/Basic_Methods/addEventListener.html">addEventListener method</a>.</em></p>
+<p>The events related to stream events are:</p>
+<ul>
+<li>
+<p><code>"streamEvent"</code>: an event has just been reached.</p>
+</li>
+<li>
+<p><code>"streamEventSkip"</code>: an event has been skipped over. This usually means
+that a player seek operation resulted in the corresponds event being
+“missed”.</p>
+</li>
+</ul>
+<p>In any case, the corresponding event will be attached as a payload.</p>
+<p>Example:</p>
+<pre><code class="language-js"><span class="hljs-comment">// listen to "streamEvent" events</span>
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"streamEvent"</span>, <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"An event has been reached:"</span>, evt);
+});
+
+<span class="hljs-comment">// listen to "streamEventSkip" events</span>
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"streamEventSkip"</span>, <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"We just 'skipped' an event:"</span>, evt);
+});
+</code></pre>
+<p><a name="the_event_format"></a></p>
+<h2>The event format</h2>
+<p>Whether you’re listening to the <code>"streamEvent"</code> or the <code>"streamEventSkip"</code>
+event, you will receive an object containing the corresponding event
+information.</p>
+<p>Here is an example of such events:</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">start</span>: <span class="hljs-number">10</span>, <span class="hljs-comment">// start time of the event, in seconds.</span>
+             <span class="hljs-comment">//</span>
+             <span class="hljs-comment">// It is always defined, as a number.</span>
+             <span class="hljs-comment">//</span>
+             <span class="hljs-comment">// A start at `10` here means that the event began when the player</span>
+             <span class="hljs-comment">// reached the position at 10 seconds.</span>
+
+  <span class="hljs-attr">end</span>: <span class="hljs-number">25</span>, <span class="hljs-comment">// Optional end time of the event, in seconds.</span>
+           <span class="hljs-comment">//</span>
+           <span class="hljs-comment">// It can be undefined or unset for events without any duration.</span>
+           <span class="hljs-comment">// A end at `25` here indicates that this event only last from the</span>
+           <span class="hljs-comment">// position at 10 seconds (the `start`) to the position at 25</span>
+           <span class="hljs-comment">// seconds, or an event with a duration of 15 seconds.</span>
+           <span class="hljs-comment">//</span>
+           <span class="hljs-comment">// If `end` is defined, you can be notified when the end of this</span>
+           <span class="hljs-comment">// event is reached by adding an `onExit` callback to that event</span>
+           <span class="hljs-comment">// (continue reading this tutorial for more information).</span>
+
+  <span class="hljs-attr">data</span>: { <span class="hljs-comment">// The event's data itself.</span>
+
+    <span class="hljs-attr">type</span>: <span class="hljs-variable constant_">EVENT_TYPE</span>, <span class="hljs-comment">// String describing the source of the event.</span>
+
+    <span class="hljs-attr">value</span>: <span class="hljs-variable constant_">EVENT_VALUE</span>, <span class="hljs-comment">// This property's format and content depends on the</span>
+                        <span class="hljs-comment">// `type` property. For example, when the type property</span>
+                        <span class="hljs-comment">// is set to "dash-event-stream", this value will be the</span>
+                        <span class="hljs-comment">// &lt;Event /&gt; element corresponding to that DASH event.</span>
+  }
+}
+</code></pre>
+<p>As written in this example, the underlying format of the event itself will
+depend on the source of the event. For example, an event generated from a DASH’s
+<code>&lt;EventStream /&gt;</code> won’t be in the same format that an event generated from a
+MP4’s <code>emsg</code> box.</p>
+<p>You can know which current format is used by checking the value of the
+<code>data.type</code> property.</p>
+<p>For now, we only have one format: DASH EventStream elements, which will have a
+<code>data.type</code> property equal to <code>"dash-event-stream"</code>.</p>
+<p><a name="dash_eventstream_elements_(1)"></a></p>
+<h3>DASH EventStream elements</h3>
+<p>A DASH EventStream’s event will be parsed under the following format:</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">start</span>: <span class="hljs-number">10</span>, <span class="hljs-comment">// As usual, the event start time in seconds</span>
+
+  <span class="hljs-attr">end</span>: <span class="hljs-number">15</span>, <span class="hljs-comment">// optional end position of the event, in seconds.</span>
+           <span class="hljs-comment">// Can be not set or set to `undefined` for events without a duration</span>
+
+  <span class="hljs-attr">data</span>: {
+
+    <span class="hljs-attr">type</span>: <span class="hljs-string">"dash-event-stream"</span>, <span class="hljs-comment">// Type corresponding to a DASH's EventStream's</span>
+                               <span class="hljs-comment">// Event element</span>
+
+    <span class="hljs-attr">value</span>: {
+      <span class="hljs-attr">schemeIdUri</span>: <span class="hljs-variable constant_">SCHEME_ID_URI</span>,
+      <span class="hljs-attr">element</span>: <span class="hljs-variable constant_">EVENT_ELEMENT</span>,
+      <span class="hljs-attr">timescale</span>: <span class="hljs-variable constant_">EVENT_TIMESCALE</span>,
+    }
+  }
+}
+</code></pre>
+<p>Where:</p>
+<ul>
+<li>
+<p><code>SCHEME_ID_URI</code> will be the value of the corresponding EventStream’s
+<code>schemeIdUri</code> attribute</p>
+</li>
+<li>
+<p><code>EVENT_ELEMENT</code> will be the corresponding <code>&lt;Event /&gt;</code> element in the MPD.</p>
+</li>
+<li>
+<p><code>EVENT_TIMESCALE</code> will be the value of the corresponding EventStream’s
+<code>timescale</code> attribute.
+This indicates a way to convert some time information on an
+<code>EVENT_ELEMENT</code> into seconds (by dividing the value by <code>timescale</code>),
+though it can usually safely be ignored.</p>
+</li>
+</ul>
+<p>For example for the following EventStream:</p>
+<pre><code class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">EventStream</span> <span class="hljs-attr">schemeIdUri</span>=<span class="hljs-string">"urn:uuid:XYZY"</span> <span class="hljs-attr">timescale</span>=<span class="hljs-string">"1000"</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"call"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">Event</span> <span class="hljs-attr">presentationTime</span>=<span class="hljs-string">"0"</span> <span class="hljs-attr">duration</span>=<span class="hljs-string">"10000"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"0"</span>&gt;</span>1 800 10101010<span class="hljs-tag">&lt;/<span class="hljs-name">Event</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">Event</span> <span class="hljs-attr">presentationTime</span>=<span class="hljs-string">"40000"</span> <span class="hljs-attr">duration</span>=<span class="hljs-string">"10000"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"1"</span>&gt;</span>1 800 10101012<span class="hljs-tag">&lt;/<span class="hljs-name">Event</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">Event</span> <span class="hljs-attr">presentationTime</span>=<span class="hljs-string">"60000"</span> <span class="hljs-attr">duration</span>=<span class="hljs-string">"10000"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"2"</span>&gt;</span>1 800 10101013<span class="hljs-tag">&lt;/<span class="hljs-name">Event</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">EventStream</span>&gt;</span>
+</code></pre>
+<p>The RxPlayer will define those three events (note: I used custom syntax here to
+include a readable <code>document</code> format):</p>
+<pre><code class="language-jsx"><span class="hljs-comment">// The first event:</span>
+{
+  <span class="hljs-attr">start</span>: <span class="hljs-number">0</span>,
+  <span class="hljs-attr">end</span>: <span class="hljs-number">10</span>,
+  <span class="hljs-attr">data</span>: {
+    <span class="hljs-attr">type</span>: <span class="hljs-string">"dash-event-stream"</span>,
+    <span class="hljs-attr">value</span>: {
+      <span class="hljs-attr">schemeIdUri</span>: <span class="hljs-string">"urn::uuid::XYZY"</span>,
+      <span class="hljs-attr">element</span>: <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">Event</span> <span class="hljs-attr">presentationTime</span>=<span class="hljs-string">"0"</span> <span class="hljs-attr">duration</span>=<span class="hljs-string">"10000"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"0"</span>&gt;</span>
+                 1 800 10101010
+               <span class="hljs-tag">&lt;/<span class="hljs-name">Event</span>&gt;</span></span>,
+      <span class="hljs-attr">timescale</span>: <span class="hljs-number">1000</span>,
+    }
+  }
+}
+
+<span class="hljs-comment">// The second event:</span>
+{
+  <span class="hljs-attr">start</span>: <span class="hljs-number">40</span>,
+  <span class="hljs-attr">end</span>: <span class="hljs-number">50</span>,
+  <span class="hljs-attr">data</span>: {
+    <span class="hljs-attr">type</span>: <span class="hljs-string">"dash-event-stream"</span>,
+    <span class="hljs-attr">value</span>: {
+      <span class="hljs-attr">schemeIdUri</span>: <span class="hljs-string">"urn::uuid::XYZY"</span>,
+      <span class="hljs-attr">element</span>: <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">Event</span> <span class="hljs-attr">presentationTime</span>=<span class="hljs-string">"40000"</span> <span class="hljs-attr">duration</span>=<span class="hljs-string">"10000"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"1"</span>&gt;</span>
+                 1 800 10101012
+               <span class="hljs-tag">&lt;/<span class="hljs-name">Event</span>&gt;</span></span>,
+      <span class="hljs-attr">timescale</span>: <span class="hljs-number">1000</span>,
+    }
+  }
+}
+
+<span class="hljs-comment">// The third event:</span>
+{
+  <span class="hljs-attr">start</span>: <span class="hljs-number">60</span>,
+  <span class="hljs-attr">end</span>: <span class="hljs-number">70</span>,
+  <span class="hljs-attr">data</span>: {
+    <span class="hljs-attr">type</span>: <span class="hljs-string">"dash-event-stream"</span>,
+    <span class="hljs-attr">value</span>: {
+      <span class="hljs-attr">schemeIdUri</span>: <span class="hljs-string">"urn::uuid::XYZY"</span>,
+      <span class="hljs-attr">element</span>: <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">Event</span> <span class="hljs-attr">presentationTime</span>=<span class="hljs-string">"60000"</span> <span class="hljs-attr">duration</span>=<span class="hljs-string">"10000"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"2"</span>&gt;</span>
+                 1 800 10101013
+               <span class="hljs-tag">&lt;/<span class="hljs-name">Event</span>&gt;</span></span>,
+      <span class="hljs-attr">timescale</span>: <span class="hljs-number">1000</span>,
+    }
+  }
+}
+</code></pre>
+<p><a name="listening_when_an_event_has_ended"></a></p>
+<h2>Listening when an event has ended</h2>
+<p>Some stream events have a <code>end</code> property, you could thus need to know when an
+event that the RxPlayer reached is now ended.</p>
+<p>Thankfully, we planned this need in the API of the RxPlayer.</p>
+<p>Any event with a set <code>end</code> can be added an <code>onExit</code> callback. This callback will
+be called once the event has ended.</p>
+<p>So for example you can write:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"streamEvent"</span>, <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"An event has been reached:"</span>, evt);
+  <span class="hljs-keyword">if</span> (evt.<span class="hljs-property">end</span> !== <span class="hljs-literal">undefined</span>) {
+    evt.<span class="hljs-property">onExit</span> = <span class="hljs-function">() =&gt;</span> {
+      <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"An event has been exited:"</span>, evt);
+    };
+  }
+});
+</code></pre>
+<p>When defined, that <code>onExit</code> callback will be called once the RxPlayer either
+reaches the end position of the event or seek outside of the scope of this
+event.</p>
+<p>Please note however that even if an event has an <code>end</code> property, it is possible
+that the <code>onExit</code> callback will never be called. For example, the user could
+stop the content while an event was “active” (we do not trigger <code>onExit</code>
+callbacks in that case) or the corresponding <code>&lt;Event /&gt;</code> could “disappear” from
+the MPD once it has been refreshed.</p>
+<p><a name="example"></a></p>
+<h2>Example</h2>
+<p>To end this tutorial, lets define a complete example:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"streamEvent"</span>, <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"An event has been reached:"</span>, evt);
+
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"This is an event of type:"</span>, evt.<span class="hljs-property">data</span>.<span class="hljs-property">type</span>);
+  <span class="hljs-keyword">if</span> (evt.<span class="hljs-property">data</span>.<span class="hljs-property">type</span> === <span class="hljs-string">"dash-event-stream"</span>) {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"This is a DASH EventStream's Event element."</span>);
+
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"schemeIdUri:"</span>, evt.<span class="hljs-property">data</span>.<span class="hljs-property">schemeIdUri</span>);
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"&lt;Event /&gt; element:"</span>, evt.<span class="hljs-property">data</span>.<span class="hljs-property">element</span>);
+  }
+
+  <span class="hljs-keyword">if</span> (evt.<span class="hljs-property">end</span> !== <span class="hljs-literal">undefined</span>) {
+    evt.<span class="hljs-property">onExit</span> = <span class="hljs-function">() =&gt;</span> {
+      <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"An event has been exited:"</span>, evt);
+    };
+  }
+});
+
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"streamEventSkip"</span>, <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"We just 'skipped' an event:"</span>, evt);
+
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"This was an event of type:"</span>, evt.<span class="hljs-property">data</span>.<span class="hljs-property">type</span>);
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="./Selecting_a_Track.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">Selecting a Track</div></a></div><div class="next-or-previous-page next-page"><a class="next-or-previous-page-link" href="../Minimal_Player.html"><div class="next-or-previous-page-link-label">Next</div><div class="next-or-previous-page-link-name">Importing a minimal RxPlayer</div></a></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#tutorial:_listening_to_stream_events">Tutorial: Listening to stream events</a></p>
+<ul>
+<li><a href="#event_formats_understood_by_the_rxplayer">Event Formats understood by the RxPlayer</a>
+<ul>
+<li><a href="#dash_eventstream_elements">DASH EventStream elements</a></li>
+</ul>
+</li>
+<li><a href="#how_to_listen_to_stream_events">How to listen to stream events</a></li>
+<li><a href="#the_event_format">The event format</a>
+<ul>
+<li><a href="#dash_eventstream_elements_(1)">DASH EventStream elements</a></li>
+</ul>
+</li>
+<li><a href="#listening_when_an_event_has_ended">Listening when an event has ended</a></li>
+<li><a href="#example">Example</a></li>
+</ul>
+</div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group opened active">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../Welcome.html">Welcome</a></li>
+<li><div class="page-list-item page-list-group opened active">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Quick_Start.html">Quick Start</a></li>
+<li class="page-list-item"><a href="./Content_with_DRM.html">Contents with DRM</a></li>
+<li class="page-list-item"><a href="./Selecting_a_Track.html">Selecting a Track</a></li>
+<li class="page-list-item active"><a href="./EventStream_Handling.html">EventStream handling</a></li></ul></li>
+<li class="page-list-item"><a href="../Minimal_Player.html">Importing a minimal RxPlayer</a></li>
+<li class="page-list-item"><a href="../Glossary.html">Glossary</a></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">API</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../api/Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../../api/Creating_a_Player.html">Creating a Player</a></li>
+<li class="page-list-item"><a href="../../api/Loading_a_Content.html">Loading a Content</a></li>
+<li class="page-list-item"><a href="../../api/Decryption_Options.html">Decryption Options</a></li>
+<li><div class="page-list-item page-list-group">Basic Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Basic_Methods/getPlayerState.html">getPlayerState</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/addEventListener.html">addEventListener</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/removeEventListener.html">removeEventListener</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/play.html">play</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/pause.html">pause</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/stop.html">stop</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getPosition.html">getPosition</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getWallClockTime.html">getWallClockTime</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/seekTo.html">seekTo</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getVideoDuration.html">getVideoDuration</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getError.html">getError</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getVideoElement.html">getVideoElement</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/dispose.html">dispose</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/reload.html">reload</a></li></ul></li>
+<li class="page-list-item"><a href="../../api/Player_States.html">Player States</a></li>
+<li class="page-list-item"><a href="../../api/Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../../api/Player_Errors.html">Player Errors</a></li>
+<li><div class="page-list-item page-list-group">Track Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Track_Selection/getAudioTrack.html">getAudioTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getTextTrack.html">getTextTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getVideoTrack.html">getVideoTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/setAudioTrack.html">setAudioTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/setTextTrack.html">setTextTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/setVideoTrack.html">setVideoTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/disableTextTrack.html">disableTextTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/setPreferredAudioTracks.html">setPreferredAudioTracks</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/setPreferredTextTracks.html">setPreferredTextTracks</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/setPreferredVideoTracks.html">setPreferredVideoTracks</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getPreferredAudioTracks.html">getPreferredAudioTracks</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getPreferredTextTracks.html">getPreferredTextTracks</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getPreferredVideoTracks.html">getPreferredVideoTracks</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Bitrate Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Bitrate_Selection/getVideoBitrate.html">getVideoBitrate</a></li>
+<li class="page-list-item"><a href="../../api/Bitrate_Selection/getAudioBitrate.html">getAudioBitrate</a></li>
+<li class="page-list-item"><a href="../../api/Bitrate_Selection/getAvailableVideoBitrates.html">getAvailableVideoBitrates</a></li>
+<li class="page-list-item"><a href="../../api/Bitrate_Selection/getAvailableAudioBitrates.html">getAvailableAudioBitrates</a></li>
+<li class="page-list-item"><a href="../../api/Bitrate_Selection/setVideoBitrate.html">setVideoBitrate</a></li>
+<li class="page-list-item"><a href="../../api/Bitrate_Selection/setAudioBitrate.html">setAudioBitrate</a></li>
+<li class="page-list-item"><a href="../../api/Bitrate_Selection/getManualVideoBitrate.html">getManualVideoBitrate</a></li>
+<li class="page-list-item"><a href="../../api/Bitrate_Selection/getManualAudioBitrate.html">getManualAudioBitrate</a></li>
+<li class="page-list-item"><a href="../../api/Bitrate_Selection/setMinVideoBitrate.html">setMinVideoBitrate</a></li>
+<li class="page-list-item"><a href="../../api/Bitrate_Selection/setMinAudioBitrate.html">setMinAudioBitrate</a></li>
+<li class="page-list-item"><a href="../../api/Bitrate_Selection/setMaxVideoBitrate.html">setMaxVideoBitrate</a></li>
+<li class="page-list-item"><a href="../../api/Bitrate_Selection/setMaxAudioBitrate.html">setMaxAudioBitrate</a></li>
+<li class="page-list-item"><a href="../../api/Bitrate_Selection/getMinVideoBitrate.html">getMinVideoBitrate</a></li>
+<li class="page-list-item"><a href="../../api/Bitrate_Selection/getMinAudioBitrate.html">getMinAudioBitrate</a></li>
+<li class="page-list-item"><a href="../../api/Bitrate_Selection/getMaxVideoBitrate.html">getMaxVideoBitrate</a></li>
+<li class="page-list-item"><a href="../../api/Bitrate_Selection/getMaxAudioBitrate.html">getMaxAudioBitrate</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Speed Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li>
+<li class="page-list-item"><a href="../../api/Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li>
+<li class="page-list-item"><a href="../../api/Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Volume Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Volume_Control/setVolume.html">setVolume</a></li>
+<li class="page-list-item"><a href="../../api/Volume_Control/getVolume.html">getVolume</a></li>
+<li class="page-list-item"><a href="../../api/Volume_Control/mute.html">mute</a></li>
+<li class="page-list-item"><a href="../../api/Volume_Control/isMute.html">isMute</a></li>
+<li class="page-list-item"><a href="../../api/Volume_Control/unMute.html">unMute</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Buffer_Information/getVideoBufferGap.html">getVideoBufferGap</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Information/getVideoLoadedTime.html">getVideoLoadedTime</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Information/getVideoPlayedTime.html">getVideoPlayedTime</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Content Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Content_Information/getUrl.html">getUrl</a></li>
+<li class="page-list-item"><a href="../../api/Content_Information/isLive.html">isLive</a></li>
+<li class="page-list-item"><a href="../../api/Content_Information/getCurrentKeySystem.html">getCurrentKeySystem</a></li></ul></li>
+<li class="page-list-item"><a href="../../api/Static_Properties.html">RxPlayer Static Properties</a></li>
+<li class="page-list-item"><a href="../../api/Typescript_Types.html">Typescript Types</a></li>
+<li><div class="page-list-item page-list-group">Tools</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Tools/TextTrackRenderer.html">TextTrackRenderer</a></li>
+<li class="page-list-item"><a href="../../api/Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li>
+<li class="page-list-item"><a href="../../api/Tools/StringUtils.html">StringUtils</a></li>
+<li class="page-list-item"><a href="../../api/Tools/parseBifThumbnails.html">parseBifThumbnails</a></li>
+<li class="page-list-item"><a href="../../api/Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li>
+<li class="page-list-item"><a href="../../api/Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Miscellaneous</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Miscellaneous/plugins.html">Plugins</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Low_Latency.html">Low Latency</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/hdr.html">HDR</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Local_Contents.html">Local Contents</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Text_Tracks.html">Text Tracks</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/images.html">Images</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Manifest_Object.html">Manifest Object</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Deprecated_APIs.html">Deprecated APIs</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Initial_Position.html">Initial Position</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Deprecated Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Deprecated/getManifest.html">getManifest</a></li>
+<li class="page-list-item"><a href="../../api/Deprecated/getCurrentAdaptations.html">getCurrentAdaptations</a></li>
+<li class="page-list-item"><a href="../../api/Deprecated/getCurrentRepresentations.html">getCurrentRepresentations</a></li>
+<li class="page-list-item"><a href="../../api/Deprecated/setFullscreen.html">setFullscreen</a></li>
+<li class="page-list-item"><a href="../../api/Deprecated/isFullscreen.html">isFullscreen</a></li>
+<li class="page-list-item"><a href="../../api/Deprecated/exitFullscreen.html">exitFullscreen</a></li>
+<li class="page-list-item"><a href="../../api/Deprecated/getImageTrackData.html">getImageTrackData</a></li>
+<li class="page-list-item"><a href="../../api/Deprecated/getNativeTextTrack.html">getNativeTextTrack</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">Reference</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../reference/API_Reference.html">API Reference</a></li></ul></li>
+<li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
+
+<li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
+</ul></div><script type="text/javascript" src="../../scripts/lunr.js" charset="utf-8"></script><script type="text/javascript" src="../../scripts/script.js" charset="utf-8"></script></body></html>

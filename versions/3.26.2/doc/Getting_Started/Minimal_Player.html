@@ -1,0 +1,458 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../styles/style.css"/><link rel="stylesheet" href="../styles/code.css"/><title>Importing a minimal RxPlayer - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../static/img/logo.png" /></a><a class="navbar-item navbar-active hideable"href="./Welcome.html">Getting Started</a>
+<a class="navbar-item hideable"href="../api/Overview.html">API</a>
+<a class="navbar-item hideable"href="../reference/API_Reference.html">Reference</a>
+<a class="navbar-item hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
+<span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
+<a aria-label="Link to repository" class="navbar-item first-right hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 3.26.2</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="./Welcome.html">Welcome</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Tutorials</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Tutorials/Quick_Start.html">Quick Start</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tutorials/Content_with_DRM.html">Contents with DRM</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tutorials/Selecting_a_Track.html">Selecting a Track</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link active" href="./Minimal_Player.html">Importing a minimal RxPlayer</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Glossary.html">Glossary</a></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="importing_a_minimal_player_with_feature_selection"></a></p>
+<h1>Importing a minimal player with feature selection</h1>
+<p><a name="overview"></a></p>
+<h2>Overview</h2>
+<p>The RxPlayer comes with many features, even some you might never need.
+For example, you may only care for DASH with TTML subtitles and not about
+Smooth streaming, VTT or SRT parsing.</p>
+<p>Because each implementation has its need, we permit multiple ways to import
+the player with limited features.
+This principally leads to a smaller file size.</p>
+<p>This customization can be done through two principal ways:</p>
+<ul>
+<li>
+<p>by importing a minimal version and then adding only the features your want</p>
+</li>
+<li>
+<p>by setting environment variables at build time</p>
+</li>
+</ul>
+<p>The first solution is the most straightforward and should be used in most
+usecases. The main disadvantages of this solution are that to reduce file size:</p>
+<ul>
+<li>
+<p>you will need to use a module-bundler or minifier which performs
+<a href="https://en.wikipedia.org/wiki/Tree_shaking">tree-shaking</a>, like webpack’s
+production mode or rollup.</p>
+</li>
+<li>
+<p>you will need to use the package published on npm (as opposed to the git
+repository directly).</p>
+</li>
+</ul>
+<p>The second solution will always work but needs you to build the bundle yourself
+through our npm scripts.</p>
+<p><a name="importing_a_minimal_version"></a></p>
+<h2>Importing a minimal version</h2>
+<p><a name="how_it_works"></a></p>
+<h3>How it works</h3>
+<p>If you imported the RxPlayer library through the npm package (like via the <code>npm install rx-player</code> command), you can import a minimal version of the player by
+importing it from <code>"rx-player/minimal"</code>:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> <span class="hljs-title class_">MinimalRxPlayer</span> <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/minimal"</span>;
+
+<span class="hljs-comment">// This player has the same API than the RxPlayer, but with no feature</span>
+<span class="hljs-comment">// (e.g. no DASH, Smooth or Directfile playback)</span>
+<span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">MinimalRxPlayer</span>();
+
+<span class="hljs-comment">// use the regular APIs...</span>
+player.<span class="hljs-title function_">setVolume</span>(<span class="hljs-number">0.5</span>);
+</code></pre>
+<p>You then will need to add the features you want on it. Those can be accessed
+through the path <code>"rx-player/features"</code>:</p>
+<pre><code class="language-js"><span class="hljs-comment">// import the DASH and Smooth features, which will be added to the RxPlayer</span>
+<span class="hljs-keyword">import</span> { <span class="hljs-variable constant_">DASH</span>, <span class="hljs-variable constant_">SMOOTH</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/features"</span>;
+</code></pre>
+<p>At last you can add those features to the imported RxPlayer class by calling the
+special <code>addFeatures</code> static method, which is only present on the minimal
+version of the Player:</p>
+<pre><code class="language-js"><span class="hljs-comment">// addFeatures takes an array of features as argument</span>
+<span class="hljs-title class_">MinimalRxPlayer</span>.<span class="hljs-title function_">addFeatures</span>([<span class="hljs-variable constant_">DASH</span>, <span class="hljs-variable constant_">SMOOTH</span>]);
+</code></pre>
+<p>Here is the complete example:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> <span class="hljs-title class_">MinimalRxPlayer</span> <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/minimal"</span>;
+<span class="hljs-keyword">import</span> { <span class="hljs-variable constant_">DASH</span>, <span class="hljs-variable constant_">SMOOTH</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/features"</span>;
+
+<span class="hljs-title class_">MinimalRxPlayer</span>.<span class="hljs-title function_">addFeatures</span>([<span class="hljs-variable constant_">DASH</span>, <span class="hljs-variable constant_">SMOOTH</span>]);
+</code></pre>
+<p>There is also “experimental” features. Such features can completely change from
+one version to the next - unlike regular features which just follows semantic
+versioning. This means that you may have to keep the concerned code up-to-date
+each time you depend on a new RxPlayer version.
+Such features are imported from <code>"rx-player/experimental/features"</code> instead:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> <span class="hljs-title class_">MinimalRxPlayer</span> <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/minimal"</span>;
+<span class="hljs-keyword">import</span> { <span class="hljs-variable constant_">DASH_WASM</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/features"</span>;
+
+<span class="hljs-title class_">MinimalRxPlayer</span>.<span class="hljs-title function_">addFeatures</span>([<span class="hljs-variable constant_">DASH_WASM</span>]);
+</code></pre>
+<p>You can of course depend on both experimental and regular features:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> <span class="hljs-title class_">MinimalRxPlayer</span> <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/minimal"</span>;
+<span class="hljs-keyword">import</span> { <span class="hljs-variable constant_">DASH</span>, <span class="hljs-variable constant_">SMOOTH</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/features"</span>;
+<span class="hljs-keyword">import</span> { <span class="hljs-variable constant_">DASH_WASM</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/features"</span>;
+
+<span class="hljs-title class_">MinimalRxPlayer</span>.<span class="hljs-title function_">addFeatures</span>([<span class="hljs-variable constant_">DASH</span>, <span class="hljs-variable constant_">SMOOTH</span>, <span class="hljs-variable constant_">DASH_WASM</span>]);
+</code></pre>
+<p>By using the minimal version, you will reduce the final bundle file <strong>if
+tree-shaking is performed on the final code (like in webpack’s production
+mode)</strong>.</p>
+<p>The key is just to know which feature does what. The next chapter will list
+and explain the role of every one of them.</p>
+<p><a name="list_of_features"></a></p>
+<h3>List of features</h3>
+<p>Features, which are variables imported from the <code>"rx-player/features"</code> path,
+are all objects declared in upper-case.</p>
+<p>Here is the anotated exhaustive list (notes are at the bottom of the table):</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description of the feature</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SMOOTH</code></td>
+<td>Enable Smooth streaming (HSS) playback</td>
+</tr>
+<tr>
+<td><code>DASH</code></td>
+<td>Enable DASH playback using a JavaScript-based MPD parser</td>
+</tr>
+<tr>
+<td><code>DIRECTFILE</code></td>
+<td>Enable playback of “directfile” contents</td>
+</tr>
+<tr>
+<td><code>EME</code></td>
+<td>Enable playback of encrypted contents</td>
+</tr>
+<tr>
+<td><code>NATIVE_TEXT_BUFFER</code> [1]</td>
+<td>Allow to display text tracks through &lt;tracks&gt; elements</td>
+</tr>
+<tr>
+<td><code>HTML_TEXT_BUFFER</code> [1]</td>
+<td>Allow to display richer text tracks through HTML elements</td>
+</tr>
+<tr>
+<td><code>IMAGE_BUFFER</code> [1]</td>
+<td>Allow to display thumbnails through the image buffer</td>
+</tr>
+<tr>
+<td><code>NATIVE_SRT_PARSER</code> [2]</td>
+<td>Parse SRT text tracks for the native text buffer</td>
+</tr>
+<tr>
+<td><code>NATIVE_VTT_PARSER</code> [2]</td>
+<td>Parse VTT text tracks for the native text buffer</td>
+</tr>
+<tr>
+<td><code>NATIVE_TTML_PARSER</code> [2]</td>
+<td>Parse TTML text tracks for the native text buffer</td>
+</tr>
+<tr>
+<td><code>NATIVE_SAMI_PARSER</code> [2]</td>
+<td>Parse SAMI text tracks for the native text buffer</td>
+</tr>
+<tr>
+<td><code>HTML_SRT_PARSER</code> [3]</td>
+<td>Parse SRT text tracks for the HTML text buffer</td>
+</tr>
+<tr>
+<td><code>HTML_VTT_PARSER</code> [3]</td>
+<td>Parse VTT text tracks for the HTML text buffer</td>
+</tr>
+<tr>
+<td><code>HTML_TTML_PARSER</code> [3]</td>
+<td>Parse TTML text tracks for the HTML text buffer</td>
+</tr>
+<tr>
+<td><code>HTML_SAMI_PARSER</code> [3]</td>
+<td>Parse SAMI text tracks for the HTML text buffer</td>
+</tr>
+<tr>
+<td><code>BIF_PARSER</code> [4]</td>
+<td>Parse BIF image tracks for the image buffer</td>
+</tr>
+<tr>
+<td><code>DASH_WASM</code> [5] [6]</td>
+<td>Enable DASH playback using a WebAssembly-based MPD parser</td>
+</tr>
+<tr>
+<td><code>LOCAL_MANIFEST</code> [5]</td>
+<td>Enable playback of “local” contents</td>
+</tr>
+<tr>
+<td><code>METAPLAYLIST</code> [5]</td>
+<td>Enable playback of “metaplaylist” contents</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><strong>Notes</strong>:</p>
+<p><strong>[1]</strong>: You will need to also add at least one parser for this type of buffer
+for those features to be useful.
+(example: <code>NATIVE_SRT_PARSER</code> will parse srt subtitles for the
+<code>NATIVE_TEXT_BUFFER</code>)</p>
+<p><strong>[2]</strong>: Those features will only be used if <code>NATIVE_TEXT_BUFFER</code> is an added
+feature.</p>
+<p><strong>[3]</strong>: Those features will only be used if <code>HTML_TEXT_BUFFER</code> is an added
+feature.</p>
+<p><strong>[4]</strong>: This feature will only be used if <code>IMAGE_BUFFER</code> is an added feature.</p>
+<p><strong>[5]</strong>: Those type of contents are experimental. They should be imported
+from <code>rx-player/experimental/features</code>.</p>
+<p><strong>[6]</strong>: In cases where both the <code>DASH</code> and <code>DASH_WASM</code> features are added
+(which are both parsers for DASH contents), the RxPlayer will default using the
+WebAssembly parser (provided by <code>DASH_WASM</code>) and fallback on the JavaScript
+parser (provided by <code>DASH</code>) when it cannot do so.</p>
+<hr>
+<p><a name="examples"></a></p>
+<h3>Examples</h3>
+<p>To help you choose your features, are some examples that represents common
+usecases.</p>
+<h4>unencrypted DASH contents with native webVTT subtitles</h4>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> <span class="hljs-title class_">RxPlayer</span> <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/minimal"</span>;
+<span class="hljs-keyword">import</span> {
+  <span class="hljs-variable constant_">DASH</span>,
+  <span class="hljs-variable constant_">NATIVE_TEXT_BUFFER</span>,
+  <span class="hljs-variable constant_">NATIVE_VTT_PARSER</span>,
+} <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/features"</span>;
+
+<span class="hljs-title class_">RxPlayer</span>.<span class="hljs-title function_">addFeatures</span>([<span class="hljs-variable constant_">DASH</span>, <span class="hljs-variable constant_">NATIVE_TEXT_BUFFER</span>, <span class="hljs-variable constant_">NATIVE_VTT_PARSER</span>]);
+</code></pre>
+<h4>possibly-encrypted DASH contents with HMTL webVTT and TTML subtitles</h4>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> <span class="hljs-title class_">RxPlayer</span> <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/minimal"</span>;
+<span class="hljs-keyword">import</span> {
+  <span class="hljs-variable constant_">DASH</span>,
+  <span class="hljs-variable constant_">EME</span>,
+  <span class="hljs-variable constant_">HTML_TEXT_BUFFER</span>,
+  <span class="hljs-variable constant_">HTML_VTT_PARSER</span>,
+  <span class="hljs-variable constant_">HTML_HTML_PARSER</span>,
+} <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/features"</span>;
+
+<span class="hljs-title class_">RxPlayer</span>.<span class="hljs-title function_">addFeatures</span>([
+  <span class="hljs-variable constant_">DASH</span>,
+  <span class="hljs-variable constant_">EME</span>,
+  <span class="hljs-variable constant_">HTML_TEXT_BUFFER</span>,
+  <span class="hljs-variable constant_">HTML_VTT_PARSER</span>,
+  <span class="hljs-variable constant_">HTML_TTML_PARSER</span>,
+]);
+</code></pre>
+<h4>Smooth contents with thumbnails (BIF) support</h4>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> <span class="hljs-title class_">RxPlayer</span> <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/minimal"</span>;
+<span class="hljs-keyword">import</span> { <span class="hljs-variable constant_">SMOOTH</span>, <span class="hljs-variable constant_">IMAGE_BUFFER</span>, <span class="hljs-variable constant_">BIF_PARSER</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/features"</span>;
+
+<span class="hljs-title class_">RxPlayer</span>.<span class="hljs-title function_">addFeatures</span>([<span class="hljs-variable constant_">SMOOTH</span>, <span class="hljs-variable constant_">IMAGE_BUFFER</span>, <span class="hljs-variable constant_">BIF_PARSER</span>]);
+</code></pre>
+<p><a name="building_with_environment_variables"></a></p>
+<h2>Building with environment variables</h2>
+<p><a name="how_it_works_(1)"></a></p>
+<h3>How it works</h3>
+<p>You can also include only the features you need on the RxPlayer library by
+building it while having specific environment variables.</p>
+<p>The code related to the unwanted features should be removed when the final code
+is minified (as the corresponding code is made unreachable).</p>
+<p>To avoid any conflict with other environment variables, they all are named
+<code>RXP_&lt;FEATURE-NAME&gt;</code>.</p>
+<p>For example, the following will remove all code related to Microsoft Smooth
+Streaming from the build:</p>
+<pre><code class="language-sh">RXP_SMOOTH=<span class="hljs-literal">false</span> npm run build:min
+</code></pre>
+<p><a name="list_of_environment_variables"></a></p>
+<h3>List of environment variables</h3>
+<h4>RXP_SMOOTH</h4>
+<p>True by default. If set to “false”, all code relative to HSS streaming will be
+ignored during a build.</p>
+<h4>RXP_DASH</h4>
+<p>True by default. If set to “false”, all code relative to DASH streaming will be
+ignored during a build.</p>
+<h4>RXP_DIRECTFILE</h4>
+<p>True by default. If set to “false”, all code relative to directfile streaming
+will be ignored during a build.</p>
+<h4>RXP_LOCAL_MANIFEST</h4>
+<p>False by default. If set to “true”, all code relative to the “local” transport
+(to be able to play content offline for example) will be included during a
+build.</p>
+<h4>RXP_METAPLAYLIST</h4>
+<p>False by default. If set to “true”, all code relative to metaplaylist streaming
+will be included during a build.</p>
+<h4>RXP_EME</h4>
+<p>True by default. If set to “false”, all code relative to encrypted contents will
+be ignored during a build.</p>
+<h4>RXP_NATIVE_TTML</h4>
+<p>True by default. If set to “false”, all code relative to TTML parsing for native
+text tracks will be ignored during a build.</p>
+<h4>RXP_NATIVE_SAMI</h4>
+<p>True by default. If set to “false”, all code relative to SAMI parsing for native
+text tracks will be ignored during a build.</p>
+<h4>RXP_NATIVE_VTT</h4>
+<p>True by default. If set to “false”, all code relative to VTT parsing for native
+text tracks will be ignored during a build.</p>
+<h4>RXP_NATIVE_SRT</h4>
+<p>True by default. If set to “false”, all code relative to SRT parsing for native
+text tracks will be ignored during a build.</p>
+<h4>RXP_HTML_TTML</h4>
+<p>True by default. If set to “false”, all code relative to TTML parsing for html
+text tracks [1] will be ignored during a build.</p>
+<h4>RXP_HTML_SAMI</h4>
+<p>True by default. If set to “false”, all code relative to SAMI parsing for html
+text tracks [1] will be ignored during a build.</p>
+<h4>RXP_HTML_VTT</h4>
+<p>True by default. If set to “false”, all code relative to VTT parsing for html
+text tracks [1] will be ignored during a build.</p>
+<h4>RXP_HTML_SRT</h4>
+<p>True by default. If set to “false”, all code relative to SRT parsing for html
+text tracks [1] will be ignored during a build.</p>
+<h4>RXP_BIF_PARSER</h4>
+<p>True by default. If set to “false”, all code relative to BIF image parsing will
+be ignored during a build.</p>
+<h4>RXP_BAREBONE</h4>
+<p>If set to true, no feature is activated by default and all other environment
+variables are considered as false by default (unless set).</p>
+<p>For example, to only activate DASH, you could do:</p>
+<pre><code class="language-sh">RXP_BAREBONE=<span class="hljs-literal">true</span> RXP_DASH=<span class="hljs-literal">true</span> npm run build:min
+</code></pre>
+<h4>RXP_ENV</h4>
+<p>Either “production” or “development”. “production” as a default.
+In the “development” case:</p>
+<ul>
+<li>logs will be activated</li>
+<li>the code will be less tolerant towards unwanted behavior</li>
+<li>the code will be less optimized</li>
+</ul>
+<hr>
+<p><strong>Notes</strong>:</p>
+<p>DOM element instead of a <code>&lt;track&gt;</code> (the latter here being called “native”) tag
+for a richer formatting.</p>
+<hr>
+</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="./Tutorials/Quick_Start.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">Quick Start</div></a></div><div class="next-or-previous-page next-page"><a class="next-or-previous-page-link" href="./Glossary.html"><div class="next-or-previous-page-link-label">Next</div><div class="next-or-previous-page-link-name">Glossary</div></a></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#importing_a_minimal_player_with_feature_selection">Importing a minimal player with feature selection</a></p>
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#importing_a_minimal_version">Importing a minimal version</a>
+<ul>
+<li><a href="#how_it_works">How it works</a></li>
+<li><a href="#list_of_features">List of features</a></li>
+<li><a href="#examples">Examples</a></li>
+</ul>
+</li>
+<li><a href="#building_with_environment_variables">Building with environment variables</a>
+<ul>
+<li><a href="#how_it_works_(1)">How it works</a></li>
+<li><a href="#list_of_environment_variables">List of environment variables</a></li>
+</ul>
+</li>
+</ul>
+</div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group opened active">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="./Welcome.html">Welcome</a></li>
+<li><div class="page-list-item page-list-group">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Tutorials/Quick_Start.html">Quick Start</a></li>
+<li class="page-list-item"><a href="./Tutorials/Content_with_DRM.html">Contents with DRM</a></li>
+<li class="page-list-item"><a href="./Tutorials/Selecting_a_Track.html">Selecting a Track</a></li>
+<li class="page-list-item"><a href="./Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li>
+<li class="page-list-item active"><a href="./Minimal_Player.html">Importing a minimal RxPlayer</a></li>
+<li class="page-list-item"><a href="./Glossary.html">Glossary</a></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">API</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../api/Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../api/Creating_a_Player.html">Creating a Player</a></li>
+<li class="page-list-item"><a href="../api/Loading_a_Content.html">Loading a Content</a></li>
+<li class="page-list-item"><a href="../api/Decryption_Options.html">Decryption Options</a></li>
+<li><div class="page-list-item page-list-group">Basic Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Basic_Methods/getPlayerState.html">getPlayerState</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/addEventListener.html">addEventListener</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/removeEventListener.html">removeEventListener</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/play.html">play</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/pause.html">pause</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/stop.html">stop</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getPosition.html">getPosition</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getWallClockTime.html">getWallClockTime</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/seekTo.html">seekTo</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getVideoDuration.html">getVideoDuration</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getError.html">getError</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getVideoElement.html">getVideoElement</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/dispose.html">dispose</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/reload.html">reload</a></li></ul></li>
+<li class="page-list-item"><a href="../api/Player_States.html">Player States</a></li>
+<li class="page-list-item"><a href="../api/Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../api/Player_Errors.html">Player Errors</a></li>
+<li><div class="page-list-item page-list-group">Track Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Track_Selection/getAudioTrack.html">getAudioTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getTextTrack.html">getTextTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getVideoTrack.html">getVideoTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/setAudioTrack.html">setAudioTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/setTextTrack.html">setTextTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/setVideoTrack.html">setVideoTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/disableTextTrack.html">disableTextTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/setPreferredAudioTracks.html">setPreferredAudioTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/setPreferredTextTracks.html">setPreferredTextTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/setPreferredVideoTracks.html">setPreferredVideoTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getPreferredAudioTracks.html">getPreferredAudioTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getPreferredTextTracks.html">getPreferredTextTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getPreferredVideoTracks.html">getPreferredVideoTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Bitrate Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Bitrate_Selection/getVideoBitrate.html">getVideoBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getAudioBitrate.html">getAudioBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getAvailableVideoBitrates.html">getAvailableVideoBitrates</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getAvailableAudioBitrates.html">getAvailableAudioBitrates</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/setVideoBitrate.html">setVideoBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/setAudioBitrate.html">setAudioBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getManualVideoBitrate.html">getManualVideoBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getManualAudioBitrate.html">getManualAudioBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/setMinVideoBitrate.html">setMinVideoBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/setMinAudioBitrate.html">setMinAudioBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/setMaxVideoBitrate.html">setMaxVideoBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/setMaxAudioBitrate.html">setMaxAudioBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getMinVideoBitrate.html">getMinVideoBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getMinAudioBitrate.html">getMinAudioBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getMaxVideoBitrate.html">getMaxVideoBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getMaxAudioBitrate.html">getMaxAudioBitrate</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Speed Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li>
+<li class="page-list-item"><a href="../api/Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li>
+<li class="page-list-item"><a href="../api/Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Volume Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Volume_Control/setVolume.html">setVolume</a></li>
+<li class="page-list-item"><a href="../api/Volume_Control/getVolume.html">getVolume</a></li>
+<li class="page-list-item"><a href="../api/Volume_Control/mute.html">mute</a></li>
+<li class="page-list-item"><a href="../api/Volume_Control/isMute.html">isMute</a></li>
+<li class="page-list-item"><a href="../api/Volume_Control/unMute.html">unMute</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Buffer_Information/getVideoBufferGap.html">getVideoBufferGap</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Information/getVideoLoadedTime.html">getVideoLoadedTime</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Information/getVideoPlayedTime.html">getVideoPlayedTime</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Content Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Content_Information/getUrl.html">getUrl</a></li>
+<li class="page-list-item"><a href="../api/Content_Information/isLive.html">isLive</a></li>
+<li class="page-list-item"><a href="../api/Content_Information/getCurrentKeySystem.html">getCurrentKeySystem</a></li></ul></li>
+<li class="page-list-item"><a href="../api/Static_Properties.html">RxPlayer Static Properties</a></li>
+<li class="page-list-item"><a href="../api/Typescript_Types.html">Typescript Types</a></li>
+<li><div class="page-list-item page-list-group">Tools</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Tools/TextTrackRenderer.html">TextTrackRenderer</a></li>
+<li class="page-list-item"><a href="../api/Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li>
+<li class="page-list-item"><a href="../api/Tools/StringUtils.html">StringUtils</a></li>
+<li class="page-list-item"><a href="../api/Tools/parseBifThumbnails.html">parseBifThumbnails</a></li>
+<li class="page-list-item"><a href="../api/Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li>
+<li class="page-list-item"><a href="../api/Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Miscellaneous</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Miscellaneous/plugins.html">Plugins</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Low_Latency.html">Low Latency</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/hdr.html">HDR</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Local_Contents.html">Local Contents</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Text_Tracks.html">Text Tracks</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/images.html">Images</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Manifest_Object.html">Manifest Object</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Deprecated_APIs.html">Deprecated APIs</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Initial_Position.html">Initial Position</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Deprecated Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Deprecated/getManifest.html">getManifest</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/getCurrentAdaptations.html">getCurrentAdaptations</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/getCurrentRepresentations.html">getCurrentRepresentations</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/setFullscreen.html">setFullscreen</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/isFullscreen.html">isFullscreen</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/exitFullscreen.html">exitFullscreen</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/getImageTrackData.html">getImageTrackData</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/getNativeTextTrack.html">getNativeTextTrack</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">Reference</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../reference/API_Reference.html">API Reference</a></li></ul></li>
+<li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
+
+<li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
+</ul></div><script type="text/javascript" src="../scripts/lunr.js" charset="utf-8"></script><script type="text/javascript" src="../scripts/script.js" charset="utf-8"></script></body></html>
