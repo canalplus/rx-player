@@ -133,7 +133,6 @@ export function parseHashInURL(hashStr) {
  * @returns {string|null}
  */
 export function generateLinkForCustomContent({
-  autoPlay, // true if autoPlay should be on
   chosenDRMType, // DRM Choice
   customKeySystem, // key system of a custom DRM if one
   fallbackKeyError, // `true` if the corresponding switch is enabled
