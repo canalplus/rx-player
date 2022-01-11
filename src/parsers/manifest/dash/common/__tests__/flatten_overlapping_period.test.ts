@@ -49,7 +49,7 @@ describe("flattenOverlappingPeriods", function() {
 
     expect(logSpy).toHaveBeenCalledTimes(1);
     expect(logSpy).toHaveBeenCalledWith(
-      "DASH: Updating overlapping Periods.", periods[1], periods[2]);
+      "DASH: Updating overlapping Periods.", 60, 60);
     logSpy.mockRestore();
   });
 
@@ -78,7 +78,7 @@ describe("flattenOverlappingPeriods", function() {
 
     expect(logSpy).toHaveBeenCalledTimes(1);
     expect(logSpy).toHaveBeenCalledWith(
-      "DASH: Updating overlapping Periods.", periods[1], periods[2]);
+      "DASH: Updating overlapping Periods.", 60, 90);
     logSpy.mockRestore();
   });
 
@@ -104,9 +104,9 @@ describe("flattenOverlappingPeriods", function() {
 
     expect(logSpy).toHaveBeenCalledTimes(2);
     expect(logSpy).toHaveBeenCalledWith(
-      "DASH: Updating overlapping Periods.", periods[0], periods[2]);
+      "DASH: Updating overlapping Periods.", 60, 50);
     expect(logSpy).toHaveBeenCalledWith(
-      "DASH: Updating overlapping Periods.", periods[1], periods[2]);
+      "DASH: Updating overlapping Periods.", 0, 50);
     logSpy.mockRestore();
   });
 

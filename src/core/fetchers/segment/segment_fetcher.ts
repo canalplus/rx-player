@@ -20,8 +20,10 @@ import {
   formatError,
   ICustomError,
 } from "../../../errors";
+import log from "../../../log";
 import Manifest, {
   Adaptation,
+  getLoggableSegmentId,
   ISegment,
   Period,
   Representation,
@@ -106,6 +108,10 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
     content : ISegmentLoaderContent
   ) : Observable<ISegmentFetcherEvent<TSegmentDataType>> {
     const { segment } = content;
+
+    // used by logs
+    const segmentIdString = getLoggableSegmentId(content);
+
     return new Observable((obs) => {
       const requestId = generateRequestID();
       const canceller = new TaskCanceller();
@@ -172,6 +178,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
       const cached = cache !== undefined ? cache.get(content) :
                                            null;
       if (cached !== null) {
+        log.debug("SF: Found wanted segment in cache", segmentIdString);
         obs.next({ type: "chunk" as const,
                    parse: generateParserFunction(cached, false) });
         obs.next({ type: "chunk-complete" as const });
@@ -179,6 +186,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
         return undefined;
       }
 
+      log.debug("SF: Beginning request", segmentIdString);
       callbacks.onRequestBegin?.({ requestTimestamp: performance.now(),
                                    id: requestId,
                                    content });
@@ -188,6 +196,8 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
                          objectAssign({ onRetry }, options),
                          canceller.signal)
         .then((res) => {
+          log.debug("SF: Segment request ended with success", segmentIdString);
+
           if (res.resultType === "segment-loaded") {
             const loadedData = res.resultData.responseData;
             if (cache !== undefined) {
@@ -200,11 +210,10 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
                        parse: generateParserFunction(res.resultData, false) });
           }
 
+          log.debug("SF: Segment request ended with success", segmentIdString);
           obs.next({ type: "chunk-complete" as const });
 
-          if (res.resultType === "segment-loaded" ||
-              res.resultType === "chunk-complete")
-          {
+          if (res.resultType !== "segment-created") {
             requestInfo = res.resultData;
             sendNetworkMetricsIfAvailable();
           }
@@ -223,6 +232,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
           obs.complete();
         })
         .catch((err) => {
+          log.debug("SF: Segment request failed", segmentIdString);
           requestInfo = null;
           obs.error(errorSelector(err));
         });
@@ -231,6 +241,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
         if (requestInfo !== undefined) {
           return; // Request already terminated
         }
+        log.debug("SF: Segment request cancelled", segmentIdString);
         requestInfo = null;
         canceller.cancel();
         callbacks.onRequestEnd?.({ id: requestId });

@@ -29,6 +29,7 @@ import {
 } from "../../../../compat";
 import config from "../../../../config";
 import log from "../../../../log";
+import { getLoggableSegmentId } from "../../../../manifest";
 import areArraysOfNumbersEqual from "../../../../utils/are_arrays_of_numbers_equal";
 import assertUnreachable from "../../../../utils/assert_unreachable";
 import { toUint8Array } from "../../../../utils/byte_parsing";
@@ -222,7 +223,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
     assertPushedDataIsBufferSource(infos);
     log.debug("AVSB: receiving order to push data to the SourceBuffer",
               this.bufferType,
-              infos);
+              getLoggableSegmentId(infos.inventoryInfos));
     return this._addToQueue({ type: SegmentBufferOperation.Push,
                               value: infos });
   }
@@ -254,7 +255,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
   public endOfSegment(infos : IEndOfSegmentInfos) : Observable<void> {
     log.debug("AVSB: receiving order for validating end of segment",
               this.bufferType,
-              infos.segment);
+              getLoggableSegmentId(infos));
     return this._addToQueue({ type: SegmentBufferOperation.EndOfSegment,
                               value: infos });
   }
@@ -447,7 +448,8 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
       switch (this._pendingTask.type) {
         case SegmentBufferOperation.EndOfSegment:
           // nothing to do, we will just acknowledge the segment.
-          log.debug("AVSB: Acknowledging complete segment", this._pendingTask.value);
+          log.debug("AVSB: Acknowledging complete segment",
+                    getLoggableSegmentId(this._pendingTask.value));
           this._flush();
           return;
 
@@ -457,6 +459,9 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
             this._flush();
             return;
           }
+          log.debug("AVSB: pushing segment",
+                    this.bufferType,
+                    getLoggableSegmentId(this._pendingTask.inventoryData));
           this._sourceBuffer.appendBuffer(segmentData);
           break;
 

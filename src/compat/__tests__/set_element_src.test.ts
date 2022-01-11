@@ -57,7 +57,7 @@ describe("compat - setElementSrc", () => {
       map(() => {
         expect(mockLogInfo).toHaveBeenCalledTimes(1);
         expect(mockLogInfo)
-          .toHaveBeenCalledWith("Setting URL to Element", fakeURL, fakeMediaElement);
+          .toHaveBeenCalledWith("Setting URL to HTMLMediaElement", fakeURL);
         expect(fakeMediaElement.src).toBe(fakeURL);
       })
     ).subscribe();

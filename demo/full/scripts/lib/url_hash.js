@@ -28,12 +28,12 @@
  * `false`, just remove the key from the string. There is no difference between
  * `false` and a not-defined key.
  * Example:
- * http://www.example.com/#!lowLatency!noAutoplay
+ * http://www.example.com/#!lowLatency!foo
  * => will get you the following JS Object:
  * ```js
  * {
  *   lowLatency: true,
- *   noAutoplay: true
+ *   foo: true
  * }
  * ```
  *
@@ -133,7 +133,6 @@ export function parseHashInURL(hashStr) {
  * @returns {string|null}
  */
 export function generateLinkForCustomContent({
-  autoPlay, // true if autoPlay should be on
   chosenDRMType, // DRM Choice
   customKeySystem, // key system of a custom DRM if one
   fallbackKeyError, // `true` if the corresponding switch is enabled
@@ -191,7 +190,6 @@ export function generateLinkForCustomContent({
          location.pathname +
          (location.search ? location.search : "") +
          "#" +
-         (!autoPlay ? "!noAutoplay" : "") +
          (lowLatency ? "!lowLatency" : "") +
          (fallbackKeyError ? "!fallbackKeyError" : "") +
          (fallbackLicenseRequest ? "!fallbackLicenseRequest" : "") +

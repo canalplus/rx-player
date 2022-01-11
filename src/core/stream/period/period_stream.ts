@@ -168,7 +168,7 @@ export default function PeriodStream({
                                  DELTA_POSITION_AFTER_RELOAD.trackSwitch.other;
 
       if (adaptation === null) { // Current type is disabled for that Period
-        log.info(`Stream: Set no ${bufferType} Adaptation`, period);
+        log.info(`Stream: Set no ${bufferType} Adaptation. P:`, period.start);
         const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
         let cleanBuffer$ : Observable<unknown>;
 
@@ -203,7 +203,9 @@ export default function PeriodStream({
                                  relativePosAfterSwitch);
       }
 
-      log.info(`Stream: Updating ${bufferType} adaptation`, adaptation, period);
+      log.info(`Stream: Updating ${bufferType} adaptation`,
+               `A: ${adaptation.id}`,
+               `P: ${period.start}`);
 
       const newStream$ = observableDefer(() => {
         const readyState = playbackObserver.getReadyState();

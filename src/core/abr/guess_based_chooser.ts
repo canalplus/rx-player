@@ -183,7 +183,7 @@ export default class GuessBasedChooser {
     return isFinite(bufferGap) && bufferGap >= 2.5 &&
            performance.now() > this._blockGuessesUntil &&
            scoreConfidenceLevel === ScoreConfidenceLevel.HIGH &&
-           score / speed > 1.1;
+           score / speed > 1.01;
   }
 
   /**
@@ -201,7 +201,7 @@ export default class GuessBasedChooser {
     bufferGap : number,
     requests : IRequestInfo[]
   ) : boolean {
-    if (scoreData !== undefined && scoreData[0] < 1.05) {
+    if (scoreData !== undefined && scoreData[0] < 1.01) {
       return true;
     } else if ((scoreData === undefined || scoreData[0] < 1.2) && bufferGap < 0.6) {
       return true;
