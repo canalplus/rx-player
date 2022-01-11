@@ -23,7 +23,8 @@
   - EME: Add hex-encoded key id to the `KEY_STATUS_CHANGE_ERROR` error message so we can know which key we're talking about when debugging [#1033]
   - dev/scripts: for the "modular" (a.k.a. minimal) RxPlayer build now rely on TypeScript's const enums, instead of uglily using sed, to replace compile-time constants. [#1014]
   - dev/scripts: remove reliance on environment variables when running the RxPlayer build scripts [#1004]
-  - dev/scripts: add esbuid devdependency and add "s" script to allow faster checks for RxPlayer developpers [#1003]
+  - dev/scripts: add esbuild devdependency and add "s" script to allow faster checks for RxPlayer developpers [#1003]
+  - CI: Rely on Github actions instead of Travis for most CI-related matters [#1046]
   - code/refacto: replace central `Clock` concept (Observable bringing media-related updates to the RxPlayer at a regular pace) by a more flexible `PlaybackObserver` class [#1002]
 
 
