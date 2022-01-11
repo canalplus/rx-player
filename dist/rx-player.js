@@ -119,7 +119,7 @@ var isSafariMobile = !_is_node__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z 
 /* harmony export */   "Z": function() { return /* binding */ clearElementSrc; }
 /* harmony export */ });
 /* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3887);
-/* harmony import */ var _browser_detection__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3666);
+/* harmony import */ var _utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1946);
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -143,13 +143,15 @@ var isSafariMobile = !_is_node__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z 
  */
 
 function clearElementSrc(element) {
-  // On Firefox, we also have to make sure the textTracks elements are both
-  // disabled and removed from the DOM.
+  // On some browsers, we first have to make sure the textTracks elements are
+  // both disabled and removed from the DOM.
   // If we do not do that, we may be left with displayed text tracks on the
-  // screen
-  if (_browser_detection__WEBPACK_IMPORTED_MODULE_0__/* .isFirefox */ .vU) {
-    var textTracks = element.textTracks;
+  // screen, even if the track elements are properly removed, due to browser
+  // issues.
+  // Bug seen on Firefox (I forgot which version) and Chrome 96.
+  var textTracks = element.textTracks;
 
+  if (!(0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z)(textTracks)) {
     for (var i = 0; i < textTracks.length; i++) {
       textTracks[i].mode = "disabled";
     }
@@ -1462,10 +1464,9 @@ var defaultThrottleConfig = {
     leading: true,
     trailing: false,
 };
-function throttle(durationSelector, config) {
-    if (config === void 0) { config = defaultThrottleConfig; }
+function throttle(durationSelector, _a) {
+    var _b = _a === void 0 ? defaultThrottleConfig : _a, leading = _b.leading, trailing = _b.trailing;
     return (0,lift/* operate */.e)(function (source, subscriber) {
-        var leading = config.leading, trailing = config.trailing;
         var hasValue = false;
         var sendValue = null;
         var throttled = null;
@@ -11803,13 +11804,12 @@ var BufferedHistory = /*#__PURE__*/function () {
     }
 
     if (firstKeptIndex > 0) {
-      this._history.splice(firstKeptIndex);
+      this._history = this._history.splice(firstKeptIndex);
     }
 
     if (this._history.length > this._maxHistoryLength) {
       var toRemove = this._history.length - this._maxHistoryLength;
-
-      this._history.splice(toRemove);
+      this._history = this._history.splice(toRemove);
     }
   };
 
@@ -17610,7 +17610,7 @@ function replaceRepresentationDASHTokens(path, id, bitrate) {
   if (path.indexOf("$") === -1) {
     return path;
   } else {
-    return path.replace(/\$\$/g, "$").replace(/\$RepresentationID\$/g, String(id)).replace(/\$Bandwidth(|\%0(\d+)d)\$/g, processFormatedToken(bitrate === undefined ? 0 : bitrate));
+    return path.replace(/\$\$/g, "$").replace(/\$RepresentationID\$/g, String(id)).replace(/\$Bandwidth(\%0(\d+)d)?\$/g, processFormatedToken(bitrate === undefined ? 0 : bitrate));
   }
 }
 /**
@@ -17635,13 +17635,13 @@ function createDashUrlDetokenizer(time, nb) {
     if (url.indexOf("$") === -1) {
       return url;
     } else {
-      return url.replace(/\$\$/g, "$").replace(/\$Number(|\%0(\d+)d)\$/g, function (_x, _y, widthStr) {
+      return url.replace(/\$\$/g, "$").replace(/\$Number(\%0(\d+)d)?\$/g, function (_x, _y, widthStr) {
         if (nb === undefined) {
           throw new Error("Segment number not defined in a $Number$ scheme");
         }
 
         return processFormatedToken(nb)(_x, _y, widthStr);
-      }).replace(/\$Time(|\%0(\d+)d)\$/g, function (_x, _y, widthStr) {
+      }).replace(/\$Time(\%0(\d+)d)?\$/g, function (_x, _y, widthStr) {
         if (time === undefined) {
           throw new Error("Segment time not defined in a $Time$ scheme");
         }
@@ -29364,7 +29364,7 @@ function generateManifestParser(options) {
       var value = parserResponse.value;
       var externalResources = value.urls.map(function (resourceUrl) {
         return scheduleRequest(function () {
-          var req = value.format === "string" ? (0,request/* default */.ZP)({
+          return value.format === "string" ? (0,request/* default */.ZP)({
             url: resourceUrl,
             responseType: "text",
             cancelSignal: cancelSignal
@@ -29373,7 +29373,6 @@ function generateManifestParser(options) {
             responseType: "arraybuffer",
             cancelSignal: cancelSignal
           });
-          return req;
         }).then(function (res) {
           if (value.format === "string") {
             if (typeof res.responseData !== "string") {
@@ -36592,7 +36591,7 @@ var AsapAction = (function (_super) {
         if ((delay != null && delay > 0) || (delay == null && this.delay > 0)) {
             return _super.prototype.recycleAsyncId.call(this, scheduler, id, delay);
         }
-        if (!scheduler.actions.some(function (action) { return action.id === id; })) {
+        if (scheduler.actions.length === 0) {
             immediateProvider.clearImmediate(id);
             scheduler._scheduled = undefined;
         }
@@ -36614,19 +36613,20 @@ var AsapScheduler = (function (_super) {
     }
     AsapScheduler.prototype.flush = function (action) {
         this._active = true;
-        var flushId = this._scheduled;
         this._scheduled = undefined;
         var actions = this.actions;
         var error;
+        var index = -1;
         action = action || actions.shift();
+        var count = actions.length;
         do {
             if ((error = action.execute(action.state, action.delay))) {
                 break;
             }
-        } while ((action = actions[0]) && action.id === flushId && actions.shift());
+        } while (++index < count && (action = actions.shift()));
         this._active = false;
         if (error) {
-            while ((action = actions[0]) && action.id === flushId && actions.shift()) {
+            while (++index < count && (action = actions.shift())) {
                 action.unsubscribe();
             }
             throw error;
@@ -41019,20 +41019,16 @@ var Observable = (function () {
         var _this = this;
         promiseCtor = getPromiseCtor(promiseCtor);
         return new promiseCtor(function (resolve, reject) {
-            var subscriber = new Subscriber/* SafeSubscriber */.Hp({
-                next: function (value) {
-                    try {
-                        next(value);
-                    }
-                    catch (err) {
-                        reject(err);
-                        subscriber.unsubscribe();
-                    }
-                },
-                error: reject,
-                complete: resolve,
-            });
-            _this.subscribe(subscriber);
+            var subscription;
+            subscription = _this.subscribe(function (value) {
+                try {
+                    next(value);
+                }
+                catch (err) {
+                    reject(err);
+                    subscription === null || subscription === void 0 ? void 0 : subscription.unsubscribe();
+                }
+            }, reject, resolve);
         });
     };
     Observable.prototype._subscribe = function (subscriber) {
@@ -47987,6 +47983,12 @@ var NetworkAnalyzer = /*#__PURE__*/function () {
 
 
 ;// CONCATENATED MODULE: ./src/core/abr/guess_based_chooser.ts
+function guess_based_chooser_createForOfIteratorHelperLoose(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (it) return (it = it.call(o)).next.bind(it); if (Array.isArray(o) || (it = guess_based_chooser_unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function guess_based_chooser_unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return guess_based_chooser_arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return guess_based_chooser_arrayLikeToArray(o, minLen); }
+
+function guess_based_chooser_arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -48116,8 +48118,7 @@ var GuessBasedChooser = /*#__PURE__*/function () {
       // Block guesses for a time
       this._consecutiveWrongGuesses++;
       this._blockGuessesUntil = performance.now() + Math.min(this._consecutiveWrongGuesses * 15000, 120000);
-      var prev = getPreviousRepresentation(representations, currentRepresentation);
-      return prev;
+      return getPreviousRepresentation(representations, currentRepresentation);
     } else if (scoreData === undefined) {
       return currentRepresentation;
     }
@@ -48147,7 +48148,7 @@ var GuessBasedChooser = /*#__PURE__*/function () {
         scoreConfidenceLevel = _ref[1];
     return isFinite(bufferGap) && bufferGap >= 2.5 && performance.now() > this._blockGuessesUntil && scoreConfidenceLevel === 1
     /* HIGH */
-    && score / speed > 1.1;
+    && score / speed > 1.01;
   }
   /**
    * Returns `true` if the pending guess of `lastGuess` seems to not
@@ -48161,7 +48162,7 @@ var GuessBasedChooser = /*#__PURE__*/function () {
   ;
 
   _proto._shouldStopGuess = function _shouldStopGuess(lastGuess, scoreData, bufferGap, requests) {
-    if (scoreData !== undefined && scoreData[0] < 1.05) {
+    if (scoreData !== undefined && scoreData[0] < 1.01) {
       return true;
     } else if ((scoreData === undefined || scoreData[0] < 1.2) && bufferGap < 0.6) {
       return true;
@@ -48172,8 +48173,8 @@ var GuessBasedChooser = /*#__PURE__*/function () {
     });
     var now = performance.now();
 
-    for (var i = 0; i < guessedRepresentationRequests.length; i++) {
-      var req = guessedRepresentationRequests[i];
+    for (var _iterator = guess_based_chooser_createForOfIteratorHelperLoose(guessedRepresentationRequests), _step; !(_step = _iterator()).done;) {
+      var req = _step.value;
       var requestElapsedTime = now - req.requestTimestamp;
 
       if (req.content.segment.isInit) {
@@ -48395,8 +48396,11 @@ var PendingRequestsStore = /*#__PURE__*/function () {
 
   _proto.remove = function remove(id) {
     if (this._currentRequests[id] == null) {
-      if (false) {}
-
+      // TODO This breaks github actions.
+      // Find why
+      // if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
+      //   throw new Error("ABR: can't remove unknown request");
+      // }
       log/* default.warn */.Z.warn("ABR: can't remove unknown request");
     }
 
