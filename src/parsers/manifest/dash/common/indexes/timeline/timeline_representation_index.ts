@@ -150,9 +150,9 @@ export interface ITimelineIndexContextArgument {
   availabilityTimeComplete : boolean;
   /** Allows to obtain the minimum and maximum positions of a content. */
   manifestBoundsCalculator : ManifestBoundsCalculator;
-  /** Start of the period concerned by this RepresentationIndex, in seconds. */
+  /** Start of the period linked to this RepresentationIndex, in seconds. */
   periodStart : number;
-  /** End of the period concerned by this RepresentationIndex, in seconds. */
+  /** End of the period linked to this RepresentationIndex, in seconds. */
   periodEnd : number|undefined;
   /** Whether the corresponding Manifest can be updated and changed. */
   isDynamic : boolean;
@@ -176,8 +176,13 @@ export interface ITimelineIndexContextArgument {
    * Use with moderation.
    */
   unsafelyBaseOnPreviousRepresentation : Representation | null;
-  /* Function that tells if an EMSG is whitelisted by the manifest */
+  /** Function that tells if an EMSG is whitelisted by the manifest */
   isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
+  /**
+   * Set to `true` if the linked Period is the chronologically last one in the
+   * Manifest.
+   */
+  isLastPeriod : boolean;
 }
 
 export interface ILastSegmentInformation {
@@ -226,6 +231,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   /* Function that tells if an EMSG is whitelisted by the manifest */
   private _isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 
+  /** `true` if the linked Period is the chronologically last one in the Manifest. */
+  private _isLastPeriod: boolean;
+
   /**
    * @param {Object} index
    * @param {Object} context
@@ -241,6 +249,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     const { availabilityTimeComplete,
             manifestBoundsCalculator,
             isDynamic,
+            isLastPeriod,
             representationBaseURLs,
             representationId,
             representationBitrate,
@@ -259,6 +268,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     this._manifestBoundsCalculator = manifestBoundsCalculator;
 
     this._isEMSGWhitelisted = isEMSGWhitelisted;
+    this._isLastPeriod = isLastPeriod;
     this._lastUpdate = context.receivedTime == null ?
                                  performance.now() :
                                  context.receivedTime;
@@ -456,6 +466,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
     this._lastUpdate = newIndex._lastUpdate;
     this._manifestBoundsCalculator = newIndex._manifestBoundsCalculator;
+    this._isLastPeriod = newIndex._isLastPeriod;
   }
 
   /**
@@ -479,6 +490,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     this._scaledPeriodStart = newIndex._scaledPeriodStart;
     this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
     this._lastUpdate = newIndex._lastUpdate;
+    this._isLastPeriod = newIndex._isLastPeriod;
   }
 
   /**
@@ -488,7 +500,13 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * @returns {Boolean}
    */
   isFinished() : boolean {
-    if (!this._isDynamic) {
+    if (!this._isDynamic || !this._isLastPeriod) {
+      // Either the content is not dynamic, in which case no new segment will
+      // be generated, either it is but this index is not linked to the current
+      // last Period in the MPD, in which case it is inferred that it has been
+      // completely generated. Note that this second condition might break very
+      // very rare use cases where old Periods are still being generated, yet it
+      // should fix more cases than it breaks.
       return true;
     }
 

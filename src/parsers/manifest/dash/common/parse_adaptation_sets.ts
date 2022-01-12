@@ -31,52 +31,10 @@ import {
 import attachTrickModeTrack from "./attach_trickmode_track";
 // eslint-disable-next-line max-len
 import inferAdaptationType from "./infer_adaptation_type";
-import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import parseRepresentations, {
-  IAdaptationInfos,
+  IRepresentationContext,
 } from "./parse_representations";
-import resolveBaseURLs, {
-  IResolvedBaseUrl,
-} from "./resolve_base_urls";
-
-/** Context needed when calling `parseAdaptationSets`. */
-export interface IAdaptationSetsContextInfos {
-  /** Whether we should request new segments even if they are not yet finished. */
-  aggressiveMode : boolean;
-  availabilityTimeComplete: boolean;
-  /** availabilityTimeOffset of the concerned period. */
-  availabilityTimeOffset: number;
-  /** Eventual URLs from which every relative URL will be based on. */
-  baseURLs : IResolvedBaseUrl[];
-  /** Allows to obtain the first available position of a content. */
-  manifestBoundsCalculator : ManifestBoundsCalculator;
-  /* End time of the current period, in seconds. */
-  end? : number | undefined;
-  /** Whether the Manifest can evolve with time. */
-  isDynamic : boolean;
-  /** Manifest DASH profiles used for signaling some features */
-  manifestProfiles?: string | undefined;
-  /**
-   * Time (in terms of `performance.now`) at which the XML file containing
-   * this AdaptationSet was received.
-   */
-  receivedTime? : number | undefined;
-  /** SegmentTemplate parsed in the Period, if found. */
-  segmentTemplate? : ISegmentTemplateIntermediateRepresentation | undefined;
-  /** Start time of the current period, in seconds. */
-  start : number;
-  /** Depth of the buffer for the whole content, in seconds. */
-  timeShiftBufferDepth? : number | undefined;
-  /**
-   * The parser should take this Period - which is from a previously parsed
-   * Manifest for the same dynamic content - as a base to speed-up the parsing
-   * process.
-   * /!\ If unexpected differences exist between both, there is a risk of
-   * de-synchronization with what is actually on the server,
-   * Use with moderation.
-   */
-  unsafelyBaseOnPreviousPeriod : Period | null;
-}
+import resolveBaseURLs from "./resolve_base_urls";
 
 /**
  * Supplementary information for "switchable" AdaptationSets of the same Period.
@@ -270,12 +228,12 @@ function getAdaptationSetSwitchingIDs(
  * Note that the AdaptationSets returned are sorted by priority (from the most
  * priority to the least one).
  * @param {Array.<Object>} adaptationsIR
- * @param {Object} periodInfos
+ * @param {Object} context
  * @returns {Array.<Object>}
  */
 export default function parseAdaptationSets(
   adaptationsIR : IAdaptationSetIntermediateRepresentation[],
-  periodInfos : IAdaptationSetsContextInfos
+  context : IAdaptationSetContext
 ): IParsedAdaptations {
   const parsedAdaptations : IParsedAdaptations = {};
   const trickModeAdaptations: Array<{ adaptation: IParsedAdaptation;
@@ -312,10 +270,10 @@ export default function parseAdaptationSets(
     const representationsIR = adaptation.children.representations;
     const availabilityTimeComplete =
       adaptation.attributes.availabilityTimeComplete ??
-      periodInfos.availabilityTimeComplete;
+      context.availabilityTimeComplete;
     const availabilityTimeOffset =
       (adaptation.attributes.availabilityTimeOffset ?? 0) +
-      periodInfos.availabilityTimeOffset;
+      context.availabilityTimeOffset;
 
     const adaptationMimeType = adaptation.attributes.mimeType;
     const adaptationCodecs = adaptation.attributes.codecs;
@@ -337,26 +295,27 @@ export default function parseAdaptationSets(
     let newID : string;
     const adaptationSetSwitchingIDs = getAdaptationSetSwitchingIDs(adaptation);
     const parentSegmentTemplates = [];
-    if (periodInfos.segmentTemplate !== undefined) {
-      parentSegmentTemplates.push(periodInfos.segmentTemplate);
+    if (context.segmentTemplate !== undefined) {
+      parentSegmentTemplates.push(context.segmentTemplate);
     }
     if (adaptation.children.segmentTemplate !== undefined) {
       parentSegmentTemplates.push(adaptation.children.segmentTemplate);
     }
 
-    const adaptationInfos : IAdaptationInfos = {
-      aggressiveMode: periodInfos.aggressiveMode,
+    const reprCtxt : IRepresentationContext = {
+      aggressiveMode: context.aggressiveMode,
       availabilityTimeComplete,
       availabilityTimeOffset,
-      baseURLs: resolveBaseURLs(periodInfos.baseURLs, adaptationChildren.baseURLs),
-      manifestBoundsCalculator: periodInfos.manifestBoundsCalculator,
-      end: periodInfos.end,
-      isDynamic: periodInfos.isDynamic,
-      manifestProfiles: periodInfos.manifestProfiles,
+      baseURLs: resolveBaseURLs(context.baseURLs, adaptationChildren.baseURLs),
+      manifestBoundsCalculator: context.manifestBoundsCalculator,
+      end: context.end,
+      isDynamic: context.isDynamic,
+      isLastPeriod: context.isLastPeriod,
+      manifestProfiles: context.manifestProfiles,
       parentSegmentTemplates,
-      receivedTime: periodInfos.receivedTime,
-      start: periodInfos.start,
-      timeShiftBufferDepth: periodInfos.timeShiftBufferDepth,
+      receivedTime: context.receivedTime,
+      start: context.start,
+      timeShiftBufferDepth: context.timeShiftBufferDepth,
       unsafelyBaseOnPreviousAdaptation: null,
     };
 
@@ -383,11 +342,11 @@ export default function parseAdaptationSets(
       // Add to the already existing main video adaptation
       // TODO remove that ugly custom logic?
       const videoMainAdaptation = parsedAdaptations.video[lastMainAdaptationIndex.video];
-      adaptationInfos.unsafelyBaseOnPreviousAdaptation = periodInfos
+      reprCtxt.unsafelyBaseOnPreviousAdaptation = context
         .unsafelyBaseOnPreviousPeriod?.getAdaptation(videoMainAdaptation.id) ?? null;
       const representations = parseRepresentations(representationsIR,
                                                    adaptation,
-                                                   adaptationInfos);
+                                                   reprCtxt);
       videoMainAdaptation.representations.push(...representations);
       newID = videoMainAdaptation.id;
     } else {
@@ -436,12 +395,12 @@ export default function parseAdaptationSets(
       newID = adaptationID;
       parsedAdaptationsIDs.push(adaptationID);
 
-      adaptationInfos.unsafelyBaseOnPreviousAdaptation = periodInfos
+      reprCtxt.unsafelyBaseOnPreviousAdaptation = context
         .unsafelyBaseOnPreviousPeriod?.getAdaptation(adaptationID) ?? null;
 
       const representations = parseRepresentations(representationsIR,
                                                    adaptation,
-                                                   adaptationInfos);
+                                                   reprCtxt);
       const parsedAdaptationSet : IParsedAdaptation =
         { id: adaptationID,
           representations,
@@ -534,3 +493,26 @@ export default function parseAdaptationSets(
   attachTrickModeTrack(parsedAdaptations, trickModeAdaptations);
   return parsedAdaptations;
 }
+
+/** Context needed when calling `parseAdaptationSets`. */
+export interface IAdaptationSetContext extends IInheritedRepresentationContext {
+  /** SegmentTemplate parsed in the Period, if found. */
+  segmentTemplate? : ISegmentTemplateIntermediateRepresentation | undefined;
+  /**
+   * The parser should take this Period - which is from a previously parsed
+   * Manifest for the same dynamic content - as a base to speed-up the parsing
+   * process.
+   * /!\ If unexpected differences exist between both, there is a risk of
+   * de-synchronization with what is actually on the server,
+   * Use with moderation.
+   */
+  unsafelyBaseOnPreviousPeriod : Period | null;
+}
+
+/**
+ * Supplementary context needed to parse a Representation common with
+ * `IRepresentationContext`.
+ */
+type IInheritedRepresentationContext = Omit<IRepresentationContext,
+                                            "unsafelyBaseOnPreviousAdaptation" |
+                                            "parentSegmentTemplates">;
