@@ -119,7 +119,8 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
       /**
        * If the request succeeded, set to the corresponding
        * `IChunkCompleteInformation` object.
-       * If the request failed or was cancelled, set to `null`.
+       * For any other completion cases: if the request either failed, was
+       * cancelled or just if no request was needed, set to `null`.
        *
        * Stays to `undefined` when the request is still pending.
        */
@@ -216,6 +217,8 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
           if (res.resultType !== "segment-created") {
             requestInfo = res.resultData;
             sendNetworkMetricsIfAvailable();
+          } else {
+            requestInfo = null;
           }
 
           if (!canceller.isUsed) {
