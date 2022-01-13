@@ -123,7 +123,7 @@ export interface IAdaptationStreamArguments {
    * this AdaptationStream won't try to download new segments.
    */
   wantedBufferAhead : IReadOnlySharedReference<number>;
-  wantedBufferSize : IReadOnlySharedReference<number>;
+  maxVideoBufferSize : IReadOnlySharedReference<number>;
 }
 
 /**
@@ -190,7 +190,7 @@ export default function AdaptationStream({
   segmentBuffer,
   segmentFetcherCreator,
   wantedBufferAhead,
-  wantedBufferSize,
+  maxVideoBufferSize,
 } : IAdaptationStreamArguments) : Observable<IAdaptationStreamEvent> {
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
@@ -377,7 +377,9 @@ export default function AdaptationStream({
       const bufferGoal$ = wantedBufferAhead.asObservable().pipe(
         map((wba) => wba * bufferGoalRatio)
       );
-      const bufferSizeGoal$ = wantedBufferSize.asObservable();
+      const maxVideoBufferSize$ = maxVideoBufferSize.asObservable();
+      const maxBufferSize$ = adaptation.type === "video" ? maxVideoBufferSize$ :
+                                                           observableOf(Infinity);
 
       log.info("Stream: changing representation",
                adaptation.type,
@@ -392,7 +394,7 @@ export default function AdaptationStream({
                                     segmentFetcher,
                                     terminate$: terminateCurrentStream$,
                                     options: { bufferGoal$,
-                                               bufferSizeGoal$,
+                                               maxBufferSize$,
                                                drmSystemId: options.drmSystemId,
                                                fastSwitchThreshold$ } })
         .pipe(catchError((err : unknown) => {

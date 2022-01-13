@@ -280,8 +280,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     maxBufferAhead : ISharedReference<number>;
     /** Maximum kept buffer behind in the current position, in seconds. */
     maxBufferBehind : ISharedReference<number>;
-    /** Maximum size of buffer , in bits */
-    wantedBufferSize : ISharedReference<number>;
+    /** Maximum size of video buffer , in bits */
+    maxVideoBufferSize : ISharedReference<number>;
   };
 
   /** Information on the current bitrate settings. */
@@ -490,7 +490,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             throttleVideoBitrateWhenHidden,
             videoElement,
             wantedBufferAhead,
-            wantedBufferSize,
+            maxVideoBufferSize,
             stopAtEnd } = parseConstructorOptions(options);
 
     // Workaround to support Firefox autoplay on FF 42.
@@ -557,7 +557,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       wantedBufferAhead: createSharedReference(wantedBufferAhead),
       maxBufferAhead: createSharedReference(maxBufferAhead),
       maxBufferBehind: createSharedReference(maxBufferBehind),
-      wantedBufferSize: createSharedReference(wantedBufferSize),
+      maxVideoBufferSize: createSharedReference(maxVideoBufferSize),
     };
 
     this._priv_bitrateInfos = {
@@ -631,7 +631,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_speed.finish();
     this._priv_contentLock.finish();
     this._priv_bufferOptions.wantedBufferAhead.finish();
-    this._priv_bufferOptions.wantedBufferSize.finish();
+    this._priv_bufferOptions.maxVideoBufferSize.finish();
     this._priv_bufferOptions.maxBufferAhead.finish();
     this._priv_bufferOptions.maxBufferBehind.finish();
     this._priv_bitrateInfos.manualBitrates.video.finish();
@@ -1875,8 +1875,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * The player . will stop downloading chunks when this size is reached.
    * @param {Number} sizeInBits
    */
-  setWantedBufferSize(sizeInBits : number) : void {
-    this._priv_bufferOptions.wantedBufferSize.setValue(sizeInBits);
+  setmaxVideoBufferSize(sizeInBits : number) : void {
+    this._priv_bufferOptions.maxVideoBufferSize.setValue(sizeInBits);
   }
 
   /**
@@ -1907,8 +1907,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Returns the max buffer memory size for the buffer
    * @returns {Number}
    */
-  getWantedBufferSize() : number {
-    return this._priv_bufferOptions.wantedBufferSize.getValue();
+  getMaxVideoBufferSize() : number {
+    return this._priv_bufferOptions.maxVideoBufferSize.getValue();
   }
 
   /**

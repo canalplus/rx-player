@@ -181,13 +181,13 @@ export default {
   DEFAULT_WANTED_BUFFER_AHEAD: 30,
 
   /**
-   * Default buffer memory limit in bits..
-   * Once enough content has been downloaded to fill the buffer up to
-   * DEFAULT_WANTED_BUFFER_SIZE , we will stop downloading
+   * Default video buffer memory limit in bits..
+   * Once enough video content has been downloaded to fill the buffer up to
+   * DEFAULT_MAX_VIDEO_BUFFER_SIZE , we will stop downloading
    * content.
    * @type {Number}
    */
-  DEFAULT_WANTED_BUFFER_SIZE: Infinity,
+  DEFAULT_MAX_VIDEO_BUFFER_SIZE: Infinity,
 
   /**
    * Default max buffer size ahead of the current position in seconds.
@@ -1231,4 +1231,10 @@ export default {
    * there can be in that history.
    */
   BUFFERED_HISTORY_MAXIMUM_ENTRIES: 200,
+
+  /**
+   * Minimum buffer (in seconds ) we should have, regardless of memory
+   * constraints
+   */
+  MIN_BUFFER_LENGTH : 5,
 };

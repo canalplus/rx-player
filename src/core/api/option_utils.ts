@@ -60,7 +60,7 @@ const { DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
         DEFAULT_THROTTLE_WHEN_HIDDEN,
         DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
         DEFAULT_WANTED_BUFFER_AHEAD,
-        DEFAULT_WANTED_BUFFER_SIZE } = config;
+        DEFAULT_MAX_VIDEO_BUFFER_SIZE } = config;
 
 export { IKeySystemOption };
 
@@ -196,7 +196,7 @@ type IParsedStartAtOption = { position : number } |
 export interface IConstructorOptions { maxBufferAhead? : number;
                                        maxBufferBehind? : number;
                                        wantedBufferAhead? : number;
-                                       wantedBufferSize?: number;
+                                       maxVideoBufferSize?: number;
 
                                        limitVideoWidth? : boolean;
                                        throttleWhenHidden? : boolean;
@@ -220,8 +220,7 @@ export interface IParsedConstructorOptions {
   maxBufferAhead : number;
   maxBufferBehind : number;
   wantedBufferAhead : number;
-  wantedBufferSize : number;
- 
+  maxVideoBufferSize : number;
   limitVideoWidth : boolean;
   throttleWhenHidden : boolean;
   throttleVideoBitrateWhenHidden : boolean;
@@ -331,7 +330,7 @@ function parseConstructorOptions(
   let maxBufferAhead : number;
   let maxBufferBehind : number;
   let wantedBufferAhead : number;
-  let wantedBufferSize : number;
+  let maxVideoBufferSize : number;
 
   let throttleWhenHidden : boolean;
   let throttleVideoBitrateWhenHidden : boolean;
@@ -376,14 +375,14 @@ function parseConstructorOptions(
       /* eslint-enable max-len */
     }
   }
- 
-  if (isNullOrUndefined(options.wantedBufferSize)) {
-    wantedBufferSize = DEFAULT_WANTED_BUFFER_SIZE;
+  
+  if (isNullOrUndefined(options.maxVideoBufferSize)) {
+    maxVideoBufferSize = DEFAULT_MAX_VIDEO_BUFFER_SIZE;
   } else {
-    wantedBufferSize = Number(options.wantedBufferSize);
-    if (isNaN(wantedBufferSize)) {
+    maxVideoBufferSize = Number(options.maxVideoBufferSize);
+    if (isNaN(maxVideoBufferSize)) {
       /* eslint-disable max-len */
-      throw new Error("Invalid wantedBufferSize parameter. Should be a number.");
+      throw new Error("Invalid maxVideoBufferSize parameter. Should be a number.");
       /* eslint-enable max-len */
     }
   }
@@ -530,7 +529,7 @@ function parseConstructorOptions(
            limitVideoWidth,
            videoElement,
            wantedBufferAhead,
-           wantedBufferSize,
+           maxVideoBufferSize,
            throttleWhenHidden,
            throttleVideoBitrateWhenHidden,
            preferredAudioTracks,

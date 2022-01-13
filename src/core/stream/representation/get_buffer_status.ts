@@ -87,7 +87,7 @@ export default function getBufferStatus(
   playbackObserver : IReadOnlyPlaybackObserver<unknown>,
   fastSwitchThreshold : number | undefined,
   bufferGoal : number,
-  bufferSizeGoal : number,
+  maxBufferSize : number,
   segmentBuffer : SegmentBuffer
 ) : IBufferStatus {
   const { period, representation } = content;
@@ -126,7 +126,7 @@ export default function getBufferStatus(
                                              getBufferedHistory,
                                              neededRange,
                                              segmentsBeingPushed,
-                                             bufferSizeGoal })
+                                             maxBufferSize })
     .map((segment) => ({ priority: getSegmentPriority(segment.time, wantedStartPosition),
                          segment }));
 
