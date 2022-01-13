@@ -181,7 +181,7 @@ export default {
   DEFAULT_WANTED_BUFFER_AHEAD: 30,
 
   /**
-   * Default video buffer memory limit in bits..
+   * Default video buffer memory limit in kilobytes..
    * Once enough video content has been downloaded to fill the buffer up to
    * DEFAULT_MAX_VIDEO_BUFFER_SIZE , we will stop downloading
    * content.

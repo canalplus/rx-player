@@ -280,7 +280,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     maxBufferAhead : ISharedReference<number>;
     /** Maximum kept buffer behind in the current position, in seconds. */
     maxBufferBehind : ISharedReference<number>;
-    /** Maximum size of video buffer , in bits */
+    /** Maximum size of video buffer , in kiloBytes */
     maxVideoBufferSize : ISharedReference<number>;
   };
 
@@ -1873,10 +1873,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * Set the max buffer size the buffer should take in memory
    * The player . will stop downloading chunks when this size is reached.
-   * @param {Number} sizeInBits
+   * @param {Number} sizeInKBytes
    */
-  setmaxVideoBufferSize(sizeInBits : number) : void {
-    this._priv_bufferOptions.maxVideoBufferSize.setValue(sizeInBits);
+  setMaxVideoBufferSize(sizeInKBytes : number) : void {
+    this._priv_bufferOptions.maxVideoBufferSize.setValue(sizeInKBytes);
   }
 
   /**
@@ -1904,7 +1904,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Returns the max buffer memory size for the buffer
+   * Returns the max buffer memory size for the buffer in kilobytes
    * @returns {Number}
    */
   getMaxVideoBufferSize() : number {

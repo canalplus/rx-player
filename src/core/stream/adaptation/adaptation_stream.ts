@@ -377,8 +377,8 @@ export default function AdaptationStream({
       const bufferGoal$ = wantedBufferAhead.asObservable().pipe(
         map((wba) => wba * bufferGoalRatio)
       );
-      const maxVideoBufferSize$ = maxVideoBufferSize.asObservable();
-      const maxBufferSize$ = adaptation.type === "video" ? maxVideoBufferSize$ :
+      // eslint-disable-next-line max-len
+      const maxBufferSize$ = adaptation.type === "video" ? maxVideoBufferSize.asObservable() :
                                                            observableOf(Infinity);
 
       log.info("Stream: changing representation",

@@ -60,6 +60,7 @@ const {
   DEFAULT_THROTTLE_WHEN_HIDDEN,
   DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
   DEFAULT_WANTED_BUFFER_AHEAD,
+  DEFAULT_MAX_VIDEO_BUFFER_SIZE,
 } = config;
 
 describe("API - parseConstructorOptions", () => {
@@ -77,6 +78,7 @@ describe("API - parseConstructorOptions", () => {
   const videoElement = document.createElement("video");
 
   const defaultConstructorOptions = {
+    maxVideoBufferSize: DEFAULT_MAX_VIDEO_BUFFER_SIZE,
     maxBufferAhead: DEFAULT_MAX_BUFFER_AHEAD,
     maxBufferBehind: DEFAULT_MAX_BUFFER_BEHIND,
     wantedBufferAhead: DEFAULT_WANTED_BUFFER_AHEAD,
