@@ -41,18 +41,15 @@ import { IStreamStatusEvent } from "../types";
 export default function createEmptyAdaptationStream(
   playbackObserver : IReadOnlyPlaybackObserver<{ position : number }>,
   wantedBufferAhead : IReadOnlySharedReference<number>,
-  wantedBufferSize : IReadOnlySharedReference<number>,
   bufferType : IBufferType,
   content : { period : Period }
 ) : Observable<IStreamStatusEvent> {
   const { period } = content;
   let hasFinishedLoading = false;
   const wantedBufferAhead$ = wantedBufferAhead.asObservable();
-  const wantedBufferSize$ = wantedBufferSize.asObservable();
   const observation$ = playbackObserver.observe(true);
   return observableCombineLatest([observation$,
-                                  wantedBufferAhead$,
-                                  wantedBufferSize$]).pipe(
+                                  wantedBufferAhead$]).pipe(
     mergeMap(([observation, wba]) => {
       const { position } = observation;
       if (period.end !== undefined && position + wba >= period.end) {

@@ -43,13 +43,6 @@ import {
   IBufferedChunkInfos,
 } from "./utils";
 
-interface IContentContext {
-  adaptation: Adaptation;
-  manifest: Manifest;
-  period: Period;
-  representation: Representation;
-}
-
 export default Manifest;
 export * from "./types";
 export {
@@ -66,7 +59,6 @@ export {
   // types
   IAdaptationType,
   IBaseContentInfos,
-  IContentContext,
   IHDRInformation,
   IManifestParsingOptions,
   IMetaPlaylistPrivateInfos,

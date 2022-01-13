@@ -151,7 +151,7 @@ export interface IRepresentationStreamOptions {
    *  Once reached, no segments will be loaded until it
    *  goes below that size again
    */
-  bufferSizeGoal$ : Observable<number>;
+  maxBufferSize$ : Observable<number>;
 
   /**
    * Hex-encoded DRM "system ID" as found in:
@@ -229,7 +229,7 @@ export default function RepresentationStream<TSegmentDataType>({
           adaptation,
           representation } = content;
   const { bufferGoal$,
-          bufferSizeGoal$,
+          maxBufferSize$,
           drmSystemId,
           fastSwitchThreshold$ } = options;
   const bufferType = adaptation.type;
@@ -286,14 +286,14 @@ export default function RepresentationStream<TSegmentDataType>({
   const status$ = observableCombineLatest([
     playbackObserver.observe(true),
     bufferGoal$,
-    bufferSizeGoal$,
+    maxBufferSize$,
     terminate$.pipe(take(1),
                     startWith(null)),
     reCheckNeededSegments$.pipe(startWith(undefined)),
   ]).pipe(
     withLatestFrom(fastSwitchThreshold$),
     mergeMap(function (
-      [ [ observation, bufferGoal, bufferSizeGoal, terminate ],
+      [ [ observation, bufferGoal, maxBufferSize, terminate ],
         fastSwitchThreshold ]
     ) : Observable<IStreamStatusEvent |
                    IStreamNeedsManifestRefresh |
@@ -305,7 +305,7 @@ export default function RepresentationStream<TSegmentDataType>({
                                      playbackObserver,
                                      fastSwitchThreshold,
                                      bufferGoal,
-                                     bufferSizeGoal,
+                                     maxBufferSize,
                                      segmentBuffer);
       const { neededSegments } = status;
 

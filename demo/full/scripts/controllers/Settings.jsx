@@ -30,7 +30,7 @@ class Settings extends React.Component {
       maxVideoBr,
       maxAudioBr,
       wantedBufferAhead,
-      wantedBufferSize,
+      maxVideoBufferSize,
       maxBufferAhead,
       maxBufferBehind,
       limitVideoWidth,
@@ -54,7 +54,7 @@ class Settings extends React.Component {
         maxVideoBitrate: parseFloat(maxVideoBr),
         maxAudioBitrate: parseFloat(maxAudioBr),
         wantedBufferAhead: parseFloat(wantedBufferAhead),
-        wantedBufferSize: parseFloat(wantedBufferSize),
+        maxVideoBufferSize: parseFloat(maxVideoBufferSize),
         maxBufferAhead: parseFloat(maxBufferAhead),
         maxBufferBehind: parseFloat(maxBufferBehind),
         limitVideoWidth,
@@ -132,8 +132,8 @@ class Settings extends React.Component {
   onWantedBufferAheadInput = (value) =>
     this.setState({ wantedBufferAhead: value });
   
-  onWantedBufferSizeInput = (value) => 
-    this.setState({ wantedBufferSize: value});
+  onMaxVideoBufferSizeInput = (value) => 
+    this.setState({ maxVideoBufferSize: value});
 
   onMaxBufferBehindInput = (value) =>
     this.setState({ maxBufferBehind: value });
@@ -161,7 +161,7 @@ class Settings extends React.Component {
       audioTrackSwitchingMode,
       onCodecSwitch,
       wantedBufferAhead,
-      wantedBufferSize,
+      maxVideoBufferSize,
       maxBufferAhead,
       maxBufferBehind,
     } = this.state;
@@ -238,13 +238,13 @@ class Settings extends React.Component {
           <Option title="Buffer Options">
             <BufferOptions
               wantedBufferAhead={wantedBufferAhead}
-              wantedBufferSize={wantedBufferSize}
+              maxVideoBufferSize={maxVideoBufferSize}
               maxBufferAhead={maxBufferAhead}
               maxBufferBehind={maxBufferBehind}
               onWantedBufferAheadInput={this.onWantedBufferAheadInput}
               onMaxBufferAheadInput={this.onMaxBufferAheadInput}
               onMaxBufferBehindInput={this.onMaxBufferBehindInput}
-              onWantedBufferSizeInput={this.onWantedBufferSizeInput}
+              onMaxVideoBufferSizeInput={this.maxVideoBufferSizeInput}
             />
           </Option>
         </div>

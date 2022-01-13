@@ -17,13 +17,12 @@
 // eslint-disable-next-line max-len
 import config from "../../../config";
 import log from "../../../log";
-import {
+import Manifest , {
   Adaptation,
   areSameContent,
   ISegment,
   Period,
   Representation,
-  IContentContext,
 } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
 import { IBufferedChunk, IEndOfSegmentInfos } from "../../segment_buffers";
@@ -34,7 +33,14 @@ import {
 
 
 
-type ISegmentMixedWithContent = IContentContext & {segment: ISegment};
+interface IContentContext {
+  adaptation: Adaptation;
+  manifest: Manifest;
+  period: Period;
+  representation: Representation;
+}
+        
+type ISegmentContext = IContentContext & {segment: ISegment};
 
 
 /** Arguments for `getNeededSegments`. */
@@ -72,12 +78,13 @@ export interface IGetNeededSegmentsArguments {
   bufferedSegments : IBufferedChunk[];
 
   /**
-   * bufferSizeGoal is the maximum memory in bits that the buffer should take
+   * maxBufferSize is the maximum memory in bits that the buffer should take
    */
-  bufferSizeGoal: number;
+  maxBufferSize: number;
 
   getBufferedHistory : (context : IChunkContext) => IBufferedHistoryEntry[];
 }
+
 
 
 /**
@@ -98,25 +105,15 @@ export default function getNeededSegments({
   getBufferedHistory,
   neededRange,
   segmentsBeingPushed,
-  bufferSizeGoal,
+  maxBufferSize,
 } : IGetNeededSegmentsArguments) : ISegment[] {
   const { representation } = content;
-  const estimateSizeBeingPushed = segmentsBeingPushed.reduce((size, segment) => {
-    const { bitrate } = segment.representation;
-    // Not taking into account the fact that the segment
-    // can still be generated and the duration not fully exact
-    const { duration } = segment.segment;
-    return size + (bitrate * duration);
-  }, 0);
-  let availableBufferSize = bufferedSegments.reduce((size, chunk) => {
-    if (chunk.chunkSize !== undefined) {
-      return size - chunk.chunkSize;
-    } else {
-      return size;
-    }
+  let availableBufferSize = getAvailableBufferSize(bufferedSegments,
+                                                   segmentsBeingPushed,
+                                                   maxBufferSize);
 
-  } , bufferSizeGoal) - estimateSizeBeingPushed;
-
+  // Current buffer length in seconds
+  let bufferLength = getBufferLength(bufferedSegments, segmentsBeingPushed);
 
   const availableSegmentsForRange = representation.index
     .getSegments(neededRange.start, neededRange.end - neededRange.start);
@@ -154,18 +151,25 @@ export default function getNeededSegments({
       }
       return true;
     });
-  const { MINIMUM_SEGMENT_SIZE } = config.getCurrent();
+  const { MINIMUM_SEGMENT_SIZE,
+        MIN_BUFFER_LENGTH } = config.getCurrent();  
+  let isMemorySaturated = false;
 
   return availableSegmentsForRange.filter(segment => {
-    const contentObject = objectAssign({ segment }, content);
+    if (segment.isInit) {
+      return true; // never skip initialization segments
+    }
+    if (isMemorySaturated &&
+        bufferLength > MIN_BUFFER_LENGTH &&
+        content.adaptation.type === "video") {
+      return false;
+    }
+    const contentObject: ISegmentContext = objectAssign({ segment }, content);
+
     const { duration } = segment;
     // First, check that the segment is not already being pushed
     if (isSegmentBeingPushed(segmentsBeingPushed, contentObject)) {
       return false;
-    }
-
-    if (segment.isInit) {
-      return true; // never skip initialization segments
     }
 
     if (segment.complete && duration < MINIMUM_SEGMENT_SIZE) {
@@ -184,23 +188,72 @@ export default function getNeededSegments({
     if (isSegmentAlreadyDownloaded(segment, segmentsToKeep, content)) {
       return false;
     }
-    if (isHoleInPlaceOfSegment(segment, segmentsToKeep)) {
-      return false;
-    }
 
-    const estimatedSizeSegment = (duration * content.representation.bitrate) / 1000;
-    if (availableBufferSize - estimatedSizeSegment < 0) {
+    const estimatedSegmentSize = duration * content.representation.bitrate;
+    if (availableBufferSize - estimatedSegmentSize < 0 &&
+        bufferLength > MIN_BUFFER_LENGTH &&
+        content.adaptation.type === "video") {
+      isMemorySaturated = true;
       return false;
     }
-    availableBufferSize -= estimatedSizeSegment;
+    availableBufferSize -= estimatedSegmentSize;
+    bufferLength += duration;
     return true;
   });
 }
+/**
+ * Compute the estimated available buffer size in memory in bits
+ * @param bufferedSegments
+ * @param segmentsBeingPushed
+ * @param maxVideoBufferSize
+ * @returns availableBufferSize in bits
+ */
+function getAvailableBufferSize(
+  bufferedSegments: IBufferedChunk[],
+  segmentsBeingPushed: IEndOfSegmentInfos[],
+  maxVideoBufferSize: number
+) : number {
+  const estimateSizeBeingPushed = segmentsBeingPushed.reduce((size, segment) => {
+    const { bitrate } = segment.representation;
+    // Not taking into account the fact that the segment
+    // can still be generated and the duration not fully exact
+    const { duration } = segment.segment;
+    return size + (bitrate * duration);
+  }, 0);
+  return bufferedSegments.reduce((size, chunk) => {
+    if (chunk.chunkSize !== undefined) {
+      return size - chunk.chunkSize;
+    } else {
+      return size;
+    }
 
-const isSegmentAlreadyDownloaded = (
+  } , maxVideoBufferSize) - estimateSizeBeingPushed;
+}
+
+/**
+ * Compute the length of the buffer in seconds
+ * @param bufferedSegments
+ * @param segmentsBeingPushed
+ * @returns bufferLength in seconds
+ */
+function getBufferLength(
+  bufferedSegments: IBufferedChunk[],
+  segmentsBeingPushed: IEndOfSegmentInfos[]
+) : number {
+  const bufferLength = bufferedSegments.reduce((length, segment) => {
+    return length + (segment.end - segment.start);
+  }, 0);
+  const bufferBeingPushed = segmentsBeingPushed.reduce((length, segment) => {
+    return length + segment.segment.duration;
+  }, 0);
+  return bufferLength + bufferBeingPushed;
+}
+
+function isSegmentAlreadyDownloaded(
   segment: ISegment,
   segmentsToKeep: IBufferedChunk[],
-  content: IContentContext) => {
+  content: IContentContext) : boolean {
+    
   const { MINIMUM_SEGMENT_SIZE } = config.getCurrent();
   /**
    * Epsilon compensating for rounding errors when comparing the start and end
@@ -225,9 +278,9 @@ const isSegmentAlreadyDownloaded = (
     }
     return false;
   });
-};
+}
 
-const isHoleInPlaceOfSegment = (segment: ISegment, segmentsToKeep: IBufferedChunk[]) => {
+function _isHoleInPlaceOfSegment(segment: ISegment, segmentsToKeep: IBufferedChunk[]) {
   // check if there is an hole in place of the segment currently
   const { time, end } = segment;
   const { MINIMUM_SEGMENT_SIZE } = config.getCurrent()
@@ -238,29 +291,26 @@ const isHoleInPlaceOfSegment = (segment: ISegment, segmentsToKeep: IBufferedChun
   const ROUNDING_ERROR = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
   return (segmentsToKeep.some((completeSeg, i) => {
       // `true` if `completeSeg` starts too far after `time`
-    return completeSeg.end > time && (completeSeg.start > time + ROUNDING_ERROR ||
+    return completeSeg.end > time || (completeSeg.start <= time + ROUNDING_ERROR &&
       // `true` if `completeSeg` ends too soon before `end`
-      getLastContiguousSegment(segmentsToKeep, i).end < end - ROUNDING_ERROR);
+      getLastContiguousSegment(segmentsToKeep, i).end >= end - ROUNDING_ERROR);
   }));
-};
+}
 
-const isSegmentBeingPushed = (
+function isSegmentBeingPushed(
   segmentsBeingPushed: IEndOfSegmentInfos[],
-  contentObject: ISegmentMixedWithContent) => {
+  contentObject: ISegmentContext) : boolean {
   if (segmentsBeingPushed.length > 0) {
-    const isAlreadyBeingPushed = segmentsBeingPushed
+    return segmentsBeingPushed
       .some((pendingSegment) => areSameContent(contentObject, pendingSegment));
-    if (isAlreadyBeingPushed) {
-      return true;
-    }
   }
   return false;
-};
+}
 
-const isSegmentPushedInOtherRepr = (segmentsBeingPushed: IEndOfSegmentInfos[],
-                                    contentObject: ISegmentMixedWithContent,
+function isSegmentPushedInOtherRepr(segmentsBeingPushed: IEndOfSegmentInfos[],
+                                    contentObject: ISegmentContext,
                                     currentPlaybackTime: number,
-                                    fastSwitchThreshold?: number) => {
+                                    fastSwitchThreshold?: number) {
   // Check if the same segment from another Representation is not already
   // being pushed.
   const { time, end } = contentObject.segment;
@@ -273,8 +323,7 @@ const isSegmentPushedInOtherRepr = (segmentsBeingPushed: IEndOfSegmentInfos[],
   if (segmentsBeingPushed.length > 0) {
     const waitForPushedSegment = segmentsBeingPushed.some((pendingSegment) => {
       if (pendingSegment.period.id !== contentObject.period.id ||
-            pendingSegment.adaptation.id !== contentObject.adaptation.id)
-      {
+          pendingSegment.adaptation.id !== contentObject.adaptation.id) {
         return true;
       }
       const { segment: oldSegment } = pendingSegment;
@@ -284,17 +333,17 @@ const isSegmentPushedInOtherRepr = (segmentsBeingPushed: IEndOfSegmentInfos[],
       if ((oldSegment.end + ROUNDING_ERROR) < end) {
         return true;
       }
-      return !shouldContentBeReplaced(pendingSegment,
-                                      contentObject,
-                                      currentPlaybackTime,
-                                      fastSwitchThreshold);
+      return shouldContentBeReplaced(pendingSegment,
+                                     contentObject,
+                                     currentPlaybackTime,
+                                     fastSwitchThreshold);
     });
     if (waitForPushedSegment) {
       return  true;
     }
   }
   return false;
-};
+}
 
 /**
  * From the given array of buffered chunks (`bufferedSegments`) returns the last

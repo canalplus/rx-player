@@ -83,7 +83,7 @@ export type IStreamOrchestratorPlaybackObservation = IPeriodStreamPlaybackObserv
 export type IStreamOrchestratorOptions =
   IPeriodStreamOptions &
   { wantedBufferAhead : IReadOnlySharedReference<number>;
-    wantedBufferSize : IReadOnlySharedReference<number>;
+    maxVideoBufferSize : IReadOnlySharedReference<number>;
     maxBufferAhead : IReadOnlySharedReference<number>;
     maxBufferBehind : IReadOnlySharedReference<number>; };
 
@@ -125,7 +125,7 @@ export default function StreamOrchestrator(
   const { maxBufferAhead,
           maxBufferBehind,
           wantedBufferAhead,
-          wantedBufferSize } = options;
+          maxVideoBufferSize } = options;
 
   const { MAXIMUM_MAX_BUFFER_AHEAD,
           MAXIMUM_MAX_BUFFER_BEHIND } = config.getCurrent();
@@ -457,7 +457,7 @@ export default function StreamOrchestrator(
                                          options,
                                          playbackObserver,
                                          wantedBufferAhead,
-                                         wantedBufferSize }
+                                         maxVideoBufferSize }
     ).pipe(
       mergeMap((evt : IPeriodStreamEvent) : Observable<IMultiplePeriodStreamsEvent> => {
         if (evt.type === "stream-status") {
