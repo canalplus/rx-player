@@ -26,7 +26,7 @@ function BufferOptions({
     maxBufferBehind !== Infinity
   );
 
-  const [isMaxVideoBufferSizeLimited, setMaxVideoBufferSizeLimited] = useState(
+  const [isMaxVideoBufferSizeLimited, setMaxVideoBufferSizeLimit] = useState(
     maxVideoBufferSize !== Infinity
   );
 
@@ -55,10 +55,10 @@ function BufferOptions({
   const onChangeLimitMaxVideoBufferSize = (evt) => {
     const isNotLimited = getCheckBoxValue(evt.target);
     if (isNotLimited){
-      setMaxVideoBufferSizeLimited(false);
+      setMaxVideoBufferSizeLimit(false);
       onMaxVideoBufferSizeInput(Infinity)
     } else {
-      setmaxVideoBufferSizeLimited(true);
+      setMaxVideoBufferSizeLimit(true);
       onMaxVideoBufferSizeInput(DEFAULT_VALUES.maxVideoBufferSize)
     }
   }
@@ -109,8 +109,8 @@ function BufferOptions({
               id="maxVideoBufferSize"
               placeholder="Number"
               onChange={(evt) => onMaxVideoBufferSizeInput(evt.target.value)}
-              disabled={isMaxVideoBufferSizeLimited === false}
               value={maxVideoBufferSize}
+              disabled={isMaxVideoBufferSizeLimited === false}
               className="optionInput"
             />
             <Button
@@ -123,7 +123,7 @@ function BufferOptions({
               ariaLabel="Reset option to default value"
               title="Reset option to default value"
               onClick={() => {
-                setMaxVideoBufferSizeLimited(DEFAULT_VALUES.maxVideoBufferSize !== 
+                setMaxVideoBufferSizeLimit(DEFAULT_VALUES.maxVideoBufferSize !== 
                   Infinity);
                 onMaxVideoBufferSizeInput(DEFAULT_VALUES.maxVideoBufferSize);
               }}

@@ -244,7 +244,7 @@ class Settings extends React.Component {
               onWantedBufferAheadInput={this.onWantedBufferAheadInput}
               onMaxBufferAheadInput={this.onMaxBufferAheadInput}
               onMaxBufferBehindInput={this.onMaxBufferBehindInput}
-              onMaxVideoBufferSizeInput={this.maxVideoBufferSizeInput}
+              onMaxVideoBufferSizeInput={this.onMaxVideoBufferSizeInput}
             />
           </Option>
         </div>

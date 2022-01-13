@@ -17,7 +17,7 @@
 // eslint-disable-next-line max-len
 import config from "../../../config";
 import log from "../../../log";
-import Manifest , {
+import Manifest, {
   Adaptation,
   areSameContent,
   ISegment,
@@ -39,7 +39,7 @@ interface IContentContext {
   period: Period;
   representation: Representation;
 }
-        
+
 type ISegmentContext = IContentContext & {segment: ISegment};
 
 
@@ -78,7 +78,7 @@ export interface IGetNeededSegmentsArguments {
   bufferedSegments : IBufferedChunk[];
 
   /**
-   * maxBufferSize is the maximum memory in bits that the buffer should take
+   * maxBufferSize is the maximum memory in kilobytes that the buffer should take
    */
   maxBufferSize: number;
 
@@ -160,8 +160,7 @@ export default function getNeededSegments({
       return true; // never skip initialization segments
     }
     if (isMemorySaturated &&
-        bufferLength > MIN_BUFFER_LENGTH &&
-        content.adaptation.type === "video") {
+        bufferLength > MIN_BUFFER_LENGTH) {
       return false;
     }
     const contentObject: ISegmentContext = objectAssign({ segment }, content);
@@ -189,10 +188,9 @@ export default function getNeededSegments({
       return false;
     }
 
-    const estimatedSegmentSize = duration * content.representation.bitrate;
+    const estimatedSegmentSize = (duration * content.representation.bitrate) / 8000;
     if (availableBufferSize - estimatedSegmentSize < 0 &&
-        bufferLength > MIN_BUFFER_LENGTH &&
-        content.adaptation.type === "video") {
+        bufferLength > MIN_BUFFER_LENGTH) {
       isMemorySaturated = true;
       return false;
     }
@@ -202,32 +200,33 @@ export default function getNeededSegments({
   });
 }
 /**
- * Compute the estimated available buffer size in memory in bits
+ * Compute the estimated available buffer size in memory in kilobytes
  * @param bufferedSegments
  * @param segmentsBeingPushed
  * @param maxVideoBufferSize
- * @returns availableBufferSize in bits
+ * @returns availableBufferSize in kilobytes
  */
 function getAvailableBufferSize(
   bufferedSegments: IBufferedChunk[],
   segmentsBeingPushed: IEndOfSegmentInfos[],
   maxVideoBufferSize: number
 ) : number {
-  const estimateSizeBeingPushed = segmentsBeingPushed.reduce((size, segment) => {
+  let availableBufferSize = maxVideoBufferSize;
+  availableBufferSize -= segmentsBeingPushed.reduce((size, segment) => {
     const { bitrate } = segment.representation;
     // Not taking into account the fact that the segment
     // can still be generated and the duration not fully exact
     const { duration } = segment.segment;
-    return size + (bitrate * duration);
+    return size + ((bitrate / 8000) * duration);
   }, 0);
   return bufferedSegments.reduce((size, chunk) => {
     if (chunk.chunkSize !== undefined) {
-      return size - chunk.chunkSize;
+      return size - (chunk.chunkSize / 8000);
     } else {
       return size;
     }
 
-  } , maxVideoBufferSize) - estimateSizeBeingPushed;
+  } , availableBufferSize);
 }
 
 /**
@@ -280,22 +279,6 @@ function isSegmentAlreadyDownloaded(
   });
 }
 
-function _isHoleInPlaceOfSegment(segment: ISegment, segmentsToKeep: IBufferedChunk[]) {
-  // check if there is an hole in place of the segment currently
-  const { time, end } = segment;
-  const { MINIMUM_SEGMENT_SIZE } = config.getCurrent()
-  /**
-   * Epsilon compensating for rounding errors when comparing the start and end
-   * time of multiple segments.
-   */
-  const ROUNDING_ERROR = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
-  return (segmentsToKeep.some((completeSeg, i) => {
-      // `true` if `completeSeg` starts too far after `time`
-    return completeSeg.end > time || (completeSeg.start <= time + ROUNDING_ERROR &&
-      // `true` if `completeSeg` ends too soon before `end`
-      getLastContiguousSegment(segmentsToKeep, i).end >= end - ROUNDING_ERROR);
-  }));
-}
 
 function isSegmentBeingPushed(
   segmentsBeingPushed: IEndOfSegmentInfos[],
@@ -345,29 +328,6 @@ function isSegmentPushedInOtherRepr(segmentsBeingPushed: IEndOfSegmentInfos[],
   return false;
 }
 
-/**
- * From the given array of buffered chunks (`bufferedSegments`) returns the last
- * buffered chunk contiguous with the one at the `startIndex` index given.
- * @param {Array.<Object>}
- * @param {number} startIndex
- * @returns {Object}
- */
-function getLastContiguousSegment(
-  bufferedSegments : IBufferedChunk[],
-  startIndex : number
-) : IBufferedChunk {
-  let j = startIndex + 1;
-  const ROUNDING_ERROR = Math.min(1 / 60, config.getCurrent().MINIMUM_SEGMENT_SIZE);
-  // go through all contiguous segments and take the last one
-  while (j < bufferedSegments.length - 1 &&
-         (bufferedSegments[j - 1].end + ROUNDING_ERROR) >
-          bufferedSegments[j].start)
-  {
-    j++;
-  }
-  j--; // index of last contiguous segment
-  return bufferedSegments[j];
-}
 
 /**
  * Returns `true` if segments linked to the given `oldContent` currently present
