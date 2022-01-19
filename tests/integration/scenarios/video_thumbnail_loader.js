@@ -59,7 +59,7 @@ describe("Video Thumbnail Loader", () => {
     }
     expect(error).not.to.equal(undefined);
     expect(time).to.equal(undefined);
-    expect(error.message).to.equal("Couldn't find track for this time.");
+    expect(error.message).to.equal("Couldn't find a trickmode track for this time.");
   });
 
   it("should not work when no period at given time", async () => {
@@ -79,7 +79,7 @@ describe("Video Thumbnail Loader", () => {
     }
     expect(error).not.to.equal(undefined);
     expect(time).to.equal(undefined);
-    expect(error.message).to.equal("Couldn't find track for this time.");
+    expect(error.message).to.equal("Couldn't find a trickmode track for this time.");
   });
 
   it("should load one thumbnail", async () => {

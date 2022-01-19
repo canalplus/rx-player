@@ -232,7 +232,8 @@ export interface IPushedChunkData<T> {
   /**
    * The whole initialization segment's data related to the chunk you want to
    * push.
-   * `null` if none.
+   * To set to `null` either if no initialization data is needed, or if you are
+   * confident that the last pushed one is compatible.
    */
   initSegment: T | null;
   /**
@@ -245,8 +246,11 @@ export interface IPushedChunkData<T> {
   /**
    * String corresponding to the mime-type + codec of the last segment pushed.
    * This might then be used by a SourceBuffer to infer the right codec to use.
+   *
+   * If set to `undefined`, the SegmentBuffer implementation will just rely on
+   * a default codec it is linked to, if one.
    */
-  codec : string;
+  codec : string | undefined;
   /**
    * Time offset in seconds to apply to this segment.
    * A `timestampOffset` set to `5` will mean that the segment will be decoded
