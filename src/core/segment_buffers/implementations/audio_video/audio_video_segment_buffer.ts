@@ -528,7 +528,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
             appendWindow } = data;
     let hasUpdatedSourceBufferType : boolean = false;
 
-    if (codec !== this.codec) {
+    if (codec !== undefined && codec !== this.codec) {
       log.debug("AVSB: updating codec", codec);
       hasUpdatedSourceBufferType = tryToChangeSourceBufferType(this._sourceBuffer,
                                                                codec);

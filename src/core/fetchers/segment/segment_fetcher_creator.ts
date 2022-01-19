@@ -23,12 +23,11 @@ import { IBufferType } from "../../segment_buffers";
 import applyPrioritizerToSegmentFetcher, {
   IPrioritizedSegmentFetcher,
 } from "./prioritized_segment_fetcher";
-import ObservablePrioritizer from "./prioritizer";
 import createSegmentFetcher, {
   getSegmentFetcherOptions,
-  ISegmentFetcherCreatorCallbacks,
-  ISegmentFetcherEvent,
+  ISegmentFetcherLifecycleCallbacks,
 } from "./segment_fetcher";
+import TaskPrioritizer from "./task_prioritizer";
 
 
 /**
@@ -68,14 +67,14 @@ export default class SegmentFetcherCreator {
    */
   private readonly _transport : ITransportPipelines;
   /**
-   * `ObservablePrioritizer` linked to this SegmentFetcherCreator.
+   * `TaskPrioritizer` linked to this SegmentFetcherCreator.
    *
    * Note: this is typed as `any` because segment loaders / parsers can use
    * different types depending on the type of buffer. We could maybe be smarter
    * about it, but typing as any just in select places, like here, looks like
    * a good compromise.
    */
-  private readonly _prioritizer : ObservablePrioritizer<ISegmentFetcherEvent<unknown>>;
+  private readonly _prioritizer : TaskPrioritizer<void>;
   /**
    * Options used by the SegmentFetcherCreator, e.g. to allow configuration on
    * segment retries (number of retries maximum, default delay and so on).
@@ -92,7 +91,7 @@ export default class SegmentFetcherCreator {
     const { MIN_CANCELABLE_PRIORITY,
             MAX_HIGH_PRIORITY_LEVEL } = config.getCurrent();
     this._transport = transport;
-    this._prioritizer = new ObservablePrioritizer({
+    this._prioritizer = new TaskPrioritizer({
       prioritySteps: { high: MAX_HIGH_PRIORITY_LEVEL,
                        low: MIN_CANCELABLE_PRIORITY },
     });
@@ -108,7 +107,7 @@ export default class SegmentFetcherCreator {
    */
   createSegmentFetcher(
     bufferType : IBufferType,
-    callbacks : ISegmentFetcherCreatorCallbacks
+    callbacks : ISegmentFetcherLifecycleCallbacks
   ) : IPrioritizedSegmentFetcher<unknown> {
     const backoffOptions = getSegmentFetcherOptions(bufferType, this._backoffOptions);
     const pipelines = this._transport[bufferType];

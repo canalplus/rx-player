@@ -17,7 +17,7 @@
 import VideoThumbnailLoader, {
   DASH_LOADER,
   MPL_LOADER,
-} from "./thumbnail_loader";
+} from "./video_thumbnail_loader";
 export {
   DASH_LOADER,
   MPL_LOADER,
