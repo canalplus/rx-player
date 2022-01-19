@@ -14,14 +14,8 @@
  * limitations under the License.
  */
 
-import {
-  combineLatest as observableCombineLatest,
-  Observable,
-  of as observableOf,
-} from "rxjs";
 import { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implementations";
-import fromCancellablePromise from "../../../utils/rx-from_cancellable_promise";
-import TaskCanceller from "../../../utils/task_canceller";
+import { CancellationSignal } from "../../../utils/task_canceller";
 
 /**
  * Remove buffer around wanted time, considering a margin around
@@ -32,29 +26,28 @@ import TaskCanceller from "../../../utils/task_canceller";
  * @param {Object} sourceBuffer
  * @param {Number} time
  * @param {Number|undefined} margin
+ * @param {Object} cancelSignal
  * @returns {Observable}
  */
-export default function removeBufferAroundTime$(
+export default function removeBufferAroundTime(
   videoElement: HTMLMediaElement,
   sourceBuffer: AudioVideoSegmentBuffer,
   time: number,
-  margin: number = 10 * 60
-): Observable<unknown> {
+  margin: number = 10 * 60,
+  cancelSignal: CancellationSignal
+): Promise<unknown> {
   if (videoElement.buffered.length === 0) {
-    return observableOf(null);
+    return Promise.resolve();
   }
-  const bufferRemovals$ = [];
-  const removalCanceller = new TaskCanceller();
+  const bufferRemovals = [];
   if ((time - margin) > 0) {
-    bufferRemovals$.push(
-      fromCancellablePromise(removalCanceller, () =>
-        sourceBuffer.removeBuffer(0, time - margin, removalCanceller.signal)));
+    bufferRemovals.push(
+      sourceBuffer.removeBuffer(0, time - margin, cancelSignal));
   }
   if ((time + margin) < videoElement.duration) {
-    bufferRemovals$.push(fromCancellablePromise(removalCanceller, () =>
-      sourceBuffer.removeBuffer(time + margin,
-                                videoElement.duration,
-                                removalCanceller.signal)));
+    bufferRemovals.push(sourceBuffer.removeBuffer(time + margin,
+                                                  videoElement.duration,
+                                                  cancelSignal));
   }
-  return observableCombineLatest(bufferRemovals$);
+  return Promise.all(bufferRemovals);
 }

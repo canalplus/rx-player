@@ -199,7 +199,7 @@ export function tryURLsWithBackoff<T>(
    *
    * @param {string|null} url
    * @param {number} index
-   * @returns {Observable}
+   * @returns {Promise}
    */
   async function tryURLsRecursively(
     url : string | null,
@@ -273,9 +273,9 @@ export function tryURLsWithBackoff<T>(
 /**
  * Lightweight version of the request algorithm, this time with only a simple
  * Promise given.
- * @param {Function} request$
+ * @param {Function} performRequest
  * @param {Object} options
- * @returns {Observable}
+ * @returns {Promise}
  */
 export function tryRequestPromiseWithBackoff<T>(
   performRequest : () => Promise<T>,

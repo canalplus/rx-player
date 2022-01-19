@@ -41,7 +41,7 @@ const { onSourceOpen$ } = events;
  * @param {MediaSource|null} mediaSource
  * @param {string|null} mediaSourceURL
  */
-function resetMediaSource(
+export function resetMediaSource(
   mediaElement : HTMLMediaElement,
   mediaSource : MediaSource | null,
   mediaSourceURL : string | null

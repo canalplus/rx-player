@@ -22,8 +22,7 @@ export default class VideoThumbnailLoaderError extends Error {
 
   /**
    * @param {string} code
-   * @param {string} reason
-   * @param {Boolean} fatal
+   * @param {string} message
    */
   constructor(code : string, message : string) {
     super();
