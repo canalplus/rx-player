@@ -21,12 +21,7 @@ import ManifestFetcher, {
 } from "./manifest";
 import SegmentFetcherCreator, {
   IPrioritizedSegmentFetcher,
-  IPrioritizedSegmentFetcherEvent,
-  ISegmentFetcherChunkCompleteEvent,
-  ISegmentFetcherChunkEvent,
   ISegmentFetcherCreatorBackoffOptions,
-  ISegmentFetcherEvent,
-  ISegmentFetcherRetry,
 } from "./segment";
 
 export {
@@ -38,13 +33,6 @@ export {
   IManifestFetcherWarningEvent,
 
   IPrioritizedSegmentFetcher,
-  IPrioritizedSegmentFetcherEvent,
-
-  ISegmentFetcherEvent,
 
   ISegmentFetcherCreatorBackoffOptions,
-
-  ISegmentFetcherChunkEvent,
-  ISegmentFetcherChunkCompleteEvent,
-  ISegmentFetcherRetry,
 };

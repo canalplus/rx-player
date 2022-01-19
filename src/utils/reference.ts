@@ -18,7 +18,9 @@ import {
   Observable,
   Subscriber,
 } from "rxjs";
-import { CancellationSignal } from "./task_canceller";
+import TaskCanceller, {
+  CancellationSignal,
+} from "./task_canceller";
 
 /**
  * A value behind a shared reference, meaning that any update to its value from
@@ -103,7 +105,27 @@ export interface ISharedReference<T> {
     options? : {
       clearSignal?: CancellationSignal | undefined;
       emitCurrentValue?: boolean | undefined;
-    },
+    } | undefined,
+  ) : void;
+
+  /**
+   * Variant of `onUpdate` which will only call the callback once, once the
+   * value inside the reference is different from `undefined`.
+   * The callback is called synchronously if the value already isn't set to
+   * `undefined`.
+   *
+   * This method can be used as a lighter weight alternative to `onUpdate` when
+   * just waiting that the stored value becomes defined.
+   * @param {Function} cb - Callback to be called each time the reference is
+   * updated. Takes the new value im argument.
+   * @param {Object} [options]
+   * @param {Object} [options.clearSignal] - Allows to provide a
+   * CancellationSignal which will unregister the callback when it emits.
+   */
+  waitUntilDefined(
+    cb : (val : Exclude<T, undefined>) => void,
+    options? : { clearSignal?: CancellationSignal | undefined } |
+               undefined,
   ) : void;
   /**
    * Indicate that no new values will be emitted.
@@ -165,6 +187,12 @@ export interface IReadOnlySharedReference<T> {
       emitCurrentValue?: boolean | undefined;
     } | undefined,
   ) : void;
+
+  waitUntilDefined(
+    cb : (val : Exclude<T, undefined>) => void,
+    options? : { clearSignal?: CancellationSignal | undefined } |
+               undefined,
+  ) : void;
 }
 
 /**
@@ -175,7 +203,7 @@ export interface IReadOnlySharedReference<T> {
  * @param {*} initialValue
  * @returns {Observable}
  */
-export function createSharedReference<T>(initialValue : T) : ISharedReference<T> {
+export default function createSharedReference<T>(initialValue : T) : ISharedReference<T> {
   /** Current value referenced by this `ISharedReference`. */
   let value = initialValue;
 
@@ -331,6 +359,32 @@ export function createSharedReference<T>(initialValue : T) : ISharedReference<T>
       }
     },
 
+    waitUntilDefined(
+      cb : (val : Exclude<T, undefined>) => void,
+      options? : { clearSignal?: CancellationSignal | undefined } |
+                 undefined
+    ) : void {
+      if (value !== undefined) {
+        cb(value as Exclude<T, undefined>);
+        return;
+      }
+      if (isFinished) {
+        return ;
+      }
+
+      const childCanceller = new TaskCanceller();
+      if (options?.clearSignal !== undefined) {
+        options.clearSignal.register(() => childCanceller.cancel());
+      }
+      this.onUpdate((val : T) => {
+        if (val !== undefined) {
+          childCanceller.cancel();
+          cb(value as Exclude<T, undefined>);
+          return;
+        }
+      }, { clearSignal: childCanceller.signal });
+    },
+
     /**
      * Indicate that no new values will be emitted.
      * Allows to automatically close all Observables generated from this shared
@@ -386,4 +440,4 @@ export function createMappedReference<T, U>(
   return newRef;
 }
 
-export default createSharedReference;
+export { createSharedReference };

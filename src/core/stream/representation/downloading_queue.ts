@@ -15,20 +15,16 @@
  */
 
 import {
-  concat as observableConcat,
   defer as observableDefer,
   EMPTY,
   filter,
   finalize,
-  map,
   merge as observableMerge,
-  mergeMap,
   Observable,
   of as observableOf,
-  ReplaySubject,
   share,
+  Subscription,
   switchMap,
-  take,
 } from "rxjs";
 import log from "../../../log";
 import Manifest, {
@@ -43,16 +39,14 @@ import {
   ISegmentParserParsedMediaChunk,
 } from "../../../transports";
 import assert from "../../../utils/assert";
-import assertUnreachable from "../../../utils/assert_unreachable";
 import objectAssign from "../../../utils/object_assign";
-import { IReadOnlySharedReference } from "../../../utils/reference";
-import {
-  IPrioritizedSegmentFetcher,
-  IPrioritizedSegmentFetcherEvent,
-} from "../../fetchers";
-import {
-  IQueuedSegment,
-} from "../types";
+import createSharedReference, {
+  IReadOnlySharedReference,
+  ISharedReference,
+} from "../../../utils/reference";
+import TaskCanceller from "../../../utils/task_canceller";
+import { IPrioritizedSegmentFetcher } from "../../fetchers";
+import { IQueuedSegment } from "../types";
 
 /**
  * Class scheduling segment downloads for a single Representation.
@@ -78,16 +72,21 @@ export default class DownloadingQueue<T> {
    * Pending request for the initialization segment.
    * `null` if no request is pending for it.
    */
-  private _initSegmentRequest : ISegmentRequestObject<T>|null;
+  private _initSegmentRequest : ISegmentRequestObject|null;
   /**
    * Pending request for a media (i.e. non-initialization) segment.
    * `null` if no request is pending for it.
    */
-  private _mediaSegmentRequest : ISegmentRequestObject<T>|null;
+  private _mediaSegmentRequest : ISegmentRequestObject|null;
   /** Interface used to load segments. */
   private _segmentFetcher : IPrioritizedSegmentFetcher<T>;
-  /** Emit the timescale anounced in the initialization segment once parsed. */
-  private _initSegmentMetadata$ : ReplaySubject<number | undefined>;
+
+  /**
+   * Emit the timescale anounced in the initialization segment once parsed.
+   * `undefined` when this is not yet known.
+   * `null` when no initialization segment or timescale exists.
+   */
+  private _initSegmentInfoRef : ISharedReference<number | undefined | null>;
   /**
    * Some media segments might have been loaded and are only awaiting for the
    * initialization segment to be parsed before being parsed themselves.
@@ -129,17 +128,17 @@ export default class DownloadingQueue<T> {
     this._initSegmentRequest = null;
     this._mediaSegmentRequest = null;
     this._segmentFetcher = segmentFetcher;
-    this._initSegmentMetadata$ = new ReplaySubject<number|undefined>(1);
+    this._initSegmentInfoRef = createSharedReference(undefined);
     this._mediaSegmentsAwaitingInitMetadata = new Set();
     if (!hasInitSegment) {
-      this._initSegmentMetadata$.next(undefined);
+      this._initSegmentInfoRef.setValue(null);
     }
   }
 
   /**
    * Returns the initialization segment currently being requested.
    * Returns `null` if no initialization segment request is pending.
-   * @returns {Object}
+   * @returns {Object | null}
    */
   public getRequestedInitSegment() : ISegment | null {
     return this._initSegmentRequest === null ? null :
@@ -149,7 +148,7 @@ export default class DownloadingQueue<T> {
   /**
    * Returns the media segment currently being requested.
    * Returns `null` if no media segment request is pending.
-   * @returns {Object}
+   * @returns {Object | null}
    */
   public getRequestedMediaSegment() : ISegment | null {
     return this._mediaSegmentRequest === null ? null :
@@ -192,7 +191,7 @@ export default class DownloadingQueue<T> {
             return true;
           }
           if (currentSegmentRequest.priority !== nextItem.priority) {
-            this._segmentFetcher.updatePriority(currentSegmentRequest.request$,
+            this._segmentFetcher.updatePriority(currentSegmentRequest.request,
                                                 nextItem.priority);
           }
           return false;
@@ -206,7 +205,7 @@ export default class DownloadingQueue<T> {
           const initSegmentRequest = this._initSegmentRequest;
           if (next.initSegment !== null && initSegmentRequest !== null) {
             if (next.initSegment.priority !== initSegmentRequest.priority) {
-              this._segmentFetcher.updatePriority(initSegmentRequest.request$,
+              this._segmentFetcher.updatePriority(initSegmentRequest.request,
                                                   next.initSegment.priority);
             }
             return false;
@@ -241,76 +240,192 @@ export default class DownloadingQueue<T> {
 
     const { segmentQueue } = this._downloadQueue.getValue();
     const currentNeededSegment = segmentQueue[0];
-    const recursivelyRequestSegments = (
+
+    /* eslint-disable-next-line @typescript-eslint/no-this-alias */
+    const self = this;
+
+    return observableDefer(() =>
+      recursivelyRequestSegments(currentNeededSegment)
+    ).pipe(finalize(() => { this._mediaSegmentRequest = null; }));
+
+    function recursivelyRequestSegments(
       startingSegment : IQueuedSegment | undefined
     ) : Observable<ILoaderRetryEvent |
                    IEndOfQueueEvent |
                    IParsedSegmentEvent<T> |
-                   IEndOfSegmentEvent
-    > => {
+                   IEndOfSegmentEvent> {
       if (startingSegment === undefined) {
         return observableOf({ type : "end-of-queue",
                               value : null });
       }
       const { segment, priority } = startingSegment;
-      const context = objectAssign({ segment }, this._content);
-      const request$ = this._segmentFetcher.createRequest(context, priority);
+      const context = objectAssign({ segment }, self._content);
+      return new Observable<
+        ILoaderRetryEvent |
+        IEndOfQueueEvent |
+        IParsedSegmentEvent<T> |
+        IEndOfSegmentEvent
+      >((obs) => {
+        /** TaskCanceller linked to this Observable's lifecycle. */
+        const canceller = new TaskCanceller();
 
-      this._mediaSegmentRequest = { segment, priority, request$ };
-      return request$
-        .pipe(mergeMap((evt) => {
-          switch (evt.type) {
-            case "retry":
-              return observableOf({ type: "retry" as const,
-                                    value: { segment, error: evt.value } });
-            case "interrupted":
-              log.info("Stream: segment request interrupted temporarly.",
-                       segment.id,
-                       segment.time);
-              return EMPTY;
+        /**
+         * If `true` , the Observable has either errored, completed, or was
+         * unsubscribed from.
+         * This only conserves the Observable for the current segment's request,
+         * not the other recursively-created future ones.
+         */
+        let isComplete = false;
 
-            case "ended":
-              this._mediaSegmentRequest = null;
-              const lastQueue = this._downloadQueue.getValue().segmentQueue;
-              if (lastQueue.length === 0) {
-                return observableOf({ type : "end-of-queue" as const,
-                                      value : null });
-              } else if (lastQueue[0].segment.id === segment.id) {
-                lastQueue.shift();
-              }
-              return recursivelyRequestSegments(lastQueue[0]);
+        /**
+         * Subscription to request the following segment (as this function is
+         * recursive).
+         * `undefined` if no following segment has been requested.
+         */
+        let nextSegmentSubscription : Subscription | undefined;
 
-            case "chunk":
-            case "chunk-complete":
-              this._mediaSegmentsAwaitingInitMetadata.add(segment.id);
-              return this._initSegmentMetadata$.pipe(
-                take(1),
-                map((initTimescale) => {
-                  if (evt.type === "chunk-complete") {
-                    return { type: "end-of-segment" as const,
-                             value: { segment } };
-                  }
-                  const parsed = evt.parse(initTimescale);
-                  assert(parsed.segmentType === "media",
-                         "Should have loaded a media segment.");
-                  return objectAssign({},
-                                      parsed,
-                                      { type: "parsed-media" as const,
-                                        segment });
-                }),
-                finalize(() => {
-                  this._mediaSegmentsAwaitingInitMetadata.delete(segment.id);
-                }));
+        /**
+         * If true, we're currently waiting for the initialization segment to be
+         * parsed before parsing a received chunk.
+         *
+         * In that case, the `DownloadingQueue` has to remain careful to only
+         * send further events and complete the Observable only once the
+         * initialization segment has been parsed AND the chunk parsing has been
+         * done (this can be done very simply by listening to the same
+         * `ISharedReference`, as its callbacks are called in the same order
+         * than the one in which they are added.
+         */
+        let isWaitingOnInitSegment = false;
 
-            default:
-              assertUnreachable(evt);
+        /** Scheduled actual segment request. */
+        const request = self._segmentFetcher.createRequest(context, priority, {
+
+          /**
+           * Callback called when the request has to be retried.
+           * @param {Error} error
+           */
+          onRetry(error : IPlayerError) : void {
+            obs.next({ type: "retry" as const, value: { segment, error } });
+          },
+
+          /**
+           * Callback called when the request has to be interrupted and
+           * restarted later.
+           */
+          beforeInterrupted() {
+            log.info("Stream: segment request interrupted temporarly.",
+                     segment.id,
+                     segment.time);
+          },
+
+          /**
+           * Callback called when a decodable chunk of the segment is available.
+           * @param {Function} parse - Function allowing to parse the segment.
+           */
+          onChunk(
+            parse : (
+              initTimescale : number | undefined
+            ) => ISegmentParserParsedInitChunk<T> | ISegmentParserParsedMediaChunk<T>
+          ) : void {
+            const initTimescale = self._initSegmentInfoRef.getValue();
+            if (initTimescale !== undefined) {
+              emitChunk(parse(initTimescale ?? undefined));
+            } else {
+              isWaitingOnInitSegment = true;
+
+              // We could also technically call `waitUntilDefined` in both cases,
+              // but I found it globally clearer to segregate the two cases,
+              // especially to always have a meaningful `isWaitingOnInitSegment`
+              // boolean which is a very important variable.
+              self._initSegmentInfoRef.waitUntilDefined((actualTimescale) => {
+                emitChunk(parse(actualTimescale ?? undefined));
+              }, { clearSignal: canceller.signal });
+            }
+          },
+
+          /** Callback called after all chunks have been sent. */
+          onAllChunksReceived() : void {
+            if (!isWaitingOnInitSegment) {
+              obs.next({ type: "end-of-segment" as const,
+                         value: { segment } });
+            } else {
+              self._mediaSegmentsAwaitingInitMetadata.add(segment.id);
+              self._initSegmentInfoRef.waitUntilDefined(() => {
+                obs.next({ type: "end-of-segment" as const,
+                           value: { segment } });
+                self._mediaSegmentsAwaitingInitMetadata.delete(segment.id);
+                isWaitingOnInitSegment = false;
+              }, { clearSignal: canceller.signal });
+            }
+          },
+
+          /**
+           * Callback called right after the request ended but before the next
+           * requests are scheduled. It is used to schedule the next segment.
+           */
+          beforeEnded() : void {
+            self._mediaSegmentRequest = null;
+
+            if (isWaitingOnInitSegment) {
+              self._initSegmentInfoRef.waitUntilDefined(
+                continueToNextSegment, { clearSignal: canceller.signal });
+            } else {
+              continueToNextSegment();
+            }
+          },
+
+        }, canceller.signal);
+
+        request.catch((error : unknown) => {
+          if (!isComplete) {
+            isComplete = true;
+            obs.error(error);
           }
-        }));
-    };
+        });
 
-    return observableDefer(() =>
-      recursivelyRequestSegments(currentNeededSegment)
-    ).pipe(finalize(() => { this._mediaSegmentRequest = null; }));
+        self._mediaSegmentRequest = { segment, priority, request };
+        return () => {
+          self._mediaSegmentsAwaitingInitMetadata.delete(segment.id);
+          if (nextSegmentSubscription !== undefined) {
+            nextSegmentSubscription.unsubscribe();
+          }
+          if (isComplete) {
+            return;
+          }
+          isComplete = true;
+          isWaitingOnInitSegment = false;
+          canceller.cancel();
+        };
+
+        function emitChunk(
+          parsed : ISegmentParserParsedInitChunk<T> |
+                   ISegmentParserParsedMediaChunk<T>
+        ) : void {
+          assert(parsed.segmentType === "media",
+                 "Should have loaded a media segment.");
+          obs.next(objectAssign({},
+                                parsed,
+                                { type: "parsed-media" as const,
+                                  segment }));
+        }
+
+        function continueToNextSegment() : void {
+          const lastQueue = self._downloadQueue.getValue().segmentQueue;
+          if (lastQueue.length === 0) {
+            obs.next({ type : "end-of-queue" as const,
+                       value : null });
+            isComplete = true;
+            obs.complete();
+            return;
+          } else if (lastQueue[0].segment.id === segment.id) {
+            lastQueue.shift();
+          }
+          isComplete = true;
+          nextSegmentSubscription = recursivelyRequestSegments(lastQueue[0])
+            .subscribe(obs);
+        }
+      });
+    }
   }
 
   /**
@@ -327,55 +442,77 @@ export default class DownloadingQueue<T> {
       this._initSegmentRequest = null;
       return EMPTY;
     }
-    const { segment, priority } = queuedInitSegment;
-    const context = objectAssign({ segment }, this._content);
-    const request$ = this._segmentFetcher.createRequest(context, priority);
 
-    this._initSegmentRequest = { segment, priority, request$ };
-    return request$
-      .pipe(mergeMap((evt) : Observable<ILoaderRetryEvent |
-                                        IParsedInitSegmentEvent<T> |
-                                        IEndOfSegmentEvent> =>
-      {
-        switch (evt.type) {
-          case "retry":
-            return observableOf({ type: "retry" as const,
-                                  value: { segment, error: evt.value } });
-          case "interrupted":
-            log.info("Stream: init segment request interrupted temporarly.",
-                     segment.id);
-            return EMPTY;
+    /* eslint-disable-next-line @typescript-eslint/no-this-alias */
+    const self = this;
+    return new Observable<
+      ILoaderRetryEvent |
+      IParsedInitSegmentEvent<T> |
+      IEndOfSegmentEvent
+    >((obs) => {
+      /** TaskCanceller linked to this Observable's lifecycle. */
+      const canceller = new TaskCanceller();
+      const { segment, priority } = queuedInitSegment;
+      const context = objectAssign({ segment }, this._content);
 
-          case "chunk":
-            const parsed = evt.parse(undefined);
-            assert(parsed.segmentType === "init",
-                   "Should have loaded an init segment.");
-            return observableConcat(
-              observableOf(objectAssign({},
-                                        parsed,
-                                        { type: "parsed-init" as const,
-                                          segment })),
+      /**
+       * If `true` , the Observable has either errored, completed, or was
+       * unsubscribed from.
+       */
+      let isComplete = false;
 
-              // We want to emit parsing information strictly AFTER the
-              // initialization segment is emitted. Hence why we perform this
-              // side-effect a posteriori in a concat operator
-              observableDefer(() => {
-                if (parsed.segmentType === "init") {
-                  this._initSegmentMetadata$.next(parsed.initTimescale);
-                }
-                return EMPTY;
-              }));
+      const request = this._segmentFetcher.createRequest(context, priority, {
+        onRetry(err : IPlayerError) {
+          obs.next({ type: "retry" as const,
+                     value: { segment, error: err } });
+        },
+        beforeInterrupted() {
+          log.info("Stream: init segment request interrupted temporarly.", segment.id);
+        },
+        beforeEnded() {
+          self._initSegmentRequest = null;
+          isComplete = true;
+          obs.complete();
+        },
+        onChunk(parse : (x : undefined) => ISegmentParserParsedInitChunk<T> |
+                                           ISegmentParserParsedMediaChunk<T>)
+        {
+          const parsed = parse(undefined);
+          assert(parsed.segmentType === "init",
+                 "Should have loaded an init segment.");
+          obs.next(objectAssign({},
+                                parsed,
+                                { type: "parsed-init" as const,
+                                  segment }));
+          if (parsed.segmentType === "init") {
+            self._initSegmentInfoRef.setValue(parsed.initTimescale ?? null);
+          }
 
-          case "chunk-complete":
-            return observableOf({ type: "end-of-segment" as const,
-                                  value: { segment } });
+        },
+        onAllChunksReceived() {
+          obs.next({ type: "end-of-segment" as const,
+                     value: { segment } });
+        },
+      }, canceller.signal);
 
-          case "ended":
-            return EMPTY; // Do nothing, just here to check every case
-          default:
-            assertUnreachable(evt);
+      request.catch((error : unknown) => {
+        if (!isComplete) {
+          isComplete = true;
+          obs.error(error);
         }
-      })).pipe(finalize(() => { this._initSegmentRequest = null; }));
+      });
+
+      this._initSegmentRequest = { segment, priority, request };
+
+      return () => {
+        this._initSegmentRequest = null;
+        if (isComplete) {
+          return;
+        }
+        isComplete = true;
+        canceller.cancel();
+      };
+    });
   }
 }
 
@@ -473,11 +610,11 @@ export interface IDownloadQueueItem {
 }
 
 /** Object describing a pending Segment request. */
-interface ISegmentRequestObject<T> {
+interface ISegmentRequestObject {
   /** The segment the request is for. */
   segment : ISegment;
   /** The request Observable itself. Can be used to update its priority. */
-  request$ : Observable<IPrioritizedSegmentFetcherEvent<T>>;
+  request: Promise<void>;
   /** Last set priority of the segment request (lower number = higher priority). */
   priority : number;
 }
@@ -492,14 +629,4 @@ export interface IDownloadingQueueContext {
   period : Period;
   /** Representation linked to the segments you want to load. */
   representation : Representation;
-}
-
-/** Object describing a pending Segment request. */
-interface ISegmentRequestObject<T> {
-  /** The segment the request is for. */
-  segment : ISegment;
-  /** The request Observable itself. Can be used to update its priority. */
-  request$ : Observable<IPrioritizedSegmentFetcherEvent<T>>;
-  /** Last set priority of the segment request (lower number = higher priority). */
-  priority : number;
 }

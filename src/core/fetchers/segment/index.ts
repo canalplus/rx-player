@@ -16,14 +16,7 @@
 
 import {
   IPrioritizedSegmentFetcher,
-  IPrioritizedSegmentFetcherEvent,
 } from "./prioritized_segment_fetcher";
-import {
-  ISegmentFetcherChunkCompleteEvent,
-  ISegmentFetcherChunkEvent,
-  ISegmentFetcherEvent,
-  ISegmentFetcherRetry,
-} from "./segment_fetcher";
 import SegmentFetcherCreator, {
   ISegmentFetcherCreatorBackoffOptions,
 } from "./segment_fetcher_creator";
@@ -31,10 +24,5 @@ import SegmentFetcherCreator, {
 export default SegmentFetcherCreator;
 export {
   IPrioritizedSegmentFetcher,
-  IPrioritizedSegmentFetcherEvent,
-  ISegmentFetcherChunkCompleteEvent,
-  ISegmentFetcherChunkEvent,
-  ISegmentFetcherEvent,
-  ISegmentFetcherRetry,
   ISegmentFetcherCreatorBackoffOptions,
 };
