@@ -84,7 +84,10 @@ export interface IGetNeededSegmentsArguments {
 }
 
 
-
+interface INeededSegments {
+  neededSegments: ISegment[];
+  isBufferFull: boolean;
+}
 /**
  * Return the list of segments that can currently be downloaded to fill holes
  * in the buffer in the given range, including already-pushed segments currently
@@ -104,7 +107,7 @@ export default function getNeededSegments({
   neededRange,
   segmentsBeingPushed,
   maxBufferSize,
-} : IGetNeededSegmentsArguments) : ISegment[] {
+} : IGetNeededSegmentsArguments) : INeededSegments {
   const { representation } = content;
   let availableBufferSize = getAvailableBufferSize(bufferedSegments,
                                                    segmentsBeingPushed,
@@ -156,7 +159,8 @@ export default function getNeededSegments({
    * time of multiple segments.
    */
   const ROUNDING_ERROR = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
-  return availableSegmentsForRange.filter(segment => {
+  let isBufferFull = false;
+  const neededSegments = availableSegmentsForRange.filter(segment => {
     const contentObject = objectAssign({ segment }, content);
 
     // First, check that the segment is not already being pushed
@@ -172,8 +176,14 @@ export default function getNeededSegments({
     if (segment.isInit) {
       return true; // never skip initialization segments
     }
+    if (isMemorySaturated) {
+      if (time <= MIN_BUFFER_BEFORE_CLEANUP + neededRange.start) {
+        isBufferFull = true;
+      }
+    }
     if (isMemorySaturated &&
       bufferLength > MIN_BUFFER_LENGTH) {
+
       return false;
     }
 
@@ -247,6 +257,7 @@ export default function getNeededSegments({
 
     return true;
   });
+  return { neededSegments, isBufferFull };
 
 }
 /**
