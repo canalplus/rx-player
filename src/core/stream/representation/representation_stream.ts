@@ -41,6 +41,7 @@ import {
   takeWhile,
   withLatestFrom,
 } from "rxjs";
+import config from "../../../config";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
@@ -133,6 +134,8 @@ export interface IRepresentationStreamArguments<TSegmentDataType> {
   /** Supplementary arguments which configure the RepresentationStream's behavior. */
   options: IRepresentationStreamOptions;
 }
+
+const { UPTO_CURRENT_POSITION_CLEANUP } = config;
 
 /**
  * Various specific stream "options" which tweak the behavior of the
@@ -376,11 +379,16 @@ export default function RepresentationStream<TSegmentDataType>({
                                 imminentDiscontinuity: status.imminentDiscontinuity,
                                 hasFinishedLoading: status.hasFinishedLoading,
                                 neededSegments: status.neededSegments } });
-
+      const bufferRemoval = status.isBufferFull ?
+            segmentBuffer
+              .removeBuffer(0, wantedStartPosition - UPTO_CURRENT_POSITION_CLEANUP)
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+              .pipe(ignoreElements()) :
+            EMPTY;
       return status.shouldRefreshManifest ?
         observableConcat(observableOf(EVENTS.needsManifestRefresh()),
-                         bufferStatusEvt) :
-        bufferStatusEvt;
+                         bufferStatusEvt, bufferRemoval) :
+        observableConcat(bufferStatusEvt, bufferRemoval);
     }),
     takeWhile((e) => e.type !== "stream-terminating", true)
   );

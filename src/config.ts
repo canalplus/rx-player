@@ -1237,4 +1237,16 @@ export default {
    * constraints
    */
   MIN_BUFFER_LENGTH : 5,
+
+  /**
+   * Minimum duration ( in seconds ) we should be able to download
+   * Before starting to garbage collect previous segments
+   */
+  MIN_BUFFER_BEFORE_CLEANUP : 10,
+
+  /**
+   * How much close to the current position we should garbage collect
+   * If we have the memory is saturated
+   */
+  UPTO_CURRENT_POSITION_CLEANUP : 5,
 };
