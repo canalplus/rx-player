@@ -390,11 +390,13 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
 
     const chosenVideoRepresentation = manifestInfos.periods[0].adaptations.video[0].representations[0]
     const {bitrate} = chosenVideoRepresentation;
-    player.setVideoBitrate(bitrate+10) 
+    player.setVideoBitrate(0) 
     // A segment is a little bit more than 4sec, so not enough for MIN_BUFF_SIZE
+    // ( MIN_BUFF_SIZE is 5sec) so the rx player will download 2 segments
     // So we take two segments : a bit more than 8sec
-    
-    player.setMaxVideoBufferSize((bitrate/8000)*9);
+    const maxBuffersize = (bitrate/8000)*2;
+    console.log(maxBuffersize)
+    player.setMaxVideoBufferSize(maxBuffersize);
     player.loadVideo({
       transport: manifestInfos.transport,
       url: manifestInfos.url,
@@ -402,8 +404,9 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     await waitForLoadedStateAfterLoadVideo(player);
 
     await sleep(100);
+    console.log(player.getVideoBufferGap())
     // And to take into consideration the estimation errors, we round it up to 9sec
-    expect(player.getVideoBufferGap()).to.be.below(12);
+    expect(player.getVideoBufferGap()).to.be.below(9);
     expect(player.getVideoBufferGap()).to.be.above(5);
   })
 });

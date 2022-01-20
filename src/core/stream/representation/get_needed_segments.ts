@@ -40,8 +40,6 @@ interface IContentContext {
   representation: Representation;
 }
 
-type ISegmentContext = IContentContext & {segment: ISegment};
-
 
 /** Arguments for `getNeededSegments`. */
 export interface IGetNeededSegmentsArguments {
@@ -114,7 +112,6 @@ export default function getNeededSegments({
 
   // Current buffer length in seconds
   let bufferLength = getBufferLength(bufferedSegments, segmentsBeingPushed);
-
   const availableSegmentsForRange = representation.index
     .getSegments(neededRange.start, neededRange.end - neededRange.start);
 
@@ -154,20 +151,29 @@ export default function getNeededSegments({
   const { MINIMUM_SEGMENT_SIZE,
         MIN_BUFFER_LENGTH } = config.getCurrent();  
   let isMemorySaturated = false;
-
+  /**
+   * Epsilon compensating for rounding errors when comparing the start and end
+   * time of multiple segments.
+   */
+  const ROUNDING_ERROR = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
   return availableSegmentsForRange.filter(segment => {
+    const contentObject = objectAssign({ segment }, content);
+
+    // First, check that the segment is not already being pushed
+    if (segmentsBeingPushed.length > 0) {
+      const isAlreadyBeingPushed = segmentsBeingPushed
+        .some((pendingSegment) => areSameContent(contentObject, pendingSegment));
+      if (isAlreadyBeingPushed) {
+        return false;
+      }
+    }
+
+    const { duration, time, end } = segment;
     if (segment.isInit) {
       return true; // never skip initialization segments
     }
     if (isMemorySaturated &&
-        bufferLength > MIN_BUFFER_LENGTH) {
-      return false;
-    }
-    const contentObject: ISegmentContext = objectAssign({ segment }, content);
-
-    const { duration } = segment;
-    // First, check that the segment is not already being pushed
-    if (isSegmentBeingPushed(segmentsBeingPushed, contentObject)) {
+      bufferLength > MIN_BUFFER_LENGTH) {
       return false;
     }
 
@@ -177,15 +183,57 @@ export default function getNeededSegments({
 
     // Check if the same segment from another Representation is not already
     // being pushed.
-    if (isSegmentPushedInOtherRepr(segmentsBeingPushed,
-                                   contentObject,
-                                   currentPlaybackTime,
-                                   fastSwitchThreshold)) {
-      return false;
+    if (segmentsBeingPushed.length > 0) {
+      const waitForPushedSegment = segmentsBeingPushed.some((pendingSegment) => {
+        if (pendingSegment.period.id !== content.period.id ||
+            pendingSegment.adaptation.id !== content.adaptation.id)
+        {
+          return false;
+        }
+        const { segment: oldSegment } = pendingSegment;
+        if ((oldSegment.time - ROUNDING_ERROR) > time) {
+          return false;
+        }
+        if ((oldSegment.end + ROUNDING_ERROR) < end) {
+          return false;
+        }
+        return !shouldContentBeReplaced(pendingSegment,
+                                        contentObject,
+                                        currentPlaybackTime,
+                                        fastSwitchThreshold);
+      });
+      if (waitForPushedSegment) {
+        return false;
+      }
     }
 
-    if (isSegmentAlreadyDownloaded(segment, segmentsToKeep, content)) {
-      return false;
+    // check if the segment is already downloaded
+    for (let i = 0; i < segmentsToKeep.length; i++) {
+      const completeSeg = segmentsToKeep[i];
+      const areFromSamePeriod = completeSeg.infos.period.id === content.period.id;
+      // Check if content are from same period, as there can't be overlapping
+      // periods, we should consider a segment as already downloaded if
+      // it is from same period (but can be from different adaptation or
+      // representation)
+      if (areFromSamePeriod) {
+        const completeSegInfos = completeSeg.infos.segment;
+        if (time - completeSegInfos.time > -ROUNDING_ERROR &&
+            completeSegInfos.end - end > -ROUNDING_ERROR)
+        {
+          return false; // already downloaded
+        }
+      }
+    }
+
+    // check if there is an hole in place of the segment currently
+    for (let i = 0; i < segmentsToKeep.length; i++) {
+      const completeSeg = segmentsToKeep[i];
+      if (completeSeg.end > time) {
+        // `true` if `completeSeg` starts too far after `time`
+        return completeSeg.start > time + ROUNDING_ERROR ||
+          // `true` if `completeSeg` ends too soon before `end`
+          getLastContiguousSegment(segmentsToKeep, i).end < end - ROUNDING_ERROR;
+      }
     }
 
     const estimatedSegmentSize = (duration * content.representation.bitrate) / 8000;
@@ -196,8 +244,10 @@ export default function getNeededSegments({
     }
     availableBufferSize -= estimatedSegmentSize;
     bufferLength += duration;
+
     return true;
   });
+
 }
 /**
  * Compute the estimated available buffer size in memory in kilobytes
@@ -248,84 +298,33 @@ function getBufferLength(
   return bufferLength + bufferBeingPushed;
 }
 
-function isSegmentAlreadyDownloaded(
-  segment: ISegment,
-  segmentsToKeep: IBufferedChunk[],
-  content: IContentContext) : boolean {
-    
+/**
+ * From the given array of buffered chunks (`bufferedSegments`) returns the last
+ * buffered chunk contiguous with the one at the `startIndex` index given.
+ * @param {Array.<Object>}
+ * @param {number} startIndex
+ * @returns {Object}
+ */
+function getLastContiguousSegment(
+  bufferedSegments : IBufferedChunk[],
+  startIndex : number
+) : IBufferedChunk {
+  let j = startIndex + 1;
   const { MINIMUM_SEGMENT_SIZE } = config.getCurrent();
   /**
    * Epsilon compensating for rounding errors when comparing the start and end
    * time of multiple segments.
    */
   const ROUNDING_ERROR = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
-  // check if the segment is already downloaded
-  const { time, end } = segment;
-  return segmentsToKeep.some((completeSeg) => {
-    const areFromSamePeriod = completeSeg.infos.period.id === content.period.id;
-    // Check if content are from same period, as there can't be overlapping
-      // periods, we should consider a segment as already downloaded if
-      // it is from same period (but can be from different adaptation or
-      // representation)
-    if (areFromSamePeriod) {
-      const completeSegInfos = completeSeg.infos.segment;
-      if (time - completeSegInfos.time > -ROUNDING_ERROR &&
-          completeSegInfos.end - end > -ROUNDING_ERROR)
-      {
-        return true; // already downloaded
-      }
-    }
-    return false;
-  });
-}
-
-
-function isSegmentBeingPushed(
-  segmentsBeingPushed: IEndOfSegmentInfos[],
-  contentObject: ISegmentContext) : boolean {
-  if (segmentsBeingPushed.length > 0) {
-    return segmentsBeingPushed
-      .some((pendingSegment) => areSameContent(contentObject, pendingSegment));
+  // go through all contiguous segments and take the last one
+  while (j < bufferedSegments.length - 1 &&
+         (bufferedSegments[j - 1].end + ROUNDING_ERROR) >
+          bufferedSegments[j].start)
+  {
+    j++;
   }
-  return false;
-}
-
-function isSegmentPushedInOtherRepr(segmentsBeingPushed: IEndOfSegmentInfos[],
-                                    contentObject: ISegmentContext,
-                                    currentPlaybackTime: number,
-                                    fastSwitchThreshold?: number) {
-  // Check if the same segment from another Representation is not already
-  // being pushed.
-  const { time, end } = contentObject.segment;
-  const { MINIMUM_SEGMENT_SIZE } = config.getCurrent()
-  /**
-   * Epsilon compensating for rounding errors when comparing the start and end
-   * time of multiple segments.
-   */
-  const ROUNDING_ERROR = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
-  if (segmentsBeingPushed.length > 0) {
-    const waitForPushedSegment = segmentsBeingPushed.some((pendingSegment) => {
-      if (pendingSegment.period.id !== contentObject.period.id ||
-          pendingSegment.adaptation.id !== contentObject.adaptation.id) {
-        return true;
-      }
-      const { segment: oldSegment } = pendingSegment;
-      if ((oldSegment.time - ROUNDING_ERROR) > time) {
-        return true;
-      }
-      if ((oldSegment.end + ROUNDING_ERROR) < end) {
-        return true;
-      }
-      return shouldContentBeReplaced(pendingSegment,
-                                     contentObject,
-                                     currentPlaybackTime,
-                                     fastSwitchThreshold);
-    });
-    if (waitForPushedSegment) {
-      return  true;
-    }
-  }
-  return false;
+  j--; // index of last contiguous segment
+  return bufferedSegments[j];
 }
 
 
