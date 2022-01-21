@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import features from "../../features";
 import Manifest, {
   Adaptation,
@@ -29,6 +28,7 @@ import parseMetaPlaylist, {
 import { IParsedManifest } from "../../parsers/manifest/types";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import objectAssign from "../../utils/object_assign";
+import PPromise from "../../utils/promise";
 import { CancellationSignal } from "../../utils/task_canceller";
 import {
   IChunkTimeInfo,

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
+import PPromise from "./promise";
 import {
   CancellationError,
   CancellationSignal,

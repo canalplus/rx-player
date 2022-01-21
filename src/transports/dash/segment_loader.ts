@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import { CustomLoaderError } from "../../errors";
+import PPromise from "../../utils/promise";
 import request, {
   fetchIsSupported,
 } from "../../utils/request";
@@ -130,7 +130,7 @@ export default function generateSegmentLoader(
                    transport: "dash",
                    url };
 
-    return new Promise((res, rej) => {
+    return new PPromise((res, rej) => {
       /** `true` when the custom segmentLoader should not be active anymore. */
       let hasFinished = false;
 
