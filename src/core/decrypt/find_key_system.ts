@@ -26,8 +26,8 @@ import arrayIncludes from "../../utils/array_includes";
 import flatMap from "../../utils/flat_map";
 import PPromise from "../../utils/promise";
 import { CancellationSignal } from "../../utils/task_canceller";
-import MediaKeysInfosStore from "./media_keys_infos_store";
 import { IKeySystemOption } from "./types";
+import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 
 type MediaKeysRequirement = "optional" |
                             "required" |

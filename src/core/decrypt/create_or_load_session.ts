@@ -17,14 +17,14 @@
 import { ICustomMediaKeySession } from "../../compat";
 import log from "../../log";
 import { CancellationSignal } from "../../utils/task_canceller";
-import cleanOldLoadedSessions, {
-  ICleaningOldSessionDataPayload,
-} from "./clean_old_loaded_sessions";
 import createSession from "./create_session";
 import {
   IInitializationDataInfo,
   IMediaKeySessionStores,
 } from "./types";
+import cleanOldLoadedSessions, {
+  ICleaningOldSessionDataPayload,
+} from "./utils/clean_old_loaded_sessions";
 import isSessionUsable from "./utils/is_session_usable";
 
 /** Information concerning a MediaKeySession. */

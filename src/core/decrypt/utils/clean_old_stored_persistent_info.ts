@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import log from "../../log";
-import PersistentSessionsStore from "./utils/persistent_sessions_store";
+import log from "../../../log";
+import PersistentSessionsStore from "./persistent_sessions_store";
 
 /**
  * Remove old information from a PersistentSessionsStore so that it respects the

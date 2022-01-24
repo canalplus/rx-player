@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import MediaKeysInfosStore from "./media_keys_infos_store";
+import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 
 /**
  * Returns the name of the current key system used.

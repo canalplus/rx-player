@@ -38,11 +38,8 @@ import createSharedReference, {
 } from "../../utils/reference";
 import TaskCanceller from "../../utils/task_canceller";
 import attachMediaKeys from "./attach_media_keys";
-import { ICleaningOldSessionDataPayload } from "./clean_old_loaded_sessions";
-import cleanOldStoredPersistentInfo from "./clean_old_stored_persistent_info";
-import getDrmSystemId from "./get_drm_system_id";
+import createOrLoadSession from "./create_or_load_session";
 import { IMediaKeysInfos } from "./get_media_keys";
-import getSession from "./get_session";
 import initMediaKeys from "./init_media_keys";
 import SessionEventsListener, {
   BlacklistedSessionError,
@@ -54,6 +51,9 @@ import {
   IKeySystemOption,
   IKeyUpdateValue,
 } from "./types";
+import { ICleaningOldSessionDataPayload } from "./utils/clean_old_loaded_sessions";
+import cleanOldStoredPersistentInfo from "./utils/clean_old_stored_persistent_info";
+import getDrmSystemId from "./utils/get_drm_system_id";
 import InitDataStore from "./utils/init_data_store";
 
 const { onEncrypted$ } = events;
@@ -445,12 +445,12 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       options.maxSessionCacheSize :
       EME_DEFAULT_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS;
 
-    const sessionRes = await getSession(initializationData,
-                                        stores,
-                                        wantedSessionType,
-                                        maxSessionCacheSize,
-                                        onCleaningSession,
-                                        this._canceller.signal);
+    const sessionRes = await createOrLoadSession(initializationData,
+                                                 stores,
+                                                 wantedSessionType,
+                                                 maxSessionCacheSize,
+                                                 onCleaningSession,
+                                                 this._canceller.signal);
     const { mediaKeySession, sessionType } = sessionRes.value;
 
     /**

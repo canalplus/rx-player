@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-import { ICustomMediaKeySession } from "../../compat";
-import getUUIDKidFromKeyStatusKID from "../../compat/eme/get_uuid_kid_from_keystatus_kid";
-import { EncryptedMediaError } from "../../errors";
-import { bytesToHex } from "../../utils/string_parsing";
-import { IEMEWarningEvent } from "./types";
+import { ICustomMediaKeySession } from "../../../compat";
+/* eslint-disable-next-line max-len */
+import getUUIDKidFromKeyStatusKID from "../../../compat/eme/get_uuid_kid_from_keystatus_kid";
+import { EncryptedMediaError } from "../../../errors";
+import { bytesToHex } from "../../../utils/string_parsing";
+import { IEMEWarningEvent } from "../types";
 
 const KEY_STATUSES = { EXPIRED: "expired",
                        INTERNAL_ERROR: "internal-error",
