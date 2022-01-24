@@ -18,8 +18,8 @@ import { ICustomMediaKeys } from "../../compat";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import PPromise from "../../utils/promise";
-import ServerCertificateStore from "./server_certificate_store";
 import { IEMEWarningEvent } from "./types";
+import ServerCertificateStore from "./utils/server_certificate_store";
 
 /**
  * Call the setServerCertificate API with the given certificate.

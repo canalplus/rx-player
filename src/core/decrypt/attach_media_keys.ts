@@ -22,11 +22,11 @@ import {
 import log from "../../log";
 import PPromise from "../../utils/promise";
 import { CancellationSignal } from "../../utils/task_canceller";
-import MediaKeysInfosStore from "./media_keys_infos_store";
 import {
   IKeySystemOption,
 } from "./types";
 import LoadedSessionsStore from "./utils/loaded_sessions_store";
+import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 
 /**
  * Dispose of the MediaKeys instance attached to the given media element, if
