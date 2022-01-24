@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import { ICustomMediaKeySession } from "../../compat";
-import PPromise from "../../utils/promise";
-import { IInitializationDataInfo } from "./types";
-import LoadedSessionsStore from "./utils/loaded_sessions_store";
+import { ICustomMediaKeySession } from "../../../compat";
+import PPromise from "../../../utils/promise";
+import { IInitializationDataInfo } from "../types";
+import LoadedSessionsStore from "./loaded_sessions_store";
 
 /**
  * Data emitted when we are beginning to close an old MediaKeySession to

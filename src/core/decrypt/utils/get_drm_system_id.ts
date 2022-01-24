@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import startsWith from "../../utils/starts_with";
+import startsWith from "../../../utils/starts_with";
 
 /**
  * @param {string} keySystem

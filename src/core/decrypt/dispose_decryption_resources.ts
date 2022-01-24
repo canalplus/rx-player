@@ -14,15 +14,26 @@
  * limitations under the License.
  */
 
-import disposeMediaKeys from "./dispose_media_keys";
+import { setMediaKeys } from "../../compat";
+import log from "../../log";
+import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 
 /**
  * Free up all ressources taken by the content decryption logic.
  * @param {HTMLMediaElement} mediaElement
  * @returns {Promise}
  */
-export default function disposeEME(
+export default async function disposeDecryptionResources(
   mediaElement : HTMLMediaElement
 ) : Promise<void> {
-  return disposeMediaKeys(mediaElement);
+  const currentState = MediaKeysInfosStore.getState(mediaElement);
+  if (currentState === null) {
+    return ;
+  }
+
+  log.info("DRM: Disposing of the current MediaKeys");
+  const { loadedSessionsStore } = currentState;
+  MediaKeysInfosStore.clearState(mediaElement);
+  await loadedSessionsStore.closeAllSessions();
+  setMediaKeys(mediaElement, null);
 }

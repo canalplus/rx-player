@@ -87,8 +87,8 @@ import createSharedReference, {
 } from "../../utils/reference";
 import warnOnce from "../../utils/warn_once";
 import {
-  clearEMESession,
-  disposeEME,
+  clearOnStop,
+  disposeDecryptionResources,
   getCurrentKeySystem,
 } from "../decrypt";
 import {
@@ -545,7 +545,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     if (this.videoElement !== null) {
       // free resources used for decryption management
-      disposeEME(this.videoElement)
+      disposeDecryptionResources(this.videoElement)
         .catch((err : unknown) => {
           const message = err instanceof Error ? err.message :
                                                  "Unknown error";
@@ -2295,7 +2295,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     };
 
     if (!isNullOrUndefined(this.videoElement)) {
-      clearEMESession(this.videoElement).then(
+      clearOnStop(this.videoElement).then(
         () => {
           log.debug("API: DRM session cleaned-up with success!");
           freeUpContentLock();

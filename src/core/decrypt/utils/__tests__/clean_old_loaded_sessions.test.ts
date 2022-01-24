@@ -22,7 +22,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
 import cleanOldLoadedSessions from "../clean_old_loaded_sessions";
-import LoadedSessionsStore from "../utils/loaded_sessions_store";
+import LoadedSessionsStore from "../loaded_sessions_store";
 
 
 const entry1 = { initializationData: { data: new Uint8Array([1, 6, 9]),

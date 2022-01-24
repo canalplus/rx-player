@@ -17,22 +17,22 @@
 import { shouldUnsetMediaKeys } from "../../compat/";
 import log from "../../log";
 import PPromise from "../../utils/promise";
-import disposeMediaKeys from "./dispose_media_keys";
-import MediaKeysInfosStore from "./media_keys_infos_store";
+import disposeDecryptionResources from "./dispose_decryption_resources";
+import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 
 /**
- * Clear DRM-related ressources that should be cleared when the current content
+ * Clear DRM-related resources that should be cleared when the current content
  * stops its playback.
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
-export default function clearEMESession(
+export default function clearOnStop(
   mediaElement : HTMLMediaElement
 ) : Promise<void> {
   log.info("DRM: Clearing-up DRM session.");
   if (shouldUnsetMediaKeys()) {
     log.info("DRM: disposing current MediaKeys.");
-    return disposeMediaKeys(mediaElement);
+    return disposeDecryptionResources(mediaElement);
   }
 
   const currentState = MediaKeysInfosStore.getState(mediaElement);
