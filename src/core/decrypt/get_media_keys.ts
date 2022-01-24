@@ -23,14 +23,14 @@ import log from "../../log";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import { CancellationSignal } from "../../utils/task_canceller";
 import getMediaKeySystemAccess from "./find_key_system";
-import MediaKeysInfosStore from "./media_keys_infos_store";
-import ServerCertificateStore from "./server_certificate_store";
 import {
   IKeySystemOption,
   IMediaKeySessionStores,
 } from "./types";
 import LoadedSessionsStore from "./utils/loaded_sessions_store";
+import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 import PersistentSessionsStore from "./utils/persistent_sessions_store";
+import ServerCertificateStore from "./utils/server_certificate_store";
 
 /**
  * @throws {EncryptedMediaError}

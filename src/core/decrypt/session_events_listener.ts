@@ -49,9 +49,6 @@ import retryObsWithBackoff, {
   IBackoffOptions,
 } from "../../utils/rx-retry_with_backoff";
 import tryCatch from "../../utils/rx-try_catch";
-import checkKeyStatuses, {
-  IKeyStatusesCheckingOptions,
-} from "./check_key_statuses";
 import {
   IEMEWarningEvent,
   IKeyMessageHandledEvent,
@@ -59,6 +56,9 @@ import {
   IKeySystemOption,
   IKeysUpdateEvent,
 } from "./types";
+import checkKeyStatuses, {
+  IKeyStatusesCheckingOptions,
+} from "./utils/check_key_statuses";
 
 const { onKeyError$,
         onKeyMessage$,

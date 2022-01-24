@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { ICustomMediaKeys } from "../../compat";
-import hashBuffer from "../../utils/hash_buffer";
+import { ICustomMediaKeys } from "../../../compat";
+import hashBuffer from "../../../utils/hash_buffer";
 
 /**
  * Keep track of server certificate which have been set for a MediaKeys.

@@ -19,20 +19,20 @@
  * It always should be imported through the `features` object.
  */
 
-import clearEMESession from "./clear_eme_session";
+import clearOnStop from "./clear_on_stop";
 import ContentDecryptor, {
   ContentDecryptorState,
   IContentDecryptorEvent,
 } from "./content_decryptor";
-import disposeEME from "./dispose_eme";
+import disposeDecryptionResources from "./dispose_decryption_resources";
 import getCurrentKeySystem from "./get_current_key_system";
 export * from "./types";
 
 export default ContentDecryptor;
 export {
-  clearEMESession,
+  clearOnStop,
   ContentDecryptorState,
-  disposeEME,
+  disposeDecryptionResources,
   getCurrentKeySystem,
   IContentDecryptorEvent,
 };
