@@ -36,7 +36,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const sanitizeHTML = require("sanitize-html");
+const { encode } = require("html-entities");
 const semver = require("semver");
 
 const INITIAL_PATH = "./versions";
@@ -49,6 +49,16 @@ function sortVersions(versions) {
 
 function isDirectory(source) {
   return fs.lstatSync(source).isDirectory();
+}
+
+/**
+ * @param {string} val
+ * @returns {string}
+ */
+function encodeHtmlAttributeValue(val) {
+  return val
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;");
 }
 
 const style = `<style type="text/css">
@@ -92,8 +102,8 @@ if (versions.length <= 0) {
       path.join(INITIAL_PATH, version, "doc/api/Overview.html") :
       path.join(INITIAL_PATH, version, "doc/pages/index.html");
 
-    body += `<li><a href=${sanitizeHTML(dirPath)}>` +
-      sanitizeHTML(version) +
+    body += `<li><a href=${encodeHtmlAttributeValue(dirPath)}>` +
+      encode(version) +
       "</a></li>";
   }
   body += "</ul>";
