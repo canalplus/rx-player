@@ -26,7 +26,7 @@ import { IIndexSegment } from "../index_helpers";
 describe("Manifest Parsers utils - updateSegmentTimeline", () => {
   let logWarnSpy : jest.MockInstance<void, unknown[]> | undefined;
   let updateSegmentTimeline : ((a : IIndexSegment[],
-                                b : IIndexSegment[]) => void) | undefined;
+                                b : IIndexSegment[]) => boolean) | undefined;
   beforeEach(() => {
     jest.resetModules();
 
@@ -44,7 +44,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     const oldTimeline : IIndexSegment[] = [];
     const newTimeline1 = [{ start: 0, duration: 1000, repeatCount: 10 }];
     const newTimeline2 : IIndexSegment[] = [];
-    updateSegmentTimeline?.(oldTimeline, newTimeline1);
+    expect(updateSegmentTimeline?.(oldTimeline, newTimeline1)).toEqual(true);
     expect(oldTimeline).toEqual(newTimeline1);
 
     oldTimeline.length = 0; // reset
@@ -57,7 +57,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     const oldTimeline = [{ start: 0, duration: 1000, repeatCount: 10 }];
     const newTimeline : IIndexSegment[] = [];
     const oldTimelineCloned = oldTimeline.slice();
-    updateSegmentTimeline?.(oldTimeline, newTimeline);
+    expect(updateSegmentTimeline?.(oldTimeline, newTimeline)).toEqual(false);
     expect(oldTimeline).toEqual(oldTimelineCloned);
     expect(logWarnSpy).not.toHaveBeenCalled();
   });
@@ -66,7 +66,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     const oldTimeline1 = [{ start: 0, duration: 1000, repeatCount: 10 }];
     const newTimeline1 = [{ start: 0, duration: 1000, repeatCount: 10 }];
     const oldTimeline1Cloned = oldTimeline1.slice();
-    updateSegmentTimeline?.(oldTimeline1, newTimeline1);
+    expect(updateSegmentTimeline?.(oldTimeline1, newTimeline1)).toEqual(false);
     expect(oldTimeline1).toEqual(oldTimeline1Cloned);
 
     const oldTimeline2 = [ { start: 0, duration: 1000, repeatCount: 10 },
@@ -76,7 +76,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
                            { start: 11000, duration: 1000, repeatCount: 0 },
                            { start: 12000, duration: 1000, repeatCount: 1 } ];
     const oldTimeline2Cloned = oldTimeline2.slice();
-    updateSegmentTimeline?.(oldTimeline2, newTimeline2);
+    expect(updateSegmentTimeline?.(oldTimeline2, newTimeline2)).toEqual(false);
     expect(oldTimeline2).toEqual(oldTimeline2Cloned);
     expect(logWarnSpy).not.toHaveBeenCalled();
   });
@@ -93,7 +93,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
 
     let err = null;
     try {
-      updateSegmentTimeline?.(oldTimeline1, newTimeline1);
+      expect(updateSegmentTimeline?.(oldTimeline1, newTimeline1)).not.toHaveReturned();
     } catch (e) {
       err = e;
     }
@@ -121,7 +121,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
                            { start: 25100, duration: 1000, repeatCount: 1 } ];
     const oldTimeline1Cloned = oldTimeline1.slice();
     const newTimeline1Cloned = newTimeline1.slice();
-    updateSegmentTimeline?.(oldTimeline1, newTimeline1);
+    expect(updateSegmentTimeline?.(oldTimeline1, newTimeline1)).toEqual(false);
     expect(oldTimeline1).toEqual([...oldTimeline1Cloned, ...newTimeline1Cloned]);
     expect(logWarnSpy).not.toHaveBeenCalled();
 
@@ -134,7 +134,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
                            { start: 25100, duration: 1000, repeatCount: 1 } ];
     const oldTimeline2Cloned = oldTimeline2.slice();
     const newTimeline2Cloned = newTimeline2.slice();
-    updateSegmentTimeline?.(oldTimeline2, newTimeline2);
+    expect(updateSegmentTimeline?.(oldTimeline2, newTimeline2)).toEqual(false);
     expect(oldTimeline2).toEqual([...oldTimeline2Cloned, ...newTimeline2Cloned]);
     expect(logWarnSpy).not.toHaveBeenCalled();
   });
@@ -147,7 +147,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     const newTimeline1 = [ { start: 12000, duration: 1000, repeatCount: 11 },
                            { start: 24000, duration: 1100, repeatCount: 0 },
                            { start: 25100, duration: 1000, repeatCount: 1 } ];
-    updateSegmentTimeline?.(oldTimeline1, newTimeline1);
+    expect(updateSegmentTimeline?.(oldTimeline1, newTimeline1)).toEqual(false);
     expect(oldTimeline1).toEqual([
       { start: 0, duration: 500, repeatCount: 20 },
       { start: 11000, duration: 1000, repeatCount: 0 },
@@ -161,7 +161,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     const newTimeline2 = [ { start: 20000, duration: 1000, repeatCount: 3 },
                            { start: 24000, duration: 1100, repeatCount: 0 },
                            { start: 25100, duration: 1000, repeatCount: 1 } ];
-    updateSegmentTimeline?.(oldTimeline2, newTimeline2);
+    expect(updateSegmentTimeline?.(oldTimeline2, newTimeline2)).toEqual(false);
     expect(oldTimeline2).toEqual([
       { start: 0, duration: 500, repeatCount: 20 },
       { start: 11000, duration: 1000, repeatCount: 8 },
@@ -180,7 +180,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
                            { start: 1500, duration: 1000, repeatCount: 0 },
                            { start: 2500, duration: 500, repeatCount: 0 },
                            { start: 3000, duration: 5000, repeatCount: 0 } ];
-    updateSegmentTimeline?.(oldTimeline1, newTimeline1);
+    expect(updateSegmentTimeline?.(oldTimeline1, newTimeline1)).toEqual(false);
     expect(oldTimeline1).toEqual([
       { start: 0, duration: 1000, repeatCount: 0 },
       { start: 1000, duration: 500, repeatCount: 0 },
@@ -199,7 +199,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
                            { start: 12000, duration: 1000, repeatCount: 0 },
                            { start: 13000, duration: 7000, repeatCount: 0 },
                            { start: 20000, duration: 5000, repeatCount: 0 } ];
-    updateSegmentTimeline?.(oldTimeline1, newTimeline1);
+    expect(updateSegmentTimeline?.(oldTimeline1, newTimeline1)).toEqual(false);
     expect(oldTimeline1).toEqual([
       { start: 0, duration: 1000, repeatCount: 0 },
       { start: 1000, duration: 500, repeatCount: 21 },
@@ -215,7 +215,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
                            { start: 12000, duration: 1000, repeatCount: 0 },
                            { start: 13000, duration: 7000, repeatCount: 0 },
                            { start: 20000, duration: 5000, repeatCount: 0 } ];
-    updateSegmentTimeline?.(oldTimeline2, newTimeline2);
+    expect(updateSegmentTimeline?.(oldTimeline2, newTimeline2)).toEqual(false);
     expect(oldTimeline2).toEqual([
       { start: 1000, duration: 500, repeatCount: 21 },
       { start: 12000, duration: 1000, repeatCount: 0 },
@@ -229,7 +229,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
                            { start: 12000, duration: 1000, repeatCount: 0 },
                            { start: 13000, duration: 7000, repeatCount: 0 },
                            { start: 20000, duration: 5000, repeatCount: 0 } ];
-    updateSegmentTimeline?.(oldTimeline3, newTimeline3);
+    expect(updateSegmentTimeline?.(oldTimeline3, newTimeline3)).toEqual(false);
     expect(oldTimeline3).toEqual([
       { start: 1000, duration: 500, repeatCount: -1 },
       { start: 12000, duration: 1000, repeatCount: 0 },
@@ -247,7 +247,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
                            { start: 12000, duration: 1000, repeatCount: 0 },
                            { start: 13000, duration: 7000, repeatCount: 0 },
                            { start: 20000, duration: 5000, repeatCount: 0 } ];
-    updateSegmentTimeline?.(oldTimeline1, newTimeline1);
+    expect(updateSegmentTimeline?.(oldTimeline1, newTimeline1)).toEqual(false);
     expect(oldTimeline1).toEqual([
       { start: 0, duration: 1000, repeatCount: 0 },
       { start: 1000, duration: 500, repeatCount: 0 },
@@ -264,7 +264,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
                            { start: 12000, duration: 1000, repeatCount: 0 },
                            { start: 13000, duration: 7000, repeatCount: 0 },
                            { start: 20000, duration: 5000, repeatCount: 0 } ];
-    updateSegmentTimeline?.(oldTimeline2, newTimeline2);
+    expect(updateSegmentTimeline?.(oldTimeline2, newTimeline2)).toEqual(false);
     expect(oldTimeline2).toEqual([
       { start: 0, duration: 1000, repeatCount: 0 },
       { start: 1000, duration: 500, repeatCount: 3 },
@@ -287,7 +287,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
                            { start: 12700, duration: 1000, repeatCount: 0 },
                            { start: 13700, duration: 7000, repeatCount: 0 },
                            { start: 20700, duration: 5000, repeatCount: 0 } ];
-    updateSegmentTimeline?.(oldTimeline1, newTimeline1);
+    expect(updateSegmentTimeline?.(oldTimeline1, newTimeline1)).toEqual(false);
     expect(oldTimeline1).toEqual([
       { start: 0, duration: 1000, repeatCount: 0 },
       { start: 1000, duration: 500, repeatCount: 2 },
@@ -308,7 +308,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
                            { start: 12700, duration: 1000, repeatCount: 0 },
                            { start: 13700, duration: 7000, repeatCount: 0 },
                            { start: 20700, duration: 5000, repeatCount: 0 } ];
-    updateSegmentTimeline?.(oldTimeline2, newTimeline2);
+    expect(updateSegmentTimeline?.(oldTimeline2, newTimeline2)).toEqual(false);
     expect(oldTimeline2).toEqual([
       { start: 0, duration: 1000, repeatCount: 0 },
       { start: 1000, duration: 500, repeatCount: 2 },
@@ -326,7 +326,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     const oldTimeline3 = [ { start: 0, duration: 1000, repeatCount: 0 },
                            { start: 1000, duration: 500, repeatCount: 21 } ];
     const newTimeline3 = [ { start: 2700, duration: 500, repeatCount: 19 } ];
-    updateSegmentTimeline?.(oldTimeline3, newTimeline3);
+    expect(updateSegmentTimeline?.(oldTimeline3, newTimeline3)).toEqual(false);
     expect(oldTimeline3).toEqual([
       { start: 0, duration: 1000, repeatCount: 0 },
       { start: 1000, duration: 500, repeatCount: 2 },
@@ -348,7 +348,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
                            { start: 12000, duration: 1000, repeatCount: 0 },
                            { start: 13000, duration: 7000, repeatCount: 0 },
                            { start: 20000, duration: 5000, repeatCount: 0 } ];
-    updateSegmentTimeline?.(oldTimeline1, newTimeline1);
+    expect(updateSegmentTimeline?.(oldTimeline1, newTimeline1)).toEqual(false);
     expect(oldTimeline1).toEqual([
       { start: 0, duration: 1000, repeatCount: 0 },
       { start: 1000, duration: 500, repeatCount: 1 },
@@ -369,7 +369,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
                            { start: 12000, duration: 1000, repeatCount: 0 },
                            { start: 13000, duration: 7000, repeatCount: 0 },
                            { start: 20000, duration: 5000, repeatCount: 0 } ];
-    updateSegmentTimeline?.(oldTimeline2, newTimeline2);
+    expect(updateSegmentTimeline?.(oldTimeline2, newTimeline2)).toEqual(false);
     expect(oldTimeline2).toEqual([
       { start: 0, duration: 1000, repeatCount: 0 },
       { start: 1000, duration: 500, repeatCount: 1 },
@@ -386,7 +386,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
 
     const oldTimeline3 = [ { start: 1000, duration: 500, repeatCount: 21 } ];
     const newTimeline3 = [ { start: 2000, duration: 1000, repeatCount: 9 } ];
-    updateSegmentTimeline?.(oldTimeline3, newTimeline3);
+    expect(updateSegmentTimeline?.(oldTimeline3, newTimeline3)).toEqual(false);
     expect(oldTimeline3).toEqual([
       { start: 1000, duration: 500, repeatCount: 1 },
       { start: 2000, duration: 1000, repeatCount: 9 },
@@ -407,10 +407,8 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
                            { start: 12000, duration: 1000, repeatCount: 0 },
                            { start: 13000, duration: 7000, repeatCount: 0 },
                            { start: 20000, duration: 5000, repeatCount: 0 } ];
-    updateSegmentTimeline?.(oldTimeline1, newTimeline1);
+    expect(updateSegmentTimeline?.(oldTimeline1, newTimeline1)).toEqual(true);
     expect(oldTimeline1).toEqual([
-      { start: 0, duration: 1000, repeatCount: 0 },
-      { start: 1000, duration: 500, repeatCount: 0 },
       { start: 2000, duration: 1000, repeatCount: 0 },
       { start: 3000, duration: 9000, repeatCount: 0 },
       { start: 12000, duration: 1000, repeatCount: 0 },
@@ -419,7 +417,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     ]);
     expect(logWarnSpy).toHaveBeenCalledTimes(1);
     expect(logWarnSpy).toHaveBeenCalledWith(
-      "RepresentationIndex: Manifest update removed previous segments"
+      "RepresentationIndex: Manifest update removed all previous segments"
     );
   });
 
@@ -429,7 +427,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     const oldTimeline1 = [ { start: 0, duration: 1000, repeatCount: 0 },
                            { start: 1000, duration: 500, repeatCount: 21 } ];
     const newTimeline1 = [ { start: 1000, duration: 500, repeatCount: 51 } ];
-    updateSegmentTimeline?.(oldTimeline1, newTimeline1);
+    expect(updateSegmentTimeline?.(oldTimeline1, newTimeline1)).toEqual(false);
     expect(oldTimeline1).toEqual([
       { start: 0, duration: 1000, repeatCount: 0 },
       { start: 1000, duration: 500, repeatCount: 51 },
@@ -437,13 +435,13 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
 
     const oldTimeline2 = [ { start: 1000, duration: 500, repeatCount: 64 } ];
     const newTimeline2 = [ { start: 1000, duration: 500, repeatCount: 72 } ];
-    updateSegmentTimeline?.(oldTimeline2, newTimeline2);
+    expect(updateSegmentTimeline?.(oldTimeline2, newTimeline2)).toEqual(false);
     expect(oldTimeline2).toEqual([ { start: 1000, duration: 500, repeatCount: 72 } ]);
 
     const oldTimeline3 = [ { start: 1000, duration: 500, repeatCount: 64 } ];
     const newTimeline3 = [ { start: 1000, duration: 500, repeatCount: 72 },
                            { start: 37500, duration: 1000, repeatCount: 5 }];
-    updateSegmentTimeline?.(oldTimeline3, newTimeline3);
+    expect(updateSegmentTimeline?.(oldTimeline3, newTimeline3)).toEqual(false);
     expect(oldTimeline3).toEqual([
       { start: 1000, duration: 500, repeatCount: 72 },
       { start: 37500, duration: 1000, repeatCount: 5 },
@@ -460,7 +458,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
                            { start: 12000, duration: 1000, repeatCount: 0 },
                            { start: 13000, duration: 7000, repeatCount: 0 },
                            { start: 20000, duration: 5000, repeatCount: 0 } ];
-    updateSegmentTimeline?.(oldTimeline1, newTimeline1);
+    expect(updateSegmentTimeline?.(oldTimeline1, newTimeline1)).toEqual(true);
     expect(oldTimeline1).toEqual([
       { start: 0, duration: 1000, repeatCount: 0 },
       { start: 1000, duration: 500, repeatCount: 21 },
@@ -484,7 +482,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
                            { start: 12000, duration: 1000, repeatCount: 0 },
                            { start: 13000, duration: 7000, repeatCount: 0 },
                            { start: 20000, duration: 5000, repeatCount: 0 } ];
-    updateSegmentTimeline?.(oldTimeline2, newTimeline2);
+    expect(updateSegmentTimeline?.(oldTimeline2, newTimeline2)).toEqual(true);
     expect(oldTimeline2).toEqual([
       { start: 0, duration: 1000, repeatCount: 0 },
       { start: 1000, duration: 500, repeatCount: 21 },
@@ -507,7 +505,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
                            { start: 20000, duration: 5000, repeatCount: 0 } ];
     const newTimeline1 = [ { start: 0, duration: 1000, repeatCount: 0 },
                            { start: 1000, duration: 500, repeatCount: 21 } ];
-    updateSegmentTimeline?.(oldTimeline1, newTimeline1);
+    expect(updateSegmentTimeline?.(oldTimeline1, newTimeline1)).toEqual(false);
     expect(oldTimeline1).toEqual([
       { start: 1000, duration: 500, repeatCount: 21 },
       { start: 12000, duration: 1000, repeatCount: 0 },
@@ -529,7 +527,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
                            { start: 20000, duration: 5000, repeatCount: -1 } ];
     const newTimeline2 = [ { start: 0, duration: 1000, repeatCount: 0 },
                            { start: 1000, duration: 500, repeatCount: 21 } ];
-    updateSegmentTimeline?.(oldTimeline2, newTimeline2);
+    expect(updateSegmentTimeline?.(oldTimeline2, newTimeline2)).toEqual(false);
     expect(oldTimeline2).toEqual([
       { start: 1000, duration: 500, repeatCount: 21 },
       { start: 12000, duration: 1000, repeatCount: 0 },
