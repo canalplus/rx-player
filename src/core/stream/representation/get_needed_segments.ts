@@ -152,7 +152,8 @@ export default function getNeededSegments({
       return true;
     });
   const { MINIMUM_SEGMENT_SIZE,
-        MIN_BUFFER_LENGTH } = config.getCurrent();  
+        MIN_BUFFER_LENGTH,
+        MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP} = config.getCurrent();  
   let isMemorySaturated = false;
   /**
    * Epsilon compensating for rounding errors when comparing the start and end
@@ -177,7 +178,11 @@ export default function getNeededSegments({
       return true; // never skip initialization segments
     }
     if (isMemorySaturated) {
-      if (time <= MIN_BUFFER_BEFORE_CLEANUP + neededRange.start) {
+      // If we are so saturated in memory
+      // That we cannot download atleast till
+      // NeededRange.Start ( current position ) + a CONST
+      // Then the buffer is full
+      if (time < neededRange.start + MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP) {
         isBufferFull = true;
       }
     }

@@ -135,7 +135,6 @@ export interface IRepresentationStreamArguments<TSegmentDataType> {
   options: IRepresentationStreamOptions;
 }
 
-const { UPTO_CURRENT_POSITION_CLEANUP } = config;
 
 /**
  * Various specific stream "options" which tweak the behavior of the
@@ -379,9 +378,14 @@ export default function RepresentationStream<TSegmentDataType>({
                                 imminentDiscontinuity: status.imminentDiscontinuity,
                                 hasFinishedLoading: status.hasFinishedLoading,
                                 neededSegments: status.neededSegments } });
+      const { UPTO_CURRENT_POSITION_CLEANUP } = config.getCurrent();
+      const gcedPosition = Math.max(
+        0,
+        wantedStartPosition - UPTO_CURRENT_POSITION_CLEANUP);
+
       const bufferRemoval = status.isBufferFull ?
             segmentBuffer
-              .removeBuffer(0, wantedStartPosition - UPTO_CURRENT_POSITION_CLEANUP)
+              .removeBuffer(0, gcedPosition)
               // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
               .pipe(ignoreElements()) :
             EMPTY;
