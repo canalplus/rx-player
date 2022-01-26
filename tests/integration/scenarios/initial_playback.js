@@ -388,14 +388,18 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
 
   it("should respect a set max buffer size", async function () {
     this.timeout(4000);
-    const chosenVideoRepresentation = manifestInfos.periods[0].adaptations.video[0].representations[0];
+    const chosenVideoRepresentation = manifestInfos
+                                        .periods[0]
+                                        .adaptations
+                                        .video[0]
+                                        .representations[0];
     player.setWantedBufferAhead(100);
     const {bitrate} = chosenVideoRepresentation;
     player.setVideoBitrate(0);
     // A segment is a little bit more than 4sec, so not enough for MIN_BUFF_SIZE
     // ( MIN_BUFF_SIZE is 5sec) so the rx player will download 2 segments
     // So we take two segments : a bit more than 8sec
-    const maxBuffersize = (bitrate/8000)*5;
+    const maxBuffersize = (bitrate/8000)*6;
     player.setMaxVideoBufferSize(maxBuffersize);
     player.loadVideo({
       transport: manifestInfos.transport,
@@ -403,17 +407,20 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     });
     await waitForLoadedStateAfterLoadVideo(player);
     await sleep(800);
-    // And to take into consideration the estimation errors, we round it up to 9sec
+    // And to take into consideration the estimation errors,
+    // we round it up to 9sec
     expect(player.getVideoBufferGap()).to.be.below(6*3);
-    expect(player.getVideoBufferGap()).to.be.above(4*3);
-  })
-  
+    expect(player.getVideoBufferGap()).to.be.above(6*1);
+  });
+
   it("should remove behind if buffer full", async function() {
-    const chosenVideoRepresentation = manifestInfos.periods[0].adaptations.video[0].representations[0];
-    player.setWantedBufferAhead(18);
+    const chosenVideoRepresentation = manifestInfos
+                                        .periods[0]
+                                        .adaptations
+                                        .video[0]
+                                        .representations[0];
+    player.setWantedBufferAhead(20);
     const {bitrate} = chosenVideoRepresentation;
-    const maxBuffersize = (bitrate/8000)*2;
-    player.setMaxVideoBufferSize(maxBuffersize);
     player.setVideoBitrate(0) ;
     player.loadVideo({
       transport: manifestInfos.transport,
@@ -421,11 +428,12 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     });
     await waitForLoadedStateAfterLoadVideo(player);
     await sleep(400);
-    expect(player.getVideoBufferGap()).to.be.above(7.5);
+    expect(player.getVideoBufferGap()).to.be.above(19);
     expect(player.getVideoElement().buffered.start(0)).to.be.closeTo(0.0, 0.8);
-    
-    player.seekTo(15);
+    const maxBuffersize = (bitrate/7000);
+    player.seekTo(19);
+    player.setMaxVideoBufferSize(maxBuffersize);
     await sleep(800);
-    expect(player.getVideoElement().buffered.start(0)).to.be.above(12);
-  })
+    expect(player.getVideoElement().buffered.start(0)).to.be.above(14);
+  });
 });

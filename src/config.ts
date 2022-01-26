@@ -1239,10 +1239,11 @@ export default {
   MIN_BUFFER_LENGTH : 5,
 
   /**
-   * Minimum duration ( in seconds ) we should be able to download
+   * Minimum distance (in seconds) from the end
+   * we should be able to download
    * Before starting to garbage collect previous segments
    */
-  MIN_BUFFER_BEFORE_CLEANUP : 10,
+  MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP: 10,
 
   /**
    * How much close to the current position we should garbage collect

@@ -36,7 +36,7 @@ const { CONTENT_REPLACEMENT_PADDING,
         MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT,
         MINIMUM_SEGMENT_SIZE,
         MIN_BUFFER_LENGTH,
-        MIN_BUFFER_BEFORE_CLEANUP } = config;
+        MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP } = config;
 
 
 interface IContentContext {
@@ -181,7 +181,11 @@ export default function getNeededSegments({
       return true; // never skip initialization segments
     }
     if (isMemorySaturated) {
-      if (time <= MIN_BUFFER_BEFORE_CLEANUP + neededRange.start) {
+      // If we are so saturated in memory
+      // That we cannot download atleast till
+      // NeededRange.Start ( current position ) + a CONST
+      // Then the buffer is full
+      if (time < neededRange.start + MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP) {
         isBufferFull = true;
       }
     }
