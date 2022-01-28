@@ -61,6 +61,7 @@ import {
   areAllKeyIdsContainedIn,
   areKeyIdsEqual,
   areSomeKeyIdsContainedIn,
+  isKeyIdContainedIn,
 } from "./utils/key_id_comparison";
 import KeySessionRecord from "./utils/key_session_record";
 
@@ -395,6 +396,37 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
           updateDecipherability(initializationData.content.manifest, [], keyIds);
         }
         return ;
+      }
+    } else if (options.singleLicensePer === "periods" &&
+               initializationData.content !== undefined)
+    {
+      const { period } = initializationData.content;
+      const createdSessions = this._currentSessions
+        .filter(x => x.source === MediaKeySessionLoadingType.Created);
+      const periodKeys = new Set<Uint8Array>();
+      addKeyIdsFromPeriod(periodKeys, period);
+      for (const createdSess of createdSessions) {
+        const periodKeysArr = Array.from(periodKeys);
+        for (const kid of periodKeysArr) {
+          if (createdSess.record.isAssociatedWithKeyId(kid)) {
+            createdSess.record.associateKeyIds(periodKeys.values());
+
+            // Re-loop through the Period's key ids to blacklist ones that are missing
+            // from `createdSess`'s `keyStatuses` and to update the content's
+            // decipherability.
+            for (const innerKid of periodKeysArr) {
+              if (!isKeyIdContainedIn(innerKid, createdSess.keyStatuses.whitelisted) &&
+                  !isKeyIdContainedIn(innerKid, createdSess.keyStatuses.blacklisted))
+              {
+                createdSess.keyStatuses.blacklisted.push(innerKid);
+              }
+            }
+            updateDecipherability(initializationData.content.manifest,
+                                  createdSess.keyStatuses.whitelisted,
+                                  createdSess.keyStatuses.blacklisted);
+            return;
+          }
+        }
       }
     }
 
@@ -1022,7 +1054,7 @@ interface IAttachedMediaKeysData {
  */
 function getFetchedLicenseKeysInfo(
   initializationData : IProcessedProtectionData,
-  singleLicensePer : undefined | "init-data" | "content",
+  singleLicensePer : undefined | "init-data" | "content" | "periods",
   usableKeyIds : Uint8Array[],
   unusableKeyIds : Uint8Array[]
 ) : { whitelisted : Uint8Array[];
@@ -1061,13 +1093,33 @@ function getFetchedLicenseKeysInfo(
     }
 
     if (content !== undefined) {
-      // Put it in a Set to automatically filter out duplicates (by ref)
-      const contentKeys = new Set<Uint8Array>();
-      const { manifest } = content;
-      for (const period of manifest.periods) {
-        addKeyIdsFromPeriod(contentKeys, period);
+      if (singleLicensePer === "content") {
+        // Put it in a Set to automatically filter out duplicates (by ref)
+        const contentKeys = new Set<Uint8Array>();
+        const { manifest } = content;
+        for (const period of manifest.periods) {
+          addKeyIdsFromPeriod(contentKeys, period);
+        }
+        mergeKeyIdSetIntoArray(contentKeys, associatedKeyIds);
+      } else if (singleLicensePer === "periods") {
+        const { manifest } = content;
+        for (const period of manifest.periods) {
+          const periodKeys = new Set<Uint8Array>();
+          addKeyIdsFromPeriod(periodKeys, period);
+          if (initializationData.content?.period.id === period.id) {
+            mergeKeyIdSetIntoArray(periodKeys, associatedKeyIds);
+          } else {
+            const periodKeysArr = Array.from(periodKeys);
+            for (const kid of periodKeysArr) {
+              const isFound = associatedKeyIds.some(k => areKeyIdsEqual(k, kid));
+              if (isFound) {
+                mergeKeyIdSetIntoArray(periodKeys, associatedKeyIds);
+                break;
+              }
+            }
+          }
+        }
       }
-      mergeKeyIdSetIntoArray(contentKeys, associatedKeyIds);
     }
   }
   return { whitelisted: usableKeyIds,
