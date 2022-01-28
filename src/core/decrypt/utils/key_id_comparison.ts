@@ -30,6 +30,18 @@ export function areKeyIdsEqual(
 }
 
 /**
+ * @param {Uint8Array} wantedKeyId
+ * @param {Array.<Uint8Array>} keyIdsArr
+ * @returns {boolean}
+ */
+export function isKeyIdContainedIn(
+  wantedKeyId : Uint8Array,
+  keyIdsArr : Uint8Array[]
+) : boolean {
+  return keyIdsArr.some(k => areKeyIdsEqual(k, wantedKeyId));
+}
+
+/**
  * Returns `true` if all key ids in `wantedKeyIds` are present in the
  * `keyIdsArr` array.
  * @param {Array.<Uint8Array>} wantedKeyIds

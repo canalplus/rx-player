@@ -422,6 +422,7 @@ export interface IKeySystemOption {
   closeSessionsOnStop? : boolean;
 
   singleLicensePer? : "content" |
+                      "periods" |
                       "init-data";
   /**
    * Maximum number of `MediaKeySession` that should be created on the same
