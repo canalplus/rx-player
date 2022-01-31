@@ -35,5 +35,6 @@ if (shouldRunFastVersion) {
 launchStaticServer(path.join(__dirname, "../demo/full/"),
                    { certificatePath: path.join(__dirname, "../localhost.crt"),
                      keyPath: path.join(__dirname, "../localhost.key"),
+                     verbose: true,
                      httpPort: 8000,
                      httpsPort: 8443 });
