@@ -28,6 +28,7 @@ import {
   ICompatVideoTrackList,
 } from "../../compat/browser_compatibility_types";
 import { Representation } from "../../manifest";
+import assert from "../../utils/assert";
 import EventEmitter from "../../utils/event_emitter";
 import normalizeLanguage from "../../utils/languages";
 import {
@@ -338,7 +339,7 @@ export default class MediaElementTrackChoiceManager
     for (let i = 0; i < this._audioTracks.length; i++) {
       const { track, nativeTrack } = this._audioTracks[i];
       if (track.id === id) {
-        nativeTrack.enabled = true;
+        this._enableAudioTrackFromIndex(i);
         this._audioTrackLockedOn = nativeTrack;
         return;
       }
@@ -589,7 +590,7 @@ export default class MediaElementTrackChoiceManager
       for (let i = 0; i < this._audioTracks.length; i++) {
         const { nativeTrack } = this._audioTracks[i];
         if (nativeTrack === this._audioTrackLockedOn) {
-          nativeTrack.enabled = true;
+          this._enableAudioTrackFromIndex(i);
           return;
         }
       }
@@ -616,7 +617,7 @@ export default class MediaElementTrackChoiceManager
           if (audioTrack.track.normalized === normalized &&
             audioTrack.track.audioDescription === track.audioDescription
           ) {
-            audioTrack.nativeTrack.enabled = true;
+            this._enableAudioTrackFromIndex(j);
             return;
           }
         }
@@ -901,6 +902,23 @@ export default class MediaElementTrackChoiceManager
         return;
       };
     }
+  }
+
+  /**
+   * Enable an audio track (and disable all others), based on its index in the
+   * `this._audioTracks` array.
+   * @param {number} index}
+   */
+  private _enableAudioTrackFromIndex(index : number) : void {
+    assert(index < this._audioTracks.length);
+    for (let i = 0; i < this._audioTracks.length; i++) {
+      if (i !== index) {
+        this._audioTracks[i].nativeTrack.enabled = false;
+      }
+    }
+
+    this._audioTracks[index].nativeTrack.enabled = true;
+    return;
   }
 }
 
