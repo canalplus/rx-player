@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { configHandler } from "./experimental/features/config_override"
+import { configHandler } from "./experimental/features/config_override";
 
 
-export default configHandler._config
+export default configHandler._config;

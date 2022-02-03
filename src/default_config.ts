@@ -7,7 +7,7 @@
  *
  * @type {Object}
  */
- const DEFAULT_CONFIG = {
+const DEFAULT_CONFIG = {
     /**
      * Volume set on unMute if the volume is set to 0 and either:
      *   - mute has never been called before
@@ -15,14 +15,14 @@
      *     via setVolume, or a previous mute call)
      * @type {Number}
      */
-    DEFAULT_UNMUTED_VOLUME: 0.1,
-  
+  DEFAULT_UNMUTED_VOLUME: 0.1,
+
     /**
      * Default time interval after which a request will timeout, in ms.
      * @type {Number}
      */
-    DEFAULT_REQUEST_TIMEOUT: 30 * 1000,
-  
+  DEFAULT_REQUEST_TIMEOUT: 30 * 1000,
+
     /**
      * Can be either:
      *   - "native": Subtitles are all displayed in a <track> element
@@ -30,9 +30,9 @@
      *     element. Can be useful to display richer TTML subtitles, for example.
      * @type {Object|null}
      */
-    DEFAULT_TEXT_TRACK_MODE: "native" as "native" |
+  DEFAULT_TEXT_TRACK_MODE: "native" as "native" |
                                          "html",
-  
+
     /**
      * Strategy to adopt when manually setting the current bitrate.
      * Can be either:
@@ -43,9 +43,9 @@
      *     during a short moment.
      * @type {string}
      */
-    DEFAULT_MANUAL_BITRATE_SWITCHING_MODE: "seamless" as "seamless" |
+  DEFAULT_MANUAL_BITRATE_SWITCHING_MODE: "seamless" as "seamless" |
                                                          "direct",
-  
+
     /**
      * Default behavior for the `enableFastSwitching` loadVideo options.
      *
@@ -58,8 +58,8 @@
      * improve.
      * When disabled, segments of a lower-quality will not be replaced.
      */
-    DEFAULT_ENABLE_FAST_SWITCHING: true,
-  
+  DEFAULT_ENABLE_FAST_SWITCHING: true,
+
     /**
      * Strategy to adopt when manually switching of audio adaptation.
      * Can be either:
@@ -69,9 +69,9 @@
      *    that we allow quicker transition between audio track, but we could
      *    see appear a RELOADING or a SEEKING state.
      */
-    DEFAULT_AUDIO_TRACK_SWITCHING_MODE: "seamless" as "seamless" |
+  DEFAULT_AUDIO_TRACK_SWITCHING_MODE: "seamless" as "seamless" |
                                                       "direct",
-  
+
     /**
      * In some cases after switching the current track or bitrate, the RxPlayer
      * could be led to go into the `"RELOADING"` state, which corresponds to
@@ -89,9 +89,9 @@
      * when reloading due to a track or bitrate switch with necessitated a
      * reloading.
      */
-    DELTA_POSITION_AFTER_RELOAD: {
+  DELTA_POSITION_AFTER_RELOAD: {
       /** Relative position when switching the bitrate */
-      bitrateSwitch: -0.1,
+    bitrateSwitch: -0.1,
       /**
        * Relative position when switching the track.
        *
@@ -108,11 +108,11 @@
        * "Other" mainly concern text track, where seeking back could even be
        * annoying, so that behavior has been disabled in that case.
        */
-      trackSwitch: { audio: -0.7,
-                     video: -0.1,
-                     other: 0 },
-    },
-  
+    trackSwitch: { audio: -0.7,
+                   video: -0.1,
+                   other: 0 },
+  },
+
     /**
      * Behavior of the RxPlayer when encountering a whole other codec on a already
      * existing audio or video SourceBuffer.
@@ -127,22 +127,22 @@
      *    - "reload": Every time a new incompatible codec is encountered on a
      *      given SourceBuffer, we will reload the MediaSource.
      */
-    DEFAULT_CODEC_SWITCHING_BEHAVIOR: "continue" as "continue" |
+  DEFAULT_CODEC_SWITCHING_BEHAVIOR: "continue" as "continue" |
                                                     "reload",
-  
+
     /**
      * If set to true, video through loadVideo will auto play by default
      * @type {Boolean}
      */
-    DEFAULT_AUTO_PLAY: false,
-  
+  DEFAULT_AUTO_PLAY: false,
+
     /**
      * If set to false, "native" subtitles (in a <track> element) will be hidden
      * by default.
      * @type {Boolean}
      */
-    DEFAULT_SHOW_NATIVE_SUBTITLE: true,
-  
+  DEFAULT_SHOW_NATIVE_SUBTITLE: true,
+
     /**
      * If set to true, the player will by default stop immediately and unload the
      * content on reaching the end of the media.
@@ -153,8 +153,8 @@
      * Set to `true` for legacy reasons.
      * @type {Boolean}
      */
-    DEFAULT_STOP_AT_END: true,
-  
+  DEFAULT_STOP_AT_END: true,
+
     /**
      * Default buffer goal in seconds.
      * Once enough content has been downloaded to fill the buffer up to
@@ -162,24 +162,24 @@
      * content.
      * @type {Number}
      */
-    DEFAULT_WANTED_BUFFER_AHEAD: 30,
-  
+  DEFAULT_WANTED_BUFFER_AHEAD: 30,
+
     /**
      * Default max buffer size ahead of the current position in seconds.
      * The buffer _after_ this limit will be garbage collected.
      * Set to Infinity for no limit.
      * @type {Number}
      */
-    DEFAULT_MAX_BUFFER_AHEAD: Infinity,
-  
+  DEFAULT_MAX_BUFFER_AHEAD: Infinity,
+
     /**
      * Default max buffer size ahead of the current position in seconds.
      * The buffer _before_ this limit will be garbage collected.
      * Set to Infinity for no limit.
      * @type {Number}
      */
-    DEFAULT_MAX_BUFFER_BEHIND: Infinity,
-  
+  DEFAULT_MAX_BUFFER_BEHIND: Infinity,
+
     /* eslint-disable @typescript-eslint/consistent-type-assertions */
     /**
      * Maximum possible buffer ahead for each type of buffer, to avoid too much
@@ -187,11 +187,11 @@
      * Equal to Infinity if not defined here.
      * @type {Object}
      */
-    MAXIMUM_MAX_BUFFER_AHEAD: {
-      text: 5 * 60 * 60,
-    } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
+  MAXIMUM_MAX_BUFFER_AHEAD: {
+    text: 5 * 60 * 60,
+  } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
     /* eslint-enable @typescript-eslint/consistent-type-assertions */
-  
+
     /* eslint-disable @typescript-eslint/consistent-type-assertions */
     /**
      * Maximum possible buffer behind for each type of buffer, to avoid too much
@@ -199,11 +199,11 @@
      * Equal to Infinity if not defined here.
      * @type {Object}
      */
-    MAXIMUM_MAX_BUFFER_BEHIND: {
-      text: 5 * 60 * 60,
-    } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
+  MAXIMUM_MAX_BUFFER_BEHIND: {
+    text: 5 * 60 * 60,
+  } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
     /* eslint-enable @typescript-eslint/consistent-type-assertions */
-  
+
     /**
      * Default bitrate ceils initially set as the first content begins.
      *
@@ -216,14 +216,14 @@
      * play will always take the last set one.
      * @type {Object}
      */
-    DEFAULT_INITIAL_BITRATES: {
-      audio: 0, // only "audio" segments
-      video: 0, // only "video" segments
-      other: 0, // tracks which are not audio/video (text images).
+  DEFAULT_INITIAL_BITRATES: {
+    audio: 0, // only "audio" segments
+    video: 0, // only "video" segments
+    other: 0, // tracks which are not audio/video (text images).
                 // Though those are generally at a single bitrate, so no adaptive
                 // mechanism is triggered for them.
-    },
-  
+  },
+
     /* eslint-disable @typescript-eslint/consistent-type-assertions */
     /**
      * Default bitrate floor initially set to dictate the minimum bitrate the
@@ -235,15 +235,15 @@
      * Set to Infinity to discard any limit in the ABR strategy.
      * @type {Object}
      */
-    DEFAULT_MIN_BITRATES: {
-      audio: 0, // only "audio" segments
-      video: 0, // only "video" segments
-      other: 0, // tracks which are not audio/video
+  DEFAULT_MIN_BITRATES: {
+    audio: 0, // only "audio" segments
+    video: 0, // only "video" segments
+    other: 0, // tracks which are not audio/video
                        // Though those are generally at a single bitrate, so no
                        // adaptive mechanism is triggered for them.
-    } as Record<"audio"|"video"|"other", number>,
+  } as Record<"audio"|"video"|"other", number>,
     /* eslint-enable @typescript-eslint/consistent-type-assertions */
-  
+
     /* eslint-disable @typescript-eslint/consistent-type-assertions */
     /**
      * Default bitrate ceil initially set to dictate the maximum bitrate the
@@ -255,15 +255,15 @@
      * Set to Infinity to discard any limit in the ABR strategy.
      * @type {Object}
      */
-    DEFAULT_MAX_BITRATES: {
-      audio: Infinity, // only "audio" segments
-      video: Infinity, // only "video" segments
-      other: Infinity, // tracks which are not audio/video
+  DEFAULT_MAX_BITRATES: {
+    audio: Infinity, // only "audio" segments
+    video: Infinity, // only "video" segments
+    other: Infinity, // tracks which are not audio/video
                        // Though those are generally at a single bitrate, so no
                        // adaptive mechanism is triggered for them.
-    } as Record<"audio"|"video"|"other", number>,
+  } as Record<"audio"|"video"|"other", number>,
     /* eslint-enable @typescript-eslint/consistent-type-assertions */
-  
+
     /**
      * Delay after which, if the page is hidden, the user is considered inactive
      * on the current video.
@@ -272,24 +272,24 @@
      * @see DEFAULT_THROTTLE_WHEN_HIDDEN
      * @type {Number}
      */
-    INACTIVITY_DELAY: 60 * 1000,
-  
+  INACTIVITY_DELAY: 60 * 1000,
+
     /**
      * If true, if the player is in a "hidden" state for a delay specified by the
      * INACTIVITY DELAY config property, we throttle automatically to the video
      * representation with the lowest bitrate.
      * @type {Boolean}
      */
-    DEFAULT_THROTTLE_WHEN_HIDDEN: false,
-  
+  DEFAULT_THROTTLE_WHEN_HIDDEN: false,
+
     /**
      * If true, if the video is considered in a "hidden" state for a delay specified by
      * the INACTIVITY DELAY config property, we throttle automatically to the video
      * representation with the lowest bitrate.
      * @type {Boolean}
      */
-    DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN: false,
-  
+  DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN: false,
+
     /**
      * If true, the video representations you can switch to in adaptive mode
      * are limited by the video element's width.
@@ -298,26 +298,26 @@
      * a width higher than the current width of the video HTMLElement.
      * @type {Boolean}
      */
-    DEFAULT_LIMIT_VIDEO_WIDTH: false,
-  
+  DEFAULT_LIMIT_VIDEO_WIDTH: false,
+
     /**
      * Default initial live gap considered if no presentation delay has been
      * suggested, in seconds.
      * @type {Number}
      */
-    DEFAULT_LIVE_GAP: {
-      DEFAULT: 10,
-      LOW_LATENCY: 3.5,
-    },
-  
+  DEFAULT_LIVE_GAP: {
+    DEFAULT: 10,
+    LOW_LATENCY: 3.5,
+  },
+
     /**
      * Maximum time, in seconds, the player should automatically skip when stalled
      * because of a current hole in the buffer.
      * Bear in mind that this might seek over not-yet-downloaded/pushed segments.
      * @type {Number}
      */
-    BUFFER_DISCONTINUITY_THRESHOLD: 0.2,
-  
+  BUFFER_DISCONTINUITY_THRESHOLD: 0.2,
+
     /**
      * When encountering small discontinuities, the RxPlayer may want, in specific
      * conditions, ignore those and let the browser seek over them iself (this
@@ -333,16 +333,16 @@
      * small enough so this (arguably rare) situation won't lead to too much
      * waiting time.
      */
-    FORCE_DISCONTINUITY_SEEK_DELAY: 2000,
-  
+  FORCE_DISCONTINUITY_SEEK_DELAY: 2000,
+
     /**
      * Ratio used to know if an already loaded segment should be re-buffered.
      * We re-load the given segment if the current one times that ratio is
      * inferior to the new one.
      * @type {Number}
      */
-    BITRATE_REBUFFERING_RATIO: 1.5,
-  
+  BITRATE_REBUFFERING_RATIO: 1.5,
+
     /**
      * Those are used when a "QuotaExceededError" error is received after
      * appending a new segment in the SourceBuffer.
@@ -351,7 +351,7 @@
      * In this case, the player goes into manual garbage collection (GC) mode.
      * @type {Object}
      */
-    BUFFER_GC_GAPS: {
+  BUFFER_GC_GAPS: {
       /**
        * _Low_ gap (from current position) from which the buffer will be _garbage
        * collected_ (read removed from the buffer) when a QuotaExceededError is
@@ -359,8 +359,8 @@
        * In seconds.
        * @type {Number}
        */
-      CALM: 240,
-  
+    CALM: 240,
+
       /**
        * _High_ gap (from current position) from which the buffer will be _garbage
        * collected_ (read removed from the buffer) when a QuotaExceededError is
@@ -368,9 +368,9 @@
        * In seconds.
        * @type {Number}
        */
-      BEEFY: 30,
-    },
-  
+    BEEFY: 30,
+  },
+
     /**
      * The default number of times a manifest request will be re-performed
      * when loaded/refreshed if the request finishes on an error which
@@ -384,8 +384,8 @@
      *     separate counter is used (see DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE).
      * @type Number
      */
-    DEFAULT_MAX_MANIFEST_REQUEST_RETRY: 4,
-  
+  DEFAULT_MAX_MANIFEST_REQUEST_RETRY: 4,
+
     /**
      * The default number of times a segment request will be re-performed when
      * on error which justify a retry.
@@ -398,8 +398,8 @@
      *     separate counter is used (see DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE).
      * @type Number
      */
-    DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR: 4,
-  
+  DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR: 4,
+
     /**
      * Under some circonstances, we're able to tell that the user is offline (see
      * the compat files).
@@ -411,8 +411,8 @@
      * A capped exponential backoff will still be used (like for an error code).
      * @type {Number}
      */
-    DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE: Infinity,
-  
+  DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE: Infinity,
+
     /**
      * Initial backoff delay when a segment / manifest download fails, in
      * milliseconds.
@@ -423,11 +423,11 @@
      * Please note that this delay is not exact, as it will be fuzzed.
      * @type {Number}
      */
-    INITIAL_BACKOFF_DELAY_BASE: {
-      REGULAR: 200,
-      LOW_LATENCY: 50,
-    },
-  
+  INITIAL_BACKOFF_DELAY_BASE: {
+    REGULAR: 200,
+    LOW_LATENCY: 50,
+  },
+
     /**
      * Maximum backoff delay when a segment / manifest download fails, in
      * milliseconds.
@@ -435,11 +435,11 @@
      * Please note that this delay is not exact, as it will be fuzzed.
      * @type {Number}
      */
-    MAX_BACKOFF_DELAY_BASE: {
-      REGULAR: 3000,
-      LOW_LATENCY: 1000,
-    },
-  
+  MAX_BACKOFF_DELAY_BASE: {
+    REGULAR: 3000,
+    LOW_LATENCY: 1000,
+  },
+
     /**
      * Minimum interval at which playback information samples will be taken. This
      * variable is for the "regular" mediasource strategy (that is, not for the
@@ -452,20 +452,20 @@
      * triggered when various events of the media element are received.
      * @type {Number}
      */
-    SAMPLING_INTERVAL_MEDIASOURCE: 1000,
-  
+  SAMPLING_INTERVAL_MEDIASOURCE: 1000,
+
     /**
      * Same than SAMPLING_INTERVAL_MEDIASOURCE but for lowLatency mode.
      * @type {Number}
      */
-    SAMPLING_INTERVAL_LOW_LATENCY: 250,
-  
+  SAMPLING_INTERVAL_LOW_LATENCY: 250,
+
     /**
      * Same than SAMPLING_INTERVAL_MEDIASOURCE but for the directfile API.
      * @type {Number}
      */
-    SAMPLING_INTERVAL_NO_MEDIASOURCE: 500,
-  
+  SAMPLING_INTERVAL_NO_MEDIASOURCE: 500,
+
     /**
      * Minimum number of bytes sampled before we trust the estimate.
      * If we have not sampled much data, our estimate may not be accurate
@@ -475,8 +475,8 @@
      * This specific value is based on experimentations.
      * @type {Number}
      */
-    ABR_MINIMUM_TOTAL_BYTES: 150e3,
-  
+  ABR_MINIMUM_TOTAL_BYTES: 150e3,
+
     /**
      * Minimum number of bytes, under which samples are discarded.
      * Our models do not include latency information, so connection startup time
@@ -486,28 +486,28 @@
      * This specific value is based on experimentation.
      * @type {Number}
      */
-    ABR_MINIMUM_CHUNK_SIZE: 16e3,
-  
+  ABR_MINIMUM_CHUNK_SIZE: 16e3,
+
     /**
      * Factor with which is multiplied the bandwidth estimate when the ABR is in
      * starvation mode.
      * @type {Object}
      */
-    ABR_STARVATION_FACTOR: {
-      DEFAULT: 0.72,
-      LOW_LATENCY: 0.72,
-    },
-  
+  ABR_STARVATION_FACTOR: {
+    DEFAULT: 0.72,
+    LOW_LATENCY: 0.72,
+  },
+
     /**
      * Factor with which is multiplied the bandwidth estimate when the ABR is not
      * in starvation mode.
      * @type {Object}
      */
-    ABR_REGULAR_FACTOR: {
-      DEFAULT: 0.8,
-      LOW_LATENCY: 0.8,
-    },
-  
+  ABR_REGULAR_FACTOR: {
+    DEFAULT: 0.8,
+    LOW_LATENCY: 0.8,
+  },
+
     /**
      * If a media buffer has less than ABR_STARVATION_GAP in seconds ahead of the
      * current position in its buffer, the ABR manager will go into starvation
@@ -527,15 +527,15 @@
      *
      * @type {Object}
      */
-    ABR_STARVATION_GAP: {
-      DEFAULT: 5,
-      LOW_LATENCY: 5,
-    },
-    OUT_OF_STARVATION_GAP: {
-      DEFAULT: 7,
-      LOW_LATENCY: 7,
-    },
-  
+  ABR_STARVATION_GAP: {
+    DEFAULT: 5,
+    LOW_LATENCY: 5,
+  },
+  OUT_OF_STARVATION_GAP: {
+    DEFAULT: 7,
+    LOW_LATENCY: 7,
+  },
+
     /**
      * This is a security to avoid going into starvation mode when the content is
      * ending (@see ABR_STARVATION_GAP).
@@ -545,8 +545,8 @@
      * is equal or higher than this value.
      * @type {Number}
      */
-    ABR_STARVATION_DURATION_DELTA: 0.1,
-  
+  ABR_STARVATION_DURATION_DELTA: 0.1,
+
     /**
      * Half-life, in seconds for a fastly-evolving exponential weighted moving
      * average.
@@ -555,8 +555,8 @@
      * Should be kept to a lower number than ABR_SLOW_EMA for coherency reasons.
      * @type {Number}
      */
-    ABR_FAST_EMA: 2,
-  
+  ABR_FAST_EMA: 2,
+
     /**
      * Half-life, in seconds for a slowly-evolving exponential weighted moving
      * average.
@@ -565,38 +565,38 @@
      * Should be kept to a higher number than ABR_FAST_EMA for coherency reasons.
      * @type {Number}
      */
-    ABR_SLOW_EMA: 10,
-  
+  ABR_SLOW_EMA: 10,
+
     /**
      * Number of seconds ahead in the buffer after which playback will resume when
      * seeking on an unbuffered part of the content.
      * @type {Number}
      */
-    RESUME_GAP_AFTER_SEEKING: {
-      DEFAULT: 1.5,
-      LOW_LATENCY: 0.5,
-    },
-  
+  RESUME_GAP_AFTER_SEEKING: {
+    DEFAULT: 1.5,
+    LOW_LATENCY: 0.5,
+  },
+
     /**
      * Number of seconds ahead in the buffer after which playback will resume when
      * the player was rebuffering due to a low readyState.
      * @type {Number}
      */
-    RESUME_GAP_AFTER_NOT_ENOUGH_DATA: {
-      DEFAULT: 0.5,
-      LOW_LATENCY: 0.5,
-    },
-  
+  RESUME_GAP_AFTER_NOT_ENOUGH_DATA: {
+    DEFAULT: 0.5,
+    LOW_LATENCY: 0.5,
+  },
+
     /**
      * Number of seconds ahead in the buffer after which playback will resume
      * after the player went through a buffering step.
      * @type {Number}
      */
-    RESUME_GAP_AFTER_BUFFERING: {
-      DEFAULT: 5,
-      LOW_LATENCY: 0.5,
-    },
-  
+  RESUME_GAP_AFTER_BUFFERING: {
+    DEFAULT: 5,
+    LOW_LATENCY: 0.5,
+  },
+
     /**
      * Maximum number of seconds in the buffer based on which a "rebuffering"
      * strategy will be considered:
@@ -605,11 +605,11 @@
      * enough buffer is ahead of the current position.
      * @type {Number}
      */
-    REBUFFERING_GAP: {
-      DEFAULT: 0.5,
-      LOW_LATENCY: 0.2,
-    },
-  
+  REBUFFERING_GAP: {
+    DEFAULT: 0.5,
+    LOW_LATENCY: 0.2,
+  },
+
     /**
      * Amount of time (in seconds) with data ahead of the current position, at
      * which we always consider the browser to be able to play.
@@ -617,8 +617,8 @@
      * If the media element has this amount of data in advance or more but
      * playback cannot begin, the player will consider it "freezing".
      */
-    MINIMUM_BUFFER_AMOUNT_BEFORE_FREEZING: 2,
-  
+  MINIMUM_BUFFER_AMOUNT_BEFORE_FREEZING: 2,
+
     /**
      * A media whose position inexplicably does not increment despite playing is
      * called as "freezing" in the RxPlayer.
@@ -630,8 +630,8 @@
      * Those interactions can be costly in time before playback continue, so it
      * should be set at a sufficiently high value to avoid false positives.
      */
-    UNFREEZING_SEEK_DELAY: 6000,
-  
+  UNFREEZING_SEEK_DELAY: 6000,
+
     /**
      * A media whose position inexplicably does not increment despite playing is
      * called as "freezing" in the RxPlayer.
@@ -643,8 +643,8 @@
      * milliseconds, the RxPlayer will emit a BUFFERING state through its API to
      * notify that the player cannot currently advance.
      */
-    FREEZING_STALLED_DELAY: 600,
-  
+  FREEZING_STALLED_DELAY: 600,
+
     /**
      * A media whose position inexplicably does not increment despite playing is
      * called as "freezing" in the RxPlayer.
@@ -656,8 +656,8 @@
      * This should be kept short enough as the goal is just to un-freeze lower-level
      * buffers.
      */
-    UNFREEZING_DELTA_POSITION: 0.001,
-  
+  UNFREEZING_DELTA_POSITION: 0.001,
+
     /**
      * Maximum authorized difference between what we calculated to be the
      * beginning or end of the segment in a media buffer and what we
@@ -668,8 +668,8 @@
      * re-download it.
      * @type {Number}
      */
-    MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT: 0.15,
-  
+  MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT: 0.15,
+
     /**
      * The maximum authorized difference, in seconds, between the real buffered
      * time of a given chunk and what the segment information of the Manifest
@@ -684,8 +684,8 @@
      * partly garbage collected (instead of complete segments).
      * @type {Number}
      */
-    MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE: 0.4,
-  
+  MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE: 0.4,
+
     /**
      * The maximum authorized difference, in seconds, between the duration a
      * segment should have according to the Manifest and the actual duration it
@@ -701,8 +701,8 @@
      * could lead to unnecessary segment re-downloading.
      * @type {Number}
      */
-    MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE: 0.3,
-  
+  MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE: 0.3,
+
     /**
      * Minimum duration in seconds a segment should be into a buffered range to be
      * considered as part of that range.
@@ -721,8 +721,8 @@
      * this logic could lead to bugs with the current code.
      * @type {Number}
      */
-    MINIMUM_SEGMENT_SIZE: 0.005,
-  
+  MINIMUM_SEGMENT_SIZE: 0.005,
+
     /**
      * Append windows allow to filter media data from segments if they are outside
      * a given limit.
@@ -740,11 +740,11 @@
      * start and added to the window end) to avoid those problems.
      * @type {Object}
      */
-    APPEND_WINDOW_SECURITIES: {
-      START: 0.2,
-      END: 0.1,
-    },
-  
+  APPEND_WINDOW_SECURITIES: {
+    START: 0.2,
+    END: 0.1,
+  },
+
     /**
      * Maximum interval at which text tracks are refreshed in an "html"
      * textTrackMode.
@@ -761,8 +761,8 @@
      *
      * @type {Number}
      */
-    MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL: 50,
-  
+  MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL: 50,
+
     /**
      * On browsers with no ResizeObserver API, this will be the interval in
      * milliseconds at which we should check if the text track element has
@@ -779,8 +779,8 @@
      *
      * @type {Number}
      */
-    TEXT_TRACK_SIZE_CHECKS_INTERVAL: 250,
-  
+  TEXT_TRACK_SIZE_CHECKS_INTERVAL: 250,
+
     /**
      * The Buffer padding is a time offset from the current time that affects
      * the buffer.
@@ -798,12 +798,12 @@
      *
      * @type {Object}
      */
-    BUFFER_PADDING: {
-      audio: 1, // only "audio" segments
-      video: 3, // only "video" segments
-      other: 1, // tracks which are not audio/video (text images).
-    },
-  
+  BUFFER_PADDING: {
+    audio: 1, // only "audio" segments
+    video: 3, // only "video" segments
+    other: 1, // tracks which are not audio/video (text images).
+  },
+
     /**
      * Segments of different types are downloaded by steps:
      *
@@ -867,14 +867,14 @@
      *
      * @type {Array.<Number>}
      */
-    SEGMENT_PRIORITIES_STEPS : [ 2,   // 1st Step (priority number = 0):  < 2
-                                 4,   // 2nd Step (priority number = 1):  2-4
-                                 8,   // 3rd Step (priority number = 2):  4-8
-                                 12,  // 4th Step (priority number = 3):  8-12
-                                 18,  // 5th Step (priority number = 4):  12-18
-                                 25], // 6th Step (priority number = 5):  18-25
+  SEGMENT_PRIORITIES_STEPS : [ 2,   // 1st Step (priority number = 0):  < 2
+                               4,   // 2nd Step (priority number = 1):  2-4
+                               8,   // 3rd Step (priority number = 2):  4-8
+                               12,  // 4th Step (priority number = 3):  8-12
+                               18,  // 5th Step (priority number = 4):  12-18
+                               25], // 6th Step (priority number = 5):  18-25
                                       // 7th Step (priority number = 6):  >= 25
-  
+
     /**
      * Some segment requests are said to be "high priority".
      *
@@ -886,8 +886,8 @@
      * (beginning by the first step, which has the priority number `0`).
      * @type {number}
      */
-    MAX_HIGH_PRIORITY_LEVEL: 1, // priority number 1 and lower is high priority
-  
+  MAX_HIGH_PRIORITY_LEVEL: 1, // priority number 1 and lower is high priority
+
     /**
      * Enter here the first priority step (see `SEGMENT_PRIORITIES_STEPS`) that
      * will be considered as low priority.
@@ -900,8 +900,8 @@
      * `MAX_HIGH_PRIORITY_LEVEL`.
      * @type {number}
      */
-    MIN_CANCELABLE_PRIORITY: 3, // priority number 3 onward can be cancelled
-  
+  MIN_CANCELABLE_PRIORITY: 3, // priority number 3 onward can be cancelled
+
     /**
      * Robustnesses used in the {audio,video}Capabilities of the
      * MediaKeySystemConfiguration (EME).
@@ -911,12 +911,12 @@
      * Defined in order of importance (first will be tested first etc.)
      * @type {Array.<string>}
      */
-    EME_DEFAULT_WIDEVINE_ROBUSTNESSES: [ "HW_SECURE_ALL",
-                                         "HW_SECURE_DECODE",
-                                         "HW_SECURE_CRYPTO",
-                                         "SW_SECURE_DECODE",
-                                         "SW_SECURE_CRYPTO" ],
-  
+  EME_DEFAULT_WIDEVINE_ROBUSTNESSES: [ "HW_SECURE_ALL",
+                                       "HW_SECURE_DECODE",
+                                       "HW_SECURE_CRYPTO",
+                                       "SW_SECURE_DECODE",
+                                       "SW_SECURE_CRYPTO" ],
+
     /**
      * Link canonical key systems names to their respective reverse domain name,
      * used in the EME APIs.
@@ -925,17 +925,17 @@
      * @type {Object}
      */
     /* eslint-disable @typescript-eslint/consistent-type-assertions */
-    EME_KEY_SYSTEMS: {
-      clearkey:  [ "webkit-org.w3.clearkey",
-                   "org.w3.clearkey" ],
-      widevine:  [ "com.widevine.alpha" ],
-      playready: [ "com.microsoft.playready",
-                   "com.chromecast.playready",
-                   "com.youtube.playready" ],
-      fairplay: [ "com.apple.fps.1_0" ],
-    } as Partial<Record<string, string[]>>,
+  EME_KEY_SYSTEMS: {
+    clearkey:  [ "webkit-org.w3.clearkey",
+                 "org.w3.clearkey" ],
+    widevine:  [ "com.widevine.alpha" ],
+    playready: [ "com.microsoft.playready",
+                 "com.chromecast.playready",
+                 "com.youtube.playready" ],
+    fairplay: [ "com.apple.fps.1_0" ],
+  } as Partial<Record<string, string[]>>,
     /* eslint-enable @typescript-eslint/consistent-type-assertions */
-  
+
     /**
      * The Manifest parsing logic has a notion of "unsafeMode" which allows to
      * speed-up this process a lot with a small risk of de-synchronization with
@@ -946,24 +946,24 @@
      * This value defines how many consecutive time maximum the "unsafeMode"
      * parsing can be done.
      */
-    MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE: 10,
-  
+  MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE: 10,
+
     /**
      * Minimum time spent parsing the Manifest before we can authorize parsing
      * it in an "unsafeMode", to speed-up the process with a little risk.
      * Please note that this parsing time also sometimes includes idle time such
      * as when the parser is waiting for a request to finish.
      */
-    MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE: 200,
-  
+  MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE: 200,
+
     /**
      * Minimum amount of <S> elements in a DASH MPD's <SegmentTimeline> element
      * necessary to begin parsing the current SegmentTimeline element in an
      * unsafe manner (meaning: with risks of de-synchronization).
      * This is only done when the "unsafeMode" parsing mode is enabled.
      */
-    MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY: 300,
-  
+  MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY: 300,
+
     /**
      * When we detect that the local Manifest might be out-of-sync with the
      * server's one, we schedule a Manifest refresh.
@@ -974,8 +974,8 @@
      * still be refreshed before this delay for other reasons.
      * @type {Number}
      */
-    OUT_OF_SYNC_MANIFEST_REFRESH_DELAY: 3000,
-  
+  OUT_OF_SYNC_MANIFEST_REFRESH_DELAY: 3000,
+
     /**
      * When a partial Manifest update (that is an update with a partial sub-set
      * of the Manifest) fails, we will perform an update with the whole Manifest
@@ -984,8 +984,8 @@
      * we set a minimum delay to wait before doing the corresponding request.
      * @type {Number}
      */
-    FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY: 3000,
-  
+  FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY: 3000,
+
     /**
      * DASH Manifest based on a SegmentTimeline should normally have an
      * MPD@minimumUpdatePeriod attribute which should be sufficient to
@@ -1000,8 +1000,8 @@
      * this information.
      * /!\ This value is expressed in seconds.
      */
-    DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0: 3,
-  
+  DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0: 3,
+
     /**
      * Default value for the maximum number of simultaneous MediaKeySessions that
      * will be kept in a cache (linked to the MediaKeys instance) to avoid doing
@@ -1013,8 +1013,8 @@
      * will be overwritten.
      * @type {Number}
      */
-    EME_DEFAULT_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS: 15,
-  
+  EME_DEFAULT_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS: 15,
+
     /**
      * When playing contents with a persistent license, we will usually store some
      * information related to that MediaKeySession, to be able to play it at a
@@ -1046,8 +1046,8 @@
      *
      * This wasn't battle-tested however.
      */
-    EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION: 1000,
-  
+  EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION: 1000,
+
     /**
      * Attempts to closing a MediaKeySession can fail, most likely because the
      * MediaKeySession was not initialized yet.
@@ -1057,8 +1057,8 @@
      * maximum number of attemps we're going to make (`0` meaning no retry at all,
      * `1` only one retry and so on).
      */
-    EME_SESSION_CLOSING_MAX_RETRY: 5,
-  
+  EME_SESSION_CLOSING_MAX_RETRY: 5,
+
     /**
      * When closing a MediaKeySession failed due to the reasons explained for the
      * `EME_SESSION_CLOSING_MAX_RETRY` config property, we may (among other
@@ -1066,8 +1066,8 @@
      * that new attempt.
      * This value indicates the initial value for this delay, in milliseconds.
      */
-    EME_SESSION_CLOSING_INITIAL_DELAY: 100,
-  
+  EME_SESSION_CLOSING_INITIAL_DELAY: 100,
+
     /**
      * When closing a MediaKeySession failed due to the reasons explained for the
      * `EME_SESSION_CLOSING_MAX_RETRY` config property, we may (among other
@@ -1076,8 +1076,8 @@
      * This value indicates the maximum possible value for this delay, in
      * milliseconds.
      */
-    EME_SESSION_CLOSING_MAX_DELAY: 1000,
-  
+  EME_SESSION_CLOSING_MAX_DELAY: 1000,
+
     /**
      * After loading a persistent MediaKeySession, the RxPlayer needs to ensure
      * that its keys still allow to decrypt a content.
@@ -1091,8 +1091,8 @@
      * If after that time, the `keyStatuses` property is still empty, we will
      * consider that session as not usable.
      */
-    EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES: 100,
-  
+  EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES: 100,
+
     /**
      * The player relies on browser events and properties to update its status to
      * "ENDED".
@@ -1110,8 +1110,8 @@
      *
      * @type {Number|null}
      */
-    FORCED_ENDED_THRESHOLD: 0.0008,
-  
+  FORCED_ENDED_THRESHOLD: 0.0008,
+
     /**
      * Maximum duration from the current position we will let in the buffer when
      * switching an Adaptation of a given type.
@@ -1124,13 +1124,13 @@
      * can happen when removing the content being decoded.
      * @type {Object}
      */
-    ADAPTATION_SWITCH_BUFFER_PADDINGS: {
-      video: { before: 2, after: 2.5 },
-      audio: { before: 2, after: 2.5 },
-      text: { before: 0, after: 0 }, // not managed natively, so no problem here
-      image: { before: 0, after: 0 }, // not managed natively, so no problem here
-    },
-  
+  ADAPTATION_SWITCH_BUFFER_PADDINGS: {
+    video: { before: 2, after: 2.5 },
+    audio: { before: 2, after: 2.5 },
+    text: { before: 0, after: 0 }, // not managed natively, so no problem here
+    image: { before: 0, after: 0 }, // not managed natively, so no problem here
+  },
+
     /**
      * Interval, in milliseconds, at which we should manually flush
      * SourceBuffers.
@@ -1142,8 +1142,8 @@
      * SourceBuffer is currently updating.
      * @type {Number}
      */
-    SOURCE_BUFFER_FLUSHING_INTERVAL: 500,
-  
+  SOURCE_BUFFER_FLUSHING_INTERVAL: 500,
+
     /**
      * Any already-pushed segment starting before or at the current position +
      * CONTENT_REPLACEMENT_PADDING won't be replaced by new segments.
@@ -1152,21 +1152,21 @@
      * as we encountered many decoding issues when doing so.
      * @type {Number} - in seconds
      */
-    CONTENT_REPLACEMENT_PADDING: 1.2,
-  
+  CONTENT_REPLACEMENT_PADDING: 1.2,
+
     /**
      * For video and audio segments, determines two thresholds below which :
      * - The segment is considered as loaded from cache
      * - The segment may be loaded from cache depending on the previous request
      */
-    CACHE_LOAD_DURATION_THRESHOLDS: {
-      video: 50,
-      audio: 10,
-    },
-  
+  CACHE_LOAD_DURATION_THRESHOLDS: {
+    video: 50,
+    audio: 10,
+  },
+
     /** Interval we will use to poll for checking if an event shall be emitted */
-    STREAM_EVENT_EMITTER_POLL_INTERVAL: 250,
-  
+  STREAM_EVENT_EMITTER_POLL_INTERVAL: 250,
+
     /**
      * In Javascript, numbers are encoded in a way that a floating number may be
      * represented internally with a rounding error. When multiplying times in
@@ -1183,8 +1183,8 @@
      * It is much more than max rounding errors when seen into practice,
      * and not significant from the media loss perspective.
      */
-    DEFAULT_MAXIMUM_TIME_ROUNDING_ERROR: 1 / 1000,
-  
+  DEFAULT_MAXIMUM_TIME_ROUNDING_ERROR: 1 / 1000,
+
     /**
      * RxPlayer's media buffers have a linked history registering recent events
      * that happened on those.
@@ -1194,8 +1194,8 @@
      * The `BUFFERED_HISTORY_RETENTION_TIME` is the minimum age an entry of
      * that history can have before being removed from the history.
      */
-    BUFFERED_HISTORY_RETENTION_TIME: 60000,
-  
+  BUFFERED_HISTORY_RETENTION_TIME: 60000,
+
     /**
      * RxPlayer's media buffers have a linked history registering recent events
      * that happened on those.
@@ -1205,8 +1205,8 @@
      * The `BUFFERED_HISTORY_RETENTION_TIME` is the maximum number of entries
      * there can be in that history.
      */
-    BUFFERED_HISTORY_MAXIMUM_ENTRIES: 200,
+  BUFFERED_HISTORY_MAXIMUM_ENTRIES: 200,
 };
 
-export type IDefaultConfig = typeof DEFAULT_CONFIG
-export default DEFAULT_CONFIG
+export type IDefaultConfig = typeof DEFAULT_CONFIG;
+export default DEFAULT_CONFIG;
