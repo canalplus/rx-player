@@ -1,9 +1,6 @@
 const path = require("path");
 const { encode } = require("html-entities");
-const {
-  encodeHtmlAttributeValue,
-  toUriCompatibleRelativePath,
-} = require("./utils");
+const { toUriCompatibleRelativePath } = require("./utils");
 
 /**
  * Construct HTML element, as a string, which corresponds to the sidebar for
@@ -52,7 +49,7 @@ function generateSidebarHtml(
       path.dirname(currentPath)
     );
     const activeClass = isActive ? " active" : "";
-    const cleanedHref = encodeHtmlAttributeValue(relativeUri);
+    const cleanedHref = encode(relativeUri);
     return "<li class=\"sidebar-item\">" +
       `<a class="sidebar-link${activeClass}" href="` +
       cleanedHref +
@@ -71,11 +68,11 @@ function constructSidebarHeaderHtml(logoInfo) {
     let hasLink = false;
     if (typeof logoInfo.link === "string") {
       hasLink = true;
-      sidebarHeaderHtml += `<a href="${encodeHtmlAttributeValue(logoInfo.link)}">`;
+      sidebarHeaderHtml += `<a href="${encode(logoInfo.link)}">`;
     }
     if (typeof logoInfo.url === "string") {
       sidebarHeaderHtml += `<img alt="logo" class="sidebar-header-logo"` +
-        ` src="${encodeHtmlAttributeValue(logoInfo.url)}" />`;
+        ` src="${encode(logoInfo.url)}" />`;
     }
     if (hasLink) {
       sidebarHeaderHtml += "</a>";

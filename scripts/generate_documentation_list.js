@@ -51,16 +51,6 @@ function isDirectory(source) {
   return fs.lstatSync(source).isDirectory();
 }
 
-/**
- * @param {string} val
- * @returns {string}
- */
-function encodeHtmlAttributeValue(val) {
-  return val
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;");
-}
-
 const style = `<style type="text/css">
 body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #333; }
 ul { list-style-type: square; }
@@ -102,7 +92,7 @@ if (versions.length <= 0) {
       path.join(INITIAL_PATH, version, "doc/api/Overview.html") :
       path.join(INITIAL_PATH, version, "doc/pages/index.html");
 
-    body += `<li><a href=${encodeHtmlAttributeValue(dirPath)}>` +
+    body += `<li><a href=${encode(dirPath)}>` +
       encode(version) +
       "</a></li>";
   }
