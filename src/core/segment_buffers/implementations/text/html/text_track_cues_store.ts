@@ -322,7 +322,8 @@ export default class TextTrackCuesStore {
           cuesInfos.cues = getCuesBefore(cuesInfos.cues, start);
           cuesInfos.end = start;
 
-          cuesInfos = cuesBuffer[i + 1];
+          i++;
+          cuesInfos = cuesBuffer[i];
           while (cuesInfos !== undefined && end > cuesInfos.end) {
             cuesBuffer.splice(i, 1);
             cuesInfos = cuesBuffer[i];
