@@ -1338,7 +1338,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     const { isDirectFile, manifest } = this._priv_contentInfos;
     if (isDirectFile) {
-      return this.videoElement.currentTime;
+      const mediaElement : HTMLMediaElement & {
+        getStartDate? : () => number | null | undefined;
+      } = this.videoElement;
+      if (typeof mediaElement.getStartDate === "function") {
+        const startDate = mediaElement.getStartDate();
+        if (typeof startDate === "number" && !isNaN(startDate)) {
+          return startDate + mediaElement.currentTime;
+        }
+      }
+      return mediaElement.currentTime;
     }
     if (manifest !== null) {
       const currentTime = this.videoElement.currentTime;
