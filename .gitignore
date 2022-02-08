@@ -16,6 +16,12 @@
 /tests/integration/coverage
 /coverage
 
+/tests/performance/node_modules
+/tests/performance/bundle1.js
+/tests/performance/bundle2.js
+/tests/performance/package.json
+/tests/performance/package-lock.json
+
 /dist/_esm5.processed
 /dist/_esm5.raw
 
