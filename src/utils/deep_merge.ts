@@ -9,12 +9,16 @@ import objectAssign from "./object_assign";
  * @param item
  * @returns {boolean}
  */
-function isObject(item: unknown) : boolean {
+function isObject(item: any) : boolean {
   return (item !== null
           && item !== undefined
           && typeof item === "object"
           && !Array.isArray(item));
 }
+
+type IDeepPartial<T> = {
+  [P in keyof T]?: IDeepPartial<T[P]> ;
+} 
 
 /**
  * Deeply merge nested objects
@@ -22,18 +26,19 @@ function isObject(item: unknown) : boolean {
  * @param sources
  * @returns output : merged object
  */
-export default function deepMerge(target: any, ...sources: any[]): any {
+export default function deepMerge<T>(target: T, ...sources: Array<IDeepPartial<T>>): T {
   if (sources.length === 0) {
     return target;
   }
-  const source = sources.shift();
+  const source = sources.shift() as IDeepPartial<T>;
   if (isObject(target) && isObject(source)) {
     for (const key in source) {
       if (isObject(source[key])) {
         if (target[key] === undefined) {
           objectAssign(target, { [key]: {} });
-        }
-        deepMerge(target[key], source[key]);
+        } 
+        const newTarget = target[key]
+        deepMerge(newTarget, source[key] as IDeepPartial<typeof newTarget>)
       } else {
         objectAssign(target, { [key]: source[key] });
       }
@@ -41,3 +46,5 @@ export default function deepMerge(target: any, ...sources: any[]): any {
   }
   return deepMerge(target, ...sources);
 }
+
+deepMerge({a: "a", b: { c : "3"}}, {b: { c : "3"}})
