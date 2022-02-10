@@ -37,7 +37,6 @@ import resolveBaseURLs, {
   IResolvedBaseUrl,
 } from "./resolve_base_urls";
 
-const { DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 } = config;
 
 /** Possible options for `parseMPD`.  */
 export interface IMPDParserArguments {
@@ -277,7 +276,7 @@ function parseCompleteIntermediateRepresentation(
       rootAttributes.minimumUpdatePeriod >= 0)
   {
     lifetime = rootAttributes.minimumUpdatePeriod === 0 ?
-      DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 :
+      config.getCurrent().DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 :
       rootAttributes.minimumUpdatePeriod;
   }
 

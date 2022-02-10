@@ -140,7 +140,6 @@ import TrackChoiceManager, {
 
 /* eslint-disable @typescript-eslint/naming-convention */
 
-const { DEFAULT_UNMUTED_VOLUME } = config;
 
 const { isPageActive,
         isVideoVisible,
@@ -489,7 +488,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             videoElement,
             wantedBufferAhead,
             stopAtEnd } = parseConstructorOptions(options);
-
+    const { DEFAULT_UNMUTED_VOLUME } = config.getCurrent();
     // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
@@ -1757,6 +1756,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * If the volume was set to 0, set a default volume instead (see config).
    */
   unMute() : void {
+    const { DEFAULT_UNMUTED_VOLUME } = config.getCurrent();
     const vol = this.getVolume();
     if (vol === 0) {
       this.setVolume(this._priv_mutedMemory === 0 ? DEFAULT_UNMUTED_VOLUME :

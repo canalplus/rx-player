@@ -79,7 +79,6 @@ import {
   IMediaSourceLoaderEvent,
 } from "./types";
 
-const { OUT_OF_SYNC_MANIFEST_REFRESH_DELAY } = config;
 
 /** Arguments to give to the `InitializeOnMediaSource` function. */
 export interface IInitializeArguments {
@@ -368,6 +367,7 @@ export default function InitializeOnMediaSource(
                                         canUseUnsafeMode: true });
                 return null;
               case "manifest-might-be-out-of-sync":
+                const { OUT_OF_SYNC_MANIFEST_REFRESH_DELAY } = config.getCurrent();
                 scheduleRefresh$.next({
                   completeRefresh: true,
                   canUseUnsafeMode: false,

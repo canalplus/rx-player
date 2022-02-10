@@ -17,10 +17,6 @@
 import config from "../../config";
 import EWMA from "./utils/ewma";
 
-const { ABR_MINIMUM_TOTAL_BYTES,
-        ABR_MINIMUM_CHUNK_SIZE,
-        ABR_FAST_EMA,
-        ABR_SLOW_EMA } = config;
 
 /**
  * Calculate a mean bandwidth based on the bytes downloaded and the amount
@@ -35,6 +31,7 @@ export default class BandwidthEstimator {
   private _bytesSampled : number;
 
   constructor() {
+    const { ABR_FAST_EMA, ABR_SLOW_EMA } = config.getCurrent();
     /**
      * A fast-moving average.
      * @private
@@ -63,6 +60,7 @@ export default class BandwidthEstimator {
    *   request.
    */
   public addSample(durationInMs : number, numberOfBytes : number) : void {
+    const { ABR_MINIMUM_CHUNK_SIZE } = config.getCurrent();
     if (numberOfBytes < ABR_MINIMUM_CHUNK_SIZE) {
       return;
     }
@@ -80,6 +78,7 @@ export default class BandwidthEstimator {
    * @returns {Number|undefined}
    */
   public getEstimate() : number|undefined {
+    const { ABR_MINIMUM_TOTAL_BYTES } = config.getCurrent();
     if (this._bytesSampled < ABR_MINIMUM_TOTAL_BYTES) {
       return undefined;
     }
@@ -94,6 +93,7 @@ export default class BandwidthEstimator {
    * Reset the bandwidth estimation.
    */
   public reset() : void {
+    const { ABR_FAST_EMA, ABR_SLOW_EMA } = config.getCurrent();
     this._fastEWMA = new EWMA(ABR_FAST_EMA);
     this._slowEWMA = new EWMA(ABR_SLOW_EMA);
     this._bytesSampled = 0;

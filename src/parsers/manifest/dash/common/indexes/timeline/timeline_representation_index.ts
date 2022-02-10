@@ -47,7 +47,6 @@ import constructTimelineFromElements from "./construct_timeline_from_elements";
 // eslint-disable-next-line max-len
 import constructTimelineFromPreviousTimeline from "./construct_timeline_from_previous_timeline";
 
-const { MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY } = config;
 
 /**
  * Index property defined for a SegmentTimeline RepresentationIndex
@@ -578,6 +577,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     const newElements = this._parseTimeline();
     this._parseTimeline = null; // Free memory
 
+    const { MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY } = config.getCurrent();
     if (this._unsafelyBaseOnPreviousIndex === null ||
         newElements.length < MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY)
     {

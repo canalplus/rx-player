@@ -48,7 +48,6 @@ import {
   SegmentBufferOperation,
 } from "../types";
 
-const { SOURCE_BUFFER_FLUSHING_INTERVAL } = config;
 
 /**
  * Item added to the AudioVideoSegmentBuffer's queue before being processed into
@@ -171,6 +170,8 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
     this._pendingTask = null;
     this._lastInitSegment = null;
     this.codec = codec;
+
+    const { SOURCE_BUFFER_FLUSHING_INTERVAL } = config.getCurrent();
 
     // Some browsers (happened with firefox 66) sometimes "forget" to send us
     // `update` or `updateend` events.

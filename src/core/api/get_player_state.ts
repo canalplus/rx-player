@@ -17,7 +17,6 @@
 import config from "../../config";
 import { IStallingSituation } from "../init";
 
-const { FORCED_ENDED_THRESHOLD } = config;
 
 export type IPlayerState = "STOPPED" |
                            "LOADED" |
@@ -56,6 +55,7 @@ export default function getLoadedContentState(
   stalledStatus : IStallingSituation |
                   null
 ) : IPlayerState {
+  const { FORCED_ENDED_THRESHOLD } = config.getCurrent();
   if (mediaElement.ended) {
     return PLAYER_STATES.ENDED;
   }

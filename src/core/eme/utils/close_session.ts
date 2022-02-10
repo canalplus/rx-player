@@ -32,9 +32,6 @@ import { onKeyMessage$, onKeyStatusesChange$ } from "../../../compat/event_liste
 import config from "../../../config";
 import log from "../../../log";
 
-const { EME_SESSION_CLOSING_MAX_RETRY,
-        EME_SESSION_CLOSING_INITIAL_DELAY,
-        EME_SESSION_CLOSING_MAX_DELAY } = config;
 
 /**
  * Close a MediaKeySession with multiple attempts if needed and do not throw if
@@ -63,6 +60,11 @@ export default function safelyCloseMediaKeySession(
     log.debug("EME: Trying to close a MediaKeySession",
               mediaKeySession.sessionId,
               retryNb);
+
+    const { EME_SESSION_CLOSING_MAX_RETRY,
+            EME_SESSION_CLOSING_INITIAL_DELAY,
+            EME_SESSION_CLOSING_MAX_DELAY } = config.getCurrent();
+
     return closeSession(mediaKeySession).pipe(
       tap(() => { log.debug("EME: Succeeded to close MediaKeySession"); }),
       catchError((err : unknown) => {

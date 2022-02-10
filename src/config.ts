@@ -13,7 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { configHandler } from "./experimental/features/config_override";
+import DEFAULT_CONFIG, { IDefaultConfig } from "./default_config";
+import deepMerge from "./utils/deep_merge";
 
 
-export default configHandler._config;
+class ConfigHandler {
+  _config = DEFAULT_CONFIG;
+
+  update(config: Partial<IDefaultConfig>) {
+    const newConfig = deepMerge(DEFAULT_CONFIG, config) as IDefaultConfig;
+    this._config = newConfig;
+  }
+
+  getCurrent(): IDefaultConfig {
+    return this._config;
+  }
+}
+const configHandler = new ConfigHandler();
+export default configHandler;
+
+

@@ -29,7 +29,6 @@ import {
   createIndexURLs,
 } from "./tokens";
 
-const { MINIMUM_SEGMENT_SIZE } = config;
 
 /**
  * Index property defined for a SegmentTemplate RepresentationIndex
@@ -532,7 +531,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       // segment that there actually is due to a very little difference between
       // the period's duration and a multiple of a segment's duration.
       // Check that we're within a good margin
-      const minimumDuration = MINIMUM_SEGMENT_SIZE * timescale;
+      const minimumDuration = config.getCurrent().MINIMUM_SEGMENT_SIZE * timescale;
       if (maximumTime - regularLastSegmentStart > minimumDuration ||
           numberIndexedToZero === 0)
       {

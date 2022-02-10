@@ -43,23 +43,6 @@ import {
   IVideoTrackPreference,
 } from "./track_choice_manager";
 
-const { DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
-        DEFAULT_AUTO_PLAY,
-        DEFAULT_CODEC_SWITCHING_BEHAVIOR,
-        DEFAULT_ENABLE_FAST_SWITCHING,
-        DEFAULT_INITIAL_BITRATES,
-        DEFAULT_LIMIT_VIDEO_WIDTH,
-        DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
-        DEFAULT_MIN_BITRATES,
-        DEFAULT_MAX_BITRATES,
-        DEFAULT_MAX_BUFFER_AHEAD,
-        DEFAULT_MAX_BUFFER_BEHIND,
-        DEFAULT_SHOW_NATIVE_SUBTITLE,
-        DEFAULT_STOP_AT_END,
-        DEFAULT_TEXT_TRACK_MODE,
-        DEFAULT_THROTTLE_WHEN_HIDDEN,
-        DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
-        DEFAULT_WANTED_BUFFER_AHEAD } = config;
 
 export { IKeySystemOption };
 
@@ -344,6 +327,17 @@ function parseConstructorOptions(
   let maxAudioBitrate : number;
   let maxVideoBitrate : number;
 
+  const { DEFAULT_INITIAL_BITRATES,
+          DEFAULT_LIMIT_VIDEO_WIDTH,
+          DEFAULT_MIN_BITRATES,
+          DEFAULT_MAX_BITRATES,
+          DEFAULT_MAX_BUFFER_AHEAD,
+          DEFAULT_MAX_BUFFER_BEHIND,
+          DEFAULT_STOP_AT_END,
+          DEFAULT_THROTTLE_WHEN_HIDDEN,
+          DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
+          DEFAULT_WANTED_BUFFER_AHEAD } = config.getCurrent();
+
   if (isNullOrUndefined(options.maxBufferAhead)) {
     maxBufferAhead = DEFAULT_MAX_BUFFER_AHEAD;
   } else {
@@ -575,6 +569,14 @@ function parseLoadVideoOptions(
   let textTrackMode : "native"|"html";
   let textTrackElement : HTMLElement|undefined;
   let startAt : IParsedStartAtOption|undefined;
+
+  const { DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
+          DEFAULT_AUTO_PLAY,
+          DEFAULT_CODEC_SWITCHING_BEHAVIOR,
+          DEFAULT_ENABLE_FAST_SWITCHING,
+          DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
+          DEFAULT_SHOW_NATIVE_SUBTITLE,
+          DEFAULT_TEXT_TRACK_MODE } = config.getCurrent();
 
   if (isNullOrUndefined(options)) {
     throw new Error("No option set on loadVideo");

@@ -65,8 +65,6 @@ interface IKeySystemType { keyName : string | undefined;
                            keyType : string;
                            keySystemOptions : IKeySystemOption; }
 
-const { EME_DEFAULT_WIDEVINE_ROBUSTNESSES,
-        EME_KEY_SYSTEMS } = config;
 
 /**
  * @param {Array.<Object>} keySystems
@@ -121,6 +119,7 @@ function checkCachedMediaKeySystemAccess(
  * @returns {string|undefined} - Either the canonical name, or undefined.
  */
 function findKeySystemCanonicalName(ksType: string) : string | undefined {
+  const { EME_KEY_SYSTEMS } = config.getCurrent();
   for (const ksName of Object.keys(EME_KEY_SYSTEMS)) {
     if (arrayIncludes(EME_KEY_SYSTEMS[ksName] as string[], ksType)) {
       return ksName;
@@ -158,6 +157,7 @@ function buildKeySystemConfigurations(
   if (keySystem.distinctiveIdentifierRequired === true) {
     distinctiveIdentifier = "required";
   }
+  const { EME_DEFAULT_WIDEVINE_ROBUSTNESSES } = config.getCurrent();
 
   // Set robustness, in order of consideration:
   //   1. the user specified its own robustnesses
@@ -283,7 +283,7 @@ export default function getMediaKeySystemAccess(
      */
     const keySystemsType: IKeySystemType[] = keySystemsConfigs.reduce(
       (arr: IKeySystemType[], keySystemOptions) => {
-
+        const { EME_KEY_SYSTEMS } = config.getCurrent();
         const managedRDNs = EME_KEY_SYSTEMS[keySystemOptions.type];
         let ksType;
 

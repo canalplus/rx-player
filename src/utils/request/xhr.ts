@@ -23,7 +23,6 @@ import {
   CancellationSignal,
 } from "../task_canceller";
 
-const { DEFAULT_REQUEST_TIMEOUT } = config;
 
 const DEFAULT_RESPONSE_TYPE : XMLHttpRequestResponseType = "json";
 
@@ -129,6 +128,8 @@ export default function request(
 export default function request<T>(
   options : IRequestOptions< XMLHttpRequestResponseType | null | undefined >
 ) : Promise<IRequestResponse< T, XMLHttpRequestResponseType >> {
+
+  const { DEFAULT_REQUEST_TIMEOUT } = config.getCurrent();
   const requestOptions = {
     url: options.url,
     headers: options.headers,

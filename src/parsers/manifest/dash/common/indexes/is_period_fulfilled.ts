@@ -16,7 +16,6 @@
 
 import config from "../../../../../config";
 
-const { DEFAULT_MAXIMUM_TIME_ROUNDING_ERROR } = config;
 
 /**
  * In Javascript, numbers are encoded in a way that a floating number may be
@@ -36,7 +35,7 @@ export default function isPeriodFulfilled(
   periodEnd: number
 ): boolean {
   const scaledRoundingError =
-    DEFAULT_MAXIMUM_TIME_ROUNDING_ERROR * timescale;
+    config.getCurrent().DEFAULT_MAXIMUM_TIME_ROUNDING_ERROR * timescale;
   return (lastSegmentEnd + scaledRoundingError) >= periodEnd;
 }
 

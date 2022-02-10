@@ -38,9 +38,6 @@ import {
 } from "../fetchers";
 import { IWarningEvent } from "./types";
 
-const { FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY,
-        MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE,
-        MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE } = config;
 
 /** Arguments to give to the `manifestUpdateScheduler` */
 export interface IManifestUpdateSchedulerArguments {
@@ -139,6 +136,9 @@ export default function manifestUpdateScheduler({
       parsingTime + (updatingTime ?? 0) :
       undefined;
 
+    const { MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE,
+            MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE } = config.getCurrent();
+
     /**
      * "unsafeMode" is a mode where we unlock advanced Manifest parsing
      * optimizations with the added risk to lose some information.
@@ -147,6 +147,7 @@ export default function manifestUpdateScheduler({
      * Only perform parsing in `unsafeMode` when the last full parsing took a
      * lot of time and do not go higher than the maximum consecutive time.
      */
+
     const unsafeModeEnabled = consecutiveUnsafeMode > 0 ?
       consecutiveUnsafeMode < MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE :
       totalUpdateTime !== undefined ?
@@ -309,6 +310,7 @@ export default function manifestUpdateScheduler({
                                                  "unknown error";
             log.warn(`MUS: Attempt to update Manifest failed: ${message}`,
                      "Re-downloading the Manifest fully");
+            const { FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY } = config.getCurrent();
             return startManualRefreshTimer(FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY,
                                            minimumManifestUpdateInterval,
                                            newSendingTime)

@@ -33,7 +33,6 @@ import {
   SegmentBuffer,
 } from "../../segment_buffers";
 
-const { ADAPTATION_SWITCH_BUFFER_PADDINGS } = config;
 
 export type IAdaptationSwitchStrategy =
   { type: "continue"; value: undefined } |
@@ -157,6 +156,7 @@ export default function getAdaptationSwitchStrategy(
 
   // Next, exclude data around current position to avoid decoding issues
   const bufferType = adaptation.type;
+  const { ADAPTATION_SWITCH_BUFFER_PADDINGS } = config.getCurrent();
 
   /** Ranges that won't be cleaned from the current buffer. */
   let paddingBefore = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].before;

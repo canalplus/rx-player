@@ -18,7 +18,6 @@ import config from "../../config";
 import log from "../../log";
 import Manifest from "../../manifest";
 
-const { DEFAULT_LIVE_GAP } = config;
 
 export interface IInitialTimeOptions { position? : number;
                                        wallClockTime? : number;
@@ -90,6 +89,8 @@ export default function getInitialTime(
             clockOffset } = manifest;
     const maximumPosition = manifest.getMaximumPosition();
     let liveTime : number;
+    const { DEFAULT_LIVE_GAP } = config.getCurrent();
+
     if (clockOffset == null) {
       log.info("Init: no clock offset found for a live content, " +
                "starting close to maximum available position");
