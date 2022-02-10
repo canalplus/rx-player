@@ -379,16 +379,16 @@ export default function RepresentationStream<TSegmentDataType>({
                                 imminentDiscontinuity: status.imminentDiscontinuity,
                                 hasFinishedLoading: status.hasFinishedLoading,
                                 neededSegments: status.neededSegments } });
-      const gcedPosition = Math.max(
-        0,
-        wantedStartPosition - UPTO_CURRENT_POSITION_CLEANUP);
-
-      const bufferRemoval = status.isBufferFull ?
-            segmentBuffer
-              .removeBuffer(0, gcedPosition)
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-              .pipe(ignoreElements()) :
-            EMPTY;
+      let bufferRemoval = EMPTY;
+      if (status.isBufferFull) {
+        const gcedPosition = Math.max(
+          0,
+          wantedStartPosition - UPTO_CURRENT_POSITION_CLEANUP);
+        bufferRemoval = segmentBuffer
+          .removeBuffer(0, gcedPosition)
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          .pipe(ignoreElements());
+      }
       return status.shouldRefreshManifest ?
         observableConcat(observableOf(EVENTS.needsManifestRefresh()),
                          bufferStatusEvt, bufferRemoval) :

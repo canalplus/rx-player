@@ -181,7 +181,7 @@ export default {
   DEFAULT_WANTED_BUFFER_AHEAD: 30,
 
   /**
-   * Default video buffer memory limit in kilobytes..
+   * Default video buffer memory limit in kilobytes.
    * Once enough video content has been downloaded to fill the buffer up to
    * DEFAULT_MAX_VIDEO_BUFFER_SIZE , we will stop downloading
    * content.
@@ -1233,21 +1233,22 @@ export default {
   BUFFERED_HISTORY_MAXIMUM_ENTRIES: 200,
 
   /**
-   * Minimum buffer (in seconds ) we should have, regardless of memory
+   * Minimum buffer (in seconds) we should have, regardless of memory
    * constraints
    */
   MIN_BUFFER_LENGTH : 5,
 
   /**
-   * Minimum distance (in seconds) from the end
+   * Minimum buffer in seconds ahead relative to current time
    * we should be able to download
-   * Before starting to garbage collect previous segments
+   * Before trying to agressively free up memory
    */
   MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP: 10,
 
   /**
-   * How much close to the current position we should garbage collect
-   * If we have the memory is saturated
+   * Distance in seconds behind the current position
+   * the player will free up to in the case we agressively free up memory
+   * It is set to avoid playback issues
    */
   UPTO_CURRENT_POSITION_CLEANUP : 5,
 };
