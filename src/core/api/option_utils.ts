@@ -368,7 +368,7 @@ function parseConstructorOptions(
       /* eslint-enable max-len */
     }
   }
-  
+
   if (isNullOrUndefined(options.maxVideoBufferSize)) {
     maxVideoBufferSize = DEFAULT_MAX_VIDEO_BUFFER_SIZE;
   } else {
