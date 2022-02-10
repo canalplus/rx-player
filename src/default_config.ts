@@ -1206,6 +1206,26 @@ const DEFAULT_CONFIG = {
      * there can be in that history.
      */
   BUFFERED_HISTORY_MAXIMUM_ENTRIES: 200,
+  
+    /**
+   * Minimum buffer (in seconds) we should have, regardless of memory
+   * constraints
+   */
+  MIN_BUFFER_LENGTH : 5,
+
+  /**
+  * Minimum buffer in seconds ahead relative to current time
+  * we should be able to download
+  * Before trying to agressively free up memory
+  */
+  MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP: 10,
+
+  /**
+  * Distance in seconds behind the current position
+  * the player will free up to in the case we agressively free up memory
+  * It is set to avoid playback issues
+  */
+  UPTO_CURRENT_POSITION_CLEANUP : 5,
 };
 
 export type IDefaultConfig = typeof DEFAULT_CONFIG;
