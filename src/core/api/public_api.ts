@@ -1338,6 +1338,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     const { isDirectFile, manifest } = this._priv_contentInfos;
     if (isDirectFile) {
+      // Calculating the "wall-clock time" necessitate to obtain first an offset,
+      // and then adding that offset to the HTMLMediaElement's current position.
+      // That offset is in most case present inside the Manifest file, yet in
+      // directfile mode, the RxPlayer won't parse that file, the browser does it.
+      //
+      // Thankfully Safari declares a `getStartDate` method allowing to obtain
+      // that offset when available. This logic is thus mainly useful when
+      // playing HLS contents in directfile mode on Safari.
       const mediaElement : HTMLMediaElement & {
         getStartDate? : () => number | null | undefined;
       } = this.videoElement;
