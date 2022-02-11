@@ -138,7 +138,7 @@ export default function getNeededSegments({
    * Epsilon compensating for rounding errors when comparing the start and end
    * time of multiple segments.
    */
-  const ROUNDING_ERROR = Math.min(1 / 60, config.getCurrent().MINIMUM_SEGMENT_SIZE);
+  const ROUNDING_ERROR = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
   const segmentsToDownload = availableSegmentsForRange.filter(segment => {
     const contentObject = objectAssign({ segment }, content);
 

@@ -200,10 +200,11 @@ export default class PlaybackObserver {
    */
   private _createInnerObservable() : Observable<IPlaybackObservation> {
 
-    const { SAMPLING_INTERVAL_MEDIASOURCE,
-            SAMPLING_INTERVAL_LOW_LATENCY,
-            SAMPLING_INTERVAL_NO_MEDIASOURCE } = config.getCurrent();
+    
     return observableDefer(() : Observable<IPlaybackObservation> => {
+      const { SAMPLING_INTERVAL_MEDIASOURCE,
+        SAMPLING_INTERVAL_LOW_LATENCY,
+        SAMPLING_INTERVAL_NO_MEDIASOURCE } = config.getCurrent();
       const getCurrentObservation = (
         event : IPlaybackObserverEventType
       ) : IPlaybackObservation => {
