@@ -109,15 +109,17 @@ export default class Adaptation {
    * @param {Object|undefined} [options]
    */
   constructor(parsedAdaptation : IParsedAdaptation, options : {
-    representationFilter? : IRepresentationFilter;
-    isManuallyAdded? : boolean;
+    representationFilter? : IRepresentationFilter | undefined;
+    isManuallyAdded? : boolean | undefined;
   } = {}) {
     const { trickModeTracks } = parsedAdaptation;
     const { representationFilter, isManuallyAdded } = options;
     this.id = parsedAdaptation.id;
-    this.isTrickModeTrack = parsedAdaptation.isTrickModeTrack;
-
     this.type = parsedAdaptation.type;
+
+    if  (parsedAdaptation.isTrickModeTrack !== undefined) {
+      this.isTrickModeTrack = parsedAdaptation.isTrickModeTrack;
+    }
 
     if (parsedAdaptation.language !== undefined) {
       this.language = parsedAdaptation.language;

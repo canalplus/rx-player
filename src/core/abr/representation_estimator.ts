@@ -119,7 +119,7 @@ export interface IABREstimate {
    * have, you will most likely only want to do it when the Representation is
    * known to be maintaninable.
    */
-  knownStableBitrate?: number;
+  knownStableBitrate?: number | undefined;
 }
 
 /** Media properties the `RepresentationEstimator` will need to keep track of. */

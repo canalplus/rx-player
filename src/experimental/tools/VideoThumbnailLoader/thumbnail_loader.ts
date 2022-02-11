@@ -75,8 +75,8 @@ export default class VideoThumbnailLoader {
   private readonly _videoElement: HTMLVideoElement;
 
   private _player: Player;
-  private _currentTask?: ITimeSettingTask;
-  private _nextTaskSegmentsCompleteIds?: string[];
+  private _currentTask : ITimeSettingTask | undefined;
+  private _nextTaskSegmentsCompleteIds : string[] | undefined;
   constructor(videoElement: HTMLVideoElement,
               player: Player) {
     this._videoElement = videoElement;

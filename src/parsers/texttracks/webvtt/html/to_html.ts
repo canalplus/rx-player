@@ -39,10 +39,10 @@ export default function toHTML(
   cueObj : { start : number;
              end : number;
              settings: Partial<Record<string, string>>;
-             header? : string;
+             header? : string | undefined;
              payload : string[]; },
   styling : { classes : IStyleElements;
-              global? : string; }
+              global? : string | undefined; }
 ) : IVTTHTMLCue {
   const { start, end, settings, header, payload } = cueObj;
 

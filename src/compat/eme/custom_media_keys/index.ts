@@ -173,14 +173,18 @@ if (isNode ||
       supported = supported && (distinctiveIdentifier !== "required");
 
       if (supported) {
-        const keySystemConfigurationResponse = {
-          videoCapabilities,
-          audioCapabilities,
+        const keySystemConfigurationResponse : MediaKeySystemConfiguration = {
           initDataTypes: ["cenc"],
           distinctiveIdentifier: "not-allowed" as const,
           persistentState: "required" as const,
           sessionTypes: ["temporary", "persistent-license"],
         };
+        if (videoCapabilities !== undefined) {
+          keySystemConfigurationResponse.videoCapabilities = videoCapabilities;
+        }
+        if (audioCapabilities !== undefined) {
+          keySystemConfigurationResponse.audioCapabilities = audioCapabilities;
+        }
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const customMediaKeys = createCustomMediaKeys(keyType);

@@ -18,8 +18,8 @@ import { IRepresentationIndex } from "../../manifest";
 import { IHDRInformation } from "../../manifest/types";
 
 export interface IManifestStreamEvent { start: number;
-                                        end?: number;
-                                        id?: string;
+                                        end?: number | undefined;
+                                        id?: string | undefined;
                                         data: IParsedStreamEventData; }
 
 export interface IParsedStreamEventData {
@@ -33,7 +33,7 @@ export interface IParsedStreamEventData {
 
 /** Describes information about an encryption Key ID of a given media. */
 export interface IContentProtectionKID { keyId : Uint8Array;
-                                         systemId?: string; }
+                                         systemId?: string | undefined; }
 
 /**
  * Encryption initialization data.
@@ -92,37 +92,37 @@ export interface IParsedRepresentation {
   id: string;
 
   /** Codec(s) associated with this Representation. */
-  codecs?: string;
+  codecs?: string | undefined;
   /**
    * Information about the encryption associated with this Representation.
    * Not set if unknown or if the content is not encrypted.
    */
-  contentProtections? : IContentProtections;
+  contentProtections? : IContentProtections | undefined;
   /**
    * Frame rate (images per seconds) associated with this Representation.
    * Not set if unknown or if it makes no sense (e.g. for subtitles).
    */
-  frameRate?: string;
+  frameRate?: string | undefined;
   /**
    * Height (top to bottom) in pixels this Representation has.
    * Not set if unknown or if it makes no sense (e.g. for audio).
    */
-  height?: number;
+  height?: number | undefined;
   /**
    * Defines the mime-type of the content.
    * This allows to deduce the media container but most of the time, the
    * `codecs` will also be needed to know how to decode that media.
    */
-  mimeType?: string;
+  mimeType?: string | undefined;
   /**
    * Width (left to right) in pixels this Representation has.
    * Not set if unknown or if it makes no sense (e.g. for audio).
    */
-  width?: number;
+  width?: number | undefined;
   /**
    * Information about the HDR characteristic of a content.
    */
-  hdrInfo?: IHDRInformation;
+  hdrInfo?: IHDRInformation | undefined;
 }
 
 /** Every possible types an Adaptation can have. */
@@ -155,34 +155,34 @@ export interface IParsedAdaptation {
    * Not set if unknown or if it makes no sense for the current track (e.g. for
    * a video track).
    */
-  audioDescription? : boolean;
+  audioDescription? : boolean | undefined;
   /**
    * Whether this Adaptation are closed captions for the hard of hearing.
    * Not set if unknown or if it makes no sense for the current track (e.g. for
    * a video track).
    */
-  closedCaption? : boolean;
+  closedCaption? : boolean | undefined;
   /**
    * If true this Adaptation is in a dub: it was recorded in another language
    * than the original(s) one(s).
    */
-  isDub? : boolean;
+  isDub? : boolean | undefined;
   /**
    * If true this Adaptation is in a sign interpreted: which is a variant of the
    * video with sign language.
    */
-  isSignInterpreted? : boolean;
+  isSignInterpreted? : boolean | undefined;
   /** Tells if the track is a trick mode track. */
-  isTrickModeTrack? : boolean;
+  isTrickModeTrack? : boolean | undefined;
   /**
    * Language the `Adaptation` is in.
    * Not set if unknown or if it makes no sense for the current track.
    */
-  language?: string;
+  language?: string | undefined;
   /**
    * TrickMode tracks attached to the adaptation.
    */
-  trickModeTracks?: IParsedAdaptation[];
+  trickModeTracks?: IParsedAdaptation[] | undefined;
 }
 
 /** Information on a given period of time in the Manifest */
@@ -205,18 +205,18 @@ export interface IParsedPeriod {
    * Duration of the Period (from the start to the end), in seconds.
    * `undefined` if the Period is the last one and is still being updated.
    */
-  duration? : number;
+  duration? : number | undefined;
   /**
    * Time at which the Period ends, in seconds.
    * `undefined` if the Period is the last one and is still
    * being updated.
    */
-  end? : number;
+  end? : number | undefined;
   /**
    * Array containing every stream event from period in manifest.
    * `undefined` if no parsed stream event in manifest.
    */
-  streamEvents?: IManifestStreamEvent[];
+  streamEvents?: IManifestStreamEvent[] | undefined;
 }
 
 /** Information on the whole content */
@@ -240,23 +240,23 @@ export interface IParsedManifest {
    * The wall-clock time when the manifest was generated and published at the
    * origin server
    */
-  publishTime?: number;
+  publishTime? : number | undefined;
   /** Underlying transport protocol: "smooth", "dash", "metaplaylist" etc. */
   transportType: string;
   /** Base time from which the segments are generated. */
-  availabilityStartTime? : number;
+  availabilityStartTime? : number | undefined;
   /**
    * Offset, in milliseconds, the client's clock (in terms of `performance.now`)
    * has relatively to the server's
    */
-  clockOffset?: number;
+  clockOffset? : number | undefined;
   /** If set, the Manifest needs to be updated when that Promise resolves. */
-  expired? : Promise<void>;
+  expired? : Promise<void> | undefined;
   /**
    * Duration of the validity of this Manifest from its download time.
    * After that time has elapsed, the Manifest should be refreshed.
    */
-  lifetime?: number;
+  lifetime? : number | undefined;
   /**
    * Data allowing to calculate the minimum and maximum seekable positions at
    * any given time.
@@ -266,7 +266,7 @@ export interface IParsedManifest {
      * The minimum time, in seconds, available in this Manifest.
      * `undefined` if that value is unknown.
      */
-    absoluteMinimumTime? : number;
+    absoluteMinimumTime? : number | undefined;
     /**
      * Some dynamic contents have the concept of a "window depth" (or "buffer
      * depth") which allows to set a minimum position for all reachable
@@ -311,8 +311,8 @@ export interface IParsedManifest {
    * Suggested delay from the last position the player should start from by
    * default.
    */
-  suggestedPresentationDelay? : number;
+  suggestedPresentationDelay? : number | undefined;
   /** URIs where the manifest can be refreshed by order of importance. */
-  uris?: string[];
+  uris? : string[] | undefined;
 }
 

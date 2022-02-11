@@ -63,7 +63,7 @@ interface IVideoTrackPreferenceObject {
  */
 interface ITMAudioRepresentation { id : string|number;
                                    bitrate : number;
-                                   codec? : string; }
+                                   codec? : string | undefined; }
 
 /** Audio track returned by the TrackChoiceManager. */
 export interface ITMAudioTrack { language : string;
@@ -85,11 +85,11 @@ export interface ITMTextTrack { language : string;
  */
 interface ITMVideoRepresentation { id : string|number;
                                    bitrate : number;
-                                   width? : number;
-                                   height? : number;
-                                   codec? : string;
-                                   frameRate? : string;
-                                   hdrInfo?: IHDRInformation; }
+                                   width? : number | undefined;
+                                   height? : number | undefined;
+                                   codec? : string | undefined;
+                                   frameRate? : string | undefined;
+                                   hdrInfo?: IHDRInformation | undefined; }
 
 /** Video track returned by the TrackChoiceManager. */
 export interface ITMVideoTrack { id : number|string;
@@ -134,10 +134,11 @@ type INormalizedPreferredAudioTrack = null |
 
 /** Audio track preference when it is not set to `null`. */
 interface INormalizedPreferredAudioTrackObject {
-  normalized? : string;
-  audioDescription? : boolean;
+  normalized? : string | undefined;
+  audioDescription? : boolean | undefined;
   codec? : { all: boolean;
-             test: RegExp; };
+             test: RegExp; } |
+           undefined;
 }
 
 /** Text track preference once normalized by the TrackChoiceManager. */

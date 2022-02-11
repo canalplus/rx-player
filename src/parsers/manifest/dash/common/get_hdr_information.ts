@@ -39,7 +39,7 @@ export interface IParsedWEBMHDRInformation {
    *
    * It may be used to ask about output device color space support.
    */
-  colorSpace?: "rec2020";
+  colorSpace: "rec2020" | undefined;
 }
 
 /**

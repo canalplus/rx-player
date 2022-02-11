@@ -66,7 +66,7 @@ function generateRegularManifestLoader(
  * @returns {Function}
  */
 export default function generateManifestLoader(
-  { customManifestLoader } : { customManifestLoader?: ICustomManifestLoader },
+  { customManifestLoader } : { customManifestLoader?: ICustomManifestLoader | undefined },
   preferredType: "arraybuffer" | "text" | "document"
 ) : (
     url : string | undefined,

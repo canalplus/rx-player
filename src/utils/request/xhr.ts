@@ -279,25 +279,26 @@ export interface IRequestOptions<ResponseType> {
   url : string;
   /** Dictionary of headers you want to set. `null` or `undefined` for no header. */
   headers? : { [ header: string ] : string } |
-             null;
+             null |
+             undefined;
   /** Wanted format for the response */
-  responseType? : ResponseType;
+  responseType? : ResponseType | undefined;
   /**
    * Optional timeout, in milliseconds, after which we will cancel a request.
    * Set to DEFAULT_REQUEST_TIMEOUT by default.
    */
-  timeout? : number;
+  timeout? : number | undefined;
   /**
    * "Cancelation token" used to be able to cancel the request.
    * When this token is "cancelled", the request will be aborted and the Promise
    * returned by `request` will be rejected.
    */
-  cancelSignal? : CancellationSignal;
+  cancelSignal? : CancellationSignal | undefined;
   /**
    * When defined, this callback will be called on each XHR "progress" event
    * with data related to this request's progress.
    */
-  onProgress? : (info : IProgressInfo) => void;
+  onProgress? : ((info : IProgressInfo) => void) | undefined;
 }
 
 /** Data emitted by `request`'s Promise when the request succeeded. */
@@ -330,5 +331,5 @@ export interface IProgressInfo {
   size : number;
   sendingTime : number;
   url : string;
-  totalSize? : number;
+  totalSize? : number | undefined;
 }

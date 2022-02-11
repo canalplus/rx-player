@@ -163,13 +163,13 @@ interface IPositionUpdateItem {
   /** Amount of buffer available for now in front of the current position, in seconds. */
   bufferGap : number;
   /** Current maximum seekable position. */
-  maximumBufferTime? : number;
-  wallClockTime? : number;
+  maximumBufferTime? : number | undefined;
+  wallClockTime? : number | undefined;
   /**
    * Only for live contents. Difference between the "live edge" and the current
    * position, in seconds.
    */
-  liveGap? : number;
+  liveGap? : number | undefined;
 }
 
 /** Payload emitted with a `bitrateEstimationChange` event. */
@@ -321,7 +321,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      * URL of the Manifest (or just of the content for DirectFile contents)
      * currently being played.
      */
-    url? : string;
+    url : string | undefined;
 
     /** Subject allowing to stop playing that content. */
     stop$ : Subject<void>;

@@ -94,8 +94,8 @@ export default function generateSegmentLoader(
   { lowLatencyMode,
     segmentLoader: customSegmentLoader,
     checkMediaSegmentIntegrity } : { lowLatencyMode: boolean;
-                                     segmentLoader? : ICustomSegmentLoader;
-                                     checkMediaSegmentIntegrity? : boolean; }
+                                     segmentLoader? : ICustomSegmentLoader | undefined;
+                                     checkMediaSegmentIntegrity? : boolean | undefined; }
 ) : ISegmentLoader<Uint8Array | ArrayBuffer | null> {
   return checkMediaSegmentIntegrity !== true ? segmentLoader :
                                                addSegmentIntegrityChecks(segmentLoader);
@@ -140,8 +140,8 @@ export default function generateSegmentLoader(
        */
       const resolve = (
         _args : { data : ArrayBuffer|Uint8Array;
-                  size? : number;
-                  duration? : number; }
+                  size? : number | undefined;
+                  duration? : number | undefined; }
       ) => {
         if (hasFinished || cancelSignal.isCancelled) {
           return;
@@ -183,7 +183,7 @@ export default function generateSegmentLoader(
       const progress = (
         _args : { duration : number;
                   size : number;
-                  totalSize? : number; }
+                  totalSize? : number | undefined; }
       ) => {
         if (hasFinished || cancelSignal.isCancelled) {
           return;

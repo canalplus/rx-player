@@ -55,7 +55,7 @@ class Representation {
    * A string describing the codec used for this Representation.
    * undefined if we do not know.
    */
-  public codec? : string;
+  public codec : string | undefined;
 
   /**
    * A string describing the mime-type for this Representation.
@@ -93,7 +93,7 @@ class Representation {
    *     Representation
    *   - if `undefined` there is no certainty on this matter
    */
-  public decipherable? : boolean;
+  public decipherable? : boolean  | undefined;
 
   /** `true` if the Representation is in a supported codec, false otherwise. */
   public isSupported : boolean;

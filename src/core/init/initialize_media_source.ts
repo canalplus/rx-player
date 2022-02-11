@@ -127,7 +127,7 @@ export interface IInitializeArguments {
   /** Emit the playback rate (speed) set by the user. */
   speed : IReadOnlySharedReference<number>;
   /** The configured starting position. */
-  startAt? : IInitialTimeOptions;
+  startAt? : IInitialTimeOptions | undefined;
   /** Configuration specific to the text track. */
   textTrackOptions : ITextTrackSegmentBufferOptions;
 }
@@ -237,7 +237,7 @@ export default function InitializeOnMediaSource(
          * ID identifying the current MediaKeys' system ID. Can be used to only
          * send initialization data linked to that ID as an optimization measure.
          */
-        drmSystemId? : string;
+        drmSystemId? : string | undefined;
       },
       evt : IEMEManagerEvent | IEMEDisabledEvent
     ) => {

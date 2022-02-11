@@ -45,7 +45,7 @@ export default class NativeTextSegmentBuffer extends SegmentBuffer {
 
   private readonly _videoElement : HTMLMediaElement;
   private readonly _track : ICompatTextTrack;
-  private readonly _trackElement? : HTMLTrackElement;
+  private readonly _trackElement : HTMLTrackElement | undefined;
 
   private _buffered : ManualTimeRanges;
 
@@ -268,11 +268,11 @@ export interface INativeTextTracksBufferSegmentData {
    * This is mostly needed for "sami" subtitles, to know which cues can / should
    * be parsed.
    */
-  language? : string;
+  language? : string | undefined;
   /** start time from which the segment apply, in seconds. */
-  start? : number;
+  start? : number | undefined;
   /** end time until which the segment apply, in seconds. */
-  end? : number;
+  end? : number | undefined;
 }
 
 /**

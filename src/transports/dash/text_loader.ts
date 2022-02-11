@@ -43,7 +43,7 @@ import lowLatencySegmentLoader from "./low_latency_segment_loader";
 export default function generateTextTrackLoader(
   { lowLatencyMode,
     checkMediaSegmentIntegrity } : { lowLatencyMode: boolean;
-                                     checkMediaSegmentIntegrity? : boolean; }
+                                     checkMediaSegmentIntegrity? : boolean | undefined; }
 ) : ISegmentLoader<Uint8Array | ArrayBuffer | string | null> {
   return checkMediaSegmentIntegrity !== true ? textTrackLoader :
                                                addSegmentIntegrityChecks(textTrackLoader);
