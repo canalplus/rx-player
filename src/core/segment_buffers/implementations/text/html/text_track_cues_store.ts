@@ -63,8 +63,8 @@ export default class TextTrackCuesStore {
 
     // begins at the end as most of the time the player will ask for the last
     // CuesGroup
-    for (let i = cuesBuffer.length - 1; i >= 0; i--) {
-      const segment = cuesBuffer[i];
+    for (let cueIdx = cuesBuffer.length - 1; cueIdx >= 0; cueIdx--) {
+      const segment = cuesBuffer[cueIdx];
       if (time < segment.end && time >= segment.start) {
         const cues = segment.cues;
         for (let j = 0; j < cues.length; j++) {
@@ -92,10 +92,10 @@ export default class TextTrackCuesStore {
 
     const to = Math.max(from, _to);
     const cuesBuffer = this._cuesBuffer;
-    for (let i = 0; i < cuesBuffer.length; i++) {
-      if (cuesBuffer[i].end > from) {
+    for (let cueIdx = 0; cueIdx < cuesBuffer.length; cueIdx++) {
+      if (cuesBuffer[cueIdx].end > from) {
         // this cuesInfos is concerned by the remove
-        const startCuesInfos = cuesBuffer[i];
+        const startCuesInfos = cuesBuffer[cueIdx];
         if (startCuesInfos.start >= to) {
           // our cuesInfos is strictly after this interval, we have nothing to do
           return;
@@ -112,8 +112,8 @@ export default class TextTrackCuesStore {
                     cuesInfos2 ] = removeCuesInfosBetween(startCuesInfos,
                                                           from,
                                                           to);
-            this._cuesBuffer[i] = cuesInfos1;
-            cuesBuffer.splice(i + 1, 0, cuesInfos2);
+            this._cuesBuffer[cueIdx] = cuesInfos1;
+            cuesBuffer.splice(cueIdx + 1, 0, cuesInfos2);
           }
           // No cuesInfos can be concerned after this one, we can quit
           return;
@@ -122,8 +122,8 @@ export default class TextTrackCuesStore {
         // Else remove all part after `from`
         if (startCuesInfos.start >= from) {
           // all the segment is concerned
-          cuesBuffer.splice(i, 1);
-          i--; // one less element, we have to decrement the loop
+          cuesBuffer.splice(cueIdx, 1);
+          cueIdx--; // one less element, we have to decrement the loop
         } else {
           // only the end is concerned
           startCuesInfos.cues = getCuesBefore(startCuesInfos.cues, from);
@@ -207,8 +207,8 @@ export default class TextTrackCuesStore {
       }
     }
 
-    for (let i = 0; i < cuesBuffer.length; i++) {
-      let cuesInfos = cuesBuffer[i];
+    for (let cueIdx = 0; cueIdx < cuesBuffer.length; cueIdx++) {
+      let cuesInfos = cuesBuffer[cueIdx];
       if (start < cuesInfos.end) {
         if (areNearlyEqual(start, cuesInfos.start)) {
           if (areNearlyEqual(end, cuesInfos.end)) {
@@ -218,7 +218,7 @@ export default class TextTrackCuesStore {
             //   Result:          |AAAAA|
             // Which means:
             //   1. replace the current cue with ours
-            cuesBuffer[i] = cuesInfosToInsert;
+            cuesBuffer[cueIdx] = cuesInfosToInsert;
             return;
           } else if (end < cuesInfos.end) {
             // our cue overlaps with the current one:
@@ -231,7 +231,7 @@ export default class TextTrackCuesStore {
             //   3. add ours before the current one
             cuesInfos.cues = getCuesAfter(cuesInfos.cues, end);
             cuesInfos.start = end;
-            cuesBuffer.splice(i, 0, cuesInfosToInsert);
+            cuesBuffer.splice(cueIdx, 0, cuesInfosToInsert);
             return;
           }
 
@@ -242,10 +242,10 @@ export default class TextTrackCuesStore {
           // Here we have to delete any cuesInfos which end before ours end,
           // and see about the following one.
           do {
-            cuesBuffer.splice(i, 1);
-            cuesInfos = cuesBuffer[i];
+            cuesBuffer.splice(cueIdx, 1);
+            cuesInfos = cuesBuffer[cueIdx];
           } while (cuesInfos !== undefined && end > cuesInfos.end);
-          onIndexOfNextCueFound(i);
+          onIndexOfNextCueFound(cueIdx);
           return;
         } else if (start < cuesInfos.start) {
           if (end < cuesInfos.start) {
@@ -255,7 +255,7 @@ export default class TextTrackCuesStore {
             //   Result:          |AAAAAAA| |BBBB|
             // Which means:
             //   - add ours before the current one
-            cuesBuffer.splice(i, 0, cuesInfosToInsert);
+            cuesBuffer.splice(cueIdx, 0, cuesInfosToInsert);
             return;
           } else if (areNearlyEqual(end, cuesInfos.start)) {
             // our cue goes just before the current one:
@@ -266,14 +266,14 @@ export default class TextTrackCuesStore {
             //   - update start time of the current one to be sure
             //   - add ours before the current one
             cuesInfos.start = end;
-            cuesBuffer.splice(i, 0, cuesInfosToInsert);
+            cuesBuffer.splice(cueIdx, 0, cuesInfosToInsert);
             return;
           } else if (areNearlyEqual(end, cuesInfos.end)) {
             //   ours:            |AAAAAAA|
             //   the current one:    |BBBB|
             //   Result:          |AAAAAAA|
             // Replace
-            cuesBuffer.splice(i, 1, cuesInfosToInsert);
+            cuesBuffer.splice(cueIdx, 1, cuesInfosToInsert);
             return;
           } else if (end < cuesInfos.end) {
             //   ours:            |AAAAAAA|
@@ -281,7 +281,7 @@ export default class TextTrackCuesStore {
             //   Result:          |AAAAAAABB|
             cuesInfos.cues = getCuesAfter(cuesInfos.cues, end);
             cuesInfos.start = end;
-            cuesBuffer.splice(i, 0, cuesInfosToInsert);
+            cuesBuffer.splice(cueIdx, 0, cuesInfosToInsert);
             return;
           }
 
@@ -289,10 +289,10 @@ export default class TextTrackCuesStore {
           //   the current one:   |BBB|...
           //   Result:          |AAAAAAA|...
           do {
-            cuesBuffer.splice(i, 1);
-            cuesInfos = cuesBuffer[i];
+            cuesBuffer.splice(cueIdx, 1);
+            cuesInfos = cuesBuffer[cueIdx];
           } while (cuesInfos !== undefined && end > cuesInfos.end);
-          onIndexOfNextCueFound(i);
+          onIndexOfNextCueFound(cueIdx);
           return;
         }
         // else -> start > cuesInfos.start
@@ -303,7 +303,7 @@ export default class TextTrackCuesStore {
           //   Result:          |BBAAAAAA|
           cuesInfos.cues = getCuesBefore(cuesInfos.cues, start);
           cuesInfos.end = start;
-          cuesBuffer.splice(i + 1, 0, cuesInfosToInsert);
+          cuesBuffer.splice(cueIdx + 1, 0, cuesInfosToInsert);
           return;
         } else if (cuesInfos.end > end) {
           //   ours:              |AAAAAA|
@@ -311,9 +311,9 @@ export default class TextTrackCuesStore {
           //   Result:          |BBAAAAAABBB|
           const [ cuesInfos1,
                   cuesInfos2 ] = removeCuesInfosBetween(cuesInfos, start, end);
-          this._cuesBuffer[i] = cuesInfos1;
-          cuesBuffer.splice(i + 1, 0, cuesInfosToInsert);
-          cuesBuffer.splice(i + 2, 0, cuesInfos2);
+          this._cuesBuffer[cueIdx] = cuesInfos1;
+          cuesBuffer.splice(cueIdx + 1, 0, cuesInfosToInsert);
+          cuesBuffer.splice(cueIdx + 2, 0, cuesInfos2);
           return;
         } else {
           //   ours:              |AAAAAA|
@@ -322,12 +322,13 @@ export default class TextTrackCuesStore {
           cuesInfos.cues = getCuesBefore(cuesInfos.cues, start);
           cuesInfos.end = start;
 
-          cuesInfos = cuesBuffer[i + 1];
+          const nextCueIdx = cueIdx + 1;
+          cuesInfos = cuesBuffer[nextCueIdx];
           while (cuesInfos !== undefined && end > cuesInfos.end) {
-            cuesBuffer.splice(i, 1);
-            cuesInfos = cuesBuffer[i];
+            cuesBuffer.splice(nextCueIdx, 1);
+            cuesInfos = cuesBuffer[nextCueIdx];
           }
-          onIndexOfNextCueFound(i);
+          onIndexOfNextCueFound(nextCueIdx);
           return;
         }
       }
