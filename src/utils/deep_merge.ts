@@ -18,7 +18,7 @@ function isObject(item: any) : boolean {
 
 type IDeepPartial<T> = {
   [P in keyof T]?: IDeepPartial<T[P]> ;
-} 
+};
 
 /**
  * Deeply merge nested objects
@@ -36,9 +36,9 @@ export default function deepMerge<T>(target: T, ...sources: Array<IDeepPartial<T
       if (isObject(source[key])) {
         if (target[key] === undefined) {
           objectAssign(target, { [key]: {} });
-        } 
-        const newTarget = target[key]
-        deepMerge(newTarget, source[key] as IDeepPartial<typeof newTarget>)
+        }
+        const newTarget = target[key];
+        deepMerge(newTarget, source[key] as IDeepPartial<typeof newTarget>);
       } else {
         objectAssign(target, { [key]: source[key] });
       }
@@ -46,5 +46,3 @@ export default function deepMerge<T>(target: T, ...sources: Array<IDeepPartial<T
   }
   return deepMerge(target, ...sources);
 }
-
-deepMerge({a: "a", b: { c : "3"}}, {b: { c : "3"}})

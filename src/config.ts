@@ -21,7 +21,7 @@ class ConfigHandler {
   _config = DEFAULT_CONFIG;
 
   update(config: Partial<IDefaultConfig>) {
-    const newConfig = deepMerge(DEFAULT_CONFIG, config) as IDefaultConfig;
+    const newConfig = deepMerge(DEFAULT_CONFIG, config) ;
     this._config = newConfig;
   }
 
