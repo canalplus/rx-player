@@ -52,7 +52,7 @@ export default function constructTimelineFromElements(
                                                           previousItem,
                                                           nextItem,
                                                           scaledPeriodStart);
-    if (timelineElement != null) {
+    if (timelineElement !== null) {
       timeline.push(timelineElement);
     }
   }

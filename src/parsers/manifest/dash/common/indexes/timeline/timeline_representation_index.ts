@@ -468,7 +468,11 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     if (newIndex._index.timeline === null) {
       newIndex._index.timeline = newIndex._getTimeline();
     }
-    updateSegmentTimeline(this._index.timeline, newIndex._index.timeline);
+    const hasReplaced = updateSegmentTimeline(this._index.timeline,
+                                              newIndex._index.timeline);
+    if (hasReplaced) {
+      this._index.startNumber = newIndex._index.startNumber;
+    }
     this._isDynamic = newIndex._isDynamic;
     this._scaledPeriodStart = newIndex._scaledPeriodStart;
     this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
@@ -531,7 +535,11 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       return; // we don't know yet
     }
     const scaledFirstPosition = toIndexTime(firstPosition, this._index);
-    clearTimelineFromPosition(this._index.timeline, scaledFirstPosition);
+    const nbEltsRemoved = clearTimelineFromPosition(this._index.timeline,
+                                                    scaledFirstPosition);
+    if (this._index.startNumber !== undefined) {
+      this._index.startNumber += nbEltsRemoved;
+    }
   }
 
   static getIndexEnd(timeline : IIndexSegment[],

@@ -20,27 +20,33 @@ import { IIndexSegment } from "./index_helpers";
  * Remove segments which starts before the given `firstAvailablePosition` from
  * the timeline. `firstAvailablePosition` has to be time scaled.
  * @param {Array.<Object>}
- * @returns {number}
+ * @returns {number} - Returns the number of removed segments. This includes
+ * potential implicit segment from decremented `repeatCount` attributes.
  */
 export default function clearTimelineFromPosition(
   timeline : IIndexSegment[],
   firstAvailablePosition : number
-) : void {
+) : number {
+  let nbEltsRemoved = 0;
   while (timeline.length > 0) {
     const firstElt = timeline[0];
     if (firstElt.start >= firstAvailablePosition) {
-      return; // all clear
+      return nbEltsRemoved; // all clear
     }
 
-    if (firstElt.repeatCount <= 0) {
+    if (firstElt.repeatCount === -1) {
+      return nbEltsRemoved;
+    } else if (firstElt.repeatCount === 0) {
       timeline.shift();
+      nbEltsRemoved += 1;
     } else { // we have a segment repetition
       const nextElt = timeline[1];
       if (nextElt !== undefined && nextElt.start <= firstAvailablePosition) {
         timeline.shift();
+        nbEltsRemoved += 1;
       } else { // no next segment or next segment is available
         if (firstElt.duration <= 0) {
-          return;
+          return nbEltsRemoved;
         }
 
         let nextStart = firstElt.start + firstElt.duration;
@@ -53,13 +59,16 @@ export default function clearTimelineFromPosition(
         }
         if (nextRepeat > firstElt.repeatCount) { // every start is before
           timeline.shift();
+          nbEltsRemoved = firstElt.repeatCount + 1;
         } else { // some repetitions start after and some before
           const newRepeat = firstElt.repeatCount - nextRepeat;
           firstElt.start = nextStart;
           firstElt.repeatCount = newRepeat;
-          return;
+          nbEltsRemoved += nextRepeat;
+          return nbEltsRemoved;
         }
       }
     }
   }
+  return nbEltsRemoved;
 }
