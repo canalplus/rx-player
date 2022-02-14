@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import { isOffline } from "../../../compat";
 import {
   CustomLoaderError,
@@ -25,6 +24,7 @@ import {
 import log from "../../../log";
 import cancellableSleep from "../../../utils/cancellable_sleep";
 import getFuzzedDelay from "../../../utils/get_fuzzed_delay";
+import PPromise from "../../../utils/promise";
 import TaskCanceller, {
   CancellationSignal,
 } from "../../../utils/task_canceller";

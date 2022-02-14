@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import features from "../../features";
 import log from "../../log";
 import Manifest, {
@@ -25,6 +24,7 @@ import { getMDAT } from "../../parsers/containers/isobmff";
 import createSmoothManifestParser, {
   SmoothRepresentationIndex,
 } from "../../parsers/manifest/smooth";
+import PPromise from "../../utils/promise";
 import request from "../../utils/request";
 import {
   strToUtf8,
@@ -178,8 +178,8 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       content : ISegmentContext,
       cancelSignal : CancellationSignal,
       callbacks : ISegmentLoaderCallbacks<ILoadedAudioVideoSegmentFormat>
-    ) : PPromise<ISegmentLoaderResultSegmentLoaded<ILoadedAudioVideoSegmentFormat> |
-                 ISegmentLoaderResultSegmentCreated<ILoadedAudioVideoSegmentFormat>>
+    ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedAudioVideoSegmentFormat> |
+                ISegmentLoaderResultSegmentCreated<ILoadedAudioVideoSegmentFormat>>
     {
       return segmentLoader(url, content, cancelSignal, callbacks);
     },
@@ -255,8 +255,8 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       content : ISegmentContext,
       cancelSignal : CancellationSignal,
       callbacks : ISegmentLoaderCallbacks<ILoadedTextSegmentFormat>
-    ) : PPromise<ISegmentLoaderResultSegmentLoaded<ILoadedTextSegmentFormat> |
-                 ISegmentLoaderResultSegmentCreated<ILoadedTextSegmentFormat>> {
+    ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedTextSegmentFormat> |
+                ISegmentLoaderResultSegmentCreated<ILoadedTextSegmentFormat>> {
       const { segment, representation } = content;
       if (segment.isInit || url === null) {
         return PPromise.resolve({ resultType: "segment-created",
@@ -436,8 +436,8 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       content : ISegmentContext,
       cancelSignal : CancellationSignal,
       callbacks : ISegmentLoaderCallbacks<ILoadedImageSegmentFormat>
-    ) : PPromise<ISegmentLoaderResultSegmentLoaded<ILoadedImageSegmentFormat> |
-                 ISegmentLoaderResultSegmentCreated<ILoadedImageSegmentFormat>> {
+    ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedImageSegmentFormat> |
+                ISegmentLoaderResultSegmentCreated<ILoadedImageSegmentFormat>> {
       if (content.segment.isInit || url === null) {
         // image do not need an init segment. Passthrough directly to the parser
         return PPromise.resolve({ resultType: "segment-created" as const,

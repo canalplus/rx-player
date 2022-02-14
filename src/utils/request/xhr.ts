@@ -18,6 +18,7 @@ import config from "../../config";
 import { RequestError } from "../../errors";
 import isNonEmptyString from "../is_non_empty_string";
 import isNullOrUndefined from "../is_null_or_undefined";
+import PPromise from "../promise";
 import {
   CancellationError,
   CancellationSignal,
@@ -138,7 +139,7 @@ export default function request<T>(
                                                   options.timeout,
   };
 
-  return new Promise((resolve, reject) => {
+  return new PPromise((resolve, reject) => {
     const { onProgress, cancelSignal } = options;
     const { url,
             headers,

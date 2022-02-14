@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import { CustomLoaderError } from "../../errors";
 import assert from "../../utils/assert";
+import PPromise from "../../utils/promise";
 import request from "../../utils/request";
 import {
   CancellationError,
@@ -165,7 +165,7 @@ const generateSegmentLoader = ({
                                   checkMediaSegmentIntegrity);
     }
 
-    return new Promise((res, rej) => {
+    return new PPromise((res, rej) => {
       /** `true` when the custom segmentLoader should not be active anymore. */
       let hasFinished = false;
 

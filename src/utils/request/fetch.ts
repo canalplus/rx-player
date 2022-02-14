@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import config from "../../config";
 import {
   NetworkErrorTypes,
@@ -112,7 +111,7 @@ const _AbortController : IAbortControllerConstructor|null =
 
 export default function fetchRequest(
   options : IFetchOptions
-) : PPromise<IFetchedStreamComplete> {
+) : Promise<IFetchedStreamComplete> {
   let headers : Headers | { [key : string ] : string } | undefined;
   if (!isNullOrUndefined(options.headers)) {
     if (isNullOrUndefined(_Headers)) {
@@ -170,7 +169,7 @@ export default function fetchRequest(
   return fetch(
     options.url,
     fetchOpts
-  ).then((response : Response) : PPromise<IFetchedStreamComplete> => {
+  ).then((response : Response) : Promise<IFetchedStreamComplete> => {
     if (!isNullOrUndefined(timeout)) {
       clearTimeout(timeout);
     }
@@ -196,7 +195,7 @@ export default function fetchRequest(
 
     return readBufferAndSendEvents();
 
-    async function readBufferAndSendEvents() : PPromise<IFetchedStreamComplete> {
+    async function readBufferAndSendEvents() : Promise<IFetchedStreamComplete> {
       const data = await reader.read();
 
       if (!data.done && !isNullOrUndefined(data.value)) {

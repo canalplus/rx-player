@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import { CustomLoaderError } from "../../errors";
+import PPromise from "../../utils/promise";
 import {
   CancellationError,
   CancellationSignal,

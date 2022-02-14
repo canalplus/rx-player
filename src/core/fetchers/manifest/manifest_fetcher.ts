@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import {
   Observable,
 } from "rxjs";
@@ -31,6 +30,7 @@ import {
   ITransportPipelines,
 } from "../../../transports";
 import assert from "../../../utils/assert";
+import PPromise from "../../../utils/promise";
 import TaskCanceller from "../../../utils/task_canceller";
 import errorSelector from "../utils/error_selector";
 import {

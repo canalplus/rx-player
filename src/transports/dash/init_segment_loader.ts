@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import { ISegment } from "../../manifest";
 import { concat } from "../../utils/byte_parsing";
+import PPromise from "../../utils/promise";
 import request from "../../utils/request";
 import { CancellationSignal } from "../../utils/task_canceller";
 import {

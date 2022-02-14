@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import features from "../../features";
+import PPromise from "../../utils/promise";
 import request from "../../utils/request";
 import takeFirstSet from "../../utils/take_first_set";
 import { CancellationSignal } from "../../utils/task_canceller";
