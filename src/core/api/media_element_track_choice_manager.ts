@@ -911,10 +911,11 @@ export default class MediaElementTrackChoiceManager
    */
   private _enableAudioTrackFromIndex(index : number) : void {
     assert(index < this._audioTracks.length);
-    for (let i = 0; i < this._audioTracks.length; i++) {
-      if (i !== index) {
-        this._audioTracks[i].nativeTrack.enabled = false;
-      }
+
+    // Seen on Safari MacOS only (2022-02-14), not disabling ALL audio tracks
+    // first (even the wanted one), can lead to the media not playing.
+    for (const audioTrack of this._audioTracks) {
+      audioTrack.nativeTrack.enabled = false;
     }
 
     this._audioTracks[index].nativeTrack.enabled = true;
