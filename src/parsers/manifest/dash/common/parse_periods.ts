@@ -34,10 +34,10 @@ import {
 import flattenOverlappingPeriods from "./flatten_overlapping_periods";
 import getPeriodsTimeInformation from "./get_periods_time_infos";
 import ManifestBoundsCalculator from "./manifest_bounds_calculator";
-import parseAdaptationSets from "./parse_adaptation_sets";
-import resolveBaseURLs, {
-  IResolvedBaseUrl,
-} from "./resolve_base_urls";
+import parseAdaptationSets, {
+  IAdaptationSetContext,
+} from "./parse_adaptation_sets";
+import resolveBaseURLs from "./resolve_base_urls";
 
 const generatePeriodID = idGenerator();
 
@@ -51,74 +51,38 @@ export type IXLinkInfos = WeakMap<IPeriodIntermediateRepresentation, {
   receivedTime? : number | undefined;
 }>;
 
-/** Context needed when calling `parsePeriods`. */
-export interface IPeriodsContextInfos {
-  /** Whether we should request new segments even if they are not yet finished. */
-  aggressiveMode : boolean;
-  availabilityStartTime : number;
-  baseURLs : IResolvedBaseUrl[];
-  clockOffset? : number | undefined;
-  duration? : number | undefined;
-  isDynamic : boolean;
-  manifestProfiles?: string | undefined;
-  /**
-   * Time (in terms of `performance.now`) at which the XML file containing this
-   * Period was received.
-   */
-  receivedTime? : number | undefined;
-  /** Depth of the buffer for the whole content, in seconds. */
-  timeShiftBufferDepth? : number | undefined;
-  /**
-   * The parser should take this Manifest - which is a previously parsed
-   * Manifest for the same dynamic content - as a base to speed-up the parsing
-   * process.
-   * /!\ If unexpected differences exist between the two, there is a risk of
-   * de-synchronization with what is actually on the server,
-   * Use with moderation.
-   */
-  unsafelyBaseOnPreviousManifest : Manifest | null;
-  xlinkInfos : IXLinkInfos;
-
-  /**
-   * XML namespaces linked to the `<MPD>` element.
-   * May be needed to convert EventStream's Event elements back into the
-   * Document form.
-   */
-  xmlNamespaces? : Array<{ key : string;
-                           value : string; }> | undefined;
-}
-
 /**
  * Process intermediate periods to create final parsed periods.
  * @param {Array.<Object>} periodsIR
- * @param {Object} contextInfos
+ * @param {Object} context
  * @returns {Array.<Object>}
  */
 export default function parsePeriods(
   periodsIR : IPeriodIntermediateRepresentation[],
-  contextInfos : IPeriodsContextInfos
+  context : IPeriodContext
 ): IParsedPeriod[] {
   const parsedPeriods : IParsedPeriod[] = [];
-  const periodsTimeInformation = getPeriodsTimeInformation(periodsIR, contextInfos);
+  const periodsTimeInformation = getPeriodsTimeInformation(periodsIR, context);
   if (periodsTimeInformation.length !== periodsIR.length) {
     throw new Error("MPD parsing error: the time information are incoherent.");
   }
 
   const { isDynamic,
-          timeShiftBufferDepth } = contextInfos;
+          timeShiftBufferDepth } = context;
   const manifestBoundsCalculator = new ManifestBoundsCalculator({ isDynamic,
                                                                   timeShiftBufferDepth });
 
-  if (!isDynamic && contextInfos.duration != null) {
-    manifestBoundsCalculator.setLastPosition(contextInfos.duration);
+  if (!isDynamic && context.duration != null) {
+    manifestBoundsCalculator.setLastPosition(context.duration);
   }
 
   // We parse it in reverse because we might need to deduce the buffer depth from
   // the last Periods' indexes
   for (let i = periodsIR.length - 1; i >= 0; i--) {
+    const isLastPeriod = i === periodsIR.length - 1;
     const periodIR = periodsIR[i];
-    const xlinkInfos = contextInfos.xlinkInfos.get(periodIR);
-    const periodBaseURLs = resolveBaseURLs(contextInfos.baseURLs,
+    const xlinkInfos = context.xlinkInfos.get(periodIR);
+    const periodBaseURLs = resolveBaseURLs(context.baseURLs,
                                            periodIR.children.baseURLs);
 
     const { periodStart,
@@ -139,30 +103,32 @@ export default function parsePeriods(
     }
 
     const receivedTime = xlinkInfos !== undefined ? xlinkInfos.receivedTime :
-                                                    contextInfos.receivedTime;
+                                                    context.receivedTime;
 
-    const unsafelyBaseOnPreviousPeriod = contextInfos
+    const unsafelyBaseOnPreviousPeriod = context
       .unsafelyBaseOnPreviousManifest?.getPeriod(periodID) ?? null;
 
     const availabilityTimeComplete = periodIR.attributes.availabilityTimeComplete ?? true;
     const availabilityTimeOffset = periodIR.attributes.availabilityTimeOffset ?? 0;
-    const periodInfos = { aggressiveMode: contextInfos.aggressiveMode,
-                          availabilityTimeComplete,
-                          availabilityTimeOffset,
-                          baseURLs: periodBaseURLs,
-                          manifestBoundsCalculator,
-                          end: periodEnd,
-                          isDynamic,
-                          manifestProfiles: contextInfos.manifestProfiles,
-                          receivedTime,
-                          segmentTemplate: periodIR.children.segmentTemplate,
-                          start: periodStart,
-                          timeShiftBufferDepth,
-                          unsafelyBaseOnPreviousPeriod };
-    const adaptations = parseAdaptationSets(periodIR.children.adaptations,
-                                            periodInfos);
+    const { aggressiveMode, manifestProfiles } = context;
+    const { segmentTemplate } = periodIR.children;
+    const adapCtxt : IAdaptationSetContext = { aggressiveMode,
+                                               availabilityTimeComplete,
+                                               availabilityTimeOffset,
+                                               baseURLs: periodBaseURLs,
+                                               manifestBoundsCalculator,
+                                               end: periodEnd,
+                                               isDynamic,
+                                               isLastPeriod,
+                                               manifestProfiles,
+                                               receivedTime,
+                                               segmentTemplate,
+                                               start: periodStart,
+                                               timeShiftBufferDepth,
+                                               unsafelyBaseOnPreviousPeriod };
+    const adaptations = parseAdaptationSets(periodIR.children.adaptations, adapCtxt);
 
-    const namespaces = (contextInfos.xmlNamespaces ?? [])
+    const namespaces = (context.xmlNamespaces ?? [])
       .concat(periodIR.attributes.namespaces ?? []);
     const streamEvents = generateStreamEvents(periodIR.children.eventStreams,
                                               periodStart,
@@ -187,7 +153,7 @@ export default function parsePeriods(
           manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
         } else {
           const guessedLastPositionFromClock =
-            guessLastPositionFromClock(contextInfos, periodStart);
+            guessLastPositionFromClock(context, periodStart);
           if (guessedLastPositionFromClock !== undefined) {
             const [guessedLastPosition, guessedPositionTime] =
               guessedLastPositionFromClock;
@@ -199,9 +165,9 @@ export default function parsePeriods(
     }
   }
 
-  if (contextInfos.isDynamic && !manifestBoundsCalculator.lastPositionIsKnown()) {
+  if (context.isDynamic && !manifestBoundsCalculator.lastPositionIsKnown()) {
     // Guess a last time the last position
-    const guessedLastPositionFromClock = guessLastPositionFromClock(contextInfos, 0);
+    const guessedLastPositionFromClock = guessLastPositionFromClock(context, 0);
     if (guessedLastPositionFromClock !== undefined) {
       const [lastPosition, positionTime] = guessedLastPositionFromClock;
       manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
@@ -233,17 +199,17 @@ export default function parsePeriods(
  * the live time more directly from that previous one, we might be better off
  * than just using the clock.
  *
- * @param {Object} contextInfos
+ * @param {Object} context
  * @param {number} minimumTime
  * @returns {Array.<number|undefined>}
  */
 function guessLastPositionFromClock(
-  contextInfos : IPeriodsContextInfos,
+  context : IPeriodContext,
   minimumTime : number
 ) : [number, number] | undefined {
-  if (contextInfos.clockOffset != null) {
-    const lastPosition = contextInfos.clockOffset / 1000 -
-      contextInfos.availabilityStartTime;
+  if (context.clockOffset != null) {
+    const lastPosition = context.clockOffset / 1000 -
+      context.availabilityStartTime;
     const positionTime = performance.now() / 1000;
     const timeInSec = positionTime + lastPosition;
     if (timeInSec >= minimumTime) {
@@ -254,7 +220,7 @@ function guessLastPositionFromClock(
     if (now >= minimumTime) {
       log.warn("DASH Parser: no clock synchronization mechanism found." +
                " Using the system clock instead.");
-      const lastPosition = now - contextInfos.availabilityStartTime;
+      const lastPosition = now - context.availabilityStartTime;
       const positionTime = performance.now() / 1000;
       return [lastPosition, positionTime];
     }
@@ -366,3 +332,38 @@ function generateStreamEvents(
   }
   return res;
 }
+
+/** Context needed when calling `parsePeriods`. */
+export interface IPeriodContext extends IInheritedAdaptationContext {
+  availabilityStartTime : number;
+  clockOffset? : number | undefined;
+  /** Duration (mediaPresentationDuration) of the whole MPD, in seconds. */
+  duration? : number | undefined;
+  /**
+   * The parser should take this Manifest - which is a previously parsed
+   * Manifest for the same dynamic content - as a base to speed-up the parsing
+   * process.
+   * /!\ If unexpected differences exist between the two, there is a risk of
+   * de-synchronization with what is actually on the server,
+   * Use with moderation.
+   */
+  unsafelyBaseOnPreviousManifest : Manifest | null;
+  xlinkInfos : IXLinkInfos;
+
+  /**
+   * XML namespaces linked to the `<MPD>` element.
+   * May be needed to convert EventStream's Event elements back into the
+   * Document form.
+   */
+  xmlNamespaces? : Array<{ key : string;
+                           value : string; }> | undefined;
+}
+
+type IInheritedAdaptationContext = Omit<IAdaptationSetContext,
+                                        "availabilityTimeComplete" |
+                                        "availabilityTimeOffset" |
+                                        "duration" |
+                                        "isLastPeriod" |
+                                        "manifestBoundsCalculator" |
+                                        "start" |
+                                        "unsafelyBaseOnPreviousPeriod">;
