@@ -12,7 +12,6 @@ import objectAssign from "./object_assign";
 function isObject(item: any) : boolean {
   return (item !== null
           && item !== undefined
-          && typeof item === "object"
           && !Array.isArray(item));
 }
 
