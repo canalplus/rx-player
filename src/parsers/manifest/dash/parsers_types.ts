@@ -71,19 +71,19 @@ export interface ILoadedResource<T extends string | ArrayBuffer> {
    * The URL of the loaded resource (post-redirection if one).
    * `undefined` if unknown or inexistant.
    */
-  url? : string;
+  url? : string | undefined;
   /**
    * The time, in terms of `performance.now()`, at which the resource was
    * starting to be fetched.
    * `undefined` if unknown or not applicable.
    */
-  sendingTime? : number;
+  sendingTime? : number | undefined;
   /**
    * The time, in terms of `performance.now()`, at which the resource was
    * fully-fetched.
    * `undefined` if unknown or not applicable.
    */
-  receivedTime? : number;
+  receivedTime? : number | undefined;
   /** The loaded resource itself, under the right format.
    * Or an error, when fetching ressources.
    */

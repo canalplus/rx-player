@@ -51,22 +51,22 @@ export interface IAdaptationSetsContextInfos {
   /** Allows to obtain the first available position of a content. */
   manifestBoundsCalculator : ManifestBoundsCalculator;
   /* End time of the current period, in seconds. */
-  end? : number;
+  end? : number | undefined;
   /** Whether the Manifest can evolve with time. */
   isDynamic : boolean;
   /** Manifest DASH profiles used for signaling some features */
-  manifestProfiles?: string;
+  manifestProfiles?: string | undefined;
   /**
    * Time (in terms of `performance.now`) at which the XML file containing
    * this AdaptationSet was received.
    */
-  receivedTime? : number;
+  receivedTime? : number | undefined;
   /** SegmentTemplate parsed in the Period, if found. */
-  segmentTemplate? : ISegmentTemplateIntermediateRepresentation;
+  segmentTemplate? : ISegmentTemplateIntermediateRepresentation | undefined;
   /** Start time of the current period, in seconds. */
   start : number;
   /** Depth of the buffer for the whole content, in seconds. */
-  timeShiftBufferDepth? : number;
+  timeShiftBufferDepth? : number | undefined;
   /**
    * The parser should take this Period - which is from a previously parsed
    * Manifest for the same dynamic content - as a base to speed-up the parsing
@@ -121,9 +121,11 @@ interface IAdaptationSwitchingInfos  {
  * @returns {Boolean}
  */
 function isVisuallyImpaired(
-  accessibility? : { schemeIdUri? : string; value? : string }
+  accessibility : { schemeIdUri? : string | undefined;
+                    value? : string | undefined; } |
+                  undefined
 ) : boolean {
-  if (accessibility == null) {
+  if (accessibility === undefined) {
     return false;
   }
 
@@ -148,9 +150,11 @@ function isVisuallyImpaired(
  * @returns {Boolean}
  */
 function isHardOfHearing(
-  accessibility? : { schemeIdUri? : string; value? : string }
+  accessibility : { schemeIdUri? : string | undefined;
+                    value? : string | undefined; } |
+                  undefined
 ) : boolean {
-  if (accessibility == null) {
+  if (accessibility === undefined) {
     return false;
   }
 
@@ -166,9 +170,11 @@ function isHardOfHearing(
  * @returns {Boolean}
  */
 function hasSignLanguageInterpretation(
-  accessibility? : { schemeIdUri? : string; value? : string }
+  accessibility : { schemeIdUri? : string | undefined;
+                    value? : string | undefined; } |
+                  undefined
 ) : boolean {
-  if (accessibility == null) {
+  if (accessibility === undefined) {
     return false;
   }
 

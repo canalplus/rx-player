@@ -54,11 +54,11 @@ export interface IManifestFetcherParsedResult {
    * The time (`performance.now()`) at which the request was started (at which
    * the JavaScript call was done).
    */
-  sendingTime? : number;
+  sendingTime? : number | undefined;
   /** The time (`performance.now()`) at which the request was fully received. */
-  receivedTime? : number;
+  receivedTime? : number | undefined;
   /* The time taken to parse the Manifest through the corresponding parse function. */
-  parsingTime? : number;
+  parsingTime? : number | undefined;
 }
 
 /** Emitted when a fetching or parsing minor error happened. */
@@ -86,7 +86,7 @@ export interface IManifestFetcherParserOptions {
    * If set, offset to add to `performance.now()` to obtain the current
    * server's time.
    */
-  externalClockOffset? : number;
+  externalClockOffset? : number | undefined;
   /** The previous value of the Manifest (when updating). */
   previousManifest : Manifest | null;
   /**

@@ -30,8 +30,8 @@ const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
 
 /** Structure of a parsed "scheme-like" element in the MPD. */
 interface IScheme {
-  schemeIdUri? : string;
-  value? : string;
+  schemeIdUri? : string | undefined;
+  value? : string | undefined;
 }
 
 /**

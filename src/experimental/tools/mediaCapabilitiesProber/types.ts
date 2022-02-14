@@ -52,9 +52,9 @@ export interface IDisplayConfiguration {
 }
 
 export interface IMediaConfiguration {
-  type?: "media-source"|"file";
-  video?: IVideoConfiguration;
-  audio?: IAudioConfiguration;
+  type?: "media-source" | "file" | undefined;
+  video?: IVideoConfiguration | undefined;
+  audio?: IAudioConfiguration | undefined;
   keySystem?: IKeySystem;
   hdcp?: string;
   display?: IDisplayConfiguration;

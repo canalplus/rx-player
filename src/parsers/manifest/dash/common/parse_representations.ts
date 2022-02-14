@@ -71,11 +71,11 @@ export interface IAdaptationInfos {
   /** Allows to obtain the first/last available position of a dynamic content. */
   manifestBoundsCalculator : ManifestBoundsCalculator;
   /** End time of the current period, in seconds. */
-  end? : number;
+  end? : number | undefined;
   /** Whether the Manifest can evolve with time. */
   isDynamic : boolean;
   /** Manifest DASH profiles used for signalling some features */
-  manifestProfiles?: string;
+  manifestProfiles?: string | undefined;
   /**
    * Parent parsed SegmentTemplate elements.
    * Sorted by provenance from higher level (e.g. Period) to lower-lever (e.g.
@@ -86,11 +86,11 @@ export interface IAdaptationInfos {
    * Time (in terms of `performance.now`) at which the XML file containing this
    * Representation was received.
    */
-  receivedTime? : number;
+  receivedTime? : number | undefined;
   /** Start time of the current period, in seconds. */
   start : number;
   /** Depth of the buffer for the whole content, in seconds. */
-  timeShiftBufferDepth? : number;
+  timeShiftBufferDepth? : number | undefined;
   /**
    * The parser should take this Adaptation - which is from a previously parsed
    * Manifest for the same dynamic content - as a base to speed-up the parsing
@@ -111,9 +111,9 @@ function getHDRInformation(
   { adaptationProfiles,
     manifestProfiles,
     codecs,
-  }: { adaptationProfiles?: string;
-       manifestProfiles?: string;
-       codecs?: string; }
+  }: { adaptationProfiles?: string | undefined;
+       manifestProfiles?: string | undefined;
+       codecs?: string | undefined; }
 ): undefined | IHDRInformation {
   const profiles = (adaptationProfiles ?? "") + (manifestProfiles ?? "");
   if (codecs === undefined) {

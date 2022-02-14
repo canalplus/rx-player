@@ -78,7 +78,7 @@ function parseTimeAndSettings(
 
 export interface IVTTCueObject { start : number;
                                  end : number;
-                                 header? : string;
+                                 header : string | undefined;
                                  settings: Partial<Record<string, string>>;
                                  payload : string[]; }
 

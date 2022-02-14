@@ -327,7 +327,7 @@ export default class NetworkAnalyzer {
     currentRepresentation : Representation | null,
     currentRequests : IRequestInfo[],
     lastEstimatedBitrate: number|undefined
-  ) : { bandwidthEstimate? : number; bitrateChosen : number } {
+  ) : { bandwidthEstimate? : number | undefined; bitrateChosen : number } {
     let newBitrateCeil : number | undefined; // bitrate ceil for the chosen Representation
     let bandwidthEstimate;
     const localConf = this._config;

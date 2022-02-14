@@ -178,12 +178,12 @@ export interface ISmoothRepresentationIndexContextInformation {
 
 /** Information allowing to generate a Smooth initialization segment. */
 interface ISmoothInitSegmentPrivateInfos {
-  bitsPerSample? : number;
-  channels? : number;
-  codecPrivateData? : string;
-  packetSize? : number;
-  samplingRate? : number;
-  protection? : { keyId : Uint8Array };
+  bitsPerSample? : number | undefined;
+  channels? : number | undefined;
+  codecPrivateData? : string | undefined;
+  packetSize? : number | undefined;
+  samplingRate? : number | undefined;
+  protection? : { keyId : Uint8Array } | undefined;
 }
 
 /**
@@ -198,13 +198,13 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    * Information needed to generate an initialization segment.
    * Taken from the Manifest.
    */
-  private _initSegmentInfos : { codecPrivateData? : string;
-                                bitsPerSample? : number;
-                                channels? : number;
-                                packetSize? : number;
-                                samplingRate? : number;
+  private _initSegmentInfos : { codecPrivateData? : string | undefined;
+                                bitsPerSample? : number | undefined;
+                                channels? : number | undefined;
+                                packetSize? : number | undefined;
+                                samplingRate? : number | undefined;
                                 timescale : number;
-                                protection? : { keyId : Uint8Array }; };
+                                protection? : { keyId : Uint8Array } | undefined; };
 
   /**
    * if `true`, this class will return segments even if we're not sure they had
@@ -225,13 +225,13 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    * Useful to know if a segment present in the timeline has actually been
    * generated on the server-side
    */
-  private _scaledLiveGap? : number;
+  private _scaledLiveGap : number | undefined;
 
   /**
    * Defines the end of the latest available segment when this index was known to
    * be valid, in the index's timescale.
    */
-  private _initialScaledLastPosition? : number;
+  private _initialScaledLastPosition : number | undefined;
 
   /**
    * Defines the earliest time when this index was known to be valid (that is, when

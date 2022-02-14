@@ -42,7 +42,9 @@ import getEventsOutOfEMSGs from "./get_events_out_of_emsgs";
  * @returns {Function}
  */
 export default function generateAudioVideoSegmentParser(
-  { __priv_patchLastSegmentInSidx } : { __priv_patchLastSegmentInSidx? : boolean }
+  { __priv_patchLastSegmentInSidx } : {
+    __priv_patchLastSegmentInSidx? : boolean | undefined;
+  }
 ) : ISegmentParser<
   ArrayBuffer | Uint8Array | null,
   ArrayBuffer | Uint8Array | null

@@ -36,7 +36,7 @@ export interface IProbedMediaConfiguration {
   globalStatus: ProberStatus;
   resultsFromAPIS: Array<{
     APIName: ICapabilitiesTypes;
-    result?: IResultsFromAPI;
+    result?: IResultsFromAPI | undefined;
   }>;
 }
 
@@ -63,7 +63,7 @@ function probeMediaConfiguration(
   let globalStatus : ProberStatus|undefined;
   const resultsFromAPIS: Array<{
     APIName: ICapabilitiesTypes;
-    result?: IResultsFromAPI;
+    result: IResultsFromAPI | undefined;
   }> = [];
   const promises = [];
   for (const browserAPI of browserAPIS) {
@@ -103,7 +103,7 @@ function probeMediaConfiguration(
   }
 
   return PPromise.all(promises).then(() => {
-    if (globalStatus == null) {
+    if (globalStatus === undefined) {
       globalStatus = ProberStatus.Unknown;
     }
 

@@ -442,8 +442,8 @@ export function getSegmentFetcherOptions(
   bufferType : string,
   { maxRetryRegular,
     maxRetryOffline,
-    lowLatencyMode } : { maxRetryRegular? : number;
-                         maxRetryOffline? : number;
+    lowLatencyMode } : { maxRetryRegular? : number | undefined;
+                         maxRetryOffline? : number | undefined;
                          lowLatencyMode : boolean; }
 ) : ISegmentFetcherOptions {
   return { maxRetryRegular: bufferType === "image" ? 0 :

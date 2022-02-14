@@ -52,9 +52,9 @@ function getWantedRepeatIndex(
  * @returns {Array.<Object>}
  */
 export default function getSegmentsFromTimeline(
-  index : { availabilityTimeComplete? : boolean;
+  index : { availabilityTimeComplete? : boolean | undefined;
             mediaURLs : string[] | null;
-            startNumber? : number;
+            startNumber? : number | undefined;
             timeline : IIndexSegment[];
             timescale : number;
             indexTimeOffset : number; },

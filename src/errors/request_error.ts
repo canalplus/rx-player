@@ -50,7 +50,10 @@ export default class RequestError extends Error {
 
     this.name = "RequestError";
     this.url = url;
-    this.xhr = xhr;
+
+    if (xhr !== undefined) {
+      this.xhr = xhr;
+    }
     this.status = status;
     this.type = type;
     this.message = type;

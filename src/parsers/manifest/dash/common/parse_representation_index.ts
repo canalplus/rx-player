@@ -51,7 +51,7 @@ export interface IRepresentationInfos {
   /** Allows to obtain the first/last available position of a dynamic content. */
   manifestBoundsCalculator : ManifestBoundsCalculator;
   /** End time of the current period, in seconds. */
-  end? : number;
+  end? : number | undefined;
   /** Whether the Manifest can evolve with time. */
   isDynamic : boolean;
   /**
@@ -64,11 +64,11 @@ export interface IRepresentationInfos {
    * Time (in terms of `performance.now`) at which the XML file containing this
    * Representation was received.
    */
-  receivedTime? : number;
+  receivedTime? : number | undefined;
   /** Start time of the current period, in seconds. */
   start : number;
   /** Depth of the buffer for the whole content, in seconds. */
-  timeShiftBufferDepth? : number;
+  timeShiftBufferDepth? : number | undefined;
   /**
    * The parser should take this Representation - which is the same as this one
    * parsed at an earlier time - as a base to speed-up the parsing process.

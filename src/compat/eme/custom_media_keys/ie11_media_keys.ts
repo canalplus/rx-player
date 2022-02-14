@@ -45,7 +45,7 @@ class IE11MediaKeySession
   public keyStatuses: ICustomMediaKeyStatusMap;
   private readonly _mk: MSMediaKeys;
   private readonly _closeSession$: Subject<void>;
-  private _ss?: MSMediaKeySession;
+  private _ss: MSMediaKeySession | undefined;
   constructor(mk: MSMediaKeys) {
     super();
     this.expiration = NaN;

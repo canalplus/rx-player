@@ -64,8 +64,8 @@ interface IAdaptationParserArguments { root : Element;
                                        timescale : number;
                                        protections : IContentProtectionSmooth[];
                                        isLive : boolean;
-                                       timeShiftBufferDepth? : number;
-                                       manifestReceivedTime? : number; }
+                                       timeShiftBufferDepth? : number | undefined;
+                                       manifestReceivedTime? : number | undefined; }
 
 type IAdaptationType = "audio" |
                        "video" |
@@ -86,15 +86,15 @@ const MIME_TYPES : Partial<Record<string, string>> = {
 };
 
 export interface IHSSParserConfiguration {
-  aggressiveMode? : boolean;
-  suggestedPresentationDelay? : number;
-  referenceDateTime? : number;
-  minRepresentationBitrate? : number;
-  keySystems? : (hex? : Uint8Array) => IKeySystem[];
+  aggressiveMode? : boolean | undefined;
+  suggestedPresentationDelay? : number | undefined;
+  referenceDateTime? : number | undefined;
+  minRepresentationBitrate? : number | undefined;
+  keySystems? : ((hex : Uint8Array | undefined) => IKeySystem[]) | undefined;
   serverSyncInfos? : {
     serverTimestamp: number;
     clientTime: number;
-  };
+  } | undefined;
 }
 
 interface ISmoothParsedQualityLevel {
@@ -104,16 +104,16 @@ interface ISmoothParsedQualityLevel {
   customAttributes : string[];
 
   // optional
-  audiotag? : number;
-  bitsPerSample? : number;
-  channels? : number;
-  codecs? : string;
-  height? : number;
-  id? : string;
-  mimeType? : string;
-  packetSize? : number;
-  samplingRate? : number;
-  width? : number;
+  audiotag? : number | undefined;
+  bitsPerSample? : number | undefined;
+  channels? : number | undefined;
+  codecs? : string | undefined;
+  height? : number | undefined;
+  id? : string | undefined;
+  mimeType? : string | undefined;
+  packetSize? : number | undefined;
+  samplingRate? : number | undefined;
+  width? : number | undefined;
 }
 
 /**
@@ -122,9 +122,11 @@ interface ISmoothParsedQualityLevel {
  */
 function createSmoothStreamingParser(
   parserOptions : IHSSParserConfiguration = {}
-) : (manifest : Document, url? : string, manifestReceivedTime? : number)
-  => IParsedManifest
-{
+) : (
+    manifest : Document,
+    url? : string | undefined,
+    manifestReceivedTime? : number | undefined
+  ) => IParsedManifest {
   const referenceDateTime = parserOptions.referenceDateTime === undefined ?
     Date.UTC(1970, 0, 1, 0, 0, 0, 0) / 1000 :
     parserOptions.referenceDateTime;

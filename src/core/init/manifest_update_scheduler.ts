@@ -48,9 +48,9 @@ export interface IManifestUpdateSchedulerArguments {
   manifestFetcher : ManifestFetcher;
   /** Information about the initial load of the manifest */
   initialManifest : { manifest : Manifest;
-                      sendingTime? : number;
-                      receivedTime? : number;
-                      parsingTime? : number; };
+                      sendingTime? : number | undefined;
+                      receivedTime? : number | undefined;
+                      parsingTime? : number | undefined; };
   /** Minimum interval to keep between Manifest updates */
   minimumManifestUpdateInterval : number;
   /** Allows the rest of the code to ask for a Manifest refresh */
@@ -74,7 +74,7 @@ export interface IManifestRefreshSchedulerEvent {
    * Optional wanted refresh delay, which is the minimum time you want to wait
    * before updating the Manifest
    */
-  delay? : number;
+  delay? : number | undefined;
   /**
    * Whether the parsing can be done in the more efficient "unsafeMode".
    * This mode is extremely fast but can lead to de-synchronisation with the
@@ -127,9 +127,9 @@ export default function manifestUpdateScheduler({
    * encountered.
    */
   function handleManifestRefresh$(
-    { sendingTime, parsingTime, updatingTime } : { sendingTime?: number;
-                                                   parsingTime? : number;
-                                                   updatingTime? : number; }
+    { sendingTime, parsingTime, updatingTime } : { sendingTime?: number | undefined;
+                                                   parsingTime? : number | undefined;
+                                                   updatingTime? : number | undefined; }
   ) : Observable<IWarningEvent> {
     /**
      * Total time taken to fully update the last Manifest, in milliseconds.

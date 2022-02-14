@@ -43,7 +43,7 @@ function regularManifestLoader(
  * @returns {Function}
  */
 export default function generateManifestLoader(
-  { customManifestLoader } : { customManifestLoader?: ICustomManifestLoader }
+  { customManifestLoader } : { customManifestLoader?: ICustomManifestLoader | undefined }
 ) : (
     url : string | undefined,
     cancelSignal : CancellationSignal

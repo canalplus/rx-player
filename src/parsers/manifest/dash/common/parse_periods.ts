@@ -44,11 +44,11 @@ const generatePeriodID = idGenerator();
 /** Information about each linked Xlink. */
 export type IXLinkInfos = WeakMap<IPeriodIntermediateRepresentation, {
   /** Real URL (post-redirection) used to download this xlink. */
-  url? : string;
+  url? : string | undefined;
   /** Time at which the request was sent (since the time origin), in ms. */
-  sendingTime? : number;
+  sendingTime? : number | undefined;
   /** Time at which the request was received (since the time origin), in ms. */
-  receivedTime? : number;
+  receivedTime? : number | undefined;
 }>;
 
 /** Context needed when calling `parsePeriods`. */
@@ -57,17 +57,17 @@ export interface IPeriodsContextInfos {
   aggressiveMode : boolean;
   availabilityStartTime : number;
   baseURLs : IResolvedBaseUrl[];
-  clockOffset? : number;
-  duration? : number;
+  clockOffset? : number | undefined;
+  duration? : number | undefined;
   isDynamic : boolean;
-  manifestProfiles?: string;
+  manifestProfiles?: string | undefined;
   /**
    * Time (in terms of `performance.now`) at which the XML file containing this
    * Period was received.
    */
-  receivedTime? : number;
+  receivedTime? : number | undefined;
   /** Depth of the buffer for the whole content, in seconds. */
-  timeShiftBufferDepth? : number;
+  timeShiftBufferDepth? : number | undefined;
   /**
    * The parser should take this Manifest - which is a previously parsed
    * Manifest for the same dynamic content - as a base to speed-up the parsing
@@ -85,7 +85,7 @@ export interface IPeriodsContextInfos {
    * Document form.
    */
   xmlNamespaces? : Array<{ key : string;
-                           value : string; }>;
+                           value : string; }> | undefined;
 }
 
 /**

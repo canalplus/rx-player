@@ -51,11 +51,11 @@ export default function callCustomManifestLoader(
        * @param {Object} args
        */
       const resolve = (_args : { data : ILoadedManifestFormat;
-                                 size? : number;
-                                 duration? : number;
-                                 url? : string;
-                                 receivingTime? : number;
-                                 sendingTime? : number; }) =>
+                                 size? : number | undefined;
+                                 duration? : number | undefined;
+                                 url? : string | undefined;
+                                 receivingTime? : number | undefined;
+                                 sendingTime? : number | undefined; }) =>
       {
         if (hasFinished || cancelSignal.isCancelled) {
           return;

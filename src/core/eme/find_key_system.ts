@@ -192,21 +192,23 @@ function buildKeySystemConfigurations(
   // More details here:
   // https://storage.googleapis.com/wvdocs/Chrome_EME_Changes_and_Best_Practices.pdf
   // https://www.w3.org/TR/encrypted-media/#get-supported-configuration-and-consent
+
   const videoCapabilities: IMediaCapability[] =
-    flatMap(videoRobustnesses,
-            robustness => [{ contentType: "video/mp4;codecs=\"avc1.4d401e\"",
-                             robustness },
-                           { contentType: "video/mp4;codecs=\"avc1.42e01e\"",
-                             robustness },
-                           { contentType: "video/webm;codecs=\"vp8\"",
-                             robustness } ]);
+    flatMap(audioRobustnesses, (robustness) =>
+      ["video/mp4;codecs=\"avc1.4d401e\"",
+       "video/mp4;codecs=\"avc1.42e01e\"",
+       "video/webm;codecs=\"vp8\""].map(contentType => {
+        return robustness !== undefined ? { contentType, robustness } :
+                                          { contentType };
+      }));
 
   const audioCapabilities: IMediaCapability[] =
-    flatMap(audioRobustnesses,
-            robustness => [{ contentType: "audio/mp4;codecs=\"mp4a.40.2\"",
-                             robustness },
-                           { contentType: "audio/webm;codecs=opus",
-                             robustness } ]);
+    flatMap(audioRobustnesses, (robustness) =>
+      ["audio/mp4;codecs=\"mp4a.40.2\"",
+       "audio/webm;codecs=opus"].map(contentType => {
+        return robustness !== undefined ? { contentType, robustness } :
+                                          { contentType };
+      }));
 
   // TODO Re-test with a set contentType but an undefined robustness on the
   // STBs on which this problem was found.

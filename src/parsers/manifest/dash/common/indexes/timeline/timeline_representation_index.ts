@@ -58,7 +58,7 @@ export interface ITimelineIndex {
   /** If `false`, the last segment anounced might be still incomplete. */
   availabilityTimeComplete : boolean;
   /** Byte range for a possible index of segments in the server. */
-  indexRange?: [number, number];
+  indexRange?: [number, number] | undefined;
   /**
    * Temporal offset, in the current timescale (see timescale), to add to the
    * presentation time (time a segment has at decoding time) to obtain the
@@ -77,15 +77,15 @@ export interface ITimelineIndex {
     /** URLs to access the initialization segment. */
     mediaURLs: string[] | null;
     /** possible byte range to request it. */
-    range?: [number, number];
-  };
+    range?: [number, number] | undefined;
+  } | undefined;
   /**
    * Base URL(s) to access any segment. Can contain tokens to replace to convert
    * it to real URLs.
    */
   mediaURLs : string[] | null ;
   /** Number from which the first segments in this index starts with. */
-  startNumber? : number;
+  startNumber? : number | undefined;
   /**
    * Every segments defined in this index.
    * `null` at the beginning as this property is parsed lazily (only when first
@@ -117,11 +117,13 @@ export interface ITimelineIndex {
  * Most of the properties here are already defined in ITimelineIndex.
  */
 export interface ITimelineIndexIndexArgument {
-  indexRange?: [number, number];
-  initialization? : { media? : string; range?: [number, number] };
-  media? : string;
-  startNumber? : number;
-  timescale? : number;
+  indexRange?: [number, number] | undefined;
+  initialization? : { media? : string | undefined;
+                      range?: [number, number] | undefined; } |
+                    undefined;
+  media? : string | undefined;
+  startNumber? : number | undefined;
+  timescale? : number | undefined;
   /**
    * Offset present in the index to convert from the mediaTime (time declared in
    * the media segments and in this index) to the presentationTime (time wanted
@@ -136,10 +138,10 @@ export interface ITimelineIndexIndexArgument {
    * The time given here is in the current
    * timescale (see timescale)
    */
-  presentationTimeOffset? : number;
+  presentationTimeOffset? : number | undefined;
 
-  timelineParser? : () => HTMLCollection;
-  timeline? : ISegmentTimelineElement[];
+  timelineParser? : (() => HTMLCollection) | undefined;
+  timeline? : ISegmentTimelineElement[] | undefined;
 }
 
 /** Aditional context needed by a SegmentTimeline RepresentationIndex. */
@@ -158,13 +160,13 @@ export interface ITimelineIndexContextArgument {
    * Time (in terms of `performance.now`) at which the XML file containing this
    * index was received
    */
-  receivedTime? : number;
+  receivedTime? : number | undefined;
   /** Base URL for the Representation concerned. */
   representationBaseURLs : IResolvedBaseUrl[];
   /** ID of the Representation concerned. */
-  representationId? : string;
+  representationId? : string | undefined;
   /** Bitrate of the Representation concerned. */
-  representationBitrate? : number;
+  representationBitrate? : number | undefined;
   /**
    * The parser should take this previous version of the
    * `TimelineRepresentationIndex` - which was from the same Representation
@@ -180,7 +182,7 @@ export interface ITimelineIndexContextArgument {
 
 export interface ILastSegmentInformation {
   /** End of the timeline on `time`, timescaled. */
-  lastPosition? : number;
+  lastPosition? : number | undefined;
 
   /** Defines the time at which `lastPosition` was last calculated. */
   time : number;

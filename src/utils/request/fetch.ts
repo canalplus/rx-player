@@ -61,14 +61,14 @@ export interface IFetchedDataObject {
    * Value of the "Content-Length" header, which should (yet also might not be)
    * the size of the complete data that will be fetched.
    */
-  totalSize? : number;
+  totalSize : number | undefined;
   /**
    * Current available chunk, which might only be a sub-part of the whole
    * data.
    * To retrieve the whole data, all `chunk` received from `fetchRequest` can be
    * concatenated.
    */
-  chunk: ArrayBuffer;
+  chunk : ArrayBuffer;
 }
 
 /** Options for the `fetchRequest` utils function. */
@@ -88,13 +88,13 @@ export interface IFetchOptions {
    */
   cancelSignal : CancellationSignal;
   /** Optional headers for the HTTP GET request perfomed by `fetchRequest`. */
-  headers? : { [ header: string ] : string }|null;
+  headers? : { [ header: string ] : string } | undefined | null;
   /**
    * Optional timeout for the HTTP GET request perfomed by `fetchRequest`.
    * This timeout is just enabled until the HTTP response from the server, even
    * if not all data has been received yet.
    */
-  timeout? : number;
+  timeout? : number | undefined;
 }
 
 const { DEFAULT_REQUEST_TIMEOUT } = config;
@@ -161,11 +161,15 @@ export default function fetchRequest(
       abortFetch();
     });
 
-  return fetch(options.url,
-               { headers,
-                 method: "GET",
-                 signal: !isNullOrUndefined(abortController) ? abortController.signal :
-                                                               undefined }
+  const fetchOpts : RequestInit = { method: "GET" };
+  if (headers !== undefined) {
+    fetchOpts.headers = headers;
+  }
+  fetchOpts.signal = !isNullOrUndefined(abortController) ? abortController.signal :
+                                                           null;
+  return fetch(
+    options.url,
+    fetchOpts
   ).then((response : Response) : PPromise<IFetchedStreamComplete> => {
     if (!isNullOrUndefined(timeout)) {
       clearTimeout(timeout);
