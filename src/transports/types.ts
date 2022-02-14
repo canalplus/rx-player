@@ -521,7 +521,13 @@ export type ICustomSegmentLoader = (
                                      duration? : number | undefined; }) => void;
 
                  reject : (err? : unknown) => void;
-                 fallback? : (() => void) | undefined; }
+                 fallback : () => void;
+                 progress : (
+                   info : { duration : number;
+                            size : number;
+                            totalSize? : number | undefined; }
+                 ) => void;
+  }
 ) =>
   // returns either the aborting callback or nothing
   (() => void)|void;
@@ -532,6 +538,7 @@ export type ICustomManifestLoader = (
 
   // second argument: callbacks
   callbacks : { resolve : (args : { data : ILoadedManifestFormat;
+                                    url? : string | undefined;
                                     sendingTime? : number | undefined;
                                     receivingTime? : number | undefined;
                                     size? : number | undefined;
@@ -539,7 +546,7 @@ export type ICustomManifestLoader = (
                           => void;
 
                  reject : (err? : Error) => void;
-                 fallback? : () => void; }
+                 fallback : () => void; }
 ) =>
   // returns either the aborting callback or nothing
   (() => void)|void;
