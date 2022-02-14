@@ -1,5 +1,4 @@
 const { encode } = require("html-entities");
-const { encodeHtmlAttributeValue } = require("./utils");
 
 /**
  * Generate HTML page for the given documentation.
@@ -42,7 +41,7 @@ function generatePageHtml(
   const styles = constructStylesHtml(cssUrls);
   const scripts = constructScriptsHtml(scriptUrls);
   const faviconHtml = typeof faviconUrl === "string" ?
-    `<link rel="icon" type="image/png" href="${encodeHtmlAttributeValue(faviconUrl)}">` :
+    `<link rel="icon" type="image/png" href="${encode(faviconUrl)}">` :
     "";
   const hamburgerHtml = constructHamburgerBarHtml(pageListHtml);
 
@@ -98,7 +97,7 @@ function constructHamburgerBarHtml(pageListHtml) {
  */
 function constructStylesHtml(cssUrls) {
   return cssUrls.map(cssUrl =>
-    `<link rel="stylesheet" href="${encodeHtmlAttributeValue(cssUrl)}"/>`)
+    `<link rel="stylesheet" href="${encode(cssUrl)}"/>`)
     .join("");
 }
 
@@ -108,7 +107,7 @@ function constructStylesHtml(cssUrls) {
  */
 function constructScriptsHtml(scriptUrls) {
   return scriptUrls.map(scriptUrl =>
-    `<script type="text/javascript" src="${encodeHtmlAttributeValue(scriptUrl)}" ` +
+    `<script type="text/javascript" src="${encode(scriptUrl)}" ` +
     `charset="utf-8"></script>`
   ).join("");
 }

@@ -1,7 +1,6 @@
 const { encode } = require("html-entities");
 const path = require("path");
 const {
-  encodeHtmlAttributeValue,
   getGithubSvg,
   toUriCompatibleRelativePath,
 } = require("./utils");
@@ -39,7 +38,7 @@ function generatePageListHtml(
             const pageActiveClasses = isPageActive ? " active" : "";
             const relativeUri = toUriCompatibleRelativePath(outputFile, currentDir);
             return `<li class="page-list-item${pageActiveClasses}">` +
-              `<a href="${encodeHtmlAttributeValue(relativeUri)}">` +
+              `<a href="${encode(relativeUri)}">` +
               encode(displayName) +
               `</a></li>`;
           }
@@ -54,7 +53,7 @@ function generatePageListHtml(
             const { displayName, outputFile } = currentSubPage;
             const relativeUri = toUriCompatibleRelativePath(outputFile, currentDir);
             return `<li class="page-list-item${spActiveClasses}">` +
-              `<a href="${encodeHtmlAttributeValue(relativeUri)}">` +
+              `<a href="${encode(relativeUri)}">` +
               encode(displayName) +
               `</a></li>`;
           }).join("\n") + "</ul></li>";
@@ -62,7 +61,7 @@ function generatePageListHtml(
       }
 
       case "external-link": {
-        const cleanedHref = encodeHtmlAttributeValue(l.link);
+        const cleanedHref = encode(l.link);
         return `<li class="page-list-item">` +
           `<a href="${cleanedHref}">` +
           encode(l.displayName) +
@@ -70,7 +69,7 @@ function generatePageListHtml(
       }
 
       case "github-link":
-        const cleanedHref = encodeHtmlAttributeValue(l.link);
+        const cleanedHref = encode(l.link);
         return `<li class="page-list-item">` +
           `<a aria-label="Link to repository" href="${cleanedHref}">` +
             getGithubSvg() +

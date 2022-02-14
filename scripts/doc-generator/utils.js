@@ -21,16 +21,6 @@ async function mkdirParent(dirPath, mode) {
 };
 
 /**
- * @param {string} val
- * @returns {string}
- */
-function encodeHtmlAttributeValue(val) {
-  return val
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;");
-}
-
-/**
  * @param {string} target
  * @param {string} currentDir
  * @returns {string}
@@ -77,7 +67,6 @@ function getGithubSvg() {
 }
 
 module.exports = {
-  encodeHtmlAttributeValue,
   getGithubSvg,
   mkdirParent,
   pathToUrl,
