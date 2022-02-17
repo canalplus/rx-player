@@ -1,5 +1,25 @@
 # Changelog
 
+## v3.26.3-canal.2022021700 (2022-02-17)
+
+### Bug fixes
+
+  - subtitles: Fix rare issue where subtitles could be skipped due to a rounding error [#1064]
+  - DASH: fix issue where the wrong segments would be requested on $Number$-based MPD with a SegmentTimeline older than the `timeShiftBufferDepth` [#1052, #1060]
+  - directfile: disable all audio tracks before enabling one to work-around Safari issue on MacOS Monterey [#1067]
+  - DRM: On Safari IOS, use `WebKitMediaKeys` instead of the standard `MediaKeys` as it seems to better handle some DRM logic [#1072]
+  - avoid unnecessary warning logs when loading some initialization segments [#1049]
+  - TypeScript: Add forgotten TypeScript types in the exposed segment and manifest loader APIs [#1057]
+  - subtitles/TTML: Set default values for `tts:extent` and `tts:origin` when improbable values are found
+
+### Other improvements
+
+  - DASH: always consider that the non-last Period is finished when it contains SegmentTimeline elements [#1047]
+  - add better buffer cleaning logic on a browser's `QuotaExceededError` to better handle memory limitations [#1065]
+  - avoid mistakenly relying on pinkie's Promise implementation when a native one is already available [#1058]
+  - tests: add performance tests, to better catch and avoid performance regressions [#1053, #1062]
+
+
 ## v3.26.2 (2022-01-11)
 
 ### Bug fixes
