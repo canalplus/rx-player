@@ -16,7 +16,7 @@
 
 import {
   IAdaptationType,
-  Representation,
+  IRepresentation,
 } from "../../manifest";
 
 /**
@@ -33,7 +33,7 @@ import {
  */
 export default function inferSegmentContainer(
   adaptationType : IAdaptationType,
-  representation : Representation
+  representation : IRepresentation
 ) : "webm" | "mp4" | undefined {
   if (adaptationType === "audio" || adaptationType === "video") {
     if (representation.mimeType === "video/mp4" ||

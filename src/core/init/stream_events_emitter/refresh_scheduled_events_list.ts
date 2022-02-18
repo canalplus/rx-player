@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import Manifest from "../../../manifest";
+import { IManifest } from "../../../manifest";
 import areSameStreamEvents from "./are_same_stream_events";
 import {
   INonFiniteStreamEventPayload,
@@ -29,7 +29,7 @@ import {
  */
 function refreshScheduledEventsList(
   oldScheduledEvents: Array<IStreamEventPayload|INonFiniteStreamEventPayload>,
-  manifest: Manifest
+  manifest: IManifest
 ): Array<IStreamEventPayload|INonFiniteStreamEventPayload> {
   const scheduledEvents: Array<IStreamEventPayload|INonFiniteStreamEventPayload> = [];
   const { periods } = manifest;

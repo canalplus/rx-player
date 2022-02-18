@@ -15,10 +15,11 @@
  */
 
 import { ICustomError } from "../../errors";
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
+import {
+  IAdaptation,
+  IManifest,
+  IPeriod,
+  IRepresentation,
 } from "../../manifest";
 import SegmentBuffersStore, {
   IBufferType,
@@ -67,10 +68,10 @@ function unstalled() : IUnstalledEvent {
  * @returns {Object}
  */
 function decipherabilityUpdate(
-  arg : Array<{ manifest : Manifest;
-                period : Period;
-                adaptation : Adaptation;
-                representation : Representation; }>
+  arg : Array<{ manifest : IManifest;
+                period : IPeriod;
+                adaptation : IAdaptation;
+                representation : IRepresentation; }>
 ) : IDecipherabilityUpdateEvent {
   return { type: "decipherabilityUpdate", value: arg };
 }
@@ -81,7 +82,7 @@ function decipherabilityUpdate(
  * @returns {Object}
  */
 function manifestReady(
-  manifest : Manifest
+  manifest : IManifest
 ) : IManifestReadyEvent {
   return { type: "manifestReady", value: { manifest } };
 }
@@ -102,7 +103,7 @@ function manifestUpdate() : IManifestUpdateEvent {
  */
 function nullRepresentation(
   type : IBufferType,
-  period : Period
+  period : IPeriod
 ) : IRepresentationChangeEvent {
   return { type: "representationChange",
            value: { type,

@@ -17,10 +17,10 @@
 import { Subject } from "rxjs";
 import { ICustomError } from "../../errors";
 import {
-  Adaptation,
+  IAdaptation,
   ISegment,
-  Period,
-  Representation,
+  IPeriod,
+  IRepresentation,
 } from "../../manifest";
 import { IEMSG } from "../../parsers/containers/isobmff";
 import { IContentProtection } from "../eme";
@@ -66,7 +66,7 @@ export interface IStreamStatusEvent {
   type : "stream-status";
   value : {
     /** Period concerned. */
-    period : Period;
+    period : IPeriod;
     /** Buffer type concerned. */
     bufferType : IBufferType;
     /**
@@ -119,9 +119,9 @@ export interface IStreamEventAddedSegment<T> {
   type : "added-segment";
   value : {
     /** Context about the content that has been added. */
-    content: { period : Period;
-               adaptation : Adaptation;
-               representation : Representation; };
+    content: { period : IPeriod;
+               adaptation : IAdaptation;
+               representation : IRepresentation; };
     /** The concerned Segment. */
     segment : ISegment;
     /** TimeRanges of the concerned SegmentBuffer after the segment was pushed. */
@@ -212,12 +212,12 @@ export interface IRepresentationChangeEvent {
     /** The type of buffer linked to that `RepresentationStream`. */
     type : IBufferType;
     /** The `Period` linked to the `RepresentationStream` we're creating. */
-    period : Period;
+    period : IPeriod;
     /**
      * The `Representation` linked to the `RepresentationStream` we're creating.
      * `null` when we're choosing no Representation at all.
      */
-    representation : Representation |
+    representation : IRepresentation |
                      null; };
 }
 
@@ -231,12 +231,12 @@ export interface IAdaptationChangeEvent {
     /** The type of buffer for which the Representation is changing. */
     type : IBufferType;
     /** The `Period` linked to the `RepresentationStream` we're creating. */
-    period : Period;
+    period : IPeriod;
     /**
      * The `Adaptation` linked to the `AdaptationStream` we're creating.
      * `null` when we're choosing no Adaptation at all.
      */
-    adaptation : Adaptation |
+    adaptation : IAdaptation |
                  null;
   };
 }
@@ -246,7 +246,7 @@ export interface IActivePeriodChangedEvent {
   type: "activePeriodChanged";
   value : {
     /** The Period we're now playing. */
-    period: Period;
+    period: IPeriod;
   };
 }
 
@@ -260,7 +260,7 @@ export interface IPeriodStreamReadyEvent {
     /** The type of buffer linked to the `PeriodStream` we want to create. */
     type : IBufferType;
     /** The `Period` linked to the `PeriodStream` we have created. */
-    period : Period;
+    period : IPeriod;
     /**
      * The subject through which any Adaptation (i.e. track) choice should be
      * emitted for that `PeriodStream`.
@@ -270,7 +270,7 @@ export interface IPeriodStreamReadyEvent {
      * You can send `null` through it to tell this `PeriodStream` that you don't
      * want any `Adaptation`.
      */
-    adaptation$ : Subject<Adaptation|null>;
+    adaptation$ : Subject<IAdaptation|null>;
   };
 }
 
@@ -296,7 +296,7 @@ export interface IPeriodStreamClearedEvent {
      * The combination of this and `Period` should give you enough information
      * about which `PeriodStream` has been removed.
      */
-    period : Period;
+    period : IPeriod;
   };
 }
 
@@ -360,7 +360,7 @@ export interface IWaitingMediaSourceReloadInternalEvent {
   type: "waiting-media-source-reload";
   value: {
     /** Period concerned. */
-    period : Period;
+    period : IPeriod;
     /** Buffer type concerned. */
     bufferType : IBufferType;
     /**
@@ -398,7 +398,7 @@ export interface ILockedStreamEvent {
   type : "locked-stream";
   value : {
     /** Period concerned. */
-    period : Period;
+    period : IPeriod;
     /** Buffer type concerned. */
     bufferType : IBufferType;
   };

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../../../manifest";
+import { IRepresentation } from "../../../../manifest";
 import filterByBitrate from "../filter_by_bitrate";
 
 describe("ABR - filterByBitrate", () => {
@@ -33,14 +33,14 @@ describe("ABR - filterByBitrate", () => {
     });
 
     it("should return all representations when specified bitrate is infinite", () => {
-      expect(filterByBitrate(fakeReps as Representation[], Infinity))
+      expect(filterByBitrate(fakeReps as IRepresentation[], Infinity))
         .toEqual(fakeReps);
     });
 
     it("should return the lowest representation when specified bitrate is 0", () => {
       const expectedFilteredReps = [ { bitrate : 100 },
                                      { bitrate : 100 } ];
-      expect(filterByBitrate(fakeReps as Representation[], 0))
+      expect(filterByBitrate(fakeReps as IRepresentation[], 0))
         .toEqual(expectedFilteredReps);
     });
 
@@ -48,7 +48,7 @@ describe("ABR - filterByBitrate", () => {
       const expectedFilteredReps = [ { bitrate : 100 },
                                      { bitrate : 100 },
                                      { bitrate : 1000 } ];
-      expect(filterByBitrate(fakeReps as Representation[], 1010))
+      expect(filterByBitrate(fakeReps as IRepresentation[], 1010))
         .toEqual(expectedFilteredReps);
     });
   });

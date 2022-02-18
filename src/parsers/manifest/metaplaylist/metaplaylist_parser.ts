@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import Manifest, {
+import {
   IAdaptationType,
+  IManifest,
   StaticRepresentationIndex,
   SUPPORTED_ADAPTATIONS_TYPE,
 } from "../../../manifest";
@@ -33,7 +34,7 @@ export type IParserResponse<T> =
   { type : "needs-manifest-loader";
     value : {
       ressources : Array<{ url : string; transportType : string }>;
-      continue : (loadedRessources : Manifest[]) => IParserResponse<T>;
+      continue : (loadedRessources : IManifest[]) => IParserResponse<T>;
     }; } |
   { type : "done"; value : T };
 
@@ -125,7 +126,7 @@ export default function parseMetaPlaylist(
     type : "needs-manifest-loader",
     value : {
       ressources,
-      continue : function parseWholeMPL(loadedRessources : Manifest[]) {
+      continue : function parseWholeMPL(loadedRessources : IManifest[]) {
         const parsedManifest = createManifest(metaPlaylist,
                                               loadedRessources,
                                               parserOptions);
@@ -146,7 +147,7 @@ export default function parseMetaPlaylist(
  */
 function createManifest(
   mplData : IMetaPlaylist,
-  manifests : Manifest[],
+  manifests : IManifest[],
   parserOptions:  { url?: string | undefined;
                     serverSyncInfos?: { serverTimestamp: number;
                                         clientTime: number; } | undefined; }

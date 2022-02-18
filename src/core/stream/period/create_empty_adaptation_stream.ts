@@ -21,7 +21,7 @@ import {
   of as observableOf,
 } from "rxjs";
 import log from "../../../log";
-import { Period } from "../../../manifest";
+import { IPeriod } from "../../../manifest";
 import { IReadOnlySharedReference } from "../../../utils/reference";
 import { IReadOnlyPlaybackObserver } from "../../api";
 import { IBufferType } from "../../segment_buffers";
@@ -42,7 +42,7 @@ export default function createEmptyAdaptationStream(
   playbackObserver : IReadOnlyPlaybackObserver<{ position : number }>,
   wantedBufferAhead : IReadOnlySharedReference<number>,
   bufferType : IBufferType,
-  content : { period : Period }
+  content : { period : IPeriod }
 ) : Observable<IStreamStatusEvent> {
   const { period } = content;
   let hasFinishedLoading = false;

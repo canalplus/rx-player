@@ -17,172 +17,128 @@ import {
   ICustomError,
   MediaError,
 } from "../errors";
-import {
-  IManifestStreamEvent,
-  IParsedPeriod,
-} from "../parsers/manifest";
+import { IParsedPeriod } from "../parsers/manifest";
 import arrayFind from "../utils/array_find";
 import objectValues from "../utils/object_values";
-import Adaptation, {
+import {
+  createAdaptationObject,
   IRepresentationFilter,
 } from "./adaptation";
-import { IAdaptationType } from "./types";
-
-/** Structure listing every `Adaptation` in a Period. */
-export type IManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
+import {
+  IAdaptation,
+  IAdaptationType,
+  IManifestAdaptations,
+  IPeriod,
+} from "./types";
 
 /**
- * Class representing the tracks and qualities available from a given time
- * period in the the Manifest.
- * @class Period
+ * Create an `IPeriod`-compatible object, which will declare the characteristics
+ * of a content during a particular time period.
+ * @param {Object} parsedPeriod
+ * @param {function|undefined} representationFilter
+ * @returns {Object}
  */
-export default class Period {
-  /** ID uniquely identifying the Period in the Manifest. */
-  public readonly id : string;
-
-  /** Every 'Adaptation' in that Period, per type of Adaptation. */
-  public adaptations : IManifestAdaptations;
-
-  /** Absolute start time of the Period, in seconds. */
-  public start : number;
-
-  /**
-   * Duration of this Period, in seconds.
-   * `undefined` for still-running Periods.
-   */
-  public duration : number | undefined;
-
-  /**
-   * Absolute end time of the Period, in seconds.
-   * `undefined` for still-running Periods.
-   */
-  public end : number | undefined;
-
-  /**
-   * Array containing every errors that happened when the Period has been
-   * created, in the order they have happened.
-   */
-  public readonly contentWarnings : ICustomError[];
-
-  /** Array containing every stream event happening on the period */
-  public streamEvents : IManifestStreamEvent[];
-
-  /**
-   * @constructor
-   * @param {Object} args
-   * @param {function|undefined} [representationFilter]
-   */
-  constructor(
-    args : IParsedPeriod,
-    representationFilter? : IRepresentationFilter | undefined
-  ) {
-    this.contentWarnings = [];
-    this.id = args.id;
-    this.adaptations = (Object.keys(args.adaptations) as IAdaptationType[])
-      .reduce<IManifestAdaptations>((acc, type) => {
-        const adaptationsForType = args.adaptations[type];
-        if (adaptationsForType == null) {
-          return acc;
-        }
-        const filteredAdaptations = adaptationsForType
-          .map((adaptation) : Adaptation => {
-            const newAdaptation = new Adaptation(adaptation, { representationFilter });
-            if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
-              const error =
-                new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-                               "An Adaptation contains only incompatible codecs.");
-              this.contentWarnings.push(error);
-            }
-            return newAdaptation;
-          })
-          .filter((adaptation) : adaptation is Adaptation =>
-            adaptation.representations.length > 0
-          );
-        if (filteredAdaptations.every(adaptation => !adaptation.isSupported) &&
-            adaptationsForType.length > 0 &&
-            (type === "video" || type === "audio")
-        ) {
-          throw new MediaError("MANIFEST_PARSE_ERROR",
-                               "No supported " + type + " adaptations");
-        }
-
-        if (filteredAdaptations.length > 0) {
-          acc[type] = filteredAdaptations;
-        }
+export function createPeriodObject(
+  args : IParsedPeriod,
+  representationFilter? : IRepresentationFilter | undefined
+) : IPeriod {
+  const contentWarnings : ICustomError[] = [];
+  const adaptations = (Object.keys(args.adaptations) as IAdaptationType[])
+    .reduce<IManifestAdaptations>((acc, type) => {
+      const adaptationsForType = args.adaptations[type];
+      if (adaptationsForType == null) {
         return acc;
-      }, {});
+      }
+      const filteredAdaptations = adaptationsForType
+        .map((adaptation) : IAdaptation => {
+          const newAdaptation = createAdaptationObject(adaptation,
+                                                       { representationFilter });
+          if (newAdaptation.representations.length > 0 &&
+              !newAdaptation.isCodecSupported)
+          {
+            const error =
+              new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
+                             "An Adaptation contains only incompatible codecs.");
+            contentWarnings.push(error);
+          }
+          return newAdaptation;
+        })
+        .filter((adaptation) : adaptation is IAdaptation =>
+          adaptation.representations.length > 0
+        );
 
-    if (!Array.isArray(this.adaptations.video) &&
-        !Array.isArray(this.adaptations.audio))
-    {
-      throw new MediaError("MANIFEST_PARSE_ERROR",
-                           "No supported audio and video tracks.");
-    }
+      if (
+        filteredAdaptations.every(adaptation => !adaptation.isCodecSupported) &&
+        adaptationsForType.length > 0 &&
+        (type === "video" || type === "audio"))
+      {
+        throw new MediaError("MANIFEST_PARSE_ERROR",
+                             "No supported " + type + " adaptations");
+      }
 
-    this.duration = args.duration;
-    this.start = args.start;
+      if (filteredAdaptations.length > 0) {
+        acc[type] = filteredAdaptations;
+      }
+      return acc;
+    }, {});
 
-    if (this.duration != null && this.start != null) {
-      this.end = this.start + this.duration;
-    }
-    this.streamEvents = args.streamEvents === undefined ?
-      [] :
-      args.streamEvents;
+  if (!Array.isArray(adaptations.video) &&
+      !Array.isArray(adaptations.audio))
+  {
+    throw new MediaError("MANIFEST_PARSE_ERROR",
+                         "No supported audio and video tracks.");
   }
 
-  /**
-   * Returns every `Adaptations` (or `tracks`) linked to that Period, in an
-   * Array.
-   * @returns {Array.<Object>}
-   */
-  getAdaptations() : Adaptation[] {
-    const adaptationsByType = this.adaptations;
-    return objectValues(adaptationsByType).reduce<Adaptation[]>(
-      // Note: the second case cannot happen. TS is just being dumb here
-      (acc, adaptations) => adaptations != null ? acc.concat(adaptations) :
-                                                  acc,
-      []);
+  const end = args.duration !== undefined && args.start !== undefined ?
+    args.duration + args.start :
+    undefined;
+
+  const periodObject : IPeriod = {
+    id: args.id,
+    adaptations,
+    start: args.start,
+    duration: args.duration,
+    end,
+    contentWarnings,
+    streamEvents: args.streamEvents ?? [],
+    getAdaptations,
+    getAdaptationsForType,
+    getAdaptation,
+    getSupportedAdaptations,
+  };
+  return periodObject;
+
+  /** @link IPeriod */
+  function getAdaptations() : IAdaptation[] {
+    return objectValues(adaptations).reduce<IAdaptation[]>(
+      (acc, adaps) => acc.concat(adaps), []);
   }
 
-  /**
-   * Returns every `Adaptations` (or `tracks`) linked to that Period for a
-   * given type.
-   * @param {string} adaptationType
-   * @returns {Array.<Object>}
-   */
-  getAdaptationsForType(adaptationType : IAdaptationType) : Adaptation[] {
-    const adaptationsForType = this.adaptations[adaptationType];
+  /** @link IPeriod */
+  function getAdaptationsForType(adaptationType : IAdaptationType) : IAdaptation[] {
+    const adaptationsForType = adaptations[adaptationType];
     return adaptationsForType == null ? [] :
                                         adaptationsForType;
   }
 
-  /**
-   * Returns the Adaptation linked to the given ID.
-   * @param {number|string} wantedId
-   * @returns {Object|undefined}
-   */
-  getAdaptation(wantedId : string) : Adaptation|undefined {
-    return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
+  /** @link IPeriod */
+  function getAdaptation(wantedId : string) : IAdaptation|undefined {
+    return arrayFind(getAdaptations(), ({ id: adapId }) => wantedId === adapId);
   }
 
-  /**
-   * Returns Adaptations that contain Representations in supported codecs.
-   * @param {string|undefined} type - If set filter on a specific Adaptation's
-   * type. Will return for all types if `undefined`.
-   * @returns {Array.<Adaptation>}
-   */
-  getSupportedAdaptations(type? : IAdaptationType) : Adaptation[] {
-    if (type === undefined) {
-      return this.getAdaptations().filter(ada => {
-        return ada.isSupported;
+  /** @link IPeriod */
+  function getSupportedAdaptations(aType? : IAdaptationType) : IAdaptation[] {
+    if (aType === undefined) {
+      return getAdaptations().filter(ada => {
+        return ada.isCodecSupported;
       });
     }
-    const adaptationsForType = this.adaptations[type];
+    const adaptationsForType = adaptations[aType];
     if (adaptationsForType === undefined) {
       return [];
     }
     return adaptationsForType.filter(ada => {
-      return ada.isSupported;
+      return ada.isCodecSupported;
     });
   }
 }

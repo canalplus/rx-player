@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../../manifest";
+import { IRepresentation } from "../../../manifest";
 import arrayFind from "../../../utils/array_find";
 import takeFirstSet from "../../../utils/take_first_set";
 
@@ -27,9 +27,9 @@ import takeFirstSet from "../../../utils/take_first_set";
  * @returns {Array.<Object>}
  */
 export default function filterByWidth(
-  representations : Representation[],
+  representations : IRepresentation[],
   width : number
-) : Representation[] {
+) : IRepresentation[] {
   const sortedRepsByWidth = representations
     .slice() // clone
     .sort((a, b) => takeFirstSet<number>(a.width, 0) -

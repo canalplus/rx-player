@@ -17,10 +17,10 @@
 import { Subject } from "rxjs";
 import { ICustomError } from "../../errors";
 import {
-  Adaptation,
+  IAdaptation,
   ISegment,
-  Period,
-  Representation,
+  IPeriod,
+  IRepresentation,
 } from "../../manifest";
 import { IContentProtection } from "../eme";
 import { IBufferType } from "../segment_buffers";
@@ -48,15 +48,15 @@ import {
 } from "./types";
 
 const EVENTS = {
-  activePeriodChanged(period : Period) : IActivePeriodChangedEvent {
+  activePeriodChanged(period : IPeriod) : IActivePeriodChangedEvent {
     return { type : "activePeriodChanged",
              value : { period } };
   },
 
   adaptationChange(
     bufferType : IBufferType,
-    adaptation : Adaptation|null,
-    period : Period
+    adaptation : IAdaptation|null,
+    period : IPeriod
   ) : IAdaptationChangeEvent {
     return { type: "adaptationChange",
              value : { type: bufferType,
@@ -65,9 +65,9 @@ const EVENTS = {
   },
 
   addedSegment<T>(
-    content : { adaptation : Adaptation;
-                period : Period;
-                representation : Representation; },
+    content : { adaptation : IAdaptation;
+                period : IPeriod;
+                representation : IRepresentation; },
     segment : ISegment,
     buffered : TimeRanges,
     segmentData : T
@@ -132,7 +132,7 @@ const EVENTS = {
    */
   lockedStream(
     bufferType : IBufferType,
-    period : Period
+    period : IPeriod
   ) : ILockedStreamEvent {
     return { type: "locked-stream",
              value: { bufferType, period } };
@@ -153,8 +153,8 @@ const EVENTS = {
 
   periodStreamReady(
     type : IBufferType,
-    period : Period,
-    adaptation$ : Subject<Adaptation|null>
+    period : IPeriod,
+    adaptation$ : Subject<IAdaptation|null>
   ) : IPeriodStreamReadyEvent {
     return { type: "periodStreamReady",
              value: { type, period, adaptation$ } };
@@ -162,7 +162,7 @@ const EVENTS = {
 
   periodStreamCleared(
     type : IBufferType,
-    period : Period
+    period : IPeriod
   ) : IPeriodStreamClearedEvent {
     return { type: "periodStreamCleared",
              value: { type, period } };
@@ -177,8 +177,8 @@ const EVENTS = {
 
   representationChange(
     type : IBufferType,
-    period : Period,
-    representation : Representation
+    period : IPeriod,
+    representation : IRepresentation
   ) : IRepresentationChangeEvent {
     return { type: "representationChange",
              value: { type, period, representation } };
@@ -200,7 +200,7 @@ const EVENTS = {
 
   waitingMediaSourceReload(
     bufferType : IBufferType,
-    period : Period,
+    period : IPeriod,
     position : number,
     autoPlay : boolean
   ) : IWaitingMediaSourceReloadInternalEvent {

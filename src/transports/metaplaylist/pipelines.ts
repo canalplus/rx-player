@@ -15,12 +15,14 @@
  */
 
 import features from "../../features";
-import Manifest, {
-  Adaptation,
+import {
+  IAdaptation,
+  IManifest,
   IMetaPlaylistPrivateInfos,
+  IPeriod,
+  IRepresentation,
   ISegment,
-  Period,
-  Representation,
+  createManifestObject,
 } from "../../manifest";
 import parseMetaPlaylist, {
   IParserResponse as IMPLParserResponse,
@@ -59,10 +61,10 @@ import generateManifestLoader from "./manifest_loader";
  * @param {number} offset
  * @returns {Object}
  */
-function getOriginalContent(segment : ISegment) : { manifest : Manifest;
-                                                    period : Period;
-                                                    adaptation : Adaptation;
-                                                    representation : Representation;
+function getOriginalContent(segment : ISegment) : { manifest : IManifest;
+                                                    period : IPeriod;
+                                                    adaptation : IAdaptation;
+                                                    representation : IRepresentation;
                                                     segment : ISegment; }
 {
   if (segment.privateInfos?.metaplaylistInfos === undefined) {
@@ -155,7 +157,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
         parsedResult : IMPLParserResponse<IParsedManifest>
       ) : Promise<IManifestParserResult> {
         if (parsedResult.type === "done") {
-          const manifest = new Manifest(parsedResult.value, options);
+          const manifest = createManifestObject(parsedResult.value, options);
           return PPromise.resolve({ manifest });
         }
 

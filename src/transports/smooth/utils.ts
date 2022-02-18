@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../manifest";
+import { IRepresentation } from "../../manifest";
 import isNonEmptyString from "../../utils/is_non_empty_string";
 import warnOnce from "../../utils/warn_once";
 
@@ -77,10 +77,10 @@ function resolveManifest(url : string) : string {
 /**
  * Returns `true` if the given Representation refers to segments in an MP4
  * container
- * @param {Representation} representation
+ * @param {Object} representation
  * @returns {Boolean}
  */
-function isMP4EmbeddedTrack(representation : Representation) : boolean {
+function isMP4EmbeddedTrack(representation : IRepresentation) : boolean {
   return typeof representation.mimeType === "string" &&
          representation.mimeType.indexOf("mp4") >= 0;
 }

@@ -16,7 +16,7 @@
 
 import config from "../../../../config";
 import log from "../../../../log";
-import Manifest from "../../../../manifest";
+import { IManifest } from "../../../../manifest";
 import arrayFind from "../../../../utils/array_find";
 import { normalizeBaseURL } from "../../../../utils/resolve_url";
 import { IParsedManifest } from "../../types";
@@ -60,7 +60,7 @@ export interface IMPDParserArguments {
    * de-synchronization with what is actually on the server,
    * Use with moderation.
    */
-  unsafelyBaseOnPreviousManifest : Manifest | null;
+  unsafelyBaseOnPreviousManifest : IManifest | null;
   /** URL of the manifest (post-redirection if one). */
   url? : string | undefined;
 }

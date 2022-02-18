@@ -23,7 +23,7 @@ import {
   ICustomError,
 } from "../../../errors";
 import log from "../../../log";
-import Manifest from "../../../manifest";
+import { IManifest } from "../../../manifest";
 import {
   IRequestedData,
   ITransportManifestPipeline,
@@ -49,7 +49,7 @@ export interface IManifestFetcherParsedResult {
   type : "parsed";
 
   /** The resulting Manifest */
-  manifest : Manifest;
+  manifest : IManifest;
   /**
    * The time (`performance.now()`) at which the request was started (at which
    * the JavaScript call was done).
@@ -88,7 +88,7 @@ export interface IManifestFetcherParserOptions {
    */
   externalClockOffset? : number | undefined;
   /** The previous value of the Manifest (when updating). */
-  previousManifest : Manifest | null;
+  previousManifest : IManifest | null;
   /**
    * If set to `true`, the Manifest parser can perform advanced optimizations
    * to speed-up the parsing process. Those optimizations might lead to a
@@ -365,7 +365,7 @@ export default class ManifestFetcher {
        * To call once the Manifest has been parsed.
        * @param {Object} manifest
        */
-      function emitManifestAndComplete(manifest : Manifest) : void {
+      function emitManifestAndComplete(manifest : IManifest) : void {
         onWarnings(manifest.contentWarnings);
         const parsingTime = performance.now() - parsingTimeStart;
         log.info(`MF: Manifest parsed in ${parsingTime}ms`);

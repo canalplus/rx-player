@@ -15,8 +15,10 @@
  */
 
 import log from "../../log";
-import type Period from "../period";
-import { MANIFEST_UPDATE_TYPE } from "../types";
+import {
+  type IPeriod,
+  MANIFEST_UPDATE_TYPE,
+} from "../types";
 import updatePeriodInPlace from "../update_period_in_place";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -152,7 +154,7 @@ describe("Manifest - updatePeriodInPlace", () => {
   });
 
 /* eslint-disable max-len */
-  it("should fully update the first Period given by the second one in a full update", () => {
+  it("should fully update the first IPeriod given by the second one in a full update", () => {
 /* eslint-enable max-len */
     const oldVideoAdaptation1 = { contentWarnings: [],
                                   id: "ada-video-1",
@@ -209,8 +211,8 @@ describe("Manifest - updatePeriodInPlace", () => {
     const newPeriodAdaptationsSpy = jest.spyOn(newPeriod, "getAdaptations");
     const logSpy = jest.spyOn(log, "warn");
 
-    updatePeriodInPlace(oldPeriod as unknown as Period,
-                        newPeriod as unknown as Period,
+    updatePeriodInPlace(oldPeriod as unknown as IPeriod,
+                        newPeriod as unknown as IPeriod,
                         MANIFEST_UPDATE_TYPE.Full);
 
     expect(oldPeriod.start).toEqual(500);
@@ -265,7 +267,7 @@ describe("Manifest - updatePeriodInPlace", () => {
   });
 
 /* eslint-disable max-len */
-  it("should partially update the first Period given by the second one in a partial update", () => {
+  it("should partially update the first IPeriod given by the second one in a partial update", () => {
 /* eslint-enable max-len */
     const oldVideoAdaptation1 = { contentWarnings: [],
                                   id: "ada-video-1",
@@ -322,8 +324,8 @@ describe("Manifest - updatePeriodInPlace", () => {
     const newPeriodAdaptationsSpy = jest.spyOn(newPeriod, "getAdaptations");
     const logSpy = jest.spyOn(log, "warn");
 
-    updatePeriodInPlace(oldPeriod as unknown as Period,
-                        newPeriod as unknown as Period,
+    updatePeriodInPlace(oldPeriod as unknown as IPeriod,
+                        newPeriod as unknown as IPeriod,
                         MANIFEST_UPDATE_TYPE.Partial);
 
     expect(oldPeriod.start).toEqual(500);
@@ -424,13 +426,13 @@ describe("Manifest - updatePeriodInPlace", () => {
     };
 
     const logSpy = jest.spyOn(log, "warn");
-    updatePeriodInPlace(oldPeriod as unknown as Period,
-                        newPeriod as unknown as Period,
+    updatePeriodInPlace(oldPeriod as unknown as IPeriod,
+                        newPeriod as unknown as IPeriod,
                         MANIFEST_UPDATE_TYPE.Full);
     expect(logSpy).not.toHaveBeenCalled();
     expect(oldPeriod.adaptations.video).toHaveLength(1);
-    updatePeriodInPlace(oldPeriod as unknown as Period,
-                        newPeriod as unknown as Period,
+    updatePeriodInPlace(oldPeriod as unknown as IPeriod,
+                        newPeriod as unknown as IPeriod,
                         MANIFEST_UPDATE_TYPE.Partial);
     expect(logSpy).not.toHaveBeenCalled();
     expect(oldPeriod.adaptations.video).toHaveLength(1);
@@ -483,8 +485,8 @@ describe("Manifest - updatePeriodInPlace", () => {
     };
 
     const logSpy = jest.spyOn(log, "warn");
-    updatePeriodInPlace(oldPeriod as unknown as Period,
-                        newPeriod as unknown as Period,
+    updatePeriodInPlace(oldPeriod as unknown as IPeriod,
+                        newPeriod as unknown as IPeriod,
                         MANIFEST_UPDATE_TYPE.Full);
     expect(logSpy).toHaveBeenCalledTimes(1);
     expect(logSpy).toHaveBeenCalledWith(
@@ -492,8 +494,8 @@ describe("Manifest - updatePeriodInPlace", () => {
     );
     expect(oldPeriod.adaptations.video).toHaveLength(2);
     logSpy.mockClear();
-    updatePeriodInPlace(oldPeriod as unknown as Period,
-                        newPeriod as unknown as Period,
+    updatePeriodInPlace(oldPeriod as unknown as IPeriod,
+                        newPeriod as unknown as IPeriod,
                         MANIFEST_UPDATE_TYPE.Partial);
     expect(logSpy).toHaveBeenCalledTimes(1);
     expect(logSpy).toHaveBeenCalledWith(
@@ -539,13 +541,13 @@ describe("Manifest - updatePeriodInPlace", () => {
     };
 
     const logSpy = jest.spyOn(log, "warn");
-    updatePeriodInPlace(oldPeriod as unknown as Period,
-                        newPeriod as unknown as Period,
+    updatePeriodInPlace(oldPeriod as unknown as IPeriod,
+                        newPeriod as unknown as IPeriod,
                         MANIFEST_UPDATE_TYPE.Full);
     expect(logSpy).not.toHaveBeenCalled();
     expect(oldVideoAdaptation1.representations).toHaveLength(1);
-    updatePeriodInPlace(oldPeriod as unknown as Period,
-                        newPeriod as unknown as Period,
+    updatePeriodInPlace(oldPeriod as unknown as IPeriod,
+                        newPeriod as unknown as IPeriod,
                         MANIFEST_UPDATE_TYPE.Partial);
     expect(logSpy).not.toHaveBeenCalled();
     expect(oldVideoAdaptation1.representations).toHaveLength(1);
@@ -587,8 +589,8 @@ describe("Manifest - updatePeriodInPlace", () => {
     };
 
     const logSpy = jest.spyOn(log, "warn");
-    updatePeriodInPlace(oldPeriod as unknown as Period,
-                        newPeriod as unknown as Period,
+    updatePeriodInPlace(oldPeriod as unknown as IPeriod,
+                        newPeriod as unknown as IPeriod,
                         MANIFEST_UPDATE_TYPE.Full);
     expect(logSpy).toHaveBeenCalledTimes(1);
     expect(logSpy).toHaveBeenCalledWith(
@@ -596,8 +598,8 @@ describe("Manifest - updatePeriodInPlace", () => {
     );
     expect(oldVideoAdaptation1.representations).toHaveLength(2);
     logSpy.mockClear();
-    updatePeriodInPlace(oldPeriod as unknown as Period,
-                        newPeriod as unknown as Period,
+    updatePeriodInPlace(oldPeriod as unknown as IPeriod,
+                        newPeriod as unknown as IPeriod,
                         MANIFEST_UPDATE_TYPE.Partial);
     expect(logSpy).toHaveBeenCalledTimes(1);
     expect(logSpy).toHaveBeenCalledWith(

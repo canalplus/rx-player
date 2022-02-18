@@ -15,20 +15,20 @@
  */
 
 import {
-  Adaptation,
+  IAdaptation,
   ISegment,
-  Period,
-  Representation,
+  IPeriod,
+  IRepresentation,
 } from "../../../manifest";
 
 /** Content information for a single buffered chunk */
 export interface IChunkContext {
   /** Adaptation this chunk is related to. */
-  adaptation : Adaptation;
+  adaptation : IAdaptation;
   /** Period this chunk is related to. */
-  period : Period;
+  period : IPeriod;
   /** Representation this chunk is related to. */
-  representation : Representation;
+  representation : IRepresentation;
   /** Segment this chunk is related to. */
   segment : ISegment;
 }

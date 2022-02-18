@@ -27,8 +27,9 @@ import isSeekingApproximate from "../../compat/is_seeking_approximate";
 import config from "../../config";
 import { MediaError } from "../../errors";
 import log from "../../log";
-import Manifest, {
-  Period,
+import {
+  IManifest,
+  IPeriod,
 } from "../../manifest";
 import { getNextRangeGap } from "../../utils/ranges";
 import {
@@ -60,7 +61,7 @@ export interface ILockedStreamEvent {
   /** Buffer type for which no segment will currently load. */
   bufferType : IBufferType;
   /** Period for which no segment will currently load. */
-  period : Period;
+  period : IPeriod;
 }
 
 /**
@@ -72,7 +73,7 @@ export interface IDiscontinuityEvent {
   /** Buffer type concerned by the discontinuity. */
   bufferType : IBufferType;
   /** Period concerned by the discontinuity. */
-  period : Period;
+  period : IPeriod;
   /**
    * Close discontinuity time information.
    * `null` if no discontinuity has been detected currently for that buffer
@@ -110,7 +111,7 @@ interface IDiscontinuityStoredInfo {
   /** Buffer type concerned by the discontinuity. */
   bufferType : IBufferType;
   /** Period concerned by the discontinuity. */
-  period : Period;
+  period : IPeriod;
   /** Discontinuity time information. */
   discontinuity : IDiscontinuityTimeInfo;
   /**
@@ -133,7 +134,7 @@ interface IDiscontinuityStoredInfo {
  */
 export default function StallAvoider(
   playbackObserver : PlaybackObserver,
-  manifest: Manifest | null,
+  manifest: IManifest | null,
   lockedStream$ : Observable<ILockedStreamEvent>,
   discontinuityUpdate$: Observable<IDiscontinuityEvent>
 ) : Observable<IStalledEvent | IUnstalledEvent | IWarningEvent> {
@@ -369,7 +370,7 @@ export default function StallAvoider(
  */
 function findSeekableDiscontinuity(
   discontinuitiesStore : IDiscontinuityStoredInfo[],
-  manifest : Manifest,
+  manifest : IManifest,
   stalledPosition : number
 ) : number | null {
   if (discontinuitiesStore.length === 0) {

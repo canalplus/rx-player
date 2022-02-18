@@ -42,11 +42,12 @@ import {
   withLatestFrom,
 } from "rxjs";
 import log from "../../../log";
-import Manifest, {
-  Adaptation,
+import {
+  IAdaptation,
+  IManifest,
+  IPeriod,
+  IRepresentation,
   ISegment,
-  Period,
-  Representation,
 } from "../../../manifest";
 import assertUnreachable from "../../../utils/assert_unreachable";
 import objectAssign from "../../../utils/object_assign";
@@ -109,10 +110,10 @@ export interface ITerminationOrder {
 /** Arguments to give to the RepresentationStream. */
 export interface IRepresentationStreamArguments<TSegmentDataType> {
   /** The context of the Representation you want to load. */
-  content: { adaptation : Adaptation;
-             manifest : Manifest;
-             period : Period;
-             representation : Representation; };
+  content: { adaptation : IAdaptation;
+             manifest : IManifest;
+             period : IPeriod;
+             representation : IRepresentation; };
   /** The `SegmentBuffer` on which segments will be pushed. */
   segmentBuffer : SegmentBuffer;
   /** Interface used to load new segments. */

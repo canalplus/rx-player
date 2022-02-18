@@ -28,8 +28,6 @@ export interface IEventEmitter<T> {
   removeEventListener<TEventName extends keyof T>(evt : TEventName,
                                                   fn : IListener<T, TEventName>) :
                                                    void;
-  trigger?<TEventName extends keyof T>(evt : TEventName,
-                                       arg : IArgs<T, TEventName>) : void;
 }
 
 // Type of the argument in the listener's callback

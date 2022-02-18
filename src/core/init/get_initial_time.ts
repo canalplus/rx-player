@@ -16,7 +16,7 @@
 
 import config from "../../config";
 import log from "../../log";
-import Manifest from "../../manifest";
+import { IManifest } from "../../manifest";
 
 const { DEFAULT_LIVE_GAP } = config;
 
@@ -40,7 +40,7 @@ export interface IInitialTimeOptions { position? : number;
  * @returns {Number}
  */
 export default function getInitialTime(
-  manifest : Manifest,
+  manifest : IManifest,
   lowLatencyMode : boolean,
   startAt? : IInitialTimeOptions
 ) : number {

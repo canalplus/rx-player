@@ -286,7 +286,9 @@ module.exports = {
     "no-console": "error",
     "no-debugger": "error",
     "no-duplicate-case": "error",
-    "no-duplicate-imports": "error",
+    "import/no-duplicates": "error",
+    // replaced by `no-duplicates` which better handle type imports
+    "no-duplicate-imports": "off",
     "no-empty": "error",
     "no-eval": "error",
     "no-fallthrough": "error",

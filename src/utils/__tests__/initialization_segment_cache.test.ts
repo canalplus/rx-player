@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../manifest";
+import { IRepresentation } from "../../manifest";
 import InitializationSegmentCache from "../initialization_segment_cache";
 
 const representation1 = {
@@ -25,7 +25,7 @@ const representation1 = {
   index: {},
   getProtectionsInitializationData() : [] { return []; },
   _addProtectionData() : never { throw new Error("Not implemented"); },
-} as unknown as Representation;
+} as unknown as IRepresentation;
 
 const representation2 = {
   bitrate: 14,
@@ -35,7 +35,7 @@ const representation2 = {
   index: {},
   getProtectionsInitializationData() : [] { return []; },
   _addProtectionData() : never { throw new Error("Not implemented"); },
-} as unknown as Representation;
+} as unknown as IRepresentation;
 
 const initSegment1 = {
   id: "init1",

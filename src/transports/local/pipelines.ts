@@ -19,7 +19,7 @@
  * It always should be imported through the `features` object.
  */
 
-import Manifest from "../../manifest";
+import { createManifestObject } from "../../manifest";
 import parseLocalManifest, {
   ILocalManifest,
 } from "../../parsers/manifest/local";
@@ -71,7 +71,7 @@ export default function getLocalManifestPipelines(
         throw new Error("Wrong format for the manifest data");
       }
       const parsed = parseLocalManifest(loadedManifest as ILocalManifest);
-      const manifest = new Manifest(parsed, options);
+      const manifest = createManifestObject(parsed, options);
       return { manifest, url: undefined };
     },
   };

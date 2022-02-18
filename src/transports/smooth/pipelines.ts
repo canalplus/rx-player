@@ -16,8 +16,9 @@
 
 import features from "../../features";
 import log from "../../log";
-import Manifest, {
-  Adaptation,
+import {
+  IAdaptation,
+  createManifestObject,
   ISegment,
 } from "../../manifest";
 import { getMDAT } from "../../parsers/containers/isobmff";
@@ -74,7 +75,7 @@ const WSX_REG = /\.wsx?(\?token=\S+)?/;
  * @param {Object} nextSegments
  */
 function addNextSegments(
-  adaptation : Adaptation,
+  adaptation : IAdaptation,
   nextSegments : INextSegmentsInfos[],
   dlSegment : ISegment
 ) : void {
@@ -151,7 +152,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                                                 url,
                                                 manifestReceivedTime);
 
-      const manifest = new Manifest(parserResult, {
+      const manifest = createManifestObject(parserResult, {
         representationFilter: options.representationFilter,
         supplementaryImageTracks: options.supplementaryImageTracks,
         supplementaryTextTracks: options.supplementaryTextTracks,

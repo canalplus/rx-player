@@ -44,10 +44,11 @@ import {
 import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
+import {
+  IAdaptation,
+  IManifest,
+  IPeriod,
+  IRepresentation,
 } from "../../../manifest";
 import deferSubscriptions from "../../../utils/defer_subscriptions";
 import {
@@ -109,9 +110,9 @@ export interface IAdaptationStreamArguments {
   /** Regularly emit playback conditions. */
   playbackObserver : IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation>;
   /** Content you want to create this Stream for. */
-  content : { manifest : Manifest;
-              period : Period;
-              adaptation : Adaptation; };
+  content : { manifest : IManifest;
+              period : IPeriod;
+              adaptation : IAdaptation; };
   options: IAdaptationStreamOptions;
   /** SourceBuffer wrapper - needed to push media segments. */
   segmentBuffer : SegmentBuffer;
@@ -362,7 +363,7 @@ export default function AdaptationStream({
    * @returns {Observable}
    */
   function createRepresentationStream(
-    representation : Representation,
+    representation : IRepresentation,
     terminateCurrentStream$ : Observable<ITerminationOrder>,
     fastSwitchThreshold$ : Observable<number | undefined>
   ) : Observable<IRepresentationStreamEvent> {

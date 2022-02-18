@@ -16,10 +16,10 @@
 
 import { Observable } from "rxjs";
 import {
-  Adaptation,
+  IAdaptation,
   ISegment,
-  Period,
-  Representation,
+  IPeriod,
+  IRepresentation,
 } from "../../../manifest";
 import SegmentInventory, {
   IBufferedChunk,
@@ -266,11 +266,11 @@ export interface IPushedChunkData<T> {
  */
 export interface IEndOfSegmentInfos {
   /** Adaptation object linked to the chunk. */
-  adaptation : Adaptation;
+  adaptation : IAdaptation;
   /** Period object linked to the chunk. */
-  period : Period;
+  period : IPeriod;
   /** Representation object linked to the chunk. */
-  representation : Representation;
+  representation : IRepresentation;
   /** The segment object linked to the pushed chunk. */
   segment : ISegment;
 }

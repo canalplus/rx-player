@@ -16,7 +16,7 @@
 
 import {
   IRepresentationIndex,
-  Representation,
+  IRepresentation,
 } from "../../../../manifest";
 import objectAssign from "../../../../utils/object_assign";
 import { IEMSG } from "../../../containers/isobmff";
@@ -180,5 +180,5 @@ export interface IRepresentationIndexContext {
    * /!\ If unexpected differences exist between both, there is a risk of
    * de-synchronization with what is actually on the server.
    */
-  unsafelyBaseOnPreviousRepresentation : Representation | null;
+  unsafelyBaseOnPreviousRepresentation : IRepresentation | null;
 }

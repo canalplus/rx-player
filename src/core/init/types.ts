@@ -15,10 +15,11 @@
  */
 
 import { ICustomError } from "../../errors";
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
+import {
+  IAdaptation,
+  IManifest,
+  IPeriod,
+  IRepresentation,
 } from "../../manifest";
 import {
   IAttachedMediaKeysEvent,
@@ -60,7 +61,7 @@ export interface IManifestReadyEvent {
   type : "manifestReady";
   value : {
     /** The Manifest we just parsed. */
-    manifest : Manifest;
+    manifest : IManifest;
   };
 }
 
@@ -76,10 +77,10 @@ export interface IManifestUpdateEvent { type: "manifestUpdate";
  */
 export interface IDecipherabilityUpdateEvent {
   type: "decipherabilityUpdate";
-  value: Array<{ manifest : Manifest;
-                 period : Period;
-                 adaptation : Adaptation;
-                 representation : Representation; }>; }
+  value: Array<{ manifest : IManifest;
+                 period : IPeriod;
+                 adaptation : IAdaptation;
+                 representation : IRepresentation; }>; }
 
 /** Event sent when a minor happened. */
 export interface IWarningEvent { type : "warning";

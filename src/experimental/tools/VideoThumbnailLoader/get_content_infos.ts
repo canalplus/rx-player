@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import Manifest from "../../../manifest";
+import { IManifest } from "../../../manifest";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import { IContentInfos } from "./types";
 
@@ -27,7 +27,7 @@ import { IContentInfos } from "./types";
  */
 export default function getContentInfos(
   time: number,
-  manifest: Manifest
+  manifest: IManifest
 ): IContentInfos|null {
   const period = manifest.getPeriodForTime(time);
   if (period === undefined ||

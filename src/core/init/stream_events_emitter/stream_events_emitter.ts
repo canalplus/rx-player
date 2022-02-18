@@ -32,7 +32,7 @@ import {
   of as observableOf,
 } from "rxjs";
 import config from "../../../config";
-import Manifest from "../../../manifest";
+import { IManifest } from "../../../manifest";
 import { fromEvent } from "../../../utils/event_emitter";
 import { IPlaybackObservation } from "../../api";
 import refreshScheduledEventsList from "./refresh_scheduled_events_list";
@@ -62,7 +62,7 @@ function isFiniteStreamEvent(
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
-function streamEventsEmitter(manifest: Manifest,
+function streamEventsEmitter(manifest: IManifest,
                              mediaElement: HTMLMediaElement,
                              observation$: Observable<IPlaybackObservation>
 ): Observable<IStreamEvent> {

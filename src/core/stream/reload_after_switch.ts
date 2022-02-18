@@ -18,7 +18,7 @@ import {
   map,
   Observable,
 } from "rxjs";
-import { Period } from "../../manifest";
+import { IPeriod } from "../../manifest";
 import { IReadOnlyPlaybackObserver } from "../api";
 import { IBufferType } from "../segment_buffers";
 import EVENTS from "./events_generators";
@@ -46,7 +46,7 @@ import { IWaitingMediaSourceReloadInternalEvent } from "./types";
  * @returns {Observable}
  */
 export default function reloadAfterSwitch(
-  period : Period,
+  period : IPeriod,
   bufferType : IBufferType,
   playbackObserver : IReadOnlyPlaybackObserver<{
     position : number;

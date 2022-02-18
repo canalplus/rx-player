@@ -30,7 +30,7 @@ import {
 } from "rxjs";
 import { MediaError } from "../../errors";
 import log from "../../log";
-import Manifest from "../../manifest";
+import { IManifest } from "../../manifest";
 import { IReadOnlySharedReference } from "../../utils/reference";
 import ABRManager from "../abr";
 import { PlaybackObserver } from "../api";
@@ -65,7 +65,7 @@ export interface IMediaSourceLoaderArguments {
   /** Various stream-related options. */
   bufferOptions : IStreamOrchestratorOptions;
   /* Manifest of the content we want to play. */
-  manifest : Manifest;
+  manifest : IManifest;
   /** Media Element on which the content will be played. */
   mediaElement : HTMLMediaElement;
   /** Emit playback conditions regularly. */

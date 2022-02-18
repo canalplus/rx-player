@@ -2,11 +2,12 @@ import {
   Observable,
 } from "rxjs";
 import { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implementations";
-import Manifest, {
-  Adaptation,
+import {
+  IAdaptation,
+  IManifest,
+  IPeriod,
+  IRepresentation,
   ISegment,
-  Period,
-  Representation,
 } from "../../../manifest";
 import { ISegmentParserParsedMediaChunk } from "../../../transports";
 
@@ -19,10 +20,10 @@ import { ISegmentParserParsedMediaChunk } from "../../../transports";
  * @returns
  */
 export default function pushData(
-  inventoryInfos: { manifest: Manifest;
-                    period: Period;
-                    adaptation: Adaptation;
-                    representation: Representation;
+  inventoryInfos: { manifest: IManifest;
+                    period: IPeriod;
+                    adaptation: IAdaptation;
+                    representation: IRepresentation;
                     segment: ISegment;
                     start: number;
                     end: number; },

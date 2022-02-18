@@ -23,7 +23,7 @@ import log from "../../../../../../log";
 import {
   IRepresentationIndex,
   ISegment,
-  Representation,
+  IRepresentation,
 } from "../../../../../../manifest";
 import { IEMSG } from "../../../../../containers/isobmff";
 import clearTimelineFromPosition from "../../../../utils/clear_timeline_from_position";
@@ -175,7 +175,7 @@ export interface ITimelineIndexContextArgument {
    * de-synchronization with what is actually on the server,
    * Use with moderation.
    */
-  unsafelyBaseOnPreviousRepresentation : Representation | null;
+  unsafelyBaseOnPreviousRepresentation : IRepresentation | null;
   /** Function that tells if an EMSG is whitelisted by the manifest */
   isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
   /**

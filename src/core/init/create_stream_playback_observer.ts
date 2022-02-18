@@ -19,7 +19,7 @@ import {
   map,
   Observable,
 } from "rxjs";
-import Manifest from "../../manifest";
+import { IManifest } from "../../manifest";
 import { IReadOnlySharedReference } from "../../utils/reference";
 import {
   IPlaybackObservation,
@@ -49,7 +49,7 @@ export interface IStreamPlaybackObserverArguments {
  * @returns {Observable}
  */
 export default function createStreamPlaybackObserver(
-  manifest : Manifest,
+  manifest : IManifest,
   playbackObserver : PlaybackObserver,
   { autoPlay,
     initialPlayPerformed,

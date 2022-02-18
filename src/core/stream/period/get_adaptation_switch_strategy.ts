@@ -16,8 +16,8 @@
 
 import config from "../../../config";
 import {
-  Adaptation,
-  Period,
+  IAdaptation,
+  IPeriod,
 } from "../../../manifest";
 import areCodecsCompatible from "../../../utils/are_codecs_compatible";
 import {
@@ -69,8 +69,8 @@ export interface IAdaptationSwitchOptions {
  */
 export default function getAdaptationSwitchStrategy(
   segmentBuffer : SegmentBuffer,
-  period : Period,
-  adaptation : Adaptation,
+  period : IPeriod,
+  adaptation : IAdaptation,
   playbackInfo : { currentTime : number; readyState : number },
   options : IAdaptationSwitchOptions
 ) : IAdaptationSwitchStrategy {
@@ -124,9 +124,8 @@ export default function getAdaptationSwitchStrategy(
       // We're playing the current Period
       isTimeInRange({ start, end }, currentTime) &&
       // There is data for the current position or the codecs are differents
-      (playbackInfo.readyState > 1 || !adaptation.getPlayableRepresentations()
-        .some(rep =>
-          areCodecsCompatible(rep.getMimeTypeString(), segmentBuffer.codec ?? ""))) &&
+      (playbackInfo.readyState > 1 || !hasCompatibleCodec(adaptation,
+                                                          segmentBuffer.codec ?? "")) &&
       // We're not playing the current wanted video Adaptation
       !isTimeInRanges(adaptationInBuffer, currentTime))
   {
@@ -205,7 +204,7 @@ export default function getAdaptationSwitchStrategy(
  * @returns {boolean}
  */
 function hasCompatibleCodec(
-  adaptation : Adaptation,
+  adaptation : IAdaptation,
   segmentBufferCodec : string
 ) : boolean {
   return adaptation.getPlayableRepresentations().some(rep =>
@@ -222,8 +221,8 @@ function hasCompatibleCodec(
  */
 function getBufferedRangesFromAdaptation(
   inventory : IBufferedChunk[],
-  period : Period,
-  adaptation : Adaptation
+  period : IPeriod,
+  adaptation : IAdaptation
 ) : IRange[] {
   return inventory.reduce<IRange[]>((acc : IRange[], chunk) : IRange[] => {
     if (chunk.infos.period.id !== period.id ||
@@ -249,7 +248,7 @@ function getBufferedRangesFromAdaptation(
  */
 function getLastSegmentBeforePeriod(
   inventory : IBufferedChunk[],
-  period : Period
+  period : IPeriod
 ) : IBufferedChunk | null {
   for (let i = 0; i < inventory.length; i++) {
     if (inventory[i].infos.period.start >= period.start) {
@@ -272,7 +271,7 @@ function getLastSegmentBeforePeriod(
  */
 function getFirstSegmentAfterPeriod(
   inventory : IBufferedChunk[],
-  period : Period
+  period : IPeriod
 ) : IBufferedChunk | null {
   for (let i = 0; i < inventory.length; i++) {
     if (inventory[i].infos.period.start > period.start) {

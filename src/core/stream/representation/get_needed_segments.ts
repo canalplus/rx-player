@@ -17,12 +17,13 @@
 // eslint-disable-next-line max-len
 import config from "../../../config";
 import log from "../../../log";
-import Manifest, {
-  Adaptation,
-  areSameContent,
+import {
+  IAdaptation,
+  IManifest,
+  IPeriod,
+  IRepresentation,
   ISegment,
-  Period,
-  Representation,
+  areSameContent,
 } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
 import { IBufferedChunk } from "../../segment_buffers";
@@ -39,10 +40,10 @@ const { CONTENT_REPLACEMENT_PADDING,
 /** Arguments for `getNeededSegments`. */
 export interface IGetNeededSegmentsArguments {
   /** The content we want to load segments for */
-  content: { adaptation : Adaptation;
-             manifest : Manifest;
-             period : Period;
-             representation : Representation; };
+  content: { adaptation : IAdaptation;
+             manifest : IManifest;
+             period : IPeriod;
+             representation : IRepresentation; };
   /**
    * The current playing position.
    * Important to avoid asking for segments on the same exact position, which
@@ -61,9 +62,9 @@ export interface IGetNeededSegmentsArguments {
   /** The range we want to fill with segments. */
   neededRange : { start: number; end: number };
   /** The list of segments that are already in the process of being pushed. */
-  segmentsBeingPushed : Array<{ adaptation : Adaptation;
-                                period : Period;
-                                representation : Representation;
+  segmentsBeingPushed : Array<{ adaptation : IAdaptation;
+                                period : IPeriod;
+                                representation : IRepresentation;
                                 segment : ISegment; }>;
   /**
    * Information on the segments already in the buffer, in chronological order.
@@ -258,13 +259,13 @@ function getLastContiguousSegment(
  * @returns {boolean}
  */
 function shouldContentBeReplaced(
-  oldContent : { adaptation : Adaptation;
-                 period : Period;
-                 representation : Representation;
+  oldContent : { adaptation : IAdaptation;
+                 period : IPeriod;
+                 representation : IRepresentation;
                  segment : ISegment; },
-  currentContent : { adaptation : Adaptation;
-                     period : Period;
-                     representation : Representation; },
+  currentContent : { adaptation : IAdaptation;
+                     period : IPeriod;
+                     representation : IRepresentation; },
   currentPlaybackTime: number,
   fastSwitchThreshold? : number
 ) : boolean {
@@ -297,8 +298,8 @@ function shouldContentBeReplaced(
  * @returns {boolean}
  */
 function canFastSwitch(
-  oldSegmentRepresentation : Representation,
-  newSegmentRepresentation : Representation,
+  oldSegmentRepresentation : IRepresentation,
+  newSegmentRepresentation : IRepresentation,
   fastSwitchThreshold : number | undefined
 ) : boolean {
   const oldContentBitrate = oldSegmentRepresentation.bitrate;

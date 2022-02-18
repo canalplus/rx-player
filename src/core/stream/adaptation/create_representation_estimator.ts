@@ -24,9 +24,10 @@ import {
   switchMap,
 } from "rxjs";
 import { MediaError } from "../../../errors";
-import Manifest, {
-  Adaptation,
-  Representation,
+import {
+  IAdaptation,
+  IManifest,
+  IRepresentation,
 } from "../../../manifest";
 import { fromEvent } from "../../../utils/event_emitter";
 import ABRManager, {
@@ -53,8 +54,8 @@ import ABRManager, {
  * @returns {Object}
  */
 export default function createRepresentationEstimator(
-  { manifest, adaptation } : { manifest : Manifest;
-                               adaptation : Adaptation; },
+  { manifest, adaptation } : { manifest : IManifest;
+                               adaptation : IAdaptation; },
   abrManager : ABRManager,
   observation$ : Observable<IABRManagerPlaybackObservation>
 ) : { estimator$ : Observable<IABREstimate>;
@@ -67,7 +68,7 @@ export default function createRepresentationEstimator(
     // Emit directly a first time on subscription (after subscribing to event)
     observableOf(null)
   ).pipe(
-    map(() : Representation[] => {
+    map(() : IRepresentation[] => {
       /** Representations for which a `RepresentationStream` can be created. */
       const playableRepresentations = adaptation.getPlayableRepresentations();
       if (playableRepresentations.length <= 0) {

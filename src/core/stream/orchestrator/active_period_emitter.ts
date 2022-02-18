@@ -22,11 +22,11 @@ import {
   Observable,
   scan,
 } from "rxjs";
-import { Period } from "../../../manifest";
+import { IPeriod } from "../../../manifest";
 import { IBufferType } from "../../segment_buffers";
 import { IStreamOrchestratorEvent } from "../types";
 
-interface IPeriodObject { period : Period;
+interface IPeriodObject { period : IPeriod;
                           buffers: Set<IBufferType>; }
 
 type IPeriodsList = Partial<Record<string, IPeriodObject>>;
@@ -71,7 +71,7 @@ type IPeriodsList = Partial<Record<string, IPeriodObject>>;
  */
 export default function ActivePeriodEmitter(
   buffers$: Array<Observable<IStreamOrchestratorEvent>>
-) : Observable<Period|null> {
+) : Observable<IPeriod|null> {
   const numberOfStreams = buffers$.length;
   return observableMerge(...buffers$).pipe(
     // not needed to filter, this is an optim
@@ -123,9 +123,9 @@ export default function ActivePeriodEmitter(
       return acc;
     }, {}),
 
-    map((list) : Period | null => {
+    map((list) : IPeriod | null => {
       const activePeriodIDs = Object.keys(list);
-      const completePeriods : Period[] = [];
+      const completePeriods : IPeriod[] = [];
       for (let i = 0; i < activePeriodIDs.length; i++) {
         const periodInfos = list[activePeriodIDs[i]];
         if (periodInfos !== undefined && periodInfos.buffers.size === numberOfStreams) {
@@ -133,7 +133,7 @@ export default function ActivePeriodEmitter(
         }
       }
 
-      return completePeriods.reduce<Period|null>((acc, period) => {
+      return completePeriods.reduce<IPeriod|null>((acc, period) => {
         if (acc === null) {
           return period;
         }

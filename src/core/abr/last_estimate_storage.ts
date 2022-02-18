@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../manifest";
+import { IRepresentation } from "../../manifest";
 
 /** Stores the last estimate made by the `RepresentationEstimator`. */
 export default class LastEstimateStorage {
@@ -28,7 +28,7 @@ export default class LastEstimateStorage {
    * Estimated Representation in the last estimate.
    * `null` if no estimate has been performed yet.
    */
-  public representation : Representation | null;
+  public representation : IRepresentation | null;
 
   /** Algorithm type used to make the last Representation estimate. */
   public algorithmType : ABRAlgorithmType;
@@ -47,7 +47,7 @@ export default class LastEstimateStorage {
    * the `GuessingEstimator`.
    */
   public update(
-    representation : Representation,
+    representation : IRepresentation,
     bandwidth : number | undefined,
     algorithmType : ABRAlgorithmType
   ) : void {

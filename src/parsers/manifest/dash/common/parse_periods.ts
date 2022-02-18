@@ -15,7 +15,7 @@
  */
 
 import log from "../../../../log";
-import Manifest from "../../../../manifest";
+import { IManifest } from "../../../../manifest";
 import flatMap from "../../../../utils/flat_map";
 import idGenerator from "../../../../utils/id_generator";
 import objectValues from "../../../../utils/object_values";
@@ -347,7 +347,7 @@ export interface IPeriodContext extends IInheritedAdaptationContext {
    * de-synchronization with what is actually on the server,
    * Use with moderation.
    */
-  unsafelyBaseOnPreviousManifest : Manifest | null;
+  unsafelyBaseOnPreviousManifest : IManifest | null;
   xlinkInfos : IXLinkInfos;
 
   /**

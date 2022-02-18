@@ -16,9 +16,9 @@
 
 import log from "../../../log";
 import {
-  Adaptation,
-  Period,
-  Representation,
+  IAdaptation,
+  IPeriod,
+  IRepresentation,
 } from "../../../manifest";
 import { IRange } from "../../../utils/ranges";
 import { SegmentBuffer } from "../../segment_buffers";
@@ -32,9 +32,9 @@ import { SegmentBuffer } from "../../segment_buffers";
  */
 export default function getBlacklistedRanges(
   segmentBuffer : SegmentBuffer,
-  contents : Array<{ adaptation : Adaptation;
-                     period : Period;
-                     representation : Representation; }>
+  contents : Array<{ adaptation : IAdaptation;
+                     period : IPeriod;
+                     representation : IRepresentation; }>
 ) : IRange[] {
   if (contents.length === 0) {
     return [];

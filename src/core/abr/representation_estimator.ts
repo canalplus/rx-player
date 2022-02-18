@@ -30,9 +30,9 @@ import {
 } from "rxjs";
 import log from "../../log";
 import {
-  Adaptation,
+  IAdaptation,
   ISegment,
-  Representation,
+  IRepresentation,
 } from "../../manifest";
 import { getLeftSizeOfRange } from "../../utils/ranges";
 import BandwidthEstimator from "./bandwidth_estimator";
@@ -86,7 +86,7 @@ export interface IABREstimate {
    * The Representation considered as the most adapted to the current network
    * and playback conditions.
    */
-  representation: Representation;
+  representation: IRepresentation;
   /**
    * If `true`, the current `representation` suggested should be switched to as
    * soon as possible. For example, you might want to interrupt all pending
@@ -158,8 +158,8 @@ export interface IABRMetricsEventValue {
   /** Duration of the loaded segment, in seconds. */
   segmentDuration: number | undefined;
   /** Context about the segment downloaded. */
-  content: { representation: Representation;
-             adaptation: Adaptation;
+  content: { representation: IRepresentation;
+             adaptation: IAdaptation;
              segment: ISegment; };
 }
 
@@ -182,7 +182,7 @@ export interface IABRRepresentationChangeEvent {
   type: "representationChange";
   value: {
     /** The new loaded `Representation`. `null` if no Representation is chosen. */
-    representation : Representation |
+    representation : IRepresentation |
                      null;
   };
 }
@@ -272,7 +272,7 @@ export interface IABRAddedSegmentEvent {
      */
     buffered : TimeRanges;
     /** The context for the segment that has been pushed. */
-    content : { representation : Representation }; };
+    content : { representation : IRepresentation }; };
 }
 
 /**
@@ -356,7 +356,7 @@ export interface IRepresentationEstimatorArguments {
    */
   maxAutoBitrate$ : Observable<number>;
   /** The list of Representations the `RepresentationEstimator` can choose from. */
-  representations : Representation[];
+  representations : IRepresentation[];
 }
 
 /**
@@ -366,9 +366,9 @@ export interface IRepresentationEstimatorArguments {
  * @returns {Array.<Representation>}
  */
 function getFilteredRepresentations(
-  representations : Representation[],
+  representations : IRepresentation[],
   filters : IABRFiltersObject
-) : Representation[] {
+) : IRepresentation[] {
   let filteredReps = representations;
 
   if (filters.bitrate != null) {
@@ -584,7 +584,7 @@ export default function RepresentationEstimator({
            * `null` if this buffer size mode is not enabled or if we don't have a
            * choice from it yet.
            */
-          let chosenRepFromBufferSize : Representation | null = null;
+          let chosenRepFromBufferSize : IRepresentation | null = null;
           if (allowBufferBasedEstimates &&
               bufferBasedBitrate !== undefined &&
               bufferBasedBitrate > currentBestBitrate)
@@ -612,7 +612,7 @@ export default function RepresentationEstimator({
            *
            * `null` if not enabled or if there's currently no guess.
            */
-          let chosenRepFromGuessMode : Representation | null = null;
+          let chosenRepFromGuessMode : IRepresentation | null = null;
           if (lowLatencyMode &&
               currentRepresentation !== null &&
               liveGap !== undefined &&

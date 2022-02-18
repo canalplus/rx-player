@@ -29,7 +29,7 @@ import {
 } from "rxjs";
 import config from "../../config";
 import log from "../../log";
-import Manifest from "../../manifest";
+import { IManifest } from "../../manifest";
 import throttle from "../../utils/rx-throttle";
 import {
   IManifestFetcherParsedResult,
@@ -47,7 +47,7 @@ export interface IManifestUpdateSchedulerArguments {
   /** Interface allowing to refresh the Manifest */
   manifestFetcher : ManifestFetcher;
   /** Information about the initial load of the manifest */
-  initialManifest : { manifest : Manifest;
+  initialManifest : { manifest : IManifest;
                       sendingTime? : number | undefined;
                       receivedTime? : number | undefined;
                       parsingTime? : number | undefined; };

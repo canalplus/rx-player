@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../../manifest";
+import { IRepresentation } from "../../../manifest";
 import arrayFindIndex from "../../../utils/array_find_index";
 
 /**
@@ -26,9 +26,9 @@ import arrayFindIndex from "../../../utils/array_find_index";
  * @returns {Array.<Object>}
  */
 export default function filterByBitrate(
-  representations : Representation[],
+  representations : IRepresentation[],
   bitrate : number
-) : Representation[] {
+) : IRepresentation[] {
   if (representations.length === 0) {
     return [];
   }

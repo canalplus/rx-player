@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { Representation } from "../../../manifest";
+import type { IRepresentation } from "../../../manifest";
 import inferSegmentContainer from "../infer_segment_container";
 
 describe("Transport utils - inferSegmentContainer", () => {
@@ -23,25 +23,25 @@ describe("Transport utils - inferSegmentContainer", () => {
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "audio/mp4" } as Representation))
+                                   mimeType: "audio/mp4" } as IRepresentation))
       .toEqual("mp4");
     expect(inferSegmentContainer("video",
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "video/mp4" } as Representation))
+                                   mimeType: "video/mp4" } as IRepresentation))
       .toEqual("mp4");
     expect(inferSegmentContainer("audio",
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "video/mp4" } as Representation))
+                                   mimeType: "video/mp4" } as IRepresentation))
       .toEqual("mp4");
     expect(inferSegmentContainer("video",
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "audio/mp4" } as Representation))
+                                   mimeType: "audio/mp4" } as IRepresentation))
       .toEqual("mp4");
   });
 
@@ -52,25 +52,25 @@ describe("Transport utils - inferSegmentContainer", () => {
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "audio/mp4" } as Representation))
+                                   mimeType: "audio/mp4" } as IRepresentation))
       .toEqual(undefined);
     expect(inferSegmentContainer("text",
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "video/mp4" } as Representation))
+                                   mimeType: "video/mp4" } as IRepresentation))
       .toEqual(undefined);
     expect(inferSegmentContainer("image",
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "video/mp4" } as Representation))
+                                   mimeType: "video/mp4" } as IRepresentation))
       .toEqual(undefined);
     expect(inferSegmentContainer("image",
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "audio/mp4" } as Representation))
+                                   mimeType: "audio/mp4" } as IRepresentation))
       .toEqual(undefined);
   });
 
@@ -81,25 +81,25 @@ describe("Transport utils - inferSegmentContainer", () => {
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "audio/webm" } as Representation))
+                                   mimeType: "audio/webm" } as IRepresentation))
       .toEqual("webm");
     expect(inferSegmentContainer("video",
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "video/webm" } as Representation))
+                                   mimeType: "video/webm" } as IRepresentation))
       .toEqual("webm");
     expect(inferSegmentContainer("audio",
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "video/webm" } as Representation))
+                                   mimeType: "video/webm" } as IRepresentation))
       .toEqual("webm");
     expect(inferSegmentContainer("video",
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "audio/webm" } as Representation))
+                                   mimeType: "audio/webm" } as IRepresentation))
       .toEqual("webm");
   });
 
@@ -110,25 +110,25 @@ describe("Transport utils - inferSegmentContainer", () => {
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "audio/webm" } as Representation))
+                                   mimeType: "audio/webm" } as IRepresentation))
       .toEqual(undefined);
     expect(inferSegmentContainer("text",
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "video/webm" } as Representation))
+                                   mimeType: "video/webm" } as IRepresentation))
       .toEqual(undefined);
     expect(inferSegmentContainer("image",
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "video/webm" } as Representation))
+                                   mimeType: "video/webm" } as IRepresentation))
       .toEqual(undefined);
     expect(inferSegmentContainer("image",
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "audio/webm" } as Representation))
+                                   mimeType: "audio/webm" } as IRepresentation))
       .toEqual(undefined);
   });
 
@@ -139,47 +139,47 @@ describe("Transport utils - inferSegmentContainer", () => {
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "application/mp4" } as Representation))
+                                   mimeType: "application/mp4" } as IRepresentation))
       .toEqual(undefined);
     expect(inferSegmentContainer("video",
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "application/mp4" } as Representation))
+                                   mimeType: "application/mp4" } as IRepresentation))
       .toEqual(undefined);
     expect(inferSegmentContainer("audio",
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "" } as Representation))
+                                   mimeType: "" } as IRepresentation))
       .toEqual(undefined);
     expect(inferSegmentContainer("video",
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "" } as Representation))
+                                   mimeType: "" } as IRepresentation))
       .toEqual(undefined);
     expect(inferSegmentContainer("audio",
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "foo" } as Representation))
+                                   mimeType: "foo" } as IRepresentation))
       .toEqual(undefined);
     expect(inferSegmentContainer("video",
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "bar" } as Representation))
+                                   mimeType: "bar" } as IRepresentation))
       .toEqual(undefined);
     expect(inferSegmentContainer("audio",
                                  { bitrate: 0,
                                    id: "1",
-                                   index: {} } as Representation))
+                                   index: {} } as IRepresentation))
       .toEqual(undefined);
     expect(inferSegmentContainer("video",
                                  { bitrate: 0,
                                    id: "1",
-                                   index: {} } as Representation))
+                                   index: {} } as IRepresentation))
       .toEqual(undefined);
   });
 
@@ -188,7 +188,7 @@ describe("Transport utils - inferSegmentContainer", () => {
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "application/mp4" } as Representation))
+                                   mimeType: "application/mp4" } as IRepresentation))
       .toEqual("mp4");
   });
 
@@ -198,30 +198,30 @@ describe("Transport utils - inferSegmentContainer", () => {
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "text/mp4" } as Representation))
+                                   mimeType: "text/mp4" } as IRepresentation))
       .toEqual(undefined);
     expect(inferSegmentContainer("text",
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "text/plain" } as Representation))
+                                   mimeType: "text/plain" } as IRepresentation))
       .toEqual(undefined);
     expect(inferSegmentContainer("text",
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "" } as Representation))
+                                   mimeType: "" } as IRepresentation))
       .toEqual(undefined);
     expect(inferSegmentContainer("text",
                                  { bitrate: 0,
                                    id: "1",
                                    index: {},
-                                   mimeType: "foo" } as Representation))
+                                   mimeType: "foo" } as IRepresentation))
       .toEqual(undefined);
     expect(inferSegmentContainer("text",
                                  { bitrate: 0,
                                    id: "1",
-                                   index: {} } as Representation))
+                                   index: {} } as IRepresentation))
       .toEqual(undefined);
   });
 });

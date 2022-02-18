@@ -16,7 +16,7 @@
 
 import {
   ISegment,
-  Representation,
+  IRepresentation,
 } from "../manifest";
 
 /**
@@ -25,7 +25,7 @@ import {
  * @class InitializationSegmentCache
  */
 class InitializationSegmentCache<T> {
-  private _cache : WeakMap<Representation, T>;
+  private _cache : WeakMap<IRepresentation, T>;
 
   constructor() {
     this._cache = new WeakMap();
@@ -37,7 +37,7 @@ class InitializationSegmentCache<T> {
    */
   public add(
     { representation,
-      segment } : { representation : Representation;
+      segment } : { representation : IRepresentation;
                     segment : ISegment; },
     response : T
   ) : void {
@@ -52,7 +52,7 @@ class InitializationSegmentCache<T> {
    */
   public get(
     { representation,
-      segment } : { representation : Representation;
+      segment } : { representation : IRepresentation;
                     segment : ISegment; }
   ) : T|null {
     if (segment.isInit) {

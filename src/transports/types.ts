@@ -15,19 +15,20 @@
  */
 
 import { IInbandEvent } from "../core/stream";
-import Manifest, {
-  Adaptation,
+import {
+  IAdaptation,
   IExposedAdaptation,
   IExposedManifest,
   IExposedPeriod,
   IExposedRepresentation,
   IExposedSegment,
+  IManifest,
+  IPeriod,
+  IRepresentation,
   IRepresentationFilter,
   ISegment,
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
-  Period,
-  Representation,
 } from "../manifest";
 import { IBifThumbnail } from "../parsers/images/bif";
 import { ILocalManifest } from "../parsers/manifest/local";
@@ -289,7 +290,7 @@ export interface IManifestParserOptions {
   /** Original URL used for the full version of the Manifest. */
   originalUrl : string | undefined;
   /** The previous value of the Manifest (when updating). */
-  previousManifest : Manifest | null;
+  previousManifest : IManifest | null;
   /**
    * If set to `true`, the Manifest parser can perform advanced optimizations
    * to speed-up the parsing process. Those optimizations might lead to a
@@ -364,7 +365,7 @@ export type IManifestParserRequestScheduler =
 /** Event emitted when a Manifest has been parsed by a Manifest parser. */
 export interface IManifestParserResult {
   /** The parsed Manifest Object itself. */
-  manifest : Manifest;
+  manifest : IManifest;
   /**
    * "Real" URL (post-redirection) at which the Manifest can be refreshed.
    *
@@ -553,13 +554,13 @@ export type ICustomManifestLoader = (
 
 export interface ISegmentContext {
   /** Manifest object related to this segment. */
-  manifest : Manifest;
-  /** Period object related to this segment. */
-  period : Period;
+  manifest : IManifest;
+  /** IPeriod object related to this segment. */
+  period : IPeriod;
   /** Adaptation object related to this segment. */
-  adaptation : Adaptation;
-  /** Representation Object related to this segment. */
-  representation : Representation;
+  adaptation : IAdaptation;
+  /** IRepresentation Object related to this segment. */
+  representation : IRepresentation;
   /** Segment we want to load. */
   segment : ISegment;
 }
@@ -676,7 +677,7 @@ export type ILoadedManifestFormat = Document |
                                     ArrayBuffer |
                                     IMetaPlaylist |
                                     ILocalManifest |
-                                    Manifest;
+                                    IManifest;
 
 /** Format of a loaded audio and video segment before parsing. */
 export type ILoadedAudioVideoSegmentFormat = Uint8Array |
@@ -712,11 +713,11 @@ export interface ISegmentParserParsedInitChunk<DataType> {
   initTimescale? : number | undefined;
   /**
    * If set to `true`, some protection information has been found in this
-   * initialization segment and lead the corresponding `Representation`
+   * initialization segment and lead the corresponding `IRepresentation`
    * object to be updated with that new information.
    *
    * In that case, you can re-check any encryption-related information with the
-   * `Representation` linked to that segment.
+   * `IRepresentation` linked to that segment.
    *
    * In the great majority of cases, this is set to `true` when new content
    * protection initialization data to have been encountered.
@@ -772,11 +773,11 @@ export interface ISegmentParserParsedMediaChunk<DataType> {
   needsManifestRefresh?: boolean;
   /**
    * If set to `true`, some protection information has been found in this
-   * media segment and lead the corresponding `Representation` object to be
+   * media segment and lead the corresponding `IRepresentation` object to be
    * updated with that new information.
    *
    * In that case, you can re-check any encryption-related information with the
-   * `Representation` linked to that segment.
+   * `IRepresentation` linked to that segment.
    *
    * In the great majority of cases, this is set to `true` when new content
    * protection initialization data to have been encountered.

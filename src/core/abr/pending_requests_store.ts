@@ -15,11 +15,12 @@
  */
 
 import log from "../../log";
-import Manifest, {
-  Adaptation,
+import {
+  IAdaptation,
+  IManifest,
+  IPeriod,
+  IRepresentation,
   ISegment,
-  Period,
-  Representation,
 } from "../../manifest";
 import objectValues from "../../utils/object_values";
 
@@ -140,9 +141,9 @@ export interface IRequestInfo {
 
 /** Content linked to a segment request. */
 export interface IRequestInfoContent {
-  manifest : Manifest;
-  period : Period;
-  adaptation : Adaptation;
-  representation : Representation;
+  manifest : IManifest;
+  period : IPeriod;
+  adaptation : IAdaptation;
+  representation : IRepresentation;
   segment : ISegment;
 }

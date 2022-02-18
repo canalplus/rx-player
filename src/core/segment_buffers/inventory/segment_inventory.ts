@@ -17,11 +17,11 @@
 import config from "../../../config";
 import log from "../../../log";
 import {
-  Adaptation,
+  IAdaptation,
   areSameContent,
   ISegment,
-  Period,
-  Representation,
+  IPeriod,
+  IRepresentation,
 } from "../../../manifest";
 import takeFirstSet from "../../../utils/take_first_set";
 import BufferedHistory, {
@@ -107,11 +107,11 @@ export interface IBufferedChunk {
 /** information to provide when "inserting" a new chunk into the SegmentInventory. */
 export interface IInsertedChunkInfos {
   /** The Adaptation that chunk is linked to */
-  adaptation : Adaptation;
+  adaptation : IAdaptation;
   /** The Period that chunk is linked to */
-  period : Period;
+  period : IPeriod;
   /** The Representation that chunk is linked to. */
-  representation : Representation;
+  representation : IRepresentation;
   /** The Segment that chunk is linked to. */
   segment : ISegment;
   /**
@@ -670,9 +670,9 @@ export default class SegmentInventory {
    * @param {Object} content
    */
   public completeSegment(
-    content : { period: Period;
-                adaptation: Adaptation;
-                representation: Representation;
+    content : { period: IPeriod;
+                adaptation: IAdaptation;
+                representation: IRepresentation;
                 segment: ISegment; },
     newBuffered : TimeRanges
   ) : void {

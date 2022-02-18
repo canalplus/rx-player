@@ -15,7 +15,7 @@
  */
 
 import log from "../../../../log";
-import { Adaptation } from "../../../../manifest";
+import { IAdaptation } from "../../../../manifest";
 import { IHDRInformation } from "../../../../manifest/types";
 import arrayFind from "../../../../utils/array_find";
 import objectAssign from "../../../../utils/object_assign";
@@ -274,7 +274,7 @@ export interface IRepresentationContext extends IInheritedRepresentationIndexCon
    * de-synchronization with what is actually on the server,
    * Use with moderation.
    */
-  unsafelyBaseOnPreviousAdaptation : Adaptation | null;
+  unsafelyBaseOnPreviousAdaptation : IAdaptation | null;
 }
 
 /**

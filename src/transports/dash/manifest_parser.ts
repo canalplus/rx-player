@@ -17,7 +17,7 @@
 import { formatError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
-import Manifest from "../../manifest";
+import { createManifestObject } from "../../manifest";
 import {
   IDashParserResponse,
   ILoadedResource,
@@ -142,7 +142,7 @@ export default function generateManifestParser(
         if (cancelSignal.isCancelled) {
           return PPromise.reject(cancelSignal.cancellationError);
         }
-        const manifest = new Manifest(parserResponse.value.parsed, options);
+        const manifest = createManifestObject(parserResponse.value.parsed, options);
         return { manifest, url };
       }
 

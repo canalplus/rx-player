@@ -21,7 +21,7 @@ import {
   of as observableOf,
 } from "rxjs";
 import log from "../../log";
-import { Representation } from "../../manifest";
+import { IRepresentation } from "../../manifest";
 import objectAssign from "../../utils/object_assign";
 import { ISharedReference } from "../../utils/reference";
 import takeFirstSet from "../../utils/take_first_set";
@@ -99,14 +99,14 @@ export default class ABRManager {
    * observable emitting the best representation (given the network/buffer
    * state).
    * @param {string} type
-   * @param {Array.<Representation>} representations
+   * @param {Array.<Object>} representations
    * @param {Observable<Object>} observation$
    * @param {Observable<Object>} streamEvents$
    * @returns {Observable}
    */
   public get$(
     type : IBufferType,
-    representations : Representation[],
+    representations : IRepresentation[],
     observation$ : Observable<IABRManagerPlaybackObservation>,
     streamEvents$ : Observable<IABRStreamEvents>
   ) : Observable<IABREstimate> {

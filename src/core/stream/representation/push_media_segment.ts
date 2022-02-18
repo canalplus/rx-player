@@ -21,11 +21,12 @@ import {
   Observable,
 } from "rxjs";
 import config from "../../../config";
-import Manifest, {
-  Adaptation,
+import {
+  IAdaptation,
+  IManifest,
+  IPeriod,
+  IRepresentation,
   ISegment,
-  Period,
-  Representation,
 } from "../../../manifest";
 import { ISegmentParserParsedMediaChunk } from "../../../transports";
 import objectAssign from "../../../utils/object_assign";
@@ -54,10 +55,10 @@ export default function pushMediaSegment<T>(
     segmentBuffer } :
   { playbackObserver : IReadOnlyPlaybackObserver<{ position : number;
                                                    wantedTimeOffset : number; }>;
-    content: { adaptation : Adaptation;
-               manifest : Manifest;
-               period : Period;
-               representation : Representation; };
+    content: { adaptation : IAdaptation;
+               manifest : IManifest;
+               period : IPeriod;
+               representation : IRepresentation; };
     initSegmentData : T | null;
     parsedSegment : ISegmentParserParsedMediaChunk<T>;
     segment : ISegment;

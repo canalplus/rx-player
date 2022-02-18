@@ -16,8 +16,10 @@
 
 import log from "../log";
 import arrayFind from "../utils/array_find";
-import Period from "./period";
-import { MANIFEST_UPDATE_TYPE } from "./types";
+import {
+  IPeriod,
+  MANIFEST_UPDATE_TYPE,
+} from "./types";
 
 /**
  * Update oldPeriod attributes with the one from newPeriod (e.g. when updating
@@ -25,8 +27,8 @@ import { MANIFEST_UPDATE_TYPE } from "./types";
  * @param {Object} oldPeriod
  * @param {Object} newPeriod
  */
-export default function updatePeriodInPlace(oldPeriod : Period,
-                                            newPeriod : Period,
+export default function updatePeriodInPlace(oldPeriod : IPeriod,
+                                            newPeriod : IPeriod,
                                             updateType : MANIFEST_UPDATE_TYPE) : void
 {
   oldPeriod.start = newPeriod.start;

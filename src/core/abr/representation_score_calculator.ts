@@ -15,7 +15,7 @@
  */
 
 import log from "../../log";
-import { Representation } from "../../manifest";
+import { IRepresentation } from "../../manifest";
 import EWMA from "./utils/ewma";
 
 /**
@@ -48,13 +48,13 @@ import EWMA from "./utils/ewma";
  * @class RepresentationScoreCalculator
  */
 export default class RepresentationScoreCalculator {
-  private _currentRepresentationData : { representation : Representation;
+  private _currentRepresentationData : { representation : IRepresentation;
                                          ewma : EWMA;
                                          loadedSegments : number;
                                          loadedDuration : number; } |
                                        null;
 
-  private _lastRepresentationWithGoodScore : Representation | null;
+  private _lastRepresentationWithGoodScore : IRepresentation | null;
 
   constructor() {
     this._currentRepresentationData = null;
@@ -70,7 +70,7 @@ export default class RepresentationScoreCalculator {
    * seconds.
    */
   public addSample(
-    representation : Representation,
+    representation : IRepresentation,
     requestDuration : number,
     segmentDuration : number
   ) : void {
@@ -106,7 +106,7 @@ export default class RepresentationScoreCalculator {
    * @returns {number|undefined}
    */
   public getEstimate(
-    representation : Representation
+    representation : IRepresentation
   ) : [number, ScoreConfidenceLevel] | undefined {
     if (this._currentRepresentationData === null ||
         this._currentRepresentationData.representation.id !== representation.id)
@@ -130,7 +130,7 @@ export default class RepresentationScoreCalculator {
    * `null` if no Representation ever reach that score.
    * @returns {Representation|null}
    */
-  public getLastStableRepresentation() : Representation | null {
+  public getLastStableRepresentation() : IRepresentation | null {
     return this._lastRepresentationWithGoodScore;
   }
 }

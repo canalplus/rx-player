@@ -27,7 +27,7 @@ import {
   ICompatVideoTrack,
   ICompatVideoTrackList,
 } from "../../compat/browser_compatibility_types";
-import { Representation } from "../../manifest";
+import { IRepresentation } from "../../manifest";
 import assert from "../../utils/assert";
 import EventEmitter from "../../utils/event_emitter";
 import normalizeLanguage from "../../utils/languages";
@@ -85,7 +85,7 @@ function createAudioTracks(
                     normalized: string;
                     language: string;
                     audioDescription: boolean;
-                    representations: Representation[]; };
+                    representations: IRepresentation[]; };
            nativeTrack: ICompatAudioTrack; }> {
   const newAudioTracks = [];
   const languagesOccurences: Partial<Record<string, number>> = {};
@@ -103,7 +103,7 @@ function createAudioTracks(
                     id,
                     normalized: normalizeLanguage(audioTrack.language),
                     audioDescription: false,
-                    representations: [] as Representation[] };
+                    representations: [] as IRepresentation[] };
     newAudioTracks.push({ track,
                           nativeTrack: audioTrack });
   }
@@ -152,7 +152,7 @@ function createTextTracks(
 function createVideoTracks(
   videoTracks: ICompatVideoTrackList
 ): Array<{ track: { id: string;
-                    representations: Representation[]; };
+                    representations: IRepresentation[]; };
            nativeTrack: ICompatVideoTrack; }> {
   const newVideoTracks = [];
   const languagesOccurences: Partial<Record<string, number>> = {};
@@ -167,7 +167,7 @@ function createVideoTracks(
                occurences.toString();
     languagesOccurences[language] = occurences + 1;
     newVideoTracks.push({ track: { id,
-                                   representations: [] as Representation[] },
+                                   representations: [] as IRepresentation[] },
                           nativeTrack: videoTrack });
   }
   return newVideoTracks;

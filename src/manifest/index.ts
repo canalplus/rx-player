@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-import Adaptation, {
+import {
   IRepresentationFilter,
   IRepresentationInfos,
   SUPPORTED_ADAPTATIONS_TYPE,
 } from "./adaptation";
-import Manifest, {
+import {
+  createManifestObject,
   IManifestParsingOptions,
-  ISupplementaryImageTrack,
-  ISupplementaryTextTrack,
 } from "./manifest";
-import Period from "./period";
-import Representation from "./representation";
 import {
   IBaseContentInfos,
   IMetaPlaylistPrivateInfos,
@@ -34,16 +31,11 @@ import {
   StaticRepresentationIndex,
 } from "./representation_index";
 import {
-  IAdaptationType,
-  IHDRInformation,
-} from "./types";
-import {
   areSameContent,
   getLoggableSegmentId,
   IBufferedChunkInfos,
 } from "./utils";
 
-export default Manifest;
 export * from "./types";
 export {
   // utils
@@ -51,23 +43,17 @@ export {
   getLoggableSegmentId,
   IBufferedChunkInfos,
 
-  // classes
-  Period,
-  Adaptation,
-  Representation,
+  // Manifest creation
+  createManifestObject,
 
   // types
-  IAdaptationType,
   IBaseContentInfos,
-  IHDRInformation,
   IManifestParsingOptions,
   IMetaPlaylistPrivateInfos,
   IRepresentationFilter,
   IRepresentationInfos,
   IRepresentationIndex,
   ISegment,
-  ISupplementaryImageTrack,
-  ISupplementaryTextTrack,
   StaticRepresentationIndex,
   SUPPORTED_ADAPTATIONS_TYPE,
 };

@@ -17,8 +17,10 @@
 import { MediaError } from "../errors";
 import log from "../log";
 import arrayFindIndex from "../utils/array_find_index";
-import Period from "./period";
-import { MANIFEST_UPDATE_TYPE } from "./types";
+import {
+  IPeriod,
+  MANIFEST_UPDATE_TYPE,
+} from "./types";
 import updatePeriodInPlace from "./update_period_in_place";
 
 /**
@@ -28,8 +30,8 @@ import updatePeriodInPlace from "./update_period_in_place";
  * @param {Array.<Object>} newPeriods
  */
 export function replacePeriods(
-  oldPeriods: Period[],
-  newPeriods: Period[]
+  oldPeriods: IPeriod[],
+  newPeriods: IPeriod[]
 ) : void {
   let firstUnhandledPeriodIdx = 0;
   for (let i = 0; i < newPeriods.length; i++) {
@@ -73,8 +75,8 @@ export function replacePeriods(
  * @param {Array.<Object>} newPeriods
  */
 export function updatePeriods(
-  oldPeriods: Period[],
-  newPeriods: Period[]
+  oldPeriods: IPeriod[],
+  newPeriods: IPeriod[]
 ) : void {
   if (oldPeriods.length === 0) {
     oldPeriods.splice(0, 0, ...newPeriods);

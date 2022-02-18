@@ -63,10 +63,11 @@ import {
 } from "../../errors";
 import features from "../../features";
 import log from "../../log";
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
+import {
+  IAdaptation,
+  IManifest,
+  IPeriod,
+  IRepresentation,
 } from "../../manifest";
 import { IBifThumbnail } from "../../parsers/images/bif";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
@@ -203,16 +204,16 @@ interface IPublicAPIEvent {
   error : ICustomError | Error;
   warning : ICustomError | Error;
   nativeTextTracksChange : TextTrack[];
-  periodChange : Period;
+  periodChange : IPeriod;
   availableAudioBitratesChange : number[];
   availableVideoBitratesChange : number[];
   availableAudioTracksChange : ITMAudioTrackListItem[];
   availableTextTracksChange : ITMTextTrackListItem[];
   availableVideoTracksChange : ITMVideoTrackListItem[];
-  decipherabilityUpdate : Array<{ manifest : Manifest;
-                                  period : Period;
-                                  adaptation : Adaptation;
-                                  representation : Representation; }>;
+  decipherabilityUpdate : Array<{ manifest : IManifest;
+                                  period : IPeriod;
+                                  adaptation : IAdaptation;
+                                  representation : IRepresentation; }>;
   seeking : null;
   seeked : null;
   streamEvent : IStreamEvent;
@@ -344,20 +345,20 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      * `null` if the current content loaded has no manifest or if the content is
      * not yet loaded.
      */
-    manifest : Manifest|null;
+    manifest : IManifest | null;
 
     /**
      * Current Period being played.
      * `null` if no Period is being played.
      */
-    currentPeriod : Period|null;
+    currentPeriod : IPeriod|null;
 
     /**
      * Store currently considered adaptations, per active period.
      * `null` if no Adaptation is active
      */
     activeAdaptations : {
-      [periodId : string] : Partial<Record<IBufferType, Adaptation|null>>;
+      [periodId : string] : Partial<Record<IBufferType, IAdaptation|null>>;
     } | null;
 
     /**
@@ -365,7 +366,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      * `null` if no Representation is active
      */
     activeRepresentations : {
-      [periodId : string] : Partial<Record<IBufferType, Representation|null>>;
+      [periodId : string] : Partial<Record<IBufferType, IRepresentation|null>>;
     } | null;
 
     /** Store starting audio track if one. */
@@ -435,7 +436,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   /** Information about last content being played. */
   private _priv_lastContentPlaybackInfos : { options?: IParsedLoadVideoOptions;
-                                             manifest?: Manifest;
+                                             manifest?: IManifest;
                                              lastPlaybackPosition?: number; };
 
   /** All possible Error types emitted by the RxPlayer. */
@@ -786,12 +787,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       let manifest$ : Observable<IManifestFetcherParsedResult |
                                  IManifestFetcherWarningEvent>;
 
-      if (initialManifest instanceof Manifest) {
-        manifest$ = observableOf({ type: "parsed",
-                                   manifest: initialManifest });
-      } else if (initialManifest !== undefined) {
-        manifest$ = manifestFetcher.parse(initialManifest, { previousManifest: null,
-                                                             unsafeMode: false });
+      if (!isNullOrUndefined(initialManifest)) {
+        // Rudimentary check for if this is an `IManifest`
+        if (typeof (initialManifest as IManifest).getPeriodForTime === "function") {
+          manifest$ = observableOf({ type: "parsed",
+                                     manifest: initialManifest as IManifest });
+        } else {
+          manifest$ = manifestFetcher.parse(initialManifest, { previousManifest: null,
+                                                               unsafeMode: false });
+        }
       } else {
         manifest$ = manifestFetcher.fetch(url).pipe(
           mergeMap((response) => response.type === "warning" ?
@@ -1128,7 +1132,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @deprecated
    * @returns {Manifest|null} - The current Manifest (`null` when not known).
    */
-  getManifest() : Manifest|null {
+  getManifest() : IManifest|null {
     warnOnce("getManifest is deprecated." +
              " Please open an issue if you used this API.");
     if (this._priv_contentInfos === null) {
@@ -1145,7 +1149,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * when none is known for now.
    */
   getCurrentAdaptations(
-  ) : Partial<Record<IBufferType, Adaptation|null>> | null {
+  ) : Partial<Record<IBufferType, IAdaptation|null>> | null {
     warnOnce("getCurrentAdaptations is deprecated." +
              " Please open an issue if you used this API.");
     if (this._priv_contentInfos === null) {
@@ -1169,7 +1173,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * (`null` when none is known for now.
    */
   getCurrentRepresentations(
-  ) : Partial<Record<IBufferType, Representation|null>> | null {
+  ) : Partial<Record<IBufferType, IRepresentation|null>> | null {
     warnOnce("getCurrentRepresentations is deprecated." +
              " Please open an issue if you used this API.");
     return this._priv_getCurrentRepresentations();
@@ -2504,7 +2508,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Initialize various private properties and emit initial event.
    * @param {Object} value
    */
-  private _priv_onManifestReady({ manifest } : { manifest : Manifest }) : void {
+  private _priv_onManifestReady({ manifest } : { manifest : IManifest }) : void {
     const contentInfos = this._priv_contentInfos;
     if (contentInfos === null) {
       log.error("API: The manifest is loaded but no content is.");
@@ -2547,7 +2551,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    *
    * @param {Object} value
    */
-  private _priv_onActivePeriodChanged({ period } : { period : Period }) : void {
+  private _priv_onActivePeriodChanged({ period } : { period : IPeriod }) : void {
     if (this._priv_contentInfos === null) {
       log.error("API: The active period changed but no content is loaded");
       return;
@@ -2597,8 +2601,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onPeriodStreamReady(value : {
     type : IBufferType;
-    period : Period;
-    adaptation$ : Subject<Adaptation|null>;
+    period : IPeriod;
+    adaptation$ : Subject<IAdaptation|null>;
   }) : void {
     const { type, period, adaptation$ } = value;
 
@@ -2651,7 +2655,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onPeriodStreamCleared(value : {
     type : IBufferType;
-    period : Period;
+    period : IPeriod;
   }) : void {
     const { type, period } = value;
 
@@ -2716,8 +2720,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     period,
   } : {
     type : IBufferType;
-    adaptation : Adaptation|null;
-    period : Period;
+    adaptation : IAdaptation|null;
+    period : IPeriod;
   }) : void {
     if (this._priv_contentInfos === null) {
       log.error("API: The adaptations changed but no content is loaded");
@@ -2782,8 +2786,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     representation,
   }: {
     type : IBufferType;
-    period : Period;
-    representation : Representation|null;
+    period : IPeriod;
+    representation : IRepresentation|null;
   }) : void {
     if (this._priv_contentInfos === null) {
       log.error("API: The representations changed but no content is loaded");
@@ -2961,7 +2965,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   private _priv_getCurrentRepresentations(
-  ) : Partial<Record<IBufferType, Representation|null>> | null {
+  ) : Partial<Record<IBufferType, IRepresentation|null>> | null {
     if (this._priv_contentInfos === null) {
       return null;
     }

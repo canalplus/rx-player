@@ -40,7 +40,7 @@ import {
   onSourceEnded$,
 } from "../../compat/event_listeners";
 import log from "../../log";
-import Manifest from "../../manifest";
+import { IManifest } from "../../manifest";
 import { fromEvent } from "../../utils/event_emitter";
 
 /** Number of seconds in a regular year. */
@@ -56,7 +56,7 @@ const YEAR_IN_SECONDS = 365 * 24 * 3600;
  * @returns {Observable}
  */
 export default function DurationUpdater(
-  manifest : Manifest,
+  manifest : IManifest,
   mediaSource : MediaSource
 ) : Observable<never> {
   return observableDefer(() => {
@@ -105,7 +105,7 @@ export default function DurationUpdater(
  */
 function setMediaSourceDuration(
   mediaSource: MediaSource,
-  manifest: Manifest,
+  manifest: IManifest,
   lastSetDuration?: number
 ): Observable<number | null> {
   return isMediaSourceOpened$(mediaSource).pipe(

@@ -15,7 +15,7 @@
  */
 
 import log from "../../../../log";
-import { Period } from "../../../../manifest";
+import { IPeriod } from "../../../../manifest";
 import arrayFind from "../../../../utils/array_find";
 import arrayIncludes from "../../../../utils/array_includes";
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
@@ -506,7 +506,7 @@ export interface IAdaptationSetContext extends IInheritedRepresentationContext {
    * de-synchronization with what is actually on the server,
    * Use with moderation.
    */
-  unsafelyBaseOnPreviousPeriod : Period | null;
+  unsafelyBaseOnPreviousPeriod : IPeriod | null;
 }
 
 /**
