@@ -1079,7 +1079,8 @@ function mergeKeyIdSetIntoArray(
   set : Set<Uint8Array>,
   arr : Uint8Array[]
 ) {
-  for (const kid of set.values()) {
+  const setArr = Array.from(set.values());
+  for (const kid of setArr) {
     const isFound = arr.some(k => areKeyIdsEqual(k, kid));
     if (!isFound) {
       arr.push(kid);
