@@ -90,7 +90,8 @@ export default class KeySessionRecord {
     if (this._keyIds === null) {
       this._keyIds = [];
     }
-    for (const keyId of keyIds) {
+    const keyIdsArr = Array.from(keyIds);
+    for (const keyId of keyIdsArr) {
       if (!this.isAssociatedWithKeyId(keyId)) {
         this._keyIds.push(keyId);
       }
