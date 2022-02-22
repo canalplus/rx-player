@@ -379,8 +379,8 @@ export interface IAdaptation {
   representations : IRepresentation[];
   /** Type of this Adaptation. */
   type : IAdaptationType;
-  /** `true` if at least one Representation is in a supported codec. `false` otherwise. */
-  isCodecSupported : boolean;
+  /** Whether at least one Representation should be decodable. */
+  hasSupport : boolean;
   /** Whether this track contains an audio description for the visually impaired. */
   isAudioDescription? : boolean;
   /** Whether this Adaptation contains closed captions for the hard-of-hearing. */
@@ -481,6 +481,15 @@ export interface IRepresentation {
   decipherable? : boolean  | undefined;
   /** `true` if the Representation is in a supported codec, false otherwise. */
   isCodecSupported : boolean;
+  /**
+   * If `true` the main characteristics (resolution, framerate, bitrate ...) of
+   * this Representation have been checked and there's a high chance of this
+   * Representation to be decodable by the browser.
+   * If `false` one of the characteristics make this Representation not
+   * decodable.
+   * If `undefined`, we could not determine this.
+   */
+  isSupported : boolean | undefined;
   /**
    * Returns "mime-type string" which includes both the mime-type and the codec,
    * which is often needed when interacting with the browser's APIs.

@@ -18,6 +18,7 @@ import { IParsedAdaptation } from "../parsers/manifest";
 import arrayFind from "../utils/array_find";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import normalizeLanguage from "../utils/languages";
+import PPromise from "../utils/promise";
 import uniq from "../utils/uniq";
 import { createRepresentationObject } from "./representation";
 import type {
@@ -40,11 +41,11 @@ export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] = [ "audio",
  * @param {Object|undefined} [options]
  * @returns {Object}
  */
-export function createAdaptationObject(
+export async function createAdaptationObject(
   parsedAdaptation : IParsedAdaptation,
   options : { representationFilter? : IRepresentationFilter | undefined;
               isManuallyAdded? : boolean | undefined; } = {}
-) : IAdaptation {
+) : Promise<IAdaptation> {
   const { trickModeTracks } = parsedAdaptation;
   const { representationFilter, isManuallyAdded } = options;
 
@@ -52,7 +53,7 @@ export function createAdaptationObject(
     id: parsedAdaptation.id,
     type: parsedAdaptation.type,
     representations: [],
-    isCodecSupported: false,
+    hasSupport: false,
     getAvailableBitrates,
     getPlayableRepresentations,
     getRepresentation,
@@ -82,16 +83,22 @@ export function createAdaptationObject(
 
   if (trickModeTracks !== undefined &&
       trickModeTracks.length > 0) {
-    adaptationObj.trickModeTracks = trickModeTracks
-      .map((track) => createAdaptationObject(track));
+    adaptationObj.trickModeTracks = [];
+    for (const track of trickModeTracks) {
+      adaptationObj.trickModeTracks.push(await createAdaptationObject(track));
+    }
   }
 
   const argsRepresentations = parsedAdaptation.representations;
-  const representations : IRepresentation[] = [];
-  let isCodecSupported : boolean = false;
+  const representationProms : Array<Promise<IRepresentation>> = [];
+  let hasSupport : boolean = false;
   for (let i = 0; i < argsRepresentations.length; i++) {
-    const representation = createRepresentationObject(argsRepresentations[i],
-                                                      { type: adaptationObj.type });
+    representationProms.push(createRepresentationObject(argsRepresentations[i],
+                                                        { type: adaptationObj.type }));
+  }
+  const representations = await PPromise.all(representationProms);
+  const filteredRepresentations : IRepresentation[] = [];
+  for (const representation of representations) {
     const shouldAdd =
       isNullOrUndefined(representationFilter) ||
       representationFilter(representation,
@@ -103,15 +110,18 @@ export function createAdaptationObject(
                              isAudioDescription: adaptationObj.isAudioDescription,
                              isSignInterpreted: adaptationObj.isSignInterpreted });
     if (shouldAdd) {
-      representations.push(representation);
-      if (!isCodecSupported && representation.isCodecSupported) {
-        isCodecSupported = true;
+      filteredRepresentations.push(representation);
+      if (!hasSupport &&
+          representation.isCodecSupported &&
+          representation.isSupported !== false)
+      {
+        hasSupport = true;
       }
     }
   }
-  representations.sort((a, b) => a.bitrate - b.bitrate);
-  adaptationObj.representations = representations;
-  adaptationObj.isCodecSupported = isCodecSupported;
+  filteredRepresentations.sort((a, b) => a.bitrate - b.bitrate);
+  adaptationObj.representations = filteredRepresentations;
+  adaptationObj.hasSupport = hasSupport;
 
   // for manuallyAdded adaptations (not in the manifest)
   adaptationObj.manuallyAdded = isManuallyAdded === true;
@@ -133,7 +143,9 @@ export function createAdaptationObject(
   /** @link IAdaptation */
   function getPlayableRepresentations() : IRepresentation[] {
     return adaptationObj.representations.filter(rep => {
-      return rep.isCodecSupported && rep.decipherable !== false;
+      return rep.isCodecSupported &&
+             rep.decipherable !== false &&
+             rep.isSupported !== false;
     });
   }
 

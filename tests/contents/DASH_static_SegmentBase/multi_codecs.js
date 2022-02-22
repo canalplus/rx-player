@@ -434,7 +434,7 @@ export default {
                 height: 144,
                 width: 192,
                 frameRate: "1000000/40000",
-                codec: "vp9",
+                codec: "vp09.00.21.08.00.02.02.02.00",
                 mimeType: "video/webm",
                 index: {
                   init: {
@@ -450,7 +450,7 @@ export default {
                 height: 240,
                 width: 320,
                 frameRate: "1000000/40000",
-                codec: "vp9",
+                codec: "vp09.00.21.08.00.02.02.02.00",
                 mimeType: "video/webm",
                 index: {
                   init: {
@@ -466,7 +466,7 @@ export default {
                 height: 360,
                 width: 480,
                 frameRate: "1000000/40000",
-                codec: "vp9",
+                codec: "vp09.00.21.08.00.02.02.02.00",
                 mimeType: "video/webm",
                 index: {
                   init: {
@@ -482,7 +482,7 @@ export default {
                 height: 480,
                 width: 640,
                 frameRate: "1000000/40000",
-                codec: "vp9",
+                codec: "vp09.00.21.08.00.02.02.02.00",
                 mimeType: "video/webm",
                 index: {
                   init: {
@@ -498,7 +498,7 @@ export default {
                 height: 576,
                 width: 768,
                 frameRate: "1000000/40000",
-                codec: "vp9",
+                codec: "vp09.00.21.08.00.02.02.02.00",
                 mimeType: "video/webm",
                 index: {
                   init: {

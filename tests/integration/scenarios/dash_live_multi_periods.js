@@ -50,7 +50,7 @@ describe("DASH live content multi-periods (SegmentTemplate)", function() {
     await sleepWithoutSinonStub(1);
     expect(xhrMock.getLockedXHR().length).to.equal(1);
     await xhrMock.flush();
-    await sleepWithoutSinonStub(1);
+    await sleepWithoutSinonStub(100);
 
     const manifest = player.getManifest();
     expect(manifest).not.to.equal(null);
@@ -73,7 +73,7 @@ describe("DASH live content multi-periods (SegmentTemplate)", function() {
     await sleepWithoutSinonStub(1);
     expect(xhrMock.getLockedXHR().length).to.equal(1);
     await xhrMock.flush();
-    await sleepWithoutSinonStub(1);
+    await sleepWithoutSinonStub(100);
 
     const manifest = player.getManifest();
     expect(manifest).not.to.equal(null);
@@ -96,7 +96,7 @@ describe("DASH live content multi-periods (SegmentTemplate)", function() {
     await sleepWithoutSinonStub(1);
     expect(xhrMock.getLockedXHR().length).to.equal(1);
     await xhrMock.flush();
-    await sleepWithoutSinonStub(1);
+    await sleepWithoutSinonStub(100);
 
     const manifest = player.getManifest();
     expect(manifest).not.to.equal(null);

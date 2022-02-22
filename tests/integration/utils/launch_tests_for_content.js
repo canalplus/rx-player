@@ -100,7 +100,7 @@ export default function launchTestsForContent(manifestInfos) {
         expect(xhrMock.getLockedXHR()[0].url).to.equal(manifestInfos.url);
 
         await xhrMock.flush(); // only wait for the manifest request
-        await sleep(1);
+        await sleep(100);
 
         expect(player.getPlayerState()).to.equal("LOADING");
 
@@ -1659,7 +1659,7 @@ export default function launchTestsForContent(manifestInfos) {
         await sleep(1);
         expect(player.getAvailableVideoTracks()).to.eql([]);
         await xhrMock.flush();
-        await sleep(50);
+        await sleep(100);
 
         const videoTracks = player.getAvailableVideoTracks();
 

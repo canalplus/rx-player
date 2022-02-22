@@ -83,31 +83,31 @@
       </Representation>
     </AdaptationSet>
     <AdaptationSet id="8" contentType="video" maxWidth="768" maxHeight="576" frameRate="1000000/40000" par="4:3">
-      <Representation id="11" bandwidth="362665" codecs="vp9" mimeType="video/webm" sar="1:1" width="480" height="360">
+      <Representation id="11" bandwidth="362665" codecs="vp09.00.21.08.00.02.02.02.00" mimeType="video/webm" sar="1:1" width="480" height="360">
         <BaseURL>v-0360p-0550k-vp9.webm</BaseURL>
         <SegmentBase indexRange="298-541" timescale="1000000">
           <Initialization range="0-297"/>
         </SegmentBase>
       </Representation>
-      <Representation id="14" bandwidth="81505" codecs="vp9" mimeType="video/webm" sar="1:1" width="192" height="144">
+      <Representation id="14" bandwidth="81505" codecs="vp09.00.21.08.00.02.02.02.00" mimeType="video/webm" sar="1:1" width="192" height="144">
         <BaseURL>v-0144p-0100k-vp9.webm</BaseURL>
         <SegmentBase indexRange="294-535" timescale="1000000">
           <Initialization range="0-293"/>
         </SegmentBase>
       </Representation>
-      <Representation id="19" bandwidth="485260" codecs="vp9" mimeType="video/webm" sar="1:1" width="640" height="480">
+      <Representation id="19" bandwidth="485260" codecs="vp09.00.21.08.00.02.02.02.00" mimeType="video/webm" sar="1:1" width="640" height="480">
         <BaseURL>v-0480p-0750k-vp9.webm</BaseURL>
         <SegmentBase indexRange="298-541" timescale="1000000">
           <Initialization range="0-297"/>
         </SegmentBase>
       </Representation>
-      <Representation id="21" bandwidth="203461" codecs="vp9" mimeType="video/webm" sar="1:1" width="320" height="240">
+      <Representation id="21" bandwidth="203461" codecs="vp09.00.21.08.00.02.02.02.00" mimeType="video/webm" sar="1:1" width="320" height="240">
         <BaseURL>v-0240p-0300k-vp9.webm</BaseURL>
         <SegmentBase indexRange="296-539" timescale="1000000">
           <Initialization range="0-295"/>
         </SegmentBase>
       </Representation>
-      <Representation id="23" bandwidth="620659" codecs="vp9" mimeType="video/webm" sar="1:1" width="768" height="576">
+      <Representation id="23" bandwidth="620659" codecs="vp09.00.21.08.00.02.02.02.00" mimeType="video/webm" sar="1:1" width="768" height="576">
         <BaseURL>v-0576p-1000k-vp9.webm</BaseURL>
         <SegmentBase indexRange="298-541" timescale="1000000">
           <Initialization range="0-297"/>

@@ -29,7 +29,7 @@ describe("DASH live content (SegmentTimeline)", function () {
     await sleep(1);
     expect(xhrMock.getLockedXHR().length).to.equal(1); // Manifest request
     await xhrMock.flush();
-    await sleep(1);
+    await sleep(100);
 
     expect(player.getPlayerState()).to.equal("LOADING");
 
@@ -206,7 +206,7 @@ describe("DASH live content (SegmentTimeline)", function () {
 
     await sleep(1);
     await xhrMock.flush();
-    await sleep(1);
+    await sleep(100);
 
     expect(player.getAvailableAudioBitrates()).to.eql([48000]);
     expect(player.getAvailableVideoBitrates()).to.eql([300000]);
@@ -225,7 +225,7 @@ describe("DASH live content (SegmentTimeline)", function () {
       await sleep(1);
       expect(player.getAvailableAudioTracks()).to.eql([]);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(100);
 
       const audioTracks = player.getAvailableAudioTracks();
 
@@ -272,7 +272,7 @@ describe("DASH live content (SegmentTimeline)", function () {
       await sleep(1);
       expect(player.getAvailableTextTracks()).to.eql([]);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(100);
 
       const textTracks = player.getAvailableTextTracks();
 
@@ -320,7 +320,7 @@ describe("DASH live content (SegmentTimeline)", function () {
       await sleep(1);
       expect(player.getAvailableVideoTracks()).to.eql([]);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(100);
 
       const videoTracks = player.getAvailableVideoTracks();
 
@@ -375,7 +375,7 @@ describe("DASH live content (SegmentTimeline)", function () {
 
       await sleep(1);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(100);
       expect(player.getMinimumPosition()).to.be
         .closeTo(1527507768, 1);
     });
@@ -392,7 +392,7 @@ describe("DASH live content (SegmentTimeline)", function () {
 
       await sleep(1);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(100);
       expect(player.getMaximumPosition()).to.be
         .closeTo(1527508062, 1);
     });
@@ -423,7 +423,7 @@ describe("DASH live content with no timeShiftBufferDepth (SegmentTimeline)", fun
     await sleep(1);
     expect(xhrMock.getLockedXHR().length).to.equal(1); // Manifest request
     await xhrMock.flush();
-    await sleep(1);
+    await sleep(100);
 
     expect(player.getPlayerState()).to.equal("LOADING");
 
@@ -603,7 +603,7 @@ describe("DASH live content with no timeShiftBufferDepth (SegmentTimeline)", fun
 
     await sleep(1);
     await xhrMock.flush();
-    await sleep(1);
+    await sleep(100);
 
     expect(player.getAvailableAudioBitrates()).to.eql([48000]);
     expect(player.getAvailableVideoBitrates()).to.eql([300000]);
@@ -622,7 +622,7 @@ describe("DASH live content with no timeShiftBufferDepth (SegmentTimeline)", fun
       await sleep(1);
       expect(player.getAvailableAudioTracks()).to.eql([]);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(100);
 
       const audioTracks = player.getAvailableAudioTracks();
 
@@ -669,7 +669,7 @@ describe("DASH live content with no timeShiftBufferDepth (SegmentTimeline)", fun
       await sleep(1);
       expect(player.getAvailableTextTracks()).to.eql([]);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(100);
 
       const textTracks = player.getAvailableTextTracks();
 
@@ -717,7 +717,7 @@ describe("DASH live content with no timeShiftBufferDepth (SegmentTimeline)", fun
       await sleep(1);
       expect(player.getAvailableVideoTracks()).to.eql([]);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(100);
 
       const videoTracks = player.getAvailableVideoTracks();
 
@@ -774,7 +774,7 @@ describe("DASH live content with no timeShiftBufferDepth (SegmentTimeline)", fun
 
       await sleep(1);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(100);
       expect(player.getMinimumPosition()).to.equal(6);
     });
   });
@@ -790,7 +790,7 @@ describe("DASH live content with no timeShiftBufferDepth (SegmentTimeline)", fun
 
       await sleep(1);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(100);
       expect(player.getMaximumPosition()).to.be
         .closeTo(1527508062, 1);
     });

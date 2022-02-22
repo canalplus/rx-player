@@ -32,7 +32,7 @@ describe("DASH live content (SegmentTemplate)", function() {
     await sleep(1);
     expect(xhrMock.getLockedXHR().length).to.equal(1);
     await xhrMock.flush();
-    await sleep(1);
+    await sleep(100);
 
     const manifest = player.getManifest();
     expect(manifest).not.to.equal(null);
@@ -137,7 +137,7 @@ describe("DASH live content (SegmentTemplate)", function() {
 
     await sleep(1);
     await xhrMock.flush();
-    await sleep(1);
+    await sleep(100);
 
     expect(player.getAvailableAudioBitrates()).to.eql([48000]);
     expect(player.getAvailableVideoBitrates()).to.eql([300000]);
@@ -156,7 +156,7 @@ describe("DASH live content (SegmentTemplate)", function() {
       await sleep(1);
       expect(player.getAvailableAudioTracks()).to.eql([]);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(100);
 
       const audioTracks = player.getAvailableAudioTracks();
 
@@ -204,7 +204,7 @@ describe("DASH live content (SegmentTemplate)", function() {
       await sleep(1);
       expect(player.getAvailableTextTracks()).to.eql([]);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(100);
 
       const textTracks = player.getAvailableTextTracks();
 
@@ -252,7 +252,7 @@ describe("DASH live content (SegmentTemplate)", function() {
       await sleep(1);
       expect(player.getAvailableVideoTracks()).to.eql([]);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(100);
 
       const videoTracks = player.getAvailableVideoTracks();
 
@@ -309,7 +309,7 @@ describe("DASH live content (SegmentTemplate)", function() {
 
       await sleep(1);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(100);
       expect(player.getMinimumPosition()).to.be.closeTo(1553521448, 1);
     });
   });
@@ -325,7 +325,7 @@ describe("DASH live content (SegmentTemplate)", function() {
 
       await sleep(1);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(100);
       expect(player.getMaximumPosition()).to.be.closeTo(1553521748, 1);
     });
   });
@@ -356,7 +356,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
     await sleep(1);
     expect(xhrMock.getLockedXHR().length).to.equal(1);
     await xhrMock.flush();
-    await sleep(1);
+    await sleep(100);
 
     const manifest = player.getManifest();
     expect(manifest).not.to.equal(null);
@@ -461,7 +461,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
 
     await sleep(1);
     await xhrMock.flush();
-    await sleep(1);
+    await sleep(100);
 
     expect(player.getAvailableAudioBitrates()).to.eql([48000]);
     expect(player.getAvailableVideoBitrates()).to.eql([300000]);
@@ -480,7 +480,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
       await sleep(1);
       expect(player.getAvailableAudioTracks()).to.eql([]);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(100);
 
       const audioTracks = player.getAvailableAudioTracks();
 
@@ -528,7 +528,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
       await sleep(1);
       expect(player.getAvailableTextTracks()).to.eql([]);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(100);
 
       const textTracks = player.getAvailableTextTracks();
 
@@ -576,7 +576,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
       await sleep(1);
       expect(player.getAvailableVideoTracks()).to.eql([]);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(100);
 
       const videoTracks = player.getAvailableVideoTracks();
 
@@ -633,7 +633,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
 
       await sleep(1);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(100);
       expect(player.getMinimumPosition()).to.equal(1553515200);
     });
   });
@@ -649,7 +649,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
 
       await sleep(1);
       await xhrMock.flush();
-      await sleep(1);
+      await sleep(100);
       expect(player.getMaximumPosition()).to.be
         .closeTo(1553521448, 3);
     });

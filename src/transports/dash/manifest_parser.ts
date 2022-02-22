@@ -132,9 +132,9 @@ export default function generateManifestParser(
      * @param {Object} parserResponse - Response returned from a MPD parser.
      * @returns {Observable}
      */
-    function processMpdParserResponse(
+    async function processMpdParserResponse(
       parserResponse : IDashParserResponse<string> | IDashParserResponse<ArrayBuffer>
-    ) : IManifestParserResult | Promise<IManifestParserResult> {
+    ) : Promise<IManifestParserResult> {
       if (parserResponse.type === "done") {
         if (parserResponse.value.warnings.length > 0) {
           onWarnings(parserResponse.value.warnings);
@@ -143,7 +143,7 @@ export default function generateManifestParser(
           return PPromise.reject(cancelSignal.cancellationError);
         }
         const [ manifest, mWarnings ] =
-          createManifestObject(parserResponse.value.parsed, options);
+          await createManifestObject(parserResponse.value.parsed, options);
         if (mWarnings.length > 0) {
           onWarnings(parserResponse.value.warnings);
         }

@@ -25,6 +25,7 @@ import canPatchISOBMFFSegment from "./can_patch_isobmff";
 import tryToChangeSourceBufferType, {
   ICompatSourceBuffer,
 } from "./change_source_buffer_type";
+import checkDecodingCapabilitiesSupport from "./check_decoding_capabilities_support";
 import clearElementSrc from "./clear_element_src";
 import {
   closeSession,
@@ -72,6 +73,7 @@ export {
   addClassName,
   addTextTrack,
   canPatchISOBMFFSegment,
+  checkDecodingCapabilitiesSupport,
   clearElementSrc,
   closeSession,
   CustomMediaKeySystemAccess,

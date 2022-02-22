@@ -50,6 +50,9 @@ const isSamsungBrowser : boolean = !isNode &&
 const isTizen : boolean = !isNode &&
                           /Tizen/.test(navigator.userAgent);
 
+const isChromeCast : boolean = !isNode &&
+                               /CrKey/.test(navigator.userAgent);
+
 interface ISafariWindowObject extends Window {
   safari? : { pushNotification? : { toString() : string } };
 }
@@ -68,6 +71,7 @@ const isSafariMobile : boolean = !isNode &&
                                  /iPad|iPhone|iPod/.test(navigator.platform);
 
 export {
+  isChromeCast,
   isEdgeChromium,
   isIE11,
   isIEOrEdge,

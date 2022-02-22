@@ -66,17 +66,17 @@ export default function getLocalManifestPipelines(
         })(url, cancelSignal);
     },
 
-    parseManifest(
+    async parseManifest(
       manifestData : IRequestedData<unknown>,
       _parserOptions : IManifestParserOptions,
       onWarnings : (warnings: Error[]) => void
-    ) : IManifestParserResult {
+    ) : Promise<IManifestParserResult> {
       const loadedManifest = manifestData.responseData;
       if (typeof manifestData !== "object") {
         throw new Error("Wrong format for the manifest data");
       }
       const parsed = parseLocalManifest(loadedManifest as ILocalManifest);
-      const [manifest, warnings] = createManifestObject(parsed, options);
+      const [manifest, warnings] = await createManifestObject(parsed, options);
       if (warnings.length > 0) {
         onWarnings(warnings);
       }

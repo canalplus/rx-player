@@ -493,6 +493,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
   });
 
   it("setting a track should not be persisted between Periods", async () => {
+    this.timeout(4000);
     await loadContent();
     await sleep(300);
 
@@ -517,6 +518,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
   });
 
   it("setting a track should be persisted when seeking back to that Period", async () => {
+    this.timeout(4000);
     await loadContent();
 
     // TODO AUDIO codec

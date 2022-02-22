@@ -153,11 +153,12 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
       return handleParsedResult(parsed);
 
-      function handleParsedResult(
+      async function handleParsedResult(
         parsedResult : IMPLParserResponse<IParsedManifest>
       ) : Promise<IManifestParserResult> {
         if (parsedResult.type === "done") {
-          const [manifest, warnings] = createManifestObject(parsedResult.value, options);
+          const [manifest, warnings] = await createManifestObject(parsedResult.value,
+                                                                  options);
           if (warnings.length > 0) {
             onWarnings(warnings);
           }

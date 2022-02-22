@@ -137,11 +137,11 @@ export default function(options : ITransportOptions) : ITransportPipelines {
 
     loadManifest: manifestLoader,
 
-    parseManifest(
+    async parseManifest(
       manifestData : IRequestedData<unknown>,
       parserOptions : IManifestParserOptions,
       onWarnings : (warnings : Error[]) => void
-    ) : IManifestParserResult {
+    ) : Promise <IManifestParserResult> {
       const url = manifestData.url ?? parserOptions.originalUrl;
       const { receivedTime: manifestReceivedTime, responseData } = manifestData;
 
@@ -153,7 +153,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                                                 url,
                                                 manifestReceivedTime);
 
-      const [manifest, warnings] = createManifestObject(parserResult, {
+      const [manifest, warnings] = await createManifestObject(parserResult, {
         representationFilter: options.representationFilter,
         supplementaryImageTracks: options.supplementaryImageTracks,
         supplementaryTextTracks: options.supplementaryTextTracks,

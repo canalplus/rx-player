@@ -35,6 +35,8 @@ const minimalIndex = { getInitSegment() { return null; },
                        _update() { /* noop */ } };
 
 const defaultIsCodecSupported = jest.fn(() => true);
+/* eslint-disable-next-line no-restricted-properties */
+const defaultCheckDecodingCapabilitiesSupport = jest.fn(() => Promise.resolve(undefined));
 
 describe.only("Manifest - Representation", () => {
   beforeEach(() => {
@@ -45,16 +47,17 @@ describe.only("Manifest - Representation", () => {
   });
 
   /* eslint-disable-next-line max-len */
-  it("should be able to create Representation with the minimum arguments given", () => {
+  it("should be able to create Representation with the minimum arguments given", async () => {
     jest.mock("../../compat", () => ({
       isCodecSupported: defaultIsCodecSupported,
+      checkDecodingCapabilitiesSupport: defaultCheckDecodingCapabilitiesSupport,
     }));
     const createRepresentationObject =
       require("../representation").createRepresentationObject;
     const args = { bitrate: 12,
                    id: "test",
                    index: minimalIndex };
-    const representation = createRepresentationObject(args, { type: "audio" });
+    const representation = await createRepresentationObject(args, { type: "audio" });
     expect(representation.id).toBe("test");
     expect(representation.bitrate).toBe(12);
     expect(representation.index).toBe(minimalIndex);
@@ -66,18 +69,20 @@ describe.only("Manifest - Representation", () => {
     expect(representation.width).toBe(undefined);
     expect(representation.getMimeTypeString()).toBe(";codecs=\"\"");
     expect(representation.isCodecSupported).toBe(true);
+    expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalledTimes(1);
   });
 
-  it("should be able to add a height attribute", () => {
+  it("should be able to add a height attribute", async () => {
     jest.mock("../../compat", () => ({
       isCodecSupported: defaultIsCodecSupported,
+      checkDecodingCapabilitiesSupport: defaultCheckDecodingCapabilitiesSupport,
     }));
     const createRepresentationObject =
       require("../representation").createRepresentationObject;
     const args = { bitrate: 12, id: "test", height: 57, index: minimalIndex };
-    const representation = createRepresentationObject(args, { type: "video" });
+    const representation = await createRepresentationObject(args, { type: "video" });
     expect(representation.id).toBe("test");
     expect(representation.bitrate).toBe(12);
     expect(representation.index).toBe(minimalIndex);
@@ -89,18 +94,20 @@ describe.only("Manifest - Representation", () => {
     expect(representation.width).toBe(undefined);
     expect(representation.getMimeTypeString()).toBe(";codecs=\"\"");
     expect(representation.isCodecSupported).toBe(true);
+    expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalledTimes(1);
   });
 
-  it("should be able to add a width attribute", () => {
+  it("should be able to add a width attribute", async () => {
     jest.mock("../../compat", () => ({
       isCodecSupported: defaultIsCodecSupported,
+      checkDecodingCapabilitiesSupport: defaultCheckDecodingCapabilitiesSupport,
     }));
     const createRepresentationObject =
       require("../representation").createRepresentationObject;
     const args = { bitrate: 12, id: "test", width: 2, index: minimalIndex };
-    const representation = createRepresentationObject(args, { type: "video" });
+    const representation = await createRepresentationObject(args, { type: "video" });
     expect(representation.id).toBe("test");
     expect(representation.bitrate).toBe(12);
     expect(representation.index).toBe(minimalIndex);
@@ -112,13 +119,15 @@ describe.only("Manifest - Representation", () => {
     expect(representation.width).toBe(2);
     expect(representation.getMimeTypeString()).toBe(";codecs=\"\"");
     expect(representation.isCodecSupported).toBe(true);
+    expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalledTimes(1);
   });
 
-  it("should be able to add a codecs attribute", () => {
+  it("should be able to add a codecs attribute", async () => {
     jest.mock("../../compat", () => ({
       isCodecSupported: defaultIsCodecSupported,
+      checkDecodingCapabilitiesSupport: defaultCheckDecodingCapabilitiesSupport,
     }));
     const createRepresentationObject =
       require("../representation").createRepresentationObject;
@@ -126,7 +135,7 @@ describe.only("Manifest - Representation", () => {
                    id: "test",
                    codecs: "vp9",
                    index: minimalIndex };
-    const representation = createRepresentationObject(args, { type: "audio" });
+    const representation = await createRepresentationObject(args, { type: "audio" });
     expect(representation.id).toBe("test");
     expect(representation.bitrate).toBe(12);
     expect(representation.index).toBe(minimalIndex);
@@ -138,13 +147,15 @@ describe.only("Manifest - Representation", () => {
     expect(representation.width).toBe(undefined);
     expect(representation.getMimeTypeString()).toBe(";codecs=\"vp9\"");
     expect(representation.isCodecSupported).toBe(true);
+    expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalledTimes(1);
   });
 
-  it("should be able to add a mimeType attribute", () => {
+  it("should be able to add a mimeType attribute", async () => {
     jest.mock("../../compat", () => ({
       isCodecSupported: defaultIsCodecSupported,
+      checkDecodingCapabilitiesSupport: defaultCheckDecodingCapabilitiesSupport,
     }));
     const createRepresentationObject =
       require("../representation").createRepresentationObject;
@@ -152,7 +163,7 @@ describe.only("Manifest - Representation", () => {
                    id: "test",
                    mimeType: "audio/mp4",
                    index: minimalIndex };
-    const representation = createRepresentationObject(args, { type: "audio" });
+    const representation = await createRepresentationObject(args, { type: "audio" });
     expect(representation.id).toBe("test");
     expect(representation.bitrate).toBe(12);
     expect(representation.index).toBe(minimalIndex);
@@ -164,13 +175,15 @@ describe.only("Manifest - Representation", () => {
     expect(representation.width).toBe(undefined);
     expect(representation.getMimeTypeString()).toBe("audio/mp4;codecs=\"\"");
     expect(representation.isCodecSupported).toBe(true);
+    expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalledTimes(1);
   });
 
-  it("should be able to add a contentProtections attribute", () => {
+  it("should be able to add a contentProtections attribute", async () => {
     jest.mock("../../compat", () => ({
       isCodecSupported: defaultIsCodecSupported,
+      checkDecodingCapabilitiesSupport: defaultCheckDecodingCapabilitiesSupport,
     }));
     const createRepresentationObject =
       require("../representation").createRepresentationObject;
@@ -183,7 +196,7 @@ describe.only("Manifest - Representation", () => {
                                          initData: { cenc: [{
                                            systemId: "EDEF",
                                            data: new Uint8Array([78]) }] } } };
-    const representation = createRepresentationObject(args, { type: "video" });
+    const representation = await createRepresentationObject(args, { type: "video" });
     expect(representation.id).toBe("test");
     expect(representation.bitrate).toBe(12);
     expect(representation.index).toBe(minimalIndex);
@@ -195,13 +208,15 @@ describe.only("Manifest - Representation", () => {
     expect(representation.width).toBe(undefined);
     expect(representation.getMimeTypeString()).toBe("video/mp4;codecs=\"vp12\"");
     expect(representation.isCodecSupported).toBe(true);
+    expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalledTimes(1);
   });
 
-  it("should be able to add a frameRate attribute", () => {
+  it("should be able to add a frameRate attribute", async () => {
     jest.mock("../../compat", () => ({
       isCodecSupported: defaultIsCodecSupported,
+      checkDecodingCapabilitiesSupport: defaultCheckDecodingCapabilitiesSupport,
     }));
     const createRepresentationObject =
       require("../representation").createRepresentationObject;
@@ -211,7 +226,7 @@ describe.only("Manifest - Representation", () => {
                    mimeType: "audio/mp4",
                    codecs: "mp4a.40.2",
                    index: minimalIndex };
-    const representation = createRepresentationObject(args, { type: "audio" });
+    const representation = await createRepresentationObject(args, { type: "audio" });
     expect(representation.id).toBe("test");
     expect(representation.bitrate).toBe(12);
     expect(representation.index).toBe(minimalIndex);
@@ -223,34 +238,36 @@ describe.only("Manifest - Representation", () => {
     expect(representation.width).toBe(undefined);
     expect(representation.getMimeTypeString()).toBe("audio/mp4;codecs=\"mp4a.40.2\"");
     expect(representation.isCodecSupported).toBe(true);
+    expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalledTimes(1);
   });
 
-  it("should be able to return an exploitable codecs + mimeType string", () => {
+  it("should be able to return an exploitable codecs + mimeType string", async () => {
     jest.mock("../../compat", () => ({
       isCodecSupported: defaultIsCodecSupported,
+      checkDecodingCapabilitiesSupport: defaultCheckDecodingCapabilitiesSupport,
     }));
     const createRepresentationObject =
       require("../representation").createRepresentationObject;
     const args1 = { bitrate: 12,
                     id: "test",
                     index: minimalIndex };
-    expect((createRepresentationObject(args1, { type: "audio" }))
+    expect((await createRepresentationObject(args1, { type: "audio" }))
       .getMimeTypeString()).toBe(";codecs=\"\"");
 
     const args2 = { bitrate: 12,
                     id: "test",
                     mimeType: "foo",
                     index: minimalIndex };
-    expect((createRepresentationObject(args2, { type: "audio" }))
+    expect((await createRepresentationObject(args2, { type: "audio" }))
       .getMimeTypeString()).toBe("foo;codecs=\"\"");
 
     const args3 = { bitrate: 12,
                     id: "test",
                     codecs: "bar",
                     index: minimalIndex };
-    expect((createRepresentationObject(args3, { type: "audio" }))
+    expect((await createRepresentationObject(args3, { type: "audio" }))
       .getMimeTypeString()).toBe(";codecs=\"bar\"");
 
     const args4 = { bitrate: 12,
@@ -258,15 +275,16 @@ describe.only("Manifest - Representation", () => {
                     mimeType: "foo",
                     codecs: "bar",
                     index: minimalIndex };
-    expect((createRepresentationObject(args4, { type: "audio" }))
+    expect((await createRepresentationObject(args4, { type: "audio" }))
       .getMimeTypeString()).toBe("foo;codecs=\"bar\"");
   });
 
   /* eslint-disable-next-line max-len */
-  it("should set `isCodecSupported` of non-supported codecs or mime-type to `false`", () => {
+  it("should set `isCodecSupported` of non-supported codecs or mime-type to `false`", async () => {
     const notSupportedSpy = jest.fn(() => false);
     jest.mock("../../compat", () => ({
       isCodecSupported: notSupportedSpy,
+      checkDecodingCapabilitiesSupport: defaultCheckDecodingCapabilitiesSupport,
     }));
     const createRepresentationObject =
       require("../representation").createRepresentationObject;
@@ -276,7 +294,7 @@ describe.only("Manifest - Representation", () => {
                    mimeType: "audio/mp4",
                    codecs: "mp4a.40.2",
                    index: minimalIndex };
-    const representation = createRepresentationObject(args, { type: "audio" });
+    const representation = await createRepresentationObject(args, { type: "audio" });
     expect(representation.id).toBe("test");
     expect(representation.bitrate).toBe(12);
     expect(representation.index).toBe(minimalIndex);
@@ -288,15 +306,52 @@ describe.only("Manifest - Representation", () => {
     expect(representation.width).toBe(undefined);
     expect(representation.getMimeTypeString()).toBe("audio/mp4;codecs=\"mp4a.40.2\"");
     expect(representation.isCodecSupported).toBe(false);
+    expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(notSupportedSpy).toHaveBeenCalledTimes(1);
     expect(notSupportedSpy).toHaveBeenCalledWith("audio/mp4;codecs=\"mp4a.40.2\"");
   });
 
-  it("should not check support for a custom media buffer", () => {
+  /* eslint-disable-next-line max-len */
+  it("should set `isSupported` of non-supported characteristics to `false`", async () => {
+    /* eslint-disable-next-line no-restricted-properties */
+    const checkSpy = jest.fn(() => Promise.resolve(false));
+    jest.mock("../../compat", () => ({
+      isCodecSupported: defaultIsCodecSupported,
+      checkDecodingCapabilitiesSupport: checkSpy,
+    }));
+    const createRepresentationObject =
+      require("../representation").createRepresentationObject;
+    const args = { bitrate: 12,
+                   id: "test",
+                   frameRate: "1/60",
+                   mimeType: "audio/mp4",
+                   codecs: "mp4a.40.2",
+                   index: minimalIndex };
+    const representation = await createRepresentationObject(args, { type: "audio" });
+    expect(representation.id).toBe("test");
+    expect(representation.bitrate).toBe(12);
+    expect(representation.index).toBe(minimalIndex);
+    expect(representation.codec).toBe("mp4a.40.2");
+    expect(representation.contentProtections).toBe(undefined);
+    expect(representation.frameRate).toBe("1/60");
+    expect(representation.height).toBe(undefined);
+    expect(representation.mimeType).toBe("audio/mp4");
+    expect(representation.width).toBe(undefined);
+    expect(representation.getMimeTypeString()).toBe("audio/mp4;codecs=\"mp4a.40.2\"");
+    expect(representation.isCodecSupported).toBe(true);
+    expect(representation.isSupported).toBe(false);
+    expect(representation.decipherable).toBe(undefined);
+    expect(checkSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("should not check support for a custom media buffer", async () => {
     const notSupportedSpy = jest.fn(() => false);
+    /* eslint-disable-next-line no-restricted-properties */
+    const checkSpy = jest.fn(() => Promise.resolve(undefined));
     jest.mock("../../compat", () => ({
       isCodecSupported: notSupportedSpy,
+      checkDecodingCapabilitiesSupport: checkSpy,
     }));
     const createRepresentationObject =
       require("../representation").createRepresentationObject;
@@ -306,12 +361,14 @@ describe.only("Manifest - Representation", () => {
                    mimeType: "bip",
                    codecs: "boop",
                    index: minimalIndex };
-    const representation = createRepresentationObject(args, { type: "foo" });
+    const representation = await createRepresentationObject(args, { type: "foo" });
     expect(representation.codec).toBe("boop");
     expect(representation.mimeType).toBe("bip");
     expect(representation.getMimeTypeString()).toBe("bip;codecs=\"boop\"");
     expect(representation.isCodecSupported).toBe(true);
+    expect(representation.isSupported).toBe(true);
     expect(representation.decipherable).toBe(undefined);
     expect(notSupportedSpy).toHaveBeenCalledTimes(0);
+    expect(checkSpy).toHaveBeenCalledTimes(0);
   });
 });

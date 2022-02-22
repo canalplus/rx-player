@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { isCodecSupported } from "../compat";
+import {
+  checkDecodingCapabilitiesSupport,
+  isCodecSupported,
+} from "../compat";
 import { IContentProtection } from "../core/eme";
 import log from "../log";
 import { IParsedRepresentation } from "../parsers/manifest";
@@ -31,10 +34,10 @@ import {
  * @param {Object} opts
  * @returns {Object}
  */
-export function createRepresentationObject(
+export async function createRepresentationObject(
   args : IParsedRepresentation,
   opts : { type : IAdaptationType }
-) : IRepresentation {
+) : Promise<IRepresentation> {
   const representationObj : IRepresentation = {
     id: args.id,
     bitrate: args.bitrate,
@@ -46,8 +49,8 @@ export function createRepresentationObject(
     _addProtectionData,
 
     // Set first to default `false` value, to have a valid Representation object
-    // before calling `isCodecSupported`.
     isCodecSupported: false,
+    isSupported: false,
   };
 
   if (args.height !== undefined) {
@@ -74,10 +77,16 @@ export function createRepresentationObject(
     representationObj.hdrInfo = args.hdrInfo;
   }
 
-  representationObj.isCodecSupported = opts.type === "audio" ||
-                                       opts.type === "video" ?
-    isCodecSupported(getMimeTypeString()) :
-    true; // TODO for other types
+  if (opts.type === "audio" || opts.type === "video") {
+    representationObj.isCodecSupported = isCodecSupported(
+      representationObj.getMimeTypeString() ?? ""
+    );
+    representationObj.isSupported =
+      await checkDecodingCapabilitiesSupport(representationObj, opts.type);
+  } else {
+    representationObj.isCodecSupported = true; // TODO for other types
+    representationObj.isSupported = true;
+  }
   return representationObj;
 
   /** @link IRepresentation */
