@@ -18,7 +18,6 @@ import {
   type IContentProtection,
   type IInitializationDataInfo,
 } from "../core/eme";
-import { type ICustomError } from "../errors";
 import {
   type IContentProtections,
   type IManifestStreamEvent,
@@ -131,11 +130,6 @@ export interface IManifest extends IEventEmitter<IManifestEvents> {
    * of manifest instances.
    */
   publishTime: number | undefined;
-  /**
-   * Array containing every minor errors that happened when the Manifest has
-   * been created, in the order they have happened.
-   */
-  contentWarnings : ICustomError[];
   /*
    * Difference between the server's clock in milliseconds and the return of the
    * JS function `performance.now`.
@@ -338,11 +332,6 @@ export interface IPeriod {
    * `undefined` for still-running Periods.
    */
   end : number | undefined;
-  /**
-   * Array containing every errors that happened when the Period has been
-   * created, in the order they have happened.
-   */
-  contentWarnings : ICustomError[];
   /** Array containing every stream event happening on the period */
   streamEvents : IManifestStreamEvent[];
   /**

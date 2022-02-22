@@ -27,24 +27,27 @@ describe("Manifest - Period", () => {
   });
 
   it("should throw if no adaptation is given", () => {
-    const adaptationSpy = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const createAdaptationSpy = jest.fn(arg => {
+      return arg;
+    });
     jest.mock("../adaptation", () => ({
-      __esModule: true as const,
-      default: adaptationSpy,
+      createAdaptationObject: createAdaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
     }));
 
-    const Period = require("../period").default;
+    const createPeriodObject = require("../period").createPeriodObject;
     const args = { id: "12", adaptations: {}, start: 0 };
     let period = null;
+    let warnings = null;
     let errorReceived = null;
     try {
-      period = new Period(args);
+      [period, warnings] = createPeriodObject(args);
     } catch (e) {
       errorReceived = e;
     }
 
     expect(period).toBe(null);
+    expect(warnings).toEqual(null);
     expect(errorReceived).not.toBe(null);
     expect(errorReceived).toBeInstanceOf(Error);
 
@@ -55,37 +58,40 @@ describe("Manifest - Period", () => {
 
     expect((errorReceived as { code? : string }).code).toBe("MANIFEST_PARSE_ERROR");
     expect(errorReceived.message).toContain("No supported audio and video tracks.");
-    expect(adaptationSpy).not.toHaveBeenCalled();
+    expect(createAdaptationSpy).not.toHaveBeenCalled();
   });
 
   it("should throw if no audio nor video adaptation is given", () => {
-    const adaptationSpy = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const createAdaptationSpy = jest.fn(arg => {
+      return arg;
+    });
     jest.mock("../adaptation", () => ({
-      __esModule: true as const,
-      default: adaptationSpy,
+      createAdaptationObject: createAdaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
     }));
 
-    const Period = require("../period").default;
+    const createPeriodObject = require("../period").createPeriodObject;
     const fooAda1 = { type: "foo",
                       id: "54",
-                      isSupported: true,
+                      isCodecSupported: true,
                       representations: [{}] };
     const fooAda2 = { type: "foo",
                       id: "55",
-                      isSupported: true,
+                      isCodecSupported: true,
                       representations: [{}] };
     const foo = [fooAda1, fooAda2];
     const args = { id: "12", adaptations: { foo }, start: 0 };
     let period = null;
+    let warnings = null;
     let errorReceived = null;
     try {
-      period = new Period(args);
+      [period, warnings] = createPeriodObject(args);
     } catch (e) {
       errorReceived = e;
     }
 
     expect(period).toBe(null);
+    expect(warnings).toEqual(null);
     expect(errorReceived).not.toBe(null);
     expect(errorReceived).toBeInstanceOf(Error);
 
@@ -98,30 +104,33 @@ describe("Manifest - Period", () => {
     expect((errorReceived as { type? : string }).type).toBe("MEDIA_ERROR");
     expect(errorReceived.message).toContain("No supported audio and video tracks.");
 
-    expect(adaptationSpy).toHaveBeenCalledTimes(2);
-    expect(adaptationSpy).toHaveBeenNthCalledWith(1, fooAda1, {});
-    expect(adaptationSpy).toHaveBeenNthCalledWith(2, fooAda2, {});
+    expect(createAdaptationSpy).toHaveBeenCalledTimes(2);
+    expect(createAdaptationSpy).toHaveBeenNthCalledWith(1, fooAda1, {});
+    expect(createAdaptationSpy).toHaveBeenNthCalledWith(2, fooAda2, {});
   });
 
   it("should throw if only empty audio and/or video adaptations is given", () => {
-    const adaptationSpy = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const createAdaptationSpy = jest.fn(arg => {
+      return arg;
+    });
     jest.mock("../adaptation", () => ({
-      __esModule: true as const,
-      default: adaptationSpy,
+      createAdaptationObject: createAdaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
     }));
 
-    const Period = require("../period").default;
+    const createPeriodObject = require("../period").createPeriodObject;
     const args = { id: "12", adaptations: { video: [], audio: [] }, start: 0 };
     let period = null;
+    let warnings = null;
     let errorReceived = null;
     try {
-      period = new Period(args);
+      [period, warnings] = createPeriodObject(args);
     } catch (e) {
       errorReceived = e;
     }
 
     expect(period).toBe(null);
+    expect(warnings).toEqual(null);
     expect(errorReceived).not.toBe(null);
     expect(errorReceived).toBeInstanceOf(Error);
 
@@ -134,51 +143,54 @@ describe("Manifest - Period", () => {
     expect((errorReceived as { type? : string }).type).toBe("MEDIA_ERROR");
     expect(errorReceived.message).toContain("No supported audio and video tracks.");
 
-    expect(adaptationSpy).toHaveBeenCalledTimes(0);
+    expect(createAdaptationSpy).toHaveBeenCalledTimes(0);
   });
 
   it("should throw if we are left with no audio representation", () => {
-    const adaptationSpy = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const createAdaptationSpy = jest.fn(arg => {
+      return arg;
+    });
     jest.mock("../adaptation", () => ({
-      __esModule: true as const,
-      default: adaptationSpy,
+      createAdaptationObject: createAdaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
     }));
 
-    const Period = require("../period").default;
+    const createPeriodObject = require("../period").createPeriodObject;
     const videoAda1 = { type: "video",
                         id: "54",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const videoAda2 = { type: "video",
                         id: "56",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const videoAda3 = { type: "video",
                         id: "57",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const video = [videoAda1, videoAda2, videoAda3];
 
     const audioAda1 = { type: "audio",
                         id: "58",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [] };
     const audioAda2 = { type: "audio",
                         id: "59",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [] };
     const audio = [audioAda1, audioAda2];
     const args = { id: "12", adaptations: { video, audio }, start: 0 };
     let period = null;
+    let warnings = null;
     let errorReceived = null;
     try {
-      period = new Period(args);
+      [period, warnings] = createPeriodObject(args);
     } catch (e) {
       errorReceived = e;
     }
 
     expect(period).toBe(null);
+    expect(warnings).toEqual(null);
     expect(errorReceived).not.toBe(null);
     expect(errorReceived).toBeInstanceOf(Error);
 
@@ -193,47 +205,50 @@ describe("Manifest - Period", () => {
   });
 
   it("should throw if no audio Adaptation is supported", () => {
-    const adaptationSpy = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const createAdaptationSpy = jest.fn(arg => {
+      return arg;
+    });
     jest.mock("../adaptation", () => ({
-      __esModule: true as const,
-      default: adaptationSpy,
+      createAdaptationObject: createAdaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
     }));
 
-    const Period = require("../period").default;
+    const createPeriodObject = require("../period").createPeriodObject;
     const videoAda1 = { type: "video",
                         id: "54",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const videoAda2 = { type: "video",
                         id: "55",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const videoAda3 = { type: "video",
                         id: "56",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const video = [videoAda1, videoAda2, videoAda3];
 
     const audioAda1 = { type: "audio",
                         id: "57",
-                        isSupported: false,
+                        isCodecSupported: false,
                         representations: [{}] };
     const audioAda2 = { type: "audio",
                         id: "58",
-                        isSupported: false,
+                        isCodecSupported: false,
                         representations: [{}] };
     const audio = [audioAda1, audioAda2];
     const args = { id: "12", adaptations: { video, audio }, start: 0 };
     let period = null;
+    let warnings = null;
     let errorReceived = null;
     try {
-      period = new Period(args);
+      [period, warnings] = createPeriodObject(args);
     } catch (e) {
       errorReceived = e;
     }
 
     expect(period).toBe(null);
+    expect(warnings).toEqual(null);
     expect(errorReceived).not.toBe(null);
     expect(errorReceived).toBeInstanceOf(Error);
 
@@ -248,47 +263,50 @@ describe("Manifest - Period", () => {
   });
 
   it("should throw if we are left with no video representation", () => {
-    const adaptationSpy = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const createAdaptationSpy = jest.fn(arg => {
+      return arg;
+    });
     jest.mock("../adaptation", () => ({
-      __esModule: true as const,
-      default: adaptationSpy,
+      createAdaptationObject: createAdaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
     }));
 
-    const Period = require("../period").default;
+    const createPeriodObject = require("../period").createPeriodObject;
     const videoAda1 = { type: "video",
                         id: "54",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [] };
     const videoAda2 = { type: "video",
                         id: "55",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [] };
     const videoAda3 = { type: "video",
                         id: "56",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [] };
     const video = [videoAda1, videoAda2, videoAda3];
 
     const audioAda1 = { type: "audio",
                         id: "58",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const audioAda2 = { type: "audio",
                         id: "59",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const audio = [audioAda1, audioAda2];
     const args = { id: "12", adaptations: { video, audio }, start: 0 };
     let period = null;
+    let warnings = null;
     let errorReceived = null;
     try {
-      period = new Period(args);
+      [period, warnings] = createPeriodObject(args);
     } catch (e) {
       errorReceived = e;
     }
 
     expect(period).toBe(null);
+    expect(warnings).toEqual(null);
     expect(errorReceived).not.toBe(null);
     expect(errorReceived).toBeInstanceOf(Error);
 
@@ -303,47 +321,50 @@ describe("Manifest - Period", () => {
   });
 
   it("should throw if no video adaptation is supported", () => {
-    const adaptationSpy = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const createAdaptationSpy = jest.fn(arg => {
+      return arg;
+    });
     jest.mock("../adaptation", () => ({
-      __esModule: true as const,
-      default: adaptationSpy,
+      createAdaptationObject: createAdaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
     }));
 
-    const Period = require("../period").default;
+    const createPeriodObject = require("../period").createPeriodObject;
     const videoAda1 = { type: "video",
                         id: "54",
-                        isSupported: false,
+                        isCodecSupported: false,
                         representations: [{}] };
     const videoAda2 = { type: "video",
                         id: "55",
-                        isSupported: false,
+                        isCodecSupported: false,
                         representations: [{}] };
     const videoAda3 = { type: "video",
                         id: "56",
-                        isSupported: false,
+                        isCodecSupported: false,
                         representations: [{}] };
     const video = [videoAda1, videoAda2, videoAda3];
 
     const audioAda1 = { type: "audio",
                         id: "58",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const audioAda2 = { type: "audio",
                         id: "59",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const audio = [audioAda1, audioAda2];
     const args = { id: "12", adaptations: { video, audio }, start: 0 };
     let period = null;
+    let warnings = null;
     let errorReceived = null;
     try {
-      period = new Period(args);
+      [period, warnings] = createPeriodObject(args);
     } catch (e) {
       errorReceived = e;
     }
 
     expect(period).toBe(null);
+    expect(warnings).toEqual(null);
     expect(errorReceived).not.toBe(null);
     expect(errorReceived).toBeInstanceOf(Error);
 
@@ -358,304 +379,316 @@ describe("Manifest - Period", () => {
   });
 
   it("should set a parsing error if an unsupported adaptation is given", () => {
-    const adaptationSpy = jest.fn(arg => {
+    const createAdaptationSpy = jest.fn(arg => {
       return { ...arg };
     });
     jest.mock("../adaptation", () => ({
-      __esModule: true as const,
-      default: adaptationSpy,
+      createAdaptationObject: createAdaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
     }));
 
-    const Period = require("../period").default;
+    const createPeriodObject = require("../period").createPeriodObject;
 
     const videoAda1 = { type: "video",
                         id: "55",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const video = [videoAda1];
     const videoAda2 = { type: "video",
                         id: "55",
-                        isSupported: false,
+                        isCodecSupported: false,
                         representations: [{}] };
     const video2 = [videoAda2];
     const args = { id: "12", adaptations: { video, video2 }, start: 0 };
-    const period = new Period(args);
-    expect(period.contentWarnings).toHaveLength(1);
+    const [period, warnings] = createPeriodObject(args);
+    expect(warnings).toHaveLength(1);
 
-    expect(adaptationSpy).toHaveBeenCalledTimes(2);
-    expect(adaptationSpy).toHaveReturnedTimes(2);
-    expect(adaptationSpy).toHaveBeenCalledWith(videoAda1, {});
-    expect(adaptationSpy).toHaveBeenCalledWith(videoAda2, {});
-    expect(adaptationSpy).toHaveReturnedWith(period.adaptations.video[0]);
+    expect(createAdaptationSpy).toHaveBeenCalledTimes(2);
+    expect(createAdaptationSpy).toHaveReturnedTimes(2);
+    expect(createAdaptationSpy).toHaveBeenCalledWith(videoAda1, {});
+    expect(createAdaptationSpy).toHaveBeenCalledWith(videoAda2, {});
+    expect(createAdaptationSpy).toHaveReturnedWith(period.adaptations.video[0]);
 
-    const [error] = period.contentWarnings;
+    const [error] = warnings;
     expect(error).toBeInstanceOf(Error);
     expect(error.code).toBe("MANIFEST_INCOMPATIBLE_CODECS_ERROR");
     expect(error.type).toBe("MEDIA_ERROR");
   });
 
+  /* eslint-disable-next-line max-len */
   it("should not set a parsing error if an empty unsupported adaptation is given", () => {
-    const adaptationSpy = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const createAdaptationSpy = jest.fn(arg => {
+      return arg;
+    });
     jest.mock("../adaptation", () => ({
-      __esModule: true as const,
-      default: adaptationSpy,
+      createAdaptationObject: createAdaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
     }));
 
-    const Period = require("../period").default;
+    const createPeriodObject = require("../period").createPeriodObject;
 
     const videoAda1 = { type: "video",
                         id: "55",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const video = [videoAda1];
     const bar = undefined;
     const args = { id: "12", adaptations: { bar, video }, start: 0 };
-    const period = new Period(args);
+    const [period, warnings] = createPeriodObject(args);
     expect(period.adaptations).toEqual({
-      video: video.map(v => ({ ...v, contentWarnings: [] })),
+      video: video.map(v => ({ ...v })),
     });
-    expect(period.contentWarnings).toHaveLength(0);
+    expect(warnings).toHaveLength(0);
 
-    expect(adaptationSpy).toHaveBeenCalledTimes(1);
-    expect(adaptationSpy).toHaveBeenCalledWith(videoAda1, {});
+    expect(createAdaptationSpy).toHaveBeenCalledTimes(1);
+    expect(createAdaptationSpy).toHaveBeenCalledWith(videoAda1, {});
   });
 
   it("should give a representationFilter to the adaptation", () => {
-    const adaptationSpy = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const createAdaptationSpy = jest.fn(arg => {
+      return arg;
+    });
     const representationFilter = jest.fn();
     jest.mock("../adaptation", () => ({
-      __esModule: true as const,
-      default: adaptationSpy,
+      createAdaptationObject: createAdaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
     }));
 
-    const Period = require("../period").default;
+    const createPeriodObject = require("../period").createPeriodObject;
     const videoAda1 = { type: "video",
                         id: "54",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const videoAda2 = { type: "video",
                         id: "55",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 0 };
-    const period = new Period(args, representationFilter);
+    const [period, warnings] = createPeriodObject(args, representationFilter);
 
-    expect(period.contentWarnings).toHaveLength(0);
+    expect(warnings).toHaveLength(0);
     expect(period.adaptations.video).toHaveLength(2);
 
-    expect(adaptationSpy).toHaveBeenCalledTimes(2);
-    expect(adaptationSpy).toHaveBeenNthCalledWith(1, videoAda1, { representationFilter });
-    expect(adaptationSpy).toHaveBeenNthCalledWith(2, videoAda2, { representationFilter });
+    expect(createAdaptationSpy).toHaveBeenCalledTimes(2);
+    expect(createAdaptationSpy)
+      .toHaveBeenNthCalledWith(1, videoAda1, { representationFilter });
+    expect(createAdaptationSpy)
+      .toHaveBeenNthCalledWith(2, videoAda2, { representationFilter });
     expect(representationFilter).not.toHaveBeenCalled();
   });
 
-  it("should add contentWarnings if Adaptations are not supported", () => {
-    const adaptationSpy = jest.fn(arg => ({ ...arg }));
+  it("should add warnings if Adaptations are not supported", () => {
+    const createAdaptationSpy = jest.fn(arg => ({ ...arg }));
     jest.mock("../adaptation", () => ({
-      __esModule: true as const,
-      default: adaptationSpy,
+      createAdaptationObject: createAdaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
     }));
 
-    const Period = require("../period").default;
+    const createPeriodObject = require("../period").createPeriodObject;
     const videoAda1 = { type: "video",
                         id: "54",
-                        isSupported: false,
+                        isCodecSupported: false,
                         representations: [{}] };
     const videoAda2 = { type: "video",
                         id: "55",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const fooAda1 = { type: "foo",
                       id: "12",
-                      isSupported: false,
+                      isCodecSupported: false,
                       representations: [{}] };
     const video = [videoAda1, videoAda2];
     const foo = [fooAda1];
     const args = { id: "12", adaptations: { video, foo }, start: 0 };
-    const period = new Period(args);
+    const [_period, warnings] = createPeriodObject(args);
 
-    expect(period.contentWarnings).toHaveLength(2);
-    const error = period.contentWarnings[0];
+    expect(warnings).toHaveLength(2);
+    const error = warnings[0];
     expect(error.code).toEqual("MANIFEST_INCOMPATIBLE_CODECS_ERROR");
     expect(error.type).toEqual("MEDIA_ERROR");
 
-    const error2 = period.contentWarnings[1];
+    const error2 = warnings[1];
     expect(error2.code).toEqual("MANIFEST_INCOMPATIBLE_CODECS_ERROR");
     expect(error2.type).toEqual("MEDIA_ERROR");
   });
 
-  it("should not add contentWarnings if an Adaptation has no Representation", () => {
-    const adaptationSpy = jest.fn(arg => ({ ...arg }));
+  /* eslint-disable-next-line max-len */
+  it("should not add warnings if an Adaptation has no Representation", () => {
+    const createAdaptationSpy = jest.fn(arg => ({ ...arg }));
     jest.mock("../adaptation", () => ({
-      __esModule: true as const,
-      default: adaptationSpy,
+      createAdaptationObject: createAdaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
     }));
 
-    const Period = require("../period").default;
+    const createPeriodObject = require("../period").createPeriodObject;
     const videoAda1 = { type: "video",
                         id: "54",
-                        isSupported: false,
+                        isCodecSupported: false,
                         representations: [] };
     const videoAda2 = { type: "video",
                         id: "55",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const fooAda1 = { type: "foo",
                       id: "12",
-                      isSupported: false,
+                      isCodecSupported: false,
                       representations: [] };
     const video = [videoAda1, videoAda2];
     const foo = [fooAda1];
     const args = { id: "12", adaptations: { video, foo }, start: 0 };
-    const period = new Period(args);
+    const [_period, warnings] = createPeriodObject(args);
 
-    expect(period.contentWarnings).toHaveLength(0);
+    expect(warnings).toHaveLength(0);
   });
 
   it("should set the given start", () => {
-    const adaptationSpy = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const createAdaptationSpy = jest.fn(arg => {
+      return arg;
+    });
     jest.mock("../adaptation", () => ({
-      __esModule: true as const,
-      default: adaptationSpy,
+      createAdaptationObject: createAdaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
     }));
 
-    const Period = require("../period").default;
+    const createPeriodObject = require("../period").createPeriodObject;
     const videoAda1 = { type: "video",
                         id: "54",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const videoAda2 = { type: "video",
                         id: "55",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 72 };
-    const period = new Period(args);
+    const [period, warnings] = createPeriodObject(args);
     expect(period.start).toEqual(72);
     expect(period.duration).toEqual(undefined);
     expect(period.end).toEqual(undefined);
+    expect(warnings).toEqual([]);
   });
 
   it("should set a given duration", () => {
-    const adaptationSpy = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const createAdaptationSpy = jest.fn(arg => {
+      return arg;
+    });
     jest.mock("../adaptation", () => ({
-      __esModule: true as const,
-      default: adaptationSpy,
+      createAdaptationObject: createAdaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
     }));
 
-    const Period = require("../period").default;
+    const createPeriodObject = require("../period").createPeriodObject;
     const videoAda1 = { type: "video",
                         id: "54",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const videoAda2 = { type: "video",
                         id: "55",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 0, duration: 12 };
-    const period = new Period(args);
+    const [period, warnings] = createPeriodObject(args);
     expect(period.start).toEqual(0);
     expect(period.duration).toEqual(12);
     expect(period.end).toEqual(12);
+    expect(warnings).toEqual([]);
   });
 
   it("should infer the end from the start and the duration", () => {
-    const adaptationSpy = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const createAdaptationSpy = jest.fn(arg => {
+      return arg;
+    });
     jest.mock("../adaptation", () => ({
-      __esModule: true as const,
-      default: adaptationSpy,
+      createAdaptationObject: createAdaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
     }));
 
-    const Period = require("../period").default;
+    const createPeriodObject = require("../period").createPeriodObject;
     const videoAda1 = { type: "video",
                         id: "54",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const videoAda2 = { type: "video",
                         id: "55",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 50, duration: 12 };
-    const period = new Period(args);
+    const [period, warnings] = createPeriodObject(args);
     expect(period.start).toEqual(50);
     expect(period.duration).toEqual(12);
     expect(period.end).toEqual(62);
+    expect(warnings).toEqual([]);
   });
 
   it("should return every Adaptations combined with `getAdaptations`", () => {
-    const adaptationSpy = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const createAdaptationSpy = jest.fn(arg => {
+      return arg;
+    });
     jest.mock("../adaptation", () => ({
-      __esModule: true as const,
-      default: adaptationSpy,
+      createAdaptationObject: createAdaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
     }));
 
-    const Period = require("../period").default;
+    const createPeriodObject = require("../period").createPeriodObject;
     const videoAda1 = { type: "video",
                         id: "54",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const videoAda2 = { type: "video",
                         id: "55",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const video = [videoAda1, videoAda2];
 
     const audioAda1 = { type: "audio",
                         id: "56",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const audio = [audioAda1];
 
     const args = { id: "12", adaptations: { video, audio }, start: 50, duration: 12 };
-    const period = new Period(args);
+    const [period, warnings] = createPeriodObject(args);
 
     expect(period.getAdaptations()).toHaveLength(3);
     expect(period.getAdaptations()).toContain(period.adaptations.video[0]);
     expect(period.getAdaptations()).toContain(period.adaptations.video[1]);
     expect(period.getAdaptations()).toContain(period.adaptations.audio[0]);
+    expect(warnings).toEqual([]);
   });
 
   /* eslint-disable max-len */
   it("should return every Adaptations from a given type with `getAdaptationsForType`", () => {
   /* eslint-enable max-len */
-    const adaptationSpy = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const createAdaptationSpy = jest.fn(arg => {
+      return arg;
+    });
     jest.mock("../adaptation", () => ({
-      __esModule: true as const,
-      default: adaptationSpy,
+      createAdaptationObject: createAdaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
     }));
 
-    const Period = require("../period").default;
+    const createPeriodObject = require("../period").createPeriodObject;
     const videoAda1 = { type: "video",
                         id: "54",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const videoAda2 = { type: "video",
                         id: "55",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const video = [videoAda1, videoAda2];
 
     const audioAda1 = { type: "audio",
                         id: "56",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const audio = [audioAda1];
 
     const args = { id: "12", adaptations: { video, audio }, start: 50, duration: 12 };
-    const period = new Period(args);
+    const [period, warnings] = createPeriodObject(args);
 
     expect(period.getAdaptationsForType("video")).toHaveLength(2);
     expect(period.getAdaptationsForType("video"))
@@ -668,55 +701,86 @@ describe("Manifest - Period", () => {
 
     expect(period.getAdaptationsForType("image")).toHaveLength(0);
     expect(period.getAdaptationsForType("text")).toHaveLength(0);
+    expect(warnings).toEqual([]);
   });
 
   /* eslint-disable max-len */
   it("should return the first Adaptations with a given Id when calling `getAdaptation`", () => {
   /* eslint-enable max-len */
-    const adaptationSpy = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const createAdaptationSpy = jest.fn(arg => {
+      return arg;
+    });
     jest.mock("../adaptation", () => ({
-      __esModule: true as const,
-      default: adaptationSpy,
+      createAdaptationObject: createAdaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
     }));
 
-    const Period = require("../period").default;
+    const createPeriodObject = require("../period").createPeriodObject;
     const videoAda1 = { type: "video",
                         id: "54",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const videoAda2 = { type: "video",
                         id: "55",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const videoAda3 = { type: "video",
                         id: "55",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const video = [videoAda1, videoAda2, videoAda3];
 
     const audioAda1 = { type: "audio",
                         id: "56",
-                        isSupported: true,
+                        isCodecSupported: true,
                         representations: [{}] };
     const audio = [audioAda1];
 
     const args = { id: "12", adaptations: { video, audio }, start: 50, duration: 12 };
-    const period = new Period(args);
+    const [period, warnings] = createPeriodObject(args);
 
     expect(period.getAdaptation("54")).toEqual(period.adaptations.video[0]);
     expect(period.getAdaptation("55")).toEqual(period.adaptations.video[1]);
     expect(period.getAdaptation("56")).toEqual(period.adaptations.audio[0]);
+    expect(warnings).toEqual([]);
   });
 
-  /* eslint-disable max-len */
-  it("should return undefind if no adaptation has the given Id when calling `getAdaptation`", () => {
-  /* eslint-enable max-len */
-    const adaptationSpy = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+  /* eslint-disable-next-line max-len */
+  it("should return undefined if no adaptation has the given Id when calling `getAdaptation`", () => {
+    const createAdaptationSpy = jest.fn(arg => {
+      return arg;
+    });
     jest.mock("../adaptation", () => ({
-      __esModule: true as const,
-      default: adaptationSpy,
+      createAdaptationObject: createAdaptationSpy,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
     }));
+
+    const createPeriodObject = require("../period").createPeriodObject;
+    const videoAda1 = { type: "video",
+                        id: "54",
+                        isCodecSupported: true,
+                        representations: [{}] };
+    const videoAda2 = { type: "video",
+                        id: "55",
+                        isCodecSupported: true,
+                        representations: [{}] };
+    const videoAda3 = { type: "video",
+                        id: "55",
+                        isCodecSupported: true,
+                        representations: [{}] };
+    const video = [videoAda1, videoAda2, videoAda3];
+
+    const audioAda1 = { type: "audio",
+                        id: "56",
+                        isCodecSupported: true,
+                        representations: [{}] };
+    const audio = [audioAda1];
+
+    const args = { id: "12", adaptations: { video, audio }, start: 50, duration: 12 };
+    const [period, warnings] = createPeriodObject(args);
+
+    expect(period.getAdaptation("88")).toEqual(undefined);
+    expect(period.getAdaptation("toto")).toEqual(undefined);
+    expect(warnings).toEqual([]);
   });
 });

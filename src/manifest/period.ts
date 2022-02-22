@@ -36,13 +36,16 @@ import {
  * of a content during a particular time period.
  * @param {Object} parsedPeriod
  * @param {function|undefined} representationFilter
- * @returns {Object}
+ * @returns {Array.<Object>} Tuple of two values:
+ *   1. The parsed Period as an object
+ *   2. Array containing every minor errors that happened when the Manifest has
+ *      been created, in the order they have happened..
  */
 export function createPeriodObject(
   args : IParsedPeriod,
   representationFilter? : IRepresentationFilter | undefined
-) : IPeriod {
-  const contentWarnings : ICustomError[] = [];
+) : [IPeriod, ICustomError[]] {
+  const warnings : ICustomError[] = [];
   const adaptations = (Object.keys(args.adaptations) as IAdaptationType[])
     .reduce<IManifestAdaptations>((acc, type) => {
       const adaptationsForType = args.adaptations[type];
@@ -59,7 +62,7 @@ export function createPeriodObject(
             const error =
               new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
                              "An Adaptation contains only incompatible codecs.");
-            contentWarnings.push(error);
+            warnings.push(error);
           }
           return newAdaptation;
         })
@@ -99,14 +102,13 @@ export function createPeriodObject(
     start: args.start,
     duration: args.duration,
     end,
-    contentWarnings,
     streamEvents: args.streamEvents ?? [],
     getAdaptations,
     getAdaptationsForType,
     getAdaptation,
     getSupportedAdaptations,
   };
-  return periodObject;
+  return [periodObject, warnings];
 
   /** @link IPeriod */
   function getAdaptations() : IAdaptation[] {

@@ -54,8 +54,8 @@ describe("Manifest - Manifest", () => {
                                                                   time: 10 } },
                                  periods: [] };
 
-    const Manifest = require("../manifest").default;
-    const manifest = new Manifest(simpleFakeManifest, {});
+    const createManifestObject = require("../manifest").createManifestObject;
+    const [manifest, warnings] = createManifestObject(simpleFakeManifest, {});
 
     expect(manifest.adaptations).toEqual({});
     expect(manifest.availabilityStartTime).toEqual(undefined);
@@ -65,7 +65,7 @@ describe("Manifest - Manifest", () => {
     expect(manifest.lifetime).toEqual(undefined);
     expect(manifest.getMaximumPosition()).toEqual(10);
     expect(manifest.getMinimumPosition()).toEqual(0);
-    expect(manifest.contentWarnings).toEqual([]);
+    expect(warnings).toEqual([]);
     expect(manifest.periods).toEqual([]);
     expect(manifest.suggestedPresentationDelay).toEqual(undefined);
     expect(manifest.uris).toEqual([]);
@@ -90,24 +90,22 @@ describe("Manifest - Manifest", () => {
                                                                   time: 10 } },
                                  periods: [period1, period2] };
 
-    const fakePeriod = jest.fn((period) => {
-      return { id: `foo${period.id}`, adaptations: {}, contentWarnings: [] };
+    const createPeriodSpy = jest.fn((period) => {
+      return [{ id: `foo${period.id}`, adaptations: {} }, []];
     });
-    jest.mock("../period", () =>  ({ __esModule: true as const,
-                                     default: fakePeriod }));
+    jest.mock("../period", () =>  ({ createPeriodObject: createPeriodSpy }));
 
-    const Manifest = require("../manifest").default;
-    const manifest = new Manifest(simpleFakeManifest, {});
-    expect(fakePeriod).toHaveBeenCalledTimes(2);
-    expect(fakePeriod).toHaveBeenCalledWith(period1, undefined);
-    expect(fakePeriod).toHaveBeenCalledWith(period2, undefined);
+    const createManifestObject = require("../manifest").createManifestObject;
+    const [manifest, warnings] = createManifestObject(simpleFakeManifest, {});
+    expect(createPeriodSpy).toHaveBeenCalledTimes(2);
+    expect(createPeriodSpy).toHaveBeenCalledWith(period1, undefined);
+    expect(createPeriodSpy).toHaveBeenCalledWith(period2, undefined);
 
+    expect(warnings).toEqual([]);
     expect(manifest.periods).toEqual([ { id: "foo0",
-                                         adaptations: {},
-                                         contentWarnings: [] },
+                                         adaptations: {} },
                                        { id: "foo1",
-                                         adaptations: {},
-                                         contentWarnings: [] } ]);
+                                         adaptations: {} } ]);
     expect(manifest.adaptations).toEqual({});
 
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
@@ -132,20 +130,19 @@ describe("Manifest - Manifest", () => {
 
     const representationFilter = function() { return false; };
 
-    const fakePeriod = jest.fn((period) => {
-      return { id: `foo${period.id}`, contentWarnings: [] };
+    const createPeriodSpy = jest.fn((period) => {
+      return [{ id: `foo${period.id}` }, []];
     });
-    jest.mock("../period", () =>  ({ __esModule: true as const,
-                                     default: fakePeriod }));
-    const Manifest = require("../manifest").default;
+    jest.mock("../period", () =>  ({ createPeriodObject: createPeriodSpy }));
+    const createManifestObject = require("../manifest").createManifestObject;
 
     /* eslint-disable @typescript-eslint/no-unused-expressions */
-    new Manifest(simpleFakeManifest, { representationFilter });
+    createManifestObject(simpleFakeManifest, { representationFilter });
     /* eslint-enable @typescript-eslint/no-unused-expressions */
 
-    expect(fakePeriod).toHaveBeenCalledTimes(2);
-    expect(fakePeriod).toHaveBeenCalledWith(period1, representationFilter);
-    expect(fakePeriod).toHaveBeenCalledWith(period2, representationFilter);
+    expect(createPeriodSpy).toHaveBeenCalledTimes(2);
+    expect(createPeriodSpy).toHaveBeenCalledWith(period1, representationFilter);
+    expect(createPeriodSpy).toHaveBeenCalledWith(period2, representationFilter);
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     expect(fakeLogger.info).not.toHaveBeenCalled();
@@ -168,21 +165,21 @@ describe("Manifest - Manifest", () => {
                                                                   time: 10 } },
                                  periods: [period1, period2] };
 
-    const fakePeriod = jest.fn((period) => {
-      return { ...period, id: `foo${period.id}`, contentWarnings: [] };
+    const createPeriodSpy = jest.fn((period) => {
+      return [{ ...period, id: `foo${period.id}` }, []];
     });
-    jest.mock("../period", () =>  ({ __esModule: true as const,
-                                     default: fakePeriod }));
-    const Manifest = require("../manifest").default;
+    jest.mock("../period", () =>  ({ createPeriodObject: createPeriodSpy }));
+    const createManifestObject = require("../manifest").createManifestObject;
 
-    const manifest = new Manifest(simpleFakeManifest, {});
-    expect(fakePeriod).toHaveBeenCalledTimes(2);
-    expect(fakePeriod).toHaveBeenCalledWith(period1, undefined);
-    expect(fakePeriod).toHaveBeenCalledWith(period2, undefined);
+    const [manifest, warnings] = createManifestObject(simpleFakeManifest, {});
+    expect(createPeriodSpy).toHaveBeenCalledTimes(2);
+    expect(createPeriodSpy).toHaveBeenCalledWith(period1, undefined);
+    expect(createPeriodSpy).toHaveBeenCalledWith(period2, undefined);
+    expect(warnings).toEqual([]);
 
     expect(manifest.periods).toEqual([
-      { id: "foo0", contentWarnings: [], start: 4, adaptations: adapP1 },
-      { id: "foo1", contentWarnings: [], start: 12, adaptations: adapP2 },
+      { id: "foo0", start: 4, adaptations: adapP1 },
+      { id: "foo1", start: 12, adaptations: adapP2 },
     ]);
     expect(manifest.adaptations).toBe(adapP1);
 
@@ -206,23 +203,22 @@ describe("Manifest - Manifest", () => {
                                                                   time: 10 } },
                                  periods: [period1, period2] };
 
-    const fakePeriod = jest.fn((period) => {
-      return { id: `foo${period.id}`,
-               contentWarnings: [ new Error(`a${period.id}`),
-                                  new Error(period.id) ] };
+    const createPeriodSpy = jest.fn((period) => {
+      return [ { ...period, id: `foo${period.id}` },
+               [ new Error(`a${period.id}`),
+                 new Error(period.id) ] ];
     });
     jest.mock("../period", () =>  ({
-      __esModule: true as const,
-      default: fakePeriod,
+      createPeriodObject: createPeriodSpy,
     }));
-    const Manifest = require("../manifest").default;
+    const createManifestObject = require("../manifest").createManifestObject;
 
-    const manifest = new Manifest(simpleFakeManifest, {});
-    expect(manifest.contentWarnings).toHaveLength(4);
-    expect(manifest.contentWarnings).toContainEqual(new Error("a0"));
-    expect(manifest.contentWarnings).toContainEqual(new Error("a1"));
-    expect(manifest.contentWarnings).toContainEqual(new Error("0"));
-    expect(manifest.contentWarnings).toContainEqual(new Error("1"));
+    const [_manifest, warnings] = createManifestObject(simpleFakeManifest, {});
+    expect(warnings).toHaveLength(4);
+    expect(warnings).toContainEqual(new Error("a0"));
+    expect(warnings).toContainEqual(new Error("a1"));
+    expect(warnings).toContainEqual(new Error("0"));
+    expect(warnings).toContainEqual(new Error("1"));
 
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
@@ -240,7 +236,6 @@ describe("Manifest - Manifest", () => {
                               isDynamic: false,
                               isLive: false,
                               lifetime: 13,
-                              contentWarnings: [new Error("a"), new Error("b")],
                               periods: [oldPeriod1, oldPeriod2],
                               timeBounds: { absoluteMinimumTime: 5,
                                             timeshiftDepth: null,
@@ -250,15 +245,14 @@ describe("Manifest - Manifest", () => {
                               suggestedPresentationDelay: 99,
                               uris: ["url1", "url2"] };
 
-    const fakePeriod = jest.fn((period) => {
-      return { ...period,
-               id: `foo${period.id}`,
-               contentWarnings: [new Error(period.id)] };
+    const createPeriodSpy = jest.fn((period) => {
+      return [ { ...period,
+                 id: `foo${period.id}` },
+               [new Error(period.id)] ];
     });
-    jest.mock("../period", () =>  ({ __esModule: true as const,
-                                     default: fakePeriod }));
-    const Manifest = require("../manifest").default;
-    const manifest = new Manifest(oldManifestArgs, {});
+    jest.mock("../period", () =>  ({ createPeriodObject: createPeriodSpy }));
+    const createManifestObject = require("../manifest").createManifestObject;
+    const [manifest, warnings] = createManifestObject(oldManifestArgs, {});
 
     expect(manifest.adaptations).toEqual({});
     expect(manifest.availabilityStartTime).toEqual(5);
@@ -266,12 +260,12 @@ describe("Manifest - Manifest", () => {
     expect(manifest.isDynamic).toEqual(false);
     expect(manifest.isLive).toEqual(false);
     expect(manifest.lifetime).toEqual(13);
-    expect(manifest.contentWarnings).toEqual([new Error("0"), new Error("1")]);
+    expect(warnings).toEqual([new Error("0"), new Error("1")]);
     expect(manifest.getMaximumPosition()).toEqual(10);
     expect(manifest.getMinimumPosition()).toEqual(5);
     expect(manifest.periods).toEqual([
-      { id: "foo0", contentWarnings: [new Error("0")], adaptations: {}, start: 4 },
-      { id: "foo1", contentWarnings: [new Error("1")], adaptations: {}, start: 12 },
+      { id: "foo0", adaptations: {}, start: 4 },
+      { id: "foo1", adaptations: {}, start: 12 },
     ]);
     expect(manifest.suggestedPresentationDelay).toEqual(99);
     expect(manifest.uris).toEqual(["url1", "url2"]);
@@ -282,18 +276,14 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should return the first URL given with `getUrl`", () => {
-    const fakePeriod = jest.fn((period) => {
-      return {
-        ...period,
-        id: `foo${period.id}`,
-        contentWarnings: [new Error(period.id)],
-      };
+    const createPeriodSpy = jest.fn((period) => {
+      return [{ id: `foo${period.id}`, adaptations: {} },
+              [new Error(period.id)]];
     });
     jest.mock("../period", () =>  ({
-      __esModule: true as const,
-      default: fakePeriod,
+      createPeriodObject: createPeriodSpy,
     }));
-    const Manifest = require("../manifest").default;
+    const createManifestObject = require("../manifest").createManifestObject;
 
     const oldManifestArgs1 = { availabilityStartTime: 5,
                                duration: 12,
@@ -306,14 +296,14 @@ describe("Manifest - Manifest", () => {
                                              maximumTimeData: { isLinear: false,
                                                                 value: 10,
                                                                 time: 10 } },
-                               contentWarnings: [new Error("a"), new Error("b")],
                                periods: [ { id: "0", start: 4, adaptations: {} },
                                           { id: "1", start: 12, adaptations: {} } ],
                                suggestedPresentationDelay: 99,
                                uris: ["url1", "url2"] };
 
-    const manifest1 = new Manifest(oldManifestArgs1, {});
+    const [manifest1, warnings1] = createManifestObject(oldManifestArgs1, {});
     expect(manifest1.getUrl()).toEqual("url1");
+    expect(warnings1).toEqual([new Error("0"), new Error("1")]);
 
     const oldManifestArgs2 = { availabilityStartTime: 5,
                                duration: 12,
@@ -321,7 +311,6 @@ describe("Manifest - Manifest", () => {
                                isDynamic: false,
                                isLive: false,
                                lifetime: 13,
-                               contentWarnings: [new Error("a"), new Error("b")],
                                periods: [ { id: "0", start: 4, adaptations: {} },
                                           { id: "1", start: 12, adaptations: {} } ],
                                suggestedPresentationDelay: 99,
@@ -331,14 +320,16 @@ describe("Manifest - Manifest", () => {
                                                                 value: 10,
                                                                 time: 10 } },
                                uris: [] };
-    const manifest2 = new Manifest(oldManifestArgs2, {});
+    const [manifest2, warnings2] = createManifestObject(oldManifestArgs2, {});
     expect(manifest2.getUrl()).toEqual(undefined);
+    expect(warnings2).toEqual([new Error("0"), new Error("1")]);
   });
 
   it("should replace with a new Manifest when calling `replace`", () => {
-    const fakePeriod = jest.fn((period) => ({ ...period,
-                                              id: `foo${period.id}`,
-                                              contentWarnings: [new Error(period.id)] }));
+    const createPeriodSpy = jest.fn((period) => {
+      return [{ id: `foo${period.id}`, adaptations: {} },
+              [new Error(period.id)]];
+    });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
       Object.keys(oldPeriod).forEach(key => {
         delete oldPeriod[key];
@@ -347,8 +338,7 @@ describe("Manifest - Manifest", () => {
       oldPeriod.start = newPeriod.start;
       oldPeriod.adaptations = newPeriod.adaptations;
     });
-    jest.mock("../period", () => ({ __esModule: true as const,
-                                    default: fakePeriod }));
+    jest.mock("../period", () => ({ createPeriodObject: createPeriodSpy }));
     jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
 
@@ -358,8 +348,6 @@ describe("Manifest - Manifest", () => {
                               isDynamic: false,
                               isLive: false,
                               lifetime: 13,
-                              contentWarnings: [ new Error("a"),
-                                                 new Error("b") ],
                               periods: [ { id: "0", start: 4, adaptations: {} },
                                          { id: "1", start: 12, adaptations: {} } ],
                               timeBounds: { absoluteMinimumTime: 7,
@@ -370,41 +358,45 @@ describe("Manifest - Manifest", () => {
                               suggestedPresentationDelay: 99,
                               uris: ["url1", "url2"] };
 
-    const Manifest = require("../manifest").default;
-    const manifest = new Manifest(oldManifestArgs, {});
-
-    const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
+    const createManifestObject = require("../manifest").createManifestObject;
+    const [manifest, warnings] = createManifestObject(oldManifestArgs, {});
+    let nbOfManifestUpdates = 0;
+    function onManifestUpdate() {
+      nbOfManifestUpdates++;
+    }
+    manifest.addEventListener("manifestUpdate", onManifestUpdate);
 
     const [oldPeriod1, oldPeriod2] = manifest.periods;
 
     const newAdaptations = {};
-    const newPeriod1 = { id: "foo0", start: 4, adaptations: {} };
-    const newPeriod2 = { id: "foo1", start: 12, adaptations: {} };
+    const newPeriod1 = { id: "foo0", start: 12, adaptations: {} };
+    const newPeriod2 = { id: "foo1", start: 40, adaptations: {} };
     const newManifest = { adaptations: newAdaptations,
                           availabilityStartTime: 6,
                           id: "man2",
                           isDynamic: true,
                           isLive: true,
                           lifetime: 14,
-                          contentWarnings: [new Error("c"), new Error("d")],
                           suggestedPresentationDelay: 100,
                           timeShiftBufferDepth: 3,
-                          _timeBounds: { absoluteMinimumTime: 7,
-                                         timeshiftDepth: 5,
-                                         maximumTimeData: { isLinear: false,
-                                                            value: 40,
-                                                            time: 30000 } },
+                          timeBounds: { absoluteMinimumTime: 30,
+                                        timeshiftDepth: 5,
+                                        maximumTimeData: { isLinear: false,
+                                                           value: 40,
+                                                           time: 30000 } },
                           periods: [newPeriod1, newPeriod2],
                           uris: ["url3", "url4"] };
 
     manifest.replace(newManifest);
+    manifest.removeEventListener("manifestUpdate", onManifestUpdate);
+    expect(nbOfManifestUpdates).toEqual(1);
     expect(manifest.adaptations).toEqual(newAdaptations);
     expect(manifest.availabilityStartTime).toEqual(6);
     expect(manifest.id).toEqual("fakeId");
     expect(manifest.isDynamic).toEqual(true);
     expect(manifest.isLive).toEqual(true);
     expect(manifest.lifetime).toEqual(14);
-    expect(manifest.contentWarnings).toEqual([new Error("c"), new Error("d")]);
+    expect(warnings).toEqual([new Error("0"), new Error("1")]);
     expect(manifest.getMinimumPosition()).toEqual(40 - 5);
     expect(manifest.getMaximumPosition()).toEqual(40);
     expect(manifest.suggestedPresentationDelay).toEqual(100);
@@ -415,13 +407,10 @@ describe("Manifest - Manifest", () => {
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod1, 0);
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod2, newPeriod2, 0);
-    expect(eeSpy).toHaveBeenCalledTimes(1);
-    expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     expect(fakeLogger.info).not.toHaveBeenCalled();
     expect(fakeLogger.warn).not.toHaveBeenCalled();
-    eeSpy.mockRestore();
   });
 
   it("should prepend older Periods when calling `replace`", () => {
@@ -436,17 +425,14 @@ describe("Manifest - Manifest", () => {
                                             maximumTimeData: { isLinear: false,
                                                                value: 10,
                                                                time: 10 } },
-                              contentWarnings: [new Error("a"), new Error("b")],
                               periods: [{ id: "1", start: 4, adaptations: {} }],
                               suggestedPresentationDelay: 99,
                               uris: ["url1", "url2"] };
 
-    const fakePeriod = jest.fn((period) => {
-      return {
-        ...period,
-        id: `foo${period.id}`,
-        contentWarnings: [new Error(period.id)],
-      };
+    const createPeriodSpy = jest.fn((period) => {
+      return [ { ...period,
+                 id: `foo${period.id}` },
+               [new Error(period.id)] ];
     });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
       Object.keys(oldPeriod).forEach(key => {
@@ -455,40 +441,38 @@ describe("Manifest - Manifest", () => {
       oldPeriod.id = newPeriod.id;
       oldPeriod.start = newPeriod.start;
       oldPeriod.adaptations = newPeriod.adaptations;
-      oldPeriod.contentWarnings = newPeriod.contentWarnings;
     });
-    jest.mock("../period", () =>  ({ __esModule: true as const,
-                                     default: fakePeriod }));
+    jest.mock("../period", () =>  ({ createPeriodObject: createPeriodSpy }));
     jest.mock("../update_period_in_place", () =>  ({
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const Manifest = require("../manifest").default;
-    const manifest = new Manifest(oldManifestArgs, {});
-    const [oldPeriod1] = manifest.periods;
+    const createManifestObject = require("../manifest").createManifestObject;
+    const [manifest, warnings] = createManifestObject(oldManifestArgs, {});
+    expect(warnings).toEqual([new Error("1")]);
+    let nbOfManifestUpdates = 0;
+    function onManifestUpdate() {
+      nbOfManifestUpdates++;
+    }
+    manifest.addEventListener("manifestUpdate", onManifestUpdate);
 
-    const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
+    const [oldPeriod1] = manifest.periods;
 
     const newPeriod1 = { id: "pre0",
                          start: 0,
-                         adaptations: {},
-                         contentWarnings: [] };
+                         adaptations: {} };
     const newPeriod2 = { id: "pre1",
                          start: 2,
-                         adaptations: {},
-                         contentWarnings: [] };
+                         adaptations: {} };
     const newPeriod3 = { id: "foo1",
                          start: 4,
-                         adaptations: {},
-                         contentWarnings: [] };
+                         adaptations: {} };
     const newManifest = { adaptations: {},
                           availabilityStartTime: 6,
                           id: "man2",
                           isDynamic: false,
                           isLive: true,
                           lifetime: 14,
-                          contentWarnings: [ new Error("c"),
-                                             new Error("d") ],
                           suggestedPresentationDelay: 100,
                           periods: [ newPeriod1,
                                      newPeriod2,
@@ -501,13 +485,13 @@ describe("Manifest - Manifest", () => {
                           uris: ["url3", "url4"] };
 
     manifest.replace(newManifest);
+    manifest.removeEventListener("manifestUpdate", onManifestUpdate);
+    expect(nbOfManifestUpdates).toEqual(1);
 
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2, newPeriod3]);
 
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod3, 0);
-    expect(eeSpy).toHaveBeenCalledTimes(1);
-    expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     // expect(fakeLogger.info).toHaveBeenCalledTimes(2);
@@ -515,7 +499,6 @@ describe("Manifest - Manifest", () => {
     //   "Manifest: Adding new Period pre0 after update.");
     // expect(fakeLogger.info).toHaveBeenCalledWith(
     //   "Manifest: Adding new Period pre1 after update.");
-    eeSpy.mockRestore();
   });
 
   it("should append newer Periods when calling `replace`", () => {
@@ -525,7 +508,6 @@ describe("Manifest - Manifest", () => {
                               isDynamic: false,
                               isLive: false,
                               lifetime: 13,
-                              contentWarnings: [new Error("a"), new Error("b")],
                               periods: [{ id: "1" }],
                               suggestedPresentationDelay: 99,
                               timeBounds: { absoluteMinimumTime: 0,
@@ -535,10 +517,10 @@ describe("Manifest - Manifest", () => {
                                                                time: 10 } },
                               uris: ["url1", "url2"] };
 
-    const fakePeriod = jest.fn((period) => {
-      return { ...period,
-               id: `foo${period.id}`,
-               contentWarnings: [new Error(period.id)] };
+    const createPeriodSpy = jest.fn((period) => {
+      return [ { ...period,
+                 id: `foo${period.id}` },
+               [new Error(period.id)] ];
     });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
       Object.keys(oldPeriod).forEach(key => {
@@ -546,17 +528,21 @@ describe("Manifest - Manifest", () => {
       });
       oldPeriod.id = newPeriod.id;
     });
-    jest.mock("../period", () =>  ({ __esModule: true as const,
-                                     default: fakePeriod }));
+    jest.mock("../period", () =>  ({ createPeriodObject: createPeriodSpy }));
     jest.mock("../update_period_in_place", () =>  ({
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const Manifest = require("../manifest").default;
-    const manifest = new Manifest(oldManifestArgs, {});
+    const createManifestObject = require("../manifest").createManifestObject;
+    const [manifest, warnings] = createManifestObject(oldManifestArgs, {});
+    expect(warnings).toEqual([new Error("1")]);
     const [oldPeriod1] = manifest.periods;
 
-    const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
+    let nbOfManifestUpdates = 0;
+    function onManifestUpdate() {
+      nbOfManifestUpdates++;
+    }
+    manifest.addEventListener("manifestUpdate", onManifestUpdate);
 
     const newPeriod1 = { id: "foo1" };
     const newPeriod2 = { id: "post0" };
@@ -567,7 +553,6 @@ describe("Manifest - Manifest", () => {
                           isDynamic: false,
                           isLive: true,
                           lifetime: 14,
-                          contentWarnings: [new Error("c"), new Error("d")],
                           suggestedPresentationDelay: 100,
                           periods: [newPeriod1, newPeriod2, newPeriod3],
                           timeBounds: { absoluteMinimumTime: 0,
@@ -578,19 +563,18 @@ describe("Manifest - Manifest", () => {
                           uris: ["url3", "url4"] };
 
     manifest.replace(newManifest);
+    manifest.removeEventListener("manifestUpdate", onManifestUpdate);
+    expect(nbOfManifestUpdates).toEqual(1);
 
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2, newPeriod3]);
 
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod1, 0);
-    expect(eeSpy).toHaveBeenCalledTimes(1);
-    expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     // expect(fakeLogger.warn).toHaveBeenCalledTimes(1);
     // expect(fakeLogger.warn)
     // .toHaveBeenCalledWith("Manifest: Adding new Periods after update.");
-    eeSpy.mockRestore();
   });
 
   it("should replace different Periods when calling `replace`", () => {
@@ -600,7 +584,6 @@ describe("Manifest - Manifest", () => {
                               isDynamic: false,
                               isLive: false,
                               lifetime: 13,
-                              contentWarnings: [new Error("a"), new Error("b")],
                               periods: [{ id: "1" }],
                               suggestedPresentationDelay: 99,
                               timeBounds: { absoluteMinimumTime: 0,
@@ -610,10 +593,9 @@ describe("Manifest - Manifest", () => {
                                                                time: 10 } },
                               uris: ["url1", "url2"] };
 
-    const fakePeriod = jest.fn((period) => {
-      return { ...period,
-               id: `foo${period.id}`,
-               contentWarnings: [new Error(period.id)] };
+    const createPeriodSpy = jest.fn((period) => {
+      return [{ id: `foo${period.id}`, adaptations: {} },
+              [new Error(period.id)]];
     });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
       Object.keys(oldPeriod).forEach(key => {
@@ -621,16 +603,19 @@ describe("Manifest - Manifest", () => {
       });
       oldPeriod.id = newPeriod.id;
     });
-    jest.mock("../period", () =>  ({ __esModule: true as const,
-                                     default: fakePeriod }));
+    jest.mock("../period", () =>  ({ createPeriodObject: createPeriodSpy }));
     jest.mock("../update_period_in_place", () =>  ({
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const Manifest = require("../manifest").default;
-    const manifest = new Manifest(oldManifestArgs, {});
+    const createManifestObject = require("../manifest").createManifestObject;
+    const [manifest, warnings] = createManifestObject(oldManifestArgs, {});
 
-    const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
+    let nbOfManifestUpdates = 0;
+    function onManifestUpdate() {
+      nbOfManifestUpdates++;
+    }
+    manifest.addEventListener("manifestUpdate", onManifestUpdate);
 
     const newPeriod1 = { id: "diff0" };
     const newPeriod2 = { id: "diff1" };
@@ -641,7 +626,6 @@ describe("Manifest - Manifest", () => {
                           isDynamic: false,
                           isLive: true,
                           lifetime: 14,
-                          contentWarnings: [new Error("c"), new Error("d")],
                           suggestedPresentationDelay: 100,
                           periods: [newPeriod1, newPeriod2, newPeriod3],
                           timeBounds: { absoluteMinimumTime: 0,
@@ -653,15 +637,15 @@ describe("Manifest - Manifest", () => {
 
     manifest.replace(newManifest);
 
+    expect(warnings).toEqual([new Error("1")]);
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2, newPeriod3]);
 
     expect(fakeUpdatePeriodInPlace).not.toHaveBeenCalled();
-    expect(eeSpy).toHaveBeenCalledTimes(1);
-    expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
+    manifest.removeEventListener("manifestUpdate", onManifestUpdate);
+    expect(nbOfManifestUpdates).toEqual(1);
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     // expect(fakeLogger.info).toHaveBeenCalledTimes(4);
-    eeSpy.mockRestore();
   });
 
   it("should merge overlapping Periods when calling `replace`", () => {
@@ -671,7 +655,6 @@ describe("Manifest - Manifest", () => {
                               isDynamic: false,
                               isLive: false,
                               lifetime: 13,
-                              contentWarnings: [new Error("a"), new Error("b")],
                               periods: [{ id: "1", start: 2 },
                                         { id: "2", start: 4 },
                                         { id: "3", start: 6 }],
@@ -683,10 +666,9 @@ describe("Manifest - Manifest", () => {
                               suggestedPresentationDelay: 99,
                               uris: ["url1", "url2"] };
 
-    const fakePeriod = jest.fn((period) => {
-      return { ...period,
-               id: `foo${period.id}`,
-               contentWarnings: [new Error(period.id)] };
+    const createPeriodSpy = jest.fn((period) => {
+      return [{ id: `foo${period.id}`, adaptations: {} },
+              [new Error(period.id)]];
     });
     const fakeUpdatePeriodInPlace = jest.fn((oldPeriod, newPeriod) => {
       Object.keys(oldPeriod).forEach(key => {
@@ -695,17 +677,21 @@ describe("Manifest - Manifest", () => {
       oldPeriod.id = newPeriod.id;
       oldPeriod.start = newPeriod.start;
     });
-    jest.mock("../period", () =>  ({ __esModule: true as const,
-                                     default: fakePeriod }));
+    jest.mock("../period", () =>  ({ createPeriodObject: createPeriodSpy }));
     jest.mock("../update_period_in_place", () =>  ({
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const Manifest = require("../manifest").default;
-    const manifest = new Manifest(oldManifestArgs, {});
+    const createManifestObject = require("../manifest").createManifestObject;
+    const [manifest, warnings] = createManifestObject(oldManifestArgs, {});
+    expect(warnings).toEqual([new Error("1"), new Error("2"), new Error("3")]);
     const [oldPeriod1, oldPeriod2] = manifest.periods;
 
-    const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
+    let nbOfManifestUpdates = 0;
+    function onManifestUpdate() {
+      nbOfManifestUpdates++;
+    }
+    manifest.addEventListener("manifestUpdate", onManifestUpdate);
 
     const newPeriod1 = { id: "pre0", start: 0 };
     const newPeriod2 = { id: "foo1", start: 2 };
@@ -718,7 +704,6 @@ describe("Manifest - Manifest", () => {
                           isDynamic: false,
                           isLive: true,
                           lifetime: 14,
-                          contentWarnings: [new Error("c"), new Error("d")],
                           suggestedPresentationDelay: 100,
                           periods: [ newPeriod1,
                                      newPeriod2,
@@ -743,11 +728,10 @@ describe("Manifest - Manifest", () => {
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod2, 0);
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod2, newPeriod4, 0);
-    expect(eeSpy).toHaveBeenCalledTimes(1);
-    expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
+    manifest.removeEventListener("manifestUpdate", onManifestUpdate);
+    expect(nbOfManifestUpdates).toEqual(1);
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     // expect(fakeLogger.info).toHaveBeenCalledTimes(5);
-    eeSpy.mockRestore();
   });
 });

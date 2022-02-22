@@ -157,7 +157,10 @@ export default function(options : ITransportOptions): ITransportPipelines {
         parsedResult : IMPLParserResponse<IParsedManifest>
       ) : Promise<IManifestParserResult> {
         if (parsedResult.type === "done") {
-          const manifest = createManifestObject(parsedResult.value, options);
+          const [manifest, warnings] = createManifestObject(parsedResult.value, options);
+          if (warnings.length > 0) {
+            onWarnings(warnings);
+          }
           return PPromise.resolve({ manifest });
         }
 

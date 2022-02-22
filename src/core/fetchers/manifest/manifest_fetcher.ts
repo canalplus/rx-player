@@ -366,7 +366,6 @@ export default class ManifestFetcher {
        * @param {Object} manifest
        */
       function emitManifestAndComplete(manifest : IManifest) : void {
-        onWarnings(manifest.contentWarnings);
         const parsingTime = performance.now() - parsingTimeStart;
         log.info(`MF: Manifest parsed in ${parsingTime}ms`);
 

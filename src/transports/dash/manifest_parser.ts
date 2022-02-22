@@ -142,7 +142,11 @@ export default function generateManifestParser(
         if (cancelSignal.isCancelled) {
           return PPromise.reject(cancelSignal.cancellationError);
         }
-        const manifest = createManifestObject(parserResponse.value.parsed, options);
+        const [ manifest, mWarnings ] =
+          createManifestObject(parserResponse.value.parsed, options);
+        if (mWarnings.length > 0) {
+          onWarnings(parserResponse.value.warnings);
+        }
         return { manifest, url };
       }
 

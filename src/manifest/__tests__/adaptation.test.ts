@@ -38,10 +38,10 @@ const minimalRepresentationIndex = {
   _replace() { /* noop */ },
   _update() { /* noop */ },
 };
-const defaultRepresentationSpy = jest.fn(arg => {
+const defaultCreateRepresentationSpy = jest.fn(arg => {
   return { bitrate: arg.bitrate,
            id: arg.id,
-           isSupported: true,
+           isCodecSupported: true,
            index: arg.index };
 });
 
@@ -50,16 +50,17 @@ describe("Manifest - Adaptation", () => {
     jest.resetModules();
   });
   afterEach(() => {
-    defaultRepresentationSpy.mockClear();
+    defaultCreateRepresentationSpy.mockClear();
   });
 
   it("should be able to create a minimal Adaptation", () => {
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: defaultRepresentationSpy }));
+    jest.mock("../representation", () => ({
+      createRepresentationObject: defaultCreateRepresentationSpy,
+    }));
 
-    const Adaptation = require("../adaptation").default;
+    const createAdaptationObject = require("../adaptation").createAdaptationObject;
     const args = { id: "12", representations: [], type: "video" };
-    const adaptation = new Adaptation(args);
+    const adaptation = createAdaptationObject(args);
     expect(adaptation.id).toBe("12");
     expect(adaptation.representations).toEqual([]);
     expect(adaptation.type).toBe("video");
@@ -71,22 +72,23 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation.getAvailableBitrates()).toEqual([]);
     expect(adaptation.getRepresentation("")).toBe(undefined);
 
-    expect(defaultRepresentationSpy).not.toHaveBeenCalled();
+    expect(defaultCreateRepresentationSpy).not.toHaveBeenCalled();
   });
 
   it("should normalize a given language", () => {
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: defaultRepresentationSpy }));
+    jest.mock("../representation", () => ({
+      createRepresentationObject: defaultCreateRepresentationSpy,
+    }));
     const normalizeSpy = jest.fn((lang : string) => lang + "foo");
     jest.mock("../../utils/languages", () => ({ __esModule: true as const,
                                                 default: normalizeSpy }));
 
-    const Adaptation = require("../adaptation").default;
+    const createAdaptationObject = require("../adaptation").createAdaptationObject;
     const args1 = { id: "12",
                     representations: [],
                     language: "fr",
                     type: "video"as const };
-    const adaptation1 = new Adaptation(args1);
+    const adaptation1 = createAdaptationObject(args1);
     expect(adaptation1.language).toBe("fr");
     expect(adaptation1.normalizedLanguage).toBe("frfoo");
     expect(normalizeSpy).toHaveBeenCalledTimes(1);
@@ -97,7 +99,7 @@ describe("Manifest - Adaptation", () => {
                     representations: [],
                     language: "toto",
                     type: "video" };
-    const adaptation2 = new Adaptation(args2);
+    const adaptation2 = createAdaptationObject(args2);
     expect(adaptation2.language).toBe("toto");
     expect(adaptation2.normalizedLanguage).toBe("totofoo");
     expect(normalizeSpy).toHaveBeenCalledTimes(1);
@@ -105,27 +107,29 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should not call normalize if no language is given", () => {
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: defaultRepresentationSpy }));
+    jest.mock("../representation", () => ({
+      createRepresentationObject: defaultCreateRepresentationSpy,
+    }));
     const normalizeSpy = jest.fn((lang : string) => lang + "foo");
     jest.mock("../../utils/languages", () => ({ __esModule: true as const,
                                                 default: normalizeSpy }));
 
-    const Adaptation = require("../adaptation").default;
+    const createAdaptationObject = require("../adaptation").createAdaptationObject;
     const args1 = { id: "12",
                     representations: [],
                     type: "video" };
-    const adaptation1 = new Adaptation(args1);
+    const adaptation1 = createAdaptationObject(args1);
     expect(adaptation1.language).toBe(undefined);
     expect(adaptation1.normalizedLanguage).toBe(undefined);
     expect(normalizeSpy).not.toHaveBeenCalled();
   });
 
   it("should create and sort the corresponding Representations", () => {
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: defaultRepresentationSpy }));
+    jest.mock("../representation", () => ({
+      createRepresentationObject: defaultCreateRepresentationSpy,
+    }));
 
-    const Adaptation = require("../adaptation").default;
+    const createAdaptationObject = require("../adaptation").createAdaptationObject;
     const rep1 = { bitrate: 10,
                    id: "rep1",
                    index: minimalRepresentationIndex };
@@ -140,12 +144,15 @@ describe("Manifest - Adaptation", () => {
                    representations,
                    type: "text" as const };
 
-    const adaptation = new Adaptation(args);
+    const adaptation = createAdaptationObject(args);
     const parsedRepresentations = adaptation.representations;
-    expect(defaultRepresentationSpy).toHaveBeenCalledTimes(3);
-    expect(defaultRepresentationSpy).toHaveBeenNthCalledWith(1, rep1, { type: "text" });
-    expect(defaultRepresentationSpy).toHaveBeenNthCalledWith(2, rep2, { type: "text" });
-    expect(defaultRepresentationSpy).toHaveBeenNthCalledWith(3, rep3, { type: "text" });
+    expect(defaultCreateRepresentationSpy).toHaveBeenCalledTimes(3);
+    expect(defaultCreateRepresentationSpy)
+      .toHaveBeenNthCalledWith(1, rep1, { type: "text" });
+    expect(defaultCreateRepresentationSpy)
+      .toHaveBeenNthCalledWith(2, rep2, { type: "text" });
+    expect(defaultCreateRepresentationSpy)
+      .toHaveBeenNthCalledWith(3, rep3, { type: "text" });
 
     expect(parsedRepresentations.length).toBe(3);
     expect(parsedRepresentations[0].id).toEqual("rep1");
@@ -160,14 +167,15 @@ describe("Manifest - Adaptation", () => {
     const representationSpy = jest.fn(arg => {
       return { bitrate: arg.bitrate,
                id: arg.id,
-               isSupported: arg.id !== "rep4",
+               isCodecSupported: arg.id !== "rep4",
                index: arg.index };
     });
 
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: representationSpy }));
+    jest.mock("../representation", () => ({
+      createRepresentationObject: representationSpy,
+    }));
 
-    const Adaptation = require("../adaptation").default;
+    const createAdaptationObject = require("../adaptation").createAdaptationObject;
     const rep1 = { bitrate: 10,
                    id: "rep1",
                    index: minimalRepresentationIndex };
@@ -201,7 +209,7 @@ describe("Manifest - Adaptation", () => {
                    language: "fr",
                    representations,
                    type: "text" as const };
-    const adaptation = new Adaptation(args, { representationFilter });
+    const adaptation = createAdaptationObject(args, { representationFilter });
 
     const parsedRepresentations = adaptation.representations;
     expect(representationFilter).toHaveBeenCalledTimes(6);
@@ -217,19 +225,20 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should set an isDub value if one", () => {
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: defaultRepresentationSpy }));
+    jest.mock("../representation", () => ({
+      createRepresentationObject: defaultCreateRepresentationSpy,
+    }));
     const normalizeSpy = jest.fn((lang : string) => lang + "foo");
     jest.mock("../../utils/languages", () => ({ __esModule: true as const,
                                                 default: normalizeSpy }));
 
-    const Adaptation = require("../adaptation").default;
+    const createAdaptationObject = require("../adaptation").createAdaptationObject;
 
     const args1 = { id: "12",
                     representations: [],
                     isDub: false,
                     type: "video" };
-    const adaptation1 = new Adaptation(args1);
+    const adaptation1 = createAdaptationObject(args1);
     expect(adaptation1.language).toBe(undefined);
     expect(adaptation1.normalizedLanguage).toBe(undefined);
     expect(adaptation1.isDub).toEqual(false);
@@ -239,7 +248,7 @@ describe("Manifest - Adaptation", () => {
                     representations: [],
                     isDub: true,
                     type: "video" };
-    const adaptation2 = new Adaptation(args2);
+    const adaptation2 = createAdaptationObject(args2);
     expect(adaptation2.language).toBe(undefined);
     expect(adaptation2.normalizedLanguage).toBe(undefined);
     expect(adaptation2.isDub).toEqual(true);
@@ -247,19 +256,20 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should set an isClosedCaption value if one", () => {
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: defaultRepresentationSpy }));
+    jest.mock("../representation", () => ({
+      createRepresentationObject: defaultCreateRepresentationSpy,
+    }));
     const normalizeSpy = jest.fn((lang : string) => lang + "foo");
     jest.mock("../../utils/languages", () => ({ __esModule: true as const,
                                                 default: normalizeSpy }));
 
-    const Adaptation = require("../adaptation").default;
+    const createAdaptationObject = require("../adaptation").createAdaptationObject;
 
     const args1 = { id: "12",
                     representations: [],
                     closedCaption: false,
                     type: "video" };
-    const adaptation1 = new Adaptation(args1);
+    const adaptation1 = createAdaptationObject(args1);
     expect(adaptation1.language).toBe(undefined);
     expect(adaptation1.normalizedLanguage).toBe(undefined);
     expect(adaptation1.isClosedCaption).toEqual(false);
@@ -269,7 +279,7 @@ describe("Manifest - Adaptation", () => {
                     representations: [],
                     closedCaption: true,
                     type: "video" };
-    const adaptation2 = new Adaptation(args2);
+    const adaptation2 = createAdaptationObject(args2);
     expect(adaptation2.language).toBe(undefined);
     expect(adaptation2.normalizedLanguage).toBe(undefined);
     expect(adaptation2.isClosedCaption).toEqual(true);
@@ -277,20 +287,21 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should set an isAudioDescription value if one", () => {
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: defaultRepresentationSpy }));
+    jest.mock("../representation", () => ({
+      createRepresentationObject: defaultCreateRepresentationSpy,
+    }));
     const normalizeSpy = jest.fn((lang : string) => lang + "foo");
 
     jest.mock("../../utils/languages", () => ({ __esModule: true as const,
                                                 default: normalizeSpy }));
 
-    const Adaptation = require("../adaptation").default;
+    const createAdaptationObject = require("../adaptation").createAdaptationObject;
 
     const args1 = { id: "12",
                     representations: [],
                     audioDescription: false,
                     type: "video" };
-    const adaptation1 = new Adaptation(args1);
+    const adaptation1 = createAdaptationObject(args1);
     expect(adaptation1.language).toBe(undefined);
     expect(adaptation1.normalizedLanguage).toBe(undefined);
     expect(adaptation1.isAudioDescription).toEqual(false);
@@ -300,7 +311,7 @@ describe("Manifest - Adaptation", () => {
                     representations: [],
                     audioDescription: true,
                     type: "video" };
-    const adaptation2 = new Adaptation(args2);
+    const adaptation2 = createAdaptationObject(args2);
     expect(adaptation2.language).toBe(undefined);
     expect(adaptation2.normalizedLanguage).toBe(undefined);
     expect(adaptation2.isAudioDescription).toEqual(true);
@@ -308,18 +319,19 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should set a manuallyAdded value if one", () => {
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: defaultRepresentationSpy }));
+    jest.mock("../representation", () => ({
+      createRepresentationObject: defaultCreateRepresentationSpy,
+    }));
     const normalizeSpy = jest.fn((lang : string) => lang + "foo");
     jest.mock("../../utils/languages", () => ({ __esModule: true as const,
                                                 default: normalizeSpy }));
 
-    const Adaptation = require("../adaptation").default;
+    const createAdaptationObject = require("../adaptation").createAdaptationObject;
 
     const args1 = { id: "12",
                     representations: [],
                     type: "video" };
-    const adaptation1 = new Adaptation(args1, { isManuallyAdded: false });
+    const adaptation1 = createAdaptationObject(args1, { isManuallyAdded: false });
     expect(adaptation1.language).toBe(undefined);
     expect(adaptation1.normalizedLanguage).toBe(undefined);
     expect(adaptation1.manuallyAdded).toEqual(false);
@@ -328,7 +340,7 @@ describe("Manifest - Adaptation", () => {
     const args2 = { id: "12",
                     representations: [],
                     type: "video" };
-    const adaptation2 = new Adaptation(args2, { isManuallyAdded: true });
+    const adaptation2 = createAdaptationObject(args2, { isManuallyAdded: true });
     expect(adaptation2.language).toBe(undefined);
     expect(adaptation2.normalizedLanguage).toBe(undefined);
     expect(adaptation2.manuallyAdded).toEqual(true);
@@ -339,13 +351,14 @@ describe("Manifest - Adaptation", () => {
   it("should filter Representation with duplicate bitrates in getAvailableBitrates", () => {
   /* eslint-enable max-len */
 
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: defaultRepresentationSpy }));
+    jest.mock("../representation", () => ({
+      createRepresentationObject: defaultCreateRepresentationSpy,
+    }));
     const uniqSpy = jest.fn(() => [45, 92]);
     jest.mock("../../utils/uniq", () => ({ __esModule: true as const,
                                            default: uniqSpy }));
 
-    const Adaptation = require("../adaptation").default;
+    const createAdaptationObject = require("../adaptation").createAdaptationObject;
     const rep1 = { bitrate: 10,
                    id: "rep1",
                    index: minimalRepresentationIndex };
@@ -359,7 +372,7 @@ describe("Manifest - Adaptation", () => {
     const args = { id: "12",
                    representations,
                    type: "text" as const };
-    const adaptation = new Adaptation(args);
+    const adaptation = createAdaptationObject(args);
 
     const parsedRepresentations = adaptation.representations;
     expect(parsedRepresentations.length).toBe(3);
@@ -373,10 +386,11 @@ describe("Manifest - Adaptation", () => {
   it("should return the first Representation with the given Id with `getRepresentation`", () => {
   /* eslint-enable max-len */
 
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: defaultRepresentationSpy }));
+    jest.mock("../representation", () => ({
+      createRepresentationObject: defaultCreateRepresentationSpy,
+    }));
 
-    const Adaptation = require("../adaptation").default;
+    const createAdaptationObject = require("../adaptation").createAdaptationObject;
     const rep1 = { bitrate: 10,
                    id: "rep1",
                    index: minimalRepresentationIndex };
@@ -388,7 +402,7 @@ describe("Manifest - Adaptation", () => {
                    index: minimalRepresentationIndex };
     const representations = [rep1, rep2, rep3];
     const args = { id: "12", representations, type: "text" as const };
-    const adaptation = new Adaptation(args);
+    const adaptation = createAdaptationObject(args);
 
     expect(adaptation.getRepresentation("rep1").bitrate).toEqual(10);
     expect(adaptation.getRepresentation("rep2").bitrate).toEqual(20);
@@ -398,10 +412,11 @@ describe("Manifest - Adaptation", () => {
   it("should return undefined in `getRepresentation` if no representation is found with this Id", () => {
   /* eslint-enable max-len */
 
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: defaultRepresentationSpy }));
+    jest.mock("../representation", () => ({
+      createRepresentationObject: defaultCreateRepresentationSpy,
+    }));
 
-    const Adaptation = require("../adaptation").default;
+    const createAdaptationObject = require("../adaptation").createAdaptationObject;
     const rep1 = { bitrate: 10,
                    id: "rep1",
                    index: minimalRepresentationIndex };
@@ -413,7 +428,7 @@ describe("Manifest - Adaptation", () => {
                    index: minimalRepresentationIndex };
     const representations = [rep1, rep2, rep3];
     const args = { id: "12", representations, type: "text" as const };
-    const adaptation = new Adaptation(args);
+    const adaptation = createAdaptationObject(args);
 
     expect(adaptation.getRepresentation("rep5")).toBe(undefined);
   });
@@ -424,17 +439,18 @@ describe("Manifest - Adaptation", () => {
     const representationSpy = jest.fn(arg => {
       return { bitrate: arg.bitrate,
                id: arg.id,
-               isSupported: arg.id !== "rep3" && arg.id !== "rep8",
+               isCodecSupported: arg.id !== "rep3" && arg.id !== "rep8",
                decipherable: arg.id === "rep6" ? false :
                              arg.id === "rep8" ? false :
                              arg.id === "rep4" ? true :
                                                  undefined,
                index: arg.index };
     });
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: representationSpy }));
+    jest.mock("../representation", () => ({
+      createRepresentationObject: representationSpy,
+    }));
 
-    const Adaptation = require("../adaptation").default;
+    const createAdaptationObject = require("../adaptation").createAdaptationObject;
     const rep1 = { bitrate: 10,
                    id: "rep1",
                    index: minimalRepresentationIndex };
@@ -468,7 +484,7 @@ describe("Manifest - Adaptation", () => {
                              rep7,
                              rep8];
     const args = { id: "12", representations, type: "text" as const };
-    const adaptation = new Adaptation(args);
+    const adaptation = createAdaptationObject(args);
 
     const playableRepresentations = adaptation.getPlayableRepresentations();
     expect(playableRepresentations.length).toEqual(5);

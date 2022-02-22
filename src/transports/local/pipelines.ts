@@ -27,6 +27,7 @@ import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import { CancellationSignal } from "../../utils/task_canceller";
 import {
   ILoadedManifestFormat,
+  IManifestParserOptions,
   IManifestParserResult,
   IRequestedData,
   ITransportOptions,
@@ -65,13 +66,20 @@ export default function getLocalManifestPipelines(
         })(url, cancelSignal);
     },
 
-    parseManifest(manifestData : IRequestedData<unknown>) : IManifestParserResult {
+    parseManifest(
+      manifestData : IRequestedData<unknown>,
+      _parserOptions : IManifestParserOptions,
+      onWarnings : (warnings: Error[]) => void
+    ) : IManifestParserResult {
       const loadedManifest = manifestData.responseData;
       if (typeof manifestData !== "object") {
         throw new Error("Wrong format for the manifest data");
       }
       const parsed = parseLocalManifest(loadedManifest as ILocalManifest);
-      const manifest = createManifestObject(parsed, options);
+      const [manifest, warnings] = createManifestObject(parsed, options);
+      if (warnings.length > 0) {
+        onWarnings(warnings);
+      }
       return { manifest, url: undefined };
     },
   };
