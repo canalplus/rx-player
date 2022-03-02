@@ -108,7 +108,7 @@
     "html-entities": "2.3.2",
     "istanbul-instrumenter-loader": "3.0.1",
     "jest": "27.4.5",
-    "karma": "6.3.14",
+    "karma": "6.3.16",
     "karma-chrome-launcher": "3.1.0",
     "karma-coverage-istanbul-reporter": "3.0.3",
     "karma-firefox-launcher": "2.1.2",
