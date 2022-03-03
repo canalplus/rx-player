@@ -78,9 +78,9 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
     await waitForLoadedStateAfterLoadVideo(player);
     player.setPlaybackRate(3);
     player.play();
-    await sleep(400);
-    expect(player.getPosition()).to.be.below(1.25);
-    expect(player.getPosition()).to.be.above(0.5);
+    await sleep(1200);
+    expect(player.getPosition()).to.be.below(4);
+    expect(player.getPosition()).to.be.above(2);
     expect(player.getCurrentBufferGap()).to.be.above(0);
     expect(player.getVideoElement().buffered.start(0))
       .to.be.below(player.getPosition());
