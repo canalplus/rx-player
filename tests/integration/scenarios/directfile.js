@@ -77,10 +77,10 @@ describe("basic playback use cases: direct file", function () {
     await waitForLoadedStateAfterLoadVideo(player);
     player.setPlaybackRate(3);
     player.play();
-    await sleep(600);
+    await sleep(1200);
     expect(player.getPlayerState()).to.equal("PLAYING");
-    expect(player.getPosition()).to.be.below(2);
-    expect(player.getPosition()).to.be.above(1);
+    expect(player.getPosition()).to.be.below(4);
+    expect(player.getPosition()).to.be.above(2);
     expect(player.getCurrentBufferGap()).to.be.above(0);
     expect(player.getVideoElement().buffered.start(0))
       .to.be.below(player.getPosition());
