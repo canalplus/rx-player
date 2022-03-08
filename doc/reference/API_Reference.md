@@ -285,24 +285,6 @@ properties, methods, events and so on.
   - [`getAudioBitrate`](../api/Bitrate_Control/getAudioBitrate.md):
     Returns the bitrate of the current audio quality.
 
-  - [`getAvailableVideoBitrates`](../api/Bitrate_Control/getAvailableVideoBitrates.md):
-    Returns all available bitrates for the current video track.
-
-  - [`getAvailableAudioBitrates`](../api/Bitrate_Control/getAvailableAudioBitrates.md):
-    Returns all available bitrates for the current audio track.
-
-  - [`setVideoBitrate`](../api/Bitrate_Control/setVideoBitrate.md):
-    Set the bitrate for the current video track.
-
-  - [`setAudioBitrate`](../api/Bitrate_Control/setAudioBitrate.md):
-    Set the bitrate for the current audio track.
-
-  - [`getManualVideoBitrate`](../api/Bitrate_Control/getManualVideoBitrate.md):
-    Returns the last video bitrate manually set.
-
-  - [`getManualAudioBitrate`](../api/Bitrate_Control/getManualAudioBitrate.md):
-    Returns the last audio bitrate manually set.
-
   - [`setMinVideoBitrate`](../api/Bitrate_Control/setMinVideoBitrate.md):
     Set the minimum video bitrate reachable through adaptive streaming.
 

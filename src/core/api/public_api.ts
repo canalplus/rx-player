@@ -1199,62 +1199,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Returns all available bitrates for the current video Adaptation.
-   * @returns {Array.<Number>}
-   */
-  getAvailableVideoBitrates() : number[] {
-    if (this._priv_contentInfos === null) {
-      return [];
-    }
-    const { currentPeriod, activeAdaptations } = this._priv_contentInfos;
-    if (currentPeriod === null || activeAdaptations === null) {
-      return [];
-    }
-    const adaptations = activeAdaptations[currentPeriod.id];
-    if (adaptations === undefined || isNullOrUndefined(adaptations.video)) {
-      return [];
-    }
-
-    return adaptations.video.getAvailableBitrates();
-  }
-
-  /**
-   * Returns all available bitrates for the current audio Adaptation.
-   * @returns {Array.<Number>}
-   */
-  getAvailableAudioBitrates() : number[] {
-    if (this._priv_contentInfos === null) {
-      return [];
-    }
-    const { currentPeriod, activeAdaptations } = this._priv_contentInfos;
-    if (currentPeriod === null || activeAdaptations === null) {
-      return [];
-    }
-    const adaptations = activeAdaptations[currentPeriod.id];
-    if (adaptations === undefined || isNullOrUndefined(adaptations.audio)) {
-      return [];
-    }
-
-    return adaptations.audio.getAvailableBitrates();
-  }
-
-  /**
-   * Returns the manual audio bitrate set. -1 if in AUTO mode.
-   * @returns {Number}
-   */
-  getManualAudioBitrate() : number {
-    return this._priv_bitrateInfos.manualBitrates.audio.getValue();
-  }
-
-  /**
-   * Returns the manual video bitrate set. -1 if in AUTO mode.
-   * @returns {Number}
-   */
-  getManualVideoBitrate() : number {
-    return this._priv_bitrateInfos.manualBitrates.video.getValue();
-  }
-
-  /**
    * Returns currently considered bitrate for video segments.
    * @returns {Number|undefined}
    */
@@ -1463,24 +1407,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this.setVolume(this._priv_mutedMemory === 0 ? DEFAULT_UNMUTED_VOLUME :
                                                     this._priv_mutedMemory);
     }
-  }
-
-  /**
-   * Force the video bitrate to a given value. Act as a ceil.
-   * -1 to set it on AUTO Mode
-   * @param {Number} btr
-   */
-  setVideoBitrate(btr : number) : void {
-    this._priv_bitrateInfos.manualBitrates.video.setValue(btr);
-  }
-
-  /**
-   * Force the audio bitrate to a given value. Act as a ceil.
-   * -1 to set it on AUTO Mode
-   * @param {Number} btr
-   */
-  setAudioBitrate(btr : number) : void {
-    this._priv_bitrateInfos.manualBitrates.audio.setValue(btr);
   }
 
   /**
@@ -2492,28 +2418,21 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         period.id === currentPeriod.id)
     {
       const periodRef = this._priv_tracksStore.getPeriodObjectFromPeriod(period);
+      if (periodRef === undefined) {
+        return;
+      }
       switch (type) {
         case "audio":
-          if (periodRef !== undefined) {
-            const audioTrack = this
-              ._priv_tracksStore.getChosenAudioTrack(periodRef);
-            this.trigger("audioTrackChange", audioTrack);
-          }
+          const audioTrack = this._priv_tracksStore.getChosenAudioTrack(periodRef);
+          this.trigger("audioTrackChange", audioTrack);
           break;
         case "text":
-          if (periodRef !== undefined) {
-            const textTrack = this._priv_tracksStore
-              .getChosenTextTrack(periodRef);
-            this.trigger("textTrackChange", textTrack);
-          }
-
+          const textTrack = this._priv_tracksStore.getChosenTextTrack(periodRef);
+          this.trigger("textTrackChange", textTrack);
           break;
         case "video":
-          if (periodRef !== undefined) {
-            const videoTrack = this._priv_tracksStore
-              .getChosenVideoTrack(periodRef);
-            this.trigger("videoTrackChange", videoTrack);
-          }
+          const videoTrack = this._priv_tracksStore.getChosenVideoTrack(periodRef);
+          this.trigger("videoTrackChange", videoTrack);
           break;
       }
     }
