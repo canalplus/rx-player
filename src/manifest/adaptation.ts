@@ -22,7 +22,6 @@ import {
 import arrayFind from "../utils/array_find";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import normalizeLanguage from "../utils/languages";
-import uniq from "../utils/uniq";
 import Representation from "./representation";
 
 /** List in an array every possible value for the Adaptation's `type` property. */
@@ -163,21 +162,6 @@ export default class Adaptation {
 
     // for manuallyAdded adaptations (not in the manifest)
     this.manuallyAdded = isManuallyAdded === true;
-  }
-
-  /**
-   * Returns unique bitrate for every Representation in this Adaptation.
-   * @returns {Array.<Number>}
-   */
-  getAvailableBitrates() : number[] {
-    const bitrates : number[] = [];
-    for (let i = 0; i < this.representations.length; i ++) {
-      const representation = this.representations[i];
-      if (representation.decipherable !== false) {
-        bitrates.push(representation.bitrate);
-      }
-    }
-    return uniq(bitrates);
   }
 
   /**
