@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import objectAssign from "./object_assign";
 
 /**
@@ -9,15 +5,18 @@ import objectAssign from "./object_assign";
  * @param item
  * @returns {boolean}
  */
-function isObject(item: any) : boolean {
+function isObject(item: unknown) : boolean {
   return (item !== null
           && item !== undefined
-          && !Array.isArray(item));
+          && !Array.isArray(item)
+          && typeof item === "object");
 }
 
 type IDeepPartial<T> = {
   [P in keyof T]?: IDeepPartial<T[P]> ;
 };
+
+type ISourcesArgument<T> = Array<IDeepPartial<T>|unknown>;
 
 /**
  * Deeply merge nested objects
@@ -25,7 +24,7 @@ type IDeepPartial<T> = {
  * @param sources
  * @returns output : merged object
  */
-export default function deepMerge<T>(target: T, ...sources: Array<IDeepPartial<T>>): T {
+export default function deepMerge<T>(target: T, ...sources: ISourcesArgument<T>): T {
   if (sources.length === 0) {
     return target;
   }

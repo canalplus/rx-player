@@ -1,5 +1,5 @@
 import configHandler from "../config";
 
 export {
-    configHandler as config
-}
+  configHandler as config,
+};
