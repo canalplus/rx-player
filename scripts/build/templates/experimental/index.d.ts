@@ -13,7 +13,4 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-export { DASH_WASM } from "./dash_wasm";
-export { LOCAL_MANIFEST } from "./local";
-export { METAPLAYLIST } from "./metaplaylist";
+ export * from "../__BUILD_DIR__/experimental/index";
