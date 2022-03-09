@@ -17,3 +17,4 @@
 export { DASH_WASM } from "./dash_wasm";
 export { LOCAL_MANIFEST } from "./local";
 export { METAPLAYLIST } from "./metaplaylist";
+export { EXPERIMENTAL_CONFIG } from "./config_override";
