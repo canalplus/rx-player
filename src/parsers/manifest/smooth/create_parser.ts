@@ -83,6 +83,7 @@ const MIME_TYPES : Partial<Record<string, string>> = {
   AVC1: "video/mp4",
   H264: "video/mp4",
   TTML: "application/ttml+xml+mp4",
+  DFXP: "application/ttml+xml+mp4",
 };
 
 export interface IHSSParserConfiguration {
