@@ -711,9 +711,9 @@ export default function launchTestsForContent(manifestInfos) {
       });
     });
 
-    describe.only("getVideoPlayedTime", () => {
+    describe("getVideoPlayedTime", () => {
       // TODO handle live contents
-      it.only("should return the difference between the start of the current range and the current time", async function() {
+      it("should return the difference between the start of the current range and the current time", async function() {
         this.timeout(5000);
         player.setWantedBufferAhead(10);
         expect(player.getWantedBufferAhead()).to.equal(10);
