@@ -96,7 +96,6 @@ export interface IFetchOptions {
   timeout? : number | undefined;
 }
 
-const { DEFAULT_REQUEST_TIMEOUT } = config;
 
 type IHeadersConstructor = new() => Headers;
 type IAbortControllerConstructor = new() => AbortController;
@@ -147,7 +146,7 @@ export default function fetchRequest(
   }
 
   const requestTimeout = isNullOrUndefined(options.timeout) ?
-    DEFAULT_REQUEST_TIMEOUT :
+    config.getCurrent().DEFAULT_REQUEST_TIMEOUT :
     options.timeout;
   const timeout = window.setTimeout(() => {
     timeouted = true;

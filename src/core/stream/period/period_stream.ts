@@ -61,7 +61,6 @@ import {
 import createEmptyStream from "./create_empty_adaptation_stream";
 import getAdaptationSwitchStrategy from "./get_adaptation_switch_strategy";
 
-const { DELTA_POSITION_AFTER_RELOAD } = config;
 
 /** Playback observation required by the `PeriodStream`. */
 export interface IPeriodStreamPlaybackObservation {
@@ -161,6 +160,7 @@ export default function PeriodStream({
        * This value contains this relative position, in seconds.
        * @see reloadAfterSwitch
        */
+      const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
       const relativePosAfterSwitch =
         switchNb === 0 ? 0 :
         bufferType === "audio" ? DELTA_POSITION_AFTER_RELOAD.trackSwitch.audio :

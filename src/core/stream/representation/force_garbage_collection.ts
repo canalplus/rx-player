@@ -25,8 +25,6 @@ import log from "../../../log";
 import { getInnerAndOuterTimeRanges } from "../../../utils/ranges";
 import { SegmentBuffer } from "../../segment_buffers";
 
-const GC_GAP_CALM = config.BUFFER_GC_GAPS.CALM;
-const GC_GAP_BEEFY = config.BUFFER_GC_GAPS.BEEFY;
 
 /**
  * Run the garbage collector.
@@ -43,6 +41,8 @@ export default function forceGarbageCollection(
   bufferingQueue : SegmentBuffer
 ) : Observable<unknown> {
   return observableDefer(() => {
+    const GC_GAP_CALM = config.getCurrent().BUFFER_GC_GAPS.CALM;
+    const GC_GAP_BEEFY = config.getCurrent().BUFFER_GC_GAPS.BEEFY;
     log.warn("Stream: Running garbage collector");
     const buffered = bufferingQueue.getBufferedRanges();
     let cleanedupRanges = selectGCedRanges(currentPosition, buffered, GC_GAP_CALM);

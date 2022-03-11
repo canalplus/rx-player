@@ -49,7 +49,6 @@ import shouldFavourCustomSafariEME from "./should_favour_custom_safari_EME";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
-const INACTIVITY_DELAY = config.INACTIVITY_DELAY;
 const pixelRatio = isNode ||
                    window.devicePixelRatio == null ||
                    window.devicePixelRatio === 0 ? 1 :
@@ -192,6 +191,7 @@ function visibilityChange() : Observable<boolean> {
  * @returns {Observable}
  */
 function isPageActive() : Observable<boolean> {
+  const { INACTIVITY_DELAY } = config.getCurrent();
   return visibilityChange().pipe(
     switchMap((x) => {
       if (!x) {
@@ -275,6 +275,7 @@ function onPictureInPictureEvent$(
 function isVideoVisible(
   pip$ : Observable<IPictureInPictureEvent>
 ) : Observable<boolean> {
+  const { INACTIVITY_DELAY } = config.getCurrent();
   return observableCombineLatest([visibilityChange(), pip$]).pipe(
     switchMap(([ isVisible, pip ]) => {
       if (pip.isEnabled || isVisible) {

@@ -16,7 +16,6 @@
 
 import config from "../../../config";
 
-const { SEGMENT_PRIORITIES_STEPS } = config;
 
 /**
  * Calculate the priority number for a given segment start time, in function of
@@ -35,7 +34,7 @@ export default function getSegmentPriority(
   wantedStartTimestamp : number
 ) : number {
   const distance = segmentTime - wantedStartTimestamp;
-
+  const { SEGMENT_PRIORITIES_STEPS } = config.getCurrent();
   for (let priority = 0; priority < SEGMENT_PRIORITIES_STEPS.length; priority++) {
     if (distance < SEGMENT_PRIORITIES_STEPS[priority]) {
       return priority;

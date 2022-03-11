@@ -63,8 +63,7 @@ import {
 } from "./types";
 import InitDataStore from "./utils/init_data_store";
 
-const { EME_DEFAULT_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS,
-        EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION } = config;
+
 const { onEncrypted$ } = events;
 
 /**
@@ -99,6 +98,9 @@ export default function EMEManager(
     /** Last key update event received for that session. */
     lastKeyUpdate$ : ReplaySubject<IKeyUpdateValue>;
   }>();
+
+  const { EME_DEFAULT_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS,
+          EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION } = config.getCurrent();
 
   /**
    * Keep track of which initialization data have been blacklisted in the

@@ -38,10 +38,6 @@ import {
   tryRequestPromiseWithBackoff,
 } from "../utils/try_urls_with_backoff";
 
-const { DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
-        DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
-        INITIAL_BACKOFF_DELAY_BASE,
-        MAX_BACKOFF_DELAY_BASE } = config;
 
 /** What will be sent once parsed. */
 export interface IManifestFetcherParsedResult {
@@ -407,6 +403,10 @@ export default class ManifestFetcher {
    * @returns {Object}
    */
   private _getBackoffSetting(onRetry : (err : unknown) => void) : IBackoffSettings {
+    const { DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
+            DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
+            INITIAL_BACKOFF_DELAY_BASE,
+            MAX_BACKOFF_DELAY_BASE } = config.getCurrent();
     const { lowLatencyMode,
             maxRetryRegular : ogRegular,
             maxRetryOffline : ogOffline } = this._settings;
