@@ -1125,7 +1125,7 @@ const DEFAULT_CONFIG = {
      * @type {Object}
      */
   ADAPTATION_SWITCH_BUFFER_PADDINGS: {
-    video: { before: 2, after: 2.5 },
+    video: { before: 5, after: 5 },
     audio: { before: 2, after: 2.5 },
     text: { before: 0, after: 0 }, // not managed natively, so no problem here
     image: { before: 0, after: 0 }, // not managed natively, so no problem here
