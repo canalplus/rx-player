@@ -75,6 +75,7 @@ describe("parsers - webvtt - createStyledElement", () => {
     node.appendChild(textNode);
 
     const styleElements = {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       "#text": "color: yellow",
     };
 

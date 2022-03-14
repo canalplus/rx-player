@@ -52,7 +52,7 @@ type ICompatRequestMediaKeySystemAccessFn =
 let requestMediaKeySystemAccess : null | ICompatRequestMediaKeySystemAccessFn = null;
 
 let _setMediaKeys :
-((elt: HTMLMediaElement, mediaKeys: MediaKeys | ICustomMediaKeys | null) => void) =
+((elt: HTMLMediaElement, mediaKeys: MediaKeys | ICustomMediaKeys | null) => unknown) =
   function defaultSetMediaKeys(
     mediaElement: HTMLMediaElement,
     mediaKeys: MediaKeys | ICustomMediaKeys | null
