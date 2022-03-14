@@ -253,7 +253,7 @@
 
 
 
-    <!-- video main avc1.640028 -->
+    <!-- video avc1.640028 + priority 50 -->
     <AdaptationSet
       group="2"
       contentType="video"
@@ -263,9 +263,9 @@
       maxWidth="2221"
       maxHeight="944"
       segmentAlignment="true"
+      selectionPriority="50"
       mimeType="video/mp4"
       startWithSAP="1">
-        <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
         <SegmentTemplate timescale="1000" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
           <SegmentTimeline><S t="0" d="4004" r="24" /><S d="1376" /></SegmentTimeline>
       </SegmentTemplate>
@@ -567,26 +567,6 @@
 
 
 
-    <!-- video main avc1.640028 -->
-    <AdaptationSet
-      group="2"
-      contentType="video"
-      par="40:17"
-      minBandwidth="400000"
-      maxBandwidth="1996000"
-      maxWidth="2221"
-      maxHeight="944"
-      segmentAlignment="true"
-      mimeType="video/mp4"
-      startWithSAP="1">
-        <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
-        <SegmentTemplate timescale="1000" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
-          <SegmentTimeline><S t="0" d="4004" r="24" /><S d="1376" /></SegmentTimeline>
-      </SegmentTemplate>
-      <Representation id="video=1996000" bandwidth="1996000" width="1680" height="944" sar="472:357" codecs="avc1.640028" scanType="progressive"></Representation>
-      <Representation id="video=400000" bandwidth="400000" width="220" height="124" sar="248:187" codecs="avc1.42C014" scanType="progressive"></Representation>
-    </AdaptationSet>
-
 
     <!-- video avc1 + priority 50 + sign interpreted -->
     <AdaptationSet
@@ -607,6 +587,27 @@
       </SegmentTemplate>
       <Representation id="video=400000" bandwidth="400000" width="220" height="124" sar="248:187" codecs="avc1.42C014" scanType="progressive"></Representation>
       <Representation id="video=795000" bandwidth="795000" width="368" height="208" sar="520:391" codecs="avc1.42C014" scanType="progressive"></Representation>
+    </AdaptationSet>
+
+    <!-- video avc1 + priority 50 + main -->
+    <AdaptationSet
+      group="2"
+      contentType="video"
+      par="40:17"
+      minBandwidth="400000"
+      maxBandwidth="1996000"
+      maxWidth="2221"
+      maxHeight="944"
+      segmentAlignment="true"
+      selectionPriority="50"
+      mimeType="video/mp4"
+      startWithSAP="1">
+        <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+        <SegmentTemplate timescale="1000" initialization="ateam-$RepresentationID$.dash" media="ateam-$RepresentationID$-$Time$.dash">
+          <SegmentTimeline><S t="0" d="4004" r="24" /><S d="1376" /></SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="video=1996000" bandwidth="1996000" width="1680" height="944" sar="472:357" codecs="avc1.640028" scanType="progressive"></Representation>
+      <Representation id="video=400000" bandwidth="400000" width="220" height="124" sar="248:187" codecs="avc1.42C014" scanType="progressive"></Representation>
     </AdaptationSet>
 
 
