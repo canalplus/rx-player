@@ -151,74 +151,6 @@ const { isPageActive,
         onTextTrackChanges$,
         videoWidth$ } = events;
 
-/** Payload emitted with a `positionUpdate` event. */
-interface IPositionUpdateItem {
-  /** current position the player is in, in seconds. */
-  position : number;
-  /** Last position set for the current media currently, in seconds. */
-  duration : number;
-  /** Playback rate (i.e. speed) at which the current media is played. */
-  playbackRate : number;
-  /** Amount of buffer available for now in front of the current position, in seconds. */
-  bufferGap : number;
-  /** Current maximum seekable position. */
-  maximumBufferTime? : number | undefined;
-  wallClockTime? : number | undefined;
-  /**
-   * Only for live contents. Difference between the "live edge" and the current
-   * position, in seconds.
-   */
-  liveGap? : number | undefined;
-}
-
-/** Payload emitted with a `bitrateEstimationChange` event. */
-interface IBitrateEstimate {
-  /** The type of buffer this estimate was done for (e.g. "audio). */
-  type : IBufferType;
-  /** The calculated bitrate, in bits per seconds. */
-  bitrate : number | undefined;
-}
-
-export type IStreamEvent = { data: IStreamEventData;
-                             start: number;
-                             end: number;
-                             onExit?: () => void; } |
-                           { data: IStreamEventData;
-                             start: number; };
-
-/** Every events sent by the RxPlayer's public API. */
-interface IPublicAPIEvent {
-  playerStateChange : string;
-  positionUpdate : IPositionUpdateItem;
-  audioTrackChange : ITMAudioTrack | null;
-  textTrackChange : ITMTextTrack | null;
-  videoTrackChange : ITMVideoTrack | null;
-  audioBitrateChange : number;
-  videoBitrateChange : number;
-  imageTrackUpdate : { data: IBifThumbnail[] };
-  fullscreenChange : boolean;
-  bitrateEstimationChange : IBitrateEstimate;
-  volumeChange : number;
-  error : ICustomError | Error;
-  warning : ICustomError | Error;
-  nativeTextTracksChange : TextTrack[];
-  periodChange : Period;
-  availableAudioBitratesChange : number[];
-  availableVideoBitratesChange : number[];
-  availableAudioTracksChange : ITMAudioTrackListItem[];
-  availableTextTracksChange : ITMTextTrackListItem[];
-  availableVideoTracksChange : ITMVideoTrackListItem[];
-  decipherabilityUpdate : Array<{ manifest : Manifest;
-                                  period : Period;
-                                  adaptation : Adaptation;
-                                  representation : Representation; }>;
-  seeking : null;
-  seeked : null;
-  streamEvent : IStreamEvent;
-  streamEventSkip : IStreamEvent;
-  inbandEvents : IInbandEvent[];
-}
-
 /**
  * @class Player
  * @extends EventEmitter
@@ -2993,6 +2925,74 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 }
 Player.version = /* PLAYER_VERSION */"3.26.2";
+
+/** Payload emitted with a `positionUpdate` event. */
+export interface IPositionUpdateItem {
+  /** current position the player is in, in seconds. */
+  position : number;
+  /** Last position set for the current media currently, in seconds. */
+  duration : number;
+  /** Playback rate (i.e. speed) at which the current media is played. */
+  playbackRate : number;
+  /** Amount of buffer available for now in front of the current position, in seconds. */
+  bufferGap : number;
+  /** Current maximum seekable position. */
+  maximumBufferTime? : number | undefined;
+  wallClockTime? : number | undefined;
+  /**
+   * Only for live contents. Difference between the "live edge" and the current
+   * position, in seconds.
+   */
+  liveGap? : number | undefined;
+}
+
+/** Payload emitted with a `bitrateEstimationChange` event. */
+export interface IBitrateEstimate {
+  /** The type of buffer this estimate was done for (e.g. "audio). */
+  type : IBufferType;
+  /** The calculated bitrate, in bits per seconds. */
+  bitrate : number | undefined;
+}
+
+export type IStreamEvent = { data: IStreamEventData;
+                             start: number;
+                             end: number;
+                             onExit?: () => void; } |
+                           { data: IStreamEventData;
+                             start: number; };
+
+/** Every events sent by the RxPlayer's public API. */
+interface IPublicAPIEvent {
+  playerStateChange : string;
+  positionUpdate : IPositionUpdateItem;
+  audioTrackChange : ITMAudioTrack | null;
+  textTrackChange : ITMTextTrack | null;
+  videoTrackChange : ITMVideoTrack | null;
+  audioBitrateChange : number;
+  videoBitrateChange : number;
+  imageTrackUpdate : { data: IBifThumbnail[] };
+  fullscreenChange : boolean;
+  bitrateEstimationChange : IBitrateEstimate;
+  volumeChange : number;
+  error : ICustomError | Error;
+  warning : ICustomError | Error;
+  nativeTextTracksChange : TextTrack[];
+  periodChange : Period;
+  availableAudioBitratesChange : number[];
+  availableVideoBitratesChange : number[];
+  availableAudioTracksChange : ITMAudioTrackListItem[];
+  availableTextTracksChange : ITMTextTrackListItem[];
+  availableVideoTracksChange : ITMVideoTrackListItem[];
+  decipherabilityUpdate : Array<{ manifest : Manifest;
+                                  period : Period;
+                                  adaptation : Adaptation;
+                                  representation : Representation; }>;
+  seeking : null;
+  seeked : null;
+  streamEvent : IStreamEvent;
+  streamEventSkip : IStreamEvent;
+  inbandEvents : IInbandEvent[];
+}
 
 export default Player;
 export { IStreamEventData };
