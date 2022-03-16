@@ -956,28 +956,26 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const playerState$ = observableConcat(
       observableOf(PLAYER_STATES.LOADING), // Begin with LOADING
 
-      // LOADED as soon as the first "loaded" event is sent
-      loaded$.pipe(take(1), map(() => PLAYER_STATES.LOADED)),
-
-      observableMerge(
-        loadedStateUpdates$
-          .pipe(
-            // From the first reload onward, we enter another dynamic (below)
+      loaded$.pipe(switchMap((_, i) => {
+        const isFirstLoad = i === 0;
+        return observableMerge(
+          // Purposely subscribed first so a RELOADING triggered synchronously
+          // after a LOADED state is catched.
+          reloading$.pipe(map(() => PLAYER_STATES.RELOADING)),
+          // Only switch to LOADED state for the first (i.e. non-RELOADING) load
+          isFirstLoad ? observableOf(PLAYER_STATES.LOADED) :
+                        EMPTY,
+          // Purposely put last so any other state change happens after we've
+          // already switched to LOADED
+          loadedStateUpdates$.pipe(
             takeUntil(reloading$),
-            skipWhile(state => state === PLAYER_STATES.PAUSED)
-          ),
-
-        // when reloading
-        reloading$.pipe(
-          switchMap(() =>
-            loaded$.pipe(
-              take(1), // wait for the next loaded event
-              mergeMap(() => loadedStateUpdates$), // to update the state as usual
-              startWith(PLAYER_STATES.RELOADING) // Starts with "RELOADING" state
-            )
+            // For the first load, we prefer staying at the LOADED state over
+            // PAUSED when autoPlay is disabled.
+            // For consecutive loads however, there's no LOADED state.
+            skipWhile(state => isFirstLoad && state === PLAYER_STATES.PAUSED)
           )
-        )
-      )
+        );
+      }))
     ).pipe(distinctUntilChanged());
 
     let playbackSubscription : Subscription|undefined;
