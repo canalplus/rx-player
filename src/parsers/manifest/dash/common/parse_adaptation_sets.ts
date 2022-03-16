@@ -15,14 +15,18 @@
  */
 
 import log from "../../../../log";
-import { Period } from "../../../../manifest";
+import {
+  IAdaptationType,
+  Period,
+  SUPPORTED_ADAPTATIONS_TYPE,
+} from "../../../../manifest";
 import arrayFind from "../../../../utils/array_find";
+import arrayFindIndex from "../../../../utils/array_find_index";
 import arrayIncludes from "../../../../utils/array_includes";
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
 import {
   IParsedAdaptation,
   IParsedAdaptations,
-  IParsedAdaptationType,
 } from "../../types";
 import {
   IAdaptationSetIntermediateRepresentation,
@@ -235,30 +239,31 @@ export default function parseAdaptationSets(
   adaptationsIR : IAdaptationSetIntermediateRepresentation[],
   context : IAdaptationSetContext
 ): IParsedAdaptations {
-  const parsedAdaptations : IParsedAdaptations = {};
+  const parsedAdaptations : Record<
+    IAdaptationType,
+    Array<[ IParsedAdaptation,
+            IAdaptationSetOrderingData ]>
+  > = { video: [],
+        audio: [],
+        text: [],
+        image: [] };
   const trickModeAdaptations: Array<{ adaptation: IParsedAdaptation;
                                       trickModeAttachedAdaptationIds: string[]; }> = [];
   const adaptationSwitchingInfos : IAdaptationSwitchingInfos = {};
+
   const parsedAdaptationsIDs : string[] = [];
 
   /**
-   * Index of the last parsed AdaptationSet with a Role set as "main" in
-   * `parsedAdaptations` for a given type.
-   * Not defined for a type with no main Adaptation inside.
-   * This is used to put main AdaptationSet first in the resulting array of
-   * Adaptation while still preserving the MPD order among them.
+   * Index of the last parsed Video AdaptationSet with a Role set as "main" in
+   * `parsedAdaptations.video`.
+   * `-1` if not yet encountered.
+   * Used as we merge all main video AdaptationSet due to a comprehension of the
+   * DASH-IF IOP.
    */
-  const lastMainAdaptationIndex : Partial<Record<IParsedAdaptationType, number>> = {};
+  let lastMainVideoAdapIdx = -1;
 
-  // first sort AdaptationSets by absolute priority.
-  adaptationsIR.sort((a, b) => {
-    /* As of DASH-IF 4.3, `1` is the default value. */
-    const priority1 = a.attributes.selectionPriority ?? 1;
-    const priority2 = b.attributes.selectionPriority ?? 1;
-    return priority2 - priority1;
-  });
-
-  for (const adaptation of adaptationsIR) {
+  for (let adaptationIdx = 0; adaptationIdx < adaptationsIR.length; adaptationIdx++) {
+    const adaptation = adaptationsIR[adaptationIdx];
     const adaptationChildren = adaptation.children;
     const { essentialProperties,
             roles } = adaptationChildren;
@@ -291,6 +296,7 @@ export default function parseAdaptationSets(
       continue;
     }
 
+    const priority = adaptation.attributes.selectionPriority ?? 1;
     const originalID = adaptation.attributes.id;
     let newID : string;
     const adaptationSetSwitchingIDs = getAdaptationSetSwitchingIDs(adaptation);
@@ -334,14 +340,11 @@ export default function parseAdaptationSets(
 
     if (type === "video" &&
         isMainAdaptation &&
-        parsedAdaptations.video !== undefined &&
-        parsedAdaptations.video.length > 0 &&
-        lastMainAdaptationIndex.video !== undefined &&
+        lastMainVideoAdapIdx >= 0 &&
+        parsedAdaptations.video.length > lastMainVideoAdapIdx &&
         !isTrickModeTrack)
     {
-      // Add to the already existing main video adaptation
-      // TODO remove that ugly custom logic?
-      const videoMainAdaptation = parsedAdaptations.video[lastMainAdaptationIndex.video];
+      const videoMainAdaptation = parsedAdaptations.video[lastMainVideoAdapIdx][0];
       reprCtxt.unsafelyBaseOnPreviousAdaptation = context
         .unsafelyBaseOnPreviousPeriod?.getAdaptation(videoMainAdaptation.id) ?? null;
       const representations = parseRepresentations(representationsIR,
@@ -422,65 +425,56 @@ export default function parseAdaptationSets(
         parsedAdaptationSet.isSignInterpreted = true;
       }
 
-      const adaptationsOfTheSameType = parsedAdaptations[type];
       if (trickModeAttachedAdaptationIds !== undefined) {
         trickModeAdaptations.push({ adaptation: parsedAdaptationSet,
                                     trickModeAttachedAdaptationIds });
-      } else if (adaptationsOfTheSameType === undefined) {
-        parsedAdaptations[type] = [parsedAdaptationSet];
-        if (isMainAdaptation) {
-          lastMainAdaptationIndex[type] = 0;
-        }
       } else {
-        let mergedInto : IParsedAdaptation|null = null;
 
         // look if we have to merge this into another Adaptation
+        let mergedIntoIdx = -1;
         for (const id of adaptationSetSwitchingIDs) {
           const switchingInfos = adaptationSwitchingInfos[id];
-          if (switchingInfos != null &&
+          if (switchingInfos !== undefined &&
               switchingInfos.newID !== newID &&
               arrayIncludes(switchingInfos.adaptationSetSwitchingIDs, originalID))
           {
-            const adaptationToMergeInto = arrayFind(adaptationsOfTheSameType,
-                                                    (a) => a.id === id);
-            if (adaptationToMergeInto != null &&
-                adaptationToMergeInto.audioDescription ===
+            mergedIntoIdx = arrayFindIndex(parsedAdaptations[type],
+                                           (a) => a[0].id === id);
+            const mergedInto = parsedAdaptations[type][mergedIntoIdx];
+            if (mergedInto !== undefined &&
+                mergedInto[0].audioDescription ===
                   parsedAdaptationSet.audioDescription &&
-                adaptationToMergeInto.closedCaption ===
+                mergedInto[0].closedCaption ===
                   parsedAdaptationSet.closedCaption &&
-                adaptationToMergeInto.language === parsedAdaptationSet.language)
+                mergedInto[0].language === parsedAdaptationSet.language)
             {
               log.info("DASH Parser: merging \"switchable\" AdaptationSets",
                        originalID, id);
-              adaptationToMergeInto.representations
-                .push(...parsedAdaptationSet.representations);
-              mergedInto = adaptationToMergeInto;
+              mergedInto[0].representations.push(...parsedAdaptationSet.representations);
+              if (type === "video" &&
+                  isMainAdaptation &&
+                  !mergedInto[1].isMainAdaptation)
+              {
+                lastMainVideoAdapIdx = Math.max(lastMainVideoAdapIdx, mergedIntoIdx);
+              }
+              mergedInto[1] = {
+                priority: Math.max(priority, mergedInto[1].priority),
+                isMainAdaptation: isMainAdaptation ||
+                                  mergedInto[1].isMainAdaptation,
+                indexInMpd: Math.min(adaptationIdx, mergedInto[1].indexInMpd),
+              };
             }
           }
         }
 
-        if (isMainAdaptation) {
-          const oldLastMainIdx = lastMainAdaptationIndex[type];
-          const newLastMainIdx = oldLastMainIdx === undefined ? 0 :
-                                                                oldLastMainIdx + 1;
-          if (mergedInto === null) {
-            // put "main" Adaptation after all other Main Adaptations
-            adaptationsOfTheSameType.splice(newLastMainIdx, 0, parsedAdaptationSet);
-            lastMainAdaptationIndex[type] = newLastMainIdx;
-          } else {
-            const indexOf = adaptationsOfTheSameType.indexOf(mergedInto);
-            if (indexOf < 0) { // Weird, not found
-              adaptationsOfTheSameType.splice(newLastMainIdx, 0, parsedAdaptationSet);
-              lastMainAdaptationIndex[type] = newLastMainIdx;
-            } else if (oldLastMainIdx === undefined || indexOf > oldLastMainIdx) {
-              // Found but was not main
-              adaptationsOfTheSameType.splice(indexOf, 1);
-              adaptationsOfTheSameType.splice(newLastMainIdx, 0, mergedInto);
-              lastMainAdaptationIndex[type] = newLastMainIdx;
-            }
+        if (mergedIntoIdx < 0) {
+          parsedAdaptations[type].push([ parsedAdaptationSet,
+                                         { priority,
+                                           isMainAdaptation,
+                                           indexInMpd: adaptationIdx }]);
+          if (type === "video" && isMainAdaptation) {
+            lastMainVideoAdapIdx = parsedAdaptations.video.length - 1;
           }
-        } else if (mergedInto === null) {
-          adaptationsOfTheSameType.push(parsedAdaptationSet);
         }
       }
     }
@@ -490,8 +484,59 @@ export default function parseAdaptationSets(
                                                adaptationSetSwitchingIDs };
     }
   }
-  attachTrickModeTrack(parsedAdaptations, trickModeAdaptations);
-  return parsedAdaptations;
+
+  const adaptationsPerType = SUPPORTED_ADAPTATIONS_TYPE
+    .reduce((acc : IParsedAdaptations, adaptationType : IAdaptationType) => {
+      const adaptationsParsedForType = parsedAdaptations[adaptationType];
+      if (adaptationsParsedForType.length > 0) {
+        adaptationsParsedForType.sort(compareAdaptations);
+        acc[adaptationType] = adaptationsParsedForType
+          .map(([parsedAdaptation]) => parsedAdaptation);
+      }
+      return acc;
+    }, {});
+  parsedAdaptations.video.sort(compareAdaptations);
+  attachTrickModeTrack(adaptationsPerType, trickModeAdaptations);
+  return adaptationsPerType;
+}
+
+/** Metadata allowing to order AdaptationSets between one another. */
+interface IAdaptationSetOrderingData {
+  /**
+   * If `true`, this AdaptationSet is considered as a "main" one (e.g. it had a
+   * Role set to "main").
+   */
+  isMainAdaptation : boolean;
+  /**
+   * Set to the `selectionPriority` attribute of the corresponding AdaptationSet
+   * or to `1` by default.
+   */
+  priority : number;
+  /** Index of this AdaptationSet in the original MPD, starting from `0`. */
+  indexInMpd : number;
+}
+
+/**
+ * Compare groups of parsed AdaptationSet, alongside some ordering metadata,
+ * allowing to easily sort them through JavaScript's `Array.prototype.sort`
+ * method.
+ * @param {Array.<Object>} a
+ * @param {Array.<Object>} b
+ * @returns {number}
+ */
+function compareAdaptations(
+  a : [IParsedAdaptation, IAdaptationSetOrderingData],
+  b : [IParsedAdaptation, IAdaptationSetOrderingData]
+) : number {
+  const priorityDiff = b[1].priority - a[1].priority;
+  if (priorityDiff !== 0) {
+    return priorityDiff;
+  }
+  if (a[1].isMainAdaptation !== b[1].isMainAdaptation) {
+    return a[1].isMainAdaptation ? -1 :
+      1;
+  }
+  return a[1].indexInMpd - b[1].indexInMpd;
 }
 
 /** Context needed when calling `parseAdaptationSets`. */
