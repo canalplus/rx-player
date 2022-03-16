@@ -24,12 +24,12 @@
             "displayName": "getMaxBufferAhead"
         },
         {
-            "path": "./getMaxVideoBufferSize.md",
-            "displayName": "getMaxVideoBufferSize"
-        },
-        {
             "path": "./setMaxVideoBufferSize.md",
             "displayName": "setMaxVideoBufferSize"
+        },
+        {
+            "path": "./getMaxVideoBufferSize.md",
+            "displayName": "getMaxVideoBufferSize"
         }
     ]
 }

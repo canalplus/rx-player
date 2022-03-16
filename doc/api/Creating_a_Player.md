@@ -299,11 +299,17 @@ _defaults_: `Infinity`
 
 Set the maximum size of video the buffer in the memory, in kilobytes (kb).
 Once this value is reached, the player won't try to download new video
-segments anymore
+segments anymore. The limit is approximative as it's based on internal estimation. 
 
 <div class="warning">
 The internal checks of the RxPlayer is based on an estimation of what the RxPlayer think
 is currently buffered and an estimation of the size of the next segments. 
+</div>
+
+<div class="warning">
+In <i>DirectFile</i> mode (see <a
+href="../Loading_a_Content.md#transport">loadVideo options</a>),
+this method has no effect.
 </div>
 
 <div class="warning">
