@@ -17,10 +17,13 @@
 import PlaybackObserver from "./playback_observer";
 import Player from "./public_api";
 export {
+  IBitrateEstimate,
+  IPositionUpdateItem,
   IStreamEvent,
   IStreamEventData,
 } from "./public_api";
 export { PlaybackObserver };
+export { IPlayerState } from "./get_player_state";
 export {
   IPlaybackObservation,
   IPlaybackObserverEventType,

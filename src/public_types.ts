@@ -45,6 +45,10 @@ export {
   ITextTrackPreference,
   IVideoTrackPreference,
 
+  IBitrateEstimate,
+  IPositionUpdateItem as IPositionUpdate,
+  IPlayerState,
+
   IStreamEvent,
   IStreamEventData,
 } from "./core/api";
