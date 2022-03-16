@@ -9,7 +9,7 @@ Once this value is reached, the player won't try to download new video
 segments anymore.
 
 This feature was designed with devices that have limited memory and trying to play very
-high bitrates tracks in minds. 
+high bitrates representations in minds. 
 
 However on some custom targets, or just to better control the memory footprint
 of the player, you might want to set this limit.
@@ -19,7 +19,7 @@ this job instead.
 
 <div class="warning">
 This option will have no effects if we didn't buffer at least <b>MIN_BUFFER_LENGTH</b> 
-<i>( defaults at 5sec )</i>
+<i>( defaults at 5sec )</i>.
 </div>
 
 <div class="warning">
