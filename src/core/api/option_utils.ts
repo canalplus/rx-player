@@ -43,7 +43,6 @@ import {
   IVideoTrackPreference,
 } from "./track_choice_manager";
 
-
 export { IKeySystemOption };
 
 /** Value of the `serverSyncInfos` transport option. */
@@ -178,6 +177,7 @@ type IParsedStartAtOption = { position : number } |
 export interface IConstructorOptions { maxBufferAhead? : number;
                                        maxBufferBehind? : number;
                                        wantedBufferAhead? : number;
+                                       maxVideoBufferSize?: number;
 
                                        limitVideoWidth? : boolean;
                                        throttleWhenHidden? : boolean;
@@ -201,7 +201,7 @@ export interface IParsedConstructorOptions {
   maxBufferAhead : number;
   maxBufferBehind : number;
   wantedBufferAhead : number;
-
+  maxVideoBufferSize : number;
   limitVideoWidth : boolean;
   throttleWhenHidden : boolean;
   throttleVideoBitrateWhenHidden : boolean;
@@ -311,6 +311,7 @@ function parseConstructorOptions(
   let maxBufferAhead : number;
   let maxBufferBehind : number;
   let wantedBufferAhead : number;
+  let maxVideoBufferSize : number;
 
   let throttleWhenHidden : boolean;
   let throttleVideoBitrateWhenHidden : boolean;
@@ -333,6 +334,7 @@ function parseConstructorOptions(
           DEFAULT_MAX_BITRATES,
           DEFAULT_MAX_BUFFER_AHEAD,
           DEFAULT_MAX_BUFFER_BEHIND,
+          DEFAULT_MAX_VIDEO_BUFFER_SIZE,
           DEFAULT_STOP_AT_END,
           DEFAULT_THROTTLE_WHEN_HIDDEN,
           DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
@@ -366,6 +368,18 @@ function parseConstructorOptions(
       /* eslint-enable max-len */
     }
   }
+
+  if (isNullOrUndefined(options.maxVideoBufferSize)) {
+    maxVideoBufferSize = DEFAULT_MAX_VIDEO_BUFFER_SIZE;
+  } else {
+    maxVideoBufferSize = Number(options.maxVideoBufferSize);
+    if (isNaN(maxVideoBufferSize)) {
+      /* eslint-disable max-len */
+      throw new Error("Invalid maxVideoBufferSize parameter. Should be a number.");
+      /* eslint-enable max-len */
+    }
+  }
+
 
   const limitVideoWidth = isNullOrUndefined(options.limitVideoWidth) ?
     DEFAULT_LIMIT_VIDEO_WIDTH :
@@ -508,6 +522,7 @@ function parseConstructorOptions(
            limitVideoWidth,
            videoElement,
            wantedBufferAhead,
+           maxVideoBufferSize,
            throttleWhenHidden,
            throttleVideoBitrateWhenHidden,
            preferredAudioTracks,

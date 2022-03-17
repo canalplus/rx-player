@@ -69,6 +69,7 @@ export default function pushMediaSegment<T>(
     const { chunkData,
             chunkInfos,
             chunkOffset,
+            chunkSize,
             appendWindow } = parsedSegment;
     const codec = content.representation.getMimeTypeString();
     const { APPEND_WINDOW_SECURITIES } = config.getCurrent();
@@ -101,6 +102,7 @@ export default function pushMediaSegment<T>(
     }
 
     const inventoryInfos = objectAssign({ segment,
+                                          chunkSize,
                                           start: estimatedStart,
                                           end: estimatedEnd },
                                         content);

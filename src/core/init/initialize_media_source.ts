@@ -91,6 +91,8 @@ export interface IInitializeArguments {
   bufferOptions : {
     /** Buffer "goal" at which we stop downloading new segments. */
     wantedBufferAhead : IReadOnlySharedReference<number>;
+    /** Buffer maximum size in kiloBytes at which we stop downloading */
+    maxVideoBufferSize :  IReadOnlySharedReference<number>;
     /** Max buffer size after the current position, in seconds (we GC further up). */
     maxBufferAhead : IReadOnlySharedReference<number>;
     /** Max buffer size before the current position, in seconds (we GC further down). */

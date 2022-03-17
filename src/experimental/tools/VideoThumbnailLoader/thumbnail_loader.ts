@@ -249,7 +249,8 @@ export default class VideoThumbnailLoader {
                   if (end === undefined) {
                     end = start + (segment.duration / segment.timescale);
                   }
-                  const inventoryInfos = objectAssign({ segment,
+                  const inventoryInfos = objectAssign({ chunkSize: data.chunkSize,
+                                                        segment,
                                                         start,
                                                         end }, contentInfos);
                   return pushData(inventoryInfos,

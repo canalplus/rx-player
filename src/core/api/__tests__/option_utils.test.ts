@@ -46,7 +46,6 @@ const normalizeTextTrackMock = normalizeTextTrack as
   jest.Mock<ReturnType<typeof normalizeTextTrack>>;
 const logWarnMock = log.warn as jest.Mock<ReturnType<typeof log.warn>>;
 
-
 describe("API - parseConstructorOptions", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -69,6 +68,7 @@ describe("API - parseConstructorOptions", () => {
     DEFAULT_MAX_BITRATES,
     DEFAULT_MAX_BUFFER_AHEAD,
     DEFAULT_MAX_BUFFER_BEHIND,
+    DEFAULT_MAX_VIDEO_BUFFER_SIZE,
     // DEFAULT_SHOW_NATIVE_SUBTITLE,
     // DEFAULT_TEXT_TRACK_MODE,
     DEFAULT_THROTTLE_WHEN_HIDDEN,
@@ -76,6 +76,7 @@ describe("API - parseConstructorOptions", () => {
     DEFAULT_WANTED_BUFFER_AHEAD,
   } = config.getCurrent();
   const defaultConstructorOptions = {
+    maxVideoBufferSize: DEFAULT_MAX_VIDEO_BUFFER_SIZE,
     maxBufferAhead: DEFAULT_MAX_BUFFER_AHEAD,
     maxBufferBehind: DEFAULT_MAX_BUFFER_BEHIND,
     wantedBufferAhead: DEFAULT_WANTED_BUFFER_AHEAD,

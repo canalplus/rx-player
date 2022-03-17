@@ -17,6 +17,7 @@ const defaultOptionsValues = {
   audioTrackSwitchingMode: "direct",
   onCodecSwitch: "continue",
   wantedBufferAhead: 30,
+  maxVideoBufferSize: Infinity,
   maxBufferAhead: Infinity,
   maxBufferBehind: Infinity,
 };

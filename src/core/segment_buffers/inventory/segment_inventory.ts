@@ -33,6 +33,20 @@ import { IChunkContext } from "./types";
 /** Information stored on a single chunk by the SegmentInventory. */
 export interface IBufferedChunk {
   /**
+   * Complete size of the pushed chunk, in bytes.
+   * Note that this does not always reflect the memory imprint of the segment in
+   * memory:
+   *
+   *   1. It's the size of the original container file. A browser receiving that
+   *      segment might then transform it under another form that may be more or
+   *      less voluminous.
+   *
+   *   2. It's the size of the full chunk. In some scenarios only a sub-part of
+   *      that chunk is actually considered (examples: when using append
+   *      windows, when another chunk overlap that one etc.).
+   */
+  chunkSize : number | undefined;
+  /**
    * Last inferred end in the media buffer this chunk ends at, in seconds.
    *
    * Depending on if contiguous chunks were around it during the first
@@ -109,6 +123,8 @@ export interface IInsertedChunkInfos {
   representation : Representation;
   /** The Segment that chunk is linked to. */
   segment : ISegment;
+  /** Estimated size of the full pushed chunk, in bytes. */
+  chunkSize : number | undefined;
   /**
    * Start time, in seconds, this chunk most probably begins from after being
    * pushed.
@@ -322,6 +338,7 @@ export default class SegmentInventory {
       adaptation,
       representation,
       segment,
+      chunkSize,
       start,
       end } : IInsertedChunkInfos
   ) : void {
@@ -338,6 +355,7 @@ export default class SegmentInventory {
 
     const inventory = this._inventory;
     const newSegment = { partiallyPushed: true,
+                         chunkSize,
                          splitted: false,
                          start,
                          end,
@@ -542,9 +560,16 @@ export default class SegmentInventory {
               //  prevSegment  : |---------|
               //  newSegment   :    |====|
               //  ===>         : |--|====|-|
-              log.debug("SI: Segment pushed is contained in a previous one",
-                        bufferType, start, end, segmentI.start, segmentI.end);
+              log.warn("SI: Segment pushed is contained in a previous one",
+                       bufferType, start, end, segmentI.start, segmentI.end);
               const nextSegment = { partiallyPushed: segmentI.partiallyPushed,
+                                    /**
+                                     * Note: this sadly means we're doing as if
+                                     * that chunk is present two times.
+                                     * Thankfully, this scenario should be
+                                     * fairly rare.
+                                     */
+                                    chunkSize: segmentI.chunkSize,
                                     splitted: true,
                                     start: newSegment.end,
                                     end: segmentI.end,
@@ -692,10 +717,15 @@ export default class SegmentInventory {
         }
 
         const firstI = i;
+        let segmentSize = inventory[i].chunkSize;
         i += 1;
         while (i < inventory.length &&
                areSameContent(inventory[i].infos, content))
         {
+          const chunkSize = inventory[i].chunkSize;
+          if (segmentSize !== undefined && chunkSize !== undefined) {
+            segmentSize += chunkSize;
+          }
           i++;
         }
 
@@ -708,6 +738,7 @@ export default class SegmentInventory {
           i -= length;
         }
         this._inventory[firstI].partiallyPushed = false;
+        this._inventory[firstI].chunkSize = segmentSize;
         this._inventory[firstI].end = lastEnd;
         this._inventory[firstI].bufferedEnd = lastBufferedEnd;
         this._inventory[firstI].splitted = splitted;

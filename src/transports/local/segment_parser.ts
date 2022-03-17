@@ -44,11 +44,13 @@ export default function segmentParser(
     if (segment.isInit) {
       return { segmentType: "init",
                initializationData: null,
+               initializationDataSize: 0,
                protectionDataUpdate: false,
                initTimescale: undefined };
     }
     return { segmentType: "media",
              chunkData: null,
+             chunkSize: 0,
              chunkInfos: null,
              chunkOffset: 0,
              protectionDataUpdate: false,
@@ -74,6 +76,7 @@ export default function segmentParser(
                                                  getMDHDTimescale(chunkData);
     return { segmentType: "init",
              initializationData: chunkData,
+             initializationDataSize: 0,
              initTimescale: timescale ?? undefined,
              protectionDataUpdate };
   }
@@ -86,6 +89,7 @@ export default function segmentParser(
   const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
   return { segmentType: "media",
            chunkData,
+           chunkSize: chunkData.length,
            chunkInfos,
            chunkOffset,
            protectionDataUpdate: false,
