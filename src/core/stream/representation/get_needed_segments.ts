@@ -123,7 +123,7 @@ export default function getNeededSegments({
         }
         log.debug("Stream: skipping segment gc-ed at the start", currentSeg);
       }
-      if (doesEndSeemGarbageCollected(currentSeg, nextSeg, neededRange.start)) {
+      if (doesEndSeemGarbageCollected(currentSeg, nextSeg, neededRange.end)) {
         lazySegmentHistory = lazySegmentHistory ?? getBufferedHistory(currentSeg.infos);
         if (shouldReloadSegmentGCedAtTheEnd(lazySegmentHistory,
                                             currentSeg.bufferedEnd)) {

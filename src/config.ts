@@ -31,5 +31,3 @@ class ConfigHandler {
 }
 const configHandler = new ConfigHandler();
 export default configHandler;
-
-
