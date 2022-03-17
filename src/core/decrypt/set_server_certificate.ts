@@ -15,10 +15,12 @@
  */
 
 import { ICustomMediaKeys } from "../../compat";
-import { EncryptedMediaError } from "../../errors";
+import {
+  EncryptedMediaError,
+  ICustomError,
+  isKnownError,
+} from "../../errors";
 import log from "../../log";
-import PPromise from "../../utils/promise";
-import { IEMEWarningEvent } from "./types";
 import ServerCertificateStore from "./utils/server_certificate_store";
 
 /**
@@ -33,14 +35,17 @@ import ServerCertificateStore from "./utils/server_certificate_store";
  *
  * @param {MediaKeys} mediaKeys
  * @param {ArrayBuffer} serverCertificate
- * @returns {Promise.<boolean>}
+ * @returns {Promise}
  */
 async function setServerCertificate(
   mediaKeys : ICustomMediaKeys|MediaKeys,
   serverCertificate : BufferSource
-) : Promise<boolean> {
+) : Promise<unknown> {
   try {
     const res = await (mediaKeys as MediaKeys).setServerCertificate(serverCertificate);
+    // Note: Even if `setServerCertificate` technically should return a
+    // Promise.<boolean>, this is not technically always true.
+    // Thus we prefer to return unknown here.
     return res;
   } catch (error) {
     log.warn("DRM: mediaKeys.setServerCertificate returned an error", error);
@@ -57,19 +62,21 @@ async function setServerCertificate(
  * @param {ArrayBuffer} serverCertificate
  * @returns {Observable}
  */
-export default function trySettingServerCertificate(
+export default async function trySettingServerCertificate(
   mediaKeys : ICustomMediaKeys|MediaKeys,
   serverCertificate : BufferSource
-) : Promise<boolean | IEMEWarningEvent> {
+) : Promise<{ type: "success"; value: unknown } |
+            { type: "already-has-one" } |
+            { type: "method-not-implemented" } |
+            { type: "error"; value: ICustomError }> {
+  if (ServerCertificateStore.hasOne(mediaKeys) === true) {
+    log.info("DRM: The MediaKeys already has a server certificate, skipping...");
+    return { type: "already-has-one" };
+  }
   if (typeof mediaKeys.setServerCertificate !== "function") {
     log.warn("DRM: Could not set the server certificate." +
              " mediaKeys.setServerCertificate is not a function");
-    return PPromise.resolve(false);
-  }
-
-  if (ServerCertificateStore.hasOne(mediaKeys) === true) {
-    log.info("DRM: The MediaKeys already has a server certificate, skipping...");
-    return PPromise.resolve(true);
+    return { type: "method-not-implemented" };
   }
 
   log.info("DRM: Setting server certificate on the MediaKeys");
@@ -78,18 +85,17 @@ export default function trySettingServerCertificate(
   // know if we attached the server certificate or not.
   // Calling `prepare` allow to invalidate temporarily that status.
   ServerCertificateStore.prepare(mediaKeys);
-  return setServerCertificate(mediaKeys, serverCertificate).then(
-    (res) => {
-      ServerCertificateStore.set(mediaKeys, serverCertificate);
-      return res;
-    },
-    (error) => {
-      return {
-        type: "warning" as const,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        value: error,
-      };
-    });
+  try {
+    const result = await setServerCertificate(mediaKeys, serverCertificate);
+    ServerCertificateStore.set(mediaKeys, serverCertificate);
+    return { type: "success", value: result };
+  } catch (error) {
+    const formattedErr = isKnownError(error) ?
+      error :
+      new EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR",
+                              "Unknown error when setting the server certificate.");
+    return { type: "error" as const, value: formattedErr };
+  }
 }
 
 export {

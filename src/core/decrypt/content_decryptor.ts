@@ -273,7 +273,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
 
         if (!isNullOrUndefined(serverCertificate)) {
           const resSsc = await setServerCertificate(mediaKeys, serverCertificate);
-          if (typeof resSsc !== "boolean") {
+          if (resSsc.type === "error") {
             this.trigger("warning", resSsc.value);
           }
         }
