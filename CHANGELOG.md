@@ -1,5 +1,37 @@
 # Changelog
 
+## v3.27.0 (XXXX-XX-XX)
+
+### Features
+
+  - Add a `maxVideoBufferSize` constructor option and `{get,set}MaxVideoBufferSize` methods to limit the size of loaded video data buffered at the same time [#1041, #1054]
+  - DRM: Add a `"periods"` mode to the `keySystems[].singleLicensePer` `loadVideo` option, allowing to obtain decryption license for groups of Periods allowing a compromise between optimization, features and compatibility [#1028, #1061]
+
+### Bug fixes
+
+  - subtitles: Fix rare issue where subtitles could be skipped due to a rounding error [#1064]
+  - DASH: fix issue where the wrong segments would be requested on $Number$-based MPD with a SegmentTimeline older than the `timeShiftBufferDepth` [#1052, #1060]
+  - directfile: disable all audio tracks before enabling one to work-around Safari issue on MacOS Monterey [#1067]
+  - avoid performing a small seek when changing the audio track [#1080]
+  - api: allow switching to RELOADING state synchronously after LOADED [#1083]
+  - Safari Mobile: Improve decryption support on Safari mobile by relying on the vendored `WebKitMediaKeys` API [#1072]
+  - avoid unnecessary warning logs when loading some initialization segments [#1049]
+  - TypeScript: Add forgotten TypeScript types in the exposed segment and manifest loader APIs [#1057]
+  - DRM: Avoid decryption issues when a license is persisted in a `singleLicensePer` `"init-data"` mode but loaded in a `"content"` mode [#1031, #1042]
+
+### Other improvements
+
+  - DASH: always consider that the non-last Period is finished when it contains SegmentTimeline elements [#1047]
+  - add better buffer cleaning logic on a browser's `QuotaExceededError` to better handle memory limitations [#1065]
+  - DASH: Prioritize selectionPriority attribute over a "main" Role when ordering AdaptationSets [#1082]
+  - directfile/Safari: use the `getStartDate` method in `getWallClockTime` when available to obtain true offseted times when playing HLS contents on Safari [#1055]
+  - avoid mistakenly relying on pinkie's Promise implementation when a native one is already available [#1058]
+  - DRM: Improve DRM Session caches performance when `singleLicensePer` is set to `"content"`
+  - TypeScript: Add IBitrateEstimate, IPositionUpdate and IPlayerState types to the exported types [#1084]
+  - tests: add performance tests, to better catch and avoid performance regressions [#1053, #1062]
+  - DRM: Refactor DRM logic for better maintainability. DRM-linked logs are now prefixed by `DRM:` instead of `EME:` like previously [#1042]
+
+
 ## v3.26.2 (2022-01-11)
 
 ### Bug fixes
