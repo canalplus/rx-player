@@ -18,8 +18,7 @@ You can set it to `Infinity` to remove this limit and just let the browser do
 this job instead.
 
 <div class="warning">
-This option will have no effects if we didn't buffer at least <b>MIN_BUFFER_LENGTH</b> 
-<i>( defaults at 5sec )</i>.
+The limit set by `setMaxVideoBufferSize` is approximative, and bypassed in edge case scenarios if we dont have enough buffer because of this limitation.
 </div>
 
 <div class="warning">
