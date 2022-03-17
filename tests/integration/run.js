@@ -15,7 +15,6 @@ if (argv.includes("-h") || argv.includes("--help")) {
   process.exit(0);
 }
 
-const coverage = !!argv.includes("--coverage");
 const singleRun = !argv.includes("--watch");
 
 const browsers = [];
@@ -35,7 +34,6 @@ if (browsers.length === 0) {
 }
 
 const webpackConfig = generateTestWebpackConfig({
-  coverage,
   contentServerInfo: { url: "127.0.0.1", port: CONTENT_SERVER_PORT },
 });
 
@@ -68,7 +66,6 @@ const karmaConf = {
   frameworks: ["webpack", "mocha"],
   plugins: [
     "karma-chrome-launcher",
-    "karma-coverage-istanbul-reporter",
     "karma-firefox-launcher",
     "karma-mocha",
     "karma-webpack"
@@ -89,18 +86,6 @@ const karmaConf = {
     mocha: { reporter: "html" },
   },
 };
-
-if (coverage) {
-  karmaConf.reporters.push("coverage-istanbul");
-  karmaConf.coverageIstanbulReporter = {
-    reports: [ "html", "text-summary" ],
-    dir: path.join(__dirname, "coverage"),
-    fixWebpackSourcePaths: true,
-    "report-config": {
-      html: { outdir: "html" },
-    },
-  };
-}
 
 const testContentServer = TestContentServer(CONTENT_SERVER_PORT);
 parseConfig(
@@ -128,7 +113,6 @@ Options:
   --bchrome     Launch tests on Chrome
   --bchromehl   Launch tests on headless Chrome
   --bfirefoxhl  Launch tests on headless Firefox
-  --coverage    Add coverage report
   --watch       Re-run tests on modifications`,
   /* eslint-enable indent */
   );
