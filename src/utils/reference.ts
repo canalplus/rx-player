@@ -19,6 +19,7 @@ import {
   Subscriber,
 } from "rxjs";
 import log from "../log";
+import { CancellationSignal } from "./task_canceller";
 
 /**
  * A value behind a shared reference, meaning that any update to its value from
@@ -62,6 +63,7 @@ export interface ISharedReference<T> {
 
   /** Update the value of this shared reference. */
   setValue(newVal : T) : void;
+  setValueIfChanged(newVal : T) : void;
 
   /**
    * Returns an Observable which synchronously emits the current value (unless
@@ -71,6 +73,25 @@ export interface ISharedReference<T> {
    * @returns {Observable}
    */
   asObservable(skipCurrentValue? : boolean) : Observable<T>;
+
+  /**
+   * Allows to register a callback to be called each time the value inside the
+   * reference is updated.
+   * @param {Function} cb - Callback to be called each time the reference is
+   * updated. Takes the new value im argument.
+   * @param {Object} [options]
+   * @param {Object} [options.clearSignal] - Allows to provide a
+   * CancellationSignal which will unregister the callback when it emits.
+   * @param {boolean} [options.emitCurrentValue] - If `true`, the callback will
+   * also be immediately called with the current value.
+   */
+  onUpdate(
+    cb : (val : T) => void,
+    options? : {
+      clearSignal?: CancellationSignal;
+      emitCurrentValue?: boolean;
+    },
+  ) : void;
 
   /**
    * Indicate that no new values will be emitted.
@@ -103,8 +124,23 @@ export interface ISharedReference<T> {
  * the code that some logic is not supposed to update the referenced value.
  */
 export interface IReadOnlySharedReference<T> {
+  /** Get the last value set on that reference. */
   getValue() : T;
+  /**
+   * Returns an Observable notifying this reference's value each time it is
+   * updated.
+   *
+   * Also emit its current value on subscription unless its argument is set to
+   * `true`.
+   */
   asObservable(skipCurrentValue? : boolean) : Observable<T>;
+  onUpdate(
+    cb : (val : T) => void,
+    options? : {
+      clearSignal?: CancellationSignal;
+      emitCurrentValue?: boolean;
+    },
+  ) : void;
 }
 
 /**
@@ -120,19 +156,23 @@ export function createSharedReference<T>(initialValue : T) : ISharedReference<T>
   let value = initialValue;
 
   /**
-   * List of currently subscribed Observables which listen to the referenced
+   * List of currently subscribed listeners which listen to the referenced
    * value's updates.
    *
-   * Contains two properties:
-   *   - `subscriber`: interface through which new value will be communicated.
-   *   - `hasBeenUnsubscribed`: becomes `true` when the Observable becomes
-   *     unsubscribed and thus when it is removed from the `subs` array.
+   * Contains three properties:
+   *   - `trigger`: Function which will be called with the new reference's value
+   *     once it changes
+   *   - `complete`: Allows to clean-up the listener, will be called once the
+   *     reference is finished.
+   *   - `hasBeenCleared`: becomes `true` when the Observable becomes
+   *     unsubscribed and thus when it is removed from the `cbs` array.
    *     Adding this property allows to detect when a previously-added
    *     Observable has since been unsubscribed e.g. as a side-effect during a
    *     function call.
    */
-  const subs : Array<{ subscriber : Subscriber<T>;
-                       hasBeenUnsubscribed : boolean; }> = [];
+  const cbs : Array<{ trigger : (a: T) => void;
+                      complete : () => void;
+                      hasBeenCleared : boolean; }> = [];
 
   let isFinished = false;
 
@@ -160,14 +200,14 @@ export function createSharedReference<T>(initialValue : T) : ISharedReference<T>
       }
       value = newVal;
 
-      if (subs.length === 0) {
+      if (cbs.length === 0) {
         return;
       }
-      const clonedSubs = subs.slice();
-      for (const subObj of clonedSubs) {
+      const clonedCbs = cbs.slice();
+      for (const cbObj of clonedCbs) {
         try {
-          if (!subObj.hasBeenUnsubscribed) {
-            subObj.subscriber.next(newVal);
+          if (!cbObj.hasBeenCleared) {
+            cbObj.trigger(newVal);
           }
         } catch (_) {
           /* nothing */
@@ -175,6 +215,11 @@ export function createSharedReference<T>(initialValue : T) : ISharedReference<T>
       }
     },
 
+    setValueIfChanged(newVal : T) : void {
+      if (newVal !== value) {
+        this.setValue(newVal);
+      }
+    },
 
     /**
      * Returns an Observable which synchronously emits the current value (unless
@@ -192,22 +237,70 @@ export function createSharedReference<T>(initialValue : T) : ISharedReference<T>
           obs.complete();
           return undefined;
         }
-        const subObj = { subscriber: obs,
-                         hasBeenUnsubscribed: false };
-        subs.push(subObj);
+        const cbObj = { trigger: obs.next.bind(obs),
+                        complete: obs.complete.bind(obs),
+                        hasBeenCleared: false };
+        cbs.push(cbObj);
         return () => {
           /**
            * Code in here can still be running while this is happening.
-           * Set `hasBeenUnsubscribed` to `true` to avoid still using the
+           * Set `hasBeenCleared` to `true` to avoid still using the
            * `subscriber` from this object.
            */
-          subObj.hasBeenUnsubscribed = true;
-          const indexOf = subs.indexOf(subObj);
+          cbObj.hasBeenCleared = true;
+          const indexOf = cbs.indexOf(cbObj);
           if (indexOf >= 0) {
-            subs.splice(indexOf, 1);
+            cbs.splice(indexOf, 1);
           }
         };
       });
+    },
+
+    /**
+     * Allows to register a callback to be called each time the value inside the
+     * reference is updated.
+     * @param {Function} cb - Callback to be called each time the reference is
+     * updated. Takes the new value im argument.
+     * @param {Object} [options]
+     * @param {Object} [options.clearSignal] - Allows to provide a
+     * CancellationSignal which will unregister the callback when it emits.
+     * @param {boolean} [options.emitCurrentValue] - If `true`, the callback will
+     * also be immediately called with the current value.
+     */
+    onUpdate(
+      cb : (val : T) => void,
+      options? : {
+        clearSignal?: CancellationSignal;
+        emitCurrentValue?: boolean;
+      }
+    ) : void {
+      if (options?.emitCurrentValue === true) {
+        cb(value);
+      }
+      if (isFinished) {
+        return ;
+      }
+      const cbObj = { trigger: cb,
+                      complete: unlisten,
+                      hasBeenCleared: false };
+      cbs.push(cbObj);
+      if (options?.clearSignal === undefined) {
+        return;
+      }
+      options.clearSignal.register(unlisten);
+
+      function unlisten() : void {
+        /**
+         * Code in here can still be running while this is happening.
+         * Set `hasBeenCleared` to `true` to avoid still using the
+         * `subscriber` from this object.
+         */
+        cbObj.hasBeenCleared = true;
+        const indexOf = cbs.indexOf(cbObj);
+        if (indexOf >= 0) {
+          cbs.splice(indexOf, 1);
+        }
+      }
     },
 
     /**
@@ -217,11 +310,11 @@ export function createSharedReference<T>(initialValue : T) : ISharedReference<T>
      */
     finish() : void {
       isFinished = true;
-      const clonedSubs = subs.slice();
-      for (const subObj of clonedSubs) {
+      const clonedCbs = cbs.slice();
+      for (const cbObj of clonedCbs) {
         try {
-          if (!subObj.hasBeenUnsubscribed) {
-            subObj.subscriber.complete();
+          if (!cbObj.hasBeenCleared) {
+            cbObj.complete();
           }
         } catch (_) {
           /* nothing */

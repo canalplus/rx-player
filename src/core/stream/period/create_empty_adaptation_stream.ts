@@ -48,7 +48,8 @@ export default function createEmptyAdaptationStream(
   let hasFinishedLoading = false;
   const wantedBufferAhead$ = wantedBufferAhead.asObservable();
   const observation$ = playbackObserver.observe(true);
-  return observableCombineLatest([observation$, wantedBufferAhead$]).pipe(
+  return observableCombineLatest([observation$,
+                                  wantedBufferAhead$]).pipe(
     mergeMap(([observation, wba]) => {
       const { position } = observation;
       if (period.end !== undefined && position + wba >= period.end) {

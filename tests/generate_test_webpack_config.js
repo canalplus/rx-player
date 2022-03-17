@@ -11,16 +11,12 @@ const Webpack = require("webpack");
  * @param {string} args.contentServerInfo.url - URL of the content server.
  * @param {number} args.contentServerInfo.port - Port that should be used when
  * requesting the content server.
- * @param {boolean} [coverage] - If set to `true`, supplementary steps will be
- * taken to allow code coverage reports.
  * @returns {Object} - The Webpack config
  */
 module.exports = function generateTestWebpackConfig({
-  contentServerInfo,
-  coverage,
+  contentServerInfo
 }) {
-  const coverageIsWanted = !!coverage;
-  const config = {
+  return {
     mode: "development",
     resolve: {
       extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
@@ -83,32 +79,4 @@ module.exports = function generateTestWebpackConfig({
       }),
     ],
   };
-
-  if (coverageIsWanted) {
-    config.devtool = "inline-source-map";
-    config.module.rules = [
-      {
-        test: /\.tsx?$/,
-        use: [{
-          loader: "ts-loader",
-          options: {
-            compilerOptions: {
-              // needed for istanbul accuracy
-              sourceMap: true,
-            },
-          },
-        }],
-      },
-      {
-        test: /\.ts$/,
-        exclude: [/__tests__/],
-        enforce: "post",
-        use: {
-          loader: "istanbul-instrumenter-loader",
-          options: { esModules: true },
-        },
-      },
-    ];
-  }
-  return config;
-}
+};

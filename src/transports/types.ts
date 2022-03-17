@@ -722,6 +722,17 @@ export interface ISegmentParserParsedInitChunk<DataType> {
    * protection initialization data to have been encountered.
    */
   protectionDataUpdate : boolean;
+  /**
+   * Size in bytes of `initializationData`.
+   * `undefined` if unknown.
+   *
+   * Note: In some cases, such as when `initializationData` is under a format
+   * whose size is difficult to estimate (e.g. a JavaScript object), the
+   * `initializationDataSize` may either be set to `undefined` or, if available,
+   * to a sensible estimate (e.g. when a JavaScript object wraps large binary
+   * data, `initializationDataSize` may refer to that binary data only).
+   */
+  initializationDataSize : number | undefined;
 }
 
 /**
@@ -740,6 +751,17 @@ export interface ISegmentParserParsedMediaChunk<DataType> {
    * `null` if unknown.
    */
   chunkInfos : IChunkTimeInfo | null;
+  /**
+   * Size in bytes of `chunkData`.
+   * `undefined` if unknown.
+   *
+   * Note: In some cases, such as when `chunkData` is under a format whose size
+   * is difficult to estimate (e.g. a JavaScript object), the `chunkSize` may
+   * either be set to `undefined` or, if available, to a sensible estimate (e.g.
+   * when a JavaScript object wraps large binary data, `chunkSize` may refer to
+   * that binary data only).
+   */
+  chunkSize : number | undefined;
   /**
    * time offset, in seconds, to add to the absolute timed data defined in
    * `chunkData` to obtain the "real" wanted effective time.

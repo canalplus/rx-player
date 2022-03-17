@@ -78,6 +78,7 @@ export function imageParser(
   if (content.segment.isInit) { // image init segment has no use
     return { segmentType: "init",
              initializationData: null,
+             initializationDataSize: 0,
              protectionDataUpdate: false,
              initTimescale: undefined };
   }
@@ -92,6 +93,7 @@ export function imageParser(
   if (data === null || features.imageParser === null) {
     return { segmentType: "media",
              chunkData: null,
+             chunkSize: 0,
              chunkInfos: { duration: segment.duration,
                            time: segment.time },
              chunkOffset,
@@ -107,6 +109,7 @@ export function imageParser(
                         end: Number.MAX_VALUE,
                         timescale: 1,
                         type: "bif" },
+           chunkSize: undefined,
            chunkInfos: { time: 0,
                          duration: Number.MAX_VALUE },
            chunkOffset,

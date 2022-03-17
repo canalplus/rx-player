@@ -291,6 +291,37 @@ This option will have no effect for contents loaded in <i>Directfile</i>
 mode (see <a href="./Loading_a_Content.md#transport">loadVideo options</a>).
 </div>
 
+### maxVideoBufferSize
+
+_type_: `Number|undefined`
+
+_defaults_: `Infinity`
+
+Set the maximum size of video the buffer in the memory, in kilobytes (kb).
+Once this value is reached, the player won't try to download new video
+segments anymore. The limit is approximative as it's based on internal estimation. 
+
+<div class="warning">
+The internal checks of the RxPlayer is based on an estimation of what the RxPlayer think
+is currently buffered and an estimation of the size of the next segments. 
+</div>
+
+<div class="warning">
+In <i>DirectFile</i> mode (see <a
+href="../Loading_a_Content.md#transport">loadVideo options</a>),
+this method has no effect.
+</div>
+
+<div class="warning">
+This option will have no effects if we didn't buffer at least <b>MIN_BUFFER_LENGTH</b> 
+<i>( defaults at 5sec )</i>
+</div>
+
+<div class="warning">
+This option will have no effect for contents loaded in <i>Directfile</i>
+mode (see <a href="./Loading_a_Content.md#transport">loadVideo options</a>).
+</div>
+
 ### preferredAudioTracks
 
 _type_: `Array.<Object|null>`

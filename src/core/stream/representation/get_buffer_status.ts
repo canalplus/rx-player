@@ -61,6 +61,11 @@ export interface IBufferStatus {
    * on which segments should be loaded.
    */
   shouldRefreshManifest : boolean;
+  /**
+   * If 'true', the buffer memory is saturated before being able to download
+   * at least MIN_REQUIRED_BUFFER_AHEAD ( default : 10sec )
+   */
+  isBufferFull: boolean;
 }
 
 /**
@@ -86,11 +91,11 @@ export default function getBufferStatus(
   playbackObserver : IReadOnlyPlaybackObserver<unknown>,
   fastSwitchThreshold : number | undefined,
   bufferGoal : number,
+  maxBufferSize : number,
   segmentBuffer : SegmentBuffer
 ) : IBufferStatus {
   const { period, representation } = content;
   segmentBuffer.synchronizeInventory();
-
   const wantedEndPosition = wantedStartPosition + bufferGoal;
   const neededRange = { start: Math.max(wantedStartPosition, period.start),
                         end: Math.min(wantedEndPosition, period.end ?? Infinity) };
@@ -118,15 +123,21 @@ export default function getBufferStatus(
   const getBufferedHistory = segmentBuffer.getSegmentHistory.bind(segmentBuffer);
 
   /** List of segments we will need to download. */
-  const neededSegments = getNeededSegments({ content,
-                                             bufferedSegments,
-                                             currentPlaybackTime,
-                                             fastSwitchThreshold,
-                                             getBufferedHistory,
-                                             neededRange,
-                                             segmentsBeingPushed })
-    .map((segment) => ({ priority: getSegmentPriority(segment.time, wantedStartPosition),
-                         segment }));
+  const { neededSegments, isBufferFull } = getNeededSegments({ content,
+                                                               bufferedSegments,
+                                                               currentPlaybackTime,
+                                                               fastSwitchThreshold,
+                                                               getBufferedHistory,
+                                                               neededRange,
+                                                               segmentsBeingPushed,
+                                                               maxBufferSize });
+
+  const prioritizedNeededSegments: IQueuedSegment[] =  neededSegments.map((segment) => (
+    {
+      priority: getSegmentPriority(segment.time, wantedStartPosition),
+      segment,
+    }
+  ));
 
   /**
    * `true` if the current `RepresentationStream` has loaded all the
@@ -137,7 +148,7 @@ export default function getBufferStatus(
   const lastPosition = representation.index.getLastPosition();
   if (!representation.index.isInitialized() ||
       period.end === undefined ||
-      neededSegments.length > 0)
+      prioritizedNeededSegments.length > 0)
   {
     hasFinishedLoading = false;
   } else {
@@ -181,10 +192,10 @@ export default function getBufferStatus(
     if (segmentsBeingPushed.length > 0) {
       nextSegmentStart = Math.min(...segmentsBeingPushed.map(info => info.segment.time));
     }
-    if (neededSegments.length > 0) {
+    if (prioritizedNeededSegments.length > 0) {
       nextSegmentStart = nextSegmentStart !== null ?
-        Math.min(nextSegmentStart, neededSegments[0].segment.time) :
-        neededSegments[0].segment.time;
+        Math.min(nextSegmentStart, prioritizedNeededSegments[0].segment.time) :
+        prioritizedNeededSegments[0].segment.time;
     }
     imminentDiscontinuity = checkForDiscontinuity(content,
                                                   neededRange,
@@ -194,7 +205,8 @@ export default function getBufferStatus(
   }
   return { imminentDiscontinuity,
            hasFinishedLoading,
-           neededSegments,
+           neededSegments: prioritizedNeededSegments,
+           isBufferFull,
            shouldRefreshManifest };
 }
 

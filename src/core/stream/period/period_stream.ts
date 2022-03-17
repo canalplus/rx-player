@@ -98,6 +98,7 @@ export interface IPeriodStreamArguments {
   playbackObserver : IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>;
   options: IPeriodStreamOptions;
   wantedBufferAhead : IReadOnlySharedReference<number>;
+  maxVideoBufferSize : IReadOnlySharedReference<number>;
 }
 
 /** Options tweaking the behavior of the PeriodStream. */
@@ -142,6 +143,7 @@ export default function PeriodStream({
   segmentBuffersStore,
   options,
   wantedBufferAhead,
+  maxVideoBufferSize,
 } : IPeriodStreamArguments) : Observable<IPeriodStreamEvent> {
   const { period } = content;
 
@@ -279,7 +281,8 @@ export default function PeriodStream({
                               playbackObserver: adaptationPlaybackObserver,
                               segmentBuffer,
                               segmentFetcherCreator,
-                              wantedBufferAhead }).pipe(
+                              wantedBufferAhead,
+                              maxVideoBufferSize }).pipe(
       catchError((error : unknown) => {
         // Stream linked to a non-native media buffer should not impact the
         // stability of the player. ie: if a text buffer sends an error, we want

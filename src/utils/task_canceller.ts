@@ -153,14 +153,14 @@ export default class TaskCanceller {
    * An optional CancellationError can be given in argument for when this
    * cancellation is actually triggered as a chain reaction from a previous
    * cancellation.
-   * @param {Error} [originError]
+   * @param {Error} [srcError]
    */
-  public cancel(originError? : CancellationError) : void {
+  public cancel(srcError? : CancellationError) : void {
     if (this.isUsed) {
       return ;
     }
     this.isUsed = true;
-    const cancellationError = originError ?? new CancellationError();
+    const cancellationError = srcError ?? new CancellationError();
     this._trigger(cancellationError);
   }
 
@@ -188,7 +188,9 @@ export class CancellationSignal {
    */
   public isCancelled : boolean;
   /**
-   * Error associated to the cancellation.
+   * Error associated to the cancellation, only set if the `CancellationSignal`
+   * has been used (which means that the task has been cancelled).
+   *
    * Can be used to notify to a caller that this task was aborted (for example
    * by rejecting it through the Promise associated to that task).
    *

@@ -41,6 +41,7 @@ import {
   takeWhile,
   withLatestFrom,
 } from "rxjs";
+import config from "../../../config";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
@@ -134,6 +135,7 @@ export interface IRepresentationStreamArguments<TSegmentDataType> {
   options: IRepresentationStreamOptions;
 }
 
+
 /**
  * Various specific stream "options" which tweak the behavior of the
  * RepresentationStream.
@@ -145,6 +147,14 @@ export interface IRepresentationStreamOptions {
    * goes below that size again.
    */
   bufferGoal$ : Observable<number>;
+
+  /**
+   *  The buffer size limit in memory that we can reach.
+   *  Once reached, no segments will be loaded until it
+   *  goes below that size again
+   */
+  maxBufferSize$ : Observable<number>;
+
   /**
    * Hex-encoded DRM "system ID" as found in:
    * https://dashif.org/identifiers/content_protection/
@@ -221,6 +231,7 @@ export default function RepresentationStream<TSegmentDataType>({
           adaptation,
           representation } = content;
   const { bufferGoal$,
+          maxBufferSize$,
           drmSystemId,
           fastSwitchThreshold$ } = options;
   const bufferType = adaptation.type;
@@ -264,7 +275,7 @@ export default function RepresentationStream<TSegmentDataType>({
     const encryptionData = representation.getEncryptionData(drmSystemId);
     if (encryptionData.length > 0) {
       encryptionEvent$ = observableOf(...encryptionData.map(d =>
-        EVENTS.encryptionDataEncountered(d)));
+        EVENTS.encryptionDataEncountered(d, content)));
       hasSentEncryptionData = true;
     }
   }
@@ -277,13 +288,14 @@ export default function RepresentationStream<TSegmentDataType>({
   const status$ = observableCombineLatest([
     playbackObserver.observe(true),
     bufferGoal$,
+    maxBufferSize$,
     terminate$.pipe(take(1),
                     startWith(null)),
     reCheckNeededSegments$.pipe(startWith(undefined)),
   ]).pipe(
     withLatestFrom(fastSwitchThreshold$),
     mergeMap(function (
-      [ [ observation, bufferGoal, terminate ],
+      [ [ observation, bufferGoal, maxBufferSize, terminate ],
         fastSwitchThreshold ]
     ) : Observable<IStreamStatusEvent |
                    IStreamNeedsManifestRefresh |
@@ -295,6 +307,7 @@ export default function RepresentationStream<TSegmentDataType>({
                                      playbackObserver,
                                      fastSwitchThreshold,
                                      bufferGoal,
+                                     maxBufferSize,
                                      segmentBuffer);
       const { neededSegments } = status;
 
@@ -365,11 +378,21 @@ export default function RepresentationStream<TSegmentDataType>({
                                 imminentDiscontinuity: status.imminentDiscontinuity,
                                 hasFinishedLoading: status.hasFinishedLoading,
                                 neededSegments: status.neededSegments } });
-
+      let bufferRemoval = EMPTY;
+      const { UPTO_CURRENT_POSITION_CLEANUP } = config.getCurrent();
+      if (status.isBufferFull) {
+        const gcedPosition = Math.max(
+          0,
+          wantedStartPosition - UPTO_CURRENT_POSITION_CLEANUP);
+        bufferRemoval = segmentBuffer
+          .removeBuffer(0, gcedPosition)
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          .pipe(ignoreElements());
+      }
       return status.shouldRefreshManifest ?
         observableConcat(observableOf(EVENTS.needsManifestRefresh()),
-                         bufferStatusEvt) :
-        bufferStatusEvt;
+                         bufferStatusEvt, bufferRemoval) :
+        observableConcat(bufferStatusEvt, bufferRemoval);
     }),
     takeWhile((e) => e.type !== "stream-terminating", true)
   );
@@ -458,7 +481,7 @@ export default function RepresentationStream<TSegmentDataType>({
       const initEncEvt$ = !hasSentEncryptionData &&
                           allEncryptionData.length > 0 ?
         observableOf(...allEncryptionData.map(p =>
-          EVENTS.encryptionDataEncountered(p))) :
+          EVENTS.encryptionDataEncountered(p, content))) :
         EMPTY;
       const pushEvent$ = pushInitSegment({ playbackObserver,
                                            content,
@@ -476,7 +499,7 @@ export default function RepresentationStream<TSegmentDataType>({
       const segmentEncryptionEvent$ = protectionDataUpdate &&
                                      !hasSentEncryptionData ?
         observableOf(...representation.getAllEncryptionData().map(p =>
-          EVENTS.encryptionDataEncountered(p))) :
+          EVENTS.encryptionDataEncountered(p, content))) :
         EMPTY;
 
       const manifestRefresh$ =  needsManifestRefresh === true ?

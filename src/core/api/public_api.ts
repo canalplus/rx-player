@@ -87,10 +87,10 @@ import createSharedReference, {
 } from "../../utils/reference";
 import warnOnce from "../../utils/warn_once";
 import {
-  clearEMESession,
-  disposeEME,
+  clearOnStop,
+  disposeDecryptionResources,
   getCurrentKeySystem,
-} from "../eme";
+} from "../decrypt";
 import {
   IManifestFetcherParsedResult,
   IManifestFetcherWarningEvent,
@@ -211,6 +211,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     maxBufferAhead : ISharedReference<number>;
     /** Maximum kept buffer behind in the current position, in seconds. */
     maxBufferBehind : ISharedReference<number>;
+    /** Maximum size of video buffer , in kiloBytes */
+    maxVideoBufferSize : ISharedReference<number>;
   };
 
   /** Information on the current bitrate settings. */
@@ -419,6 +421,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             throttleVideoBitrateWhenHidden,
             videoElement,
             wantedBufferAhead,
+            maxVideoBufferSize,
             stopAtEnd } = parseConstructorOptions(options);
     const { DEFAULT_UNMUTED_VOLUME } = config.getCurrent();
     // Workaround to support Firefox autoplay on FF 42.
@@ -485,6 +488,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       wantedBufferAhead: createSharedReference(wantedBufferAhead),
       maxBufferAhead: createSharedReference(maxBufferAhead),
       maxBufferBehind: createSharedReference(maxBufferBehind),
+      maxVideoBufferSize: createSharedReference(maxVideoBufferSize),
     };
 
     this._priv_bitrateInfos = {
@@ -544,8 +548,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this.stop();
 
     if (this.videoElement !== null) {
-      // free resources used for EME management
-      disposeEME(this.videoElement);
+      // free resources used for decryption management
+      disposeDecryptionResources(this.videoElement)
+        .catch((err : unknown) => {
+          const message = err instanceof Error ? err.message :
+                                                 "Unknown error";
+          log.error("API: Could not dispose decryption resources: " + message);
+        });
     }
 
     // free Observables linked to the Player instance
@@ -558,6 +567,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_speed.finish();
     this._priv_contentLock.finish();
     this._priv_bufferOptions.wantedBufferAhead.finish();
+    this._priv_bufferOptions.maxVideoBufferSize.finish();
     this._priv_bufferOptions.maxBufferAhead.finish();
     this._priv_bufferOptions.maxBufferBehind.finish();
     this._priv_bitrateInfos.manualBitrates.video.finish();
@@ -1813,6 +1823,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Set the max buffer size the buffer should take in memory
+   * The player . will stop downloading chunks when this size is reached.
+   * @param {Number} sizeInKBytes
+   */
+  setMaxVideoBufferSize(sizeInKBytes : number) : void {
+    this._priv_bufferOptions.maxVideoBufferSize.setValue(sizeInKBytes);
+  }
+
+  /**
    * Returns the max buffer size for the buffer behind the current position.
    * @returns {Number}
    */
@@ -1834,6 +1853,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   getWantedBufferAhead() : number {
     return this._priv_bufferOptions.wantedBufferAhead.getValue();
+  }
+
+  /**
+   * Returns the max buffer memory size for the buffer in kilobytes
+   * @returns {Number}
+   */
+  getMaxVideoBufferSize() : number {
+    return this._priv_bufferOptions.maxVideoBufferSize.getValue();
   }
 
   /**
@@ -2283,25 +2310,23 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_contentEventsMemory = {};
 
-    // EME cleaning
+    // DRM-related clean-up
     const freeUpContentLock = () => {
       log.debug("Unlocking `contentLock`. Next content can begin.");
       this._priv_contentLock.setValue(false);
     };
 
     if (!isNullOrUndefined(this.videoElement)) {
-      clearEMESession(this.videoElement)
-        .subscribe({
-          error: (err : unknown) => {
-            log.error("API: An error arised when trying to clean-up the EME session:" +
-                      (err instanceof Error ? err.toString() :
-                                              "Unknown Error"));
-            freeUpContentLock();
-          },
-          complete: () => {
-            log.debug("API: EME session cleaned-up with success!");
-            freeUpContentLock();
-          },
+      clearOnStop(this.videoElement).then(
+        () => {
+          log.debug("API: DRM session cleaned-up with success!");
+          freeUpContentLock();
+        },
+        (err : unknown) => {
+          log.error("API: An error arised when trying to clean-up the DRM session:" +
+                    (err instanceof Error ? err.toString() :
+                                            "Unknown Error"));
+          freeUpContentLock();
         });
     } else {
       freeUpContentLock();

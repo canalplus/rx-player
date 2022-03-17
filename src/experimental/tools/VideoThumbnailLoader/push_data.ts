@@ -24,6 +24,7 @@ export default function pushData(
                     adaptation: Adaptation;
                     representation: Representation;
                     segment: ISegment;
+                    chunkSize: number | undefined;
                     start: number;
                     end: number; },
   parsed: ISegmentParserParsedMediaChunk<Uint8Array | ArrayBuffer>,

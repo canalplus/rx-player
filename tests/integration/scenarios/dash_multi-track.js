@@ -149,6 +149,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
   });
 
   it("should properly load the content with the right default tracks", async function () {
+    this.timeout(3000);
     xhrMock.lock();
     player.loadVideo({ url: multiAdaptationSetsInfos.url,
                        transport: multiAdaptationSetsInfos.transport });
@@ -161,7 +162,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
 
     expect(player.getPlayerState()).to.equal("LOADING");
     await xhrMock.unlock();
-    await sleep(500);
+    await sleep(1500);
 
     expect(player.getPlayerState()).to.equal("LOADED");
 
