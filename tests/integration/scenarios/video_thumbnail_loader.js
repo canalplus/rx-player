@@ -65,7 +65,7 @@ describe("Video Thumbnail Loader", () => {
   it("should not work when no period at given time", async () => {
     VideoThumbnailLoader.addLoader(DASH_LOADER);
     rxPlayer.loadVideo({ url: trickModeInfos.url, transport: "dash" });
-    await sleep(75);
+    await sleep(500);
 
     const manifest = rxPlayer.getManifest();
 

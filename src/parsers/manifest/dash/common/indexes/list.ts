@@ -37,7 +37,7 @@ export interface IListIndex {
    */
   duration : number;
   /** Byte range for a possible index of segments in the server. */
-  indexRange?: [number, number];
+  indexRange?: [number, number] | undefined;
   /**
    * Temporal offset, in the current timescale (see timescale), to add to the
    * presentation time (time a segment has at decoding time) to obtain the
@@ -56,14 +56,14 @@ export interface IListIndex {
     /** URLs to access the initialization segment. */
     mediaURLs: string[] | null;
     /** possible byte range to request it. */
-    range?: [number, number];
-  };
+    range?: [number, number] | undefined;
+  } | undefined;
   /** Information on the list of segments for this index. */
   list: Array<{
     /** URLs of the segment. */
     mediaURLs : string[] | null;
     /** Possible byte-range of the segment. */
-    mediaRange? : [number, number];
+    mediaRange? : [number, number] | undefined;
   }>;
   /**
    * Timescale to convert a time given here into seconds.
@@ -78,12 +78,12 @@ export interface IListIndex {
  * Most of the properties here are already defined in IListIndex.
  */
 export interface IListIndexIndexArgument {
-  duration? : number;
-  indexRange?: [number, number];
-  initialization?: { media? : string;
-                     range? : [number, number]; };
-  list: Array<{ media? : string;
-                mediaRange? : [number, number]; }>;
+  duration? : number | undefined;
+  indexRange?: [number, number] | undefined;
+  initialization?: { media? : string | undefined;
+                     range? : [number, number] | undefined; };
+  list: Array<{ media? : string | undefined;
+                mediaRange? : [number, number] | undefined; }>;
   /**
    * Offset present in the index to convert from the mediaTime (time declared in
    * the media segments and in this index) to the presentationTime (time wanted
@@ -98,8 +98,8 @@ export interface IListIndexIndexArgument {
    * The time given here is in the current
    * timescale (see timescale)
    */
-  presentationTimeOffset? : number;
-  timescale? : number;
+  presentationTimeOffset? : number | undefined;
+  timescale? : number | undefined;
 }
 
 /** Aditional context needed by a SegmentList RepresentationIndex. */
@@ -109,9 +109,9 @@ export interface IListIndexContextArgument {
   /** Base URL for the Representation concerned. */
   representationBaseURLs : IResolvedBaseUrl[];
   /** ID of the Representation concerned. */
-  representationId? : string;
+  representationId? : string | undefined;
   /** Bitrate of the Representation concerned. */
-  representationBitrate? : number;
+  representationBitrate? : number | undefined;
   /* Function that tells if an EMSG is whitelisted by the manifest */
   isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 }

@@ -83,18 +83,18 @@ interface ISupplementaryTextTrack {
 interface IManifestParsingOptions {
   /* eslint-disable import/no-deprecated */
   /** Text tracks to add manually to the Manifest instance. */
-  supplementaryTextTracks? : ISupplementaryTextTrack[];
+  supplementaryTextTracks? : ISupplementaryTextTrack[] | undefined;
   /** Image tracks to add manually to the Manifest instance. */
-  supplementaryImageTracks? : ISupplementaryImageTrack[];
+  supplementaryImageTracks? : ISupplementaryImageTrack[] | undefined;
   /* eslint-enable import/no-deprecated */
   /** External callback peforming an automatic filtering of wanted Representations. */
-  representationFilter? : IRepresentationFilter;
+  representationFilter? : IRepresentationFilter | undefined;
   /** Optional URL that points to a shorter version of the Manifest used
    * for updates only. When using this URL for refresh, the manifest will be
    * updated with the partial update type. If this URL is undefined, then the
    * manifest will be updated fully when it needs to be refreshed, and it will
    * fetched through the original URL. */
-  manifestUpdateUrl? : string;
+  manifestUpdateUrl? : string | undefined;
 }
 
 /** Representation affected by a `decipherabilityUpdate` event. */
@@ -197,7 +197,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
 
   /** Optional URL that points to a shorter version of the Manifest used
    * for updates only. */
-  public updateUrl?: string;
+  public updateUrl : string | undefined;
 
   /**
    * Suggested delay from the "live edge" (i.e. the position corresponding to
@@ -205,7 +205,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * from.
    * This only applies to live contents.
    */
-  public suggestedPresentationDelay? : number;
+  public suggestedPresentationDelay : number | undefined;
 
   /**
    * Amount of time, in seconds, this Manifest is valid from the time when it
@@ -213,7 +213,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * If no lifetime is set, this Manifest does not become invalid after an
    * amount of time.
    */
-  public lifetime? : number;
+  public lifetime : number | undefined;
 
   /**
    * Minimum time, in seconds, at which a segment defined in the Manifest
@@ -221,14 +221,14 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * This is also used as an offset for live content to apply to a segment's
    * time.
    */
-  public availabilityStartTime? : number;
+  public availabilityStartTime : number | undefined;
 
   /**
    * It specifies the wall-clock time when the manifest was generated and published
    * at the origin server. It is present in order to identify different versions
    * of manifest instances.
    */
-  public publishTime?: number;
+  public publishTime: number | undefined;
 
   /**
    * Array containing every minor errors that happened when the Manifest has
@@ -271,7 +271,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
      *      segment, and `timeshiftDepth` would be the whole depth that will
      *      become available once enough segments have been generated.
      */
-    absoluteMinimumTime? : number;
+    absoluteMinimumTime? : number | undefined;
     /**
      * Some dynamic contents have the concept of a "window depth" (or "buffer
      * depth") which allows to set a minimum position for all reachable

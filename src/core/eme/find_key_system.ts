@@ -65,8 +65,6 @@ interface IKeySystemType { keyName : string | undefined;
                            keyType : string;
                            keySystemOptions : IKeySystemOption; }
 
-const { EME_DEFAULT_WIDEVINE_ROBUSTNESSES,
-        EME_KEY_SYSTEMS } = config;
 
 /**
  * @param {Array.<Object>} keySystems
@@ -121,6 +119,7 @@ function checkCachedMediaKeySystemAccess(
  * @returns {string|undefined} - Either the canonical name, or undefined.
  */
 function findKeySystemCanonicalName(ksType: string) : string | undefined {
+  const { EME_KEY_SYSTEMS } = config.getCurrent();
   for (const ksName of Object.keys(EME_KEY_SYSTEMS)) {
     if (arrayIncludes(EME_KEY_SYSTEMS[ksName] as string[], ksType)) {
       return ksName;
@@ -158,6 +157,7 @@ function buildKeySystemConfigurations(
   if (keySystem.distinctiveIdentifierRequired === true) {
     distinctiveIdentifier = "required";
   }
+  const { EME_DEFAULT_WIDEVINE_ROBUSTNESSES } = config.getCurrent();
 
   // Set robustness, in order of consideration:
   //   1. the user specified its own robustnesses
@@ -192,21 +192,23 @@ function buildKeySystemConfigurations(
   // More details here:
   // https://storage.googleapis.com/wvdocs/Chrome_EME_Changes_and_Best_Practices.pdf
   // https://www.w3.org/TR/encrypted-media/#get-supported-configuration-and-consent
+
   const videoCapabilities: IMediaCapability[] =
-    flatMap(videoRobustnesses,
-            robustness => [{ contentType: "video/mp4;codecs=\"avc1.4d401e\"",
-                             robustness },
-                           { contentType: "video/mp4;codecs=\"avc1.42e01e\"",
-                             robustness },
-                           { contentType: "video/webm;codecs=\"vp8\"",
-                             robustness } ]);
+    flatMap(audioRobustnesses, (robustness) =>
+      ["video/mp4;codecs=\"avc1.4d401e\"",
+       "video/mp4;codecs=\"avc1.42e01e\"",
+       "video/webm;codecs=\"vp8\""].map(contentType => {
+        return robustness !== undefined ? { contentType, robustness } :
+                                          { contentType };
+      }));
 
   const audioCapabilities: IMediaCapability[] =
-    flatMap(audioRobustnesses,
-            robustness => [{ contentType: "audio/mp4;codecs=\"mp4a.40.2\"",
-                             robustness },
-                           { contentType: "audio/webm;codecs=opus",
-                             robustness } ]);
+    flatMap(audioRobustnesses, (robustness) =>
+      ["audio/mp4;codecs=\"mp4a.40.2\"",
+       "audio/webm;codecs=opus"].map(contentType => {
+        return robustness !== undefined ? { contentType, robustness } :
+                                          { contentType };
+      }));
 
   // TODO Re-test with a set contentType but an undefined robustness on the
   // STBs on which this problem was found.
@@ -283,7 +285,7 @@ export default function getMediaKeySystemAccess(
      */
     const keySystemsType: IKeySystemType[] = keySystemsConfigs.reduce(
       (arr: IKeySystemType[], keySystemOptions) => {
-
+        const { EME_KEY_SYSTEMS } = config.getCurrent();
         const managedRDNs = EME_KEY_SYSTEMS[keySystemOptions.type];
         let ksType;
 

@@ -25,8 +25,6 @@ import log from "../../../log";
 import { getInnerAndOuterTimeRanges } from "../../../utils/ranges";
 import { SegmentBuffer } from "../../segment_buffers";
 
-const GC_GAP_CALM = config.BUFFER_GC_GAPS.CALM;
-const GC_GAP_BEEFY = config.BUFFER_GC_GAPS.BEEFY;
 
 /**
  * Run the garbage collector.
@@ -43,6 +41,8 @@ export default function forceGarbageCollection(
   bufferingQueue : SegmentBuffer
 ) : Observable<unknown> {
   return observableDefer(() => {
+    const GC_GAP_CALM = config.getCurrent().BUFFER_GC_GAPS.CALM;
+    const GC_GAP_BEEFY = config.getCurrent().BUFFER_GC_GAPS.BEEFY;
     log.warn("Stream: Running garbage collector");
     const buffered = bufferingQueue.getBufferedRanges();
     let cleanedupRanges = selectGCedRanges(currentPosition, buffered, GC_GAP_CALM);
@@ -84,19 +84,17 @@ function selectGCedRanges(
 
   // start by trying to remove all ranges that do not contain the
   // current time and respect the gcGap
-  // respect the gcGap? FIXME?
   for (let i = 0; i < outerRanges.length; i++) {
     const outerRange = outerRanges[i];
-    if (position - gcGap < outerRange.end) {
+    if (position - gcGap > outerRange.end) {
       cleanedupRanges.push(outerRange);
-    }
-    else if (position + gcGap > outerRange.start) {
+    } else if (position + gcGap < outerRange.start) {
       cleanedupRanges.push(outerRange);
     }
   }
 
   // try to clean up some space in the current range
-  if (innerRange != null) {
+  if (innerRange !== null) {
     log.debug("Stream: GC removing part of inner range", cleanedupRanges);
     if (position - gcGap > innerRange.start) {
       cleanedupRanges.push({ start: innerRange.start,

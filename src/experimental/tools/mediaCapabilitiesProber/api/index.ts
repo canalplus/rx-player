@@ -127,7 +127,7 @@ const mediaCapabilitiesProber = {
     }>
   ) : Promise<ICompatibleKeySystem[]> {
     const promises: Array<Promise<{ globalStatus: ProberStatus;
-                                    result? : ICompatibleKeySystem; }>> = [];
+                                    result? : ICompatibleKeySystem | undefined; }>> = [];
     configurations.forEach((configuration) => {
       const globalConfig = {
         keySystem: configuration,

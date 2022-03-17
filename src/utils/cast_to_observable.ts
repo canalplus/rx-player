@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import {
   from as observableFrom,
   Observable,
   of as observableOf,
 } from "rxjs";
 import isNullOrUndefined from "./is_null_or_undefined";
+import PPromise from "./promise";
 
 /**
  * Try to cast the given value into an observable.
@@ -30,7 +30,6 @@ import isNullOrUndefined from "./is_null_or_undefined";
  */
 function castToObservable<T>(value : Observable<T> |
                                      Promise<T> |
-                                     PPromise<T> |
                                      Exclude<T, Observable<T>>) : Observable<T> {
   if (value instanceof Observable) {
     return value;

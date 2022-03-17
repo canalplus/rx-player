@@ -70,9 +70,16 @@ module.exports = function createServer(port) {
       res.setHeader("Content-Type", urlObj.contentType);
     }
     answerWithCORS(res, isPartial ? 206 : 200, Buffer.from(data));
-  }).listen(port);
+  });
+
+  const listeningPromise = new Promise((res) => {
+    server.listen(port, function () {
+      res();
+    });
+  });
 
   return {
+    listeningPromise,
     close() {
       server.close();
     },

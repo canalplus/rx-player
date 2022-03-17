@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import log from "../../../../../log";
 import assertUnreachable from "../../../../../utils/assert_unreachable";
 import noop from "../../../../../utils/noop";
+import PPromise from "../../../../../utils/promise";
 import parseMpdIr, {
   IIrParserResponse,
   ILoadedXlinkData,

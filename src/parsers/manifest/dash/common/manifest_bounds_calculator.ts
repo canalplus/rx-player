@@ -47,7 +47,7 @@ export default class ManifestBoundsCalculator {
   /**
    * @param {Object} args
    */
-  constructor(args : { timeShiftBufferDepth? : number;
+  constructor(args : { timeShiftBufferDepth : number | undefined;
                        isDynamic : boolean; }
   ) {
     this._isDynamic = args.isDynamic;

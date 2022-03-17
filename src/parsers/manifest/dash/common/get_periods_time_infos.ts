@@ -21,9 +21,9 @@ interface IPeriodTimeInformation {
   /** Time in seconds at which the Period starts. */
   periodStart: number;
   /** Difference in seconds between the Period's end and its start. */
-  periodDuration?: number;
+  periodDuration?: number | undefined;
   /** Time in seconds at which the Period ends. */
-  periodEnd?: number;
+  periodEnd?: number | undefined;
 }
 
 /** Additionnal context needed to retrieve the period time information. */
@@ -31,7 +31,7 @@ export interface IParsedPeriodsContext {
   /** Value of MPD@availabilityStartTime. */
   availabilityStartTime : number;
   /** Value of MPD@mediaPresentationDuration. */
-  duration? : number;
+  duration? : number | undefined;
   /** `true` if MPD@type is equal to "dynamic". */
   isDynamic : boolean;
 }

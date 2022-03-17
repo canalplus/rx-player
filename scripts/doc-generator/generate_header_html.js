@@ -1,7 +1,6 @@
 const path = require("path");
 const { encode } = require("html-entities");
 const {
-  encodeHtmlAttributeValue,
   toUriCompatibleRelativePath,
   getGithubSvg,
 } = require("./utils");
@@ -30,12 +29,12 @@ function generateHeaderHtml(config, currentLinkIdx, currentPath, logoInfo) {
       case "local-doc": {
         const relativeUri = toUriCompatibleRelativePath(l.firstPage, currentDir);
         const activeClass = i === currentLinkIdx ? " navbar-active" : "";
-        const cleanedHref = encodeHtmlAttributeValue(relativeUri);
+        const cleanedHref = encode(relativeUri);
         return `<a class="navbar-item${activeClass}${customClass} hideable"` +
           `href="${cleanedHref}">${encode(l.displayName)}</a>`;
       }
       case "external-link": {
-        const cleanedHref = encodeHtmlAttributeValue(l.link);
+        const cleanedHref = encode(l.link);
         return `<a class="navbar-item${customClass} hideable"` +
           `href="${cleanedHref}">${encode(l.displayName)}</a>`;
       }
@@ -84,7 +83,7 @@ function constructVersionLinkHtmlInHeaderBar(versionInfo, customClass) {
   if (typeof versionInfo.link === "string") {
     hasLink = true;
     element += `<a class="navbar-item${customClass}"` +
-      `href="${encodeHtmlAttributeValue(versionInfo.link)}">`;
+      `href="${encode(versionInfo.link)}">`;
   } else {
     element += `<span class="navbar-item${customClass}">`;
   }
@@ -101,7 +100,7 @@ function constructVersionLinkHtmlInHeaderBar(versionInfo, customClass) {
  * @returns {string}
  */
 function constructGithubLinkHtmlInHeaderBar(githubLnk, customClass) {
-  const cleanedHref = encodeHtmlAttributeValue(githubLnk);
+  const cleanedHref = encode(githubLnk);
   return `<a aria-label="Link to repository" class="navbar-item${customClass} hideable" href="${cleanedHref}">` +
     getGithubSvg() +
     "</a>";
@@ -133,11 +132,11 @@ function constructLogoHtmlInHeaderBar(logoInfo) {
   let hasLink = false;
   if (typeof logoInfo.link === "string") {
     hasLink = true;
-    logoHtml += `<a href="${encodeHtmlAttributeValue(logoInfo.link)}">`;
+    logoHtml += `<a href="${encode(logoInfo.link)}">`;
   }
   if (typeof logoInfo.url === "string") {
     logoHtml += `<img alt="Logo" class="navbar-item navbar-item-logo"` +
-      ` src="${encodeHtmlAttributeValue(logoInfo.url)}" />`;
+      ` src="${encode(logoInfo.url)}" />`;
   }
   if (hasLink) {
     logoHtml += "</a>";

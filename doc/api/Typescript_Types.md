@@ -152,6 +152,27 @@ All of those can be imported from `"rx-player/types"` respectively as
 `IManifest`, `IPeriod`, `IAdaptation`, `IRepresentation` and `ISegment`
 
 
+### getPlayerState method / playerStateChange event
+
+The return type of the `getPlayerState` state method and of the
+`playerStateChange` events is a string describing the [current state of the
+RxPlayer](./Player_States.md).
+
+All values possible are defined through the `IPlayerState` type:
+
+```ts
+// the type(s) wanted
+import { IPlayerState } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+function getPlayerState() : IPlayerState {
+  return rxPlayer.getPlayerState();
+}
+```
+
+
 ### getAvailableAudioTracks method / availableAudioTracksChange event
 
 The return type of the `getAvailableAudioTracks` method is an array of objects.
@@ -165,9 +186,6 @@ import { IAvailableAudioTrack } from "rx-player/types";
 
 // hypothetical file exporting an RxPlayer instance
 import rxPlayer from "./player";
-
-// hypothetical file exporting a configuration object
-import config from "./config"; // define a global config
 
 function getAvailableAudioTracks() : IAvailableAudioTrack[] {
   return rxPlayer.getAvailableAudioTracks();
@@ -301,6 +319,25 @@ function getCurrentlyDownloadedVideoTrack() : IVideoTrack {
 }
 ```
 
+### positionUpdate event
+
+The type `IPositionUpdate` corresponds to the payload of a
+`positionUpdate` event.
+
+Example:
+
+```ts
+// the type(s) wanted
+import { IPositionUpdate } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+rxPlayer.addEventListener("positionUpdate", (evt : IPositionUpdate) {
+  console.log(evt);
+});
+```
+
 ### streamEvent / streamEventSkip events
 
 The type `IStreamEvent` corresponds to the payload of either a `streamEvent` or
@@ -325,6 +362,25 @@ function processEventData(eventData : IStreamEventData) {
 
 rxPlayer.addEventListener("streamEvent", (evt : IStreamEvent) {
   processEventData(evt.data);
+});
+```
+
+### bitrateEstimationChange event
+
+The type `IBitrateEstimate` corresponds to the payload of a
+`bitrateEstimationChange` event.
+
+Example:
+
+```ts
+// the type(s) wanted
+import { IBitrateEstimate } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+rxPlayer.addEventListener("bitrateEstimationChange", (evt : IBitrateEstimate) {
+  console.log(evt);
 });
 ```
 

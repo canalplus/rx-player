@@ -31,14 +31,6 @@ import log from "../../log";
 import objectAssign from "../../utils/object_assign";
 import { getRange } from "../../utils/ranges";
 
-const { SAMPLING_INTERVAL_MEDIASOURCE,
-        SAMPLING_INTERVAL_LOW_LATENCY,
-        SAMPLING_INTERVAL_NO_MEDIASOURCE,
-        RESUME_GAP_AFTER_SEEKING,
-        RESUME_GAP_AFTER_NOT_ENOUGH_DATA,
-        RESUME_GAP_AFTER_BUFFERING,
-        REBUFFERING_GAP,
-        MINIMUM_BUFFER_AMOUNT_BEFORE_FREEZING } = config;
 
 /**
  * HTMLMediaElement Events for which playback observations are calculated and
@@ -207,7 +199,12 @@ export default class PlaybackObserver {
    * @returns {Observable}
    */
   private _createInnerObservable() : Observable<IPlaybackObservation> {
+
+
     return observableDefer(() : Observable<IPlaybackObservation> => {
+      const { SAMPLING_INTERVAL_MEDIASOURCE,
+              SAMPLING_INTERVAL_LOW_LATENCY,
+              SAMPLING_INTERVAL_NO_MEDIASOURCE } = config.getCurrent();
       const getCurrentObservation = (
         event : IPlaybackObserverEventType
       ) : IPlaybackObservation => {
@@ -452,6 +449,9 @@ function getRebufferingEndGap(
   }
   const suffix : "LOW_LATENCY" | "DEFAULT" = lowLatencyMode ? "LOW_LATENCY" :
                                                               "DEFAULT";
+  const { RESUME_GAP_AFTER_SEEKING,
+          RESUME_GAP_AFTER_NOT_ENOUGH_DATA,
+          RESUME_GAP_AFTER_BUFFERING } = config.getCurrent();
 
   switch (rebufferingStatus.reason) {
     case "seeking":
@@ -474,6 +474,7 @@ function hasLoadedUntilTheEnd(
   duration : number,
   lowLatencyMode : boolean
 ) : boolean {
+  const { REBUFFERING_GAP } = config.getCurrent();
   const suffix : "LOW_LATENCY" | "DEFAULT" = lowLatencyMode ? "LOW_LATENCY" :
                                                               "DEFAULT";
   return currentRange !== null &&
@@ -533,6 +534,8 @@ function getRebufferingStatus(
   currentInfo : IMediaInfos,
   { withMediaSource, lowLatencyMode } : IPlaybackObserverOptions
 ) : IRebufferingStatus | null {
+
+  const { REBUFFERING_GAP } = config.getCurrent();
   const { event: currentEvt,
           position: currentTime,
           bufferGap,
@@ -643,6 +646,7 @@ function getFreezingStatus(
   prevObservation : IPlaybackObservation,
   currentInfo : IMediaInfos
 ) : IFreezingStatus | null {
+  const { MINIMUM_BUFFER_AMOUNT_BEFORE_FREEZING } = config.getCurrent();
   if (prevObservation.freezing) {
     if (currentInfo.ended ||
         currentInfo.paused ||

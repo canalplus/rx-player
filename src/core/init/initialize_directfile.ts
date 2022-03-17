@@ -100,8 +100,8 @@ export interface IDirectFileOptions { autoPlay : boolean;
                                       mediaElement : HTMLMediaElement;
                                       playbackObserver : PlaybackObserver;
                                       speed : IReadOnlySharedReference<number>;
-                                      startAt? : IInitialTimeOptions;
-                                      url? : string; }
+                                      startAt? : IInitialTimeOptions | undefined;
+                                      url? : string | undefined; }
 
 /**
  * Launch a content in "Directfile mode".

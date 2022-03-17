@@ -178,7 +178,9 @@ function parsePlainTextTrack(
  * @returns {Function}
  */
 export default function generateTextTrackParser(
-  { __priv_patchLastSegmentInSidx } : { __priv_patchLastSegmentInSidx? : boolean }
+  { __priv_patchLastSegmentInSidx } : {
+    __priv_patchLastSegmentInSidx? : boolean | undefined;
+  }
 ) : ISegmentParser< ArrayBuffer | Uint8Array | string | null,
                     ITextTrackSegmentData | null > {
   /**

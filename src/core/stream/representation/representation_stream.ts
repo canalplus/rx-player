@@ -135,7 +135,6 @@ export interface IRepresentationStreamArguments<TSegmentDataType> {
   options: IRepresentationStreamOptions;
 }
 
-const { UPTO_CURRENT_POSITION_CLEANUP } = config;
 
 /**
  * Various specific stream "options" which tweak the behavior of the
@@ -380,6 +379,7 @@ export default function RepresentationStream<TSegmentDataType>({
                                 hasFinishedLoading: status.hasFinishedLoading,
                                 neededSegments: status.neededSegments } });
       let bufferRemoval = EMPTY;
+      const { UPTO_CURRENT_POSITION_CLEANUP } = config.getCurrent();
       if (status.isBufferFull) {
         const gcedPosition = Math.max(
           0,

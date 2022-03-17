@@ -35,7 +35,6 @@ import EVENTS from "../events_generators";
 import { IStreamEventAddedSegment } from "../types";
 import appendSegmentToBuffer from "./append_segment_to_buffer";
 
-const { APPEND_WINDOW_SECURITIES } = config;
 
 /**
  * Push a given media segment (non-init segment) to a SegmentBuffer.
@@ -73,7 +72,7 @@ export default function pushMediaSegment<T>(
             chunkSize,
             appendWindow } = parsedSegment;
     const codec = content.representation.getMimeTypeString();
-
+    const { APPEND_WINDOW_SECURITIES } = config.getCurrent();
     // Cutting exactly at the start or end of the appendWindow can lead to
     // cases of infinite rebuffering due to how browser handle such windows.
     // To work-around that, we add a small offset before and after those.

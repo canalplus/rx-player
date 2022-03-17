@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import { formatError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
@@ -24,6 +23,7 @@ import {
   ILoadedResource,
 } from "../../parsers/manifest/dash/parsers_types";
 import objectAssign from "../../utils/object_assign";
+import PPromise from "../../utils/promise";
 import request from "../../utils/request";
 import {
   strToUtf8,

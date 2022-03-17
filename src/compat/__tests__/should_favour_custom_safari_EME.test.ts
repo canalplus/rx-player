@@ -40,27 +40,43 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
   it("should return false if we are not on Safari", () => {
     jest.mock("../browser_detection", () => {
       return { __esModule: true as const,
-               isSafari: false };
+               isSafariDesktop: false,
+               isSafariMobile: false };
     });
     const shouldFavourCustomSafariEME = require("../should_favour_custom_safari_EME");
     expect(shouldFavourCustomSafariEME.default()).toBe(false);
   });
 
   /* eslint-disable max-len */
-  it("should return false if we are on Safari but WekitMediaKeys is not available", () => {
+  it("should return false if we are on Safari Desktop but WekitMediaKeys is not available", () => {
   /* eslint-enable max-len */
 
     win.WebKitMediaKeys = undefined;
     jest.mock("../browser_detection", () => {
       return { __esModule: true as const,
-               isSafari: true };
+               isSafariDesktop: true,
+               isSafariMobile: false };
     });
     const shouldFavourCustomSafariEME = require("../should_favour_custom_safari_EME");
     expect(shouldFavourCustomSafariEME.default()).toBe(false);
   });
 
   /* eslint-disable max-len */
-  it("should return true if we are on Safari and a WebKitMediaKeys implementation is available", () => {
+  it("should return false if we are on Safari Mobile but WekitMediaKeys is not available", () => {
+  /* eslint-enable max-len */
+
+    win.WebKitMediaKeys = undefined;
+    jest.mock("../browser_detection", () => {
+      return { __esModule: true as const,
+               isSafariDesktop: false,
+               isSafariMobile: true };
+    });
+    const shouldFavourCustomSafariEME = require("../should_favour_custom_safari_EME");
+    expect(shouldFavourCustomSafariEME.default()).toBe(false);
+  });
+
+  /* eslint-disable max-len */
+  it("should return true if we are on Safari Desktop and a WebKitMediaKeys implementation is available", () => {
   /* eslint-enable max-len */
 
     win.WebKitMediaKeys = {
@@ -75,7 +91,31 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
     proto.webkitSetMediaKeys = () => ({});
     jest.mock("../browser_detection", () => {
       return { __esModule: true as const,
-               isSafari: true };
+               isSafariDesktop: true,
+               isSafariMobile: false };
+    });
+    const shouldFavourCustomSafariEME = require("../should_favour_custom_safari_EME");
+    expect(shouldFavourCustomSafariEME.default()).toBe(true);
+  });
+
+  /* eslint-disable max-len */
+  it("should return true if we are on Safari Mobile and a WebKitMediaKeys implementation is available", () => {
+  /* eslint-enable max-len */
+
+    win.WebKitMediaKeys = {
+      isTypeSupported: () => ({}),
+      prototype: {
+        createSession: () => ({}),
+      },
+    };
+    const proto = win.HTMLMediaElement.prototype as unknown as {
+      webkitSetMediaKeys : () => Record<string, never>;
+    };
+    proto.webkitSetMediaKeys = () => ({});
+    jest.mock("../browser_detection", () => {
+      return { __esModule: true as const,
+               isSafariDesktop: false,
+               isSafariMobile: true };
     });
     const shouldFavourCustomSafariEME = require("../should_favour_custom_safari_EME");
     expect(shouldFavourCustomSafariEME.default()).toBe(true);

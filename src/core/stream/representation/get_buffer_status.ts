@@ -35,7 +35,6 @@ import checkForDiscontinuity from "./check_for_discontinuity";
 import getNeededSegments from "./get_needed_segments";
 import getSegmentPriority from "./get_segment_priority";
 
-const { MINIMUM_SEGMENT_SIZE } = config;
 
 /** Analysis of the current buffer's status. */
 export interface IBufferStatus {
@@ -223,6 +222,7 @@ function getPlayableBufferedSegments(
   neededRange : { start : number; end : number },
   segmentInventory : IBufferedChunk[]
 ) : IBufferedChunk[] {
+  const { MINIMUM_SEGMENT_SIZE } = config.getCurrent();
   const segmentRoundingError = Math.max(1 / 60, MINIMUM_SEGMENT_SIZE);
   const minEnd = neededRange.start + segmentRoundingError;
   const maxStart = neededRange.end - segmentRoundingError;

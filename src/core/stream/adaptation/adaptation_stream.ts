@@ -76,7 +76,6 @@ import {
 } from "../types";
 import createRepresentationEstimator from "./create_representation_estimator";
 
-const { DELTA_POSITION_AFTER_RELOAD } = config;
 
 /** Regular playback information needed by the AdaptationStream. */
 export interface IAdaptationStreamPlaybackObservation extends
@@ -282,6 +281,7 @@ export default function AdaptationStream({
         fromEstimate.manual &&
         !isFirstEstimate)
     {
+      const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
       return reloadAfterSwitch(period,
                                adaptation.type,
                                playbackObserver,

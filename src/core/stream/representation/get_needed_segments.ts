@@ -31,13 +31,6 @@ import {
   IChunkContext,
 } from "../../segment_buffers/inventory";
 
-const { CONTENT_REPLACEMENT_PADDING,
-        BITRATE_REBUFFERING_RATIO,
-        MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT,
-        MINIMUM_SEGMENT_SIZE,
-        MIN_BUFFER_LENGTH,
-        MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP } = config;
-
 
 interface IContentContext {
   adaptation: Adaptation;
@@ -89,11 +82,6 @@ export interface IGetNeededSegmentsArguments {
   getBufferedHistory : (context : IChunkContext) => IBufferedHistoryEntry[];
 }
 
-/**
- * Epsilon compensating for rounding errors when comparing the start and end
- * time of multiple segments.
- */
-const ROUNDING_ERROR = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
 
 interface INeededSegments {
   neededSegments: ISegment[];
@@ -164,6 +152,15 @@ export default function getNeededSegments({
     });
   let isMemorySaturated = false;
   let isBufferFull = false;
+
+  const { MINIMUM_SEGMENT_SIZE,
+          MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP,
+          MIN_BUFFER_LENGTH } = config.getCurrent();
+  /**
+   * Epsilon compensating for rounding errors when comparing the start and end
+   * time of multiple segments.
+   */
+  const ROUNDING_ERROR = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
   const neededSegments = availableSegmentsForRange.filter(segment => {
     const contentObject = objectAssign({ segment }, content);
 
@@ -329,7 +326,7 @@ function getLastContiguousSegment(
   startIndex : number
 ) : IBufferedChunk {
   let j = startIndex + 1;
-
+  const ROUNDING_ERROR = Math.min(1 / 60, config.getCurrent().MINIMUM_SEGMENT_SIZE);
   // go through all contiguous segments and take the last one
   while (j < bufferedSegments.length - 1 &&
          (bufferedSegments[j - 1].end + ROUNDING_ERROR) >
@@ -359,6 +356,7 @@ function shouldContentBeReplaced(
   currentPlaybackTime: number,
   fastSwitchThreshold? : number
 ) : boolean {
+  const { CONTENT_REPLACEMENT_PADDING } = config.getCurrent();
   if (oldContent.period.id !== currentContent.period.id) {
     return false; // keep segments from another Period by default.
   }
@@ -393,6 +391,7 @@ function canFastSwitch(
   fastSwitchThreshold : number | undefined
 ) : boolean {
   const oldContentBitrate = oldSegmentRepresentation.bitrate;
+  const { BITRATE_REBUFFERING_RATIO } = config.getCurrent();
   if (fastSwitchThreshold === undefined) {
     // only re-load comparatively-poor bitrates for the same Adaptation.
     const bitrateCeil = oldContentBitrate * BITRATE_REBUFFERING_RATIO;
@@ -419,6 +418,7 @@ function doesStartSeemGarbageCollected(
   prevSeg : IBufferedChunk | null,
   maximumStartTime : number
 ) {
+  const { MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT } = config.getCurrent();
   if (currentSeg.bufferedStart === undefined)  {
     log.warn("Stream: Start of a segment unknown. " +
              "Assuming it is garbage collected by default.",
@@ -461,6 +461,7 @@ function doesEndSeemGarbageCollected(
   nextSeg : IBufferedChunk | null,
   minimumEndTime : number
 ) {
+  const { MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT } = config.getCurrent();
   if (currentSeg.bufferedEnd === undefined)  {
     log.warn("Stream: End of a segment unknown. " +
              "Assuming it is garbage collected by default.",

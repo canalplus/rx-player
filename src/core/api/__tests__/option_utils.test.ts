@@ -46,22 +46,6 @@ const normalizeTextTrackMock = normalizeTextTrack as
   jest.Mock<ReturnType<typeof normalizeTextTrack>>;
 const logWarnMock = log.warn as jest.Mock<ReturnType<typeof log.warn>>;
 
-const {
-  // DEFAULT_AUTO_PLAY,
-  DEFAULT_INITIAL_BITRATES,
-  DEFAULT_LIMIT_VIDEO_WIDTH,
-  // DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
-  DEFAULT_MIN_BITRATES,
-  DEFAULT_MAX_BITRATES,
-  DEFAULT_MAX_BUFFER_AHEAD,
-  DEFAULT_MAX_BUFFER_BEHIND,
-  // DEFAULT_SHOW_NATIVE_SUBTITLE,
-  // DEFAULT_TEXT_TRACK_MODE,
-  DEFAULT_THROTTLE_WHEN_HIDDEN,
-  DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
-  DEFAULT_WANTED_BUFFER_AHEAD,
-  DEFAULT_MAX_VIDEO_BUFFER_SIZE,
-} = config;
 
 describe("API - parseConstructorOptions", () => {
   beforeEach(() => {
@@ -76,7 +60,22 @@ describe("API - parseConstructorOptions", () => {
   });
 
   const videoElement = document.createElement("video");
-
+  const {
+    // DEFAULT_AUTO_PLAY,
+    DEFAULT_INITIAL_BITRATES,
+    DEFAULT_LIMIT_VIDEO_WIDTH,
+    // DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
+    DEFAULT_MAX_VIDEO_BUFFER_SIZE,
+    DEFAULT_MIN_BITRATES,
+    DEFAULT_MAX_BITRATES,
+    DEFAULT_MAX_BUFFER_AHEAD,
+    DEFAULT_MAX_BUFFER_BEHIND,
+    // DEFAULT_SHOW_NATIVE_SUBTITLE,
+    // DEFAULT_TEXT_TRACK_MODE,
+    DEFAULT_THROTTLE_WHEN_HIDDEN,
+    DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
+    DEFAULT_WANTED_BUFFER_AHEAD,
+  } = config.getCurrent();
   const defaultConstructorOptions = {
     maxVideoBufferSize: DEFAULT_MAX_VIDEO_BUFFER_SIZE,
     maxBufferAhead: DEFAULT_MAX_BUFFER_AHEAD,

@@ -48,8 +48,6 @@ const { onEnded$,
         onSeeked$,
         onSeeking$ } = events;
 
-const { MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL,
-        TEXT_TRACK_SIZE_CHECKS_INTERVAL } = config;
 
 /**
  * Generate the interval at which TextTrack HTML Cues should be refreshed.
@@ -60,7 +58,7 @@ function generateRefreshInterval(videoElement : HTMLMediaElement) : Observable<b
   const seeking$ = onSeeking$(videoElement);
   const seeked$ = onSeeked$(videoElement);
   const ended$ = onEnded$(videoElement);
-
+  const { MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL } = config.getCurrent();
   const manualRefresh$ = observableMerge(seeked$, ended$);
   const autoRefresh$ = observableInterval(MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL)
     .pipe(startWith(null));
@@ -182,7 +180,7 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
           this._disableCurrentCues();
           return;
         }
-
+        const { MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL } = config.getCurrent();
         // to spread the time error, we divide the regular chosen interval.
         const time = Math.max(this._videoElement.currentTime +
                               (MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL / 1000) / 2,
@@ -420,6 +418,7 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
                                element : HTMLElement; } => cue.resolution !== null);
 
     if (proportionalCues.length > 0) {
+      const { TEXT_TRACK_SIZE_CHECKS_INTERVAL } = config.getCurrent();
       // update propertionally-sized elements periodically
       onHeightWidthChange(this._textTrackElement, TEXT_TRACK_SIZE_CHECKS_INTERVAL)
         .pipe(takeUntil(this._clearSizeUpdates$),
@@ -445,11 +444,11 @@ export interface INativeTextTracksBufferSegmentData {
    * This is mostly needed for "sami" subtitles, to know which cues can / should
    * be parsed.
    */
-  language? : string;
+  language? : string | undefined;
   /** start time from which the segment apply, in seconds. */
-  start? : number;
+  start? : number | undefined;
   /** end time until which the segment apply, in seconds. */
-  end? : number;
+  end? : number | undefined;
 }
 
 /**

@@ -29,11 +29,6 @@ import BufferedHistory, {
 } from "./buffered_history";
 import { IChunkContext } from "./types";
 
-const { BUFFERED_HISTORY_RETENTION_TIME,
-        BUFFERED_HISTORY_MAXIMUM_ENTRIES,
-        MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
-        MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE,
-        MINIMUM_SEGMENT_SIZE } = config;
 
 /** Information stored on a single chunk by the SegmentInventory. */
 export interface IBufferedChunk {
@@ -168,6 +163,8 @@ export default class SegmentInventory {
   private _bufferedHistory : BufferedHistory;
 
   constructor() {
+    const { BUFFERED_HISTORY_RETENTION_TIME,
+            BUFFERED_HISTORY_MAXIMUM_ENTRIES } = config.getCurrent();
     this._inventory = [];
     this._bufferedHistory = new BufferedHistory(BUFFERED_HISTORY_RETENTION_TIME,
                                                 BUFFERED_HISTORY_MAXIMUM_ENTRIES);
@@ -196,7 +193,7 @@ export default class SegmentInventory {
     const inventory = this._inventory;
     let inventoryIndex = 0; // Current index considered.
     let thisSegment = inventory[0]; // Current segmentInfos considered
-
+    const { MINIMUM_SEGMENT_SIZE } = config.getCurrent();
     /** Type of buffer considered, used for logs */
     const bufferType : string | undefined = thisSegment?.infos.adaptation.type;
 
@@ -811,6 +808,8 @@ function bufferedStartLooksCoherent(
   }
   const { start, end } = thisSegment;
   const duration = end - start;
+  const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
+          MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE } = config.getCurrent();
   return Math.abs(start - thisSegment.bufferedStart) <=
            MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE &&
          (thisSegment.bufferedEnd === undefined ||
@@ -836,6 +835,8 @@ function bufferedEndLooksCoherent(
   }
   const { start, end } = thisSegment;
   const duration = end - start;
+  const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
+          MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE } = config.getCurrent();
   return Math.abs(end - thisSegment.bufferedEnd) <=
            MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE &&
          thisSegment.bufferedStart != null &&
@@ -859,6 +860,7 @@ function guessBufferedStartFromRangeStart(
                             null,
   bufferType : string
 ) : void {
+  const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE } = config.getCurrent();
   if (firstSegmentInRange.bufferedStart !== undefined) {
     if (firstSegmentInRange.bufferedStart < rangeStart) {
       log.debug("SI: Segment partially GCed at the start",
@@ -923,6 +925,7 @@ function guessBufferedEndFromRangeEnd(
   rangeEnd : number,
   bufferType? : string
 ) : void {
+  const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE } = config.getCurrent();
   if (lastSegmentInRange.bufferedEnd !== undefined) {
     if (lastSegmentInRange.bufferedEnd > rangeEnd) {
       log.debug("SI: Segment partially GCed at the end",

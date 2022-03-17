@@ -373,7 +373,7 @@ export interface IManifestParserResult {
    * This property should only be set when a unique URL is sufficient to
    * retrieve the whole data.
    */
-  url? : string;
+  url? : string | undefined;
 }
 
 /**
@@ -416,11 +416,11 @@ export interface ITextTrackSegmentData {
    * This is mostly needed for "sami" subtitles, to know which cues can / should
    * be parsed.
    */
-  language? : string;
+  language? : string | undefined;
   /** start time from which the segment apply, in seconds. */
-  start? : number;
+  start? : number | undefined;
   /** end time until which the segment apply, in seconds. */
-  end? : number;
+  end? : number | undefined;
 }
 
 /** Format under which image data is decodable by the RxPlayer. */
@@ -487,21 +487,21 @@ interface IServerSyncInfos { serverTimestamp : number;
                              clientTime : number; }
 
 export interface ITransportOptions {
-  aggressiveMode? : boolean;
-  checkMediaSegmentIntegrity? : boolean;
+  aggressiveMode? : boolean | undefined;
+  checkMediaSegmentIntegrity? : boolean | undefined;
   lowLatencyMode : boolean;
-  manifestLoader?: ICustomManifestLoader;
-  manifestUpdateUrl? : string;
-  referenceDateTime? : number;
-  representationFilter? : IRepresentationFilter;
-  segmentLoader? : ICustomSegmentLoader;
-  serverSyncInfos? : IServerSyncInfos;
+  manifestLoader?: ICustomManifestLoader | undefined;
+  manifestUpdateUrl? : string | undefined;
+  referenceDateTime? : number | undefined;
+  representationFilter? : IRepresentationFilter | undefined;
+  segmentLoader? : ICustomSegmentLoader | undefined;
+  serverSyncInfos? : IServerSyncInfos | undefined;
   /* eslint-disable import/no-deprecated */
-  supplementaryImageTracks? : ISupplementaryImageTrack[];
-  supplementaryTextTracks? : ISupplementaryTextTrack[];
+  supplementaryImageTracks? : ISupplementaryImageTrack[] | undefined;
+  supplementaryTextTracks? : ISupplementaryTextTrack[] | undefined;
   /* eslint-enable import/no-deprecated */
 
-  __priv_patchLastSegmentInSidx? : boolean;
+  __priv_patchLastSegmentInSidx? : boolean | undefined;
 }
 
 export type ICustomSegmentLoader = (
@@ -521,7 +521,13 @@ export type ICustomSegmentLoader = (
                                      duration? : number | undefined; }) => void;
 
                  reject : (err? : unknown) => void;
-                 fallback? : (() => void) | undefined; }
+                 fallback : () => void;
+                 progress : (
+                   info : { duration : number;
+                            size : number;
+                            totalSize? : number | undefined; }
+                 ) => void;
+  }
 ) =>
   // returns either the aborting callback or nothing
   (() => void)|void;
@@ -532,14 +538,15 @@ export type ICustomManifestLoader = (
 
   // second argument: callbacks
   callbacks : { resolve : (args : { data : ILoadedManifestFormat;
-                                    sendingTime? : number;
-                                    receivingTime? : number;
-                                    size? : number;
-                                    duration? : number; })
+                                    url? : string | undefined;
+                                    sendingTime? : number | undefined;
+                                    receivingTime? : number | undefined;
+                                    size? : number | undefined;
+                                    duration? : number | undefined; })
                           => void;
 
                  reject : (err? : Error) => void;
-                 fallback? : () => void; }
+                 fallback : () => void; }
 ) =>
   // returns either the aborting callback or nothing
   (() => void)|void;
@@ -597,7 +604,7 @@ export interface ISegmentLoadingProgressInformation {
   /** Size of the data already downloaded, in bytes. */
   size : number;
   /** Size of whole data to download (data already-loaded included), in bytes. */
-  totalSize? : number;
+  totalSize? : number | undefined;
 }
 
 /**
@@ -646,19 +653,19 @@ export interface IChunkCompleteInformation {
    * This property should only be set when a unique URL is sufficient to
    * retrieve the whole data.
    */
-  url? : string;
+  url? : string | undefined;
   /**
    * Time at which the request began in terms of `performance.now`.
    * If fetching the corresponding data necessitated to perform multiple
    * requests, this time corresponds to the first request made.
    */
-  sendingTime? : number;
+  sendingTime? : number | undefined;
   /**
    * Time at which the request ended in terms of `performance.now`.
    * If fetching the corresponding data necessitated to perform multiple
    * requests, this time corresponds to the last request to end.
    */
-  receivedTime? : number;
+  receivedTime? : number | undefined;
   /** Size in bytes of the loaded data.  `undefined` if we don't know.  */
   size : number | undefined;
 }
@@ -702,7 +709,7 @@ export interface ISegmentParserParsedInitChunk<DataType> {
    * Timescale metadata found inside this initialization segment.
    * That timescale might be useful when parsing further merdia segments.
    */
-  initTimescale? : number;
+  initTimescale? : number | undefined;
   /**
    * If set to `true`, some protection information has been found in this
    * initialization segment and lead the corresponding `Representation`
@@ -779,7 +786,7 @@ export interface ISegmentParserParsedMediaChunk<DataType> {
    * If set and not empty, then "events" have been encountered in this parsed
    * chunks.
    */
-  inbandEvents? : IInbandEvent[];
+  inbandEvents? : IInbandEvent[] | undefined;
   /**
    * If set to `true`, then parsing this chunk revealed that the current
    * Manifest instance needs to be refreshed.
@@ -813,19 +820,19 @@ export interface IRequestedData<T> {
    * This property should only be set when a unique URL is sufficient to
    * retrieve the whole data.
    */
-  url? : string;
+  url? : string | undefined;
   /**
    * Time at which the request began in terms of `performance.now`.
    * If fetching the corresponding data necessitated to perform multiple
    * requests, this time corresponds to the first request made.
    */
-  sendingTime? : number;
+  sendingTime? : number | undefined;
   /**
    * Time at which the request ended in terms of `performance.now`.
    * If fetching the corresponding data necessitated to perform multiple
    * requests, this time corresponds to the last request to end.
    */
-  receivedTime? : number;
+  receivedTime? : number | undefined;
   /** Size in bytes of the loaded data.  `undefined` if we don't know.  */
   size : number | undefined;
 }

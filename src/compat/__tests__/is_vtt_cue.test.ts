@@ -63,7 +63,7 @@ describe("Compat - isVTTCue", () => {
     const originalVTTCue = window.VTTCue;
     win.VTTCue = MockVTTCue;
     const cue = new VTTCue(0, 10, "");
-    win.VTTCue = undefined;
+    delete win.VTTCue;
     const isVTTCue = require("../is_vtt_cue").default;
     expect(isVTTCue(cue)).toEqual(false);
     window.VTTCue = originalVTTCue;

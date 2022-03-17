@@ -160,7 +160,7 @@ describe("manifest error management", function () {
 
     clock.restore();
 
-    await sleep(5);
+    await sleep(1000);
     expect(player.getManifest()).not.to.equal(null);
     expect(typeof player.getManifest()).to.equal("object");
     expect(player.getError()).to.equal(null);

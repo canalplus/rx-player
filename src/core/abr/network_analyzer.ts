@@ -25,11 +25,6 @@ import {
 } from "./pending_requests_store";
 import EWMA from "./utils/ewma";
 
-const { ABR_REGULAR_FACTOR,
-        ABR_STARVATION_DURATION_DELTA,
-        ABR_STARVATION_FACTOR,
-        ABR_STARVATION_GAP,
-        OUT_OF_STARVATION_GAP } = config;
 
 /** Object describing the current playback conditions. */
 interface IPlaybackConditionsInfo {
@@ -289,6 +284,10 @@ export default class NetworkAnalyzer {
                       regularBitrateFactor : number; };
 
   constructor(initialBitrate: number, lowLatencyMode: boolean) {
+    const { ABR_STARVATION_GAP,
+            OUT_OF_STARVATION_GAP,
+            ABR_STARVATION_FACTOR,
+            ABR_REGULAR_FACTOR } = config.getCurrent();
     this._initialBitrate = initialBitrate;
     this._inStarvationMode = false;
     this._lowLatencyMode = lowLatencyMode;
@@ -327,14 +326,14 @@ export default class NetworkAnalyzer {
     currentRepresentation : Representation | null,
     currentRequests : IRequestInfo[],
     lastEstimatedBitrate: number|undefined
-  ) : { bandwidthEstimate? : number; bitrateChosen : number } {
+  ) : { bandwidthEstimate? : number | undefined; bitrateChosen : number } {
     let newBitrateCeil : number | undefined; // bitrate ceil for the chosen Representation
     let bandwidthEstimate;
     const localConf = this._config;
     const { bufferGap, position, duration } = playbackInfo;
     const realBufferGap = isFinite(bufferGap) ? bufferGap :
                                                 0;
-
+    const { ABR_STARVATION_DURATION_DELTA } = config.getCurrent();
     // check if should get in/out of starvation mode
     if (isNaN(duration) ||
         realBufferGap + position < duration - ABR_STARVATION_DURATION_DELTA)

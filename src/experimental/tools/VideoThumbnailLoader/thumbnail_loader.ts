@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import pinkie from "pinkie";
 import {
   catchError,
   combineLatest,
@@ -36,6 +35,7 @@ import createSegmentFetcher, {
 import log from "../../../log";
 import { ISegment } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
+import PPromise from "../../../utils/promise";
 import { freeRequest } from "./create_request";
 import getCompleteSegmentId from "./get_complete_segment_id";
 import getContentInfos from "./get_content_infos";
@@ -51,9 +51,6 @@ import {
   ILoaders,
 } from "./types";
 import VideoThumbnailLoaderError from "./video_thumbnail_loader_error";
-
-const PPromise = typeof Promise === "function" ? Promise :
-                                                 pinkie;
 
 const MIN_NEEDED_DATA_AFTER_TIME = 2;
 
@@ -75,8 +72,8 @@ export default class VideoThumbnailLoader {
   private readonly _videoElement: HTMLVideoElement;
 
   private _player: Player;
-  private _currentTask?: ITimeSettingTask;
-  private _nextTaskSegmentsCompleteIds?: string[];
+  private _currentTask : ITimeSettingTask | undefined;
+  private _nextTaskSegmentsCompleteIds : string[] | undefined;
   constructor(videoElement: HTMLVideoElement,
               player: Player) {
     this._videoElement = videoElement;

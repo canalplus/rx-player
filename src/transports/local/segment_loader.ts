@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import { CustomLoaderError } from "../../errors";
 import {
   ILocalManifestInitSegmentLoader,
   ILocalManifestSegmentLoader,
 } from "../../parsers/manifest/local";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import PPromise from "../../utils/promise";
 import {
   CancellationError,
   CancellationSignal,
@@ -39,7 +39,7 @@ import {
 function loadInitSegment(
   customSegmentLoader : ILocalManifestInitSegmentLoader,
   cancelSignal : CancellationSignal
-) : PPromise<ISegmentLoaderResultSegmentLoaded<ArrayBuffer | null>> {
+) : Promise<ISegmentLoaderResultSegmentLoaded<ArrayBuffer | null>> {
   return new PPromise((res, rej) => {
     /** `true` when the custom segmentLoader should not be active anymore. */
     let hasFinished = false;
@@ -107,7 +107,7 @@ function loadSegment(
   segment : { time : number; duration : number; timestampOffset? : number },
   customSegmentLoader : ILocalManifestSegmentLoader,
   cancelSignal : CancellationSignal
-) : PPromise< ISegmentLoaderResultSegmentLoaded<ArrayBuffer | null>> {
+) : Promise< ISegmentLoaderResultSegmentLoaded<ArrayBuffer | null>> {
   return new PPromise((res, rej) => {
     /** `true` when the custom segmentLoader should not be active anymore. */
     let hasFinished = false;
@@ -191,7 +191,7 @@ export default function segmentLoader(
   content : ISegmentContext,
   cancelSignal : CancellationSignal,
   _callbacks : ISegmentLoaderCallbacks<ArrayBuffer | null>
-) : PPromise<ISegmentLoaderResultSegmentLoaded<ArrayBuffer | null>> {
+) : Promise<ISegmentLoaderResultSegmentLoaded<ArrayBuffer | null>> {
   const { segment } = content;
   const privateInfos = segment.privateInfos;
   if (segment.isInit) {

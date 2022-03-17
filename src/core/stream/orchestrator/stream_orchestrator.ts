@@ -78,8 +78,6 @@ import getBlacklistedRanges from "./get_blacklisted_ranges";
 
 export type IStreamOrchestratorPlaybackObservation = IPeriodStreamPlaybackObservation;
 
-const { MAXIMUM_MAX_BUFFER_AHEAD,
-        MAXIMUM_MAX_BUFFER_BEHIND } = config;
 
 /** Options tweaking the behavior of the StreamOrchestrator. */
 export type IStreamOrchestratorOptions =
@@ -129,6 +127,8 @@ export default function StreamOrchestrator(
           wantedBufferAhead,
           maxVideoBufferSize } = options;
 
+  const { MAXIMUM_MAX_BUFFER_AHEAD,
+          MAXIMUM_MAX_BUFFER_BEHIND } = config.getCurrent();
   // Keep track of a unique BufferGarbageCollector created per
   // SegmentBuffer.
   const garbageCollectors =

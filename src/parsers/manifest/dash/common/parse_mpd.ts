@@ -37,7 +37,6 @@ import resolveBaseURLs, {
   IResolvedBaseUrl,
 } from "./resolve_base_urls";
 
-const { DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 } = config;
 
 /** Possible options for `parseMPD`.  */
 export interface IMPDParserArguments {
@@ -47,11 +46,11 @@ export interface IMPDParserArguments {
    * If set, offset to add to `performance.now()` to obtain the current server's
    * time.
    */
-  externalClockOffset? : number;
+  externalClockOffset? : number | undefined;
   /** Time, in terms of `performance.now` at which this MPD was received. */
-  manifestReceivedTime? : number;
+  manifestReceivedTime? : number | undefined;
   /** Default base time, in seconds. */
-  referenceDateTime? : number;
+  referenceDateTime? : number | undefined;
   /**
    * The parser should take this Manifest - which is a previously parsed
    * Manifest for the same dynamic content - as a base to speed-up the parsing
@@ -62,13 +61,13 @@ export interface IMPDParserArguments {
    */
   unsafelyBaseOnPreviousManifest : Manifest | null;
   /** URL of the manifest (post-redirection if one). */
-  url? : string;
+  url? : string | undefined;
 }
 
 export interface ILoadedXlinkData {
-  url? : string;
-  sendingTime? : number;
-  receivedTime? : number;
+  url? : string | undefined;
+  sendingTime? : number | undefined;
+  receivedTime? : number | undefined;
   parsed : IPeriodIntermediateRepresentation[];
   warnings : Error[];
 }
@@ -127,7 +126,7 @@ export default function parseMpdIr(
   mpdIR : IMPDIntermediateRepresentation,
   args : IMPDParserArguments,
   warnings : Error[],
-  hasLoadedClock? : boolean,
+  hasLoadedClock? : boolean | undefined,
   xlinkInfos : IXLinkInfos = new WeakMap()
 ) : IIrParserResponse {
   const { children: rootChildren,
@@ -277,7 +276,7 @@ function parseCompleteIntermediateRepresentation(
       rootAttributes.minimumUpdatePeriod >= 0)
   {
     lifetime = rootAttributes.minimumUpdatePeriod === 0 ?
-      DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 :
+      config.getCurrent().DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 :
       rootAttributes.minimumUpdatePeriod;
   }
 

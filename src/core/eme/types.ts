@@ -40,7 +40,7 @@ export interface IInitializationDataInfo {
    * `undefined` when not known (different from an empty array - which would
    * just mean that there's no key id involved).
    */
-  keyIds? : Uint8Array[];
+  keyIds? : Uint8Array[] | undefined;
   /** Every initialization data for that type. */
   values: Array<{
     /**
@@ -298,7 +298,7 @@ export interface IContentProtection {
    * `undefined` when not known (different from an empty array - which would
    * just mean that there's no key id involved).
    */
-  keyIds? : Uint8Array[];
+  keyIds? : Uint8Array[] | undefined;
   /** Every initialization data for that type. */
   values: Array<{
     /**

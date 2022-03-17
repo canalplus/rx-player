@@ -107,6 +107,7 @@
       maxBandwidth="1996000"
       maxWidth="2221"
       maxHeight="944"
+      selectionPriority="2"
       segmentAlignment="true"
       mimeType="video/mp4"
       startWithSAP="1">

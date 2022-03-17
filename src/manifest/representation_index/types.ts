@@ -38,12 +38,12 @@ export interface ISmoothInitSegmentPrivateInfos {
    * as found in the Manifest.
    */
   timescale : number;
-  codecPrivateData? : string;
-  bitsPerSample? : number;
-  channels? : number;
-  packetSize? : number;
-  samplingRate? : number;
-  protection? : { keyId : Uint8Array };
+  codecPrivateData? : string | undefined;
+  bitsPerSample? : number | undefined;
+  channels? : number | undefined;
+  packetSize? : number | undefined;
+  samplingRate? : number | undefined;
+  protection? : { keyId : Uint8Array } | undefined;
 }
 
 /**
@@ -78,7 +78,7 @@ export interface IMetaPlaylistPrivateInfos {
   /** The segment originally created by this transport's RepresentationIndex. */
   originalSegment : ISegment;
   contentStart : number;
-  contentEnd? : number;
+  contentEnd? : number | undefined;
 }
 
 /**
@@ -112,12 +112,12 @@ export interface ILocalManifestSegmentPrivateInfos {
  * exploited by the corresponding transport logic.
  */
 export interface IPrivateInfos {
-  smoothInitSegment? : ISmoothInitSegmentPrivateInfos;
-  smoothMediaSegment? : ISmoothSegmentPrivateInfos;
-  metaplaylistInfos? : IMetaPlaylistPrivateInfos;
-  localManifestInitSegment? : ILocalManifestInitSegmentPrivateInfos;
-  localManifestSegment? : ILocalManifestSegmentPrivateInfos;
-  isEMSGWhitelisted? : (evt: IEMSG) => boolean;
+  smoothInitSegment? : ISmoothInitSegmentPrivateInfos | undefined;
+  smoothMediaSegment? : ISmoothSegmentPrivateInfos | undefined;
+  metaplaylistInfos? : IMetaPlaylistPrivateInfos | undefined;
+  localManifestInitSegment? : ILocalManifestInitSegmentPrivateInfos | undefined;
+  localManifestSegment? : ILocalManifestSegmentPrivateInfos | undefined;
+  isEMSGWhitelisted? : ((evt: IEMSG) => boolean) | undefined;
 }
 
 /** Represent a single Segment from a Representation. */
@@ -149,24 +149,24 @@ export interface ISegment {
    * contain an index describing other Segments
    * TODO put in privateInfos?
    */
-  indexRange? : [number, number];
+  indexRange? : [number, number] | undefined;
   /**
    * Optional number of the Segment
    * TODO put in privateInfos?
    */
-  number? : number;
+  number? : number | undefined;
   /**
    * Allows to store supplementary information on a segment that can be later
    * exploited by the transport logic.
    */
-  privateInfos? : IPrivateInfos;
+  privateInfos? : IPrivateInfos | undefined;
   /** Optional byte range to retrieve the Segment from its URL(s) */
-  range? : [number, number];
+  range? : [number, number] | undefined;
   /**
    * Estimated time, in seconds, at which the concerned segment should be
    * offseted when decoded.
    */
-  timestampOffset? : number;
+  timestampOffset? : number | undefined;
   /**
    * Estimated start time for the segment, in seconds.
    * Note that some rounding errors and some differences between what the

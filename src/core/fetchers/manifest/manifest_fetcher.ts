@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import {
   Observable,
 } from "rxjs";
@@ -31,6 +30,7 @@ import {
   ITransportPipelines,
 } from "../../../transports";
 import assert from "../../../utils/assert";
+import PPromise from "../../../utils/promise";
 import TaskCanceller from "../../../utils/task_canceller";
 import errorSelector from "../utils/error_selector";
 import {
@@ -38,10 +38,6 @@ import {
   tryRequestPromiseWithBackoff,
 } from "../utils/try_urls_with_backoff";
 
-const { DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
-        DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
-        INITIAL_BACKOFF_DELAY_BASE,
-        MAX_BACKOFF_DELAY_BASE } = config;
 
 /** What will be sent once parsed. */
 export interface IManifestFetcherParsedResult {
@@ -54,11 +50,11 @@ export interface IManifestFetcherParsedResult {
    * The time (`performance.now()`) at which the request was started (at which
    * the JavaScript call was done).
    */
-  sendingTime? : number;
+  sendingTime? : number | undefined;
   /** The time (`performance.now()`) at which the request was fully received. */
-  receivedTime? : number;
+  receivedTime? : number | undefined;
   /* The time taken to parse the Manifest through the corresponding parse function. */
-  parsingTime? : number;
+  parsingTime? : number | undefined;
 }
 
 /** Emitted when a fetching or parsing minor error happened. */
@@ -86,7 +82,7 @@ export interface IManifestFetcherParserOptions {
    * If set, offset to add to `performance.now()` to obtain the current
    * server's time.
    */
-  externalClockOffset? : number;
+  externalClockOffset? : number | undefined;
   /** The previous value of the Manifest (when updating). */
   previousManifest : Manifest | null;
   /**
@@ -407,6 +403,10 @@ export default class ManifestFetcher {
    * @returns {Object}
    */
   private _getBackoffSetting(onRetry : (err : unknown) => void) : IBackoffSettings {
+    const { DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
+            DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
+            INITIAL_BACKOFF_DELAY_BASE,
+            MAX_BACKOFF_DELAY_BASE } = config.getCurrent();
     const { lowLatencyMode,
             maxRetryRegular : ogRegular,
             maxRetryOffline : ogOffline } = this._settings;

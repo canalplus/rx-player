@@ -43,7 +43,6 @@ import {
   IStreamEventPayload,
 } from "./types";
 
-const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config;
 
 /**
  * Tells if a stream event has a duration
@@ -161,6 +160,8 @@ function streamEventsEmitter(manifest: Manifest,
       if (!hasEvents) {
         return EMPTY;
       }
+
+      const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config.getCurrent();
       return observableCombineLatest([
         interval(STREAM_EVENT_EMITTER_POLL_INTERVAL).pipe(startWith(null)),
         observation$,

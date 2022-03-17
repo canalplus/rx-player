@@ -53,10 +53,6 @@ import { IBufferType } from "../../segment_buffers";
 import errorSelector from "../utils/error_selector";
 import { tryURLsWithBackoff } from "../utils/try_urls_with_backoff";
 
-const { DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
-        DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
-        INITIAL_BACKOFF_DELAY_BASE,
-        MAX_BACKOFF_DELAY_BASE } = config;
 
 const generateRequestID = idGenerator();
 
@@ -442,10 +438,14 @@ export function getSegmentFetcherOptions(
   bufferType : string,
   { maxRetryRegular,
     maxRetryOffline,
-    lowLatencyMode } : { maxRetryRegular? : number;
-                         maxRetryOffline? : number;
+    lowLatencyMode } : { maxRetryRegular? : number | undefined;
+                         maxRetryOffline? : number | undefined;
                          lowLatencyMode : boolean; }
 ) : ISegmentFetcherOptions {
+  const { DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
+          DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
+          INITIAL_BACKOFF_DELAY_BASE,
+          MAX_BACKOFF_DELAY_BASE } = config.getCurrent();
   return { maxRetryRegular: bufferType === "image" ? 0 :
                             maxRetryRegular ?? DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
            maxRetryOffline: maxRetryOffline ?? DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,

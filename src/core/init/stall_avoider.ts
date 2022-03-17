@@ -44,11 +44,6 @@ import {
   IWarningEvent,
 } from "./types";
 
-const { BUFFER_DISCONTINUITY_THRESHOLD,
-        FORCE_DISCONTINUITY_SEEK_DELAY,
-        FREEZING_STALLED_DELAY,
-        UNFREEZING_SEEK_DELAY,
-        UNFREEZING_DELTA_POSITION } = config;
 
 /**
  * Work-around rounding errors with floating points by setting an acceptable,
@@ -224,6 +219,12 @@ export default function StallAvoider(
               readyState,
               rebuffering,
               freezing } = observation;
+
+      const { BUFFER_DISCONTINUITY_THRESHOLD,
+              FORCE_DISCONTINUITY_SEEK_DELAY,
+              FREEZING_STALLED_DELAY,
+              UNFREEZING_SEEK_DELAY,
+              UNFREEZING_DELTA_POSITION } = config.getCurrent();
 
       if (freezing !== null) {
         const now = performance.now();

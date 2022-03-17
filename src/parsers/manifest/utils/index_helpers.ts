@@ -28,7 +28,7 @@ export interface IIndexSegment {
    */
   repeatCount: number;
   /** Optional byte-range the segment is available at when requested. */
-  range?: [number, number];
+  range?: [number, number] | undefined;
 }
 
 /**
@@ -42,7 +42,7 @@ export interface IIndexSegment {
 export function calculateRepeat(
   element : IIndexSegment,
   nextElement? : IIndexSegment | null | undefined,
-  maxPosition? : number
+  maxPosition? : number | undefined
 ) : number {
   const { repeatCount } = element;
 

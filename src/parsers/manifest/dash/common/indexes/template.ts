@@ -29,7 +29,6 @@ import {
   createIndexURLs,
 } from "./tokens";
 
-const { MINIMUM_SEGMENT_SIZE } = config;
 
 /**
  * Index property defined for a SegmentTemplate RepresentationIndex
@@ -49,14 +48,14 @@ export interface ITemplateIndex {
    */
   timescale : number;
   /** Byte range for a possible index of segments in the server. */
-  indexRange?: [number, number];
+  indexRange?: [number, number] | undefined;
   /** Information on the initialization segment. */
   initialization? : {
     /** URLs to access the initialization segment. */
     mediaURLs: string[] | null;
     /** possible byte range to request it. */
-    range?: [number, number];
-  };
+    range?: [number, number] | undefined;
+  } | undefined;
   /**
    * URL base to access any segment.
    * Can contain token to replace to convert it to real URLs.
@@ -91,7 +90,7 @@ export interface ITemplateIndex {
    */
   presentationTimeOffset : number;
   /** Number from which the first segments in this index starts with. */
-  startNumber? : number;
+  startNumber? : number | undefined;
 }
 
 /**
@@ -99,14 +98,15 @@ export interface ITemplateIndex {
  * Most of the properties here are already defined in ITemplateIndex.
  */
 export interface ITemplateIndexIndexArgument {
-  duration? : number;
-  indexRange?: [number, number];
-  initialization?: { media? : string;
-                     range? : [number, number]; };
-  media? : string;
-  presentationTimeOffset? : number;
-  startNumber? : number;
-  timescale? : number;
+  duration? : number | undefined;
+  indexRange?: [number, number] | undefined;
+  initialization?: { media? : string | undefined;
+                     range? : [number, number] | undefined; } |
+                   undefined;
+  media? : string | undefined;
+  presentationTimeOffset? : number | undefined;
+  startNumber? : number | undefined;
+  timescale? : number | undefined;
 }
 
 /** Aditional context needed by a SegmentTemplate RepresentationIndex. */
@@ -125,9 +125,9 @@ export interface ITemplateIndexContextArgument {
   /** Base URL for the Representation concerned. */
   representationBaseURLs : IResolvedBaseUrl[];
   /** ID of the Representation concerned. */
-  representationId? : string;
+  representationId? : string | undefined;
   /** Bitrate of the Representation concerned. */
-  representationBitrate? : number;
+  representationBitrate? : number | undefined;
   /* Function that tells if an EMSG is whitelisted by the manifest */
   isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 }
@@ -150,9 +150,9 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   /** Absolute start of the Period, in seconds. */
   private _periodStart : number;
   /** Difference between the end time of the Period and its start time, in timescale. */
-  private _scaledPeriodEnd? : number;
+  private _scaledPeriodEnd : number | undefined;
   /** Minimum availabilityTimeOffset concerning the segments of this Representation. */
-  private _availabilityTimeOffset? : number;
+  private _availabilityTimeOffset : number | undefined;
   /** Whether the corresponding Manifest can be updated and changed. */
   private _isDynamic : boolean;
   /* Function that tells if an EMSG is whitelisted by the manifest */
@@ -532,7 +532,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       // segment that there actually is due to a very little difference between
       // the period's duration and a multiple of a segment's duration.
       // Check that we're within a good margin
-      const minimumDuration = MINIMUM_SEGMENT_SIZE * timescale;
+      const minimumDuration = config.getCurrent().MINIMUM_SEGMENT_SIZE * timescale;
       if (maximumTime - regularLastSegmentStart > minimumDuration ||
           numberIndexedToZero === 0)
       {

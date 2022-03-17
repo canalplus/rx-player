@@ -46,6 +46,7 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
   /* eslint-enable max-len */
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
       isDynamic: false,
+      timeShiftBufferDepth: undefined,
     });
     expect(manifestBoundsCalculator.estimateMinimumBound()).toEqual(0);
     expect(manifestBoundsCalculator.estimateMinimumBound()).toEqual(0);

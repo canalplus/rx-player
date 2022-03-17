@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import { CustomLoaderError } from "../../errors";
 import assert from "../../utils/assert";
+import PPromise from "../../utils/promise";
 import request from "../../utils/request";
 import {
   CancellationError,
@@ -51,7 +51,7 @@ function regularSegmentLoader(
   content : ISegmentContext,
   callbacks : ISegmentLoaderCallbacks<Uint8Array | ArrayBuffer | null>,
   cancelSignal : CancellationSignal,
-  checkMediaSegmentIntegrity? : boolean
+  checkMediaSegmentIntegrity? : boolean | undefined
 ) : Promise<ISegmentLoaderResultSegmentLoaded<Uint8Array | ArrayBuffer | null>> {
   let headers;
   const range = content.segment.range;
@@ -85,8 +85,8 @@ const generateSegmentLoader = ({
   checkMediaSegmentIntegrity,
   customSegmentLoader,
 } : {
-  checkMediaSegmentIntegrity? : boolean;
-  customSegmentLoader? : ICustomSegmentLoader;
+  checkMediaSegmentIntegrity? : boolean | undefined;
+  customSegmentLoader? : ICustomSegmentLoader | undefined;
 }) => (
   url : string | null,
   content : ISegmentContext,
@@ -165,7 +165,7 @@ const generateSegmentLoader = ({
                                   checkMediaSegmentIntegrity);
     }
 
-    return new Promise((res, rej) => {
+    return new PPromise((res, rej) => {
       /** `true` when the custom segmentLoader should not be active anymore. */
       let hasFinished = false;
 
@@ -176,8 +176,8 @@ const generateSegmentLoader = ({
        */
       const resolve = (_args : {
         data : ArrayBuffer|Uint8Array;
-        size? : number;
-        duration? : number;
+        size? : number | undefined;
+        duration? : number | undefined;
       }) => {
         if (hasFinished || cancelSignal.isCancelled) {
           return;
@@ -231,7 +231,7 @@ const generateSegmentLoader = ({
       const progress = (
         _args : { duration : number;
                   size : number;
-                  totalSize? : number; }
+                  totalSize? : number | undefined; }
       ) => {
         if (hasFinished || cancelSignal.isCancelled) {
           return;

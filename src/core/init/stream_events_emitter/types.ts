@@ -22,7 +22,7 @@ export interface IStreamEventData {
 }
 
 export interface IStreamEventPayload {
-  id?: string;
+  id?: string | undefined;
   start: number;
   end: number;
   data: IStreamEventData;
@@ -30,7 +30,7 @@ export interface IStreamEventPayload {
 }
 
 export interface INonFiniteStreamEventPayload {
-  id?: string;
+  id?: string | undefined;
   start: number;
   data: IStreamEventData;
   publicEvent: IPublicNonFiniteStreamEvent;

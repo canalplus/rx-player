@@ -140,7 +140,6 @@ import TrackChoiceManager, {
 
 /* eslint-disable @typescript-eslint/naming-convention */
 
-const { DEFAULT_UNMUTED_VOLUME } = config;
 
 const { isPageActive,
         isVideoVisible,
@@ -151,74 +150,6 @@ const { isPageActive,
         onSeeking$,
         onTextTrackChanges$,
         videoWidth$ } = events;
-
-/** Payload emitted with a `positionUpdate` event. */
-interface IPositionUpdateItem {
-  /** current position the player is in, in seconds. */
-  position : number;
-  /** Last position set for the current media currently, in seconds. */
-  duration : number;
-  /** Playback rate (i.e. speed) at which the current media is played. */
-  playbackRate : number;
-  /** Amount of buffer available for now in front of the current position, in seconds. */
-  bufferGap : number;
-  /** Current maximum seekable position. */
-  maximumBufferTime? : number;
-  wallClockTime? : number;
-  /**
-   * Only for live contents. Difference between the "live edge" and the current
-   * position, in seconds.
-   */
-  liveGap? : number;
-}
-
-/** Payload emitted with a `bitrateEstimationChange` event. */
-interface IBitrateEstimate {
-  /** The type of buffer this estimate was done for (e.g. "audio). */
-  type : IBufferType;
-  /** The calculated bitrate, in bits per seconds. */
-  bitrate : number | undefined;
-}
-
-export type IStreamEvent = { data: IStreamEventData;
-                             start: number;
-                             end: number;
-                             onExit?: () => void; } |
-                           { data: IStreamEventData;
-                             start: number; };
-
-/** Every events sent by the RxPlayer's public API. */
-interface IPublicAPIEvent {
-  playerStateChange : string;
-  positionUpdate : IPositionUpdateItem;
-  audioTrackChange : ITMAudioTrack | null;
-  textTrackChange : ITMTextTrack | null;
-  videoTrackChange : ITMVideoTrack | null;
-  audioBitrateChange : number;
-  videoBitrateChange : number;
-  imageTrackUpdate : { data: IBifThumbnail[] };
-  fullscreenChange : boolean;
-  bitrateEstimationChange : IBitrateEstimate;
-  volumeChange : number;
-  error : ICustomError | Error;
-  warning : ICustomError | Error;
-  nativeTextTracksChange : TextTrack[];
-  periodChange : Period;
-  availableAudioBitratesChange : number[];
-  availableVideoBitratesChange : number[];
-  availableAudioTracksChange : ITMAudioTrackListItem[];
-  availableTextTracksChange : ITMTextTrackListItem[];
-  availableVideoTracksChange : ITMVideoTrackListItem[];
-  decipherabilityUpdate : Array<{ manifest : Manifest;
-                                  period : Period;
-                                  adaptation : Adaptation;
-                                  representation : Representation; }>;
-  seeking : null;
-  seeked : null;
-  streamEvent : IStreamEvent;
-  streamEventSkip : IStreamEvent;
-  inbandEvents : IInbandEvent[];
-}
 
 /**
  * @class Player
@@ -323,7 +254,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      * URL of the Manifest (or just of the content for DirectFile contents)
      * currently being played.
      */
-    url? : string;
+    url : string | undefined;
 
     /** Subject allowing to stop playing that content. */
     stop$ : Subject<void>;
@@ -492,7 +423,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             wantedBufferAhead,
             maxVideoBufferSize,
             stopAtEnd } = parseConstructorOptions(options);
-
+    const { DEFAULT_UNMUTED_VOLUME } = config.getCurrent();
     // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
@@ -1030,28 +961,26 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const playerState$ = observableConcat(
       observableOf(PLAYER_STATES.LOADING), // Begin with LOADING
 
-      // LOADED as soon as the first "loaded" event is sent
-      loaded$.pipe(take(1), map(() => PLAYER_STATES.LOADED)),
-
-      observableMerge(
-        loadedStateUpdates$
-          .pipe(
-            // From the first reload onward, we enter another dynamic (below)
+      loaded$.pipe(switchMap((_, i) => {
+        const isFirstLoad = i === 0;
+        return observableMerge(
+          // Purposely subscribed first so a RELOADING triggered synchronously
+          // after a LOADED state is catched.
+          reloading$.pipe(map(() => PLAYER_STATES.RELOADING)),
+          // Only switch to LOADED state for the first (i.e. non-RELOADING) load
+          isFirstLoad ? observableOf(PLAYER_STATES.LOADED) :
+                        EMPTY,
+          // Purposely put last so any other state change happens after we've
+          // already switched to LOADED
+          loadedStateUpdates$.pipe(
             takeUntil(reloading$),
-            skipWhile(state => state === PLAYER_STATES.PAUSED)
-          ),
-
-        // when reloading
-        reloading$.pipe(
-          switchMap(() =>
-            loaded$.pipe(
-              take(1), // wait for the next loaded event
-              mergeMap(() => loadedStateUpdates$), // to update the state as usual
-              startWith(PLAYER_STATES.RELOADING) // Starts with "RELOADING" state
-            )
+            // For the first load, we prefer staying at the LOADED state over
+            // PAUSED when autoPlay is disabled.
+            // For consecutive loads however, there's no LOADED state.
+            skipWhile(state => isFirstLoad && state === PLAYER_STATES.PAUSED)
           )
-        )
-      )
+        );
+      }))
     ).pipe(distinctUntilChanged());
 
     let playbackSubscription : Subscription|undefined;
@@ -1343,7 +1272,24 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     const { isDirectFile, manifest } = this._priv_contentInfos;
     if (isDirectFile) {
-      return this.videoElement.currentTime;
+      // Calculating the "wall-clock time" necessitate to obtain first an offset,
+      // and then adding that offset to the HTMLMediaElement's current position.
+      // That offset is in most case present inside the Manifest file, yet in
+      // directfile mode, the RxPlayer won't parse that file, the browser does it.
+      //
+      // Thankfully Safari declares a `getStartDate` method allowing to obtain
+      // that offset when available. This logic is thus mainly useful when
+      // playing HLS contents in directfile mode on Safari.
+      const mediaElement : HTMLMediaElement & {
+        getStartDate? : () => number | null | undefined;
+      } = this.videoElement;
+      if (typeof mediaElement.getStartDate === "function") {
+        const startDate = mediaElement.getStartDate();
+        if (typeof startDate === "number" && !isNaN(startDate)) {
+          return startDate + mediaElement.currentTime;
+        }
+      }
+      return mediaElement.currentTime;
     }
     if (manifest !== null) {
       const currentTime = this.videoElement.currentTime;
@@ -1762,6 +1708,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * If the volume was set to 0, set a default volume instead (see config).
    */
   unMute() : void {
+    const { DEFAULT_UNMUTED_VOLUME } = config.getCurrent();
     const vol = this.getVolume();
     if (vol === 0) {
       this.setVolume(this._priv_mutedMemory === 0 ? DEFAULT_UNMUTED_VOLUME :
@@ -2998,6 +2945,74 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 }
 Player.version = /* PLAYER_VERSION */"3.26.2";
+
+/** Payload emitted with a `positionUpdate` event. */
+export interface IPositionUpdateItem {
+  /** current position the player is in, in seconds. */
+  position : number;
+  /** Last position set for the current media currently, in seconds. */
+  duration : number;
+  /** Playback rate (i.e. speed) at which the current media is played. */
+  playbackRate : number;
+  /** Amount of buffer available for now in front of the current position, in seconds. */
+  bufferGap : number;
+  /** Current maximum seekable position. */
+  maximumBufferTime? : number | undefined;
+  wallClockTime? : number | undefined;
+  /**
+   * Only for live contents. Difference between the "live edge" and the current
+   * position, in seconds.
+   */
+  liveGap? : number | undefined;
+}
+
+/** Payload emitted with a `bitrateEstimationChange` event. */
+export interface IBitrateEstimate {
+  /** The type of buffer this estimate was done for (e.g. "audio). */
+  type : IBufferType;
+  /** The calculated bitrate, in bits per seconds. */
+  bitrate : number | undefined;
+}
+
+export type IStreamEvent = { data: IStreamEventData;
+                             start: number;
+                             end: number;
+                             onExit?: () => void; } |
+                           { data: IStreamEventData;
+                             start: number; };
+
+/** Every events sent by the RxPlayer's public API. */
+interface IPublicAPIEvent {
+  playerStateChange : string;
+  positionUpdate : IPositionUpdateItem;
+  audioTrackChange : ITMAudioTrack | null;
+  textTrackChange : ITMTextTrack | null;
+  videoTrackChange : ITMVideoTrack | null;
+  audioBitrateChange : number;
+  videoBitrateChange : number;
+  imageTrackUpdate : { data: IBifThumbnail[] };
+  fullscreenChange : boolean;
+  bitrateEstimationChange : IBitrateEstimate;
+  volumeChange : number;
+  error : ICustomError | Error;
+  warning : ICustomError | Error;
+  nativeTextTracksChange : TextTrack[];
+  periodChange : Period;
+  availableAudioBitratesChange : number[];
+  availableVideoBitratesChange : number[];
+  availableAudioTracksChange : ITMAudioTrackListItem[];
+  availableTextTracksChange : ITMTextTrackListItem[];
+  availableVideoTracksChange : ITMVideoTrackListItem[];
+  decipherabilityUpdate : Array<{ manifest : Manifest;
+                                  period : Period;
+                                  adaptation : Adaptation;
+                                  representation : Representation; }>;
+  seeking : null;
+  seeked : null;
+  streamEvent : IStreamEvent;
+  streamEventSkip : IStreamEvent;
+  inbandEvents : IInbandEvent[];
+}
 
 export default Player;
 export { IStreamEventData };

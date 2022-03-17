@@ -44,20 +44,15 @@ import {
 
 /** Default MediaKeySystemAccess configuration used by the RxPlayer. */
 export const defaultKSConfig = [{
-  audioCapabilities: [ { contentType: "audio/mp4;codecs=\"mp4a.40.2\"",
-                         robustness: undefined },
-                       { contentType: "audio/webm;codecs=opus",
-                         robustness: undefined } ],
+  audioCapabilities: [ { contentType: "audio/mp4;codecs=\"mp4a.40.2\"" },
+                       { contentType: "audio/webm;codecs=opus" } ],
   distinctiveIdentifier: "optional" as const,
   initDataTypes: ["cenc"] as const,
   persistentState: "optional" as const,
   sessionTypes: ["temporary"] as const,
-  videoCapabilities: [ { contentType: "video/mp4;codecs=\"avc1.4d401e\"",
-                         robustness: undefined },
-                       { contentType: "video/mp4;codecs=\"avc1.42e01e\"",
-                         robustness: undefined },
-                       { contentType: "video/webm;codecs=\"vp8\"",
-                         robustness: undefined } ],
+  videoCapabilities: [ { contentType: "video/mp4;codecs=\"avc1.4d401e\"" },
+                       { contentType: "video/mp4;codecs=\"avc1.42e01e\"" },
+                       { contentType: "video/webm;codecs=\"vp8\"" } ],
 }];
 
 /** Default Widevine MediaKeySystemAccess configuration used by the RxPlayer. */

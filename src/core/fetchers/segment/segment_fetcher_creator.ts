@@ -30,8 +30,6 @@ import createSegmentFetcher, {
   ISegmentFetcherEvent,
 } from "./segment_fetcher";
 
-const { MIN_CANCELABLE_PRIORITY,
-        MAX_HIGH_PRIORITY_LEVEL } = config;
 
 /**
  * Interact with the transport pipelines to download segments with the right
@@ -91,6 +89,8 @@ export default class SegmentFetcherCreator {
     transport : ITransportPipelines,
     options : ISegmentFetcherCreatorBackoffOptions
   ) {
+    const { MIN_CANCELABLE_PRIORITY,
+            MAX_HIGH_PRIORITY_LEVEL } = config.getCurrent();
     this._transport = transport;
     this._prioritizer = new ObservablePrioritizer({
       prioritySteps: { high: MAX_HIGH_PRIORITY_LEVEL,

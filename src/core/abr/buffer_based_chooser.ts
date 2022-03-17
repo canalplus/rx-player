@@ -109,9 +109,9 @@ export interface IBufferBasedChooserPlaybackObservation {
    */
   bufferGap : number;
   /** The bitrate of the currently downloaded segments, in bps. */
-  currentBitrate? : number;
+  currentBitrate? : number | undefined;
   /** The "maintainability score" of the currently downloaded segments. */
-  currentScore? : number;
+  currentScore? : number | undefined;
   /** Playback rate wanted */
   speed : number;
 }

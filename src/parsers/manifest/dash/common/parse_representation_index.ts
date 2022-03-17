@@ -37,21 +37,126 @@ import resolveBaseURLs, {
   IResolvedBaseUrl,
 } from "./resolve_base_urls";
 
+/**
+ * Parse the specific segment indexing information found in a representation
+ * into a IRepresentationIndex implementation.
+ * @param {Array.<Object>} representation
+ * @param {Object} context
+ * @returns {Array.<Object>}
+ */
+export default function parseRepresentationIndex(
+  representation : IRepresentationIntermediateRepresentation,
+  context : IRepresentationIndexContext
+) : IRepresentationIndex {
+  const representationBaseURLs = resolveBaseURLs(context.baseURLs,
+                                                 representation.children.baseURLs);
+  const { aggressiveMode,
+          availabilityTimeOffset,
+          manifestBoundsCalculator,
+          isDynamic,
+          end: periodEnd,
+          start: periodStart,
+          receivedTime,
+          timeShiftBufferDepth,
+          unsafelyBaseOnPreviousRepresentation,
+          inbandEventStreams,
+          isLastPeriod } = context;
+
+  const isEMSGWhitelisted = (inbandEvent: IEMSG): boolean => {
+    if (inbandEventStreams === undefined) {
+      return false;
+    }
+    return inbandEventStreams
+      .some(({ schemeIdUri }) => schemeIdUri === inbandEvent.schemeIdUri);
+  };
+  const reprIndexCtxt = { aggressiveMode,
+                          availabilityTimeComplete: true,
+                          availabilityTimeOffset,
+                          unsafelyBaseOnPreviousRepresentation,
+                          isEMSGWhitelisted,
+                          isLastPeriod,
+                          manifestBoundsCalculator,
+                          isDynamic,
+                          periodEnd,
+                          periodStart,
+                          receivedTime,
+                          representationBaseURLs,
+                          representationBitrate: representation.attributes.bitrate,
+                          representationId: representation.attributes.id,
+                          timeShiftBufferDepth };
+  let representationIndex : IRepresentationIndex;
+  if (representation.children.segmentBase !== undefined) {
+    const { segmentBase } = representation.children;
+    representationIndex = new BaseRepresentationIndex(segmentBase, reprIndexCtxt);
+  } else if (representation.children.segmentList !== undefined) {
+    const { segmentList } = representation.children;
+    representationIndex = new ListRepresentationIndex(segmentList, reprIndexCtxt);
+  } else if (representation.children.segmentTemplate !== undefined ||
+             context.parentSegmentTemplates.length > 0)
+  {
+    const segmentTemplates = context.parentSegmentTemplates.slice();
+    const childSegmentTemplate = representation.children.segmentTemplate;
+    if (childSegmentTemplate !== undefined) {
+      segmentTemplates.push(childSegmentTemplate);
+    }
+    const segmentTemplate =
+      objectAssign({},
+                   ...segmentTemplates as [
+                     ISegmentTemplateIntermediateRepresentation
+                   ] /* Ugly TS Hack */);
+    reprIndexCtxt.availabilityTimeComplete =
+      segmentTemplate.availabilityTimeComplete ??
+      context.availabilityTimeComplete;
+    reprIndexCtxt.availabilityTimeOffset =
+      (segmentTemplate.availabilityTimeOffset ?? 0) +
+      context.availabilityTimeOffset;
+    representationIndex = TimelineRepresentationIndex
+      .isTimelineIndexArgument(segmentTemplate) ?
+        new TimelineRepresentationIndex(segmentTemplate, reprIndexCtxt) :
+        new TemplateRepresentationIndex(segmentTemplate, reprIndexCtxt);
+  } else {
+    const adaptationChildren = context.adaptation.children;
+    if (adaptationChildren.segmentBase !== undefined) {
+      const { segmentBase } = adaptationChildren;
+      representationIndex = new BaseRepresentationIndex(segmentBase, reprIndexCtxt);
+    } else if (adaptationChildren.segmentList !== undefined) {
+      const { segmentList } = adaptationChildren;
+      representationIndex = new ListRepresentationIndex(segmentList, reprIndexCtxt);
+    } else {
+      representationIndex = new TemplateRepresentationIndex({
+        duration: Number.MAX_VALUE,
+        timescale: 1,
+        startNumber: 0,
+        media: "",
+      }, reprIndexCtxt);
+    }
+  }
+  return representationIndex;
+}
+
 /** Supplementary context needed to parse a RepresentationIndex. */
-export interface IRepresentationInfos {
+export interface IRepresentationIndexContext {
   /** Parsed AdaptationSet which contains the Representation. */
   adaptation : IAdaptationSetIntermediateRepresentation;
   /** Whether we should request new segments even if they are not yet finished. */
   aggressiveMode : boolean;
+  /** If false, declared segments in the MPD might still be not completely generated. */
   availabilityTimeComplete : boolean;
   /** availability time offset of the concerned Adaptation. */
   availabilityTimeOffset : number;
   /** Eventual URLs from which every relative URL will be based on. */
   baseURLs : IResolvedBaseUrl[];
+  /** End time of the current Period, in seconds. */
+  end? : number | undefined;
+  /** List of inband event streams that are present on the representation */
+  inbandEventStreams: IScheme[] | undefined;
+  /**
+   * Set to `true` if the linked Period is the chronologically last one in the
+   * Manifest.
+   */
+  isLastPeriod : boolean;
   /** Allows to obtain the first/last available position of a dynamic content. */
   manifestBoundsCalculator : ManifestBoundsCalculator;
-  /** End time of the current period, in seconds. */
-  end? : number;
   /** Whether the Manifest can evolve with time. */
   isDynamic : boolean;
   /**
@@ -64,11 +169,11 @@ export interface IRepresentationInfos {
    * Time (in terms of `performance.now`) at which the XML file containing this
    * Representation was received.
    */
-  receivedTime? : number;
+  receivedTime? : number | undefined;
   /** Start time of the current period, in seconds. */
   start : number;
   /** Depth of the buffer for the whole content, in seconds. */
-  timeShiftBufferDepth? : number;
+  timeShiftBufferDepth? : number | undefined;
   /**
    * The parser should take this Representation - which is the same as this one
    * parsed at an earlier time - as a base to speed-up the parsing process.
@@ -76,101 +181,4 @@ export interface IRepresentationInfos {
    * de-synchronization with what is actually on the server.
    */
   unsafelyBaseOnPreviousRepresentation : Representation | null;
-  /** List of inband event streams that are present on the representation */
-  inbandEventStreams: IScheme[] | undefined;
-}
-
-/**
- * Parse the specific segment indexing information found in a representation
- * into a IRepresentationIndex implementation.
- * @param {Array.<Object>} representation
- * @param {Object} representationInfos
- * @returns {Array.<Object>}
- */
-export default function parseRepresentationIndex(
-  representation : IRepresentationIntermediateRepresentation,
-  representationInfos : IRepresentationInfos
-) : IRepresentationIndex {
-  const representationBaseURLs = resolveBaseURLs(representationInfos.baseURLs,
-                                                 representation.children.baseURLs);
-  const { aggressiveMode,
-          availabilityTimeOffset,
-          manifestBoundsCalculator,
-          isDynamic,
-          end: periodEnd,
-          start: periodStart,
-          receivedTime,
-          timeShiftBufferDepth,
-          unsafelyBaseOnPreviousRepresentation,
-          inbandEventStreams } = representationInfos;
-
-  const isEMSGWhitelisted = (inbandEvent: IEMSG): boolean => {
-    if (inbandEventStreams === undefined) {
-      return false;
-    }
-    return inbandEventStreams
-      .some(({ schemeIdUri }) => schemeIdUri === inbandEvent.schemeIdUri);
-  };
-  const context = { aggressiveMode,
-                    availabilityTimeComplete: true,
-                    availabilityTimeOffset,
-                    unsafelyBaseOnPreviousRepresentation,
-                    isEMSGWhitelisted,
-                    manifestBoundsCalculator,
-                    isDynamic,
-                    periodEnd,
-                    periodStart,
-                    receivedTime,
-                    representationBaseURLs,
-                    representationBitrate: representation.attributes.bitrate,
-                    representationId: representation.attributes.id,
-                    timeShiftBufferDepth };
-  let representationIndex : IRepresentationIndex;
-  if (representation.children.segmentBase !== undefined) {
-    const { segmentBase } = representation.children;
-    representationIndex = new BaseRepresentationIndex(segmentBase, context);
-  } else if (representation.children.segmentList !== undefined) {
-    const { segmentList } = representation.children;
-    representationIndex = new ListRepresentationIndex(segmentList, context);
-  } else if (representation.children.segmentTemplate !== undefined ||
-             representationInfos.parentSegmentTemplates.length > 0)
-  {
-    const segmentTemplates = representationInfos.parentSegmentTemplates.slice();
-    const childSegmentTemplate = representation.children.segmentTemplate;
-    if (childSegmentTemplate !== undefined) {
-      segmentTemplates.push(childSegmentTemplate);
-    }
-    const segmentTemplate =
-      objectAssign({},
-                   ...segmentTemplates as [
-                     ISegmentTemplateIntermediateRepresentation
-                   ] /* Ugly TS Hack */);
-    context.availabilityTimeComplete =
-      segmentTemplate.availabilityTimeComplete ??
-      representationInfos.availabilityTimeComplete;
-    context.availabilityTimeOffset =
-      (segmentTemplate.availabilityTimeOffset ?? 0) +
-      representationInfos.availabilityTimeOffset;
-    representationIndex = TimelineRepresentationIndex
-      .isTimelineIndexArgument(segmentTemplate) ?
-        new TimelineRepresentationIndex(segmentTemplate, context) :
-        new TemplateRepresentationIndex(segmentTemplate, context);
-  } else {
-    const adaptationChildren = representationInfos.adaptation.children;
-    if (adaptationChildren.segmentBase !== undefined) {
-      const { segmentBase } = adaptationChildren;
-      representationIndex = new BaseRepresentationIndex(segmentBase, context);
-    } else if (adaptationChildren.segmentList !== undefined) {
-      const { segmentList } = adaptationChildren;
-      representationIndex = new ListRepresentationIndex(segmentList, context);
-    } else {
-      representationIndex = new TemplateRepresentationIndex({
-        duration: Number.MAX_VALUE,
-        timescale: 1,
-        startNumber: 0,
-        media: "",
-      }, context);
-    }
-  }
-  return representationIndex;
 }

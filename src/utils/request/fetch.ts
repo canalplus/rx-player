@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import config from "../../config";
 import {
   NetworkErrorTypes,
@@ -61,14 +60,14 @@ export interface IFetchedDataObject {
    * Value of the "Content-Length" header, which should (yet also might not be)
    * the size of the complete data that will be fetched.
    */
-  totalSize? : number;
+  totalSize : number | undefined;
   /**
    * Current available chunk, which might only be a sub-part of the whole
    * data.
    * To retrieve the whole data, all `chunk` received from `fetchRequest` can be
    * concatenated.
    */
-  chunk: ArrayBuffer;
+  chunk : ArrayBuffer;
 }
 
 /** Options for the `fetchRequest` utils function. */
@@ -88,16 +87,15 @@ export interface IFetchOptions {
    */
   cancelSignal : CancellationSignal;
   /** Optional headers for the HTTP GET request perfomed by `fetchRequest`. */
-  headers? : { [ header: string ] : string }|null;
+  headers? : { [ header: string ] : string } | undefined | null;
   /**
    * Optional timeout for the HTTP GET request perfomed by `fetchRequest`.
    * This timeout is just enabled until the HTTP response from the server, even
    * if not all data has been received yet.
    */
-  timeout? : number;
+  timeout? : number | undefined;
 }
 
-const { DEFAULT_REQUEST_TIMEOUT } = config;
 
 type IHeadersConstructor = new() => Headers;
 type IAbortControllerConstructor = new() => AbortController;
@@ -112,7 +110,7 @@ const _AbortController : IAbortControllerConstructor|null =
 
 export default function fetchRequest(
   options : IFetchOptions
-) : PPromise<IFetchedStreamComplete> {
+) : Promise<IFetchedStreamComplete> {
   let headers : Headers | { [key : string ] : string } | undefined;
   if (!isNullOrUndefined(options.headers)) {
     if (isNullOrUndefined(_Headers)) {
@@ -148,7 +146,7 @@ export default function fetchRequest(
   }
 
   const requestTimeout = isNullOrUndefined(options.timeout) ?
-    DEFAULT_REQUEST_TIMEOUT :
+    config.getCurrent().DEFAULT_REQUEST_TIMEOUT :
     options.timeout;
   const timeout = window.setTimeout(() => {
     timeouted = true;
@@ -161,12 +159,16 @@ export default function fetchRequest(
       abortFetch();
     });
 
-  return fetch(options.url,
-               { headers,
-                 method: "GET",
-                 signal: !isNullOrUndefined(abortController) ? abortController.signal :
-                                                               undefined }
-  ).then((response : Response) : PPromise<IFetchedStreamComplete> => {
+  const fetchOpts : RequestInit = { method: "GET" };
+  if (headers !== undefined) {
+    fetchOpts.headers = headers;
+  }
+  fetchOpts.signal = !isNullOrUndefined(abortController) ? abortController.signal :
+                                                           null;
+  return fetch(
+    options.url,
+    fetchOpts
+  ).then((response : Response) : Promise<IFetchedStreamComplete> => {
     if (!isNullOrUndefined(timeout)) {
       clearTimeout(timeout);
     }
@@ -192,7 +194,7 @@ export default function fetchRequest(
 
     return readBufferAndSendEvents();
 
-    async function readBufferAndSendEvents() : PPromise<IFetchedStreamComplete> {
+    async function readBufferAndSendEvents() : Promise<IFetchedStreamComplete> {
       const data = await reader.read();
 
       if (!data.done && !isNullOrUndefined(data.value)) {
