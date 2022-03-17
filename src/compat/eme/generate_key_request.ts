@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-import {
-  catchError,
-  defer as observableDefer,
-  Observable,
-} from "rxjs";
 import log from "../../log";
 import { getNextBoxOffsets } from "../../parsers/containers/isobmff";
 import {
   be4toi,
   concat,
 } from "../../utils/byte_parsing";
-import castToObservable from "../../utils/cast_to_observable";
 import { PSSH_TO_INTEGER } from "./constants";
 import { ICustomMediaKeySession } from "./custom_media_keys";
 
@@ -136,37 +130,35 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
  * "encrypted" event for the corresponding request.
  * @param {string} sessionType - Type of session you want to generate. Consult
  * EME Specification for more information on session types.
- * @returns {Observable} - Emit when done. Errors if fails.
+ * @returns {Promise} - Emit when done. Errors if fails.
  */
 export default function generateKeyRequest(
   session: MediaKeySession|ICustomMediaKeySession,
   initializationDataType : string | undefined,
   initializationData : Uint8Array
-) : Observable<unknown> {
-  return observableDefer(() => {
-    log.debug("Compat: Calling generateRequest on the MediaKeySession");
-    let patchedInit : Uint8Array;
-    try {
-      patchedInit = patchInitData(initializationData);
-    } catch (_e) {
-      patchedInit = initializationData;
-    }
-    const initDataType = initializationDataType ?? "";
-    return castToObservable(session.generateRequest(initDataType, patchedInit))
-      .pipe(catchError(error => {
-        if (initDataType !== "" || !(error instanceof TypeError)) {
-          throw error;
-        }
+) : Promise<unknown> {
+  log.debug("Compat: Calling generateRequest on the MediaKeySession");
+  let patchedInit : Uint8Array;
+  try {
+    patchedInit = patchInitData(initializationData);
+  } catch (_e) {
+    patchedInit = initializationData;
+  }
+  const initDataType = initializationDataType ?? "";
+  return session.generateRequest(initDataType, patchedInit)
+    .catch((error) => {
+      if (initDataType !== "" || !(error instanceof TypeError)) {
+        throw error;
+      }
 
-        // On newer EME versions of the specification, the initialization data
-        // type given to generateRequest cannot be an empty string (it returns
-        // a rejected promise with a TypeError in that case).
-        // Retry with a default "cenc" value for initialization data type if
-        // we're in that condition.
-        log.warn("Compat: error while calling `generateRequest` with an empty " +
-                 "initialization data type. Retrying with a default \"cenc\" value.",
-                 error);
-        return castToObservable(session.generateRequest("cenc", patchedInit));
-      }));
-  });
+      // On newer EME versions of the specification, the initialization data
+      // type given to generateRequest cannot be an empty string (it returns
+      // a rejected promise with a TypeError in that case).
+      // Retry with a default "cenc" value for initialization data type if
+      // we're in that condition.
+      log.warn("Compat: error while calling `generateRequest` with an empty " +
+               "initialization data type. Retrying with a default \"cenc\" value.",
+               error);
+      return session.generateRequest("cenc", patchedInit);
+    });
 }

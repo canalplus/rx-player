@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-import { IInitializationDataInfo } from "../core/eme";
 import {
   ICustomError,
   MediaError,
 } from "../errors";
 import { IParsedManifest } from "../parsers/manifest";
-import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
 import arrayFind from "../utils/array_find";
 import EventEmitter from "../utils/event_emitter";
 import idGenerator from "../utils/id_generator";
@@ -502,73 +500,10 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * changes performed.
    * @param {Object} keyUpdates
    */
-  public updateDeciperabilitiesBasedOnKeyIds(
-    { whitelistedKeyIds,
-      blacklistedKeyIDs } : { whitelistedKeyIds : Uint8Array[];
-                              blacklistedKeyIDs : Uint8Array[]; }
+  public updateRepresentationsDeciperability(
+    isDecipherableCb : (rep : Representation) => boolean | undefined
   ) : void {
-    const updates = updateDeciperability(this, (representation) => {
-      if (representation.decipherable === false ||
-          representation.contentProtections === undefined)
-      {
-        return representation.decipherable;
-      }
-      const contentKIDs = representation.contentProtections.keyIds;
-      for (let i = 0; i < contentKIDs.length; i++) {
-        const elt = contentKIDs[i];
-        for (let j = 0; j < blacklistedKeyIDs.length; j++) {
-          if (areArraysOfNumbersEqual(blacklistedKeyIDs[j], elt.keyId)) {
-            return false;
-          }
-        }
-        for (let j = 0; j < whitelistedKeyIds.length; j++) {
-          if (areArraysOfNumbersEqual(whitelistedKeyIds[j], elt.keyId)) {
-            return true;
-          }
-        }
-      }
-      return representation.decipherable;
-    });
-
-    if (updates.length > 0) {
-      this.trigger("decipherabilityUpdate", updates);
-    }
-  }
-
-  /**
-   * Look in the Manifest for Representations linked to the given content
-   * protection initialization data and mark them as being impossible to
-   * decrypt.
-   * Then trigger a "decipherabilityUpdate" event to notify everyone of the
-   * changes performed.
-   * @param {Object} initData
-   */
-  public addUndecipherableProtectionData(initData : IInitializationDataInfo) : void {
-    const updates = updateDeciperability(this, (representation) => {
-      if (representation.decipherable === false) {
-        return false;
-      }
-      const segmentProtections = representation.contentProtections?.initData ?? [];
-      for (let i = 0; i < segmentProtections.length; i++) {
-        if (initData.type === undefined ||
-            segmentProtections[i].type === initData.type)
-        {
-          const containedInitData = initData.values.every(undecipherableVal => {
-            return segmentProtections[i].values.some(currVal => {
-              return (undecipherableVal.systemId === undefined ||
-                      currVal.systemId === undecipherableVal.systemId) &&
-                     areArraysOfNumbersEqual(currVal.data,
-                                             undecipherableVal.data);
-            });
-          });
-          if (containedInitData) {
-            return false;
-          }
-        }
-      }
-      return representation.decipherable;
-    });
-
+    const updates = updateDeciperability(this, isDecipherableCb);
     if (updates.length > 0) {
       this.trigger("decipherabilityUpdate", updates);
     }
@@ -795,14 +730,9 @@ function updateDeciperability(
   isDecipherable : (rep : Representation) => boolean | undefined
 ) : IDecipherabilityUpdateElement[] {
   const updates : IDecipherabilityUpdateElement[] = [];
-  for (let i = 0; i < manifest.periods.length; i++) {
-    const period = manifest.periods[i];
-    const adaptations = period.getAdaptations();
-    for (let j = 0; j < adaptations.length; j++) {
-      const adaptation = adaptations[j];
-      const representations = adaptation.representations;
-      for (let k = 0; k < representations.length; k++) {
-        const representation = representations[k];
+  for (const period of manifest.periods) {
+    for (const adaptation of period.getAdaptations()) {
+      for (const representation of adaptation.representations) {
         const result = isDecipherable(representation);
         if (result !== representation.decipherable) {
           updates.push({ manifest, period, adaptation, representation });

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { lastValueFrom } from "rxjs";
 import { requestMediaKeySystemAccess } from "../../../../compat";
 import PPromise from "../../../../utils/promise";
 import log from "../log";
@@ -55,7 +54,7 @@ export default function probeDRMInfos(
     return PPromise.resolve([ProberStatus.NotSupported, result]);
   }
 
-  return lastValueFrom(requestMediaKeySystemAccess(type, [configuration]))
+  return requestMediaKeySystemAccess(type, [configuration])
     .then((keySystemAccess) => {
       result.compatibleConfiguration = keySystemAccess.getConfiguration();
       const status : [ProberStatus, ICompatibleKeySystem?] =
