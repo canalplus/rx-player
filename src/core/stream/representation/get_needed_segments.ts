@@ -32,7 +32,6 @@ import {
 } from "../../segment_buffers/inventory";
 
 
-
 interface IContentContext {
   adaptation: Adaptation;
   manifest: Manifest;
@@ -152,8 +151,8 @@ export default function getNeededSegments({
       return true;
     });
   const { MINIMUM_SEGMENT_SIZE,
-        MIN_BUFFER_LENGTH,
-        MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP} = config.getCurrent();  
+          MIN_BUFFER_LENGTH,
+          MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP } = config.getCurrent();
   let isMemorySaturated = false;
   /**
    * Epsilon compensating for rounding errors when comparing the start and end
