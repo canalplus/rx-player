@@ -61,7 +61,6 @@ const karmaConf = {
   frameworks: ["webpack", "mocha"],
   plugins: [
     "karma-chrome-launcher",
-    "karma-coverage-istanbul-reporter",
     "karma-firefox-launcher",
     "karma-mocha",
     "karma-webpack"
