@@ -36,7 +36,7 @@ import {
 } from "../../utils/languages";
 import objectAssign from "../../utils/object_assign";
 import warnOnce from "../../utils/warn_once";
-import { IKeySystemOption } from "../eme";
+import { IKeySystemOption } from "../decrypt";
 import {
   IAudioTrackPreference,
   ITextTrackPreference,

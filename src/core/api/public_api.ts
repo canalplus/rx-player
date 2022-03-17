@@ -87,10 +87,10 @@ import createSharedReference, {
 } from "../../utils/reference";
 import warnOnce from "../../utils/warn_once";
 import {
-  clearEMESession,
-  disposeEME,
+  clearOnStop,
+  disposeDecryptionResources,
   getCurrentKeySystem,
-} from "../eme";
+} from "../decrypt";
 import {
   IManifestFetcherParsedResult,
   IManifestFetcherWarningEvent,
@@ -544,8 +544,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this.stop();
 
     if (this.videoElement !== null) {
-      // free resources used for EME management
-      disposeEME(this.videoElement);
+      // free resources used for decryption management
+      disposeDecryptionResources(this.videoElement)
+        .catch((err : unknown) => {
+          const message = err instanceof Error ? err.message :
+                                                 "Unknown error";
+          log.error("API: Could not dispose decryption resources: " + message);
+        });
     }
 
     // free Observables linked to the Player instance
@@ -2283,25 +2288,23 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_contentEventsMemory = {};
 
-    // EME cleaning
+    // DRM-related clean-up
     const freeUpContentLock = () => {
       log.debug("Unlocking `contentLock`. Next content can begin.");
       this._priv_contentLock.setValue(false);
     };
 
     if (!isNullOrUndefined(this.videoElement)) {
-      clearEMESession(this.videoElement)
-        .subscribe({
-          error: (err : unknown) => {
-            log.error("API: An error arised when trying to clean-up the EME session:" +
-                      (err instanceof Error ? err.toString() :
-                                              "Unknown Error"));
-            freeUpContentLock();
-          },
-          complete: () => {
-            log.debug("API: EME session cleaned-up with success!");
-            freeUpContentLock();
-          },
+      clearOnStop(this.videoElement).then(
+        () => {
+          log.debug("API: DRM session cleaned-up with success!");
+          freeUpContentLock();
+        },
+        (err : unknown) => {
+          log.error("API: An error arised when trying to clean-up the DRM session:" +
+                    (err instanceof Error ? err.toString() :
+                                            "Unknown Error"));
+          freeUpContentLock();
         });
     } else {
       freeUpContentLock();
