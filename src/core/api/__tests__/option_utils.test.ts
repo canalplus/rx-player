@@ -954,6 +954,17 @@ describe("API - parseLoadVideoOptions", () => {
     });
 
     expect(parseLoadVideoOptions({
+      audioTrackSwitchingMode: "reload",
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      audioTrackSwitchingMode: "reload",
+    });
+
+    expect(parseLoadVideoOptions({
       audioTrackSwitchingMode: "seamless",
       url: "foo",
       transport: "bar",
@@ -985,6 +996,7 @@ describe("API - parseLoadVideoOptions", () => {
         `the following strategy name:
 - \`seamless\`
 - \`direct\`
+- \`reload\`
 If badly set, seamless strategy will be used as default`);
     logWarnMock.mockReset();
     logWarnMock.mockReturnValue(undefined);

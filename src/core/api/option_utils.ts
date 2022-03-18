@@ -37,6 +37,7 @@ import {
 import objectAssign from "../../utils/object_assign";
 import warnOnce from "../../utils/warn_once";
 import { IKeySystemOption } from "../decrypt";
+import { IAudioTrackSwitchingMode } from "../stream";
 import {
   IAudioTrackPreference,
   ITextTrackPreference,
@@ -236,7 +237,7 @@ export interface ILoadVideoOptions {
   textTrackElement? : HTMLElement;
   manualBitrateSwitchingMode? : "seamless"|"direct";
   enableFastSwitching? : boolean;
-  audioTrackSwitchingMode? : "seamless"|"direct";
+  audioTrackSwitchingMode? : IAudioTrackSwitchingMode;
   onCodecSwitch? : "continue"|"reload";
 
   /* eslint-disable import/no-deprecated */
@@ -266,7 +267,7 @@ interface IParsedLoadVideoOptionsBase {
   startAt : IParsedStartAtOption|undefined;
   manualBitrateSwitchingMode : "seamless"|"direct";
   enableFastSwitching : boolean;
-  audioTrackSwitchingMode : "seamless"|"direct";
+  audioTrackSwitchingMode : IAudioTrackSwitchingMode;
   onCodecSwitch : "continue"|"reload";
 }
 
@@ -649,11 +650,12 @@ function parseLoadVideoOptions(
   let audioTrackSwitchingMode = isNullOrUndefined(options.audioTrackSwitchingMode)
                                   ? DEFAULT_AUDIO_TRACK_SWITCHING_MODE
                                   : options.audioTrackSwitchingMode;
-  if (!arrayIncludes(["seamless", "direct"], audioTrackSwitchingMode)) {
+  if (!arrayIncludes(["seamless", "direct", "reload"], audioTrackSwitchingMode)) {
     log.warn("The `audioTrackSwitchingMode` loadVideo option must match one of " +
              "the following strategy name:\n" +
              "- `seamless`\n" +
              "- `direct`\n" +
+             "- `reload`\n" +
              "If badly set, " + DEFAULT_AUDIO_TRACK_SWITCHING_MODE +
              " strategy will be used as default");
     audioTrackSwitchingMode = DEFAULT_AUDIO_TRACK_SWITCHING_MODE;
