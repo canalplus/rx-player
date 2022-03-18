@@ -28,7 +28,6 @@ import parseMetaPlaylist, {
 import { IParsedManifest } from "../../parsers/manifest/types";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import objectAssign from "../../utils/object_assign";
-import PPromise from "../../utils/promise";
 import { CancellationSignal } from "../../utils/task_canceller";
 import {
   IChunkTimeInfo,
@@ -156,7 +155,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
       ) : Promise<IManifestParserResult> {
         if (parsedResult.type === "done") {
           const manifest = new Manifest(parsedResult.value, options);
-          return PPromise.resolve({ manifest });
+          return Promise.resolve({ manifest });
         }
 
         const parsedValue = parsedResult.value;
@@ -177,7 +176,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
           }
         });
 
-        return PPromise.all(loaderProms).then(parsedReqs => {
+        return Promise.all(loaderProms).then(parsedReqs => {
           const loadedRessources = parsedReqs.map(e => e.manifest);
           return handleParsedResult(parsedResult.value.continue(loadedRessources));
         });

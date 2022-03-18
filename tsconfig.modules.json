@@ -18,7 +18,6 @@
     "module": "es2015",
     "typeRoots": [
       "./scripts/build/constants.d.ts",
-      "./src/typings/pinkie.d.ts",
       "./src/typings/next-tick.d.ts",
       "./src/typings/object-assign.d.ts",
       "./node_modules/@types"

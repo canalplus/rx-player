@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import PPromise from "../../../../utils/promise";
 import getProbedConfiguration, { ICapabilitiesTypes } from "../capabilities";
 import log from "../log";
 import probers, {
@@ -102,7 +101,7 @@ function probeMediaConfiguration(
     }
   }
 
-  return PPromise.all(promises).then(() => {
+  return Promise.all(promises).then(() => {
     if (globalStatus === undefined) {
       globalStatus = ProberStatus.Unknown;
     }

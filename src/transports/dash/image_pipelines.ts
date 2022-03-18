@@ -15,7 +15,6 @@
  */
 
 import features from "../../features";
-import PPromise from "../../utils/promise";
 import request from "../../utils/request";
 import takeFirstSet from "../../utils/take_first_set";
 import { CancellationSignal } from "../../utils/task_canceller";
@@ -24,7 +23,6 @@ import {
   ILoadedImageSegmentFormat,
   ISegmentContext,
   ISegmentLoaderCallbacks,
-  ISegmentLoaderResultChunkedComplete,
   ISegmentLoaderResultSegmentCreated,
   ISegmentLoaderResultSegmentLoaded,
   ISegmentParserParsedInitChunk,
@@ -39,31 +37,31 @@ import {
  * @param {Object} callbacks
  * @returns {Promise}
  */
-export function imageLoader(
+export async function imageLoader(
   url : string | null,
   content : ISegmentContext,
   cancelSignal : CancellationSignal,
   callbacks : ISegmentLoaderCallbacks<ILoadedImageSegmentFormat>
 ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedImageSegmentFormat> |
-            ISegmentLoaderResultSegmentCreated<ILoadedImageSegmentFormat> |
-            ISegmentLoaderResultChunkedComplete>
+            ISegmentLoaderResultSegmentCreated<ILoadedImageSegmentFormat>>
 {
   const { segment } = content;
   if (segment.isInit || url === null) {
-    return PPromise.resolve({ resultType: "segment-created",
-                              resultData: null });
+    return { resultType: "segment-created",
+             resultData: null };
   }
-  return request({ url,
-                   responseType: "arraybuffer",
-                   onProgress: callbacks.onProgress,
-                   cancelSignal })
-    .then((data) => ({ resultType: "segment-loaded",
-                       resultData: data }));
+  const data = await request({ url,
+                               responseType: "arraybuffer",
+                               onProgress: callbacks.onProgress,
+                               cancelSignal });
+  return { resultType: "segment-loaded",
+           resultData: data };
 }
 
 /**
  * Parses an image segment.
- * @param {Object} args
+ * @param {Object} loadedSegment
+ * @param {Object} content
  * @returns {Object}
  */
 export function imageParser(

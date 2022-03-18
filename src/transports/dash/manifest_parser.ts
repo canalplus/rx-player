@@ -23,7 +23,6 @@ import {
   ILoadedResource,
 } from "../../parsers/manifest/dash/parsers_types";
 import objectAssign from "../../utils/object_assign";
-import PPromise from "../../utils/promise";
 import request from "../../utils/request";
 import {
   strToUtf8,
@@ -140,7 +139,7 @@ export default function generateManifestParser(
           onWarnings(parserResponse.value.warnings);
         }
         if (cancelSignal.isCancelled) {
-          return PPromise.reject(cancelSignal.cancellationError);
+          return Promise.reject(cancelSignal.cancellationError);
         }
         const manifest = new Manifest(parserResponse.value.parsed, options);
         return { manifest, url };
@@ -192,7 +191,7 @@ export default function generateManifestParser(
         });
       });
 
-      return PPromise.all(externalResources).then(loadedResources => {
+      return Promise.all(externalResources).then(loadedResources => {
         if (value.format === "string") {
           assertLoadedResourcesFormatString(loadedResources);
           return processMpdParserResponse(value.continue(loadedResources));

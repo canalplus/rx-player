@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import PPromise from "../../utils/promise";
 import { ICustomMediaKeys } from "./custom_media_keys";
 
 // MediaKeySystemAccess implementation
@@ -56,7 +55,7 @@ export default class CustomMediaKeySystemAccess implements ICustomMediaKeySystem
    * MediaKeySystemAccess. Never rejects.
    */
   public createMediaKeys() : Promise<ICustomMediaKeys|MediaKeys> {
-    return new PPromise((res) => res(this._mediaKeys));
+    return new Promise((res) => res(this._mediaKeys));
   }
 
   /**

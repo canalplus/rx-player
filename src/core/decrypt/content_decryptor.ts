@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import {
   events,
   generateKeyRequest,
@@ -578,7 +577,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       }
     }
 
-    return PPromise.resolve();
+    return Promise.resolve();
   }
 
   private _tryToUseAlreadyCreatedSession(

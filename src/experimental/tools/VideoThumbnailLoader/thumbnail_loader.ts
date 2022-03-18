@@ -35,7 +35,6 @@ import createSegmentFetcher, {
 import log from "../../../log";
 import { ISegment } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
-import PPromise from "../../../utils/promise";
 import { freeRequest } from "./create_request";
 import getCompleteSegmentId from "./get_complete_segment_id";
 import getContentInfos from "./get_content_infos";
@@ -110,13 +109,13 @@ export default class VideoThumbnailLoader {
 
     const manifest = this._player.getManifest();
     if (manifest === null) {
-      return PPromise.reject(
+      return Promise.reject(
         new VideoThumbnailLoaderError("NO_MANIFEST",
                                       "No manifest available."));
     }
     const contentInfos = getContentInfos(time, manifest);
     if (contentInfos === null) {
-      return PPromise.reject(
+      return Promise.reject(
         new VideoThumbnailLoaderError("NO_TRACK",
                                       "Couldn't find track for this time."));
     }
@@ -125,7 +124,7 @@ export default class VideoThumbnailLoader {
       .representation.index.getSegments(time, MIN_NEEDED_DATA_AFTER_TIME);
 
     if (segments.length === 0) {
-      return PPromise.reject(
+      return Promise.reject(
         new VideoThumbnailLoaderError("NO_THUMBNAIL",
                                       "Couldn't find thumbnail for the given time."));
     }
@@ -147,7 +146,7 @@ export default class VideoThumbnailLoader {
     if (segments.length === 0) {
       this._videoElement.currentTime = time;
       log.debug("VTL: Thumbnails already loaded.", time);
-      return PPromise.resolve(time);
+      return Promise.resolve(time);
     }
 
     log.debug("VTL: Found thumbnail for time", time, segments);
@@ -193,7 +192,7 @@ export default class VideoThumbnailLoader {
                                       "VideoThumbnailLoaderError: No " +
                                       "imported loader for this transport type: " +
                                       contentInfos.manifest.transport);
-      return PPromise.reject(error);
+      return Promise.reject(error);
     }
     const killTask$ = new Subject<void>();
     const abortError$ = killTask$.pipe(

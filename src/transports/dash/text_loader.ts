@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "../../utils/promise";
 import request, {
   fetchIsSupported,
 } from "../../utils/request";
@@ -68,8 +67,8 @@ export default function generateTextTrackLoader(
     const { range } = segment;
 
     if (url === null) {
-      return PPromise.resolve({ resultType: "segment-created",
-                                resultData: null });
+      return Promise.resolve({ resultType: "segment-created",
+                               resultData: null });
     }
 
     if (segment.isInit) {

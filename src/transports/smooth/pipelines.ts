@@ -24,7 +24,6 @@ import { getMDAT } from "../../parsers/containers/isobmff";
 import createSmoothManifestParser, {
   SmoothRepresentationIndex,
 } from "../../parsers/manifest/smooth";
-import PPromise from "../../utils/promise";
 import request from "../../utils/request";
 import {
   strToUtf8,
@@ -108,7 +107,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       cancelSignal : CancellationSignal
     ) : Promise<string | undefined> {
       if (url === undefined) {
-        return PPromise.resolve(undefined);
+        return Promise.resolve(undefined);
       }
 
       let resolving : Promise<string>;
@@ -126,7 +125,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
             return extractedURL;
           });
       } else {
-        resolving = PPromise.resolve(url);
+        resolving = Promise.resolve(url);
       }
 
       const token = extractToken(url);
@@ -263,8 +262,8 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                 ISegmentLoaderResultSegmentCreated<ILoadedTextSegmentFormat>> {
       const { segment, representation } = content;
       if (segment.isInit || url === null) {
-        return PPromise.resolve({ resultType: "segment-created",
-                                  resultData: null });
+        return Promise.resolve({ resultType: "segment-created",
+                                 resultData: null });
       }
 
       const isMP4 = isMP4EmbeddedTrack(representation);

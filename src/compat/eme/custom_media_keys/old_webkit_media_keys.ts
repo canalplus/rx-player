@@ -17,7 +17,6 @@
 import { base64ToBytes } from "../../../utils/base64";
 import EventEmitter from "../../../utils/event_emitter";
 import noop from "../../../utils/noop";
-import PPromise from "../../../utils/promise";
 import { utf8ToStr } from "../../../utils/string_parsing";
 import {
   ICustomMediaKeys,
@@ -77,7 +76,7 @@ class OldWebkitMediaKeySession
 
     this.sessionId = "";
     this._closeSession = noop; // Just here to make TypeScript happy
-    this.closed = new PPromise((resolve) => {
+    this.closed = new Promise((resolve) => {
       this._closeSession = resolve;
     });
     this.keyStatuses = new Map();
@@ -92,7 +91,7 @@ class OldWebkitMediaKeySession
   }
 
   public update(license: Uint8Array) : Promise<void> {
-    return new PPromise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       try {
         if (this._key.indexOf("clearkey") >= 0) {
           const licenseTypedArray =
@@ -121,14 +120,14 @@ class OldWebkitMediaKeySession
     _initDataType: string,
     initData: ArrayBuffer
   ): Promise<void> {
-    return new PPromise((resolve) => {
+    return new Promise((resolve) => {
       this._vid.webkitGenerateKeyRequest(this._key, initData);
       resolve();
     });
   }
 
   public close(): Promise<void> {
-    return new PPromise((resolve) => {
+    return new Promise((resolve) => {
       this._unbindSession();
       this._closeSession();
       resolve();
@@ -142,11 +141,11 @@ class OldWebkitMediaKeySession
    */
   public load(): Promise<boolean> {
     // Not implemented. Always return false as in "no session with that id".
-    return PPromise.resolve(false);
+    return Promise.resolve(false);
   }
 
   public remove(): Promise<void> {
-    return PPromise.resolve();
+    return Promise.resolve();
   }
 
   private _unbindSession() {
