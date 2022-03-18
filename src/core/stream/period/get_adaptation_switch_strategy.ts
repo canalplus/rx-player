@@ -41,21 +41,27 @@ export type IAdaptationSwitchStrategy =
   { type: "needs-reload"; value: undefined };
 
 export interface IAdaptationSwitchOptions {
-  /**
-   * Strategy to adopt when manually switching of audio adaptation.
-   * Can be either:
-   *    - "seamless": transitions are smooth but could be not immediate.
-   *    - "direct": strategy will be "smart", if the mimetype and the codec,
-   *    change, we will perform a hard reload of the media source, however, if it
-   *    doesn't change, we will just perform a small flush by removing buffered range
-   *    and performing, a small seek on the media element.
-   *    Transitions are faster, but, we could see appear a reloading or seeking state.
-   */
-  audioTrackSwitchingMode : "seamless" | "direct";
-
+  /** RxPlayer's behavior when switching the audio track. */
+  audioTrackSwitchingMode : IAudioTrackSwitchingMode;
   /** Behavior when a new video and/or audio codec is encountered. */
   onCodecSwitch : "continue" | "reload";
 }
+
+/**
+ * Strategy to adopt when manually switching of audio adaptation.
+ * Can be either:
+ *    - "seamless": transitions are smooth but could be not immediate.
+ *    - "direct": strategy will be "smart", if the mimetype and the codec,
+ *    change, we will perform a hard reload of the media source, however, if it
+ *    doesn't change, we will just perform a small flush by removing buffered range
+ *    and performing, a small seek on the media element.
+ *    Transitions are faster, but, we could see appear a BUFFERING state.
+ *    - "reload": completely reload the content. This allows a direct switch
+ *    compatible with most device but may necessitate a RELOADING phase.
+ */
+export type IAudioTrackSwitchingMode = "seamless" |
+                                       "direct" |
+                                       "reload";
 
 /**
  * Find out what to do when switching Adaptation, based on the current
@@ -119,7 +125,11 @@ export default function getAdaptationSwitchStrategy(
   }
 
   const { currentTime } = playbackInfo;
-  if (adaptation.type === "video" &&
+  const { audioTrackSwitchingMode } = options;
+
+  const hasReloadSwitchingMode = adaptation.type === "video" ||
+    (adaptation.type === "audio" && audioTrackSwitchingMode === "reload");
+  if (hasReloadSwitchingMode &&
       // We're playing the current Period
       isTimeInRange({ start, end }, currentTime) &&
       // There is data for the current position or the codecs are differents
@@ -135,7 +145,7 @@ export default function getAdaptationSwitchStrategy(
   // From here, clean-up data from the previous Adaptation, if one
 
   const shouldFlush = adaptation.type === "audio" &&
-                      options.audioTrackSwitchingMode === "direct";
+                      audioTrackSwitchingMode === "direct";
 
   const rangesToExclude = [];
 
