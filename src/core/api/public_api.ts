@@ -221,7 +221,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /** Information on the current bitrate settings. */
   private readonly _priv_bitrateInfos : {
     /**
-     * Store last bitrates for each type for ABRManager instanciation.
+     * Store last bitrates for each media type for the adaptive logic.
      * Store the initial wanted bitrates at first.
      */
     lastBitrates : { audio? : number;
@@ -229,15 +229,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                      text? : number;
                      image? : number; };
 
-    /** Store last wanted minAutoBitrates for the next ABRManager instanciation. */
+    /** Store last wanted minAutoBitrates for the adaptive logic. */
     minAutoBitrates : { audio : ISharedReference<number>;
                         video : ISharedReference<number>; };
 
-    /** Store last wanted maxAutoBitrates for the next ABRManager instanciation. */
+    /** Store last wanted maxAutoBitrates for the adaptive logic. */
     maxAutoBitrates : { audio : ISharedReference<number>;
                         video : ISharedReference<number>; };
 
-    /** Store last wanted manual bitrates for the next ABRManager instanciation. */
+    /** Store last wanted manual bitrates for the adaptive logic. */
     manualBitrates : { audio : ISharedReference<number>;
                        video : ISharedReference<number>; };
   };
@@ -834,7 +834,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         }
       }
 
-      /** Options used by the ABR Manager. */
+      /** Options used by the adaptive logic. */
       const adaptiveOptions = {
         initialBitrates: this._priv_bitrateInfos.lastBitrates,
         lowLatencyMode,

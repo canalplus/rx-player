@@ -15,11 +15,25 @@
  */
 
 import AdaptiveRepresentationSelector, {
+  IABREstimate,
   IAdaptiveRepresentationSelectorArguments,
+  IAddedSegmentCallbackPayload,
+  IMetricsCallbackPayload,
   IRepresentationEstimator,
+  IRepresentationEstimatorCallbacks,
+  IRepresentationEstimatorPlaybackObservation,
   IRepresentationEstimatorThrottlers as IABRThrottlers,
-} from "./abr_manager";
+  IRequestBeginCallbackPayload,
+  IRequestEndCallbackPayload,
+  IRequestProgressCallbackPayload,
+} from "./adaptive_representation_selector";
+
+export default AdaptiveRepresentationSelector;
 export {
+  IAdaptiveRepresentationSelectorArguments,
+  IABRThrottlers,
+  IRepresentationEstimator,
+
   IAddedSegmentCallbackPayload,
   IABREstimate,
   IMetricsCallbackPayload,
@@ -28,11 +42,4 @@ export {
   IRequestBeginCallbackPayload,
   IRequestProgressCallbackPayload,
   IRequestEndCallbackPayload,
-} from "./representation_estimator";
-
-export default AdaptiveRepresentationSelector;
-export {
-  IAdaptiveRepresentationSelectorArguments,
-  IABRThrottlers,
-  IRepresentationEstimator,
 };
