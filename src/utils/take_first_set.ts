@@ -30,6 +30,11 @@ export default function takeFirstSet(
   a? : undefined|null,
   b? : undefined|null
 ) : undefined;
+export default function takeFirstSet<T>(
+  a : undefined|null|T,
+  b : undefined|null|T,
+  c : T
+) : T;
 export default function takeFirstSet<T>(...args : Array<T|null|undefined>) : T |
                                                                              undefined;
 export default function takeFirstSet<T>(

@@ -192,14 +192,13 @@ export default class TaskCanceller {
 }
 
 /**
- * Class associated to a TaskCanceller allowing to be notified when a task
- * needs to be aborted.
+ * Signal allowing to be notified when the linked task needs to be aborted.
  * @class
  */
 export class CancellationSignal {
   /**
-   * True when the associated `TaskCanceller` was already triggered, meaning
-   * that the current task needs to be aborted.
+   * True when the cancellation order was already triggered, meaning that the
+   * linked task needs to be aborted.
    */
   public isCancelled : boolean;
   /**

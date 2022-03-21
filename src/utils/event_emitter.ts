@@ -20,6 +20,7 @@ import {
 } from "rxjs";
 import log from "../log";
 import isNullOrUndefined from "./is_null_or_undefined";
+import { CancellationSignal } from "./task_canceller";
 
 export interface IEventEmitter<T> {
   addEventListener<TEventName extends keyof T>(evt : TEventName,
@@ -37,7 +38,7 @@ type IArgs<TEventRecord, TEventName
      extends keyof TEventRecord> = TEventRecord[TEventName];
 
 // Type of the listener function
-type IListener<TEventRecord, TEventName
+export type IListener<TEventRecord, TEventName
      extends keyof TEventRecord> = (args: IArgs<TEventRecord, TEventName>) => void;
 
 type IListeners<TEventRecord> = {
@@ -66,16 +67,24 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
    * @param {Function} fn - The callback to call as that event is triggered.
    * The callback will take as argument the eventual payload of the event
    * (single argument).
+   * @param {Object | undefined} cancellationSignal - When that signal emits,
+   * the event listener is automatically removed.
    */
   public addEventListener<TEventName extends keyof T>(
     evt : TEventName,
-    fn : IListener<T, TEventName>
+    fn : IListener<T, TEventName>,
+    cancellationSignal? : CancellationSignal
   ) : void {
     const listeners = this._listeners[evt];
     if (!Array.isArray(listeners)) {
       this._listeners[evt] = [fn];
     } else {
       listeners.push(fn);
+    }
+    if (cancellationSignal !== undefined) {
+      cancellationSignal.register(() => {
+        this.removeEventListener(evt, fn);
+      });
     }
   }
 
