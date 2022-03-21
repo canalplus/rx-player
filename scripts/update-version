@@ -24,8 +24,8 @@ set -e
 version=$1
 
 sed -i.bak -e "s/\/\\* PLAYER_VERSION \\*\/\"\(.*\)\";/\/* PLAYER_VERSION *\/\"${version}\";/g" src/core/api/public_api.ts && rm src/core/api/public_api.ts.bak
-sed -i.bak -e "s/\"version\": \"[0-9]\+\.[0-9]\+\.[0-9]\+\(-\w\+[0-9]\)\?\"/\"version\": \"${version}\"/g" package.json && rm package.json.bak
-sed -i.bak -e "s/sonar\.projectVersion= *[0-9]\+\.[0-9]\+\.[0-9]\+/sonar.projectVersion=${version}/g" sonar-project.properties && rm sonar-project.properties.bak
+sed -i.bak -e "s/\"version\":\s*\"[0-9]\+\.[0-9]\+\.[0-9]\+[^\"]*\"/\"version\": \"${version}\"/g" package.json && rm package.json.bak
+sed -i.bak -e "s/sonar\.projectVersion= *.*/sonar.projectVersion=${version}/g" sonar-project.properties && rm sonar-project.properties.bak
 echo $version > VERSION
 
 npm install
