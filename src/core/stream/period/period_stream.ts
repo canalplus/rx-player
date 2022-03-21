@@ -43,7 +43,7 @@ import objectAssign from "../../../utils/object_assign";
 import { getLeftSizeOfRange } from "../../../utils/ranges";
 import { IReadOnlySharedReference } from "../../../utils/reference";
 import WeakMapMemory from "../../../utils/weak_map_memory";
-import ABRManager from "../../abr";
+import { IRepresentationEstimator } from "../../abr";
 import { IReadOnlyPlaybackObserver } from "../../api";
 import { SegmentFetcherCreator } from "../../fetchers";
 import SegmentBuffersStore, {
@@ -90,7 +90,6 @@ export interface IPeriodStreamPlaybackObservation {
 
 /** Arguments required by the `PeriodStream`. */
 export interface IPeriodStreamArguments {
-  abrManager : ABRManager;
   bufferType : IBufferType;
   content : { manifest : Manifest;
               period : Period; };
@@ -99,6 +98,7 @@ export interface IPeriodStreamArguments {
   segmentBuffersStore : SegmentBuffersStore;
   playbackObserver : IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>;
   options: IPeriodStreamOptions;
+  representationEstimator : IRepresentationEstimator;
   wantedBufferAhead : IReadOnlySharedReference<number>;
   maxVideoBufferSize : IReadOnlySharedReference<number>;
 }
@@ -125,11 +125,11 @@ export type IPeriodStreamOptions =
  * @returns {Observable}
  */
 export default function PeriodStream({
-  abrManager,
   bufferType,
   content,
   garbageCollectors,
   playbackObserver,
+  representationEstimator,
   segmentFetcherCreator,
   segmentBuffersStore,
   options,
@@ -271,10 +271,10 @@ export default function PeriodStream({
     const { manifest } = content;
     const adaptationPlaybackObserver =
       createAdaptationStreamPlaybackObserver(playbackObserver, segmentBuffer);
-    return AdaptationStream({ abrManager,
-                              content: { manifest, period, adaptation },
+    return AdaptationStream({ content: { manifest, period, adaptation },
                               options,
                               playbackObserver: adaptationPlaybackObserver,
+                              representationEstimator,
                               segmentBuffer,
                               segmentFetcherCreator,
                               wantedBufferAhead,

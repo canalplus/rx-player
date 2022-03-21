@@ -1,8 +1,8 @@
-# `ABRManager` #################################################################
+# `AdaptiveRepresentationSelector` #############################################
 
-The `ABRManager` (ABR for Adaptive BitRate) is a class which facilitates the
-choice between multiple audio/video qualities in function of the current
-bandwidth, the network capacities and other specific settings set by the client.
+The `AdaptiveRepresentationSelector` is a function which facilitates the choice
+between multiple audio/video qualities in function of the network capabilities
+and other specific settings set by the client.
 
 It does so by receiving various values such as:
   - when network requests begin, progresses or end
@@ -19,8 +19,8 @@ be the most adapted, that is the quality which:
     network to handle would lead to excessive re-bufferings, but a too low would
     be not as pleasant to watch)
 
-In order to estimate the quality that maximizes the playback experience, the ABR
-relies on multiple algorithms:
+In order to estimate the quality that maximizes the playback experience, we rely
+on multiple algorithms:
   1. One which picks a quality from network conditions.
   2. Another relies on buffering conditions to make its choices.
   3. A third, only used in very rare conditions, "guess" the right quality by

@@ -44,10 +44,10 @@ import TaskCanceller, {
   CancellationSignal,
 } from "../../../utils/task_canceller";
 import {
-  IABRMetricsEventValue,
-  IABRRequestBeginEventValue,
-  IABRRequestEndEventValue,
-  IABRRequestProgressEventValue,
+  IMetricsCallbackPayload,
+  IRequestBeginCallbackPayload,
+  IRequestEndCallbackPayload,
+  IRequestProgressCallbackPayload,
 } from "../../abr";
 import { IBufferType } from "../../segment_buffers";
 import errorSelector from "../utils/error_selector";
@@ -150,6 +150,9 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
          * @param {Object} info
          */
         onProgress(info : ISegmentLoadingProgressInformation) : void {
+          if (requestInfo !== undefined) {
+            return; // Request already terminated
+          }
           if (info.totalSize !== undefined && info.size < info.totalSize) {
             callbacks.onProgress?.({ duration: info.duration,
                                      size: info.size,
@@ -388,21 +391,21 @@ export interface ISegmentFetcherRetry { type : "retry";
  */
 export interface ISegmentFetcherCreatorCallbacks {
   /** Called when a segment request begins. */
-  onRequestBegin? : (arg : IABRRequestBeginEventValue) => void;
+  onRequestBegin? : (arg : IRequestBeginCallbackPayload) => void;
   /** Called when progress information is available on a pending segment request. */
-  onProgress? : (arg : IABRRequestProgressEventValue) => void;
+  onProgress? : (arg : IRequestProgressCallbackPayload) => void;
   /**
    * Called when a segment request ends (either because it completed, it failed
    * or was canceled).
    */
-  onRequestEnd? : (arg : IABRRequestEndEventValue) => void;
+  onRequestEnd? : (arg : IRequestEndCallbackPayload) => void;
   /**
    * Called when network metrics linked to a segment request are available,
    * once the request has terminated.
    * This callback may be called before or after the corresponding
    * `onRequestEnd` callback, you should not rely on the order between the two.
    */
-  onMetrics? : (arg : IABRMetricsEventValue) => void;
+  onMetrics? : (arg : IMetricsCallbackPayload) => void;
 }
 
 /** Options allowing to configure an `ISegmentFetcher`'s behavior. */

@@ -14,146 +14,117 @@
  * limitations under the License.
  */
 
-import {
-  combineLatest as observableCombineLatest,
-  map,
-  Observable,
-  of as observableOf,
-} from "rxjs";
 import log from "../../log";
 import Manifest, {
   Adaptation,
   Period,
   Representation,
 } from "../../manifest";
-import objectAssign from "../../utils/object_assign";
-import { ISharedReference } from "../../utils/reference";
+import createSharedReference, {
+  IReadOnlySharedReference,
+} from "../../utils/reference";
 import takeFirstSet from "../../utils/take_first_set";
+import { CancellationSignal } from "../../utils/task_canceller";
+import { IReadOnlyPlaybackObserver } from "../api";
 import { IBufferType } from "../segment_buffers";
 import BandwidthEstimator from "./bandwidth_estimator";
-import RepresentationEstimator, {
+import getEstimateReference, {
   IABREstimate,
-  IABRFiltersObject,
-  IABRStreamEvents,
+  IRepresentationEstimatorCallbacks,
   IRepresentationEstimatorPlaybackObservation,
 } from "./representation_estimator";
 
-export type IABRManagerPlaybackObservation = IRepresentationEstimatorPlaybackObservation;
-
-// Options for every RepresentationEstimator
-interface IRepresentationEstimatorsThrottlers {
-  limitWidth : Partial<Record<IBufferType,
-                              Observable<number>>>;
-  throttle : Partial<Record<IBufferType,
-                            Observable<number>>>;
-  throttleBitrate : Partial<Record<IBufferType,
-                                   Observable<number>>>;
-}
-
-export interface IABRManagerArguments {
-  initialBitrates: Partial<Record<IBufferType, // Initial bitrate chosen, per
-                                  number>>;    // type (minimum if not set)
-  lowLatencyMode: boolean; // Some settings can depend on wether you're playing a
-                           // low-latency content. Set it to `true` if you're playing
-                           // such content.
-
-  /** Minimum bitrate chosen when in auto mode, per type (0 by default) */
-  minAutoBitrates: Partial<Record<IBufferType, ISharedReference<number>>>;
-
-  /** Maximum bitrate chosen when in auto mode, per type (0 by default) */
-  maxAutoBitrates: Partial<Record<IBufferType, ISharedReference<number>>>;
-
-  /** Manually forced bitrate set for a given type (`-1` for auto mode */
-  manualBitrates: Partial<Record<IBufferType, ISharedReference<number>>>;
-
-  throttlers: IRepresentationEstimatorsThrottlers; // Throttle from external events
-}
-
 /**
- * Adaptive BitRate Manager.
- *
- * Select the right Representation from the network and buffer infos it
- * receives.
- * @class ABRManager
+ * Select the most adapted Representation according to the network and buffer
+ * metrics it receives.
+ * @param {Object} options
  */
-export default class ABRManager {
-  private _bandwidthEstimators : Partial<Record<IBufferType, BandwidthEstimator>>;
-  private _initialBitrates : Partial<Record<IBufferType, number>>;
-  private _manualBitrates : Partial<Record<IBufferType, ISharedReference<number>>>;
-  private _minAutoBitrates : Partial<Record<IBufferType, ISharedReference<number>>>;
-  private _maxAutoBitrates : Partial<Record<IBufferType, ISharedReference<number>>>;
-  private _throttlers : IRepresentationEstimatorsThrottlers;
-  private _lowLatencyMode : boolean;
-
+export default function createAdaptiveRepresentationSelector(
+  options : IAdaptiveRepresentationSelectorArguments
+) : IRepresentationEstimator {
   /**
-   * @param {Object} options
+   * Allows to estimate the current network bandwidth.
+   * One per active media type.
    */
-  constructor(options : IABRManagerArguments) {
-    this._manualBitrates = options.manualBitrates;
-    this._minAutoBitrates = options.minAutoBitrates;
-    this._maxAutoBitrates = options.maxAutoBitrates;
-    this._initialBitrates = options.initialBitrates;
-    this._throttlers = options.throttlers;
-    this._bandwidthEstimators = {};
-    this._lowLatencyMode = options.lowLatencyMode;
-  }
+  const bandwidthEstimators : Partial<Record<IBufferType, BandwidthEstimator>> = {};
+  const manualBitrates = options.manualBitrates;
+  const minAutoBitrates = options.minAutoBitrates;
+  const maxAutoBitrates = options.maxAutoBitrates;
+  const initialBitrates = options.initialBitrates;
+  const throttlers = options.throttlers;
+  const lowLatencyMode = options.lowLatencyMode;
 
   /**
-   * Take type and an array of the available representations, spit out an
+   * Take context and an array of the available representations, spit out an
    * observable emitting the best representation (given the network/buffer
    * state).
    * @param {Object} context
-   * @param {Array.<Representation>} representations
-   * @param {Observable<Object>} observation$
-   * @param {Observable<Object>} streamEvents$
-   * @returns {Observable}
+   * @param {Object} currentRepresentation - Reference emitting the
+   * Representation currently loaded.
+   * @param {Object} representations - Reference emitting the list of available
+   * Representations to choose from.
+   * @param {Object} playbackObserver - Emits regularly playback conditions
+   * @param {Object} cancellationSignal - After this `CancellationSignal` emits,
+   * estimates will stop to be emitted.
+   * @returns {Array.<Object>}
    */
-  public get$(
+  return function getEstimates(
     context : { manifest : Manifest;
                 period : Period;
                 adaptation : Adaptation; },
-    representations : Representation[],
-    observation$ : Observable<IABRManagerPlaybackObservation>,
-    streamEvents$ : Observable<IABRStreamEvents>
-  ) : Observable<IABREstimate> {
+    currentRepresentation : IReadOnlySharedReference<Representation | null>,
+    representations : IReadOnlySharedReference<Representation[]>,
+    playbackObserver : IReadOnlyPlaybackObserver<
+      IRepresentationEstimatorPlaybackObservation
+    >,
+    cancellationSignal : CancellationSignal
+  ) : [ IReadOnlySharedReference<IABREstimate>,
+        IRepresentationEstimatorCallbacks ] {
     const { type } = context.adaptation;
-    const bandwidthEstimator = this._getBandwidthEstimator(type);
-    const manualBitrate$ =
-      takeFirstSet<Observable<number>>(this._manualBitrates[type]?.asObservable(),
-                                       observableOf(-1));
-    const minAutoBitrate$ =
-      takeFirstSet<Observable<number>>(this._minAutoBitrates[type]?.asObservable(),
-                                       observableOf(0));
-    const maxAutoBitrate$ =
-      takeFirstSet<Observable<number>>(this._maxAutoBitrates[type]?.asObservable(),
-                                       observableOf(Infinity));
-    const initialBitrate = takeFirstSet<number>(this._initialBitrates[type], 0);
-    const filters$ = createFilters(this._throttlers.limitWidth[type],
-                                   this._throttlers.throttleBitrate[type],
-                                   this._throttlers.throttle[type]);
-    return RepresentationEstimator({ bandwidthEstimator,
-                                     context,
-                                     streamEvents$,
-                                     observation$,
-                                     filters$,
-                                     initialBitrate,
-                                     manualBitrate$,
-                                     minAutoBitrate$,
-                                     maxAutoBitrate$,
-                                     representations,
-                                     lowLatencyMode: this._lowLatencyMode });
-  }
+    const bandwidthEstimator = _getBandwidthEstimator(type);
+    const manualBitrate = takeFirstSet<IReadOnlySharedReference<number>>(
+      manualBitrates[type],
+      createSharedReference(-1));
+    const minAutoBitrate = takeFirstSet<IReadOnlySharedReference<number>>(
+      minAutoBitrates[type],
+      createSharedReference(0));
+    const maxAutoBitrate = takeFirstSet<IReadOnlySharedReference<number>>(
+      maxAutoBitrates[type],
+      createSharedReference(Infinity));
+    const initialBitrate = takeFirstSet<number>(initialBitrates[type], 0);
+    const filters = {
+      limitWidth: takeFirstSet<IReadOnlySharedReference<number | undefined>>(
+        throttlers.limitWidth[type],
+        createSharedReference(undefined)),
+      throttleBitrate: takeFirstSet<IReadOnlySharedReference<number>>(
+        throttlers.throttleBitrate[type],
+        throttlers.throttle[type],
+        createSharedReference(Infinity)),
+    };
+    return getEstimateReference({ bandwidthEstimator,
+                                  context,
+                                  currentRepresentation,
+                                  filters,
+                                  initialBitrate,
+                                  manualBitrate,
+                                  minAutoBitrate,
+                                  maxAutoBitrate,
+                                  playbackObserver,
+                                  representations,
+                                  lowLatencyMode },
+                                cancellationSignal);
+  };
 
   /**
    * @param {string} bufferType
    * @returns {Object}
    */
-  private _getBandwidthEstimator(bufferType : IBufferType) : BandwidthEstimator {
-    const originalBandwidthEstimator = this._bandwidthEstimators[bufferType];
+  function _getBandwidthEstimator(bufferType : IBufferType) : BandwidthEstimator {
+    const originalBandwidthEstimator = bandwidthEstimators[bufferType];
     if (originalBandwidthEstimator == null) {
       log.debug("ABR: Creating new BandwidthEstimator for ", bufferType);
       const bandwidthEstimator = new BandwidthEstimator();
-      this._bandwidthEstimators[bufferType] = bandwidthEstimator;
+      bandwidthEstimators[bufferType] = bandwidthEstimator;
       return bandwidthEstimator;
     }
     return originalBandwidthEstimator;
@@ -161,36 +132,55 @@ export default class ABRManager {
 }
 
 /**
- * Create Observable that merge several throttling Observables into one.
- * @param {Observable} limitWidth$ - Emit the width at which the chosen
- * Representation should be limited.
- * @param {Observable} throttleBitrate$ - Emit the maximum bitrate authorized.
- * @param {Observable} throttle$ - Also emit the maximum bitrate authorized.
- * Here for legacy reasons.
- * @returns {Observable}
+ * Type of the function returned by `createAdaptiveRepresentationSelector`,
+ * allowing to estimate the most adapted `Representation`.
  */
-function createFilters(
-  limitWidth$? : Observable<number>,
-  throttleBitrate$? : Observable<number>,
-  throttle$? : Observable<number>
-) : Observable<IABRFiltersObject> {
-  const deviceEventsArray : Array<Observable<IABRFiltersObject>> = [];
+export type IRepresentationEstimator = (
+  context : { manifest : Manifest;
+              period : Period;
+              adaptation : Adaptation; },
+  currentRepresentation : IReadOnlySharedReference<Representation | null>,
+  representations : IReadOnlySharedReference<Representation[]>,
+  playbackObserver : IReadOnlyPlaybackObserver<
+    IRepresentationEstimatorPlaybackObservation
+  >,
+  cancellationSignal : CancellationSignal
+) => [ IReadOnlySharedReference<IABREstimate>,
+       IRepresentationEstimatorCallbacks ];
 
-  if (limitWidth$ != null) {
-    deviceEventsArray.push(limitWidth$.pipe(map(width => ({ width }))));
-  }
-  if (throttle$ != null) {
-    deviceEventsArray.push(throttle$.pipe(map(bitrate => ({ bitrate }))));
-  }
-  if (throttleBitrate$ != null) {
-    deviceEventsArray.push(throttleBitrate$.pipe(map(bitrate => ({ bitrate }))));
-  }
+/** Arguments received by `createAdaptiveRepresentationSelector`. */
+export interface IAdaptiveRepresentationSelectorArguments {
+  /** Initial bitrate chosen, per type (minimum if not set) */
+  initialBitrates: Partial<Record<IBufferType, number>>;
 
-  // Emit restrictions on the pools of available representations to choose
-  // from.
-  return deviceEventsArray.length > 0 ?
-    observableCombineLatest(deviceEventsArray)
-      .pipe(map((args : IABRFiltersObject[]) =>
-        objectAssign({}, ...args) as IABRFiltersObject)) :
-    observableOf({});
+  /**
+   * Some settings can depend on wether you're playing a low-latency content.
+   * Set it to `true` if you're playing such content.
+   */
+  lowLatencyMode: boolean;
+
+  /** Minimum bitrate chosen when in auto mode, per type (0 by default) */
+  minAutoBitrates: Partial<Record<IBufferType, IReadOnlySharedReference<number>>>;
+
+  /** Maximum bitrate chosen when in auto mode, per type (0 by default) */
+  maxAutoBitrates: Partial<Record<IBufferType, IReadOnlySharedReference<number>>>;
+
+  /** Manually forced bitrate set for a given type (`-1` for auto mode */
+  manualBitrates: Partial<Record<IBufferType, IReadOnlySharedReference<number>>>;
+
+  /** Allows to filter which Representations can be choosen. */
+  throttlers: IRepresentationEstimatorThrottlers;
+}
+
+/**
+ * Throttlers are interfaces allowing to limit the pool of Representations
+ * to choose from.
+ */
+export interface IRepresentationEstimatorThrottlers {
+  limitWidth : Partial<Record<IBufferType,
+                              IReadOnlySharedReference<number>>>;
+  throttle : Partial<Record<IBufferType,
+                            IReadOnlySharedReference<number>>>;
+  throttleBitrate : Partial<Record<IBufferType,
+                                   IReadOnlySharedReference<number>>>;
 }

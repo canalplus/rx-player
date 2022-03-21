@@ -47,7 +47,7 @@ import filterMap from "../../../utils/filter_map";
 import { IReadOnlySharedReference } from "../../../utils/reference";
 import SortedList from "../../../utils/sorted_list";
 import WeakMapMemory from "../../../utils/weak_map_memory";
-import ABRManager from "../../abr";
+import { IRepresentationEstimator } from "../../abr";
 import type { IReadOnlyPlaybackObserver } from "../../api";
 import { SegmentFetcherCreator } from "../../fetchers";
 import SegmentBuffersStore, {
@@ -103,8 +103,8 @@ export type IStreamOrchestratorOptions =
  *
  * @param {Object} content
  * @param {Observable} playbackObserver - Emit position information
- * @param {Object} abrManager - Emit bitrate estimates and best Representation
- * to play.
+ * @param {Object} representationEstimator - Emit bitrate estimates and best
+ * Representation to play.
  * @param {Object} segmentBuffersStore - Will be used to lazily create
  * SegmentBuffer instances associated with the current content.
  * @param {Object} segmentFetcherCreator - Allow to download segments.
@@ -115,7 +115,7 @@ export default function StreamOrchestrator(
   content : { manifest : Manifest;
               initialPeriod : Period; },
   playbackObserver : IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>,
-  abrManager : ABRManager,
+  representationEstimator : IRepresentationEstimator,
   segmentBuffersStore : SegmentBuffersStore,
   segmentFetcherCreator : SegmentFetcherCreator,
   options: IStreamOrchestratorOptions
@@ -422,16 +422,16 @@ export default function StreamOrchestrator(
     // Will emit when the current Stream should be destroyed.
     const killCurrentStream$ = observableMerge(endOfCurrentStream$, destroyAll$);
 
-    const periodStream$ = PeriodStream({ abrManager,
-                                         bufferType,
+    const periodStream$ = PeriodStream({ bufferType,
                                          content: { manifest, period: basePeriod },
                                          garbageCollectors,
+                                         maxVideoBufferSize,
                                          segmentFetcherCreator,
                                          segmentBuffersStore,
                                          options,
                                          playbackObserver,
-                                         wantedBufferAhead,
-                                         maxVideoBufferSize }
+                                         representationEstimator,
+                                         wantedBufferAhead }
     ).pipe(
       mergeMap((evt : IPeriodStreamEvent) : Observable<IMultiplePeriodStreamsEvent> => {
         if (evt.type === "stream-status") {
