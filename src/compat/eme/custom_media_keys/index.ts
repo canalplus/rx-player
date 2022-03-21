@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import { MediaError } from "../../../errors";
 import assert from "../../../utils/assert";
 import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
@@ -154,7 +153,7 @@ if (isNode ||
     keySystemConfigurations : MediaKeySystemConfiguration[]
   ) : Promise<MediaKeySystemAccess|CustomMediaKeySystemAccess> {
     if (!isTypeSupported(keyType)) {
-      return PPromise.reject(new Error("Unsupported key type"));
+      return Promise.reject(new Error("Unsupported key type"));
     }
 
     for (let i = 0; i < keySystemConfigurations.length; i++) {
@@ -185,7 +184,7 @@ if (isNode ||
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const customMediaKeys = createCustomMediaKeys(keyType);
-        return PPromise.resolve(
+        return Promise.resolve(
           new CustomMediaKeySystemAccess(keyType,
                                          customMediaKeys,
                                          keySystemConfigurationResponse)
@@ -193,7 +192,7 @@ if (isNode ||
       }
     }
 
-    return PPromise.reject(new Error("Unsupported configuration"));
+    return Promise.reject(new Error("Unsupported configuration"));
   };
 }
 

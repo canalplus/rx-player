@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import log from "../../log";
 import { ICustomMediaKeySession } from "./custom_media_keys";
 
@@ -49,7 +48,7 @@ export default async function loadSession(
   // Chromium/Chrome versions where the `keyStatuses` property from a loaded
   // MediaKeySession would not be populated directly as the load answer but
   // asynchronously after.
-  return new PPromise((resolve) => {
+  return new Promise((resolve) => {
     (session as MediaKeySession).addEventListener("keystatuseschange",
                                                   resolveWithLoadedStatus);
     const timeout = setTimeout(resolveWithLoadedStatus,

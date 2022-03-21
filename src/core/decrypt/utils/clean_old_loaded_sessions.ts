@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "../../../utils/promise";
 import LoadedSessionsStore from "./loaded_sessions_store";
 
 /**
@@ -41,5 +40,5 @@ export default async function cleanOldLoadedSessions(
     const entry = entries[i];
     proms.push(loadedSessionsStore.closeSession(entry.mediaKeySession));
   }
-  await PPromise.all(proms);
+  await Promise.all(proms);
 }

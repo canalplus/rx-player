@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "./promise";
 import {
   CancellationError,
   CancellationSignal,
@@ -37,7 +36,7 @@ export default function cancellableSleep(
   delay: number,
   cancellationSignal: CancellationSignal
 ) : Promise<void> {
-  return new PPromise((res, rej) => {
+  return new Promise((res, rej) => {
     const timeout = setTimeout(() => {
       unregisterCancelSignal();
       res();

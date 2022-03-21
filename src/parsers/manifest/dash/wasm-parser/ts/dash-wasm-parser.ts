@@ -17,7 +17,6 @@
 import log from "../../../../../log";
 import assertUnreachable from "../../../../../utils/assert_unreachable";
 import noop from "../../../../../utils/noop";
-import PPromise from "../../../../../utils/promise";
 import parseMpdIr, {
   IIrParserResponse,
   ILoadedXlinkData,
@@ -136,15 +135,15 @@ export default class DashWasmParser {
    */
   public waitForInitialization() : Promise<void> {
     return this._initProm ??
-           PPromise.reject("No initialization performed yet.");
+           Promise.reject("No initialization performed yet.");
   }
 
   public async initialize(opts : IDashWasmParserOptions) : Promise<void> {
     if (this.status !== "uninitialized") {
-      return PPromise.reject(new Error("DashWasmParser already initialized."));
+      return Promise.reject(new Error("DashWasmParser already initialized."));
     } else if (!this.isCompatible()) {
       this.status = "failure";
-      return PPromise.reject(new Error("Target not compatible with WebAssembly."));
+      return Promise.reject(new Error("Target not compatible with WebAssembly."));
     }
     this.status = "initializing";
 
@@ -175,7 +174,7 @@ export default class DashWasmParser {
 
     const streamingProm = typeof WebAssembly.instantiateStreaming === "function" ?
       WebAssembly.instantiateStreaming(fetchedWasm, imports) :
-      PPromise.reject("`WebAssembly.instantiateStreaming` API not available");
+      Promise.reject("`WebAssembly.instantiateStreaming` API not available");
 
     this._initProm = streamingProm
       .catch(async (e) => {

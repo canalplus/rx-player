@@ -16,7 +16,6 @@
 
 import { shouldUnsetMediaKeys } from "../../compat/";
 import log from "../../log";
-import PPromise from "../../utils/promise";
 import disposeDecryptionResources from "./dispose_decryption_resources";
 import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 
@@ -44,5 +43,5 @@ export default function clearOnStop(
   }
   log.info("DRM: Nothing to clear. Returning right away. No state =",
            currentState === null);
-  return PPromise.resolve();
+  return Promise.resolve();
 }

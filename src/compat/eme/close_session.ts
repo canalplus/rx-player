@@ -16,7 +16,6 @@
 
 import log from "../../log";
 import cancellableSleep from "../../utils/cancellable_sleep";
-import PPromise from "../../utils/promise";
 import TaskCanceller, {
   CancellationError,
 } from "../../utils/task_canceller";
@@ -40,7 +39,7 @@ export default function closeSession(
 ): Promise<void> {
   const timeoutCanceller = new TaskCanceller();
 
-  return PPromise.race([
+  return Promise.race([
     session.close()
       .then(() => { timeoutCanceller.cancel(); }),
     // The `closed` promise may resolve, even if `close()` result has not

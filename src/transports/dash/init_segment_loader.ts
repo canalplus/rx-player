@@ -16,7 +16,6 @@
 
 import { ISegment } from "../../manifest";
 import { concat } from "../../utils/byte_parsing";
-import PPromise from "../../utils/promise";
 import request from "../../utils/request";
 import { CancellationSignal } from "../../utils/task_canceller";
 import {
@@ -86,7 +85,7 @@ export default function initSegmentLoader(
                                   cancelSignal,
                                   onProgress: callbacks.onProgress });
 
-  return PPromise.all([rangeRequest$, indexRequest$])
+  return Promise.all([rangeRequest$, indexRequest$])
     .then(([ initData, indexData ]) => {
       const data = concat(new Uint8Array(initData.responseData),
                           new Uint8Array(indexData.responseData));

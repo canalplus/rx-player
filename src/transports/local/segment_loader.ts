@@ -20,7 +20,6 @@ import {
   ILocalManifestSegmentLoader,
 } from "../../parsers/manifest/local";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import PPromise from "../../utils/promise";
 import {
   CancellationError,
   CancellationSignal,
@@ -40,7 +39,7 @@ function loadInitSegment(
   customSegmentLoader : ILocalManifestInitSegmentLoader,
   cancelSignal : CancellationSignal
 ) : Promise<ISegmentLoaderResultSegmentLoaded<ArrayBuffer | null>> {
-  return new PPromise((res, rej) => {
+  return new Promise((res, rej) => {
     /** `true` when the custom segmentLoader should not be active anymore. */
     let hasFinished = false;
 
@@ -108,7 +107,7 @@ function loadSegment(
   customSegmentLoader : ILocalManifestSegmentLoader,
   cancelSignal : CancellationSignal
 ) : Promise< ISegmentLoaderResultSegmentLoaded<ArrayBuffer | null>> {
-  return new PPromise((res, rej) => {
+  return new Promise((res, rej) => {
     /** `true` when the custom segmentLoader should not be active anymore. */
     let hasFinished = false;
 

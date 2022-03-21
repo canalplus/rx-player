@@ -20,7 +20,6 @@ import {
   setMediaKeys,
 } from "../../compat";
 import log from "../../log";
-import PPromise from "../../utils/promise";
 import { CancellationSignal } from "../../utils/task_canceller";
 import {
   IKeySystemOption,
@@ -58,7 +57,7 @@ export default async function attachMediaKeys(
   const closeAllSessions = previousState !== null &&
                            previousState.loadedSessionsStore !== loadedSessionsStore ?
                              previousState.loadedSessionsStore.closeAllSessions() :
-                             PPromise.resolve();
+                             Promise.resolve();
 
   await closeAllSessions;
 

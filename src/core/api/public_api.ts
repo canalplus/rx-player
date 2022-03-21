@@ -76,7 +76,6 @@ import EventEmitter, {
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import Logger from "../../utils/logger";
 import objectAssign from "../../utils/object_assign";
-import PPromise from "../../utils/promise";
 import {
   getLeftSizeOfRange,
   getPlayedSizeOfRange,
@@ -1539,7 +1538,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     /* eslint-disable @typescript-eslint/unbound-method */
     if (isNullOrUndefined(playPromise) || typeof playPromise.catch !== "function") {
     /* eslint-enable @typescript-eslint/unbound-method */
-      return PPromise.resolve();
+      return Promise.resolve();
     }
     return playPromise.catch((error: Error) => {
       if (error.name === "NotAllowedError") {

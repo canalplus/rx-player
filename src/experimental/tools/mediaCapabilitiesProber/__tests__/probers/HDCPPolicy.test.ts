@@ -22,7 +22,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable no-restricted-properties */
 
-import PPromise from "../../../../../utils/promise";
 import { ProberStatus } from "../../types";
 
 
@@ -57,7 +56,7 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
 
   it("should resolve with `Unknown` if no getStatusForPolicy API", (done) => {
     const mockCreateMediaKeys = jest.fn(() => {
-      return PPromise.resolve({});
+      return Promise.resolve({});
     });
     const mockRequestMediaKeySystemAcces = jest.fn(() => {
       return Promise.resolve({
@@ -85,8 +84,8 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
 
   it("should resolve with `Supported` if policy is supported", (done) => {
     const mockCreateMediaKeys = jest.fn(() => {
-      return PPromise.resolve({
-        getStatusForPolicy: () => PPromise.resolve("usable"),
+      return Promise.resolve({
+        getStatusForPolicy: () => Promise.resolve("usable"),
       });
     });
     const mockRequestMediaKeySystemAcces = jest.fn(() => {
@@ -115,8 +114,8 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
 
   it("should resolve with `NotSupported` if policy is not supported", (done) => {
     const mockCreateMediaKeys = jest.fn(() => {
-      return PPromise.resolve({
-        getStatusForPolicy: () => PPromise.resolve("not-usable"),
+      return Promise.resolve({
+        getStatusForPolicy: () => Promise.resolve("not-usable"),
       });
     });
     const mockRequestMediaKeySystemAcces = jest.fn(() => {

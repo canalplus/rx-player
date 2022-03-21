@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import { Subscription } from "rxjs";
 import {
   closeSession,
@@ -138,10 +137,10 @@ export default class LoadedSessionsStore {
     if (entry === undefined) {
       log.warn("DRM-LSS: No MediaKeySession found with " +
                "the given initData and initDataType");
-      return PPromise.resolve(false);
+      return Promise.resolve(false);
     }
     await safelyCloseMediaKeySession(entry.mediaKeySession);
-    return PPromise.resolve(true);
+    return Promise.resolve(true);
   }
 
   /**
@@ -177,7 +176,7 @@ export default class LoadedSessionsStore {
 
     const closingProms = allEntries
       .map((entry) => safelyCloseMediaKeySession(entry.mediaKeySession));
-    await PPromise.all(closingProms);
+    await Promise.all(closingProms);
   }
 
   private getIndex(record : KeySessionRecord) : number {
@@ -294,7 +293,7 @@ function safelyCloseMediaKeySession(
         sleepTimer = window.setTimeout(res, delay);
       });
 
-      await PPromise.race([ksChangeProm, ksMsgProm, sleepProm]);
+      await Promise.race([ksChangeProm, ksMsgProm, sleepProm]);
       ksChangeSub?.unsubscribe();
       ksMsgSub?.unsubscribe();
       clearTimeout(sleepTimer);
@@ -313,6 +312,6 @@ function safelyCloseMediaKeySession(
     log.error("DRM: Could not close MediaKeySession: " +
               (err instanceof Error ? err.toString() :
                                       "Unknown error"));
-    return PPromise.resolve(null);
+    return Promise.resolve(null);
   }
 }

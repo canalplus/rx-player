@@ -24,7 +24,6 @@ import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import arrayIncludes from "../../utils/array_includes";
 import flatMap from "../../utils/flat_map";
-import PPromise from "../../utils/promise";
 import { CancellationSignal } from "../../utils/task_canceller";
 import { IKeySystemOption } from "./types";
 import MediaKeysInfosStore from "./utils/media_keys_infos_store";
@@ -258,7 +257,7 @@ export default function getMediaKeySystemAccess(
                                       currentState.keySystemOptions);
     if (cachedKeySystemAccess !== null) {
       log.info("DRM: Found cached compatible keySystem");
-      return PPromise.resolve({
+      return Promise.resolve({
         type: "reuse-media-key-system-access" as const,
         value: { mediaKeySystemAccess: cachedKeySystemAccess.keySystemAccess,
                  options: cachedKeySystemAccess.keySystemOptions },

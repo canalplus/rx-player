@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "../../utils/promise";
 import TaskCanceller, {
   CancellationError,
 } from "../../utils/task_canceller";
@@ -33,7 +32,7 @@ export default function addSegmentIntegrityChecks<T>(
   segmentLoader : ISegmentLoader<T>
 ) : ISegmentLoader<T> {
   return (url, content, initialCancelSignal, callbacks) => {
-    return new PPromise((res, rej) => {
+    return new Promise((res, rej) => {
       const canceller = new TaskCanceller();
       const unregisterCancelLstnr = initialCancelSignal
         .register(function onCheckCancellation(err : CancellationError) {

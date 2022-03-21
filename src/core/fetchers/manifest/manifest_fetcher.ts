@@ -30,7 +30,6 @@ import {
   ITransportPipelines,
 } from "../../../transports";
 import assert from "../../../utils/assert";
-import PPromise from "../../../utils/promise";
 import TaskCanceller from "../../../utils/task_canceller";
 import errorSelector from "../utils/error_selector";
 import {
@@ -431,6 +430,5 @@ export default class ManifestFetcher {
  * @returns {boolean}
  */
 function isPromise<T>(val : T | Promise<T>) : val is Promise<T> {
-  return val instanceof PPromise ||
-         val instanceof Promise;
+  return val instanceof Promise;
 }

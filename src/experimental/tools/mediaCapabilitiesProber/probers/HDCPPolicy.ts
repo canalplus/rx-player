@@ -15,7 +15,6 @@
  */
 
 import { requestMediaKeySystemAccess } from "../../../../compat";
-import PPromise from "../../../../utils/promise";
 import {
   IMediaConfiguration,
   ProberStatus,
@@ -38,11 +37,11 @@ export default function probeHDCPPolicy(
   config: IMediaConfiguration
 ): Promise<[ProberStatus]> {
   if (requestMediaKeySystemAccess == null) {
-    return PPromise.reject("MediaCapabilitiesProber >>> API_CALL: " +
+    return Promise.reject("MediaCapabilitiesProber >>> API_CALL: " +
       "API not available");
   }
   if (config.hdcp == null) {
-    return PPromise.reject("MediaCapabilitiesProber >>> API_CALL: " +
+    return Promise.reject("MediaCapabilitiesProber >>> API_CALL: " +
       "Missing policy argument for calling getStatusForPolicy.");
   }
 

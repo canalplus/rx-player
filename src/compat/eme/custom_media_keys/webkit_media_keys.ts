@@ -16,7 +16,6 @@
 
 import EventEmitter from "../../../utils/event_emitter";
 import noop from "../../../utils/noop";
-import PPromise from "../../../utils/promise";
 import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
 import getWebKitFairplayInitData from "../get_webkit_fairplay_initdata";
 import {
@@ -105,7 +104,7 @@ class WebkitMediaKeySession
 
     this._unbindSession = noop;
     this._closeSession = noop; // Just here to make TypeScript happy
-    this.closed = new PPromise((resolve) => {
+    this.closed = new Promise((resolve) => {
       this._closeSession = resolve;
     });
     this.keyStatuses = new Map();
@@ -117,7 +116,7 @@ class WebkitMediaKeySession
   }
 
   public update(license: BufferSource) : Promise<void> {
-    return new PPromise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       /* eslint-disable @typescript-eslint/no-unsafe-member-access */
       if (this._nativeSession === undefined ||
           this._nativeSession.update === undefined ||
@@ -140,7 +139,7 @@ class WebkitMediaKeySession
     _initDataType: string,
     initData: ArrayBuffer
   ): Promise<void> {
-    return new PPromise((resolve) => {
+    return new Promise((resolve) => {
       const elt = this._videoElement as ICompatHTMLMediaElement;
       if (elt.webkitKeys?.createSession === undefined) {
         throw new Error("No WebKitMediaKeys API.");
@@ -170,7 +169,7 @@ class WebkitMediaKeySession
   }
 
   public close(): Promise<void> {
-    return new PPromise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       this._unbindSession();
       this._closeSession();
       if (this._nativeSession === undefined) {
@@ -185,11 +184,11 @@ class WebkitMediaKeySession
   }
 
   load(): Promise<boolean> {
-    return PPromise.resolve(false);
+    return Promise.resolve(false);
   }
 
   remove(): Promise<void> {
-    return PPromise.resolve();
+    return Promise.resolve();
   }
 
   get sessionId(): string {
@@ -253,7 +252,7 @@ class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
 
   setServerCertificate(serverCertificate: Uint8Array): Promise<void> {
     this._serverCertificate = serverCertificate;
-    return PPromise.resolve();
+    return Promise.resolve();
   }
 }
 

@@ -24,7 +24,6 @@ import {
 import log from "../../../log";
 import cancellableSleep from "../../../utils/cancellable_sleep";
 import getFuzzedDelay from "../../../utils/get_fuzzed_delay";
-import PPromise from "../../../utils/promise";
 import TaskCanceller, {
   CancellationSignal,
 } from "../../../utils/task_canceller";
@@ -171,7 +170,7 @@ export function tryURLsWithBackoff<T>(
   cancellationSignal : CancellationSignal
 ) : Promise<T> {
   if (cancellationSignal.isCancelled) {
-    return PPromise.reject(cancellationSignal.cancellationError);
+    return Promise.reject(cancellationSignal.cancellationError);
   }
 
   const { baseDelay,
@@ -185,7 +184,7 @@ export function tryURLsWithBackoff<T>(
   const urlsToTry = urls.slice();
   if (urlsToTry.length === 0) {
     log.warn("Fetchers: no URL given to `tryURLsWithBackoff`.");
-    return PPromise.reject(new Error("No URL to request"));
+    return Promise.reject(new Error("No URL to request"));
   }
   return tryURLsRecursively(urlsToTry[0], 0);
 

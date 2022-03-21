@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import {
   ICustomMediaKeySession,
   loadSession,
@@ -78,8 +77,8 @@ function createTemporarySession(
 ) : Promise<INewSessionCreatedEvent> {
   log.info("DRM: Creating a new temporary session");
   const entry = loadedSessionsStore.createSession(initData, "temporary");
-  return PPromise.resolve({ type: MediaKeySessionLoadingType.Created,
-                            value: entry });
+  return Promise.resolve({ type: MediaKeySessionLoadingType.Created,
+                           value: entry });
 }
 
 /**

@@ -23,8 +23,6 @@
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import PPromise from "../../../../../utils/promise";
-
 import probeDecodingInfos from "../../probers/decodingInfo";
 import {
   IMediaConfiguration,
@@ -42,9 +40,9 @@ const origMediaCapabilities = (navigator as any).mediaCapabilities;
 function stubDecodingInfo(isSupported: boolean, mustReject?: boolean) {
   const decodingInfoStub = jest.fn(() => {
     if (mustReject === true) {
-      return PPromise.reject();
+      return Promise.reject();
     } else {
-      return PPromise.resolve({
+      return Promise.resolve({
         supported: isSupported,
       });
     }
