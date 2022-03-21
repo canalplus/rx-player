@@ -236,7 +236,7 @@ const DEFAULT_CONFIG = {
     /* eslint-disable @typescript-eslint/consistent-type-assertions */
     /**
      * Default bitrate floor initially set to dictate the minimum bitrate the
-     * ABR manager can automatically switch to.
+     * adaptive logic can automatically switch to.
      *
      * If no track is found with a quality superior or equal to the
      * bitrate there, the lowest bitrate will be taken instead.
@@ -256,7 +256,7 @@ const DEFAULT_CONFIG = {
     /* eslint-disable @typescript-eslint/consistent-type-assertions */
     /**
      * Default bitrate ceil initially set to dictate the maximum bitrate the
-     * ABR manager can automatically switch to.
+     * adaptive logic can automatically switch to.
      *
      * If no track is found with a quality inferior or equal to the
      * bitrate there, the lowest bitrate will be taken instead.
@@ -519,7 +519,7 @@ const DEFAULT_CONFIG = {
 
     /**
      * If a media buffer has less than ABR_STARVATION_GAP in seconds ahead of the
-     * current position in its buffer, the ABR manager will go into starvation
+     * current position in its buffer, the adaptive logic will go into starvation
      * mode.
      *
      * It gets out of starvation mode when the OUT_OF_STARVATION_GAP value is
