@@ -22,23 +22,19 @@
 import {
   NEVER,
   Observable,
-  combineLatest as observableCombineLatest,
-  defer as observableDefer,
-  delay,
-  distinctUntilChanged,
   fromEvent as observableFromEvent,
-  interval as observableInterval,
-  map,
   merge as observableMerge,
-  of as observableOf,
-  startWith,
-  switchMap,
-  throttleTime,
 } from "rxjs";
 import config from "../config";
 import log from "../log";
 import { IEventEmitter } from "../utils/event_emitter";
 import isNonEmptyString from "../utils/is_non_empty_string";
+import isNullOrUndefined from "../utils/is_null_or_undefined";
+import noop from "../utils/noop";
+import createSharedReference, {
+  IReadOnlySharedReference,
+} from "../utils/reference";
+import { CancellationSignal } from "../utils/task_canceller";
 import {
   ICompatDocument,
   ICompatHTMLMediaElement,
@@ -150,12 +146,16 @@ function compatibleListener<T extends Event>(
 }
 
 /**
- * Returns an observable:
- *   - emitting true when the document is visible
- *   - emitting false when the document is hidden
- * @returns {Observable}
+ * Returns a reference:
+ *   - set to `true` when the document is visible
+ *   - set to `false` when the document is hidden
+ * @param {Object} stopListening - `CancellationSignal` allowing to free the
+ * ressources allocated to update this value.
+ * @returns {Object}
  */
-function visibilityChange() : Observable<boolean> {
+function getDocumentVisibilityRef(
+  stopListening : CancellationSignal
+) : IReadOnlySharedReference<boolean> {
   let prefix : string|undefined;
 
   const doc = document as ICompatDocument;
@@ -173,35 +173,53 @@ function visibilityChange() : Observable<boolean> {
                                             "hidden";
   const visibilityChangeEvent = isNonEmptyString(prefix) ? prefix + "visibilitychange" :
                                                            "visibilitychange";
-  return observableDefer(() => {
-    const isHidden = document[hidden as "hidden"];
-    return observableFromEvent(document, visibilityChangeEvent)
-      .pipe(
-        map(() => !(document[hidden as "hidden"])),
-        startWith(!isHidden),
-        distinctUntilChanged()
-      );
+
+  const isHidden = document[hidden as "hidden"];
+  const ref = createSharedReference(isHidden);
+
+  addEventListener(document, visibilityChangeEvent, () => {
+    const isVisible = !(document[hidden as "hidden"]);
+    ref.setValueIfChanged(isVisible);
+  }, stopListening);
+
+  stopListening.register(() => {
+    ref.finish();
   });
+
+  return ref;
 }
 
 /**
- * Emit `true` if the page is considered active.
- * `false` when considered inactive.
- * Emit the original value on subscription.
- * @returns {Observable}
+ * Returns a reference:
+ *   - Set to `true` when the current page is considered visible and active.
+ *   - Set to `false` otherwise.
+ * @param {Object} stopListening - `CancellationSignal` allowing to free the
+ * resources allocated to update this value.
+ * @returns {Object}
  */
-function isPageActive() : Observable<boolean> {
-  const { INACTIVITY_DELAY } = config.getCurrent();
-  return visibilityChange().pipe(
-    switchMap((x) => {
-      if (!x) {
-        return observableOf(x).pipe(
-          delay(INACTIVITY_DELAY)
-        );
-      }
-      return observableOf(x);
-    })
-  );
+function getPageActivityRef(
+  stopListening : CancellationSignal
+) : IReadOnlySharedReference<boolean> {
+  const isDocVisibleRef = getDocumentVisibilityRef(stopListening);
+  let currentTimeout : number | undefined;
+  const ref = createSharedReference(true);
+  stopListening.register(() => {
+    clearTimeout(currentTimeout);
+    ref.finish();
+  });
+
+  isDocVisibleRef.onUpdate(function onDocVisibilityChange(isVisible : boolean) : void {
+    clearTimeout(currentTimeout); // clear potential previous timeout
+    if (!isVisible) {
+      const { INACTIVITY_DELAY } = config.getCurrent();
+      currentTimeout = window.setTimeout(() => {
+        ref.setValueIfChanged(false);
+      }, INACTIVITY_DELAY);
+    }
+    ref.setValueIfChanged(true);
+  }, { clearSignal: stopListening, emitCurrentValue: true });
+
+  return ref;
 }
 
 /**
@@ -230,96 +248,144 @@ export interface IPictureInPictureEvent {
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
-function onPictureInPictureEvent$(
-  elt: HTMLMediaElement
-): Observable<IPictureInPictureEvent> {
-  return observableDefer(() => {
-    const mediaElement = elt as ICompatHTMLMediaElement;
-    if (mediaElement.webkitSupportsPresentationMode === true &&
-        typeof mediaElement.webkitSetPresentationMode === "function")
-    {
-      const isWebKitPIPEnabled =
-        mediaElement.webkitPresentationMode === "picture-in-picture";
-      return observableFromEvent(mediaElement, "webkitpresentationmodechanged").pipe(
-        map(() => ({
-          isEnabled: mediaElement.webkitPresentationMode === "picture-in-picture",
-          pipWindow: null,
-        })),
-        startWith({ isEnabled: isWebKitPIPEnabled, pipWindow: null }));
-    }
+function getPictureOnPictureStateRef(
+  elt: HTMLMediaElement,
+  stopListening: CancellationSignal
+): IReadOnlySharedReference<IPictureInPictureEvent> {
+  const mediaElement = elt as ICompatHTMLMediaElement;
+  if (mediaElement.webkitSupportsPresentationMode === true &&
+      typeof mediaElement.webkitSetPresentationMode === "function")
+  {
+    const isWebKitPIPEnabled =
+      mediaElement.webkitPresentationMode === "picture-in-picture";
+    const ref = createSharedReference<IPictureInPictureEvent>({
+      isEnabled: isWebKitPIPEnabled,
+      pipWindow: null,
+    });
+    addEventListener(mediaElement, "webkitpresentationmodechanged", () => {
+      const isEnabled = mediaElement.webkitPresentationMode === "picture-in-picture";
+      ref.setValue({ isEnabled, pipWindow: null });
+    }, stopListening);
+    stopListening.register(() => {
+      ref.finish();
+    });
+    return ref;
+  }
 
-    const isPIPEnabled = (
-      (document as ICompatDocument).pictureInPictureElement === mediaElement
-    );
-    const initialState = { isEnabled: isPIPEnabled, pipWindow: null };
-    return observableMerge(
-      observableFromEvent(mediaElement, "enterpictureinpicture")
-        .pipe(map((evt) => ({
-          isEnabled: true,
-          pipWindow: (evt as Event & {
-            pictureInPictureWindow? : ICompatPictureInPictureWindow;
-          }).pictureInPictureWindow ?? null,
-        }))),
-      observableFromEvent(mediaElement, "leavepictureinpicture")
-        .pipe(map(() => ({ isEnabled: false, pipWindow: null })))
-    ).pipe(startWith(initialState));
+  const isPIPEnabled = (
+    (document as ICompatDocument).pictureInPictureElement === mediaElement
+  );
+  const ref = createSharedReference<IPictureInPictureEvent>({ isEnabled: isPIPEnabled,
+                                                              pipWindow: null });
+  addEventListener(mediaElement, "enterpictureinpicture", (evt) => {
+    ref.setValue({
+      isEnabled: true,
+      pipWindow: (evt as Event & {
+        pictureInPictureWindow? : ICompatPictureInPictureWindow;
+      }).pictureInPictureWindow ?? null,
+    });
+  }, stopListening);
+  addEventListener(mediaElement, "leavepictureinpicture", () => {
+    ref.setValue({ isEnabled: false, pipWindow: null });
+  }, stopListening);
+  stopListening.register(() => {
+    ref.finish();
   });
+  return ref;
 }
 
 /**
- * Returns `true` when video is considered as visible (the page is visible and/or
- * the Picture-In-Picture is activated). Returns `false` otherwise.
- * @param {Observable} pip$
+ * Returns a reference:
+ *   - Set to `true` when video is considered as visible (the page is visible
+ *     and/or the Picture-In-Picture is activated).
+ *   - Set to `false` otherwise.
+ * @param {Object} pipStatus
+ * @param {Object} stopListening - `CancellationSignal` allowing to free the
+ * resources reserved to listen to video visibility change.
  * @returns {Observable}
  */
-function isVideoVisible(
-  pip$ : Observable<IPictureInPictureEvent>
-) : Observable<boolean> {
-  const { INACTIVITY_DELAY } = config.getCurrent();
-  return observableCombineLatest([visibilityChange(), pip$]).pipe(
-    switchMap(([ isVisible, pip ]) => {
-      if (pip.isEnabled || isVisible) {
-        return observableOf(true);
-      }
-      return observableOf(false)
-        .pipe(delay(INACTIVITY_DELAY));
-    }),
-    distinctUntilChanged()
-  );
+function getVideoVisibilityRef(
+  pipStatus : IReadOnlySharedReference<IPictureInPictureEvent>,
+  stopListening : CancellationSignal
+) : IReadOnlySharedReference<boolean> {
+  const isDocVisibleRef = getDocumentVisibilityRef(stopListening);
+  let currentTimeout : number | undefined;
+  const ref = createSharedReference(true);
+  stopListening.register(() => {
+    clearTimeout(currentTimeout);
+    ref.finish();
+  });
+
+  isDocVisibleRef.onUpdate(checkCurrentVisibility,
+                           { clearSignal: stopListening });
+  pipStatus.onUpdate(checkCurrentVisibility,
+                     { clearSignal: stopListening });
+  checkCurrentVisibility();
+  return ref;
+
+  function checkCurrentVisibility() : void {
+    if (pipStatus.getValue().isEnabled || isDocVisibleRef.getValue()) {
+      ref.setValueIfChanged(true);
+    } else {
+      const { INACTIVITY_DELAY } = config.getCurrent();
+      currentTimeout = window.setTimeout(() => {
+        ref.setValueIfChanged(false);
+      }, INACTIVITY_DELAY);
+    }
+  }
 }
 
 /**
  * Get video width from HTML video element, or video estimated dimensions
  * when Picture-in-Picture is activated.
  * @param {HTMLMediaElement} mediaElement
- * @param {Observable} pip$
- * @returns {Observable}
+ * @param {Object} pipStatusRef
+ * @param {Object} stopListening
+ * @returns {Object}
  */
-function videoWidth$(
+function getVideoWidthRef(
   mediaElement : HTMLMediaElement,
-  pip$ : Observable<IPictureInPictureEvent>
-) : Observable<number> {
-  return observableCombineLatest([
-    pip$,
-    observableInterval(20000).pipe(startWith(null)),
-    observableFromEvent(window, "resize").pipe(throttleTime(500), startWith(null)),
-  ]).pipe(
-    switchMap(([ pip ]) : Observable<number> => {
-      if (!pip.isEnabled) {
-        return observableOf(mediaElement.clientWidth * pixelRatio);
-      } else if (pip.pipWindow != null) {
-        const { pipWindow } = pip;
-        const firstWidth = getVideoWidthFromPIPWindow(mediaElement, pipWindow);
-        return observableFromEvent(pipWindow, "resize").pipe(
-          startWith(firstWidth * pixelRatio),
-          map(() => getVideoWidthFromPIPWindow(mediaElement, pipWindow) * pixelRatio)
+  pipStatusRef : IReadOnlySharedReference<IPictureInPictureEvent>,
+  stopListening : CancellationSignal
+) : IReadOnlySharedReference<number> {
+  const ref = createSharedReference<number>(mediaElement.clientWidth * pixelRatio);
+  let clearPreviousEventListener = noop;
+  pipStatusRef.onUpdate(checkVideoWidth, { clearSignal: stopListening });
+  addEventListener(window, "resize", checkVideoWidth, stopListening);
+  const interval = window.setInterval(checkVideoWidth, 20000);
+
+  checkVideoWidth();
+
+  stopListening.register(function stopUpdatingVideoWidthRef() {
+    clearPreviousEventListener();
+    clearInterval(interval);
+    ref.finish();
+  });
+  return ref;
+
+  function checkVideoWidth() {
+    clearPreviousEventListener();
+    const pipStatus = pipStatusRef.getValue();
+    if (!pipStatus.isEnabled) {
+      ref.setValueIfChanged(mediaElement.clientWidth * pixelRatio);
+    } else if (!isNullOrUndefined(pipStatus.pipWindow)) {
+      const { pipWindow } = pipStatus;
+      const firstWidth = getVideoWidthFromPIPWindow(mediaElement, pipWindow);
+      pipWindow.addEventListener("resize", onPipResize);
+      clearPreviousEventListener = () => {
+        pipWindow.removeEventListener("resize", onPipResize);
+        clearPreviousEventListener = noop;
+      };
+      ref.setValueIfChanged(firstWidth * pixelRatio);
+      function onPipResize() {
+        ref.setValueIfChanged(
+          getVideoWidthFromPIPWindow(mediaElement, pipWindow) * pixelRatio
         );
-      } else {
-        return observableOf(Infinity);
       }
-    }),
-    distinctUntilChanged()
-  );
+    } else {
+      ref.setValueIfChanged(Infinity);
+    }
+  }
 }
 
 /**
@@ -442,27 +508,50 @@ const onKeyError$ = compatibleListener(["keyerror", "error"]);
  */
 const onKeyStatusesChange$ = compatibleListener(["keystatuseschange"]);
 
+/**
+ * Utilitary function allowing to add an event listener and remove it
+ * automatically once the given `CancellationSignal` emits.
+ * @param {EventTarget} elt - The element on which should be attached the event
+ * listener.
+ * @param {string} evt - The event you wish to listen to
+ * @param {Function} listener - The listener function
+ * @param {Object} stopListening - Removes the event listener once this signal
+ * emits
+ */
+function addEventListener(
+  elt : IEventEmitterLike,
+  evt : string,
+  listener : (x? : unknown) => void,
+  stopListening : CancellationSignal
+) : void {
+  elt.addEventListener(evt, listener);
+  stopListening.register(() => {
+    elt.removeEventListener(evt, listener);
+  });
+}
+
 export {
-  isPageActive,
-  isVideoVisible,
-  videoWidth$,
-  onPlayPause$,
-  onTextTrackChanges$,
-  onLoadedMetadata$,
-  onSeeking$,
-  onSeeked$,
-  onEnded$,
-  onTimeUpdate$,
-  onFullscreenChange$,
-  onSourceOpen$,
-  onSourceClose$,
-  onSourceEnded$,
-  onUpdate$,
-  onRemoveSourceBuffers$,
+  addEventListener,
+  getPageActivityRef,
+  getPictureOnPictureStateRef,
+  getVideoVisibilityRef,
+  getVideoWidthRef,
   onEncrypted$,
-  onKeyMessage$,
+  onEnded$,
+  onFullscreenChange$,
   onKeyAdded$,
   onKeyError$,
+  onKeyMessage$,
   onKeyStatusesChange$,
-  onPictureInPictureEvent$,
+  onLoadedMetadata$,
+  onPlayPause$,
+  onRemoveSourceBuffers$,
+  onSeeked$,
+  onSeeking$,
+  onSourceClose$,
+  onSourceEnded$,
+  onSourceOpen$,
+  onTextTrackChanges$,
+  onTimeUpdate$,
+  onUpdate$,
 };

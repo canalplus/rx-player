@@ -14,27 +14,25 @@
  * limitations under the License.
  */
 
-import ABRManager, {
-  IABRManagerArguments,
-  IABRManagerPlaybackObservation,
+import AdaptiveRepresentationSelector, {
+  IAdaptiveRepresentationSelectorArguments,
+  IRepresentationEstimator,
+  IRepresentationEstimatorThrottlers as IABRThrottlers,
 } from "./abr_manager";
 export {
-  IABRAddedSegmentEvent,
+  IAddedSegmentCallbackPayload,
   IABREstimate,
-  IABRMetricsEvent,
-  IABRMetricsEventValue,
-  IABRRepresentationChangeEvent,
-  IABRRequestBeginEvent,
-  IABRRequestBeginEventValue,
-  IABRRequestEndEvent,
-  IABRRequestEndEventValue,
-  IABRRequestProgressEvent,
-  IABRRequestProgressEventValue,
-  IABRStreamEvents,
+  IMetricsCallbackPayload,
+  IRepresentationEstimatorCallbacks,
+  IRepresentationEstimatorPlaybackObservation,
+  IRequestBeginCallbackPayload,
+  IRequestProgressCallbackPayload,
+  IRequestEndCallbackPayload,
 } from "./representation_estimator";
 
-export default ABRManager;
+export default AdaptiveRepresentationSelector;
 export {
-  IABRManagerArguments,
-  IABRManagerPlaybackObservation,
+  IAdaptiveRepresentationSelectorArguments,
+  IABRThrottlers,
+  IRepresentationEstimator,
 };

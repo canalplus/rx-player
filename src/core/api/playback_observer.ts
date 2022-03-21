@@ -28,8 +28,10 @@ import {
 } from "rxjs";
 import config from "../../config";
 import log from "../../log";
+import noop from "../../utils/noop";
 import objectAssign from "../../utils/object_assign";
 import { getRange } from "../../utils/ranges";
+import { CancellationSignal } from "../../utils/task_canceller";
 
 
 /**
@@ -170,6 +172,36 @@ export default class PlaybackObserver {
           this._observation$;
       }
     });
+  }
+
+  /**
+   * Register a callback so it regularly receives playback observations.
+   * @param {Function} cb
+   * @param {Object} options - Configuration options:
+   *   - `includeLastObservation`: If set to `true` the last observation will
+   *     be first emitted synchronously.
+   *   - `clearSignal`: If set, the callback will be unregistered when this
+   *     CancellationSignal emits.
+   * @returns {Function} - Allows to easily unregister the callback
+   */
+  public listen(
+    cb : (observation : IPlaybackObservation) => void,
+    options? : { includeLastObservation? : boolean | undefined;
+                 clearSignal? : CancellationSignal | undefined; }
+  ) : () => void {
+    if (options?.clearSignal?.isCancelled === true) {
+      return noop;
+    }
+    const sub = this.observe(options?.includeLastObservation ?? false)
+      .subscribe(cb);
+    const unregister = options?.clearSignal?.register(() => {
+      sub.unsubscribe();
+    }) ?? noop;
+
+    return () => {
+      unregister();
+      sub.unsubscribe();
+    };
   }
 
   /**
@@ -427,6 +459,21 @@ export interface IReadOnlyPlaybackObserver<TObservationType> {
    * @returns {Observable}
    */
   observe(includeLastObservation : boolean) : Observable<TObservationType>;
+  /**
+   * Register a callback so it regularly receives playback observations.
+   * @param {Function} cb
+   * @param {Object} options - Configuration options:
+   *   - `includeLastObservation`: If set to `true` the last observation will
+   *     be first emitted synchronously.
+   *   - `clearSignal`: If set, the callback will be unregistered when this
+   *     CancellationSignal emits.
+   * @returns {Function} - Allows to easily unregister the callback
+   */
+  listen(
+    cb : (observation : TObservationType) => void,
+    options? : { includeLastObservation? : boolean | undefined;
+                 clearSignal? : CancellationSignal | undefined; }
+  ) : () => void;
   /**
    * Generate a new `IReadOnlyPlaybackObserver` from this one.
    *
@@ -774,6 +821,25 @@ function generateReadOnlyObserver<TSource, TDest>(
     observe(includeLastObservation : boolean) : Observable<TDest> {
       return includeLastObservation ? newObs :
                                       newObs.pipe(skip(1));
+    },
+    listen(
+      cb : (observation : TDest) => void,
+      options? : { includeLastObservation? : boolean | undefined;
+                   clearSignal? : CancellationSignal | undefined; }
+    ) : () => void {
+      if (options?.clearSignal?.isCancelled === true) {
+        return noop;
+      }
+      const obs = options?.includeLastObservation === true ? newObs :
+                                                             newObs.pipe(skip(1));
+      const sub = obs.subscribe(cb);
+      const unregister = options?.clearSignal?.register(() => {
+        sub.unsubscribe();
+      }) ?? noop;
+      return () => {
+        unregister();
+        sub.unsubscribe();
+      };
     },
     deriveReadOnlyObserver<TNext>(
       newUdateObserver : (observation$ : Observable<TDest>) => Observable<TNext>
