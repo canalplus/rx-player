@@ -44,7 +44,7 @@ import objectAssign from "../../../utils/object_assign";
 import { getLeftSizeOfRange } from "../../../utils/ranges";
 import { IReadOnlySharedReference } from "../../../utils/reference";
 import WeakMapMemory from "../../../utils/weak_map_memory";
-import { IRepresentationEstimator } from "../../abr";
+import { IRepresentationEstimator } from "../../adaptive";
 import { IReadOnlyPlaybackObserver } from "../../api";
 import { SegmentFetcherCreator } from "../../fetchers";
 import SegmentBuffersStore, {
