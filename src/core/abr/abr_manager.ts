@@ -27,12 +27,12 @@ import takeFirstSet from "../../utils/take_first_set";
 import { CancellationSignal } from "../../utils/task_canceller";
 import { IReadOnlyPlaybackObserver } from "../api";
 import { IBufferType } from "../segment_buffers";
-import BandwidthEstimator from "./bandwidth_estimator";
 import getEstimateReference, {
   IABREstimate,
   IRepresentationEstimatorCallbacks,
   IRepresentationEstimatorPlaybackObservation,
 } from "./representation_estimator";
+import BandwidthEstimator from "./utils/bandwidth_estimator";
 
 /**
  * Select the most adapted Representation according to the network and buffer
