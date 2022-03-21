@@ -6,6 +6,7 @@
 
   - Add a `maxVideoBufferSize` constructor option and `{get,set}MaxVideoBufferSize` methods to limit the size of loaded video data buffered at the same time [#1041, #1054]
   - DRM: Add a `"periods"` mode to the `keySystems[].singleLicensePer` `loadVideo` option, allowing to obtain decryption license for groups of Periods allowing a compromise between optimization, features and compatibility [#1028, #1061]
+  - Add a `"reload"` `audioTrackSwitchingMode` to work-around rare compatibility issues when switching audio tracks [#1089]
 
 ### Bug fixes
 
@@ -25,9 +26,9 @@
   - add better buffer cleaning logic on a browser's `QuotaExceededError` to better handle memory limitations [#1065]
   - DASH: Prioritize selectionPriority attribute over a "main" Role when ordering AdaptationSets [#1082]
   - directfile/Safari: use the `getStartDate` method in `getWallClockTime` when available to obtain true offseted times when playing HLS contents on Safari [#1055]
-  - avoid mistakenly relying on pinkie's Promise implementation when a native one is already available [#1058]
   - DRM: Improve DRM Session caches performance when `singleLicensePer` is set to `"content"`
   - TypeScript: Add IBitrateEstimate, IPositionUpdate and IPlayerState types to the exported types [#1084]
+  - Remove dependency on pinkie's promise ponyfill [#1058, #1090]
   - tests: add performance tests, to better catch and avoid performance regressions [#1053, #1062]
   - DRM: Refactor DRM logic for better maintainability. DRM-linked logs are now prefixed by `DRM:` instead of `EME:` like previously [#1042]
 
