@@ -47,7 +47,7 @@ import filterMap from "../../../utils/filter_map";
 import { IReadOnlySharedReference } from "../../../utils/reference";
 import SortedList from "../../../utils/sorted_list";
 import WeakMapMemory from "../../../utils/weak_map_memory";
-import { IRepresentationEstimator } from "../../abr";
+import { IRepresentationEstimator } from "../../adaptive";
 import type { IReadOnlyPlaybackObserver } from "../../api";
 import { SegmentFetcherCreator } from "../../fetchers";
 import SegmentBuffersStore, {

@@ -46,7 +46,7 @@ import {
   IRequestBeginCallbackPayload,
   IRequestEndCallbackPayload,
   IRequestProgressCallbackPayload,
-} from "../../abr";
+} from "../../adaptive";
 import { IBufferType } from "../../segment_buffers";
 import errorSelector from "../utils/error_selector";
 import { tryURLsWithBackoff } from "../utils/try_urls_with_backoff";
