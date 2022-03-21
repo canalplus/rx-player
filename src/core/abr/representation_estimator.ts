@@ -31,20 +31,20 @@ import TaskCanceller, {
   CancellationSignal,
 } from "../../utils/task_canceller";
 import { IReadOnlyPlaybackObserver } from "../api";
-import BandwidthEstimator from "./bandwidth_estimator";
 import BufferBasedChooser from "./buffer_based_chooser";
 import GuessBasedChooser from "./guess_based_chooser";
+import NetworkAnalyzer from "./network_analyzer";
+import BandwidthEstimator from "./utils/bandwidth_estimator";
+import filterByBitrate from "./utils/filter_by_bitrate";
+import filterByWidth from "./utils/filter_by_width";
 import LastEstimateStorage, {
   ABRAlgorithmType,
-} from "./last_estimate_storage";
-import NetworkAnalyzer from "./network_analyzer";
+} from "./utils/last_estimate_storage";
 import PendingRequestsStore, {
   IPendingRequestStoreBegin,
   IPendingRequestStoreProgress,
-} from "./pending_requests_store";
-import RepresentationScoreCalculator from "./representation_score_calculator";
-import filterByBitrate from "./utils/filter_by_bitrate";
-import filterByWidth from "./utils/filter_by_width";
+} from "./utils/pending_requests_store";
+import RepresentationScoreCalculator from "./utils/representation_score_calculator";
 import selectOptimalRepresentation from "./utils/select_optimal_representation";
 
 /**
