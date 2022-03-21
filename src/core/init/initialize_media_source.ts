@@ -42,7 +42,7 @@ import objectAssign from "../../utils/object_assign";
 import { IReadOnlySharedReference } from "../../utils/reference";
 import AdaptiveRepresentationSelector, {
   IAdaptiveRepresentationSelectorArguments,
-} from "../abr";
+} from "../adaptive";
 import { PlaybackObserver } from "../api";
 import {
   getCurrentKeySystem,

@@ -88,7 +88,7 @@ import createSharedReference, {
 } from "../../utils/reference";
 import TaskCanceller from "../../utils/task_canceller";
 import warnOnce from "../../utils/warn_once";
-import { IABRThrottlers } from "../abr";
+import { IABRThrottlers } from "../adaptive";
 import {
   clearOnStop,
   disposeDecryptionResources,

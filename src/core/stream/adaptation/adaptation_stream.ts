@@ -60,7 +60,7 @@ import TaskCanceller from "../../../utils/task_canceller";
 import {
   IABREstimate,
   IRepresentationEstimator,
-} from "../../abr";
+} from "../../adaptive";
 import { IReadOnlyPlaybackObserver } from "../../api";
 import { SegmentFetcherCreator } from "../../fetchers";
 import { SegmentBuffer } from "../../segment_buffers";

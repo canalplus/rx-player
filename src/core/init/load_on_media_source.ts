@@ -32,7 +32,7 @@ import { MediaError } from "../../errors";
 import log from "../../log";
 import Manifest from "../../manifest";
 import { IReadOnlySharedReference } from "../../utils/reference";
-import { IRepresentationEstimator } from "../abr";
+import { IRepresentationEstimator } from "../adaptive";
 import { PlaybackObserver } from "../api";
 import { SegmentFetcherCreator } from "../fetchers";
 import SegmentBuffersStore from "../segment_buffers";

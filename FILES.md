@@ -22,7 +22,7 @@ a single directory or subdirectory, in alphabetical order.
   - [src/typings/: Typescript typings](#src-typings)
   - [src/utils/: The utils](#src-utils)
 - [src/core/: The core directory](#core)
-  - [src/core/abr/: The adaptive bitrate code](#core-abr)
+  - [src/core/adaptive/: The adaptive bitrate code](#core-abr)
   - [src/core/api/: The API definition](#core-api)
   - [src/core/stream/: Load the right segments](#core-stream)
   - [src/core/decrypt/: Decryption management](#core-decrypt)
@@ -211,17 +211,17 @@ As this directory is versatile and complicated, it also deserves its own chapter
 
 
 <a name="core-abr"></a>
-### src/core/abr/: The adaptive bitrate code ###################################
+### src/core/adaptive/: The adaptive bitrate code ##############################
 
-Defines an ABRManager class which manages the adaptive streaming part of the
-player.
+Defines functions which manages the adaptive streaming part of the player.
 
 This manager takes various observables/options as inputs to record the current
 situation of the player, give an opinion about the best media tracks to choose,
-and provide methods allowing to get/set various ABR-related options.
+and provide methods allowing to get/set various adaptive-related options.
 
-Despite containing several files and using several classes, only the ABRManager
-defined in ``abr/index.js`` should be needed by the rest of the core.
+Despite containing several files and using several classes, only the
+`AdaptiveRepresentationSelector` exported in `adaptive/index.js` should be
+needed by the rest of the core.
 This allows to isolate this complex part and facilitate future refactoring and
 improvements.
 
