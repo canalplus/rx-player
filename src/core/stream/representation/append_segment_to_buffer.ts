@@ -24,6 +24,7 @@ import {
   mergeMap,
   ignoreElements,
   Observable,
+  take,
 } from "rxjs";
 import { MediaError } from "../../../errors";
 import { IReadOnlyPlaybackObserver } from "../../api";
@@ -60,19 +61,22 @@ export default function appendSegmentToBuffer<T>(
         throw new MediaError("BUFFER_APPEND_ERROR", reason);
       }
 
-      return playbackObserver.observe(true).pipe(mergeMap((observation) => {
-        const currentPos = observation.position + observation.wantedTimeOffset;
-        return observableConcat(
-          forceGarbageCollection(currentPos, segmentBuffer).pipe(ignoreElements()),
-          append$
-        ).pipe(
-          catchError((forcedGCError : unknown) => {
-            const reason = forcedGCError instanceof Error ? forcedGCError.toString() :
-                                                            "Could not clean the buffer";
+      return playbackObserver.observe(true).pipe(
+        take(1),
+        mergeMap((observation) => {
+          const currentPos = observation.position + observation.wantedTimeOffset;
+          return observableConcat(
+            forceGarbageCollection(currentPos, segmentBuffer).pipe(ignoreElements()),
+            append$
+          ).pipe(
+            catchError((forcedGCError : unknown) => {
+              const reason = forcedGCError instanceof Error ?
+                forcedGCError.toString() :
+                "Could not clean the buffer";
 
-            throw new MediaError("BUFFER_FULL_ERROR", reason);
-          })
-        );
-      }));
+              throw new MediaError("BUFFER_FULL_ERROR", reason);
+            })
+          );
+        }));
     }));
 }
