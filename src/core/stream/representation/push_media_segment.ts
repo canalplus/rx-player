@@ -29,6 +29,8 @@ import Manifest, {
 } from "../../../manifest";
 import { ISegmentParserParsedMediaChunk } from "../../../transports";
 import objectAssign from "../../../utils/object_assign";
+import fromCancellablePromise from "../../../utils/rx-from_cancellable_promise";
+import TaskCanceller from "../../../utils/task_canceller";
 import { IReadOnlyPlaybackObserver } from "../../api";
 import { SegmentBuffer } from "../../segment_buffers";
 import EVENTS from "../events_generators";
@@ -108,12 +110,16 @@ export default function pushMediaSegment<T>(
                                           start: estimatedStart,
                                           end: estimatedEnd },
                                         content);
+    const canceller = new TaskCanceller();
 
-    return appendSegmentToBuffer(playbackObserver,
-                                 segmentBuffer,
-                                 { data, inventoryInfos }).pipe(map(() => {
-      const buffered = segmentBuffer.getBufferedRanges();
-      return EVENTS.addedSegment(content, segment, buffered, chunkData);
-    }));
+    return fromCancellablePromise(canceller, () =>
+      appendSegmentToBuffer(playbackObserver,
+                            segmentBuffer,
+                            { data, inventoryInfos },
+                            canceller.signal))
+      .pipe(map(() => {
+        const buffered = segmentBuffer.getBufferedRanges();
+        return EVENTS.addedSegment(content, segment, buffered, chunkData);
+      }));
   });
 }

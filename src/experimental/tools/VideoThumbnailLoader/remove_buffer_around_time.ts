@@ -20,6 +20,8 @@ import {
   of as observableOf,
 } from "rxjs";
 import { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implementations";
+import fromCancellablePromise from "../../../utils/rx-from_cancellable_promise";
+import TaskCanceller from "../../../utils/task_canceller";
 
 /**
  * Remove buffer around wanted time, considering a margin around
@@ -42,11 +44,17 @@ export default function removeBufferAroundTime$(
     return observableOf(null);
   }
   const bufferRemovals$ = [];
+  const removalCanceller = new TaskCanceller();
   if ((time - margin) > 0) {
-    bufferRemovals$.push(sourceBuffer.removeBuffer(0, time - margin));
+    bufferRemovals$.push(
+      fromCancellablePromise(removalCanceller, () =>
+        sourceBuffer.removeBuffer(0, time - margin, removalCanceller.signal)));
   }
   if ((time + margin) < videoElement.duration) {
-    bufferRemovals$.push(sourceBuffer.removeBuffer(time + margin, videoElement.duration));
+    bufferRemovals$.push(fromCancellablePromise(removalCanceller, () =>
+      sourceBuffer.removeBuffer(time + margin,
+                                videoElement.duration,
+                                removalCanceller.signal)));
   }
   return observableCombineLatest(bufferRemovals$);
 }

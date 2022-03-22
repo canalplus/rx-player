@@ -15,11 +15,6 @@
  */
 
 import {
-  defer as observableDefer,
-  Observable,
-  of as observableOf,
-} from "rxjs";
-import {
   addTextTrack,
   ICompatTextTrack,
 } from "../../../../../compat";
@@ -73,26 +68,26 @@ export default class NativeTextSegmentBuffer extends SegmentBuffer {
 
   /**
    * @param {Object} infos
-   * @returns {Observable}
+   * @returns {Promise}
    */
-  public pushChunk(infos : IPushChunkInfos<unknown>) : Observable<void> {
-    return observableDefer(() => {
-      log.debug("NTSB: Appending new native text tracks");
-      if (infos.data.chunk === null) {
-        return observableOf(undefined);
-      }
-      const { timestampOffset,
-              appendWindow,
-              chunk } = infos.data;
-      assertChunkIsTextTrackSegmentData(chunk);
-      const { start: startTime,
-              end: endTime,
-              data: dataString,
-              type,
-              language } = chunk;
-      const appendWindowStart = appendWindow[0] ?? 0;
-      const appendWindowEnd = appendWindow[1] ?? Infinity;
+  public pushChunk(infos : IPushChunkInfos<unknown>) : Promise<void> {
+    log.debug("NTSB: Appending new native text tracks");
+    if (infos.data.chunk === null) {
+      return Promise.resolve();
+    }
+    const { timestampOffset,
+            appendWindow,
+            chunk } = infos.data;
+    assertChunkIsTextTrackSegmentData(chunk);
+    const { start: startTime,
+            end: endTime,
+            data: dataString,
+            type,
+            language } = chunk;
+    const appendWindowStart = appendWindow[0] ?? 0;
+    const appendWindowEnd = appendWindow[1] ?? Infinity;
 
+    try {
       const cues = parseTextTrackToCues(type, dataString, timestampOffset, language);
 
       if (appendWindowStart !== 0 && appendWindowEnd !== Infinity) {
@@ -130,7 +125,7 @@ export default class NativeTextSegmentBuffer extends SegmentBuffer {
       } else {
         if (cues.length <= 0) {
           log.warn("NTSB: Current text tracks have no cues nor start time. Aborting");
-          return observableOf(undefined);
+          return Promise.resolve();
         }
         log.warn("NTSB: No start time given. Guessing from cues.");
         start = cues[0].startTime;
@@ -142,7 +137,7 @@ export default class NativeTextSegmentBuffer extends SegmentBuffer {
       } else {
         if (cues.length <= 0) {
           log.warn("NTSB: Current text tracks have no cues nor end time. Aborting");
-          return observableOf(undefined);
+          return Promise.resolve();
         }
         log.warn("NTSB: No end time given. Guessing from cues.");
         end = cues[cues.length - 1].endTime;
@@ -151,7 +146,7 @@ export default class NativeTextSegmentBuffer extends SegmentBuffer {
       if (end <= start) {
         log.warn("NTSB: Invalid text track appended: ",
                  "the start time is inferior or equal to the end time.");
-        return observableOf(undefined);
+        return Promise.resolve();
       }
 
       if (cues.length > 0) {
@@ -178,37 +173,31 @@ export default class NativeTextSegmentBuffer extends SegmentBuffer {
       if (infos.inventoryInfos !== null) {
         this._segmentInventory.insertChunk(infos.inventoryInfos);
       }
-      return observableOf(undefined);
-    });
+    } catch (err) {
+      return Promise.reject(err);
+    }
+
+    return Promise.resolve();
   }
 
   /**
    * Remove buffered data.
    * @param {number} start - start position, in seconds
    * @param {number} end - end position, in seconds
-   * @returns {Observable}
+   * @returns {Promise}
    */
-  public removeBuffer(start : number, end : number) : Observable<void> {
-    return observableDefer(() => {
-      this._removeData(start, end);
-      return observableOf(undefined);
-    });
+  public removeBuffer(start : number, end : number) : Promise<void> {
+    this._removeData(start, end);
+    return Promise.resolve();
   }
 
   /**
-   * Indicate that every chunks from a Segment has been given to pushChunk so
-   * far.
-   * This will update our internal Segment inventory accordingly.
-   * The returned Observable will emit and complete successively once the whole
-   * segment has been pushed and this indication is acknowledged.
    * @param {Object} infos
-   * @returns {Observable}
+   * @returns {Promise}
    */
-  public endOfSegment(_infos : IEndOfSegmentInfos) : Observable<void> {
-    return observableDefer(() => {
-      this._segmentInventory.completeSegment(_infos, this._buffered);
-      return observableOf(undefined);
-    });
+  public endOfSegment(_infos : IEndOfSegmentInfos) : Promise<void> {
+    this._segmentInventory.completeSegment(_infos, this._buffered);
+    return Promise.resolve();
   }
 
   /**
