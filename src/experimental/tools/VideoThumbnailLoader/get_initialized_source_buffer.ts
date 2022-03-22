@@ -29,6 +29,8 @@ import {
 import { ISegmentFetcher } from "../../../core/fetchers/segment/segment_fetcher";
 import { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implementations";
 import { ISegment } from "../../../manifest";
+import fromCancellablePromise from "../../../utils/rx-from_cancellable_promise";
+import TaskCanceller from "../../../utils/task_canceller";
 import prepareSourceBuffer from "./prepare_source_buffer";
 import { IContentInfos } from "./types";
 
@@ -88,14 +90,17 @@ function loadAndPushInitData(contentInfos: IContentInfos,
       const initSegmentData = initializationData instanceof ArrayBuffer ?
         new Uint8Array(initializationData) :
         initializationData;
-      return sourceBuffer
+
+      const pushCanceller = new TaskCanceller();
+      return fromCancellablePromise(pushCanceller, () => sourceBuffer
         .pushChunk({ data: { initSegment: initSegmentData,
                              chunk: null,
                              appendWindow: [undefined, undefined],
                              timestampOffset: 0,
                              codec: contentInfos
                                .representation.getMimeTypeString() },
-                     inventoryInfos: null });
+                     inventoryInfos: null },
+                   pushCanceller.signal));
     })
   );
 }
