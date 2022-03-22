@@ -34,7 +34,7 @@ function NetworkConfig({
           name="audioTrackSwitchingMode"
           onChange={({ value }) => onAudioTrackSwitchingModeChange(value)}
           selected={{ value: audioTrackSwitchingMode }}
-          options={["seamless", "direct"]}
+          options={["seamless", "direct", "reload"]}
         >
           Audio track switching mode
         </Select>
