@@ -9,6 +9,8 @@ import Manifest, {
   Representation,
 } from "../../../manifest";
 import { ISegmentParserParsedMediaChunk } from "../../../transports";
+import fromCancellablePromise from "../../../utils/rx-from_cancellable_promise";
+import TaskCanceller from "../../../utils/task_canceller";
 
 /**
  * Push data to the video source buffer.
@@ -33,12 +35,14 @@ export default function pushData(
   const { chunkData, appendWindow } = parsed;
   const segmentData = chunkData instanceof ArrayBuffer ?
     new Uint8Array(chunkData) : chunkData;
-  return videoSourceBuffer
+  const pushCanceller = new TaskCanceller();
+  return fromCancellablePromise(pushCanceller, () => videoSourceBuffer
     .pushChunk({ data: { chunk: segmentData,
                          timestampOffset: 0,
                          appendWindow,
                          initSegment: null,
                          codec: inventoryInfos
                            .representation.getMimeTypeString() },
-                 inventoryInfos });
+                 inventoryInfos },
+               pushCanceller.signal));
 }
