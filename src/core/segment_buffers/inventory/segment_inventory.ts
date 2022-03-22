@@ -748,7 +748,7 @@ export default class SegmentInventory {
 
     if (resSegments.length === 0) {
       log.warn("SI: Completed Segment not found", content);
-    } else {
+    } else if (config.getCurrent().SYNCHRONIZE_BUFFERED_ON_COMPLETE_SEGMENT) {
       this.synchronizeBuffered(newBuffered);
       for (const seg of resSegments) {
         if (seg.bufferedStart !== undefined && seg.bufferedEnd !== undefined) {

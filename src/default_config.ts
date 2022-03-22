@@ -1230,6 +1230,18 @@ const DEFAULT_CONFIG = {
   MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP: 10,
 
   /**
+   * Since the RxPlayer v3.26.1, a SourceBuffer's `buffered` attribute may be
+   * read directly after the segment has been completely pushed (after the
+   * corresponding `updateend` event, for example).
+   * We fear that it might still be too early for some targets, which is why we
+   * set this feature under the `SYNCHRONIZE_BUFFERED_ON_COMPLETE_SEGMENT` flag.
+   *
+   * Note that if set to `false`, certain features and improvements might not
+   * work.
+   */
+  SYNCHRONIZE_BUFFERED_ON_COMPLETE_SEGMENT: true,
+
+  /**
    * Distance in seconds behind the current position
    * the player will free up to in the case we agressively free up memory
    * It is set to avoid playback issues
