@@ -371,17 +371,17 @@ function getVideoWidthRef(
     } else if (!isNullOrUndefined(pipStatus.pipWindow)) {
       const { pipWindow } = pipStatus;
       const firstWidth = getVideoWidthFromPIPWindow(mediaElement, pipWindow);
+      const onPipResize = () => {
+        ref.setValueIfChanged(
+          getVideoWidthFromPIPWindow(mediaElement, pipWindow) * pixelRatio
+        );
+      };
       pipWindow.addEventListener("resize", onPipResize);
       clearPreviousEventListener = () => {
         pipWindow.removeEventListener("resize", onPipResize);
         clearPreviousEventListener = noop;
       };
       ref.setValueIfChanged(firstWidth * pixelRatio);
-      function onPipResize() {
-        ref.setValueIfChanged(
-          getVideoWidthFromPIPWindow(mediaElement, pipWindow) * pixelRatio
-        );
-      }
     } else {
       ref.setValueIfChanged(Infinity);
     }
