@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import {
-  Observable,
-  of as observableOf,
-} from "rxjs";
 import { MediaError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
+import {
+  CancellationError,
+  CancellationSignal,
+} from "../../utils/task_canceller";
 import {
   AudioVideoSegmentBuffer,
   IBufferType,
@@ -60,7 +60,7 @@ type INativeMediaBufferType = "audio" | "video";
  * To be able to use a SegmentBuffer linked to a native media buffer, you
  * will first need to create it, but also wait until the other one is either
  * created or explicitely disabled through the `disableSegmentBuffer` method.
- * The Observable returned by `waitForUsableBuffers` will emit when
+ * The Promise returned by `waitForUsableBuffers` will emit when
  * that is the case.
  *
  * @class SegmentBuffersStore
@@ -96,7 +96,7 @@ export default class SegmentBuffersStore {
   /**
    * Callbacks called after a SourceBuffer is either created or disabled.
    * Used for example to trigger the `this.waitForUsableBuffers`
-   * Observable.
+   * Promise.
    */
   private _onNativeBufferAddedOrDisabled : Array<() => void>;
 
@@ -179,7 +179,7 @@ export default class SegmentBuffersStore {
    * content need to all be created (by creating SegmentBuffers linked to them)
    * before any one can be used.
    *
-   * This function will return an Observable emitting when any and all native
+   * This function will return a Promise resolving when any and all native
    * SourceBuffers can be used.
    *
    * From https://w3c.github.io/media-source/#methods
@@ -187,18 +187,27 @@ export default class SegmentBuffersStore {
    *   exception if the media element has reached the HAVE_METADATA
    *   readyState. This can occur if the user agent's media engine
    *   does not support adding more tracks during playback.
-   * @return {Observable}
+   * @param {Object} cancelWaitSignal
+   * @return {Promise}
    */
-  public waitForUsableBuffers() : Observable<void> {
+  public waitForUsableBuffers(cancelWaitSignal : CancellationSignal) : Promise<void> {
     if (this._areNativeBuffersUsable()) {
-      return observableOf(undefined);
+      return Promise.resolve();
     }
-    return new Observable(obs => {
-      this._onNativeBufferAddedOrDisabled.push(() => {
+    return new Promise((res, rej) => {
+      const onAddedOrDisabled = () => {
         if (this._areNativeBuffersUsable()) {
-          obs.next(undefined);
-          obs.complete();
+          res();
         }
+      };
+      this._onNativeBufferAddedOrDisabled.push(onAddedOrDisabled);
+
+      cancelWaitSignal.register((error : CancellationError) => {
+        const indexOf = this._onNativeBufferAddedOrDisabled.indexOf(onAddedOrDisabled);
+        if (indexOf >= 0) {
+          this._onNativeBufferAddedOrDisabled.splice(indexOf, 1);
+        }
+        rej(error);
       });
     });
   }

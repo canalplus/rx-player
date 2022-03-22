@@ -14,52 +14,66 @@
  * limitations under the License.
  */
 
-import {
-  combineLatest as observableCombineLatest,
-  concatAll,
-  EMPTY,
-  from as observableFrom,
-  ignoreElements,
-  mergeMap,
-  Observable,
-  of as observableOf,
-} from "rxjs";
 import log from "../../log";
 import { getInnerAndOuterTimeRanges } from "../../utils/ranges";
+import { IReadOnlySharedReference } from "../../utils/reference";
+import { CancellationSignal } from "../../utils/task_canceller";
+import { IReadOnlyPlaybackObserver } from "../api";
+import { IStreamOrchestratorPlaybackObservation } from "../stream";
 import { SegmentBuffer } from "./implementations";
 
 export interface IGarbageCollectorArgument {
   /** SegmentBuffer implementation */
   segmentBuffer : SegmentBuffer;
   /** Emit current position in seconds regularly */
-  currentTime$ : Observable<number>;
+  playbackObserver : IReadOnlyPlaybackObserver<
+    Pick<IStreamOrchestratorPlaybackObservation, "position">
+  >;
   /** Maximum time to keep behind current time position, in seconds */
-  maxBufferBehind$ : Observable<number>;
+  maxBufferBehind : IReadOnlySharedReference<number>;
   /** Minimum time to keep behind current time position, in seconds */
-  maxBufferAhead$ : Observable<number>;
+  maxBufferAhead : IReadOnlySharedReference<number>;
 }
 
 /**
  * Perform cleaning of the buffer according to the values set by the user
- * each time `currentTime$` emits and each times the
+ * each time `playbackObserver` emits and each times the
  * maxBufferBehind/maxBufferAhead values change.
  *
+ * Abort this operation when the `cancellationSignal` emits.
+ *
  * @param {Object} opt
+ * @param {Object} cancellationSignal
  * @returns {Observable}
  */
-export default function BufferGarbageCollector({
-  segmentBuffer,
-  currentTime$,
-  maxBufferBehind$,
-  maxBufferAhead$,
-} : IGarbageCollectorArgument) : Observable<never> {
-  return observableCombineLatest([currentTime$, maxBufferBehind$, maxBufferAhead$]).pipe(
-    mergeMap(([currentTime, maxBufferBehind, maxBufferAhead]) => {
-      return clearBuffer(segmentBuffer,
-                         currentTime,
-                         maxBufferBehind,
-                         maxBufferAhead);
-    }));
+export default function BufferGarbageCollector(
+  { segmentBuffer,
+    playbackObserver,
+    maxBufferBehind,
+    maxBufferAhead } : IGarbageCollectorArgument,
+  cancellationSignal : CancellationSignal
+) : void {
+  let lastPosition : number;
+  playbackObserver.listen((o) => {
+    lastPosition = o.position.pending ?? o.position.last;
+    clean();
+  }, { includeLastObservation: true, clearSignal: cancellationSignal });
+  function clean() {
+    clearBuffer(segmentBuffer,
+                lastPosition,
+                maxBufferBehind.getValue(),
+                maxBufferAhead.getValue(),
+                cancellationSignal)
+      .catch(e => {
+        const errMsg = e instanceof Error ?
+          e.message :
+          "Unknown error";
+        log.error("Could not run BufferGarbageCollector:", errMsg);
+      });
+  }
+  maxBufferBehind.onUpdate(clean, { clearSignal: cancellationSignal });
+  maxBufferAhead.onUpdate(clean, { clearSignal: cancellationSignal });
+  clean();
 }
 
 /**
@@ -76,16 +90,17 @@ export default function BufferGarbageCollector({
  * @param {Number} position - The current position
  * @param {Number} maxBufferBehind
  * @param {Number} maxBufferAhead
- * @returns {Observable}
+ * @returns {Promise}
  */
-function clearBuffer(
+async function clearBuffer(
   segmentBuffer : SegmentBuffer,
   position : number,
   maxBufferBehind : number,
-  maxBufferAhead : number
-) : Observable<never> {
+  maxBufferAhead : number,
+  cancellationSignal : CancellationSignal
+) : Promise<void> {
   if (!isFinite(maxBufferBehind) && !isFinite(maxBufferAhead)) {
-    return EMPTY;
+    return Promise.resolve();
   }
 
   const cleanedupRanges : Array<{ start : number;
@@ -150,21 +165,14 @@ function clearBuffer(
 
   collectBufferBehind();
   collectBufferAhead();
-  const clean$ = observableFrom(
-    cleanedupRanges.map((range) => {
-      log.debug("GC: cleaning range from SegmentBuffer", range.start, range.end);
-      if (range.start >= range.end) {
-        return observableOf(null);
-      }
-      return segmentBuffer.removeBuffer(range.start, range.end);
-    })
-  ).pipe(concatAll(),
-        // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
-        // first type parameter as `any` instead of the perfectly fine `unknown`,
-        // leading to linter issues, as it forbids the usage of `any`.
-        // This is why we're disabling the eslint rule.
-        /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-         ignoreElements());
 
-  return clean$;
+  for (const range of cleanedupRanges) {
+    if (range.start < range.end) {
+      log.debug("GC: cleaning range from SegmentBuffer", range.start, range.end);
+      if (cancellationSignal.cancellationError !== null) {
+        throw cancellationSignal.cancellationError;
+      }
+      await segmentBuffer.removeBuffer(range.start, range.end, cancellationSignal);
+    }
+  }
 }

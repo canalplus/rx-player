@@ -16,14 +16,12 @@
 
 import {
   concat as observableConcat,
-  defer as observableDefer,
   interval as observableInterval,
   map,
   merge as observableMerge,
   Observable,
   of as observableOf,
   startWith,
-  Subject,
   switchMap,
   takeUntil,
 } from "rxjs";
@@ -34,6 +32,7 @@ import {
 import config from "../../../../../config";
 import log from "../../../../../log";
 import { ITextTrackSegmentData } from "../../../../../transports";
+import TaskCanceller from "../../../../../utils/task_canceller";
 import {
   IEndOfSegmentInfos,
   IPushChunkInfos,
@@ -116,12 +115,8 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
    */
   private readonly _videoElement : HTMLMediaElement;
 
-  /**
-   * When "nexting" that subject, every Observable declared here will be
-   * unsubscribed.
-   * Used for clean-up
-   */
-  private readonly _destroy$ : Subject<void>;
+  /** Used for clean-up. */
+  private readonly _canceller : TaskCanceller;
 
   /** HTMLElement which will contain the cues */
   private readonly _textTrackElement : HTMLElement;
@@ -131,10 +126,10 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
 
   /**
    * We could need us to automatically update styling depending on
-   * `_textTrackElement`'s size. This Subject allows to stop that
+   * `_textTrackElement`'s size. This TaskCanceller allows to stop that
    * regular check.
    */
-  private _clearSizeUpdates$ : Subject<void>;
+  private _sizeUpdateCanceller : TaskCanceller;
 
   /** Information on cues currently displayed. */
   private _currentCues : Array<{
@@ -167,14 +162,13 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
 
     this._videoElement = videoElement;
     this._textTrackElement = textTrackElement;
-    this._clearSizeUpdates$ = new Subject();
-    this._destroy$ = new Subject();
+    this._sizeUpdateCanceller = new TaskCanceller();
+    this._canceller = new TaskCanceller();
     this._buffer = new TextTrackCuesStore();
     this._currentCues = [];
 
     // update text tracks
-    generateRefreshInterval(this._videoElement)
-      .pipe(takeUntil(this._destroy$))
+    const refreshSub = generateRefreshInterval(this._videoElement)
       .subscribe((shouldDisplay) => {
         if (!shouldDisplay) {
           this._disableCurrentCues();
@@ -192,47 +186,43 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
           this._displayCues(cues);
         }
       });
+    this._canceller.signal.register(() => {
+      refreshSub.unsubscribe();
+    });
   }
 
   /**
    * Push segment on Subscription.
    * @param {Object} infos
-   * @returns {Observable}
+   * @returns {Promise}
    */
-  public pushChunk(infos : IPushChunkInfos<unknown>) : Observable<void> {
-    return observableDefer(() => {
+  public pushChunk(infos : IPushChunkInfos<unknown>) : Promise<void> {
+    try {
       this.pushChunkSync(infos);
-      return observableOf(undefined);
-    });
+    } catch (err) {
+      return Promise.reject(err);
+    }
+    return Promise.resolve();
   }
 
   /**
    * Remove buffered data.
    * @param {number} start - start position, in seconds
    * @param {number} end - end position, in seconds
-   * @returns {Observable}
+   * @returns {Promise}
    */
-  public removeBuffer(start : number, end : number) : Observable<void> {
-    return observableDefer(() => {
-      this.removeBufferSync(start, end);
-      return observableOf(undefined);
-    });
+  public removeBuffer(start : number, end : number) : Promise<void> {
+    this.removeBufferSync(start, end);
+    return Promise.resolve();
   }
 
   /**
-   * Indicate that every chunks from a Segment has been given to pushChunk so
-   * far.
-   * This will update our internal Segment inventory accordingly.
-   * The returned Observable will emit and complete successively once the whole
-   * segment has been pushed and this indication is acknowledged.
    * @param {Object} infos
-   * @returns {Observable}
+   * @returns {Promise}
    */
-  public endOfSegment(_infos : IEndOfSegmentInfos) : Observable<void> {
-    return observableDefer(() => {
-      this._segmentInventory.completeSegment(_infos, this._buffered);
-      return observableOf(undefined);
-    });
+  public endOfSegment(infos : IEndOfSegmentInfos) : Promise<void> {
+    this._segmentInventory.completeSegment(infos, this._buffered);
+    return Promise.resolve();
   }
 
   /**
@@ -248,8 +238,7 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
     this._disableCurrentCues();
     this._buffer.remove(0, Infinity);
     this._buffered.remove(0, Infinity);
-    this._destroy$.next();
-    this._destroy$.complete();
+    this._canceller.cancel();
   }
 
   /**
@@ -375,7 +364,7 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
    * Remove the current cue from being displayed.
    */
   private _disableCurrentCues() : void {
-    this._clearSizeUpdates$.next();
+    this._sizeUpdateCanceller.cancel();
     if (this._currentCues.length > 0) {
       for (let i = 0; i < this._currentCues.length; i++) {
         safelyRemoveChild(this._textTrackElement, this._currentCues[i].element);
@@ -399,7 +388,7 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
     // Remove and re-display everything
     // TODO More intelligent handling
 
-    this._clearSizeUpdates$.next();
+    this._sizeUpdateCanceller.cancel();
     for (let i = 0; i < this._currentCues.length; i++) {
       safelyRemoveChild(this._textTrackElement, this._currentCues[i].element);
     }
@@ -418,17 +407,19 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
                                element : HTMLElement; } => cue.resolution !== null);
 
     if (proportionalCues.length > 0) {
+      this._sizeUpdateCanceller = new TaskCanceller({ cancelOn: this._canceller.signal });
       const { TEXT_TRACK_SIZE_CHECKS_INTERVAL } = config.getCurrent();
       // update propertionally-sized elements periodically
-      onHeightWidthChange(this._textTrackElement, TEXT_TRACK_SIZE_CHECKS_INTERVAL)
-        .pipe(takeUntil(this._clearSizeUpdates$),
-              takeUntil(this._destroy$))
-        .subscribe(({ height, width }) => {
-          for (let i = 0; i < proportionalCues.length; i++) {
-            const { resolution, element } = proportionalCues[i];
-            updateProportionalElements(height, width, resolution, element);
-          }
-        });
+      const heightWidthRef = onHeightWidthChange(this._textTrackElement,
+                                                 TEXT_TRACK_SIZE_CHECKS_INTERVAL,
+                                                 this._sizeUpdateCanceller.signal);
+      heightWidthRef.onUpdate(({ height, width }) => {
+        for (let i = 0; i < proportionalCues.length; i++) {
+          const { resolution, element } = proportionalCues[i];
+          updateProportionalElements(height, width, resolution, element);
+        }
+      }, { clearSignal: this._sizeUpdateCanceller.signal,
+           emitCurrentValue: true });
     }
   }
 }
