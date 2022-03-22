@@ -18,15 +18,8 @@
  * This file allows any Stream to push data to a SegmentBuffer.
  */
 
-import {
-  catchError,
-  concat as observableConcat,
-  mergeMap,
-  ignoreElements,
-  Observable,
-  take,
-} from "rxjs";
 import { MediaError } from "../../../errors";
+import { CancellationSignal } from "../../../utils/task_canceller";
 import { IReadOnlyPlaybackObserver } from "../../api";
 import {
   IPushChunkInfos,
@@ -39,45 +32,37 @@ import { IRepresentationStreamPlaybackObservation } from "./representation_strea
  * Append a segment to the given segmentBuffer.
  * If it leads to a QuotaExceededError, try to run our custom range
  * _garbage collector_ then retry.
- *
  * @param {Observable} playbackObserver
  * @param {Object} segmentBuffer
  * @param {Object} dataInfos
- * @returns {Observable}
+ * @param {Object} cancellationSignal
+ * @returns {Promise}
  */
-export default function appendSegmentToBuffer<T>(
+export default async function appendSegmentToBuffer<T>(
   playbackObserver : IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
   segmentBuffer : SegmentBuffer,
-  dataInfos : IPushChunkInfos<T>
-) : Observable<unknown> {
-  const append$ = segmentBuffer.pushChunk(dataInfos);
+  dataInfos : IPushChunkInfos<T>,
+  cancellationSignal : CancellationSignal
+) : Promise<void> {
+  try {
+    await segmentBuffer.pushChunk(dataInfos, cancellationSignal);
+  } catch (appendError : unknown) {
+    if (!(appendError instanceof Error) || appendError.name !== "QuotaExceededError") {
+      const reason = appendError instanceof Error ?
+        appendError.toString() :
+        "An unknown error happened when pushing content";
+      throw new MediaError("BUFFER_APPEND_ERROR", reason);
+    }
+    const { position } = playbackObserver.getReference().getValue();
+    const currentPos = position.pending ?? position.last;
+    try {
+      await forceGarbageCollection(currentPos, segmentBuffer, cancellationSignal);
+      await segmentBuffer.pushChunk(dataInfos, cancellationSignal);
+    } catch (err2) {
+      const reason = err2 instanceof Error ? err2.toString() :
+                                             "Could not clean the buffer";
 
-  return append$.pipe(
-    catchError((appendError : unknown) => {
-      if (!(appendError instanceof Error) || appendError.name !== "QuotaExceededError") {
-        const reason = appendError instanceof Error ?
-          appendError.toString() :
-          "An unknown error happened when pushing content";
-        throw new MediaError("BUFFER_APPEND_ERROR", reason);
-      }
-
-      return playbackObserver.getReference().asObservable().pipe(
-        take(1),
-        mergeMap((observation) => {
-          const currentPos = observation.position.pending ??
-                             observation.position.last;
-          return observableConcat(
-            forceGarbageCollection(currentPos, segmentBuffer).pipe(ignoreElements()),
-            append$
-          ).pipe(
-            catchError((forcedGCError : unknown) => {
-              const reason = forcedGCError instanceof Error ?
-                forcedGCError.toString() :
-                "Could not clean the buffer";
-
-              throw new MediaError("BUFFER_FULL_ERROR", reason);
-            })
-          );
-        }));
-    }));
+      throw new MediaError("BUFFER_FULL_ERROR", reason);
+    }
+  }
 }
