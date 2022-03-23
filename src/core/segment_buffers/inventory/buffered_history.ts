@@ -75,18 +75,19 @@ export default class BufferedHistory {
    * @param {Object} context
    * @param {number} bufferedStart
    * @param {number} bufferedEnd
+   * @param {number} completeTimestamp
    */
   public addBufferedSegment(
     context : IChunkContext,
     bufferedStart : number,
-    bufferedEnd : number
+    bufferedEnd : number,
+    completeTimestamp : number
   ) : void {
-    const now = performance.now();
-    this._history.push({ date: now,
+    this._history.push({ date: completeTimestamp,
                          bufferedStart,
                          bufferedEnd,
                          context });
-    this._cleanHistory(now);
+    this._cleanHistory(performance.now());
 
   }
   /**

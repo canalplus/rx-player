@@ -217,7 +217,7 @@ describe("discontinuities handling", () => {
     });
 
     it("should seek over discontinuity when seeking in one", async function() {
-      this.timeout(4000);
+      this.timeout(5000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
         if (err.type === "MEDIA_ERROR" &&
@@ -232,7 +232,7 @@ describe("discontinuities handling", () => {
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
       player.seekTo(25);
-      await sleep(2000);
+      await sleep(3000);
       expect(player.getPosition()).to.be.at.least(28);
       expect(player.getPlayerState()).to.equal("PLAYING");
       expect(discontinuitiesWarningReceived).to.be.at.least(1);

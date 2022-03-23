@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
 import {
   Adaptation,
   Period,
@@ -53,13 +52,9 @@ export default function getBlacklistedRanges(
     if (hasContent) {
       const { bufferedStart, bufferedEnd } = chunk;
       if (bufferedStart === undefined || bufferedEnd === undefined) {
-        log.warn("SO: No buffered start or end found from a segment.");
-        const buffered = segmentBuffer.getBufferedRanges();
-        const len = buffered.length;
-        if (len === 0) {
-          return [];
-        }
-        return [{ start: buffered.start(0), end: buffered.end(len - 1) }];
+        // Add and remove 2 seconds just to be sure each segment is correctly
+        // removed.
+        return [{ start: chunk.start - 2, end: chunk.end + 2 }];
       }
 
       const previousLastElement = accumulator[accumulator.length - 1];

@@ -110,7 +110,19 @@ export interface IBufferedChunk {
    * As such, this property should not be relied on until the segment has been
    * fully-pushed.
    */
-  start : number; // Supposed start the segment should start from, in seconds
+  start : number;
+
+  /**
+   * Timestamp at which the segment corresponding to that chunk was known to be
+   * completely pushed.
+   */
+  completeTimestamp : number | null;
+
+  /**
+   * If set to `true`, the segment has been included in the `BufferedHistory`.
+   * If set to `false`, it hasn't yet.
+   */
+  inHistory : boolean;
 }
 
 /** information to provide when "inserting" a new chunk into the SegmentInventory. */
@@ -190,17 +202,19 @@ export default class SegmentInventory {
    * @param {TimeRanges}
    */
   public synchronizeBuffered(buffered : TimeRanges) : void {
+    const now = performance.now();
     const inventory = this._inventory;
     let inventoryIndex = 0; // Current index considered.
-    let thisSegment = inventory[0]; // Current segmentInfos considered
-    const { MINIMUM_SEGMENT_SIZE } = config.getCurrent();
+    let thisSegment : IBufferedChunk | undefined = inventory[0];
+    const { MINIMUM_SEGMENT_SIZE,
+            MS_BEFORE_BUFFERED_SYNCHRONIZATION } = config.getCurrent();
     /** Type of buffer considered, used for logs */
     const bufferType : string | undefined = thisSegment?.infos.adaptation.type;
 
     const rangesLength = buffered.length;
     for (let i = 0; i < rangesLength; i++) {
       if (thisSegment === undefined) { // we arrived at the end of our inventory
-        return;
+        break;
       }
 
       // take the i'nth contiguous buffered TimeRange
@@ -249,7 +263,7 @@ export default class SegmentInventory {
       }
 
       if (thisSegment === undefined) {
-        return;
+        break;
       }
 
       // If the current segment is actually completely outside that range (it
@@ -261,13 +275,15 @@ export default class SegmentInventory {
         guessBufferedStartFromRangeStart(thisSegment,
                                          rangeStart,
                                          lastDeletedSegmentInfos,
-                                         bufferType);
+                                         bufferType,
+                                         now);
 
         if (inventoryIndex === inventory.length - 1) {
           // This is the last segment in the inventory.
           // We can directly update the end as the end of the current range.
-          guessBufferedEndFromRangeEnd(thisSegment, rangeEnd, bufferType);
-          return;
+          guessBufferedEndFromRangeEnd(thisSegment, rangeEnd, bufferType, now);
+          thisSegment = undefined;
+          break;
         }
 
         thisSegment = inventory[++inventoryIndex];
@@ -289,13 +305,21 @@ export default class SegmentInventory {
           // those segments are contiguous, we have no way to infer their real
           // end
           if (prevSegment.bufferedEnd === undefined) {
-            prevSegment.bufferedEnd = thisSegment.precizeStart ? thisSegment.start :
+            if (prevSegment.completeTimestamp !== null &&
+                now - prevSegment.completeTimestamp < MS_BEFORE_BUFFERED_SYNCHRONIZATION)
+            {
+              prevSegment.bufferedEnd = thisSegment.precizeStart ? thisSegment.start :
                                                                  prevSegment.end;
-            log.debug("SI: calculating buffered end of contiguous segment",
-                      bufferType, prevSegment.bufferedEnd, prevSegment.end);
+              log.debug("SI: calculating buffered end of contiguous segment",
+                        bufferType, prevSegment.bufferedEnd, prevSegment.end);
+            }
           }
 
-          thisSegment.bufferedStart = prevSegment.bufferedEnd;
+          if (thisSegment.completeTimestamp !== null &&
+              now - thisSegment.completeTimestamp < MS_BEFORE_BUFFERED_SYNCHRONIZATION) {
+            thisSegment.bufferedStart = prevSegment.bufferedEnd;
+          }
+
           thisSegment = inventory[++inventoryIndex];
           if (thisSegment !== undefined) {
             thisSegmentStart = takeFirstSet<number>(thisSegment.bufferedStart,
@@ -309,13 +333,15 @@ export default class SegmentInventory {
       // update the bufferedEnd of the last segment in that range
       const lastSegmentInRange = inventory[inventoryIndex - 1];
       if (lastSegmentInRange !== undefined) {
-        guessBufferedEndFromRangeEnd(lastSegmentInRange, rangeEnd, bufferType);
+        guessBufferedEndFromRangeEnd(lastSegmentInRange, rangeEnd, bufferType, now);
       }
     }
 
+    this._updateBufferedHistory();
+
     // if we still have segments left, they are not affiliated to any range.
     // They might have been garbage collected, delete them from here.
-    if (thisSegment != null) {
+    if (thisSegment !== undefined) {
       log.debug("SI: last segments have been GCed",
                 bufferType, inventoryIndex, inventory.length);
       inventory.splice(inventoryIndex, inventory.length - inventoryIndex);
@@ -363,6 +389,8 @@ export default class SegmentInventory {
                          precizeEnd: false,
                          bufferedStart: undefined,
                          bufferedEnd: undefined,
+                         completeTimestamp: null,
+                         inHistory: false,
                          infos: { segment, period, adaptation, representation } };
 
     // begin by the end as in most use cases this will be faster
@@ -574,11 +602,13 @@ export default class SegmentInventory {
                                     start: newSegment.end,
                                     end: segmentI.end,
                                     precizeStart: segmentI.precizeStart &&
-                                                segmentI.precizeEnd &&
-                                                newSegment.precizeEnd,
+                                                  segmentI.precizeEnd &&
+                                                  newSegment.precizeEnd,
                                     precizeEnd: segmentI.precizeEnd,
                                     bufferedStart: undefined,
                                     bufferedEnd: segmentI.end,
+                                    completeTimestamp: segmentI.completeTimestamp,
+                                    inHistory: segmentI.inHistory,
                                     infos: segmentI.infos };
               segmentI.end = newSegment.start;
               segmentI.splitted = true;
@@ -695,8 +725,7 @@ export default class SegmentInventory {
     content : { period: Period;
                 adaptation: Adaptation;
                 representation: Representation;
-                segment: ISegment; },
-    newBuffered : TimeRanges
+                segment: ISegment; }
   ) : void {
     if (content.segment.isInit) {
       return;
@@ -748,17 +777,10 @@ export default class SegmentInventory {
 
     if (resSegments.length === 0) {
       log.warn("SI: Completed Segment not found", content);
-    } else if (config.getCurrent().SYNCHRONIZE_BUFFERED_ON_COMPLETE_SEGMENT) {
-      this.synchronizeBuffered(newBuffered);
+    } else {
+      const completeTimestamp = performance.now();
       for (const seg of resSegments) {
-        if (seg.bufferedStart !== undefined && seg.bufferedEnd !== undefined) {
-          this._bufferedHistory.addBufferedSegment(seg.infos,
-                                                   seg.bufferedStart,
-                                                   seg.bufferedEnd);
-        } else {
-          log.debug("SI: buffered range not known after sync. Skipping history.",
-                    seg);
-        }
+        seg.completeTimestamp = completeTimestamp;
       }
     }
   }
@@ -789,6 +811,25 @@ export default class SegmentInventory {
    */
   public getHistoryFor(context : IChunkContext) : IBufferedHistoryEntry[] {
     return this._bufferedHistory.getHistoryFor(context);
+  }
+
+  /**
+   * @param {Object} seg
+   */
+  private _updateBufferedHistory() : void {
+    for (const seg of this._inventory) {
+      if (!seg.inHistory &&
+          seg.completeTimestamp !== null &&
+          seg.bufferedStart !== undefined &&
+          seg.bufferedEnd !== undefined)
+      {
+        this._bufferedHistory.addBufferedSegment(seg.infos,
+                                                 seg.bufferedStart,
+                                                 seg.bufferedEnd,
+                                                 seg.completeTimestamp);
+        seg.inHistory = true;
+      }
+    }
   }
 }
 
@@ -852,15 +893,27 @@ function bufferedEndLooksCoherent(
  * @param {Object} firstSegmentInRange
  * @param {number} rangeStart
  * @param {Object} lastDeletedSegmentInfos
+ * @param {string} bufferType
+ * @param {number} currentTimestamp
  */
 function guessBufferedStartFromRangeStart(
   firstSegmentInRange : IBufferedChunk,
   rangeStart : number,
   lastDeletedSegmentInfos : { end : number; precizeEnd : boolean } |
                             null,
-  bufferType : string
+  bufferType : string,
+  currentTimestamp : number
 ) : void {
-  const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE } = config.getCurrent();
+  const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
+          MS_BEFORE_BUFFERED_SYNCHRONIZATION } = config.getCurrent();
+
+  if (firstSegmentInRange.completeTimestamp === null ||
+      currentTimestamp - firstSegmentInRange.completeTimestamp <
+        MS_BEFORE_BUFFERED_SYNCHRONIZATION)
+  {
+    return;
+  }
+
   if (firstSegmentInRange.bufferedStart !== undefined) {
     if (firstSegmentInRange.bufferedStart < rangeStart) {
       log.debug("SI: Segment partially GCed at the start",
@@ -917,15 +970,28 @@ function guessBufferedStartFromRangeStart(
  * Evaluate the given buffered Chunk's buffered end from its range's end,
  * considering that this chunk is the last one in it.
  * @param {Object} firstSegmentInRange
- * @param {number} rangeStart
- * @param {Object} infos
+ * @param {number} rangeEnd
+ * @param {string} bufferType
+ * @param {number} currentTimestamp
  */
 function guessBufferedEndFromRangeEnd(
   lastSegmentInRange : IBufferedChunk,
   rangeEnd : number,
-  bufferType? : string
+  bufferType : string,
+  currentTimestamp : number
 ) : void {
-  const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE } = config.getCurrent();
+  const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
+          MS_BEFORE_BUFFERED_SYNCHRONIZATION } = config.getCurrent();
+
+  if (MS_BEFORE_BUFFERED_SYNCHRONIZATION > 0 &&
+      (
+        lastSegmentInRange.completeTimestamp === null ||
+        currentTimestamp - lastSegmentInRange.completeTimestamp <
+          MS_BEFORE_BUFFERED_SYNCHRONIZATION))
+  {
+    return;
+  }
+
   if (lastSegmentInRange.bufferedEnd !== undefined) {
     if (lastSegmentInRange.bufferedEnd > rangeEnd) {
       log.debug("SI: Segment partially GCed at the end",
