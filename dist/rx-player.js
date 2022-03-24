@@ -68,13 +68,13 @@ var READY_STATES = {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "kD": function() { return /* binding */ isEdgeChromium; },
-/* harmony export */   "fq": function() { return /* binding */ isIE11; },
-/* harmony export */   "YM": function() { return /* binding */ isIEOrEdge; },
-/* harmony export */   "vU": function() { return /* binding */ isFirefox; },
-/* harmony export */   "G6": function() { return /* binding */ isSafari; },
 /* harmony export */   "SB": function() { return /* binding */ isSafariMobile; },
+/* harmony export */   "YM": function() { return /* binding */ isIEOrEdge; },
+/* harmony export */   "fq": function() { return /* binding */ isIE11; },
+/* harmony export */   "kD": function() { return /* binding */ isEdgeChromium; },
 /* harmony export */   "op": function() { return /* binding */ isSamsungBrowser; },
+/* harmony export */   "vS": function() { return /* binding */ isSafariDesktop; },
+/* harmony export */   "vU": function() { return /* binding */ isFirefox; },
 /* harmony export */   "yS": function() { return /* binding */ isTizen; }
 /* harmony export */ });
 /* harmony import */ var _is_node__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2203);
@@ -105,7 +105,11 @@ var isEdgeChromium = !_is_node__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z 
 var isFirefox = !_is_node__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z && navigator.userAgent.toLowerCase().indexOf("firefox") !== -1;
 var isSamsungBrowser = !_is_node__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z && /SamsungBrowser/.test(navigator.userAgent);
 var isTizen = !_is_node__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z && /Tizen/.test(navigator.userAgent);
-var isSafari = !_is_node__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z && (Object.prototype.toString.call(window.HTMLElement).indexOf("Constructor") >= 0 || ((_b = (_a = window.safari) === null || _a === void 0 ? void 0 : _a.pushNotification) === null || _b === void 0 ? void 0 : _b.toString()) === "[object SafariRemoteNotification]");
+/** `true` on Safari on a PC platform (i.e. not iPhone / iPad etc.) */
+
+var isSafariDesktop = !_is_node__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z && (Object.prototype.toString.call(window.HTMLElement).indexOf("Constructor") >= 0 || ((_b = (_a = window.safari) === null || _a === void 0 ? void 0 : _a.pushNotification) === null || _b === void 0 ? void 0 : _b.toString()) === "[object SafariRemoteNotification]");
+/** `true` on Safari on an iPhone, iPad & iPod platform */
+
 var isSafariMobile = !_is_node__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z && typeof navigator.platform === "string" && /iPad|iPhone|iPod/.test(navigator.platform);
 
 
@@ -191,18 +195,10 @@ __webpack_require__.d(__webpack_exports__, {
   "Y": function() { return /* binding */ setMediaKeys; }
 });
 
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/throwError.js
-var throwError = __webpack_require__(3610);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/of.js
-var of = __webpack_require__(2817);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/defer.js
-var defer = __webpack_require__(9917);
 // EXTERNAL MODULE: ./src/errors/media_error.ts
 var media_error = __webpack_require__(3714);
 // EXTERNAL MODULE: ./src/utils/assert.ts
 var assert = __webpack_require__(811);
-// EXTERNAL MODULE: ./src/utils/cast_to_observable.ts
-var cast_to_observable = __webpack_require__(8117);
 // EXTERNAL MODULE: ./src/compat/browser_detection.ts
 var browser_detection = __webpack_require__(3666);
 // EXTERNAL MODULE: ./src/compat/is_node.ts
@@ -211,26 +207,8 @@ var is_node = __webpack_require__(2203);
 var should_favour_custom_safari_EME = __webpack_require__(5059);
 // EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/createClass.js
 var createClass = __webpack_require__(3144);
-// EXTERNAL MODULE: ./src/utils/promise.ts
-var promise = __webpack_require__(9589);
 ;// CONCATENATED MODULE: ./src/compat/eme/custom_key_system_access.ts
 
-
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 /**
  * Simple implementation of the MediaKeySystemAccess EME API.
@@ -238,7 +216,6 @@ var promise = __webpack_require__(9589);
  * All needed arguments are given to the constructor
  * @class CustomMediaKeySystemAccess
  */
-
 var CustomMediaKeySystemAccess = /*#__PURE__*/function () {
   /**
    * @param {string} _keyType - type of key system (e.g. "widevine" or
@@ -267,7 +244,7 @@ var CustomMediaKeySystemAccess = /*#__PURE__*/function () {
   _proto.createMediaKeys = function createMediaKeys() {
     var _this = this;
 
-    return new promise/* default */.Z(function (res) {
+    return new Promise(function (res) {
       return res(_this._mediaKeys);
     });
   }
@@ -301,8 +278,8 @@ var merge = __webpack_require__(3071);
 var takeUntil = __webpack_require__(3505);
 // EXTERNAL MODULE: ./src/utils/event_emitter.ts
 var event_emitter = __webpack_require__(1959);
-// EXTERNAL MODULE: ./src/compat/event_listeners.ts + 5 modules
-var event_listeners = __webpack_require__(8719);
+// EXTERNAL MODULE: ./src/compat/event_listeners.ts + 6 modules
+var event_listeners = __webpack_require__(4804);
 ;// CONCATENATED MODULE: ./src/compat/eme/custom_media_keys/ms_media_keys_constructor.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -360,7 +337,6 @@ if (!is_node/* default */.Z) {
 
 
 
-
 var IE11MediaKeySession = /*#__PURE__*/function (_EventEmitter) {
   (0,inheritsLoose/* default */.Z)(IE11MediaKeySession, _EventEmitter);
 
@@ -372,12 +348,12 @@ var IE11MediaKeySession = /*#__PURE__*/function (_EventEmitter) {
     _this.keyStatuses = new Map();
     _this._mk = mk;
     _this._closeSession$ = new Subject/* Subject */.x();
-    _this.closed = new promise/* default */.Z(function (resolve) {
+    _this.closed = new Promise(function (resolve) {
       _this._closeSession$.subscribe(resolve);
     });
 
     _this.update = function (license) {
-      return new promise/* default */.Z(function (resolve, reject) {
+      return new Promise(function (resolve, reject) {
         if (_this._ss === undefined) {
           return reject("MediaKeySession not set.");
         }
@@ -398,7 +374,7 @@ var IE11MediaKeySession = /*#__PURE__*/function (_EventEmitter) {
   _proto.generateRequest = function generateRequest(_initDataType, initData) {
     var _this2 = this;
 
-    return new promise/* default */.Z(function (resolve) {
+    return new Promise(function (resolve) {
       var initDataU8 = initData instanceof Uint8Array ? initData : initData instanceof ArrayBuffer ? new Uint8Array(initData) : new Uint8Array(initData.buffer);
       _this2._ss = _this2._mk.createSession("video/mp4", initDataU8);
       (0,merge/* merge */.T)(event_listeners/* onKeyMessage$ */.GJ(_this2._ss), event_listeners/* onKeyAdded$ */.GV(_this2._ss), event_listeners/* onKeyError$ */.Xe(_this2._ss)).pipe((0,takeUntil/* takeUntil */.R)(_this2._closeSession$)).subscribe(function (evt) {
@@ -411,7 +387,7 @@ var IE11MediaKeySession = /*#__PURE__*/function (_EventEmitter) {
   _proto.close = function close() {
     var _this3 = this;
 
-    return new promise/* default */.Z(function (resolve) {
+    return new Promise(function (resolve) {
       if (_this3._ss != null) {
         _this3._ss.close();
 
@@ -427,11 +403,11 @@ var IE11MediaKeySession = /*#__PURE__*/function (_EventEmitter) {
   };
 
   _proto.load = function load() {
-    return promise/* default.resolve */.Z.resolve(false);
+    return Promise.resolve(false);
   };
 
   _proto.remove = function remove() {
-    return promise/* default.resolve */.Z.resolve();
+    return Promise.resolve();
   };
 
   (0,createClass/* default */.Z)(IE11MediaKeySession, [{
@@ -593,6 +569,8 @@ function getMozMediaKeysCallbacks() {
 }
 // EXTERNAL MODULE: ./src/utils/base64.ts
 var base64 = __webpack_require__(9689);
+// EXTERNAL MODULE: ./src/utils/noop.ts
+var noop = __webpack_require__(8894);
 // EXTERNAL MODULE: ./src/utils/string_parsing.ts
 var string_parsing = __webpack_require__(3635);
 ;// CONCATENATED MODULE: ./src/compat/eme/custom_media_keys/old_webkit_media_keys.ts
@@ -617,8 +595,6 @@ var string_parsing = __webpack_require__(3635);
 
 
 
-
-
 /**
  * Returns true if the given media element has old webkit methods
  * corresponding to the IOldWebkitHTMLMediaElement interface.
@@ -629,6 +605,12 @@ var string_parsing = __webpack_require__(3635);
 function isOldWebkitMediaElement(element) {
   return typeof element.webkitGenerateKeyRequest === "function";
 }
+/**
+ * MediaKeySession implementation for older versions of WebKit relying on APIs
+ * such as `webkitGenerateKeyRequest` `webkitAddKey` to be called on the
+ * HTMLMediaElement.
+ * @class OldWebkitMediaKeySession
+ */
 
 var OldWebkitMediaKeySession = /*#__PURE__*/function (_EventEmitter) {
   (0,inheritsLoose/* default */.Z)(OldWebkitMediaKeySession, _EventEmitter);
@@ -637,86 +619,108 @@ var OldWebkitMediaKeySession = /*#__PURE__*/function (_EventEmitter) {
     var _this;
 
     _this = _EventEmitter.call(this) || this;
-    _this._closeSession$ = new Subject/* Subject */.x();
     _this._vid = mediaElement;
     _this._key = keySystem;
     _this.sessionId = "";
-    _this.closed = new promise/* default */.Z(function (resolve) {
-      _this._closeSession$.subscribe(resolve);
+    _this._closeSession = noop/* default */.Z; // Just here to make TypeScript happy
+
+    _this.closed = new Promise(function (resolve) {
+      _this._closeSession = resolve;
     });
     _this.keyStatuses = new Map();
     _this.expiration = NaN;
-    (0,merge/* merge */.T)(event_listeners/* onKeyMessage$ */.GJ(mediaElement), event_listeners/* onKeyAdded$ */.GV(mediaElement), event_listeners/* onKeyError$ */.Xe(mediaElement)).pipe((0,takeUntil/* takeUntil */.R)(_this._closeSession$)).subscribe(function (evt) {
-      return _this.trigger(evt.type, evt);
-    });
 
-    _this.update = function (license) {
-      return new promise/* default */.Z(function (resolve, reject) {
-        try {
-          if (_this._key.indexOf("clearkey") >= 0) {
-            var licenseTypedArray = license instanceof ArrayBuffer ? new Uint8Array(license) : license;
-            /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
-            /* eslint-disable @typescript-eslint/no-unsafe-argument */
-
-            /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
-            var json = JSON.parse((0,string_parsing/* utf8ToStr */.uR)(licenseTypedArray));
-            var key = (0,base64/* base64ToBytes */.K)(json.keys[0].k);
-            var kid = (0,base64/* base64ToBytes */.K)(json.keys[0].kid);
-            /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-
-            /* eslint-enable @typescript-eslint/no-unsafe-argument */
-
-            /* eslint-enable @typescript-eslint/no-unsafe-assignment */
-
-            resolve(_this._vid.webkitAddKey(_this._key, key, kid,
-            /* sessionId */
-            ""));
-          } else {
-            resolve(_this._vid.webkitAddKey(_this._key, license, null,
-            /* sessionId */
-            ""));
-          }
-        } catch (err) {
-          reject(err);
-        }
-      });
+    _this._onSessionRelatedEvent = function (evt) {
+      _this.trigger(evt.type, evt);
     };
 
+    ["keymessage", "message", "keyadded", "ready", "keyerror", "error"].forEach(function (evt) {
+      return mediaElement.addEventListener(evt, _this._onSessionRelatedEvent);
+    });
     return _this;
   }
 
   var _proto = OldWebkitMediaKeySession.prototype;
 
-  _proto.generateRequest = function generateRequest(_initDataType, initData) {
+  _proto.update = function update(license) {
     var _this2 = this;
 
-    return new promise/* default */.Z(function (resolve) {
-      _this2._vid.webkitGenerateKeyRequest(_this2._key, initData);
+    return new Promise(function (resolve, reject) {
+      try {
+        if (_this2._key.indexOf("clearkey") >= 0) {
+          var licenseTypedArray = license instanceof ArrayBuffer ? new Uint8Array(license) : license;
+          /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
+          /* eslint-disable @typescript-eslint/no-unsafe-argument */
+
+          /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
+          var json = JSON.parse((0,string_parsing/* utf8ToStr */.uR)(licenseTypedArray));
+          var key = (0,base64/* base64ToBytes */.K)(json.keys[0].k);
+          var kid = (0,base64/* base64ToBytes */.K)(json.keys[0].kid);
+          /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+
+          /* eslint-enable @typescript-eslint/no-unsafe-argument */
+
+          /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+
+          resolve(_this2._vid.webkitAddKey(_this2._key, key, kid,
+          /* sessionId */
+          ""));
+        } else {
+          resolve(_this2._vid.webkitAddKey(_this2._key, license, null,
+          /* sessionId */
+          ""));
+        }
+      } catch (err) {
+        reject(err);
+      }
+    });
+  };
+
+  _proto.generateRequest = function generateRequest(_initDataType, initData) {
+    var _this3 = this;
+
+    return new Promise(function (resolve) {
+      _this3._vid.webkitGenerateKeyRequest(_this3._key, initData);
 
       resolve();
     });
   };
 
   _proto.close = function close() {
-    var _this3 = this;
+    var _this4 = this;
 
-    return new promise/* default */.Z(function (resolve) {
-      _this3._closeSession$.next();
+    return new Promise(function (resolve) {
+      _this4._unbindSession();
 
-      _this3._closeSession$.complete();
+      _this4._closeSession();
 
       resolve();
     });
-  };
+  }
+  /**
+   * Load a Persistent MediaKeySession.
+   * Do nothing here because this implementation doesn't handle them.
+   * @returns {Promise.<boolean>}
+   */
+  ;
 
   _proto.load = function load() {
-    return promise/* default.resolve */.Z.resolve(false);
+    // Not implemented. Always return false as in "no session with that id".
+    return Promise.resolve(false);
   };
 
   _proto.remove = function remove() {
-    return promise/* default.resolve */.Z.resolve();
+    return Promise.resolve();
+  };
+
+  _proto._unbindSession = function _unbindSession() {
+    var _this5 = this;
+
+    ["keymessage", "message", "keyadded", "ready", "keyerror", "error"].forEach(function (evt) {
+      return _this5._vid.removeEventListener(evt, _this5._onSessionRelatedEvent);
+    });
   };
 
   return OldWebkitMediaKeySession;
@@ -878,8 +882,6 @@ var webkit_media_keys_constructor = __webpack_require__(158);
 
 
 
-
-
 /**
  * Check if keyType is for fairplay DRM
  * @param {string} keyType
@@ -929,44 +931,19 @@ var WebkitMediaKeySession = /*#__PURE__*/function (_EventEmitter) {
 
     _this = _EventEmitter.call(this) || this;
     _this._serverCertificate = serverCertificate;
-    _this._closeSession$ = new Subject/* Subject */.x();
     _this._videoElement = mediaElement;
     _this._keyType = keyType;
-    _this.closed = new promise/* default */.Z(function (resolve) {
-      _this._closeSession$.subscribe(resolve);
+    _this._unbindSession = noop/* default */.Z;
+    _this._closeSession = noop/* default */.Z; // Just here to make TypeScript happy
+
+    _this.closed = new Promise(function (resolve) {
+      _this._closeSession = resolve;
     });
     _this.keyStatuses = new Map();
     _this.expiration = NaN;
 
-    _this.update = function (license) {
-      return new promise/* default */.Z(function (resolve, reject) {
-        /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-        if (_this._nativeSession === undefined || _this._nativeSession.update === undefined || typeof _this._nativeSession.update !== "function") {
-          return reject("Unavailable WebKit key session.");
-        }
-
-        try {
-          var uInt8Arraylicense;
-
-          if (license instanceof ArrayBuffer) {
-            uInt8Arraylicense = new Uint8Array(license);
-          } else if (license instanceof Uint8Array) {
-            uInt8Arraylicense = license;
-          } else {
-            uInt8Arraylicense = new Uint8Array(license.buffer);
-          }
-          /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-
-
-          resolve(_this._nativeSession.update(uInt8Arraylicense));
-          /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-        } catch (err) {
-          reject(err);
-        }
-        /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-
-      });
+    _this._onEvent = function (evt) {
+      _this.trigger(evt.type, evt);
     };
 
     return _this;
@@ -974,18 +951,32 @@ var WebkitMediaKeySession = /*#__PURE__*/function (_EventEmitter) {
 
   var _proto = WebkitMediaKeySession.prototype;
 
-  _proto.listenEvent = function listenEvent(session) {
+  _proto.update = function update(license) {
     var _this2 = this;
 
-    (0,merge/* merge */.T)(event_listeners/* onKeyMessage$ */.GJ(session), event_listeners/* onKeyAdded$ */.GV(session), event_listeners/* onKeyError$ */.Xe(session)).pipe((0,takeUntil/* takeUntil */.R)(this._closeSession$)).subscribe(function (evt) {
-      _this2.trigger(evt.type, evt);
+    return new Promise(function (resolve, reject) {
+      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+      if (_this2._nativeSession === undefined || _this2._nativeSession.update === undefined || typeof _this2._nativeSession.update !== "function") {
+        return reject("Unavailable WebKit key session.");
+      }
+
+      try {
+        /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        resolve(_this2._nativeSession.update(license));
+        /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+      } catch (err) {
+        reject(err);
+      }
+      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+
     });
   };
 
   _proto.generateRequest = function generateRequest(_initDataType, initData) {
     var _this3 = this;
 
-    return new promise/* default */.Z(function (resolve) {
+    return new Promise(function (resolve) {
       var _a;
 
       var elt = _this3._videoElement;
@@ -1012,7 +1003,7 @@ var WebkitMediaKeySession = /*#__PURE__*/function (_EventEmitter) {
         throw new Error("Impossible to get the key sessions");
       }
 
-      _this3.listenEvent(keySession); // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      _this3._listenEvent(keySession); // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 
 
       _this3._nativeSession = keySession;
@@ -1023,10 +1014,10 @@ var WebkitMediaKeySession = /*#__PURE__*/function (_EventEmitter) {
   _proto.close = function close() {
     var _this4 = this;
 
-    return new promise/* default */.Z(function (resolve, reject) {
-      _this4._closeSession$.next();
+    return new Promise(function (resolve, reject) {
+      _this4._unbindSession();
 
-      _this4._closeSession$.complete();
+      _this4._closeSession();
 
       if (_this4._nativeSession === undefined) {
         reject("No session to close.");
@@ -1044,11 +1035,40 @@ var WebkitMediaKeySession = /*#__PURE__*/function (_EventEmitter) {
   };
 
   _proto.load = function load() {
-    return promise/* default.resolve */.Z.resolve(false);
+    return Promise.resolve(false);
   };
 
   _proto.remove = function remove() {
-    return promise/* default.resolve */.Z.resolve();
+    return Promise.resolve();
+  };
+
+  _proto._listenEvent = function _listenEvent(session) {
+    var _this5 = this;
+
+    this._unbindSession(); // If previous session was linked
+
+    /* eslint-disable @typescript-eslint/no-unsafe-call */
+
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
+    /* eslint-disable @typescript-eslint/no-unsafe-return */
+
+
+    ["keymessage", "message", "keyadded", "ready", "keyerror", "error"].forEach(function (evt) {
+      return session.addEventListener(evt, _this5._onEvent);
+    });
+
+    this._unbindSession = function () {
+      ["keymessage", "message", "keyadded", "ready", "keyerror", "error"].forEach(function (evt) {
+        return session.removeEventListener(evt, _this5._onEvent);
+      });
+    };
+    /* eslint-disable @typescript-eslint/no-unsafe-return */
+
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
+    /* eslint-enable @typescript-eslint/no-unsafe-call */
+
   };
 
   (0,createClass/* default */.Z)(WebkitMediaKeySession, [{
@@ -1104,7 +1124,7 @@ var WebKitCustomMediaKeys = /*#__PURE__*/function () {
 
   _proto2.setServerCertificate = function setServerCertificate(serverCertificate) {
     this._serverCertificate = serverCertificate;
-    return promise/* default.resolve */.Z.resolve();
+    return Promise.resolve();
   };
 
   return WebKitCustomMediaKeys;
@@ -1166,11 +1186,15 @@ function getWebKitMediaKeysCallbacks() {
 
 
 
-
-
 var requestMediaKeySystemAccess = null;
+/**
+ * Set the given MediaKeys on the given HTMLMediaElement.
+ * Emits null when done then complete.
+ * @param {HTMLMediaElement} elt
+ * @param {Object} mediaKeys
+ */
 
-var _setMediaKeys = function defaultSetMediaKeys(mediaElement, mediaKeys) {
+var setMediaKeys = function defaultSetMediaKeys(mediaElement, mediaKeys) {
   var elt = mediaElement;
   /* eslint-disable @typescript-eslint/unbound-method */
 
@@ -1207,8 +1231,10 @@ var _setMediaKeys = function defaultSetMediaKeys(mediaElement, mediaKeys) {
 
 
 if (is_node/* default */.Z || navigator.requestMediaKeySystemAccess != null && !(0,should_favour_custom_safari_EME/* default */.Z)()) {
-  requestMediaKeySystemAccess = function requestMediaKeySystemAccess(a, b) {
-    return (0,cast_to_observable/* default */.Z)(navigator.requestMediaKeySystemAccess(a, b));
+  requestMediaKeySystemAccess = function requestMediaKeySystemAccess() {
+    var _navigator;
+
+    return (_navigator = navigator).requestMediaKeySystemAccess.apply(_navigator, arguments);
   };
 } else {
   var isTypeSupported;
@@ -1218,25 +1244,25 @@ if (is_node/* default */.Z || navigator.requestMediaKeySystemAccess != null && !
     var callbacks = getOldWebKitMediaKeysCallbacks();
     isTypeSupported = callbacks.isTypeSupported;
     createCustomMediaKeys = callbacks.createCustomMediaKeys;
-    _setMediaKeys = callbacks.setMediaKeys; // This is for WebKit with prefixed EME api
+    setMediaKeys = callbacks.setMediaKeys; // This is for WebKit with prefixed EME api
   } else if (webkit_media_keys_constructor/* WebKitMediaKeysConstructor */.t !== undefined) {
     var _callbacks = getWebKitMediaKeysCallbacks();
 
     isTypeSupported = _callbacks.isTypeSupported;
     createCustomMediaKeys = _callbacks.createCustomMediaKeys;
-    _setMediaKeys = _callbacks.setMediaKeys;
+    setMediaKeys = _callbacks.setMediaKeys;
   } else if (browser_detection/* isIE11 */.fq && MSMediaKeysConstructor !== undefined) {
     var _callbacks2 = getIE11MediaKeysCallbacks();
 
     isTypeSupported = _callbacks2.isTypeSupported;
     createCustomMediaKeys = _callbacks2.createCustomMediaKeys;
-    _setMediaKeys = _callbacks2.setMediaKeys;
+    setMediaKeys = _callbacks2.setMediaKeys;
   } else if (MozMediaKeysConstructor !== undefined) {
     var _callbacks3 = getMozMediaKeysCallbacks();
 
     isTypeSupported = _callbacks3.isTypeSupported;
     createCustomMediaKeys = _callbacks3.createCustomMediaKeys;
-    _setMediaKeys = _callbacks3.setMediaKeys;
+    setMediaKeys = _callbacks3.setMediaKeys;
   } else {
     var MK = window.MediaKeys;
 
@@ -1265,9 +1291,7 @@ if (is_node/* default */.Z || navigator.requestMediaKeySystemAccess != null && !
 
   requestMediaKeySystemAccess = function requestMediaKeySystemAccess(keyType, keySystemConfigurations) {
     if (!isTypeSupported(keyType)) {
-      return (0,throwError/* throwError */._)(function () {
-        return new Error("Unsupported key type");
-      });
+      return Promise.reject(new Error("Unsupported key type"));
     }
 
     for (var i = 0; i < keySystemConfigurations.length; i++) {
@@ -1284,37 +1308,28 @@ if (is_node/* default */.Z || navigator.requestMediaKeySystemAccess != null && !
 
       if (supported) {
         var keySystemConfigurationResponse = {
-          videoCapabilities: videoCapabilities,
-          audioCapabilities: audioCapabilities,
           initDataTypes: ["cenc"],
           distinctiveIdentifier: "not-allowed",
           persistentState: "required",
           sessionTypes: ["temporary", "persistent-license"]
-        }; // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        };
+
+        if (videoCapabilities !== undefined) {
+          keySystemConfigurationResponse.videoCapabilities = videoCapabilities;
+        }
+
+        if (audioCapabilities !== undefined) {
+          keySystemConfigurationResponse.audioCapabilities = audioCapabilities;
+        } // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
 
         var customMediaKeys = createCustomMediaKeys(keyType);
-        return (0,of.of)(new CustomMediaKeySystemAccess(keyType, customMediaKeys, keySystemConfigurationResponse));
+        return Promise.resolve(new CustomMediaKeySystemAccess(keyType, customMediaKeys, keySystemConfigurationResponse));
       }
     }
 
-    return (0,throwError/* throwError */._)(function () {
-      return new Error("Unsupported configuration");
-    });
+    return Promise.reject(new Error("Unsupported configuration"));
   };
-}
-/**
- * Set the given MediaKeys on the given HTMLMediaElement.
- * Emits null when done then complete.
- * @param {HTMLMediaElement} elt
- * @param {Object} mediaKeys
- * @returns {Observable}
- */
-
-
-function setMediaKeys(elt, mediaKeys) {
-  return (0,defer/* defer */.P)(function () {
-    return (0,cast_to_observable/* default */.Z)(_setMediaKeys(elt, mediaKeys));
-  });
 }
 
 
@@ -1367,7 +1382,7 @@ if (!_is_node__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z) {
 
 /***/ }),
 
-/***/ 8719:
+/***/ 4804:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1419,10 +1434,16 @@ var concat = __webpack_require__(6362);
 var take = __webpack_require__(4727);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/ignoreElements.js
 var ignoreElements = __webpack_require__(533);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/mapTo.js
-var mapTo = __webpack_require__(3833);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/mergeMap.js
-var mergeMap = __webpack_require__(3994);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/map.js
+var map = __webpack_require__(9127);
+;// CONCATENATED MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/mapTo.js
+
+function mapTo(value) {
+    return (0,map/* map */.U)(function () { return value; });
+}
+//# sourceMappingURL=mapTo.js.map
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/mergeMap.js + 1 modules
+var mergeMap = __webpack_require__(7877);
 ;// CONCATENATED MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/delayWhen.js
 
 
@@ -1435,7 +1456,7 @@ function delayWhen(delayDurationSelector, subscriptionDelay) {
             return (0,concat/* concat */.z)(subscriptionDelay.pipe((0,take/* take */.q)(1), (0,ignoreElements/* ignoreElements */.l)()), source.pipe(delayWhen(delayDurationSelector)));
         };
     }
-    return (0,mergeMap/* mergeMap */.z)(function (value, index) { return delayDurationSelector(value, index).pipe((0,take/* take */.q)(1), (0,mapTo/* mapTo */.h)(value)); });
+    return (0,mergeMap/* mergeMap */.z)(function (value, index) { return delayDurationSelector(value, index).pipe((0,take/* take */.q)(1), mapTo(value)); });
 }
 //# sourceMappingURL=delayWhen.js.map
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/timer.js
@@ -1523,8 +1544,6 @@ var fromEvent = __webpack_require__(2401);
 var merge = __webpack_require__(3071);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/defer.js
 var defer = __webpack_require__(9917);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/map.js
-var map = __webpack_require__(9127);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/startWith.js
 var startWith = __webpack_require__(6108);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/distinctUntilChanged.js
@@ -1537,8 +1556,8 @@ var of = __webpack_require__(2817);
 var combineLatest = __webpack_require__(2334);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/interval.js
 var interval = __webpack_require__(6697);
-// EXTERNAL MODULE: ./src/config.ts
-var config = __webpack_require__(944);
+// EXTERNAL MODULE: ./src/config.ts + 2 modules
+var config = __webpack_require__(6872);
 // EXTERNAL MODULE: ./src/utils/is_non_empty_string.ts
 var is_non_empty_string = __webpack_require__(6923);
 // EXTERNAL MODULE: ./src/compat/is_node.ts
@@ -1573,7 +1592,6 @@ var should_favour_custom_safari_EME = __webpack_require__(5059);
 
 
 var BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
-var INACTIVITY_DELAY = config/* default.INACTIVITY_DELAY */.Z.INACTIVITY_DELAY;
 var pixelRatio = is_node/* default */.Z || window.devicePixelRatio == null || window.devicePixelRatio === 0 ? 1 : window.devicePixelRatio;
 /**
  * Find the first supported event from the list given.
@@ -1694,6 +1712,9 @@ function visibilityChange() {
 
 
 function isPageActive() {
+  var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+      INACTIVITY_DELAY = _config$getCurrent.INACTIVITY_DELAY;
+
   return visibilityChange().pipe((0,switchMap/* switchMap */.w)(function (x) {
     if (!x) {
       return (0,of.of)(x).pipe(delay(INACTIVITY_DELAY));
@@ -1770,6 +1791,9 @@ function onPictureInPictureEvent$(elt) {
 
 
 function isVideoVisible(pip$) {
+  var _config$getCurrent2 = config/* default.getCurrent */.Z.getCurrent(),
+      INACTIVITY_DELAY = _config$getCurrent2.INACTIVITY_DELAY;
+
   return (0,combineLatest/* combineLatest */.a)([visibilityChange(), pip$]).pipe((0,switchMap/* switchMap */.w)(function (_ref) {
     var isVisible = _ref[0],
         pip = _ref[1];
@@ -2079,7 +2103,7 @@ function makeCue(startTime, endTime, payload) {
  */
 
 function shouldFavourCustomSafariEME() {
-  return _browser_detection__WEBPACK_IMPORTED_MODULE_0__/* .isSafari */ .G6 && _eme_custom_media_keys_webkit_media_keys_constructor__WEBPACK_IMPORTED_MODULE_1__/* .WebKitMediaKeysConstructor */ .t !== undefined;
+  return (_browser_detection__WEBPACK_IMPORTED_MODULE_0__/* .isSafariDesktop */ .vS || _browser_detection__WEBPACK_IMPORTED_MODULE_0__/* .isSafariMobile */ .SB) && _eme_custom_media_keys_webkit_media_keys_constructor__WEBPACK_IMPORTED_MODULE_1__/* .WebKitMediaKeysConstructor */ .t !== undefined;
 }
 
 /***/ }),
@@ -2121,26 +2145,17 @@ function shouldValidateMetadata() {
 
 /***/ }),
 
-/***/ 944:
-/***/ (function(__unused_webpack_module, __webpack_exports__) {
+/***/ 6872:
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  "Z": function() { return /* binding */ config; }
+});
+
+;// CONCATENATED MODULE: ./src/default_config.ts
 /**
  * Configuration file for the whole player.
  * Feel free to tweak those values if you know what you're doing.
@@ -2150,7 +2165,7 @@ function shouldValidateMetadata() {
  *
  * @type {Object}
  */
-/* harmony default export */ __webpack_exports__["Z"] = ({
+var DEFAULT_CONFIG = {
   /**
    * Volume set on unMute if the volume is set to 0 and either:
    *   - mute has never been called before
@@ -2321,6 +2336,15 @@ function shouldValidateMetadata() {
    * @type {Number}
    */
   DEFAULT_MAX_BUFFER_BEHIND: Infinity,
+
+  /**
+   * Default video buffer memory limit in kilobytes.
+   * Once enough video content has been downloaded to fill the buffer up to
+   * DEFAULT_MAX_VIDEO_BUFFER_SIZE , we will stop downloading
+   * content.
+   * @type {Number}
+   */
+  DEFAULT_MAX_VIDEO_BUFFER_SIZE: Infinity,
 
   /* eslint-disable @typescript-eslint/consistent-type-assertions */
 
@@ -3053,7 +3077,7 @@ function shouldValidateMetadata() {
 
   /**
    * Robustnesses used in the {audio,video}Capabilities of the
-   * MediaKeySystemConfiguration (EME).
+   * MediaKeySystemConfiguration (DRM).
    *
    * Only used for widevine keysystems.
    *
@@ -3270,8 +3294,8 @@ function shouldValidateMetadata() {
    */
   ADAPTATION_SWITCH_BUFFER_PADDINGS: {
     video: {
-      before: 2,
-      after: 2.5
+      before: 5,
+      after: 5
     },
     audio: {
       before: 2,
@@ -3362,8 +3386,122 @@ function shouldValidateMetadata() {
    * The `BUFFERED_HISTORY_RETENTION_TIME` is the maximum number of entries
    * there can be in that history.
    */
-  BUFFERED_HISTORY_MAXIMUM_ENTRIES: 200
-});
+  BUFFERED_HISTORY_MAXIMUM_ENTRIES: 200,
+
+  /**
+   * Minimum buffer (in seconds) we should have, regardless of memory
+   * constraints
+   */
+  MIN_BUFFER_LENGTH: 5,
+
+  /**
+   * Minimum buffer in seconds ahead relative to current time
+   * we should be able to download
+   * Before trying to agressively free up memory
+   */
+  MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP: 10,
+
+  /**
+   * Distance in seconds behind the current position
+   * the player will free up to in the case we agressively free up memory
+   * It is set to avoid playback issues
+   */
+  UPTO_CURRENT_POSITION_CLEANUP: 5
+};
+/* harmony default export */ var default_config = (DEFAULT_CONFIG);
+// EXTERNAL MODULE: ./src/utils/object_assign.ts
+var object_assign = __webpack_require__(8026);
+;// CONCATENATED MODULE: ./src/utils/deep_merge.ts
+
+/**
+ * Check if an item is an object
+ * @param item
+ * @returns {boolean}
+ */
+
+function isObject(item) {
+  return item !== null && item !== undefined && !Array.isArray(item) && typeof item === "object";
+}
+/**
+ * Deeply merge nested objects
+ * @param target
+ * @param sources
+ * @returns output : merged object
+ */
+
+
+function deepMerge(target) {
+  for (var _len = arguments.length, sources = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+    sources[_key - 1] = arguments[_key];
+  }
+
+  if (sources.length === 0) {
+    return target;
+  }
+
+  var source = sources.shift();
+
+  if (isObject(target) && isObject(source)) {
+    for (var key in source) {
+      if (isObject(source[key])) {
+        if (target[key] === undefined) {
+          var _objectAssign;
+
+          (0,object_assign/* default */.Z)(target, (_objectAssign = {}, _objectAssign[key] = {}, _objectAssign));
+        }
+
+        var newTarget = target[key];
+        deepMerge(newTarget, source[key]);
+      } else {
+        var _objectAssign2;
+
+        (0,object_assign/* default */.Z)(target, (_objectAssign2 = {}, _objectAssign2[key] = source[key], _objectAssign2));
+      }
+    }
+  }
+
+  return deepMerge.apply(void 0, [target].concat(sources));
+}
+;// CONCATENATED MODULE: ./src/config.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+var ConfigHandler = /*#__PURE__*/function () {
+  function ConfigHandler() {
+    this._config = default_config;
+  }
+
+  var _proto = ConfigHandler.prototype;
+
+  _proto.update = function update(config) {
+    var newConfig = deepMerge(this._config, config);
+    this._config = newConfig;
+  };
+
+  _proto.getCurrent = function getCurrent() {
+    return this._config;
+  };
+
+  return ConfigHandler;
+}();
+
+var configHandler = new ConfigHandler();
+/* harmony default export */ var config = (configHandler);
 
 /***/ }),
 
@@ -3375,9 +3513,16 @@ function shouldValidateMetadata() {
 /* harmony export */   "Z": function() { return /* binding */ MediaElementTrackChoiceManager; }
 /* harmony export */ });
 /* harmony import */ var _babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4578);
-/* harmony import */ var _utils_event_emitter__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(1959);
+/* harmony import */ var _utils_assert__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(811);
+/* harmony import */ var _utils_event_emitter__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(1959);
 /* harmony import */ var _utils_languages__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7829);
 
+
+function _createForOfIteratorHelperLoose(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (it) return (it = it.call(o)).next.bind(it); if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
 /**
  * Copyright 2015 CANAL+ Group
@@ -3394,6 +3539,7 @@ function shouldValidateMetadata() {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 
 
 /**
@@ -3615,7 +3761,8 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
           nativeTrack = _this$_audioTracks$i.nativeTrack;
 
       if (track.id === id) {
-        nativeTrack.enabled = true;
+        this._enableAudioTrackFromIndex(i);
+
         this._audioTrackLockedOn = nativeTrack;
         return;
       }
@@ -3910,7 +4057,8 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
         var nativeTrack = this._audioTracks[i].nativeTrack;
 
         if (nativeTrack === this._audioTrackLockedOn) {
-          nativeTrack.enabled = true;
+          this._enableAudioTrackFromIndex(i);
+
           return;
         }
       }
@@ -3940,7 +4088,8 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
           var audioTrack = this._audioTracks[j];
 
           if (audioTrack.track.normalized === normalized && audioTrack.track.audioDescription === track.audioDescription) {
-            audioTrack.nativeTrack.enabled = true;
+            this._enableAudioTrackFromIndex(j);
+
             return;
           }
         }
@@ -4316,10 +4465,29 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
         return;
       };
     }
+  }
+  /**
+   * Enable an audio track (and disable all others), based on its index in the
+   * `this._audioTracks` array.
+   * @param {number} index}
+   */
+  ;
+
+  _proto._enableAudioTrackFromIndex = function _enableAudioTrackFromIndex(index) {
+    (0,_utils_assert__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .Z)(index < this._audioTracks.length); // Seen on Safari MacOS only (2022-02-14), not disabling ALL audio tracks
+    // first (even the wanted one), can lead to the media not playing.
+
+    for (var _iterator = _createForOfIteratorHelperLoose(this._audioTracks), _step; !(_step = _iterator()).done;) {
+      var audioTrack = _step.value;
+      audioTrack.nativeTrack.enabled = false;
+    }
+
+    this._audioTracks[index].nativeTrack.enabled = true;
+    return;
   };
 
   return MediaElementTrackChoiceManager;
-}(_utils_event_emitter__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .Z);
+}(_utils_event_emitter__WEBPACK_IMPORTED_MODULE_3__/* ["default"] */ .Z);
 /**
  * Disable all text track elements in the given array from showing.
  * @param {Array.<Object>} textTracks
@@ -4367,48 +4535,24 @@ function disableVideoTracks(videoTracks) {
 
 /***/ }),
 
-/***/ 8281:
+/***/ 7665:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
-  "ZP": function() { return /* binding */ eme; }
+  "u": function() { return /* binding */ ContentDecryptorState; },
+  "Z": function() { return /* binding */ ContentDecryptor; }
 });
 
-// UNUSED EXPORTS: clearEMESession, disposeEME, getCurrentKeySystem
-
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/mergeMap.js
-var mergeMap = __webpack_require__(3994);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/of.js
-var of = __webpack_require__(2817);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/concat.js
-var concat = __webpack_require__(6362);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/shareReplay.js
-var shareReplay = __webpack_require__(8515);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/filter.js
-var filter = __webpack_require__(4975);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/take.js
-var take = __webpack_require__(4727);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/tap.js
-var tap = __webpack_require__(2006);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/merge.js
-var merge = __webpack_require__(3071);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/map.js
-var map = __webpack_require__(9127);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/throwError.js
-var throwError = __webpack_require__(3610);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/ReplaySubject.js
-var ReplaySubject = __webpack_require__(3);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/empty.js
-var empty = __webpack_require__(1545);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/catchError.js
-var catchError = __webpack_require__(9878);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/ignoreElements.js
-var ignoreElements = __webpack_require__(533);
-// EXTERNAL MODULE: ./src/compat/event_listeners.ts + 5 modules
-var event_listeners = __webpack_require__(8719);
+// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js
+var asyncToGenerator = __webpack_require__(5861);
+// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/inheritsLoose.js
+var inheritsLoose = __webpack_require__(4578);
+// EXTERNAL MODULE: ./node_modules/@babel/runtime/regenerator/index.js
+var regenerator = __webpack_require__(7757);
+var regenerator_default = /*#__PURE__*/__webpack_require__.n(regenerator);
 // EXTERNAL MODULE: ./src/log.ts + 1 modules
 var log = __webpack_require__(3887);
 // EXTERNAL MODULE: ./src/parsers/containers/isobmff/take_pssh_out.ts + 1 modules
@@ -4578,12 +4722,8 @@ function getInitData(encryptedEvent) {
     values: values
   };
 }
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/defer.js
-var defer = __webpack_require__(9917);
 // EXTERNAL MODULE: ./src/parsers/containers/isobmff/get_box.ts
 var get_box = __webpack_require__(2297);
-// EXTERNAL MODULE: ./src/utils/cast_to_observable.ts
-var cast_to_observable = __webpack_require__(8117);
 ;// CONCATENATED MODULE: ./src/compat/eme/generate_key_request.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -4600,8 +4740,6 @@ var cast_to_observable = __webpack_require__(8117);
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 
 
 
@@ -4696,49 +4834,60 @@ function patchInitData(initData) {
  * "encrypted" event for the corresponding request.
  * @param {string} sessionType - Type of session you want to generate. Consult
  * EME Specification for more information on session types.
- * @returns {Observable} - Emit when done. Errors if fails.
+ * @returns {Promise} - Emit when done. Errors if fails.
  */
 
 function generateKeyRequest(session, initializationDataType, initializationData) {
-  return (0,defer/* defer */.P)(function () {
-    log/* default.debug */.Z.debug("Compat: Calling generateRequest on the MediaKeySession");
-    var patchedInit;
+  log/* default.debug */.Z.debug("Compat: Calling generateRequest on the MediaKeySession");
+  var patchedInit;
 
-    try {
-      patchedInit = patchInitData(initializationData);
-    } catch (_e) {
-      patchedInit = initializationData;
-    }
+  try {
+    patchedInit = patchInitData(initializationData);
+  } catch (_e) {
+    patchedInit = initializationData;
+  }
 
-    var initDataType = initializationDataType !== null && initializationDataType !== void 0 ? initializationDataType : "";
-    return (0,cast_to_observable/* default */.Z)(session.generateRequest(initDataType, patchedInit)).pipe((0,catchError/* catchError */.K)(function (error) {
-      if (initDataType !== "" || !(error instanceof TypeError)) {
-        throw error;
-      } // On newer EME versions of the specification, the initialization data
-      // type given to generateRequest cannot be an empty string (it returns
-      // a rejected promise with a TypeError in that case).
-      // Retry with a default "cenc" value for initialization data type if
-      // we're in that condition.
+  var initDataType = initializationDataType !== null && initializationDataType !== void 0 ? initializationDataType : "";
+  return session.generateRequest(initDataType, patchedInit)["catch"](function (error) {
+    if (initDataType !== "" || !(error instanceof TypeError)) {
+      throw error;
+    } // On newer EME versions of the specification, the initialization data
+    // type given to generateRequest cannot be an empty string (it returns
+    // a rejected promise with a TypeError in that case).
+    // Retry with a default "cenc" value for initialization data type if
+    // we're in that condition.
 
 
-      log/* default.warn */.Z.warn("Compat: error while calling `generateRequest` with an empty " + "initialization data type. Retrying with a default \"cenc\" value.", error);
-      return (0,cast_to_observable/* default */.Z)(session.generateRequest("cenc", patchedInit));
-    }));
+    log/* default.warn */.Z.warn("Compat: error while calling `generateRequest` with an empty " + "initialization data type. Retrying with a default \"cenc\" value.", error);
+    return session.generateRequest("cenc", patchedInit);
   });
 }
-// EXTERNAL MODULE: ./src/config.ts
-var config = __webpack_require__(944);
+// EXTERNAL MODULE: ./src/compat/event_listeners.ts + 6 modules
+var event_listeners = __webpack_require__(4804);
+// EXTERNAL MODULE: ./src/config.ts + 2 modules
+var config = __webpack_require__(6872);
 // EXTERNAL MODULE: ./src/errors/encrypted_media_error.ts
 var encrypted_media_error = __webpack_require__(5157);
+// EXTERNAL MODULE: ./src/errors/other_error.ts
+var other_error = __webpack_require__(5389);
+// EXTERNAL MODULE: ./src/utils/array_find.ts
+var array_find = __webpack_require__(3274);
 // EXTERNAL MODULE: ./src/utils/array_includes.ts
 var array_includes = __webpack_require__(7714);
-// EXTERNAL MODULE: ./src/utils/assert_unreachable.ts + 1 modules
-var assert_unreachable = __webpack_require__(7904);
-// EXTERNAL MODULE: ./src/utils/filter_map.ts
-var filter_map = __webpack_require__(2793);
+// EXTERNAL MODULE: ./src/utils/event_emitter.ts
+var event_emitter = __webpack_require__(1959);
 // EXTERNAL MODULE: ./src/utils/is_null_or_undefined.ts
 var is_null_or_undefined = __webpack_require__(1946);
-;// CONCATENATED MODULE: ./src/core/eme/clean_old_stored_persistent_info.ts
+// EXTERNAL MODULE: ./src/utils/task_canceller.ts
+var task_canceller = __webpack_require__(288);
+// EXTERNAL MODULE: ./src/compat/eme/custom_media_keys/index.ts + 7 modules
+var custom_media_keys = __webpack_require__(6139);
+// EXTERNAL MODULE: ./src/core/decrypt/utils/media_keys_infos_store.ts
+var media_keys_infos_store = __webpack_require__(770);
+;// CONCATENATED MODULE: ./src/core/decrypt/attach_media_keys.ts
+
+
+
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -4755,37 +4904,430 @@ var is_null_or_undefined = __webpack_require__(1946);
  * limitations under the License.
  */
 
+
+
 /**
- * Remove old information from a PersistentSessionsStore so that it respects the
- * given `limit` as a maximum size. This can be used to prevent its size from
- * growing indefinitely.
- *
- * This is needed because our persistent session information storage is
- * un-bounded in size, adding more data will just add more data without removing
- * the old one - which can be valid or invalid.
- *
- * This is problematic for at least two reasons:
- *   - This data is loaded into JS memory which is finite (and which maximum
- *     bounds depends on the user environment).
- *   - The final storage used (as chosen by the application using the RxPlayer)
- *     will in most cases have a maximum storage size.
+ * Dispose of the MediaKeys instance attached to the given media element, if
+ * one.
+ * @param {Object} mediaElement
  */
 
-function cleanOldStoredPersistentInfo(persistentSessionsStore, limit) {
-  if (isNaN(limit) || limit < 0 || limit >= persistentSessionsStore.getLength()) {
-    return;
+function disableMediaKeys(mediaElement) {
+  media_keys_infos_store/* default.setState */.Z.setState(mediaElement, null);
+  (0,custom_media_keys/* setMediaKeys */.Y)(mediaElement, null);
+}
+/**
+ * Attach MediaKeys and its associated state to an HTMLMediaElement.
+ *
+ * /!\ Mutates heavily MediaKeysInfosStore
+ * @param {Object} mediaKeysInfos
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
+
+function attachMediaKeys(_x, _x2, _x3) {
+  return _attachMediaKeys.apply(this, arguments);
+}
+
+function _attachMediaKeys() {
+  _attachMediaKeys = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee(mediaElement, _ref, cancelSignal) {
+    var keySystemOptions, loadedSessionsStore, mediaKeySystemAccess, mediaKeys, previousState, closeAllSessions;
+    return regenerator_default().wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            keySystemOptions = _ref.keySystemOptions, loadedSessionsStore = _ref.loadedSessionsStore, mediaKeySystemAccess = _ref.mediaKeySystemAccess, mediaKeys = _ref.mediaKeys;
+            previousState = media_keys_infos_store/* default.getState */.Z.getState(mediaElement);
+            closeAllSessions = previousState !== null && previousState.loadedSessionsStore !== loadedSessionsStore ? previousState.loadedSessionsStore.closeAllSessions() : Promise.resolve();
+            _context.next = 5;
+            return closeAllSessions;
+
+          case 5:
+            if (!cancelSignal.isCancelled) {
+              _context.next = 7;
+              break;
+            }
+
+            throw cancelSignal.cancellationError;
+
+          case 7:
+            media_keys_infos_store/* default.setState */.Z.setState(mediaElement, {
+              keySystemOptions: keySystemOptions,
+              mediaKeySystemAccess: mediaKeySystemAccess,
+              mediaKeys: mediaKeys,
+              loadedSessionsStore: loadedSessionsStore
+            });
+
+            if (!(mediaElement.mediaKeys === mediaKeys)) {
+              _context.next = 10;
+              break;
+            }
+
+            return _context.abrupt("return");
+
+          case 10:
+            log/* default.info */.Z.info("DRM: Attaching MediaKeys to the media element");
+            (0,custom_media_keys/* setMediaKeys */.Y)(mediaElement, mediaKeys);
+            log/* default.info */.Z.info("DRM: MediaKeys attached with success");
+
+          case 13:
+          case "end":
+            return _context.stop();
+        }
+      }
+    }, _callee);
+  }));
+  return _attachMediaKeys.apply(this, arguments);
+}
+;// CONCATENATED MODULE: ./src/compat/eme/load_session.ts
+
+
+
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+var EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES = 100;
+/**
+ * Load a persistent session, based on its `sessionId`, on the given
+ * MediaKeySession.
+ *
+ * Returns an Observable which emits:
+ *   - true if the persistent MediaKeySession was found and loaded
+ *   - false if no persistent MediaKeySession was found with that `sessionId`.
+ * Then completes.
+ *
+ * The Observable throws if anything goes wrong in the process.
+ * @param {MediaKeySession} session
+ * @param {string} sessionId
+ * @returns {Observable}
+ */
+
+function loadSession(_x, _x2) {
+  return _loadSession.apply(this, arguments);
+}
+
+function _loadSession() {
+  _loadSession = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee(session, sessionId) {
+    var isLoaded;
+    return regenerator_default().wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            log/* default.info */.Z.info("Compat/DRM: Load persisted session", sessionId);
+            _context.next = 3;
+            return session.load(sessionId);
+
+          case 3:
+            isLoaded = _context.sent;
+
+            if (!(!isLoaded || session.keyStatuses.size > 0)) {
+              _context.next = 6;
+              break;
+            }
+
+            return _context.abrupt("return", isLoaded);
+
+          case 6:
+            return _context.abrupt("return", new Promise(function (resolve) {
+              session.addEventListener("keystatuseschange", resolveWithLoadedStatus);
+              var timeout = setTimeout(resolveWithLoadedStatus, EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES);
+
+              function resolveWithLoadedStatus() {
+                cleanUp();
+                resolve(isLoaded);
+              }
+
+              function cleanUp() {
+                clearTimeout(timeout);
+                session.removeEventListener("keystatuseschange", resolveWithLoadedStatus);
+              }
+            }));
+
+          case 7:
+          case "end":
+            return _context.stop();
+        }
+      }
+    }, _callee);
+  }));
+  return _loadSession.apply(this, arguments);
+}
+;// CONCATENATED MODULE: ./src/core/decrypt/utils/is_session_usable.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+/**
+ * If all key statuses attached to session are valid (either not
+ * "expired" or "internal-error"), return true.
+ * If not, return false.
+ * @param {MediaKeySession} loadedSession
+ * @returns {MediaKeySession}
+ */
+
+function isSessionUsable(loadedSession) {
+  if (loadedSession.sessionId === "") {
+    return false;
   }
 
-  var numberOfPersistentSessions = persistentSessionsStore.getLength();
-  var toDelete = numberOfPersistentSessions - limit;
-  log/* default.info */.Z.info("EME: Too many stored persistent sessions, removing some.", numberOfPersistentSessions, toDelete);
-  persistentSessionsStore.deleteOldSessions(toDelete);
+  var keyStatusesMap = loadedSession.keyStatuses;
+  var keyStatuses = [];
+  keyStatusesMap.forEach(function (keyStatus) {
+    keyStatuses.push(keyStatus);
+  });
+
+  if (keyStatuses.length <= 0) {
+    log/* default.debug */.Z.debug("DRM: isSessionUsable: MediaKeySession given has an empty keyStatuses", loadedSession.sessionId);
+    return false;
+  }
+
+  if ((0,array_includes/* default */.Z)(keyStatuses, "expired")) {
+    log/* default.debug */.Z.debug("DRM: isSessionUsable: MediaKeySession given has an expired key", loadedSession.sessionId);
+    return false;
+  }
+
+  if ((0,array_includes/* default */.Z)(keyStatuses, "internal-error")) {
+    log/* default.debug */.Z.debug("DRM: isSessionUsable: MediaKeySession given has a key with an " + "internal-error", loadedSession.sessionId);
+    return false;
+  }
+
+  log/* default.debug */.Z.debug("DRM: isSessionUsable: MediaKeySession is usable", loadedSession.sessionId);
+  return true;
 }
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/mapTo.js
-var mapTo = __webpack_require__(3833);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/startWith.js
-var startWith = __webpack_require__(6108);
-;// CONCATENATED MODULE: ./src/core/eme/clean_old_loaded_sessions.ts
+;// CONCATENATED MODULE: ./src/core/decrypt/create_session.ts
+
+
+
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+/**
+ * Create a new Session or load a persistent one on the given MediaKeys,
+ * according to wanted settings and what is currently stored.
+ *
+ * If session creating fails, remove the oldest MediaKeySession loaded and
+ * retry.
+ *
+ * /!\ This only creates new sessions.
+ * It will fail if loadedSessionsStore already has a MediaKeySession with
+ * the given initialization data.
+ * @param {Object} stores
+ * @param {Object} initData
+ * @param {string} wantedSessionType
+ * @returns {Promise}
+ */
+
+function createSession(stores, initData, wantedSessionType) {
+  var loadedSessionsStore = stores.loadedSessionsStore,
+      persistentSessionsStore = stores.persistentSessionsStore;
+
+  if (wantedSessionType === "temporary") {
+    return createTemporarySession(loadedSessionsStore, initData);
+  } else if (persistentSessionsStore === null) {
+    log/* default.warn */.Z.warn("DRM: Cannot create persistent MediaKeySession, " + "PersistentSessionsStore not created.");
+    return createTemporarySession(loadedSessionsStore, initData);
+  }
+
+  return createAndTryToRetrievePersistentSession(loadedSessionsStore, persistentSessionsStore, initData);
+}
+/**
+ * Create a new temporary MediaKeySession linked to the given initData and
+ * initDataType.
+ * @param {Object} loadedSessionsStore
+ * @param {Object} initData
+ * @returns {Promise}
+ */
+
+function createTemporarySession(loadedSessionsStore, initData) {
+  log/* default.info */.Z.info("DRM: Creating a new temporary session");
+  var entry = loadedSessionsStore.createSession(initData, "temporary");
+  return Promise.resolve({
+    type: "created-session"
+    /* Created */
+    ,
+    value: entry
+  });
+}
+/**
+ * Create a persistent MediaKeySession and try to load on it a previous
+ * MediaKeySession linked to the same initialization data.
+ * @param {Object} loadedSessionsStore
+ * @param {Object} persistentSessionsStore
+ * @param {Object} initData
+ * @returns {Promise}
+ */
+
+
+function createAndTryToRetrievePersistentSession(_x, _x2, _x3) {
+  return _createAndTryToRetrievePersistentSession.apply(this, arguments);
+}
+
+function _createAndTryToRetrievePersistentSession() {
+  _createAndTryToRetrievePersistentSession = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee2(loadedSessionsStore, persistentSessionsStore, initData) {
+    var entry, storedEntry, hasLoadedSession, recreatePersistentSession, _recreatePersistentSession;
+
+    return regenerator_default().wrap(function _callee2$(_context2) {
+      while (1) {
+        switch (_context2.prev = _context2.next) {
+          case 0:
+            _recreatePersistentSession = function _recreatePersistentSe2() {
+              _recreatePersistentSession = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee() {
+                var persistentEntry, newEntry;
+                return regenerator_default().wrap(function _callee$(_context) {
+                  while (1) {
+                    switch (_context.prev = _context.next) {
+                      case 0:
+                        log/* default.info */.Z.info("DRM: Removing previous persistent session.");
+                        persistentEntry = persistentSessionsStore.get(initData);
+
+                        if (persistentEntry !== null) {
+                          persistentSessionsStore["delete"](persistentEntry.sessionId);
+                        }
+
+                        _context.next = 5;
+                        return loadedSessionsStore.closeSession(entry.mediaKeySession);
+
+                      case 5:
+                        newEntry = loadedSessionsStore.createSession(initData, "persistent-license");
+                        return _context.abrupt("return", {
+                          type: "created-session"
+                          /* Created */
+                          ,
+                          value: newEntry
+                        });
+
+                      case 7:
+                      case "end":
+                        return _context.stop();
+                    }
+                  }
+                }, _callee);
+              }));
+              return _recreatePersistentSession.apply(this, arguments);
+            };
+
+            recreatePersistentSession = function _recreatePersistentSe() {
+              return _recreatePersistentSession.apply(this, arguments);
+            };
+
+            log/* default.info */.Z.info("DRM: Creating persistent MediaKeySession");
+            entry = loadedSessionsStore.createSession(initData, "persistent-license");
+            storedEntry = persistentSessionsStore.getAndReuse(initData);
+
+            if (!(storedEntry === null)) {
+              _context2.next = 7;
+              break;
+            }
+
+            return _context2.abrupt("return", {
+              type: "created-session"
+              /* Created */
+              ,
+              value: entry
+            });
+
+          case 7:
+            _context2.prev = 7;
+            _context2.next = 10;
+            return loadSession(entry.mediaKeySession, storedEntry.sessionId);
+
+          case 10:
+            hasLoadedSession = _context2.sent;
+
+            if (hasLoadedSession) {
+              _context2.next = 15;
+              break;
+            }
+
+            log/* default.warn */.Z.warn("DRM: No data stored for the loaded session");
+            persistentSessionsStore["delete"](storedEntry.sessionId);
+            return _context2.abrupt("return", {
+              type: "created-session"
+              /* Created */
+              ,
+              value: entry
+            });
+
+          case 15:
+            if (!(hasLoadedSession && isSessionUsable(entry.mediaKeySession))) {
+              _context2.next = 19;
+              break;
+            }
+
+            persistentSessionsStore.add(initData, initData.keyIds, entry.mediaKeySession);
+            log/* default.info */.Z.info("DRM: Succeeded to load persistent session.");
+            return _context2.abrupt("return", {
+              type: "loaded-persistent-session"
+              /* LoadedPersistentSession */
+              ,
+              value: entry
+            });
+
+          case 19:
+            // Unusable persistent session: recreate a new session from scratch.
+            log/* default.warn */.Z.warn("DRM: Previous persistent session not usable anymore.");
+            return _context2.abrupt("return", recreatePersistentSession());
+
+          case 23:
+            _context2.prev = 23;
+            _context2.t0 = _context2["catch"](7);
+            log/* default.warn */.Z.warn("DRM: Unable to load persistent session: " + (_context2.t0 instanceof Error ? _context2.t0.toString() : "Unknown Error"));
+            return _context2.abrupt("return", recreatePersistentSession());
+
+          case 27:
+          case "end":
+            return _context2.stop();
+        }
+      }
+    }, _callee2, null, [[7, 23]]);
+  }));
+  return _createAndTryToRetrievePersistentSession.apply(this, arguments);
+}
+;// CONCATENATED MODULE: ./src/core/decrypt/utils/clean_old_loaded_sessions.ts
+
+
+
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -4811,307 +5353,51 @@ var startWith = __webpack_require__(6108);
  * @param {Object} loadedSessionsStore
  * @returns {Observable}
  */
-
-function cleanOldLoadedSessions(loadedSessionsStore, limit) {
-  if (limit < 0 || limit >= loadedSessionsStore.getLength()) {
-    return empty/* EMPTY */.E;
-  }
-
-  var cleaningOldSessions$ = [];
-  var entries = loadedSessionsStore.getAll().slice(); // clone
-
-  var toDelete = entries.length - limit;
-
-  for (var i = 0; i < toDelete; i++) {
-    var entry = entries[i];
-    var cleaning$ = loadedSessionsStore.closeSession(entry.initializationData).pipe((0,mapTo/* mapTo */.h)({
-      type: "cleaned-old-session",
-      value: entry
-    }), (0,startWith/* startWith */.O)({
-      type: "cleaning-old-session",
-      value: entry
-    }));
-    cleaningOldSessions$.push(cleaning$);
-  }
-
-  return merge/* merge.apply */.T.apply(void 0, cleaningOldSessions$);
+function cleanOldLoadedSessions(_x, _x2) {
+  return _cleanOldLoadedSessions.apply(this, arguments);
 }
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/race.js + 1 modules
-var race = __webpack_require__(4181);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/timer.js
-var timer = __webpack_require__(6625);
-// EXTERNAL MODULE: ./src/utils/rx-try_catch.ts
-var rx_try_catch = __webpack_require__(5561);
-;// CONCATENATED MODULE: ./src/compat/eme/load_session.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
+function _cleanOldLoadedSessions() {
+  _cleanOldLoadedSessions = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee(loadedSessionsStore, limit) {
+    var proms, entries, toDelete, i, entry;
+    return regenerator_default().wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            if (!(limit < 0 || limit >= loadedSessionsStore.getLength())) {
+              _context.next = 2;
+              break;
+            }
 
+            return _context.abrupt("return");
 
+          case 2:
+            proms = [];
+            entries = loadedSessionsStore.getAll().slice(); // clone
 
+            toDelete = entries.length - limit;
 
-var EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES = 100;
-/**
- * Load a persistent session, based on its `sessionId`, on the given
- * MediaKeySession.
- *
- * Returns an Observable which emits:
- *   - true if the persistent MediaKeySession was found and loaded
- *   - false if no persistent MediaKeySession was found with that `sessionId`.
- * Then completes.
- *
- * The Observable throws if anything goes wrong in the process.
- * @param {MediaKeySession} session
- * @param {string} sessionId
- * @returns {Observable}
- */
+            for (i = 0; i < toDelete; i++) {
+              entry = entries[i];
+              proms.push(loadedSessionsStore.closeSession(entry.mediaKeySession));
+            }
 
-function loadSession(session, sessionId) {
-  return (0,defer/* defer */.P)(function () {
-    log/* default.info */.Z.info("Compat/EME: Load persisted session", sessionId);
-    return (0,rx_try_catch/* default */.Z)(function () {
-      return (0,cast_to_observable/* default */.Z)(session.load(sessionId));
-    }, undefined);
-  }).pipe((0,mergeMap/* mergeMap */.z)(function (isLoaded) {
-    if (!isLoaded || session.keyStatuses.size > 0) {
-      return (0,of.of)(isLoaded);
-    } // A browser race condition can exist, seen for example in some
-    // Chromium/Chrome versions where the `keyStatuses` property from a loaded
-    // MediaKeySession would not be populated directly as the load answer but
-    // asynchronously after.
+            _context.next = 8;
+            return Promise.all(proms);
 
-
-    return (0,race/* race */.S)((0,timer/* timer */.H)(EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES), (0,event_listeners/* onKeyStatusesChange$ */.eX)(session)).pipe((0,take/* take */.q)(1), (0,map/* map */.U)(function () {
-      return isLoaded;
-    }));
-  }));
-}
-;// CONCATENATED MODULE: ./src/core/eme/utils/is_session_usable.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-/**
- * If all key statuses attached to session are valid (either not
- * "expired" or "internal-error"), return true.
- * If not, return false.
- * @param {Uint8Array} initData
- * @param {MediaKeySession} loadedSession
- * @returns {MediaKeySession}
- */
-
-function isSessionUsable(loadedSession) {
-  if (loadedSession.sessionId === "") {
-    return false;
-  }
-
-  var keyStatusesMap = loadedSession.keyStatuses;
-  var keyStatuses = [];
-  keyStatusesMap.forEach(function (keyStatus) {
-    keyStatuses.push(keyStatus);
-  });
-
-  if (keyStatuses.length <= 0) {
-    log/* default.debug */.Z.debug("EME: isSessionUsable: MediaKeySession given has an empty keyStatuses", loadedSession.sessionId);
-    return false;
-  }
-
-  if ((0,array_includes/* default */.Z)(keyStatuses, "expired")) {
-    log/* default.debug */.Z.debug("EME: isSessionUsable: MediaKeySession given has an expired key", loadedSession.sessionId);
-    return false;
-  }
-
-  if ((0,array_includes/* default */.Z)(keyStatuses, "internal-error")) {
-    log/* default.debug */.Z.debug("EME: isSessionUsable: MediaKeySession given has a key with an " + "internal-error", loadedSession.sessionId);
-    return false;
-  }
-
-  log/* default.debug */.Z.debug("EME: isSessionUsable: MediaKeySession is usable", loadedSession.sessionId);
-  return true;
-}
-;// CONCATENATED MODULE: ./src/core/eme/create_session.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
-
-/**
- * Create a new Session on the given MediaKeys, corresponding to the given
- * initializationData.
- * If session creating fails, remove the oldest MediaKeySession loaded and
- * retry.
- *
- * /!\ This only creates new sessions.
- * It will fail if loadedSessionsStore already has a MediaKeySession with
- * the given initializationData.
- * @param {Uint8Array} initData
- * @param {string|undefined} initDataType
- * @param {Object} mediaKeysInfos
- * @returns {Observable}
- */
-
-function createSession(stores, initializationData, wantedSessionType) {
-  return (0,defer/* defer */.P)(function () {
-    var loadedSessionsStore = stores.loadedSessionsStore,
-        persistentSessionsStore = stores.persistentSessionsStore;
-
-    if (wantedSessionType === "temporary") {
-      return createTemporarySession(loadedSessionsStore, initializationData);
-    } else if (persistentSessionsStore === null) {
-      log/* default.warn */.Z.warn("EME: Cannot create persistent MediaKeySession, " + "PersistentSessionsStore not created.");
-      return createTemporarySession(loadedSessionsStore, initializationData);
-    }
-
-    return createAndTryToRetrievePersistentSession(loadedSessionsStore, persistentSessionsStore, initializationData);
-  });
-}
-/**
- * Create a new temporary MediaKeySession linked to the given initData and
- * initDataType.
- * @param {Object} loadedSessionsStore
- * @param {Object} initData
- * @returns {Observable}
- */
-
-function createTemporarySession(loadedSessionsStore, initData) {
-  return (0,defer/* defer */.P)(function () {
-    log/* default.info */.Z.info("EME: Creating a new temporary session");
-    var session = loadedSessionsStore.createSession(initData, "temporary");
-    return (0,of.of)({
-      type: "created-session",
-      value: {
-        mediaKeySession: session,
-        sessionType: "temporary"
-      }
-    });
-  });
-}
-/**
- * Create a persistent MediaKeySession and try to load on it a previous
- * MediaKeySession linked to the same initData and initDataType.
- * @param {Object} loadedSessionsStore
- * @param {Object} persistentSessionsStore
- * @param {Object} initData
- * @returns {Observable}
- */
-
-
-function createAndTryToRetrievePersistentSession(loadedSessionsStore, persistentSessionsStore, initData) {
-  return (0,defer/* defer */.P)(function () {
-    log/* default.info */.Z.info("EME: Creating persistent MediaKeySession");
-    var session = loadedSessionsStore.createSession(initData, "persistent-license");
-    var storedEntry = persistentSessionsStore.getAndReuse(initData);
-
-    if (storedEntry === null) {
-      return (0,of.of)({
-        type: "created-session",
-        value: {
-          mediaKeySession: session,
-          sessionType: "persistent-license"
+          case 8:
+          case "end":
+            return _context.stop();
         }
-      });
-    }
-    /**
-     * Helper function to close and restart the current persistent session
-     * considered, and re-create it from scratch.
-     * @returns {Observable}
-     */
-
-
-    var recreatePersistentSession = function recreatePersistentSession() {
-      log/* default.info */.Z.info("EME: Removing previous persistent session.");
-
-      if (persistentSessionsStore.get(initData) !== null) {
-        persistentSessionsStore["delete"](initData);
       }
-
-      return loadedSessionsStore.closeSession(initData).pipe((0,map/* map */.U)(function () {
-        var newSession = loadedSessionsStore.createSession(initData, "persistent-license");
-        return {
-          type: "created-session",
-          value: {
-            mediaKeySession: newSession,
-            sessionType: "persistent-license"
-          }
-        };
-      }));
-    };
-
-    return loadSession(session, storedEntry.sessionId).pipe((0,mergeMap/* mergeMap */.z)(function (hasLoadedSession) {
-      if (!hasLoadedSession) {
-        log/* default.warn */.Z.warn("EME: No data stored for the loaded session");
-        persistentSessionsStore["delete"](initData);
-        return (0,of.of)({
-          type: "created-session",
-          value: {
-            mediaKeySession: session,
-            sessionType: "persistent-license"
-          }
-        });
-      }
-
-      if (hasLoadedSession && isSessionUsable(session)) {
-        persistentSessionsStore.add(initData, session);
-        log/* default.info */.Z.info("EME: Succeeded to load persistent session.");
-        return (0,of.of)({
-          type: "loaded-persistent-session",
-          value: {
-            mediaKeySession: session,
-            sessionType: "persistent-license"
-          }
-        });
-      } // Unusable persistent session: recreate a new session from scratch.
-
-
-      log/* default.warn */.Z.warn("EME: Previous persistent session not usable anymore.");
-      return recreatePersistentSession();
-    }), (0,catchError/* catchError */.K)(function (err) {
-      log/* default.warn */.Z.warn("EME: Unable to load persistent session: " + (err instanceof Error ? err.toString() : "Unknown Error"));
-      return recreatePersistentSession();
-    }));
-  });
+    }, _callee);
+  }));
+  return _cleanOldLoadedSessions.apply(this, arguments);
 }
-;// CONCATENATED MODULE: ./src/core/eme/get_session.ts
+;// CONCATENATED MODULE: ./src/core/decrypt/create_or_load_session.ts
+
+
+
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -5127,7 +5413,6 @@ function createAndTryToRetrievePersistentSession(loadedSessionsStore, persistent
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 
 
 
@@ -5142,173 +5427,116 @@ function createAndTryToRetrievePersistentSession(loadedSessionsStore, persistent
  * `EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS` config property.
  *
  * You can refer to the events emitted to know about the current situation.
- * @param {Event} initializationDataInfo
- * @param {Object} handledInitData
- * @param {Object} mediaKeysInfos
- * @returns {Observable}
+ * @param {Object} initializationData
+ * @param {Object} stores
+ * @param {string} wantedSessionType
+ * @param {number} maxSessionCacheSize
+ * @param {Object} cancelSignal
+ * @returns {Promise}
  */
 
-function getSession(initializationData, stores, wantedSessionType, maxSessionCacheSize) {
-  return (0,defer/* defer */.P)(function () {
-    /**
-     * Store previously-loaded MediaKeySession with the same initialization data, if one.
-     */
-    var previousLoadedSession = null;
-    var loadedSessionsStore = stores.loadedSessionsStore,
-        persistentSessionsStore = stores.persistentSessionsStore;
-    var entry = loadedSessionsStore.getAndReuse(initializationData);
+function createOrLoadSession(_x, _x2, _x3, _x4, _x5) {
+  return _createOrLoadSession.apply(this, arguments);
+}
 
-    if (entry !== null) {
-      previousLoadedSession = entry.mediaKeySession;
+function _createOrLoadSession() {
+  _createOrLoadSession = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee(initializationData, stores, wantedSessionType, maxSessionCacheSize, cancelSignal) {
+    var previousLoadedSession, loadedSessionsStore, persistentSessionsStore, entry, evt;
+    return regenerator_default().wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            /** Store previously-loaded compatible MediaKeySession, if one. */
+            previousLoadedSession = null;
+            loadedSessionsStore = stores.loadedSessionsStore, persistentSessionsStore = stores.persistentSessionsStore;
+            entry = loadedSessionsStore.reuse(initializationData);
 
-      if (isSessionUsable(previousLoadedSession)) {
-        log/* default.info */.Z.info("EME: Reuse loaded session", previousLoadedSession.sessionId);
-        return (0,of.of)({
-          type: "loaded-open-session",
-          value: {
-            mediaKeySession: previousLoadedSession,
-            sessionType: entry.sessionType,
-            initializationData: initializationData
-          }
-        });
-      } else if (persistentSessionsStore !== null) {
-        // If the session is not usable anymore, we can also remove it from the
-        // PersistentSessionsStore.
-        // TODO Are we sure this is always what we want?
-        persistentSessionsStore["delete"](initializationData);
+            if (!(entry !== null)) {
+              _context.next = 11;
+              break;
+            }
+
+            previousLoadedSession = entry.mediaKeySession;
+
+            if (!isSessionUsable(previousLoadedSession)) {
+              _context.next = 10;
+              break;
+            }
+
+            log/* default.info */.Z.info("DRM: Reuse loaded session", previousLoadedSession.sessionId);
+            return _context.abrupt("return", {
+              type: "loaded-open-session"
+              /* LoadedOpenSession */
+              ,
+              value: {
+                mediaKeySession: previousLoadedSession,
+                sessionType: entry.sessionType,
+                keySessionRecord: entry.keySessionRecord
+              }
+            });
+
+          case 10:
+            if (persistentSessionsStore !== null) {
+              // If the session is not usable anymore, we can also remove it from the
+              // PersistentSessionsStore.
+              // TODO Are we sure this is always what we want?
+              if (entry.mediaKeySession.sessionId !== "") {
+                persistentSessionsStore["delete"](entry.mediaKeySession.sessionId);
+              }
+            }
+
+          case 11:
+            if (!(previousLoadedSession !== null)) {
+              _context.next = 16;
+              break;
+            }
+
+            _context.next = 14;
+            return loadedSessionsStore.closeSession(previousLoadedSession);
+
+          case 14:
+            if (!(cancelSignal.cancellationError !== null)) {
+              _context.next = 16;
+              break;
+            }
+
+            throw cancelSignal.cancellationError;
+
+          case 16:
+            _context.next = 18;
+            return cleanOldLoadedSessions(loadedSessionsStore, maxSessionCacheSize);
+
+          case 18:
+            if (!(cancelSignal.cancellationError !== null)) {
+              _context.next = 20;
+              break;
+            }
+
+            throw cancelSignal.cancellationError;
+
+          case 20:
+            _context.next = 22;
+            return createSession(stores, initializationData, wantedSessionType);
+
+          case 22:
+            evt = _context.sent;
+            return _context.abrupt("return", {
+              type: evt.type,
+              value: {
+                mediaKeySession: evt.value.mediaKeySession,
+                sessionType: evt.value.sessionType,
+                keySessionRecord: evt.value.keySessionRecord
+              }
+            });
+
+          case 24:
+          case "end":
+            return _context.stop();
+        }
       }
-    }
-
-    return (previousLoadedSession != null ? loadedSessionsStore.closeSession(initializationData) : (0,of.of)(null)).pipe((0,mergeMap/* mergeMap */.z)(function () {
-      return (0,concat/* concat */.z)(cleanOldLoadedSessions(loadedSessionsStore, maxSessionCacheSize), createSession(stores, initializationData, wantedSessionType).pipe((0,map/* map */.U)(function (evt) {
-        return {
-          type: evt.type,
-          value: {
-            mediaKeySession: evt.value.mediaKeySession,
-            sessionType: evt.value.sessionType,
-            initializationData: initializationData
-          }
-        };
-      })));
-    }));
-  });
-}
-// EXTERNAL MODULE: ./src/utils/reference.ts
-var reference = __webpack_require__(5095);
-// EXTERNAL MODULE: ./src/compat/eme/custom_media_keys/index.ts + 7 modules
-var custom_media_keys = __webpack_require__(6139);
-// EXTERNAL MODULE: ./src/core/eme/media_keys_infos_store.ts
-var media_keys_infos_store = __webpack_require__(6033);
-;// CONCATENATED MODULE: ./src/core/eme/attach_media_keys.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
-
-/**
- * Dispose the media keys on media element.
- * @param {Object} mediaElement
- * @returns {Observable}
- */
-
-function disableMediaKeys(mediaElement) {
-  return (0,defer/* defer */.P)(function () {
-    media_keys_infos_store/* default.setState */.Z.setState(mediaElement, null);
-    return (0,custom_media_keys/* setMediaKeys */.Y)(mediaElement, null);
-  });
-}
-/**
- * Attach MediaKeys and its associated state to an HTMLMediaElement.
- *
- * /!\ Mutates heavily MediaKeysInfosStore
- * @param {Object} mediaKeysInfos
- * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
- */
-
-function attachMediaKeys(mediaElement, _ref) {
-  var keySystemOptions = _ref.keySystemOptions,
-      loadedSessionsStore = _ref.loadedSessionsStore,
-      mediaKeySystemAccess = _ref.mediaKeySystemAccess,
-      mediaKeys = _ref.mediaKeys;
-  return (0,defer/* defer */.P)(function () {
-    var previousState = media_keys_infos_store/* default.getState */.Z.getState(mediaElement);
-    var closeAllSessions$ = previousState !== null && previousState.loadedSessionsStore !== loadedSessionsStore ? previousState.loadedSessionsStore.closeAllSessions() : (0,of.of)(null);
-    return closeAllSessions$.pipe((0,mergeMap/* mergeMap */.z)(function () {
-      media_keys_infos_store/* default.setState */.Z.setState(mediaElement, {
-        keySystemOptions: keySystemOptions,
-        mediaKeySystemAccess: mediaKeySystemAccess,
-        mediaKeys: mediaKeys,
-        loadedSessionsStore: loadedSessionsStore
-      });
-
-      if (mediaElement.mediaKeys === mediaKeys) {
-        return (0,of.of)(null);
-      }
-
-      log/* default.info */.Z.info("EME: Attaching MediaKeys to the media element");
-      return (0,custom_media_keys/* setMediaKeys */.Y)(mediaElement, mediaKeys).pipe((0,tap/* tap */.b)(function () {
-        log/* default.info */.Z.info("EME: MediaKeys attached with success");
-      }));
-    }));
-  });
-}
-// EXTERNAL MODULE: ./src/utils/starts_with.ts
-var starts_with = __webpack_require__(9252);
-;// CONCATENATED MODULE: ./src/core/eme/get_drm_system_id.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * @param {string} keySystem
- * @returns {string|undefined}
- */
-
-function getDrmSystemId(keySystem) {
-  if ((0,starts_with/* default */.Z)(keySystem, "com.microsoft.playready") || keySystem === "com.chromecast.playready" || keySystem === "com.youtube.playready") {
-    return "9a04f07998404286ab92e65be0885f95";
-  }
-
-  if (keySystem === "com.widevine.alpha") {
-    return "edef8ba979d64acea3c827dcd51d21ed";
-  }
-
-  if ((0,starts_with/* default */.Z)(keySystem, "com.apple.fps")) {
-    return "94ce86fb07ff4f43adb893d2fa968ca2";
-  }
-
-  if ((0,starts_with/* default */.Z)(keySystem, "com.nagra.")) {
-    return "adb41c242dbf4a6d958b4457c0d27b95";
-  }
-
-  return undefined;
+    }, _callee);
+  }));
+  return _createOrLoadSession.apply(this, arguments);
 }
 // EXTERNAL MODULE: ./src/compat/browser_detection.ts
 var browser_detection = __webpack_require__(3666);
@@ -5340,7 +5568,10 @@ function shouldRenewMediaKeys() {
 }
 // EXTERNAL MODULE: ./src/utils/flat_map.ts
 var flat_map = __webpack_require__(9592);
-;// CONCATENATED MODULE: ./src/core/eme/find_key_system.ts
+;// CONCATENATED MODULE: ./src/core/decrypt/find_key_system.ts
+
+
+
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -5363,9 +5594,6 @@ var flat_map = __webpack_require__(9592);
 
 
 
-
-var EME_DEFAULT_WIDEVINE_ROBUSTNESSES = config/* default.EME_DEFAULT_WIDEVINE_ROBUSTNESSES */.Z.EME_DEFAULT_WIDEVINE_ROBUSTNESSES,
-    EME_KEY_SYSTEMS = config/* default.EME_KEY_SYSTEMS */.Z.EME_KEY_SYSTEMS;
 /**
  * @param {Array.<Object>} keySystems
  * @param {MediaKeySystemAccess} currentKeySystemAccess
@@ -5414,6 +5642,9 @@ function checkCachedMediaKeySystemAccess(keySystems, currentKeySystemAccess, cur
 
 
 function findKeySystemCanonicalName(ksType) {
+  var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+      EME_KEY_SYSTEMS = _config$getCurrent.EME_KEY_SYSTEMS;
+
   for (var _i = 0, _Object$keys = Object.keys(EME_KEY_SYSTEMS); _i < _Object$keys.length; _i++) {
     var ksName = _Object$keys[_i];
 
@@ -5451,7 +5682,10 @@ function buildKeySystemConfigurations(ksName, keySystem) {
 
   if (keySystem.distinctiveIdentifierRequired === true) {
     distinctiveIdentifier = "required";
-  } // Set robustness, in order of consideration:
+  }
+
+  var _config$getCurrent2 = config/* default.getCurrent */.Z.getCurrent(),
+      EME_DEFAULT_WIDEVINE_ROBUSTNESSES = _config$getCurrent2.EME_DEFAULT_WIDEVINE_ROBUSTNESSES; // Set robustness, in order of consideration:
   //   1. the user specified its own robustnesses
   //   2. a "widevine" key system is used, in that case set the default widevine
   //      robustnesses as defined in the config
@@ -5480,26 +5714,25 @@ function buildKeySystemConfigurations(ksName, keySystem) {
   // https://www.w3.org/TR/encrypted-media/#get-supported-configuration-and-consent
 
 
-  var videoCapabilities = (0,flat_map/* default */.Z)(videoRobustnesses, function (robustness) {
-    return [{
-      contentType: "video/mp4;codecs=\"avc1.4d401e\"",
-      robustness: robustness
-    }, {
-      contentType: "video/mp4;codecs=\"avc1.42e01e\"",
-      robustness: robustness
-    }, {
-      contentType: "video/webm;codecs=\"vp8\"",
-      robustness: robustness
-    }];
+  var videoCapabilities = (0,flat_map/* default */.Z)(audioRobustnesses, function (robustness) {
+    return ["video/mp4;codecs=\"avc1.4d401e\"", "video/mp4;codecs=\"avc1.42e01e\"", "video/webm;codecs=\"vp8\""].map(function (contentType) {
+      return robustness !== undefined ? {
+        contentType: contentType,
+        robustness: robustness
+      } : {
+        contentType: contentType
+      };
+    });
   });
   var audioCapabilities = (0,flat_map/* default */.Z)(audioRobustnesses, function (robustness) {
-    return [{
-      contentType: "audio/mp4;codecs=\"mp4a.40.2\"",
-      robustness: robustness
-    }, {
-      contentType: "audio/webm;codecs=opus",
-      robustness: robustness
-    }];
+    return ["audio/mp4;codecs=\"mp4a.40.2\"", "audio/webm;codecs=opus"].map(function (contentType) {
+      return robustness !== undefined ? {
+        contentType: contentType,
+        robustness: robustness
+      } : {
+        contentType: contentType
+      };
+    });
   }); // TODO Re-test with a set contentType but an undefined robustness on the
   // STBs on which this problem was found.
   //
@@ -5526,134 +5759,1645 @@ function buildKeySystemConfigurations(ksName, keySystem) {
 /**
  * Try to find a compatible key system from the keySystems array given.
  *
- * Returns an Observable which, when subscribed to, will request a
- * MediaKeySystemAccess based on the various keySystems provided. This
- * Observable will:
- *   - emit the MediaKeySystemAccess and the keySystems as an object, when
- *     found. The object is under this form:
- *     {
- *       keySystemAccess {MediaKeySystemAccess}
- *       keySystem {Object}
- *     }
- *   - complete immediately after emitting.
- *   - throw if no  compatible key system has been found.
+ * This function will request a MediaKeySystemAccess based on the various
+ * keySystems provided.
+ *
+ * This Promise might either:
+ *   - resolves the MediaKeySystemAccess and the keySystems as an object, when
+ *     found.
+ *   - reject if no compatible key system has been found.
  *
  * @param {HTMLMediaElement} mediaElement
  * @param {Array.<Object>} keySystems - The keySystems you want to test.
+ * @param {Object} cancelSignal
+ * @returns {Promise.<Object>}
+ */
+
+
+function getMediaKeySystemAccess(mediaElement, keySystemsConfigs, cancelSignal) {
+  log/* default.info */.Z.info("DRM: Searching for compatible MediaKeySystemAccess");
+  var currentState = media_keys_infos_store/* default.getState */.Z.getState(mediaElement);
+
+  if (currentState != null) {
+    // Fast way to find a compatible keySystem if the currently loaded
+    // one as exactly the same compatibility options.
+    var cachedKeySystemAccess = checkCachedMediaKeySystemAccess(keySystemsConfigs, currentState.mediaKeySystemAccess, currentState.keySystemOptions);
+
+    if (cachedKeySystemAccess !== null) {
+      log/* default.info */.Z.info("DRM: Found cached compatible keySystem");
+      return Promise.resolve({
+        type: "reuse-media-key-system-access",
+        value: {
+          mediaKeySystemAccess: cachedKeySystemAccess.keySystemAccess,
+          options: cachedKeySystemAccess.keySystemOptions
+        }
+      });
+    }
+  }
+  /**
+   * Array of set keySystems for this content.
+   * Each item of this array is an object containing the following keys:
+   *   - keyName {string}: keySystem canonical name (e.g. "widevine")
+   *   - keyType {string}: keySystem type (e.g. "com.widevine.alpha")
+   *   - keySystem {Object}: the original keySystem object
+   * @type {Array.<Object>}
+   */
+
+
+  var keySystemsType = keySystemsConfigs.reduce(function (arr, keySystemOptions) {
+    var _config$getCurrent3 = config/* default.getCurrent */.Z.getCurrent(),
+        EME_KEY_SYSTEMS = _config$getCurrent3.EME_KEY_SYSTEMS;
+
+    var managedRDNs = EME_KEY_SYSTEMS[keySystemOptions.type];
+    var ksType;
+
+    if (managedRDNs != null) {
+      ksType = managedRDNs.map(function (keyType) {
+        var keyName = keySystemOptions.type;
+        return {
+          keyName: keyName,
+          keyType: keyType,
+          keySystemOptions: keySystemOptions
+        };
+      });
+    } else {
+      var keyName = findKeySystemCanonicalName(keySystemOptions.type);
+      var keyType = keySystemOptions.type;
+      ksType = [{
+        keyName: keyName,
+        keyType: keyType,
+        keySystemOptions: keySystemOptions
+      }];
+    }
+
+    return arr.concat(ksType);
+  }, []);
+  return recursivelyTestKeySystems(0);
+  /**
+   * Test all key system configuration stored in `keySystemsType` one by one
+   * recursively.
+   * Returns a Promise which will emit the MediaKeySystemAccess if one was
+   * found compatible with one of the configurations or just reject if none
+   * were found to be compatible.
+   * @param {Number} index - The index in `keySystemsType` to start from.
+   * Should be set to `0` when calling directly.
+   * @returns {Promise.<Object>}
+   */
+
+  function recursivelyTestKeySystems(_x) {
+    return _recursivelyTestKeySystems.apply(this, arguments);
+  }
+
+  function _recursivelyTestKeySystems() {
+    _recursivelyTestKeySystems = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee(index) {
+      var _keySystemsType$index, keyName, keyType, keySystemOptions, keySystemConfigurations, keySystemAccess;
+
+      return regenerator_default().wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              if (!(index >= keySystemsType.length)) {
+                _context.next = 2;
+                break;
+              }
+
+              throw new encrypted_media_error/* default */.Z("INCOMPATIBLE_KEYSYSTEMS", "No key system compatible with your wanted " + "configuration has been found in the current " + "browser.");
+
+            case 2:
+              if (!(custom_media_keys/* requestMediaKeySystemAccess */.N == null)) {
+                _context.next = 4;
+                break;
+              }
+
+              throw new Error("requestMediaKeySystemAccess is not implemented in your browser.");
+
+            case 4:
+              _keySystemsType$index = keySystemsType[index], keyName = _keySystemsType$index.keyName, keyType = _keySystemsType$index.keyType, keySystemOptions = _keySystemsType$index.keySystemOptions;
+              keySystemConfigurations = buildKeySystemConfigurations(keyName, keySystemOptions);
+              log/* default.debug */.Z.debug("DRM: Request keysystem access " + keyType + "," + (index + 1 + " of " + keySystemsType.length), keySystemConfigurations);
+              _context.prev = 7;
+              _context.next = 10;
+              return (0,custom_media_keys/* requestMediaKeySystemAccess */.N)(keyType, keySystemConfigurations);
+
+            case 10:
+              keySystemAccess = _context.sent;
+              log/* default.info */.Z.info("DRM: Found compatible keysystem", keyType, keySystemConfigurations);
+              return _context.abrupt("return", {
+                type: "create-media-key-system-access",
+                value: {
+                  options: keySystemOptions,
+                  mediaKeySystemAccess: keySystemAccess
+                }
+              });
+
+            case 15:
+              _context.prev = 15;
+              _context.t0 = _context["catch"](7);
+              log/* default.debug */.Z.debug("DRM: Rejected access to keysystem", keyType, keySystemConfigurations);
+
+              if (!(cancelSignal.cancellationError !== null)) {
+                _context.next = 20;
+                break;
+              }
+
+              throw cancelSignal.cancellationError;
+
+            case 20:
+              return _context.abrupt("return", recursivelyTestKeySystems(index + 1));
+
+            case 21:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee, null, [[7, 15]]);
+    }));
+    return _recursivelyTestKeySystems.apply(this, arguments);
+  }
+}
+// EXTERNAL MODULE: ./src/utils/cancellable_sleep.ts
+var cancellable_sleep = __webpack_require__(7864);
+;// CONCATENATED MODULE: ./src/compat/eme/close_session.ts
+
+
+
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+/**
+ * Close the given `MediaKeySession` and returns a Promise resolving when the
+ * session is closed.
+ * This promise does not reject, even if we're unable to close the
+ * `MediaKeySession`.
+ *
+ * Note that there is a lot of browser issues linked to the impossibility to
+ * either close a MediaKeySession or to know if a MediaKeySession was closed.
+ * Due to this, the returned Promise might take some time before resolving on
+ * some devices.
+ * @param {MediaKeySession|Object} session
+ * @returns {Promise.<undefined>}
+ */
+
+function closeSession(session) {
+  var timeoutCanceller = new task_canceller/* default */.ZP();
+  return Promise.race([session.close().then(function () {
+    timeoutCanceller.cancel();
+  }), // The `closed` promise may resolve, even if `close()` result has not
+  // (seen at some point on Firefox).
+  session.closed.then(function () {
+    timeoutCanceller.cancel();
+  }), waitTimeoutAndCheck()]);
+  /**
+   * If the session is not closed after 1000ms, try to communicate with the
+   * MediaKeySession and check if an error is returned.
+   * This is needed because on some browsers with poor EME implementation,
+   * knowing when a MediaKeySession is closed is actually a hard task.
+   *
+   * The returned Promise will never reject.
+   * @returns {Promise.<undefined>}
+   */
+
+  function waitTimeoutAndCheck() {
+    return _waitTimeoutAndCheck.apply(this, arguments);
+  }
+  /**
+   * Try to update `MediaKeySession` and check its error if it failed.
+   * If we still don't know whether it closed yet, wait a second
+   * timeout then quit.
+   *
+   * The returned Promise resolves if the `MediaKeySession` seems closed and
+   * rejects if we couldn't know or it doesn't.
+   * @returns {Promise.<undefined>}
+   */
+
+
+  function _waitTimeoutAndCheck() {
+    _waitTimeoutAndCheck = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee() {
+      var message;
+      return regenerator_default().wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              _context.prev = 0;
+              _context.next = 3;
+              return (0,cancellable_sleep/* default */.Z)(1000, timeoutCanceller.signal);
+
+            case 3:
+              _context.next = 5;
+              return tryUpdatingSession();
+
+            case 5:
+              _context.next = 13;
+              break;
+
+            case 7:
+              _context.prev = 7;
+              _context.t0 = _context["catch"](0);
+
+              if (!(_context.t0 instanceof task_canceller/* CancellationError */.FU)) {
+                _context.next = 11;
+                break;
+              }
+
+              return _context.abrupt("return");
+
+            case 11:
+              message = _context.t0 instanceof Error ? _context.t0.message : "Unknown error made it impossible to close the session";
+              log/* default.error */.Z.error("DRM: " + message);
+
+            case 13:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee, null, [[0, 7]]);
+    }));
+    return _waitTimeoutAndCheck.apply(this, arguments);
+  }
+
+  function tryUpdatingSession() {
+    return _tryUpdatingSession.apply(this, arguments);
+  }
+
+  function _tryUpdatingSession() {
+    _tryUpdatingSession = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee2() {
+      return regenerator_default().wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              _context2.prev = 0;
+              _context2.next = 3;
+              return session.update(new Uint8Array(1));
+
+            case 3:
+              _context2.next = 13;
+              break;
+
+            case 5:
+              _context2.prev = 5;
+              _context2.t0 = _context2["catch"](0);
+
+              if (!timeoutCanceller.isUsed) {
+                _context2.next = 9;
+                break;
+              }
+
+              return _context2.abrupt("return");
+
+            case 9:
+              if (!(_context2.t0 instanceof Error && _context2.t0.message === "The session is already closed.")) {
+                _context2.next = 11;
+                break;
+              }
+
+              return _context2.abrupt("return");
+
+            case 11:
+              _context2.next = 13;
+              return (0,cancellable_sleep/* default */.Z)(1000, timeoutCanceller.signal);
+
+            case 13:
+              if (!timeoutCanceller.isUsed) {
+                _context2.next = 15;
+                break;
+              }
+
+              return _context2.abrupt("return");
+
+            case 15:
+              throw new Error("Compat: Couldn't know if session is closed");
+
+            case 16:
+            case "end":
+              return _context2.stop();
+          }
+        }
+      }, _callee2, null, [[0, 5]]);
+    }));
+    return _tryUpdatingSession.apply(this, arguments);
+  }
+}
+;// CONCATENATED MODULE: ./src/core/decrypt/utils/key_id_comparison.ts
+function _createForOfIteratorHelperLoose(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (it) return (it = it.call(o)).next.bind(it); if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * Returns `true` if both given key id appear to be equal.
+ * @param {Uint8Array} keyId1
+ * @param {Uint8Array} keyId2
+ * @returns {boolean}
+ */
+
+function areKeyIdsEqual(keyId1, keyId2) {
+  return keyId1 === keyId2 || (0,are_arrays_of_numbers_equal/* default */.Z)(keyId1, keyId2);
+}
+/**
+ * @param {Uint8Array} wantedKeyId
+ * @param {Array.<Uint8Array>} keyIdsArr
+ * @returns {boolean}
+ */
+
+function isKeyIdContainedIn(wantedKeyId, keyIdsArr) {
+  return keyIdsArr.some(function (k) {
+    return areKeyIdsEqual(k, wantedKeyId);
+  });
+}
+/**
+ * Returns `true` if all key ids in `wantedKeyIds` are present in the
+ * `keyIdsArr` array.
+ * @param {Array.<Uint8Array>} wantedKeyIds
+ * @param {Array.<Uint8Array>} keyIdsArr
+ * @returns {boolean}
+ */
+
+function areAllKeyIdsContainedIn(wantedKeyIds, keyIdsArr) {
+  var _loop = function _loop() {
+    var keyId = _step.value;
+    var found = keyIdsArr.some(function (k) {
+      return areKeyIdsEqual(k, keyId);
+    });
+
+    if (!found) {
+      return {
+        v: false
+      };
+    }
+  };
+
+  for (var _iterator = _createForOfIteratorHelperLoose(wantedKeyIds), _step; !(_step = _iterator()).done;) {
+    var _ret = _loop();
+
+    if (typeof _ret === "object") return _ret.v;
+  }
+
+  return true;
+}
+/**
+ * Returns `true` if at least one key id in `wantedKeyIds` is present in the
+ * `keyIdsArr` array.
+ * @param {Array.<Uint8Array>} wantedKeyIds
+ * @param {Array.<Uint8Array>} keyIdsArr
+ * @returns {boolean}
+ */
+
+function areSomeKeyIdsContainedIn(wantedKeyIds, keyIdsArr) {
+  var _loop2 = function _loop2() {
+    var keyId = _step2.value;
+    var found = keyIdsArr.some(function (k) {
+      return areKeyIdsEqual(k, keyId);
+    });
+
+    if (found) {
+      return {
+        v: true
+      };
+    }
+  };
+
+  for (var _iterator2 = _createForOfIteratorHelperLoose(wantedKeyIds), _step2; !(_step2 = _iterator2()).done;) {
+    var _ret2 = _loop2();
+
+    if (typeof _ret2 === "object") return _ret2.v;
+  }
+
+  return false;
+}
+;// CONCATENATED MODULE: ./src/core/decrypt/utils/key_session_record.ts
+function key_session_record_createForOfIteratorHelperLoose(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (it) return (it = it.call(o)).next.bind(it); if (Array.isArray(o) || (it = key_session_record_unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function key_session_record_unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return key_session_record_arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return key_session_record_arrayLikeToArray(o, minLen); }
+
+function key_session_record_arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * Class storing key-related information linked to a created `MediaKeySession`.
+ *
+ * This class allows to regroup one or multiple key ids and can be linked to a
+ * single MediaKeySession so you can know which key that MediaKeySession
+ * handles.
+ *
+ * The main use case behind the complexities of this `KeySessionRecord` is to
+ * better handle the `singleLicensePer` RxPlayer option, which allows the
+ * recuperation of a license containing multiple keys, even if only one of
+ * those keys was asked for (which in turn allows to reduce the number of
+ * requests and to improve performance).
+ * Here, the `KeySessionRecord` will regroup all those key's id and can be
+ * linked to the corresponding MediaKeySession.
+ * That way, you can later check if another encrypted content is compatible with
+ * that session through the `KeySessionRecord`'s `isCompatibleWith` method.
+ *
+ * @example
+ * ```js
+ * const record = new KeySessionRecord(initData);
+ *
+ * // Create a MediaKeySession linked to that initialization data and fetch the
+ * // license
+ * // ...
+ *
+ * // Once the license has been loaded to the MediaKeySession linked to that
+ - // initialization data, associate the license's key Ids with the latter.
+ * record.associateKeyIds(someKeyIds);
+ *
+ * // Function called when new initialization data is encountered
+ * function onNewInitializationData(newInitializationData) {
+ *   if (record.isCompatibleWith(newInitializationData)) {
+ *     console.log("This initialization data should already be handled, ignored.");
+ *   } else {
+ *     console.log("This initialization data is not handled yet.";
+ *   }
+ * }
+ * ```
+ * @class KeySessionRecord
+ */
+
+var KeySessionRecord = /*#__PURE__*/function () {
+  /**
+   * Create a new `KeySessionRecord`, linked to its corresponding initialization
+   * data,
+   * @param {Object} initializationData
+   */
+  function KeySessionRecord(initializationData) {
+    this._initializationData = initializationData;
+    this._keyIds = null;
+  }
+  /**
+   * Associate supplementary key ids to this `KeySessionRecord` so it becomes
+   * "compatible" to them.
+   *
+   * After this call, new initialization data linked to subsets of those key
+   * ids will be considered compatible  to this `KeySessionRecord` (calls to
+   * `isCompatibleWith` with the corresponding initialization data will return
+   * `true`).
+   * @param {Array.<Uint8Array>} keyIds
+   */
+
+
+  var _proto = KeySessionRecord.prototype;
+
+  _proto.associateKeyIds = function associateKeyIds(keyIds) {
+    if (this._keyIds === null) {
+      this._keyIds = [];
+    }
+
+    var keyIdsArr = Array.from(keyIds);
+
+    for (var _i = 0, _keyIdsArr = keyIdsArr; _i < _keyIdsArr.length; _i++) {
+      var keyId = _keyIdsArr[_i];
+
+      if (!this.isAssociatedWithKeyId(keyId)) {
+        this._keyIds.push(keyId);
+      }
+    }
+  }
+  /**
+   * @param {Uint8Array} keyId
+   * @returns {boolean}
+   */
+  ;
+
+  _proto.isAssociatedWithKeyId = function isAssociatedWithKeyId(keyId) {
+    if (this._keyIds === null) {
+      return false;
+    }
+
+    for (var _iterator = key_session_record_createForOfIteratorHelperLoose(this._keyIds), _step; !(_step = _iterator()).done;) {
+      var storedKeyId = _step.value;
+
+      if (areKeyIdsEqual(storedKeyId, keyId)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+  /**
+   * @returns {Array.<Uint8Array>}
+   */
+  ;
+
+  _proto.getAssociatedKeyIds = function getAssociatedKeyIds() {
+    if (this._keyIds === null) {
+      return [];
+    }
+
+    return this._keyIds;
+  }
+  /**
+   * Check if that `KeySessionRecord` is compatible to the initialization data
+   * given.
+   *
+   * If it returns `true`, it means that this `KeySessionRecord` is already
+   * linked to that initialization data's key. As such, if that
+   * `KeySessionRecord` is already associated to an active MediaKeySession for
+   * example, the content linked to that initialization data should already be
+   * handled.
+   *
+   * If it returns `false`, it means that this `KeySessionRecord` has no
+   * relation with the given initialization data.
+   *
+   * @param {Object} initializationData
+   * @returns {boolean}
+   */
+  ;
+
+  _proto.isCompatibleWith = function isCompatibleWith(initializationData) {
+    var keyIds = initializationData.keyIds;
+
+    if (keyIds !== undefined) {
+      if (this._keyIds !== null && areAllKeyIdsContainedIn(keyIds, this._keyIds)) {
+        return true;
+      }
+
+      if (this._initializationData.keyIds !== undefined) {
+        return areAllKeyIdsContainedIn(keyIds, this._initializationData.keyIds);
+      }
+    }
+
+    return this._checkInitializationDataCompatibility(initializationData);
+  };
+
+  _proto._checkInitializationDataCompatibility = function _checkInitializationDataCompatibility(initializationData) {
+    if (initializationData.keyIds !== undefined && this._initializationData.keyIds !== undefined) {
+      return areAllKeyIdsContainedIn(initializationData.keyIds, this._initializationData.keyIds);
+    }
+
+    if (this._initializationData.type !== initializationData.type) {
+      return false;
+    }
+
+    return this._initializationData.values.isCompatibleWith(initializationData.values);
+  };
+
+  return KeySessionRecord;
+}();
+
+
+;// CONCATENATED MODULE: ./src/core/decrypt/utils/loaded_sessions_store.ts
+
+
+
+function loaded_sessions_store_createForOfIteratorHelperLoose(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (it) return (it = it.call(o)).next.bind(it); if (Array.isArray(o) || (it = loaded_sessions_store_unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function loaded_sessions_store_unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return loaded_sessions_store_arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return loaded_sessions_store_arrayLikeToArray(o, minLen); }
+
+function loaded_sessions_store_arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+
+
+
+/**
+ * Create and store MediaKeySessions linked to a single MediaKeys
+ * instance.
+ *
+ * Keep track of sessionTypes and of the initialization data each
+ * MediaKeySession is created for.
+ * @class LoadedSessionsStore
+ */
+
+var LoadedSessionsStore = /*#__PURE__*/function () {
+  /**
+   * Create a new LoadedSessionsStore, which will store information about
+   * loaded MediaKeySessions on the given MediaKeys instance.
+   * @param {MediaKeys} mediaKeys
+   */
+  function LoadedSessionsStore(mediaKeys) {
+    this._mediaKeys = mediaKeys;
+    this._storage = [];
+  }
+  /**
+   * Create a new MediaKeySession and store it in this store.
+   * @param {Object} initializationData
+   * @param {string} sessionType
+   * @returns {Object}
+   */
+
+
+  var _proto = LoadedSessionsStore.prototype;
+
+  _proto.createSession = function createSession(initData, sessionType) {
+    var _this = this;
+
+    var keySessionRecord = new KeySessionRecord(initData);
+
+    var mediaKeySession = this._mediaKeys.createSession(sessionType);
+
+    var entry = {
+      mediaKeySession: mediaKeySession,
+      sessionType: sessionType,
+      keySessionRecord: keySessionRecord
+    };
+
+    if (!(0,is_null_or_undefined/* default */.Z)(mediaKeySession.closed)) {
+      mediaKeySession.closed.then(function () {
+        var index = _this.getIndex(keySessionRecord);
+
+        if (index >= 0 && _this._storage[index].mediaKeySession === mediaKeySession) {
+          _this._storage.splice(index, 1);
+        }
+      })["catch"](function (e) {
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        log/* default.warn */.Z.warn("DRM-LSS: MediaKeySession.closed rejected: " + e);
+      });
+    }
+
+    log/* default.debug */.Z.debug("DRM-LSS: Add MediaKeySession", entry.sessionType);
+
+    this._storage.push({
+      keySessionRecord: keySessionRecord,
+      mediaKeySession: mediaKeySession,
+      sessionType: sessionType
+    });
+
+    return entry;
+  }
+  /**
+   * Find a stored entry compatible with the initialization data given and moves
+   * this entry at the end of the `LoadedSessionsStore`''s storage, returned by
+   * its `getAll` method.
+   *
+   * This can be used for example to tell when a previously-stored
+   * entry is re-used to then be able to implement a caching replacement
+   * algorithm based on the least-recently-used values by just evicting the first
+   * values returned by `getAll`.
+   * @param {Object} initializationData
+   * @returns {Object|null}
+   */
+  ;
+
+  _proto.reuse = function reuse(initializationData) {
+    for (var i = this._storage.length - 1; i >= 0; i--) {
+      var stored = this._storage[i];
+
+      if (stored.keySessionRecord.isCompatibleWith(initializationData)) {
+        this._storage.splice(i, 1);
+
+        this._storage.push(stored);
+
+        return {
+          keySessionRecord: stored.keySessionRecord,
+          mediaKeySession: stored.mediaKeySession,
+          sessionType: stored.sessionType
+        };
+      }
+    }
+
+    return null;
+  }
+  /**
+   * Close a MediaKeySession and remove its related stored information from the
+   * `LoadedSessionsStore`.
+   * Emit when done.
+   * @param {Object} mediaKeySession
+   * @returns {Promise}
+   */
+  ;
+
+  _proto.closeSession =
+  /*#__PURE__*/
+  function () {
+    var _closeSession = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee(mediaKeySession) {
+      var entry, _iterator, _step, stored;
+
+      return regenerator_default().wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              _iterator = loaded_sessions_store_createForOfIteratorHelperLoose(this._storage);
+
+            case 1:
+              if ((_step = _iterator()).done) {
+                _context.next = 8;
+                break;
+              }
+
+              stored = _step.value;
+
+              if (!(stored.mediaKeySession === mediaKeySession)) {
+                _context.next = 6;
+                break;
+              }
+
+              entry = stored;
+              return _context.abrupt("break", 8);
+
+            case 6:
+              _context.next = 1;
+              break;
+
+            case 8:
+              if (!(entry === undefined)) {
+                _context.next = 11;
+                break;
+              }
+
+              log/* default.warn */.Z.warn("DRM-LSS: No MediaKeySession found with " + "the given initData and initDataType");
+              return _context.abrupt("return", Promise.resolve(false));
+
+            case 11:
+              _context.next = 13;
+              return safelyCloseMediaKeySession(entry.mediaKeySession);
+
+            case 13:
+              return _context.abrupt("return", Promise.resolve(true));
+
+            case 14:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee, this);
+    }));
+
+    function closeSession(_x) {
+      return _closeSession.apply(this, arguments);
+    }
+
+    return closeSession;
+  }()
+  /**
+   * Returns the number of stored MediaKeySessions in this LoadedSessionsStore.
+   * @returns {number}
+   */
+  ;
+
+  _proto.getLength = function getLength() {
+    return this._storage.length;
+  }
+  /**
+   * Returns information about all stored MediaKeySession, in the order in which
+   * the MediaKeySession have been created.
+   * @returns {Array.<Object>}
+   */
+  ;
+
+  _proto.getAll = function getAll() {
+    return this._storage;
+  }
+  /**
+   * Close all sessions in this store.
+   * Emit `null` when done.
+   * @returns {Promise}
+   */
+  ;
+
+  _proto.closeAllSessions =
+  /*#__PURE__*/
+  function () {
+    var _closeAllSessions = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee2() {
+      var allEntries, closingProms;
+      return regenerator_default().wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              allEntries = this._storage;
+              log/* default.debug */.Z.debug("DRM-LSS: Closing all current MediaKeySessions", allEntries.length); // re-initialize the storage, so that new interactions with the
+              // `LoadedSessionsStore` do not rely on MediaKeySessions we're in the
+              // process of removing
+
+              this._storage = [];
+              closingProms = allEntries.map(function (entry) {
+                return safelyCloseMediaKeySession(entry.mediaKeySession);
+              });
+              _context2.next = 6;
+              return Promise.all(closingProms);
+
+            case 6:
+            case "end":
+              return _context2.stop();
+          }
+        }
+      }, _callee2, this);
+    }));
+
+    function closeAllSessions() {
+      return _closeAllSessions.apply(this, arguments);
+    }
+
+    return closeAllSessions;
+  }();
+
+  _proto.getIndex = function getIndex(record) {
+    for (var i = 0; i < this._storage.length; i++) {
+      var stored = this._storage[i];
+
+      if (stored.keySessionRecord === record) {
+        return i;
+      }
+    }
+
+    return -1;
+  };
+
+  return LoadedSessionsStore;
+}();
+/**
+ * Close a MediaKeySession with multiple attempts if needed and do not throw if
+ * this action throws an error.
+ * Emits then complete when done.
+ * @param {MediaKeySession} mediaKeySession
  * @returns {Observable}
  */
 
 
-function getMediaKeySystemAccess(mediaElement, keySystemsConfigs) {
-  return (0,defer/* defer */.P)(function () {
-    log/* default.info */.Z.info("EME: Searching for compatible MediaKeySystemAccess");
-    var currentState = media_keys_infos_store/* default.getState */.Z.getState(mediaElement);
 
-    if (currentState != null) {
-      // Fast way to find a compatible keySystem if the currently loaded
-      // one as exactly the same compatibility options.
-      var cachedKeySystemAccess = checkCachedMediaKeySystemAccess(keySystemsConfigs, currentState.mediaKeySystemAccess, currentState.keySystemOptions);
 
-      if (cachedKeySystemAccess !== null) {
-        log/* default.info */.Z.info("EME: Found cached compatible keySystem");
-        return (0,of.of)({
-          type: "reuse-media-key-system-access",
-          value: {
-            mediaKeySystemAccess: cachedKeySystemAccess.keySystemAccess,
-            options: cachedKeySystemAccess.keySystemOptions
+function safelyCloseMediaKeySession(mediaKeySession) {
+  return recursivelyTryToCloseMediaKeySession(0);
+  /**
+   * Perform a new attempt at closing the MediaKeySession.
+   * If this operation fails due to a not-"callable" (an EME term)
+   * MediaKeySession, retry based on either a timer or on MediaKeySession
+   * events, whichever comes first.
+   * Emits then complete when done.
+   * @param {number} retryNb - The attempt number starting at 0.
+   * @returns {Observable}
+   */
+
+  function recursivelyTryToCloseMediaKeySession(_x2) {
+    return _recursivelyTryToCloseMediaKeySession.apply(this, arguments);
+  }
+  /**
+   * Log error anouncing that we could not close the MediaKeySession and emits
+   * then complete through Observable.
+   * TODO Emit warning?
+   * @returns {Observable}
+   */
+
+
+  function _recursivelyTryToCloseMediaKeySession() {
+    _recursivelyTryToCloseMediaKeySession = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee3(retryNb) {
+      var _config$getCurrent, EME_SESSION_CLOSING_MAX_RETRY, EME_SESSION_CLOSING_INITIAL_DELAY, EME_SESSION_CLOSING_MAX_DELAY, nextRetryNb, delay, ksChangeSub, ksChangeProm, ksMsgSub, ksMsgProm, sleepTimer, sleepProm;
+
+      return regenerator_default().wrap(function _callee3$(_context3) {
+        while (1) {
+          switch (_context3.prev = _context3.next) {
+            case 0:
+              log/* default.debug */.Z.debug("DRM: Trying to close a MediaKeySession", mediaKeySession.sessionId, retryNb);
+              _context3.prev = 1;
+              _context3.next = 4;
+              return closeSession(mediaKeySession);
+
+            case 4:
+              log/* default.debug */.Z.debug("DRM: Succeeded to close MediaKeySession");
+              return _context3.abrupt("return", undefined);
+
+            case 8:
+              _context3.prev = 8;
+              _context3.t0 = _context3["catch"](1);
+
+              if (!(!(_context3.t0 instanceof Error) || _context3.t0.name !== "InvalidStateError" || mediaKeySession.sessionId !== "")) {
+                _context3.next = 12;
+                break;
+              }
+
+              return _context3.abrupt("return", failToCloseSession(_context3.t0));
+
+            case 12:
+              _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(), EME_SESSION_CLOSING_MAX_RETRY = _config$getCurrent.EME_SESSION_CLOSING_MAX_RETRY, EME_SESSION_CLOSING_INITIAL_DELAY = _config$getCurrent.EME_SESSION_CLOSING_INITIAL_DELAY, EME_SESSION_CLOSING_MAX_DELAY = _config$getCurrent.EME_SESSION_CLOSING_MAX_DELAY; // We will retry either:
+              //   - when an event indicates that the MediaKeySession is
+              //     initialized (`callable` is the proper EME term here)
+              //   - after a delay, raising exponentially
+
+              nextRetryNb = retryNb + 1;
+
+              if (!(nextRetryNb > EME_SESSION_CLOSING_MAX_RETRY)) {
+                _context3.next = 16;
+                break;
+              }
+
+              return _context3.abrupt("return", failToCloseSession(_context3.t0));
+
+            case 16:
+              delay = Math.min(Math.pow(2, retryNb) * EME_SESSION_CLOSING_INITIAL_DELAY, EME_SESSION_CLOSING_MAX_DELAY);
+              log/* default.warn */.Z.warn("DRM: attempt to close a mediaKeySession failed, " + "scheduling retry...", delay);
+              ksChangeProm = new Promise(function (res) {
+                ksChangeSub = (0,event_listeners/* onKeyStatusesChange$ */.eX)(mediaKeySession).subscribe(res);
+              });
+              ksMsgProm = new Promise(function (res) {
+                ksMsgSub = (0,event_listeners/* onKeyMessage$ */.GJ)(mediaKeySession).subscribe(res);
+              });
+              sleepProm = new Promise(function (res) {
+                sleepTimer = window.setTimeout(res, delay);
+              });
+              _context3.next = 23;
+              return Promise.race([ksChangeProm, ksMsgProm, sleepProm]);
+
+            case 23:
+              ksChangeSub === null || ksChangeSub === void 0 ? void 0 : ksChangeSub.unsubscribe();
+              ksMsgSub === null || ksMsgSub === void 0 ? void 0 : ksMsgSub.unsubscribe();
+              clearTimeout(sleepTimer);
+              return _context3.abrupt("return", recursivelyTryToCloseMediaKeySession(nextRetryNb));
+
+            case 27:
+            case "end":
+              return _context3.stop();
           }
-        });
-      }
-    }
-    /**
-     * Array of set keySystems for this content.
-     * Each item of this array is an object containing the following keys:
-     *   - keyName {string}: keySystem canonical name (e.g. "widevine")
-     *   - keyType {string}: keySystem type (e.g. "com.widevine.alpha")
-     *   - keySystem {Object}: the original keySystem object
-     * @type {Array.<Object>}
-     */
+        }
+      }, _callee3, null, [[1, 8]]);
+    }));
+    return _recursivelyTryToCloseMediaKeySession.apply(this, arguments);
+  }
 
-
-    var keySystemsType = keySystemsConfigs.reduce(function (arr, keySystemOptions) {
-      var managedRDNs = EME_KEY_SYSTEMS[keySystemOptions.type];
-      var ksType;
-
-      if (managedRDNs != null) {
-        ksType = managedRDNs.map(function (keyType) {
-          var keyName = keySystemOptions.type;
-          return {
-            keyName: keyName,
-            keyType: keyType,
-            keySystemOptions: keySystemOptions
-          };
-        });
-      } else {
-        var keyName = findKeySystemCanonicalName(keySystemOptions.type);
-        var keyType = keySystemOptions.type;
-        ksType = [{
-          keyName: keyName,
-          keyType: keyType,
-          keySystemOptions: keySystemOptions
-        }];
-      }
-
-      return arr.concat(ksType);
-    }, []);
-    return recursivelyTestKeySystems(0);
-    /**
-     * Test all key system configuration stored in `keySystemsType` one by one
-     * recursively.
-     * Returns an Observable which emit the MediaKeySystemAccess if one was
-     * found compatible with one of the configurations or just throws if none
-     * were found to be compatible.
-     * @param {Number} index - The index in `keySystemsType` to start from.
-     * Should be set to `0` when calling directly.
-     * @returns {Observable}
-     */
-
-    function recursivelyTestKeySystems(index) {
-      // if we iterated over the whole keySystemsType Array, quit on error
-      if (index >= keySystemsType.length) {
-        var error = new encrypted_media_error/* default */.Z("INCOMPATIBLE_KEYSYSTEMS", "No key system compatible with your " + "wanted configuration has been found " + "in the current browser.");
-        return (0,throwError/* throwError */._)(function () {
-          return error;
-        });
-      }
-
-      if (custom_media_keys/* requestMediaKeySystemAccess */.N == null) {
-        var _error = Error("requestMediaKeySystemAccess is not " + "implemented in your browser.");
-
-        return (0,throwError/* throwError */._)(function () {
-          return _error;
-        });
-      }
-
-      var _keySystemsType$index = keySystemsType[index],
-          keyName = _keySystemsType$index.keyName,
-          keyType = _keySystemsType$index.keyType,
-          keySystemOptions = _keySystemsType$index.keySystemOptions;
-      var keySystemConfigurations = buildKeySystemConfigurations(keyName, keySystemOptions);
-      log/* default.debug */.Z.debug("EME: Request keysystem access " + keyType + "," + (index + 1 + " of " + keySystemsType.length), keySystemConfigurations);
-      return (0,custom_media_keys/* requestMediaKeySystemAccess */.N)(keyType, keySystemConfigurations).pipe((0,map/* map */.U)(function (keySystemAccess) {
-        log/* default.info */.Z.info("EME: Found compatible keysystem", keyType, keySystemConfigurations);
-        return {
-          type: "create-media-key-system-access",
-          value: {
-            options: keySystemOptions,
-            mediaKeySystemAccess: keySystemAccess
-          }
-        };
-      }), (0,catchError/* catchError */.K)(function () {
-        log/* default.debug */.Z.debug("EME: Rejected access to keysystem", keyType, keySystemConfigurations);
-        return recursivelyTestKeySystems(index + 1);
-      }));
-    }
-  });
+  function failToCloseSession(err) {
+    log/* default.error */.Z.error("DRM: Could not close MediaKeySession: " + (err instanceof Error ? err.toString() : "Unknown error"));
+    return Promise.resolve(null);
+  }
 }
+// EXTERNAL MODULE: ./src/utils/assert.ts
+var assert = __webpack_require__(811);
+// EXTERNAL MODULE: ./src/utils/base64.ts
+var utils_base64 = __webpack_require__(9689);
 // EXTERNAL MODULE: ./src/utils/hash_buffer.ts
 var hash_buffer = __webpack_require__(2870);
-;// CONCATENATED MODULE: ./src/core/eme/server_certificate_store.ts
+// EXTERNAL MODULE: ./src/utils/is_non_empty_string.ts
+var is_non_empty_string = __webpack_require__(6923);
+;// CONCATENATED MODULE: ./src/core/decrypt/utils/serializable_bytes.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/** Wrap byte-based data and allow serialization of it into base64. */
+
+var SerializableBytes = /*#__PURE__*/function () {
+  /**
+   * Create a new `SerializableBytes`, wrapping the initialization data
+   * given and allowing serialization into base64.
+   * @param {Uint8Array}
+   */
+  function SerializableBytes(initData) {
+    this.initData = initData;
+  }
+  /**
+   * Convert it to base64.
+   * `toJSON` is specially interpreted by JavaScript engines to be able to rely
+   * on it when calling `JSON.stringify` on it or any of its parent objects:
+   * https://tc39.es/ecma262/#sec-serializejsonproperty
+   * @returns {string}
+   */
+
+
+  var _proto = SerializableBytes.prototype;
+
+  _proto.toJSON = function toJSON() {
+    return (0,utils_base64/* bytesToBase64 */.J)(this.initData);
+  }
+  /**
+   * Decode a base64 sequence representing an initialization data back to an
+   * Uint8Array.
+   * @param {string}
+   * @returns {Uint8Array}
+   */
+  ;
+
+  SerializableBytes.decode = function decode(base64) {
+    return (0,utils_base64/* base64ToBytes */.K)(base64);
+  };
+
+  return SerializableBytes;
+}();
+
+
+;// CONCATENATED MODULE: ./src/core/decrypt/utils/are_init_values_compatible.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+/**
+ * Returns `true` if both values are compatible initialization data, which
+ * means that one is completely contained in the other.
+ *
+ * Both values given should be sorted by systemId the same way.
+ * @param {Array.<Object>} stored
+ * @param {Array.<Object>} newElts
+ * @returns {boolean}
+ */
+
+function areInitializationValuesCompatible(stored, newElts) {
+  var _a, _b;
+
+  return (_b = (_a = _isAInB(stored, newElts)) !== null && _a !== void 0 ? _a : _isAInB(newElts, stored)) !== null && _b !== void 0 ? _b : false;
+}
+/**
+ * Take two arrays of initialization data values, `a` and `b`, sorted by
+ * their `systemId` property in the same order.
+ *
+ * Returns `true` if `a` is not empty and is completely contained in the `b`
+ * array.
+ * This is equivalent to: "`a` is contained in `b`".
+ *
+ * Returns `false` either if `a` is empty or if `b` has different initialization
+ * data than it for equivalent system ids.
+ * This is equivalent to: "`a` represents different data than `b`".
+ *
+ * Returns `null` if `a` is not fully contained in `b` but can still be
+ * compatible with it.
+ * This is equivalent to: "`a` is not contained in `b`, but `b` could be
+ * contained in `a`".
+ * @param {Array.<Object>} a
+ * @param {Array.<Object>} b
+ * @returns {boolean}
+ */
+
+function _isAInB(a, b) {
+  if (a.length === 0) {
+    return false;
+  }
+
+  if (b.length < a.length) {
+    return null;
+  }
+
+  var firstAElt = a[0];
+  var aIdx = 0;
+  var bIdx = 0;
+
+  for (; bIdx < b.length; bIdx++) {
+    var bElt = b[bIdx];
+
+    if (bElt.systemId !== firstAElt.systemId) {
+      continue;
+    }
+
+    if (bElt.hash !== firstAElt.hash) {
+      return false;
+    }
+
+    var aData = firstAElt.data instanceof Uint8Array ? firstAElt.data : typeof firstAElt.data === "string" ? SerializableBytes.decode(firstAElt.data) : firstAElt.data.initData;
+    var bData = bElt.data instanceof Uint8Array ? bElt.data : typeof bElt.data === "string" ? SerializableBytes.decode(bElt.data) : bElt.data.initData;
+
+    if (!(0,are_arrays_of_numbers_equal/* default */.Z)(aData, bData)) {
+      return false;
+    }
+
+    if (b.length - bIdx < a.length) {
+      // not enough place to store `a`'s initialization data.
+      return null;
+    } // first `a` value was found. Check if all `a` values are found in `b`
+
+
+    for (aIdx = 1; aIdx < a.length; aIdx++) {
+      var aElt = a[aIdx];
+
+      for (bIdx += 1; bIdx < b.length; bIdx++) {
+        var bNewElt = b[bIdx];
+
+        if (aElt.systemId !== bNewElt.systemId) {
+          continue;
+        }
+
+        if (aElt.hash !== bNewElt.hash) {
+          return false;
+        }
+
+        var aNewData = aElt.data instanceof Uint8Array ? aElt.data : typeof aElt.data === "string" ? SerializableBytes.decode(aElt.data) : aElt.data.initData;
+        var bNewData = bNewElt.data instanceof Uint8Array ? bNewElt.data : typeof bNewElt.data === "string" ? SerializableBytes.decode(bNewElt.data) : bNewElt.data.initData;
+
+        if (!(0,are_arrays_of_numbers_equal/* default */.Z)(aNewData, bNewData)) {
+          return false;
+        }
+
+        break;
+      }
+
+      if (aIdx === b.length) {
+        // we didn't find `aElt`'s systemId in b
+        return null;
+      }
+    } // If we're here, then we've found all `a`'s systemId in `b` and they match
+
+
+    return true;
+  }
+
+  return null; // We didn't find the firstAElt`s systemId in `b`.
+}
+;// CONCATENATED MODULE: ./src/core/decrypt/utils/persistent_sessions_store.ts
+function persistent_sessions_store_createForOfIteratorHelperLoose(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (it) return (it = it.call(o)).next.bind(it); if (Array.isArray(o) || (it = persistent_sessions_store_unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function persistent_sessions_store_unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return persistent_sessions_store_arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return persistent_sessions_store_arrayLikeToArray(o, minLen); }
+
+function persistent_sessions_store_arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+
+
+
+
+
+
+
+/**
+ * Throw if the given storage does not respect the right interface.
+ * @param {Object} storage
+ */
+
+function checkStorage(storage) {
+  (0,assert/* assertInterface */.u)(storage, {
+    save: "function",
+    load: "function"
+  }, "licenseStorage");
+}
+/**
+ * Set representing persisted licenses. Depends on a simple local-
+ * storage implementation with a `save`/`load` synchronous interface
+ * to persist information on persisted sessions.
+ *
+ * This set is used only for a cdm/keysystem with license persistency
+ * supported.
+ * @class PersistentSessionsStore
+ */
+
+
+var PersistentSessionsStore = /*#__PURE__*/function () {
+  /**
+   * Create a new PersistentSessionsStore.
+   * @param {Object} storage
+   */
+  function PersistentSessionsStore(storage) {
+    checkStorage(storage);
+    this._entries = [];
+    this._storage = storage;
+
+    try {
+      var entries = this._storage.load();
+
+      if (!Array.isArray(entries)) {
+        entries = [];
+      }
+
+      this._entries = entries;
+    } catch (e) {
+      log/* default.warn */.Z.warn("DRM-PSS: Could not get entries from license storage", e);
+      this.dispose();
+    }
+  }
+  /**
+   * Returns the number of stored values.
+   * @returns {number}
+   */
+
+
+  var _proto = PersistentSessionsStore.prototype;
+
+  _proto.getLength = function getLength() {
+    return this._entries.length;
+  }
+  /**
+   * Returns information about all stored MediaKeySession, in the order in which
+   * the MediaKeySession have been created.
+   * @returns {Array.<Object>}
+   */
+  ;
+
+  _proto.getAll = function getAll() {
+    return this._entries;
+  }
+  /**
+   * Retrieve an entry based on its initialization data.
+   * @param {Object}  initData
+   * @param {string|undefined} initDataType
+   * @returns {Object|null}
+   */
+  ;
+
+  _proto.get = function get(initData) {
+    var index = this._getIndex(initData);
+
+    return index === -1 ? null : this._entries[index];
+  }
+  /**
+   * Like `get`, but also move the corresponding value at the end of the store
+   * (as returned by `getAll`) if found.
+   * This can be used for example to tell when a previously-stored value is
+   * re-used to then be able to implement a caching replacement algorithm based
+   * on the least-recently-used values by just evicting the first values
+   * returned by `getAll`.
+   * @param {Uint8Array} initData
+   * @param {string|undefined} initDataType
+   * @returns {*}
+   */
+  ;
+
+  _proto.getAndReuse = function getAndReuse(initData) {
+    var index = this._getIndex(initData);
+
+    if (index === -1) {
+      return null;
+    }
+
+    var item = this._entries.splice(index, 1)[0];
+
+    this._entries.push(item);
+
+    return item;
+  }
+  /**
+   * Add a new entry in the PersistentSessionsStore.
+   * @param {Uint8Array}  initData
+   * @param {string|undefined} initDataType
+   * @param {MediaKeySession} session
+   */
+  ;
+
+  _proto.add = function add(initData, keyIds, session) {
+    if ((0,is_null_or_undefined/* default */.Z)(session) || !(0,is_non_empty_string/* default */.Z)(session.sessionId)) {
+      log/* default.warn */.Z.warn("DRM-PSS: Invalid Persisten Session given.");
+      return;
+    }
+
+    var sessionId = session.sessionId;
+    var currentEntry = this.get(initData);
+
+    if (currentEntry !== null && currentEntry.sessionId === sessionId) {
+      return;
+    } else if (currentEntry !== null) {
+      // currentEntry has a different sessionId
+      this["delete"](currentEntry.sessionId);
+    }
+
+    log/* default.info */.Z.info("DRM-PSS: Add new session", sessionId);
+    var storedValues = prepareValuesForStore(initData.values.getFormattedValues());
+
+    if (keyIds === undefined) {
+      this._entries.push({
+        version: 3,
+        sessionId: sessionId,
+        values: storedValues,
+        initDataType: initData.type
+      });
+    } else {
+      this._entries.push({
+        version: 4,
+        sessionId: sessionId,
+        keyIds: keyIds.map(function (k) {
+          return new SerializableBytes(k);
+        }),
+        values: storedValues,
+        initDataType: initData.type
+      });
+    }
+
+    this._save();
+  }
+  /**
+   * Delete stored MediaKeySession information based on its session id.
+   * @param {Uint8Array}  initData
+   * @param {string|undefined} initDataType
+   */
+  ;
+
+  _proto["delete"] = function _delete(sessionId) {
+    var index = -1;
+
+    for (var i = 0; i < this._entries.length; i++) {
+      var _entry = this._entries[i];
+
+      if (_entry.sessionId === sessionId) {
+        index = i;
+        break;
+      }
+    }
+
+    if (index === -1) {
+      log/* default.warn */.Z.warn("DRM-PSS: initData to delete not found.");
+      return;
+    }
+
+    var entry = this._entries[index];
+    log/* default.warn */.Z.warn("DRM-PSS: Delete session from store", entry.sessionId);
+
+    this._entries.splice(index, 1);
+
+    this._save();
+  };
+
+  _proto.deleteOldSessions = function deleteOldSessions(sessionsToDelete) {
+    log/* default.info */.Z.info("DRM-PSS: Deleting last " + sessionsToDelete + " sessions.");
+
+    if (sessionsToDelete <= 0) {
+      return;
+    }
+
+    if (sessionsToDelete <= this._entries.length) {
+      this._entries.splice(0, sessionsToDelete);
+    } else {
+      log/* default.warn */.Z.warn("DRM-PSS: Asked to remove more information that it contains", sessionsToDelete, this._entries.length);
+      this._entries = [];
+    }
+
+    this._save();
+  }
+  /**
+   * Delete all saved entries.
+   */
+  ;
+
+  _proto.dispose = function dispose() {
+    this._entries = [];
+
+    this._save();
+  }
+  /**
+   * Retrieve index of an entry.
+   * Returns `-1` if not found.
+   * @param {Object} initData
+   * @returns {number}
+   */
+  ;
+
+  _proto._getIndex = function _getIndex(initData) {
+    var _this = this;
+
+    // Older versions of the format include a concatenation of all
+    // initialization data and its hash.
+    // This is only computed lazily, the first time it is needed.
+    var lazyConcatenatedData = null;
+
+    function getConcatenatedInitDataInfo() {
+      if (lazyConcatenatedData === null) {
+        var concatInitData = initData.values.constructRequestData();
+        lazyConcatenatedData = {
+          initData: concatInitData,
+          initDataHash: (0,hash_buffer/* default */.Z)(concatInitData)
+        };
+      }
+
+      return lazyConcatenatedData;
+    }
+
+    var _loop = function _loop(i) {
+      var entry = _this._entries[i];
+
+      if (entry.initDataType === initData.type) {
+        switch (entry.version) {
+          case 4:
+            if (initData.keyIds !== undefined) {
+              var foundCompatible = initData.keyIds.every(function (keyId) {
+                var keyIdB64 = (0,utils_base64/* bytesToBase64 */.J)(keyId);
+
+                for (var _iterator = persistent_sessions_store_createForOfIteratorHelperLoose(entry.keyIds), _step; !(_step = _iterator()).done;) {
+                  var entryKid = _step.value;
+
+                  if (typeof entryKid === "string") {
+                    if (keyIdB64 === entryKid) {
+                      return true;
+                    }
+                  } else if (areKeyIdsEqual(entryKid.initData, keyId)) {
+                    return true;
+                  }
+                }
+
+                return false;
+              });
+
+              if (foundCompatible) {
+                return {
+                  v: i
+                };
+              }
+            } else {
+              var _formatted = initData.values.getFormattedValues();
+
+              if (areInitializationValuesCompatible(_formatted, entry.values)) {
+                return {
+                  v: i
+                };
+              }
+            }
+
+            break;
+
+          case 3:
+            var formatted = initData.values.getFormattedValues();
+
+            if (areInitializationValuesCompatible(formatted, entry.values)) {
+              return {
+                v: i
+              };
+            }
+
+            break;
+
+          case 2:
+            {
+              var _getConcatenatedInitD = getConcatenatedInitDataInfo(),
+                  concatInitData = _getConcatenatedInitD.initData,
+                  concatHash = _getConcatenatedInitD.initDataHash;
+
+              if (entry.initDataHash === concatHash) {
+                try {
+                  var decodedInitData = typeof entry.initData === "string" ? SerializableBytes.decode(entry.initData) : entry.initData.initData;
+
+                  if ((0,are_arrays_of_numbers_equal/* default */.Z)(decodedInitData, concatInitData)) {
+                    return {
+                      v: i
+                    };
+                  }
+                } catch (e) {
+                  log/* default.warn */.Z.warn("DRM-PSS: Could not decode initialization data.", e);
+                }
+              }
+
+              break;
+            }
+
+          case 1:
+            {
+              var _getConcatenatedInitD2 = getConcatenatedInitDataInfo(),
+                  _concatInitData = _getConcatenatedInitD2.initData,
+                  _concatHash = _getConcatenatedInitD2.initDataHash;
+
+              if (entry.initDataHash === _concatHash) {
+                if (typeof entry.initData.length === "undefined") {
+                  // If length is undefined, it has been linearized. We could still
+                  // convert it back to an Uint8Array but this would necessitate some
+                  // ugly unreadable logic for a very very minor possibility.
+                  // Just consider that it is a match based on the hash.
+                  return {
+                    v: i
+                  };
+                } else if ((0,are_arrays_of_numbers_equal/* default */.Z)(entry.initData, _concatInitData)) {
+                  return {
+                    v: i
+                  };
+                }
+              }
+
+              break;
+            }
+
+          default:
+            {
+              var _getConcatenatedInitD3 = getConcatenatedInitDataInfo(),
+                  _concatHash2 = _getConcatenatedInitD3.initDataHash;
+
+              if (entry.initData === _concatHash2) {
+                return {
+                  v: i
+                };
+              }
+            }
+        }
+      }
+    };
+
+    for (var i = 0; i < this._entries.length; i++) {
+      var _ret = _loop(i);
+
+      if (typeof _ret === "object") return _ret.v;
+    }
+
+    return -1;
+  }
+  /**
+   * Use the given storage to store the current entries.
+   */
+  ;
+
+  _proto._save = function _save() {
+    try {
+      this._storage.save(this._entries);
+    } catch (e) {
+      log/* default.warn */.Z.warn("DRM-PSS: Could not save licenses in localStorage");
+    }
+  };
+
+  return PersistentSessionsStore;
+}();
+/**
+ * Format given initializationData's values so they are ready to be stored:
+ *   - sort them by systemId, so they are faster to compare
+ *   - add hash for each initialization data encountered.
+ * @param {Array.<Object>} initialValues
+ * @returns {Array.<Object>}
+ */
+
+
+
+
+function prepareValuesForStore(initialValues) {
+  return initialValues.map(function (_ref) {
+    var systemId = _ref.systemId,
+        data = _ref.data,
+        hash = _ref.hash;
+    return {
+      systemId: systemId,
+      hash: hash,
+      data: new SerializableBytes(data)
+    };
+  });
+}
+;// CONCATENATED MODULE: ./src/core/decrypt/utils/server_certificate_store.ts
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -5771,7 +7515,10 @@ var serverCertificateHashesMap = new WeakMap();
     return true;
   }
 });
-;// CONCATENATED MODULE: ./src/compat/eme/close_session.ts
+;// CONCATENATED MODULE: ./src/core/decrypt/get_media_keys.ts
+
+
+
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -5787,1152 +7534,6 @@ var serverCertificateHashesMap = new WeakMap();
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-/**
- * Close session and returns and observable that emits when
- * the session is closed.
- * @param {MediaKeySession|Object} session
- * @returns {Observable}
- */
-
-function closeSession$(session) {
-  return (0,race/* race */.S)((0,cast_to_observable/* default */.Z)(session.close()), // If the session is not closed after 1000ms, try
-  // to call another method on session to guess if
-  // session is closed or not.
-  (0,timer/* timer */.H)(1000).pipe((0,mergeMap/* mergeMap */.z)(function () {
-    var tryToUpdateSession$ = (0,cast_to_observable/* default */.Z)(session.update(new Uint8Array(1)));
-    return tryToUpdateSession$.pipe( // Update has resolved, so we can't know if session is closed
-    (0,map/* map */.U)(function () {
-      throw new Error("Compat: Couldn't know if session is " + "closed");
-    }), (0,catchError/* catchError */.K)(function (err) {
-      // The caught error can tell if session is closed
-      // (Chrome may throw this error)
-      if (err instanceof Error && err.message === "The session is already closed.") {
-        return (0,of.of)(null);
-      } // The `closed` promise may resolve, even if `close()` result has not
-      // (it may happen on Firefox). Wait for it and timeout after 1 second.
-      // TODO There is a subtle TypeScript issue there that made casting to
-      // a type-compatible type mandatory. If a more elegant solution can
-      // be found, it should be preffered.
-
-
-      var sessionIsClosed$ = (0,cast_to_observable/* default */.Z)(session.closed);
-      return (0,race/* race */.S)(sessionIsClosed$, (0,timer/* timer */.H)(1000).pipe((0,map/* map */.U)(function () {
-        throw new Error("Compat: Couldn't know if session is " + "closed");
-      })));
-    }));
-  })));
-}
-;// CONCATENATED MODULE: ./src/core/eme/utils/close_session.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
-
-
-var EME_SESSION_CLOSING_MAX_RETRY = config/* default.EME_SESSION_CLOSING_MAX_RETRY */.Z.EME_SESSION_CLOSING_MAX_RETRY,
-    EME_SESSION_CLOSING_INITIAL_DELAY = config/* default.EME_SESSION_CLOSING_INITIAL_DELAY */.Z.EME_SESSION_CLOSING_INITIAL_DELAY,
-    EME_SESSION_CLOSING_MAX_DELAY = config/* default.EME_SESSION_CLOSING_MAX_DELAY */.Z.EME_SESSION_CLOSING_MAX_DELAY;
-/**
- * Close a MediaKeySession with multiple attempts if needed and do not throw if
- * this action throws an error.
- * Emits then complete when done.
- * @param {MediaKeySession} mediaKeySession
- * @returns {Observable}
- */
-
-function safelyCloseMediaKeySession(mediaKeySession) {
-  return recursivelyTryToCloseMediaKeySession(0);
-  /**
-   * Perform a new attempt at closing the MediaKeySession.
-   * If this operation fails due to a not-"callable" (an EME term)
-   * MediaKeySession, retry based on either a timer or on MediaKeySession
-   * events, whichever comes first.
-   * Emits then complete when done.
-   * @param {number} retryNb - The attempt number starting at 0.
-   * @returns {Observable}
-   */
-
-  function recursivelyTryToCloseMediaKeySession(retryNb) {
-    log/* default.debug */.Z.debug("EME: Trying to close a MediaKeySession", mediaKeySession.sessionId, retryNb);
-    return closeSession$(mediaKeySession).pipe((0,tap/* tap */.b)(function () {
-      log/* default.debug */.Z.debug("EME: Succeeded to close MediaKeySession");
-    }), (0,catchError/* catchError */.K)(function (err) {
-      // Unitialized MediaKeySession may not close properly until their
-      // corresponding `generateRequest` or `load` call are handled by the
-      // browser.
-      // In that case the EME specification tells us that the browser is
-      // supposed to reject the `close` call with an InvalidStateError.
-      if (!(err instanceof Error) || err.name !== "InvalidStateError" || mediaKeySession.sessionId !== "") {
-        return failToCloseSession(err);
-      } // We will retry either:
-      //   - when an event indicates that the MediaKeySession is
-      //     initialized (`callable` is the proper EME term here)
-      //   - after a delay, raising exponentially
-
-
-      var nextRetryNb = retryNb + 1;
-
-      if (nextRetryNb > EME_SESSION_CLOSING_MAX_RETRY) {
-        return failToCloseSession(err);
-      }
-
-      var delay = Math.min(Math.pow(2, retryNb) * EME_SESSION_CLOSING_INITIAL_DELAY, EME_SESSION_CLOSING_MAX_DELAY);
-      log/* default.warn */.Z.warn("EME: attempt to close a mediaKeySession failed, " + "scheduling retry...", delay);
-      return (0,race/* race */.S)([(0,timer/* timer */.H)(delay), (0,event_listeners/* onKeyStatusesChange$ */.eX)(mediaKeySession), (0,event_listeners/* onKeyMessage$ */.GJ)(mediaKeySession)]).pipe((0,take/* take */.q)(1), (0,mergeMap/* mergeMap */.z)(function () {
-        return recursivelyTryToCloseMediaKeySession(nextRetryNb);
-      }));
-    }));
-  }
-  /**
-   * Log error anouncing that we could not close the MediaKeySession and emits
-   * then complete through Observable.
-   * TODO Emit warning?
-   * @returns {Observable}
-   */
-
-
-  function failToCloseSession(err) {
-    log/* default.error */.Z.error("EME: Could not close MediaKeySession: " + (err instanceof Error ? err.toString() : "Unknown error"));
-    return (0,of.of)(null);
-  }
-}
-// EXTERNAL MODULE: ./src/utils/base64.ts
-var utils_base64 = __webpack_require__(9689);
-;// CONCATENATED MODULE: ./src/core/eme/utils/init_data_container.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/** Wrap initialization data and allow serialization of it into base64. */
-
-var InitDataContainer = /*#__PURE__*/function () {
-  /**
-   * Create a new container, wrapping the initialization data given and allowing
-   * linearization into base64.
-   * @param {Uint8Array}
-   */
-  function InitDataContainer(initData) {
-    this.initData = initData;
-  }
-  /**
-   * Convert it to base64.
-   * `toJSON` is specially interpreted by JavaScript engines to be able to rely
-   * on it when calling `JSON.stringify` on it or any of its parent objects:
-   * https://tc39.es/ecma262/#sec-serializejsonproperty
-   * @returns {string}
-   */
-
-
-  var _proto = InitDataContainer.prototype;
-
-  _proto.toJSON = function toJSON() {
-    return (0,utils_base64/* bytesToBase64 */.J)(this.initData);
-  }
-  /**
-   * Decode a base64 sequence representing an initialization data back to an
-   * Uint8Array.
-   * @param {string}
-   * @returns {Uint8Array}
-   */
-  ;
-
-  InitDataContainer.decode = function decode(base64) {
-    return (0,utils_base64/* base64ToBytes */.K)(base64);
-  };
-
-  return InitDataContainer;
-}();
-
-
-;// CONCATENATED MODULE: ./src/core/eme/utils/are_init_values_compatible.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-/**
- * Returns `true` if both values are compatible initialization data, which
- * means that one is completely contained in the other.
- *
- * Both values given should be sorted by systemId the same way.
- * @param {Array.<Object>} stored
- * @param {Array.<Object>} newElts
- * @returns {boolean}
- */
-
-function areInitializationValuesCompatible(stored, newElts) {
-  var _a, _b;
-
-  return (_b = (_a = _isAInB(stored, newElts)) !== null && _a !== void 0 ? _a : _isAInB(newElts, stored)) !== null && _b !== void 0 ? _b : false;
-}
-/**
- * Take two arrays of initialization data values, `a` and `b`, sorted by
- * their `systemId` property in the same order.
- *
- * Returns `true` if `a` is not empty and is completely contained in the `b`
- * array.
- * This is equivalent to: "`a` is contained in `b`".
- *
- * Returns `false` either if `a` is empty or if `b` has different initialization
- * data than it for equivalent system ids.
- * This is equivalent to: "`a` represents different data than `b`".
- *
- * Returns `null` if `a` is not fully contained in `b` but can still be
- * compatible with it.
- * This is equivalent to: "`a` is not contained in `b`, but `b` could be
- * contained in `a`".
- * @param {Array.<Object>} a
- * @param {Array.<Object>} b
- * @returns {boolean}
- */
-
-function _isAInB(a, b) {
-  if (a.length === 0) {
-    return false;
-  }
-
-  if (b.length < a.length) {
-    return null;
-  }
-
-  var firstAElt = a[0];
-  var aIdx = 0;
-  var bIdx = 0;
-
-  for (; bIdx < b.length; bIdx++) {
-    var bElt = b[bIdx];
-
-    if (bElt.systemId !== firstAElt.systemId) {
-      continue;
-    }
-
-    if (bElt.hash !== firstAElt.hash) {
-      return false;
-    }
-
-    var aData = firstAElt.data instanceof Uint8Array ? firstAElt.data : typeof firstAElt.data === "string" ? InitDataContainer.decode(firstAElt.data) : firstAElt.data.initData;
-    var bData = bElt.data instanceof Uint8Array ? bElt.data : typeof bElt.data === "string" ? InitDataContainer.decode(bElt.data) : bElt.data.initData;
-
-    if (!(0,are_arrays_of_numbers_equal/* default */.Z)(aData, bData)) {
-      return false;
-    }
-
-    if (b.length - bIdx < a.length) {
-      // not enough place to store `a`'s initialization data.
-      return null;
-    } // first `a` value was found. Check if all `a` values are found in `b`
-
-
-    for (aIdx = 1; aIdx < a.length; aIdx++) {
-      var aElt = a[aIdx];
-
-      for (bIdx += 1; bIdx < b.length; bIdx++) {
-        var bNewElt = b[bIdx];
-
-        if (aElt.systemId !== bNewElt.systemId) {
-          continue;
-        }
-
-        if (aElt.hash !== bNewElt.hash) {
-          return false;
-        }
-
-        var aNewData = aElt.data instanceof Uint8Array ? aElt.data : typeof aElt.data === "string" ? InitDataContainer.decode(aElt.data) : aElt.data.initData;
-        var bNewData = bNewElt.data instanceof Uint8Array ? bNewElt.data : typeof bNewElt.data === "string" ? InitDataContainer.decode(bNewElt.data) : bNewElt.data.initData;
-
-        if (!(0,are_arrays_of_numbers_equal/* default */.Z)(aNewData, bNewData)) {
-          return false;
-        }
-
-        break;
-      }
-
-      if (aIdx === b.length) {
-        // we didn't find `aElt`'s systemId in b
-        return null;
-      }
-    } // If we're here, then we've found all `a`'s systemId in `b` and they match
-
-
-    return true;
-  }
-
-  return null; // We didn't find the firstAElt`s systemId in `b`.
-}
-;// CONCATENATED MODULE: ./src/core/eme/utils/init_data_store.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-/**
- * Store a unique value associated to an initData and initDataType.
- * @class InitDataStore
- */
-
-var InitDataStore = /*#__PURE__*/function () {
-  /** Construct a new InitDataStore.  */
-  function InitDataStore() {
-    this._storage = [];
-  }
-  /**
-   * Returns all stored value, in the order in which they have been stored.
-   * Note: it is possible to move a value to the end of this array by calling
-   * the `getAndReuse` method.
-   * @returns {Array}
-   */
-
-
-  var _proto = InitDataStore.prototype;
-
-  _proto.getAll = function getAll() {
-    return this._storage.map(function (item) {
-      return item.payload;
-    });
-  }
-  /**
-   * Returns the number of stored values.
-   * @returns {number}
-   */
-  ;
-
-  _proto.getLength = function getLength() {
-    return this._storage.length;
-  }
-  /**
-   * Returns `true` if no initialization data is stored yet in this
-   * InitDataStore.
-   * Returns `false` otherwise.
-   * @returns {boolean}
-   */
-  ;
-
-  _proto.isEmpty = function isEmpty() {
-    return this._storage.length === 0;
-  }
-  /**
-   * Returns the element associated with the given initData and initDataType.
-   * Returns `undefined` if not found.
-   * @param {Uint8Array} initData
-   * @param {string|undefined} initDataType
-   * @returns {*}
-   */
-  ;
-
-  _proto.get = function get(initializationData) {
-    var index = this._findIndex(initializationData);
-
-    return index >= 0 ? this._storage[index].payload : undefined;
-  }
-  /**
-   * Like `get`, but also move the corresponding value at the end of the store
-   * (as returned by `getAll`) if found.
-   * This can be used for example to tell when a previously-stored value is
-   * re-used to then be able to implement a caching replacement algorithm based
-   * on the least-recently-used values by just evicting the first values
-   * returned by `getAll`.
-   * @param {Uint8Array} initData
-   * @param {string|undefined} initDataType
-   * @returns {*}
-   */
-  ;
-
-  _proto.getAndReuse = function getAndReuse(initializationData) {
-    var index = this._findIndex(initializationData);
-
-    if (index === -1) {
-      return undefined;
-    }
-
-    var item = this._storage.splice(index, 1)[0];
-
-    this._storage.push(item);
-
-    return item.payload;
-  }
-  /**
-   * Add to the store a value linked to the corresponding initData and
-   * initDataType.
-   * If a value was already stored linked to those, replace it.
-   * @param {Object} initializationData
-   * @param {*} payload
-   */
-  ;
-
-  _proto.store = function store(initializationData, payload) {
-    var indexOf = this._findIndex(initializationData);
-
-    if (indexOf >= 0) {
-      // this._storage contains the stored value in the same order they have
-      // been put. So here we want to remove the previous element and re-push
-      // it to the end.
-      this._storage.splice(indexOf, 1);
-    }
-
-    var values = this._formatValuesForStore(initializationData.values);
-
-    this._storage.push({
-      type: initializationData.type,
-      values: values,
-      payload: payload
-    });
-  }
-  /**
-   * Add to the store a value linked to the corresponding initData and
-   * initDataType.
-   * If a value linked to those was already stored, do nothing and returns
-   * `false`.
-   * If not, add the value and return `true`.
-   *
-   * This can be used as a more performant version of doing both a `get` call -
-   * to see if a value is stored linked to that data - and then if not doing a
-   * store. `storeIfNone` is more performant as it will only perform hashing
-   * and a look-up a single time.
-   * @param {Object} initializationData
-   * @param {*} payload
-   * @returns {boolean}
-   */
-  ;
-
-  _proto.storeIfNone = function storeIfNone(initializationData, payload) {
-    var indexOf = this._findIndex(initializationData);
-
-    if (indexOf >= 0) {
-      return false;
-    }
-
-    var values = this._formatValuesForStore(initializationData.values);
-
-    this._storage.push({
-      type: initializationData.type,
-      values: values,
-      payload: payload
-    });
-
-    return true;
-  }
-  /**
-   * Remove an initDataType and initData combination from this store.
-   * Returns the associated value if it has been found, `undefined` otherwise.
-   * @param {Uint8Array} initData
-   * @param {string|undefined} initDataType
-   * @returns {*}
-   */
-  ;
-
-  _proto.remove = function remove(initializationData) {
-    var indexOf = this._findIndex(initializationData);
-
-    if (indexOf === -1) {
-      return undefined;
-    }
-
-    return this._storage.splice(indexOf, 1)[0].payload;
-  }
-  /**
-   * Find the index of the corresponding initialization data in `this._storage`.
-   * Returns `-1` if not found.
-   * @param {Object} initializationData
-   * @returns {boolean}
-   */
-  ;
-
-  _proto._findIndex = function _findIndex(initializationData) {
-    var formattedVals = this._formatValuesForStore(initializationData.values); // Begin by the last element as we usually re-encounter the last stored
-    // initData sooner than the first one.
-
-
-    for (var i = this._storage.length - 1; i >= 0; i--) {
-      var stored = this._storage[i];
-
-      if (stored.type === initializationData.type) {
-        if (areInitializationValuesCompatible(stored.values, formattedVals)) {
-          return i;
-        }
-      }
-    }
-
-    return -1;
-  }
-  /**
-   * Format given initializationData's values so they are ready to be stored:
-   *   - sort them by systemId, so they are faster to compare
-   *   - add hash for each initialization data encountered.
-   * @param {Array.<Object>} initialValues
-   * @returns {Array.<Object>}
-   */
-  ;
-
-  _proto._formatValuesForStore = function _formatValuesForStore(initialValues) {
-    return initialValues.slice().sort(function (a, b) {
-      return a.systemId === b.systemId ? 0 : a.systemId === undefined ? 1 : b.systemId === undefined ? -1 : a.systemId < b.systemId ? -1 : 1;
-    }).map(function (_ref) {
-      var systemId = _ref.systemId,
-          data = _ref.data;
-      return {
-        systemId: systemId,
-        data: data,
-        hash: (0,hash_buffer/* default */.Z)(data)
-      };
-    });
-  };
-
-  return InitDataStore;
-}();
-
-
-;// CONCATENATED MODULE: ./src/core/eme/utils/loaded_sessions_store.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
-
-
-
-/**
- * Create and store MediaKeySessions linked to a single MediaKeys
- * instance.
- *
- * Keep track of sessionTypes and of the initialization data each
- * MediaKeySession is created for.
- * @class LoadedSessionsStore
- */
-
-var LoadedSessionsStore = /*#__PURE__*/function () {
-  /**
-   * Create a new LoadedSessionsStore, which will store information about
-   * loaded MediaKeySessions on the given MediaKeys instance.
-   * @param {MediaKeys} mediaKeys
-   */
-  function LoadedSessionsStore(mediaKeys) {
-    this._mediaKeys = mediaKeys;
-    this._storage = new InitDataStore();
-  }
-  /**
-   * Returns the stored MediaKeySession information related to the
-   * given initDataType and initData if found.
-   * Returns `null` if no such MediaKeySession is stored.
-   * @param {Object} initializationData
-   * @returns {Object|null}
-   */
-
-
-  var _proto = LoadedSessionsStore.prototype;
-
-  _proto.get = function get(initializationData) {
-    var entry = this._storage.get(initializationData);
-
-    return entry === undefined ? null : {
-      mediaKeySession: entry.mediaKeySession,
-      sessionType: entry.sessionType
-    };
-  }
-  /**
-   * Like `get` but also moves the corresponding MediaKeySession to the end of
-   * its internal storage, as returned by the `getAll` method.
-   *
-   * This can be used for example to tell when a previously-stored
-   * initialization data is re-used to then be able to implement a caching
-   * replacement algorithm based on the least-recently-used values by just
-   * evicting the first values returned by `getAll`.
-   * @param {Object} initializationData
-   * @returns {Object|null}
-   */
-  ;
-
-  _proto.getAndReuse = function getAndReuse(initializationData) {
-    var entry = this._storage.getAndReuse(initializationData);
-
-    return entry === undefined ? null : {
-      mediaKeySession: entry.mediaKeySession,
-      sessionType: entry.sessionType
-    };
-  }
-  /**
-   * Moves the corresponding MediaKeySession to the end of its internal storage,
-   * as returned by the `getAll` method.
-   *
-   * This can be used to signal that a previously-stored initialization data is
-   * re-used to then be able to implement a caching replacement algorithm based
-   * on the least-recently-used values by just evicting the first values
-   * returned by `getAll`.
-   *
-   * Returns `true` if the corresponding session was found in the store, `false`
-   * otherwise.
-   * @param {Object} initializationData
-   * @returns {boolean}
-   */
-  ;
-
-  _proto.reuse = function reuse(initializationData) {
-    return this._storage.getAndReuse(initializationData) !== undefined;
-  }
-  /**
-   * Create a new MediaKeySession and store it in this store.
-   * @throws {EncryptedMediaError}
-   * @param {Object} initializationData
-   * @param {string} sessionType
-   * @returns {MediaKeySession}
-   */
-  ;
-
-  _proto.createSession = function createSession(initializationData, sessionType) {
-    var _this = this;
-
-    if (this._storage.get(initializationData) !== undefined) {
-      throw new encrypted_media_error/* default */.Z("MULTIPLE_SESSIONS_SAME_INIT_DATA", "This initialization data was already stored.");
-    }
-
-    var mediaKeySession = this._mediaKeys.createSession(sessionType);
-
-    var entry = {
-      mediaKeySession: mediaKeySession,
-      sessionType: sessionType,
-      initializationData: initializationData
-    };
-
-    if (!(0,is_null_or_undefined/* default */.Z)(mediaKeySession.closed)) {
-      mediaKeySession.closed.then(function () {
-        var currentEntry = _this._storage.get(initializationData);
-
-        if (currentEntry !== undefined && currentEntry.mediaKeySession === mediaKeySession) {
-          _this._storage.remove(initializationData);
-        }
-      })["catch"](function (e) {
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        log/* default.warn */.Z.warn("EME-LSS: MediaKeySession.closed rejected: " + e);
-      });
-    }
-
-    log/* default.debug */.Z.debug("EME-LSS: Add MediaKeySession", entry.sessionType);
-
-    this._storage.store(initializationData, entry);
-
-    return mediaKeySession;
-  }
-  /**
-   * Close a MediaKeySession corresponding to an initialization data and remove
-   * its related stored information from the LoadedSessionsStore.
-   * Emit when done.
-   * @param {Object} initializationData
-   * @returns {Observable}
-   */
-  ;
-
-  _proto.closeSession = function closeSession(initializationData) {
-    var _this2 = this;
-
-    return (0,defer/* defer */.P)(function () {
-      var entry = _this2._storage.remove(initializationData);
-
-      if (entry === undefined) {
-        log/* default.warn */.Z.warn("EME-LSS: No MediaKeySession found with " + "the given initData and initDataType");
-        return empty/* EMPTY */.E;
-      }
-
-      return safelyCloseMediaKeySession(entry.mediaKeySession);
-    });
-  }
-  /**
-   * Returns the number of stored MediaKeySessions in this LoadedSessionsStore.
-   * @returns {number}
-   */
-  ;
-
-  _proto.getLength = function getLength() {
-    return this._storage.getLength();
-  }
-  /**
-   * Returns information about all stored MediaKeySession, in the order in which
-   * the MediaKeySession have been created.
-   * @returns {Array.<Object>}
-   */
-  ;
-
-  _proto.getAll = function getAll() {
-    return this._storage.getAll();
-  }
-  /**
-   * Close all sessions in this store.
-   * Emit `null` when done.
-   * @returns {Observable}
-   */
-  ;
-
-  _proto.closeAllSessions = function closeAllSessions() {
-    var _this3 = this;
-
-    return (0,defer/* defer */.P)(function () {
-      var closing$ = _this3._storage.getAll().map(function (entry) {
-        return safelyCloseMediaKeySession(entry.mediaKeySession);
-      });
-
-      log/* default.debug */.Z.debug("EME-LSS: Closing all current MediaKeySessions", closing$.length); // re-initialize the storage, so that new interactions with the
-      // `LoadedSessionsStore` do not rely on MediaKeySessions we're in the
-      // process of removing
-
-      _this3._storage = new InitDataStore();
-      return (0,concat/* concat */.z)(merge/* merge.apply */.T.apply(void 0, closing$).pipe((0,ignoreElements/* ignoreElements */.l)()), (0,of.of)(null));
-    });
-  };
-
-  return LoadedSessionsStore;
-}();
-
-
-// EXTERNAL MODULE: ./src/utils/assert.ts
-var assert = __webpack_require__(811);
-// EXTERNAL MODULE: ./src/utils/is_non_empty_string.ts
-var is_non_empty_string = __webpack_require__(6923);
-;// CONCATENATED MODULE: ./src/core/eme/utils/persistent_sessions_store.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
-
-
-
-
-
-
-/**
- * Throw if the given storage does not respect the right interface.
- * @param {Object} storage
- */
-
-function checkStorage(storage) {
-  (0,assert/* assertInterface */.u)(storage, {
-    save: "function",
-    load: "function"
-  }, "licenseStorage");
-}
-/** Wrap initialization data and allow serialization of it into base64. */
-
-
-var persistent_sessions_store_InitDataContainer = /*#__PURE__*/function () {
-  /**
-   * Create a new container, wrapping the initialization data given and allowing
-   * linearization into base64.
-   * @param {Uint8Array}
-   */
-  function InitDataContainer(initData) {
-    this.initData = initData;
-  }
-  /**
-   * Convert it to base64.
-   * `toJSON` is specially interpreted by JavaScript engines to be able to rely
-   * on it when calling `JSON.stringify` on it or any of its parent objects:
-   * https://tc39.es/ecma262/#sec-serializejsonproperty
-   * @returns {string}
-   */
-
-
-  var _proto = InitDataContainer.prototype;
-
-  _proto.toJSON = function toJSON() {
-    return (0,utils_base64/* bytesToBase64 */.J)(this.initData);
-  }
-  /**
-   * Decode a base64 sequence representing an initialization data back to an
-   * Uint8Array.
-   * @param {string}
-   * @returns {Uint8Array}
-   */
-  ;
-
-  InitDataContainer.decode = function decode(base64) {
-    return (0,utils_base64/* base64ToBytes */.K)(base64);
-  };
-
-  return InitDataContainer;
-}();
-/**
- * Set representing persisted licenses. Depends on a simple local-
- * storage implementation with a `save`/`load` synchronous interface
- * to persist information on persisted sessions.
- *
- * This set is used only for a cdm/keysystem with license persistency
- * supported.
- * @class PersistentSessionsStore
- */
-
-
-var PersistentSessionsStore = /*#__PURE__*/function () {
-  /**
-   * Create a new PersistentSessionsStore.
-   * @param {Object} storage
-   */
-  function PersistentSessionsStore(storage) {
-    checkStorage(storage);
-    this._entries = [];
-    this._storage = storage;
-
-    try {
-      this._entries = this._storage.load();
-
-      if (!Array.isArray(this._entries)) {
-        this._entries = [];
-      }
-    } catch (e) {
-      log/* default.warn */.Z.warn("EME-PSS: Could not get entries from license storage", e);
-      this.dispose();
-    }
-  }
-  /**
-   * Returns the number of stored values.
-   * @returns {number}
-   */
-
-
-  var _proto2 = PersistentSessionsStore.prototype;
-
-  _proto2.getLength = function getLength() {
-    return this._entries.length;
-  }
-  /**
-   * Returns information about all stored MediaKeySession, in the order in which
-   * the MediaKeySession have been created.
-   * @returns {Array.<Object>}
-   */
-  ;
-
-  _proto2.getAll = function getAll() {
-    return this._entries;
-  }
-  /**
-   * Retrieve an entry based on its initialization data.
-   * @param {Uint8Array}  initData
-   * @param {string|undefined} initDataType
-   * @returns {Object|null}
-   */
-  ;
-
-  _proto2.get = function get(initData) {
-    var index = this._getIndex(initData);
-
-    return index === -1 ? null : this._entries[index];
-  }
-  /**
-   * Like `get`, but also move the corresponding value at the end of the store
-   * (as returned by `getAll`) if found.
-   * This can be used for example to tell when a previously-stored value is
-   * re-used to then be able to implement a caching replacement algorithm based
-   * on the least-recently-used values by just evicting the first values
-   * returned by `getAll`.
-   * @param {Uint8Array} initData
-   * @param {string|undefined} initDataType
-   * @returns {*}
-   */
-  ;
-
-  _proto2.getAndReuse = function getAndReuse(initData) {
-    var index = this._getIndex(initData);
-
-    if (index === -1) {
-      return null;
-    }
-
-    var item = this._entries.splice(index, 1)[0];
-
-    this._entries.push(item);
-
-    return item;
-  }
-  /**
-   * Add a new entry in the PersistentSessionsStore.
-   * @param {Uint8Array}  initData
-   * @param {string|undefined} initDataType
-   * @param {MediaKeySession} session
-   */
-  ;
-
-  _proto2.add = function add(initData, session) {
-    if ((0,is_null_or_undefined/* default */.Z)(session) || !(0,is_non_empty_string/* default */.Z)(session.sessionId)) {
-      log/* default.warn */.Z.warn("EME-PSS: Invalid Persisten Session given.");
-      return;
-    }
-
-    var sessionId = session.sessionId;
-    var currentEntry = this.get(initData);
-
-    if (currentEntry !== null && currentEntry.sessionId === sessionId) {
-      return;
-    } else if (currentEntry !== null) {
-      // currentEntry has a different sessionId
-      this["delete"](initData);
-    }
-
-    log/* default.info */.Z.info("EME-PSS: Add new session", sessionId);
-
-    this._entries.push({
-      version: 3,
-      sessionId: sessionId,
-      values: this._formatValuesForStore(initData.values),
-      initDataType: initData.type
-    });
-
-    this._save();
-  }
-  /**
-   * Delete stored MediaKeySession information based on its initialization
-   * data.
-   * @param {Uint8Array}  initData
-   * @param {string|undefined} initDataType
-   */
-  ;
-
-  _proto2["delete"] = function _delete(initData) {
-    var index = this._getIndex(initData);
-
-    if (index === -1) {
-      log/* default.warn */.Z.warn("EME-PSS: initData to delete not found.");
-      return;
-    }
-
-    var entry = this._entries[index];
-    log/* default.warn */.Z.warn("EME-PSS: Delete session from store", entry.sessionId);
-
-    this._entries.splice(index, 1);
-
-    this._save();
-  };
-
-  _proto2.deleteOldSessions = function deleteOldSessions(sessionsToDelete) {
-    log/* default.info */.Z.info("EME-PSS: Deleting last " + sessionsToDelete + " sessions.");
-
-    if (sessionsToDelete <= 0) {
-      return;
-    }
-
-    if (sessionsToDelete <= this._entries.length) {
-      this._entries.splice(0, sessionsToDelete);
-    } else {
-      log/* default.warn */.Z.warn("EME-PSS: Asked to remove more information that it contains", sessionsToDelete, this._entries.length);
-      this._entries = [];
-    }
-
-    this._save();
-  }
-  /**
-   * Delete all saved entries.
-   */
-  ;
-
-  _proto2.dispose = function dispose() {
-    this._entries = [];
-
-    this._save();
-  }
-  /**
-   * Retrieve index of an entry.
-   * Returns `-1` if not found.
-   * @param {Uint8Array}  initData
-   * @param {string|undefined} initDataType
-   * @returns {number}
-   */
-  ;
-
-  _proto2._getIndex = function _getIndex(initData) {
-    var formatted = this._formatValuesForStore(initData.values); // Older versions of the format include a concatenation of all
-    // initialization data and its hash.
-
-
-    var concatInitData = byte_parsing/* concat.apply */.zo.apply(void 0, initData.values.map(function (i) {
-      return i.data;
-    }));
-    var concatInitDataHash = (0,hash_buffer/* default */.Z)(concatInitData);
-
-    for (var i = 0; i < this._entries.length; i++) {
-      var entry = this._entries[i];
-
-      if (entry.initDataType === initData.type) {
-        switch (entry.version) {
-          case 3:
-            if (areInitializationValuesCompatible(formatted, entry.values)) {
-              return i;
-            }
-
-            break;
-
-          case 2:
-            if (entry.initDataHash === concatInitDataHash) {
-              try {
-                var decodedInitData = typeof entry.initData === "string" ? persistent_sessions_store_InitDataContainer.decode(entry.initData) : entry.initData.initData;
-
-                if ((0,are_arrays_of_numbers_equal/* default */.Z)(decodedInitData, concatInitData)) {
-                  return i;
-                }
-              } catch (e) {
-                log/* default.warn */.Z.warn("EME-PSS: Could not decode initialization data.", e);
-              }
-            }
-
-            break;
-
-          case 1:
-            if (entry.initDataHash === concatInitDataHash) {
-              if (typeof entry.initData.length === "undefined") {
-                // If length is undefined, it has been linearized. We could still
-                // convert it back to an Uint8Array but this would necessitate some
-                // ugly unreadable logic for a very very minor possibility.
-                // Just consider that it is a match based on the hash.
-                return i;
-              } else if ((0,are_arrays_of_numbers_equal/* default */.Z)(entry.initData, concatInitData)) {
-                return i;
-              }
-            }
-
-            break;
-
-          default:
-            if (entry.initData === concatInitDataHash) {
-              return i;
-            }
-
-        }
-      }
-    }
-
-    return -1;
-  }
-  /**
-   * Use the given storage to store the current entries.
-   */
-  ;
-
-  _proto2._save = function _save() {
-    try {
-      this._storage.save(this._entries);
-    } catch (e) {
-      log/* default.warn */.Z.warn("EME-PSS: Could not save licenses in localStorage");
-    }
-  }
-  /**
-   * Format given initializationData's values so they are ready to be stored:
-   *   - sort them by systemId, so they are faster to compare
-   *   - add hash for each initialization data encountered.
-   * @param {Array.<Object>} initialValues
-   * @returns {Array.<Object>}
-   */
-  ;
-
-  _proto2._formatValuesForStore = function _formatValuesForStore(initialValues) {
-    return initialValues.slice().sort(function (a, b) {
-      return a.systemId === b.systemId ? 0 : a.systemId === undefined ? 1 : b.systemId === undefined ? -1 : a.systemId < b.systemId ? -1 : 1;
-    }).map(function (_ref) {
-      var systemId = _ref.systemId,
-          data = _ref.data;
-      return {
-        systemId: systemId,
-        data: new persistent_sessions_store_InitDataContainer(data),
-        hash: (0,hash_buffer/* default */.Z)(data)
-      };
-    });
-  };
-
-  return PersistentSessionsStore;
-}();
-
-
-;// CONCATENATED MODULE: ./src/core/eme/get_media_keys.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
 
 
 
@@ -6958,57 +7559,26 @@ function createPersistentSessionsStorage(keySystemOptions) {
     throw new encrypted_media_error/* default */.Z("INVALID_KEY_SYSTEM", "No license storage found for persistent license.");
   }
 
-  log/* default.debug */.Z.debug("EME: Set the given license storage");
+  log/* default.debug */.Z.debug("DRM: Set the given license storage");
   return new PersistentSessionsStore(licenseStorage);
 }
 /**
- * @param {HTMLMediaElement} mediaElement
- * @param {Array.<Object>} keySystemsConfigs
- * @returns {Observable}
+ * Create a MediaKeys instance and associated structures (or just return the
+ * current ones if sufficient) based on a wanted configuration.
+ * @param {HTMLMediaElement} mediaElement - The HTMLMediaElement on which you
+ * will attach the MediaKeys instance.
+ * This Element is here only used to check if the current MediaKeys and
+ * MediaKeySystemAccess instances are sufficient
+ * @param {Array.<Object>} keySystemsConfigs - The key system configuration.
+ * Needed to ask the right MediaKeySystemAccess.
+ * @param {Object} cancelSignal - CancellationSignal allowing to cancel the
+ * creation of the MediaKeys instance while the task is still pending.
+ * @returns {Promise.<Object>}
  */
 
 
-function getMediaKeysInfos(mediaElement, keySystemsConfigs) {
-  return getMediaKeySystemAccess(mediaElement, keySystemsConfigs).pipe((0,mergeMap/* mergeMap */.z)(function (evt) {
-    var _evt$value = evt.value,
-        options = _evt$value.options,
-        mediaKeySystemAccess = _evt$value.mediaKeySystemAccess;
-    var currentState = media_keys_infos_store/* default.getState */.Z.getState(mediaElement);
-    var persistentSessionsStore = createPersistentSessionsStorage(options);
-
-    if (currentState !== null && evt.type === "reuse-media-key-system-access") {
-      var mediaKeys = currentState.mediaKeys,
-          loadedSessionsStore = currentState.loadedSessionsStore; // We might just rely on the currently attached MediaKeys instance.
-      // First check if server certificate parameters are the same than in the
-      // current MediaKeys instance. If not, re-create MediaKeys from scratch.
-
-      if (server_certificate_store.hasOne(mediaKeys) === false || !(0,is_null_or_undefined/* default */.Z)(options.serverCertificate) && server_certificate_store.has(mediaKeys, options.serverCertificate)) {
-        return (0,of.of)({
-          mediaKeys: mediaKeys,
-          mediaKeySystemAccess: mediaKeySystemAccess,
-          stores: {
-            loadedSessionsStore: loadedSessionsStore,
-            persistentSessionsStore: persistentSessionsStore
-          },
-          options: options
-        });
-      }
-    }
-
-    return createMediaKeys(mediaKeySystemAccess).pipe((0,map/* map */.U)(function (mediaKeys) {
-      log/* default.info */.Z.info("EME: MediaKeys created with success");
-      var loadedSessionsStore = new LoadedSessionsStore(mediaKeys);
-      return {
-        mediaKeys: mediaKeys,
-        mediaKeySystemAccess: mediaKeySystemAccess,
-        stores: {
-          loadedSessionsStore: loadedSessionsStore,
-          persistentSessionsStore: persistentSessionsStore
-        },
-        options: options
-      };
-    }));
-  }));
+function getMediaKeysInfos(_x, _x2, _x3) {
+  return _getMediaKeysInfos.apply(this, arguments);
 }
 /**
  * Create `MediaKeys` from the `MediaKeySystemAccess` given.
@@ -7017,16 +7587,123 @@ function getMediaKeysInfos(mediaElement, keySystemsConfigs) {
  * @returns {Observable.<MediaKeys>}
  */
 
-function createMediaKeys(mediaKeySystemAccess) {
-  log/* default.info */.Z.info("EME: Calling createMediaKeys on the MediaKeySystemAccess");
-  return (0,rx_try_catch/* default */.Z)(function () {
-    return (0,cast_to_observable/* default */.Z)(mediaKeySystemAccess.createMediaKeys());
-  }, undefined).pipe((0,catchError/* catchError */.K)(function (error) {
-    var message = error instanceof Error ? error.message : "Unknown error when creating MediaKeys.";
-    throw new encrypted_media_error/* default */.Z("CREATE_MEDIA_KEYS_ERROR", message);
+function _getMediaKeysInfos() {
+  _getMediaKeysInfos = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee(mediaElement, keySystemsConfigs, cancelSignal) {
+    var evt, _evt$value, options, mediaKeySystemAccess, currentState, persistentSessionsStore, _mediaKeys, _loadedSessionsStore, mediaKeys, loadedSessionsStore;
+
+    return regenerator_default().wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            _context.next = 2;
+            return getMediaKeySystemAccess(mediaElement, keySystemsConfigs, cancelSignal);
+
+          case 2:
+            evt = _context.sent;
+
+            if (!(cancelSignal.cancellationError !== null)) {
+              _context.next = 5;
+              break;
+            }
+
+            throw cancelSignal.cancellationError;
+
+          case 5:
+            _evt$value = evt.value, options = _evt$value.options, mediaKeySystemAccess = _evt$value.mediaKeySystemAccess;
+            currentState = media_keys_infos_store/* default.getState */.Z.getState(mediaElement);
+            persistentSessionsStore = createPersistentSessionsStorage(options);
+
+            if (!(currentState !== null && evt.type === "reuse-media-key-system-access")) {
+              _context.next = 12;
+              break;
+            }
+
+            _mediaKeys = currentState.mediaKeys, _loadedSessionsStore = currentState.loadedSessionsStore; // We might just rely on the currently attached MediaKeys instance.
+            // First check if server certificate parameters are the same than in the
+            // current MediaKeys instance. If not, re-create MediaKeys from scratch.
+
+            if (!(server_certificate_store.hasOne(_mediaKeys) === false || !(0,is_null_or_undefined/* default */.Z)(options.serverCertificate) && server_certificate_store.has(_mediaKeys, options.serverCertificate))) {
+              _context.next = 12;
+              break;
+            }
+
+            return _context.abrupt("return", {
+              mediaKeys: _mediaKeys,
+              mediaKeySystemAccess: mediaKeySystemAccess,
+              stores: {
+                loadedSessionsStore: _loadedSessionsStore,
+                persistentSessionsStore: persistentSessionsStore
+              },
+              options: options
+            });
+
+          case 12:
+            _context.next = 14;
+            return createMediaKeys(mediaKeySystemAccess);
+
+          case 14:
+            mediaKeys = _context.sent;
+            log/* default.info */.Z.info("DRM: MediaKeys created with success");
+            loadedSessionsStore = new LoadedSessionsStore(mediaKeys);
+            return _context.abrupt("return", {
+              mediaKeys: mediaKeys,
+              mediaKeySystemAccess: mediaKeySystemAccess,
+              stores: {
+                loadedSessionsStore: loadedSessionsStore,
+                persistentSessionsStore: persistentSessionsStore
+              },
+              options: options
+            });
+
+          case 18:
+          case "end":
+            return _context.stop();
+        }
+      }
+    }, _callee);
   }));
+  return _getMediaKeysInfos.apply(this, arguments);
 }
-;// CONCATENATED MODULE: ./src/core/eme/init_media_keys.ts
+
+function createMediaKeys(_x4) {
+  return _createMediaKeys.apply(this, arguments);
+}
+
+function _createMediaKeys() {
+  _createMediaKeys = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee2(mediaKeySystemAccess) {
+    var mediaKeys, message;
+    return regenerator_default().wrap(function _callee2$(_context2) {
+      while (1) {
+        switch (_context2.prev = _context2.next) {
+          case 0:
+            log/* default.info */.Z.info("DRM: Calling createMediaKeys on the MediaKeySystemAccess");
+            _context2.prev = 1;
+            _context2.next = 4;
+            return mediaKeySystemAccess.createMediaKeys();
+
+          case 4:
+            mediaKeys = _context2.sent;
+            return _context2.abrupt("return", mediaKeys);
+
+          case 8:
+            _context2.prev = 8;
+            _context2.t0 = _context2["catch"](1);
+            message = _context2.t0 instanceof Error ? _context2.t0.message : "Unknown error when creating MediaKeys.";
+            throw new encrypted_media_error/* default */.Z("CREATE_MEDIA_KEYS_ERROR", message);
+
+          case 12:
+          case "end":
+            return _context2.stop();
+        }
+      }
+    }, _callee2, null, [[1, 8]]);
+  }));
+  return _createMediaKeys.apply(this, arguments);
+}
+;// CONCATENATED MODULE: ./src/core/decrypt/init_media_keys.ts
+
+
+
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -7045,90 +7722,61 @@ function createMediaKeys(mediaKeySystemAccess) {
 
 
 
-
-
-
-
 /**
  * Get media keys infos from key system configs then attach media keys to media element.
  * @param {HTMLMediaElement} mediaElement
  * @param {Array.<Object>} keySystemsConfigs
- * @returns {Observable}
+ * @param {Object} cancelSignal
+ * @returns {Promise.<Object>}
  */
 
-function initMediaKeys(mediaElement, keySystemsConfigs) {
-  return getMediaKeysInfos(mediaElement, keySystemsConfigs).pipe((0,mergeMap/* mergeMap */.z)(function (_ref) {
-    var mediaKeys = _ref.mediaKeys,
-        mediaKeySystemAccess = _ref.mediaKeySystemAccess,
-        stores = _ref.stores,
-        options = _ref.options;
+function initMediaKeys(_x, _x2, _x3) {
+  return _initMediaKeys.apply(this, arguments);
+}
 
-    /**
-     * String identifying the key system, allowing the rest of the code to
-     * only advertise the required initialization data for license requests.
-     *
-     * Note that we only set this value if retro-compatibility to older
-     * persistent logic in the RxPlayer is not important, as the optimizations
-     * this property unlocks can break the loading of MediaKeySessions
-     * persisted in older RxPlayer's versions.
-     */
-    var initializationDataSystemId;
+function _initMediaKeys() {
+  _initMediaKeys = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee(mediaElement, keySystemsConfigs, cancelSignal) {
+    var mediaKeysInfo, mediaKeys, shouldDisableOldMediaKeys;
+    return regenerator_default().wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            _context.next = 2;
+            return getMediaKeysInfos(mediaElement, keySystemsConfigs, cancelSignal);
 
-    if ((0,is_null_or_undefined/* default */.Z)(options.licenseStorage) || options.licenseStorage.disableRetroCompatibility === true) {
-      initializationDataSystemId = getDrmSystemId(mediaKeySystemAccess.keySystem);
-    }
+          case 2:
+            mediaKeysInfo = _context.sent;
+            mediaKeys = mediaKeysInfo.mediaKeys;
+            shouldDisableOldMediaKeys = mediaElement.mediaKeys !== null && mediaElement.mediaKeys !== undefined && mediaKeys !== mediaElement.mediaKeys;
 
-    var canAttachMediaKeys = (0,reference/* default */.Z)(false);
-    var shouldDisableOldMediaKeys = mediaElement.mediaKeys !== null && mediaElement.mediaKeys !== undefined && mediaKeys !== mediaElement.mediaKeys;
-    var disableOldMediaKeys$ = (0,of.of)(null);
+            if (shouldDisableOldMediaKeys) {
+              log/* default.debug */.Z.debug("DRM: Disabling old MediaKeys");
+              disableMediaKeys(mediaElement);
+            }
 
-    if (shouldDisableOldMediaKeys) {
-      log/* default.debug */.Z.debug("EME: Disabling old MediaKeys");
-      disableOldMediaKeys$ = disableMediaKeys(mediaElement);
-    }
+            return _context.abrupt("return", mediaKeysInfo);
 
-    return disableOldMediaKeys$.pipe((0,mergeMap/* mergeMap */.z)(function () {
-      log/* default.debug */.Z.debug("EME: Attaching current MediaKeys");
-      return canAttachMediaKeys.asObservable().pipe((0,filter/* filter */.h)(function (canAttach) {
-        return canAttach;
-      }), (0,mergeMap/* mergeMap */.z)(function () {
-        var stateToAttatch = {
-          loadedSessionsStore: stores.loadedSessionsStore,
-          mediaKeySystemAccess: mediaKeySystemAccess,
-          mediaKeys: mediaKeys,
-          keySystemOptions: options
-        };
-        return attachMediaKeys(mediaElement, stateToAttatch);
-      }), (0,take/* take */.q)(1), (0,mapTo/* mapTo */.h)({
-        type: "attached-media-keys",
-        value: {
-          mediaKeySystemAccess: mediaKeySystemAccess,
-          mediaKeys: mediaKeys,
-          stores: stores,
-          options: options
+          case 7:
+          case "end":
+            return _context.stop();
         }
-      }), (0,startWith/* startWith */.O)({
-        type: "created-media-keys",
-        value: {
-          mediaKeySystemAccess: mediaKeySystemAccess,
-          initializationDataSystemId: initializationDataSystemId,
-          mediaKeys: mediaKeys,
-          stores: stores,
-          options: options,
-          canAttachMediaKeys: canAttachMediaKeys
-        }
-      }));
-    }));
+      }
+    }, _callee);
   }));
+  return _initMediaKeys.apply(this, arguments);
 }
 // EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/assertThisInitialized.js
 var assertThisInitialized = __webpack_require__(7326);
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/inheritsLoose.js
-var inheritsLoose = __webpack_require__(4578);
 // EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/wrapNativeSuper.js + 4 modules
 var wrapNativeSuper = __webpack_require__(2146);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/Subject.js + 1 modules
 var Subject = __webpack_require__(6716);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/map.js
+var map = __webpack_require__(9127);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/mergeMap.js + 1 modules
+var mergeMap = __webpack_require__(7877);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/defer.js
+var defer = __webpack_require__(9917);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/scheduler/async.js
 var scheduler_async = __webpack_require__(7991);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/util/isDate.js
@@ -7209,6 +7857,10 @@ function timeoutErrorFactory(info) {
 //# sourceMappingURL=timeout.js.map
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/util/identity.js
 var identity = __webpack_require__(278);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/catchError.js
+var catchError = __webpack_require__(9878);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/merge.js
+var merge = __webpack_require__(3071);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/util/isFunction.js
 var isFunction = __webpack_require__(8474);
 ;// CONCATENATED MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/concatMap.js
@@ -7218,8 +7870,22 @@ function concatMap(project, resultSelector) {
     return (0,isFunction/* isFunction */.m)(resultSelector) ? (0,mergeMap/* mergeMap */.z)(project, resultSelector, 1) : (0,mergeMap/* mergeMap */.z)(project, 1);
 }
 //# sourceMappingURL=concatMap.js.map
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/empty.js
+var empty = __webpack_require__(1545);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/of.js
+var of = __webpack_require__(2817);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/takeUntil.js
 var takeUntil = __webpack_require__(3505);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/concat.js
+var concat = __webpack_require__(6362);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/tap.js
+var tap = __webpack_require__(2006);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/ignoreElements.js
+var ignoreElements = __webpack_require__(533);
+// EXTERNAL MODULE: ./src/utils/cast_to_observable.ts
+var cast_to_observable = __webpack_require__(8117);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/timer.js
+var timer = __webpack_require__(6625);
 // EXTERNAL MODULE: ./src/utils/get_fuzzed_delay.ts
 var get_fuzzed_delay = __webpack_require__(2572);
 ;// CONCATENATED MODULE: ./src/utils/rx-retry_with_backoff.ts
@@ -7300,6 +7966,8 @@ function retryObsWithBackoff(obs$, options) {
     }));
   }));
 }
+// EXTERNAL MODULE: ./src/utils/rx-try_catch.ts
+var rx_try_catch = __webpack_require__(5561);
 ;// CONCATENATED MODULE: ./src/compat/eme/get_uuid_kid_from_keystatus_kid.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -7333,7 +8001,7 @@ function getUUIDKIDFromKeyStatusKID(keySystem, baseKeyId) {
 
   return baseKeyId;
 }
-;// CONCATENATED MODULE: ./src/core/eme/check_key_statuses.ts
+;// CONCATENATED MODULE: ./src/core/decrypt/utils/check_key_statuses.ts
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -7349,6 +8017,8 @@ function getUUIDKIDFromKeyStatusKID(keySystem, baseKeyId) {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/* eslint-disable-next-line max-len */
 
 
 
@@ -7447,7 +8117,7 @@ function checkKeyStatuses(session, options, keySystem) {
     whitelistedKeyIds: whitelistedKeyIds
   };
 }
-;// CONCATENATED MODULE: ./src/core/eme/session_events_listener.ts
+;// CONCATENATED MODULE: ./src/core/decrypt/session_events_listener.ts
 
 
 
@@ -7509,13 +8179,11 @@ var BlacklistedSessionError = /*#__PURE__*/function (_Error) {
  * @param {MediaKeySession} session - The MediaKeySession concerned.
  * @param {Object} keySystemOptions - The key system options.
  * @param {String} keySystem - The configuration keySystem used for deciphering
- * @param {Object} initializationData - The initialization data linked to that
- * session.
  * @returns {Observable}
  */
 
-function SessionEventsListener(session, keySystemOptions, keySystem, initializationData) {
-  log/* default.info */.Z.info("EME: Binding session events", session.sessionId);
+function SessionEventsListener(session, keySystemOptions, keySystem) {
+  log/* default.info */.Z.info("DRM: Binding session events", session.sessionId);
   var sessionWarningSubject$ = new Subject/* Subject */.x();
   var _keySystemOptions$get = keySystemOptions.getLicenseConfig,
       getLicenseConfig = _keySystemOptions$get === void 0 ? {} : _keySystemOptions$get;
@@ -7528,7 +8196,7 @@ function SessionEventsListener(session, keySystemOptions, keySystem, initializat
   var keyMessages$ = onKeyMessage$(session).pipe((0,mergeMap/* mergeMap */.z)(function (messageEvent) {
     var message = new Uint8Array(messageEvent.message);
     var messageType = (0,is_non_empty_string/* default */.Z)(messageEvent.messageType) ? messageEvent.messageType : "license-request";
-    log/* default.info */.Z.info("EME: Received message event, type " + messageType, session.sessionId, messageEvent);
+    log/* default.info */.Z.info("DRM: Received message event, type " + messageType, session.sessionId, messageEvent);
     var getLicense$ = (0,defer/* defer */.P)(function () {
       var getLicense = keySystemOptions.getLicense(message, messageType);
       var getLicenseTimeout = (0,is_null_or_undefined/* default */.Z)(getLicenseConfig.timeout) ? 10 * 1000 : getLicenseConfig.timeout;
@@ -7552,25 +8220,24 @@ function SessionEventsListener(session, keySystemOptions, keySystem, initializat
         var fallbackOnLastTry = err.fallbackOnLastTry;
 
         if (fallbackOnLastTry === true) {
-          log/* default.warn */.Z.warn("EME: Last `getLicense` attempt failed. " + "Blacklisting the current session.");
+          log/* default.warn */.Z.warn("DRM: Last `getLicense` attempt failed. " + "Blacklisting the current session.");
           throw new BlacklistedSessionError(formattedError);
         }
       }
 
       throw formattedError;
-    }), (0,startWith/* startWith */.O)({
-      type: "session-message",
-      value: {
-        messageType: messageType,
-        initializationData: initializationData
-      }
     }));
   }));
   var sessionUpdates = (0,merge/* merge */.T)(keyMessages$, keyStatusesChange$).pipe(concatMap(function (evt) {
     switch (evt.type) {
       case "key-message-handled":
       case "key-status-change-handled":
-        return updateSessionWithMessage(session, evt.value.license, initializationData);
+        if ((0,is_null_or_undefined/* default */.Z)(evt.value.license)) {
+          log/* default.info */.Z.info("DRM: No message given, skipping session.update");
+          return empty/* EMPTY */.E;
+        }
+
+        return updateSessionWithMessage(session, evt.value.license);
 
       default:
         return (0,of.of)(evt);
@@ -7642,38 +8309,24 @@ function formatGetLicenseError(error) {
  * Returns the right event depending on the action taken.
  * @param {MediaKeySession} session
  * @param {ArrayBuffer|TypedArray|null} message
- * @param {Object} initializationData
  * @returns {Observable}
  */
 
 
-function updateSessionWithMessage(session, message, initializationData) {
-  if ((0,is_null_or_undefined/* default */.Z)(message)) {
-    log/* default.info */.Z.info("EME: No message given, skipping session.update");
-    return (0,of.of)({
-      type: "no-update",
-      value: {
-        initializationData: initializationData
-      }
-    });
-  }
-
-  log/* default.info */.Z.info("EME: Updating MediaKeySession with message");
+function updateSessionWithMessage(session, message) {
+  log/* default.info */.Z.info("DRM: Updating MediaKeySession with message");
   return (0,cast_to_observable/* default */.Z)(session.update(message)).pipe((0,catchError/* catchError */.K)(function (error) {
     var reason = error instanceof Error ? error.toString() : "`session.update` failed";
     throw new encrypted_media_error/* default */.Z("KEY_UPDATE_ERROR", reason);
   }), (0,tap/* tap */.b)(function () {
-    log/* default.info */.Z.info("EME: MediaKeySession update succeeded.");
-  }), (0,map/* map */.U)(function () {
-    return {
-      type: "session-updated",
-      value: {
-        session: session,
-        license: message,
-        initializationData: initializationData
-      }
-    };
-  }));
+    log/* default.info */.Z.info("DRM: MediaKeySession update succeeded.");
+  }), // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
+  // first type parameter as `any` instead of the perfectly fine `unknown`,
+  // leading to linter issues, as it forbids the usage of `any`.
+  // This is why we're disabling the eslint rule.
+
+  /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
+  (0,ignoreElements/* ignoreElements */.l)());
 }
 /**
  * @param {MediaKeySession}
@@ -7684,7 +8337,7 @@ function updateSessionWithMessage(session, message, initializationData) {
 
 
 function handleKeyStatusesChangeEvent(session, keySystemOptions, keySystem, keyStatusesEvent) {
-  log/* default.info */.Z.info("EME: keystatuseschange event received", session.sessionId);
+  log/* default.info */.Z.info("DRM: keystatuseschange event received", session.sessionId);
   var callback$ = (0,defer/* defer */.P)(function () {
     return (0,rx_try_catch/* default */.Z)(function () {
       if (typeof keySystemOptions.onKeyStatusesChange !== "function") {
@@ -7738,7 +8391,12 @@ function getLicenseBackoffOptions(sessionWarningSubject$, numberOfRetry) {
     }
   };
 }
-;// CONCATENATED MODULE: ./src/core/eme/set_server_certificate.ts
+// EXTERNAL MODULE: ./src/errors/is_known_error.ts
+var is_known_error = __webpack_require__(9822);
+;// CONCATENATED MODULE: ./src/core/decrypt/set_server_certificate.ts
+
+
+
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -7757,12 +8415,9 @@ function getLicenseBackoffOptions(sessionWarningSubject$, numberOfRetry) {
 
 
 
-
-
-
 /**
  * Call the setServerCertificate API with the given certificate.
- * Complete observable on success, throw when failed.
+ * Resolves on success, rejects on failure.
  *
  * TODO Handle returned value?
  * From the spec:
@@ -7772,19 +8427,11 @@ function getLicenseBackoffOptions(sessionWarningSubject$, numberOfRetry) {
  *
  * @param {MediaKeys} mediaKeys
  * @param {ArrayBuffer} serverCertificate
- * @returns {Observable}
+ * @returns {Promise}
  */
 
-function setServerCertificate(mediaKeys, serverCertificate) {
-  return (0,defer/* defer */.P)(function () {
-    return (0,rx_try_catch/* default */.Z)(function () {
-      return (0,cast_to_observable/* default */.Z)(mediaKeys.setServerCertificate(serverCertificate));
-    }, undefined).pipe((0,catchError/* catchError */.K)(function (error) {
-      log/* default.warn */.Z.warn("EME: mediaKeys.setServerCertificate returned an error", error);
-      var reason = error instanceof Error ? error.toString() : "`setServerCertificate` error";
-      throw new encrypted_media_error/* default */.Z("LICENSE_SERVER_CERTIFICATE_ERROR", reason);
-    }));
-  });
+function setServerCertificate(_x, _x2) {
+  return _setServerCertificate.apply(this, arguments);
 }
 /**
  * Call the setCertificate API. If it fails just emit the error as warning
@@ -7795,43 +8442,322 @@ function setServerCertificate(mediaKeys, serverCertificate) {
  */
 
 
-function trySettingServerCertificate(mediaKeys, serverCertificate) {
-  return (0,defer/* defer */.P)(function () {
-    if (typeof mediaKeys.setServerCertificate !== "function") {
-      log/* default.warn */.Z.warn("EME: Could not set the server certificate." + " mediaKeys.setServerCertificate is not a function");
-      return empty/* EMPTY */.E;
-    }
+function _setServerCertificate() {
+  _setServerCertificate = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee(mediaKeys, serverCertificate) {
+    var res, reason;
+    return regenerator_default().wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            _context.prev = 0;
+            _context.next = 3;
+            return mediaKeys.setServerCertificate(serverCertificate);
 
-    if (server_certificate_store.hasOne(mediaKeys) === true) {
-      log/* default.info */.Z.info("EME: The MediaKeys already has a server certificate, skipping...");
-      return empty/* EMPTY */.E;
-    }
+          case 3:
+            res = _context.sent;
+            return _context.abrupt("return", res);
 
-    log/* default.info */.Z.info("EME: Setting server certificate on the MediaKeys"); // Because of browser errors, or a user action that can lead to interrupting
-    // server certificate setting, we might be left in a status where we don't
-    // know if we attached the server certificate or not.
-    // Calling `prepare` allow to invalidate temporarily that status.
+          case 7:
+            _context.prev = 7;
+            _context.t0 = _context["catch"](0);
+            log/* default.warn */.Z.warn("DRM: mediaKeys.setServerCertificate returned an error", _context.t0);
+            reason = _context.t0 instanceof Error ? _context.t0.toString() : "`setServerCertificate` error";
+            throw new encrypted_media_error/* default */.Z("LICENSE_SERVER_CERTIFICATE_ERROR", reason);
 
-    server_certificate_store.prepare(mediaKeys);
-    return setServerCertificate(mediaKeys, serverCertificate).pipe((0,tap/* tap */.b)(function () {
-      server_certificate_store.set(mediaKeys, serverCertificate);
-    }), // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
-    // first type parameter as `any` instead of the perfectly fine `unknown`,
-    // leading to linter issues, as it forbids the usage of `any`.
-    // This is why we're disabling the eslint rule.
-
-    /* eslint-disable @typescript-eslint/no-unsafe-argument */
-    (0,ignoreElements/* ignoreElements */.l)(), (0,catchError/* catchError */.K)(function (error) {
-      return (0,of.of)({
-        type: "warning",
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        value: error
-      });
-    }));
-  });
+          case 12:
+          case "end":
+            return _context.stop();
+        }
+      }
+    }, _callee, null, [[0, 7]]);
+  }));
+  return _setServerCertificate.apply(this, arguments);
 }
 
-;// CONCATENATED MODULE: ./src/core/eme/eme_manager.ts
+function trySettingServerCertificate(_x3, _x4) {
+  return _trySettingServerCertificate.apply(this, arguments);
+}
+
+function _trySettingServerCertificate() {
+  _trySettingServerCertificate = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee2(mediaKeys, serverCertificate) {
+    var result, formattedErr;
+    return regenerator_default().wrap(function _callee2$(_context2) {
+      while (1) {
+        switch (_context2.prev = _context2.next) {
+          case 0:
+            if (!(server_certificate_store.hasOne(mediaKeys) === true)) {
+              _context2.next = 3;
+              break;
+            }
+
+            log/* default.info */.Z.info("DRM: The MediaKeys already has a server certificate, skipping...");
+            return _context2.abrupt("return", {
+              type: "already-has-one"
+            });
+
+          case 3:
+            if (!(typeof mediaKeys.setServerCertificate !== "function")) {
+              _context2.next = 6;
+              break;
+            }
+
+            log/* default.warn */.Z.warn("DRM: Could not set the server certificate." + " mediaKeys.setServerCertificate is not a function");
+            return _context2.abrupt("return", {
+              type: "method-not-implemented"
+            });
+
+          case 6:
+            log/* default.info */.Z.info("DRM: Setting server certificate on the MediaKeys"); // Because of browser errors, or a user action that can lead to interrupting
+            // server certificate setting, we might be left in a status where we don't
+            // know if we attached the server certificate or not.
+            // Calling `prepare` allow to invalidate temporarily that status.
+
+            server_certificate_store.prepare(mediaKeys);
+            _context2.prev = 8;
+            _context2.next = 11;
+            return setServerCertificate(mediaKeys, serverCertificate);
+
+          case 11:
+            result = _context2.sent;
+            server_certificate_store.set(mediaKeys, serverCertificate);
+            return _context2.abrupt("return", {
+              type: "success",
+              value: result
+            });
+
+          case 16:
+            _context2.prev = 16;
+            _context2.t0 = _context2["catch"](8);
+            formattedErr = (0,is_known_error/* default */.Z)(_context2.t0) ? _context2.t0 : new encrypted_media_error/* default */.Z("LICENSE_SERVER_CERTIFICATE_ERROR", "Unknown error when setting the server certificate.");
+            return _context2.abrupt("return", {
+              type: "error",
+              value: formattedErr
+            });
+
+          case 20:
+          case "end":
+            return _context2.stop();
+        }
+      }
+    }, _callee2, null, [[8, 16]]);
+  }));
+  return _trySettingServerCertificate.apply(this, arguments);
+}
+
+
+;// CONCATENATED MODULE: ./src/core/decrypt/utils/clean_old_stored_persistent_info.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * Remove old information from a PersistentSessionsStore so that it respects the
+ * given `limit` as a maximum size. This can be used to prevent its size from
+ * growing indefinitely.
+ *
+ * This is needed because our persistent session information storage is
+ * un-bounded in size, adding more data will just add more data without removing
+ * the old one - which can be valid or invalid.
+ *
+ * This is problematic for at least two reasons:
+ *   - This data is loaded into JS memory which is finite (and which maximum
+ *     bounds depends on the user environment).
+ *   - The final storage used (as chosen by the application using the RxPlayer)
+ *     will in most cases have a maximum storage size.
+ */
+
+function cleanOldStoredPersistentInfo(persistentSessionsStore, limit) {
+  if (isNaN(limit) || limit < 0 || limit >= persistentSessionsStore.getLength()) {
+    return;
+  }
+
+  var numberOfPersistentSessions = persistentSessionsStore.getLength();
+  var toDelete = numberOfPersistentSessions - limit;
+  log/* default.info */.Z.info("DRM: Too many stored persistent sessions, removing some.", numberOfPersistentSessions, toDelete);
+  persistentSessionsStore.deleteOldSessions(toDelete);
+}
+// EXTERNAL MODULE: ./src/utils/starts_with.ts
+var starts_with = __webpack_require__(9252);
+;// CONCATENATED MODULE: ./src/core/decrypt/utils/get_drm_system_id.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @param {string} keySystem
+ * @returns {string|undefined}
+ */
+
+function getDrmSystemId(keySystem) {
+  if ((0,starts_with/* default */.Z)(keySystem, "com.microsoft.playready") || keySystem === "com.chromecast.playready" || keySystem === "com.youtube.playready") {
+    return "9a04f07998404286ab92e65be0885f95";
+  }
+
+  if (keySystem === "com.widevine.alpha") {
+    return "edef8ba979d64acea3c827dcd51d21ed";
+  }
+
+  if ((0,starts_with/* default */.Z)(keySystem, "com.apple.fps")) {
+    return "94ce86fb07ff4f43adb893d2fa968ca2";
+  }
+
+  if ((0,starts_with/* default */.Z)(keySystem, "com.nagra.")) {
+    return "adb41c242dbf4a6d958b4457c0d27b95";
+  }
+
+  return undefined;
+}
+;// CONCATENATED MODULE: ./src/core/decrypt/utils/init_data_values_container.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+/**
+ * Wrap initialization data values and reformat it so it becomes easier to check
+ * compatibility with other `InitDataValuesContainer`.
+ * @class InitDataValuesContainer
+ */
+
+var InitDataValuesContainer = /*#__PURE__*/function () {
+  /**
+   * Construct a new `InitDataValuesContainer`.
+   * Note that the data is not formatted right away.
+   * It is only really formatted lazily the first time we need it.
+   *
+   * @param {Array.<Object>} initDataValues
+   */
+  function InitDataValuesContainer(initDataValues) {
+    this._innerValues = initDataValues;
+    this._lazyFormattedValues = null;
+  }
+  /**
+   * Construct data that should be given to the `generateRequest` EME API.
+   * @returns {Uint8Array}
+   */
+
+
+  var _proto = InitDataValuesContainer.prototype;
+
+  _proto.constructRequestData = function constructRequestData() {
+    // `generateKeyRequest` awaits a single Uint8Array containing all
+    // initialization data.
+    return byte_parsing/* concat.apply */.zo.apply(void 0, this._innerValues.map(function (i) {
+      return i.data;
+    }));
+  }
+  /**
+   * Returns `true` if the given `InitDataValuesContainer` seems to be
+   * "compatible" with the one stored in this instance.
+   * Returns `false` if not.
+   *
+   * By "compatible" we mean that it will generate the same key request.
+   * @param {InitDataValuesContainer | Object} initDataValues
+   * @returns {boolean}
+   */
+  ;
+
+  _proto.isCompatibleWith = function isCompatibleWith(initDataValues) {
+    var formatted = initDataValues instanceof InitDataValuesContainer ? initDataValues.getFormattedValues() : initDataValues;
+    return areInitializationValuesCompatible(this.getFormattedValues(), formatted);
+  }
+  /**
+   * Return the stored initialization data values, with added niceties:
+   *   - they are sorted always the same way for similar
+   *     `InitDataValuesContainer`
+   *   - each value is associated to its hash, which is always done with  the
+   *     same hashing function than for all other InitDataValuesContainer).
+   *
+   * The main point being to be able to compare much faster multiple
+   * `InitDataValuesContainer`, though that data can also be used in any
+   * other way.
+   * @returns {Array.<Object>}
+   */
+  ;
+
+  _proto.getFormattedValues = function getFormattedValues() {
+    if (this._lazyFormattedValues === null) {
+      this._lazyFormattedValues = formatInitDataValues(this._innerValues);
+    }
+
+    return this._lazyFormattedValues;
+  };
+
+  return InitDataValuesContainer;
+}();
+/**
+ * Format given initializationData's values so they are faster to compare:
+ *   - sort them by systemId
+ *   - add hash for each initialization data encountered.
+ * @param {Array.<Object>} initialValues
+ * @returns {Array.<Object>}
+ */
+
+
+
+
+function formatInitDataValues(initialValues) {
+  return initialValues.slice().sort(function (a, b) {
+    return a.systemId === b.systemId ? 0 : a.systemId === undefined ? 1 : b.systemId === undefined ? -1 : a.systemId < b.systemId ? -1 : 1;
+  }).map(function (_ref) {
+    var systemId = _ref.systemId,
+        data = _ref.data;
+    return {
+      systemId: systemId,
+      data: data,
+      hash: (0,hash_buffer/* default */.Z)(data)
+    };
+  });
+}
+;// CONCATENATED MODULE: ./src/core/decrypt/content_decryptor.ts
+
+
+
+function content_decryptor_createForOfIteratorHelperLoose(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (it) return (it = it.call(o)).next.bind(it); if (Array.isArray(o) || (it = content_decryptor_unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function content_decryptor_unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return content_decryptor_arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return content_decryptor_arrayLikeToArray(o, minLen); }
+
+function content_decryptor_arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+
+
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -7864,308 +8790,766 @@ function trySettingServerCertificate(mediaKeys, serverCertificate) {
 
 
 
-var EME_DEFAULT_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS = config/* default.EME_DEFAULT_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS */.Z.EME_DEFAULT_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS,
-    EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION = config/* default.EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION */.Z.EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION;
+
+
+
 var onEncrypted$ = event_listeners/* onEncrypted$ */.Oh;
 /**
- * EME abstraction used to communicate with the Content Decryption Module (or
- * CDM) to be able to decrypt contents.
+ * Module communicating with the Content Decryption Module (or CDM) to be able
+ * to decrypt contents.
  *
- * The `EMEManager` can be given one or multiple key systems. It will choose the
- * appropriate one depending on user settings and browser support.
- * @param {HTMLMediaElement} mediaElement - The MediaElement which will be
- * associated to a MediaKeys object
- * @param {Array.<Object>} keySystemsConfigs - key system configuration
- * @param {Observable} contentProtections$ - Observable emitting external
- * initialization data.
- * @returns {Observable}
+ * The `ContentDecryptor` starts communicating with the CDM, to initialize the
+ * key system, as soon as it is created.
+ *
+ * You can be notified of various events, such as fatal errors, by registering
+ * to one of its multiple events (@see IContentDecryptorEvent).
+ *
+ * @class ContentDecryptor
  */
 
-function EMEManager(mediaElement, keySystemsConfigs, contentProtections$) {
-  log/* default.debug */.Z.debug("EME: Starting EMEManager logic.");
+var ContentDecryptor = /*#__PURE__*/function (_EventEmitter) {
+  (0,inheritsLoose/* default */.Z)(ContentDecryptor, _EventEmitter);
+
   /**
-   * Keep track of all decryption keys handled by this instance of the
-   * `EMEManager`.
-   * This allows to avoid creating multiple MediaKeySessions handling the same
-   * decryption keys.
+   * Create a new `ContentDecryptor`, and initialize its decryption capabilities
+   * right away.
+   * Goes into the `WaitingForAttachment` state once that initialization is
+   * done, after which you should call the `attach` method when you're ready for
+   * those decryption capabilities to be attached to the HTMLMediaElement.
+   *
+   * @param {HTMLMediaElement} mediaElement - The MediaElement which will be
+   * associated to a MediaKeys object
+   * @param {Array.<Object>} ksOptions - key system configuration.
+   * The `ContentDecryptor` can be given one or multiple key system
+   * configurations. It will choose the appropriate one depending on user
+   * settings and browser support.
    */
+  function ContentDecryptor(mediaElement, ksOptions) {
+    var _this;
 
-  var contentSessions = new InitDataStore();
-  /**
-   * Keep track of which initialization data have been blacklisted in the
-   * current instance of the `EMEManager`.
-   * If the same initialization data is encountered again, we can directly emit
-   * the same `BlacklistedSessionError`.
-   */
+    _this = _EventEmitter.call(this) || this;
+    log/* default.debug */.Z.debug("DRM: Starting ContentDecryptor logic.");
+    var canceller = new task_canceller/* default */.ZP();
+    _this._currentSessions = [];
+    _this._canceller = canceller;
+    _this._wasAttachCalled = false;
+    _this._initDataQueue = [];
+    _this._stateData = {
+      state: ContentDecryptorState.Initializing,
+      isMediaKeysAttached: false,
+      isInitDataQueueLocked: true,
+      data: null
+    };
+    _this.error = null;
+    var listenerSub = onEncrypted$(mediaElement).subscribe(function (evt) {
+      log/* default.debug */.Z.debug("DRM: Encrypted event received from media element.");
+      var initData = getInitData(evt);
 
-  var blacklistedInitData = new InitDataStore();
-  /** Emit the MediaKeys instance and its related information when ready. */
-
-  var mediaKeysInit$ = initMediaKeys(mediaElement, keySystemsConfigs).pipe((0,mergeMap/* mergeMap */.z)(function (mediaKeysEvt) {
-    if (mediaKeysEvt.type !== "attached-media-keys") {
-      return (0,of.of)(mediaKeysEvt);
-    }
-
-    var _mediaKeysEvt$value = mediaKeysEvt.value,
-        mediaKeys = _mediaKeysEvt$value.mediaKeys,
-        options = _mediaKeysEvt$value.options;
-    var serverCertificate = options.serverCertificate;
-
-    if ((0,is_null_or_undefined/* default */.Z)(serverCertificate)) {
-      return (0,of.of)(mediaKeysEvt);
-    }
-
-    return (0,concat/* concat */.z)(trySettingServerCertificate(mediaKeys, serverCertificate), (0,of.of)(mediaKeysEvt));
-  }), (0,shareReplay/* shareReplay */.d)()); // Share side-effects and cache success
-
-  /** Emit when the MediaKeys instance has been attached the HTMLMediaElement. */
-
-  var attachedMediaKeys$ = mediaKeysInit$.pipe((0,filter/* filter */.h)(function (evt) {
-    return evt.type === "attached-media-keys";
-  }), (0,take/* take */.q)(1));
-  /** Parsed `encrypted` events coming from the HTMLMediaElement. */
-
-  var mediaEncryptedEvents$ = onEncrypted$(mediaElement).pipe((0,tap/* tap */.b)(function () {
-    log/* default.debug */.Z.debug("EME: Encrypted event received from media element.");
-  }), (0,filter_map/* default */.Z)(function (evt) {
-    return getInitData(evt);
-  }, null), (0,shareReplay/* shareReplay */.d)({
-    refCount: true
-  })); // multiple Observables listen to that one
-  // as soon as the EMEManager is subscribed
-
-  /** Encryption events coming from the `contentProtections$` argument. */
-
-  var externalEvents$ = contentProtections$.pipe((0,tap/* tap */.b)(function () {
-    log/* default.debug */.Z.debug("EME: Encrypted event received from Player");
-  }));
-  /** Emit events signaling that an encryption initialization data is encountered. */
-
-  var initializationData$ = (0,merge/* merge */.T)(externalEvents$, mediaEncryptedEvents$);
-  /** Create MediaKeySessions and handle the corresponding events. */
-
-  var bindSession$ = initializationData$.pipe( // Add attached MediaKeys info once available
-  (0,mergeMap/* mergeMap */.z)(function (initializationData) {
-    return attachedMediaKeys$.pipe((0,map/* map */.U)(function (mediaKeysEvt) {
-      return [initializationData, mediaKeysEvt];
-    }));
-  }),
-  /* Attach server certificate and create/reuse MediaKeySession */
-  (0,mergeMap/* mergeMap */.z)(function (_ref) {
-    var initializationData = _ref[0],
-        mediaKeysEvent = _ref[1];
-    var _mediaKeysEvent$value = mediaKeysEvent.value,
-        mediaKeySystemAccess = _mediaKeysEvent$value.mediaKeySystemAccess,
-        stores = _mediaKeysEvent$value.stores,
-        options = _mediaKeysEvent$value.options;
-    var blacklistError = blacklistedInitData.get(initializationData);
-
-    if (blacklistError !== undefined) {
-      if (initializationData.type === undefined) {
-        log/* default.error */.Z.error("EME: The current session has already been blacklisted " + "but the current content is not known. Throwing.");
-        var sessionError = blacklistError.sessionError;
-        sessionError.fatal = true;
-        return (0,throwError/* throwError */._)(function () {
-          return sessionError;
-        });
+      if (initData !== null) {
+        _this.onInitializationData(initData);
       }
-
-      log/* default.warn */.Z.warn("EME: The current session has already been blacklisted. " + "Blacklisting content.");
-      return (0,of.of)({
-        type: "blacklist-protection-data",
-        value: initializationData
-      });
-    }
-
-    var lastKeyUpdate$ = new ReplaySubject/* ReplaySubject */.t(1); // First, check that this initialization data is not already handled
-
-    if (options.singleLicensePer === "content" && !contentSessions.isEmpty()) {
-      var keyIds = initializationData.keyIds;
-
-      if (keyIds === undefined) {
-        log/* default.warn */.Z.warn("EME: Initialization data linked to unknown key id, we'll " + "not able to fallback from it.");
-        return (0,of.of)({
-          type: "init-data-ignored",
-          value: {
-            initializationData: initializationData
-          }
-        });
-      }
-
-      var firstSession = contentSessions.getAll()[0];
-      return firstSession.lastKeyUpdate$.pipe((0,mergeMap/* mergeMap */.z)(function (evt) {
-        var hasAllNeededKeyIds = keyIds.every(function (keyId) {
-          for (var i = 0; i < evt.whitelistedKeyIds.length; i++) {
-            if ((0,are_arrays_of_numbers_equal/* default */.Z)(evt.whitelistedKeyIds[i], keyId)) {
-              return true;
-            }
-          }
-        });
-
-        if (!hasAllNeededKeyIds) {
-          // Not all keys are available in the current session, blacklist those
-          return (0,of.of)({
-            type: "keys-update",
-            value: {
-              blacklistedKeyIDs: keyIds,
-              whitelistedKeyIds: []
-            }
-          });
-        } // Already handled by the current session.
-        // Move corresponding session on top of the cache if it exists
-
-
-        var loadedSessionsStore = mediaKeysEvent.value.stores.loadedSessionsStore;
-        loadedSessionsStore.reuse(firstSession.initializationData);
-        return (0,of.of)({
-          type: "init-data-ignored",
-          value: {
-            initializationData: initializationData
-          }
-        });
-      }));
-    } else if (!contentSessions.storeIfNone(initializationData, {
-      initializationData: initializationData,
-      lastKeyUpdate$: lastKeyUpdate$
-    })) {
-      log/* default.debug */.Z.debug("EME: Init data already received. Skipping it.");
-      return (0,of.of)({
-        type: "init-data-ignored",
-        value: {
-          initializationData: initializationData
-        }
-      });
-    }
-
-    var wantedSessionType;
-
-    if (options.persistentLicense !== true) {
-      wantedSessionType = "temporary";
-    } else if (!canCreatePersistentSession(mediaKeySystemAccess)) {
-      log/* default.warn */.Z.warn("EME: Cannot create \"persistent-license\" session: not supported");
-      wantedSessionType = "temporary";
-    } else {
-      wantedSessionType = "persistent-license";
-    }
-
-    var maxSessionCacheSize = typeof options.maxSessionCacheSize === "number" ? options.maxSessionCacheSize : EME_DEFAULT_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS;
-    return getSession(initializationData, stores, wantedSessionType, maxSessionCacheSize).pipe((0,mergeMap/* mergeMap */.z)(function (sessionEvt) {
-      switch (sessionEvt.type) {
-        case "cleaning-old-session":
-          contentSessions.remove(sessionEvt.value.initializationData);
-          return empty/* EMPTY */.E;
-
-        case "cleaned-old-session":
-          return empty/* EMPTY */.E;
-
-        case "created-session":
-        case "loaded-open-session":
-        case "loaded-persistent-session":
-          // Do nothing, just to check every possibility is taken
-          break;
-
-        default:
-          // Use TypeScript to check if all possibilities have been checked
-          (0,assert_unreachable/* default */.Z)(sessionEvt);
-      }
-
-      var _sessionEvt$value = sessionEvt.value,
-          mediaKeySession = _sessionEvt$value.mediaKeySession,
-          sessionType = _sessionEvt$value.sessionType;
+    });
+    canceller.signal.register(function () {
+      listenerSub.unsubscribe();
+    });
+    initMediaKeys(mediaElement, ksOptions, canceller.signal).then(function (mediaKeysInfo) {
+      var options = mediaKeysInfo.options,
+          mediaKeySystemAccess = mediaKeysInfo.mediaKeySystemAccess;
       /**
-       * We only store persistent sessions once its keys are known.
-       * This boolean allows to know if this session has already been
-       * persisted or not.
+       * String identifying the key system, allowing the rest of the code to
+       * only advertise the required initialization data for license requests.
+       *
+       * Note that we only set this value if retro-compatibility to older
+       * persistent logic in the RxPlayer is not important, as the
+       * optimizations this property unlocks can break the loading of
+       * MediaKeySessions persisted in older RxPlayer's versions.
        */
 
-      var isSessionPersisted = false; // `generateKeyRequest` awaits a single Uint8Array containing all
-      // initialization data.
+      var systemId;
 
-      var concatInitData = byte_parsing/* concat.apply */.zo.apply(void 0, initializationData.values.map(function (i) {
-        return i.data;
-      }));
-      var generateRequest$ = sessionEvt.type !== "created-session" ? empty/* EMPTY */.E : generateKeyRequest(mediaKeySession, initializationData.type, concatInitData).pipe((0,catchError/* catchError */.K)(function (error) {
-        throw new encrypted_media_error/* default */.Z("KEY_GENERATE_REQUEST_ERROR", error instanceof Error ? error.toString() : "Unknown error");
-      }), (0,ignoreElements/* ignoreElements */.l)());
-      return (0,merge/* merge */.T)(SessionEventsListener(mediaKeySession, options, mediaKeySystemAccess.keySystem, initializationData), generateRequest$).pipe((0,map/* map */.U)(function (evt) {
-        if (evt.type !== "keys-update") {
-          return evt;
-        } // We want to add the current key ids in the blacklist if it is
-        // not already there.
-        //
-        // We only do that when `singleLicensePer` is set to something
-        // else than the default `"init-data"` because this logic:
-        //   1. might result in a quality fallback, which is a v3.x.x
-        //      breaking change if some APIs (like `singleLicensePer`)
-        //      aren't used.
-        //   2. Rely on the EME spec regarding key statuses being well
-        //      implemented on all supported devices, which we're not
-        //      sure yet. Because in any other `singleLicensePer`, we
-        //      need a good implementation anyway, it doesn't matter
-        //      there.
+      if ((0,is_null_or_undefined/* default */.Z)(options.licenseStorage) || options.licenseStorage.disableRetroCompatibility === true) {
+        systemId = getDrmSystemId(mediaKeySystemAccess.keySystem);
+      }
+
+      _this.systemId = systemId;
+
+      if (_this._stateData.state === ContentDecryptorState.Initializing) {
+        _this._stateData = {
+          state: ContentDecryptorState.WaitingForAttachment,
+          isInitDataQueueLocked: true,
+          isMediaKeysAttached: false,
+          data: {
+            mediaKeysInfo: mediaKeysInfo,
+            mediaElement: mediaElement
+          }
+        };
+
+        _this.trigger("stateChange", _this._stateData.state);
+      }
+    })["catch"](function (err) {
+      _this._onFatalError(err);
+    });
+    return _this;
+  }
+  /**
+   * Returns the current state of the ContentDecryptor.
+   * @see ContentDecryptorState
+   * @returns {Object}
+   */
 
 
-        var expectedKeyIds = initializationData.keyIds;
+  var _proto = ContentDecryptor.prototype;
 
-        if (expectedKeyIds !== undefined && options.singleLicensePer !== "init-data") {
-          var missingKeyIds = expectedKeyIds.filter(function (expected) {
-            return !evt.value.whitelistedKeyIds.some(function (whitelisted) {
-              return (0,are_arrays_of_numbers_equal/* default */.Z)(whitelisted, expected);
-            }) && !evt.value.blacklistedKeyIDs.some(function (blacklisted) {
-              return (0,are_arrays_of_numbers_equal/* default */.Z)(blacklisted, expected);
-            });
-          });
+  _proto.getState = function getState() {
+    return this._stateData.state;
+  }
+  /**
+   * Attach the current decryption capabilities to the HTMLMediaElement.
+   * This method should only be called once the `ContentDecryptor` is in the
+   * `WaitingForAttachment` state.
+   *
+   * You might want to first set the HTMLMediaElement's `src` attribute before
+   * calling this method, and only push data to it once the `ReadyForContent`
+   * state is reached, for compatibility reasons.
+   */
+  ;
 
-          if (missingKeyIds.length > 0) {
-            var _evt$value$blackliste;
+  _proto.attach = function attach() {
+    var _this2 = this;
 
-            (_evt$value$blackliste = evt.value.blacklistedKeyIDs).push.apply(_evt$value$blackliste, missingKeyIds);
+    if (this._stateData.state !== ContentDecryptorState.WaitingForAttachment) {
+      throw new Error("`attach` should only be called when " + "in the WaitingForAttachment state");
+    } else if (this._wasAttachCalled) {
+      log/* default.warn */.Z.warn("DRM: ContentDecryptor's `attach` method called more than once.");
+      return;
+    }
+
+    this._wasAttachCalled = true;
+    var _this$_stateData$data = this._stateData.data,
+        mediaElement = _this$_stateData$data.mediaElement,
+        mediaKeysInfo = _this$_stateData$data.mediaKeysInfo;
+    var options = mediaKeysInfo.options,
+        mediaKeys = mediaKeysInfo.mediaKeys,
+        mediaKeySystemAccess = mediaKeysInfo.mediaKeySystemAccess,
+        stores = mediaKeysInfo.stores;
+    var stateToAttatch = {
+      loadedSessionsStore: stores.loadedSessionsStore,
+      mediaKeySystemAccess: mediaKeySystemAccess,
+      mediaKeys: mediaKeys,
+      keySystemOptions: options
+    };
+    var shouldDisableLock = options.disableMediaKeysAttachmentLock === true;
+
+    if (shouldDisableLock) {
+      this._stateData = {
+        state: ContentDecryptorState.ReadyForContent,
+        isInitDataQueueLocked: true,
+        isMediaKeysAttached: false,
+        data: null
+      };
+      this.trigger("stateChange", this._stateData.state);
+
+      if (this._isStopped()) {
+        // previous trigger might have lead to disposal
+        return;
+      }
+    }
+
+    log/* default.debug */.Z.debug("DRM: Attaching current MediaKeys");
+    attachMediaKeys(mediaElement, stateToAttatch, this._canceller.signal).then( /*#__PURE__*/(0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee() {
+      var serverCertificate, resSsc, prevState;
+      return regenerator_default().wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              serverCertificate = options.serverCertificate;
+
+              if ((0,is_null_or_undefined/* default */.Z)(serverCertificate)) {
+                _context.next = 6;
+                break;
+              }
+
+              _context.next = 4;
+              return trySettingServerCertificate(mediaKeys, serverCertificate);
+
+            case 4:
+              resSsc = _context.sent;
+
+              if (resSsc.type === "error") {
+                _this2.trigger("warning", resSsc.value);
+              }
+
+            case 6:
+              if (!_this2._isStopped()) {
+                _context.next = 8;
+                break;
+              }
+
+              return _context.abrupt("return");
+
+            case 8:
+              prevState = _this2._stateData.state;
+              _this2._stateData = {
+                state: ContentDecryptorState.ReadyForContent,
+                isMediaKeysAttached: true,
+                isInitDataQueueLocked: false,
+                data: {
+                  mediaKeysData: mediaKeysInfo
+                }
+              };
+
+              if (prevState !== ContentDecryptorState.ReadyForContent) {
+                _this2.trigger("stateChange", ContentDecryptorState.ReadyForContent);
+              }
+
+              if (!_this2._isStopped()) {
+                _this2._processCurrentInitDataQueue();
+              }
+
+            case 12:
+            case "end":
+              return _context.stop();
           }
         }
+      }, _callee);
+    })))["catch"](function (err) {
+      _this2._onFatalError(err);
+    });
+  }
+  /**
+   * Stop this `ContentDecryptor` instance:
+   *   - stop listening and reacting to the various event listeners
+   *   - abort all operations.
+   *
+   * Once disposed, a `ContentDecryptor` cannot be used anymore.
+   */
+  ;
 
-        lastKeyUpdate$.next(evt.value);
-
-        if (evt.value.whitelistedKeyIds.length === 0 && evt.value.blacklistedKeyIDs.length === 0 || sessionType === "temporary" || stores.persistentSessionsStore === null || isSessionPersisted) {
-          return evt;
-        }
-
-        var persistentSessionsStore = stores.persistentSessionsStore;
-        cleanOldStoredPersistentInfo(persistentSessionsStore, EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION - 1);
-        persistentSessionsStore.add(initializationData, mediaKeySession);
-        isSessionPersisted = true;
-        return evt;
-      }), (0,catchError/* catchError */.K)(function (err) {
-        if (!(err instanceof BlacklistedSessionError)) {
-          throw err;
-        }
-
-        blacklistedInitData.store(initializationData, err);
-        var sessionError = err.sessionError;
-
-        if (initializationData.type === undefined) {
-          log/* default.error */.Z.error("EME: Current session blacklisted and content not known. " + "Throwing.");
-          sessionError.fatal = true;
-          throw sessionError;
-        }
-
-        log/* default.warn */.Z.warn("EME: Current session blacklisted. Blacklisting content.");
-        return (0,of.of)({
-          type: "warning",
-          value: sessionError
-        }, {
-          type: "blacklist-protection-data",
-          value: initializationData
-        });
-      }));
-    }));
-  }));
-  return (0,merge/* merge */.T)(mediaKeysInit$, mediaEncryptedEvents$.pipe((0,map/* map */.U)(function (evt) {
-    return {
-      type: "encrypted-event-received",
-      value: evt
+  _proto.dispose = function dispose() {
+    this.removeEventListener();
+    this._stateData = {
+      state: ContentDecryptorState.Disposed,
+      isMediaKeysAttached: undefined,
+      isInitDataQueueLocked: undefined,
+      data: null
     };
-  })), bindSession$);
-}
+
+    this._canceller.cancel();
+
+    this.trigger("stateChange", this._stateData.state);
+  }
+  /**
+   * Method to call when new protection initialization data is encounted on the
+   * content.
+   *
+   * When called, the `ContentDecryptor` will try to obtain the decryption key
+   * if not already obtained.
+   *
+   * @param {Object} initializationData
+   */
+  ;
+
+  _proto.onInitializationData = function onInitializationData(initializationData) {
+    var _this3 = this;
+
+    if (this._stateData.isInitDataQueueLocked !== false) {
+      if (this._isStopped()) {
+        throw new Error("ContentDecryptor either disposed or stopped.");
+      }
+
+      this._initDataQueue.push(initializationData);
+
+      return;
+    }
+
+    var mediaKeysData = this._stateData.data.mediaKeysData;
+    var processedInitializationData = Object.assign(Object.assign({}, initializationData), {
+      values: new InitDataValuesContainer(initializationData.values)
+    });
+
+    this._processInitializationData(processedInitializationData, mediaKeysData)["catch"](function (err) {
+      _this3._onFatalError(err);
+    });
+  }
+  /**
+   * Async logic run each time new initialization data has to be processed.
+   * The promise return may reject, in which case a fatal error should be linked
+   * the current `ContentDecryptor`.
+   *
+   * The Promise's resolution however provides no semantic value.
+   * @param {Object} initializationData
+   * @returns {Promise.<void>}
+   */
+  ;
+
+  _proto._processInitializationData =
+  /*#__PURE__*/
+  function () {
+    var _processInitializationData2 = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee2(initializationData, mediaKeysData) {
+      var _this4 = this;
+
+      var mediaKeySystemAccess, stores, options, firstCreatedSession, keyIds, hexKids, period, createdSessions, periodKeys, _iterator, _step, createdSess, periodKeysArr, _i, _periodKeysArr, kid, _iterator2, _step2, innerKid, wantedSessionType, _config$getCurrent, EME_DEFAULT_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS, EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION, maxSessionCacheSize, sessionRes, sessionInfo, _sessionRes$value, mediaKeySession, sessionType, isSessionPersisted, sub, requestData;
+
+      return regenerator_default().wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              mediaKeySystemAccess = mediaKeysData.mediaKeySystemAccess, stores = mediaKeysData.stores, options = mediaKeysData.options;
+
+              if (!(this._tryToUseAlreadyCreatedSession(initializationData, mediaKeysData) || this._isStopped())) {
+                _context2.next = 3;
+                break;
+              }
+
+              return _context2.abrupt("return");
+
+            case 3:
+              if (!(options.singleLicensePer === "content")) {
+                _context2.next = 15;
+                break;
+              }
+
+              firstCreatedSession = (0,array_find/* default */.Z)(this._currentSessions, function (x) {
+                return x.source === "created-session";
+              }
+              /* Created */
+              );
+
+              if (!(firstCreatedSession !== undefined)) {
+                _context2.next = 13;
+                break;
+              }
+
+              // We already fetched a `singleLicensePer: "content"` license, yet we
+              // could not use the already-created MediaKeySession with it.
+              // It means that we'll never handle it and we should thus blacklist it.
+              keyIds = initializationData.keyIds;
+
+              if (!(keyIds === undefined)) {
+                _context2.next = 10;
+                break;
+              }
+
+              if (initializationData.content === undefined) {
+                log/* default.warn */.Z.warn("DRM: Unable to fallback from a non-decipherable quality.");
+              } else {
+                blackListProtectionData(initializationData.content.manifest, initializationData);
+              }
+
+              return _context2.abrupt("return");
+
+            case 10:
+              firstCreatedSession.record.associateKeyIds(keyIds);
+
+              if (initializationData.content !== undefined) {
+                if (log/* default.getLevel */.Z.getLevel() === "DEBUG") {
+                  hexKids = keyIds.reduce(function (acc, kid) {
+                    return acc + ", " + (0,string_parsing/* bytesToHex */.ci)(kid);
+                  }, "");
+                  log/* default.debug */.Z.debug("DRM: Blacklisting new key ids", hexKids);
+                }
+
+                updateDecipherability(initializationData.content.manifest, [], keyIds);
+              }
+
+              return _context2.abrupt("return");
+
+            case 13:
+              _context2.next = 37;
+              break;
+
+            case 15:
+              if (!(options.singleLicensePer === "periods" && initializationData.content !== undefined)) {
+                _context2.next = 37;
+                break;
+              }
+
+              period = initializationData.content.period;
+              createdSessions = this._currentSessions.filter(function (x) {
+                return x.source === "created-session";
+              }
+              /* Created */
+              );
+              periodKeys = new Set();
+              addKeyIdsFromPeriod(periodKeys, period);
+              _iterator = content_decryptor_createForOfIteratorHelperLoose(createdSessions);
+
+            case 21:
+              if ((_step = _iterator()).done) {
+                _context2.next = 37;
+                break;
+              }
+
+              createdSess = _step.value;
+              periodKeysArr = Array.from(periodKeys);
+              _i = 0, _periodKeysArr = periodKeysArr;
+
+            case 25:
+              if (!(_i < _periodKeysArr.length)) {
+                _context2.next = 35;
+                break;
+              }
+
+              kid = _periodKeysArr[_i];
+
+              if (!createdSess.record.isAssociatedWithKeyId(kid)) {
+                _context2.next = 32;
+                break;
+              }
+
+              createdSess.record.associateKeyIds(periodKeys.values()); // Re-loop through the Period's key ids to blacklist ones that are missing
+              // from `createdSess`'s `keyStatuses` and to update the content's
+              // decipherability.
+
+              for (_iterator2 = content_decryptor_createForOfIteratorHelperLoose(periodKeysArr); !(_step2 = _iterator2()).done;) {
+                innerKid = _step2.value;
+
+                if (!isKeyIdContainedIn(innerKid, createdSess.keyStatuses.whitelisted) && !isKeyIdContainedIn(innerKid, createdSess.keyStatuses.blacklisted)) {
+                  createdSess.keyStatuses.blacklisted.push(innerKid);
+                }
+              }
+
+              updateDecipherability(initializationData.content.manifest, createdSess.keyStatuses.whitelisted, createdSess.keyStatuses.blacklisted);
+              return _context2.abrupt("return");
+
+            case 32:
+              _i++;
+              _context2.next = 25;
+              break;
+
+            case 35:
+              _context2.next = 21;
+              break;
+
+            case 37:
+              // /!\ Do not forget to unlock when done
+              // TODO this is error-prone and can lead to performance issue when loading
+              // persistent sessions.
+              // Can we find a better strategy?
+              this._lockInitDataQueue();
+
+              if (options.persistentLicense !== true) {
+                wantedSessionType = "temporary";
+              } else if (!canCreatePersistentSession(mediaKeySystemAccess)) {
+                log/* default.warn */.Z.warn("DRM: Cannot create \"persistent-license\" session: not supported");
+                wantedSessionType = "temporary";
+              } else {
+                wantedSessionType = "persistent-license";
+              }
+
+              _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(), EME_DEFAULT_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS = _config$getCurrent.EME_DEFAULT_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS, EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION = _config$getCurrent.EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION;
+              maxSessionCacheSize = typeof options.maxSessionCacheSize === "number" ? options.maxSessionCacheSize : EME_DEFAULT_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS;
+              _context2.next = 43;
+              return createOrLoadSession(initializationData, stores, wantedSessionType, maxSessionCacheSize, this._canceller.signal);
+
+            case 43:
+              sessionRes = _context2.sent;
+
+              if (!this._isStopped()) {
+                _context2.next = 46;
+                break;
+              }
+
+              return _context2.abrupt("return");
+
+            case 46:
+              sessionInfo = {
+                record: sessionRes.value.keySessionRecord,
+                source: sessionRes.type,
+                keyStatuses: {
+                  whitelisted: [],
+                  blacklisted: []
+                },
+                blacklistedSessionError: null
+              };
+
+              this._currentSessions.push(sessionInfo);
+
+              _sessionRes$value = sessionRes.value, mediaKeySession = _sessionRes$value.mediaKeySession, sessionType = _sessionRes$value.sessionType;
+              /**
+               * We only store persistent sessions once its keys are known.
+               * This boolean allows to know if this session has already been
+               * persisted or not.
+               */
+
+              isSessionPersisted = false;
+              sub = SessionEventsListener(mediaKeySession, options, mediaKeySystemAccess.keySystem).subscribe({
+                next: function next(evt) {
+                  switch (evt.type) {
+                    case "warning":
+                      _this4.trigger("warning", evt.value);
+
+                      return;
+                  }
+
+                  var linkedKeys;
+
+                  if (sessionInfo.source === "created-session"
+                  /* Created */
+                  ) {
+                    // When the license has been fetched, there might be implicit key ids
+                    // linked to the session depending on the `singleLicensePer` option.
+                    linkedKeys = getFetchedLicenseKeysInfo(initializationData, options.singleLicensePer, evt.value.whitelistedKeyIds, evt.value.blacklistedKeyIDs);
+                  } else {
+                    // When the MediaKeySession is just a cached/persisted one, we don't
+                    // have any concept of "implicit key id".
+                    linkedKeys = {
+                      whitelisted: evt.value.whitelistedKeyIds,
+                      blacklisted: evt.value.blacklistedKeyIDs
+                    };
+                  }
+
+                  sessionInfo.record.associateKeyIds(linkedKeys.whitelisted);
+                  sessionInfo.record.associateKeyIds(linkedKeys.blacklisted);
+                  sessionInfo.keyStatuses = {
+                    whitelisted: linkedKeys.whitelisted,
+                    blacklisted: linkedKeys.blacklisted
+                  };
+
+                  if (sessionInfo.record.getAssociatedKeyIds().length !== 0 && sessionType === "persistent-license" && stores.persistentSessionsStore !== null && !isSessionPersisted) {
+                    var persistentSessionsStore = stores.persistentSessionsStore;
+                    cleanOldStoredPersistentInfo(persistentSessionsStore, EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION - 1);
+                    persistentSessionsStore.add(initializationData, sessionInfo.record.getAssociatedKeyIds(), mediaKeySession);
+                    isSessionPersisted = true;
+                  }
+
+                  if (initializationData.content !== undefined) {
+                    updateDecipherability(initializationData.content.manifest, linkedKeys.whitelisted, linkedKeys.blacklisted);
+                  }
+
+                  _this4._unlockInitDataQueue();
+                },
+                error: function error(err) {
+                  if (!(err instanceof BlacklistedSessionError)) {
+                    _this4._onFatalError(err);
+
+                    return;
+                  }
+
+                  sessionInfo.blacklistedSessionError = err;
+
+                  if (initializationData.content !== undefined) {
+                    var manifest = initializationData.content.manifest;
+                    log/* default.info */.Z.info("DRM: blacklisting Representations based on " + "protection data.");
+                    blackListProtectionData(manifest, initializationData);
+                  }
+
+                  _this4._unlockInitDataQueue(); // TODO warning for blacklisted session?
+
+                }
+              });
+
+              this._canceller.signal.register(function () {
+                sub.unsubscribe();
+              });
+
+              if (options.singleLicensePer === undefined || options.singleLicensePer === "init-data") {
+                this._unlockInitDataQueue();
+              }
+
+              if (!(sessionRes.type === "created-session"
+              /* Created */
+              )) {
+                _context2.next = 63;
+                break;
+              }
+
+              requestData = initializationData.values.constructRequestData();
+              _context2.prev = 55;
+              _context2.next = 58;
+              return generateKeyRequest(mediaKeySession, initializationData.type, requestData);
+
+            case 58:
+              _context2.next = 63;
+              break;
+
+            case 60:
+              _context2.prev = 60;
+              _context2.t0 = _context2["catch"](55);
+              throw new encrypted_media_error/* default */.Z("KEY_GENERATE_REQUEST_ERROR", _context2.t0 instanceof Error ? _context2.t0.toString() : "Unknown error");
+
+            case 63:
+              return _context2.abrupt("return", Promise.resolve());
+
+            case 64:
+            case "end":
+              return _context2.stop();
+          }
+        }
+      }, _callee2, this, [[55, 60]]);
+    }));
+
+    function _processInitializationData(_x, _x2) {
+      return _processInitializationData2.apply(this, arguments);
+    }
+
+    return _processInitializationData;
+  }();
+
+  _proto._tryToUseAlreadyCreatedSession = function _tryToUseAlreadyCreatedSession(initializationData, mediaKeysData) {
+    var stores = mediaKeysData.stores,
+        options = mediaKeysData.options;
+    /**
+     * If set, a currently-used key session is already compatible to this
+     * initialization data.
+     */
+
+    var compatibleSessionInfo = (0,array_find/* default */.Z)(this._currentSessions, function (x) {
+      return x.record.isCompatibleWith(initializationData);
+    });
+
+    if (compatibleSessionInfo === undefined) {
+      return false;
+    } // Check if the compatible session is blacklisted
+
+
+    var blacklistedSessionError = compatibleSessionInfo.blacklistedSessionError;
+
+    if (!(0,is_null_or_undefined/* default */.Z)(blacklistedSessionError)) {
+      if (initializationData.type === undefined || initializationData.content === undefined) {
+        log/* default.error */.Z.error("DRM: This initialization data has already been blacklisted " + "but the current content is not known.");
+        return true;
+      } else {
+        log/* default.info */.Z.info("DRM: This initialization data has already been blacklisted. " + "Blacklisting the related content.");
+        var manifest = initializationData.content.manifest;
+        blackListProtectionData(manifest, initializationData);
+        return true;
+      }
+    } // Check if the current key id(s) has been blacklisted by this session
+
+
+    if (initializationData.keyIds !== undefined) {
+      /**
+       * If set to `true`, the Representation(s) linked to this
+       * initialization data's key id should be marked as "not decipherable".
+       */
+      var isUndecipherable;
+
+      if (options.singleLicensePer === undefined || options.singleLicensePer === "init-data") {
+        // Note: In the default "init-data" mode, we only avoid a
+        // Representation if the key id was originally explicitely
+        // blacklisted (and not e.g. if its key was just not present in
+        // the license).
+        //
+        // This is to enforce v3.x.x retro-compatibility: we cannot
+        // fallback from a Representation unless some RxPlayer option
+        // documentating this behavior has been set.
+        var blacklisted = compatibleSessionInfo.keyStatuses.blacklisted;
+        isUndecipherable = areSomeKeyIdsContainedIn(initializationData.keyIds, blacklisted);
+      } else {
+        // In any other mode, as soon as not all of this initialization
+        // data's linked key ids are explicitely whitelisted, we can mark
+        // the corresponding Representation as "not decipherable".
+        // This is because we've no such retro-compatibility guarantee to
+        // make there.
+        var whitelisted = compatibleSessionInfo.keyStatuses.whitelisted;
+        isUndecipherable = !areAllKeyIdsContainedIn(initializationData.keyIds, whitelisted);
+      }
+
+      if (isUndecipherable) {
+        if (initializationData.content === undefined) {
+          log/* default.error */.Z.error("DRM: Cannot forbid key id, the content is unknown.");
+          return true;
+        }
+
+        log/* default.info */.Z.info("DRM: Current initialization data is linked to blacklisted keys. " + "Marking Representations as not decipherable");
+        updateDecipherability(initializationData.content.manifest, [], initializationData.keyIds);
+        return true;
+      }
+    } // If we reached here, it means that this initialization data is not
+    // blacklisted in any way.
+    // Search loaded session and put it on top of the cache if it exists.
+
+
+    var entry = stores.loadedSessionsStore.reuse(initializationData);
+
+    if (entry !== null) {
+      // TODO update decipherability to `true` if not?
+      log/* default.debug */.Z.debug("DRM: Init data already processed. Skipping it.");
+      return true;
+    } // Session not found in `loadedSessionsStore`, it might have been closed
+    // since.
+    // Remove from `this._currentSessions` and start again.
+
+
+    var indexOf = this._currentSessions.indexOf(compatibleSessionInfo);
+
+    if (indexOf === -1) {
+      log/* default.error */.Z.error("DRM: Unable to remove processed init data: not found.");
+    } else {
+      log/* default.debug */.Z.debug("DRM: A session from a processed init data is not available " + "anymore. Re-processing it.");
+
+      this._currentSessions.splice(indexOf, 1);
+    }
+
+    return false;
+  };
+
+  _proto._onFatalError = function _onFatalError(err) {
+    if (this._canceller.isUsed) {
+      return;
+    }
+
+    var formattedErr = err instanceof Error ? err : new other_error/* default */.Z("NONE", "Unknown encryption error");
+    this.error = formattedErr;
+    this._initDataQueue.length = 0;
+    this._stateData = {
+      state: ContentDecryptorState.Error,
+      isMediaKeysAttached: undefined,
+      isInitDataQueueLocked: undefined,
+      data: null
+    };
+
+    this._canceller.cancel();
+
+    this.trigger("error", formattedErr); // The previous trigger might have lead to a disposal of the `ContentDecryptor`.
+
+    if (this._stateData.state === ContentDecryptorState.Error) {
+      this.trigger("stateChange", this._stateData.state);
+    }
+  }
+  /**
+   * Return `true` if the `ContentDecryptor` has either been disposed or
+   * encountered a fatal error which made it stop.
+   * @returns {boolean}
+   */
+  ;
+
+  _proto._isStopped = function _isStopped() {
+    return this._stateData.state === ContentDecryptorState.Disposed || this._stateData.state === ContentDecryptorState.Error;
+  };
+
+  _proto._processCurrentInitDataQueue = function _processCurrentInitDataQueue() {
+    while (this._stateData.isInitDataQueueLocked === false) {
+      var initData = this._initDataQueue.shift();
+
+      if (initData === undefined) {
+        return;
+      }
+
+      this.onInitializationData(initData);
+    }
+  };
+
+  _proto._lockInitDataQueue = function _lockInitDataQueue() {
+    if (this._stateData.isInitDataQueueLocked === false) {
+      this._stateData.isInitDataQueueLocked = true;
+    }
+  };
+
+  _proto._unlockInitDataQueue = function _unlockInitDataQueue() {
+    if (this._stateData.isMediaKeysAttached !== true) {
+      log/* default.error */.Z.error("DRM: Trying to unlock in the wrong state");
+      return;
+    }
+
+    this._stateData.isInitDataQueueLocked = false;
+
+    this._processCurrentInitDataQueue();
+  };
+
+  return ContentDecryptor;
+}(event_emitter/* default */.Z);
 /**
  * Returns `true` if the given MediaKeySystemAccess can create
  * "persistent-license" MediaKeySessions.
@@ -8173,13 +9557,280 @@ function EMEManager(mediaElement, keySystemsConfigs, contentProtections$) {
  * @returns {Boolean}
  */
 
+
+
+
 function canCreatePersistentSession(mediaKeySystemAccess) {
   var _mediaKeySystemAccess = mediaKeySystemAccess.getConfiguration(),
       sessionTypes = _mediaKeySystemAccess.sessionTypes;
 
   return sessionTypes !== undefined && (0,array_includes/* default */.Z)(sessionTypes, "persistent-license");
 }
-;// CONCATENATED MODULE: ./src/core/eme/index.ts
+
+function updateDecipherability(manifest, whitelistedKeyIds, blacklistedKeyIDs) {
+  manifest.updateRepresentationsDeciperability(function (representation) {
+    if (representation.contentProtections === undefined) {
+      return representation.decipherable;
+    }
+
+    var contentKIDs = representation.contentProtections.keyIds;
+
+    for (var i = 0; i < contentKIDs.length; i++) {
+      var elt = contentKIDs[i];
+
+      for (var j = 0; j < blacklistedKeyIDs.length; j++) {
+        if (areKeyIdsEqual(blacklistedKeyIDs[j], elt.keyId)) {
+          return false;
+        }
+      }
+
+      for (var _j = 0; _j < whitelistedKeyIds.length; _j++) {
+        if (areKeyIdsEqual(whitelistedKeyIds[_j], elt.keyId)) {
+          return true;
+        }
+      }
+    }
+
+    return representation.decipherable;
+  });
+}
+
+function blackListProtectionData(manifest, initData) {
+  manifest.updateRepresentationsDeciperability(function (representation) {
+    var _a, _b;
+
+    if (representation.decipherable === false) {
+      return false;
+    }
+
+    var segmentProtections = (_b = (_a = representation.contentProtections) === null || _a === void 0 ? void 0 : _a.initData) !== null && _b !== void 0 ? _b : [];
+
+    var _loop = function _loop(i) {
+      if (initData.type === undefined || segmentProtections[i].type === initData.type) {
+        var containedInitData = initData.values.getFormattedValues().every(function (undecipherableVal) {
+          return segmentProtections[i].values.some(function (currVal) {
+            return (undecipherableVal.systemId === undefined || currVal.systemId === undecipherableVal.systemId) && (0,are_arrays_of_numbers_equal/* default */.Z)(currVal.data, undecipherableVal.data);
+          });
+        });
+
+        if (containedInitData) {
+          return {
+            v: false
+          };
+        }
+      }
+    };
+
+    for (var i = 0; i < segmentProtections.length; i++) {
+      var _ret = _loop(i);
+
+      if (typeof _ret === "object") return _ret.v;
+    }
+
+    return representation.decipherable;
+  });
+}
+/** Enumeration of the various "state" the `ContentDecryptor` can be in. */
+
+
+var ContentDecryptorState;
+
+(function (ContentDecryptorState) {
+  /**
+   * The `ContentDecryptor` is not yet ready to create key sessions and request
+   * licenses.
+   * This is is the initial state of the ContentDecryptor.
+   */
+  ContentDecryptorState[ContentDecryptorState["Initializing"] = 0] = "Initializing";
+  /**
+   * The `ContentDecryptor` has been initialized.
+   * You should now called the `attach` method when you want to add decryption
+   * capabilities to the HTMLMediaElement. The ContentDecryptor won't go to the
+   * `ReadyForContent` state until `attach` is called.
+   *
+   * For compatibility reasons, this should be done after the HTMLMediaElement's
+   * src attribute is set.
+   *
+   * It is also from when this state is reached that the `ContentDecryptor`'s
+   * `systemId` property may be known.
+   *
+   * This state is always coming after the `Initializing` state.
+   */
+
+  ContentDecryptorState[ContentDecryptorState["WaitingForAttachment"] = 1] = "WaitingForAttachment";
+  /**
+   * Content (encrypted or not) can begin to be pushed on the HTMLMediaElement
+   * (this state was needed because some browser quirks sometimes forces us to
+   * call EME API before this can be done).
+   *
+   * This state is always coming after the `WaitingForAttachment` state.
+   */
+
+  ContentDecryptorState[ContentDecryptorState["ReadyForContent"] = 2] = "ReadyForContent";
+  /**
+   * The `ContentDecryptor` has encountered a fatal error and has been stopped.
+   * It is now unusable.
+   */
+
+  ContentDecryptorState[ContentDecryptorState["Error"] = 3] = "Error";
+  /** The `ContentDecryptor` has been disposed of and is now unusable. */
+
+  ContentDecryptorState[ContentDecryptorState["Disposed"] = 4] = "Disposed";
+})(ContentDecryptorState || (ContentDecryptorState = {}));
+/**
+ * Returns information on all keys - explicit or implicit - that are linked to
+ * a loaded license.
+ *
+ * In the RxPlayer, there is a concept of "explicit" key ids, which are key ids
+ * found in a license whose status can be known through the `keyStatuses`
+ * property from a `MediaKeySession`, and of "implicit" key ids, which are key
+ * ids which were expected to be in a fetched license, but apparently weren't.
+ * @param {Object} initializationData
+ * @param {string|undefined} singleLicensePer
+ * @param {Array.<Uint8Array>} usableKeyIds
+ * @param {Array.<Uint8Array>} unusableKeyIds
+ * @returns {Object}
+ */
+
+
+function getFetchedLicenseKeysInfo(initializationData, singleLicensePer, usableKeyIds, unusableKeyIds) {
+  var _a;
+  /**
+   * Every key id associated with the MediaKeySession, starting with
+   * whitelisted ones.
+   */
+
+
+  var associatedKeyIds = [].concat(usableKeyIds, unusableKeyIds);
+
+  if (singleLicensePer !== undefined && singleLicensePer !== "init-data") {
+    // We want to add the current key ids in the blacklist if it is
+    // not already there.
+    //
+    // We only do that when `singleLicensePer` is set to something
+    // else than the default `"init-data"` because this logic:
+    //   1. might result in a quality fallback, which is a v3.x.x
+    //      breaking change if some APIs (like `singleLicensePer`)
+    //      aren't used.
+    //   2. Rely on the EME spec regarding key statuses being well
+    //      implemented on all supported devices, which we're not
+    //      sure yet. Because in any other `singleLicensePer`, we
+    //      need a good implementation anyway, it doesn't matter
+    //      there.
+    var expectedKeyIds = initializationData.keyIds,
+        content = initializationData.content;
+
+    if (expectedKeyIds !== undefined) {
+      var missingKeyIds = expectedKeyIds.filter(function (expected) {
+        return !associatedKeyIds.some(function (k) {
+          return areKeyIdsEqual(k, expected);
+        });
+      });
+
+      if (missingKeyIds.length > 0) {
+        associatedKeyIds.push.apply(associatedKeyIds, missingKeyIds);
+      }
+    }
+
+    if (content !== undefined) {
+      if (singleLicensePer === "content") {
+        // Put it in a Set to automatically filter out duplicates (by ref)
+        var contentKeys = new Set();
+        var manifest = content.manifest;
+
+        for (var _iterator3 = content_decryptor_createForOfIteratorHelperLoose(manifest.periods), _step3; !(_step3 = _iterator3()).done;) {
+          var period = _step3.value;
+          addKeyIdsFromPeriod(contentKeys, period);
+        }
+
+        mergeKeyIdSetIntoArray(contentKeys, associatedKeyIds);
+      } else if (singleLicensePer === "periods") {
+        var _manifest = content.manifest;
+
+        for (var _iterator4 = content_decryptor_createForOfIteratorHelperLoose(_manifest.periods), _step4; !(_step4 = _iterator4()).done;) {
+          var _period = _step4.value;
+          var periodKeys = new Set();
+          addKeyIdsFromPeriod(periodKeys, _period);
+
+          if (((_a = initializationData.content) === null || _a === void 0 ? void 0 : _a.period.id) === _period.id) {
+            mergeKeyIdSetIntoArray(periodKeys, associatedKeyIds);
+          } else {
+            var periodKeysArr = Array.from(periodKeys);
+
+            var _loop2 = function _loop2() {
+              var kid = _periodKeysArr2[_i2];
+              var isFound = associatedKeyIds.some(function (k) {
+                return areKeyIdsEqual(k, kid);
+              });
+
+              if (isFound) {
+                mergeKeyIdSetIntoArray(periodKeys, associatedKeyIds);
+                return "break";
+              }
+            };
+
+            for (var _i2 = 0, _periodKeysArr2 = periodKeysArr; _i2 < _periodKeysArr2.length; _i2++) {
+              var _ret2 = _loop2();
+
+              if (_ret2 === "break") break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return {
+    whitelisted: usableKeyIds,
+
+    /** associatedKeyIds starts with the whitelisted one. */
+    blacklisted: associatedKeyIds.slice(usableKeyIds.length)
+  };
+}
+
+function mergeKeyIdSetIntoArray(set, arr) {
+  var setArr = Array.from(set.values());
+
+  var _loop3 = function _loop3() {
+    var kid = _setArr[_i3];
+    var isFound = arr.some(function (k) {
+      return areKeyIdsEqual(k, kid);
+    });
+
+    if (!isFound) {
+      arr.push(kid);
+    }
+  };
+
+  for (var _i3 = 0, _setArr = setArr; _i3 < _setArr.length; _i3++) {
+    _loop3();
+  }
+}
+
+function addKeyIdsFromPeriod(set, period) {
+  for (var _iterator5 = content_decryptor_createForOfIteratorHelperLoose(period.getAdaptations()), _step5; !(_step5 = _iterator5()).done;) {
+    var adaptation = _step5.value;
+
+    for (var _iterator6 = content_decryptor_createForOfIteratorHelperLoose(adaptation.representations), _step6; !(_step6 = _iterator6()).done;) {
+      var representation = _step6.value;
+
+      if (representation.contentProtections !== undefined && representation.contentProtections.keyIds.length >= -1) {
+        for (var _iterator7 = content_decryptor_createForOfIteratorHelperLoose(representation.contentProtections.keyIds), _step7; !(_step7 = _iterator7()).done;) {
+          var kidInf = _step7.value;
+          set.add(kidInf.keyId);
+        }
+      }
+    }
+  }
+}
+
+/***/ }),
+
+/***/ 1266:
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var _content_decryptor__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7665);
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -8205,12 +9856,12 @@ function canCreatePersistentSession(mediaKeySystemAccess) {
 
 
 
-/* harmony default export */ var eme = (EMEManager);
+/* harmony default export */ __webpack_exports__["ZP"] = (_content_decryptor__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z);
 
 
 /***/ }),
 
-/***/ 6033:
+/***/ 770:
 /***/ (function(__unused_webpack_module, __webpack_exports__) {
 
 "use strict";
@@ -8259,125 +9910,6 @@ var currentMediaState = new WeakMap();
     currentMediaState.set(mediaElement, null);
   }
 });
-
-/***/ }),
-
-/***/ 4507:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-
-// EXPORTS
-__webpack_require__.d(__webpack_exports__, {
-  "Z": function() { return /* binding */ createEMEManager; }
-});
-
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/merge.js
-var merge = __webpack_require__(3071);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/map.js
-var map = __webpack_require__(9127);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/of.js
-var of = __webpack_require__(2817);
-// EXTERNAL MODULE: ./src/compat/eme/custom_media_keys/index.ts + 7 modules
-var custom_media_keys = __webpack_require__(6139);
-;// CONCATENATED MODULE: ./src/compat/has_eme_apis.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * Returns true if the browser has the minimum needed EME APIs to decrypt a
- * content.
- * @returns {Boolean}
- */
-
-function hasEMEAPIs() {
-  return typeof custom_media_keys/* requestMediaKeySystemAccess */.N === "function";
-}
-// EXTERNAL MODULE: ./src/compat/event_listeners.ts + 5 modules
-var event_listeners = __webpack_require__(8719);
-// EXTERNAL MODULE: ./src/errors/encrypted_media_error.ts
-var encrypted_media_error = __webpack_require__(5157);
-// EXTERNAL MODULE: ./src/features/index.ts
-var features = __webpack_require__(7874);
-// EXTERNAL MODULE: ./src/log.ts + 1 modules
-var log = __webpack_require__(3887);
-;// CONCATENATED MODULE: ./src/core/init/create_eme_manager.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
-
-
-var onEncrypted$ = event_listeners/* onEncrypted$ */.Oh;
-/**
- * Create EMEManager if possible (has the APIs and configuration).
- * Else, return an Observable throwing at the next encrypted event encountered.
- * @param {HTMLMediaElement} mediaElement
- * @param {Array.<Object>} keySystems
- * @param {Observable<Object>} contentProtections$
- * @returns {Observable}
- */
-
-function createEMEManager(mediaElement, keySystems, contentProtections$) {
-  var encryptedEvents$ = (0,merge/* merge */.T)(onEncrypted$(mediaElement), contentProtections$);
-
-  if (features/* default.emeManager */.Z.emeManager == null) {
-    return (0,merge/* merge */.T)(encryptedEvents$.pipe((0,map/* map */.U)(function () {
-      log/* default.error */.Z.error("Init: Encrypted event but EME feature not activated");
-      throw new encrypted_media_error/* default */.Z("MEDIA_IS_ENCRYPTED_ERROR", "EME feature not activated.");
-    })), (0,of.of)({
-      type: "eme-disabled"
-    }));
-  }
-
-  if (keySystems.length === 0) {
-    return (0,merge/* merge */.T)(encryptedEvents$.pipe((0,map/* map */.U)(function () {
-      log/* default.error */.Z.error("Init: Ciphered media and no keySystem passed");
-      throw new encrypted_media_error/* default */.Z("MEDIA_IS_ENCRYPTED_ERROR", "Media is encrypted and no `keySystems` given");
-    })), (0,of.of)({
-      type: "eme-disabled"
-    }));
-  }
-
-  if (!hasEMEAPIs()) {
-    return (0,merge/* merge */.T)(encryptedEvents$.pipe((0,map/* map */.U)(function () {
-      log/* default.error */.Z.error("Init: Encrypted event but no EME API available");
-      throw new encrypted_media_error/* default */.Z("MEDIA_IS_ENCRYPTED_ERROR", "Encryption APIs not found.");
-    })), (0,of.of)({
-      type: "eme-disabled"
-    }));
-  }
-
-  log/* default.debug */.Z.debug("Init: Creating EMEManager");
-  return features/* default.emeManager */.Z.emeManager(mediaElement, keySystems, contentProtections$);
-}
 
 /***/ }),
 
@@ -8669,8 +10201,8 @@ var of = __webpack_require__(2817);
 var tap = __webpack_require__(2006);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/shareReplay.js
 var shareReplay = __webpack_require__(8515);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/mergeMap.js
-var mergeMap = __webpack_require__(3994);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/mergeMap.js + 1 modules
+var mergeMap = __webpack_require__(7877);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/startWith.js
 var startWith = __webpack_require__(6108);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/concat.js
@@ -8720,8 +10252,8 @@ function play(mediaElement) {
 }
 // EXTERNAL MODULE: ./src/compat/browser_compatibility_types.ts
 var browser_compatibility_types = __webpack_require__(3774);
-// EXTERNAL MODULE: ./src/compat/event_listeners.ts + 5 modules
-var event_listeners = __webpack_require__(8719);
+// EXTERNAL MODULE: ./src/compat/event_listeners.ts + 6 modules
+var event_listeners = __webpack_require__(4804);
 ;// CONCATENATED MODULE: ./src/compat/when_loaded_metadata.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -8914,8 +10446,6 @@ __webpack_require__.d(__webpack_exports__, {
   "Z": function() { return /* binding */ initializeDirectfileContent; }
 });
 
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/mergeMap.js
-var mergeMap = __webpack_require__(3994);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/empty.js
 var empty = __webpack_require__(1545);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/share.js
@@ -8926,6 +10456,8 @@ var ignoreElements = __webpack_require__(533);
 var filter = __webpack_require__(4975);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/take.js
 var take = __webpack_require__(4727);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/mergeMap.js + 1 modules
+var mergeMap = __webpack_require__(7877);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/switchMap.js
 var switchMap = __webpack_require__(4978);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/of.js
@@ -8979,12 +10511,12 @@ function setElementSrc$(mediaElement, url) {
 }
 // EXTERNAL MODULE: ./src/utils/defer_subscriptions.ts + 5 modules
 var defer_subscriptions = __webpack_require__(8333);
-// EXTERNAL MODULE: ./src/core/init/create_eme_manager.ts + 1 modules
-var create_eme_manager = __webpack_require__(4507);
 // EXTERNAL MODULE: ./src/core/init/emit_loaded_event.ts + 1 modules
 var emit_loaded_event = __webpack_require__(5039);
 // EXTERNAL MODULE: ./src/core/init/initial_seek_and_play.ts + 2 modules
 var initial_seek_and_play = __webpack_require__(7920);
+// EXTERNAL MODULE: ./src/core/init/link_drm_and_content.ts + 1 modules
+var link_drm_and_content = __webpack_require__(9607);
 // EXTERNAL MODULE: ./src/core/init/stall_avoider.ts + 1 modules
 var stall_avoider = __webpack_require__(467);
 // EXTERNAL MODULE: ./src/core/init/throw_on_media_error.ts
@@ -9021,6 +10553,12 @@ var update_playback_rate = __webpack_require__(2983);
 
 
 
+ // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
+// first type parameter as `any` instead of the perfectly fine `unknown`,
+// leading to linter issues, as it forbids the usage of `any`.
+// This is why we're disabling the eslint rule.
+
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 /**
  * calculate initial time as a position in seconds.
@@ -9103,26 +10641,18 @@ function initializeDirectfileContent(_ref) {
     startTime: initialTime,
     mustAutoPlay: autoPlay
   }),
-      seekAndPlay$ = _initialSeekAndPlay.seekAndPlay$; // Create EME Manager, an observable which will manage every EME-related
-  // issue.
+      seekAndPlay$ = _initialSeekAndPlay.seekAndPlay$;
+  /** Initialize decryption capabilities and the HTMLMediaElement's src attribute. */
 
 
-  var emeManager$ = linkURL$.pipe((0,mergeMap/* mergeMap */.z)(function () {
-    return (0,create_eme_manager/* default */.Z)(mediaElement, keySystems, empty/* EMPTY */.E);
-  }), (0,defer_subscriptions/* default */.Z)(), (0,share/* share */.B)()); // Translate errors coming from the media element into RxPlayer errors
+  var drmEvents$ = (0,link_drm_and_content/* default */.Z)(mediaElement, keySystems, empty/* EMPTY */.E, linkURL$).pipe((0,defer_subscriptions/* default */.Z)(), (0,share/* share */.B)()); // Translate errors coming from the media element into RxPlayer errors
   // through a throwing Observable.
 
   var mediaError$ = (0,throw_on_media_error/* default */.Z)(mediaElement);
   var observation$ = playbackObserver.observe(true); // Set the speed set by the user on the media element while pausing a
   // little longer while the buffer is empty.
 
-  var playbackRate$ = (0,update_playback_rate/* default */.Z)(mediaElement, speed, observation$) // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
-  // first type parameter as `any` instead of the perfectly fine `unknown`,
-  // leading to linter issues, as it forbids the usage of `any`.
-  // This is why we're disabling the eslint rule.
-
-  /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-  .pipe((0,ignoreElements/* ignoreElements */.l)());
+  var playbackRate$ = (0,update_playback_rate/* default */.Z)(mediaElement, speed, observation$).pipe((0,ignoreElements/* ignoreElements */.l)());
   /**
    * Observable trying to avoid various stalling situations, emitting "stalled"
    * events when it cannot, as well as "unstalled" events when it get out of one.
@@ -9135,13 +10665,8 @@ function initializeDirectfileContent(_ref) {
    * Also emits warning events if issues arise when doing so.
    */
 
-  var loadingEvts$ = emeManager$.pipe((0,filter/* filter */.h)(function isEMEReady(evt) {
-    if (evt.type === "created-media-keys") {
-      evt.value.canAttachMediaKeys.setValue(true);
-      return true;
-    }
-
-    return evt.type === "eme-disabled" || evt.type === "attached-media-keys";
+  var loadingEvts$ = drmEvents$.pipe((0,filter/* filter */.h)(function (evt) {
+    return evt.type === "decryption-ready" || evt.type === "decryption-disabled";
   }), (0,take/* take */.q)(1), (0,mergeMap/* mergeMap */.z)(function () {
     return seekAndPlay$;
   }), (0,switchMap/* switchMap */.w)(function (evt) {
@@ -9151,7 +10676,187 @@ function initializeDirectfileContent(_ref) {
 
     return (0,emit_loaded_event/* default */.Z)(observation$, mediaElement, null, true);
   }));
-  return (0,merge/* merge */.T)(loadingEvts$, emeManager$, mediaError$, playbackRate$, stallAvoider$);
+  return (0,merge/* merge */.T)(loadingEvts$, drmEvents$.pipe((0,ignoreElements/* ignoreElements */.l)()), mediaError$, playbackRate$, stallAvoider$);
+}
+
+/***/ }),
+
+/***/ 9607:
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  "Z": function() { return /* binding */ linkDrmAndContent; }
+});
+
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/merge.js
+var merge = __webpack_require__(3071);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/map.js
+var map = __webpack_require__(9127);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/Observable.js + 1 modules
+var Observable = __webpack_require__(1480);
+// EXTERNAL MODULE: ./src/compat/eme/custom_media_keys/index.ts + 7 modules
+var custom_media_keys = __webpack_require__(6139);
+;// CONCATENATED MODULE: ./src/compat/has_eme_apis.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * Returns true if the browser has the minimum needed EME APIs to decrypt a
+ * content.
+ * @returns {Boolean}
+ */
+
+function hasEMEAPIs() {
+  return typeof custom_media_keys/* requestMediaKeySystemAccess */.N === "function";
+}
+// EXTERNAL MODULE: ./src/compat/event_listeners.ts + 6 modules
+var event_listeners = __webpack_require__(4804);
+// EXTERNAL MODULE: ./src/errors/encrypted_media_error.ts
+var encrypted_media_error = __webpack_require__(5157);
+// EXTERNAL MODULE: ./src/features/index.ts
+var features = __webpack_require__(7874);
+// EXTERNAL MODULE: ./src/log.ts + 1 modules
+var log = __webpack_require__(3887);
+// EXTERNAL MODULE: ./src/core/decrypt/content_decryptor.ts + 31 modules
+var content_decryptor = __webpack_require__(7665);
+;// CONCATENATED MODULE: ./src/core/init/link_drm_and_content.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+
+
+
+var onEncrypted$ = event_listeners/* onEncrypted$ */.Oh;
+/**
+ * @param {HTMLMediaElement} mediaElement
+ * @param {Array.<Object>} keySystems
+ * @param {Observable<Object>} contentProtections$
+ * @param {Promise} linkingMedia$
+ * @returns {Observable}
+ */
+
+function linkDrmAndContent(mediaElement, keySystems, contentProtections$, linkingMedia$) {
+  var encryptedEvents$ = (0,merge/* merge */.T)(onEncrypted$(mediaElement), contentProtections$);
+
+  if (features/* default.ContentDecryptor */.Z.ContentDecryptor == null) {
+    return (0,merge/* merge */.T)(encryptedEvents$.pipe((0,map/* map */.U)(function () {
+      log/* default.error */.Z.error("Init: Encrypted event but EME feature not activated");
+      throw new encrypted_media_error/* default */.Z("MEDIA_IS_ENCRYPTED_ERROR", "EME feature not activated.");
+    })), linkingMedia$.pipe((0,map/* map */.U)(function (mediaSource) {
+      return {
+        type: "decryption-disabled",
+        value: {
+          drmSystemId: undefined,
+          mediaSource: mediaSource
+        }
+      };
+    })));
+  }
+
+  if (keySystems.length === 0) {
+    return (0,merge/* merge */.T)(encryptedEvents$.pipe((0,map/* map */.U)(function () {
+      log/* default.error */.Z.error("Init: Ciphered media and no keySystem passed");
+      throw new encrypted_media_error/* default */.Z("MEDIA_IS_ENCRYPTED_ERROR", "Media is encrypted and no `keySystems` given");
+    })), linkingMedia$.pipe((0,map/* map */.U)(function (mediaSource) {
+      return {
+        type: "decryption-disabled",
+        value: {
+          drmSystemId: undefined,
+          mediaSource: mediaSource
+        }
+      };
+    })));
+  }
+
+  if (!hasEMEAPIs()) {
+    return (0,merge/* merge */.T)(encryptedEvents$.pipe((0,map/* map */.U)(function () {
+      log/* default.error */.Z.error("Init: Encrypted event but no EME API available");
+      throw new encrypted_media_error/* default */.Z("MEDIA_IS_ENCRYPTED_ERROR", "Encryption APIs not found.");
+    })), linkingMedia$.pipe((0,map/* map */.U)(function (mediaSource) {
+      return {
+        type: "decryption-disabled",
+        value: {
+          drmSystemId: undefined,
+          mediaSource: mediaSource
+        }
+      };
+    })));
+  }
+
+  log/* default.debug */.Z.debug("Init: Creating ContentDecryptor");
+  var ContentDecryptor = features/* default.ContentDecryptor */.Z.ContentDecryptor;
+  return new Observable/* Observable */.y(function (obs) {
+    var contentDecryptor = new ContentDecryptor(mediaElement, keySystems);
+    var mediaSub;
+    contentDecryptor.addEventListener("stateChange", function (state) {
+      if (state === content_decryptor/* ContentDecryptorState.WaitingForAttachment */.u.WaitingForAttachment) {
+        contentDecryptor.removeEventListener("stateChange");
+        mediaSub = linkingMedia$.subscribe(function (mediaSource) {
+          contentDecryptor.addEventListener("stateChange", function (newState) {
+            if (newState === content_decryptor/* ContentDecryptorState.ReadyForContent */.u.ReadyForContent) {
+              obs.next({
+                type: "decryption-ready",
+                value: {
+                  drmSystemId: contentDecryptor.systemId,
+                  mediaSource: mediaSource
+                }
+              });
+              contentDecryptor.removeEventListener("stateChange");
+            }
+          });
+          contentDecryptor.attach();
+        });
+      }
+    });
+    contentDecryptor.addEventListener("error", function (e) {
+      obs.error(e);
+    });
+    contentDecryptor.addEventListener("warning", function (w) {
+      obs.next({
+        type: "warning",
+        value: w
+      });
+    });
+    var protectionDataSub = contentProtections$.subscribe(function (data) {
+      contentDecryptor.onInitializationData(data);
+    });
+    return function () {
+      protectionDataSub.unsubscribe();
+      mediaSub === null || mediaSub === void 0 ? void 0 : mediaSub.unsubscribe();
+      contentDecryptor.dispose();
+    };
+  });
 }
 
 /***/ }),
@@ -9211,8 +10916,8 @@ var browser_detection = __webpack_require__(3666);
 
 var isSeekingApproximate = browser_detection/* isTizen */.yS;
 /* harmony default export */ var is_seeking_approximate = (isSeekingApproximate);
-// EXTERNAL MODULE: ./src/config.ts
-var config = __webpack_require__(944);
+// EXTERNAL MODULE: ./src/config.ts + 2 modules
+var config = __webpack_require__(6872);
 // EXTERNAL MODULE: ./src/errors/media_error.ts
 var media_error = __webpack_require__(3714);
 // EXTERNAL MODULE: ./src/log.ts + 1 modules
@@ -9244,11 +10949,6 @@ var events_generators = __webpack_require__(8567);
 
 
 
-var BUFFER_DISCONTINUITY_THRESHOLD = config/* default.BUFFER_DISCONTINUITY_THRESHOLD */.Z.BUFFER_DISCONTINUITY_THRESHOLD,
-    FORCE_DISCONTINUITY_SEEK_DELAY = config/* default.FORCE_DISCONTINUITY_SEEK_DELAY */.Z.FORCE_DISCONTINUITY_SEEK_DELAY,
-    FREEZING_STALLED_DELAY = config/* default.FREEZING_STALLED_DELAY */.Z.FREEZING_STALLED_DELAY,
-    UNFREEZING_SEEK_DELAY = config/* default.UNFREEZING_SEEK_DELAY */.Z.UNFREEZING_SEEK_DELAY,
-    UNFREEZING_DELTA_POSITION = config/* default.UNFREEZING_DELTA_POSITION */.Z.UNFREEZING_DELTA_POSITION;
 /**
  * Work-around rounding errors with floating points by setting an acceptable,
  * very short, deviation when checking equalities.
@@ -9347,6 +11047,13 @@ function StallAvoider(playbackObserver, manifest, lockedStream$, discontinuityUp
         readyState = observation.readyState,
         rebuffering = observation.rebuffering,
         freezing = observation.freezing;
+
+    var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+        BUFFER_DISCONTINUITY_THRESHOLD = _config$getCurrent.BUFFER_DISCONTINUITY_THRESHOLD,
+        FORCE_DISCONTINUITY_SEEK_DELAY = _config$getCurrent.FORCE_DISCONTINUITY_SEEK_DELAY,
+        FREEZING_STALLED_DELAY = _config$getCurrent.FREEZING_STALLED_DELAY,
+        UNFREEZING_SEEK_DELAY = _config$getCurrent.UNFREEZING_SEEK_DELAY,
+        UNFREEZING_DELTA_POSITION = _config$getCurrent.UNFREEZING_DELTA_POSITION;
 
     if (freezing !== null) {
       var now = performance.now();
@@ -9631,7 +11338,7 @@ function generateDiscontinuityError(stalledPosition, seekTo) {
 /* harmony export */   "Z": function() { return /* binding */ throwOnMediaError; }
 /* harmony export */ });
 /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2401);
-/* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3994);
+/* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7877);
 /* harmony import */ var _errors__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3714);
 /**
  * Copyright 2015 CANAL+ Group
@@ -9963,8 +11670,8 @@ var of = __webpack_require__(2817);
 var Subject = __webpack_require__(6716);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/defer.js
 var defer = __webpack_require__(9917);
-// EXTERNAL MODULE: ./src/compat/event_listeners.ts + 5 modules
-var event_listeners = __webpack_require__(8719);
+// EXTERNAL MODULE: ./src/compat/event_listeners.ts + 6 modules
+var event_listeners = __webpack_require__(4804);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/Observable.js + 1 modules
 var Observable = __webpack_require__(1480);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/distinctUntilChanged.js
@@ -10061,8 +11768,8 @@ function onHeightWidthChange(element, interval) {
     }));
   });
 }
-// EXTERNAL MODULE: ./src/config.ts
-var config = __webpack_require__(944);
+// EXTERNAL MODULE: ./src/config.ts + 2 modules
+var config = __webpack_require__(6872);
 // EXTERNAL MODULE: ./src/core/segment_buffers/implementations/types.ts + 3 modules
 var types = __webpack_require__(9612);
 // EXTERNAL MODULE: ./src/core/segment_buffers/implementations/utils/manual_time_ranges.ts
@@ -10287,8 +11994,8 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
     var ret = []; // begins at the end as most of the time the player will ask for the last
     // CuesGroup
 
-    for (var i = cuesBuffer.length - 1; i >= 0; i--) {
-      var segment = cuesBuffer[i];
+    for (var cueIdx = cuesBuffer.length - 1; cueIdx >= 0; cueIdx--) {
+      var segment = cuesBuffer[cueIdx];
 
       if (time < segment.end && time >= segment.start) {
         var cues = segment.cues;
@@ -10318,10 +12025,10 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
     var to = Math.max(from, _to);
     var cuesBuffer = this._cuesBuffer;
 
-    for (var i = 0; i < cuesBuffer.length; i++) {
-      if (cuesBuffer[i].end > from) {
+    for (var cueIdx = 0; cueIdx < cuesBuffer.length; cueIdx++) {
+      if (cuesBuffer[cueIdx].end > from) {
         // this cuesInfos is concerned by the remove
-        var startCuesInfos = cuesBuffer[i];
+        var startCuesInfos = cuesBuffer[cueIdx];
 
         if (startCuesInfos.start >= to) {
           // our cuesInfos is strictly after this interval, we have nothing to do
@@ -10340,8 +12047,8 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
                 cuesInfos1 = _removeCuesInfosBetwe[0],
                 cuesInfos2 = _removeCuesInfosBetwe[1];
 
-            this._cuesBuffer[i] = cuesInfos1;
-            cuesBuffer.splice(i + 1, 0, cuesInfos2);
+            this._cuesBuffer[cueIdx] = cuesInfos1;
+            cuesBuffer.splice(cueIdx + 1, 0, cuesInfos2);
           } // No cuesInfos can be concerned after this one, we can quit
 
 
@@ -10351,8 +12058,8 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
 
         if (startCuesInfos.start >= from) {
           // all the segment is concerned
-          cuesBuffer.splice(i, 1);
-          i--; // one less element, we have to decrement the loop
+          cuesBuffer.splice(cueIdx, 1);
+          cueIdx--; // one less element, we have to decrement the loop
         } else {
           // only the end is concerned
           startCuesInfos.cues = getCuesBefore(startCuesInfos.cues, from);
@@ -10442,8 +12149,8 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
       }
     }
 
-    for (var i = 0; i < cuesBuffer.length; i++) {
-      var cuesInfos = cuesBuffer[i];
+    for (var cueIdx = 0; cueIdx < cuesBuffer.length; cueIdx++) {
+      var cuesInfos = cuesBuffer[cueIdx];
 
       if (start < cuesInfos.end) {
         if (areNearlyEqual(start, cuesInfos.start)) {
@@ -10454,7 +12161,7 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
             //   Result:          |AAAAA|
             // Which means:
             //   1. replace the current cue with ours
-            cuesBuffer[i] = cuesInfosToInsert;
+            cuesBuffer[cueIdx] = cuesInfosToInsert;
             return;
           } else if (end < cuesInfos.end) {
             // our cue overlaps with the current one:
@@ -10467,7 +12174,7 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
             //   3. add ours before the current one
             cuesInfos.cues = getCuesAfter(cuesInfos.cues, end);
             cuesInfos.start = end;
-            cuesBuffer.splice(i, 0, cuesInfosToInsert);
+            cuesBuffer.splice(cueIdx, 0, cuesInfosToInsert);
             return;
           } // our cue goes beyond the current one:
           //   ours:            |AAAAAAA|
@@ -10478,11 +12185,11 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
 
 
           do {
-            cuesBuffer.splice(i, 1);
-            cuesInfos = cuesBuffer[i];
+            cuesBuffer.splice(cueIdx, 1);
+            cuesInfos = cuesBuffer[cueIdx];
           } while (cuesInfos !== undefined && end > cuesInfos.end);
 
-          onIndexOfNextCueFound(i);
+          onIndexOfNextCueFound(cueIdx);
           return;
         } else if (start < cuesInfos.start) {
           if (end < cuesInfos.start) {
@@ -10492,7 +12199,7 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
             //   Result:          |AAAAAAA| |BBBB|
             // Which means:
             //   - add ours before the current one
-            cuesBuffer.splice(i, 0, cuesInfosToInsert);
+            cuesBuffer.splice(cueIdx, 0, cuesInfosToInsert);
             return;
           } else if (areNearlyEqual(end, cuesInfos.start)) {
             // our cue goes just before the current one:
@@ -10503,14 +12210,14 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
             //   - update start time of the current one to be sure
             //   - add ours before the current one
             cuesInfos.start = end;
-            cuesBuffer.splice(i, 0, cuesInfosToInsert);
+            cuesBuffer.splice(cueIdx, 0, cuesInfosToInsert);
             return;
           } else if (areNearlyEqual(end, cuesInfos.end)) {
             //   ours:            |AAAAAAA|
             //   the current one:    |BBBB|
             //   Result:          |AAAAAAA|
             // Replace
-            cuesBuffer.splice(i, 1, cuesInfosToInsert);
+            cuesBuffer.splice(cueIdx, 1, cuesInfosToInsert);
             return;
           } else if (end < cuesInfos.end) {
             //   ours:            |AAAAAAA|
@@ -10518,7 +12225,7 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
             //   Result:          |AAAAAAABB|
             cuesInfos.cues = getCuesAfter(cuesInfos.cues, end);
             cuesInfos.start = end;
-            cuesBuffer.splice(i, 0, cuesInfosToInsert);
+            cuesBuffer.splice(cueIdx, 0, cuesInfosToInsert);
             return;
           } //   ours:            |AAAAAAA|
           //   the current one:   |BBB|...
@@ -10526,11 +12233,11 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
 
 
           do {
-            cuesBuffer.splice(i, 1);
-            cuesInfos = cuesBuffer[i];
+            cuesBuffer.splice(cueIdx, 1);
+            cuesInfos = cuesBuffer[cueIdx];
           } while (cuesInfos !== undefined && end > cuesInfos.end);
 
-          onIndexOfNextCueFound(i);
+          onIndexOfNextCueFound(cueIdx);
           return;
         } // else -> start > cuesInfos.start
 
@@ -10541,7 +12248,7 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
           //   Result:          |BBAAAAAA|
           cuesInfos.cues = getCuesBefore(cuesInfos.cues, start);
           cuesInfos.end = start;
-          cuesBuffer.splice(i + 1, 0, cuesInfosToInsert);
+          cuesBuffer.splice(cueIdx + 1, 0, cuesInfosToInsert);
           return;
         } else if (cuesInfos.end > end) {
           //   ours:              |AAAAAA|
@@ -10551,9 +12258,9 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
               cuesInfos1 = _removeCuesInfosBetwe2[0],
               cuesInfos2 = _removeCuesInfosBetwe2[1];
 
-          this._cuesBuffer[i] = cuesInfos1;
-          cuesBuffer.splice(i + 1, 0, cuesInfosToInsert);
-          cuesBuffer.splice(i + 2, 0, cuesInfos2);
+          this._cuesBuffer[cueIdx] = cuesInfos1;
+          cuesBuffer.splice(cueIdx + 1, 0, cuesInfosToInsert);
+          cuesBuffer.splice(cueIdx + 2, 0, cuesInfos2);
           return;
         } else {
           //   ours:              |AAAAAA|
@@ -10561,14 +12268,15 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
           //   Result:          |BBAAAAAA|...
           cuesInfos.cues = getCuesBefore(cuesInfos.cues, start);
           cuesInfos.end = start;
-          cuesInfos = cuesBuffer[i + 1];
+          var nextCueIdx = cueIdx + 1;
+          cuesInfos = cuesBuffer[nextCueIdx];
 
           while (cuesInfos !== undefined && end > cuesInfos.end) {
-            cuesBuffer.splice(i, 1);
-            cuesInfos = cuesBuffer[i];
+            cuesBuffer.splice(nextCueIdx, 1);
+            cuesInfos = cuesBuffer[nextCueIdx];
           }
 
-          onIndexOfNextCueFound(i);
+          onIndexOfNextCueFound(nextCueIdx);
           return;
         }
       }
@@ -10713,8 +12421,6 @@ function updateProportionalElements(currentHeight, currentWidth, resolution, tex
 var onEnded$ = event_listeners/* onEnded$ */.C1,
     onSeeked$ = event_listeners/* onSeeked$ */.ik,
     onSeeking$ = event_listeners/* onSeeking$ */.d5;
-var MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL = config/* default.MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL */.Z.MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL,
-    TEXT_TRACK_SIZE_CHECKS_INTERVAL = config/* default.TEXT_TRACK_SIZE_CHECKS_INTERVAL */.Z.TEXT_TRACK_SIZE_CHECKS_INTERVAL;
 /**
  * Generate the interval at which TextTrack HTML Cues should be refreshed.
  * @param {HTMLMediaElement} videoElement
@@ -10725,6 +12431,10 @@ function generateRefreshInterval(videoElement) {
   var seeking$ = onSeeking$(videoElement);
   var seeked$ = onSeeked$(videoElement);
   var ended$ = onEnded$(videoElement);
+
+  var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+      MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL = _config$getCurrent.MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL;
+
   var manualRefresh$ = (0,merge/* merge */.T)(seeked$, ended$);
   var autoRefresh$ = (0,observable_interval/* interval */.F)(MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL).pipe((0,startWith/* startWith */.O)(null));
   return manualRefresh$.pipe((0,startWith/* startWith */.O)(null), (0,switchMap/* switchMap */.w)(function () {
@@ -10805,7 +12515,10 @@ var HTMLTextSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
         _this._disableCurrentCues();
 
         return;
-      } // to spread the time error, we divide the regular chosen interval.
+      }
+
+      var _config$getCurrent2 = config/* default.getCurrent */.Z.getCurrent(),
+          MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL = _config$getCurrent2.MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL; // to spread the time error, we divide the regular chosen interval.
 
 
       var time = Math.max(_this._videoElement.currentTime + MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL / 1000 / 2, 0);
@@ -11083,7 +12796,10 @@ var HTMLTextSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
     });
 
     if (proportionalCues.length > 0) {
-      // update propertionally-sized elements periodically
+      var _config$getCurrent3 = config/* default.getCurrent */.Z.getCurrent(),
+          TEXT_TRACK_SIZE_CHECKS_INTERVAL = _config$getCurrent3.TEXT_TRACK_SIZE_CHECKS_INTERVAL; // update propertionally-sized elements periodically
+
+
       onHeightWidthChange(this._textTrackElement, TEXT_TRACK_SIZE_CHECKS_INTERVAL).pipe((0,takeUntil/* takeUntil */.R)(this._clearSizeUpdates$), (0,takeUntil/* takeUntil */.R)(this._destroy$)).subscribe(function (_ref) {
         var height = _ref.height,
             width = _ref.width;
@@ -11688,8 +13404,8 @@ __webpack_require__.d(__webpack_exports__, {
   "f": function() { return /* binding */ SegmentBufferOperation; }
 });
 
-// EXTERNAL MODULE: ./src/config.ts
-var config = __webpack_require__(944);
+// EXTERNAL MODULE: ./src/config.ts + 2 modules
+var config = __webpack_require__(6872);
 // EXTERNAL MODULE: ./src/log.ts + 1 modules
 var log = __webpack_require__(3887);
 // EXTERNAL MODULE: ./src/manifest/utils.ts
@@ -11844,11 +13560,6 @@ function segment_inventory_arrayLikeToArray(arr, len) { if (len == null || len >
 
 
 
-var BUFFERED_HISTORY_RETENTION_TIME = config/* default.BUFFERED_HISTORY_RETENTION_TIME */.Z.BUFFERED_HISTORY_RETENTION_TIME,
-    BUFFERED_HISTORY_MAXIMUM_ENTRIES = config/* default.BUFFERED_HISTORY_MAXIMUM_ENTRIES */.Z.BUFFERED_HISTORY_MAXIMUM_ENTRIES,
-    MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE = config/* default.MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE */.Z.MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
-    MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE = config/* default.MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE */.Z.MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE,
-    MINIMUM_SEGMENT_SIZE = config/* default.MINIMUM_SEGMENT_SIZE */.Z.MINIMUM_SEGMENT_SIZE;
 /**
  * Keep track of every chunk downloaded and currently in the linked media
  * buffer.
@@ -11861,6 +13572,10 @@ var BUFFERED_HISTORY_RETENTION_TIME = config/* default.BUFFERED_HISTORY_RETENTIO
 
 var SegmentInventory = /*#__PURE__*/function () {
   function SegmentInventory() {
+    var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+        BUFFERED_HISTORY_RETENTION_TIME = _config$getCurrent.BUFFERED_HISTORY_RETENTION_TIME,
+        BUFFERED_HISTORY_MAXIMUM_ENTRIES = _config$getCurrent.BUFFERED_HISTORY_MAXIMUM_ENTRIES;
+
     this._inventory = [];
     this._bufferedHistory = new BufferedHistory(BUFFERED_HISTORY_RETENTION_TIME, BUFFERED_HISTORY_MAXIMUM_ENTRIES);
   }
@@ -11894,7 +13609,10 @@ var SegmentInventory = /*#__PURE__*/function () {
 
     var thisSegment = inventory[0]; // Current segmentInfos considered
 
+    var _config$getCurrent2 = config/* default.getCurrent */.Z.getCurrent(),
+        MINIMUM_SEGMENT_SIZE = _config$getCurrent2.MINIMUM_SEGMENT_SIZE;
     /** Type of buffer considered, used for logs */
+
 
     var bufferType = thisSegment === null || thisSegment === void 0 ? void 0 : thisSegment.infos.adaptation.type;
     var rangesLength = buffered.length;
@@ -12017,6 +13735,7 @@ var SegmentInventory = /*#__PURE__*/function () {
         adaptation = _ref.adaptation,
         representation = _ref.representation,
         segment = _ref.segment,
+        chunkSize = _ref.chunkSize,
         start = _ref.start,
         end = _ref.end;
 
@@ -12034,6 +13753,7 @@ var SegmentInventory = /*#__PURE__*/function () {
     var inventory = this._inventory;
     var newSegment = {
       partiallyPushed: true,
+      chunkSize: chunkSize,
       splitted: false,
       start: start,
       end: end,
@@ -12242,9 +13962,17 @@ var SegmentInventory = /*#__PURE__*/function () {
               //  prevSegment  : |---------|
               //  newSegment   :    |====|
               //  ===>         : |--|====|-|
-              log/* default.debug */.Z.debug("SI: Segment pushed is contained in a previous one", bufferType, start, end, segmentI.start, segmentI.end);
+              log/* default.warn */.Z.warn("SI: Segment pushed is contained in a previous one", bufferType, start, end, segmentI.start, segmentI.end);
               var nextSegment = {
                 partiallyPushed: segmentI.partiallyPushed,
+
+                /**
+                 * Note: this sadly means we're doing as if
+                 * that chunk is present two times.
+                 * Thankfully, this scenario should be
+                 * fairly rare.
+                 */
+                chunkSize: segmentI.chunkSize,
                 splitted: true,
                 start: newSegment.end,
                 end: segmentI.end,
@@ -12392,9 +14120,16 @@ var SegmentInventory = /*#__PURE__*/function () {
         }
 
         var firstI = i;
+        var segmentSize = inventory[i].chunkSize;
         i += 1;
 
         while (i < inventory.length && (0,utils/* areSameContent */.z)(inventory[i].infos, content)) {
+          var chunkSize = inventory[i].chunkSize;
+
+          if (segmentSize !== undefined && chunkSize !== undefined) {
+            segmentSize += chunkSize;
+          }
+
           i++;
         }
 
@@ -12410,6 +14145,7 @@ var SegmentInventory = /*#__PURE__*/function () {
         }
 
         this._inventory[firstI].partiallyPushed = false;
+        this._inventory[firstI].chunkSize = segmentSize;
         this._inventory[firstI].end = lastEnd;
         this._inventory[firstI].bufferedEnd = lastBufferedEnd;
         this._inventory[firstI].splitted = splitted;
@@ -12484,6 +14220,11 @@ function bufferedStartLooksCoherent(thisSegment) {
   var start = thisSegment.start,
       end = thisSegment.end;
   var duration = end - start;
+
+  var _config$getCurrent3 = config/* default.getCurrent */.Z.getCurrent(),
+      MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE = _config$getCurrent3.MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
+      MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE = _config$getCurrent3.MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE;
+
   return Math.abs(start - thisSegment.bufferedStart) <= MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE && (thisSegment.bufferedEnd === undefined || thisSegment.bufferedEnd > thisSegment.bufferedStart && Math.abs(thisSegment.bufferedEnd - thisSegment.bufferedStart - duration) <= Math.min(MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE, duration / 3));
 }
 /**
@@ -12502,6 +14243,11 @@ function bufferedEndLooksCoherent(thisSegment) {
   var start = thisSegment.start,
       end = thisSegment.end;
   var duration = end - start;
+
+  var _config$getCurrent4 = config/* default.getCurrent */.Z.getCurrent(),
+      MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE = _config$getCurrent4.MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
+      MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE = _config$getCurrent4.MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE;
+
   return Math.abs(end - thisSegment.bufferedEnd) <= MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE && thisSegment.bufferedStart != null && thisSegment.bufferedEnd > thisSegment.bufferedStart && Math.abs(thisSegment.bufferedEnd - thisSegment.bufferedStart - duration) <= Math.min(MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE, duration / 3);
 }
 /**
@@ -12514,6 +14260,9 @@ function bufferedEndLooksCoherent(thisSegment) {
 
 
 function guessBufferedStartFromRangeStart(firstSegmentInRange, rangeStart, lastDeletedSegmentInfos, bufferType) {
+  var _config$getCurrent5 = config/* default.getCurrent */.Z.getCurrent(),
+      MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE = _config$getCurrent5.MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE;
+
   if (firstSegmentInRange.bufferedStart !== undefined) {
     if (firstSegmentInRange.bufferedStart < rangeStart) {
       log/* default.debug */.Z.debug("SI: Segment partially GCed at the start", bufferType, firstSegmentInRange.bufferedStart, rangeStart);
@@ -12560,6 +14309,9 @@ function guessBufferedStartFromRangeStart(firstSegmentInRange, rangeStart, lastD
 
 
 function guessBufferedEndFromRangeEnd(lastSegmentInRange, rangeEnd, bufferType) {
+  var _config$getCurrent6 = config/* default.getCurrent */.Z.getCurrent(),
+      MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE = _config$getCurrent6.MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE;
+
   if (lastSegmentInRange.bufferedEnd !== undefined) {
     if (lastSegmentInRange.bufferedEnd > rangeEnd) {
       log/* default.debug */.Z.debug("SI: Segment partially GCed at the end", bufferType, lastSegmentInRange.bufferedEnd, rangeEnd);
@@ -12942,9 +14694,10 @@ var ManualTimeRanges = /*#__PURE__*/function () {
 /***/ }),
 
 /***/ 8567:
-/***/ (function(__unused_webpack_module, __webpack_exports__) {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony import */ var _utils_object_assign__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8026);
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -12960,6 +14713,7 @@ var ManualTimeRanges = /*#__PURE__*/function () {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 var EVENTS = {
   activePeriodChanged: function activePeriodChanged(period) {
     return {
@@ -13094,10 +14848,12 @@ var EVENTS = {
       }
     };
   },
-  encryptionDataEncountered: function encryptionDataEncountered(initDataInfo) {
+  encryptionDataEncountered: function encryptionDataEncountered(reprProtData, content) {
     return {
       type: "encryption-data-encountered",
-      value: initDataInfo
+      value: (0,_utils_object_assign__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z)({
+        content: content
+      }, reprProtData)
     };
   },
   representationChange: function representationChange(type, period, representation) {
@@ -13286,9 +15042,9 @@ var EncryptedMediaError = /*#__PURE__*/function (_Error) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "SM": function() { return /* binding */ ErrorCodes; },
 /* harmony export */   "ZB": function() { return /* binding */ ErrorTypes; },
-/* harmony export */   "br": function() { return /* binding */ NetworkErrorTypes; },
-/* harmony export */   "SM": function() { return /* binding */ ErrorCodes; }
+/* harmony export */   "br": function() { return /* binding */ NetworkErrorTypes; }
 /* harmony export */ });
 /**
  * Copyright 2015 CANAL+ Group
@@ -13765,7 +15521,11 @@ var RequestError = /*#__PURE__*/function (_Error) {
     Object.setPrototypeOf((0,_babel_runtime_helpers_assertThisInitialized__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .Z)(_this), RequestError.prototype);
     _this.name = "RequestError";
     _this.url = url;
-    _this.xhr = xhr;
+
+    if (xhr !== undefined) {
+      _this.xhr = xhr;
+    }
+
     _this.status = status;
     _this.type = type;
     _this.message = type;
@@ -13809,7 +15569,7 @@ var features = {
     js: null
   },
   directfile: null,
-  emeManager: null,
+  ContentDecryptor: null,
   htmlTextTracksBuffer: null,
   htmlTextTracksParsers: {},
   imageBuffer: null,
@@ -14393,8 +16153,11 @@ var Adaptation = /*#__PURE__*/function () {
         representationFilter = _options.representationFilter,
         isManuallyAdded = _options.isManuallyAdded;
     this.id = parsedAdaptation.id;
-    this.isTrickModeTrack = parsedAdaptation.isTrickModeTrack;
     this.type = parsedAdaptation.type;
+
+    if (parsedAdaptation.isTrickModeTrack !== undefined) {
+      this.isTrickModeTrack = parsedAdaptation.isTrickModeTrack;
+    }
 
     if (parsedAdaptation.language !== undefined) {
       this.language = parsedAdaptation.language;
@@ -14528,8 +16291,6 @@ __webpack_require__.d(__webpack_exports__, {
 var inheritsLoose = __webpack_require__(4578);
 // EXTERNAL MODULE: ./src/errors/media_error.ts
 var media_error = __webpack_require__(3714);
-// EXTERNAL MODULE: ./src/utils/are_arrays_of_numbers_equal.ts
-var are_arrays_of_numbers_equal = __webpack_require__(4791);
 // EXTERNAL MODULE: ./src/utils/array_find.ts
 var array_find = __webpack_require__(3274);
 // EXTERNAL MODULE: ./src/utils/event_emitter.ts
@@ -15098,6 +16859,12 @@ function updatePeriods(oldPeriods, newPeriods) {
 ;// CONCATENATED MODULE: ./src/manifest/manifest.ts
 
 
+function _createForOfIteratorHelperLoose(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (it) return (it = it.call(o)).next.bind(it); if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -15113,7 +16880,6 @@ function updatePeriods(oldPeriods, newPeriods) {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 
 
 
@@ -15366,83 +17132,8 @@ var Manifest = /*#__PURE__*/function (_EventEmitter) {
    */
   ;
 
-  _proto.updateDeciperabilitiesBasedOnKeyIds = function updateDeciperabilitiesBasedOnKeyIds(_ref) {
-    var whitelistedKeyIds = _ref.whitelistedKeyIds,
-        blacklistedKeyIDs = _ref.blacklistedKeyIDs;
-    var updates = updateDeciperability(this, function (representation) {
-      if (representation.decipherable === false || representation.contentProtections === undefined) {
-        return representation.decipherable;
-      }
-
-      var contentKIDs = representation.contentProtections.keyIds;
-
-      for (var i = 0; i < contentKIDs.length; i++) {
-        var elt = contentKIDs[i];
-
-        for (var j = 0; j < blacklistedKeyIDs.length; j++) {
-          if ((0,are_arrays_of_numbers_equal/* default */.Z)(blacklistedKeyIDs[j], elt.keyId)) {
-            return false;
-          }
-        }
-
-        for (var _j = 0; _j < whitelistedKeyIds.length; _j++) {
-          if ((0,are_arrays_of_numbers_equal/* default */.Z)(whitelistedKeyIds[_j], elt.keyId)) {
-            return true;
-          }
-        }
-      }
-
-      return representation.decipherable;
-    });
-
-    if (updates.length > 0) {
-      this.trigger("decipherabilityUpdate", updates);
-    }
-  }
-  /**
-   * Look in the Manifest for Representations linked to the given content
-   * protection initialization data and mark them as being impossible to
-   * decrypt.
-   * Then trigger a "decipherabilityUpdate" event to notify everyone of the
-   * changes performed.
-   * @param {Object} initData
-   */
-  ;
-
-  _proto.addUndecipherableProtectionData = function addUndecipherableProtectionData(initData) {
-    var updates = updateDeciperability(this, function (representation) {
-      var _a, _b;
-
-      if (representation.decipherable === false) {
-        return false;
-      }
-
-      var segmentProtections = (_b = (_a = representation.contentProtections) === null || _a === void 0 ? void 0 : _a.initData) !== null && _b !== void 0 ? _b : [];
-
-      var _loop = function _loop(i) {
-        if (initData.type === undefined || segmentProtections[i].type === initData.type) {
-          var containedInitData = initData.values.every(function (undecipherableVal) {
-            return segmentProtections[i].values.some(function (currVal) {
-              return (undecipherableVal.systemId === undefined || currVal.systemId === undecipherableVal.systemId) && (0,are_arrays_of_numbers_equal/* default */.Z)(currVal.data, undecipherableVal.data);
-            });
-          });
-
-          if (containedInitData) {
-            return {
-              v: false
-            };
-          }
-        }
-      };
-
-      for (var i = 0; i < segmentProtections.length; i++) {
-        var _ret = _loop(i);
-
-        if (typeof _ret === "object") return _ret.v;
-      }
-
-      return representation.decipherable;
-    });
+  _proto.updateRepresentationsDeciperability = function updateRepresentationsDeciperability(isDecipherableCb) {
+    var updates = updateDeciperability(this, isDecipherableCb);
 
     if (updates.length > 0) {
       this.trigger("decipherabilityUpdate", updates);
@@ -15501,8 +17192,8 @@ var Manifest = /*#__PURE__*/function (_EventEmitter) {
     (0,warn_once/* default */.Z)("manifest.getAdaptation(id) is deprecated." + " Please use manifest.period[].getAdaptation(id) instead");
     /* eslint-disable import/no-deprecated */
 
-    return (0,array_find/* default */.Z)(this.getAdaptations(), function (_ref2) {
-      var id = _ref2.id;
+    return (0,array_find/* default */.Z)(this.getAdaptations(), function (_ref) {
+      var id = _ref.id;
       return wantedId === id;
     });
     /* eslint-enable import/no-deprecated */
@@ -15521,9 +17212,9 @@ var Manifest = /*#__PURE__*/function (_EventEmitter) {
 
     var _imageTracks = Array.isArray(imageTracks) ? imageTracks : [imageTracks];
 
-    var newImageTracks = _imageTracks.map(function (_ref3) {
-      var mimeType = _ref3.mimeType,
-          url = _ref3.url;
+    var newImageTracks = _imageTracks.map(function (_ref2) {
+      var mimeType = _ref2.mimeType,
+          url = _ref2.url;
       var adaptationID = "gen-image-ada-" + generateSupplementaryTrackID();
       var representationID = "gen-image-rep-" + generateSupplementaryTrackID();
       var newAdaptation = new manifest_adaptation/* default */.Z({
@@ -15571,13 +17262,13 @@ var Manifest = /*#__PURE__*/function (_EventEmitter) {
 
     var _textTracks = Array.isArray(textTracks) ? textTracks : [textTracks];
 
-    var newTextAdaptations = _textTracks.reduce(function (allSubs, _ref4) {
-      var mimeType = _ref4.mimeType,
-          codecs = _ref4.codecs,
-          url = _ref4.url,
-          language = _ref4.language,
-          languages = _ref4.languages,
-          closedCaption = _ref4.closedCaption;
+    var newTextAdaptations = _textTracks.reduce(function (allSubs, _ref3) {
+      var mimeType = _ref3.mimeType,
+          codecs = _ref3.codecs,
+          url = _ref3.url,
+          language = _ref3.language,
+          languages = _ref3.languages,
+          closedCaption = _ref3.closedCaption;
       var langsToMapOn = language != null ? [language] : languages != null ? languages : [];
       return allSubs.concat(langsToMapOn.map(function (_language) {
         var adaptationID = "gen-text-ada-" + generateSupplementaryTrackID();
@@ -15689,16 +17380,14 @@ var Manifest = /*#__PURE__*/function (_EventEmitter) {
 function updateDeciperability(manifest, isDecipherable) {
   var updates = [];
 
-  for (var i = 0; i < manifest.periods.length; i++) {
-    var period = manifest.periods[i];
-    var adaptations = period.getAdaptations();
+  for (var _iterator = _createForOfIteratorHelperLoose(manifest.periods), _step; !(_step = _iterator()).done;) {
+    var period = _step.value;
 
-    for (var j = 0; j < adaptations.length; j++) {
-      var adaptation = adaptations[j];
-      var representations = adaptation.representations;
+    for (var _iterator2 = _createForOfIteratorHelperLoose(period.getAdaptations()), _step2; !(_step2 = _iterator2()).done;) {
+      var adaptation = _step2.value;
 
-      for (var k = 0; k < representations.length; k++) {
-        var representation = representations[k];
+      for (var _iterator3 = _createForOfIteratorHelperLoose(adaptation.representations), _step3; !(_step3 = _iterator3()).done;) {
+        var representation = _step3.value;
         var result = isDecipherable(representation);
 
         if (result !== representation.decipherable) {
@@ -15749,8 +17438,8 @@ function updateDeciperability(manifest, isDecipherable) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "z": function() { return /* binding */ areSameContent; },
-/* harmony export */   "K": function() { return /* binding */ getLoggableSegmentId; }
+/* harmony export */   "K": function() { return /* binding */ getLoggableSegmentId; },
+/* harmony export */   "z": function() { return /* binding */ areSameContent; }
 /* harmony export */ });
 /* harmony import */ var _utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1946);
 /**
@@ -15838,12 +17527,12 @@ var MAX_32_BIT_INT = Math.pow(2, 32) - 1;
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "iz": function() { return /* binding */ getBox; },
-/* harmony export */   "t_": function() { return /* binding */ getBoxContent; },
-/* harmony export */   "lp": function() { return /* binding */ getBoxesContent; },
 /* harmony export */   "Qy": function() { return /* binding */ getBoxOffsets; },
 /* harmony export */   "Xj": function() { return /* binding */ getNextBoxOffsets; },
-/* harmony export */   "nR": function() { return /* binding */ getUuidContent; }
+/* harmony export */   "iz": function() { return /* binding */ getBox; },
+/* harmony export */   "lp": function() { return /* binding */ getBoxesContent; },
+/* harmony export */   "nR": function() { return /* binding */ getUuidContent; },
+/* harmony export */   "t_": function() { return /* binding */ getBoxContent; }
 /* harmony export */ });
 /* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3887);
 /* harmony import */ var _utils_assert__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(811);
@@ -16092,11 +17781,11 @@ function getNextBoxOffsets(buf) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "XA": function() { return /* binding */ getTRAF; },
-/* harmony export */   "uq": function() { return /* binding */ getTRAFs; },
+/* harmony export */   "E3": function() { return /* binding */ getEMSG; },
 /* harmony export */   "Le": function() { return /* binding */ getMDAT; },
+/* harmony export */   "XA": function() { return /* binding */ getTRAF; },
 /* harmony export */   "fs": function() { return /* binding */ getMDIA; },
-/* harmony export */   "E3": function() { return /* binding */ getEMSG; }
+/* harmony export */   "uq": function() { return /* binding */ getTRAFs; }
 /* harmony export */ });
 /* harmony import */ var _get_box__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2297);
 /**
@@ -16402,11 +18091,11 @@ function getPsshSystemID(buff, initialDataOffset) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "LD": function() { return /* binding */ getMDHDTimescale; },
-/* harmony export */   "Qx": function() { return /* binding */ getTrackFragmentDecodeTime; },
-/* harmony export */   "MM": function() { return /* binding */ getDurationFromTrun; },
-/* harmony export */   "Wf": function() { return /* binding */ getSegmentsFromSidx; },
 /* harmony export */   "J6": function() { return /* binding */ updateBoxLength; },
+/* harmony export */   "LD": function() { return /* binding */ getMDHDTimescale; },
+/* harmony export */   "MM": function() { return /* binding */ getDurationFromTrun; },
+/* harmony export */   "Qx": function() { return /* binding */ getTrackFragmentDecodeTime; },
+/* harmony export */   "Wf": function() { return /* binding */ getSegmentsFromSidx; },
 /* harmony export */   "s9": function() { return /* binding */ parseEmsgBoxes; }
 /* harmony export */ });
 /* unused harmony export patchPssh */
@@ -17527,8 +19216,8 @@ function getSegmentsFromTimeline(index, from, durationWanted, isEMSGWhitelisted,
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "k6": function() { return /* binding */ createIndexURLs; },
-/* harmony export */   "QB": function() { return /* binding */ createDashUrlDetokenizer; }
+/* harmony export */   "QB": function() { return /* binding */ createDashUrlDetokenizer; },
+/* harmony export */   "k6": function() { return /* binding */ createIndexURLs; }
 /* harmony export */ });
 /* unused harmony export replaceRepresentationDASHTokens */
 /* harmony import */ var _utils_is_non_empty_string__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6923);
@@ -17668,8 +19357,8 @@ __webpack_require__.d(__webpack_exports__, {
 var assert_unreachable = __webpack_require__(7904);
 // EXTERNAL MODULE: ./src/utils/is_null_or_undefined.ts
 var is_null_or_undefined = __webpack_require__(1946);
-// EXTERNAL MODULE: ./src/config.ts
-var config = __webpack_require__(944);
+// EXTERNAL MODULE: ./src/config.ts + 2 modules
+var config = __webpack_require__(6872);
 // EXTERNAL MODULE: ./src/log.ts + 1 modules
 var log = __webpack_require__(3887);
 // EXTERNAL MODULE: ./src/utils/array_find.ts
@@ -18326,12 +20015,14 @@ var ManifestBoundsCalculator = /*#__PURE__*/function () {
 }();
 
 
+// EXTERNAL MODULE: ./src/manifest/adaptation.ts + 3 modules
+var manifest_adaptation = __webpack_require__(8999);
+// EXTERNAL MODULE: ./src/utils/array_find_index.ts
+var array_find_index = __webpack_require__(5138);
 // EXTERNAL MODULE: ./src/utils/array_includes.ts
 var array_includes = __webpack_require__(7714);
 // EXTERNAL MODULE: ./src/utils/is_non_empty_string.ts
 var is_non_empty_string = __webpack_require__(6923);
-// EXTERNAL MODULE: ./src/manifest/adaptation.ts + 3 modules
-var manifest_adaptation = __webpack_require__(8999);
 ;// CONCATENATED MODULE: ./src/parsers/manifest/dash/common/attach_trickmode_track.ts
 function _createForOfIteratorHelperLoose(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (it) return (it = it.call(o)).next.bind(it); if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 
@@ -18881,7 +20572,6 @@ var get_segments_from_timeline = __webpack_require__(6394);
  * limitations under the License.
  */
 
-var DEFAULT_MAXIMUM_TIME_ROUNDING_ERROR = config/* default.DEFAULT_MAXIMUM_TIME_ROUNDING_ERROR */.Z.DEFAULT_MAXIMUM_TIME_ROUNDING_ERROR;
 /**
  * In Javascript, numbers are encoded in a way that a floating number may be
  * represented internally with a rounding error.
@@ -18896,7 +20586,7 @@ var DEFAULT_MAXIMUM_TIME_ROUNDING_ERROR = config/* default.DEFAULT_MAXIMUM_TIME_
  */
 
 function isPeriodFulfilled(timescale, lastSegmentEnd, periodEnd) {
-  var scaledRoundingError = DEFAULT_MAXIMUM_TIME_ROUNDING_ERROR * timescale;
+  var scaledRoundingError = config/* default.getCurrent */.Z.getCurrent().DEFAULT_MAXIMUM_TIME_ROUNDING_ERROR * timescale;
   return lastSegmentEnd + scaledRoundingError >= periodEnd;
 }
 ;// CONCATENATED MODULE: ./src/parsers/manifest/dash/common/indexes/timeline/convert_element_to_index_segment.ts
@@ -19072,7 +20762,7 @@ function constructTimelineFromElements(elements, scaledPeriodStart) {
     var nextItem = initialTimeline[_i + 1] === undefined ? null : initialTimeline[_i + 1];
     var timelineElement = convertElementsToIndexSegment(item, previousItem, nextItem, scaledPeriodStart);
 
-    if (timelineElement != null) {
+    if (timelineElement !== null) {
       timeline.push(timelineElement);
     }
   }
@@ -19357,7 +21047,6 @@ function constructTimelineFromPreviousTimeline(newElements, prevTimeline, scaled
  // eslint-disable-next-line max-len
 
 
-var MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY = config/* default.MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY */.Z.MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY;
 
 var TimelineRepresentationIndex = /*#__PURE__*/function () {
   /**
@@ -19374,6 +21063,7 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
     var availabilityTimeComplete = context.availabilityTimeComplete,
         manifestBoundsCalculator = context.manifestBoundsCalculator,
         isDynamic = context.isDynamic,
+        isLastPeriod = context.isLastPeriod,
         representationBaseURLs = context.representationBaseURLs,
         representationId = context.representationId,
         representationBitrate = context.representationBitrate,
@@ -19386,6 +21076,7 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
     var indexTimeOffset = presentationTimeOffset - scaledStart;
     this._manifestBoundsCalculator = manifestBoundsCalculator;
     this._isEMSGWhitelisted = isEMSGWhitelisted;
+    this._isLastPeriod = isLastPeriod;
     this._lastUpdate = context.receivedTime == null ? performance.now() : context.receivedTime;
     this._unsafelyBaseOnPreviousIndex = null;
 
@@ -19592,6 +21283,7 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
     this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
     this._lastUpdate = newIndex._lastUpdate;
     this._manifestBoundsCalculator = newIndex._manifestBoundsCalculator;
+    this._isLastPeriod = newIndex._isLastPeriod;
   }
   /**
    * Update this RepresentationIndex with a shorter version of it coming from a
@@ -19609,11 +21301,17 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
       newIndex._index.timeline = newIndex._getTimeline();
     }
 
-    (0,update_segment_timeline/* default */.Z)(this._index.timeline, newIndex._index.timeline);
+    var hasReplaced = (0,update_segment_timeline/* default */.Z)(this._index.timeline, newIndex._index.timeline);
+
+    if (hasReplaced) {
+      this._index.startNumber = newIndex._index.startNumber;
+    }
+
     this._isDynamic = newIndex._isDynamic;
     this._scaledPeriodStart = newIndex._scaledPeriodStart;
     this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
     this._lastUpdate = newIndex._lastUpdate;
+    this._isLastPeriod = newIndex._isLastPeriod;
   }
   /**
    * Returns `true` if this RepresentationIndex currently contains its last
@@ -19624,7 +21322,13 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
   ;
 
   _proto.isFinished = function isFinished() {
-    if (!this._isDynamic) {
+    if (!this._isDynamic || !this._isLastPeriod) {
+      // Either the content is not dynamic, in which case no new segment will
+      // be generated, either it is but this index is not linked to the current
+      // last Period in the MPD, in which case it is inferred that it has been
+      // completely generated. Note that this second condition might break very
+      // very rare use cases where old Periods are still being generated, yet it
+      // should fix more cases than it breaks.
       return true;
     }
 
@@ -19679,7 +21383,11 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
     }
 
     var scaledFirstPosition = (0,index_helpers/* toIndexTime */.gT)(firstPosition, this._index);
-    (0,clear_timeline_from_position/* default */.Z)(this._index.timeline, scaledFirstPosition);
+    var nbEltsRemoved = (0,clear_timeline_from_position/* default */.Z)(this._index.timeline, scaledFirstPosition);
+
+    if (this._index.startNumber !== undefined) {
+      this._index.startNumber += nbEltsRemoved;
+    }
   };
 
   TimelineRepresentationIndex.getIndexEnd = function getIndexEnd(timeline, scaledPeriodEnd) {
@@ -19726,6 +21434,9 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
     var newElements = this._parseTimeline();
 
     this._parseTimeline = null; // Free memory
+
+    var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+        MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY = _config$getCurrent.MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY;
 
     if (this._unsafelyBaseOnPreviousIndex === null || newElements.length < MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY) {
       // Just completely parse the current timeline
@@ -19789,7 +21500,6 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
 
 
 
-var MINIMUM_SEGMENT_SIZE = config/* default.MINIMUM_SEGMENT_SIZE */.Z.MINIMUM_SEGMENT_SIZE;
 /**
  * IRepresentationIndex implementation for DASH' SegmentTemplate without a
  * SegmentTimeline.
@@ -20176,7 +21886,7 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
       // the period's duration and a multiple of a segment's duration.
       // Check that we're within a good margin
 
-      var minimumDuration = MINIMUM_SEGMENT_SIZE * timescale;
+      var minimumDuration = config/* default.getCurrent */.Z.getCurrent().MINIMUM_SEGMENT_SIZE * timescale;
 
       if (maximumTime - regularLastSegmentStart > minimumDuration || numberIndexedToZero === 0) {
         return regularLastSegmentStart;
@@ -20274,24 +21984,25 @@ function resolveBaseURLs(currentBaseURLs, newBaseUrlsIR) {
  * Parse the specific segment indexing information found in a representation
  * into a IRepresentationIndex implementation.
  * @param {Array.<Object>} representation
- * @param {Object} representationInfos
+ * @param {Object} context
  * @returns {Array.<Object>}
  */
 
-function parseRepresentationIndex(representation, representationInfos) {
+function parseRepresentationIndex(representation, context) {
   var _a, _b;
 
-  var representationBaseURLs = resolveBaseURLs(representationInfos.baseURLs, representation.children.baseURLs);
-  var aggressiveMode = representationInfos.aggressiveMode,
-      availabilityTimeOffset = representationInfos.availabilityTimeOffset,
-      manifestBoundsCalculator = representationInfos.manifestBoundsCalculator,
-      isDynamic = representationInfos.isDynamic,
-      periodEnd = representationInfos.end,
-      periodStart = representationInfos.start,
-      receivedTime = representationInfos.receivedTime,
-      timeShiftBufferDepth = representationInfos.timeShiftBufferDepth,
-      unsafelyBaseOnPreviousRepresentation = representationInfos.unsafelyBaseOnPreviousRepresentation,
-      inbandEventStreams = representationInfos.inbandEventStreams;
+  var representationBaseURLs = resolveBaseURLs(context.baseURLs, representation.children.baseURLs);
+  var aggressiveMode = context.aggressiveMode,
+      availabilityTimeOffset = context.availabilityTimeOffset,
+      manifestBoundsCalculator = context.manifestBoundsCalculator,
+      isDynamic = context.isDynamic,
+      periodEnd = context.end,
+      periodStart = context.start,
+      receivedTime = context.receivedTime,
+      timeShiftBufferDepth = context.timeShiftBufferDepth,
+      unsafelyBaseOnPreviousRepresentation = context.unsafelyBaseOnPreviousRepresentation,
+      inbandEventStreams = context.inbandEventStreams,
+      isLastPeriod = context.isLastPeriod;
 
   var isEMSGWhitelisted = function isEMSGWhitelisted(inbandEvent) {
     if (inbandEventStreams === undefined) {
@@ -20304,12 +22015,13 @@ function parseRepresentationIndex(representation, representationInfos) {
     });
   };
 
-  var context = {
+  var reprIndexCtxt = {
     aggressiveMode: aggressiveMode,
     availabilityTimeComplete: true,
     availabilityTimeOffset: availabilityTimeOffset,
     unsafelyBaseOnPreviousRepresentation: unsafelyBaseOnPreviousRepresentation,
     isEMSGWhitelisted: isEMSGWhitelisted,
+    isLastPeriod: isLastPeriod,
     manifestBoundsCalculator: manifestBoundsCalculator,
     isDynamic: isDynamic,
     periodEnd: periodEnd,
@@ -20324,12 +22036,12 @@ function parseRepresentationIndex(representation, representationInfos) {
 
   if (representation.children.segmentBase !== undefined) {
     var segmentBase = representation.children.segmentBase;
-    representationIndex = new base/* default */.Z(segmentBase, context);
+    representationIndex = new base/* default */.Z(segmentBase, reprIndexCtxt);
   } else if (representation.children.segmentList !== undefined) {
     var segmentList = representation.children.segmentList;
-    representationIndex = new ListRepresentationIndex(segmentList, context);
-  } else if (representation.children.segmentTemplate !== undefined || representationInfos.parentSegmentTemplates.length > 0) {
-    var segmentTemplates = representationInfos.parentSegmentTemplates.slice();
+    representationIndex = new ListRepresentationIndex(segmentList, reprIndexCtxt);
+  } else if (representation.children.segmentTemplate !== undefined || context.parentSegmentTemplates.length > 0) {
+    var segmentTemplates = context.parentSegmentTemplates.slice();
     var childSegmentTemplate = representation.children.segmentTemplate;
 
     if (childSegmentTemplate !== undefined) {
@@ -20337,25 +22049,25 @@ function parseRepresentationIndex(representation, representationInfos) {
     }
 
     var segmentTemplate = object_assign/* default.apply */.Z.apply(void 0, [{}].concat(segmentTemplates));
-    context.availabilityTimeComplete = (_a = segmentTemplate.availabilityTimeComplete) !== null && _a !== void 0 ? _a : representationInfos.availabilityTimeComplete;
-    context.availabilityTimeOffset = ((_b = segmentTemplate.availabilityTimeOffset) !== null && _b !== void 0 ? _b : 0) + representationInfos.availabilityTimeOffset;
-    representationIndex = timeline.isTimelineIndexArgument(segmentTemplate) ? new timeline(segmentTemplate, context) : new TemplateRepresentationIndex(segmentTemplate, context);
+    reprIndexCtxt.availabilityTimeComplete = (_a = segmentTemplate.availabilityTimeComplete) !== null && _a !== void 0 ? _a : context.availabilityTimeComplete;
+    reprIndexCtxt.availabilityTimeOffset = ((_b = segmentTemplate.availabilityTimeOffset) !== null && _b !== void 0 ? _b : 0) + context.availabilityTimeOffset;
+    representationIndex = timeline.isTimelineIndexArgument(segmentTemplate) ? new timeline(segmentTemplate, reprIndexCtxt) : new TemplateRepresentationIndex(segmentTemplate, reprIndexCtxt);
   } else {
-    var adaptationChildren = representationInfos.adaptation.children;
+    var adaptationChildren = context.adaptation.children;
 
     if (adaptationChildren.segmentBase !== undefined) {
       var _segmentBase = adaptationChildren.segmentBase;
-      representationIndex = new base/* default */.Z(_segmentBase, context);
+      representationIndex = new base/* default */.Z(_segmentBase, reprIndexCtxt);
     } else if (adaptationChildren.segmentList !== undefined) {
       var _segmentList = adaptationChildren.segmentList;
-      representationIndex = new ListRepresentationIndex(_segmentList, context);
+      representationIndex = new ListRepresentationIndex(_segmentList, reprIndexCtxt);
     } else {
       representationIndex = new TemplateRepresentationIndex({
         duration: Number.MAX_VALUE,
         timescale: 1,
         startNumber: 0,
         media: ""
-      }, context);
+      }, reprIndexCtxt);
     }
   }
 
@@ -20447,12 +22159,12 @@ function getHDRInformation(_ref) {
 /**
  * Process intermediate representations to create final parsed representations.
  * @param {Array.<Object>} representationsIR
- * @param {Object} adaptationInfos
+ * @param {Object} context
  * @returns {Array.<Object>}
  */
 
 
-function parseRepresentations(representationsIR, adaptation, adaptationInfos) {
+function parseRepresentations(representationsIR, adaptation, context) {
   var _a, _b, _c, _d;
 
   var parsedRepresentations = [];
@@ -20469,18 +22181,18 @@ function parseRepresentations(representationsIR, adaptation, adaptationInfos) {
     } // Retrieve previous version of the Representation, if one.
 
 
-    var unsafelyBaseOnPreviousRepresentation = (_b = (_a = adaptationInfos.unsafelyBaseOnPreviousAdaptation) === null || _a === void 0 ? void 0 : _a.getRepresentation(representationID)) !== null && _b !== void 0 ? _b : null;
+    var unsafelyBaseOnPreviousRepresentation = (_b = (_a = context.unsafelyBaseOnPreviousAdaptation) === null || _a === void 0 ? void 0 : _a.getRepresentation(representationID)) !== null && _b !== void 0 ? _b : null;
     var inbandEventStreams = combineInbandEventStreams(representation, adaptation);
-    var availabilityTimeComplete = (_c = representation.attributes.availabilityTimeComplete) !== null && _c !== void 0 ? _c : adaptationInfos.availabilityTimeComplete;
-    var availabilityTimeOffset = ((_d = representation.attributes.availabilityTimeOffset) !== null && _d !== void 0 ? _d : 0) + adaptationInfos.availabilityTimeOffset;
-    var representationInfos = (0,object_assign/* default */.Z)({}, adaptationInfos, {
+    var availabilityTimeComplete = (_c = representation.attributes.availabilityTimeComplete) !== null && _c !== void 0 ? _c : context.availabilityTimeComplete;
+    var availabilityTimeOffset = ((_d = representation.attributes.availabilityTimeOffset) !== null && _d !== void 0 ? _d : 0) + context.availabilityTimeOffset;
+    var reprIndexCtxt = (0,object_assign/* default */.Z)({}, context, {
       availabilityTimeOffset: availabilityTimeOffset,
       availabilityTimeComplete: availabilityTimeComplete,
       unsafelyBaseOnPreviousRepresentation: unsafelyBaseOnPreviousRepresentation,
       adaptation: adaptation,
       inbandEventStreams: inbandEventStreams
     });
-    var representationIndex = parseRepresentationIndex(representation, representationInfos); // Find bitrate
+    var representationIndex = parseRepresentationIndex(representation, reprIndexCtxt); // Find bitrate
 
     var representationBitrate = void 0;
 
@@ -20599,7 +22311,7 @@ function parseRepresentations(representationsIR, adaptation, adaptationInfos) {
 
     parsedRepresentation.hdrInfo = getHDRInformation({
       adaptationProfiles: adaptation.attributes.profiles,
-      manifestProfiles: adaptationInfos.manifestProfiles,
+      manifestProfiles: context.manifestProfiles,
       codecs: codecs
     });
     parsedRepresentations.push(parsedRepresentation);
@@ -20637,6 +22349,8 @@ function parse_adaptation_sets_arrayLikeToArray(arr, len) { if (len == null || l
 
 
 
+
+
  // eslint-disable-next-line max-len
 
 
@@ -20651,7 +22365,7 @@ function parse_adaptation_sets_arrayLikeToArray(arr, len) { if (len == null || l
  */
 
 function isVisuallyImpaired(accessibility) {
-  if (accessibility == null) {
+  if (accessibility === undefined) {
     return false;
   }
 
@@ -20669,7 +22383,7 @@ function isVisuallyImpaired(accessibility) {
 
 
 function isHardOfHearing(accessibility) {
-  if (accessibility == null) {
+  if (accessibility === undefined) {
     return false;
   }
 
@@ -20685,7 +22399,7 @@ function isHardOfHearing(accessibility) {
 
 
 function hasSignLanguageInterpretation(accessibility) {
-  if (accessibility == null) {
+  if (accessibility === undefined) {
     return false;
   }
 
@@ -20783,40 +22497,35 @@ function getAdaptationSetSwitchingIDs(adaptation) {
  * Note that the AdaptationSets returned are sorted by priority (from the most
  * priority to the least one).
  * @param {Array.<Object>} adaptationsIR
- * @param {Object} periodInfos
+ * @param {Object} context
  * @returns {Array.<Object>}
  */
 
 
-function parseAdaptationSets(adaptationsIR, periodInfos) {
-  var _a, _b, _c, _d, _e, _f, _g;
+function parseAdaptationSets(adaptationsIR, context) {
+  var _a, _b, _c, _d, _e, _f, _g, _h;
 
-  var parsedAdaptations = {};
+  var parsedAdaptations = {
+    video: [],
+    audio: [],
+    text: [],
+    image: []
+  };
   var trickModeAdaptations = [];
   var adaptationSwitchingInfos = {};
   var parsedAdaptationsIDs = [];
   /**
-   * Index of the last parsed AdaptationSet with a Role set as "main" in
-   * `parsedAdaptations` for a given type.
-   * Not defined for a type with no main Adaptation inside.
-   * This is used to put main AdaptationSet first in the resulting array of
-   * Adaptation while still preserving the MPD order among them.
+   * Index of the last parsed Video AdaptationSet with a Role set as "main" in
+   * `parsedAdaptations.video`.
+   * `-1` if not yet encountered.
+   * Used as we merge all main video AdaptationSet due to a comprehension of the
+   * DASH-IF IOP.
    */
 
-  var lastMainAdaptationIndex = {}; // first sort AdaptationSets by absolute priority.
+  var lastMainVideoAdapIdx = -1;
 
-  adaptationsIR.sort(function (a, b) {
-    var _a, _b;
-    /* As of DASH-IF 4.3, `1` is the default value. */
-
-
-    var priority1 = (_a = a.attributes.selectionPriority) !== null && _a !== void 0 ? _a : 1;
-    var priority2 = (_b = b.attributes.selectionPriority) !== null && _b !== void 0 ? _b : 1;
-    return priority2 - priority1;
-  });
-
-  for (var _iterator2 = parse_adaptation_sets_createForOfIteratorHelperLoose(adaptationsIR), _step2; !(_step2 = _iterator2()).done;) {
-    var adaptation = _step2.value;
+  for (var adaptationIdx = 0; adaptationIdx < adaptationsIR.length; adaptationIdx++) {
+    var adaptation = adaptationsIR[adaptationIdx];
     var adaptationChildren = adaptation.children;
     var essentialProperties = adaptationChildren.essentialProperties,
         roles = adaptationChildren.roles;
@@ -20826,8 +22535,8 @@ function parseAdaptationSets(adaptationsIR, periodInfos) {
       return role.schemeIdUri === "urn:mpeg:dash:role:2011";
     });
     var representationsIR = adaptation.children.representations;
-    var availabilityTimeComplete = (_a = adaptation.attributes.availabilityTimeComplete) !== null && _a !== void 0 ? _a : periodInfos.availabilityTimeComplete;
-    var availabilityTimeOffset = ((_b = adaptation.attributes.availabilityTimeOffset) !== null && _b !== void 0 ? _b : 0) + periodInfos.availabilityTimeOffset;
+    var availabilityTimeComplete = (_a = adaptation.attributes.availabilityTimeComplete) !== null && _a !== void 0 ? _a : context.availabilityTimeComplete;
+    var availabilityTimeOffset = ((_b = adaptation.attributes.availabilityTimeOffset) !== null && _b !== void 0 ? _b : 0) + context.availabilityTimeOffset;
     var adaptationMimeType = adaptation.attributes.mimeType;
     var adaptationCodecs = adaptation.attributes.codecs;
     var type = inferAdaptationType(representationsIR, (0,is_non_empty_string/* default */.Z)(adaptationMimeType) ? adaptationMimeType : null, (0,is_non_empty_string/* default */.Z)(adaptationCodecs) ? adaptationCodecs : null, adaptationChildren.roles != null ? adaptationChildren.roles : null);
@@ -20836,48 +22545,48 @@ function parseAdaptationSets(adaptationsIR, periodInfos) {
       continue;
     }
 
+    var priority = (_c = adaptation.attributes.selectionPriority) !== null && _c !== void 0 ? _c : 1;
     var originalID = adaptation.attributes.id;
     var newID = void 0;
     var adaptationSetSwitchingIDs = getAdaptationSetSwitchingIDs(adaptation);
     var parentSegmentTemplates = [];
 
-    if (periodInfos.segmentTemplate !== undefined) {
-      parentSegmentTemplates.push(periodInfos.segmentTemplate);
+    if (context.segmentTemplate !== undefined) {
+      parentSegmentTemplates.push(context.segmentTemplate);
     }
 
     if (adaptation.children.segmentTemplate !== undefined) {
       parentSegmentTemplates.push(adaptation.children.segmentTemplate);
     }
 
-    var adaptationInfos = {
-      aggressiveMode: periodInfos.aggressiveMode,
+    var reprCtxt = {
+      aggressiveMode: context.aggressiveMode,
       availabilityTimeComplete: availabilityTimeComplete,
       availabilityTimeOffset: availabilityTimeOffset,
-      baseURLs: resolveBaseURLs(periodInfos.baseURLs, adaptationChildren.baseURLs),
-      manifestBoundsCalculator: periodInfos.manifestBoundsCalculator,
-      end: periodInfos.end,
-      isDynamic: periodInfos.isDynamic,
-      manifestProfiles: periodInfos.manifestProfiles,
+      baseURLs: resolveBaseURLs(context.baseURLs, adaptationChildren.baseURLs),
+      manifestBoundsCalculator: context.manifestBoundsCalculator,
+      end: context.end,
+      isDynamic: context.isDynamic,
+      isLastPeriod: context.isLastPeriod,
+      manifestProfiles: context.manifestProfiles,
       parentSegmentTemplates: parentSegmentTemplates,
-      receivedTime: periodInfos.receivedTime,
-      start: periodInfos.start,
-      timeShiftBufferDepth: periodInfos.timeShiftBufferDepth,
+      receivedTime: context.receivedTime,
+      start: context.start,
+      timeShiftBufferDepth: context.timeShiftBufferDepth,
       unsafelyBaseOnPreviousAdaptation: null
     };
     var trickModeProperty = Array.isArray(essentialProperties) ? (0,array_find/* default */.Z)(essentialProperties, function (scheme) {
       return scheme.schemeIdUri === "http://dashif.org/guidelines/trickmode";
     }) : undefined;
-    var trickModeAttachedAdaptationIds = (_c = trickModeProperty === null || trickModeProperty === void 0 ? void 0 : trickModeProperty.value) === null || _c === void 0 ? void 0 : _c.split(" ");
+    var trickModeAttachedAdaptationIds = (_d = trickModeProperty === null || trickModeProperty === void 0 ? void 0 : trickModeProperty.value) === null || _d === void 0 ? void 0 : _d.split(" ");
     var isTrickModeTrack = trickModeAttachedAdaptationIds !== undefined;
 
-    if (type === "video" && isMainAdaptation && parsedAdaptations.video !== undefined && parsedAdaptations.video.length > 0 && lastMainAdaptationIndex.video !== undefined && !isTrickModeTrack) {
+    if (type === "video" && isMainAdaptation && lastMainVideoAdapIdx >= 0 && parsedAdaptations.video.length > lastMainVideoAdapIdx && !isTrickModeTrack) {
       var _videoMainAdaptation$;
 
-      // Add to the already existing main video adaptation
-      // TODO remove that ugly custom logic?
-      var videoMainAdaptation = parsedAdaptations.video[lastMainAdaptationIndex.video];
-      adaptationInfos.unsafelyBaseOnPreviousAdaptation = (_e = (_d = periodInfos.unsafelyBaseOnPreviousPeriod) === null || _d === void 0 ? void 0 : _d.getAdaptation(videoMainAdaptation.id)) !== null && _e !== void 0 ? _e : null;
-      var representations = parseRepresentations(representationsIR, adaptation, adaptationInfos);
+      var videoMainAdaptation = parsedAdaptations.video[lastMainVideoAdapIdx][0];
+      reprCtxt.unsafelyBaseOnPreviousAdaptation = (_f = (_e = context.unsafelyBaseOnPreviousPeriod) === null || _e === void 0 ? void 0 : _e.getAdaptation(videoMainAdaptation.id)) !== null && _f !== void 0 ? _f : null;
+      var representations = parseRepresentations(representationsIR, adaptation, reprCtxt);
 
       (_videoMainAdaptation$ = videoMainAdaptation.representations).push.apply(_videoMainAdaptation$, representations);
 
@@ -20930,9 +22639,9 @@ function parseAdaptationSets(adaptationsIR, periodInfos) {
 
       newID = adaptationID;
       parsedAdaptationsIDs.push(adaptationID);
-      adaptationInfos.unsafelyBaseOnPreviousAdaptation = (_g = (_f = periodInfos.unsafelyBaseOnPreviousPeriod) === null || _f === void 0 ? void 0 : _f.getAdaptation(adaptationID)) !== null && _g !== void 0 ? _g : null;
+      reprCtxt.unsafelyBaseOnPreviousAdaptation = (_h = (_g = context.unsafelyBaseOnPreviousPeriod) === null || _g === void 0 ? void 0 : _g.getAdaptation(adaptationID)) !== null && _h !== void 0 ? _h : null;
 
-      var _representations = parseRepresentations(representationsIR, adaptation, adaptationInfos);
+      var _representations = parseRepresentations(representationsIR, adaptation, reprCtxt);
 
       var parsedAdaptationSet = {
         id: adaptationID,
@@ -20961,71 +22670,59 @@ function parseAdaptationSets(adaptationsIR, periodInfos) {
         parsedAdaptationSet.isSignInterpreted = true;
       }
 
-      var adaptationsOfTheSameType = parsedAdaptations[type];
-
       if (trickModeAttachedAdaptationIds !== undefined) {
         trickModeAdaptations.push({
           adaptation: parsedAdaptationSet,
           trickModeAttachedAdaptationIds: trickModeAttachedAdaptationIds
         });
-      } else if (adaptationsOfTheSameType === undefined) {
-        parsedAdaptations[type] = [parsedAdaptationSet];
-
-        if (isMainAdaptation) {
-          lastMainAdaptationIndex[type] = 0;
-        }
       } else {
-        var mergedInto = null; // look if we have to merge this into another Adaptation
+        // look if we have to merge this into another Adaptation
+        var mergedIntoIdx = -1;
 
         var _loop = function _loop() {
-          var id = _step3.value;
+          var id = _step2.value;
           var switchingInfos = adaptationSwitchingInfos[id];
 
-          if (switchingInfos != null && switchingInfos.newID !== newID && (0,array_includes/* default */.Z)(switchingInfos.adaptationSetSwitchingIDs, originalID)) {
-            var adaptationToMergeInto = (0,array_find/* default */.Z)(adaptationsOfTheSameType, function (a) {
-              return a.id === id;
+          if (switchingInfos !== undefined && switchingInfos.newID !== newID && (0,array_includes/* default */.Z)(switchingInfos.adaptationSetSwitchingIDs, originalID)) {
+            mergedIntoIdx = (0,array_find_index/* default */.Z)(parsedAdaptations[type], function (a) {
+              return a[0].id === id;
             });
+            var mergedInto = parsedAdaptations[type][mergedIntoIdx];
 
-            if (adaptationToMergeInto != null && adaptationToMergeInto.audioDescription === parsedAdaptationSet.audioDescription && adaptationToMergeInto.closedCaption === parsedAdaptationSet.closedCaption && adaptationToMergeInto.language === parsedAdaptationSet.language) {
-              var _adaptationToMergeInt;
+            if (mergedInto !== undefined && mergedInto[0].audioDescription === parsedAdaptationSet.audioDescription && mergedInto[0].closedCaption === parsedAdaptationSet.closedCaption && mergedInto[0].language === parsedAdaptationSet.language) {
+              var _mergedInto$0$represe;
 
               log/* default.info */.Z.info("DASH Parser: merging \"switchable\" AdaptationSets", originalID, id);
 
-              (_adaptationToMergeInt = adaptationToMergeInto.representations).push.apply(_adaptationToMergeInt, parsedAdaptationSet.representations);
+              (_mergedInto$0$represe = mergedInto[0].representations).push.apply(_mergedInto$0$represe, parsedAdaptationSet.representations);
 
-              mergedInto = adaptationToMergeInto;
+              if (type === "video" && isMainAdaptation && !mergedInto[1].isMainAdaptation) {
+                lastMainVideoAdapIdx = Math.max(lastMainVideoAdapIdx, mergedIntoIdx);
+              }
+
+              mergedInto[1] = {
+                priority: Math.max(priority, mergedInto[1].priority),
+                isMainAdaptation: isMainAdaptation || mergedInto[1].isMainAdaptation,
+                indexInMpd: Math.min(adaptationIdx, mergedInto[1].indexInMpd)
+              };
             }
           }
         };
 
-        for (var _iterator3 = parse_adaptation_sets_createForOfIteratorHelperLoose(adaptationSetSwitchingIDs), _step3; !(_step3 = _iterator3()).done;) {
+        for (var _iterator2 = parse_adaptation_sets_createForOfIteratorHelperLoose(adaptationSetSwitchingIDs), _step2; !(_step2 = _iterator2()).done;) {
           _loop();
         }
 
-        if (isMainAdaptation) {
-          var oldLastMainIdx = lastMainAdaptationIndex[type];
-          var newLastMainIdx = oldLastMainIdx === undefined ? 0 : oldLastMainIdx + 1;
+        if (mergedIntoIdx < 0) {
+          parsedAdaptations[type].push([parsedAdaptationSet, {
+            priority: priority,
+            isMainAdaptation: isMainAdaptation,
+            indexInMpd: adaptationIdx
+          }]);
 
-          if (mergedInto === null) {
-            // put "main" Adaptation after all other Main Adaptations
-            adaptationsOfTheSameType.splice(newLastMainIdx, 0, parsedAdaptationSet);
-            lastMainAdaptationIndex[type] = newLastMainIdx;
-          } else {
-            var indexOf = adaptationsOfTheSameType.indexOf(mergedInto);
-
-            if (indexOf < 0) {
-              // Weird, not found
-              adaptationsOfTheSameType.splice(newLastMainIdx, 0, parsedAdaptationSet);
-              lastMainAdaptationIndex[type] = newLastMainIdx;
-            } else if (oldLastMainIdx === undefined || indexOf > oldLastMainIdx) {
-              // Found but was not main
-              adaptationsOfTheSameType.splice(indexOf, 1);
-              adaptationsOfTheSameType.splice(newLastMainIdx, 0, mergedInto);
-              lastMainAdaptationIndex[type] = newLastMainIdx;
-            }
+          if (type === "video" && isMainAdaptation) {
+            lastMainVideoAdapIdx = parsedAdaptations.video.length - 1;
           }
-        } else if (mergedInto === null) {
-          adaptationsOfTheSameType.push(parsedAdaptationSet);
         }
       }
     }
@@ -21038,8 +22735,44 @@ function parseAdaptationSets(adaptationsIR, periodInfos) {
     }
   }
 
-  attach_trickmode_track(parsedAdaptations, trickModeAdaptations);
-  return parsedAdaptations;
+  var adaptationsPerType = manifest_adaptation/* SUPPORTED_ADAPTATIONS_TYPE.reduce */.r.reduce(function (acc, adaptationType) {
+    var adaptationsParsedForType = parsedAdaptations[adaptationType];
+
+    if (adaptationsParsedForType.length > 0) {
+      adaptationsParsedForType.sort(compareAdaptations);
+      acc[adaptationType] = adaptationsParsedForType.map(function (_ref) {
+        var parsedAdaptation = _ref[0];
+        return parsedAdaptation;
+      });
+    }
+
+    return acc;
+  }, {});
+  parsedAdaptations.video.sort(compareAdaptations);
+  attach_trickmode_track(adaptationsPerType, trickModeAdaptations);
+  return adaptationsPerType;
+}
+/**
+ * Compare groups of parsed AdaptationSet, alongside some ordering metadata,
+ * allowing to easily sort them through JavaScript's `Array.prototype.sort`
+ * method.
+ * @param {Array.<Object>} a
+ * @param {Array.<Object>} b
+ * @returns {number}
+ */
+
+function compareAdaptations(a, b) {
+  var priorityDiff = b[1].priority - a[1].priority;
+
+  if (priorityDiff !== 0) {
+    return priorityDiff;
+  }
+
+  if (a[1].isMainAdaptation !== b[1].isMainAdaptation) {
+    return a[1].isMainAdaptation ? -1 : 1;
+  }
+
+  return a[1].indexInMpd - b[1].indexInMpd;
 }
 ;// CONCATENATED MODULE: ./src/parsers/manifest/dash/common/parse_periods.ts
 function parse_periods_createForOfIteratorHelperLoose(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (it) return (it = it.call(o)).next.bind(it); if (Array.isArray(o) || (it = parse_periods_unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -21078,37 +22811,38 @@ var generatePeriodID = (0,id_generator/* default */.Z)();
 /**
  * Process intermediate periods to create final parsed periods.
  * @param {Array.<Object>} periodsIR
- * @param {Object} contextInfos
+ * @param {Object} context
  * @returns {Array.<Object>}
  */
 
-function parsePeriods(periodsIR, contextInfos) {
+function parsePeriods(periodsIR, context) {
   var _a, _b, _c, _d, _e, _f;
 
   var parsedPeriods = [];
-  var periodsTimeInformation = getPeriodsTimeInformation(periodsIR, contextInfos);
+  var periodsTimeInformation = getPeriodsTimeInformation(periodsIR, context);
 
   if (periodsTimeInformation.length !== periodsIR.length) {
     throw new Error("MPD parsing error: the time information are incoherent.");
   }
 
-  var isDynamic = contextInfos.isDynamic,
-      timeShiftBufferDepth = contextInfos.timeShiftBufferDepth;
+  var isDynamic = context.isDynamic,
+      timeShiftBufferDepth = context.timeShiftBufferDepth;
   var manifestBoundsCalculator = new ManifestBoundsCalculator({
     isDynamic: isDynamic,
     timeShiftBufferDepth: timeShiftBufferDepth
   });
 
-  if (!isDynamic && contextInfos.duration != null) {
-    manifestBoundsCalculator.setLastPosition(contextInfos.duration);
+  if (!isDynamic && context.duration != null) {
+    manifestBoundsCalculator.setLastPosition(context.duration);
   } // We parse it in reverse because we might need to deduce the buffer depth from
   // the last Periods' indexes
 
 
   var _loop = function _loop(i) {
+    var isLastPeriod = i === periodsIR.length - 1;
     var periodIR = periodsIR[i];
-    var xlinkInfos = contextInfos.xlinkInfos.get(periodIR);
-    var periodBaseURLs = resolveBaseURLs(contextInfos.baseURLs, periodIR.children.baseURLs);
+    var xlinkInfos = context.xlinkInfos.get(periodIR);
+    var periodBaseURLs = resolveBaseURLs(context.baseURLs, periodIR.children.baseURLs);
     var _periodsTimeInformati = periodsTimeInformation[i],
         periodStart = _periodsTimeInformati.periodStart,
         periodDuration = _periodsTimeInformati.periodDuration,
@@ -21129,27 +22863,31 @@ function parsePeriods(periodsIR, contextInfos) {
       periodID += "-dup";
     }
 
-    var receivedTime = xlinkInfos !== undefined ? xlinkInfos.receivedTime : contextInfos.receivedTime;
-    var unsafelyBaseOnPreviousPeriod = (_b = (_a = contextInfos.unsafelyBaseOnPreviousManifest) === null || _a === void 0 ? void 0 : _a.getPeriod(periodID)) !== null && _b !== void 0 ? _b : null;
+    var receivedTime = xlinkInfos !== undefined ? xlinkInfos.receivedTime : context.receivedTime;
+    var unsafelyBaseOnPreviousPeriod = (_b = (_a = context.unsafelyBaseOnPreviousManifest) === null || _a === void 0 ? void 0 : _a.getPeriod(periodID)) !== null && _b !== void 0 ? _b : null;
     var availabilityTimeComplete = (_c = periodIR.attributes.availabilityTimeComplete) !== null && _c !== void 0 ? _c : true;
     var availabilityTimeOffset = (_d = periodIR.attributes.availabilityTimeOffset) !== null && _d !== void 0 ? _d : 0;
-    var periodInfos = {
-      aggressiveMode: contextInfos.aggressiveMode,
+    var aggressiveMode = context.aggressiveMode,
+        manifestProfiles = context.manifestProfiles;
+    var segmentTemplate = periodIR.children.segmentTemplate;
+    var adapCtxt = {
+      aggressiveMode: aggressiveMode,
       availabilityTimeComplete: availabilityTimeComplete,
       availabilityTimeOffset: availabilityTimeOffset,
       baseURLs: periodBaseURLs,
       manifestBoundsCalculator: manifestBoundsCalculator,
       end: periodEnd,
       isDynamic: isDynamic,
-      manifestProfiles: contextInfos.manifestProfiles,
+      isLastPeriod: isLastPeriod,
+      manifestProfiles: manifestProfiles,
       receivedTime: receivedTime,
-      segmentTemplate: periodIR.children.segmentTemplate,
+      segmentTemplate: segmentTemplate,
       start: periodStart,
       timeShiftBufferDepth: timeShiftBufferDepth,
       unsafelyBaseOnPreviousPeriod: unsafelyBaseOnPreviousPeriod
     };
-    var adaptations = parseAdaptationSets(periodIR.children.adaptations, periodInfos);
-    var namespaces = ((_e = contextInfos.xmlNamespaces) !== null && _e !== void 0 ? _e : []).concat((_f = periodIR.attributes.namespaces) !== null && _f !== void 0 ? _f : []);
+    var adaptations = parseAdaptationSets(periodIR.children.adaptations, adapCtxt);
+    var namespaces = ((_e = context.xmlNamespaces) !== null && _e !== void 0 ? _e : []).concat((_f = periodIR.attributes.namespaces) !== null && _f !== void 0 ? _f : []);
     var streamEvents = generateStreamEvents(periodIR.children.eventStreams, periodStart, namespaces);
     var parsedPeriod = {
       id: periodID,
@@ -21174,7 +22912,7 @@ function parsePeriods(periodsIR, contextInfos) {
 
           manifestBoundsCalculator.setLastPosition(_lastPosition, _positionTime);
         } else {
-          var _guessedLastPositionFromClock = guessLastPositionFromClock(contextInfos, periodStart);
+          var _guessedLastPositionFromClock = guessLastPositionFromClock(context, periodStart);
 
           if (_guessedLastPositionFromClock !== undefined) {
             var guessedLastPosition = _guessedLastPositionFromClock[0],
@@ -21190,9 +22928,9 @@ function parsePeriods(periodsIR, contextInfos) {
     _loop(i);
   }
 
-  if (contextInfos.isDynamic && !manifestBoundsCalculator.lastPositionIsKnown()) {
+  if (context.isDynamic && !manifestBoundsCalculator.lastPositionIsKnown()) {
     // Guess a last time the last position
-    var guessedLastPositionFromClock = guessLastPositionFromClock(contextInfos, 0);
+    var guessedLastPositionFromClock = guessLastPositionFromClock(context, 0);
 
     if (guessedLastPositionFromClock !== undefined) {
       var lastPosition = guessedLastPositionFromClock[0],
@@ -21226,14 +22964,14 @@ function parsePeriods(periodsIR, contextInfos) {
  * the live time more directly from that previous one, we might be better off
  * than just using the clock.
  *
- * @param {Object} contextInfos
+ * @param {Object} context
  * @param {number} minimumTime
  * @returns {Array.<number|undefined>}
  */
 
-function guessLastPositionFromClock(contextInfos, minimumTime) {
-  if (contextInfos.clockOffset != null) {
-    var lastPosition = contextInfos.clockOffset / 1000 - contextInfos.availabilityStartTime;
+function guessLastPositionFromClock(context, minimumTime) {
+  if (context.clockOffset != null) {
+    var lastPosition = context.clockOffset / 1000 - context.availabilityStartTime;
     var positionTime = performance.now() / 1000;
     var timeInSec = positionTime + lastPosition;
 
@@ -21246,7 +22984,7 @@ function guessLastPositionFromClock(contextInfos, minimumTime) {
     if (now >= minimumTime) {
       log/* default.warn */.Z.warn("DASH Parser: no clock synchronization mechanism found." + " Using the system clock instead.");
 
-      var _lastPosition2 = now - contextInfos.availabilityStartTime;
+      var _lastPosition2 = now - context.availabilityStartTime;
 
       var _positionTime2 = performance.now() / 1000;
 
@@ -21405,7 +23143,6 @@ function parse_mpd_arrayLikeToArray(arr, len) { if (len == null || len > arr.len
 
 
 
-var DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 = config/* default.DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 */.Z.DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0;
 /**
  * Checks if xlinks needs to be loaded before actually parsing the manifest.
  * @param {Object} mpdIR
@@ -21571,7 +23308,7 @@ function parseCompleteIntermediateRepresentation(mpdIR, args, warnings, xlinkInf
   var maximumTimeData;
 
   if (rootAttributes.minimumUpdatePeriod !== undefined && rootAttributes.minimumUpdatePeriod >= 0) {
-    lifetime = rootAttributes.minimumUpdatePeriod === 0 ? DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 : rootAttributes.minimumUpdatePeriod;
+    lifetime = rootAttributes.minimumUpdatePeriod === 0 ? config/* default.getCurrent */.Z.getCurrent().DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 : rootAttributes.minimumUpdatePeriod;
   }
 
   var _getMinimumAndMaximum = getMinimumAndMaximumPosition(parsedPeriods),
@@ -24026,28 +25763,35 @@ function parseFromDocument(document, args) {
  * Remove segments which starts before the given `firstAvailablePosition` from
  * the timeline. `firstAvailablePosition` has to be time scaled.
  * @param {Array.<Object>}
- * @returns {number}
+ * @returns {number} - Returns the number of removed segments. This includes
+ * potential implicit segment from decremented `repeatCount` attributes.
  */
 function clearTimelineFromPosition(timeline, firstAvailablePosition) {
+  var nbEltsRemoved = 0;
+
   while (timeline.length > 0) {
     var firstElt = timeline[0];
 
     if (firstElt.start >= firstAvailablePosition) {
-      return; // all clear
+      return nbEltsRemoved; // all clear
     }
 
-    if (firstElt.repeatCount <= 0) {
+    if (firstElt.repeatCount === -1) {
+      return nbEltsRemoved;
+    } else if (firstElt.repeatCount === 0) {
       timeline.shift();
+      nbEltsRemoved += 1;
     } else {
       // we have a segment repetition
       var nextElt = timeline[1];
 
       if (nextElt !== undefined && nextElt.start <= firstAvailablePosition) {
         timeline.shift();
+        nbEltsRemoved += 1;
       } else {
         // no next segment or next segment is available
         if (firstElt.duration <= 0) {
-          return;
+          return nbEltsRemoved;
         }
 
         var nextStart = firstElt.start + firstElt.duration;
@@ -24061,16 +25805,20 @@ function clearTimelineFromPosition(timeline, firstAvailablePosition) {
         if (nextRepeat > firstElt.repeatCount) {
           // every start is before
           timeline.shift();
+          nbEltsRemoved = firstElt.repeatCount + 1;
         } else {
           // some repetitions start after and some before
           var newRepeat = firstElt.repeatCount - nextRepeat;
           firstElt.start = nextStart;
           firstElt.repeatCount = newRepeat;
-          return;
+          nbEltsRemoved += nextRepeat;
+          return nbEltsRemoved;
         }
       }
     }
   }
+
+  return nbEltsRemoved;
 }
 
 /***/ }),
@@ -24081,11 +25829,11 @@ function clearTimelineFromPosition(timeline, firstAvailablePosition) {
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "KF": function() { return /* binding */ calculateRepeat; },
-/* harmony export */   "jH": function() { return /* binding */ getIndexSegmentEnd; },
-/* harmony export */   "gT": function() { return /* binding */ toIndexTime; },
-/* harmony export */   "zG": function() { return /* binding */ fromIndexTime; },
 /* harmony export */   "PZ": function() { return /* binding */ getTimescaledRange; },
-/* harmony export */   "_j": function() { return /* binding */ checkDiscontinuity; }
+/* harmony export */   "_j": function() { return /* binding */ checkDiscontinuity; },
+/* harmony export */   "gT": function() { return /* binding */ toIndexTime; },
+/* harmony export */   "jH": function() { return /* binding */ getIndexSegmentEnd; },
+/* harmony export */   "zG": function() { return /* binding */ fromIndexTime; }
 /* harmony export */ });
 /* harmony import */ var _utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1946);
 /**
@@ -24353,22 +26101,29 @@ function isSegmentStillAvailable(segment, timeline, timescale, indexTimeOffset) 
 /**
  * Update a complete array of segments in a given timeline with a [generally]
  * smaller but [generally] newer set of segments.
+ *
+ * Returns a boolean:
+ *   - If set to `true`, the old timeline was emptied and completely replaced by
+ *     the content of the newer timeline.
+ *     This could happen either if a problem happened while trying to update or
+ *     when the update is actually bigger than what it is updating.
+ *   - If set to `false`, the older timeline was either updated to add the newer
+ *     segments, or untouched.
+ *
  * @param {Array.<Object>} oldTimeline
  * @param {Array.<Object>} newTimeline
+ * @returns {boolean}
  */
 
 function updateSegmentTimeline(oldTimeline, newTimeline) {
-  var prevTimelineLength = oldTimeline.length;
-
   if (oldTimeline.length === 0) {
-    oldTimeline.splice.apply(oldTimeline, [0, prevTimelineLength].concat(newTimeline));
-    return;
+    oldTimeline.push.apply(oldTimeline, newTimeline);
+    return true;
+  } else if (newTimeline.length === 0) {
+    return false;
   }
 
-  if (newTimeline.length === 0) {
-    return;
-  }
-
+  var prevTimelineLength = oldTimeline.length;
   var newIndexStart = newTimeline[0].start;
   var oldLastElt = oldTimeline[prevTimelineLength - 1];
   var oldIndexEnd = (0,_index_helpers__WEBPACK_IMPORTED_MODULE_0__/* .getIndexSegmentEnd */ .jH)(oldLastElt, newTimeline[0]);
@@ -24382,24 +26137,26 @@ function updateSegmentTimeline(oldTimeline, newTimeline) {
 
     if (currStart === newIndexStart) {
       // replace that one and those after it
-      oldTimeline.splice.apply(oldTimeline, [i, prevTimelineLength - i].concat(newTimeline));
-      return;
+      var nbEltsToRemove = prevTimelineLength - i;
+      oldTimeline.splice.apply(oldTimeline, [i, nbEltsToRemove].concat(newTimeline));
+      return false;
     } else if (currStart < newIndexStart) {
       // first to be before
       var currElt = oldTimeline[i];
 
       if (currElt.start + currElt.duration > newIndexStart) {
-        // the new Manifest overlaps a previous segment (weird). Remove the latter.
-        _log__WEBPACK_IMPORTED_MODULE_2__/* ["default"].warn */ .Z.warn("RepresentationIndex: Manifest update removed previous segments");
-        oldTimeline.splice.apply(oldTimeline, [i, prevTimelineLength - i].concat(newTimeline));
-        return;
+        // The new Manifest overlaps a previous segment (weird)
+        // In that improbable case, we'll just completely replace segments
+        _log__WEBPACK_IMPORTED_MODULE_2__/* ["default"].warn */ .Z.warn("RepresentationIndex: Manifest update removed all previous segments");
+        oldTimeline.splice.apply(oldTimeline, [0, prevTimelineLength].concat(newTimeline));
+        return true;
       } else if (currElt.repeatCount === undefined || currElt.repeatCount <= 0) {
         if (currElt.repeatCount < 0) {
           currElt.repeatCount = Math.floor((newIndexStart - currElt.start) / currElt.duration) - 1;
         }
 
         oldTimeline.splice.apply(oldTimeline, [i + 1, prevTimelineLength - (i + 1)].concat(newTimeline));
-        return;
+        return false;
       } // else, there is a positive repeat we might want to update
 
 
@@ -24409,7 +26166,7 @@ function updateSegmentTimeline(oldTimeline, newTimeline) {
         // our new index comes directly after
         // put it after this one
         oldTimeline.splice.apply(oldTimeline, [i + 1, prevTimelineLength - (i + 1)].concat(newTimeline));
-        return;
+        return false;
       }
 
       var newCurrRepeat = (newIndexStart - currElt.start) / currElt.duration - 1;
@@ -24421,14 +26178,14 @@ function updateSegmentTimeline(oldTimeline, newTimeline) {
         oldTimeline.splice.apply(oldTimeline, [i, prevTimelineLength - i].concat(newTimeline));
         oldTimeline[i].start = currElt.start;
         oldTimeline[i].repeatCount = newRepeatCount;
-        return;
+        return false;
       }
 
       _log__WEBPACK_IMPORTED_MODULE_2__/* ["default"].warn */ .Z.warn("RepresentationIndex: Manifest update removed previous segments");
       oldTimeline[i].repeatCount = Math.floor(newCurrRepeat); // put it after this one
 
       oldTimeline.splice.apply(oldTimeline, [i + 1, prevTimelineLength - (i + 1)].concat(newTimeline));
-      return;
+      return false;
     }
   } // if we got here, it means that every segments in the previous manifest are
   // after the new one. This is unusual.
@@ -24441,12 +26198,12 @@ function updateSegmentTimeline(oldTimeline, newTimeline) {
   if (prevLastElt.repeatCount !== undefined && prevLastElt.repeatCount < 0) {
     if (prevLastElt.start > newLastElt.start) {
       _log__WEBPACK_IMPORTED_MODULE_2__/* ["default"].warn */ .Z.warn("RepresentationIndex: The new index is older than the previous one");
-      return; // the old comes after
+      return false;
     } else {
       // the new has more depth
       _log__WEBPACK_IMPORTED_MODULE_2__/* ["default"].warn */ .Z.warn("RepresentationIndex: The new index is \"bigger\" than the previous one");
       oldTimeline.splice.apply(oldTimeline, [0, prevTimelineLength].concat(newTimeline));
-      return;
+      return true;
     }
   }
 
@@ -24455,13 +26212,13 @@ function updateSegmentTimeline(oldTimeline, newTimeline) {
 
   if (prevLastTime >= newLastTime) {
     _log__WEBPACK_IMPORTED_MODULE_2__/* ["default"].warn */ .Z.warn("RepresentationIndex: The new index is older than the previous one");
-    return; // the old comes after
+    return false;
   } // the new one has more depth. full update
 
 
   _log__WEBPACK_IMPORTED_MODULE_2__/* ["default"].warn */ .Z.warn("RepresentationIndex: The new index is \"bigger\" than the previous one");
   oldTimeline.splice.apply(oldTimeline, [0, prevTimelineLength].concat(newTimeline));
-  return;
+  return true;
 }
 
 /***/ }),
@@ -27792,18 +29549,18 @@ function parseTTMLString(str, timeOffset) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "YU": function() { return /* binding */ REGXP_4_HEX_COLOR; },
 /* harmony export */   "Dq": function() { return /* binding */ REGXP_8_HEX_COLOR; },
+/* harmony export */   "Du": function() { return /* binding */ REGXP_TIME_TICK; },
 /* harmony export */   "GK": function() { return /* binding */ REGXP_RGB_COLOR; },
-/* harmony export */   "ev": function() { return /* binding */ REGXP_RGBA_COLOR; },
-/* harmony export */   "eT": function() { return /* binding */ REGXP_LENGTH; },
-/* harmony export */   "_0": function() { return /* binding */ REGXP_PERCENT_VALUES; },
 /* harmony export */   "KO": function() { return /* binding */ REGXP_TIME_COLON; },
+/* harmony export */   "YU": function() { return /* binding */ REGXP_4_HEX_COLOR; },
+/* harmony export */   "_0": function() { return /* binding */ REGXP_PERCENT_VALUES; },
+/* harmony export */   "eT": function() { return /* binding */ REGXP_LENGTH; },
+/* harmony export */   "ev": function() { return /* binding */ REGXP_RGBA_COLOR; },
 /* harmony export */   "gu": function() { return /* binding */ REGXP_TIME_COLON_FRAMES; },
-/* harmony export */   "wf": function() { return /* binding */ REGXP_TIME_COLON_MS; },
 /* harmony export */   "jb": function() { return /* binding */ REGXP_TIME_FRAMES; },
 /* harmony export */   "te": function() { return /* binding */ REGXP_TIME_HMS; },
-/* harmony export */   "Du": function() { return /* binding */ REGXP_TIME_TICK; }
+/* harmony export */   "wf": function() { return /* binding */ REGXP_TIME_COLON_MS; }
 /* harmony export */ });
 /**
  * Copyright 2015 CANAL+ Group
@@ -28967,10 +30724,10 @@ function parseCueBlock(cueLines, timeOffset) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "yE": function() { return /* binding */ getFirstLineAfterHeader; },
-/* harmony export */   "tq": function() { return /* binding */ isStartOfCueBlock; },
+/* harmony export */   "$4": function() { return /* binding */ findEndOfCueBlock; },
 /* harmony export */   "JF": function() { return /* binding */ isStartOfStyleBlock; },
-/* harmony export */   "$4": function() { return /* binding */ findEndOfCueBlock; }
+/* harmony export */   "tq": function() { return /* binding */ isStartOfCueBlock; },
+/* harmony export */   "yE": function() { return /* binding */ getFirstLineAfterHeader; }
 /* harmony export */ });
 /* unused harmony exports isStartOfNoteBlock, isStartOfRegionBlock */
 /* harmony import */ var _utils_is_non_empty_string__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6923);
@@ -29113,14 +30870,19 @@ __webpack_require__.d(__webpack_exports__, {
 var features = __webpack_require__(7874);
 // EXTERNAL MODULE: ./src/transports/utils/generate_manifest_loader.ts + 1 modules
 var generate_manifest_loader = __webpack_require__(8791);
-// EXTERNAL MODULE: ./node_modules/pinkie/index.js
-var pinkie = __webpack_require__(8555);
-var pinkie_default = /*#__PURE__*/__webpack_require__.n(pinkie);
+// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js
+var asyncToGenerator = __webpack_require__(5861);
+// EXTERNAL MODULE: ./node_modules/@babel/runtime/regenerator/index.js
+var regenerator = __webpack_require__(7757);
+var regenerator_default = /*#__PURE__*/__webpack_require__.n(regenerator);
 // EXTERNAL MODULE: ./src/utils/request/index.ts + 1 modules
 var request = __webpack_require__(4597);
 // EXTERNAL MODULE: ./src/utils/take_first_set.ts
 var take_first_set = __webpack_require__(5278);
 ;// CONCATENATED MODULE: ./src/transports/dash/image_pipelines.ts
+
+
+
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -29139,7 +30901,6 @@ var take_first_set = __webpack_require__(5278);
 
 
 
-
 /**
  * Loads an image segment.
  * @param {string|null} url
@@ -29149,33 +30910,60 @@ var take_first_set = __webpack_require__(5278);
  * @returns {Promise}
  */
 
-function imageLoader(url, content, cancelSignal, callbacks) {
-  var segment = content.segment;
-
-  if (segment.isInit || url === null) {
-    return pinkie_default().resolve({
-      resultType: "segment-created",
-      resultData: null
-    });
-  }
-
-  return (0,request/* default */.ZP)({
-    url: url,
-    responseType: "arraybuffer",
-    onProgress: callbacks.onProgress,
-    cancelSignal: cancelSignal
-  }).then(function (data) {
-    return {
-      resultType: "segment-loaded",
-      resultData: data
-    };
-  });
+function imageLoader(_x, _x2, _x3, _x4) {
+  return _imageLoader.apply(this, arguments);
 }
 /**
  * Parses an image segment.
- * @param {Object} args
+ * @param {Object} loadedSegment
+ * @param {Object} content
  * @returns {Object}
  */
+
+function _imageLoader() {
+  _imageLoader = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee(url, content, cancelSignal, callbacks) {
+    var segment, data;
+    return regenerator_default().wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            segment = content.segment;
+
+            if (!(segment.isInit || url === null)) {
+              _context.next = 3;
+              break;
+            }
+
+            return _context.abrupt("return", {
+              resultType: "segment-created",
+              resultData: null
+            });
+
+          case 3:
+            _context.next = 5;
+            return (0,request/* default */.ZP)({
+              url: url,
+              responseType: "arraybuffer",
+              onProgress: callbacks.onProgress,
+              cancelSignal: cancelSignal
+            });
+
+          case 5:
+            data = _context.sent;
+            return _context.abrupt("return", {
+              resultType: "segment-loaded",
+              resultData: data
+            });
+
+          case 7:
+          case "end":
+            return _context.stop();
+        }
+      }
+    }, _callee);
+  }));
+  return _imageLoader.apply(this, arguments);
+}
 
 function imageParser(loadedSegment, content) {
   var segment = content.segment,
@@ -29188,6 +30976,7 @@ function imageParser(loadedSegment, content) {
     return {
       segmentType: "init",
       initializationData: null,
+      initializationDataSize: 0,
       protectionDataUpdate: false,
       initTimescale: undefined
     };
@@ -29203,6 +30992,7 @@ function imageParser(loadedSegment, content) {
     return {
       segmentType: "media",
       chunkData: null,
+      chunkSize: 0,
       chunkInfos: {
         duration: segment.duration,
         time: segment.time
@@ -29224,6 +31014,7 @@ function imageParser(loadedSegment, content) {
       timescale: 1,
       type: "bif"
     },
+    chunkSize: undefined,
     chunkInfos: {
       time: 0,
       duration: Number.MAX_VALUE
@@ -29259,7 +31050,6 @@ var string_parsing = __webpack_require__(3635);
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 
 
 
@@ -29351,7 +31141,7 @@ function generateManifestParser(options) {
         }
 
         if (cancelSignal.isCancelled) {
-          return pinkie_default().reject(cancelSignal.cancellationError);
+          return Promise.reject(cancelSignal.cancellationError);
         }
 
         var manifest = new src_manifest/* default */.ZP(parserResponse.value.parsed, options);
@@ -29412,7 +31202,7 @@ function generateManifestParser(options) {
           });
         });
       });
-      return pinkie_default().all(externalResources).then(function (loadedResources) {
+      return Promise.all(externalResources).then(function (loadedResources) {
         if (value.format === "string") {
           assertLoadedResourcesFormatString(loadedResources);
           return processMpdParserResponse(value["continue"](loadedResources));
@@ -29544,13 +31334,8 @@ function doesXmlSeemsUtf8Encoded(xmlData) {
 }
 // EXTERNAL MODULE: ./src/errors/custom_loader_error.ts
 var custom_loader_error = __webpack_require__(7839);
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js
-var asyncToGenerator = __webpack_require__(5861);
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/regenerator/index.js
-var regenerator = __webpack_require__(7757);
-var regenerator_default = /*#__PURE__*/__webpack_require__.n(regenerator);
-// EXTERNAL MODULE: ./src/config.ts
-var config = __webpack_require__(944);
+// EXTERNAL MODULE: ./src/config.ts + 2 modules
+var config = __webpack_require__(6872);
 // EXTERNAL MODULE: ./src/errors/request_error.ts
 var request_error = __webpack_require__(9105);
 // EXTERNAL MODULE: ./src/errors/error_codes.ts
@@ -29580,7 +31365,6 @@ var is_null_or_undefined = __webpack_require__(1946);
 
 
 
-var DEFAULT_REQUEST_TIMEOUT = config/* default.DEFAULT_REQUEST_TIMEOUT */.Z.DEFAULT_REQUEST_TIMEOUT;
 
 var _Headers = typeof Headers === "function" ? Headers : null;
 
@@ -29622,7 +31406,7 @@ function fetchRequest(options) {
     abortController.abort();
   }
 
-  var requestTimeout = (0,is_null_or_undefined/* default */.Z)(options.timeout) ? DEFAULT_REQUEST_TIMEOUT : options.timeout;
+  var requestTimeout = (0,is_null_or_undefined/* default */.Z)(options.timeout) ? config/* default.getCurrent */.Z.getCurrent().DEFAULT_REQUEST_TIMEOUT : options.timeout;
   var timeout = window.setTimeout(function () {
     timeouted = true;
     abortFetch();
@@ -29631,11 +31415,16 @@ function fetchRequest(options) {
     cancellation = err;
     abortFetch();
   });
-  return fetch(options.url, {
-    headers: headers,
-    method: "GET",
-    signal: !(0,is_null_or_undefined/* default */.Z)(abortController) ? abortController.signal : undefined
-  }).then(function (response) {
+  var fetchOpts = {
+    method: "GET"
+  };
+
+  if (headers !== undefined) {
+    fetchOpts.headers = headers;
+  }
+
+  fetchOpts.signal = !(0,is_null_or_undefined/* default */.Z)(abortController) ? abortController.signal : null;
+  return fetch(options.url, fetchOpts).then(function (response) {
     if (!(0,is_null_or_undefined/* default */.Z)(timeout)) {
       clearTimeout(timeout);
     }
@@ -29908,7 +31697,6 @@ var byte_parsing = __webpack_require__(6968);
 
 
 
-
 /**
  * Perform a request for an initialization segment, agnostic to the container.
  * @param {string} url
@@ -29986,7 +31774,7 @@ function initSegmentLoader(url, segment, cancelSignal, callbacks) {
     cancelSignal: cancelSignal,
     onProgress: callbacks.onProgress
   });
-  return pinkie_default().all([rangeRequest$, indexRequest$]).then(function (_ref) {
+  return Promise.all([rangeRequest$, indexRequest$]).then(function (_ref) {
     var initData = _ref[0],
         indexData = _ref[1];
     var data = (0,byte_parsing/* concat */.zo)(new Uint8Array(initData.responseData), new Uint8Array(indexData.responseData));
@@ -30187,10 +31975,9 @@ function lowLatencySegmentLoader(url, content, callbacks, cancelSignal) {
 
 
 
-
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
- * @param {string} uri
+ * @param {string} url
  * @param {Object} content
  * @param {boolean} lowLatencyMode
  * @param {Object} callbacks
@@ -30246,7 +32033,7 @@ function generateSegmentLoader(_ref) {
 
   function segmentLoader(url, content, cancelSignal, callbacks) {
     if (url == null) {
-      return pinkie_default().resolve({
+      return Promise.resolve({
         resultType: "segment-created",
         resultData: null
       });
@@ -30901,6 +32688,7 @@ function generateAudioVideoSegmentParser(_ref) {
         return {
           segmentType: "init",
           initializationData: null,
+          initializationDataSize: 0,
           protectionDataUpdate: false,
           initTimescale: undefined
         };
@@ -30909,6 +32697,7 @@ function generateAudioVideoSegmentParser(_ref) {
       return {
         segmentType: "media",
         chunkData: null,
+        chunkSize: 0,
         chunkInfos: null,
         chunkOffset: 0,
         protectionDataUpdate: false,
@@ -30954,6 +32743,7 @@ function generateAudioVideoSegmentParser(_ref) {
             return {
               segmentType: "media",
               chunkData: chunkData,
+              chunkSize: chunkData.length,
               chunkInfos: chunkInfos,
               chunkOffset: chunkOffset,
               appendWindow: appendWindow,
@@ -30968,6 +32758,7 @@ function generateAudioVideoSegmentParser(_ref) {
       return {
         segmentType: "media",
         chunkData: chunkData,
+        chunkSize: chunkData.length,
         chunkInfos: chunkInfos,
         chunkOffset: chunkOffset,
         protectionDataUpdate: protectionDataUpdate,
@@ -31008,6 +32799,7 @@ function generateAudioVideoSegmentParser(_ref) {
     return {
       segmentType: "init",
       initializationData: chunkData,
+      initializationDataSize: chunkData.length,
       protectionDataUpdate: protectionDataUpdate,
       initTimescale: parsedTimescale
     };
@@ -31029,7 +32821,6 @@ function generateAudioVideoSegmentParser(_ref) {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 
 
 
@@ -31062,7 +32853,7 @@ function generateTextTrackLoader(_ref) {
     var range = segment.range;
 
     if (url === null) {
-      return pinkie_default().resolve({
+      return Promise.resolve({
         resultType: "segment-created",
         resultData: null
       });
@@ -31369,6 +33160,7 @@ function parseISOBMFFEmbeddedTextTrack(data, isChunked, content, initTimescale, 
     return {
       segmentType: "init",
       initializationData: null,
+      initializationDataSize: 0,
       protectionDataUpdate: false,
       initTimescale: mdhdTimescale
     };
@@ -31380,6 +33172,7 @@ function parseISOBMFFEmbeddedTextTrack(data, isChunked, content, initTimescale, 
   return {
     segmentType: "media",
     chunkData: chunkData,
+    chunkSize: chunkBytes.length,
     chunkInfos: chunkInfos,
     chunkOffset: chunkOffset,
     protectionDataUpdate: false,
@@ -31409,16 +33202,19 @@ function parsePlainTextTrack(data, isChunked, content) {
     return {
       segmentType: "init",
       initializationData: null,
+      initializationDataSize: 0,
       protectionDataUpdate: false,
       initTimescale: undefined
     };
   }
 
   var textTrackData;
+  var chunkSize;
 
   if (typeof data !== "string") {
     var bytesData = data instanceof Uint8Array ? data : new Uint8Array(data);
     textTrackData = (0,string_parsing/* utf8ToStr */.uR)(bytesData);
+    chunkSize = bytesData.length;
   } else {
     textTrackData = data;
   }
@@ -31427,6 +33223,7 @@ function parsePlainTextTrack(data, isChunked, content) {
   return {
     segmentType: "media",
     chunkData: chunkData,
+    chunkSize: chunkSize,
     chunkInfos: null,
     chunkOffset: timestampOffset,
     protectionDataUpdate: false,
@@ -31464,11 +33261,13 @@ function generateTextTrackParser(_ref) {
       return segment.isInit ? {
         segmentType: "init",
         initializationData: null,
+        initializationDataSize: 0,
         protectionDataUpdate: false,
         initTimescale: undefined
       } : {
         segmentType: "media",
         chunkData: null,
+        chunkSize: 0,
         chunkInfos: null,
         chunkOffset: (_a = segment.timestampOffset) !== null && _a !== void 0 ? _a : 0,
         protectionDataUpdate: false,
@@ -31596,9 +33395,11 @@ __webpack_require__.d(__webpack_exports__, {
   "Z": function() { return /* binding */ transports_smooth; }
 });
 
-// EXTERNAL MODULE: ./node_modules/pinkie/index.js
-var pinkie = __webpack_require__(8555);
-var pinkie_default = /*#__PURE__*/__webpack_require__.n(pinkie);
+// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js
+var asyncToGenerator = __webpack_require__(5861);
+// EXTERNAL MODULE: ./node_modules/@babel/runtime/regenerator/index.js
+var regenerator = __webpack_require__(7757);
+var regenerator_default = /*#__PURE__*/__webpack_require__.n(regenerator);
 // EXTERNAL MODULE: ./src/features/index.ts
 var features = __webpack_require__(7874);
 // EXTERNAL MODULE: ./src/log.ts + 1 modules
@@ -32774,7 +34575,8 @@ var MIME_TYPES = {
   AACL: "audio/mp4",
   AVC1: "video/mp4",
   H264: "video/mp4",
-  TTML: "application/ttml+xml+mp4"
+  TTML: "application/ttml+xml+mp4",
+  DFXP: "application/ttml+xml+mp4"
 };
 /**
  * @param {Object|undefined} parserOptions
@@ -34473,7 +36275,6 @@ function isMP4EmbeddedTrack(representation) {
 
 
 
-
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
  * @param {string} uri
@@ -34587,12 +36388,12 @@ var generateSegmentLoader = function generateSegmentLoader(_ref) {
           responseData = new Uint8Array(0);
       }
 
-      return pinkie_default().resolve({
+      return Promise.resolve({
         resultType: "segment-created",
         resultData: responseData
       });
     } else if (url === null) {
-      return pinkie_default().resolve({
+      return Promise.resolve({
         resultType: "segment-created",
         resultData: null
       });
@@ -34727,6 +36528,9 @@ var generateSegmentLoader = function generateSegmentLoader(_ref) {
 
 /* harmony default export */ var segment_loader = (generateSegmentLoader);
 ;// CONCATENATED MODULE: ./src/transports/smooth/pipelines.ts
+
+
+
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -34742,7 +36546,6 @@ var generateSegmentLoader = function generateSegmentLoader(_ref) {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 
 
 
@@ -34792,7 +36595,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
     // TODO (v4.x.x) Remove that function
     resolveManifestUrl: function resolveManifestUrl(url, cancelSignal) {
       if (url === undefined) {
-        return pinkie_default().resolve(undefined);
+        return Promise.resolve(undefined);
       }
 
       var resolving;
@@ -34813,7 +36616,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
           return extractedURL;
         });
       } else {
-        resolving = pinkie_default().resolve(url);
+        resolving = Promise.resolve(url);
       }
 
       var token = extractToken(url);
@@ -34873,6 +36676,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
           return {
             segmentType: "init",
             initializationData: null,
+            initializationDataSize: 0,
             protectionDataUpdate: false,
             initTimescale: undefined
           };
@@ -34883,6 +36687,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
           chunkData: null,
           chunkInfos: null,
           chunkOffset: 0,
+          chunkSize: 0,
           protectionDataUpdate: false,
           appendWindow: [undefined, undefined]
         };
@@ -34895,6 +36700,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
         return {
           segmentType: "init",
           initializationData: data,
+          initializationDataSize: data.byteLength,
           // smooth init segments are crafted by hand.
           // Their timescale is the one from the manifest.
           initTimescale: timescale,
@@ -34922,6 +36728,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
         chunkData: chunkData,
         chunkInfos: chunkInfos,
         chunkOffset: 0,
+        chunkSize: chunkData.length,
         protectionDataUpdate: false,
         appendWindow: [undefined, undefined]
       };
@@ -34933,7 +36740,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
           representation = content.representation;
 
       if (segment.isInit || url === null) {
-        return pinkie_default().resolve({
+        return Promise.resolve({
           resultType: "segment-created",
           resultData: null
         });
@@ -34993,12 +36800,14 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
           codec = _representation$codec === void 0 ? "" : _representation$codec;
       var data = loadedSegment.data,
           isChunked = loadedSegment.isChunked;
+      var chunkSize;
 
       if (segment.isInit) {
         // text init segment has no use in HSS
         return {
           segmentType: "init",
           initializationData: null,
+          initializationDataSize: 0,
           protectionDataUpdate: false,
           initTimescale: undefined
         };
@@ -35010,6 +36819,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
           chunkData: null,
           chunkInfos: null,
           chunkOffset: 0,
+          chunkSize: 0,
           protectionDataUpdate: false,
           appendWindow: [undefined, undefined]
         };
@@ -35033,6 +36843,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
           chunkBytes = data instanceof Uint8Array ? data : new Uint8Array(data);
         }
 
+        chunkSize = chunkBytes.length;
         var timingInfos = initTimescale !== undefined ? extractTimingsInfos(chunkBytes, isChunked, initTimescale, segment, manifest.isLive) : null;
         nextSegments = timingInfos === null || timingInfos === void 0 ? void 0 : timingInfos.nextSegments;
         chunkInfos = (_a = timingInfos === null || timingInfos === void 0 ? void 0 : timingInfos.chunkInfos) !== null && _a !== void 0 ? _a : null;
@@ -35069,6 +36880,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
 
         if (typeof data !== "string") {
           var bytesData = data instanceof Uint8Array ? data : new Uint8Array(data);
+          chunkSize = bytesData.length;
           chunkString = (0,string_parsing/* utf8ToStr */.uR)(bytesData);
         } else {
           chunkString = data;
@@ -35117,6 +36929,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
           end: segmentEnd,
           language: language
         },
+        chunkSize: chunkSize,
         chunkInfos: chunkInfos,
         chunkOffset: chunkOffset,
         protectionDataUpdate: false,
@@ -35126,25 +36939,45 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
   };
   var imageTrackPipeline = {
     loadSegment: function loadSegment(url, content, cancelSignal, callbacks) {
-      if (content.segment.isInit || url === null) {
-        // image do not need an init segment. Passthrough directly to the parser
-        return pinkie_default().resolve({
-          resultType: "segment-created",
-          resultData: null
-        });
-      }
+      return (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee() {
+        var data;
+        return regenerator_default().wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                if (!(content.segment.isInit || url === null)) {
+                  _context.next = 2;
+                  break;
+                }
 
-      return (0,request/* default */.ZP)({
-        url: url,
-        responseType: "arraybuffer",
-        onProgress: callbacks.onProgress,
-        cancelSignal: cancelSignal
-      }).then(function (data) {
-        return {
-          resultType: "segment-loaded",
-          resultData: data
-        };
-      });
+                return _context.abrupt("return", {
+                  resultType: "segment-created",
+                  resultData: null
+                });
+
+              case 2:
+                _context.next = 4;
+                return (0,request/* default */.ZP)({
+                  url: url,
+                  responseType: "arraybuffer",
+                  onProgress: callbacks.onProgress,
+                  cancelSignal: cancelSignal
+                });
+
+              case 4:
+                data = _context.sent;
+                return _context.abrupt("return", {
+                  resultType: "segment-loaded",
+                  resultData: data
+                });
+
+              case 6:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee);
+      }))();
     },
     parseSegment: function parseSegment(loadedSegment, content, _initTimescale) {
       var data = loadedSegment.data,
@@ -35155,6 +36988,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
         return {
           segmentType: "init",
           initializationData: null,
+          initializationDataSize: 0,
           protectionDataUpdate: false,
           initTimescale: undefined
         };
@@ -35171,6 +37005,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
           chunkData: null,
           chunkInfos: null,
           chunkOffset: 0,
+          chunkSize: 0,
           protectionDataUpdate: false,
           appendWindow: [undefined, undefined]
         };
@@ -35191,6 +37026,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
           time: 0,
           duration: Number.MAX_VALUE
         },
+        chunkSize: undefined,
         chunkOffset: 0,
         protectionDataUpdate: false,
         appendWindow: [undefined, undefined]
@@ -35427,9 +37263,6 @@ __webpack_require__.d(__webpack_exports__, {
 var assert_unreachable = __webpack_require__(7904);
 // EXTERNAL MODULE: ./src/utils/request/index.ts + 1 modules
 var request = __webpack_require__(4597);
-// EXTERNAL MODULE: ./node_modules/pinkie/index.js
-var pinkie = __webpack_require__(8555);
-var pinkie_default = /*#__PURE__*/__webpack_require__.n(pinkie);
 // EXTERNAL MODULE: ./src/errors/custom_loader_error.ts
 var custom_loader_error = __webpack_require__(7839);
 ;// CONCATENATED MODULE: ./src/transports/utils/call_custom_manifest_loader.ts
@@ -35449,10 +37282,9 @@ var custom_loader_error = __webpack_require__(7839);
  * limitations under the License.
  */
 
-
 function callCustomManifestLoader(customManifestLoader, fallbackManifestLoader) {
   return function (url, cancelSignal) {
-    return new (pinkie_default())(function (res, rej) {
+    return new Promise(function (res, rej) {
       var timeAPIsDelta = Date.now() - performance.now();
       /** `true` when the custom segmentLoader should not be active anymore. */
 
@@ -36212,18 +38044,18 @@ function base64ToBytes(str) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "zo": function() { return /* binding */ concat; },
-/* harmony export */   "zK": function() { return /* binding */ be2toi; },
-/* harmony export */   "QI": function() { return /* binding */ be3toi; },
-/* harmony export */   "pX": function() { return /* binding */ be4toi; },
-/* harmony export */   "pV": function() { return /* binding */ be8toi; },
-/* harmony export */   "qb": function() { return /* binding */ le2toi; },
-/* harmony export */   "dN": function() { return /* binding */ le4toi; },
-/* harmony export */   "XT": function() { return /* binding */ itobe2; },
-/* harmony export */   "kh": function() { return /* binding */ itobe4; },
-/* harmony export */   "el": function() { return /* binding */ itobe8; },
 /* harmony export */   "O_": function() { return /* binding */ itole4; },
-/* harmony export */   "_f": function() { return /* binding */ toUint8Array; }
+/* harmony export */   "QI": function() { return /* binding */ be3toi; },
+/* harmony export */   "XT": function() { return /* binding */ itobe2; },
+/* harmony export */   "_f": function() { return /* binding */ toUint8Array; },
+/* harmony export */   "dN": function() { return /* binding */ le4toi; },
+/* harmony export */   "el": function() { return /* binding */ itobe8; },
+/* harmony export */   "kh": function() { return /* binding */ itobe4; },
+/* harmony export */   "pV": function() { return /* binding */ be8toi; },
+/* harmony export */   "pX": function() { return /* binding */ be4toi; },
+/* harmony export */   "qb": function() { return /* binding */ le2toi; },
+/* harmony export */   "zK": function() { return /* binding */ be2toi; },
+/* harmony export */   "zo": function() { return /* binding */ concat; }
 /* harmony export */ });
 /* unused harmony exports le8toi, itole2, isABEqualBytes */
 /**
@@ -36452,16 +38284,65 @@ function toUint8Array(input) {
 
 /***/ }),
 
+/***/ 7864:
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Z": function() { return /* binding */ cancellableSleep; }
+/* harmony export */ });
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * Wait the given `delay`, resolving the Promise when finished.
+ *
+ * The `cancellationSignal` given allows to cancel that timeout. In the case it
+ * is triggered before the timeout ended, this function will reject the
+ * corresponding `CancellationError` through the returned Promise.
+ *
+ * @param {number} delay - Delay to wait, in milliseconds
+ * @param {Object} cancellationSignal - `CancellationSignal` allowing to abort
+ * the timeout.
+ * @returns {Promise} - Resolve on timeout completion, rejects on timeout
+ * cancellation with the corresponding `CancellationError`.
+ */
+function cancellableSleep(delay, cancellationSignal) {
+  return new Promise(function (res, rej) {
+    var timeout = setTimeout(function () {
+      unregisterCancelSignal();
+      res();
+    }, delay);
+    var unregisterCancelSignal = cancellationSignal.register(function onCancel(cancellationError) {
+      clearTimeout(timeout);
+      rej(cancellationError);
+    });
+  });
+}
+
+/***/ }),
+
 /***/ 8117:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var pinkie__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8555);
-/* harmony import */ var pinkie__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(pinkie__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(1480);
-/* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(3102);
-/* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(2817);
-/* harmony import */ var _is_null_or_undefined__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(1946);
+/* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1480);
+/* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3102);
+/* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(2817);
+/* harmony import */ var _is_null_or_undefined__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(1946);
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -36479,7 +38360,6 @@ function toUint8Array(input) {
  */
 
 
-
 /**
  * Try to cast the given value into an observable.
  * StraightForward - test first for an Observable then for a Promise.
@@ -36488,13 +38368,13 @@ function toUint8Array(input) {
  */
 
 function castToObservable(value) {
-  if (value instanceof rxjs__WEBPACK_IMPORTED_MODULE_1__/* .Observable */ .y) {
+  if (value instanceof rxjs__WEBPACK_IMPORTED_MODULE_0__/* .Observable */ .y) {
     return value;
-  } else if (value instanceof (pinkie__WEBPACK_IMPORTED_MODULE_0___default()) || value instanceof Promise || !(0,_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .Z)(value) && typeof value.then === "function") {
-    return (0,rxjs__WEBPACK_IMPORTED_MODULE_3__/* .from */ .D)(value);
+  } else if (value instanceof Promise || !(0,_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .Z)(value) && typeof value.then === "function") {
+    return (0,rxjs__WEBPACK_IMPORTED_MODULE_2__/* .from */ .D)(value);
   }
 
-  return (0,rxjs__WEBPACK_IMPORTED_MODULE_4__.of)(value);
+  return (0,rxjs__WEBPACK_IMPORTED_MODULE_3__.of)(value);
 }
 
 /* harmony default export */ __webpack_exports__["Z"] = (castToObservable);
@@ -36743,8 +38623,8 @@ function deferSubscriptions() {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Z": function() { return /* binding */ EventEmitter; },
-/* harmony export */   "R": function() { return /* binding */ fromEvent; }
+/* harmony export */   "R": function() { return /* binding */ fromEvent; },
+/* harmony export */   "Z": function() { return /* binding */ EventEmitter; }
 /* harmony export */ });
 /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(1480);
 /* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3887);
@@ -37763,49 +39643,23 @@ function objectValues(o) {
 
 /***/ }),
 
-/***/ 9589:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var pinkie__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8555);
-/* harmony import */ var pinkie__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(pinkie__WEBPACK_IMPORTED_MODULE_0__);
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/* harmony default export */ __webpack_exports__["Z"] = (typeof Promise === "function" ? Promise : (pinkie__WEBPACK_IMPORTED_MODULE_0___default()));
-
-/***/ }),
-
 /***/ 2829:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "JN": function() { return /* binding */ convertToRanges; },
-/* harmony export */   "uH": function() { return /* binding */ excludeFromRanges; },
-/* harmony export */   "F_": function() { return /* binding */ getInnerAndOuterTimeRanges; },
-/* harmony export */   "L7": function() { return /* binding */ getLeftSizeOfRange; },
-/* harmony export */   "XS": function() { return /* binding */ getNextRangeGap; },
+/* harmony export */   "A1": function() { return /* binding */ isTimeInRanges; },
 /* harmony export */   "DD": function() { return /* binding */ getPlayedSizeOfRange; },
-/* harmony export */   "rx": function() { return /* binding */ getRange; },
+/* harmony export */   "F_": function() { return /* binding */ getInnerAndOuterTimeRanges; },
+/* harmony export */   "JN": function() { return /* binding */ convertToRanges; },
+/* harmony export */   "L7": function() { return /* binding */ getLeftSizeOfRange; },
+/* harmony export */   "Ti": function() { return /* binding */ isTimeInRange; },
+/* harmony export */   "XS": function() { return /* binding */ getNextRangeGap; },
 /* harmony export */   "at": function() { return /* binding */ getSizeOfRange; },
 /* harmony export */   "kR": function() { return /* binding */ insertInto; },
-/* harmony export */   "Ti": function() { return /* binding */ isTimeInRange; },
-/* harmony export */   "A1": function() { return /* binding */ isTimeInRanges; },
-/* harmony export */   "tn": function() { return /* binding */ keepRangeIntersection; }
+/* harmony export */   "rx": function() { return /* binding */ getRange; },
+/* harmony export */   "tn": function() { return /* binding */ keepRangeIntersection; },
+/* harmony export */   "uH": function() { return /* binding */ excludeFromRanges; }
 /* harmony export */ });
 /* unused harmony exports isAfter, isBefore, isTimeInTimeRanges, mergeContiguousRanges, removeEmptyRanges */
 /**
@@ -38374,19 +40228,22 @@ function createSharedReference(initialValue) {
   /** Current value referenced by this `ISharedReference`. */
   var value = initialValue;
   /**
-   * List of currently subscribed Observables which listen to the referenced
+   * List of currently subscribed listeners which listen to the referenced
    * value's updates.
    *
-   * Contains two properties:
-   *   - `subscriber`: interface through which new value will be communicated.
-   *   - `hasBeenUnsubscribed`: becomes `true` when the Observable becomes
-   *     unsubscribed and thus when it is removed from the `subs` array.
+   * Contains three properties:
+   *   - `trigger`: Function which will be called with the new reference's value
+   *     once it changes
+   *   - `complete`: Allows to clean-up the listener, will be called once the
+   *     reference is finished.
+   *   - `hasBeenCleared`: becomes `true` when the Observable becomes
+   *     unsubscribed and thus when it is removed from the `cbs` array.
    *     Adding this property allows to detect when a previously-added
    *     Observable has since been unsubscribed e.g. as a side-effect during a
    *     function call.
    */
 
-  var subs = [];
+  var cbs = [];
   var isFinished = false;
   return {
     /**
@@ -38411,22 +40268,27 @@ function createSharedReference(initialValue) {
 
       value = newVal;
 
-      if (subs.length === 0) {
+      if (cbs.length === 0) {
         return;
       }
 
-      var clonedSubs = subs.slice();
+      var clonedCbs = cbs.slice();
 
-      for (var _iterator = _createForOfIteratorHelperLoose(clonedSubs), _step; !(_step = _iterator()).done;) {
-        var subObj = _step.value;
+      for (var _iterator = _createForOfIteratorHelperLoose(clonedCbs), _step; !(_step = _iterator()).done;) {
+        var cbObj = _step.value;
 
         try {
-          if (!subObj.hasBeenUnsubscribed) {
-            subObj.subscriber.next(newVal);
+          if (!cbObj.hasBeenCleared) {
+            cbObj.trigger(newVal);
           }
         } catch (_) {
           /* nothing */
         }
+      }
+    },
+    setValueIfChanged: function setValueIfChanged(newVal) {
+      if (newVal !== value) {
+        this.setValue(newVal);
       }
     },
 
@@ -38448,25 +40310,74 @@ function createSharedReference(initialValue) {
           return undefined;
         }
 
-        var subObj = {
-          subscriber: obs,
-          hasBeenUnsubscribed: false
+        var cbObj = {
+          trigger: obs.next.bind(obs),
+          complete: obs.complete.bind(obs),
+          hasBeenCleared: false
         };
-        subs.push(subObj);
+        cbs.push(cbObj);
         return function () {
           /**
            * Code in here can still be running while this is happening.
-           * Set `hasBeenUnsubscribed` to `true` to avoid still using the
+           * Set `hasBeenCleared` to `true` to avoid still using the
            * `subscriber` from this object.
            */
-          subObj.hasBeenUnsubscribed = true;
-          var indexOf = subs.indexOf(subObj);
+          cbObj.hasBeenCleared = true;
+          var indexOf = cbs.indexOf(cbObj);
 
           if (indexOf >= 0) {
-            subs.splice(indexOf, 1);
+            cbs.splice(indexOf, 1);
           }
         };
       });
+    },
+
+    /**
+     * Allows to register a callback to be called each time the value inside the
+     * reference is updated.
+     * @param {Function} cb - Callback to be called each time the reference is
+     * updated. Takes the new value im argument.
+     * @param {Object} [options]
+     * @param {Object} [options.clearSignal] - Allows to provide a
+     * CancellationSignal which will unregister the callback when it emits.
+     * @param {boolean} [options.emitCurrentValue] - If `true`, the callback will
+     * also be immediately called with the current value.
+     */
+    onUpdate: function onUpdate(cb, options) {
+      if ((options === null || options === void 0 ? void 0 : options.emitCurrentValue) === true) {
+        cb(value);
+      }
+
+      if (isFinished) {
+        return;
+      }
+
+      var cbObj = {
+        trigger: cb,
+        complete: unlisten,
+        hasBeenCleared: false
+      };
+      cbs.push(cbObj);
+
+      if ((options === null || options === void 0 ? void 0 : options.clearSignal) === undefined) {
+        return;
+      }
+
+      options.clearSignal.register(unlisten);
+
+      function unlisten() {
+        /**
+         * Code in here can still be running while this is happening.
+         * Set `hasBeenCleared` to `true` to avoid still using the
+         * `subscriber` from this object.
+         */
+        cbObj.hasBeenCleared = true;
+        var indexOf = cbs.indexOf(cbObj);
+
+        if (indexOf >= 0) {
+          cbs.splice(indexOf, 1);
+        }
+      }
     },
 
     /**
@@ -38476,14 +40387,14 @@ function createSharedReference(initialValue) {
      */
     finish: function finish() {
       isFinished = true;
-      var clonedSubs = subs.slice();
+      var clonedCbs = cbs.slice();
 
-      for (var _iterator2 = _createForOfIteratorHelperLoose(clonedSubs), _step2; !(_step2 = _iterator2()).done;) {
-        var subObj = _step2.value;
+      for (var _iterator2 = _createForOfIteratorHelperLoose(clonedCbs), _step2; !(_step2 = _iterator2()).done;) {
+        var cbObj = _step2.value;
 
         try {
-          if (!subObj.hasBeenUnsubscribed) {
-            subObj.subscriber.complete();
+          if (!cbObj.hasBeenCleared) {
+            cbObj.complete();
           }
         } catch (_) {
           /* nothing */
@@ -38508,8 +40419,8 @@ __webpack_require__.d(__webpack_exports__, {
 
 // UNUSED EXPORTS: fetchIsSupported, fetchRequest, xhr
 
-// EXTERNAL MODULE: ./src/config.ts
-var config = __webpack_require__(944);
+// EXTERNAL MODULE: ./src/config.ts + 2 modules
+var config = __webpack_require__(6872);
 // EXTERNAL MODULE: ./src/errors/request_error.ts
 var request_error = __webpack_require__(9105);
 // EXTERNAL MODULE: ./src/utils/is_non_empty_string.ts
@@ -38536,9 +40447,11 @@ var is_null_or_undefined = __webpack_require__(1946);
 
 
 
-var DEFAULT_REQUEST_TIMEOUT = config/* default.DEFAULT_REQUEST_TIMEOUT */.Z.DEFAULT_REQUEST_TIMEOUT;
 var DEFAULT_RESPONSE_TYPE = "json";
 function request(options) {
+  var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+      DEFAULT_REQUEST_TIMEOUT = _config$getCurrent.DEFAULT_REQUEST_TIMEOUT;
+
   var requestOptions = {
     url: options.url,
     headers: options.headers,
@@ -38942,14 +40855,14 @@ function startsWith(completeString, searchString, position) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "DM": function() { return /* binding */ readNullTerminatedString; },
+/* harmony export */   "TZ": function() { return /* binding */ strToUtf16LE; },
 /* harmony export */   "ci": function() { return /* binding */ bytesToHex; },
 /* harmony export */   "nr": function() { return /* binding */ hexToBytes; },
 /* harmony export */   "tG": function() { return /* binding */ strToUtf8; },
 /* harmony export */   "uR": function() { return /* binding */ utf8ToStr; },
-/* harmony export */   "TZ": function() { return /* binding */ strToUtf16LE; },
-/* harmony export */   "wV": function() { return /* binding */ utf16LEToStr; },
 /* harmony export */   "wO": function() { return /* binding */ guidToUuid; },
-/* harmony export */   "DM": function() { return /* binding */ readNullTerminatedString; }
+/* harmony export */   "wV": function() { return /* binding */ utf16LEToStr; }
 /* harmony export */ });
 /* unused harmony exports strToBeUtf16, beUtf16ToStr */
 /* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3887);
@@ -39418,9 +41331,10 @@ function takeFirstSet() {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "FU": function() { return /* binding */ CancellationError; },
 /* harmony export */   "ZP": function() { return /* binding */ TaskCanceller; }
 /* harmony export */ });
-/* unused harmony exports CancellationSignal, CancellationError */
+/* unused harmony export CancellationSignal */
 /* harmony import */ var _babel_runtime_helpers_assertThisInitialized__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7326);
 /* harmony import */ var _babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4578);
 /* harmony import */ var _babel_runtime_helpers_wrapNativeSuper__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(2146);
@@ -39569,19 +41483,19 @@ var TaskCanceller = /*#__PURE__*/function () {
    * An optional CancellationError can be given in argument for when this
    * cancellation is actually triggered as a chain reaction from a previous
    * cancellation.
-   * @param {Error} [originError]
+   * @param {Error} [srcError]
    */
 
 
   var _proto = TaskCanceller.prototype;
 
-  _proto.cancel = function cancel(originError) {
+  _proto.cancel = function cancel(srcError) {
     if (this.isUsed) {
       return;
     }
 
     this.isUsed = true;
-    var cancellationError = originError !== null && originError !== void 0 ? originError : new CancellationError();
+    var cancellationError = srcError !== null && srcError !== void 0 ? srcError : new CancellationError();
 
     this._trigger(cancellationError);
   }
@@ -39861,306 +41775,6 @@ module.exports = (function () {
 
 	return null;
 }());
-
-
-/***/ }),
-
-/***/ 8555:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-var PENDING = 'pending';
-var SETTLED = 'settled';
-var FULFILLED = 'fulfilled';
-var REJECTED = 'rejected';
-var NOOP = function () {};
-var isNode = typeof __webpack_require__.g !== 'undefined' && typeof __webpack_require__.g.process !== 'undefined' && typeof __webpack_require__.g.process.emit === 'function';
-
-var asyncSetTimer = typeof setImmediate === 'undefined' ? setTimeout : setImmediate;
-var asyncQueue = [];
-var asyncTimer;
-
-function asyncFlush() {
-	// run promise callbacks
-	for (var i = 0; i < asyncQueue.length; i++) {
-		asyncQueue[i][0](asyncQueue[i][1]);
-	}
-
-	// reset async asyncQueue
-	asyncQueue = [];
-	asyncTimer = false;
-}
-
-function asyncCall(callback, arg) {
-	asyncQueue.push([callback, arg]);
-
-	if (!asyncTimer) {
-		asyncTimer = true;
-		asyncSetTimer(asyncFlush, 0);
-	}
-}
-
-function invokeResolver(resolver, promise) {
-	function resolvePromise(value) {
-		resolve(promise, value);
-	}
-
-	function rejectPromise(reason) {
-		reject(promise, reason);
-	}
-
-	try {
-		resolver(resolvePromise, rejectPromise);
-	} catch (e) {
-		rejectPromise(e);
-	}
-}
-
-function invokeCallback(subscriber) {
-	var owner = subscriber.owner;
-	var settled = owner._state;
-	var value = owner._data;
-	var callback = subscriber[settled];
-	var promise = subscriber.then;
-
-	if (typeof callback === 'function') {
-		settled = FULFILLED;
-		try {
-			value = callback(value);
-		} catch (e) {
-			reject(promise, e);
-		}
-	}
-
-	if (!handleThenable(promise, value)) {
-		if (settled === FULFILLED) {
-			resolve(promise, value);
-		}
-
-		if (settled === REJECTED) {
-			reject(promise, value);
-		}
-	}
-}
-
-function handleThenable(promise, value) {
-	var resolved;
-
-	try {
-		if (promise === value) {
-			throw new TypeError('A promises callback cannot return that same promise.');
-		}
-
-		if (value && (typeof value === 'function' || typeof value === 'object')) {
-			// then should be retrieved only once
-			var then = value.then;
-
-			if (typeof then === 'function') {
-				then.call(value, function (val) {
-					if (!resolved) {
-						resolved = true;
-
-						if (value === val) {
-							fulfill(promise, val);
-						} else {
-							resolve(promise, val);
-						}
-					}
-				}, function (reason) {
-					if (!resolved) {
-						resolved = true;
-
-						reject(promise, reason);
-					}
-				});
-
-				return true;
-			}
-		}
-	} catch (e) {
-		if (!resolved) {
-			reject(promise, e);
-		}
-
-		return true;
-	}
-
-	return false;
-}
-
-function resolve(promise, value) {
-	if (promise === value || !handleThenable(promise, value)) {
-		fulfill(promise, value);
-	}
-}
-
-function fulfill(promise, value) {
-	if (promise._state === PENDING) {
-		promise._state = SETTLED;
-		promise._data = value;
-
-		asyncCall(publishFulfillment, promise);
-	}
-}
-
-function reject(promise, reason) {
-	if (promise._state === PENDING) {
-		promise._state = SETTLED;
-		promise._data = reason;
-
-		asyncCall(publishRejection, promise);
-	}
-}
-
-function publish(promise) {
-	promise._then = promise._then.forEach(invokeCallback);
-}
-
-function publishFulfillment(promise) {
-	promise._state = FULFILLED;
-	publish(promise);
-}
-
-function publishRejection(promise) {
-	promise._state = REJECTED;
-	publish(promise);
-	if (!promise._handled && isNode) {
-		__webpack_require__.g.process.emit('unhandledRejection', promise._data, promise);
-	}
-}
-
-function notifyRejectionHandled(promise) {
-	__webpack_require__.g.process.emit('rejectionHandled', promise);
-}
-
-/**
- * @class
- */
-function Promise(resolver) {
-	if (typeof resolver !== 'function') {
-		throw new TypeError('Promise resolver ' + resolver + ' is not a function');
-	}
-
-	if (this instanceof Promise === false) {
-		throw new TypeError('Failed to construct \'Promise\': Please use the \'new\' operator, this object constructor cannot be called as a function.');
-	}
-
-	this._then = [];
-
-	invokeResolver(resolver, this);
-}
-
-Promise.prototype = {
-	constructor: Promise,
-
-	_state: PENDING,
-	_then: null,
-	_data: undefined,
-	_handled: false,
-
-	then: function (onFulfillment, onRejection) {
-		var subscriber = {
-			owner: this,
-			then: new this.constructor(NOOP),
-			fulfilled: onFulfillment,
-			rejected: onRejection
-		};
-
-		if ((onRejection || onFulfillment) && !this._handled) {
-			this._handled = true;
-			if (this._state === REJECTED && isNode) {
-				asyncCall(notifyRejectionHandled, this);
-			}
-		}
-
-		if (this._state === FULFILLED || this._state === REJECTED) {
-			// already resolved, call callback async
-			asyncCall(invokeCallback, subscriber);
-		} else {
-			// subscribe
-			this._then.push(subscriber);
-		}
-
-		return subscriber.then;
-	},
-
-	catch: function (onRejection) {
-		return this.then(null, onRejection);
-	}
-};
-
-Promise.all = function (promises) {
-	if (!Array.isArray(promises)) {
-		throw new TypeError('You must pass an array to Promise.all().');
-	}
-
-	return new Promise(function (resolve, reject) {
-		var results = [];
-		var remaining = 0;
-
-		function resolver(index) {
-			remaining++;
-			return function (value) {
-				results[index] = value;
-				if (!--remaining) {
-					resolve(results);
-				}
-			};
-		}
-
-		for (var i = 0, promise; i < promises.length; i++) {
-			promise = promises[i];
-
-			if (promise && typeof promise.then === 'function') {
-				promise.then(resolver(i), reject);
-			} else {
-				results[i] = promise;
-			}
-		}
-
-		if (!remaining) {
-			resolve(results);
-		}
-	});
-};
-
-Promise.race = function (promises) {
-	if (!Array.isArray(promises)) {
-		throw new TypeError('You must pass an array to Promise.race().');
-	}
-
-	return new Promise(function (resolve, reject) {
-		for (var i = 0, promise; i < promises.length; i++) {
-			promise = promises[i];
-
-			if (promise && typeof promise.then === 'function') {
-				promise.then(resolve, reject);
-			} else {
-				resolve(promise);
-			}
-		}
-	});
-};
-
-Promise.resolve = function (value) {
-	if (value && typeof value === 'object' && value.constructor === Promise) {
-		return value;
-	}
-
-	return new Promise(function (resolve) {
-		resolve(value);
-	});
-};
-
-Promise.reject = function (reason) {
-	return new Promise(function (resolve, reject) {
-		reject(reason);
-	});
-};
-
-module.exports = Promise;
 
 
 /***/ }),
@@ -42130,7 +43744,7 @@ function from(input, scheduler) {
 /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5987);
 /* harmony import */ var _observable_innerFrom__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(7878);
 /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(1480);
-/* harmony import */ var _operators_mergeMap__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(3994);
+/* harmony import */ var _operators_mergeMap__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(7877);
 /* harmony import */ var _util_isArrayLike__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(5685);
 /* harmony import */ var _util_isFunction__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8474);
 /* harmony import */ var _util_mapOneOrManyArgs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3211);
@@ -42446,66 +44060,6 @@ function of() {
 
 /***/ }),
 
-/***/ 4181:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-
-// EXPORTS
-__webpack_require__.d(__webpack_exports__, {
-  "S": function() { return /* binding */ race; }
-});
-
-// UNUSED EXPORTS: raceInit
-
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/Observable.js + 1 modules
-var Observable = __webpack_require__(1480);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/innerFrom.js
-var innerFrom = __webpack_require__(7878);
-;// CONCATENATED MODULE: ./node_modules/rxjs/dist/esm5/internal/util/argsOrArgArray.js
-var isArray = Array.isArray;
-function argsOrArgArray(args) {
-    return args.length === 1 && isArray(args[0]) ? args[0] : args;
-}
-//# sourceMappingURL=argsOrArgArray.js.map
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/OperatorSubscriber.js
-var OperatorSubscriber = __webpack_require__(2566);
-;// CONCATENATED MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/race.js
-
-
-
-
-function race() {
-    var sources = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-        sources[_i] = arguments[_i];
-    }
-    sources = argsOrArgArray(sources);
-    return sources.length === 1 ? (0,innerFrom/* innerFrom */.Xf)(sources[0]) : new Observable/* Observable */.y(raceInit(sources));
-}
-function raceInit(sources) {
-    return function (subscriber) {
-        var subscriptions = [];
-        var _loop_1 = function (i) {
-            subscriptions.push((0,innerFrom/* innerFrom */.Xf)(sources[i]).subscribe(new OperatorSubscriber/* OperatorSubscriber */.Q(subscriber, function (value) {
-                if (subscriptions) {
-                    for (var s = 0; s < subscriptions.length; s++) {
-                        s !== i && subscriptions[s].unsubscribe();
-                    }
-                    subscriptions = null;
-                }
-                subscriber.next(value);
-            })));
-        };
-        for (var i = 0; subscriptions && !subscriber.closed && i < sources.length; i++) {
-            _loop_1(i);
-        }
-    };
-}
-//# sourceMappingURL=race.js.map
-
-/***/ }),
-
 /***/ 3610:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
@@ -42801,22 +44355,6 @@ function map(project, thisArg) {
 
 /***/ }),
 
-/***/ 3833:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "h": function() { return /* binding */ mapTo; }
-/* harmony export */ });
-/* harmony import */ var _map__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9127);
-
-function mapTo(value) {
-    return (0,_map__WEBPACK_IMPORTED_MODULE_0__/* .map */ .U)(function () { return value; });
-}
-//# sourceMappingURL=mapTo.js.map
-
-/***/ }),
-
 /***/ 4367:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
@@ -42824,7 +44362,7 @@ function mapTo(value) {
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "J": function() { return /* binding */ mergeAll; }
 /* harmony export */ });
-/* harmony import */ var _mergeMap__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3994);
+/* harmony import */ var _mergeMap__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7877);
 /* harmony import */ var _util_identity__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(278);
 
 
@@ -42836,16 +44374,27 @@ function mergeAll(concurrent) {
 
 /***/ }),
 
-/***/ 9007:
+/***/ 7877:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "p": function() { return /* binding */ mergeInternals; }
-/* harmony export */ });
-/* harmony import */ var _observable_innerFrom__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7878);
-/* harmony import */ var _util_executeSchedule__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7845);
-/* harmony import */ var _OperatorSubscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2566);
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  "z": function() { return /* binding */ mergeMap; }
+});
+
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/map.js
+var map = __webpack_require__(9127);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/innerFrom.js
+var innerFrom = __webpack_require__(7878);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/util/lift.js
+var lift = __webpack_require__(6798);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/util/executeSchedule.js
+var executeSchedule = __webpack_require__(7845);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/OperatorSubscriber.js
+var OperatorSubscriber = __webpack_require__(2566);
+;// CONCATENATED MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/mergeInternals.js
 
 
 
@@ -42864,7 +44413,7 @@ function mergeInternals(source, subscriber, project, concurrent, onBeforeNext, e
         expand && subscriber.next(value);
         active++;
         var innerComplete = false;
-        (0,_observable_innerFrom__WEBPACK_IMPORTED_MODULE_0__/* .innerFrom */ .Xf)(project(value, index++)).subscribe(new _OperatorSubscriber__WEBPACK_IMPORTED_MODULE_1__/* .OperatorSubscriber */ .Q(subscriber, function (innerValue) {
+        (0,innerFrom/* innerFrom */.Xf)(project(value, index++)).subscribe(new OperatorSubscriber/* OperatorSubscriber */.Q(subscriber, function (innerValue) {
             onBeforeNext === null || onBeforeNext === void 0 ? void 0 : onBeforeNext(innerValue);
             if (expand) {
                 outerNext(innerValue);
@@ -42881,7 +44430,7 @@ function mergeInternals(source, subscriber, project, concurrent, onBeforeNext, e
                     var _loop_1 = function () {
                         var bufferedValue = buffer.shift();
                         if (innerSubScheduler) {
-                            (0,_util_executeSchedule__WEBPACK_IMPORTED_MODULE_2__/* .executeSchedule */ .f)(subscriber, innerSubScheduler, function () { return doInnerSub(bufferedValue); });
+                            (0,executeSchedule/* executeSchedule */.f)(subscriber, innerSubScheduler, function () { return doInnerSub(bufferedValue); });
                         }
                         else {
                             doInnerSub(bufferedValue);
@@ -42898,7 +44447,7 @@ function mergeInternals(source, subscriber, project, concurrent, onBeforeNext, e
             }
         }));
     };
-    source.subscribe(new _OperatorSubscriber__WEBPACK_IMPORTED_MODULE_1__/* .OperatorSubscriber */ .Q(subscriber, outerNext, function () {
+    source.subscribe(new OperatorSubscriber/* OperatorSubscriber */.Q(subscriber, outerNext, function () {
         isComplete = true;
         checkComplete();
     }));
@@ -42907,21 +44456,9 @@ function mergeInternals(source, subscriber, project, concurrent, onBeforeNext, e
     };
 }
 //# sourceMappingURL=mergeInternals.js.map
-
-/***/ }),
-
-/***/ 3994:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "z": function() { return /* binding */ mergeMap; }
-/* harmony export */ });
-/* harmony import */ var _map__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9127);
-/* harmony import */ var _observable_innerFrom__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7878);
-/* harmony import */ var _util_lift__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(6798);
-/* harmony import */ var _mergeInternals__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(9007);
-/* harmony import */ var _util_isFunction__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8474);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/util/isFunction.js
+var isFunction = __webpack_require__(8474);
+;// CONCATENATED MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/mergeMap.js
 
 
 
@@ -42929,13 +44466,13 @@ function mergeInternals(source, subscriber, project, concurrent, onBeforeNext, e
 
 function mergeMap(project, resultSelector, concurrent) {
     if (concurrent === void 0) { concurrent = Infinity; }
-    if ((0,_util_isFunction__WEBPACK_IMPORTED_MODULE_0__/* .isFunction */ .m)(resultSelector)) {
-        return mergeMap(function (a, i) { return (0,_map__WEBPACK_IMPORTED_MODULE_1__/* .map */ .U)(function (b, ii) { return resultSelector(a, b, i, ii); })((0,_observable_innerFrom__WEBPACK_IMPORTED_MODULE_2__/* .innerFrom */ .Xf)(project(a, i))); }, concurrent);
+    if ((0,isFunction/* isFunction */.m)(resultSelector)) {
+        return mergeMap(function (a, i) { return (0,map/* map */.U)(function (b, ii) { return resultSelector(a, b, i, ii); })((0,innerFrom/* innerFrom */.Xf)(project(a, i))); }, concurrent);
     }
     else if (typeof resultSelector === 'number') {
         concurrent = resultSelector;
     }
-    return (0,_util_lift__WEBPACK_IMPORTED_MODULE_3__/* .operate */ .e)(function (source, subscriber) { return (0,_mergeInternals__WEBPACK_IMPORTED_MODULE_4__/* .mergeInternals */ .p)(source, subscriber, project, concurrent); });
+    return (0,lift/* operate */.e)(function (source, subscriber) { return mergeInternals(source, subscriber, project, concurrent); });
 }
 //# sourceMappingURL=mergeMap.js.map
 
@@ -43588,8 +45125,8 @@ var AsyncScheduler = (function (_super) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "z": function() { return /* binding */ asyncScheduler; },
-/* harmony export */   "P": function() { return /* binding */ async; }
+/* harmony export */   "P": function() { return /* binding */ async; },
+/* harmony export */   "z": function() { return /* binding */ asyncScheduler; }
 /* harmony export */ });
 /* harmony import */ var _AsyncAction__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8337);
 /* harmony import */ var _AsyncScheduler__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9682);
@@ -43682,9 +45219,9 @@ var observable = (function () { return (typeof Symbol === 'function' && Symbol.o
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "_6": function() { return /* binding */ popNumber; },
 /* harmony export */   "jO": function() { return /* binding */ popResultSelector; },
-/* harmony export */   "yG": function() { return /* binding */ popScheduler; },
-/* harmony export */   "_6": function() { return /* binding */ popNumber; }
+/* harmony export */   "yG": function() { return /* binding */ popScheduler; }
 /* harmony export */ });
 /* harmony import */ var _isFunction__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8474);
 /* harmony import */ var _isScheduler__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4865);
@@ -43749,8 +45286,8 @@ function createErrorClass(createImpl) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "x": function() { return /* binding */ errorContext; },
-/* harmony export */   "O": function() { return /* binding */ captureError; }
+/* harmony export */   "O": function() { return /* binding */ captureError; },
+/* harmony export */   "x": function() { return /* binding */ errorContext; }
 /* harmony export */ });
 /* harmony import */ var _config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3912);
 
@@ -43939,8 +45476,8 @@ function isPromise(value) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Q": function() { return /* binding */ readableStreamLikeToAsyncGenerator; },
-/* harmony export */   "L": function() { return /* binding */ isReadableStreamLike; }
+/* harmony export */   "L": function() { return /* binding */ isReadableStreamLike; },
+/* harmony export */   "Q": function() { return /* binding */ readableStreamLikeToAsyncGenerator; }
 /* harmony export */ });
 /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5987);
 /* harmony import */ var _isFunction__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8474);
@@ -44113,15 +45650,15 @@ function createInvalidObservableTypeError(input) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ZT": function() { return /* binding */ __extends; },
-/* harmony export */   "mG": function() { return /* binding */ __awaiter; },
-/* harmony export */   "Jh": function() { return /* binding */ __generator; },
-/* harmony export */   "XA": function() { return /* binding */ __values; },
 /* harmony export */   "CR": function() { return /* binding */ __read; },
-/* harmony export */   "ev": function() { return /* binding */ __spreadArray; },
-/* harmony export */   "qq": function() { return /* binding */ __await; },
 /* harmony export */   "FC": function() { return /* binding */ __asyncGenerator; },
-/* harmony export */   "KL": function() { return /* binding */ __asyncValues; }
+/* harmony export */   "Jh": function() { return /* binding */ __generator; },
+/* harmony export */   "KL": function() { return /* binding */ __asyncValues; },
+/* harmony export */   "XA": function() { return /* binding */ __values; },
+/* harmony export */   "ZT": function() { return /* binding */ __extends; },
+/* harmony export */   "ev": function() { return /* binding */ __spreadArray; },
+/* harmony export */   "mG": function() { return /* binding */ __awaiter; },
+/* harmony export */   "qq": function() { return /* binding */ __await; }
 /* harmony export */ });
 /* unused harmony exports __assign, __rest, __decorate, __param, __metadata, __createBinding, __exportStar, __spread, __spreadArrays, __asyncDelegator, __makeTemplateObject, __importStar, __importDefault, __classPrivateFieldGet, __classPrivateFieldSet */
 /*! *****************************************************************************
@@ -44637,18 +46174,6 @@ function _wrapNativeSuper(Class) {
 /******/ 		};
 /******/ 	}();
 /******/ 	
-/******/ 	/* webpack/runtime/global */
-/******/ 	!function() {
-/******/ 		__webpack_require__.g = (function() {
-/******/ 			if (typeof globalThis === 'object') return globalThis;
-/******/ 			try {
-/******/ 				return this || new Function('return this')();
-/******/ 			} catch (e) {
-/******/ 				if (typeof window === 'object') return window;
-/******/ 			}
-/******/ 		})();
-/******/ 	}();
-/******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
 /******/ 	!function() {
 /******/ 		__webpack_require__.o = function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); }
@@ -44681,8 +46206,8 @@ var map = __webpack_require__(9127);
 var distinctUntilChanged = __webpack_require__(3741);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/of.js
 var of = __webpack_require__(2817);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/mergeMap.js
-var mergeMap = __webpack_require__(3994);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/mergeMap.js + 1 modules
+var mergeMap = __webpack_require__(7877);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/shareReplay.js
 var shareReplay = __webpack_require__(8515);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/Observable.js + 1 modules
@@ -44727,10 +46252,12 @@ var combineLatest = __webpack_require__(2334);
 var startWith = __webpack_require__(6108);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/concat.js
 var concat = __webpack_require__(6362);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/take.js
-var take = __webpack_require__(4727);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/switchMap.js
+var switchMap = __webpack_require__(4978);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/merge.js
 var merge = __webpack_require__(3071);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/empty.js
+var empty = __webpack_require__(1545);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/util/lift.js
 var lift = __webpack_require__(6798);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/OperatorSubscriber.js
@@ -44746,12 +46273,10 @@ function skipWhile(predicate) {
     });
 }
 //# sourceMappingURL=skipWhile.js.map
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/switchMap.js
-var switchMap = __webpack_require__(4978);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/empty.js
-var empty = __webpack_require__(1545);
-// EXTERNAL MODULE: ./src/compat/event_listeners.ts + 5 modules
-var event_listeners = __webpack_require__(8719);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/take.js
+var take = __webpack_require__(4727);
+// EXTERNAL MODULE: ./src/compat/event_listeners.ts + 6 modules
+var event_listeners = __webpack_require__(4804);
 ;// CONCATENATED MODULE: ./src/compat/fullscreen.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -44939,8 +46464,8 @@ function canRelyOnVideoVisibilityAndSize() {
   var proto = HTMLVideoElement === null || HTMLVideoElement === void 0 ? void 0 : HTMLVideoElement.prototype;
   return (proto === null || proto === void 0 ? void 0 : proto.requirePictureInPicture) !== undefined;
 }
-// EXTERNAL MODULE: ./src/config.ts
-var config = __webpack_require__(944);
+// EXTERNAL MODULE: ./src/config.ts + 2 modules
+var config = __webpack_require__(6872);
 // EXTERNAL MODULE: ./src/errors/media_error.ts
 var media_error = __webpack_require__(3714);
 // EXTERNAL MODULE: ./src/errors/format_error.ts
@@ -44959,21 +46484,25 @@ var event_emitter = __webpack_require__(1959);
 var is_null_or_undefined = __webpack_require__(1946);
 // EXTERNAL MODULE: ./src/utils/object_assign.ts
 var object_assign = __webpack_require__(8026);
-// EXTERNAL MODULE: ./src/utils/promise.ts
-var promise = __webpack_require__(9589);
 // EXTERNAL MODULE: ./src/utils/ranges.ts
 var ranges = __webpack_require__(2829);
 // EXTERNAL MODULE: ./src/utils/reference.ts
 var reference = __webpack_require__(5095);
 // EXTERNAL MODULE: ./src/utils/warn_once.ts
 var warn_once = __webpack_require__(8806);
-// EXTERNAL MODULE: ./src/utils/noop.ts
-var noop = __webpack_require__(8894);
+// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js
+var asyncToGenerator = __webpack_require__(5861);
+// EXTERNAL MODULE: ./node_modules/@babel/runtime/regenerator/index.js
+var regenerator = __webpack_require__(7757);
+var regenerator_default = /*#__PURE__*/__webpack_require__.n(regenerator);
 // EXTERNAL MODULE: ./src/compat/eme/custom_media_keys/index.ts + 7 modules
 var custom_media_keys = __webpack_require__(6139);
-// EXTERNAL MODULE: ./src/core/eme/media_keys_infos_store.ts
-var media_keys_infos_store = __webpack_require__(6033);
-;// CONCATENATED MODULE: ./src/core/eme/dispose_media_keys.ts
+// EXTERNAL MODULE: ./src/core/decrypt/utils/media_keys_infos_store.ts
+var media_keys_infos_store = __webpack_require__(770);
+;// CONCATENATED MODULE: ./src/core/decrypt/dispose_decryption_resources.ts
+
+
+
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -44992,54 +46521,52 @@ var media_keys_infos_store = __webpack_require__(6033);
 
 
 
-
 /**
- * @param {Object} mediaKeysInfos
- * @returns {Observable}
+ * Free up all ressources taken by the content decryption logic.
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Promise}
  */
 
-function disposeMediaKeys(mediaElement) {
-  return (0,defer/* defer */.P)(function () {
-    var currentState = media_keys_infos_store/* default.getState */.Z.getState(mediaElement);
-
-    if (currentState === null) {
-      return (0,of.of)(null);
-    }
-
-    log/* default.info */.Z.info("EME: Disposing of the current MediaKeys");
-    var loadedSessionsStore = currentState.loadedSessionsStore;
-    media_keys_infos_store/* default.clearState */.Z.clearState(mediaElement);
-    return loadedSessionsStore.closeAllSessions().pipe((0,mergeMap/* mergeMap */.z)(function () {
-      return (0,custom_media_keys/* setMediaKeys */.Y)(mediaElement, null);
-    }));
-  });
+function disposeDecryptionResources(_x) {
+  return _disposeDecryptionResources.apply(this, arguments);
 }
-;// CONCATENATED MODULE: ./src/core/eme/dispose_eme.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
+function _disposeDecryptionResources() {
+  _disposeDecryptionResources = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee(mediaElement) {
+    var currentState, loadedSessionsStore;
+    return regenerator_default().wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            currentState = media_keys_infos_store/* default.getState */.Z.getState(mediaElement);
 
-/**
- * Free up all ressources taken by the EME management.
- */
+            if (!(currentState === null)) {
+              _context.next = 3;
+              break;
+            }
 
-function disposeEME(mediaElement) {
-  disposeMediaKeys(mediaElement).subscribe(noop/* default */.Z);
+            return _context.abrupt("return");
+
+          case 3:
+            log/* default.info */.Z.info("DRM: Disposing of the current MediaKeys");
+            loadedSessionsStore = currentState.loadedSessionsStore;
+            media_keys_infos_store/* default.clearState */.Z.clearState(mediaElement);
+            _context.next = 8;
+            return loadedSessionsStore.closeAllSessions();
+
+          case 8:
+            (0,custom_media_keys/* setMediaKeys */.Y)(mediaElement, null);
+
+          case 9:
+          case "end":
+            return _context.stop();
+        }
+      }
+    }, _callee);
+  }));
+  return _disposeDecryptionResources.apply(this, arguments);
 }
-;// CONCATENATED MODULE: ./src/core/eme/get_current_key_system.ts
+;// CONCATENATED MODULE: ./src/core/decrypt/get_current_key_system.ts
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -45066,8 +46593,6 @@ function get_current_key_system_getCurrentKeySystem(mediaElement) {
   var currentState = media_keys_infos_store/* default.getState */.Z.getState(mediaElement);
   return currentState == null ? null : currentState.keySystemOptions.type;
 }
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/ignoreElements.js
-var ignoreElements = __webpack_require__(533);
 ;// CONCATENATED MODULE: ./src/compat/should_unset_media_keys.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -45095,7 +46620,7 @@ var ignoreElements = __webpack_require__(533);
 function shouldUnsetMediaKeys() {
   return browser_detection/* isIE11 */.fq;
 }
-;// CONCATENATED MODULE: ./src/core/eme/clear_eme_session.ts
+;// CONCATENATED MODULE: ./src/core/decrypt/clear_on_stop.ts
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -45115,48 +46640,31 @@ function shouldUnsetMediaKeys() {
 
 
 
-
 /**
- * Clear EME ressources that should be cleared when the current content stops
- * its playback.
+ * Clear DRM-related resources that should be cleared when the current content
+ * stops its playback.
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
 
-function clearEMESession(mediaElement) {
-  return (0,defer/* defer */.P)(function () {
-    log/* default.info */.Z.info("EME: Clearing-up EME session.");
+function clearOnStop(mediaElement) {
+  log/* default.info */.Z.info("DRM: Clearing-up DRM session.");
 
-    if (shouldUnsetMediaKeys()) {
-      log/* default.info */.Z.info("EME: disposing current MediaKeys.");
-      return disposeMediaKeys(mediaElement).pipe((0,ignoreElements/* ignoreElements */.l)());
-    }
+  if (shouldUnsetMediaKeys()) {
+    log/* default.info */.Z.info("DRM: disposing current MediaKeys.");
+    return disposeDecryptionResources(mediaElement);
+  }
 
-    var currentState = media_keys_infos_store/* default.getState */.Z.getState(mediaElement);
+  var currentState = media_keys_infos_store/* default.getState */.Z.getState(mediaElement);
 
-    if (currentState !== null && currentState.keySystemOptions.closeSessionsOnStop === true) {
-      log/* default.info */.Z.info("EME: closing all current sessions.");
-      return currentState.loadedSessionsStore.closeAllSessions() // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
-      // first type parameter as `any` instead of the perfectly fine `unknown`,
-      // leading to linter issues, as it forbids the usage of `any`.
-      // This is why we're disabling the eslint rule.
+  if (currentState !== null && currentState.keySystemOptions.closeSessionsOnStop === true) {
+    log/* default.info */.Z.info("DRM: closing all current sessions.");
+    return currentState.loadedSessionsStore.closeAllSessions();
+  }
 
-      /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-      .pipe((0,ignoreElements/* ignoreElements */.l)());
-    }
-
-    log/* default.info */.Z.info("EME: Nothing to clear. Returning right away. No state =", currentState === null);
-    return empty/* EMPTY */.E;
-  });
+  log/* default.info */.Z.info("DRM: Nothing to clear. Returning right away. No state =", currentState === null);
+  return Promise.resolve();
 }
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js
-var asyncToGenerator = __webpack_require__(5861);
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/regenerator/index.js
-var regenerator = __webpack_require__(7757);
-var regenerator_default = /*#__PURE__*/__webpack_require__.n(regenerator);
-// EXTERNAL MODULE: ./node_modules/pinkie/index.js
-var pinkie = __webpack_require__(8555);
-var pinkie_default = /*#__PURE__*/__webpack_require__.n(pinkie);
 // EXTERNAL MODULE: ./src/utils/assert.ts
 var assert = __webpack_require__(811);
 // EXTERNAL MODULE: ./src/utils/task_canceller.ts
@@ -45248,49 +46756,8 @@ function isOffline() {
 var custom_loader_error = __webpack_require__(7839);
 // EXTERNAL MODULE: ./src/errors/is_known_error.ts
 var is_known_error = __webpack_require__(9822);
-;// CONCATENATED MODULE: ./src/utils/cancellable_sleep.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * Wait the given `delay`, resolving the Promise when finished.
- *
- * The `cancellationSignal` given allows to cancel that timeout. In the case it
- * is triggered before the timeout ended, this function will reject the
- * corresponding `CancellationError` through the returned Promise.
- *
- * @param {number} delay - Delay to wait, in milliseconds
- * @param {Object} cancellationSignal - `CancellationSignal` allowing to abort
- * the timeout.
- * @returns {Promise} - Resolve on timeout completion, rejects on timeout
- * cancellation with the corresponding `CancellationError`.
- */
-
-function cancellableSleep(delay, cancellationSignal) {
-  return new (pinkie_default())(function (res, rej) {
-    var timeout = setTimeout(function () {
-      unregisterCancelSignal();
-      res();
-    }, delay);
-    var unregisterCancelSignal = cancellationSignal.register(function onCancel(cancellationError) {
-      clearTimeout(timeout);
-      rej(cancellationError);
-    });
-  });
-}
+// EXTERNAL MODULE: ./src/utils/cancellable_sleep.ts
+var cancellable_sleep = __webpack_require__(7864);
 // EXTERNAL MODULE: ./src/utils/get_fuzzed_delay.ts
 var get_fuzzed_delay = __webpack_require__(2572);
 ;// CONCATENATED MODULE: ./src/core/fetchers/utils/try_urls_with_backoff.ts
@@ -45312,7 +46779,6 @@ var get_fuzzed_delay = __webpack_require__(2572);
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 
 
 
@@ -45429,7 +46895,7 @@ function getRequestErrorType(error) {
 
 function tryURLsWithBackoff(urls, performRequest, options, cancellationSignal) {
   if (cancellationSignal.isCancelled) {
-    return pinkie_default().reject(cancellationSignal.cancellationError);
+    return Promise.reject(cancellationSignal.cancellationError);
   }
 
   var baseDelay = options.baseDelay,
@@ -45445,7 +46911,7 @@ function tryURLsWithBackoff(urls, performRequest, options, cancellationSignal) {
 
   if (urlsToTry.length === 0) {
     log/* default.warn */.Z.warn("Fetchers: no URL given to `tryURLsWithBackoff`.");
-    return pinkie_default().reject(new Error("No URL to request"));
+    return Promise.reject(new Error("No URL to request"));
   }
 
   return tryURLsRecursively(urlsToTry[0], 0);
@@ -45580,7 +47046,7 @@ function tryURLsWithBackoff(urls, performRequest, options, cancellationSignal) {
 
             case 38:
               _context.next = 40;
-              return cancellableSleep(fuzzedDelay, cancellationSignal);
+              return (0,cancellable_sleep/* default */.Z)(fuzzedDelay, cancellationSignal);
 
             case 40:
               return _context.abrupt("return", tryURLsRecursively(nextURL, 0));
@@ -45640,11 +47106,6 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 
 
 
-
-var DEFAULT_MAX_MANIFEST_REQUEST_RETRY = config/* default.DEFAULT_MAX_MANIFEST_REQUEST_RETRY */.Z.DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
-    DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE = config/* default.DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE */.Z.DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
-    INITIAL_BACKOFF_DELAY_BASE = config/* default.INITIAL_BACKOFF_DELAY_BASE */.Z.INITIAL_BACKOFF_DELAY_BASE,
-    MAX_BACKOFF_DELAY_BASE = config/* default.MAX_BACKOFF_DELAY_BASE */.Z.MAX_BACKOFF_DELAY_BASE;
 /**
  * Class allowing to facilitate the task of loading and parsing a Manifest.
  * @class ManifestFetcher
@@ -45974,6 +47435,12 @@ var ManifestFetcher = /*#__PURE__*/function () {
   ;
 
   _proto._getBackoffSetting = function _getBackoffSetting(onRetry) {
+    var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+        DEFAULT_MAX_MANIFEST_REQUEST_RETRY = _config$getCurrent.DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
+        DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE = _config$getCurrent.DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
+        INITIAL_BACKOFF_DELAY_BASE = _config$getCurrent.INITIAL_BACKOFF_DELAY_BASE,
+        MAX_BACKOFF_DELAY_BASE = _config$getCurrent.MAX_BACKOFF_DELAY_BASE;
+
     var _this$_settings = this._settings,
         lowLatencyMode = _this$_settings.lowLatencyMode,
         ogRegular = _this$_settings.maxRetryRegular,
@@ -46004,7 +47471,7 @@ var ManifestFetcher = /*#__PURE__*/function () {
 
 
 function isPromise(val) {
-  return val instanceof (pinkie_default()) || val instanceof Promise;
+  return val instanceof Promise;
 }
 ;// CONCATENATED MODULE: ./src/core/fetchers/manifest/index.ts
 /**
@@ -46725,10 +48192,6 @@ var InitializationSegmentCache = /*#__PURE__*/function () {
 
 
 
-var DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR = config/* default.DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR */.Z.DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
-    segment_fetcher_DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE = config/* default.DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE */.Z.DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
-    segment_fetcher_INITIAL_BACKOFF_DELAY_BASE = config/* default.INITIAL_BACKOFF_DELAY_BASE */.Z.INITIAL_BACKOFF_DELAY_BASE,
-    segment_fetcher_MAX_BACKOFF_DELAY_BASE = config/* default.MAX_BACKOFF_DELAY_BASE */.Z.MAX_BACKOFF_DELAY_BASE;
 var generateRequestID = (0,id_generator/* default */.Z)();
 /**
  * Create an `ISegmentFetcher` object which will allow to easily fetch and parse
@@ -46780,7 +48243,8 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
       /**
        * If the request succeeded, set to the corresponding
        * `IChunkCompleteInformation` object.
-       * If the request failed or was cancelled, set to `null`.
+       * For any other completion cases: if the request either failed, was
+       * cancelled or just if no request was needed, set to `null`.
        *
        * Stays to `undefined` when the request is still pending.
        */
@@ -46895,6 +48359,8 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
         if (res.resultType !== "segment-created") {
           requestInfo = res.resultData;
           sendNetworkMetricsIfAvailable();
+        } else {
+          requestInfo = null;
         }
 
         if (!canceller.isUsed) {
@@ -47026,11 +48492,18 @@ function getSegmentFetcherOptions(bufferType, _ref) {
   var maxRetryRegular = _ref.maxRetryRegular,
       maxRetryOffline = _ref.maxRetryOffline,
       lowLatencyMode = _ref.lowLatencyMode;
+
+  var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+      DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR = _config$getCurrent.DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
+      DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE = _config$getCurrent.DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
+      INITIAL_BACKOFF_DELAY_BASE = _config$getCurrent.INITIAL_BACKOFF_DELAY_BASE,
+      MAX_BACKOFF_DELAY_BASE = _config$getCurrent.MAX_BACKOFF_DELAY_BASE;
+
   return {
     maxRetryRegular: bufferType === "image" ? 0 : maxRetryRegular !== null && maxRetryRegular !== void 0 ? maxRetryRegular : DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
-    maxRetryOffline: maxRetryOffline !== null && maxRetryOffline !== void 0 ? maxRetryOffline : segment_fetcher_DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
-    baseDelay: lowLatencyMode ? segment_fetcher_INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY : segment_fetcher_INITIAL_BACKOFF_DELAY_BASE.REGULAR,
-    maxDelay: lowLatencyMode ? segment_fetcher_MAX_BACKOFF_DELAY_BASE.LOW_LATENCY : segment_fetcher_MAX_BACKOFF_DELAY_BASE.REGULAR
+    maxRetryOffline: maxRetryOffline !== null && maxRetryOffline !== void 0 ? maxRetryOffline : DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
+    baseDelay: lowLatencyMode ? INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY : INITIAL_BACKOFF_DELAY_BASE.REGULAR,
+    maxDelay: lowLatencyMode ? MAX_BACKOFF_DELAY_BASE.LOW_LATENCY : MAX_BACKOFF_DELAY_BASE.REGULAR
   };
 }
 ;// CONCATENATED MODULE: ./src/core/fetchers/segment/segment_fetcher_creator.ts
@@ -47053,8 +48526,6 @@ function getSegmentFetcherOptions(bufferType, _ref) {
 
 
 
-var MIN_CANCELABLE_PRIORITY = config/* default.MIN_CANCELABLE_PRIORITY */.Z.MIN_CANCELABLE_PRIORITY,
-    MAX_HIGH_PRIORITY_LEVEL = config/* default.MAX_HIGH_PRIORITY_LEVEL */.Z.MAX_HIGH_PRIORITY_LEVEL;
 /**
  * Interact with the transport pipelines to download segments with the right
  * priority.
@@ -47091,6 +48562,10 @@ var SegmentFetcherCreator = /*#__PURE__*/function () {
    * @param {Object} transport
    */
   function SegmentFetcherCreator(transport, options) {
+    var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+        MIN_CANCELABLE_PRIORITY = _config$getCurrent.MIN_CANCELABLE_PRIORITY,
+        MAX_HIGH_PRIORITY_LEVEL = _config$getCurrent.MAX_HIGH_PRIORITY_LEVEL;
+
     this._transport = transport;
     this._prioritizer = new ObservablePrioritizer({
       prioritySteps: {
@@ -47142,55 +48617,6 @@ var SegmentFetcherCreator = /*#__PURE__*/function () {
  */
 
 /* harmony default export */ var segment = (SegmentFetcherCreator);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/mergeInternals.js
-var mergeInternals = __webpack_require__(9007);
-;// CONCATENATED MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/mergeScan.js
-
-
-function mergeScan(accumulator, seed, concurrent) {
-    if (concurrent === void 0) { concurrent = Infinity; }
-    return (0,lift/* operate */.e)(function (source, subscriber) {
-        var state = seed;
-        return (0,mergeInternals/* mergeInternals */.p)(source, subscriber, function (value, index) { return accumulator(state, value, index); }, concurrent, function (value) {
-            state = value;
-        }, false, undefined, function () { return (state = null); });
-    });
-}
-//# sourceMappingURL=mergeScan.js.map
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/innerFrom.js
-var innerFrom = __webpack_require__(7878);
-;// CONCATENATED MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/exhaustMap.js
-
-
-
-
-function exhaustMap(project, resultSelector) {
-    if (resultSelector) {
-        return function (source) {
-            return source.pipe(exhaustMap(function (a, i) { return (0,innerFrom/* innerFrom */.Xf)(project(a, i)).pipe((0,map/* map */.U)(function (b, ii) { return resultSelector(a, b, i, ii); })); }));
-        };
-    }
-    return (0,lift/* operate */.e)(function (source, subscriber) {
-        var index = 0;
-        var innerSub = null;
-        var isComplete = false;
-        source.subscribe(new OperatorSubscriber/* OperatorSubscriber */.Q(subscriber, function (outerValue) {
-            if (!innerSub) {
-                innerSub = new OperatorSubscriber/* OperatorSubscriber */.Q(subscriber, undefined, function () {
-                    innerSub = null;
-                    isComplete && subscriber.complete();
-                });
-                (0,innerFrom/* innerFrom */.Xf)(project(outerValue, index++)).subscribe(innerSub);
-            }
-        }, function () {
-            isComplete = true;
-            !innerSub && subscriber.complete();
-        }));
-    });
-}
-//# sourceMappingURL=exhaustMap.js.map
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/tap.js
-var tap = __webpack_require__(2006);
 ;// CONCATENATED MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/finalize.js
 
 function finalize(callback) {
@@ -47204,6 +48630,8 @@ function finalize(callback) {
     });
 }
 //# sourceMappingURL=finalize.js.map
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/ignoreElements.js
+var ignoreElements = __webpack_require__(533);
 ;// CONCATENATED MODULE: ./src/compat/should_reload_media_source_on_decipherability_update.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -47321,10 +48749,6 @@ var EWMA = /*#__PURE__*/function () {
  */
 
 
-var ABR_MINIMUM_TOTAL_BYTES = config/* default.ABR_MINIMUM_TOTAL_BYTES */.Z.ABR_MINIMUM_TOTAL_BYTES,
-    ABR_MINIMUM_CHUNK_SIZE = config/* default.ABR_MINIMUM_CHUNK_SIZE */.Z.ABR_MINIMUM_CHUNK_SIZE,
-    ABR_FAST_EMA = config/* default.ABR_FAST_EMA */.Z.ABR_FAST_EMA,
-    ABR_SLOW_EMA = config/* default.ABR_SLOW_EMA */.Z.ABR_SLOW_EMA;
 /**
  * Calculate a mean bandwidth based on the bytes downloaded and the amount
  * of time needed to do so.
@@ -47335,10 +48759,15 @@ var ABR_MINIMUM_TOTAL_BYTES = config/* default.ABR_MINIMUM_TOTAL_BYTES */.Z.ABR_
 
 var BandwidthEstimator = /*#__PURE__*/function () {
   function BandwidthEstimator() {
+    var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+        ABR_FAST_EMA = _config$getCurrent.ABR_FAST_EMA,
+        ABR_SLOW_EMA = _config$getCurrent.ABR_SLOW_EMA;
     /**
      * A fast-moving average.
      * @private
      */
+
+
     this._fastEWMA = new EWMA(ABR_FAST_EMA);
     /**
      * A slow-moving average.
@@ -47365,6 +48794,9 @@ var BandwidthEstimator = /*#__PURE__*/function () {
   var _proto = BandwidthEstimator.prototype;
 
   _proto.addSample = function addSample(durationInMs, numberOfBytes) {
+    var _config$getCurrent2 = config/* default.getCurrent */.Z.getCurrent(),
+        ABR_MINIMUM_CHUNK_SIZE = _config$getCurrent2.ABR_MINIMUM_CHUNK_SIZE;
+
     if (numberOfBytes < ABR_MINIMUM_CHUNK_SIZE) {
       return;
     }
@@ -47384,6 +48816,9 @@ var BandwidthEstimator = /*#__PURE__*/function () {
   ;
 
   _proto.getEstimate = function getEstimate() {
+    var _config$getCurrent3 = config/* default.getCurrent */.Z.getCurrent(),
+        ABR_MINIMUM_TOTAL_BYTES = _config$getCurrent3.ABR_MINIMUM_TOTAL_BYTES;
+
     if (this._bytesSampled < ABR_MINIMUM_TOTAL_BYTES) {
       return undefined;
     } // Take the minimum of these two estimates.  This should have the effect of
@@ -47398,6 +48833,10 @@ var BandwidthEstimator = /*#__PURE__*/function () {
   ;
 
   _proto.reset = function reset() {
+    var _config$getCurrent4 = config/* default.getCurrent */.Z.getCurrent(),
+        ABR_FAST_EMA = _config$getCurrent4.ABR_FAST_EMA,
+        ABR_SLOW_EMA = _config$getCurrent4.ABR_SLOW_EMA;
+
     this._fastEWMA = new EWMA(ABR_FAST_EMA);
     this._slowEWMA = new EWMA(ABR_SLOW_EMA);
     this._bytesSampled = 0;
@@ -47407,6 +48846,8 @@ var BandwidthEstimator = /*#__PURE__*/function () {
 }();
 
 
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/tap.js
+var tap = __webpack_require__(2006);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/withLatestFrom.js
 var withLatestFrom = __webpack_require__(3428);
 ;// CONCATENATED MODULE: ./src/core/abr/get_buffer_levels.ts
@@ -47467,93 +48908,6 @@ function getBufferLevels(bitrates) {
     return Vp * (gp + (bitrates[boundedIndex] * utilities[boundedIndex - 1] - bitrates[boundedIndex - 1] * utilities[boundedIndex]) / (bitrates[boundedIndex] - bitrates[boundedIndex - 1])) + 4;
   }
 }
-;// CONCATENATED MODULE: ./src/core/abr/get_estimate_from_buffer_levels.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-/**
- * From the buffer gap, choose a representation.
- * @param {Object} playbackObservation
- * @param {Array.<Number>} bitrates
- * @param {Array.<Number>} bufferLevels
- * @returns {Object|undefined}
- */
-
-function getEstimateFromBufferLevels(playbackObservation, bitrates, bufferLevels) {
-  var bufferGap = playbackObservation.bufferGap,
-      currentBitrate = playbackObservation.currentBitrate,
-      currentScore = playbackObservation.currentScore,
-      speed = playbackObservation.speed;
-
-  if (currentBitrate == null) {
-    return bitrates[0];
-  }
-
-  var currentBitrateIndex = (0,array_find_index/* default */.Z)(bitrates, function (b) {
-    return b === currentBitrate;
-  });
-
-  if (currentBitrateIndex < 0 || bitrates.length !== bufferLevels.length) {
-    log/* default.error */.Z.error("ABR: Current Bitrate not found in the calculated levels");
-    return bitrates[0];
-  }
-
-  var scaledScore;
-
-  if (currentScore != null) {
-    scaledScore = speed === 0 ? currentScore : currentScore / speed;
-  }
-
-  if (scaledScore != null && scaledScore > 1) {
-    var currentBufferLevel = bufferLevels[currentBitrateIndex];
-
-    var nextIndex = function () {
-      for (var i = currentBitrateIndex + 1; i < bufferLevels.length; i++) {
-        if (bufferLevels[i] > currentBufferLevel) {
-          return i;
-        }
-      }
-    }();
-
-    if (nextIndex != null) {
-      var nextBufferLevel = bufferLevels[nextIndex];
-
-      if (bufferGap >= nextBufferLevel) {
-        return bitrates[nextIndex];
-      }
-    }
-  }
-
-  if (scaledScore == null || scaledScore < 1.15) {
-    var _currentBufferLevel = bufferLevels[currentBitrateIndex];
-
-    if (bufferGap < _currentBufferLevel) {
-      for (var i = currentBitrateIndex - 1; i >= 0; i--) {
-        if (bitrates[i] < currentBitrate) {
-          return bitrates[i];
-        }
-      }
-
-      return currentBitrate;
-    }
-  }
-
-  return currentBitrate;
-}
 ;// CONCATENATED MODULE: ./src/core/abr/buffer_based_chooser.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -47573,7 +48927,6 @@ function getEstimateFromBufferLevels(playbackObservation, bitrates, bufferLevels
 
 
 
-
 /**
  * Choose a bitrate based on the currently available buffer.
  *
@@ -47585,23 +48938,99 @@ function getEstimateFromBufferLevels(playbackObservation, bitrates, bufferLevels
  * "maintanable" or not.
  * If so, we may switch to a better quality, or conversely to a worse quality.
  *
- * @param {Observable} update$
- * @param {Array.<number>} bitrates
- * @returns {Observable}
+ * @class BufferBasedChooser
  */
 
-function BufferBasedChooser(update$, bitrates) {
-  var levelsMap = getBufferLevels(bitrates);
-  log/* default.debug */.Z.debug("ABR: Steps for buffer based chooser.", levelsMap.map(function (l, i) {
-    return {
-      bufferLevel: l,
-      bitrate: bitrates[i]
-    };
-  }));
-  return update$.pipe((0,map/* map */.U)(function (playbackObservation) {
-    return getEstimateFromBufferLevels(playbackObservation, bitrates, levelsMap);
-  }));
-}
+var BufferBasedChooser = /*#__PURE__*/function () {
+  /**
+   * @param {Array.<number>} number;
+   */
+  function BufferBasedChooser(bitrates) {
+    this._levelsMap = getBufferLevels(bitrates);
+    this._bitrates = bitrates;
+    log/* default.debug */.Z.debug("ABR: Steps for buffer based chooser.", this._levelsMap.map(function (l, i) {
+      return {
+        bufferLevel: l,
+        bitrate: bitrates[i]
+      };
+    }));
+  }
+  /**
+   * @param {Object} playbackObservation
+   * @returns {number|undefined}
+   */
+
+
+  var _proto = BufferBasedChooser.prototype;
+
+  _proto.getEstimate = function getEstimate(playbackObservation) {
+    var bufferLevels = this._levelsMap;
+    var bitrates = this._bitrates;
+    var bufferGap = playbackObservation.bufferGap,
+        currentBitrate = playbackObservation.currentBitrate,
+        currentScore = playbackObservation.currentScore,
+        speed = playbackObservation.speed;
+
+    if (currentBitrate == null) {
+      return bitrates[0];
+    }
+
+    var currentBitrateIndex = (0,array_find_index/* default */.Z)(bitrates, function (b) {
+      return b === currentBitrate;
+    });
+
+    if (currentBitrateIndex < 0 || bitrates.length !== bufferLevels.length) {
+      log/* default.error */.Z.error("ABR: Current Bitrate not found in the calculated levels");
+      return bitrates[0];
+    }
+
+    var scaledScore;
+
+    if (currentScore != null) {
+      scaledScore = speed === 0 ? currentScore : currentScore / speed;
+    }
+
+    if (scaledScore != null && scaledScore > 1) {
+      var currentBufferLevel = bufferLevels[currentBitrateIndex];
+
+      var nextIndex = function () {
+        for (var i = currentBitrateIndex + 1; i < bufferLevels.length; i++) {
+          if (bufferLevels[i] > currentBufferLevel) {
+            return i;
+          }
+        }
+      }();
+
+      if (nextIndex != null) {
+        var nextBufferLevel = bufferLevels[nextIndex];
+
+        if (bufferGap >= nextBufferLevel) {
+          return bitrates[nextIndex];
+        }
+      }
+    }
+
+    if (scaledScore == null || scaledScore < 1.15) {
+      var _currentBufferLevel = bufferLevels[currentBitrateIndex];
+
+      if (bufferGap < _currentBufferLevel) {
+        for (var i = currentBitrateIndex - 1; i >= 0; i--) {
+          if (bitrates[i] < currentBitrate) {
+            return bitrates[i];
+          }
+        }
+
+        return currentBitrate;
+      }
+    }
+
+    return currentBitrate;
+  };
+
+  return BufferBasedChooser;
+}();
+
+
 // EXTERNAL MODULE: ./src/utils/array_find.ts
 var array_find = __webpack_require__(3274);
 ;// CONCATENATED MODULE: ./src/core/abr/network_analyzer.ts
@@ -47624,11 +49053,6 @@ var array_find = __webpack_require__(3274);
 
 
 
-var ABR_REGULAR_FACTOR = config/* default.ABR_REGULAR_FACTOR */.Z.ABR_REGULAR_FACTOR,
-    ABR_STARVATION_DURATION_DELTA = config/* default.ABR_STARVATION_DURATION_DELTA */.Z.ABR_STARVATION_DURATION_DELTA,
-    ABR_STARVATION_FACTOR = config/* default.ABR_STARVATION_FACTOR */.Z.ABR_STARVATION_FACTOR,
-    ABR_STARVATION_GAP = config/* default.ABR_STARVATION_GAP */.Z.ABR_STARVATION_GAP,
-    OUT_OF_STARVATION_GAP = config/* default.OUT_OF_STARVATION_GAP */.Z.OUT_OF_STARVATION_GAP;
 /**
  * Get pending segment request(s) starting with the asked segment position.
  * @param {Object} requests - Every requests pending, in a chronological
@@ -47856,6 +49280,12 @@ function shouldDirectlySwitchToLowBitrate(playbackInfo, requests, lowLatencyMode
 
 var NetworkAnalyzer = /*#__PURE__*/function () {
   function NetworkAnalyzer(initialBitrate, lowLatencyMode) {
+    var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+        ABR_STARVATION_GAP = _config$getCurrent.ABR_STARVATION_GAP,
+        OUT_OF_STARVATION_GAP = _config$getCurrent.OUT_OF_STARVATION_GAP,
+        ABR_STARVATION_FACTOR = _config$getCurrent.ABR_STARVATION_FACTOR,
+        ABR_REGULAR_FACTOR = _config$getCurrent.ABR_REGULAR_FACTOR;
+
     this._initialBitrate = initialBitrate;
     this._inStarvationMode = false;
     this._lowLatencyMode = lowLatencyMode;
@@ -47904,7 +49334,11 @@ var NetworkAnalyzer = /*#__PURE__*/function () {
     var bufferGap = playbackInfo.bufferGap,
         position = playbackInfo.position,
         duration = playbackInfo.duration;
-    var realBufferGap = isFinite(bufferGap) ? bufferGap : 0; // check if should get in/out of starvation mode
+    var realBufferGap = isFinite(bufferGap) ? bufferGap : 0;
+
+    var _config$getCurrent2 = config/* default.getCurrent */.Z.getCurrent(),
+        ABR_STARVATION_DURATION_DELTA = _config$getCurrent2.ABR_STARVATION_DURATION_DELTA; // check if should get in/out of starvation mode
+
 
     if (isNaN(duration) || realBufferGap + position < duration - ABR_STARVATION_DURATION_DELTA) {
       if (!this._inStarvationMode && realBufferGap <= localConf.starvationGap) {
@@ -48396,11 +49830,8 @@ var PendingRequestsStore = /*#__PURE__*/function () {
 
   _proto.remove = function remove(id) {
     if (this._currentRequests[id] == null) {
-      // TODO This breaks github actions.
-      // Find why
-      // if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
-      //   throw new Error("ABR: can't remove unknown request");
-      // }
+      if (false) {}
+
       log/* default.warn */.Z.warn("ABR: can't remove unknown request");
     }
 
@@ -48888,7 +50319,10 @@ function RepresentationEstimator(_ref) {
       var bitrates = representations.map(function (r) {
         return r.bitrate;
       });
-      var bufferBasedEstimation$ = BufferBasedChooser(bufferBasedobservation$, bitrates).pipe((0,startWith/* startWith */.O)(undefined));
+      var bufferBasedChooser = new BufferBasedChooser(bitrates);
+      var bufferBasedEstimation$ = bufferBasedobservation$.pipe((0,map/* map */.U)(function (bbo) {
+        return bufferBasedChooser.getEstimate(bbo);
+      }), (0,startWith/* startWith */.O)(undefined));
       return (0,combineLatest/* combineLatest */.a)([observation$, minAutoBitrate$, maxAutoBitrate$, filters$, bufferBasedEstimation$]).pipe((0,withLatestFrom/* withLatestFrom */.M)(currentRepresentation$), (0,map/* map */.U)(function (_ref4) {
         var _ref4$ = _ref4[0],
             observation = _ref4$[0],
@@ -49171,8 +50605,6 @@ function createFilters(limitWidth$, throttleBitrate$, throttle$) {
  */
 
 /* harmony default export */ var abr = (ABRManager);
-// EXTERNAL MODULE: ./src/core/init/create_eme_manager.ts + 1 modules
-var create_eme_manager = __webpack_require__(4507);
 // EXTERNAL MODULE: ./src/compat/clear_element_src.ts
 var clear_element_src = __webpack_require__(5767);
 // EXTERNAL MODULE: ./src/compat/browser_compatibility_types.ts
@@ -49319,7 +50751,6 @@ var events_generators = __webpack_require__(8343);
  */
 
 
-var DEFAULT_LIVE_GAP = config/* default.DEFAULT_LIVE_GAP */.Z.DEFAULT_LIVE_GAP;
 /**
  * Returns the calculated initial time for the content described by the given
  * Manifest:
@@ -49379,6 +50810,9 @@ function getInitialTime(manifest, lowLatencyMode, startAt) {
     var maximumPosition = manifest.getMaximumPosition();
     var liveTime;
 
+    var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+        DEFAULT_LIVE_GAP = _config$getCurrent.DEFAULT_LIVE_GAP;
+
     if (clockOffset == null) {
       log/* default.info */.Z.info("Init: no clock offset found for a live content, " + "starting close to maximum available position");
       liveTime = maximumPosition;
@@ -49400,6 +50834,8 @@ function getInitialTime(manifest, lowLatencyMode, startAt) {
   log/* default.info */.Z.info("Init: starting at the minimum available position:", minimumPosition);
   return minimumPosition;
 }
+// EXTERNAL MODULE: ./src/core/init/link_drm_and_content.ts + 1 modules
+var link_drm_and_content = __webpack_require__(9607);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/throwError.js
 var throwError = __webpack_require__(3610);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/interval.js
@@ -49483,7 +50919,6 @@ var types = __webpack_require__(9612);
 
 
 
-var SOURCE_BUFFER_FLUSHING_INTERVAL = config/* default.SOURCE_BUFFER_FLUSHING_INTERVAL */.Z.SOURCE_BUFFER_FLUSHING_INTERVAL;
 /**
  * Allows to push and remove new segments to a SourceBuffer in a FIFO queue (not
  * doing so can lead to browser Errors) while keeping an inventory of what has
@@ -49516,12 +50951,16 @@ var AudioVideoSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
     _this._queue = [];
     _this._pendingTask = null;
     _this._lastInitSegment = null;
-    _this.codec = codec; // Some browsers (happened with firefox 66) sometimes "forget" to send us
+    _this.codec = codec;
+
+    var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+        SOURCE_BUFFER_FLUSHING_INTERVAL = _config$getCurrent.SOURCE_BUFFER_FLUSHING_INTERVAL; // Some browsers (happened with firefox 66) sometimes "forget" to send us
     // `update` or `updateend` events.
     // In that case, we're completely unable to continue the queue here and
     // stay locked in a waiting state.
     // This interval is here to check at regular intervals if the underlying
     // SourceBuffer is currently updating.
+
 
     (0,observable_interval/* interval */.F)(SOURCE_BUFFER_FLUSHING_INTERVAL).pipe((0,tap/* tap */.b)(function () {
       return _this._flush();
@@ -50402,6 +51841,38 @@ function shouldHaveNativeBuffer(bufferType) {
 
 /* harmony default export */ var segment_buffers = (SegmentBuffersStore);
 
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/innerFrom.js
+var innerFrom = __webpack_require__(7878);
+;// CONCATENATED MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/exhaustMap.js
+
+
+
+
+function exhaustMap(project, resultSelector) {
+    if (resultSelector) {
+        return function (source) {
+            return source.pipe(exhaustMap(function (a, i) { return (0,innerFrom/* innerFrom */.Xf)(project(a, i)).pipe((0,map/* map */.U)(function (b, ii) { return resultSelector(a, b, i, ii); })); }));
+        };
+    }
+    return (0,lift/* operate */.e)(function (source, subscriber) {
+        var index = 0;
+        var innerSub = null;
+        var isComplete = false;
+        source.subscribe(new OperatorSubscriber/* OperatorSubscriber */.Q(subscriber, function (outerValue) {
+            if (!innerSub) {
+                innerSub = new OperatorSubscriber/* OperatorSubscriber */.Q(subscriber, undefined, function () {
+                    innerSub = null;
+                    isComplete && subscriber.complete();
+                });
+                (0,innerFrom/* innerFrom */.Xf)(project(outerValue, index++)).subscribe(innerSub);
+            }
+        }, function () {
+            isComplete = true;
+            !innerSub && subscriber.complete();
+        }));
+    });
+}
+//# sourceMappingURL=exhaustMap.js.map
 ;// CONCATENATED MODULE: ./src/utils/sorted_list.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -51560,16 +53031,6 @@ function getIndexOfLastChunkInPeriod(bufferedChunks, periodEnd) {
 
 
 
-var CONTENT_REPLACEMENT_PADDING = config/* default.CONTENT_REPLACEMENT_PADDING */.Z.CONTENT_REPLACEMENT_PADDING,
-    BITRATE_REBUFFERING_RATIO = config/* default.BITRATE_REBUFFERING_RATIO */.Z.BITRATE_REBUFFERING_RATIO,
-    MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT = config/* default.MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT */.Z.MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT,
-    MINIMUM_SEGMENT_SIZE = config/* default.MINIMUM_SEGMENT_SIZE */.Z.MINIMUM_SEGMENT_SIZE;
-/**
- * Epsilon compensating for rounding errors when comparing the start and end
- * time of multiple segments.
- */
-
-var ROUNDING_ERROR = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
 /**
  * Return the list of segments that can currently be downloaded to fill holes
  * in the buffer in the given range, including already-pushed segments currently
@@ -51588,8 +53049,12 @@ function getNeededSegments(_ref) {
       fastSwitchThreshold = _ref.fastSwitchThreshold,
       getBufferedHistory = _ref.getBufferedHistory,
       neededRange = _ref.neededRange,
-      segmentsBeingPushed = _ref.segmentsBeingPushed;
+      segmentsBeingPushed = _ref.segmentsBeingPushed,
+      maxBufferSize = _ref.maxBufferSize;
   var representation = content.representation;
+  var availableBufferSize = getAvailableBufferSize(bufferedSegments, segmentsBeingPushed, maxBufferSize); // Current buffer length in seconds
+
+  var bufferLength = getBufferLength(bufferedSegments, segmentsBeingPushed);
   var availableSegmentsForRange = representation.index.getSegments(neededRange.start, neededRange.end - neededRange.start); // Remove from `bufferedSegments` any segments we would prefer to replace:
   //   - segments in the wrong track / bad quality
   //   - garbage-collected segments
@@ -51611,7 +53076,7 @@ function getNeededSegments(_ref) {
       log/* default.debug */.Z.debug("Stream: skipping segment gc-ed at the start", currentSeg);
     }
 
-    if (doesEndSeemGarbageCollected(currentSeg, nextSeg, neededRange.start)) {
+    if (doesEndSeemGarbageCollected(currentSeg, nextSeg, neededRange.end)) {
       lazySegmentHistory = lazySegmentHistory !== null && lazySegmentHistory !== void 0 ? lazySegmentHistory : getBufferedHistory(currentSeg.infos);
 
       if (shouldReloadSegmentGCedAtTheEnd(lazySegmentHistory, currentSeg.bufferedEnd)) {
@@ -51623,7 +53088,21 @@ function getNeededSegments(_ref) {
 
     return true;
   });
-  var segmentsToDownload = availableSegmentsForRange.filter(function (segment) {
+
+  var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+      MINIMUM_SEGMENT_SIZE = _config$getCurrent.MINIMUM_SEGMENT_SIZE,
+      MIN_BUFFER_LENGTH = _config$getCurrent.MIN_BUFFER_LENGTH,
+      MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP = _config$getCurrent.MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP;
+
+  var isMemorySaturated = false;
+  /**
+   * Epsilon compensating for rounding errors when comparing the start and end
+   * time of multiple segments.
+   */
+
+  var ROUNDING_ERROR = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
+  var isBufferFull = false;
+  var neededSegments = availableSegmentsForRange.filter(function (segment) {
     var contentObject = (0,object_assign/* default */.Z)({
       segment: segment
     }, content); // First, check that the segment is not already being pushed
@@ -51644,6 +53123,20 @@ function getNeededSegments(_ref) {
 
     if (segment.isInit) {
       return true; // never skip initialization segments
+    }
+
+    if (isMemorySaturated) {
+      // If we are so saturated in memory
+      // That we cannot download atleast till
+      // NeededRange.Start ( current position ) + a CONST
+      // Then the buffer is full
+      if (time < neededRange.start + MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP) {
+        isBufferFull = true;
+      }
+    }
+
+    if (isMemorySaturated && bufferLength > MIN_BUFFER_LENGTH) {
+      return false;
     }
 
     if (segment.complete && duration < MINIMUM_SEGMENT_SIZE) {
@@ -51704,9 +53197,63 @@ function getNeededSegments(_ref) {
       }
     }
 
+    var estimatedSegmentSize = duration * content.representation.bitrate / 8000;
+
+    if (availableBufferSize - estimatedSegmentSize < 0 && bufferLength > MIN_BUFFER_LENGTH) {
+      isMemorySaturated = true;
+      return false;
+    }
+
+    availableBufferSize -= estimatedSegmentSize;
+    bufferLength += duration;
     return true;
   });
-  return segmentsToDownload;
+  return {
+    neededSegments: neededSegments,
+    isBufferFull: isBufferFull
+  };
+}
+/**
+ * Compute the estimated available buffer size in memory in kilobytes
+ * @param bufferedSegments
+ * @param segmentsBeingPushed
+ * @param maxVideoBufferSize
+ * @returns availableBufferSize in kilobytes
+ */
+
+function getAvailableBufferSize(bufferedSegments, segmentsBeingPushed, maxVideoBufferSize) {
+  var availableBufferSize = maxVideoBufferSize;
+  availableBufferSize -= segmentsBeingPushed.reduce(function (size, segment) {
+    var bitrate = segment.representation.bitrate; // Not taking into account the fact that the segment
+    // can still be generated and the duration not fully exact
+
+    var duration = segment.segment.duration;
+    return size + bitrate / 8000 * duration;
+  }, 0);
+  return bufferedSegments.reduce(function (size, chunk) {
+    if (chunk.chunkSize !== undefined) {
+      return size - chunk.chunkSize / 8000;
+    } else {
+      return size;
+    }
+  }, availableBufferSize);
+}
+/**
+ * Compute the length of the buffer in seconds
+ * @param bufferedSegments
+ * @param segmentsBeingPushed
+ * @returns bufferLength in seconds
+ */
+
+
+function getBufferLength(bufferedSegments, segmentsBeingPushed) {
+  var bufferLength = bufferedSegments.reduce(function (length, segment) {
+    return length + (segment.end - segment.start);
+  }, 0);
+  var bufferBeingPushed = segmentsBeingPushed.reduce(function (length, segment) {
+    return length + segment.segment.duration;
+  }, 0);
+  return bufferLength + bufferBeingPushed;
 }
 /**
  * From the given array of buffered chunks (`bufferedSegments`) returns the last
@@ -51716,8 +53263,19 @@ function getNeededSegments(_ref) {
  * @returns {Object}
  */
 
+
 function getLastContiguousSegment(bufferedSegments, startIndex) {
-  var j = startIndex + 1; // go through all contiguous segments and take the last one
+  var j = startIndex + 1;
+
+  var _config$getCurrent2 = config/* default.getCurrent */.Z.getCurrent(),
+      MINIMUM_SEGMENT_SIZE = _config$getCurrent2.MINIMUM_SEGMENT_SIZE;
+  /**
+   * Epsilon compensating for rounding errors when comparing the start and end
+   * time of multiple segments.
+   */
+
+
+  var ROUNDING_ERROR = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE); // go through all contiguous segments and take the last one
 
   while (j < bufferedSegments.length - 1 && bufferedSegments[j - 1].end + ROUNDING_ERROR > bufferedSegments[j].start) {
     j++;
@@ -51739,6 +53297,9 @@ function getLastContiguousSegment(bufferedSegments, startIndex) {
 
 
 function shouldContentBeReplaced(oldContent, currentContent, currentPlaybackTime, fastSwitchThreshold) {
+  var _config$getCurrent3 = config/* default.getCurrent */.Z.getCurrent(),
+      CONTENT_REPLACEMENT_PADDING = _config$getCurrent3.CONTENT_REPLACEMENT_PADDING;
+
   if (oldContent.period.id !== currentContent.period.id) {
     return false; // keep segments from another Period by default.
   }
@@ -51770,6 +53331,9 @@ function shouldContentBeReplaced(oldContent, currentContent, currentPlaybackTime
 function canFastSwitch(oldSegmentRepresentation, newSegmentRepresentation, fastSwitchThreshold) {
   var oldContentBitrate = oldSegmentRepresentation.bitrate;
 
+  var _config$getCurrent4 = config/* default.getCurrent */.Z.getCurrent(),
+      BITRATE_REBUFFERING_RATIO = _config$getCurrent4.BITRATE_REBUFFERING_RATIO;
+
   if (fastSwitchThreshold === undefined) {
     // only re-load comparatively-poor bitrates for the same Adaptation.
     var bitrateCeil = oldContentBitrate * BITRATE_REBUFFERING_RATIO;
@@ -51793,6 +53357,9 @@ function canFastSwitch(oldSegmentRepresentation, newSegmentRepresentation, fastS
 
 
 function doesStartSeemGarbageCollected(currentSeg, prevSeg, maximumStartTime) {
+  var _config$getCurrent5 = config/* default.getCurrent */.Z.getCurrent(),
+      MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT = _config$getCurrent5.MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT;
+
   if (currentSeg.bufferedStart === undefined) {
     log/* default.warn */.Z.warn("Stream: Start of a segment unknown. " + "Assuming it is garbage collected by default.", currentSeg);
     return true;
@@ -51824,6 +53391,9 @@ function doesStartSeemGarbageCollected(currentSeg, prevSeg, maximumStartTime) {
 
 
 function doesEndSeemGarbageCollected(currentSeg, nextSeg, minimumEndTime) {
+  var _config$getCurrent6 = config/* default.getCurrent */.Z.getCurrent(),
+      MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT = _config$getCurrent6.MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT;
+
   if (currentSeg.bufferedEnd === undefined) {
     log/* default.warn */.Z.warn("Stream: End of a segment unknown. " + "Assuming it is garbage collected by default.", currentSeg);
     return true;
@@ -51951,7 +53521,6 @@ function shouldReloadSegmentGCedAtTheEnd(segmentEntries, currentBufferedEnd) {
  * limitations under the License.
  */
 
-var SEGMENT_PRIORITIES_STEPS = config/* default.SEGMENT_PRIORITIES_STEPS */.Z.SEGMENT_PRIORITIES_STEPS;
 /**
  * Calculate the priority number for a given segment start time, in function of
  * the distance with the wanted starting timestamp.
@@ -51967,6 +53536,9 @@ var SEGMENT_PRIORITIES_STEPS = config/* default.SEGMENT_PRIORITIES_STEPS */.Z.SE
 
 function getSegmentPriority(segmentTime, wantedStartTimestamp) {
   var distance = segmentTime - wantedStartTimestamp;
+
+  var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+      SEGMENT_PRIORITIES_STEPS = _config$getCurrent.SEGMENT_PRIORITIES_STEPS;
 
   for (var priority = 0; priority < SEGMENT_PRIORITIES_STEPS.length; priority++) {
     if (distance < SEGMENT_PRIORITIES_STEPS[priority]) {
@@ -51997,7 +53569,6 @@ function getSegmentPriority(segmentTime, wantedStartTimestamp) {
 
 
 
-var get_buffer_status_MINIMUM_SEGMENT_SIZE = config/* default.MINIMUM_SEGMENT_SIZE */.Z.MINIMUM_SEGMENT_SIZE;
 /**
  * Checks on the current buffered data for the given type and Period
  * and returns what should be done to fill the buffer according to the buffer
@@ -52013,7 +53584,7 @@ var get_buffer_status_MINIMUM_SEGMENT_SIZE = config/* default.MINIMUM_SEGMENT_SI
  * @returns {Object}
  */
 
-function getBufferStatus(content, wantedStartPosition, playbackObserver, fastSwitchThreshold, bufferGoal, segmentBuffer) {
+function getBufferStatus(content, wantedStartPosition, playbackObserver, fastSwitchThreshold, bufferGoal, maxBufferSize, segmentBuffer) {
   var _a;
 
   var period = content.period,
@@ -52047,15 +53618,20 @@ function getBufferStatus(content, wantedStartPosition, playbackObserver, fastSwi
   var getBufferedHistory = segmentBuffer.getSegmentHistory.bind(segmentBuffer);
   /** List of segments we will need to download. */
 
-  var neededSegments = getNeededSegments({
+  var _getNeededSegments = getNeededSegments({
     content: content,
     bufferedSegments: bufferedSegments,
     currentPlaybackTime: currentPlaybackTime,
     fastSwitchThreshold: fastSwitchThreshold,
     getBufferedHistory: getBufferedHistory,
     neededRange: neededRange,
-    segmentsBeingPushed: segmentsBeingPushed
-  }).map(function (segment) {
+    segmentsBeingPushed: segmentsBeingPushed,
+    maxBufferSize: maxBufferSize
+  }),
+      neededSegments = _getNeededSegments.neededSegments,
+      isBufferFull = _getNeededSegments.isBufferFull;
+
+  var prioritizedNeededSegments = neededSegments.map(function (segment) {
     return {
       priority: getSegmentPriority(segment.time, wantedStartPosition),
       segment: segment
@@ -52069,7 +53645,7 @@ function getBufferStatus(content, wantedStartPosition, playbackObserver, fastSwi
   var hasFinishedLoading;
   var lastPosition = representation.index.getLastPosition();
 
-  if (!representation.index.isInitialized() || period.end === undefined || neededSegments.length > 0) {
+  if (!representation.index.isInitialized() || period.end === undefined || prioritizedNeededSegments.length > 0) {
     hasFinishedLoading = false;
   } else {
     if (lastPosition === undefined) {
@@ -52110,8 +53686,8 @@ function getBufferStatus(content, wantedStartPosition, playbackObserver, fastSwi
       }));
     }
 
-    if (neededSegments.length > 0) {
-      nextSegmentStart = nextSegmentStart !== null ? Math.min(nextSegmentStart, neededSegments[0].segment.time) : neededSegments[0].segment.time;
+    if (prioritizedNeededSegments.length > 0) {
+      nextSegmentStart = nextSegmentStart !== null ? Math.min(nextSegmentStart, prioritizedNeededSegments[0].segment.time) : prioritizedNeededSegments[0].segment.time;
     }
 
     imminentDiscontinuity = checkForDiscontinuity(content, neededRange, nextSegmentStart, hasFinishedLoading, bufferedSegments);
@@ -52120,7 +53696,8 @@ function getBufferStatus(content, wantedStartPosition, playbackObserver, fastSwi
   return {
     imminentDiscontinuity: imminentDiscontinuity,
     hasFinishedLoading: hasFinishedLoading,
-    neededSegments: neededSegments,
+    neededSegments: prioritizedNeededSegments,
+    isBufferFull: isBufferFull,
     shouldRefreshManifest: shouldRefreshManifest
   };
 }
@@ -52134,7 +53711,10 @@ function getBufferStatus(content, wantedStartPosition, playbackObserver, fastSwi
  */
 
 function getPlayableBufferedSegments(neededRange, segmentInventory) {
-  var segmentRoundingError = Math.max(1 / 60, get_buffer_status_MINIMUM_SEGMENT_SIZE);
+  var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+      MINIMUM_SEGMENT_SIZE = _config$getCurrent.MINIMUM_SEGMENT_SIZE;
+
+  var segmentRoundingError = Math.max(1 / 60, MINIMUM_SEGMENT_SIZE);
   var minEnd = neededRange.start + segmentRoundingError;
   var maxStart = neededRange.end - segmentRoundingError;
   var overlappingChunks = [];
@@ -52176,8 +53756,6 @@ function getPlayableBufferedSegments(neededRange, segmentInventory) {
 
 
 
-var GC_GAP_CALM = config/* default.BUFFER_GC_GAPS.CALM */.Z.BUFFER_GC_GAPS.CALM;
-var GC_GAP_BEEFY = config/* default.BUFFER_GC_GAPS.BEEFY */.Z.BUFFER_GC_GAPS.BEEFY;
 /**
  * Run the garbage collector.
  *
@@ -52191,6 +53769,8 @@ var GC_GAP_BEEFY = config/* default.BUFFER_GC_GAPS.BEEFY */.Z.BUFFER_GC_GAPS.BEE
 
 function forceGarbageCollection(currentPosition, bufferingQueue) {
   return (0,defer/* defer */.P)(function () {
+    var GC_GAP_CALM = config/* default.getCurrent */.Z.getCurrent().BUFFER_GC_GAPS.CALM;
+    var GC_GAP_BEEFY = config/* default.getCurrent */.Z.getCurrent().BUFFER_GC_GAPS.BEEFY;
     log/* default.warn */.Z.warn("Stream: Running garbage collector");
     var buffered = bufferingQueue.getBufferedRanges();
     var cleanedupRanges = selectGCedRanges(currentPosition, buffered, GC_GAP_CALM); // more aggressive GC if we could not find any range to clean
@@ -52228,20 +53808,19 @@ function selectGCedRanges(position, buffered, gcGap) {
 
   var cleanedupRanges = []; // start by trying to remove all ranges that do not contain the
   // current time and respect the gcGap
-  // respect the gcGap? FIXME?
 
   for (var i = 0; i < outerRanges.length; i++) {
     var outerRange = outerRanges[i];
 
-    if (position - gcGap < outerRange.end) {
+    if (position - gcGap > outerRange.end) {
       cleanedupRanges.push(outerRange);
-    } else if (position + gcGap > outerRange.start) {
+    } else if (position + gcGap < outerRange.start) {
       cleanedupRanges.push(outerRange);
     }
   } // try to clean up some space in the current range
 
 
-  if (innerRange != null) {
+  if (innerRange !== null) {
     log/* default.debug */.Z.debug("Stream: GC removing part of inner range", cleanedupRanges);
 
     if (position - gcGap > innerRange.start) {
@@ -52303,7 +53882,7 @@ function appendSegmentToBuffer(playbackObserver, segmentBuffer, dataInfos) {
       throw new media_error/* default */.Z("BUFFER_APPEND_ERROR", reason);
     }
 
-    return playbackObserver.observe(true).pipe((0,mergeMap/* mergeMap */.z)(function (observation) {
+    return playbackObserver.observe(true).pipe((0,take/* take */.q)(1), (0,mergeMap/* mergeMap */.z)(function (observation) {
       var currentPos = observation.position + observation.wantedTimeOffset;
       return (0,concat/* concat */.z)(forceGarbageCollection(currentPos, segmentBuffer).pipe((0,ignoreElements/* ignoreElements */.l)()), append$).pipe((0,catchError/* catchError */.K)(function (forcedGCError) {
         var reason = forcedGCError instanceof Error ? forcedGCError.toString() : "Could not clean the buffer";
@@ -52389,7 +53968,6 @@ function pushInitSegment(_ref) {
 
 
 
-var APPEND_WINDOW_SECURITIES = config/* default.APPEND_WINDOW_SECURITIES */.Z.APPEND_WINDOW_SECURITIES;
 /**
  * Push a given media segment (non-init segment) to a SegmentBuffer.
  * The Observable returned:
@@ -52416,10 +53994,15 @@ function pushMediaSegment(_ref) {
     var chunkData = parsedSegment.chunkData,
         chunkInfos = parsedSegment.chunkInfos,
         chunkOffset = parsedSegment.chunkOffset,
+        chunkSize = parsedSegment.chunkSize,
         appendWindow = parsedSegment.appendWindow;
-    var codec = content.representation.getMimeTypeString(); // Cutting exactly at the start or end of the appendWindow can lead to
+    var codec = content.representation.getMimeTypeString();
+
+    var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+        APPEND_WINDOW_SECURITIES = _config$getCurrent.APPEND_WINDOW_SECURITIES; // Cutting exactly at the start or end of the appendWindow can lead to
     // cases of infinite rebuffering due to how browser handle such windows.
     // To work-around that, we add a small offset before and after those.
+
 
     var safeAppendWindow = [appendWindow[0] !== undefined ? Math.max(0, appendWindow[0] - APPEND_WINDOW_SECURITIES.START) : undefined, appendWindow[1] !== undefined ? appendWindow[1] + APPEND_WINDOW_SECURITIES.END : undefined];
     var data = {
@@ -52443,6 +54026,7 @@ function pushMediaSegment(_ref) {
 
     var inventoryInfos = (0,object_assign/* default */.Z)({
       segment: segment,
+      chunkSize: chunkSize,
       start: estimatedStart,
       end: estimatedEnd
     }, content);
@@ -52492,6 +54076,7 @@ function pushMediaSegment(_ref) {
 
 
 
+
 /**
  * Build up buffer for a single Representation.
  *
@@ -52516,6 +54101,7 @@ function RepresentationStream(_ref) {
       adaptation = content.adaptation,
       representation = content.representation;
   var bufferGoal$ = options.bufferGoal$,
+      maxBufferSize$ = options.maxBufferSize$,
       drmSystemId = options.drmSystemId,
       fastSwitchThreshold$ = options.fastSwitchThreshold$;
   var bufferType = adaptation.type;
@@ -52559,7 +54145,7 @@ function RepresentationStream(_ref) {
 
     if (encryptionData.length > 0) {
       encryptionEvent$ = of.of.apply(void 0, encryptionData.map(function (d) {
-        return stream_events_generators/* default.encryptionDataEncountered */.Z.encryptionDataEncountered(d);
+        return stream_events_generators/* default.encryptionDataEncountered */.Z.encryptionDataEncountered(d, content);
       }));
       hasSentEncryptionData = true;
     }
@@ -52570,14 +54156,15 @@ function RepresentationStream(_ref) {
   var queue$ = downloadingQueue.start().pipe((0,mergeMap/* mergeMap */.z)(onQueueEvent));
   /** Observable emitting the stream "status" and filling `lastSegmentQueue`. */
 
-  var status$ = (0,combineLatest/* combineLatest */.a)([playbackObserver.observe(true), bufferGoal$, terminate$.pipe((0,take/* take */.q)(1), (0,startWith/* startWith */.O)(null)), reCheckNeededSegments$.pipe((0,startWith/* startWith */.O)(undefined))]).pipe((0,withLatestFrom/* withLatestFrom */.M)(fastSwitchThreshold$), (0,mergeMap/* mergeMap */.z)(function (_ref2) {
+  var status$ = (0,combineLatest/* combineLatest */.a)([playbackObserver.observe(true), bufferGoal$, maxBufferSize$, terminate$.pipe((0,take/* take */.q)(1), (0,startWith/* startWith */.O)(null)), reCheckNeededSegments$.pipe((0,startWith/* startWith */.O)(undefined))]).pipe((0,withLatestFrom/* withLatestFrom */.M)(fastSwitchThreshold$), (0,mergeMap/* mergeMap */.z)(function (_ref2) {
     var _ref2$ = _ref2[0],
         observation = _ref2$[0],
         bufferGoal = _ref2$[1],
-        terminate = _ref2$[2],
+        maxBufferSize = _ref2$[2],
+        terminate = _ref2$[3],
         fastSwitchThreshold = _ref2[1];
     var wantedStartPosition = observation.position + observation.wantedTimeOffset;
-    var status = getBufferStatus(content, wantedStartPosition, playbackObserver, fastSwitchThreshold, bufferGoal, segmentBuffer);
+    var status = getBufferStatus(content, wantedStartPosition, playbackObserver, fastSwitchThreshold, bufferGoal, maxBufferSize, segmentBuffer);
     var neededSegments = status.neededSegments;
     var neededInitSegment = null; // Add initialization segment if required
 
@@ -52647,7 +54234,18 @@ function RepresentationStream(_ref) {
         neededSegments: status.neededSegments
       }
     });
-    return status.shouldRefreshManifest ? (0,concat/* concat */.z)((0,of.of)(stream_events_generators/* default.needsManifestRefresh */.Z.needsManifestRefresh()), bufferStatusEvt) : bufferStatusEvt;
+    var bufferRemoval = empty/* EMPTY */.E;
+
+    var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+        UPTO_CURRENT_POSITION_CLEANUP = _config$getCurrent.UPTO_CURRENT_POSITION_CLEANUP;
+
+    if (status.isBufferFull) {
+      var gcedPosition = Math.max(0, wantedStartPosition - UPTO_CURRENT_POSITION_CLEANUP);
+      bufferRemoval = segmentBuffer.removeBuffer(0, gcedPosition) // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      .pipe((0,ignoreElements/* ignoreElements */.l)());
+    }
+
+    return status.shouldRefreshManifest ? (0,concat/* concat */.z)((0,of.of)(stream_events_generators/* default.needsManifestRefresh */.Z.needsManifestRefresh()), bufferStatusEvt, bufferRemoval) : (0,concat/* concat */.z)(bufferStatusEvt, bufferRemoval);
   }), takeWhile(function (e) {
     return e.type !== "stream-terminating";
   }, true));
@@ -52723,7 +54321,7 @@ function RepresentationStream(_ref) {
 
       var allEncryptionData = representation.getAllEncryptionData();
       var initEncEvt$ = !hasSentEncryptionData && allEncryptionData.length > 0 ? of.of.apply(void 0, allEncryptionData.map(function (p) {
-        return stream_events_generators/* default.encryptionDataEncountered */.Z.encryptionDataEncountered(p);
+        return stream_events_generators/* default.encryptionDataEncountered */.Z.encryptionDataEncountered(p, content);
       })) : empty/* EMPTY */.E;
       var pushEvent$ = pushInitSegment({
         playbackObserver: playbackObserver,
@@ -52740,7 +54338,7 @@ function RepresentationStream(_ref) {
       // every protection data together? To check.
 
       var segmentEncryptionEvent$ = protectionDataUpdate && !hasSentEncryptionData ? of.of.apply(void 0, representation.getAllEncryptionData().map(function (p) {
-        return stream_events_generators/* default.encryptionDataEncountered */.Z.encryptionDataEncountered(p);
+        return stream_events_generators/* default.encryptionDataEncountered */.Z.encryptionDataEncountered(p, content);
       })) : empty/* EMPTY */.E;
       var manifestRefresh$ = needsManifestRefresh === true ? (0,of.of)(stream_events_generators/* default.needsManifestRefresh */.Z.needsManifestRefresh()) : empty/* EMPTY */.E;
       var inbandEvents$ = inbandEvents !== undefined && inbandEvents.length > 0 ? (0,of.of)({
@@ -52887,7 +54485,6 @@ function createRepresentationEstimator(_ref, abrManager, observation$) {
 
 
 
-var DELTA_POSITION_AFTER_RELOAD = config/* default.DELTA_POSITION_AFTER_RELOAD */.Z.DELTA_POSITION_AFTER_RELOAD;
 /**
  * Create new AdaptationStream Observable, which task will be to download the
  * media data for a given Adaptation (i.e. "track").
@@ -52910,7 +54507,8 @@ function AdaptationStream(_ref) {
       options = _ref.options,
       segmentBuffer = _ref.segmentBuffer,
       segmentFetcherCreator = _ref.segmentFetcherCreator,
-      wantedBufferAhead = _ref.wantedBufferAhead;
+      wantedBufferAhead = _ref.wantedBufferAhead,
+      maxVideoBufferSize = _ref.maxVideoBufferSize;
   var directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   var manifest = content.manifest,
       period = content.period,
@@ -53007,6 +54605,9 @@ function AdaptationStream(_ref) {
     // To do that properly, we need to reload the MediaSource
 
     if (directManualBitrateSwitching && fromEstimate.manual && !isFirstEstimate) {
+      var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+          DELTA_POSITION_AFTER_RELOAD = _config$getCurrent.DELTA_POSITION_AFTER_RELOAD;
+
       return reloadAfterSwitch(period, adaptation.type, playbackObserver, DELTA_POSITION_AFTER_RELOAD.bitrateSwitch);
     }
     /**
@@ -53087,7 +54688,9 @@ function AdaptationStream(_ref) {
       bufferGoalRatioMap[representation.id] = bufferGoalRatio;
       var bufferGoal$ = wantedBufferAhead.asObservable().pipe((0,map/* map */.U)(function (wba) {
         return wba * bufferGoalRatio;
-      }));
+      })); // eslint-disable-next-line max-len
+
+      var maxBufferSize$ = adaptation.type === "video" ? maxVideoBufferSize.asObservable() : (0,of.of)(Infinity);
       log/* default.info */.Z.info("Stream: changing representation", adaptation.type, representation.id, representation.bitrate);
       return stream_representation({
         playbackObserver: playbackObserver,
@@ -53102,6 +54705,7 @@ function AdaptationStream(_ref) {
         terminate$: terminateCurrentStream$,
         options: {
           bufferGoal$: bufferGoal$,
+          maxBufferSize$: maxBufferSize$,
           drmSystemId: options.drmSystemId,
           fastSwitchThreshold$: fastSwitchThreshold$
         }
@@ -53288,7 +54892,6 @@ function areCodecsCompatible(a, b) {
 
 
 
-var ADAPTATION_SWITCH_BUFFER_PADDINGS = config/* default.ADAPTATION_SWITCH_BUFFER_PADDINGS */.Z.ADAPTATION_SWITCH_BUFFER_PADDINGS;
 /**
  * Find out what to do when switching Adaptation, based on the current
  * situation.
@@ -53362,8 +54965,10 @@ function getAdaptationSwitchStrategy(segmentBuffer, period, adaptation, playback
   }
 
   var currentTime = playbackInfo.currentTime;
+  var audioTrackSwitchingMode = options.audioTrackSwitchingMode;
+  var hasReloadSwitchingMode = adaptation.type === "video" || adaptation.type === "audio" && audioTrackSwitchingMode === "reload";
 
-  if (adaptation.type === "video" && // We're playing the current Period
+  if (hasReloadSwitchingMode && // We're playing the current Period
   (0,ranges/* isTimeInRange */.Ti)({
     start: start,
     end: end
@@ -53381,7 +54986,7 @@ function getAdaptationSwitchStrategy(segmentBuffer, period, adaptation, playback
   } // From here, clean-up data from the previous Adaptation, if one
 
 
-  var shouldFlush = adaptation.type === "audio" && options.audioTrackSwitchingMode === "direct";
+  var shouldFlush = adaptation.type === "audio" && audioTrackSwitchingMode === "direct";
   var rangesToExclude = []; // First, we don't want to accidentally remove some segments from the previous
   // Period (which overlap a little with this one)
 
@@ -53401,7 +55006,11 @@ function getAdaptationSwitchStrategy(segmentBuffer, period, adaptation, playback
 
 
   var bufferType = adaptation.type;
+
+  var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+      ADAPTATION_SWITCH_BUFFER_PADDINGS = _config$getCurrent.ADAPTATION_SWITCH_BUFFER_PADDINGS;
   /** Ranges that won't be cleaned from the current buffer. */
+
 
   var paddingBefore = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].before;
 
@@ -53565,7 +55174,6 @@ function getFirstSegmentAfterPeriod(inventory, period) {
 
 
 
-var period_stream_DELTA_POSITION_AFTER_RELOAD = config/* default.DELTA_POSITION_AFTER_RELOAD */.Z.DELTA_POSITION_AFTER_RELOAD;
 /**
  * Create single PeriodStream Observable:
  *   - Lazily create (or reuse) a SegmentBuffer for the given type.
@@ -53586,7 +55194,8 @@ function PeriodStream(_ref) {
       segmentFetcherCreator = _ref.segmentFetcherCreator,
       segmentBuffersStore = _ref.segmentBuffersStore,
       options = _ref.options,
-      wantedBufferAhead = _ref.wantedBufferAhead;
+      wantedBufferAhead = _ref.wantedBufferAhead,
+      maxVideoBufferSize = _ref.maxVideoBufferSize;
   var period = content.period; // Emits the chosen Adaptation for the current type.
   // `null` when no Adaptation is chosen (e.g. no subtitles)
 
@@ -53599,7 +55208,10 @@ function PeriodStream(_ref) {
      * This value contains this relative position, in seconds.
      * @see reloadAfterSwitch
      */
-    var relativePosAfterSwitch = switchNb === 0 ? 0 : bufferType === "audio" ? period_stream_DELTA_POSITION_AFTER_RELOAD.trackSwitch.audio : bufferType === "video" ? period_stream_DELTA_POSITION_AFTER_RELOAD.trackSwitch.video : period_stream_DELTA_POSITION_AFTER_RELOAD.trackSwitch.other;
+    var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+        DELTA_POSITION_AFTER_RELOAD = _config$getCurrent.DELTA_POSITION_AFTER_RELOAD;
+
+    var relativePosAfterSwitch = switchNb === 0 ? 0 : bufferType === "audio" ? DELTA_POSITION_AFTER_RELOAD.trackSwitch.audio : bufferType === "video" ? DELTA_POSITION_AFTER_RELOAD.trackSwitch.video : DELTA_POSITION_AFTER_RELOAD.trackSwitch.other;
 
     if (adaptation === null) {
       // Current type is disabled for that Period
@@ -53682,7 +55294,8 @@ function PeriodStream(_ref) {
       playbackObserver: adaptationPlaybackObserver,
       segmentBuffer: segmentBuffer,
       segmentFetcherCreator: segmentFetcherCreator,
-      wantedBufferAhead: wantedBufferAhead
+      wantedBufferAhead: wantedBufferAhead,
+      maxVideoBufferSize: maxVideoBufferSize
     }).pipe((0,catchError/* catchError */.K)(function (error) {
       // Stream linked to a non-native media buffer should not impact the
       // stability of the player. ie: if a text buffer sends an error, we want
@@ -54097,8 +55710,6 @@ function getBlacklistedRanges(segmentBuffer, contents) {
 
 
 
-var MAXIMUM_MAX_BUFFER_AHEAD = config/* default.MAXIMUM_MAX_BUFFER_AHEAD */.Z.MAXIMUM_MAX_BUFFER_AHEAD,
-    MAXIMUM_MAX_BUFFER_BEHIND = config/* default.MAXIMUM_MAX_BUFFER_BEHIND */.Z.MAXIMUM_MAX_BUFFER_BEHIND;
 /**
  * Create and manage the various Stream Observables needed for the content to
  * play:
@@ -54130,8 +55741,14 @@ function StreamOrchestrator(content, playbackObserver, abrManager, segmentBuffer
       initialPeriod = content.initialPeriod;
   var maxBufferAhead = options.maxBufferAhead,
       maxBufferBehind = options.maxBufferBehind,
-      wantedBufferAhead = options.wantedBufferAhead; // Keep track of a unique BufferGarbageCollector created per
+      wantedBufferAhead = options.wantedBufferAhead,
+      maxVideoBufferSize = options.maxVideoBufferSize;
+
+  var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+      MAXIMUM_MAX_BUFFER_AHEAD = _config$getCurrent.MAXIMUM_MAX_BUFFER_AHEAD,
+      MAXIMUM_MAX_BUFFER_BEHIND = _config$getCurrent.MAXIMUM_MAX_BUFFER_BEHIND; // Keep track of a unique BufferGarbageCollector created per
   // SegmentBuffer.
+
 
   var garbageCollectors = new WeakMapMemory(function (segmentBuffer) {
     var bufferType = segmentBuffer.bufferType;
@@ -54420,7 +56037,8 @@ function StreamOrchestrator(content, playbackObserver, abrManager, segmentBuffer
       segmentBuffersStore: segmentBuffersStore,
       options: options,
       playbackObserver: playbackObserver,
-      wantedBufferAhead: wantedBufferAhead
+      wantedBufferAhead: wantedBufferAhead,
+      maxVideoBufferSize: maxVideoBufferSize
     }).pipe((0,mergeMap/* mergeMap */.z)(function (evt) {
       if (evt.type === "stream-status") {
         if (evt.value.hasFinishedLoading) {
@@ -54706,8 +56324,45 @@ function isMediaSourceOpened$(mediaSource) {
 /* eslint-enable @typescript-eslint/no-unsafe-argument */
 // EXTERNAL MODULE: ./src/core/init/emit_loaded_event.ts + 1 modules
 var emit_loaded_event = __webpack_require__(5039);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/race.js + 1 modules
-var race = __webpack_require__(4181);
+;// CONCATENATED MODULE: ./node_modules/rxjs/dist/esm5/internal/util/argsOrArgArray.js
+var isArray = Array.isArray;
+function argsOrArgArray(args) {
+    return args.length === 1 && isArray(args[0]) ? args[0] : args;
+}
+//# sourceMappingURL=argsOrArgArray.js.map
+;// CONCATENATED MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/race.js
+
+
+
+
+function race() {
+    var sources = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        sources[_i] = arguments[_i];
+    }
+    sources = argsOrArgArray(sources);
+    return sources.length === 1 ? (0,innerFrom/* innerFrom */.Xf)(sources[0]) : new Observable/* Observable */.y(raceInit(sources));
+}
+function raceInit(sources) {
+    return function (subscriber) {
+        var subscriptions = [];
+        var _loop_1 = function (i) {
+            subscriptions.push((0,innerFrom/* innerFrom */.Xf)(sources[i]).subscribe(new OperatorSubscriber/* OperatorSubscriber */.Q(subscriber, function (value) {
+                if (subscriptions) {
+                    for (var s = 0; s < subscriptions.length; s++) {
+                        s !== i && subscriptions[s].unsubscribe();
+                    }
+                    subscriptions = null;
+                }
+                subscriber.next(value);
+            })));
+        };
+        for (var i = 0; subscriptions && !subscriber.closed && i < sources.length; i++) {
+            _loop_1(i);
+        }
+    };
+}
+//# sourceMappingURL=race.js.map
 // EXTERNAL MODULE: ./node_modules/rxjs/node_modules/tslib/tslib.es6.js
 var tslib_es6 = __webpack_require__(5987);
 ;// CONCATENATED MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/takeLast.js
@@ -54819,7 +56474,7 @@ function triggerEndOfStream(mediaSource) {
     var updatedSourceBuffers$ = updatingSourceBuffers.map(function (sourceBuffer) {
       return onUpdate$(sourceBuffer).pipe((0,take/* take */.q)(1));
     });
-    return (0,race/* race */.S)(merge/* merge.apply */.T.apply(void 0, updatedSourceBuffers$).pipe(takeLast(1)), onRemoveSourceBuffers$(sourceBuffers).pipe((0,take/* take */.q)(1))).pipe((0,mergeMap/* mergeMap */.z)(function () {
+    return race(merge/* merge.apply */.T.apply(void 0, updatedSourceBuffers$).pipe(takeLast(1)), onRemoveSourceBuffers$(sourceBuffers).pipe((0,take/* take */.q)(1))).pipe((0,mergeMap/* mergeMap */.z)(function () {
       return triggerEndOfStream(mediaSource);
     }));
   });
@@ -54994,7 +56649,6 @@ function refreshScheduledEventsList(oldScheduledEvents, manifest) {
 
 
 
-var STREAM_EVENT_EMITTER_POLL_INTERVAL = config/* default.STREAM_EVENT_EMITTER_POLL_INTERVAL */.Z.STREAM_EVENT_EMITTER_POLL_INTERVAL;
 /**
  * Tells if a stream event has a duration
  * @param {Object} evt
@@ -55099,6 +56753,9 @@ function streamEventsEmitter(manifest, mediaElement, observation$) {
     if (!hasEvents) {
       return empty/* EMPTY */.E;
     }
+
+    var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+        STREAM_EVENT_EMITTER_POLL_INTERVAL = _config$getCurrent.STREAM_EVENT_EMITTER_POLL_INTERVAL;
 
     return (0,combineLatest/* combineLatest */.a)([(0,observable_interval/* interval */.F)(STREAM_EVENT_EMITTER_POLL_INTERVAL).pipe((0,startWith/* startWith */.O)(null)), observation$]).pipe((0,map/* map */.U)(function (_ref) {
       var _ = _ref[0],
@@ -55377,9 +57034,6 @@ function throttle(func) {
 
 
 
-var FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY = config/* default.FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY */.Z.FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY,
-    MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE = config/* default.MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE */.Z.MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE,
-    MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE = config/* default.MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE */.Z.MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE;
 /**
  * Refresh the Manifest at the right time.
  * @param {Object} manifestUpdateSchedulerArguments
@@ -55429,6 +57083,10 @@ function manifestUpdateScheduler(_ref) {
      * Note: this time also includes possible requests done by the parsers.
      */
     var totalUpdateTime = parsingTime !== undefined ? parsingTime + (updatingTime !== null && updatingTime !== void 0 ? updatingTime : 0) : undefined;
+
+    var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+        MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE = _config$getCurrent.MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE,
+        MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE = _config$getCurrent.MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE;
     /**
      * "unsafeMode" is a mode where we unlock advanced Manifest parsing
      * optimizations with the added risk to lose some information.
@@ -55437,6 +57095,7 @@ function manifestUpdateScheduler(_ref) {
      * Only perform parsing in `unsafeMode` when the last full parsing took a
      * lot of time and do not go higher than the maximum consecutive time.
      */
+
 
     var unsafeModeEnabled = consecutiveUnsafeMode > 0 ? consecutiveUnsafeMode < MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE : totalUpdateTime !== undefined ? totalUpdateTime >= MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE : false;
     /** Time elapsed since the beginning of the Manifest request, in milliseconds. */
@@ -55588,6 +57247,10 @@ function manifestUpdateScheduler(_ref) {
         } catch (e) {
           var message = e instanceof Error ? e.message : "unknown error";
           log/* default.warn */.Z.warn("MUS: Attempt to update Manifest failed: " + message, "Re-downloading the Manifest fully");
+
+          var _config$getCurrent2 = config/* default.getCurrent */.Z.getCurrent(),
+              FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY = _config$getCurrent2.FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY;
+
           return startManualRefreshTimer(FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY, minimumManifestUpdateInterval, newSendingTime).pipe((0,mergeMap/* mergeMap */.z)(function () {
             return refreshManifest({
               completeRefresh: true,
@@ -55670,7 +57333,6 @@ var throw_on_media_error = __webpack_require__(2447);
 
 
 
-var OUT_OF_SYNC_MANIFEST_REFRESH_DELAY = config/* default.OUT_OF_SYNC_MANIFEST_REFRESH_DELAY */.Z.OUT_OF_SYNC_MANIFEST_REFRESH_DELAY;
 /**
  * Begin content playback.
  *
@@ -55683,7 +57345,7 @@ var OUT_OF_SYNC_MANIFEST_REFRESH_DELAY = config/* default.OUT_OF_SYNC_MANIFEST_R
  *
  *   - download the content's Manifest and handle its refresh logic
  *
- *   - Perform EME management if needed
+ *   - Perform decryption if needed
  *
  *   - ask for the choice of the wanted Adaptation through events (e.g. to
  *     choose a language)
@@ -55732,21 +57394,21 @@ function InitializeOnMediaSource(_ref) {
   var openMediaSource$ = openMediaSource(mediaElement).pipe((0,shareReplay/* shareReplay */.d)({
     refCount: true
   }));
-  /** Send content protection data to the `EMEManager`. */
+  /** Send content protection initialization data. */
 
   var protectedSegments$ = new Subject/* Subject */.x();
-  /** Create `EMEManager`, an observable which will handle content DRM. */
+  /** Initialize decryption capabilities and MediaSource. */
 
-  var emeManager$ = (0,create_eme_manager/* default */.Z)(mediaElement, keySystems, protectedSegments$).pipe( // Because multiple Observables here depend on this Observable as a source,
+  var drmEvents$ = (0,link_drm_and_content/* default */.Z)(mediaElement, keySystems, protectedSegments$, openMediaSource$).pipe( // Because multiple Observables here depend on this Observable as a source,
   // we prefer deferring Subscription until those Observables are themselves
   // all subscribed to.
-  // This is needed because `emeManager$` might send events synchronously
+  // This is needed because `drmEvents$` might send events synchronously
   // on subscription. In that case, it might communicate those events directly
   // after the first Subscription is done, making the next subscription miss
   // out on those events, even if that second subscription is done
   // synchronously after the first one.
   // By calling `deferSubscriptions`, we ensure that subscription to
-  // `emeManager$` effectively starts after a very short delay, thus
+  // `drmEvents$` effectively starts after a very short delay, thus
   // ensuring that no such race condition can occur.
   (0,defer_subscriptions/* default */.Z)(), (0,share/* share */.B)());
   /**
@@ -55755,75 +57417,24 @@ function InitializeOnMediaSource(_ref) {
    */
 
   var mediaError$ = (0,throw_on_media_error/* default */.Z)(mediaElement);
-  /**
-   * Wait for the MediaKeys to have been created before opening the MediaSource,
-   * after that second step is done, ask the EMEManager to attach the MediaKeys.
-   * Steps are done in that specific order to avoid compatibility issues.
-   *
-   * This Observable will emit when ready both the MediaSource and useful
-   * DRM-specific information.
-   */
-
-  var prepareMediaSource$ = emeManager$.pipe(mergeScan(function (acc, evt) {
-    switch (evt.type) {
-      case "eme-disabled":
-      case "attached-media-keys":
-        return (0,of.of)({
-          isEmeReady: true,
-          drmSystemId: acc.drmSystemId
-        });
-
-      case "created-media-keys":
-        var drmSystemId = evt.value.initializationDataSystemId;
-        return openMediaSource$.pipe((0,mergeMap/* mergeMap */.z)(function () {
-          // Now that the MediaSource has been opened and linked to the media
-          // element we can attach the MediaKeys instance to the latter.
-          evt.value.canAttachMediaKeys.setValue(true); // If the `disableMediaKeysAttachmentLock` option has been set to
-          // `true`, we should not wait until the MediaKeys instance has been
-          // attached to start loading the content.
-          // TODO we may want to keep keySystems option knowledge in the EME
-          // code
-
-          var shouldDisableLock = evt.value.options.disableMediaKeysAttachmentLock === true;
-          return shouldDisableLock ? (0,of.of)({
-            isEmeReady: true,
-            drmSystemId: drmSystemId
-          }) : empty/* EMPTY */.E;
-        }), (0,startWith/* startWith */.O)({
-          isEmeReady: false,
-          drmSystemId: drmSystemId
-        }));
-
-      default:
-        return empty/* EMPTY */.E;
-    }
-  }, {
-    isEmeReady: false,
-    drmSystemId: undefined
-  }), (0,filter/* filter */.h)(function (emitted) {
-    return emitted.isEmeReady;
-  }), (0,take/* take */.q)(1), exhaustMap(function (_ref2) {
-    var drmSystemId = _ref2.drmSystemId;
-    return openMediaSource$.pipe((0,map/* map */.U)(function (mediaSource) {
-      return {
-        mediaSource: mediaSource,
-        drmSystemId: drmSystemId
-      };
-    }));
-  }));
+  var mediaSourceReady$ = drmEvents$.pipe((0,filter/* filter */.h)(function (evt) {
+    return evt.type === "decryption-ready" || evt.type === "decryption-disabled";
+  }), (0,map/* map */.U)(function (e) {
+    return e.value;
+  }), (0,take/* take */.q)(1));
   /** Load and play the content asked. */
 
-  var loadContent$ = (0,combineLatest/* combineLatest */.a)([manifest$, prepareMediaSource$]).pipe((0,mergeMap/* mergeMap */.z)(function (_ref3) {
-    var manifestEvt = _ref3[0],
-        mediaSourceInfo = _ref3[1];
+  var loadContent$ = (0,combineLatest/* combineLatest */.a)([manifest$, mediaSourceReady$]).pipe((0,mergeMap/* mergeMap */.z)(function (_ref2) {
+    var manifestEvt = _ref2[0],
+        _ref2$ = _ref2[1],
+        drmSystemId = _ref2$.drmSystemId,
+        initialMediaSource = _ref2$.mediaSource;
 
     if (manifestEvt.type === "warning") {
       return (0,of.of)(manifestEvt);
     }
 
     var manifest = manifestEvt.manifest;
-    var initialMediaSource = mediaSourceInfo.mediaSource,
-        drmSystemId = mediaSourceInfo.drmSystemId;
     log/* default.debug */.Z.debug("Init: Calculating initial time");
     var initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
     log/* default.debug */.Z.debug("Init: Initial time calculated:", initialTime);
@@ -55852,21 +57463,7 @@ function InitializeOnMediaSource(_ref) {
     var manifestEvents$ = (0,merge/* merge */.T)((0,event_emitter/* fromEvent */.R)(manifest, "manifestUpdate").pipe((0,map/* map */.U)(function () {
       return events_generators/* default.manifestUpdate */.Z.manifestUpdate();
     })), (0,event_emitter/* fromEvent */.R)(manifest, "decipherabilityUpdate").pipe((0,map/* map */.U)(events_generators/* default.decipherabilityUpdate */.Z.decipherabilityUpdate)));
-    var setUndecipherableRepresentations$ = emeManager$.pipe((0,tap/* tap */.b)(function (evt) {
-      if (evt.type === "keys-update") {
-        manifest.updateDeciperabilitiesBasedOnKeyIds(evt.value);
-      } else if (evt.type === "blacklist-protection-data") {
-        log/* default.info */.Z.info("Init: blacklisting Representations based on protection data.");
-        manifest.addUndecipherableProtectionData(evt.value);
-      }
-    }), // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
-    // first type parameter as `any` instead of the perfectly fine `unknown`,
-    // leading to linter issues, as it forbids the usage of `any`.
-    // This is why we're disabling the eslint rule.
-
-    /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-    (0,ignoreElements/* ignoreElements */.l)());
-    return (0,merge/* merge */.T)(manifestEvents$, manifestUpdate$, setUndecipherableRepresentations$, recursiveLoad$).pipe((0,startWith/* startWith */.O)(events_generators/* default.manifestReady */.Z.manifestReady(manifest)), finalize(function () {
+    return (0,merge/* merge */.T)(manifestEvents$, manifestUpdate$, recursiveLoad$).pipe((0,startWith/* startWith */.O)(events_generators/* default.manifestReady */.Z.manifestReady(manifest)), finalize(function () {
       scheduleRefresh$.complete();
     }));
     /**
@@ -55892,6 +57489,9 @@ function InitializeOnMediaSource(_ref) {
             return null;
 
           case "manifest-might-be-out-of-sync":
+            var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+                OUT_OF_SYNC_MANIFEST_REFRESH_DELAY = _config$getCurrent.OUT_OF_SYNC_MANIFEST_REFRESH_DELAY;
+
             scheduleRefresh$.next({
               completeRefresh: true,
               canUseUnsafeMode: false,
@@ -55943,7 +57543,7 @@ function InitializeOnMediaSource(_ref) {
       return (0,merge/* merge */.T)(handleReloads$, currentLoad$);
     }
   }));
-  return (0,merge/* merge */.T)(loadContent$, mediaError$, emeManager$);
+  return (0,merge/* merge */.T)(loadContent$, mediaError$, drmEvents$.pipe((0,ignoreElements/* ignoreElements */.l)()));
 }
 ;// CONCATENATED MODULE: ./src/core/init/index.ts
 /**
@@ -56034,7 +57634,6 @@ function emitSeekEvents(mediaElement, observation$) {
  * limitations under the License.
  */
 
-var FORCED_ENDED_THRESHOLD = config/* default.FORCED_ENDED_THRESHOLD */.Z.FORCED_ENDED_THRESHOLD;
 /** Player state dictionnary. */
 
 var PLAYER_STATES = {
@@ -56059,6 +57658,9 @@ var PLAYER_STATES = {
  */
 
 function getLoadedContentState(mediaElement, isPlaying, stalledStatus) {
+  var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+      FORCED_ENDED_THRESHOLD = _config$getCurrent.FORCED_ENDED_THRESHOLD;
+
   if (mediaElement.ended) {
     return PLAYER_STATES.ENDED;
   }
@@ -56115,23 +57717,6 @@ function option_utils_arrayLikeToArray(arr, len) { if (len == null || len > arr.
 
 
 
-var DEFAULT_AUDIO_TRACK_SWITCHING_MODE = config/* default.DEFAULT_AUDIO_TRACK_SWITCHING_MODE */.Z.DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
-    DEFAULT_AUTO_PLAY = config/* default.DEFAULT_AUTO_PLAY */.Z.DEFAULT_AUTO_PLAY,
-    DEFAULT_CODEC_SWITCHING_BEHAVIOR = config/* default.DEFAULT_CODEC_SWITCHING_BEHAVIOR */.Z.DEFAULT_CODEC_SWITCHING_BEHAVIOR,
-    DEFAULT_ENABLE_FAST_SWITCHING = config/* default.DEFAULT_ENABLE_FAST_SWITCHING */.Z.DEFAULT_ENABLE_FAST_SWITCHING,
-    DEFAULT_INITIAL_BITRATES = config/* default.DEFAULT_INITIAL_BITRATES */.Z.DEFAULT_INITIAL_BITRATES,
-    DEFAULT_LIMIT_VIDEO_WIDTH = config/* default.DEFAULT_LIMIT_VIDEO_WIDTH */.Z.DEFAULT_LIMIT_VIDEO_WIDTH,
-    DEFAULT_MANUAL_BITRATE_SWITCHING_MODE = config/* default.DEFAULT_MANUAL_BITRATE_SWITCHING_MODE */.Z.DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
-    DEFAULT_MIN_BITRATES = config/* default.DEFAULT_MIN_BITRATES */.Z.DEFAULT_MIN_BITRATES,
-    DEFAULT_MAX_BITRATES = config/* default.DEFAULT_MAX_BITRATES */.Z.DEFAULT_MAX_BITRATES,
-    DEFAULT_MAX_BUFFER_AHEAD = config/* default.DEFAULT_MAX_BUFFER_AHEAD */.Z.DEFAULT_MAX_BUFFER_AHEAD,
-    DEFAULT_MAX_BUFFER_BEHIND = config/* default.DEFAULT_MAX_BUFFER_BEHIND */.Z.DEFAULT_MAX_BUFFER_BEHIND,
-    DEFAULT_SHOW_NATIVE_SUBTITLE = config/* default.DEFAULT_SHOW_NATIVE_SUBTITLE */.Z.DEFAULT_SHOW_NATIVE_SUBTITLE,
-    DEFAULT_STOP_AT_END = config/* default.DEFAULT_STOP_AT_END */.Z.DEFAULT_STOP_AT_END,
-    DEFAULT_TEXT_TRACK_MODE = config/* default.DEFAULT_TEXT_TRACK_MODE */.Z.DEFAULT_TEXT_TRACK_MODE,
-    DEFAULT_THROTTLE_WHEN_HIDDEN = config/* default.DEFAULT_THROTTLE_WHEN_HIDDEN */.Z.DEFAULT_THROTTLE_WHEN_HIDDEN,
-    DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN = config/* default.DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN */.Z.DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
-    DEFAULT_WANTED_BUFFER_AHEAD = config/* default.DEFAULT_WANTED_BUFFER_AHEAD */.Z.DEFAULT_WANTED_BUFFER_AHEAD;
 /**
  * Parse options given to the API constructor and set default options as found
  * in the config.
@@ -56146,6 +57731,7 @@ function parseConstructorOptions(options) {
   var maxBufferAhead;
   var maxBufferBehind;
   var wantedBufferAhead;
+  var maxVideoBufferSize;
   var throttleWhenHidden;
   var throttleVideoBitrateWhenHidden;
   var preferredAudioTracks;
@@ -56158,6 +57744,19 @@ function parseConstructorOptions(options) {
   var minVideoBitrate;
   var maxAudioBitrate;
   var maxVideoBitrate;
+
+  var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+      DEFAULT_INITIAL_BITRATES = _config$getCurrent.DEFAULT_INITIAL_BITRATES,
+      DEFAULT_LIMIT_VIDEO_WIDTH = _config$getCurrent.DEFAULT_LIMIT_VIDEO_WIDTH,
+      DEFAULT_MIN_BITRATES = _config$getCurrent.DEFAULT_MIN_BITRATES,
+      DEFAULT_MAX_BITRATES = _config$getCurrent.DEFAULT_MAX_BITRATES,
+      DEFAULT_MAX_BUFFER_AHEAD = _config$getCurrent.DEFAULT_MAX_BUFFER_AHEAD,
+      DEFAULT_MAX_BUFFER_BEHIND = _config$getCurrent.DEFAULT_MAX_BUFFER_BEHIND,
+      DEFAULT_MAX_VIDEO_BUFFER_SIZE = _config$getCurrent.DEFAULT_MAX_VIDEO_BUFFER_SIZE,
+      DEFAULT_STOP_AT_END = _config$getCurrent.DEFAULT_STOP_AT_END,
+      DEFAULT_THROTTLE_WHEN_HIDDEN = _config$getCurrent.DEFAULT_THROTTLE_WHEN_HIDDEN,
+      DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN = _config$getCurrent.DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
+      DEFAULT_WANTED_BUFFER_AHEAD = _config$getCurrent.DEFAULT_WANTED_BUFFER_AHEAD;
 
   if ((0,is_null_or_undefined/* default */.Z)(options.maxBufferAhead)) {
     maxBufferAhead = DEFAULT_MAX_BUFFER_AHEAD;
@@ -56187,6 +57786,18 @@ function parseConstructorOptions(options) {
     if (isNaN(wantedBufferAhead)) {
       /* eslint-disable max-len */
       throw new Error("Invalid wantedBufferAhead parameter. Should be a number.");
+      /* eslint-enable max-len */
+    }
+  }
+
+  if ((0,is_null_or_undefined/* default */.Z)(options.maxVideoBufferSize)) {
+    maxVideoBufferSize = DEFAULT_MAX_VIDEO_BUFFER_SIZE;
+  } else {
+    maxVideoBufferSize = Number(options.maxVideoBufferSize);
+
+    if (isNaN(maxVideoBufferSize)) {
+      /* eslint-disable max-len */
+      throw new Error("Invalid maxVideoBufferSize parameter. Should be a number.");
       /* eslint-enable max-len */
     }
   }
@@ -56326,6 +57937,7 @@ function parseConstructorOptions(options) {
     limitVideoWidth: limitVideoWidth,
     videoElement: videoElement,
     wantedBufferAhead: wantedBufferAhead,
+    maxVideoBufferSize: maxVideoBufferSize,
     throttleWhenHidden: throttleWhenHidden,
     throttleVideoBitrateWhenHidden: throttleVideoBitrateWhenHidden,
     preferredAudioTracks: preferredAudioTracks,
@@ -56390,6 +58002,15 @@ function parseLoadVideoOptions(options) {
   var textTrackElement;
   var startAt;
 
+  var _config$getCurrent2 = config/* default.getCurrent */.Z.getCurrent(),
+      DEFAULT_AUDIO_TRACK_SWITCHING_MODE = _config$getCurrent2.DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
+      DEFAULT_AUTO_PLAY = _config$getCurrent2.DEFAULT_AUTO_PLAY,
+      DEFAULT_CODEC_SWITCHING_BEHAVIOR = _config$getCurrent2.DEFAULT_CODEC_SWITCHING_BEHAVIOR,
+      DEFAULT_ENABLE_FAST_SWITCHING = _config$getCurrent2.DEFAULT_ENABLE_FAST_SWITCHING,
+      DEFAULT_MANUAL_BITRATE_SWITCHING_MODE = _config$getCurrent2.DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
+      DEFAULT_SHOW_NATIVE_SUBTITLE = _config$getCurrent2.DEFAULT_SHOW_NATIVE_SUBTITLE,
+      DEFAULT_TEXT_TRACK_MODE = _config$getCurrent2.DEFAULT_TEXT_TRACK_MODE;
+
   if ((0,is_null_or_undefined/* default */.Z)(options)) {
     throw new Error("No option set on loadVideo");
   }
@@ -56428,8 +58049,8 @@ function parseLoadVideoOptions(options) {
   var minimumManifestUpdateInterval = (_e = (_d = options.transportOptions) === null || _d === void 0 ? void 0 : _d.minimumManifestUpdateInterval) !== null && _e !== void 0 ? _e : 0;
   var audioTrackSwitchingMode = (0,is_null_or_undefined/* default */.Z)(options.audioTrackSwitchingMode) ? DEFAULT_AUDIO_TRACK_SWITCHING_MODE : options.audioTrackSwitchingMode;
 
-  if (!(0,array_includes/* default */.Z)(["seamless", "direct"], audioTrackSwitchingMode)) {
-    log/* default.warn */.Z.warn("The `audioTrackSwitchingMode` loadVideo option must match one of " + "the following strategy name:\n" + "- `seamless`\n" + "- `direct`\n" + "If badly set, " + DEFAULT_AUDIO_TRACK_SWITCHING_MODE + " strategy will be used as default");
+  if (!(0,array_includes/* default */.Z)(["seamless", "direct", "reload"], audioTrackSwitchingMode)) {
+    log/* default.warn */.Z.warn("The `audioTrackSwitchingMode` loadVideo option must match one of " + "the following strategy name:\n" + "- `seamless`\n" + "- `direct`\n" + "- `reload`\n" + "If badly set, " + DEFAULT_AUDIO_TRACK_SWITCHING_MODE + " strategy will be used as default");
     audioTrackSwitchingMode = DEFAULT_AUDIO_TRACK_SWITCHING_MODE;
   }
 
@@ -56598,14 +58219,6 @@ function skip(count) {
 
 
 
-var SAMPLING_INTERVAL_MEDIASOURCE = config/* default.SAMPLING_INTERVAL_MEDIASOURCE */.Z.SAMPLING_INTERVAL_MEDIASOURCE,
-    SAMPLING_INTERVAL_LOW_LATENCY = config/* default.SAMPLING_INTERVAL_LOW_LATENCY */.Z.SAMPLING_INTERVAL_LOW_LATENCY,
-    SAMPLING_INTERVAL_NO_MEDIASOURCE = config/* default.SAMPLING_INTERVAL_NO_MEDIASOURCE */.Z.SAMPLING_INTERVAL_NO_MEDIASOURCE,
-    RESUME_GAP_AFTER_SEEKING = config/* default.RESUME_GAP_AFTER_SEEKING */.Z.RESUME_GAP_AFTER_SEEKING,
-    RESUME_GAP_AFTER_NOT_ENOUGH_DATA = config/* default.RESUME_GAP_AFTER_NOT_ENOUGH_DATA */.Z.RESUME_GAP_AFTER_NOT_ENOUGH_DATA,
-    RESUME_GAP_AFTER_BUFFERING = config/* default.RESUME_GAP_AFTER_BUFFERING */.Z.RESUME_GAP_AFTER_BUFFERING,
-    REBUFFERING_GAP = config/* default.REBUFFERING_GAP */.Z.REBUFFERING_GAP,
-    MINIMUM_BUFFER_AMOUNT_BEFORE_FREEZING = config/* default.MINIMUM_BUFFER_AMOUNT_BEFORE_FREEZING */.Z.MINIMUM_BUFFER_AMOUNT_BEFORE_FREEZING;
 /**
  * HTMLMediaElement Events for which playback observations are calculated and
  * emitted.
@@ -56733,6 +58346,11 @@ var PlaybackObserver = /*#__PURE__*/function () {
     var _this2 = this;
 
     return (0,defer/* defer */.P)(function () {
+      var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+          SAMPLING_INTERVAL_MEDIASOURCE = _config$getCurrent.SAMPLING_INTERVAL_MEDIASOURCE,
+          SAMPLING_INTERVAL_LOW_LATENCY = _config$getCurrent.SAMPLING_INTERVAL_LOW_LATENCY,
+          SAMPLING_INTERVAL_NO_MEDIASOURCE = _config$getCurrent.SAMPLING_INTERVAL_NO_MEDIASOURCE;
+
       var getCurrentObservation = function getCurrentObservation(event) {
         var _a;
 
@@ -56816,6 +58434,11 @@ function getRebufferingEndGap(rebufferingStatus, lowLatencyMode) {
 
   var suffix = lowLatencyMode ? "LOW_LATENCY" : "DEFAULT";
 
+  var _config$getCurrent2 = config/* default.getCurrent */.Z.getCurrent(),
+      RESUME_GAP_AFTER_SEEKING = _config$getCurrent2.RESUME_GAP_AFTER_SEEKING,
+      RESUME_GAP_AFTER_NOT_ENOUGH_DATA = _config$getCurrent2.RESUME_GAP_AFTER_NOT_ENOUGH_DATA,
+      RESUME_GAP_AFTER_BUFFERING = _config$getCurrent2.RESUME_GAP_AFTER_BUFFERING;
+
   switch (rebufferingStatus.reason) {
     case "seeking":
       return RESUME_GAP_AFTER_SEEKING[suffix];
@@ -56836,6 +58459,9 @@ function getRebufferingEndGap(rebufferingStatus, lowLatencyMode) {
 
 
 function hasLoadedUntilTheEnd(currentRange, duration, lowLatencyMode) {
+  var _config$getCurrent3 = config/* default.getCurrent */.Z.getCurrent(),
+      REBUFFERING_GAP = _config$getCurrent3.REBUFFERING_GAP;
+
   var suffix = lowLatencyMode ? "LOW_LATENCY" : "DEFAULT";
   return currentRange !== null && duration - currentRange.end <= REBUFFERING_GAP[suffix];
 }
@@ -56890,6 +58516,10 @@ function getMediaInfos(mediaElement, event) {
 function getRebufferingStatus(prevObservation, currentInfo, _ref) {
   var withMediaSource = _ref.withMediaSource,
       lowLatencyMode = _ref.lowLatencyMode;
+
+  var _config$getCurrent4 = config/* default.getCurrent */.Z.getCurrent(),
+      REBUFFERING_GAP = _config$getCurrent4.REBUFFERING_GAP;
+
   var currentEvt = currentInfo.event,
       currentTime = currentInfo.position,
       bufferGap = currentInfo.bufferGap,
@@ -56982,6 +58612,9 @@ function getRebufferingStatus(prevObservation, currentInfo, _ref) {
 
 
 function getFreezingStatus(prevObservation, currentInfo) {
+  var _config$getCurrent5 = config/* default.getCurrent */.Z.getCurrent(),
+      MINIMUM_BUFFER_AMOUNT_BEFORE_FREEZING = _config$getCurrent5.MINIMUM_BUFFER_AMOUNT_BEFORE_FREEZING;
+
   if (prevObservation.freezing) {
     if (currentInfo.ended || currentInfo.paused || currentInfo.readyState === 0 || currentInfo.playbackRate === 0 || prevObservation.position !== currentInfo.position) {
       return null; // Quit freezing status
@@ -58460,10 +60093,8 @@ function getRightVideoTrack(adaptation, isTrickModeEnabled) {
 
 
 
-
 /* eslint-disable @typescript-eslint/naming-convention */
 
-var DEFAULT_UNMUTED_VOLUME = config/* default.DEFAULT_UNMUTED_VOLUME */.Z.DEFAULT_UNMUTED_VOLUME;
 var isPageActive = event_listeners/* isPageActive */.Nh,
     isVideoVisible = event_listeners/* isVideoVisible */._K,
     onEnded$ = event_listeners/* onEnded$ */.C1,
@@ -58511,14 +60142,18 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
         throttleVideoBitrateWhenHidden = _parseConstructorOpti.throttleVideoBitrateWhenHidden,
         videoElement = _parseConstructorOpti.videoElement,
         wantedBufferAhead = _parseConstructorOpti.wantedBufferAhead,
-        stopAtEnd = _parseConstructorOpti.stopAtEnd; // Workaround to support Firefox autoplay on FF 42.
+        maxVideoBufferSize = _parseConstructorOpti.maxVideoBufferSize,
+        stopAtEnd = _parseConstructorOpti.stopAtEnd;
+
+    var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+        DEFAULT_UNMUTED_VOLUME = _config$getCurrent.DEFAULT_UNMUTED_VOLUME; // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
 
 
     videoElement.preload = "auto";
     _this.version =
     /* PLAYER_VERSION */
-    "3.26.2";
+    "3.27.0";
     _this.log = log/* default */.Z;
     _this.state = "STOPPED";
     _this.videoElement = videoElement;
@@ -58572,7 +60207,8 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     _this._priv_bufferOptions = {
       wantedBufferAhead: (0,reference/* default */.Z)(wantedBufferAhead),
       maxBufferAhead: (0,reference/* default */.Z)(maxBufferAhead),
-      maxBufferBehind: (0,reference/* default */.Z)(maxBufferBehind)
+      maxBufferBehind: (0,reference/* default */.Z)(maxBufferBehind),
+      maxVideoBufferSize: (0,reference/* default */.Z)(maxVideoBufferSize)
     };
     _this._priv_bitrateInfos = {
       lastBitrates: {
@@ -58643,8 +60279,11 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     this.stop();
 
     if (this.videoElement !== null) {
-      // free resources used for EME management
-      disposeEME(this.videoElement);
+      // free resources used for decryption management
+      disposeDecryptionResources(this.videoElement)["catch"](function (err) {
+        var message = err instanceof Error ? err.message : "Unknown error";
+        log/* default.error */.Z.error("API: Could not dispose decryption resources: " + message);
+      });
     } // free Observables linked to the Player instance
 
 
@@ -58662,6 +60301,8 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     this._priv_contentLock.finish();
 
     this._priv_bufferOptions.wantedBufferAhead.finish();
+
+    this._priv_bufferOptions.maxVideoBufferSize.finish();
 
     this._priv_bufferOptions.maxBufferAhead.finish();
 
@@ -59074,21 +60715,22 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     /** Emit all player "state" updates. */
 
     var playerState$ = (0,concat/* concat */.z)((0,of.of)(PLAYER_STATES.LOADING), // Begin with LOADING
-    // LOADED as soon as the first "loaded" event is sent
-    loaded$.pipe((0,take/* take */.q)(1), (0,map/* map */.U)(function () {
-      return PLAYER_STATES.LOADED;
-    })), (0,merge/* merge */.T)(loadedStateUpdates$.pipe( // From the first reload onward, we enter another dynamic (below)
-    (0,takeUntil/* takeUntil */.R)(reloading$), skipWhile(function (state) {
-      return state === PLAYER_STATES.PAUSED;
-    })), // when reloading
-    reloading$.pipe((0,switchMap/* switchMap */.w)(function () {
-      return loaded$.pipe((0,take/* take */.q)(1), // wait for the next loaded event
-      (0,mergeMap/* mergeMap */.z)(function () {
-        return loadedStateUpdates$;
-      }), // to update the state as usual
-      (0,startWith/* startWith */.O)(PLAYER_STATES.RELOADING) // Starts with "RELOADING" state
-      );
-    })))).pipe((0,distinctUntilChanged/* distinctUntilChanged */.x)());
+    loaded$.pipe((0,switchMap/* switchMap */.w)(function (_, i) {
+      var isFirstLoad = i === 0;
+      return (0,merge/* merge */.T)( // Purposely subscribed first so a RELOADING triggered synchronously
+      // after a LOADED state is catched.
+      reloading$.pipe((0,map/* map */.U)(function () {
+        return PLAYER_STATES.RELOADING;
+      })), // Only switch to LOADED state for the first (i.e. non-RELOADING) load
+      isFirstLoad ? (0,of.of)(PLAYER_STATES.LOADED) : empty/* EMPTY */.E, // Purposely put last so any other state change happens after we've
+      // already switched to LOADED
+      loadedStateUpdates$.pipe((0,takeUntil/* takeUntil */.R)(reloading$), // For the first load, we prefer staying at the LOADED state over
+      // PAUSED when autoPlay is disabled.
+      // For consecutive loads however, there's no LOADED state.
+      skipWhile(function (state) {
+        return isFirstLoad && state === PLAYER_STATES.PAUSED;
+      })));
+    }))).pipe((0,distinctUntilChanged/* distinctUntilChanged */.x)());
     var playbackSubscription;
     stopContent$.pipe((0,take/* take */.q)(1)).subscribe(function () {
       if (playbackSubscription !== undefined) {
@@ -59403,7 +61045,25 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
         manifest = _this$_priv_contentIn4.manifest;
 
     if (isDirectFile) {
-      return this.videoElement.currentTime;
+      // Calculating the "wall-clock time" necessitate to obtain first an offset,
+      // and then adding that offset to the HTMLMediaElement's current position.
+      // That offset is in most case present inside the Manifest file, yet in
+      // directfile mode, the RxPlayer won't parse that file, the browser does it.
+      //
+      // Thankfully Safari declares a `getStartDate` method allowing to obtain
+      // that offset when available. This logic is thus mainly useful when
+      // playing HLS contents in directfile mode on Safari.
+      var mediaElement = this.videoElement;
+
+      if (typeof mediaElement.getStartDate === "function") {
+        var startDate = mediaElement.getStartDate();
+
+        if (typeof startDate === "number" && !isNaN(startDate)) {
+          return startDate + mediaElement.currentTime;
+        }
+      }
+
+      return mediaElement.currentTime;
     }
 
     if (manifest !== null) {
@@ -59678,7 +61338,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
 
     if ((0,is_null_or_undefined/* default */.Z)(playPromise) || typeof playPromise["catch"] !== "function") {
       /* eslint-enable @typescript-eslint/unbound-method */
-      return promise/* default.resolve */.Z.resolve();
+      return Promise.resolve();
     }
 
     return playPromise["catch"](function (error) {
@@ -59863,6 +61523,9 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
   ;
 
   _proto.unMute = function unMute() {
+    var _config$getCurrent2 = config/* default.getCurrent */.Z.getCurrent(),
+        DEFAULT_UNMUTED_VOLUME = _config$getCurrent2.DEFAULT_UNMUTED_VOLUME;
+
     var vol = this.getVolume();
 
     if (vol === 0) {
@@ -59980,6 +61643,16 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     this._priv_bufferOptions.wantedBufferAhead.setValue(sizeInSeconds);
   }
   /**
+   * Set the max buffer size the buffer should take in memory
+   * The player . will stop downloading chunks when this size is reached.
+   * @param {Number} sizeInKBytes
+   */
+  ;
+
+  _proto.setMaxVideoBufferSize = function setMaxVideoBufferSize(sizeInKBytes) {
+    this._priv_bufferOptions.maxVideoBufferSize.setValue(sizeInKBytes);
+  }
+  /**
    * Returns the max buffer size for the buffer behind the current position.
    * @returns {Number}
    */
@@ -60005,6 +61678,15 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
 
   _proto.getWantedBufferAhead = function getWantedBufferAhead() {
     return this._priv_bufferOptions.wantedBufferAhead.getValue();
+  }
+  /**
+   * Returns the max buffer memory size for the buffer in kilobytes
+   * @returns {Number}
+   */
+  ;
+
+  _proto.getMaxVideoBufferSize = function getMaxVideoBufferSize() {
+    return this._priv_bufferOptions.maxVideoBufferSize.getValue();
   }
   /**
    * Returns type of current keysystem (e.g. playready, widevine) if the content
@@ -60565,7 +62247,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     this._priv_trackChoiceManager = null;
     (_a = this._priv_mediaElementTrackChoiceManager) === null || _a === void 0 ? void 0 : _a.dispose();
     this._priv_mediaElementTrackChoiceManager = null;
-    this._priv_contentEventsMemory = {}; // EME cleaning
+    this._priv_contentEventsMemory = {}; // DRM-related clean-up
 
     var freeUpContentLock = function freeUpContentLock() {
       log/* default.debug */.Z.debug("Unlocking `contentLock`. Next content can begin.");
@@ -60574,15 +62256,12 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     };
 
     if (!(0,is_null_or_undefined/* default */.Z)(this.videoElement)) {
-      clearEMESession(this.videoElement).subscribe({
-        error: function error(err) {
-          log/* default.error */.Z.error("API: An error arised when trying to clean-up the EME session:" + (err instanceof Error ? err.toString() : "Unknown Error"));
-          freeUpContentLock();
-        },
-        complete: function complete() {
-          log/* default.debug */.Z.debug("API: EME session cleaned-up with success!");
-          freeUpContentLock();
-        }
+      clearOnStop(this.videoElement).then(function () {
+        log/* default.debug */.Z.debug("API: DRM session cleaned-up with success!");
+        freeUpContentLock();
+      }, function (err) {
+        log/* default.error */.Z.error("API: An error arised when trying to clean-up the DRM session:" + (err instanceof Error ? err.toString() : "Unknown Error"));
+        freeUpContentLock();
       });
     } else {
       freeUpContentLock();
@@ -61303,7 +62982,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
 
 Player.version =
 /* PLAYER_VERSION */
-"3.26.2";
+"3.27.0";
 /* harmony default export */ var public_api = (Player);
 ;// CONCATENATED MODULE: ./src/core/api/index.ts
 /**
@@ -61358,7 +63037,7 @@ var features_object = __webpack_require__(7273);
 
 function initializeFeaturesObject() {
   if (true) {
-    features_object/* default.emeManager */.Z.emeManager = (__webpack_require__(8281)/* ["default"] */ .ZP);
+    features_object/* default.ContentDecryptor */.Z.ContentDecryptor = (__webpack_require__(1266)/* ["default"] */ .ZP);
   }
 
   if (true) {
