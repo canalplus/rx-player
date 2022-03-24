@@ -16,7 +16,6 @@
 
 import {
   events,
-  generateKeyRequest,
   getInitData,
   ICustomMediaKeys,
   ICustomMediaKeySystemAccess,
@@ -567,10 +566,22 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     if (sessionRes.type === MediaKeySessionLoadingType.Created) {
       const requestData = initializationData.values.constructRequestData();
       try {
-        await generateKeyRequest(mediaKeySession,
-                                 initializationData.type,
-                                 requestData);
+        await stores.loadedSessionsStore.generateLicenseRequest(
+          mediaKeySession,
+          initializationData.type,
+          requestData);
       } catch (error) {
+        // First check that the error was not due to the MediaKeySession closing
+        // or being closed
+        const entry = stores.loadedSessionsStore.getEntryForSession(mediaKeySession);
+        if (entry === null || entry.closingStatus.type !== "none") {
+          // MediaKeySession closing/closed: Just remove from handled list and abort.
+          const indexInCurrent = this._currentSessions.indexOf(sessionInfo);
+          if (indexInCurrent >= 0) {
+            this._currentSessions.splice(indexInCurrent, 1);
+          }
+          return Promise.resolve();
+        }
         throw new EncryptedMediaError("KEY_GENERATE_REQUEST_ERROR",
                                       error instanceof Error ? error.toString() :
                                       "Unknown error");

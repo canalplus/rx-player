@@ -88,7 +88,10 @@ export default async function createOrLoadSession(
     throw cancelSignal.cancellationError; // stop here if cancelled since
   }
 
-  const evt = await createSession(stores, initializationData, wantedSessionType);
+  const evt = await createSession(stores,
+                                  initializationData,
+                                  wantedSessionType,
+                                  cancelSignal);
   return { type: evt.type,
            value: { mediaKeySession: evt.value.mediaKeySession,
                     sessionType: evt.value.sessionType,

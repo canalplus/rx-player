@@ -124,12 +124,10 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
  * Generate a request from session.
  * @param {MediaKeySession} session - MediaKeySession on which the request will
  * be done.
- * @param {Uint8Array} initData - Initialization data given e.g. by the
- * "encrypted" event for the corresponding request.
- * @param {string} initDataType - Initialization data type given e.g. by the
- * "encrypted" event for the corresponding request.
- * @param {string} sessionType - Type of session you want to generate. Consult
- * EME Specification for more information on session types.
+ * @param {string} initializationDataType - Initialization data type given e.g.
+ * by the "encrypted" event for the corresponding request.
+ * @param {Uint8Array} initializationData - Initialization data given e.g. by
+ * the "encrypted" event for the corresponding request.
  * @returns {Promise} - Emit when done. Errors if fails.
  */
 export default function generateKeyRequest(
