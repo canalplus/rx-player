@@ -16,17 +16,20 @@
   - avoid performing a small seek when changing the audio track [#1080]
   - api: allow switching to RELOADING state synchronously after LOADED [#1083]
   - Safari Mobile: Improve decryption support on Safari mobile by relying on the vendored `WebKitMediaKeys` API [#1072]
+  - DASH: Fix issue which prevented the integrity check of most MP4 DASH segments when `transportOptions.checkMediaSegmentIntegrity` was set to `true`
   - avoid unnecessary warning logs when loading some initialization segments [#1049]
   - TypeScript: Add forgotten TypeScript types in the exposed segment and manifest loader APIs [#1057]
   - DRM: Avoid decryption issues when a license is persisted in a `singleLicensePer` `"init-data"` mode but loaded in a `"content"` mode [#1031, #1042]
+  - DRM: Totally avoid the theoretical possibility of leaking MediaKeySessions when a `generateRequest` or `load` call takes multiple seconds [#1093]
 
 ### Other improvements
 
   - DASH: always consider that the non-last Period is finished when it contains SegmentTimeline elements [#1047]
   - add better buffer cleaning logic on a browser's `QuotaExceededError` to better handle memory limitations [#1065]
   - DASH: Prioritize selectionPriority attribute over a "main" Role when ordering AdaptationSets [#1082]
-  - directfile/Safari: use the `getStartDate` method in `getWallClockTime` when available to obtain true offseted times when playing HLS contents on Safari [#1055]
+  - directfile/Safari: use the `getStartDate` method in `getWallClockTime`, `seekTo` and the `positionUpdate` event when available to obtain true offseted "wall-clock" times when playing HLS contents on Safari [#1055]
   - DRM: Improve DRM Session caches performance when `singleLicensePer` is set to `"content"`
+  - DRM: Stop retrying closing MediaKeySessions multiple times when it fails, instead doing it only once when it should work [#1093]
   - TypeScript: Add IBitrateEstimate, IPositionUpdate and IPlayerState types to the exported types [#1084]
   - Remove dependency on pinkie's promise ponyfill [#1058, #1090]
   - tests: add performance tests, to better catch and avoid performance regressions [#1053, #1062]
