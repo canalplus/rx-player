@@ -14,17 +14,13 @@
  * limitations under the License.
  */
 
-import { Subscription } from "rxjs";
 import {
   closeSession,
+  generateKeyRequest,
   ICustomMediaKeys,
   ICustomMediaKeySession,
+  loadSession,
 } from "../../../compat";
-import {
-  onKeyMessage$,
-  onKeyStatusesChange$,
-} from "../../../compat/event_listeners";
-import config from "../../../config";
 import log from "../../../log";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import { IProcessedProtectionData } from "../types";
@@ -57,7 +53,7 @@ export default class LoadedSessionsStore {
 
   /**
    * Create a new MediaKeySession and store it in this store.
-   * @param {Object} initializationData
+   * @param {Object} initData
    * @param {string} sessionType
    * @returns {Object}
    */
@@ -67,7 +63,12 @@ export default class LoadedSessionsStore {
   ) : IStoredSessionEntry {
     const keySessionRecord = new KeySessionRecord(initData);
     const mediaKeySession = this._mediaKeys.createSession(sessionType);
-    const entry = { mediaKeySession, sessionType, keySessionRecord };
+    const entry = { mediaKeySession,
+                    sessionType,
+                    keySessionRecord,
+                    isGeneratingRequest: false,
+                    isLoadingPersistentSession: false,
+                    closingStatus: { type: "none" as const } };
     if (!isNullOrUndefined(mediaKeySession.closed)) {
       mediaKeySession.closed
         .then(() => {
@@ -85,7 +86,7 @@ export default class LoadedSessionsStore {
     }
 
     log.debug("DRM-LSS: Add MediaKeySession", entry.sessionType);
-    this._storage.push({ keySessionRecord, mediaKeySession, sessionType });
+    this._storage.push({ ...entry });
     return entry;
   }
 
@@ -109,12 +110,143 @@ export default class LoadedSessionsStore {
       if (stored.keySessionRecord.isCompatibleWith(initializationData)) {
         this._storage.splice(i, 1);
         this._storage.push(stored);
-        return { keySessionRecord: stored.keySessionRecord,
-                 mediaKeySession: stored.mediaKeySession,
-                 sessionType: stored.sessionType };
+        return { ...stored };
       }
     }
     return null;
+  }
+
+  /**
+   * Get `LoadedSessionsStore`'s entry for a given MediaKeySession.
+   * Returns `null` if the given MediaKeySession is not stored in the
+   * `LoadedSessionsStore`.
+   * @param {MediaKeySession} mediaKeySession
+   * @returns {Object|null}
+   */
+  public getEntryForSession(
+    mediaKeySession : MediaKeySession | ICustomMediaKeySession
+  ) : IStoredSessionEntry | null {
+    for (let i = this._storage.length - 1; i >= 0; i--) {
+      const stored = this._storage[i];
+      if (stored.mediaKeySession === mediaKeySession) {
+        return { ...stored };
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Generate a license request on the given MediaKeySession, while indicating
+   * to the LoadedSessionsStore that a license-request is pending so
+   * session-closing orders are properly scheduled after it is done.
+   * @param {Object} mediaKeySession
+   * @param {string} initializationDataType - Initialization data type given
+   * e.g. by the "encrypted" event for the corresponding request.
+   * @param {Uint8Array} initializationData - Initialization data given e.g. by
+   * the "encrypted" event for the corresponding request.
+   * @returns {Promise}
+   */
+  public async generateLicenseRequest(
+    mediaKeySession : MediaKeySession | ICustomMediaKeySession,
+    initializationDataType : string | undefined,
+    initializationData : Uint8Array
+  ) : Promise<unknown> {
+    let entry : IStoredSessionEntry | undefined;
+    for (const stored of this._storage) {
+      if (stored.mediaKeySession === mediaKeySession) {
+        entry = stored;
+        break;
+      }
+    }
+    if (entry === undefined) {
+      log.error("DRM-LSS: generateRequest error. No MediaKeySession found with " +
+                "the given initData and initDataType");
+      return generateKeyRequest(mediaKeySession,
+                                initializationDataType,
+                                initializationData);
+    }
+
+    entry.isGeneratingRequest = true;
+
+    // Note the `as string` is needed due to TypeScript not understanding that
+    // the `closingStatus` might change in the next checks
+    if (entry.closingStatus.type as string !== "none") {
+      throw new Error("The `MediaKeySession` is being closed.");
+    }
+    try {
+      await generateKeyRequest(mediaKeySession,
+                               initializationDataType,
+                               initializationData);
+    } catch (err) {
+      if (entry === undefined) {
+        throw err;
+      }
+      entry.isGeneratingRequest = false;
+      if (entry.closingStatus.type === "awaiting") {
+        entry.closingStatus.start();
+      }
+      throw err;
+
+    }
+    if (entry === undefined) {
+      return undefined;
+    }
+    entry.isGeneratingRequest = false;
+    if (entry.closingStatus.type === "awaiting") {
+      entry.closingStatus.start();
+    }
+  }
+
+  /**
+   * @param {Object} mediaKeySession
+   * @param {string} sessionId
+   * @returns {Promise}
+   */
+  public async loadPersistentSession(
+    mediaKeySession : MediaKeySession | ICustomMediaKeySession,
+    sessionId : string
+  ) : Promise<boolean> {
+    let entry : IStoredSessionEntry | undefined;
+    for (const stored of this._storage) {
+      if (stored.mediaKeySession === mediaKeySession) {
+        entry = stored;
+        break;
+      }
+    }
+    if (entry === undefined) {
+      log.error("DRM-LSS: loadPersistentSession error. No MediaKeySession found with " +
+                "the given initData and initDataType");
+      return loadSession(mediaKeySession, sessionId);
+    }
+    entry.isLoadingPersistentSession = true;
+
+    // Note the `as string` is needed due to TypeScript not understanding that
+    // the `closingStatus` might change in the next checks
+    if (entry.closingStatus.type as string !== "none") {
+      throw new Error("The `MediaKeySession` is being closed.");
+    }
+    let ret : boolean;
+    try {
+      ret = await loadSession(mediaKeySession, sessionId);
+    } catch (err) {
+      if (entry === undefined) {
+        throw err;
+      }
+      entry.isLoadingPersistentSession = false;
+      if (entry.closingStatus.type === "awaiting") {
+        entry.closingStatus.start();
+      }
+      throw err;
+
+    }
+    if (entry === undefined) {
+      return ret;
+    }
+    entry.isLoadingPersistentSession = false;
+    if (entry.closingStatus.type === "awaiting") {
+      entry.closingStatus.start();
+    }
+    return ret;
   }
 
   /**
@@ -127,7 +259,7 @@ export default class LoadedSessionsStore {
   public async closeSession(
     mediaKeySession : MediaKeySession | ICustomMediaKeySession
   ) : Promise<boolean> {
-    let entry;
+    let entry : IStoredSessionEntry | undefined;
     for (const stored of this._storage) {
       if (stored.mediaKeySession === mediaKeySession) {
         entry = stored;
@@ -139,8 +271,7 @@ export default class LoadedSessionsStore {
                "the given initData and initDataType");
       return Promise.resolve(false);
     }
-    await safelyCloseMediaKeySession(entry.mediaKeySession);
-    return Promise.resolve(true);
+    return this._closeEntry(entry);
   }
 
   /**
@@ -175,10 +306,17 @@ export default class LoadedSessionsStore {
     this._storage = [];
 
     const closingProms = allEntries
-      .map((entry) => safelyCloseMediaKeySession(entry.mediaKeySession));
+      .map((entry) => this._closeEntry(entry));
     await Promise.all(closingProms);
   }
 
+  /**
+   * Get the index of a stored MediaKeySession entry based on its
+   * `KeySessionRecord`.
+   * Returns -1 if not found.
+   * @param {Object} record
+   * @returns {number}
+   */
   private getIndex(record : KeySessionRecord) : number {
     for (let i = 0; i < this._storage.length; i++) {
       const stored = this._storage[i];
@@ -187,6 +325,50 @@ export default class LoadedSessionsStore {
       }
     }
     return -1;
+  }
+
+  /**
+   * Prepare the closure of a `MediaKeySession` stored as an entry of the
+   * `LoadedSessionsStore`.
+   * Allows to postpone the closure action if another MediaKeySession action
+   * is already pending.
+   * @param {Object} entry
+   * @returns {Promise.<boolean>}
+   */
+  private async _closeEntry(
+    entry : IStoredSessionEntry
+  ) : Promise<boolean> {
+    const { mediaKeySession } = entry;
+    return new Promise((resolve, reject) => {
+      if (entry !== undefined &&
+          (
+            entry.isLoadingPersistentSession || entry.isGeneratingRequest
+          ))
+      {
+        entry.closingStatus = { type: "awaiting",
+                                start: tryClosingEntryAndResolve };
+      } else {
+        tryClosingEntryAndResolve();
+      }
+      function tryClosingEntryAndResolve() {
+        if (entry !== undefined) {
+          entry.closingStatus = { type: "pending" };
+        }
+        safelyCloseMediaKeySession(mediaKeySession)
+          .then(() => {
+            if (entry !== undefined) {
+              entry.closingStatus = { type: "done" };
+            }
+            resolve(true);
+          })
+          .catch((err) => {
+            if (entry !== undefined) {
+              entry.closingStatus = { type: "failed" };
+            }
+            reject(err);
+          });
+      }
+    });
   }
 }
 
@@ -216,102 +398,72 @@ export interface IStoredSessionEntry {
    * which the MediaKeySession was created.
    */
   sessionType : MediaKeySessionType;
+
+  /**
+   * Set to `true` while a `generateRequest` call is pending.
+   * This information might be useful as it is one of the operation we have to
+   * wait for before closing a MediaKeySession.
+   */
+  isGeneratingRequest : boolean;
+
+  /**
+   * Set to `true` while a `load` call is pending.
+   * This information might be useful as it is one of the operation we have to
+   * wait for before closing a MediaKeySession.
+   */
+  isLoadingPersistentSession : boolean;
+
+  /**
+   * The status of a potential `MediaKeySession`'s close request.
+   * Closing a MediaKeySession could be made complex as it normally cannot
+   * happen until `generateRequest` or `load` has been called.
+   *
+   * To avoid problems while still staying compatible to the most devices
+   * possible - which may have strange implementation of the specification -
+   * we're adding the `closingStatus` property allowing to perform multiple
+   * type of interaction while a close operation is either pending or is
+   * awaited.
+   */
+  closingStatus :
+    /** Status when the MediaKeySession is currently being closed. */
+    { type : "pending" } |
+    /** Status when the MediaKeySession has been closed. */
+    { type : "done" } |
+    /** Status when the MediaKeySession failed to close. */
+    { type : "failed" } |
+    /**
+     * Status when a close order has been received for this MediaKeySession
+     * while some sensitive operation (examples are `generateRequest` and `load`
+     * calls).
+     * The `LoadedSessionsStore` should call `start` once it has finished those
+     * operations.
+     */
+    {
+      type : "awaiting";
+      start : () => void;
+    } |
+    /** Status when the MediaKeySession failed to close. */
+    { type : "none" };
 }
 
 /**
- * Close a MediaKeySession with multiple attempts if needed and do not throw if
- * this action throws an error.
+ * Close a MediaKeySession and just log an error if it fails (while resolving).
  * Emits then complete when done.
  * @param {MediaKeySession} mediaKeySession
  * @returns {Observable}
  */
-function safelyCloseMediaKeySession(
+async function safelyCloseMediaKeySession(
   mediaKeySession : MediaKeySession | ICustomMediaKeySession
-) : Promise<unknown> {
-  return recursivelyTryToCloseMediaKeySession(0);
-
-  /**
-   * Perform a new attempt at closing the MediaKeySession.
-   * If this operation fails due to a not-"callable" (an EME term)
-   * MediaKeySession, retry based on either a timer or on MediaKeySession
-   * events, whichever comes first.
-   * Emits then complete when done.
-   * @param {number} retryNb - The attempt number starting at 0.
-   * @returns {Observable}
-   */
-  async function recursivelyTryToCloseMediaKeySession(
-    retryNb : number
-  ) : Promise<unknown> {
-    log.debug("DRM: Trying to close a MediaKeySession",
-              mediaKeySession.sessionId,
-              retryNb);
-    try {
-      await closeSession(mediaKeySession);
-      log.debug("DRM: Succeeded to close MediaKeySession");
-      return undefined;
-    } catch (err : unknown) {
-      // Unitialized MediaKeySession may not close properly until their
-      // corresponding `generateRequest` or `load` call are handled by the
-      // browser.
-      // In that case the EME specification tells us that the browser is
-      // supposed to reject the `close` call with an InvalidStateError.
-      if (!(err instanceof Error) || err.name !== "InvalidStateError" ||
-          mediaKeySession.sessionId !== "")
-      {
-        return failToCloseSession(err);
-      }
-
-      const { EME_SESSION_CLOSING_MAX_RETRY,
-              EME_SESSION_CLOSING_INITIAL_DELAY,
-              EME_SESSION_CLOSING_MAX_DELAY } = config.getCurrent();
-
-      // We will retry either:
-      //   - when an event indicates that the MediaKeySession is
-      //     initialized (`callable` is the proper EME term here)
-      //   - after a delay, raising exponentially
-      const nextRetryNb = retryNb + 1;
-      if (nextRetryNb > EME_SESSION_CLOSING_MAX_RETRY) {
-        return failToCloseSession(err);
-      }
-      const delay = Math.min(Math.pow(2, retryNb) * EME_SESSION_CLOSING_INITIAL_DELAY,
-                             EME_SESSION_CLOSING_MAX_DELAY);
-      log.warn("DRM: attempt to close a mediaKeySession failed, " +
-               "scheduling retry...", delay);
-
-      let ksChangeSub : undefined | Subscription;
-      const ksChangeProm = new Promise((res) => {
-        ksChangeSub = onKeyStatusesChange$(mediaKeySession).subscribe(res);
-      });
-
-      let ksMsgSub : undefined | Subscription;
-      const ksMsgProm = new Promise((res) => {
-        ksMsgSub = onKeyMessage$(mediaKeySession).subscribe(res);
-      });
-
-      let sleepTimer : undefined | number;
-      const sleepProm = new Promise((res) => {
-        sleepTimer = window.setTimeout(res, delay);
-      });
-
-      await Promise.race([ksChangeProm, ksMsgProm, sleepProm]);
-      ksChangeSub?.unsubscribe();
-      ksMsgSub?.unsubscribe();
-      clearTimeout(sleepTimer);
-
-      return recursivelyTryToCloseMediaKeySession(nextRetryNb);
-    }
-  }
-
-  /**
-   * Log error anouncing that we could not close the MediaKeySession and emits
-   * then complete through Observable.
-   * TODO Emit warning?
-   * @returns {Observable}
-   */
-  function failToCloseSession(err : unknown) : Promise<null> {
+) : Promise<void> {
+  log.debug("DRM: Trying to close a MediaKeySession", mediaKeySession.sessionId);
+  try {
+    await closeSession(mediaKeySession);
+    log.debug("DRM: Succeeded to close MediaKeySession");
+    return ;
+  } catch (err : unknown) {
     log.error("DRM: Could not close MediaKeySession: " +
               (err instanceof Error ? err.toString() :
                                       "Unknown error"));
-    return Promise.resolve(null);
+    return ;
   }
 }

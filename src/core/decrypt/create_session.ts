@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-import {
-  ICustomMediaKeySession,
-  loadSession,
-} from "../../compat";
+import { ICustomMediaKeySession } from "../../compat";
 import log from "../../log";
+import { CancellationSignal } from "../../utils/task_canceller";
 import {
   IProcessedProtectionData,
   IMediaKeySessionStores,
@@ -42,12 +40,14 @@ import PersistentSessionsStore from "./utils/persistent_sessions_store";
  * @param {Object} stores
  * @param {Object} initData
  * @param {string} wantedSessionType
+ * @param {Object} cancelSignal
  * @returns {Promise}
  */
 export default function createSession(
   stores : IMediaKeySessionStores,
   initData : IProcessedProtectionData,
-  wantedSessionType : MediaKeySessionType
+  wantedSessionType : MediaKeySessionType,
+  cancelSignal : CancellationSignal
 ) : Promise<ICreateSessionEvent> {
   const { loadedSessionsStore,
           persistentSessionsStore } = stores;
@@ -61,7 +61,8 @@ export default function createSession(
   }
   return createAndTryToRetrievePersistentSession(loadedSessionsStore,
                                                  persistentSessionsStore,
-                                                 initData);
+                                                 initData,
+                                                 cancelSignal);
 }
 
 /**
@@ -87,13 +88,18 @@ function createTemporarySession(
  * @param {Object} loadedSessionsStore
  * @param {Object} persistentSessionsStore
  * @param {Object} initData
+ * @param {Object} cancelSignal
  * @returns {Promise}
  */
 async function createAndTryToRetrievePersistentSession(
   loadedSessionsStore : LoadedSessionsStore,
   persistentSessionsStore : PersistentSessionsStore,
-  initData : IProcessedProtectionData
+  initData : IProcessedProtectionData,
+  cancelSignal : CancellationSignal
 ) : Promise<INewSessionCreatedEvent | IPersistentSessionRecoveryEvent> {
+  if (cancelSignal.cancellationError !== null) {
+    throw cancelSignal.cancellationError;
+  }
   log.info("DRM: Creating persistent MediaKeySession");
 
   const entry = loadedSessionsStore.createSession(initData, "persistent-license");
@@ -104,8 +110,10 @@ async function createAndTryToRetrievePersistentSession(
   }
 
   try {
-    const hasLoadedSession = await loadSession(entry.mediaKeySession,
-                                               storedEntry.sessionId);
+    const hasLoadedSession = await loadedSessionsStore.loadPersistentSession(
+      entry.mediaKeySession,
+      storedEntry.sessionId
+    );
     if (!hasLoadedSession) {
       log.warn("DRM: No data stored for the loaded session");
       persistentSessionsStore.delete(storedEntry.sessionId);
@@ -136,6 +144,9 @@ async function createAndTryToRetrievePersistentSession(
    * @returns {Observable}
    */
   async function recreatePersistentSession() : Promise<INewSessionCreatedEvent> {
+    if (cancelSignal.cancellationError !== null) {
+      throw cancelSignal.cancellationError;
+    }
     log.info("DRM: Removing previous persistent session.");
     const persistentEntry = persistentSessionsStore.get(initData);
     if (persistentEntry !== null) {
@@ -143,6 +154,9 @@ async function createAndTryToRetrievePersistentSession(
     }
 
     await loadedSessionsStore.closeSession(entry.mediaKeySession);
+    if (cancelSignal.cancellationError !== null) {
+      throw cancelSignal.cancellationError;
+    }
     const newEntry = loadedSessionsStore.createSession(initData,
                                                        "persistent-license");
     return { type: MediaKeySessionLoadingType.Created,
