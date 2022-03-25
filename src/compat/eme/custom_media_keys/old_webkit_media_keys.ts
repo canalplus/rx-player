@@ -66,7 +66,6 @@ class OldWebkitMediaKeySession
   private readonly _vid: IOldWebkitHTMLMediaElement;
   private readonly _key: string;
 
-  private readonly _onSessionRelatedEvent : (evt : Event) => void;
   private _closeSession : () => void;
 
   constructor(mediaElement: IOldWebkitHTMLMediaElement, keySystem: string) {
@@ -76,18 +75,23 @@ class OldWebkitMediaKeySession
 
     this.sessionId = "";
     this._closeSession = noop; // Just here to make TypeScript happy
-    this.closed = new Promise((resolve) => {
-      this._closeSession = resolve;
-    });
     this.keyStatuses = new Map();
     this.expiration = NaN;
 
-    this._onSessionRelatedEvent = (evt : Event) => {
+    const onSessionRelatedEvent = (evt : Event) => {
       this.trigger(evt.type, evt);
     };
+    this.closed = new Promise((resolve) => {
+      this._closeSession = () => {
+        ["keymessage", "message", "keyadded", "ready", "keyerror", "error"]
+          .forEach(evt => mediaElement.removeEventListener(evt, onSessionRelatedEvent));
+        resolve();
+      };
+    });
+
 
     ["keymessage", "message", "keyadded", "ready", "keyerror", "error"]
-      .forEach(evt => mediaElement.addEventListener(evt, this._onSessionRelatedEvent));
+      .forEach(evt => mediaElement.addEventListener(evt, onSessionRelatedEvent));
   }
 
   public update(license: Uint8Array) : Promise<void> {
@@ -128,7 +132,6 @@ class OldWebkitMediaKeySession
 
   public close(): Promise<void> {
     return new Promise((resolve) => {
-      this._unbindSession();
       this._closeSession();
       resolve();
     });
@@ -146,11 +149,6 @@ class OldWebkitMediaKeySession
 
   public remove(): Promise<void> {
     return Promise.resolve();
-  }
-
-  private _unbindSession() {
-    ["keymessage", "message", "keyadded", "ready", "keyerror", "error"]
-      .forEach(evt => this._vid.removeEventListener(evt, this._onSessionRelatedEvent));
   }
 }
 

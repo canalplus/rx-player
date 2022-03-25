@@ -83,7 +83,6 @@ class WebkitMediaKeySession
   private _nativeSession: undefined | MediaKeySession;
   private _serverCertificate: Uint8Array | undefined;
 
-  private readonly _onEvent : (evt : Event) => void;
   private _closeSession : () => void;
   private _unbindSession : () => void;
 
@@ -109,10 +108,6 @@ class WebkitMediaKeySession
     });
     this.keyStatuses = new Map();
     this.expiration = NaN;
-
-    this._onEvent = (evt : Event) => {
-      this.trigger(evt.type, evt);
-    };
   }
 
   public update(license: BufferSource) : Promise<void> {
@@ -124,9 +119,17 @@ class WebkitMediaKeySession
         return reject("Unavailable WebKit key session.");
       }
       try {
+        let uInt8Arraylicense: Uint8Array;
+        if (license instanceof ArrayBuffer) {
+          uInt8Arraylicense = new Uint8Array(license);
+        } else if (license instanceof Uint8Array) {
+          uInt8Arraylicense = license;
+        } else {
+          uInt8Arraylicense = new Uint8Array(license.buffer);
+        }
         /* eslint-disable @typescript-eslint/no-unsafe-member-access */
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        resolve(this._nativeSession.update(license));
+        resolve(this._nativeSession.update(uInt8Arraylicense));
         /* eslint-enable @typescript-eslint/no-unsafe-member-access */
       } catch (err) {
         reject(err);
@@ -202,15 +205,19 @@ class WebkitMediaKeySession
   private _listenEvent(session: MediaKeySession) : void {
     this._unbindSession(); // If previous session was linked
 
+    const onEvent = (evt : Event) => {
+      this.trigger(evt.type, evt);
+    };
+
     /* eslint-disable @typescript-eslint/no-unsafe-call */
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     /* eslint-disable @typescript-eslint/no-unsafe-return */
     ["keymessage", "message", "keyadded", "ready", "keyerror", "error"]
-      .forEach(evt => session.addEventListener(evt, this._onEvent));
+      .forEach(evt => session.addEventListener(evt, onEvent));
 
     this._unbindSession = () => {
       ["keymessage", "message", "keyadded", "ready", "keyerror", "error"]
-        .forEach(evt => session.removeEventListener(evt, this._onEvent));
+        .forEach(evt => session.removeEventListener(evt, onEvent));
     };
     /* eslint-disable @typescript-eslint/no-unsafe-return */
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
