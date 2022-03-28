@@ -84,14 +84,20 @@ class OldWebkitMediaKeySession
     this.closed = new Promise((resolve) => {
       this._closeSession = () => {
         ["keymessage", "message", "keyadded", "ready", "keyerror", "error"]
-          .forEach(evt => mediaElement.removeEventListener(evt, onSessionRelatedEvent));
+          .forEach(evt => {
+            mediaElement.removeEventListener(evt, onSessionRelatedEvent);
+            mediaElement.removeEventListener(`webkit${evt}`, onSessionRelatedEvent);
+          });
         resolve();
       };
     });
 
 
     ["keymessage", "message", "keyadded", "ready", "keyerror", "error"]
-      .forEach(evt => mediaElement.addEventListener(evt, onSessionRelatedEvent));
+      .forEach(evt => {
+        mediaElement.addEventListener(evt, onSessionRelatedEvent);
+        mediaElement.addEventListener(`webkit${evt}`, onSessionRelatedEvent);
+      });
   }
 
   public update(license: Uint8Array) : Promise<void> {

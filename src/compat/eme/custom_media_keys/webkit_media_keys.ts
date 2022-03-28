@@ -213,11 +213,17 @@ class WebkitMediaKeySession
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     /* eslint-disable @typescript-eslint/no-unsafe-return */
     ["keymessage", "message", "keyadded", "ready", "keyerror", "error"]
-      .forEach(evt => session.addEventListener(evt, onEvent));
+      .forEach(evt => {
+        session.addEventListener(evt, onEvent);
+        session.addEventListener(`webkit${evt}`, onEvent);
+      });
 
     this._unbindSession = () => {
       ["keymessage", "message", "keyadded", "ready", "keyerror", "error"]
-        .forEach(evt => session.removeEventListener(evt, onEvent));
+        .forEach(evt => {
+          session.removeEventListener(evt, onEvent);
+          session.removeEventListener(`webkit${evt}`, onEvent);
+        });
     };
     /* eslint-disable @typescript-eslint/no-unsafe-return */
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
