@@ -1588,7 +1588,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         } else if (isDirectFile && this.videoElement !== null) {
           const startDate = getStartDate(this.videoElement);
           if (startDate !== undefined) {
-            positionWanted = startDate + timeObj.wallClockTime;
+            positionWanted = timeObj.wallClockTime - startDate;
           }
         }
         if (positionWanted === undefined) {

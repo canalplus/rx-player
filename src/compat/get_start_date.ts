@@ -32,11 +32,16 @@ export default function getStartDate(
   mediaElement : HTMLMediaElement
 ) : number | undefined {
   const _mediaElement : HTMLMediaElement & {
-    getStartDate? : () => number | null | undefined;
+    getStartDate? : () => number | Date | null | undefined;
   } = mediaElement;
   if (typeof _mediaElement.getStartDate === "function") {
     const startDate = _mediaElement.getStartDate();
-    if (typeof startDate === "number" && !isNaN(startDate)) {
+    if (typeof startDate === "object" && startDate !== null) {
+      const startDateNum = +startDate;
+      if (!isNaN(startDateNum)) {
+        return startDateNum / 1000;
+      }
+    } else if (typeof startDate === "number" && !isNaN(startDate)) {
       return startDate;
     }
   }
