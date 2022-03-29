@@ -70,7 +70,7 @@ export default function getInitialTime(
   lowLatencyMode : boolean,
   startAt? : IInitialTimeOptions
 ) : number {
-  if (startAt != null) {
+  if (!isNullOrUndefined(startAt)) {
     const min = manifest.getMinimumSafePosition();
     let max;
     if (manifest.isLive) {

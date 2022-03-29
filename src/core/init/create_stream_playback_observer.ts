@@ -62,6 +62,21 @@ export default function createStreamPlaybackObserver(
   ) : Observable<IStreamOrchestratorPlaybackObservation> {
     return observableCombineLatest([observation$, speed.asObservable()]).pipe(
       map(([observation, lastSpeed]) => {
+        let wantedTimeOffset = 0;
+        if (!initialSeekPerformed.getValue()) {
+          wantedTimeOffset = startTime - observation.position;
+        } else if (!manifest.isDynamic || manifest.isLastPeriodKnown) {
+          const lastPeriod = manifest.periods[manifest.periods.length - 1];
+          if (lastPeriod !== undefined &&
+              lastPeriod.end !== undefined &&
+              observation.position > lastPeriod.end)
+          {
+            wantedTimeOffset = lastPeriod.end -
+                               observation.position -
+                               1;
+          }
+        }
+
         return {
           // TODO more exact according to the current Adaptation chosen?
           maximumPosition: manifest.getMaximumSafePosition(),
@@ -71,16 +86,13 @@ export default function createStreamPlaybackObserver(
                                                       !autoPlay,
           readyState: observation.readyState,
           speed: lastSpeed,
-
           // wantedTimeOffset is an offset to add to the timing's current time to have
           // the "real" wanted position.
           // For now, this is seen when the media element has not yet seeked to its
           // initial position, the currentTime will most probably be 0 where the
           // effective starting position will be _startTime_.
           // Thus we initially set a wantedTimeOffset equal to startTime.
-          wantedTimeOffset: initialSeekPerformed.getValue() ?
-            0 :
-            startTime - observation.position,
+          wantedTimeOffset,
         };
       }));
   });

@@ -64,7 +64,6 @@ import {
   IMultiplePeriodStreamsEvent,
   IPeriodStreamEvent,
   IStreamOrchestratorEvent,
-  IStreamWarningEvent,
 } from "../types";
 import ActivePeriodEmitter from "./active_period_emitter";
 import areStreamsComplete from "./are_streams_complete";
@@ -151,31 +150,8 @@ export default function StreamOrchestrator(
       });
     });
 
-  // trigger warnings when the wanted time is before or after the manifest's
-  // segments
-  const outOfManifest$ = playbackObserver.observe(true).pipe(
-    filterMap<IStreamOrchestratorPlaybackObservation, IStreamWarningEvent, null>((
-      { position, wantedTimeOffset }
-    ) => {
-      const offsetedPosition = wantedTimeOffset + position;
-      if (offsetedPosition < manifest.getMinimumSafePosition()) {
-        const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST",
-                                       "The current position is behind the " +
-                                       "earliest time announced in the Manifest.");
-        return EVENTS.warning(warning);
-      } else if (offsetedPosition > manifest.getMaximumSafePosition()) {
-        const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST",
-                                       "The current position is after the latest " +
-                                       "time announced in the Manifest.");
-        return EVENTS.warning(warning);
-      }
-      return null;
-    }, null));
-
-  const bufferTypes = segmentBuffersStore.getBufferTypes();
-
   // Every PeriodStreams for every possible types
-  const streamsArray = bufferTypes.map((bufferType) => {
+  const streamsArray = segmentBuffersStore.getBufferTypes().map((bufferType) => {
     return manageEveryStreams(bufferType, initialPeriod)
       .pipe(deferSubscriptions(), share());
   });
@@ -203,10 +179,7 @@ export default function StreamOrchestrator(
           map((emitEndOfStream) =>
             emitEndOfStream ? EVENTS.endOfStream() : EVENTS.resumeStream()));
 
-  return observableMerge(...streamsArray,
-                         activePeriodChanged$,
-                         endOfStream$,
-                         outOfManifest$);
+  return observableMerge(...streamsArray, activePeriodChanged$, endOfStream$);
 
   /**
    * Manage creation and removal of Streams for every Periods for a given type.
