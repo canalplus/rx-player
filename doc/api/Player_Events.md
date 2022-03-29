@@ -78,6 +78,7 @@ The object emitted as the following properties:
 
 - `liveGap` (`Number|undefined`): Only for live contents. The gap between
   the current position and the "live edge".
+  Might not be set for `directfile` contents.
 
 - `maximumBufferTime` (`Number|undefined`): The maximum time until which
   the buffer can currently be filled. That is:

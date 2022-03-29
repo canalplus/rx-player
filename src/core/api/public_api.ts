@@ -46,6 +46,7 @@ import {
 import {
   events,
   exitFullscreen,
+  getStartDate,
   isFullscreen,
   requestFullscreen,
 } from "../../compat";
@@ -1276,24 +1277,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     const { isDirectFile, manifest } = this._priv_contentInfos;
     if (isDirectFile) {
-      // Calculating the "wall-clock time" necessitate to obtain first an offset,
-      // and then adding that offset to the HTMLMediaElement's current position.
-      // That offset is in most case present inside the Manifest file, yet in
-      // directfile mode, the RxPlayer won't parse that file, the browser does it.
-      //
-      // Thankfully Safari declares a `getStartDate` method allowing to obtain
-      // that offset when available. This logic is thus mainly useful when
-      // playing HLS contents in directfile mode on Safari.
-      const mediaElement : HTMLMediaElement & {
-        getStartDate? : () => number | null | undefined;
-      } = this.videoElement;
-      if (typeof mediaElement.getStartDate === "function") {
-        const startDate = mediaElement.getStartDate();
-        if (typeof startDate === "number" && !isNaN(startDate)) {
-          return startDate + mediaElement.currentTime;
-        }
-      }
-      return mediaElement.currentTime;
+      const startDate = getStartDate(this.videoElement);
+      return (startDate ?? 0) + this.videoElement.currentTime;
     }
     if (manifest !== null) {
       const currentTime = this.videoElement.currentTime;
@@ -1596,12 +1581,19 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       } else if (!isNullOrUndefined(timeObj.position)) {
         positionWanted = timeObj.position;
       } else if (!isNullOrUndefined(timeObj.wallClockTime)) {
-        positionWanted = (isDirectFile || manifest === null) ?
-          timeObj.wallClockTime :
-          timeObj.wallClockTime - (
-            manifest.availabilityStartTime !== undefined ?
-              manifest.availabilityStartTime :
-              0);
+        if (manifest !== null) {
+          positionWanted = timeObj.wallClockTime - (
+            manifest.availabilityStartTime ?? 0
+          );
+        } else if (isDirectFile && this.videoElement !== null) {
+          const startDate = getStartDate(this.videoElement);
+          if (startDate !== undefined) {
+            positionWanted = startDate + timeObj.wallClockTime;
+          }
+        }
+        if (positionWanted === undefined) {
+          positionWanted = timeObj.wallClockTime;
+        }
       } else {
         throw new Error("invalid time object. You must set one of the " +
                         "following properties: \"relative\", \"position\" or " +
@@ -2893,8 +2885,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       const ast = manifest.availabilityStartTime ?? 0;
       positionData.wallClockTime = observation.position + ast;
       positionData.liveGap = maximumPosition - observation.position;
+    } else if (isDirectFile && this.videoElement !== null) {
+      const startDate = getStartDate(this.videoElement);
+      if (startDate !== undefined) {
+        positionData.wallClockTime = startDate + observation.position;
+      }
     }
-
     this.trigger("positionUpdate", positionData);
   }
 
