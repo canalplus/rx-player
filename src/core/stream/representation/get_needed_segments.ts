@@ -286,7 +286,7 @@ function getAvailableBufferSize(
   }, 0);
   return bufferedSegments.reduce((size, chunk) => {
     if (chunk.chunkSize !== undefined) {
-      return size - (chunk.chunkSize / 8000);
+      return size - (chunk.chunkSize / 1000);
     } else {
       return size;
     }
