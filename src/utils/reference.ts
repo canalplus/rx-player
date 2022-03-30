@@ -18,7 +18,6 @@ import {
   Observable,
   Subscriber,
 } from "rxjs";
-import log from "../log";
 import { CancellationSignal } from "./task_canceller";
 
 /**
@@ -194,7 +193,6 @@ export function createSharedReference<T>(initialValue : T) : ISharedReference<T>
         if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
           throw new Error("Finished shared references cannot be updated");
         } else {
-          log.error("Finished shared references cannot be updated");
           return;
         }
       }
