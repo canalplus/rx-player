@@ -239,26 +239,32 @@ export default function getNeededSegments({
       }
     }
 
-    // check if there is an hole in place of the segment currently
-    for (let i = 0; i < segmentsToKeep.length; i++) {
-      const completeSeg = segmentsToKeep[i];
-      if (completeSeg.end > time) {
-        // `true` if `completeSeg` starts too far after `time`
-        return completeSeg.start > time + ROUNDING_ERROR ||
-          // `true` if `completeSeg` ends too soon before `end`
-          getLastContiguousSegment(segmentsToKeep, i).end < end - ROUNDING_ERROR;
-      }
-    }
-
     const estimatedSegmentSize = (duration * content.representation.bitrate) / 8000;
     if (availableBufferSize - estimatedSegmentSize < 0 &&
         bufferLength > MIN_BUFFER_LENGTH) {
       isMemorySaturated = true;
       return false;
     }
+
+    // check if there is an hole in place of the segment currently
+    for (let i = 0; i < segmentsToKeep.length; i++) {
+      const completeSeg = segmentsToKeep[i];
+
+      // For the first already-loaded segment, take the first one ending after
+      // this one' s start
+      if ((completeSeg.end + ROUNDING_ERROR) > time) {
+        const shouldLoad = completeSeg.start > time + ROUNDING_ERROR ||
+                           getLastContiguousSegment(segmentsToKeep, i).end <
+                             end - ROUNDING_ERROR;
+        if (shouldLoad) {
+          availableBufferSize -= estimatedSegmentSize;
+          bufferLength += duration;
+        }
+        return shouldLoad;
+      }
+    }
     availableBufferSize -= estimatedSegmentSize;
     bufferLength += duration;
-
     return true;
   });
   return { neededSegments, isBufferFull };
