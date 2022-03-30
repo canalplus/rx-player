@@ -170,10 +170,19 @@ export default function PeriodStream({
           if (SegmentBuffersStore.isNative(bufferType)) {
             return reloadAfterSwitch(period, bufferType, playbackObserver, 0);
           }
+          if (period.end === undefined) {
+            cleanBuffer$ = segmentBufferStatus.value.removeBuffer(period.start,
+                                                                  Infinity);
+          } else if (period.end <= period.start) {
+            cleanBuffer$ = observableOf(null);
+          } else {
+            cleanBuffer$ = segmentBufferStatus.value.removeBuffer(period.start,
+                                                                  period.end);
+          }
           cleanBuffer$ = segmentBufferStatus.value
             .removeBuffer(period.start,
-                          period.end == null ? Infinity :
-                                               period.end);
+                          period.end === undefined ? Infinity :
+                                                     period.end);
         } else {
           if (segmentBufferStatus.type === "uninitialized") {
             segmentBuffersStore.disableSegmentBuffer(bufferType);

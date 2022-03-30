@@ -19,6 +19,7 @@ import {
   defer as observableDefer,
   from as observableFrom,
   Observable,
+  of as observableOf,
 } from "rxjs";
 import config from "../../../config";
 import log from "../../../log";
@@ -54,7 +55,9 @@ export default function forceGarbageCollection(
 
     log.debug("Stream: GC cleaning", cleanedupRanges);
     return observableFrom(
-      cleanedupRanges.map(({ start, end }) => bufferingQueue.removeBuffer(start, end))
+      cleanedupRanges.map(({ start, end }) =>
+        start >= end ? observableOf(null) :
+                       bufferingQueue.removeBuffer(start, end))
     ).pipe(concatAll());
   });
 }

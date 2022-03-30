@@ -22,6 +22,7 @@ import {
   ignoreElements,
   mergeMap,
   Observable,
+  of as observableOf,
 } from "rxjs";
 import log from "../../log";
 import { getInnerAndOuterTimeRanges } from "../../utils/ranges";
@@ -152,6 +153,9 @@ function clearBuffer(
   const clean$ = observableFrom(
     cleanedupRanges.map((range) => {
       log.debug("GC: cleaning range from SegmentBuffer", range);
+      if (range.start >= range.end) {
+        return observableOf(null);
+      }
       return segmentBuffer.removeBuffer(range.start, range.end);
     })
   ).pipe(concatAll(),

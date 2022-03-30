@@ -348,7 +348,8 @@ export default function StreamOrchestrator(
 
         return observableConcat(
           ...rangesToClean.map(({ start, end }) =>
-            segmentBuffer.removeBuffer(start, end).pipe(ignoreElements())),
+            start >= end ? EMPTY :
+                           segmentBuffer.removeBuffer(start, end).pipe(ignoreElements())),
           playbackObserver.observe(true).pipe(
             take(1),
             mergeMap((observation) => {

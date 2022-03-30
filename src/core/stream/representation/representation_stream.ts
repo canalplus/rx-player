@@ -384,10 +384,12 @@ export default function RepresentationStream<TSegmentDataType>({
         const gcedPosition = Math.max(
           0,
           wantedStartPosition - UPTO_CURRENT_POSITION_CLEANUP);
-        bufferRemoval = segmentBuffer
-          .removeBuffer(0, gcedPosition)
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          .pipe(ignoreElements());
+        if (gcedPosition > 0) {
+          bufferRemoval = segmentBuffer
+            .removeBuffer(0, gcedPosition)
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+            .pipe(ignoreElements());
+        }
       }
       return status.shouldRefreshManifest ?
         observableConcat(observableOf(EVENTS.needsManifestRefresh()),
