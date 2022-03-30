@@ -112,8 +112,6 @@ export default function getNeededSegments({
                                                    segmentsBeingPushed,
                                                    maxBufferSize);
 
-  // Current buffer length in seconds
-  let bufferLength = getBufferLength(bufferedSegments, segmentsBeingPushed);
   const availableSegmentsForRange = representation.index
     .getSegments(neededRange.start, neededRange.end - neededRange.start);
 
@@ -151,9 +149,8 @@ export default function getNeededSegments({
       return true;
     });
   const { MINIMUM_SEGMENT_SIZE,
-          MIN_BUFFER_LENGTH,
           MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP } = config.getCurrent();
-  let isMemorySaturated = false;
+  let shouldStopLoadingSegments = false;
   /**
    * Epsilon compensating for rounding errors when comparing the start and end
    * time of multiple segments.
@@ -176,21 +173,9 @@ export default function getNeededSegments({
     if (segment.isInit) {
       return true; // never skip initialization segments
     }
-    if (isMemorySaturated) {
-      // If we are so saturated in memory
-      // That we cannot download atleast till
-      // NeededRange.Start ( current position ) + a CONST
-      // Then the buffer is full
-      if (time < neededRange.start + MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP) {
-        isBufferFull = true;
-      }
-    }
-    if (isMemorySaturated &&
-      bufferLength > MIN_BUFFER_LENGTH) {
-
+    if (shouldStopLoadingSegments) {
       return false;
     }
-
     if (segment.complete && duration < MINIMUM_SEGMENT_SIZE) {
       return false; // too small, don't download
     }
@@ -240,10 +225,12 @@ export default function getNeededSegments({
     }
 
     const estimatedSegmentSize = (duration * content.representation.bitrate) / 8000;
-    if (availableBufferSize - estimatedSegmentSize < 0 &&
-        bufferLength > MIN_BUFFER_LENGTH) {
-      isMemorySaturated = true;
-      return false;
+    if (availableBufferSize - estimatedSegmentSize < 0) {
+      isBufferFull = true;
+      if (time > neededRange.start + MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP) {
+        shouldStopLoadingSegments = true;
+        return false;
+      }
     }
 
     // check if there is an hole in place of the segment currently
@@ -258,13 +245,11 @@ export default function getNeededSegments({
                              end - ROUNDING_ERROR;
         if (shouldLoad) {
           availableBufferSize -= estimatedSegmentSize;
-          bufferLength += duration;
         }
         return shouldLoad;
       }
     }
     availableBufferSize -= estimatedSegmentSize;
-    bufferLength += duration;
     return true;
   });
   return { neededSegments, isBufferFull };
@@ -298,25 +283,6 @@ function getAvailableBufferSize(
     }
 
   } , availableBufferSize);
-}
-
-/**
- * Compute the length of the buffer in seconds
- * @param bufferedSegments
- * @param segmentsBeingPushed
- * @returns bufferLength in seconds
- */
-function getBufferLength(
-  bufferedSegments: IBufferedChunk[],
-  segmentsBeingPushed: IEndOfSegmentInfos[]
-) : number {
-  const bufferLength = bufferedSegments.reduce((length, segment) => {
-    return length + (segment.end - segment.start);
-  }, 0);
-  const bufferBeingPushed = segmentsBeingPushed.reduce((length, segment) => {
-    return length + segment.segment.duration;
-  }, 0);
-  return bufferLength + bufferBeingPushed;
 }
 
 /**

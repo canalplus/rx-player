@@ -62,8 +62,8 @@ export interface IBufferStatus {
    */
   shouldRefreshManifest : boolean;
   /**
-   * If 'true', the buffer memory is saturated before being able to download
-   * at least MIN_REQUIRED_BUFFER_AHEAD ( default : 10sec )
+   * If 'true', the buffer memory is saturated, thus we may have issues loading
+   * new segments.
    */
   isBufferFull: boolean;
 }

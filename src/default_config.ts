@@ -1164,38 +1164,31 @@ const DEFAULT_CONFIG = {
      */
   DEFAULT_MAXIMUM_TIME_ROUNDING_ERROR: 1 / 1000,
 
-    /**
-     * RxPlayer's media buffers have a linked history registering recent events
-     * that happened on those.
-     * The reason is to implement various heuristics in case of weird browser
-     * behavior.
-     *
-     * The `BUFFERED_HISTORY_RETENTION_TIME` is the minimum age an entry of
-     * that history can have before being removed from the history.
-     */
+  /**
+   * RxPlayer's media buffers have a linked history registering recent events
+   * that happened on those.
+   * The reason is to implement various heuristics in case of weird browser
+   * behavior.
+   *
+   * The `BUFFERED_HISTORY_RETENTION_TIME` is the minimum age an entry of
+   * that history can have before being removed from the history.
+   */
   BUFFERED_HISTORY_RETENTION_TIME: 60000,
 
-    /**
-     * RxPlayer's media buffers have a linked history registering recent events
-     * that happened on those.
-     * The reason is to implement various heuristics in case of weird browser
-     * behavior.
-     *
-     * The `BUFFERED_HISTORY_RETENTION_TIME` is the maximum number of entries
-     * there can be in that history.
-     */
+  /**
+   * RxPlayer's media buffers have a linked history registering recent events
+   * that happened on those.
+   * The reason is to implement various heuristics in case of weird browser
+   * behavior.
+   *
+   * The `BUFFERED_HISTORY_RETENTION_TIME` is the maximum number of entries
+   * there can be in that history.
+   */
   BUFFERED_HISTORY_MAXIMUM_ENTRIES: 200,
-
-    /**
-     * Minimum buffer (in seconds) we should have, regardless of memory
-     * constraints
-     */
-  MIN_BUFFER_LENGTH : 5,
 
   /**
    * Minimum buffer in seconds ahead relative to current time
-   * we should be able to download
-   * Before trying to agressively free up memory
+   * we should be able to download.
    */
   MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP: 10,
 
