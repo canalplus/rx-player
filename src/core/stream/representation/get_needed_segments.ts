@@ -84,7 +84,17 @@ export interface IGetNeededSegmentsArguments {
 
 
 interface INeededSegments {
-  neededSegments: ISegment[];
+  /** Segments that should be loaded right now, by chronological order. */
+  segmentsToLoad: ISegment[];
+  /**
+   * Segments that should be loaded, but not right now, due to some other
+   * constraints, such as memory limitations.
+   */
+  segmentsOnHold : ISegment[];
+  /**
+   * If `true` the buffer is currently full according to the given limits.
+   * Memory should be freed if possible, for example by cleaning the buffers.
+   */
   isBufferFull: boolean;
 }
 /**
@@ -157,7 +167,8 @@ export default function getNeededSegments({
    */
   const ROUNDING_ERROR = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
   let isBufferFull = false;
-  const neededSegments = availableSegmentsForRange.filter(segment => {
+  const segmentsOnHold : ISegment[] = [];
+  const segmentsToLoad = availableSegmentsForRange.filter(segment => {
     const contentObject = objectAssign({ segment }, content);
 
     // First, check that the segment is not already being pushed
@@ -174,6 +185,7 @@ export default function getNeededSegments({
       return true; // never skip initialization segments
     }
     if (shouldStopLoadingSegments) {
+      segmentsOnHold.push(segment);
       return false;
     }
     if (segment.complete && duration < MINIMUM_SEGMENT_SIZE) {
@@ -229,6 +241,7 @@ export default function getNeededSegments({
       isBufferFull = true;
       if (time > neededRange.start + MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP) {
         shouldStopLoadingSegments = true;
+        segmentsOnHold.push(segment);
         return false;
       }
     }
@@ -252,7 +265,7 @@ export default function getNeededSegments({
     availableBufferSize -= estimatedSegmentSize;
     return true;
   });
-  return { neededSegments, isBufferFull };
+  return { segmentsToLoad, segmentsOnHold, isBufferFull };
 
 }
 /**
