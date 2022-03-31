@@ -55564,8 +55564,6 @@ function PeriodStream(_ref) {
         } else {
           cleanBuffer$ = segmentBufferStatus.value.removeBuffer(period.start, period.end);
         }
-
-        cleanBuffer$ = segmentBufferStatus.value.removeBuffer(period.start, period.end === undefined ? Infinity : period.end);
       } else {
         if (segmentBufferStatus.type === "uninitialized") {
           segmentBuffersStore.disableSegmentBuffer(bufferType);
