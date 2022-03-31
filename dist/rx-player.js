@@ -3368,17 +3368,10 @@ var DEFAULT_CONFIG = {
   BUFFERED_HISTORY_MAXIMUM_ENTRIES: 200,
 
   /**
-   * Minimum buffer (in seconds) we should have, regardless of memory
-   * constraints
-   */
-  MIN_BUFFER_LENGTH: 5,
-
-  /**
    * Minimum buffer in seconds ahead relative to current time
-   * we should be able to download
-   * Before trying to agressively free up memory
+   * we should be able to download, even in cases of saturated memory.
    */
-  MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP: 10,
+  MIN_BUFFER_AHEAD: 5,
 
   /**
    * Distance in seconds behind the current position
@@ -40478,8 +40471,7 @@ function isTimeInTimeRanges(ranges, time) {
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "$": function() { return /* binding */ createSharedReference; }
 /* harmony export */ });
-/* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(1480);
-/* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3887);
+/* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1480);
 function _createForOfIteratorHelperLoose(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (it) return (it = it.call(o)).next.bind(it); if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
@@ -40501,7 +40493,6 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 
 /**
  * Create an `ISharedReference` object encapsulating the mutable `initialValue`
@@ -40549,7 +40540,6 @@ function createSharedReference(initialValue) {
     setValue: function setValue(newVal) {
       if (isFinished) {
         if (false) {} else {
-          _log__WEBPACK_IMPORTED_MODULE_0__/* ["default"].error */ .Z.error("Finished shared references cannot be updated");
           return;
         }
       }
@@ -40588,7 +40578,7 @@ function createSharedReference(initialValue) {
      * @returns {Observable}
      */
     asObservable: function asObservable(skipCurrentValue) {
-      return new rxjs__WEBPACK_IMPORTED_MODULE_1__/* .Observable */ .y(function (obs) {
+      return new rxjs__WEBPACK_IMPORTED_MODULE_0__/* .Observable */ .y(function (obs) {
         if (skipCurrentValue !== true) {
           obs.next(value);
         }
@@ -52664,6 +52654,11 @@ function clearBuffer(segmentBuffer, position, maxBufferBehind, maxBufferAhead) {
   collectBufferAhead();
   var clean$ = (0,from/* from */.D)(cleanedupRanges.map(function (range) {
     log/* default.debug */.Z.debug("GC: cleaning range from SegmentBuffer", range);
+
+    if (range.start >= range.end) {
+      return (0,of.of)(null);
+    }
+
     return segmentBuffer.removeBuffer(range.start, range.end);
   })).pipe((0,concatAll/* concatAll */.u)(), // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
   // first type parameter as `any` instead of the perfectly fine `unknown`,
@@ -53398,9 +53393,7 @@ function getNeededSegments(_ref) {
       segmentsBeingPushed = _ref.segmentsBeingPushed,
       maxBufferSize = _ref.maxBufferSize;
   var representation = content.representation;
-  var availableBufferSize = getAvailableBufferSize(bufferedSegments, segmentsBeingPushed, maxBufferSize); // Current buffer length in seconds
-
-  var bufferLength = getBufferLength(bufferedSegments, segmentsBeingPushed);
+  var availableBufferSize = getAvailableBufferSize(bufferedSegments, segmentsBeingPushed, maxBufferSize);
   var availableSegmentsForRange = representation.index.getSegments(neededRange.start, neededRange.end - neededRange.start); // Remove from `bufferedSegments` any segments we would prefer to replace:
   //   - segments in the wrong track / bad quality
   //   - garbage-collected segments
@@ -53437,10 +53430,9 @@ function getNeededSegments(_ref) {
 
   var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
       MINIMUM_SEGMENT_SIZE = _config$getCurrent.MINIMUM_SEGMENT_SIZE,
-      MIN_BUFFER_LENGTH = _config$getCurrent.MIN_BUFFER_LENGTH,
-      MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP = _config$getCurrent.MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP;
+      MIN_BUFFER_AHEAD = _config$getCurrent.MIN_BUFFER_AHEAD;
 
-  var isMemorySaturated = false;
+  var shouldStopLoadingSegments = false;
   /**
    * Epsilon compensating for rounding errors when comparing the start and end
    * time of multiple segments.
@@ -53448,7 +53440,8 @@ function getNeededSegments(_ref) {
 
   var ROUNDING_ERROR = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
   var isBufferFull = false;
-  var neededSegments = availableSegmentsForRange.filter(function (segment) {
+  var segmentsOnHold = [];
+  var segmentsToLoad = availableSegmentsForRange.filter(function (segment) {
     var contentObject = (0,object_assign/* default */.Z)({
       segment: segment
     }, content); // First, check that the segment is not already being pushed
@@ -53471,17 +53464,8 @@ function getNeededSegments(_ref) {
       return true; // never skip initialization segments
     }
 
-    if (isMemorySaturated) {
-      // If we are so saturated in memory
-      // That we cannot download atleast till
-      // NeededRange.Start ( current position ) + a CONST
-      // Then the buffer is full
-      if (time < neededRange.start + MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP) {
-        isBufferFull = true;
-      }
-    }
-
-    if (isMemorySaturated && bufferLength > MIN_BUFFER_LENGTH) {
+    if (shouldStopLoadingSegments) {
+      segmentsOnHold.push(segment);
       return false;
     }
 
@@ -53530,32 +53514,42 @@ function getNeededSegments(_ref) {
           return false; // already downloaded
         }
       }
-    } // check if there is an hole in place of the segment currently
-
-
-    for (var _i = 0; _i < segmentsToKeep.length; _i++) {
-      var _completeSeg = segmentsToKeep[_i];
-
-      if (_completeSeg.end > time) {
-        // `true` if `completeSeg` starts too far after `time`
-        return _completeSeg.start > time + ROUNDING_ERROR || // `true` if `completeSeg` ends too soon before `end`
-        getLastContiguousSegment(segmentsToKeep, _i).end < end - ROUNDING_ERROR;
-      }
     }
 
     var estimatedSegmentSize = duration * content.representation.bitrate / 8000;
 
-    if (availableBufferSize - estimatedSegmentSize < 0 && bufferLength > MIN_BUFFER_LENGTH) {
-      isMemorySaturated = true;
-      return false;
+    if (availableBufferSize - estimatedSegmentSize < 0) {
+      isBufferFull = true;
+
+      if (time > neededRange.start + MIN_BUFFER_AHEAD) {
+        shouldStopLoadingSegments = true;
+        segmentsOnHold.push(segment);
+        return false;
+      }
+    } // check if there is an hole in place of the segment currently
+
+
+    for (var _i = 0; _i < segmentsToKeep.length; _i++) {
+      var _completeSeg = segmentsToKeep[_i]; // For the first already-loaded segment, take the first one ending after
+      // this one' s start
+
+      if (_completeSeg.end + ROUNDING_ERROR > time) {
+        var shouldLoad = _completeSeg.start > time + ROUNDING_ERROR || getLastContiguousSegment(segmentsToKeep, _i).end < end - ROUNDING_ERROR;
+
+        if (shouldLoad) {
+          availableBufferSize -= estimatedSegmentSize;
+        }
+
+        return shouldLoad;
+      }
     }
 
     availableBufferSize -= estimatedSegmentSize;
-    bufferLength += duration;
     return true;
   });
   return {
-    neededSegments: neededSegments,
+    segmentsToLoad: segmentsToLoad,
+    segmentsOnHold: segmentsOnHold,
     isBufferFull: isBufferFull
   };
 }
@@ -53578,28 +53572,11 @@ function getAvailableBufferSize(bufferedSegments, segmentsBeingPushed, maxVideoB
   }, 0);
   return bufferedSegments.reduce(function (size, chunk) {
     if (chunk.chunkSize !== undefined) {
-      return size - chunk.chunkSize / 8000;
+      return size - chunk.chunkSize / 1000;
     } else {
       return size;
     }
   }, availableBufferSize);
-}
-/**
- * Compute the length of the buffer in seconds
- * @param bufferedSegments
- * @param segmentsBeingPushed
- * @returns bufferLength in seconds
- */
-
-
-function getBufferLength(bufferedSegments, segmentsBeingPushed) {
-  var bufferLength = bufferedSegments.reduce(function (length, segment) {
-    return length + (segment.end - segment.start);
-  }, 0);
-  var bufferBeingPushed = segmentsBeingPushed.reduce(function (length, segment) {
-    return length + segment.segment.duration;
-  }, 0);
-  return bufferLength + bufferBeingPushed;
 }
 /**
  * From the given array of buffered chunks (`bufferedSegments`) returns the last
@@ -53974,10 +53951,11 @@ function getBufferStatus(content, wantedStartPosition, playbackObserver, fastSwi
     segmentsBeingPushed: segmentsBeingPushed,
     maxBufferSize: maxBufferSize
   }),
-      neededSegments = _getNeededSegments.neededSegments,
+      segmentsToLoad = _getNeededSegments.segmentsToLoad,
+      segmentsOnHold = _getNeededSegments.segmentsOnHold,
       isBufferFull = _getNeededSegments.isBufferFull;
 
-  var prioritizedNeededSegments = neededSegments.map(function (segment) {
+  var prioritizedNeededSegments = segmentsToLoad.map(function (segment) {
     return {
       priority: getSegmentPriority(segment.time, wantedStartPosition),
       segment: segment
@@ -53991,7 +53969,7 @@ function getBufferStatus(content, wantedStartPosition, playbackObserver, fastSwi
   var hasFinishedLoading;
   var lastPosition = representation.index.getLastPosition();
 
-  if (!representation.index.isInitialized() || period.end === undefined || prioritizedNeededSegments.length > 0) {
+  if (!representation.index.isInitialized() || period.end === undefined || prioritizedNeededSegments.length > 0 || segmentsOnHold.length > 0) {
     hasFinishedLoading = false;
   } else {
     if (lastPosition === undefined) {
@@ -54030,6 +54008,10 @@ function getBufferStatus(content, wantedStartPosition, playbackObserver, fastSwi
       nextSegmentStart = Math.min.apply(Math, segmentsBeingPushed.map(function (info) {
         return info.segment.time;
       }));
+    }
+
+    if (segmentsOnHold.length > 0) {
+      nextSegmentStart = nextSegmentStart !== null ? Math.min(nextSegmentStart, segmentsOnHold[0].time) : segmentsOnHold[0].time;
     }
 
     if (prioritizedNeededSegments.length > 0) {
@@ -54129,7 +54111,7 @@ function forceGarbageCollection(currentPosition, bufferingQueue) {
     return (0,from/* from */.D)(cleanedupRanges.map(function (_ref) {
       var start = _ref.start,
           end = _ref.end;
-      return bufferingQueue.removeBuffer(start, end);
+      return start >= end ? (0,of.of)(null) : bufferingQueue.removeBuffer(start, end);
     })).pipe((0,concatAll/* concatAll */.u)());
   });
 }
@@ -54587,8 +54569,11 @@ function RepresentationStream(_ref) {
 
     if (status.isBufferFull) {
       var gcedPosition = Math.max(0, wantedStartPosition - UPTO_CURRENT_POSITION_CLEANUP);
-      bufferRemoval = segmentBuffer.removeBuffer(0, gcedPosition) // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      .pipe((0,ignoreElements/* ignoreElements */.l)());
+
+      if (gcedPosition > 0) {
+        bufferRemoval = segmentBuffer.removeBuffer(0, gcedPosition) // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        .pipe((0,ignoreElements/* ignoreElements */.l)());
+      }
     }
 
     return status.shouldRefreshManifest ? (0,concat/* concat */.z)((0,of.of)(stream_events_generators/* default.needsManifestRefresh */.Z.needsManifestRefresh()), bufferStatusEvt, bufferRemoval) : (0,concat/* concat */.z)(bufferStatusEvt, bufferRemoval);
@@ -55572,7 +55557,15 @@ function PeriodStream(_ref) {
           return reloadAfterSwitch(period, bufferType, playbackObserver, 0);
         }
 
-        cleanBuffer$ = segmentBufferStatus.value.removeBuffer(period.start, period.end == null ? Infinity : period.end);
+        if (period.end === undefined) {
+          cleanBuffer$ = segmentBufferStatus.value.removeBuffer(period.start, Infinity);
+        } else if (period.end <= period.start) {
+          cleanBuffer$ = (0,of.of)(null);
+        } else {
+          cleanBuffer$ = segmentBufferStatus.value.removeBuffer(period.start, period.end);
+        }
+
+        cleanBuffer$ = segmentBufferStatus.value.removeBuffer(period.start, period.end === undefined ? Infinity : period.end);
       } else {
         if (segmentBufferStatus.type === "uninitialized") {
           segmentBuffersStore.disableSegmentBuffer(bufferType);
@@ -56295,7 +56288,7 @@ function StreamOrchestrator(content, playbackObserver, abrManager, segmentBuffer
       return concat/* concat.apply */.z.apply(void 0, rangesToClean.map(function (_ref4) {
         var start = _ref4.start,
             end = _ref4.end;
-        return segmentBuffer.removeBuffer(start, end).pipe((0,ignoreElements/* ignoreElements */.l)());
+        return start >= end ? empty/* EMPTY */.E : segmentBuffer.removeBuffer(start, end).pipe((0,ignoreElements/* ignoreElements */.l)());
       }).concat([playbackObserver.observe(true).pipe((0,take/* take */.q)(1), (0,mergeMap/* mergeMap */.z)(function (observation) {
         return (0,concat/* concat */.z)((0,of.of)(stream_events_generators/* default.needsDecipherabilityFlush */.Z.needsDecipherabilityFlush(observation.position, !observation.isPaused, observation.duration)), (0,defer/* defer */.P)(function () {
           var lastPosition = observation.position + observation.wantedTimeOffset;
