@@ -66,6 +66,7 @@ function parseISOBMFFEmbeddedTextTrack(
     const mdhdTimescale = getMDHDTimescale(chunkBytes);
     return { segmentType: "init",
              initializationData: null,
+             initializationDataSize: 0,
              initTimescale: mdhdTimescale,
              protectionDataUpdate: false };
   }
@@ -80,6 +81,7 @@ function parseISOBMFFEmbeddedTextTrack(
   const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
   return { segmentType: "media",
            chunkData,
+           chunkSize: chunkBytes.length,
            chunkInfos,
            chunkOffset,
            protectionDataUpdate: false,
@@ -107,15 +109,18 @@ function parsePlainTextTrack(
   if (segment.isInit) {
     return { segmentType: "init",
              initializationData: null,
+             initializationDataSize: 0,
              initTimescale: undefined,
              protectionDataUpdate: false };
   }
 
   let textTrackData : string;
+  let chunkSize : number | undefined;
   if (typeof data !== "string") {
     const bytesData = data instanceof Uint8Array ? data :
                                                    new Uint8Array(data);
     textTrackData = utf8ToStr(bytesData);
+    chunkSize = bytesData.length;
   } else {
     textTrackData = data;
   }
@@ -123,6 +128,7 @@ function parsePlainTextTrack(
   const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
   return { segmentType: "media",
            chunkData,
+           chunkSize,
            chunkInfos: null,
            chunkOffset,
            protectionDataUpdate: false,
@@ -152,12 +158,14 @@ export default function textTrackParser(
     if (segment.isInit) {
       return { segmentType: "init",
                initializationData: null,
+               initializationDataSize: 0,
                protectionDataUpdate: false,
                initTimescale: undefined };
     }
     const chunkOffset = segment.timestampOffset ?? 0;
     return { segmentType: "media",
              chunkData: null,
+             chunkSize: 0,
              chunkInfos: null,
              chunkOffset,
              protectionDataUpdate: false,

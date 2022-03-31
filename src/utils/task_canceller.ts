@@ -136,13 +136,28 @@ export default class TaskCanceller {
    * Creates a new `TaskCanceller`, with its own `CancellationSignal` created
    * as its `signal` provide.
    * You can then pass this property to async task you wish to be cancellable.
+   * @param {Object|undefined} options
    */
-  constructor() {
+  constructor(options? : {
+    /**
+     * If set the TaskCanceller created here will automatically be triggered
+     * when that signal emits.
+     */
+    cancelOn? : CancellationSignal | undefined;
+  } | undefined) {
     const [trigger, register] = createCancellationFunctions();
     this.isUsed = false;
     this._trigger = trigger;
     this.signal = new CancellationSignal(register);
+
+    if (options?.cancelOn !== undefined) {
+      const unregisterParent = options.cancelOn.register(() => {
+        this.cancel();
+      });
+      this.signal.register(unregisterParent);
+    }
   }
+
 
   /**
    * "Trigger" the `TaskCanceller`, notify through its associated
@@ -153,14 +168,14 @@ export default class TaskCanceller {
    * An optional CancellationError can be given in argument for when this
    * cancellation is actually triggered as a chain reaction from a previous
    * cancellation.
-   * @param {Error} [originError]
+   * @param {Error} [srcError]
    */
-  public cancel(originError? : CancellationError) : void {
+  public cancel(srcError? : CancellationError) : void {
     if (this.isUsed) {
       return ;
     }
     this.isUsed = true;
-    const cancellationError = originError ?? new CancellationError();
+    const cancellationError = srcError ?? new CancellationError();
     this._trigger(cancellationError);
   }
 
@@ -188,7 +203,9 @@ export class CancellationSignal {
    */
   public isCancelled : boolean;
   /**
-   * Error associated to the cancellation.
+   * Error associated to the cancellation, only set if the `CancellationSignal`
+   * has been used (which means that the task has been cancelled).
+   *
    * Can be used to notify to a caller that this task was aborted (for example
    * by rejecting it through the Promise associated to that task).
    *

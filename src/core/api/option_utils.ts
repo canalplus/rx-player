@@ -36,13 +36,13 @@ import {
 } from "../../utils/languages";
 import objectAssign from "../../utils/object_assign";
 import warnOnce from "../../utils/warn_once";
-import { IKeySystemOption } from "../eme";
+import { IKeySystemOption } from "../decrypt";
+import { IAudioTrackSwitchingMode } from "../stream";
 import {
   IAudioTrackPreference,
   ITextTrackPreference,
   IVideoTrackPreference,
 } from "./track_choice_manager";
-
 
 export { IKeySystemOption };
 
@@ -178,6 +178,7 @@ type IParsedStartAtOption = { position : number } |
 export interface IConstructorOptions { maxBufferAhead? : number;
                                        maxBufferBehind? : number;
                                        wantedBufferAhead? : number;
+                                       maxVideoBufferSize?: number;
 
                                        limitVideoWidth? : boolean;
                                        throttleWhenHidden? : boolean;
@@ -201,7 +202,7 @@ export interface IParsedConstructorOptions {
   maxBufferAhead : number;
   maxBufferBehind : number;
   wantedBufferAhead : number;
-
+  maxVideoBufferSize : number;
   limitVideoWidth : boolean;
   throttleWhenHidden : boolean;
   throttleVideoBitrateWhenHidden : boolean;
@@ -236,7 +237,7 @@ export interface ILoadVideoOptions {
   textTrackElement? : HTMLElement;
   manualBitrateSwitchingMode? : "seamless"|"direct";
   enableFastSwitching? : boolean;
-  audioTrackSwitchingMode? : "seamless"|"direct";
+  audioTrackSwitchingMode? : IAudioTrackSwitchingMode;
   onCodecSwitch? : "continue"|"reload";
 
   /* eslint-disable import/no-deprecated */
@@ -266,7 +267,7 @@ interface IParsedLoadVideoOptionsBase {
   startAt : IParsedStartAtOption|undefined;
   manualBitrateSwitchingMode : "seamless"|"direct";
   enableFastSwitching : boolean;
-  audioTrackSwitchingMode : "seamless"|"direct";
+  audioTrackSwitchingMode : IAudioTrackSwitchingMode;
   onCodecSwitch : "continue"|"reload";
 }
 
@@ -311,6 +312,7 @@ function parseConstructorOptions(
   let maxBufferAhead : number;
   let maxBufferBehind : number;
   let wantedBufferAhead : number;
+  let maxVideoBufferSize : number;
 
   let throttleWhenHidden : boolean;
   let throttleVideoBitrateWhenHidden : boolean;
@@ -333,6 +335,7 @@ function parseConstructorOptions(
           DEFAULT_MAX_BITRATES,
           DEFAULT_MAX_BUFFER_AHEAD,
           DEFAULT_MAX_BUFFER_BEHIND,
+          DEFAULT_MAX_VIDEO_BUFFER_SIZE,
           DEFAULT_STOP_AT_END,
           DEFAULT_THROTTLE_WHEN_HIDDEN,
           DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
@@ -366,6 +369,18 @@ function parseConstructorOptions(
       /* eslint-enable max-len */
     }
   }
+
+  if (isNullOrUndefined(options.maxVideoBufferSize)) {
+    maxVideoBufferSize = DEFAULT_MAX_VIDEO_BUFFER_SIZE;
+  } else {
+    maxVideoBufferSize = Number(options.maxVideoBufferSize);
+    if (isNaN(maxVideoBufferSize)) {
+      /* eslint-disable max-len */
+      throw new Error("Invalid maxVideoBufferSize parameter. Should be a number.");
+      /* eslint-enable max-len */
+    }
+  }
+
 
   const limitVideoWidth = isNullOrUndefined(options.limitVideoWidth) ?
     DEFAULT_LIMIT_VIDEO_WIDTH :
@@ -508,6 +523,7 @@ function parseConstructorOptions(
            limitVideoWidth,
            videoElement,
            wantedBufferAhead,
+           maxVideoBufferSize,
            throttleWhenHidden,
            throttleVideoBitrateWhenHidden,
            preferredAudioTracks,
@@ -634,11 +650,12 @@ function parseLoadVideoOptions(
   let audioTrackSwitchingMode = isNullOrUndefined(options.audioTrackSwitchingMode)
                                   ? DEFAULT_AUDIO_TRACK_SWITCHING_MODE
                                   : options.audioTrackSwitchingMode;
-  if (!arrayIncludes(["seamless", "direct"], audioTrackSwitchingMode)) {
+  if (!arrayIncludes(["seamless", "direct", "reload"], audioTrackSwitchingMode)) {
     log.warn("The `audioTrackSwitchingMode` loadVideo option must match one of " +
              "the following strategy name:\n" +
              "- `seamless`\n" +
              "- `direct`\n" +
+             "- `reload`\n" +
              "If badly set, " + DEFAULT_AUDIO_TRACK_SWITCHING_MODE +
              " strategy will be used as default");
     audioTrackSwitchingMode = DEFAULT_AUDIO_TRACK_SWITCHING_MODE;

@@ -15,7 +15,6 @@
  */
 
 import { CustomLoaderError } from "../../errors";
-import PPromise from "../../utils/promise";
 import request, {
   fetchIsSupported,
 } from "../../utils/request";
@@ -42,7 +41,7 @@ import lowLatencySegmentLoader from "./low_latency_segment_loader";
 
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
- * @param {string} uri
+ * @param {string} url
  * @param {Object} content
  * @param {boolean} lowLatencyMode
  * @param {Object} callbacks
@@ -114,8 +113,8 @@ export default function generateSegmentLoader(
               ISegmentLoaderResultChunkedComplete>
   {
     if (url == null) {
-      return PPromise.resolve({ resultType: "segment-created",
-                                resultData: null });
+      return Promise.resolve({ resultType: "segment-created",
+                               resultData: null });
     }
 
     if (lowLatencyMode || customSegmentLoader === undefined) {
@@ -130,7 +129,7 @@ export default function generateSegmentLoader(
                    transport: "dash",
                    url };
 
-    return new PPromise((res, rej) => {
+    return new Promise((res, rej) => {
       /** `true` when the custom segmentLoader should not be active anymore. */
       let hasFinished = false;
 

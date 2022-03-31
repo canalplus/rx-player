@@ -16,7 +16,6 @@
 
 import { CustomLoaderError } from "../../errors";
 import assert from "../../utils/assert";
-import PPromise from "../../utils/promise";
 import request from "../../utils/request";
 import {
   CancellationError,
@@ -143,11 +142,11 @@ const generateSegmentLoader = ({
         responseData = new Uint8Array(0);
     }
 
-    return PPromise.resolve({ resultType: "segment-created" as const,
-                              resultData: responseData });
+    return Promise.resolve({ resultType: "segment-created" as const,
+                             resultData: responseData });
   } else if (url === null) {
-    return PPromise.resolve({ resultType: "segment-created" as const,
-                              resultData: null });
+    return Promise.resolve({ resultType: "segment-created" as const,
+                             resultData: null });
   } else {
     const args = { adaptation,
                    manifest,
@@ -165,7 +164,7 @@ const generateSegmentLoader = ({
                                   checkMediaSegmentIntegrity);
     }
 
-    return new PPromise((res, rej) => {
+    return new Promise((res, rej) => {
       /** `true` when the custom segmentLoader should not be active anymore. */
       let hasFinished = false;
 

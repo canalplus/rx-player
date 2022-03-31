@@ -102,6 +102,7 @@ function parseISOBMFFEmbeddedTextTrack(
     }
     return { segmentType: "init",
              initializationData: null,
+             initializationDataSize: 0,
              protectionDataUpdate: false,
              initTimescale: mdhdTimescale };
   }
@@ -116,6 +117,7 @@ function parseISOBMFFEmbeddedTextTrack(
   const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
   return { segmentType: "media",
            chunkData,
+           chunkSize: chunkBytes.length,
            chunkInfos,
            chunkOffset,
            protectionDataUpdate: false,
@@ -144,21 +146,25 @@ function parsePlainTextTrack(
   if (segment.isInit) {
     return { segmentType: "init",
              initializationData: null,
+             initializationDataSize: 0,
              protectionDataUpdate: false,
              initTimescale: undefined };
   }
 
   let textTrackData : string;
+  let chunkSize : number | undefined;
   if (typeof data !== "string") {
     const bytesData = data instanceof Uint8Array ? data :
                                                    new Uint8Array(data);
     textTrackData = utf8ToStr(bytesData);
+    chunkSize = bytesData.length;
   } else {
     textTrackData = data;
   }
   const chunkData = getPlainTextTrackData(content, textTrackData, isChunked);
   return { segmentType: "media",
            chunkData,
+           chunkSize,
            chunkInfos: null,
            chunkOffset: timestampOffset,
            protectionDataUpdate: false,
@@ -196,11 +202,13 @@ export default function generateTextTrackParser(
       // No data, just return an empty placeholder object
       return segment.isInit ? { segmentType: "init",
                                 initializationData: null,
+                                initializationDataSize: 0,
                                 protectionDataUpdate: false,
                                 initTimescale: undefined } :
 
                               { segmentType: "media",
                                 chunkData: null,
+                                chunkSize: 0,
                                 chunkInfos: null,
                                 chunkOffset: segment.timestampOffset ?? 0,
                                 protectionDataUpdate: false,

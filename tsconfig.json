@@ -16,7 +16,6 @@
     "types": ["rxjs", "node", "jest"],
     "moduleResolution": "node",
     "typeRoots": [
-      "./src/typings/pinkie.d.ts",
       "./src/typings/next-tick.d.ts",
       "./src/typings/object-assign.d.ts",
       "./src/typings/globals.d.ts",

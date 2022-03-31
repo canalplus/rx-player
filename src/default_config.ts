@@ -180,6 +180,15 @@ const DEFAULT_CONFIG = {
      */
   DEFAULT_MAX_BUFFER_BEHIND: Infinity,
 
+    /**
+     * Default video buffer memory limit in kilobytes.
+     * Once enough video content has been downloaded to fill the buffer up to
+     * DEFAULT_MAX_VIDEO_BUFFER_SIZE , we will stop downloading
+     * content.
+     * @type {Number}
+     */
+  DEFAULT_MAX_VIDEO_BUFFER_SIZE: Infinity,
+
     /* eslint-disable @typescript-eslint/consistent-type-assertions */
     /**
      * Maximum possible buffer ahead for each type of buffer, to avoid too much
@@ -904,7 +913,7 @@ const DEFAULT_CONFIG = {
 
     /**
      * Robustnesses used in the {audio,video}Capabilities of the
-     * MediaKeySystemConfiguration (EME).
+     * MediaKeySystemConfiguration (DRM).
      *
      * Only used for widevine keysystems.
      *
@@ -1049,36 +1058,6 @@ const DEFAULT_CONFIG = {
   EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION: 1000,
 
     /**
-     * Attempts to closing a MediaKeySession can fail, most likely because the
-     * MediaKeySession was not initialized yet.
-     * When we consider that we're in one of these case, we will retry to close it.
-     *
-     * To avoid going into an infinite loop of retry, this number indicates a
-     * maximum number of attemps we're going to make (`0` meaning no retry at all,
-     * `1` only one retry and so on).
-     */
-  EME_SESSION_CLOSING_MAX_RETRY: 5,
-
-    /**
-     * When closing a MediaKeySession failed due to the reasons explained for the
-     * `EME_SESSION_CLOSING_MAX_RETRY` config property, we may (among other
-     * triggers) choose to wait a delay raising exponentially at each retry before
-     * that new attempt.
-     * This value indicates the initial value for this delay, in milliseconds.
-     */
-  EME_SESSION_CLOSING_INITIAL_DELAY: 100,
-
-    /**
-     * When closing a MediaKeySession failed due to the reasons explained for the
-     * `EME_SESSION_CLOSING_MAX_RETRY` config property, we may (among other
-     * triggers) choose to wait a delay raising exponentially at each retry before
-     * that new attempt.
-     * This value indicates the maximum possible value for this delay, in
-     * milliseconds.
-     */
-  EME_SESSION_CLOSING_MAX_DELAY: 1000,
-
-    /**
      * After loading a persistent MediaKeySession, the RxPlayer needs to ensure
      * that its keys still allow to decrypt a content.
      *
@@ -1185,27 +1164,40 @@ const DEFAULT_CONFIG = {
      */
   DEFAULT_MAXIMUM_TIME_ROUNDING_ERROR: 1 / 1000,
 
-    /**
-     * RxPlayer's media buffers have a linked history registering recent events
-     * that happened on those.
-     * The reason is to implement various heuristics in case of weird browser
-     * behavior.
-     *
-     * The `BUFFERED_HISTORY_RETENTION_TIME` is the minimum age an entry of
-     * that history can have before being removed from the history.
-     */
+  /**
+   * RxPlayer's media buffers have a linked history registering recent events
+   * that happened on those.
+   * The reason is to implement various heuristics in case of weird browser
+   * behavior.
+   *
+   * The `BUFFERED_HISTORY_RETENTION_TIME` is the minimum age an entry of
+   * that history can have before being removed from the history.
+   */
   BUFFERED_HISTORY_RETENTION_TIME: 60000,
 
-    /**
-     * RxPlayer's media buffers have a linked history registering recent events
-     * that happened on those.
-     * The reason is to implement various heuristics in case of weird browser
-     * behavior.
-     *
-     * The `BUFFERED_HISTORY_RETENTION_TIME` is the maximum number of entries
-     * there can be in that history.
-     */
+  /**
+   * RxPlayer's media buffers have a linked history registering recent events
+   * that happened on those.
+   * The reason is to implement various heuristics in case of weird browser
+   * behavior.
+   *
+   * The `BUFFERED_HISTORY_RETENTION_TIME` is the maximum number of entries
+   * there can be in that history.
+   */
   BUFFERED_HISTORY_MAXIMUM_ENTRIES: 200,
+
+  /**
+   * Minimum buffer in seconds ahead relative to current time
+   * we should be able to download, even in cases of saturated memory.
+   */
+  MIN_BUFFER_AHEAD: 5,
+
+  /**
+   * Distance in seconds behind the current position
+   * the player will free up to in the case we agressively free up memory
+   * It is set to avoid playback issues
+   */
+  UPTO_CURRENT_POSITION_CLEANUP : 5,
 };
 
 export type IDefaultConfig = typeof DEFAULT_CONFIG;

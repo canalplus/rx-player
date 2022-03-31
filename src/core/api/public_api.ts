@@ -46,6 +46,7 @@ import {
 import {
   events,
   exitFullscreen,
+  getStartDate,
   isFullscreen,
   requestFullscreen,
 } from "../../compat";
@@ -76,7 +77,6 @@ import EventEmitter, {
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import Logger from "../../utils/logger";
 import objectAssign from "../../utils/object_assign";
-import PPromise from "../../utils/promise";
 import {
   getLeftSizeOfRange,
   getPlayedSizeOfRange,
@@ -87,10 +87,10 @@ import createSharedReference, {
 } from "../../utils/reference";
 import warnOnce from "../../utils/warn_once";
 import {
-  clearEMESession,
-  disposeEME,
+  clearOnStop,
+  disposeDecryptionResources,
   getCurrentKeySystem,
-} from "../eme";
+} from "../decrypt";
 import {
   IManifestFetcherParsedResult,
   IManifestFetcherWarningEvent,
@@ -211,6 +211,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     maxBufferAhead : ISharedReference<number>;
     /** Maximum kept buffer behind in the current position, in seconds. */
     maxBufferBehind : ISharedReference<number>;
+    /** Maximum size of video buffer , in kiloBytes */
+    maxVideoBufferSize : ISharedReference<number>;
   };
 
   /** Information on the current bitrate settings. */
@@ -419,13 +421,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             throttleVideoBitrateWhenHidden,
             videoElement,
             wantedBufferAhead,
+            maxVideoBufferSize,
             stopAtEnd } = parseConstructorOptions(options);
     const { DEFAULT_UNMUTED_VOLUME } = config.getCurrent();
     // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /* PLAYER_VERSION */"3.26.2";
+    this.version = /* PLAYER_VERSION */"3.27.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -485,6 +488,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       wantedBufferAhead: createSharedReference(wantedBufferAhead),
       maxBufferAhead: createSharedReference(maxBufferAhead),
       maxBufferBehind: createSharedReference(maxBufferBehind),
+      maxVideoBufferSize: createSharedReference(maxVideoBufferSize),
     };
 
     this._priv_bitrateInfos = {
@@ -544,8 +548,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this.stop();
 
     if (this.videoElement !== null) {
-      // free resources used for EME management
-      disposeEME(this.videoElement);
+      // free resources used for decryption management
+      disposeDecryptionResources(this.videoElement)
+        .catch((err : unknown) => {
+          const message = err instanceof Error ? err.message :
+                                                 "Unknown error";
+          log.error("API: Could not dispose decryption resources: " + message);
+        });
     }
 
     // free Observables linked to the Player instance
@@ -558,6 +567,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_speed.finish();
     this._priv_contentLock.finish();
     this._priv_bufferOptions.wantedBufferAhead.finish();
+    this._priv_bufferOptions.maxVideoBufferSize.finish();
     this._priv_bufferOptions.maxBufferAhead.finish();
     this._priv_bufferOptions.maxBufferBehind.finish();
     this._priv_bitrateInfos.manualBitrates.video.finish();
@@ -1267,24 +1277,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     const { isDirectFile, manifest } = this._priv_contentInfos;
     if (isDirectFile) {
-      // Calculating the "wall-clock time" necessitate to obtain first an offset,
-      // and then adding that offset to the HTMLMediaElement's current position.
-      // That offset is in most case present inside the Manifest file, yet in
-      // directfile mode, the RxPlayer won't parse that file, the browser does it.
-      //
-      // Thankfully Safari declares a `getStartDate` method allowing to obtain
-      // that offset when available. This logic is thus mainly useful when
-      // playing HLS contents in directfile mode on Safari.
-      const mediaElement : HTMLMediaElement & {
-        getStartDate? : () => number | null | undefined;
-      } = this.videoElement;
-      if (typeof mediaElement.getStartDate === "function") {
-        const startDate = mediaElement.getStartDate();
-        if (typeof startDate === "number" && !isNaN(startDate)) {
-          return startDate + mediaElement.currentTime;
-        }
-      }
-      return mediaElement.currentTime;
+      const startDate = getStartDate(this.videoElement);
+      return (startDate ?? 0) + this.videoElement.currentTime;
     }
     if (manifest !== null) {
       const currentTime = this.videoElement.currentTime;
@@ -1529,7 +1523,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     /* eslint-disable @typescript-eslint/unbound-method */
     if (isNullOrUndefined(playPromise) || typeof playPromise.catch !== "function") {
     /* eslint-enable @typescript-eslint/unbound-method */
-      return PPromise.resolve();
+      return Promise.resolve();
     }
     return playPromise.catch((error: Error) => {
       if (error.name === "NotAllowedError") {
@@ -1587,12 +1581,19 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       } else if (!isNullOrUndefined(timeObj.position)) {
         positionWanted = timeObj.position;
       } else if (!isNullOrUndefined(timeObj.wallClockTime)) {
-        positionWanted = (isDirectFile || manifest === null) ?
-          timeObj.wallClockTime :
-          timeObj.wallClockTime - (
-            manifest.availabilityStartTime !== undefined ?
-              manifest.availabilityStartTime :
-              0);
+        if (manifest !== null) {
+          positionWanted = timeObj.wallClockTime - (
+            manifest.availabilityStartTime ?? 0
+          );
+        } else if (isDirectFile && this.videoElement !== null) {
+          const startDate = getStartDate(this.videoElement);
+          if (startDate !== undefined) {
+            positionWanted = timeObj.wallClockTime - startDate;
+          }
+        }
+        if (positionWanted === undefined) {
+          positionWanted = timeObj.wallClockTime;
+        }
       } else {
         throw new Error("invalid time object. You must set one of the " +
                         "following properties: \"relative\", \"position\" or " +
@@ -1813,6 +1814,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Set the max buffer size the buffer should take in memory
+   * The player . will stop downloading chunks when this size is reached.
+   * @param {Number} sizeInKBytes
+   */
+  setMaxVideoBufferSize(sizeInKBytes : number) : void {
+    this._priv_bufferOptions.maxVideoBufferSize.setValue(sizeInKBytes);
+  }
+
+  /**
    * Returns the max buffer size for the buffer behind the current position.
    * @returns {Number}
    */
@@ -1834,6 +1844,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   getWantedBufferAhead() : number {
     return this._priv_bufferOptions.wantedBufferAhead.getValue();
+  }
+
+  /**
+   * Returns the max buffer memory size for the buffer in kilobytes
+   * @returns {Number}
+   */
+  getMaxVideoBufferSize() : number {
+    return this._priv_bufferOptions.maxVideoBufferSize.getValue();
   }
 
   /**
@@ -2283,25 +2301,23 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_contentEventsMemory = {};
 
-    // EME cleaning
+    // DRM-related clean-up
     const freeUpContentLock = () => {
       log.debug("Unlocking `contentLock`. Next content can begin.");
       this._priv_contentLock.setValue(false);
     };
 
     if (!isNullOrUndefined(this.videoElement)) {
-      clearEMESession(this.videoElement)
-        .subscribe({
-          error: (err : unknown) => {
-            log.error("API: An error arised when trying to clean-up the EME session:" +
-                      (err instanceof Error ? err.toString() :
-                                              "Unknown Error"));
-            freeUpContentLock();
-          },
-          complete: () => {
-            log.debug("API: EME session cleaned-up with success!");
-            freeUpContentLock();
-          },
+      clearOnStop(this.videoElement).then(
+        () => {
+          log.debug("API: DRM session cleaned-up with success!");
+          freeUpContentLock();
+        },
+        (err : unknown) => {
+          log.error("API: An error arised when trying to clean-up the DRM session:" +
+                    (err instanceof Error ? err.toString() :
+                                            "Unknown Error"));
+          freeUpContentLock();
         });
     } else {
       freeUpContentLock();
@@ -2869,8 +2885,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       const ast = manifest.availabilityStartTime ?? 0;
       positionData.wallClockTime = observation.position + ast;
       positionData.liveGap = maximumPosition - observation.position;
+    } else if (isDirectFile && this.videoElement !== null) {
+      const startDate = getStartDate(this.videoElement);
+      if (startDate !== undefined) {
+        positionData.wallClockTime = startDate + observation.position;
+      }
     }
-
     this.trigger("positionUpdate", positionData);
   }
 
@@ -2922,7 +2942,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return activeRepresentations[currentPeriod.id];
   }
 }
-Player.version = /* PLAYER_VERSION */"3.26.2";
+Player.version = /* PLAYER_VERSION */"3.27.0";
 
 /** Payload emitted with a `positionUpdate` event. */
 export interface IPositionUpdateItem {

@@ -59,7 +59,9 @@ import {
   IStreamWarningEvent,
 } from "../types";
 import createEmptyStream from "./create_empty_adaptation_stream";
-import getAdaptationSwitchStrategy from "./get_adaptation_switch_strategy";
+import getAdaptationSwitchStrategy, {
+  IAudioTrackSwitchingMode,
+} from "./get_adaptation_switch_strategy";
 
 
 /** Playback observation required by the `PeriodStream`. */
@@ -98,27 +100,17 @@ export interface IPeriodStreamArguments {
   playbackObserver : IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>;
   options: IPeriodStreamOptions;
   wantedBufferAhead : IReadOnlySharedReference<number>;
+  maxVideoBufferSize : IReadOnlySharedReference<number>;
 }
 
 /** Options tweaking the behavior of the PeriodStream. */
 export type IPeriodStreamOptions =
   IAdaptationStreamOptions &
   {
-    /**
-     * Strategy to adopt when manually switching of audio adaptation.
-     * Can be either:
-     *    - "seamless": transitions are smooth but could be not immediate.
-     *    - "direct": strategy will be "smart", if the mimetype and the codec,
-     *    change, we will perform a hard reload of the media source, however, if it
-     *    doesn't change, we will just perform a small flush by removing buffered range
-     *    and performing, a small seek on the media element.
-     *    Transitions are faster, but, we could see appear a reloading or seeking state.
-     */
-    audioTrackSwitchingMode : "seamless" | "direct";
-
+    /** RxPlayer's behavior when switching the audio track. */
+    audioTrackSwitchingMode : IAudioTrackSwitchingMode;
     /** Behavior when a new video and/or audio codec is encountered. */
     onCodecSwitch : "continue" | "reload";
-
     /** Options specific to the text SegmentBuffer. */
     textTrackOptions? : ITextTrackSegmentBufferOptions;
   };
@@ -142,6 +134,7 @@ export default function PeriodStream({
   segmentBuffersStore,
   options,
   wantedBufferAhead,
+  maxVideoBufferSize,
 } : IPeriodStreamArguments) : Observable<IPeriodStreamEvent> {
   const { period } = content;
 
@@ -177,10 +170,15 @@ export default function PeriodStream({
           if (SegmentBuffersStore.isNative(bufferType)) {
             return reloadAfterSwitch(period, bufferType, playbackObserver, 0);
           }
-          cleanBuffer$ = segmentBufferStatus.value
-            .removeBuffer(period.start,
-                          period.end == null ? Infinity :
-                                               period.end);
+          if (period.end === undefined) {
+            cleanBuffer$ = segmentBufferStatus.value.removeBuffer(period.start,
+                                                                  Infinity);
+          } else if (period.end <= period.start) {
+            cleanBuffer$ = observableOf(null);
+          } else {
+            cleanBuffer$ = segmentBufferStatus.value.removeBuffer(period.start,
+                                                                  period.end);
+          }
         } else {
           if (segmentBufferStatus.type === "uninitialized") {
             segmentBuffersStore.disableSegmentBuffer(bufferType);
@@ -279,7 +277,8 @@ export default function PeriodStream({
                               playbackObserver: adaptationPlaybackObserver,
                               segmentBuffer,
                               segmentFetcherCreator,
-                              wantedBufferAhead }).pipe(
+                              wantedBufferAhead,
+                              maxVideoBufferSize }).pipe(
       catchError((error : unknown) => {
         // Stream linked to a non-native media buffer should not impact the
         // stability of the player. ie: if a text buffer sends an error, we want

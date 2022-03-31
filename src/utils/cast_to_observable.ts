@@ -20,7 +20,6 @@ import {
   of as observableOf,
 } from "rxjs";
 import isNullOrUndefined from "./is_null_or_undefined";
-import PPromise from "./promise";
 
 /**
  * Try to cast the given value into an observable.
@@ -34,7 +33,6 @@ function castToObservable<T>(value : Observable<T> |
   if (value instanceof Observable) {
     return value;
   } else if (
-    value instanceof PPromise ||
     value instanceof Promise ||
     (
       !isNullOrUndefined(value) &&

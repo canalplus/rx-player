@@ -19,6 +19,7 @@ import PeriodStream, {
   IPeriodStreamOptions,
   IPeriodStreamPlaybackObservation,
 } from "./period_stream";
+export { IAudioTrackSwitchingMode } from "./get_adaptation_switch_strategy";
 
 export default PeriodStream;
 

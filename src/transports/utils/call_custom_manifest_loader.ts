@@ -15,7 +15,6 @@
  */
 
 import { CustomLoaderError } from "../../errors";
-import PPromise from "../../utils/promise";
 import {
   CancellationError,
   CancellationSignal,
@@ -41,7 +40,7 @@ export default function callCustomManifestLoader(
     url : string | undefined,
     cancelSignal : CancellationSignal
   ) : Promise< IRequestedData<ILoadedManifestFormat> > => {
-    return new PPromise((res, rej) => {
+    return new Promise((res, rej) => {
       const timeAPIsDelta = Date.now() - performance.now();
       /** `true` when the custom segmentLoader should not be active anymore. */
       let hasFinished = false;

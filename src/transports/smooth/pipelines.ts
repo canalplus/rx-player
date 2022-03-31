@@ -24,7 +24,6 @@ import { getMDAT } from "../../parsers/containers/isobmff";
 import createSmoothManifestParser, {
   SmoothRepresentationIndex,
 } from "../../parsers/manifest/smooth";
-import PPromise from "../../utils/promise";
 import request from "../../utils/request";
 import {
   strToUtf8,
@@ -108,7 +107,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       cancelSignal : CancellationSignal
     ) : Promise<string | undefined> {
       if (url === undefined) {
-        return PPromise.resolve(undefined);
+        return Promise.resolve(undefined);
       }
 
       let resolving : Promise<string>;
@@ -126,7 +125,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
             return extractedURL;
           });
       } else {
-        resolving = PPromise.resolve(url);
+        resolving = Promise.resolve(url);
       }
 
       const token = extractToken(url);
@@ -198,6 +197,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         if (segment.isInit) {
           return { segmentType: "init",
                    initializationData: null,
+                   initializationDataSize: 0,
                    protectionDataUpdate: false,
                    initTimescale: undefined };
         }
@@ -205,6 +205,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                  chunkData: null,
                  chunkInfos: null,
                  chunkOffset: 0,
+                 chunkSize: 0,
                  protectionDataUpdate: false,
                  appendWindow: [undefined, undefined] };
       }
@@ -216,6 +217,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         const timescale = segment.privateInfos?.smoothInitSegment?.timescale;
         return { segmentType: "init",
                  initializationData: data,
+                 initializationDataSize: data.byteLength,
                  // smooth init segments are crafted by hand.
                  // Their timescale is the one from the manifest.
                  initTimescale: timescale,
@@ -244,6 +246,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                chunkData,
                chunkInfos,
                chunkOffset: 0,
+               chunkSize: chunkData.length,
                protectionDataUpdate: false,
                appendWindow: [undefined, undefined] };
     },
@@ -259,8 +262,8 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                 ISegmentLoaderResultSegmentCreated<ILoadedTextSegmentFormat>> {
       const { segment, representation } = content;
       if (segment.isInit || url === null) {
-        return PPromise.resolve({ resultType: "segment-created",
-                                  resultData: null });
+        return Promise.resolve({ resultType: "segment-created",
+                                 resultData: null });
       }
 
       const isMP4 = isMP4EmbeddedTrack(representation);
@@ -302,9 +305,11 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       const isMP4 = isMP4EmbeddedTrack(representation);
       const { mimeType = "", codec = "" } = representation;
       const { data, isChunked } = loadedSegment;
+      let chunkSize : number | undefined;
       if (segment.isInit) { // text init segment has no use in HSS
         return { segmentType: "init",
                  initializationData: null,
+                 initializationDataSize: 0,
                  protectionDataUpdate: false,
                  initTimescale: undefined };
       }
@@ -313,6 +318,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                  chunkData: null,
                  chunkInfos: null,
                  chunkOffset: 0,
+                 chunkSize: 0,
                  protectionDataUpdate: false,
                  appendWindow: [undefined, undefined] };
       }
@@ -333,6 +339,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
           chunkBytes = data instanceof Uint8Array ? data :
             new Uint8Array(data);
         }
+        chunkSize = chunkBytes.length;
         const timingInfos = initTimescale !== undefined ?
           extractTimingsInfos(chunkBytes,
                               isChunked,
@@ -380,6 +387,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
         if (typeof data !== "string") {
           const bytesData = data instanceof Uint8Array ? data :
                                                          new Uint8Array(data);
+          chunkSize = bytesData.length;
           chunkString = utf8ToStr(bytesData);
         } else {
           chunkString = data;
@@ -423,6 +431,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                             start: segmentStart,
                             end: segmentEnd,
                             language },
+               chunkSize,
                chunkInfos,
                chunkOffset,
                protectionDataUpdate: false,
@@ -431,7 +440,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
   };
 
   const imageTrackPipeline = {
-    loadSegment(
+    async loadSegment(
       url : string | null,
       content : ISegmentContext,
       cancelSignal : CancellationSignal,
@@ -440,16 +449,16 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                 ISegmentLoaderResultSegmentCreated<ILoadedImageSegmentFormat>> {
       if (content.segment.isInit || url === null) {
         // image do not need an init segment. Passthrough directly to the parser
-        return PPromise.resolve({ resultType: "segment-created" as const,
-                                  resultData: null });
+        return { resultType: "segment-created" as const,
+                 resultData: null };
       }
 
-      return request({ url,
-                       responseType: "arraybuffer",
-                       onProgress: callbacks.onProgress,
-                       cancelSignal })
-        .then((data) => ({ resultType: "segment-loaded" as const,
-                           resultData: data }));
+      const data = await request({ url,
+                                   responseType: "arraybuffer",
+                                   onProgress: callbacks.onProgress,
+                                   cancelSignal });
+      return { resultType: "segment-loaded" as const,
+               resultData: data };
     },
 
     parseSegment(
@@ -465,6 +474,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       if (content.segment.isInit) { // image init segment has no use
         return { segmentType: "init",
                  initializationData: null,
+                 initializationDataSize: 0,
                  protectionDataUpdate: false,
                  initTimescale: undefined };
       }
@@ -479,6 +489,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                  chunkData: null,
                  chunkInfos: null,
                  chunkOffset: 0,
+                 chunkSize: 0,
                  protectionDataUpdate: false,
                  appendWindow: [undefined, undefined] };
       }
@@ -493,6 +504,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                             type: "bif" },
                chunkInfos: { time: 0,
                              duration: Number.MAX_VALUE },
+               chunkSize: undefined,
                chunkOffset: 0,
                protectionDataUpdate: false,
                appendWindow: [undefined, undefined] };

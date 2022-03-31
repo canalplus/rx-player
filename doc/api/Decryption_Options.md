@@ -357,20 +357,60 @@ Can be set to the following values:
     encountered.
 
     Not only that, all Representations (qualities) whose key was not present
-    in the license will be fallbacked from, meaning that they won't be
+    in the license will be fallbacked from[1], meaning that they won't be
     played anymore.
 
-    _Note that while fallbacking, it is possible that the player goes into
-    the `"RELOADING"` state (during which the video will disappear and many
-    APIs will become unavailable). More information about the `"RELOADING"`
-    state can be found in [the player states documentation](./Player_States.md)._
+  - `"periods"`: Each license fetched will be assumed to be for a group
+    of [Periods](../Getting_Started/Glossary.md#period).
 
-    You can set this option as an optimization (to only perform a single
-    license requests instead of many while playing contents encrypted with
-    multiple keys) but only if the corresponding optimizations have also
-    been performed on the side of the license server (to return a license
-    for every keys even if one for a single key was asked for).
+    That is, the RxPlayer will assume that any license fetched:
 
+      - will contain all the compatible keys for the Period of the
+        Representation for which the license request was done.
+
+        That is, if the license request was done for a Representation in the
+        second Period, the license fetched will be assumed to contain all
+        compatible keys linked to the second Period.
+
+        This means that all expected keys which are absent will be considered as
+        not compatible - thus their corresponding Representation will be
+        fallbacked from[1]).
+
+      - may contain all compatible keys for some other Periods (or all other
+        Periods).
+
+        The rule here is that as long as the license contain at least one
+        decryption key linked to a Representation of any other Period, the
+        RxPlayer will assume that the license server returned all compatible
+        keys for that Period. Any other key linked to that Period but absent
+        from the license will considered as not compatible - and thus their
+        corresponding Representation will be fallbacked from[1].
+
+    This option allows to avoid doing too much license requests (compared to the
+    default "init-data" mode) for contents encrypted with multiple keys, but
+    also may be preferable to the "content" mode in any of the following
+    situations:
+
+      - You don't know all upcoming keys in advance.
+
+        Here you can just communicate them by groups of Periods
+
+      - The devices on which the RxPlayer will play are not able to store all
+        keys needed for a single content at once
+
+        Here you can just provide a limited number of keys, linked to a limited
+        number of Periods.
+
+[1] _Note that while fallbacking, it is possible that the player goes into
+the `"RELOADING"` state (during which the video will disappear and many
+APIs will become unavailable). More information about the `"RELOADING"`
+state can be found in [the player states documentation](./Player_States.md)._
+
+You can set this option as an optimization (to only perform a single
+license requests instead of many while playing contents encrypted with
+multiple keys) but only if the corresponding optimizations have also
+been performed on the side of the license server (to return a license
+for every keys even if one for a single key was asked for).
 
 ### disableMediaKeysAttachmentLock
 

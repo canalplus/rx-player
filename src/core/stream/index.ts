@@ -18,6 +18,7 @@ import StreamOrchestrator, {
   IStreamOrchestratorOptions,
   IStreamOrchestratorPlaybackObservation,
 } from "./orchestrator";
+export { IAudioTrackSwitchingMode } from "./period";
 export * from "./types";
 
 export default StreamOrchestrator;

@@ -16,15 +16,12 @@
 
 import {
   combineLatest as observableCombineLatest,
-  EMPTY,
-  exhaustMap,
   filter,
   finalize,
   ignoreElements,
   map,
   merge as observableMerge,
   mergeMap,
-  mergeScan,
   Observable,
   of as observableOf,
   share,
@@ -34,7 +31,6 @@ import {
   switchMap,
   take,
   takeUntil,
-  tap,
 } from "rxjs";
 import { shouldReloadMediaSourceOnDecipherabilityUpdate } from "../../compat";
 import config from "../../config";
@@ -51,9 +47,8 @@ import { PlaybackObserver } from "../api";
 import {
   getCurrentKeySystem,
   IContentProtection,
-  IEMEManagerEvent,
   IKeySystemOption,
-} from "../eme";
+} from "../decrypt";
 import {
   IManifestFetcherParsedResult,
   IManifestFetcherWarningEvent,
@@ -61,14 +56,16 @@ import {
   SegmentFetcherCreator,
 } from "../fetchers";
 import { ITextTrackSegmentBufferOptions } from "../segment_buffers";
-import createEMEManager, {
-  IEMEDisabledEvent,
-} from "./create_eme_manager";
+import { IAudioTrackSwitchingMode } from "../stream";
 import openMediaSource from "./create_media_source";
 import EVENTS from "./events_generators";
 import getInitialTime, {
   IInitialTimeOptions,
 } from "./get_initial_time";
+import linkDrmAndContent, {
+  IDecryptionDisabledEvent,
+  IDecryptionReadyEvent,
+} from "./link_drm_and_content";
 import createMediaSourceLoader from "./load_on_media_source";
 import manifestUpdateScheduler, {
   IManifestRefreshSchedulerEvent,
@@ -79,6 +76,11 @@ import {
   IMediaSourceLoaderEvent,
 } from "./types";
 
+// NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
+// first type parameter as `any` instead of the perfectly fine `unknown`,
+// leading to linter issues, as it forbids the usage of `any`.
+// This is why we're disabling the eslint rule.
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 /** Arguments to give to the `InitializeOnMediaSource` function. */
 export interface IInitializeArguments {
@@ -90,6 +92,8 @@ export interface IInitializeArguments {
   bufferOptions : {
     /** Buffer "goal" at which we stop downloading new segments. */
     wantedBufferAhead : IReadOnlySharedReference<number>;
+    /** Buffer maximum size in kiloBytes at which we stop downloading */
+    maxVideoBufferSize :  IReadOnlySharedReference<number>;
     /** Max buffer size after the current position, in seconds (we GC further up). */
     maxBufferAhead : IReadOnlySharedReference<number>;
     /** Max buffer size before the current position, in seconds (we GC further down). */
@@ -102,7 +106,7 @@ export interface IInitializeArguments {
      */
     enableFastSwitching : boolean;
     /** Strategy when switching of audio track. */
-    audioTrackSwitchingMode : "seamless" | "direct";
+    audioTrackSwitchingMode : IAudioTrackSwitchingMode;
     /** Behavior when a new video and/or audio codec is encountered. */
     onCodecSwitch : "continue" | "reload";
   };
@@ -143,7 +147,7 @@ export interface IInitializeArguments {
  *
  *   - download the content's Manifest and handle its refresh logic
  *
- *   - Perform EME management if needed
+ *   - Perform decryption if needed
  *
  *   - ask for the choice of the wanted Adaptation through events (e.g. to
  *     choose a language)
@@ -192,26 +196,28 @@ export default function InitializeOnMediaSource(
     shareReplay({ refCount: true })
   );
 
-  /** Send content protection data to the `EMEManager`. */
+  /** Send content protection initialization data. */
   const protectedSegments$ = new Subject<IContentProtection>();
 
-  /** Create `EMEManager`, an observable which will handle content DRM. */
-  const emeManager$ = createEMEManager(mediaElement,
+  /** Initialize decryption capabilities and MediaSource. */
+  const drmEvents$ = linkDrmAndContent(mediaElement,
                                        keySystems,
-                                       protectedSegments$).pipe(
-    // Because multiple Observables here depend on this Observable as a source,
-    // we prefer deferring Subscription until those Observables are themselves
-    // all subscribed to.
-    // This is needed because `emeManager$` might send events synchronously
-    // on subscription. In that case, it might communicate those events directly
-    // after the first Subscription is done, making the next subscription miss
-    // out on those events, even if that second subscription is done
-    // synchronously after the first one.
-    // By calling `deferSubscriptions`, we ensure that subscription to
-    // `emeManager$` effectively starts after a very short delay, thus
-    // ensuring that no such race condition can occur.
-    deferSubscriptions(),
-    share());
+                                       protectedSegments$,
+                                       openMediaSource$)
+    .pipe(
+      // Because multiple Observables here depend on this Observable as a source,
+      // we prefer deferring Subscription until those Observables are themselves
+      // all subscribed to.
+      // This is needed because `drmEvents$` might send events synchronously
+      // on subscription. In that case, it might communicate those events directly
+      // after the first Subscription is done, making the next subscription miss
+      // out on those events, even if that second subscription is done
+      // synchronously after the first one.
+      // By calling `deferSubscriptions`, we ensure that subscription to
+      // `drmEvents$` effectively starts after a very short delay, thus
+      // ensuring that no such race condition can occur.
+      deferSubscriptions(),
+      share());
 
   /**
    * Translate errors coming from the media element into RxPlayer errors
@@ -219,71 +225,20 @@ export default function InitializeOnMediaSource(
    */
   const mediaError$ = throwOnMediaError(mediaElement);
 
-  /**
-   * Wait for the MediaKeys to have been created before opening the MediaSource,
-   * after that second step is done, ask the EMEManager to attach the MediaKeys.
-   * Steps are done in that specific order to avoid compatibility issues.
-   *
-   * This Observable will emit when ready both the MediaSource and useful
-   * DRM-specific information.
-   */
-  const prepareMediaSource$ = emeManager$.pipe(
-    mergeScan((
-      acc : {
-        /** set to true once EME APIs have been initialized. */
-        isEmeReady : boolean;
-        /**
-         * ID identifying the current MediaKeys' system ID. Can be used to only
-         * send initialization data linked to that ID as an optimization measure.
-         */
-        drmSystemId? : string | undefined;
-      },
-      evt : IEMEManagerEvent | IEMEDisabledEvent
-    ) => {
-      switch (evt.type) {
-        case "eme-disabled":
-        case "attached-media-keys":
-          return observableOf({ isEmeReady: true,
-                                drmSystemId: acc.drmSystemId });
-        case "created-media-keys":
-          const drmSystemId = evt.value.initializationDataSystemId;
-          return openMediaSource$.pipe(
-            mergeMap(() => {
-              // Now that the MediaSource has been opened and linked to the media
-              // element we can attach the MediaKeys instance to the latter.
-              evt.value.canAttachMediaKeys.setValue(true);
-
-              // If the `disableMediaKeysAttachmentLock` option has been set to
-              // `true`, we should not wait until the MediaKeys instance has been
-              // attached to start loading the content.
-              // TODO we may want to keep keySystems option knowledge in the EME
-              // code
-              const shouldDisableLock = evt.value.options
-                .disableMediaKeysAttachmentLock === true;
-              return shouldDisableLock ? observableOf({ isEmeReady: true,
-                                                        drmSystemId }) :
-                                         EMPTY;
-            }),
-            startWith({ isEmeReady: false, drmSystemId }));
-        default:
-          return EMPTY;
-      }
-    }, { isEmeReady: false, drmSystemId: undefined }),
-    filter((emitted) => emitted.isEmeReady),
-    take(1),
-    exhaustMap(({ drmSystemId }) =>
-      openMediaSource$
-        .pipe(map((mediaSource) => ({ mediaSource, drmSystemId })))));
+  const mediaSourceReady$ = drmEvents$.pipe(
+    filter((evt) : evt is IDecryptionReadyEvent<MediaSource> |
+                          IDecryptionDisabledEvent<MediaSource> =>
+      evt.type === "decryption-ready" || evt.type === "decryption-disabled"),
+    map(e => e.value),
+    take(1));
 
   /** Load and play the content asked. */
-  const loadContent$ = observableCombineLatest([manifest$,
-                                                prepareMediaSource$]).pipe(
-    mergeMap(([manifestEvt, mediaSourceInfo]) => {
+  const loadContent$ = observableCombineLatest([manifest$, mediaSourceReady$]).pipe(
+    mergeMap(([manifestEvt, { drmSystemId, mediaSource: initialMediaSource } ]) => {
       if (manifestEvt.type === "warning") {
         return observableOf(manifestEvt);
       }
       const { manifest } = manifestEvt;
-      const { mediaSource: initialMediaSource, drmSystemId } = mediaSourceInfo;
 
       log.debug("Init: Calculating initial time");
       const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
@@ -319,25 +274,8 @@ export default function InitializeOnMediaSource(
         fromEvent(manifest, "decipherabilityUpdate")
           .pipe(map(EVENTS.decipherabilityUpdate)));
 
-      const setUndecipherableRepresentations$ = emeManager$.pipe(
-        tap((evt) => {
-          if (evt.type === "keys-update") {
-            manifest.updateDeciperabilitiesBasedOnKeyIds(evt.value);
-          } else if (evt.type === "blacklist-protection-data") {
-            log.info("Init: blacklisting Representations based on protection data.");
-            manifest.addUndecipherableProtectionData(evt.value);
-          }
-        }),
-        // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
-        // first type parameter as `any` instead of the perfectly fine `unknown`,
-        // leading to linter issues, as it forbids the usage of `any`.
-        // This is why we're disabling the eslint rule.
-        /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-        ignoreElements());
-
       return observableMerge(manifestEvents$,
                              manifestUpdate$,
-                             setUndecipherableRepresentations$,
                              recursiveLoad$)
         .pipe(startWith(EVENTS.manifestReady(manifest)),
               finalize(() => { scheduleRefresh$.complete(); }));
@@ -420,5 +358,5 @@ export default function InitializeOnMediaSource(
       }
     }));
 
-  return observableMerge(loadContent$, mediaError$, emeManager$);
+  return observableMerge(loadContent$, mediaError$, drmEvents$.pipe(ignoreElements()));
 }

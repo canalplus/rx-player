@@ -21,11 +21,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
-import PPromise from "../../utils/promise";
-
 describe("compat - play", () => {
   it("should call play and returns an Observable if play returns a Promise", (done) => {
-    const mockPlay = jest.fn(() => PPromise.resolve());
+    const mockPlay = jest.fn(() => Promise.resolve());
     const fakeMediaElement = { play: mockPlay };
 
     const play$ = require("../play").default;
@@ -48,7 +46,7 @@ describe("compat - play", () => {
   it("should throw through an Observable if the `play` promise is rejected", (done) => {
     const notAllowedError = new Error("NotAllowedError: Can't play");
     const mockPlay = jest.fn(() => {
-      return PPromise.reject(notAllowedError);
+      return Promise.reject(notAllowedError);
     });
     const fakeMediaElement = { play: mockPlay };
 

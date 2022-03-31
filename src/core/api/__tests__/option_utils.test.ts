@@ -46,7 +46,6 @@ const normalizeTextTrackMock = normalizeTextTrack as
   jest.Mock<ReturnType<typeof normalizeTextTrack>>;
 const logWarnMock = log.warn as jest.Mock<ReturnType<typeof log.warn>>;
 
-
 describe("API - parseConstructorOptions", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -69,6 +68,7 @@ describe("API - parseConstructorOptions", () => {
     DEFAULT_MAX_BITRATES,
     DEFAULT_MAX_BUFFER_AHEAD,
     DEFAULT_MAX_BUFFER_BEHIND,
+    DEFAULT_MAX_VIDEO_BUFFER_SIZE,
     // DEFAULT_SHOW_NATIVE_SUBTITLE,
     // DEFAULT_TEXT_TRACK_MODE,
     DEFAULT_THROTTLE_WHEN_HIDDEN,
@@ -76,6 +76,7 @@ describe("API - parseConstructorOptions", () => {
     DEFAULT_WANTED_BUFFER_AHEAD,
   } = config.getCurrent();
   const defaultConstructorOptions = {
+    maxVideoBufferSize: DEFAULT_MAX_VIDEO_BUFFER_SIZE,
     maxBufferAhead: DEFAULT_MAX_BUFFER_AHEAD,
     maxBufferBehind: DEFAULT_MAX_BUFFER_BEHIND,
     wantedBufferAhead: DEFAULT_WANTED_BUFFER_AHEAD,
@@ -953,6 +954,17 @@ describe("API - parseLoadVideoOptions", () => {
     });
 
     expect(parseLoadVideoOptions({
+      audioTrackSwitchingMode: "reload",
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      audioTrackSwitchingMode: "reload",
+    });
+
+    expect(parseLoadVideoOptions({
       audioTrackSwitchingMode: "seamless",
       url: "foo",
       transport: "bar",
@@ -984,6 +996,7 @@ describe("API - parseLoadVideoOptions", () => {
         `the following strategy name:
 - \`seamless\`
 - \`direct\`
+- \`reload\`
 If badly set, seamless strategy will be used as default`);
     logWarnMock.mockReset();
     logWarnMock.mockReturnValue(undefined);
