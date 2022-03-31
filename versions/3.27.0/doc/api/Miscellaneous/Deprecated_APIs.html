@@ -1,0 +1,572 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Deprecated APIs - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "../..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../../static/img/logo.png" /></a><a class="navbar-item hideable"href="../../Getting_Started/Welcome.html">Getting Started</a>
+<a class="navbar-item navbar-active hideable"href="../Overview.html">API</a>
+<a class="navbar-item hideable"href="../../reference/API_Reference.html">Reference</a>
+<a class="navbar-item hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
+<span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
+<a aria-label="Link to repository" class="navbar-item first-right hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 3.27.0</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="../Overview.html">Overview</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Creating_a_Player.html">Creating a Player</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Loading_a_Content.html">Loading a Content</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Decryption_Options.html">Decryption Options</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Basic Methods</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getPlayerState.html">getPlayerState</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/addEventListener.html">addEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/removeEventListener.html">removeEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/play.html">play</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/pause.html">pause</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/stop.html">stop</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getPosition.html">getPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getWallClockTime.html">getWallClockTime</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/seekTo.html">seekTo</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getVideoDuration.html">getVideoDuration</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getError.html">getError</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getVideoElement.html">getVideoElement</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/dispose.html">dispose</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/reload.html">reload</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_States.html">Player States</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_Events.html">Player Events</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_Errors.html">Player Errors</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Track Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAudioTrack.html">getAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getTextTrack.html">getTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getVideoTrack.html">getVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setAudioTrack.html">setAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setTextTrack.html">setTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setVideoTrack.html">setVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/disableTextTrack.html">disableTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setPreferredAudioTracks.html">setPreferredAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setPreferredTextTracks.html">setPreferredTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setPreferredVideoTracks.html">setPreferredVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getPreferredAudioTracks.html">getPreferredAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getPreferredTextTracks.html">getPreferredTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getPreferredVideoTracks.html">getPreferredVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Bitrate Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getVideoBitrate.html">getVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getAudioBitrate.html">getAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getAvailableVideoBitrates.html">getAvailableVideoBitrates</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getAvailableAudioBitrates.html">getAvailableAudioBitrates</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/setVideoBitrate.html">setVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/setAudioBitrate.html">setAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getManualVideoBitrate.html">getManualVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getManualAudioBitrate.html">getManualAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/setMinVideoBitrate.html">setMinVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/setMinAudioBitrate.html">setMinAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/setMaxVideoBitrate.html">setMaxVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/setMaxAudioBitrate.html">setMaxAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getMinVideoBitrate.html">getMinVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getMinAudioBitrate.html">getMinAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getMaxVideoBitrate.html">getMaxVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getMaxAudioBitrate.html">getMaxAudioBitrate</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Speed Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Volume Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/setVolume.html">setVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/getVolume.html">getVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/mute.html">mute</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/isMute.html">isMute</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/unMute.html">unMute</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Information/getVideoBufferGap.html">getVideoBufferGap</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Information/getVideoLoadedTime.html">getVideoLoadedTime</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Information/getVideoPlayedTime.html">getVideoPlayedTime</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Content Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/getUrl.html">getUrl</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/isLive.html">isLive</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/getCurrentKeySystem.html">getCurrentKeySystem</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="../Static_Properties.html">RxPlayer Static Properties</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Typescript_Types.html">Typescript Types</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Tools</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Tools/TextTrackRenderer.html">TextTrackRenderer</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/StringUtils.html">StringUtils</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/parseBifThumbnails.html">parseBifThumbnails</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group active opened">Miscellaneous</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./plugins.html">Plugins</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Low_Latency.html">Low Latency</a></li><li class="sidebar-item"><a class="sidebar-link" href="./DASH_WASM_Parser.html">DASH WASM Parser</a></li><li class="sidebar-item"><a class="sidebar-link" href="./hdr.html">HDR</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Local_Contents.html">Local Contents</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Local_Manifest_v0.1.html">Local Manifest v0.1</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Text_Tracks.html">Text Tracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./images.html">Images</a></li><li class="sidebar-item"><a class="sidebar-link" href="./MetaPlaylist.html">MetaPlaylist</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Manifest_Object.html">Manifest Object</a></li><li class="sidebar-item"><a class="sidebar-link active" href="./Deprecated_APIs.html">Deprecated APIs</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Initial_Position.html">Initial Position</a></li><li class="sidebar-item"><a class="sidebar-link" href="./presentationTimeOffset.html">presentationTimeOffset</a></li><li class="sidebar-item"><a class="sidebar-link" href="./DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Deprecated Methods</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/getManifest.html">getManifest</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/getCurrentAdaptations.html">getCurrentAdaptations</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/getCurrentRepresentations.html">getCurrentRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/setFullscreen.html">setFullscreen</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/isFullscreen.html">isFullscreen</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/exitFullscreen.html">exitFullscreen</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/getImageTrackData.html">getImageTrackData</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/getNativeTextTrack.html">getNativeTextTrack</a></li></ul></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="deprecated_apis"></a></p>
+<h1>Deprecated APIs</h1>
+<p>This documentation lists APIs deprecated in the v3.x.x.</p>
+<p>As we guarantee API compatibility in the v3.x.x, those API won’t disappear until
+we switch to a v4.x.x version.</p>
+<p>You will find here which APIs are deprecated, why, and depending on the
+concerned API, how to replace it.</p>
+<p><a name="fullscreen_apis"></a></p>
+<h2>Fullscreen APIs</h2>
+<p>All fullscreen APIs have been deprecated, namely:</p>
+<ul>
+<li>the <code>isFullscreen</code> method</li>
+<li>the <code>setFullscreen</code> method</li>
+<li>the <code>exitFullscreen</code> method</li>
+<li>the <code>fullscreenChange</code> event</li>
+</ul>
+<p>This is because of several things:</p>
+<ul>
+<li>
+<p>fullscreen management has now become a lot more complex with features such
+as advanced subtitles management, were the text track HTMLElement is
+controlled by the application.</p>
+</li>
+<li>
+<p>most application developpers also wants to put their own controls into
+fullscreen mode. Those APIs only put the media element into fullscreen mode
+and not any other element. This can be misleading.</p>
+</li>
+</ul>
+<p>The fullscreen logic should now be entirely on the application-side. Replacement
+code is provided for each of those APIs below.</p>
+<p><a name="image_(bif)_apis"></a></p>
+<h2>Image (BIF) APIs</h2>
+<p>The following properties methods and events have been deprecated:</p>
+<ul>
+<li>the <code>imageTrackUpdate</code> event</li>
+<li>the <code>getImageTrackData</code> method</li>
+<li>the <code>supplementaryImageTracks</code> loadVideo option</li>
+</ul>
+<p>This is because most code linked to image management will be moved outside the
+RxPlayer. Doing that will both be more flexible for users and much easier to
+maintain for us (albeit with a small time of transition for the application).</p>
+<p>You can replace those API by this new exported function:
+<a href="../Tools/parseBifThumbnails.html">parseBifThumbnails</a>.</p>
+<p>To give more details about why those APIs have been deprecated, there are
+multiple reasons:</p>
+<ol>
+<li>How it should be specified for live contents of for multi-Period DASH
+contents is not clear enough.</li>
+<li>Integrating it in the RxPlayer’s API means that it had to take multiple
+choices that we prefer to let to the application: whether to retry the
+request if the it fails or if it is unavailable, whether to do the request
+at all for users with a low bitrate…</li>
+<li>The task of displaying those thumbnails is ultimately on the UI-side (the
+part that know where the user wants to seek)</li>
+<li>The biggest part of the code related to it was a simple BIF parser, that
+can easily be re-implemented by any application.</li>
+</ol>
+<p><a name="rxplayer_methods"></a></p>
+<h2>RxPlayer Methods</h2>
+<p>The following RxPlayer methods are deprecated.</p>
+<p><a name="getmanifest"></a></p>
+<h3>getManifest</h3>
+<p><code>getManifest</code> returns our internal representation we have of a given “manifest”
+document.</p>
+<p>Though it was first exposed to allow users to have access to more precize
+information on the current content, this method also limited us on the possible
+evolutions we could do, as changing what this function returns would mean
+breaking the API.</p>
+<p>We also realized that that method was not used for now by the implementation we
+know of.</p>
+<p>For now, we decided we will simply remove that API in the next major version. If
+that’s a problem for you, please open an issue.</p>
+<p><a name="getcurrentadaptations"></a></p>
+<h3>getCurrentAdaptations</h3>
+<p><code>getCurrentAdaptations</code> returns an object describing each tracks available for
+the current Period in the current content.</p>
+<p>Like <code>getManifest</code>, we found that this API was not much used and limited us on
+the possible evolutions we can do on the RxPlayer.</p>
+<p>Again like <code>getManifest</code>, we plan to remove that API completely without
+replacing it.
+If that’s a problem for you, please open an issue.</p>
+<p><a name="getcurrentrepresentations"></a></p>
+<h3>getCurrentRepresentations</h3>
+<p><code>getCurrentRepresentations</code> returns an object describing each “qualities”
+available in the current chosen tracks.</p>
+<p>Exactly like <code>getCurrentAdaptations</code> and <code>getManifest</code>, we found that this API:</p>
+<ul>
+<li>was not used as far as we know</li>
+<li>limited the evolutions we could do on the RxPlayer’s code without breaking
+the API.</li>
+</ul>
+<p>We thus plan to remove that API completely without replacing it.
+If that’s a problem for you, please open an issue.</p>
+<p><a name="getnativetexttrack"></a></p>
+<h3>getNativeTextTrack</h3>
+<p><code>getNativeTextTrack</code> returned the first <code>TextTrack</code> element attached to the
+media element or <code>null </code> if it did not exist.</p>
+<p>This API was originally created to allow users to manipulate the <code>TextTrack</code>
+element themselves. For example, to “catch” cues as they appear and display them
+differently.</p>
+<p>What changed is that we now have two text track modes:</p>
+<ul>
+<li><code>html</code>, which allow advanced subtitle management</li>
+<li><code>native</code>, the old mode, which display subtitles natively through a
+<code>TextTrack</code> element.</li>
+</ul>
+<p>This API will only return an element for the <code>native</code> mode, but none for the
+<code>html</code> mode because its element is not attached to the media element.</p>
+<p>We heavily insist on people wanting advanced usecases to use the <code>html</code> mode, as
+many formatting options do not work in <code>native</code> mode.</p>
+<p>As we considered that <code>getNativeTextTrack</code> API was more confusing than it was
+helpful in our current API, we decided to deprecate it. Do not hesitate to open
+an issue if you use this API.</p>
+<p><a name="isfullscreen"></a></p>
+<h3>isFullscreen</h3>
+<p><code>isFullscreen</code> has been deprecated as it is part of our Fullscreen APIs, see
+<a href="#fullscreen-apis">the related chapter</a> for more information.</p>
+<p><code>isFullscreen</code> just checked that ANY element was fullscreen. As such, it can
+easily be replace for the majority of browsers with the following code:</p>
+<pre><code class="language-js"><span class="hljs-keyword">function</span> <span class="hljs-title function_">isFullscreen</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-keyword">return</span> !!(
+    <span class="hljs-variable language_">document</span>.<span class="hljs-property">fullscreenElement</span> ||
+    <span class="hljs-variable language_">document</span>.<span class="hljs-property">mozFullScreenElement</span> ||
+    <span class="hljs-variable language_">document</span>.<span class="hljs-property">webkitFullscreenElement</span> ||
+    <span class="hljs-variable language_">document</span>.<span class="hljs-property">msFullscreenElement</span>
+  );
+}
+</code></pre>
+<p><a name="setfullscreen"></a></p>
+<h3>setFullscreen</h3>
+<p><code>setFullscreen</code> has been deprecated as it is part of our Fullscreen APIs, see
+<a href="#fullscreen-apis">the related chapter</a> for more information.</p>
+<p><code>setFullscreen</code> allowed to set the media element in fullscreen mode (or exit
+fullscreen mode, if <code>false</code> was given as argument).</p>
+<p>If you want to just put the media element on fullscreen mode, you can use the
+following code:</p>
+<pre><code class="language-js"><span class="hljs-keyword">function</span> <span class="hljs-title function_">setFullscreen</span>(<span class="hljs-params">goFull</span>) {
+  <span class="hljs-keyword">if</span> (goFull === <span class="hljs-string">"false"</span>) {
+    <span class="hljs-title function_">exitFullscreen</span>();
+    <span class="hljs-keyword">return</span>;
+  }
+  <span class="hljs-keyword">if</span> (<span class="hljs-title function_">isFullscreen</span>()) {
+    <span class="hljs-comment">// see code above</span>
+    <span class="hljs-keyword">return</span>;
+  }
+
+  <span class="hljs-keyword">const</span> mediaElement = player.<span class="hljs-title function_">getVideoElement</span>();
+  <span class="hljs-keyword">if</span> (!mediaElement) {
+    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">"No media element"</span>);
+  }
+  <span class="hljs-keyword">if</span> (mediaElement.<span class="hljs-property">requestFullscreen</span>) {
+    mediaElement.<span class="hljs-title function_">requestFullscreen</span>();
+  } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (mediaElement.<span class="hljs-property">msRequestFullscreen</span>) {
+    mediaElement.<span class="hljs-title function_">msRequestFullscreen</span>();
+  } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (mediaElement.<span class="hljs-property">mozRequestFullScreen</span>) {
+    mediaElement.<span class="hljs-title function_">mozRequestFullScreen</span>();
+  } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (mediaElement.<span class="hljs-property">webkitRequestFullscreen</span>) {
+    mediaElement.<span class="hljs-title function_">webkitRequestFullscreen</span>(<span class="hljs-title class_">Element</span>.<span class="hljs-property">ALLOW_KEYBOARD_INPUT</span>);
+  }
+}
+</code></pre>
+<p>Please consider however that this function will only put the media element in
+full screen mode, without the eventual controls and HTML text tracks you might
+also want to set in fullscreen. The code is easily adaptable however to put
+your own element into fullscreen mode instead.</p>
+<p><a name="exitfullscreen"></a></p>
+<h3>exitFullscreen</h3>
+<p><code>exitFullscreen</code> has been deprecated as it is part of our Fullscreen APIs, see
+<a href="#fullscreen-apis">the related chapter</a> for more information.</p>
+<p><code>exitFullscreen</code> just <code>exited</code> any element put in fullscreen mode. As such,
+its code can easily be replaced by:</p>
+<pre><code class="language-js"><span class="hljs-keyword">function</span> <span class="hljs-title function_">exitFullscreen</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-keyword">if</span> (<span class="hljs-title function_">isFullscreen</span>()) {
+    <span class="hljs-keyword">if</span> (<span class="hljs-variable language_">document</span>.<span class="hljs-property">exitFullscreen</span>) {
+      <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">exitFullscreen</span>();
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-variable language_">document</span>.<span class="hljs-property">msExitFullscreen</span>) {
+      <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">msExitFullscreen</span>();
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-variable language_">document</span>.<span class="hljs-property">mozCancelFullScreen</span>) {
+      <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">mozCancelFullScreen</span>();
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-variable language_">document</span>.<span class="hljs-property">webkitExitFullscreen</span>) {
+      <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">webkitExitFullscreen</span>();
+    }
+  }
+}
+</code></pre>
+<p><a name="getimagetrackdata"></a></p>
+<h3>getImageTrackData</h3>
+<p><code>getImageTrackData</code> has been deprecated like most API related to BIF thumbnail
+parsing.
+You can read <a href="#bif-apis">the related chapter</a> for more information.</p>
+<p>You can replace this API by using the
+<a href="../Tools/parseBifThumbnails.html">parseBifThumbnails</a> tool.</p>
+<p><a name="rxplayer_events"></a></p>
+<h2>RxPlayer Events</h2>
+<p>The following RxPlayer events has been deprecated.</p>
+<p><a name="nativetexttrackschange"></a></p>
+<h3>nativeTextTracksChange</h3>
+<p><code>nativeTextTracksChange</code> events are deprecated. Which means they probably
+won’t be sent in a <code>v4.x.x</code> version.</p>
+<p>The reasons are basically the same than for the <code>getNativeTextTracks</code> method.
+It should not be needed anymore as most advanced needs should be better answered
+by an <code>html</code> text track mode.</p>
+<p><a name="fullscreenchange"></a></p>
+<h3>fullscreenChange</h3>
+<p><code>fullscreenChange</code> events have been deprecated as it is part of our Fullscreen
+APIs, see <a href="#fullscreen-apis">the related chapter</a> for more information.</p>
+<p>The <code>fullscreenChange</code> event was sent when the media element got in or out of
+fullscreen mode, with agg boolean as a payload:</p>
+<ul>
+<li>if <code>true</code>, the element entered fullscreen mode</li>
+<li>if <code>false</code>, the element exited fullscreen mode</li>
+</ul>
+<p>This behavior can easily be recreated through the following code:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> mediaElement = player.<span class="hljs-title function_">getVideoElement</span>();
+mediaElement.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"fullscreenChange"</span>, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-keyword">if</span> (<span class="hljs-title function_">isFullscreen</span>()) {
+    <span class="hljs-comment">// see isFullscreen implementation above</span>
+    <span class="hljs-comment">// do things</span>
+  } <span class="hljs-keyword">else</span> {
+    <span class="hljs-comment">// do other things</span>
+  }
+});
+</code></pre>
+<p><a name="imagetrackupdate"></a></p>
+<h3>imageTrackUpdate</h3>
+<p><code>imageTrackUpdate</code> events have been deprecated like most API related to BIF
+thumbnail parsing.
+You can read <a href="#bif-apis">the related chapter</a> for more information.</p>
+<p>You can replace this API by using the
+<a href="../Tools/parseBifThumbnails.html">parseBifThumbnails</a> tool.</p>
+<p><a name="loadvideo_options"></a></p>
+<h2>loadVideo options</h2>
+<p>The following loadVideo options are deprecated.</p>
+<p><a name="defaultaudiotrack"></a></p>
+<h3>defaultAudioTrack</h3>
+<p><a href="../Loading_a_Content.html#preferredaudiotracks">The <code>preferredAudioTracks</code> loadVideo
+option</a> is now the preferred
+(no pun intended) solution to set the default audio track.
+This new option allows to handle much more complex use cases and can even be
+updated at any time through <a href="../Track_Selection/setPreferredAudioTracks.html">the <code>setPreferredAudioTracks</code>
+method</a>.</p>
+<h4>How to replace that option</h4>
+<p>It is very easy to replace <code>defaultAudioTrack</code> by <code>preferredAudioTracks</code>.</p>
+<p>For example, if you want to have a default french audio language, you probably
+previously did:</p>
+<pre><code class="language-js">player.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">url</span>: myURL,
+  <span class="hljs-attr">transport</span>: myTransport,
+
+  <span class="hljs-attr">defaultAudioTrack</span>: { <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+  <span class="hljs-comment">// or just `defaultAudioTrack: "fra"`, both are equivalent</span>
+});
+</code></pre>
+<p>Now you will have to set it through an array either when creating a new
+RxPlayer:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayer</span>({
+  <span class="hljs-attr">preferredAudioTracks</span>: [{ <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> }],
+});
+</code></pre>
+<p>Or at any time, through the <code>setPreferredAudioTracks</code> method:</p>
+<pre><code class="language-js">player.<span class="hljs-title function_">setPreferredAudioTracks</span>([{ <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> }]);
+</code></pre>
+<p><a name="defaulttexttrack"></a></p>
+<h3>defaultTextTrack</h3>
+<p><code>defaultTextTrack</code> is replaced by <a href="../Loading_a_Content.html#preferredtexttracks">the <code>preferredTextTracks</code> constructor
+option</a> for the same reason
+than <code>defaultAudioTrack</code>.</p>
+<h4>How to replace that option</h4>
+<p>It is very easy to replace <code>defaultTextTrack</code> by <code>preferredTextTracks</code>.</p>
+<p>For example, if you want to have a default swedish subtitle language, you
+probably previously did:</p>
+<pre><code class="language-js">player.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">url</span>: myURL,
+  <span class="hljs-attr">transport</span>: myTransport,
+
+  <span class="hljs-attr">defaultTextTrack</span>: { <span class="hljs-attr">language</span>: <span class="hljs-string">"swe"</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> },
+  <span class="hljs-comment">// or just `defaultTextTrack: "swe"`, both are equivalent</span>
+});
+</code></pre>
+<p>Now you will have to set it through an array either when creating a new
+RxPlayer:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayer</span>({
+  <span class="hljs-attr">preferredTextTracks</span>: [{ <span class="hljs-attr">language</span>: <span class="hljs-string">"swe"</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> }],
+});
+</code></pre>
+<p>Or at any time, through the <code>setPreferredTextTracks</code> method:</p>
+<pre><code class="language-js">player.<span class="hljs-title function_">setPreferredTextTracks</span>([{ <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> }]);
+</code></pre>
+<p><a name="supplementarytexttracks"></a></p>
+<h3>supplementaryTextTracks</h3>
+<p>The <code>supplementaryTextTracks</code> has been deprecated for multiple reasons:</p>
+<ol>
+<li>
+<p>The main reason is that the behavior of this API is not defined for
+multi-Period DASH contents (nor for MetaPlaylist contents): Should we only
+add the subtitles for the first Period or should it be for every Period?
+How to define a different subtitles track for the first and for the second
+Period?</p>
+<p>Adding an external tool much less coupled to the RxPlayer move those
+questions entirely to the application, which should know more than us what
+to do in those different cases.</p>
+</li>
+<li>
+<p>Its API was a little arcane because we had to make it compatible with every
+possible type of contents (i.e. DASH, Smooth, MetaPlaylist etc.) out there.</p>
+</li>
+<li>
+<p>It did not work for Directfile contents yet. Although we could have made it
+compatible with them, we thought that this was the occasion to define a
+better API to replace it.</p>
+</li>
+<li>
+<p>Its behavior was more complex that you would initially think of. For
+example, we could have to re-download multiple times the same subtitles
+file if manual garbage collecting was enabled.</p>
+</li>
+<li>
+<p>All usages of that API that we know of were for Smooth or DASH VoD contents
+which sadly just omitted those subtitles tracks in their Manifest. The true
+“clean” way to fix the problem in that case is to do it at the source: the
+content.
+In this case, fixing it on the player-side should only be a temporary
+work-around (don’t be scared, we still have an API replacement).</p>
+</li>
+</ol>
+<p>The new <code>TextTrackRenderer</code> tool which replace it is much more straightforward.
+As an external tool which just reads and renders already-downloaded text
+subtitles, its API and the extent of what it does should be much more simple.</p>
+<p>It’s also compatible with any type of contents, even when playing through an
+other player.</p>
+<h4>How to replace that option</h4>
+<p>Every <code>supplementaryTextTracks</code> feature can be replaced by the
+<code>TextTrackRenderer</code> tool.
+Please bear in mind however that they are two completely different APIs, doing
+the transition might take some time.</p>
+<p>The <code>TextTrackRenderer</code> tool is documented <a href="../Tools/TextTrackRenderer.html">here</a>.</p>
+<p><a name="supplementaryimagetracks"></a></p>
+<h3>supplementaryImageTracks</h3>
+<p>The <code>supplementaryImageTracks</code> events have been deprecated like most API related
+to BIF thumbnail parsing.
+You can read <a href="#bif-apis">the related chapter</a> for more information.</p>
+<p>You can replace this API by using the
+<a href="../Tools/parseBifThumbnails.html">parseBifThumbnails</a> tool.</p>
+<p><a name="hidenativesubtitle"></a></p>
+<h3>hideNativeSubtitle</h3>
+<p>The <code>hideNativeSubtitle</code> option is deprecated and won’t be replaced.</p>
+<p>This is because it was added at a time when our text track API was much less
+advanced. Some applications wanted to handle subtitles themselves and thus hid
+the true “native” subtitles to display them themselves in a better way.</p>
+<p>However, this API seems to not be used anymore. Please open an issue if you need
+it.</p>
+<p><a name="rxplayer_constructor_options"></a></p>
+<h2>RxPlayer constructor options</h2>
+<p>The following RxPlayer constructor options are deprecated.</p>
+<p><a name="throttlewhenhidden"></a></p>
+<h3>throttleWhenHidden</h3>
+<p><code>throttleWhenHidden</code>has been deprecated as video visibility relies only on
+page visibility API and document hiddenness.</p>
+<p>A video should be visible if the Picture-In-Picture mode is activated, even
+if the <code>hidden</code> attribute of <code>document</code> is set to <code>true</code>.</p>
+<p><code>throttleVideoBitrateWhenHidden</code> relies on both and can be used like this :</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> rxPlayer = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayer</span>({
+  <span class="hljs-comment">// ... RxPlayer options</span>
+  <span class="hljs-comment">// throttleWhenHidden: true [deprecated]</span>
+  <span class="hljs-attr">throttleVideoBitrateWhenHidden</span>: <span class="hljs-literal">true</span>,
+});
+</code></pre>
+<p><a name="other_properties"></a></p>
+<h2>Other properties</h2>
+<p>Some very specific properties from various methods are deprecated.
+You will find them here.</p>
+<p><a name="manifest"></a></p>
+<h3>Manifest</h3>
+<p>The <code>adaptations</code> property returned by the <code>Manifest</code> object you can obtain
+through the <code>getManifest</code> call is deprecated.</p>
+<p>This corresponds to the <code>adaptations</code> property of the first element in the
+<code>periods</code> object from the same <code>Manifest</code> object, so it’s very easy to
+replace:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> manifest = player.<span class="hljs-title function_">getManifest</span>();
+
+<span class="hljs-keyword">if</span> (manifest &amp;&amp; manifest.<span class="hljs-property">periods</span>.<span class="hljs-property">length</span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(manifest.<span class="hljs-property">adaptations</span> === manifest.<span class="hljs-property">periods</span>[<span class="hljs-number">0</span>].<span class="hljs-property">adaptations</span>); <span class="hljs-comment">// true</span>
+}
+</code></pre>
+<p><a name="smooth"></a></p>
+<h3>Smooth</h3>
+<p>Setting a <code>*.wsx</code>, a <code>*.ism</code> or a <code>*.isml</code> URL as an <code>url</code> property in
+<code>loadVideo</code> is now deprecated when we’re talking about a Smooth Streaming
+content.</p>
+<p>We recommend to only set a Manifest URL in that property when the transport is
+equal to <code>smooth</code>.</p>
+<p><a name="networkerror"></a></p>
+<h3>NetworkError</h3>
+<p>The <code>xhr</code> property from a <code>NetworkError</code> is deprecated.</p>
+<p>This is to prepare the support of low-latency streaming, with
+<a href="https://mpeg.chiariglione.org/standards/mpeg-a/common-media-application-format">CMAF</a>,
+where the <code>fetch</code> API has to be used instead of an <code>XMLHttpRequest</code>.</p>
+<p>We recommend to not rely on this property anymore. You still should have access
+to the <code>status</code> and <code>url</code> properties.</p>
+</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="./Manifest_Object.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">Manifest Object</div></a></div><div class="next-or-previous-page next-page"><a class="next-or-previous-page-link" href="./Initial_Position.html"><div class="next-or-previous-page-link-label">Next</div><div class="next-or-previous-page-link-name">Initial Position</div></a></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#deprecated_apis">Deprecated APIs</a></p>
+<ul>
+<li><a href="#fullscreen_apis">Fullscreen APIs</a></li>
+<li><a href="#image_(bif)_apis">Image (BIF) APIs</a></li>
+<li><a href="#rxplayer_methods">RxPlayer Methods</a>
+<ul>
+<li><a href="#getmanifest">getManifest</a></li>
+<li><a href="#getcurrentadaptations">getCurrentAdaptations</a></li>
+<li><a href="#getcurrentrepresentations">getCurrentRepresentations</a></li>
+<li><a href="#getnativetexttrack">getNativeTextTrack</a></li>
+<li><a href="#isfullscreen">isFullscreen</a></li>
+<li><a href="#setfullscreen">setFullscreen</a></li>
+<li><a href="#exitfullscreen">exitFullscreen</a></li>
+<li><a href="#getimagetrackdata">getImageTrackData</a></li>
+</ul>
+</li>
+<li><a href="#rxplayer_events">RxPlayer Events</a>
+<ul>
+<li><a href="#nativetexttrackschange">nativeTextTracksChange</a></li>
+<li><a href="#fullscreenchange">fullscreenChange</a></li>
+<li><a href="#imagetrackupdate">imageTrackUpdate</a></li>
+</ul>
+</li>
+<li><a href="#loadvideo_options">loadVideo options</a>
+<ul>
+<li><a href="#defaultaudiotrack">defaultAudioTrack</a></li>
+<li><a href="#defaulttexttrack">defaultTextTrack</a></li>
+<li><a href="#supplementarytexttracks">supplementaryTextTracks</a></li>
+<li><a href="#supplementaryimagetracks">supplementaryImageTracks</a></li>
+<li><a href="#hidenativesubtitle">hideNativeSubtitle</a></li>
+</ul>
+</li>
+<li><a href="#rxplayer_constructor_options">RxPlayer constructor options</a>
+<ul>
+<li><a href="#throttlewhenhidden">throttleWhenHidden</a></li>
+</ul>
+</li>
+<li><a href="#other_properties">Other properties</a>
+<ul>
+<li><a href="#manifest">Manifest</a></li>
+<li><a href="#smooth">Smooth</a></li>
+<li><a href="#networkerror">NetworkError</a></li>
+</ul>
+</li>
+</ul>
+</div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../Getting_Started/Welcome.html">Welcome</a></li>
+<li><div class="page-list-item page-list-group">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../Getting_Started/Tutorials/Quick_Start.html">Quick Start</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/Content_with_DRM.html">Contents with DRM</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/Selecting_a_Track.html">Selecting a Track</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li>
+<li class="page-list-item"><a href="../../Getting_Started/Minimal_Player.html">Importing a minimal RxPlayer</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Glossary.html">Glossary</a></li></ul></li>
+<li class="page-list-item"><div class="page-list-group opened active">API</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../Creating_a_Player.html">Creating a Player</a></li>
+<li class="page-list-item"><a href="../Loading_a_Content.html">Loading a Content</a></li>
+<li class="page-list-item"><a href="../Decryption_Options.html">Decryption Options</a></li>
+<li><div class="page-list-item page-list-group">Basic Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Basic_Methods/getPlayerState.html">getPlayerState</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/addEventListener.html">addEventListener</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/removeEventListener.html">removeEventListener</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/play.html">play</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/pause.html">pause</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/stop.html">stop</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getPosition.html">getPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getWallClockTime.html">getWallClockTime</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/seekTo.html">seekTo</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getVideoDuration.html">getVideoDuration</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getError.html">getError</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getVideoElement.html">getVideoElement</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/dispose.html">dispose</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/reload.html">reload</a></li></ul></li>
+<li class="page-list-item"><a href="../Player_States.html">Player States</a></li>
+<li class="page-list-item"><a href="../Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../Player_Errors.html">Player Errors</a></li>
+<li><div class="page-list-item page-list-group">Track Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Track_Selection/getAudioTrack.html">getAudioTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getTextTrack.html">getTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getVideoTrack.html">getVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setAudioTrack.html">setAudioTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setTextTrack.html">setTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setVideoTrack.html">setVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/disableTextTrack.html">disableTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setPreferredAudioTracks.html">setPreferredAudioTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setPreferredTextTracks.html">setPreferredTextTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setPreferredVideoTracks.html">setPreferredVideoTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getPreferredAudioTracks.html">getPreferredAudioTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getPreferredTextTracks.html">getPreferredTextTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getPreferredVideoTracks.html">getPreferredVideoTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Bitrate Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Bitrate_Selection/getVideoBitrate.html">getVideoBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getAudioBitrate.html">getAudioBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getAvailableVideoBitrates.html">getAvailableVideoBitrates</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getAvailableAudioBitrates.html">getAvailableAudioBitrates</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/setVideoBitrate.html">setVideoBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/setAudioBitrate.html">setAudioBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getManualVideoBitrate.html">getManualVideoBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getManualAudioBitrate.html">getManualAudioBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/setMinVideoBitrate.html">setMinVideoBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/setMinAudioBitrate.html">setMinAudioBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/setMaxVideoBitrate.html">setMaxVideoBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/setMaxAudioBitrate.html">setMaxAudioBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getMinVideoBitrate.html">getMinVideoBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getMinAudioBitrate.html">getMinAudioBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getMaxVideoBitrate.html">getMaxVideoBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getMaxAudioBitrate.html">getMaxAudioBitrate</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Speed Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li>
+<li class="page-list-item"><a href="../Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li>
+<li class="page-list-item"><a href="../Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Volume Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Volume_Control/setVolume.html">setVolume</a></li>
+<li class="page-list-item"><a href="../Volume_Control/getVolume.html">getVolume</a></li>
+<li class="page-list-item"><a href="../Volume_Control/mute.html">mute</a></li>
+<li class="page-list-item"><a href="../Volume_Control/isMute.html">isMute</a></li>
+<li class="page-list-item"><a href="../Volume_Control/unMute.html">unMute</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Buffer_Information/getVideoBufferGap.html">getVideoBufferGap</a></li>
+<li class="page-list-item"><a href="../Buffer_Information/getVideoLoadedTime.html">getVideoLoadedTime</a></li>
+<li class="page-list-item"><a href="../Buffer_Information/getVideoPlayedTime.html">getVideoPlayedTime</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Content Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Content_Information/getUrl.html">getUrl</a></li>
+<li class="page-list-item"><a href="../Content_Information/isLive.html">isLive</a></li>
+<li class="page-list-item"><a href="../Content_Information/getCurrentKeySystem.html">getCurrentKeySystem</a></li></ul></li>
+<li class="page-list-item"><a href="../Static_Properties.html">RxPlayer Static Properties</a></li>
+<li class="page-list-item"><a href="../Typescript_Types.html">Typescript Types</a></li>
+<li><div class="page-list-item page-list-group">Tools</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Tools/TextTrackRenderer.html">TextTrackRenderer</a></li>
+<li class="page-list-item"><a href="../Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li>
+<li class="page-list-item"><a href="../Tools/StringUtils.html">StringUtils</a></li>
+<li class="page-list-item"><a href="../Tools/parseBifThumbnails.html">parseBifThumbnails</a></li>
+<li class="page-list-item"><a href="../Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li>
+<li class="page-list-item"><a href="../Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li>
+<li><div class="page-list-item page-list-group opened active">Miscellaneous</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./plugins.html">Plugins</a></li>
+<li class="page-list-item"><a href="./Low_Latency.html">Low Latency</a></li>
+<li class="page-list-item"><a href="./DASH_WASM_Parser.html">DASH WASM Parser</a></li>
+<li class="page-list-item"><a href="./hdr.html">HDR</a></li>
+<li class="page-list-item"><a href="./Local_Contents.html">Local Contents</a></li>
+<li class="page-list-item"><a href="./Local_Manifest_v0.1.html">Local Manifest v0.1</a></li>
+<li class="page-list-item"><a href="./Text_Tracks.html">Text Tracks</a></li>
+<li class="page-list-item"><a href="./images.html">Images</a></li>
+<li class="page-list-item"><a href="./MetaPlaylist.html">MetaPlaylist</a></li>
+<li class="page-list-item"><a href="./Manifest_Object.html">Manifest Object</a></li>
+<li class="page-list-item active"><a href="./Deprecated_APIs.html">Deprecated APIs</a></li>
+<li class="page-list-item"><a href="./Initial_Position.html">Initial Position</a></li>
+<li class="page-list-item"><a href="./presentationTimeOffset.html">presentationTimeOffset</a></li>
+<li class="page-list-item"><a href="./DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Deprecated Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Deprecated/getManifest.html">getManifest</a></li>
+<li class="page-list-item"><a href="../Deprecated/getCurrentAdaptations.html">getCurrentAdaptations</a></li>
+<li class="page-list-item"><a href="../Deprecated/getCurrentRepresentations.html">getCurrentRepresentations</a></li>
+<li class="page-list-item"><a href="../Deprecated/setFullscreen.html">setFullscreen</a></li>
+<li class="page-list-item"><a href="../Deprecated/isFullscreen.html">isFullscreen</a></li>
+<li class="page-list-item"><a href="../Deprecated/exitFullscreen.html">exitFullscreen</a></li>
+<li class="page-list-item"><a href="../Deprecated/getImageTrackData.html">getImageTrackData</a></li>
+<li class="page-list-item"><a href="../Deprecated/getNativeTextTrack.html">getNativeTextTrack</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">Reference</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../reference/API_Reference.html">API Reference</a></li></ul></li>
+<li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
+
+<li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
+</ul></div><script type="text/javascript" src="../../scripts/lunr.js" charset="utf-8"></script><script type="text/javascript" src="../../scripts/script.js" charset="utf-8"></script></body></html>

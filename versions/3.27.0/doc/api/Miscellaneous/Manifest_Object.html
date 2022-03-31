@@ -1,0 +1,438 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Manifest Object - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "../..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../../static/img/logo.png" /></a><a class="navbar-item hideable"href="../../Getting_Started/Welcome.html">Getting Started</a>
+<a class="navbar-item navbar-active hideable"href="../Overview.html">API</a>
+<a class="navbar-item hideable"href="../../reference/API_Reference.html">Reference</a>
+<a class="navbar-item hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
+<span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
+<a aria-label="Link to repository" class="navbar-item first-right hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 3.27.0</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="../Overview.html">Overview</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Creating_a_Player.html">Creating a Player</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Loading_a_Content.html">Loading a Content</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Decryption_Options.html">Decryption Options</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Basic Methods</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getPlayerState.html">getPlayerState</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/addEventListener.html">addEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/removeEventListener.html">removeEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/play.html">play</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/pause.html">pause</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/stop.html">stop</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getPosition.html">getPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getWallClockTime.html">getWallClockTime</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/seekTo.html">seekTo</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getVideoDuration.html">getVideoDuration</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getError.html">getError</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getVideoElement.html">getVideoElement</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/dispose.html">dispose</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/reload.html">reload</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_States.html">Player States</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_Events.html">Player Events</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_Errors.html">Player Errors</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Track Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAudioTrack.html">getAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getTextTrack.html">getTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getVideoTrack.html">getVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setAudioTrack.html">setAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setTextTrack.html">setTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setVideoTrack.html">setVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/disableTextTrack.html">disableTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setPreferredAudioTracks.html">setPreferredAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setPreferredTextTracks.html">setPreferredTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setPreferredVideoTracks.html">setPreferredVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getPreferredAudioTracks.html">getPreferredAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getPreferredTextTracks.html">getPreferredTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getPreferredVideoTracks.html">getPreferredVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Bitrate Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getVideoBitrate.html">getVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getAudioBitrate.html">getAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getAvailableVideoBitrates.html">getAvailableVideoBitrates</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getAvailableAudioBitrates.html">getAvailableAudioBitrates</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/setVideoBitrate.html">setVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/setAudioBitrate.html">setAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getManualVideoBitrate.html">getManualVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getManualAudioBitrate.html">getManualAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/setMinVideoBitrate.html">setMinVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/setMinAudioBitrate.html">setMinAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/setMaxVideoBitrate.html">setMaxVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/setMaxAudioBitrate.html">setMaxAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getMinVideoBitrate.html">getMinVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getMinAudioBitrate.html">getMinAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getMaxVideoBitrate.html">getMaxVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Bitrate_Selection/getMaxAudioBitrate.html">getMaxAudioBitrate</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Speed Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Volume Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/setVolume.html">setVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/getVolume.html">getVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/mute.html">mute</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/isMute.html">isMute</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/unMute.html">unMute</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Information/getVideoBufferGap.html">getVideoBufferGap</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Information/getVideoLoadedTime.html">getVideoLoadedTime</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Information/getVideoPlayedTime.html">getVideoPlayedTime</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Content Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/getUrl.html">getUrl</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/isLive.html">isLive</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/getCurrentKeySystem.html">getCurrentKeySystem</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="../Static_Properties.html">RxPlayer Static Properties</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Typescript_Types.html">Typescript Types</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Tools</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Tools/TextTrackRenderer.html">TextTrackRenderer</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/StringUtils.html">StringUtils</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/parseBifThumbnails.html">parseBifThumbnails</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group active opened">Miscellaneous</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./plugins.html">Plugins</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Low_Latency.html">Low Latency</a></li><li class="sidebar-item"><a class="sidebar-link" href="./DASH_WASM_Parser.html">DASH WASM Parser</a></li><li class="sidebar-item"><a class="sidebar-link" href="./hdr.html">HDR</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Local_Contents.html">Local Contents</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Local_Manifest_v0.1.html">Local Manifest v0.1</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Text_Tracks.html">Text Tracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./images.html">Images</a></li><li class="sidebar-item"><a class="sidebar-link" href="./MetaPlaylist.html">MetaPlaylist</a></li><li class="sidebar-item"><a class="sidebar-link active" href="./Manifest_Object.html">Manifest Object</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated_APIs.html">Deprecated APIs</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Initial_Position.html">Initial Position</a></li><li class="sidebar-item"><a class="sidebar-link" href="./presentationTimeOffset.html">presentationTimeOffset</a></li><li class="sidebar-item"><a class="sidebar-link" href="./DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Deprecated Methods</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/getManifest.html">getManifest</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/getCurrentAdaptations.html">getCurrentAdaptations</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/getCurrentRepresentations.html">getCurrentRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/setFullscreen.html">setFullscreen</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/isFullscreen.html">isFullscreen</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/exitFullscreen.html">exitFullscreen</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/getImageTrackData.html">getImageTrackData</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Deprecated/getNativeTextTrack.html">getNativeTextTrack</a></li></ul></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="manifest_object"></a></p>
+<h1>Manifest Object</h1>
+<p><a name="overview"></a></p>
+<h2>Overview</h2>
+<p>A Manifest Object and its sub-parts are data structures returned by multiple
+APIs of the player.</p>
+<p>Its data represents the corresponding streaming protocol’s
+<a href="../../Getting_Started/Glossary.html#manifest">Manifest</a> equivalent (MPD for DASH, Manifest for
+Microsoft Smooth Streaming etc.).</p>
+<p>Basically, the structure of a Manifest file has the following hierarchy:</p>
+<pre><code>Manifest Object
+  ...Manifest data and methods
+  Period Object
+    ...Period properties
+    Adaptation Object
+      ...Adaptation data and methods
+      Representation Object
+        ...Representation data and methods
+        RepresentationIndex Object
+          ...RepresentationIndex data and methods
+            SegmentObject
+            ...SegmentObject data
+</code></pre>
+<p>Due to this highly hierachical structure, each level will be described in its
+own chapter here.</p>
+<div class="warning">
+Like in the rest of this documentation, any variable or method not
+defined here can change without notice.
+</div>
+<p>Only use the documented variables and open an issue if you think it’s not
+enough.</p>
+<p><a name="structure_of_a_manifest_object"></a></p>
+<h2>Structure of a Manifest Object</h2>
+<p>The manifest Object represents the <a href="../../Getting_Started/Glossary.html#manifest">Manifest file</a> of the
+content loaded.</p>
+<p><a name="properties"></a></p>
+<h3>properties</h3>
+<p>The manifest Object has the following properties.</p>
+<h4>periods</h4>
+<p><em>type</em>: <code>Array.&lt;Period&gt;</code></p>
+<p>A single Manifest instance can contain multiple <a href="../../Getting_Started/Glossary.html#period">Periods</a>,
+which are periods of time for which the list of available type of contents
+(audio tracks, subtitles, video tracks…) can be different.</p>
+<p>Such example of Periods could be multiple Programs of a live contents, which can
+be each in different languages, for example.</p>
+<p>The player will switch smoothly across subsequent Periods within playback.</p>
+<p>Most Streaming technologies (e.g. HLS and Smooth) do not have a “Period”
+concept. For those, the Manifest will only have one Period for the whole
+content.</p>
+<h4>adaptations</h4>
+<div class="warning">
+This option is deprecated, it will disappear in the next major release
+`v4.0.0` (see <a href="./Deprecated_APIs.html">Deprecated
+APIs</a>).
+</div>
+<hr>
+<p><em>type</em>: <code>Object</code></p>
+<hr>
+<p>Adaptation objects for the first Period.</p>
+<p>Both of those lines have the same effect:</p>
+<pre><code class="language-js"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(manifest.<span class="hljs-property">adaptations</span>);
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(manifest.<span class="hljs-property">periods</span>[<span class="hljs-number">0</span>].<span class="hljs-property">adaptations</span>);
+</code></pre>
+<p>See <a href="#period-props">the Period chapter</a> for more information on Adaptations.</p>
+<h4>isLive</h4>
+<p><em>type</em>: <code>Boolean</code></p>
+<p><code>true</code> if the content is a “live” content (e.g. a live TV Channel).
+<code>false</code> otherwise.</p>
+<h4>uris</h4>
+<p><em>type</em>: <code>Array.&lt;string&gt;</code></p>
+<p>The list of uris that can be used to refer to the Manifest file.</p>
+<h4>transport</h4>
+<p><em>type</em>: <code>string</code></p>
+<p>The type of transport used. For now, this can only be equal to either <code>dash</code>
+or <code>smooth</code>.</p>
+<p><a name="structure_of_a_period_object"></a></p>
+<h2>Structure of a Period Object</h2>
+<p>A Period is an object describing what to play during a certain time periods.</p>
+<p>A Manifest can have a single Period, which means that the played content do not
+change its characteristics (same languages, same bitrates etc.) or multiple
+ones.</p>
+<p>A good example of a content with multiple Periods would be a live channel
+broadcasting multiple foreign films. Each film, being in a different language,
+will need to be part of a new Period.</p>
+<p><a name="properties_(1)"></a></p>
+<h3>properties</h3>
+<h4>id</h4>
+<p><em>type</em>: <code>string</code></p>
+<p>This id should be a string unique to that Period. It serves identifications
+purpose, when updating the Manifest for example.</p>
+<h4>start</h4>
+<p><em>type</em>: <code>Number</code></p>
+<p>Start time at which the Period begins in the whole content, in seconds.</p>
+<h4>end</h4>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p>End time at which the Period ends in the whole content, in seconds.</p>
+<p>If not set or set to undefined, it means that the end is unknown, in which case
+it is the current last content of the current Manifest.</p>
+<h4>adaptations</h4>
+<p><em>type</em>: <code>Object</code></p>
+<p>The <a href="../../Getting_Started/Glossary.html#adaptation">Adaptations</a> (tracks if you want) for the current
+content, per-type (audio/video/text/image).</p>
+<p>See <a href="#adaptation">the Adaptation chapter</a> for more info about an Adaptation’s
+structure.</p>
+<p>The Adaptation object <em>can</em> contain any of the following keys:</p>
+<ul>
+<li>audio (<code>Array.&lt;Adaptation&gt;</code>): The audio Adaptation(s) available.</li>
+<li>video (<code>Array.&lt;Adaptation&gt;</code>): The video Adaptation(s) available.</li>
+<li>text (<code>Array.&lt;Adaptation&gt;</code>): The text Adaptation(s) available.</li>
+<li>image (<code>Array.&lt;Adaptation&gt;</code>): The image Adaptation(s) available.</li>
+</ul>
+<p><a name="structure_of_an_adaptation_object"></a></p>
+<h2>Structure of an Adaptation Object</h2>
+<p>An <a href="../../Getting_Started/Glossary.html#adaptation">Adaptation</a> is a set of streams representing the
+exact same contents in multiple forms (different sizes, different bitrates…).
+Concretely, a frequent usecase is to have a single video Adaptation and multiple
+audio ones, one for each language available.</p>
+<p>As such, it is also often called in the API a <code>track</code>.</p>
+<p><a name="properties_(2)"></a></p>
+<h3>properties</h3>
+<h4>id</h4>
+<p><em>type</em>: <code>string</code></p>
+<p>This id should be a string unique to that Adaptation. It serves
+identifications purpose, when updating the Manifest for example.</p>
+<h4>type</h4>
+<p><em>type</em>: <code>string</code></p>
+<p>The type of the Adaptation. The possible types are:</p>
+<ul>
+<li><code>"video"</code></li>
+<li><code>"audio"</code></li>
+<li><code>"text"</code></li>
+<li><code>"image"</code></li>
+</ul>
+<h4>language</h4>
+<p><em>type</em>: <code>string|undefined</code></p>
+<p>The language of the Adaptation. This is particularly useful for audio and text
+Adaptations.</p>
+<p>Note that this property is not always present in an Adaptation.</p>
+<h4>normalizedLanguage</h4>
+<p><em>type</em>: <code>string|undefined</code></p>
+<p>An attempt to translate the language of the Adaptation into an ISO 639-3 code.
+If the translation attempt fails (no corresponding ISO 639-3 language code is
+found), it will equal the value of <code>language</code></p>
+<p>Note that this property is not always present in an Adaptation.</p>
+<h4>isAudioDescription</h4>
+<p><em>type</em>: <code>Boolean|undefined</code></p>
+<p>This property only makes sense for audio Adaptations. In this case, if <code>true</code>
+it means that the audio track has added commentaries for the visually impaired.</p>
+<h4>isClosedCaption</h4>
+<p><em>type</em>: <code>Boolean|undefined</code></p>
+<p>This property only makes sense for text Adaptations. In this case, if <code>true</code>
+it means that the text track has added hints for the hard of hearing.</p>
+<h4>isTrickMode</h4>
+<p><em>type</em> : <code>Boolean|undefined</code></p>
+<p>This property only makes sense for video Adaptations. In this case, if <code>true</code>
+it means that the video track is a trick mode track that will be played only
+if the user start the trick mode on the respective main adaptation.</p>
+<h4>representations</h4>
+<p><em>type</em>: <code>Array.&lt;Representation&gt;</code></p>
+<p>The <a href="../../Getting_Started/Glossary.html#representation">Represesentations</a> for this Adaptation.</p>
+<p>See <a href="#representation">the Representation chapter</a> for more info about a
+Representation’s structure.</p>
+<p><a name="methods"></a></p>
+<h3>methods</h3>
+<h4>getAvailableBitrates</h4>
+<p><em>return value</em>: <code>Array.&lt;Number&gt;</code></p>
+<p>Returns every bitrates available for this Adaptation.</p>
+<p><a name="structure_of_a_representation_object"></a></p>
+<h2>Structure of a Representation Object</h2>
+<p>A <a href="../../Getting_Started/Glossary.html#representation">Representation</a> is an
+<a href="../../Getting_Started/Glossary.html#adaptation">Adaptation</a> encoded in a certain way. It is defined by
+multiple values (a codec, a bitrate). Only some of them are documented here (as
+stated before, open an issue if you would like to access other properties).</p>
+<p><a name="properties_(3)"></a></p>
+<h3>properties</h3>
+<h4>id</h4>
+<p><em>type</em>: <code>string</code></p>
+<p>This id should be a string unique to that Representation.</p>
+<h4>bitrate</h4>
+<p><em>type</em>: <code>Number</code></p>
+<p>The bitrate of the Representation.</p>
+<h4>codec</h4>
+<p><em>type</em>: <code>string|undefined</code></p>
+<p>The codec of the Representation.</p>
+<h4>decipherable</h4>
+<p><em>type</em>: <code>boolean|undefined</code></p>
+<p>Whether we are able to decrypt this Representation / unable to decrypt it or
+if we don’t know yet:</p>
+<ul>
+<li>if <code>true</code>, it means that we know we were able to decrypt this
+Representation in the current content.</li>
+<li>if <code>false</code>, it means that we know we were unable to decrypt this
+Representation</li>
+<li>if <code>undefined</code> there is no certainty on this matter</li>
+</ul>
+<h4>height</h4>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p>This property makes the most sense for video Representations.
+It defines the height of the video, in pixels.</p>
+<h4>width</h4>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p>This property makes the most sense for video Representations.
+It defines the width of the video, in pixels.</p>
+<h4>index</h4>
+<p><em>type</em>: <code>RepresentationIndex</code></p>
+<p>The represesentation index for this Representation.</p>
+<p>See <a href="#representation-index">the RepresentationIndex chapter</a> for more info about
+a RepresentationIndex’s structure.</p>
+<h4>frameRate</h4>
+<p><em>type</em>: <code>string|undefined</code></p>
+<p>The represesentation frame rate for this Representation. It defines either the
+number of frames per second as an integer (24), or as a ratio (24000 / 1000).</p>
+<h4>hdrInfo</h4>
+<p><em>type</em>: <code>Object|undefined</code></p>
+<p>Information about the hdr characteristics of the track.
+(see <a href="./hdr.html#hdrinfo">HDR support documentation</a>)</p>
+<p><a name="structure_of_a_representationindex_object"></a></p>
+<h2>Structure of a RepresentationIndex Object</h2>
+<p>A RepresentationIndex is an uniform way of declaring the segment index in any
+<a href="../../Getting_Started/Glossary.html#manifest">Manifest</a>.</p>
+<p>That’s the part that calculates which segments will be needed. Because the index
+can be different depending on the type of contents/transport most interactions
+here are done through few methods which hide the complexity underneath.</p>
+<p><a name="methods_(1)"></a></p>
+<h3>methods</h3>
+<h4>getSegments</h4>
+<p><em>arguments</em>:</p>
+<ul>
+<li>
+<p><em>up</em> (<code>Number</code>): The position, in seconds from which you want to get the
+segment.</p>
+</li>
+<li>
+<p><em>duration</em> (<code>Number</code>): The duration in seconds from the asked position</p>
+</li>
+</ul>
+<p><em>return value</em>: <code>Array.&lt;Segment&gt;</code></p>
+<p>Returns the needed segments as defined by the current Manifest during an asked
+timeframe.</p>
+<p>See <a href="#segment">the Segment chapter</a> for more info about a Segment’s structure.</p>
+<p><a name="structure_of_a_segment_object"></a></p>
+<h2>Structure of a Segment Object</h2>
+<p>A Segment object defines a segment, as generated by the RepresentationIndex.</p>
+<p>Those segments can have multiple useful properties which for the most part are
+described here.</p>
+<p><a name="properties_(4)"></a></p>
+<h3>properties</h3>
+<h4>id</h4>
+<p><em>type</em>: <code>string</code></p>
+<p>This id should be a string unique to that segment.</p>
+<h4>timescale</h4>
+<p><em>type</em>: <code>Number</code></p>
+<p>The timescale in which the duration and time are expressed.</p>
+<p>Basically, divide any of those by the timescale to obtain seconds.</p>
+<h4>duration</h4>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p>The duration, timescaled, of the Segments in s.</p>
+<h4>time</h4>
+<p><em>type</em>: <code>Number</code></p>
+<p>The start time, timescaled, of the Segments in s.</p>
+<h4>isInit</h4>
+<p><em>type</em>: <code>Boolean|undefined</code></p>
+<p>If true, the segment concerned is an init segment.</p>
+<h4>range</h4>
+<p><em>type</em>: <code>Array.&lt;Number&gt;|null|undefined</code></p>
+<p>If defined, it means that the segment is defined in a certain byte range
+remotely. In this case, the array contains two elements, the start byte and the
+end byte.</p>
+<h4>indexRange</h4>
+<p><em>type</em>: <code>Array.&lt;Number&gt;|null|undefined</code></p>
+<p>If defined, it means that a segment index is defined in a certain byte range
+remotely. In this case, the array contains two elements, the start byte and the
+end byte.</p>
+<h4>number</h4>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p>The number of the segment (if numbered), useful with certain types of index.</p>
+</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="./MetaPlaylist.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">MetaPlaylist</div></a></div><div class="next-or-previous-page next-page"><a class="next-or-previous-page-link" href="./Deprecated_APIs.html"><div class="next-or-previous-page-link-label">Next</div><div class="next-or-previous-page-link-name">Deprecated APIs</div></a></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#manifest_object">Manifest Object</a></p>
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#structure_of_a_manifest_object">Structure of a Manifest Object</a>
+<ul>
+<li><a href="#properties">properties</a></li>
+</ul>
+</li>
+<li><a href="#structure_of_a_period_object">Structure of a Period Object</a>
+<ul>
+<li><a href="#properties_(1)">properties</a></li>
+</ul>
+</li>
+<li><a href="#structure_of_an_adaptation_object">Structure of an Adaptation Object</a>
+<ul>
+<li><a href="#properties_(2)">properties</a></li>
+<li><a href="#methods">methods</a></li>
+</ul>
+</li>
+<li><a href="#structure_of_a_representation_object">Structure of a Representation Object</a>
+<ul>
+<li><a href="#properties_(3)">properties</a></li>
+</ul>
+</li>
+<li><a href="#structure_of_a_representationindex_object">Structure of a RepresentationIndex Object</a>
+<ul>
+<li><a href="#methods_(1)">methods</a></li>
+</ul>
+</li>
+<li><a href="#structure_of_a_segment_object">Structure of a Segment Object</a>
+<ul>
+<li><a href="#properties_(4)">properties</a></li>
+</ul>
+</li>
+</ul>
+</div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../Getting_Started/Welcome.html">Welcome</a></li>
+<li><div class="page-list-item page-list-group">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../Getting_Started/Tutorials/Quick_Start.html">Quick Start</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/Content_with_DRM.html">Contents with DRM</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/Selecting_a_Track.html">Selecting a Track</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li>
+<li class="page-list-item"><a href="../../Getting_Started/Minimal_Player.html">Importing a minimal RxPlayer</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Glossary.html">Glossary</a></li></ul></li>
+<li class="page-list-item"><div class="page-list-group opened active">API</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../Creating_a_Player.html">Creating a Player</a></li>
+<li class="page-list-item"><a href="../Loading_a_Content.html">Loading a Content</a></li>
+<li class="page-list-item"><a href="../Decryption_Options.html">Decryption Options</a></li>
+<li><div class="page-list-item page-list-group">Basic Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Basic_Methods/getPlayerState.html">getPlayerState</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/addEventListener.html">addEventListener</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/removeEventListener.html">removeEventListener</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/play.html">play</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/pause.html">pause</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/stop.html">stop</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getPosition.html">getPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getWallClockTime.html">getWallClockTime</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/seekTo.html">seekTo</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getVideoDuration.html">getVideoDuration</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getError.html">getError</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getVideoElement.html">getVideoElement</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/dispose.html">dispose</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/reload.html">reload</a></li></ul></li>
+<li class="page-list-item"><a href="../Player_States.html">Player States</a></li>
+<li class="page-list-item"><a href="../Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../Player_Errors.html">Player Errors</a></li>
+<li><div class="page-list-item page-list-group">Track Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Track_Selection/getAudioTrack.html">getAudioTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getTextTrack.html">getTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getVideoTrack.html">getVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setAudioTrack.html">setAudioTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setTextTrack.html">setTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setVideoTrack.html">setVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/disableTextTrack.html">disableTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setPreferredAudioTracks.html">setPreferredAudioTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setPreferredTextTracks.html">setPreferredTextTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setPreferredVideoTracks.html">setPreferredVideoTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getPreferredAudioTracks.html">getPreferredAudioTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getPreferredTextTracks.html">getPreferredTextTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getPreferredVideoTracks.html">getPreferredVideoTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Bitrate Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Bitrate_Selection/getVideoBitrate.html">getVideoBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getAudioBitrate.html">getAudioBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getAvailableVideoBitrates.html">getAvailableVideoBitrates</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getAvailableAudioBitrates.html">getAvailableAudioBitrates</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/setVideoBitrate.html">setVideoBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/setAudioBitrate.html">setAudioBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getManualVideoBitrate.html">getManualVideoBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getManualAudioBitrate.html">getManualAudioBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/setMinVideoBitrate.html">setMinVideoBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/setMinAudioBitrate.html">setMinAudioBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/setMaxVideoBitrate.html">setMaxVideoBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/setMaxAudioBitrate.html">setMaxAudioBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getMinVideoBitrate.html">getMinVideoBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getMinAudioBitrate.html">getMinAudioBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getMaxVideoBitrate.html">getMaxVideoBitrate</a></li>
+<li class="page-list-item"><a href="../Bitrate_Selection/getMaxAudioBitrate.html">getMaxAudioBitrate</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Speed Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li>
+<li class="page-list-item"><a href="../Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li>
+<li class="page-list-item"><a href="../Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Volume Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Volume_Control/setVolume.html">setVolume</a></li>
+<li class="page-list-item"><a href="../Volume_Control/getVolume.html">getVolume</a></li>
+<li class="page-list-item"><a href="../Volume_Control/mute.html">mute</a></li>
+<li class="page-list-item"><a href="../Volume_Control/isMute.html">isMute</a></li>
+<li class="page-list-item"><a href="../Volume_Control/unMute.html">unMute</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Buffer_Information/getVideoBufferGap.html">getVideoBufferGap</a></li>
+<li class="page-list-item"><a href="../Buffer_Information/getVideoLoadedTime.html">getVideoLoadedTime</a></li>
+<li class="page-list-item"><a href="../Buffer_Information/getVideoPlayedTime.html">getVideoPlayedTime</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Content Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Content_Information/getUrl.html">getUrl</a></li>
+<li class="page-list-item"><a href="../Content_Information/isLive.html">isLive</a></li>
+<li class="page-list-item"><a href="../Content_Information/getCurrentKeySystem.html">getCurrentKeySystem</a></li></ul></li>
+<li class="page-list-item"><a href="../Static_Properties.html">RxPlayer Static Properties</a></li>
+<li class="page-list-item"><a href="../Typescript_Types.html">Typescript Types</a></li>
+<li><div class="page-list-item page-list-group">Tools</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Tools/TextTrackRenderer.html">TextTrackRenderer</a></li>
+<li class="page-list-item"><a href="../Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li>
+<li class="page-list-item"><a href="../Tools/StringUtils.html">StringUtils</a></li>
+<li class="page-list-item"><a href="../Tools/parseBifThumbnails.html">parseBifThumbnails</a></li>
+<li class="page-list-item"><a href="../Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li>
+<li class="page-list-item"><a href="../Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li>
+<li><div class="page-list-item page-list-group opened active">Miscellaneous</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./plugins.html">Plugins</a></li>
+<li class="page-list-item"><a href="./Low_Latency.html">Low Latency</a></li>
+<li class="page-list-item"><a href="./DASH_WASM_Parser.html">DASH WASM Parser</a></li>
+<li class="page-list-item"><a href="./hdr.html">HDR</a></li>
+<li class="page-list-item"><a href="./Local_Contents.html">Local Contents</a></li>
+<li class="page-list-item"><a href="./Local_Manifest_v0.1.html">Local Manifest v0.1</a></li>
+<li class="page-list-item"><a href="./Text_Tracks.html">Text Tracks</a></li>
+<li class="page-list-item"><a href="./images.html">Images</a></li>
+<li class="page-list-item"><a href="./MetaPlaylist.html">MetaPlaylist</a></li>
+<li class="page-list-item active"><a href="./Manifest_Object.html">Manifest Object</a></li>
+<li class="page-list-item"><a href="./Deprecated_APIs.html">Deprecated APIs</a></li>
+<li class="page-list-item"><a href="./Initial_Position.html">Initial Position</a></li>
+<li class="page-list-item"><a href="./presentationTimeOffset.html">presentationTimeOffset</a></li>
+<li class="page-list-item"><a href="./DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Deprecated Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Deprecated/getManifest.html">getManifest</a></li>
+<li class="page-list-item"><a href="../Deprecated/getCurrentAdaptations.html">getCurrentAdaptations</a></li>
+<li class="page-list-item"><a href="../Deprecated/getCurrentRepresentations.html">getCurrentRepresentations</a></li>
+<li class="page-list-item"><a href="../Deprecated/setFullscreen.html">setFullscreen</a></li>
+<li class="page-list-item"><a href="../Deprecated/isFullscreen.html">isFullscreen</a></li>
+<li class="page-list-item"><a href="../Deprecated/exitFullscreen.html">exitFullscreen</a></li>
+<li class="page-list-item"><a href="../Deprecated/getImageTrackData.html">getImageTrackData</a></li>
+<li class="page-list-item"><a href="../Deprecated/getNativeTextTrack.html">getNativeTextTrack</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">Reference</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../reference/API_Reference.html">API Reference</a></li></ul></li>
+<li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
+
+<li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
+</ul></div><script type="text/javascript" src="../../scripts/lunr.js" charset="utf-8"></script><script type="text/javascript" src="../../scripts/script.js" charset="utf-8"></script></body></html>

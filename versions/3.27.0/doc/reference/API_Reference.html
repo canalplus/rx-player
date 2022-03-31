@@ -1,0 +1,934 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../styles/style.css"/><link rel="stylesheet" href="../styles/code.css"/><title>API Reference - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../static/img/logo.png" /></a><a class="navbar-item hideable"href="../Getting_Started/Welcome.html">Getting Started</a>
+<a class="navbar-item hideable"href="../api/Overview.html">API</a>
+<a class="navbar-item navbar-active hideable"href="./API_Reference.html">Reference</a>
+<a class="navbar-item hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
+<span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
+<a aria-label="Link to repository" class="navbar-item first-right hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 3.27.0</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link active" href="./API_Reference.html">API Reference</a></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="api_reference"></a></p>
+<h1>API reference</h1>
+<p><a name="overview"></a></p>
+<h2>Overview</h2>
+<p>This is the API reference which presents every RxPlayer API in a single page.</p>
+<p>The point of this page is to provide an easier-to-navigate page than the <a href="../api/Overview.html">API
+documentation</a> for when you’re already familiar with it.</p>
+<p>API are splitted here in multiple categories depending on if they are
+properties, methods, events and so on.</p>
+<p><a name="constructor"></a></p>
+<h2>Constructor</h2>
+<ul>
+<li><a href="../api/Creating_a_Player.html#instantiation"><code>new RxPlayer()</code></a>:
+Create a new RxPlayer.</li>
+</ul>
+<p><a name="constructor_options"></a></p>
+<h2>Constructor options</h2>
+<ul>
+<li>
+<p><a href="../api/Creating_a_Player.html#videoElement"><code>videoElement</code></a>: specifies the
+media element on which the content will play.</p>
+</li>
+<li>
+<p><a href="../api/Creating_a_Player.html#initialvideobitrate"><code>initialVideoBitrate</code></a>:
+Ceil value for the initial video bitrate wanted.</p>
+</li>
+<li>
+<p><a href="../api/Creating_a_Player.html#initialaudiobitrate"><code>initialAudioBitrate</code></a>:
+Ceil value for the initial audio bitrate wanted.</p>
+</li>
+<li>
+<p><a href="../api/Creating_a_Player.html#minvideobitrate"><code>minVideoBitrate</code></a>:
+Minimum video bitrate reachable through adaptive streaming.</p>
+</li>
+<li>
+<p><a href="../api/Creating_a_Player.html#minaudiobitrate"><code>minAudioBitrate</code></a>:
+Minimum audio bitrate reachable through adaptive streaming.</p>
+</li>
+<li>
+<p><a href="../api/Creating_a_Player.html#maxvideobitrate"><code>maxVideoBitrate</code></a>:
+Maximum video bitrate reachable through adaptive streaming.</p>
+</li>
+<li>
+<p><a href="../api/Creating_a_Player.html#maxaudiobitrate"><code>maxAudioBitrate</code></a>:
+Maximum audio bitrate reachable through adaptive streaming.</p>
+</li>
+<li>
+<p><a href="../api/Creating_a_Player.html#wantedbufferahead"><code>wantedBufferAhead</code></a>:
+Set the default buffering goal.</p>
+</li>
+<li>
+<p><a href="../api/Creating_a_Player.html#preferredaudiotracks"><code>preferredAudioTracks</code></a>:
+Set default audio tracks preferences based on tracks characteristics.</p>
+</li>
+<li>
+<p><a href="../api/Creating_a_Player.html#preferredtexttracks"><code>preferredTextTracks</code></a>:
+Set default text tracks preferences based on tracks characteristics.</p>
+</li>
+<li>
+<p><a href="../api/Creating_a_Player.html#preferredvideotracks"><code>preferredVideoTracks</code></a>:
+Set default video tracks preferences based on tracks characteristics.</p>
+</li>
+<li>
+<p><a href="../api/Creating_a_Player.html#maxbufferahead"><code>maxBufferAhead</code></a>:
+Set the default maximum kept buffer ahead of the current position, in seconds.</p>
+</li>
+<li>
+<p><a href="../api/Creating_a_Player.html#maxbufferbehind"><code>maxBufferBehind</code></a>:
+Set the default maximum kept buffer before the current position, in seconds.</p>
+</li>
+<li>
+<p><a href="../api/Creating_a_Player.html#limitvideowidth"><code>limitVideoWidth</code></a>:
+Limit the maximum video width according to the video element’s current width.</p>
+</li>
+<li>
+<p><a href="../api/Creating_a_Player.html#throttlevideobitratewhenhidden"><code>throttleVideoBitrateWhenHidden</code></a>:
+Limit the maximum video bitrate when the current video is hidden to the
+user.</p>
+</li>
+<li>
+<p><a href="../api/Creating_a_Player.html#stopatend"><code>stopAtEnd</code></a>:
+Stop automatically when the end of a content is reached.</p>
+</li>
+<li>
+<p><a href="../api/Creating_a_Player.html#throttlewhenhidden"><code>throttleWhenHidden</code></a>:
+[Deprecated] Limit the maximum video bitrate when the current video is
+hidden to the user.</p>
+</li>
+</ul>
+<p><a name="%60loadvideo%60_options"></a></p>
+<h2><code>loadVideo</code> options</h2>
+<ul>
+<li>
+<p><a href="../api/Loading_a_Content.html#transport"><code>transport</code></a>: The adaptive streaming
+technology (e.g. “dash”, “smooth” etc.) used.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#url"><code>url</code></a>: URL to the content (e.g. DASH’s
+MPD, Smooth’s Manifest etc.)</p>
+</li>
+<li>
+<p><a href="../api/Decryption_Options.html#loadvideo_%60keysystems%60_options"><code>keySystems</code></a>:
+DRM configuration for the content.</p>
+<ul>
+<li>
+<p><a href="../api/Decryption_Options.html#type"><code>keySystems[].type</code></a>: Name of the
+DRM technology wanted.</p>
+</li>
+<li>
+<p><a href="../api/Decryption_Options.html#getlicense"><code>keySystems[].getLicense</code></a>:
+Logic to fetch the license.</p>
+</li>
+<li>
+<p><a href="../api/Decryption_Options.html#getlicenseconfig"><code>keySystems[].getLicenseConfig</code></a>:
+Supplementary configuration linked to the <code>getLicense</code> function.</p>
+</li>
+<li>
+<p><a href="../api/Decryption_Options.html#servercertificate"><code>keySystems[].serverCertificate</code></a>:
+Eventual certificate encrypting exchanges between the CDM and license
+server.</p>
+</li>
+<li>
+<p><a href="../api/Decryption_Options.html#persistentlicense"><code>keySystems[].persistentLicense</code></a>:
+Allows to ask for the DRM session to persist the license.</p>
+</li>
+<li>
+<p><a href="../api/Decryption_Options.html#licensestorage"><code>keySystems[].licenseStorage</code></a>:
+Allows to ask for the DRM session to persist the license.</p>
+</li>
+<li>
+<p><a href="../api/Decryption_Options.html#fallbackon"><code>keySystems[].fallbackOn</code></a>:
+Allows to fallback to another quality when a key is refused.</p>
+</li>
+<li>
+<p><a href="../api/Decryption_Options.html#maxsessioncachesize"><code>keySystems[].maxSessionCacheSize</code></a>:
+Maximum number of DRM sessions cached by the RxPlayer.</p>
+</li>
+<li>
+<p><a href="../api/Decryption_Options.html#closesessionsonstop"><code>keySystems[].closeSessionsOnStop</code></a>:
+Closes DRM sessions when the content stops.</p>
+</li>
+<li>
+<p><a href="../api/Decryption_Options.html#singlelicenseper"><code>keySystems[].singleLicensePer</code></a>:
+Allows to use a single <code>getLicense</code> call for keys linked to multiple
+qualities.</p>
+</li>
+<li>
+<p><a href="../api/Decryption_Options.html#disablemediakeysattachmentlock"><code>keySystems[].disableMediaKeysAttachmentLock</code></a>:
+Disable a lock that may cause the RxPlayer to deadlock on encrypted
+contents on some peculiar devices.</p>
+</li>
+<li>
+<p><a href="../api/Decryption_Options.html#distinctiveidentifierrequired"><code>keySystems[].distinctiveIdentifierRequired</code></a>:
+Allows the configuration of the <a href="https://www.w3.org/TR/encrypted-media/#distinctive-identifier">Distinctive
+Indentifier(s)</a>
+property.</p>
+</li>
+<li>
+<p><a href="../api/Decryption_Options.html#persistentstaterequired"><code>keySystems[].persistentStateRequired</code></a>:
+Allows the configuration of the <a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-persistentstate">persistentState</a>
+property.</p>
+</li>
+<li>
+<p><a href="../api/Decryption_Options.html#throwonlicenseexpiration"><code>keySystems[].throwOnLicenseExpiration</code></a>:
+Allows to stop or not when the current license has expired.</p>
+</li>
+<li>
+<p><a href="../api/Decryption_Options.html#onkeystatuseschange"><code>keySystems[].onKeyStatusesChange</code></a>:
+Callback triggered when on of the key’s <a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus">status</a>
+is updated.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#autoplay"><code>autoPlay</code></a>:
+Allows to automatically play after a content is loaded.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#startat"><code>startAt</code></a>:
+Define the position at which the RxPlayer should start.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#transportoptions"><code>transportOptions</code></a>:
+Options relative to the current “transport”.</p>
+<ul>
+<li>
+<p><a href="../api/Loading_a_Content.html#transportoptions"><code>transportOptions.minimumManifestUpdateInterval</code></a>:
+Allows to limit the frequency of Manifest updates.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#transportoptions"><code>transportOptions.initialManifest</code></a>:
+Allows to provide an initial Manifest to speed-up the content loading</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#transportoptions"><code>transportOptions.manifestUpdateUrl</code></a>:
+Provide another URL, potentially to a shorter Manifest, used only for
+Manifest updates</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#transportoptions"><code>transportOptions.representationFilter</code></a>:
+Filter out qualities from the Manifest based on its characteristics.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#transportoptions"><code>transportOptions.segmentLoader</code></a>:
+Provide a custom logic to fetch segments.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#transportoptions"><code>transportOptions.manifestLoader</code></a>:
+Provide a custom logic to fetch the Manifest.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#transportoptions"><code>transportOptions.checkMediaSegmentIntegrity</code></a>:
+Enable supplementary checks to retry a request if a segment appears
+corrupted.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#transportoptions"><code>transportOptions.serverSyncInfos</code></a>:
+Provide time synchronization mechanism between the client and server.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#transportoptions"><code>transportOptions.aggressiveMode</code></a>:
+Allows to ask to download the segments early.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#transportoptions"><code>transportOptions.referenceDateTime</code></a>:
+Default offset to add to the segment’s time to obtain a live time. This is
+in most cases not needed.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#texttrackmode"><code>textTrackMode</code></a>:
+The way in which the text tracks should be displayed.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#texttrackelement"><code>textTrackElement</code></a>:
+<code>HTMLElement</code> in which text tracks should be displayed.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#audiotrackswitchingmode"><code>audioTrackSwitchingMode</code></a>:
+Behavior when switching the audio track.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#manualbitrateswitchingmode"><code>manualBitrateSwitchingMode</code></a>:
+Behavior when switching manually the video or audio quality.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#oncodecswitch"><code>onCodecSwitch</code></a>:
+Behavior when the codec changes between incompatible ones.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#lowlatencymode"><code>lowLatencyMode</code></a>:
+Allows to play low-latency contents efficiently.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#networkconfig"><code>networkConfig</code></a>:
+Configuration linked to the Manifest and segment requests.</p>
+<ul>
+<li>
+<p><a href="../api/Loading_a_Content.html#networkconfig"><code>networkConfig.segmentRetry</code></a>:
+Maximum number of retries when a segment request fails.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#networkconfig"><code>networkConfig.manifestRetry</code></a>:
+Maximum number of retries when a Manifest request fails.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#networkconfig"><code>networkConfig.offlineRetry</code></a>:
+Maximum number of retries when a Manifest or segment request fails due to
+the user being offline.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#enablefastswitching"><code>enableFastSwitching</code></a>:
+Enable or disable an optimization replacing segments of poor quality with
+segments of a better quality.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#hidenativesubtitle"><code>hideNativeSubtitle</code></a>:
+[Deprecated] hide subtitles in <code>&lt;track&gt;</code> elements.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#supplementaryimagetracks"><code>supplementaryImageTracks</code></a>:
+[Deprecated] Add supplementary tracks in the content for thumbnails.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#supplementarytexttracks"><code>supplementaryTextTracks</code></a>:
+[Deprecated] Add supplementary tracks in the content for text.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#defaultaudioTrack"><code>defaultAudioTrack</code></a>:
+[Deprecated] Default characteristics wanted for the audio track.</p>
+</li>
+<li>
+<p><a href="../api/Loading_a_Content.html#defaulttexttrack"><code>defaultTextTrack</code></a>:
+[Deprecated] Default characteristics wanted for the text track.</p>
+</li>
+</ul>
+<p><a name="methods"></a></p>
+<h2>Methods</h2>
+<ul>
+<li>
+<p><a href="../api/Loading_a_Content.html"><code>loadVideo</code></a>: Load a content.</p>
+</li>
+<li>
+<p><a href="../api/Basic_Methods/getPlayerState.html"><code>getPlayerState</code></a>: Get the current
+player’s state.</p>
+</li>
+<li>
+<p><a href="../api/Basic_Methods/addEventListener.html"><code>addEventListener</code></a>: Add a
+listener to one of the RxPlayer’s event.</p>
+</li>
+<li>
+<p><a href="../api/Basic_Methods/removeEventListener.html"><code>removeEventListener</code></a>: Remove
+a listener to one of the RxPlayer’s event.</p>
+</li>
+<li>
+<p><a href="../api/Basic_Methods/play.html"><code>play</code></a>: Resume paused content.</p>
+</li>
+<li>
+<p><a href="../api/Basic_Methods/pause.html"><code>pause</code></a>: Pause the current content.</p>
+</li>
+<li>
+<p><a href="../api/Basic_Methods/stop.html"><code>stop</code></a>: Stop playing the current content.</p>
+</li>
+<li>
+<p><a href="../api/Basic_Methods/getPosition.html"><code>getPosition</code></a>: Get the current
+playback condition.</p>
+</li>
+<li>
+<p><a href="../api/Basic_Methods/getWallClockTime.html"><code>getWallClockTime</code></a>: Get the
+current playback condition offseted to be relative to the the current date.</p>
+</li>
+<li>
+<p><a href="../api/Basic_Methods/seekTo.html"><code>seekTo</code></a>: Seek in the current content.</p>
+</li>
+<li>
+<p><a href="../api/Basic_Methods/getMinimumPosition.html"><code>getMinimumPosition</code></a>: Get the
+minimum seekable position.</p>
+</li>
+<li>
+<p><a href="../api/Basic_Methods/getMaximumPosition.html"><code>getMaximumPosition</code></a>: Get the
+maximum seekable position.</p>
+</li>
+<li>
+<p><a href="../api/Basic_Methods/getVideoDuration.html"><code>getVideoDuration</code></a>: Get the
+duration linked to the media element.</p>
+</li>
+<li>
+<p><a href="../api/Basic_Methods/getError.html"><code>getError</code></a>: Returns the current “fatal”
+error.</p>
+</li>
+<li>
+<p><a href="../api/Basic_Methods/getVideoElement.html"><code>getVideoElement</code></a>: Returns the
+media element linked to the RxPlayer.</p>
+</li>
+<li>
+<p><a href="../api/Basic_Methods/dispose.html"><code>dispose</code></a>: Dispose of most resources
+taken by the RxPlayer.</p>
+</li>
+<li>
+<p><a href="../api/Basic_Methods/reload.html"><code>reload</code></a>: Reload the last loade content as
+fast as possible.</p>
+</li>
+<li>
+<p><a href="../api/Track_Selection/getAudioTrack.html"><code>getAudioTrack</code></a>: Get information on
+the current audio track.</p>
+</li>
+<li>
+<p><a href="../api/Track_Selection/getTextTrack.html"><code>getTextTrack</code></a>: Get information on
+the current text track.</p>
+</li>
+<li>
+<p><a href="../api/Track_Selection/getVideoTrack.html"><code>getVideoTrack</code></a>: Get information on
+the current video track.</p>
+</li>
+<li>
+<p><a href="../api/Track_Selection/getAvailableAudioTracks.html"><code>getAvailableAudioTracks</code></a>:
+Get information on all the available audio tracks.</p>
+</li>
+<li>
+<p><a href="../api/Track_Selection/getAvailableTextTracks.html"><code>getAvailableTextTracks</code></a>:
+Get information on all the available text tracks.</p>
+</li>
+<li>
+<p><a href="../api/Track_Selection/getAvailableVideoTracks.html"><code>getAvailableVideoTracks</code></a>:
+Get information on all the available video tracks.</p>
+</li>
+<li>
+<p><a href="../api/Track_Selection/setAudioTrack.html"><code>setAudioTrack</code></a>:
+Set the current audio track.</p>
+</li>
+<li>
+<p><a href="../api/Track_Selection/setTextTrack.html"><code>setTextTrack</code></a>:
+Set the current text track.</p>
+</li>
+<li>
+<p><a href="../api/Track_Selection/setVideoTrack.html"><code>setVideoTrack</code></a>:
+Set the current video track.</p>
+</li>
+<li>
+<p><a href="../api/Track_Selection/disableTextTrack.html"><code>disableTextTrack</code></a>:
+Disable the current text track.</p>
+</li>
+<li>
+<p><a href="../api/Track_Selection/disableVideoTrack.html"><code>disableVideoTrack</code></a>:
+Disable the current video track.</p>
+</li>
+<li>
+<p><a href="../api/Track_Selection/setPreferredAudioTracks.html"><code>setPreferredAudioTracks</code></a>:
+Update the current audio tracks preferences.</p>
+</li>
+<li>
+<p><a href="../api/Track_Selection/setPreferredTextTracks.html"><code>setPreferredTextTracks</code></a>:
+Update the current text tracks preferences.</p>
+</li>
+<li>
+<p><a href="../api/Track_Selection/setPreferredVideoTracks.html"><code>setPreferredVideoTracks</code></a>:
+Update the current video tracks preferences.</p>
+</li>
+<li>
+<p><a href="../api/Track_Selection/getPreferredAudioTracks.html"><code>getPreferredAudioTracks</code></a>:
+Return the current audio tracks preferences.</p>
+</li>
+<li>
+<p><a href="../api/Track_Selection/getPreferredTextTracks.html"><code>getPreferredTextTracks</code></a>:
+Return the current text tracks preferences.</p>
+</li>
+<li>
+<p><a href="../api/Track_Selection/getPreferredVideoTracks.html"><code>getPreferredVideoTracks</code></a>:
+Return the current video tracks preferences.</p>
+</li>
+<li>
+<p><a href="../api/Track_Selection/isTrickModeEnabled.html"><code>isTrickModeEnabled</code></a>:
+Returns <code>true</code> if trick mode tracks are currently enabled by default.</p>
+</li>
+<li>
+<p><a href="../api/Bitrate_Selection/getVideoBitrate.html"><code>getVideoBitrate</code></a>:
+Returns the bitrate of the current video quality.</p>
+</li>
+<li>
+<p><a href="../api/Bitrate_Selection/getAudioBitrate.html"><code>getAudioBitrate</code></a>:
+Returns the bitrate of the current audio quality.</p>
+</li>
+<li>
+<p><a href="../api/Bitrate_Selection/getAvailableVideoBitrates.html"><code>getAvailableVideoBitrates</code></a>:
+Returns all available bitrates for the current video track.</p>
+</li>
+<li>
+<p><a href="../api/Bitrate_Selection/getAvailableAudioBitrates.html"><code>getAvailableAudioBitrates</code></a>:
+Returns all available bitrates for the current audio track.</p>
+</li>
+<li>
+<p><a href="../api/Bitrate_Selection/setVideoBitrate.html"><code>setVideoBitrate</code></a>:
+Set the bitrate for the current video track.</p>
+</li>
+<li>
+<p><a href="../api/Bitrate_Selection/setAudioBitrate.html"><code>setAudioBitrate</code></a>:
+Set the bitrate for the current audio track.</p>
+</li>
+<li>
+<p><a href="../api/Bitrate_Selection/getManualVideoBitrate.html"><code>getManualVideoBitrate</code></a>:
+Returns the last video bitrate manually set.</p>
+</li>
+<li>
+<p><a href="../api/Bitrate_Selection/getManualAudioBitrate.html"><code>getManualAudioBitrate</code></a>:
+Returns the last audio bitrate manually set.</p>
+</li>
+<li>
+<p><a href="../api/Bitrate_Selection/setMinVideoBitrate.html"><code>setMinVideoBitrate</code></a>:
+Set the minimum video bitrate reachable through adaptive streaming.</p>
+</li>
+<li>
+<p><a href="../api/Bitrate_Selection/setMinAudioBitrate.html"><code>setMinAudioBitrate</code></a>:
+Set the minimum audio bitrate reachable through adaptive streaming.</p>
+</li>
+<li>
+<p><a href="../api/Bitrate_Selection/setMaxVideoBitrate.html"><code>setMaxVideoBitrate</code></a>:
+Set the maximum video bitrate reachable through adaptive streaming.</p>
+</li>
+<li>
+<p><a href="../api/Bitrate_Selection/setMaxAudioBitrate.html"><code>setMaxAudioBitrate</code></a>:
+Set the maximum audio bitrate reachable through adaptive streaming.</p>
+</li>
+<li>
+<p><a href="../api/Bitrate_Selection/getMinVideoBitrate.html"><code>getMinVideoBitrate</code></a>:
+Returns the minimum video bitrate reachable through adaptive streaming.</p>
+</li>
+<li>
+<p><a href="../api/Bitrate_Selection/getMinAudioBitrate.html"><code>getMinAudioBitrate</code></a>:
+Returns the minimum audio bitrate reachable through adaptive streaming.</p>
+</li>
+<li>
+<p><a href="../api/Bitrate_Selection/getMaxVideoBitrate.html"><code>getMaxVideoBitrate</code></a>:
+Returns the maximum video bitrate reachable through adaptive streaming.</p>
+</li>
+<li>
+<p><a href="../api/Bitrate_Selection/getMaxAudioBitrate.html"><code>getMaxAudioBitrate</code></a>:
+Returns the maximum audio bitrate reachable through adaptive streaming.</p>
+</li>
+<li>
+<p><a href="../api/Speed_Control/setPlaybackRate.html"><code>setPlaybackRate</code></a>:
+Update the speed at which the content is played.</p>
+</li>
+<li>
+<p><a href="../api/Speed_Control/getPlaybackRate.html"><code>getPlaybackRate</code></a>:
+Read the speed at which the content is played.</p>
+</li>
+<li>
+<p><a href="../api/Speed_Control/areTrickModeTracksEnabled.html"><code>areTrickModeTracksEnabled</code></a>:
+Indicates if the tricmode tracks are active by default.</p>
+</li>
+<li>
+<p><a href="../api/Volume_Control/setVolume.html"><code>setVolume</code></a>:
+Update the audio volume.</p>
+</li>
+<li>
+<p><a href="../api/Volume_Control/getVolume.html"><code>getVolume</code></a>:
+Get the current audio volume.</p>
+</li>
+<li>
+<p><a href="../api/Volume_Control/mute.html"><code>mute</code></a>:
+Mute the audio volume.</p>
+</li>
+<li>
+<p><a href="../api/Volume_Control/isMute.html"><code>isMute</code></a>:
+Return <code>true</code> if the audio volume is set to <code>0</code>.</p>
+</li>
+<li>
+<p><a href="../api/Volume_Control/isMute.html"><code>isMute</code></a>:
+Return <code>true</code> if the audio volume is set to <code>0</code>.</p>
+</li>
+<li>
+<p><a href="../api/Volume_Control/unMute.html"><code>unMute</code></a>:
+Restore the volume as it was before it was muted.</p>
+</li>
+<li>
+<p><a href="../api/Buffer_Control/setWantedBufferAhead.html"><code>setWantedBufferAhead</code></a>:
+Update the buffering goal, in seconds.</p>
+</li>
+<li>
+<p><a href="../api/Buffer_Control/getWantedBufferAhead.html"><code>getWantedBufferAhead</code></a>:
+Get the current buffering goal, in seconds</p>
+</li>
+<li>
+<p><a href="../api/Buffer_Control/setMaxBufferBehind.html"><code>setMaxBufferBehind</code></a>:
+Remove automatically old media data.</p>
+</li>
+<li>
+<p><a href="../api/Buffer_Control/getMaxBufferBehind.html"><code>getMaxBufferBehind</code></a>:
+Get the current maximum kept buffer behind the current position, in seconds.</p>
+</li>
+<li>
+<p><a href="../api/Buffer_Control/setMaxBufferAhead.html"><code>setMaxBufferAhead</code></a>:
+Remove automatically media data too far ahead.</p>
+</li>
+<li>
+<p><a href="../api/Buffer_Control/getMaxBufferAhead.html"><code>getMaxBufferAhead</code></a>:
+Get the current maximum kept buffer ahead of the current position, in seconds.</p>
+</li>
+<li>
+<p><a href="../api/Buffer_Information/getVideoBufferGap.html"><code>getVideoBufferGap</code></a>:
+Returns in seconds the difference between the current position and the end
+of the current media time range.</p>
+</li>
+<li>
+<p><a href="../api/Buffer_Information/getVideoLoadedTime.html"><code>getVideoLoadedTime</code></a>:
+Returns in seconds the difference between the start and the end of the
+current media time range.</p>
+</li>
+<li>
+<p><a href="../api/Buffer_Information/getVideoPlayedTime.html"><code>getVideoPlayedTime</code></a>:
+Returns in seconds the difference between the start of the current media
+time range and the current position.</p>
+</li>
+<li>
+<p><a href="../api/Content_Information/getUrl.html"><code>getUrl</code></a>:
+Get URL of the currently-played content.</p>
+</li>
+<li>
+<p><a href="../api/Content_Information/isLive.html"><code>isLive</code></a>:
+Returns <code>true</code> if the content is a “live” content.</p>
+</li>
+<li>
+<p><a href="../api/Content_Information/getCurrentKeySystem.html"><code>getCurrentKeySystem</code></a>:
+Returns the name of the current key system.</p>
+</li>
+<li>
+<p><a href="../api/Deprecated/getManifest.html"><code>getManifest</code></a>:
+[Deprecated] Information on the current Manifest.</p>
+</li>
+<li>
+<p><a href="../api/Deprecated/getCurrentAdaptations.html"><code>getCurrentAdaptations</code></a>:
+[Deprecated] Information on the current Adaptations.</p>
+</li>
+<li>
+<p><a href="../api/Deprecated/getCurrentRepresentations.html"><code>getCurrentRepresentations</code></a>:
+[Deprecated] Information on the current Representations.</p>
+</li>
+<li>
+<p><a href="../api/Deprecated/setFullscreen.html"><code>setFullscreen</code></a>:
+[Deprecated] Switch media element into fullscreen mode.</p>
+</li>
+<li>
+<p><a href="../api/Deprecated/isFullscreen.html"><code>isFullscreen</code></a>:
+[Deprecated] Returns <code>true</code> if the current media element is in fullscreen
+mode.</p>
+</li>
+<li>
+<p><a href="../api/Deprecated/exitFullscreen.html"><code>exitFullscreen</code></a>:
+[Deprecated] Exit fullscreen mode.</p>
+</li>
+<li>
+<p><a href="../api/Deprecated/getImageTrackData.html"><code>getImageTrackData</code></a>:
+[Deprecated] Returns the data of the current image track.</p>
+</li>
+<li>
+<p><a href="../api/Deprecated/getNativeTextTrack.html"><code>getNativeTextTrack</code></a>:
+[Deprecated] Returns the first <code>&lt;track&gt;</code> element attached to the media
+element.</p>
+</li>
+</ul>
+<p><a name="static_properties"></a></p>
+<h2>Static Properties</h2>
+<ul>
+<li>
+<p><a href="../api/Static_Properties.html#version"><code>version</code></a>:
+The current version of the RxPlayer.</p>
+</li>
+<li>
+<p><a href="../api/Static_Properties.html#loglevel"><code>LogLevel</code></a>:
+Update the verbosity of the RxPlayer logger.</p>
+</li>
+<li>
+<p><a href="../api/Static_Properties.html#errortypes"><code>ErrorTypes</code></a>:
+All Error types that can be encountered.</p>
+</li>
+<li>
+<p><a href="../api/Static_Properties.html#errorcodes"><code>ErrorCodes</code></a>:
+All Error codes that can be encountered.</p>
+</li>
+</ul>
+<p><a name="events"></a></p>
+<h2>Events</h2>
+<ul>
+<li>
+<p><a href="../api/Player_Events.html#playerstatechange"><code>playerStateChange</code></a>:
+The current state of the player has changed.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#error"><code>error</code></a>:
+A fatal error happened.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#warning"><code>warning</code></a>:
+A non-fatal error happened.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#positionupdate"><code>positionUpdate</code></a>:
+Regular event about the current position evolving.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#seeking"><code>seeking</code></a>:
+A seek operation began.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#seeked"><code>seeked</code></a>:
+A seek operation ended.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#availableaudiotrackschange"><code>availableAudioTracksChange</code></a>:
+The list of available audio tracks changed.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#availablevideotrackschange"><code>availableVideoTracksChange</code></a>:
+The list of available video tracks changed.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#availabletexttrackschange"><code>availableTextTracksChange</code></a>:
+The list of available text tracks changed.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#audiotrackchange"><code>audioTrackChange</code></a>:
+The current audio track changed.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#videotrackchange"><code>videoTrackChange</code></a>:
+The current video track changed.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#texttrackchange"><code>textTrackChange</code></a>:
+The current text track changed.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#availableaudiobitrateschange"><code>availableAudioBitratesChange</code></a>:
+The list of available audio bitrates changed.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#availablevideobitrateschange"><code>availableVideoBitratesChange</code></a>:
+The list of available video bitrates changed.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#audiobitratechange"><code>audioBitrateChange</code></a>:
+The current audio bitrate changed.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#videobitratechange"><code>videoBitrateChange</code></a>:
+The current video track changed.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#bitrateestimationchange"><code>bitrateEstimationChange</code></a>:
+A new bitrate estimate is available.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#periodchange"><code>periodChange</code></a>:
+A new Period begins.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#decipherabilityupdate"><code>decipherabilityUpdate</code></a>:
+A Representation’s decipherability status has been updated.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#inbandevents"><code>inbandEvents</code></a>:
+Events in the media have been encountered.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#streamevent"><code>streamEvent</code></a>:
+A “stream event” just started.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#streameventskip"><code>streamEventSkip</code></a>:
+A “stream event” was just skipped.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#imagetrackupdate"><code>imageTrackUpdate</code></a>:
+[Deprecated] The current image track changed.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#fullscreenchange"><code>fullscreenChange</code></a>:
+[Deprecated] The player went into or exited fullscreen mode.</p>
+</li>
+<li>
+<p><a href="../api/Player_Events.html#nativetexttrackschange"><code>nativeTextTracksChange</code></a>:
+[Deprecated] A <code>&lt;track&gt;</code> element is added or removed to the media element.</p>
+</li>
+</ul>
+<p><a name="error_types"></a></p>
+<h2>Error types</h2>
+<ul>
+<li>
+<p><a href="../api/Player_Errors.html#network_error"><code>NETWORK_ERROR</code></a>:
+A network-related error.</p>
+</li>
+<li>
+<p><a href="../api/Player_Errors.html#media_error"><code>MEDIA_ERROR</code></a>:
+A media-related error.</p>
+</li>
+<li>
+<p><a href="../api/Player_Errors.html#encrypted_media_error"><code>ENCRYPTED_MEDIA_ERROR</code></a>:
+An error related to media decryption.</p>
+</li>
+<li>
+<p><a href="../api/Player_Errors.html#other_error"><code>OTHER_ERROR</code></a>:
+Another non-categorized error.</p>
+</li>
+</ul>
+<p><a name="tools"></a></p>
+<h2>Tools</h2>
+<ul>
+<li>
+<p><a href="../api/Tools/TextTrackRenderer.html"><code>TextTrackRenderer</code></a>:
+Render external text tracks on top of the video.</p>
+</li>
+<li>
+<p><a href="../api/Tools/VideoThumbnailLoader.html"><code>VideoThumbnailLoader</code></a>:
+Display seeking preview thumbnails from trick mode video tracks.</p>
+</li>
+<li>
+<p><a href="../api/Tools/StringUtils.html"><code>StringUtils</code></a>:
+Various string conversion utils.</p>
+</li>
+<li>
+<p><a href="../api/Tools/parseBifThumbnails.html"><code>parseBifThumbnails</code></a>:
+Parse thumbnails in the “BIF” format.</p>
+</li>
+<li>
+<p><a href="../api/Tools/MediaCapabilitiesProber.html"><code>MediaCapabilitiesProber</code></a>:
+Tool to probe several media-related browser APIs.</p>
+</li>
+<li>
+<p><a href="../api/Tools/createMetaplaylist.html"><code>createMetaplaylist</code></a>:
+Generate a MetaPlaylist content.</p>
+</li>
+</ul>
+</body></html></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#api_reference">API reference</a></p>
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#constructor">Constructor</a></li>
+<li><a href="#constructor_options">Constructor options</a></li>
+<li><a href="#%60loadvideo%60_options"><code>loadVideo</code> options</a></li>
+<li><a href="#methods">Methods</a></li>
+<li><a href="#static_properties">Static Properties</a></li>
+<li><a href="#events">Events</a></li>
+<li><a href="#error_types">Error types</a></li>
+<li><a href="#tools">Tools</a></li>
+</ul>
+</div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../Getting_Started/Welcome.html">Welcome</a></li>
+<li><div class="page-list-item page-list-group">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Getting_Started/Tutorials/Quick_Start.html">Quick Start</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Tutorials/Content_with_DRM.html">Contents with DRM</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Tutorials/Selecting_a_Track.html">Selecting a Track</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li>
+<li class="page-list-item"><a href="../Getting_Started/Minimal_Player.html">Importing a minimal RxPlayer</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Glossary.html">Glossary</a></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">API</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../api/Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../api/Creating_a_Player.html">Creating a Player</a></li>
+<li class="page-list-item"><a href="../api/Loading_a_Content.html">Loading a Content</a></li>
+<li class="page-list-item"><a href="../api/Decryption_Options.html">Decryption Options</a></li>
+<li><div class="page-list-item page-list-group">Basic Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Basic_Methods/getPlayerState.html">getPlayerState</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/addEventListener.html">addEventListener</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/removeEventListener.html">removeEventListener</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/play.html">play</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/pause.html">pause</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/stop.html">stop</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getPosition.html">getPosition</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getWallClockTime.html">getWallClockTime</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/seekTo.html">seekTo</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getVideoDuration.html">getVideoDuration</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getError.html">getError</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getVideoElement.html">getVideoElement</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/dispose.html">dispose</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/reload.html">reload</a></li></ul></li>
+<li class="page-list-item"><a href="../api/Player_States.html">Player States</a></li>
+<li class="page-list-item"><a href="../api/Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../api/Player_Errors.html">Player Errors</a></li>
+<li><div class="page-list-item page-list-group">Track Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Track_Selection/getAudioTrack.html">getAudioTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getTextTrack.html">getTextTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getVideoTrack.html">getVideoTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/setAudioTrack.html">setAudioTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/setTextTrack.html">setTextTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/setVideoTrack.html">setVideoTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/disableTextTrack.html">disableTextTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/setPreferredAudioTracks.html">setPreferredAudioTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/setPreferredTextTracks.html">setPreferredTextTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/setPreferredVideoTracks.html">setPreferredVideoTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getPreferredAudioTracks.html">getPreferredAudioTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getPreferredTextTracks.html">getPreferredTextTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getPreferredVideoTracks.html">getPreferredVideoTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Bitrate Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Bitrate_Selection/getVideoBitrate.html">getVideoBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getAudioBitrate.html">getAudioBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getAvailableVideoBitrates.html">getAvailableVideoBitrates</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getAvailableAudioBitrates.html">getAvailableAudioBitrates</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/setVideoBitrate.html">setVideoBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/setAudioBitrate.html">setAudioBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getManualVideoBitrate.html">getManualVideoBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getManualAudioBitrate.html">getManualAudioBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/setMinVideoBitrate.html">setMinVideoBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/setMinAudioBitrate.html">setMinAudioBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/setMaxVideoBitrate.html">setMaxVideoBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/setMaxAudioBitrate.html">setMaxAudioBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getMinVideoBitrate.html">getMinVideoBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getMinAudioBitrate.html">getMinAudioBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getMaxVideoBitrate.html">getMaxVideoBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getMaxAudioBitrate.html">getMaxAudioBitrate</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Speed Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li>
+<li class="page-list-item"><a href="../api/Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li>
+<li class="page-list-item"><a href="../api/Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Volume Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Volume_Control/setVolume.html">setVolume</a></li>
+<li class="page-list-item"><a href="../api/Volume_Control/getVolume.html">getVolume</a></li>
+<li class="page-list-item"><a href="../api/Volume_Control/mute.html">mute</a></li>
+<li class="page-list-item"><a href="../api/Volume_Control/isMute.html">isMute</a></li>
+<li class="page-list-item"><a href="../api/Volume_Control/unMute.html">unMute</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Buffer_Information/getVideoBufferGap.html">getVideoBufferGap</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Information/getVideoLoadedTime.html">getVideoLoadedTime</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Information/getVideoPlayedTime.html">getVideoPlayedTime</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Content Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Content_Information/getUrl.html">getUrl</a></li>
+<li class="page-list-item"><a href="../api/Content_Information/isLive.html">isLive</a></li>
+<li class="page-list-item"><a href="../api/Content_Information/getCurrentKeySystem.html">getCurrentKeySystem</a></li></ul></li>
+<li class="page-list-item"><a href="../api/Static_Properties.html">RxPlayer Static Properties</a></li>
+<li class="page-list-item"><a href="../api/Typescript_Types.html">Typescript Types</a></li>
+<li><div class="page-list-item page-list-group">Tools</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Tools/TextTrackRenderer.html">TextTrackRenderer</a></li>
+<li class="page-list-item"><a href="../api/Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li>
+<li class="page-list-item"><a href="../api/Tools/StringUtils.html">StringUtils</a></li>
+<li class="page-list-item"><a href="../api/Tools/parseBifThumbnails.html">parseBifThumbnails</a></li>
+<li class="page-list-item"><a href="../api/Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li>
+<li class="page-list-item"><a href="../api/Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Miscellaneous</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Miscellaneous/plugins.html">Plugins</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Low_Latency.html">Low Latency</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/hdr.html">HDR</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Local_Contents.html">Local Contents</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Text_Tracks.html">Text Tracks</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/images.html">Images</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Manifest_Object.html">Manifest Object</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Deprecated_APIs.html">Deprecated APIs</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Initial_Position.html">Initial Position</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Deprecated Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Deprecated/getManifest.html">getManifest</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/getCurrentAdaptations.html">getCurrentAdaptations</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/getCurrentRepresentations.html">getCurrentRepresentations</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/setFullscreen.html">setFullscreen</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/isFullscreen.html">isFullscreen</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/exitFullscreen.html">exitFullscreen</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/getImageTrackData.html">getImageTrackData</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/getNativeTextTrack.html">getNativeTextTrack</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group opened active">Reference</div><ul class="page-list-cat-group"><li class="page-list-item active"><a href="./API_Reference.html">API Reference</a></li></ul></li>
+<li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
+
+<li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
+</ul></div><script type="text/javascript" src="../scripts/lunr.js" charset="utf-8"></script><script type="text/javascript" src="../scripts/script.js" charset="utf-8"></script></body></html>
