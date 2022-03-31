@@ -1188,9 +1188,9 @@ const DEFAULT_CONFIG = {
 
   /**
    * Minimum buffer in seconds ahead relative to current time
-   * we should be able to download.
+   * we should be able to download, even in cases of saturated memory.
    */
-  MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP: 10,
+  MIN_BUFFER_AHEAD: 5,
 
   /**
    * Distance in seconds behind the current position

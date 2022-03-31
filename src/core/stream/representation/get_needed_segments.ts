@@ -159,7 +159,7 @@ export default function getNeededSegments({
       return true;
     });
   const { MINIMUM_SEGMENT_SIZE,
-          MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP } = config.getCurrent();
+          MIN_BUFFER_AHEAD } = config.getCurrent();
   let shouldStopLoadingSegments = false;
   /**
    * Epsilon compensating for rounding errors when comparing the start and end
@@ -239,7 +239,7 @@ export default function getNeededSegments({
     const estimatedSegmentSize = (duration * content.representation.bitrate) / 8000;
     if (availableBufferSize - estimatedSegmentSize < 0) {
       isBufferFull = true;
-      if (time > neededRange.start + MIN_BUFFER_DISTANCE_BEFORE_CLEAN_UP) {
+      if (time > neededRange.start + MIN_BUFFER_AHEAD) {
         shouldStopLoadingSegments = true;
         segmentsOnHold.push(segment);
         return false;
