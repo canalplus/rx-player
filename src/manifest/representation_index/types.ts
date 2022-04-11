@@ -268,10 +268,15 @@ export interface IRepresentationIndex {
   getFirstPosition() : number | null | undefined;
 
   /**
-   * Returns the ending time, in seconds, of the last segment currently
-   * available in this index.
+   * Returns the ending time, in seconds, of the last playable position
+   * currently available in this index.
    * Returns `null` if nothing is in the index
    * Returns `undefined` if we cannot know this value.
+   *
+   * The last playable position is generally equivalent to the end of the last
+   * segment associated to this index, excepted when it goes over the end limit
+   * of the corresponding `Period`, in which case it will be equal to this end
+   * instead.
    * @returns {Number|null|undefined}
    */
   getLastPosition() : number | null | undefined;
