@@ -29,9 +29,10 @@ import {
   withLatestFrom,
 } from "rxjs";
 import log from "../../log";
-import {
+import Manifest, {
   Adaptation,
   ISegment,
+  Period,
   Representation,
 } from "../../manifest";
 import { getLeftSizeOfRange } from "../../utils/ranges";
@@ -141,12 +142,8 @@ export interface IRepresentationEstimatorPlaybackObservation {
   speed : number;
   /** `duration` property of the HTMLMediaElement on which the content plays. */
   duration : number;
-  /**
-   * For live contents only, difference between the maximum playable position
-   * and the current position.
-   * `undefined` for non-live contents.
-   */
-  liveGap : number | undefined;
+  /** Theoretical maximum position on the content that can currently be played. */
+  maximumPosition : number;
 }
 
 /** Content of the `IABRMetricsEvent` event's payload. */
@@ -357,6 +354,15 @@ export interface IRepresentationEstimatorArguments {
   maxAutoBitrate$ : Observable<number>;
   /** The list of Representations the `RepresentationEstimator` can choose from. */
   representations : Representation[];
+  /** Context for the list of Representations to choose. */
+  context : {
+    /** In which Manifest the Representations are. */
+    manifest : Manifest;
+    /** In which Period the Representations are. */
+    period : Period;
+    /** In which Adaptation the Representations are. */
+    adaptation : Adaptation;
+  };
 }
 
 /**
@@ -396,6 +402,7 @@ function getFilteredRepresentations(
  */
 export default function RepresentationEstimator({
   bandwidthEstimator,
+  context,
   observation$,
   filters$,
   initialBitrate,
@@ -534,7 +541,7 @@ export default function RepresentationEstimator({
                  bufferBasedBitrate ],
                currentRepresentation ]
         ) : IABREstimate => {
-          const { bufferGap, liveGap } = observation;
+          const { bufferGap, position, maximumPosition } = observation;
 
           const filteredReps = getFilteredRepresentations(representations,
                                                           filters);
@@ -615,8 +622,8 @@ export default function RepresentationEstimator({
           let chosenRepFromGuessMode : Representation | null = null;
           if (lowLatencyMode &&
               currentRepresentation !== null &&
-              liveGap !== undefined &&
-              liveGap < 40)
+              context.manifest.isDynamic &&
+              maximumPosition - position < 40)
           {
             chosenRepFromGuessMode = guessBasedChooser.getGuess(representations,
                                                                 observation,
