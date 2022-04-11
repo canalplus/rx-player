@@ -263,10 +263,15 @@ export interface IParsedManifest {
    */
   timeBounds : {
     /**
-     * The minimum time, in seconds, available in this Manifest.
-     * `undefined` if that value is unknown.
+     * This is the theoretical minimum playable position on the content
+     * regardless of the current Adaptation chosen, as estimated at parsing
+     * time.
+     * `undefined` if unknown.
+     *
+     * More technically, the `minimumSafePosition` is the maximum between all
+     * the minimum positions reachable in any of the audio and video Adaptation.
      */
-    absoluteMinimumTime? : number | undefined;
+    minimumSafePosition? : number | undefined;
     /**
      * Some dynamic contents have the concept of a "window depth" (or "buffer
      * depth") which allows to set a minimum position for all reachable
@@ -283,27 +288,50 @@ export interface IParsedManifest {
     timeshiftDepth : number | null;
     /** Data allowing to calculate the maximum position at any given time. */
     maximumTimeData : {
-      /** Maximum seekable time in milliseconds calculated at `time`. */
-      value : number;
       /**
-       * `Performance.now()` output at the time `value` was calculated.
-       * This can be used to retrieve the maximum position from `value` when it
+       * Current position representing live content.
+       * Only makes sense for un-ended live contents.
+       *
+       * `undefined` if unknown or if it doesn't make sense in the current context.
+       */
+      livePosition : number | undefined;
+      /**
+       * Whether the maximum positions should evolve linearly over time.
+       *
+       * If set to `true`, the maximum seekable position continuously increase at
+       * the same rate than the time since `time` does.
+       *
+       * For example, a `maximumSafePosition` of 50000 (50 seconds) will
+       * indicate a maximum time of 51 seconds after 1 second have passed, of 56
+       * seconds after 6 seconds have passed (we know how many seconds have
+       * passed since the initial calculation of the maximum position by
+       * checking the `time` property) etc.
+       */
+      isLinear: boolean;
+      /**
+       * This is the theoretical maximum playable position on the content,
+       * regardless of the current Adaptation chosen, as estimated at parsing
+       * time.
+       *
+       * More technically, the `maximumSafePosition` is the minimum between all
+       * attributes indicating the duration of the content in the Manifest.
+       *
+       * That is the minimum between:
+       *   - The Manifest original attributes relative to its duration
+       *   - The minimum between all known maximum audio positions
+       *   - The minimum between all known maximum video positions
+       *
+       * This can for example be understood as the safe maximum playable
+       * position through all possible tacks.
+       */
+      maximumSafePosition : number;
+      /**
+       * `Performance.now()` output at the time both `maximumSafePosition` and
+       * `maximumPositionWithMediaData` were calculated.
+       * This can be used to retrieve a new maximum position from them when they
        * linearly evolves over time (see `isLinear` property).
        */
       time : number;
-      /**
-       * Whether the maximum seekable position evolves linearly over time.
-       *
-       * If set to `false`, `value` indicates the constant maximum position.
-       *
-       * If set to `true`, the maximum seekable time continuously increase at
-       * the same rate than the time since `time` does.
-       * For example, a `value` of 50000 (50 seconds) will indicate a maximum time
-       * of 51 seconds after 1 second have passed, of 56 seconds after 6 seconds
-       * have passed (we know how many seconds have passed since the initial
-       * calculation of value by checking the `time` property) etc.
-       */
-      isLinear: boolean;
     };
   };
   /**

@@ -72,7 +72,13 @@ export default function getInitialTime(
 ) : number {
   if (startAt != null) {
     const min = manifest.getMinimumPosition();
-    const max = manifest.getMaximumPosition();
+    let max;
+    if (manifest.isLive) {
+      max = manifest.getLivePosition();
+    }
+    if (max === undefined) {
+      max = manifest.getMaximumPosition();
+    }
     if (!isNullOrUndefined(startAt.position)) {
       log.debug("Init: using startAt.minimumPosition");
       return Math.max(Math.min(startAt.position, max), min);

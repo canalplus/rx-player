@@ -2878,13 +2878,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     };
 
     if (manifest !== null &&
-        maximumPosition !== undefined &&
         manifest.isLive &&
         observation.position > 0
     ) {
       const ast = manifest.availabilityStartTime ?? 0;
       positionData.wallClockTime = observation.position + ast;
-      positionData.liveGap = maximumPosition - observation.position;
+      const livePosition = manifest.getLivePosition();
+      if (livePosition !== undefined) {
+        positionData.liveGap = livePosition - observation.position;
+      }
     } else if (isDirectFile && this.videoElement !== null) {
       const startDate = getStartDate(this.videoElement);
       if (startDate !== undefined) {
