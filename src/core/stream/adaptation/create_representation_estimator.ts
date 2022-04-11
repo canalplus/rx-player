@@ -26,6 +26,7 @@ import {
 import { MediaError } from "../../../errors";
 import Manifest, {
   Adaptation,
+  Period,
   Representation,
 } from "../../../manifest";
 import { fromEvent } from "../../../utils/event_emitter";
@@ -53,13 +54,15 @@ import ABRManager, {
  * @returns {Object}
  */
 export default function createRepresentationEstimator(
-  { manifest, adaptation } : { manifest : Manifest;
-                               adaptation : Adaptation; },
+  content : { manifest : Manifest;
+              period : Period;
+              adaptation : Adaptation; },
   abrManager : ABRManager,
   observation$ : Observable<IABRManagerPlaybackObservation>
 ) : { estimator$ : Observable<IABREstimate>;
       abrFeedbacks$ : Subject<IABRStreamEvents>; }
 {
+  const { manifest, adaptation } = content;
   const abrFeedbacks$ = new Subject<IABRStreamEvents>();
   const estimator$ = observableMerge(
     // subscribe "first" (hack as it is a merge here) to event
@@ -90,7 +93,7 @@ export default function createRepresentationEstimator(
       return true;
     }),
     switchMap((playableRepresentations) =>
-      abrManager.get$(adaptation.type,
+      abrManager.get$(content,
                       playableRepresentations,
                       observation$,
                       abrFeedbacks$)));

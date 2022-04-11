@@ -63,9 +63,8 @@ export default function createStreamPlaybackObserver(
     return observableCombineLatest([observation$, speed.asObservable()]).pipe(
       map(([observation, lastSpeed]) => {
         return {
-          liveGap: manifest.isLive ?
-            manifest.getMaximumPosition() - observation.position :
-            undefined,
+          // TODO more exact according to the current Adaptation chosen?
+          maximumPosition: manifest.getMaximumPosition(),
           position: observation.position,
           duration: observation.duration,
           isPaused: initialPlayPerformed.getValue() ? observation.paused :
