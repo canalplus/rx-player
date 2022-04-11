@@ -17,13 +17,40 @@
 import config from "../../config";
 import log from "../../log";
 import Manifest from "../../manifest";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 
-
-export interface IInitialTimeOptions { position? : number;
-                                       wallClockTime? : number;
-                                       fromFirstPosition? : number;
-                                       fromLastPosition? : number;
-                                       percentage? : number; }
+/**
+ * All possible initial time options that can be set.
+ *
+ * Written this way (with many type possibilities) on purpose to avoid issues
+ * if the application using the RxPlayer gives undocumented values such as
+ * `null`.
+ *
+ * TODO we shouldn't be that robust, at least not outside the API code, because
+ * if we begin to be that liberal here, where should we end?
+ * We may instead either want to progressively remove tolerance on the wrong
+ * type being given or be better to enforce type-compliancy in the API code.
+ */
+export interface IInitialTimeOptions {
+  /** If set, we should begin at this position, in seconds. */
+  position? : number | null | undefined;
+  /** If set, we should begin at this unix timestamp, in seconds. */
+  wallClockTime? : number | null | undefined;
+  /**
+   * If set, we should begin at this position relative to the content's start,
+   * in seconds.
+   */
+  fromFirstPosition? : number | null | undefined;
+  /**
+   * If set, we should begin at this position relative to the content's end,
+   * in seconds.
+   */
+  fromLastPosition? : number | null | undefined;
+  /** If set, we should begin at this position relative to the whole duration of
+   * the content, in percentage.
+   */
+  percentage? : number | null | undefined;
+}
 
 /**
  * Returns the calculated initial time for the content described by the given
@@ -46,30 +73,30 @@ export default function getInitialTime(
   if (startAt != null) {
     const min = manifest.getMinimumPosition();
     const max = manifest.getMaximumPosition();
-    if (startAt.position != null) {
+    if (!isNullOrUndefined(startAt.position)) {
       log.debug("Init: using startAt.minimumPosition");
       return Math.max(Math.min(startAt.position, max), min);
     }
-    else if (startAt.wallClockTime != null) {
+    else if (!isNullOrUndefined(startAt.wallClockTime)) {
       log.debug("Init: using startAt.wallClockTime");
-      const ast = manifest.availabilityStartTime == null ?
+      const ast = manifest.availabilityStartTime === undefined ?
         0 :
         manifest.availabilityStartTime;
       const position = startAt.wallClockTime - ast;
       return Math.max(Math.min(position, max), min);
     }
-    else if (startAt.fromFirstPosition != null) {
+    else if (!isNullOrUndefined(startAt.fromFirstPosition)) {
       log.debug("Init: using startAt.fromFirstPosition");
       const { fromFirstPosition } = startAt;
       return fromFirstPosition <= 0 ? min :
                                       Math.min(max, min + fromFirstPosition);
     }
-    else if (startAt.fromLastPosition != null) {
+    else if (!isNullOrUndefined(startAt.fromLastPosition)) {
       log.debug("Init: using startAt.fromLastPosition");
       const { fromLastPosition } = startAt;
       return fromLastPosition >= 0 ? max :
                                      Math.max(min, max + fromLastPosition);
-    } else if (startAt.percentage != null) {
+    } else if (!isNullOrUndefined(startAt.percentage)) {
       log.debug("Init: using startAt.percentage");
       const { percentage } = startAt;
       if (percentage > 100) {
@@ -91,14 +118,14 @@ export default function getInitialTime(
     let liveTime : number;
     const { DEFAULT_LIVE_GAP } = config.getCurrent();
 
-    if (clockOffset == null) {
+    if (clockOffset === undefined) {
       log.info("Init: no clock offset found for a live content, " +
                "starting close to maximum available position");
       liveTime = maximumPosition;
     } else {
       log.info("Init: clock offset found for a live content, " +
                "checking if we can start close to it");
-      const ast = manifest.availabilityStartTime == null ?
+      const ast = manifest.availabilityStartTime === undefined ?
         0 :
         manifest.availabilityStartTime;
       const clockRelativeLiveTime = (performance.now() + clockOffset) / 1000 - ast;
