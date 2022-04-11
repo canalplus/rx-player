@@ -533,7 +533,10 @@ function createSmoothStreamingParser(
     let availabilityStartTime : number|undefined;
     let minimumTime : number | undefined;
     let timeshiftDepth : number | null = null;
-    let maximumTimeData : { isLinear : boolean; value : number; time : number };
+    let maximumTimeData : { isLinear : boolean;
+                            maximumSafePosition: number;
+                            livePosition : number | undefined;
+                            time : number; };
 
     const firstVideoAdaptation = adaptations.video !== undefined ?
       adaptations.video[0] :
@@ -541,8 +544,15 @@ function createSmoothStreamingParser(
     const firstAudioAdaptation = adaptations.audio !== undefined ?
       adaptations.audio[0] :
       undefined;
-    let firstTimeReference : number|undefined;
-    let lastTimeReference : number|undefined;
+
+    /** Minimum time that can be reached regardless of the StreamIndex chosen. */
+    let safeMinimumTime : number|undefined;
+
+    /** Maximum time that can be reached regardless of the StreamIndex chosen. */
+    let safeMaximumTime : number|undefined;
+
+    /** Maximum time that can be reached in absolute on the content. */
+    let unsafeMaximumTime : number|undefined;
 
     if (firstVideoAdaptation !== undefined || firstAudioAdaptation !== undefined) {
       const firstTimeReferences : number[] = [];
@@ -585,44 +595,52 @@ function createSmoothStreamingParser(
       }
 
       if (firstTimeReferences.length > 0) {
-        firstTimeReference = Math.max(...firstTimeReferences);
+        safeMinimumTime = Math.max(...firstTimeReferences);
       }
 
       if (lastTimeReferences.length > 0) {
-        lastTimeReference = Math.min(...lastTimeReferences);
+        safeMaximumTime = Math.min(...lastTimeReferences);
+        unsafeMaximumTime = Math.max(...lastTimeReferences);
       }
     }
 
     const manifestDuration = root.getAttribute("Duration");
-    const duration = (manifestDuration != null && +manifestDuration !== 0) ?
+    const duration = (manifestDuration !== null && +manifestDuration !== 0) ?
       (+manifestDuration / timescale) : undefined;
 
     if (isLive) {
       suggestedPresentationDelay = parserOptions.suggestedPresentationDelay;
       availabilityStartTime = referenceDateTime;
 
-      minimumTime = firstTimeReference ?? availabilityStartTime;
-      const maximumTime = lastTimeReference != null ?
-        lastTimeReference :
-        (Date.now() / 1000 - availabilityStartTime);
+      minimumTime = safeMinimumTime ?? availabilityStartTime;
+      let livePosition = unsafeMaximumTime;
+      if (livePosition === undefined) {
+        livePosition = (Date.now() / 1000 - availabilityStartTime);
+      }
+      let maximumSafePosition = safeMaximumTime;
+      if (maximumSafePosition === undefined) {
+        maximumSafePosition = livePosition;
+      }
       maximumTimeData = { isLinear: true,
-                          value: maximumTime,
+                          maximumSafePosition,
+                          livePosition,
                           time: performance.now() };
       timeshiftDepth = timeShiftBufferDepth ?? null;
     } else {
-      minimumTime = firstTimeReference ?? 0;
-      const maximumTime = lastTimeReference !== undefined ? lastTimeReference :
-                          duration !== undefined ? minimumTime + duration :
-                                                   Infinity;
+      minimumTime = safeMinimumTime ?? 0;
+      const maximumTime = safeMaximumTime !== undefined ? safeMaximumTime :
+                          duration !== undefined        ? minimumTime + duration :
+                                                          Infinity;
       maximumTimeData = { isLinear: false,
-                          value: maximumTime,
+                          maximumSafePosition: maximumTime,
+                          livePosition: undefined,
                           time: performance.now() };
     }
 
     const periodStart = isLive ? 0 :
                                  minimumTime;
     const periodEnd = isLive ? undefined :
-                               maximumTimeData.value;
+                               maximumTimeData.maximumSafePosition;
     const manifest = {
       availabilityStartTime: availabilityStartTime === undefined ?
         0 :
@@ -631,7 +649,7 @@ function createSmoothStreamingParser(
       isLive,
       isDynamic: isLive,
       isLastPeriodKnown: true,
-      timeBounds: { absoluteMinimumTime: minimumTime,
+      timeBounds: { minimumSafePosition: minimumTime,
                     timeshiftDepth,
                     maximumTimeData },
       periods: [{ adaptations,

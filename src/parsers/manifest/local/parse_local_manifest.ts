@@ -61,10 +61,11 @@ export default function parseLocalManifest(
            isLastPeriodKnown: isFinished,
            isLive: false,
            uris: [],
-           timeBounds: { absoluteMinimumTime: minimumPosition ?? 0,
+           timeBounds: { minimumSafePosition: minimumPosition ?? 0,
                          timeshiftDepth: null,
                          maximumTimeData: { isLinear: false,
-                                            value: maximumPosition,
+                                            maximumSafePosition: maximumPosition,
+                                            livePosition: undefined,
                                             time: performance.now() } },
            periods: parsedPeriods };
 }

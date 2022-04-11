@@ -308,11 +308,16 @@ function createManifest(
                      isLastPeriodKnown,
                      uris: url == null ? [] :
                                          [url],
-                     timeBounds: { minimumTime,
+
+                     // TODO more precize time bounds?
+                     timeBounds: { minimumSafePosition: minimumTime,
                                    timeshiftDepth: null,
-                                   maximumTimeData: { isLinear: false,
-                                                      value: maximumTime,
-                                                      time } },
+                                   maximumTimeData: {
+                                     isLinear: false,
+                                     maximumSafePosition: maximumTime,
+                                     livePosition: undefined,
+                                     time,
+                                   } },
                      lifetime: mplData.pollInterval };
 
   return manifest;

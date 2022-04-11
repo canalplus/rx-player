@@ -24,7 +24,9 @@ import getLastPositionFromAdaptation from "./get_last_time_from_adaptation";
  */
 export default function getMaximumPosition(
   periods : IParsedPeriod[]
-) : number | undefined {
+) : { safe : number | undefined;
+      unsafe : number | undefined; }
+{
   for (let i = periods.length - 1; i >= 0; i--) {
     const periodAdaptations = periods[i].adaptations;
     const firstAudioAdaptationFromPeriod = periodAdaptations.audio === undefined ?
@@ -44,7 +46,7 @@ export default function getMaximumPosition(
         const lastPosition =
           getLastPositionFromAdaptation(firstAudioAdaptationFromPeriod);
         if (lastPosition === undefined) {
-          return undefined;
+          return { safe: undefined, unsafe: undefined };
         }
         maximumAudioPosition = lastPosition;
       }
@@ -52,7 +54,7 @@ export default function getMaximumPosition(
         const lastPosition =
           getLastPositionFromAdaptation(firstVideoAdaptationFromPeriod);
         if (lastPosition === undefined) {
-          return undefined;
+          return { safe: undefined, unsafe: undefined };
         }
         maximumVideoPosition = lastPosition;
       }
@@ -64,18 +66,22 @@ export default function getMaximumPosition(
       ) {
         log.info("Parser utils: found Period with no segment. ",
                  "Going to previous one to calculate last position");
-        return undefined;
+        return { safe: undefined, unsafe: undefined };
       }
 
       if (maximumVideoPosition !== null) {
         if (maximumAudioPosition !== null) {
-          return Math.min(maximumAudioPosition, maximumVideoPosition);
+          return { safe: Math.min(maximumAudioPosition, maximumVideoPosition),
+                   unsafe: Math.max(maximumAudioPosition, maximumVideoPosition) };
         }
-        return maximumVideoPosition;
+        return { safe: maximumVideoPosition,
+                 unsafe: maximumVideoPosition };
       }
       if (maximumAudioPosition !== null) {
-        return maximumAudioPosition;
+        return { safe: maximumAudioPosition,
+                 unsafe: maximumAudioPosition };
       }
     }
   }
+  return { safe: undefined, unsafe: undefined };
 }
