@@ -106,6 +106,8 @@ export interface IListIndexIndexArgument {
 export interface IListIndexContextArgument {
   /** Start of the period concerned by this RepresentationIndex, in seconds. */
   periodStart : number;
+  /** End of the period concerned by this RepresentationIndex, in seconds. */
+  periodEnd : number | undefined;
   /** Base URL for the Representation concerned. */
   representationBaseURLs : IResolvedBaseUrl[];
   /** ID of the Representation concerned. */
@@ -121,6 +123,8 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   private _index : IListIndex;
   /** Start of the period concerned by this RepresentationIndex, in seconds. */
   protected _periodStart : number;
+  /** End of the period concerned by this RepresentationIndex, in seconds. */
+  protected _periodEnd : number | undefined;
   /* Function that tells if an EMSG is whitelisted by the manifest */
   private _isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 
@@ -134,12 +138,14 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
     }
 
     const { periodStart,
+            periodEnd,
             representationBaseURLs,
             representationId,
             representationBitrate,
             isEMSGWhitelisted } = context;
     this._isEMSGWhitelisted = isEMSGWhitelisted;
     this._periodStart = periodStart;
+    this._periodEnd = periodEnd;
     const presentationTimeOffset =
       index.presentationTimeOffset != null ? index.presentationTimeOffset :
                                              0;
@@ -248,7 +254,8 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   getLastPosition() : number {
     const index = this._index;
     const { duration, list } = index;
-    return ((list.length * duration) / index.timescale) + this._periodStart;
+    return Math.min(((list.length * duration) / index.timescale) + this._periodStart,
+                    this._periodEnd ?? Infinity);
   }
 
   /**

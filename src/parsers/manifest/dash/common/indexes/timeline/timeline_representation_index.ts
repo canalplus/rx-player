@@ -47,7 +47,6 @@ import constructTimelineFromElements from "./construct_timeline_from_elements";
 // eslint-disable-next-line max-len
 import constructTimelineFromPreviousTimeline from "./construct_timeline_from_previous_timeline";
 
-
 /**
  * Index property defined for a SegmentTimeline RepresentationIndex
  * This object contains every property needed to generate an ISegment for a
@@ -307,8 +306,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
                     timeline: index.timeline ?? null,
                     timescale };
     this._scaledPeriodStart = toIndexTime(periodStart, this._index);
-    this._scaledPeriodEnd = periodEnd == null ? undefined :
-                                                toIndexTime(periodEnd, this._index);
+    this._scaledPeriodEnd = periodEnd === undefined ? undefined :
+                                                      toIndexTime(periodEnd, this._index);
   }
 
   /**
@@ -566,9 +565,10 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     if (timeline.length <= 0) {
       return null;
     }
-    return getIndexSegmentEnd(timeline[timeline.length - 1],
-                              null,
-                              scaledPeriodEnd);
+    return Math.min(getIndexSegmentEnd(timeline[timeline.length - 1],
+                                       null,
+                                       scaledPeriodEnd),
+                    scaledPeriodEnd ?? Infinity);
   }
 
   /**
