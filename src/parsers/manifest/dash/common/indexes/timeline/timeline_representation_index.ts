@@ -389,7 +389,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       this._index.timeline = this._getTimeline();
     }
     const lastTime = TimelineRepresentationIndex.getIndexEnd(this._index.timeline,
-                                                             this._scaledPeriodStart);
+                                                             this._scaledPeriodEnd);
     return lastTime === null ? null :
                                fromIndexTime(lastTime, this._index);
   }
