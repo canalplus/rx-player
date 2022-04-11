@@ -301,9 +301,9 @@ export default function RepresentationStream<TSegmentDataType>({
                    IStreamNeedsManifestRefresh |
                    IStreamTerminatingEvent>
     {
-      const wantedStartPosition = observation.position + observation.wantedTimeOffset;
+      const initialWantedTime = observation.position + observation.wantedTimeOffset;
       const status = getBufferStatus(content,
-                                     wantedStartPosition,
+                                     initialWantedTime,
                                      playbackObserver,
                                      fastSwitchThreshold,
                                      bufferGoal,
@@ -383,7 +383,7 @@ export default function RepresentationStream<TSegmentDataType>({
       if (status.isBufferFull) {
         const gcedPosition = Math.max(
           0,
-          wantedStartPosition - UPTO_CURRENT_POSITION_CLEANUP);
+          initialWantedTime - UPTO_CURRENT_POSITION_CLEANUP);
         if (gcedPosition > 0) {
           bufferRemoval = segmentBuffer
             .removeBuffer(0, gcedPosition)

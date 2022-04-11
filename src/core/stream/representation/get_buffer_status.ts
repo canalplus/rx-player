@@ -20,6 +20,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import { IReadOnlyPlaybackObserver } from "../../api";
 import {
   IBufferedChunk,
@@ -76,9 +77,11 @@ export interface IBufferStatus {
  * be filled by any segment, even in the future.
  *
  * @param {Object} content
- * @param {Object} playbackInfo
+ * @param {number} initialWantedTime
+ * @param {Object} playbackObserver
  * @param {number|undefined} fastSwitchThreshold
  * @param {number} bufferGoal
+ * @param {number} maxBufferSize
  * @param {Object} segmentBuffer
  * @returns {Object}
  */
@@ -87,21 +90,21 @@ export default function getBufferStatus(
              manifest : Manifest;
              period : Period;
              representation : Representation; },
-  wantedStartPosition : number,
+  initialWantedTime : number,
   playbackObserver : IReadOnlyPlaybackObserver<unknown>,
   fastSwitchThreshold : number | undefined,
   bufferGoal : number,
   maxBufferSize : number,
   segmentBuffer : SegmentBuffer
 ) : IBufferStatus {
-  const { period, representation } = content;
   segmentBuffer.synchronizeInventory();
-  const wantedEndPosition = wantedStartPosition + bufferGoal;
-  const neededRange = { start: Math.max(wantedStartPosition, period.start),
-                        end: Math.min(wantedEndPosition, period.end ?? Infinity) };
 
-  const shouldRefreshManifest = representation.index.shouldRefresh(wantedStartPosition,
-                                                                   wantedEndPosition);
+  const { representation } = content;
+  const neededRange = getRangeOfNeededSegments(content,
+                                               initialWantedTime,
+                                               bufferGoal);
+  const shouldRefreshManifest = representation.index.shouldRefresh(neededRange.start,
+                                                                   neededRange.end);
 
   /**
    * Every segment awaiting an "EndOfSegment" operation, which indicates that a
@@ -136,7 +139,7 @@ export default function getBufferStatus(
 
   const prioritizedNeededSegments: IQueuedSegment[] = segmentsToLoad.map((segment) => (
     {
-      priority: getSegmentPriority(segment.time, wantedStartPosition),
+      priority: getSegmentPriority(segment.time, initialWantedTime),
       segment,
     }
   ));
@@ -145,38 +148,9 @@ export default function getBufferStatus(
    * `true` if the current `RepresentationStream` has loaded all the
    * needed segments for this Representation until the end of the Period.
    */
-  let hasFinishedLoading : boolean;
-
-  const lastPosition = representation.index.getLastPosition();
-  if (!representation.index.isInitialized() ||
-      period.end === undefined ||
-      prioritizedNeededSegments.length > 0 ||
-      segmentsOnHold.length  > 0)
-  {
-    hasFinishedLoading = false;
-  } else {
-    if (lastPosition === undefined) {
-      // We do not know the end of this index.
-      // If we reached the end of the period, check that all segments are
-      // available.
-      hasFinishedLoading = neededRange.end >= period.end &&
-                           representation.index.isFinished();
-    } else if (lastPosition === null) {
-      // There is no available segment in the index currently. If the index
-      // tells us it has finished generating new segments, we're done.
-      hasFinishedLoading = representation.index.isFinished();
-    } else {
-      // We have a declared end. Check that our range went until the last
-      // position available in the index. If that's the case and we're left
-      // with no segments after filtering them, it means we already have
-      // downloaded the last segments and have nothing left to do: full.
-      const endOfRange = period.end !== undefined ? Math.min(period.end,
-                                                             lastPosition) :
-                                                    lastPosition;
-      hasFinishedLoading = neededRange.end >= endOfRange &&
-                           representation.index.isFinished();
-    }
-  }
+  const hasFinishedLoading = neededRange.hasReachedPeriodEnd &&
+                             prioritizedNeededSegments.length === 0 &&
+                             segmentsOnHold.length === 0;
 
   let imminentDiscontinuity;
   if (!representation.index.isInitialized() ||
@@ -216,6 +190,93 @@ export default function getBufferStatus(
            neededSegments: prioritizedNeededSegments,
            isBufferFull,
            shouldRefreshManifest };
+}
+
+/**
+ * Returns both the time range of segments that should be loaded (from a
+ * starting position to an ending position) and whether the end of the Period is
+ * reached by that range.
+ * @param {Object} content
+ * @param {number} initialWantedTime
+ * @param {number} bufferGoal
+ * @returns {Object}
+ */
+function getRangeOfNeededSegments(
+  content: { adaptation : Adaptation;
+             manifest : Manifest;
+             period : Period;
+             representation : Representation; },
+  initialWantedTime : number,
+  bufferGoal : number
+) : { start : number; end : number; hasReachedPeriodEnd : boolean } {
+  let wantedStartPosition : number;
+  const { manifest, period, representation } = content;
+  const lastIndexPosition = representation.index.getLastPosition();
+  const representationIndex = representation.index;
+
+  // There is an exception for when the current initially wanted time is already
+  // after the last position with segments AND when we're playing the absolute
+  // last Period in the Manifest.
+  // In that case, we want to actually request at least the last segment to
+  // avoid ending the last Period - and by extension the content - with a
+  // segment which isn't the last one.
+  if (!isNullOrUndefined(lastIndexPosition) &&
+      initialWantedTime >= lastIndexPosition &&
+      representationIndex.isInitialized() &&
+      representationIndex.isFinished() &&
+      isPeriodTheCurrentAndLastOne(manifest, period, initialWantedTime))
+  {
+    wantedStartPosition = lastIndexPosition - 1;
+  } else {
+    wantedStartPosition = initialWantedTime;
+  }
+
+  const wantedEndPosition = wantedStartPosition + bufferGoal;
+
+  let hasReachedPeriodEnd;
+  if (!representation.index.isInitialized() ||
+      !representation.index.isFinished() ||
+      period.end === undefined)
+  {
+    hasReachedPeriodEnd = false;
+  } else if (lastIndexPosition === undefined) {
+    // We do not know the end of this index.
+    hasReachedPeriodEnd = wantedEndPosition >= period.end;
+  } else if (lastIndexPosition === null) {
+    // There is no available segment in the index currently.
+    hasReachedPeriodEnd = true;
+  } else {
+    // We have a declared end. Check that our range went until the last
+    // position available in the index. If that's the case and we're left
+    // with no segments after filtering them, it means we already have
+    // downloaded the last segments and have nothing left to do: full.
+    hasReachedPeriodEnd = wantedEndPosition >= lastIndexPosition;
+  }
+
+  return { start: Math.max(wantedStartPosition,
+                           period.start),
+           end: Math.min(wantedEndPosition, period.end ?? Infinity),
+           hasReachedPeriodEnd };
+}
+
+/**
+ * Returns `true` if the given Period is both:
+ *   - the one being played (the current position is known from `time`)
+ *   - the absolute last one in the Manifest (that is, there will never be a
+ *     Period after it).
+ * @param {Object} manifest
+ * @param {Object} period
+ * @param {number} time
+ * @returns {boolean}
+ */
+function isPeriodTheCurrentAndLastOne(
+  manifest : Manifest,
+  period : Period,
+  time : number
+) : boolean {
+  return period.containsTime(time) &&
+         manifest.isLastPeriodKnown &&
+         period.id === manifest.periods[manifest.periods.length - 1]?.id;
 }
 
 /**
