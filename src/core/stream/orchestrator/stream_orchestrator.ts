@@ -158,12 +158,12 @@ export default function StreamOrchestrator(
       { position, wantedTimeOffset }
     ) => {
       const offsetedPosition = wantedTimeOffset + position;
-      if (offsetedPosition < manifest.getMinimumPosition()) {
+      if (offsetedPosition < manifest.getMinimumSafePosition()) {
         const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST",
                                        "The current position is behind the " +
                                        "earliest time announced in the Manifest.");
         return EVENTS.warning(warning);
-      } else if (offsetedPosition > manifest.getMaximumPosition()) {
+      } else if (offsetedPosition > manifest.getMaximumSafePosition()) {
         const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST",
                                        "The current position is after the latest " +
                                        "time announced in the Manifest.");

@@ -64,7 +64,7 @@ export default function createStreamPlaybackObserver(
       map(([observation, lastSpeed]) => {
         return {
           liveGap: manifest.isLive ?
-            manifest.getMaximumPosition() - observation.position :
+            manifest.getMaximumSafePosition() - observation.position :
             undefined,
           position: observation.position,
           duration: observation.duration,

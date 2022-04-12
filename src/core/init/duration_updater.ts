@@ -120,7 +120,7 @@ function setMediaSourceDuration(
       let newDuration : number;
       if (manifest.isDynamic) {
         const maxPotentialPos = manifest.getLivePosition() ??
-                                manifest.getMaximumPosition();
+                                manifest.getMaximumSafePosition();
 
         // Some targets poorly support setting a very high number for durations.
         // Yet, in dynamic contents, we would prefer setting a value as high as possible
@@ -130,7 +130,7 @@ function setMediaSourceDuration(
         // we authorize exceptionally going over it.
         newDuration =  Math.max(Math.pow(2, 32), maxPotentialPos + YEAR_IN_SECONDS);
       } else {
-        newDuration = manifest.getMaximumPosition();
+        newDuration = manifest.getMaximumSafePosition();
       }
 
       if (mediaSource.duration >= newDuration ||
