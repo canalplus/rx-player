@@ -479,10 +479,12 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   }
 
   /**
-   * Get the minimum position currently defined by the Manifest, in seconds.
+   * Returns the theoretical minimum playable position on the content
+   * regardless of the current Adaptation chosen, as estimated at parsing
+   * time.
    * @returns {number}
    */
-  public getMinimumPosition() : number {
+  public getMinimumSafePosition() : number {
     const windowData = this._timeBounds;
     if (windowData.timeshiftDepth === null) {
       return windowData.minimumSafePosition ?? 0;
@@ -518,10 +520,11 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   }
 
   /**
-   * Get the maximum position currently defined by the Manifest, in seconds.
-   * @returns {number}
+   * Returns the theoretical maximum playable position on the content
+   * regardless of the current Adaptation chosen, as estimated at parsing
+   * time.
    */
-  public getMaximumPosition() : number {
+  public getMaximumSafePosition() : number {
     const { maximumTimeData } = this._timeBounds;
     if (!maximumTimeData.isLinear) {
       return maximumTimeData.maximumSafePosition;
@@ -727,7 +730,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       // Partial updates do not remove old Periods.
       // This can become a memory problem when playing a content long enough.
       // Let's clean manually Periods behind the minimum possible position.
-      const min = this.getMinimumPosition();
+      const min = this.getMinimumSafePosition();
       while (this.periods.length > 0) {
         const period = this.periods[0];
         if (period.end === undefined || period.end > min) {

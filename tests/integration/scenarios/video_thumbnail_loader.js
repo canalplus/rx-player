@@ -73,7 +73,7 @@ describe("Video Thumbnail Loader", () => {
     let error;
     try {
       time = await videoThumbnailLoader
-        .setTime(manifest.getMaximumPosition() + 10);
+        .setTime(manifest.getMaximumSafePosition() + 10);
     } catch (err) {
       error = err;
     }

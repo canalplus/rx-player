@@ -205,8 +205,8 @@ export default function launchTestsForContent(manifestInfos) {
         expect(manifest.isLive).to.equal(isLive);
         expect(manifest.getUrl()).to.equal(manifestInfos.url);
 
-        expect(manifest.getMaximumPosition()).to.equal(maximumPosition);
-        expect(manifest.getMinimumPosition()).to.equal(minimumPosition);
+        expect(manifest.getMaximumSafePosition()).to.equal(maximumPosition);
+        expect(manifest.getMinimumSafePosition()).to.equal(minimumPosition);
         expect(manifest.availabilityStartTime).to.equal(availabilityStartTime);
 
         expect(manifest.periods.length).to.equal(periodsInfos.length);

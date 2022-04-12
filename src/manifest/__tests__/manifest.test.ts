@@ -47,11 +47,13 @@ describe("Manifest - Manifest", () => {
                                  isDynamic: false,
                                  isLive: false,
                                  duration: 5,
-                                 timeBounds: { absoluteMinimumTime: 0,
+                                 timeBounds: { minimumSafePosition: 0,
                                                timeshiftDepth: null,
-                                               maximumTimeData: { isLinear: false,
-                                                                  value: 10,
-                                                                  time: 10 } },
+                                               maximumTimeData: {
+                                                 isLinear: false,
+                                                 maximumSafePosition: 10,
+                                                 time: 10,
+                                               } },
                                  periods: [] };
 
     const Manifest = require("../manifest").default;
@@ -63,8 +65,8 @@ describe("Manifest - Manifest", () => {
     expect(manifest.isDynamic).toEqual(false);
     expect(manifest.isLive).toEqual(false);
     expect(manifest.lifetime).toEqual(undefined);
-    expect(manifest.getMaximumPosition()).toEqual(10);
-    expect(manifest.getMinimumPosition()).toEqual(0);
+    expect(manifest.getMaximumSafePosition()).toEqual(10);
+    expect(manifest.getMinimumSafePosition()).toEqual(0);
     expect(manifest.contentWarnings).toEqual([]);
     expect(manifest.periods).toEqual([]);
     expect(manifest.suggestedPresentationDelay).toEqual(undefined);
@@ -83,11 +85,13 @@ describe("Manifest - Manifest", () => {
                                  isDynamic: false,
                                  isLive: false,
                                  duration: 5,
-                                 timeBounds: { absoluteMinimumTime: 0,
+                                 timeBounds: { minimumSafePosition: 0,
                                                timeshiftDepth: null,
-                                               maximumTimeData: { isLinear: false,
-                                                                  value: 10,
-                                                                  time: 10 } },
+                                               maximumTimeData: {
+                                                 isLinear: false,
+                                                 maximumSafePosition: 10,
+                                                 time: 10,
+                                               } },
                                  periods: [period1, period2] };
 
     const fakePeriod = jest.fn((period) => {
@@ -123,11 +127,13 @@ describe("Manifest - Manifest", () => {
                                  isDynamic: false,
                                  isLive: false,
                                  duration: 5,
-                                 timeBounds: { absoluteMinimumTime: 0,
+                                 timeBounds: { minimumSafePosition: 0,
                                                timeshiftDepth: null,
-                                               maximumTimeData: { isLinear: false,
-                                                                  value: 10,
-                                                                  time: 10 } },
+                                               maximumTimeData: {
+                                                 isLinear: false,
+                                                 maximumSafePosition: 10,
+                                                 time: 10,
+                                               } },
                                  periods: [period1, period2] };
 
     const representationFilter = function() { return false; };
@@ -161,11 +167,13 @@ describe("Manifest - Manifest", () => {
                                  isDynamic: false,
                                  isLive: false,
                                  duration: 5,
-                                 timeBounds: { absoluteMinimumTime: 0,
+                                 timeBounds: { minimumSafePosition: 0,
                                                timeshiftDepth: null,
-                                               maximumTimeData: { isLinear: false,
-                                                                  value: 10,
-                                                                  time: 10 } },
+                                               maximumTimeData: {
+                                                 isLinear: false,
+                                                 maximumSafePosition: 10,
+                                                 time: 10,
+                                               } },
                                  periods: [period1, period2] };
 
     const fakePeriod = jest.fn((period) => {
@@ -199,11 +207,13 @@ describe("Manifest - Manifest", () => {
                                  isDynamic: false,
                                  isLive: false,
                                  duration: 5,
-                                 timeBounds: { absoluteMinimumTime: 0,
+                                 timeBounds: { minimumSafePosition: 0,
                                                timeshiftDepth: null,
-                                               maximumTimeData: { isLinear: false,
-                                                                  value: 10,
-                                                                  time: 10 } },
+                                               maximumTimeData: {
+                                                 isLinear: false,
+                                                 maximumSafePosition: 10,
+                                                 time: 10,
+                                               } },
                                  periods: [period1, period2] };
 
     const fakePeriod = jest.fn((period) => {
@@ -242,10 +252,10 @@ describe("Manifest - Manifest", () => {
                               lifetime: 13,
                               contentWarnings: [new Error("a"), new Error("b")],
                               periods: [oldPeriod1, oldPeriod2],
-                              timeBounds: { absoluteMinimumTime: 5,
+                              timeBounds: { minimumSafePosition: 5,
                                             timeshiftDepth: null,
                                             maximumTimeData: { isLinear: false,
-                                                               value: 10,
+                                                               maximumSafePosition: 10,
                                                                time } },
                               suggestedPresentationDelay: 99,
                               uris: ["url1", "url2"] };
@@ -267,8 +277,8 @@ describe("Manifest - Manifest", () => {
     expect(manifest.isLive).toEqual(false);
     expect(manifest.lifetime).toEqual(13);
     expect(manifest.contentWarnings).toEqual([new Error("0"), new Error("1")]);
-    expect(manifest.getMaximumPosition()).toEqual(10);
-    expect(manifest.getMinimumPosition()).toEqual(5);
+    expect(manifest.getMaximumSafePosition()).toEqual(10);
+    expect(manifest.getMinimumSafePosition()).toEqual(5);
     expect(manifest.periods).toEqual([
       { id: "foo0", contentWarnings: [new Error("0")], adaptations: {}, start: 4 },
       { id: "foo1", contentWarnings: [new Error("1")], adaptations: {}, start: 12 },
@@ -301,11 +311,13 @@ describe("Manifest - Manifest", () => {
                                isDynamic: false,
                                isLive: false,
                                lifetime: 13,
-                               timeBounds: { absoluteMinimumTime: 0,
+                               timeBounds: { minimumSafePosition: 0,
                                              timeshiftDepth: null,
-                                             maximumTimeData: { isLinear: false,
-                                                                value: 10,
-                                                                time: 10 } },
+                                             maximumTimeData: {
+                                               isLinear: false,
+                                               maximumSafePosition: 10,
+                                               time: 10,
+                                             } },
                                contentWarnings: [new Error("a"), new Error("b")],
                                periods: [ { id: "0", start: 4, adaptations: {} },
                                           { id: "1", start: 12, adaptations: {} } ],
@@ -325,11 +337,13 @@ describe("Manifest - Manifest", () => {
                                periods: [ { id: "0", start: 4, adaptations: {} },
                                           { id: "1", start: 12, adaptations: {} } ],
                                suggestedPresentationDelay: 99,
-                               timeBounds: { absoluteMinimumTime: 0,
+                               timeBounds: { minimumSafePosition: 0,
                                              timeshiftDepth: null,
-                                             maximumTimeData: { isLinear: false,
-                                                                value: 10,
-                                                                time: 10 } },
+                                             maximumTimeData: {
+                                               isLinear: false,
+                                               maximumSafePosition: 10,
+                                               time: 10,
+                                             } },
                                uris: [] };
     const manifest2 = new Manifest(oldManifestArgs2, {});
     expect(manifest2.getUrl()).toEqual(undefined);
@@ -362,11 +376,13 @@ describe("Manifest - Manifest", () => {
                                                  new Error("b") ],
                               periods: [ { id: "0", start: 4, adaptations: {} },
                                          { id: "1", start: 12, adaptations: {} } ],
-                              timeBounds: { absoluteMinimumTime: 7,
+                              timeBounds: { minimumSafePosition: 7,
                                             timeshiftDepth: 10,
-                                            maximumTimeData: { isLinear: true,
-                                                               value: 30,
-                                                               time: 30000 } },
+                                            maximumTimeData: {
+                                              isLinear: true,
+                                              maximumSafePosition: 30,
+                                              time: 30000,
+                                            } },
                               suggestedPresentationDelay: 99,
                               uris: ["url1", "url2"] };
 
@@ -389,11 +405,13 @@ describe("Manifest - Manifest", () => {
                           contentWarnings: [new Error("c"), new Error("d")],
                           suggestedPresentationDelay: 100,
                           timeShiftBufferDepth: 3,
-                          _timeBounds: { absoluteMinimumTime: 7,
+                          _timeBounds: { minimumSafePosition: 7,
                                          timeshiftDepth: 5,
-                                         maximumTimeData: { isLinear: false,
-                                                            value: 40,
-                                                            time: 30000 } },
+                                         maximumTimeData: {
+                                           isLinear: false,
+                                           maximumSafePosition: 40,
+                                           time: 30000,
+                                         } },
                           periods: [newPeriod1, newPeriod2],
                           uris: ["url3", "url4"] };
 
@@ -405,8 +423,8 @@ describe("Manifest - Manifest", () => {
     expect(manifest.isLive).toEqual(true);
     expect(manifest.lifetime).toEqual(14);
     expect(manifest.contentWarnings).toEqual([new Error("c"), new Error("d")]);
-    expect(manifest.getMinimumPosition()).toEqual(40 - 5);
-    expect(manifest.getMaximumPosition()).toEqual(40);
+    expect(manifest.getMinimumSafePosition()).toEqual(40 - 5);
+    expect(manifest.getMaximumSafePosition()).toEqual(40);
     expect(manifest.suggestedPresentationDelay).toEqual(100);
     expect(manifest.uris).toEqual(["url3", "url4"]);
 
@@ -431,11 +449,13 @@ describe("Manifest - Manifest", () => {
                               isDynamic: false,
                               isLive: false,
                               lifetime: 13,
-                              timeBounds: { absoluteMinimumTime: 0,
+                              timeBounds: { minimumSafePosition: 0,
                                             timeshiftDepth: null,
-                                            maximumTimeData: { isLinear: false,
-                                                               value: 10,
-                                                               time: 10 } },
+                                            maximumTimeData: {
+                                              isLinear: false,
+                                              maximumSafePosition: 10,
+                                              time: 10,
+                                            } },
                               contentWarnings: [new Error("a"), new Error("b")],
                               periods: [{ id: "1", start: 4, adaptations: {} }],
                               suggestedPresentationDelay: 99,
@@ -493,10 +513,10 @@ describe("Manifest - Manifest", () => {
                           periods: [ newPeriod1,
                                      newPeriod2,
                                      newPeriod3 ],
-                          timeBounds: { absoluteMinimumTime: 0,
+                          timeBounds: { minimumSafePosition: 0,
                                         timeshiftDepth: null,
                                         maximumTimeData: { isLinear: false,
-                                                           value: 10,
+                                                           maximumSafePosition: 10,
                                                            time: 10 } },
                           uris: ["url3", "url4"] };
 
@@ -528,11 +548,13 @@ describe("Manifest - Manifest", () => {
                               contentWarnings: [new Error("a"), new Error("b")],
                               periods: [{ id: "1" }],
                               suggestedPresentationDelay: 99,
-                              timeBounds: { absoluteMinimumTime: 0,
+                              timeBounds: { minimumSafePosition: 0,
                                             timeshiftDepth: null,
-                                            maximumTimeData: { isLinear: false,
-                                                               value: 10,
-                                                               time: 10 } },
+                                            maximumTimeData: {
+                                              isLinear: false,
+                                              maximumSafePosition: 10,
+                                              time: 10,
+                                            } },
                               uris: ["url1", "url2"] };
 
     const fakePeriod = jest.fn((period) => {
@@ -570,10 +592,10 @@ describe("Manifest - Manifest", () => {
                           contentWarnings: [new Error("c"), new Error("d")],
                           suggestedPresentationDelay: 100,
                           periods: [newPeriod1, newPeriod2, newPeriod3],
-                          timeBounds: { absoluteMinimumTime: 0,
+                          timeBounds: { minimumSafePosition: 0,
                                         timeshiftDepth: null,
                                         maximumTimeData: { isLinear: false,
-                                                           value: 10,
+                                                           maximumSafePosition: 10,
                                                            time: 10 } },
                           uris: ["url3", "url4"] };
 
@@ -603,11 +625,13 @@ describe("Manifest - Manifest", () => {
                               contentWarnings: [new Error("a"), new Error("b")],
                               periods: [{ id: "1" }],
                               suggestedPresentationDelay: 99,
-                              timeBounds: { absoluteMinimumTime: 0,
+                              timeBounds: { minimumSafePosition: 0,
                                             timeshiftDepth: null,
-                                            maximumTimeData: { isLinear: false,
-                                                               value: 10,
-                                                               time: 10 } },
+                                            maximumTimeData: {
+                                              isLinear: false,
+                                              maximumSafePosition: 10,
+                                              time: 10,
+                                            } },
                               uris: ["url1", "url2"] };
 
     const fakePeriod = jest.fn((period) => {
@@ -644,10 +668,10 @@ describe("Manifest - Manifest", () => {
                           contentWarnings: [new Error("c"), new Error("d")],
                           suggestedPresentationDelay: 100,
                           periods: [newPeriod1, newPeriod2, newPeriod3],
-                          timeBounds: { absoluteMinimumTime: 0,
+                          timeBounds: { minimumSafePosition: 0,
                                         timeshiftDepth: null,
                                         maximumTimeData: { isLinear: false,
-                                                           value: 10,
+                                                           maximumSafePosition: 10,
                                                            time: 10 } },
                           uris: ["url3", "url4"] };
 
@@ -675,11 +699,13 @@ describe("Manifest - Manifest", () => {
                               periods: [{ id: "1", start: 2 },
                                         { id: "2", start: 4 },
                                         { id: "3", start: 6 }],
-                              timeBounds: { absoluteMinimumTime: 0,
+                              timeBounds: { minimumSafePosition: 0,
                                             timeshiftDepth: null,
-                                            maximumTimeData: { isLinear: false,
-                                                               value: 10,
-                                                               time: 10 } },
+                                            maximumTimeData: {
+                                              isLinear: false,
+                                              maximumSafePosition: 10,
+                                              time: 10,
+                                            } },
                               suggestedPresentationDelay: 99,
                               uris: ["url1", "url2"] };
 
@@ -725,10 +751,10 @@ describe("Manifest - Manifest", () => {
                                      newPeriod3,
                                      newPeriod4,
                                      newPeriod5 ],
-                          timeBounds: { absoluteMinimumTime: 0,
+                          timeBounds: { minimumSafePosition: 0,
                                         timeshiftDepth: null,
                                         maximumTimeData: { isLinear: false,
-                                                           value: 10,
+                                                           maximumSafePosition: 10,
                                                            time: 10 } },
                           uris: ["url3", "url4"] };
 

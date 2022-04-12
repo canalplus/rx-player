@@ -1606,7 +1606,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     let seekAt = positionWanted;
     if (manifest !== null && !manifest.isLive) {
-      const maximumTime = manifest.getMaximumPosition();
+      const maximumTime = manifest.getMaximumSafePosition();
       seekAt = maximumTime !== undefined ? Math.min(positionWanted,
                                                     maximumTime - 0.001) :
                                            positionWanted;
@@ -2235,7 +2235,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     const { manifest } = this._priv_contentInfos;
     if (manifest !== null) {
-      return manifest.getMinimumPosition();
+      return manifest.getMinimumSafePosition();
     }
     return null;
   }
@@ -2259,7 +2259,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     if (manifest !== null) {
-      return manifest.getMaximumPosition();
+      return manifest.getMaximumSafePosition();
     }
     return null;
   }
@@ -2864,7 +2864,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_lastContentPlaybackInfos.lastPlaybackPosition = observation.position;
 
-    const maximumPosition = manifest !== null ? manifest.getMaximumPosition() :
+    const maximumPosition = manifest !== null ? manifest.getMaximumSafePosition() :
                                                 undefined;
     const positionData : IPositionUpdateItem = {
       position: observation.position,

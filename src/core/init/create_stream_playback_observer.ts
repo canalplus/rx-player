@@ -64,7 +64,7 @@ export default function createStreamPlaybackObserver(
       map(([observation, lastSpeed]) => {
         return {
           // TODO more exact according to the current Adaptation chosen?
-          maximumPosition: manifest.getMaximumPosition(),
+          maximumPosition: manifest.getMaximumSafePosition(),
           position: observation.position,
           duration: observation.duration,
           isPaused: initialPlayPerformed.getValue() ? observation.paused :
