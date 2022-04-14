@@ -40,8 +40,6 @@ import resolveBaseURLs, {
 
 /** Possible options for `parseMPD`.  */
 export interface IMPDParserArguments {
-  /** Whether we should request new segments even if they are not yet finished. */
-  aggressiveMode : boolean;
   /**
    * If set, offset to add to `performance.now()` to obtain the current server's
    * time.
@@ -252,8 +250,7 @@ function parseCompleteIntermediateRepresentation(
   const { externalClockOffset: clockOffset,
           unsafelyBaseOnPreviousManifest } = args;
 
-  const manifestInfos = { aggressiveMode: args.aggressiveMode,
-                          availabilityStartTime,
+  const manifestInfos = { availabilityStartTime,
                           baseURLs: mpdBaseUrls,
                           clockOffset,
                           duration: rootAttributes.duration,

@@ -783,7 +783,6 @@ export interface IRequestedData<T> {
 }
 
 export interface ITransportOptions {
-  aggressiveMode? : boolean | undefined;
   checkMediaSegmentIntegrity? : boolean | undefined;
   lowLatencyMode : boolean;
   manifestLoader?: IManifestLoader | undefined;
