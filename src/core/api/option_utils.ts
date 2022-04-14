@@ -49,7 +49,6 @@ export type IParsedStartAtOption = { position : number } |
                                    { fromFirstPosition : number };
 
 export interface IParsedTransportOptions {
-  aggressiveMode? : boolean | undefined;
   checkMediaSegmentIntegrity? : boolean | undefined;
   lowLatencyMode : boolean;
   manifestLoader?: IManifestLoader | undefined;
