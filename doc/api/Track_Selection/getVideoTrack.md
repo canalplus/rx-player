@@ -30,8 +30,10 @@ return an object with the following properties:
     - `id` (`string`): The id used to identify this Representation.
       No other Representation from this track will have the same `id`.
 
-    - `bitrate` (`Number`): The bitrate of this Representation, in bits per
-      seconds.
+    - `bitrate` (`Number|undefined`): The bitrate of this Representation, in
+      bits per seconds.
+
+      `undefined` if unknown.
 
     - `width` (`Number|undefined`): The width of video, in pixels.
 

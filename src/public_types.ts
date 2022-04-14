@@ -204,7 +204,7 @@ export interface IExposedSegment {
 export interface IRepresentation {
   /** String identifying the Representation, unique per Adaptation. */
   id : string;
-  bitrate : number;
+  bitrate? : number | undefined;
   /** Codec used by the segment in that Representation. */
   codec? : string | undefined;
   /**
@@ -641,7 +641,7 @@ export interface IRepresentationInfos { bufferType: string;
  * RxPlayer.
  */
 export interface IAudioRepresentation { id : string|number;
-                                        bitrate : number;
+                                        bitrate? : number | undefined;
                                         codec? : string | undefined; }
 
 /** Audio track returned by the RxPlayer. */
@@ -665,7 +665,7 @@ export interface ITextTrack { language : string;
  * RxPlayer.
  */
 export interface IVideoRepresentation { id : string|number;
-                                        bitrate : number;
+                                        bitrate? : number | undefined;
                                         width? : number | undefined;
                                         height? : number | undefined;
                                         codec? : string | undefined;
