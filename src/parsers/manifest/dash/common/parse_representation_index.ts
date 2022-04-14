@@ -50,8 +50,7 @@ export default function parseRepresentationIndex(
 ) : IRepresentationIndex {
   const representationBaseURLs = resolveBaseURLs(context.baseURLs,
                                                  representation.children.baseURLs);
-  const { aggressiveMode,
-          availabilityTimeOffset,
+  const { availabilityTimeOffset,
           manifestBoundsCalculator,
           isDynamic,
           end: periodEnd,
@@ -69,8 +68,7 @@ export default function parseRepresentationIndex(
     return inbandEventStreams
       .some(({ schemeIdUri }) => schemeIdUri === inbandEvent.schemeIdUri);
   };
-  const reprIndexCtxt = { aggressiveMode,
-                          availabilityTimeComplete: true,
+  const reprIndexCtxt = { availabilityTimeComplete: true,
                           availabilityTimeOffset,
                           unsafelyBaseOnPreviousRepresentation,
                           isEMSGWhitelisted,
@@ -138,8 +136,6 @@ export default function parseRepresentationIndex(
 export interface IRepresentationIndexContext {
   /** Parsed AdaptationSet which contains the Representation. */
   adaptation : IAdaptationSetIntermediateRepresentation;
-  /** Whether we should request new segments even if they are not yet finished. */
-  aggressiveMode : boolean;
   /** If false, declared segments in the MPD might still be not completely generated. */
   availabilityTimeComplete : boolean;
   /** availability time offset of the concerned Adaptation. */

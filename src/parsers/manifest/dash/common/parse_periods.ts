@@ -110,10 +110,9 @@ export default function parsePeriods(
 
     const availabilityTimeComplete = periodIR.attributes.availabilityTimeComplete ?? true;
     const availabilityTimeOffset = periodIR.attributes.availabilityTimeOffset ?? 0;
-    const { aggressiveMode, manifestProfiles } = context;
+    const { manifestProfiles } = context;
     const { segmentTemplate } = periodIR.children;
-    const adapCtxt : IAdaptationSetContext = { aggressiveMode,
-                                               availabilityTimeComplete,
+    const adapCtxt : IAdaptationSetContext = { availabilityTimeComplete,
                                                availabilityTimeOffset,
                                                baseURLs: periodBaseURLs,
                                                manifestBoundsCalculator,
