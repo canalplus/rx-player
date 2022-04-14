@@ -165,9 +165,6 @@ properties, methods, events and so on.
     - [`transportOptions.serverSyncInfos`](../api/Loading_a_Content.md#transportoptions):
       Provide time synchronization mechanism between the client and server.
 
-    - [`transportOptions.aggressiveMode`](../api/Loading_a_Content.md#transportoptions):
-      Allows to ask to download the segments early.
-
     - [`transportOptions.referenceDateTime`](../api/Loading_a_Content.md#transportoptions):
       Default offset to add to the segment's time to obtain a live time. This is
       in most cases not needed.
