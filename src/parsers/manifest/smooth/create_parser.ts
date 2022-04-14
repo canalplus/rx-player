@@ -51,13 +51,6 @@ import parseBoolean from "./utils/parseBoolean";
 import reduceChildren from "./utils/reduceChildren";
 import { replaceRepresentationSmoothTokens } from "./utils/tokens";
 
-/**
- * Default value for the aggressive `mode`.
- * In this mode, segments will be returned even if we're not sure those had time
- * to be generated.
- */
-const DEFAULT_AGGRESSIVE_MODE = false;
-
 interface IAdaptationParserArguments { root : Element;
                                        baseUrl : string;
                                        timescale : number;
@@ -85,7 +78,6 @@ const MIME_TYPES : Partial<Record<string, string>> = {
 };
 
 export interface IHSSParserConfiguration {
-  aggressiveMode? : boolean | undefined;
   suggestedPresentationDelay? : number | undefined;
   referenceDateTime? : number | undefined;
   minRepresentationBitrate? : number | undefined;
@@ -392,11 +384,7 @@ function createSmoothStreamingParser(
                                       keyId: firstProtection.keyId,
                                     } : undefined };
 
-      const aggressiveMode = parserOptions.aggressiveMode == null ?
-        DEFAULT_AGGRESSIVE_MODE :
-        parserOptions.aggressiveMode;
-      const reprIndex = new RepresentationIndex({ aggressiveMode,
-                                                  isLive,
+      const reprIndex = new RepresentationIndex({ isLive,
                                                   sharedSmoothTimeline,
                                                   media,
                                                   segmentPrivateInfos });
