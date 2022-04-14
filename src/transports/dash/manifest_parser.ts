@@ -48,8 +48,7 @@ export default function generateManifestParser(
     scheduleRequest : IManifestParserRequestScheduler
   ) => IManifestParserResult | Promise<IManifestParserResult>
 {
-  const { aggressiveMode,
-          referenceDateTime } = options;
+  const { referenceDateTime } = options;
   const serverTimeOffset = options.serverSyncInfos !== undefined ?
     options.serverSyncInfos.serverTimestamp - options.serverSyncInfos.clientTime :
     undefined;
@@ -64,13 +63,11 @@ export default function generateManifestParser(
     const argClockOffset = parserOptions.externalClockOffset;
     const url = manifestData.url ?? parserOptions.originalUrl;
 
-    const optAggressiveMode = aggressiveMode === true;
     const externalClockOffset = serverTimeOffset ?? argClockOffset;
     const unsafelyBaseOnPreviousManifest = parserOptions.unsafeMode ?
       parserOptions.previousManifest :
       null;
-    const dashParserOpts = { aggressiveMode: optAggressiveMode,
-                             unsafelyBaseOnPreviousManifest,
+    const dashParserOpts = { unsafelyBaseOnPreviousManifest,
                              url,
                              referenceDateTime,
                              externalClockOffset };
