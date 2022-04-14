@@ -526,38 +526,6 @@ considered stable:
   });
   ```
 
-- **aggressiveMode** (`boolean|undefined`):
-
-<div class="warning">
-This option is deprecated, it will disappear in the next major release
-`v4.0.0` (see <a href="./Miscellaneous/Deprecated_APIs.md">Deprecated
-APIs</a>).
-</div>
-
-  If set to true, we will try to download segments very early, even if we are
-  not sure they had time to be completely generated.
-
-  For the moment, this mode has only an effect for all Smooth contents and
-  some DASH contents relying on a number-based SegmentTemplate segment
-  indexing scheme.
-
-  The upside is that you might have the last segments sooner.
-  The downside is that requests for segments which did not had time to
-  generate might trigger a `NetworkError`. Depending on your other settings
-  (especially the `networkConfig` loadVideo options), those errors might just
-  be sent as warnings and the corresponding requests be retried.
-
-  Example:
-
-  ```js
-  rxPlayer.loadVideo({
-    // ...
-    transportOptions: {
-      aggressiveMode: true,
-    },
-  });
-  ```
-
 - **manifestUpdateUrl** (`string|undefined`):
 
 <div class="warning">
