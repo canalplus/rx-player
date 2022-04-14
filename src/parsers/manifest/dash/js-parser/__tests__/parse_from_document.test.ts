@@ -28,7 +28,6 @@ describe("parseFromDocument", () => {
     expect(function() {
       parseFromDocument(doc, {
         url: "",
-        aggressiveMode: false,
         externalClockOffset: 10,
         unsafelyBaseOnPreviousManifest: null,
       });
@@ -37,7 +36,6 @@ describe("parseFromDocument", () => {
       const prevManifest = {} as unknown as Manifest;
       parseFromDocument(doc, {
         url: "",
-        aggressiveMode: false,
         unsafelyBaseOnPreviousManifest: prevManifest,
       });
     }).toThrow("document root should be MPD");
