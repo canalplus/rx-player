@@ -41,8 +41,10 @@ Each of the objects in the returned array have the following properties:
 
   - `id` (`string`): The id used to identify this Representation.
 
-  - `bitrate` (`Number`): The bitrate of this Representation, in bits per
-    seconds.
+  - `bitrate` (`Number|undefined`): The bitrate of this Representation, in
+    bits per seconds.
+
+    `undefined` if unknown.
 
   - `codec` (`string|undefined`): The audio codec the Representation is
     in, as announced in the corresponding Manifest.
