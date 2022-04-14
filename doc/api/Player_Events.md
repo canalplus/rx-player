@@ -212,8 +212,10 @@ The array emitted contains object describing each available video track:
 
   - `id` (`string`): The id used to identify this Representation.
 
-  - `bitrate` (`Number`): The bitrate of this Representation, in bits per
-    seconds.
+  - `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits
+    per seconds.
+
+    `undefined` if unknown.
 
   - `width` (`Number|undefined`): The width of video, in pixels.
 
@@ -351,8 +353,10 @@ properties:
 
   - `id` (`string`): The id used to identify this Representation.
 
-  - `bitrate` (`Number`): The bitrate of this Representation, in bits per
-    seconds.
+  - `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits
+    per seconds.
+
+    `undefined` if unknown.
 
   - `width` (`Number|undefined`): The width of video, in pixels.
 
