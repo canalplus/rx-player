@@ -326,7 +326,6 @@ export default function parseAdaptationSets(
     }
 
     const reprCtxt : IRepresentationContext = {
-      aggressiveMode: context.aggressiveMode,
       availabilityTimeComplete,
       availabilityTimeOffset,
       baseURLs: resolveBaseURLs(context.baseURLs, adaptationChildren.baseURLs),
