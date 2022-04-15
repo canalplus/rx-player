@@ -241,7 +241,9 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       }
       return acc;
     }, []);
-    this.trigger("newAvailablePeriods", periodsAdded);
+    if (periodsAdded.length > 0) {
+      this.trigger("newAvailablePeriods", periodsAdded);
+    }
   }
 
   /**
@@ -811,7 +813,13 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   }
 
   public dispose() : void {
-    this.resetPeriodObjects();
+    while (true) {
+      const lastPeriod = this._storedPeriodInfo.pop();
+      if (lastPeriod === undefined) {
+        return;
+      }
+      lastPeriod.isRemoved = true;
+    }
   }
 
   /**
