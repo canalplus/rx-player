@@ -4,21 +4,18 @@
 
 The RxPlayer has an advanced API when it comes to track selection:
 
-- You can list the available audio, video and/or text tracks and chose one of
-  them
-
-- You can disable the current video and / or text track
-
-Because the RxPlayer declares multiple APIs to allow those different use cases,
-the track selection API can seem intimidating and confusing at first.
+You can list, change, enable or disable video audio and text tracks for either
+what is currently being played or any other [Period](../Glossary.md#period) in
+the current content.
+Because the RxPlayer's track API tries to be complete and flexible, it can feel
+intimidating at first.
 
 This tutorial will help you understand what your options are, why you would use
-an API instead of another one and how to use them.
+an API instead of another and how to use them.
 
 ## What is a "track"?
 
 We should first agree on what is a track, as a concept.
-
 Let's take for example an italian film presented to an english-speaking
 audience.
 
@@ -42,33 +39,18 @@ And we could even imagine multiple video tracks:
   far-fetched here but let's just pretend we're talking about some kind of
   experimental film!)
 
-All those will provide to the user a different way to offer the same film. They
-even can technically be switched one independently of the other (though
-restrictions on possible combinations can exist) to give a large number of
-different experience for what is effectively the same content.
+All those will provide to the user a different way to offer the same film. In
+most cases, audiom video and text tracks are currently independent and can such
+be switched in a large number of combination to give a large number of different
+experience for what is effectively the same content.
 
 ## Listing the available tracks
 
-### Preamble
+### Nominal case: currently played content
 
-The RxPlayer does not "guess" the tracks available for a given content.
-It usually finds every information about them in a specific file, called the
-Manifest.
+#### Using methods
 
-Thus, the list of available tracks will only be available once the RxPlayer has
-loaded and parsed that Manifest.
-Moreover, a Manifest can have several lists of available tracks depending on the
-player's position (for example, a live channel with multiple programs might have
-different audio languages available for different programs).
-
-This means both that the available tracks won't generally be known just after a
-`loadVideo` call and that it can then change at any time.
-
-Thankfully, most of this complexity is abstracted by the RxPlayer API.
-
-### Using methods
-
-Once the RxPlayer has loaded the content (meaning the RxPlayer is not in the
+Once the RxPlayer has loaded a content (meaning the RxPlayer is not in the
 `STOPPED`, `LOADING` or `RELOADING` [player state](../../api/Player_States.md)) you can
 begin to ask it what is the current list of available tracks.
 
@@ -97,7 +79,7 @@ Note that you can still ask for the current tracks when the RxPlayer does not
 have loaded any content (is in the `STOPPED`, `LOADING` or `RELOADING` player
 state), but you will most likely only get an empty array in those cases.
 
-#### Examples
+##### Examples
 
 Those methods are straightforward, here are some examples of how they can be
 used:
@@ -130,35 +112,34 @@ const frenchTextTracks = rxPlayer
   .filter((track) => track.normalized === "fra");
 ```
 
-### Using events
+#### Using events
 
-If you want to have the list of available tracks as soon as possible, it might
-be a good idea to rely on the related events.
+If you want to be alerted when the list of currently available tracks is set or
+change, it might be a good idea to rely on events.
 
 Here are the three events you will need to know:
 
 - [`"availableAudioTracksChange"`](../../api/Player_Events.md#availableaudiotrackschange):
-  the list of available audio tracks was just updated
+  the list of available audio tracks for what is currently being played was just
+  updated.
 
 - [`"availableVideoTracksChange"`](../../api/Player_Events.md#availablevideotrackschange):
   idem for video tracks
 
 - [`"availableTextTracksChange"`](../../api/Player_Events.md#availabletexttrackschange):
-  idem for video tracks
+  idem for text tracks
 
 All of those events will have the corresponding available tracks as a payload,
 which will be the exact same data that what you would get when calling the
 corresponding `getAvailable...Tracks` method at this point.
 
 Note that no `available...TracksChange` event will be sent when the RxPlayer
-stops the content or temporarly goes through the `RELOADING` player state,
-despite the fact that in those cases there is no available tracks to choose
-from.
+stops the content or temporarly goes through the `RELOADING` player state
+with an empty array as a payload - as there is no current content in those
+cases.
 
-Still, calling the `getAvailable...Tracks` methods in those cases will return
-an empty array (as it should). This has to be considered.
 
-#### Examples
+##### Examples
 
 Like any RxPlayer event, you will need to add an event listener for those:
 
@@ -183,25 +164,98 @@ rxPlayer.addEventListener("availableTextTracksChange", (textTracks) => {
 });
 ```
 
-### Should you use the methods or events?
+### Advanced case: Any part of the content
 
-Both the exposed methods and events return the same data.
+For contents with multiple [Periods](../Glossary.md#period) and/or when in the
+`LOADING` or `RELOADING` state, you may want to list the tracks for a part of
+the content that the RxPlayer is not yet playing.
 
-Whether you should rely on the former or on the latter will depend on what
-corresponds the most to your codebase:
+This can be for example for a future/previous live program, or even for the
+current one when the RxPlayer did not yet begin to play it.
 
-- if you want to fetch that list at a given point in time - such as when the
-  user clicks on a button - it can be easier to just call the methods.
+In those conditions, the three methods presented here
+(`getAvailableVideoTracks`, `getAvailableTextTracks` and
+`getAvailableAudioTracks`) can all take an argument: the `id` property of the
+wanted period:
 
-- if you want to know that list as soon as available and perform an action
-  right after (such as selecting a track, displaying this list...), you might
-  prefer relying on the events.
+```js
+// Getting the audio track list for the Period with the "foo" id.
+rxPlayer.getAvailableAudioTracks("foo");
+```
 
-  Here you will also have to re-set that list yourself when the player has no
-  content loaded anymore (in the `STOPPED`, `LOADING` or `RELOADING` player
-  state).
+That `id` can be known in several ways:
+  - the [`getAvailablePeriods` method](../../api/Basic_Methods/getAvailablePeriod.md)
+    can list the different Periods and their respective `id` property:
+
+    ```js
+    for (const period of rxPlayer.getAvailablePeriods()) {
+      console.log(`Tracks for Period ${period.id}:`,
+                  rxPlayer.getAvailableAudioTracks(period.id));
+    }
+    ```
+
+  - the [`newAvailablePeriods` event](../../api/Player_Events.md#newavailableperiods)
+    triggered each time new Periods are known (either when the content is
+    first loaded, or when the it is updated) with their respective `id` property:
+
+    ```js
+    rxPlayer.addEventListener("newAvailablePeriods, (periods) => {
+      for (const period of periods) {
+        console.log(`Tracks for Period ${period.id}:`,
+                    rxPlayer.getAvailableAudioTracks(period.id));
+      }
+    });
+    ```
+
+  - the [`periodChange` event](../../api/Player_Events.md#periodchange)
+    triggered when the current Period being played changes, with the
+    corresponding `id` property:
+    ```js
+    rxPlayer.addEventListener("periodChange, (period) => {
+      console.log(`Tracks for the current Period ${period.id}:`,
+                  rxPlayer.getAvailableAudioTracks(period.id));
+    });
+    ```
+
+
+### Obtaining those lists as soon as possible
+
+The RxPlayer does not "guess" the tracks available for a given content, it
+usually finds every information about them in the Manifest file which is
+loaded at the beginning.
+
+Thus, the list of available tracks will only be available once the RxPlayer has
+loaded and parsed that Manifest.
+Moreover, a Manifest can have several lists of available tracks depending on the
+player's position (for example, a live channel with multiple programs might have
+different audio languages available for different programs).
+
+This means both that the available tracks won't generally be known just after a
+`loadVideo` call and that it can then change at any time.
+The first instant when the list of available audio, video and text tracks is
+available after loading the content through `loadVideo` is on the
+[`newAvailablePeriods`](../../api/Player_Events.md#newavailableperiods) event:
+
+```js
+rxPlayer.loadVideo({ url: "foo/bar", transport: "dash" /* ... */ });
+rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
+  for (const period of periods) {
+    const periodId = period.id;
+    const videoTracks = rxPlayer.getAvailableVideoTracks(periodId);
+    const audioTracks = rxPlayer.getAvailableVideoTracks(periodId);
+    const textTracks = rxPlayer.getAvailableTextTracks(periodId);
+    console.log(`Video tracks for Period "${periodId}":`${videoTracks}`);
+    console.log(`Audio tracks for Period "${periodId}":`${audioTracks}`);
+    console.log(`Text tracks for Period "${periodId}":`${textTracks}`);
+  }
+});
+```
 
 ## Knowing the current track
+
+### Nominal case: currently played content
+
+#### Using methods
 
 You might also want to know which track is the one currently selected.
 There are several ways to do that.
