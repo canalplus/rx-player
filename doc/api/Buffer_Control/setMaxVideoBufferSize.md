@@ -9,7 +9,7 @@ Once this value is reached, the player won't try to download new video
 segments anymore.
 
 This feature was designed with devices that have limited memory and trying to play very
-high bitrates representations in minds. 
+high bitrates representations in minds.
 
 However on some custom targets, or just to better control the memory footprint
 of the player, you might want to set this limit.

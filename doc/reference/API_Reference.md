@@ -56,6 +56,10 @@ properties, methods, events and so on.
   - [`maxBufferBehind`](../api/Creating_a_Player.md#maxbufferbehind):
     Set the default maximum kept buffer before the current position, in seconds.
 
+  - [`maxVideoBufferSize`](../api/Creating_a_Player.md#maxvideobuffersize):
+    Set the default maximum size the video buffer can take in the memory, in
+    kilobytes (kb).
+
   - [`limitVideoWidth`](../api/Creating_a_Player.md#limitvideowidth):
     Limit the maximum video width according to the video element's current width.
 
@@ -419,6 +423,14 @@ properties, methods, events and so on.
 
   - [`getMaxBufferAhead`](../api/Buffer_Control/getMaxBufferAhead.md):
     Get the current maximum kept buffer ahead of the current position, in seconds.
+
+  - [`setMaxVideoBufferSize`](../api/Buffer_Control/setMaxVideoBufferSize.md):
+    Set the maximum memory the video buffer can take up in the memory, in
+    kilobytes.
+
+  - [`getMaxVideoBufferSize`](../api/Buffer_Control/getMaxVideoBufferSize.md):
+    Get the maximum memory the video buffer can take up in the memory, in
+    kilobytes.
 
   - [`getVideoBufferGap`](../api/Buffer_Information/getVideoBufferGap.md):
     Returns in seconds the difference between the current position and the end

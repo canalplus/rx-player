@@ -297,13 +297,13 @@ _type_: `Number|undefined`
 
 _defaults_: `Infinity`
 
-Set the maximum size of video the buffer in the memory, in kilobytes (kb).
+Set the maximum size the video buffer can take in the memory, in kilobytes (kb).
 Once this value is reached, the player won't try to download new video
-segments anymore. The limit is approximative as it's based on internal estimation. 
+segments anymore. The limit is approximative as it's based on internal estimation.
 
 <div class="warning">
 The internal checks of the RxPlayer is based on an estimation of what the RxPlayer think
-is currently buffered and an estimation of the size of the next segments. 
+is currently buffered and an estimation of the size of the next segments.
 </div>
 
 <div class="warning">
@@ -313,7 +313,7 @@ this method has no effect.
 </div>
 
 <div class="warning">
-This option will have no effects if we didn't buffer at least <b>MIN_BUFFER_LENGTH</b> 
+This option will have no effects if we didn't buffer at least <b>MIN_BUFFER_LENGTH</b>
 <i>( defaults at 5sec )</i>
 </div>
 
