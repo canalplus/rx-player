@@ -202,6 +202,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   /** Absolute start of the period, timescaled and converted to index time. */
   private _scaledPeriodStart : number;
 
+  /** Actual un-scaled start of the Period as indicated in the MPD. */
+  private _periodStart : number;
+
   /** Absolute end of the period, timescaled and converted to index time. */
   private _scaledPeriodEnd : number | undefined;
 
@@ -306,6 +309,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
                     startNumber: index.startNumber,
                     timeline: index.timeline ?? null,
                     timescale };
+    this._periodStart = periodStart;
     this._scaledPeriodStart = toIndexTime(periodStart, this._index);
     this._scaledPeriodEnd = periodEnd == null ? undefined :
                                                 toIndexTime(periodEnd, this._index);
@@ -462,6 +466,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     this._index = newIndex._index;
     this._isDynamic = newIndex._isDynamic;
     this._scaledPeriodStart = newIndex._scaledPeriodStart;
+    this._periodStart = newIndex._periodStart;
     this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
     this._lastUpdate = newIndex._lastUpdate;
     this._manifestBoundsCalculator = newIndex._manifestBoundsCalculator;
@@ -487,6 +492,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     }
     this._isDynamic = newIndex._isDynamic;
     this._scaledPeriodStart = newIndex._scaledPeriodStart;
+    this._periodStart = newIndex._periodStart;
     this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
     this._lastUpdate = newIndex._lastUpdate;
     this._isLastPeriod = newIndex._isLastPeriod;
@@ -549,6 +555,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
     }
+    if (!this._isDynamic) {
+      return;
+    }
     const firstPosition = this._manifestBoundsCalculator.estimateMinimumBound();
     if (firstPosition == null) {
       return; // we don't know yet
@@ -605,12 +614,13 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     const newElements = this._parseTimeline();
     this._parseTimeline = null; // Free memory
 
+    const actualPeriodStart = this._periodStart * this._index.timescale;
     const { MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY } = config.getCurrent();
     if (this._unsafelyBaseOnPreviousIndex === null ||
         newElements.length < MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY)
     {
       // Just completely parse the current timeline
-      return constructTimelineFromElements(newElements, this._scaledPeriodStart);
+      return constructTimelineFromElements(newElements, actualPeriodStart);
     }
 
     // Construct previously parsed timeline if not already done
@@ -625,7 +635,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
 
     return constructTimelineFromPreviousTimeline(newElements,
                                                  prevTimeline,
-                                                 this._scaledPeriodStart);
+                                                 actualPeriodStart);
 
   }
 }
