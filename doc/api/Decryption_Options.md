@@ -255,8 +255,8 @@ This is an object containing the following properties:
 
 _type_: `Object | undefined`
 
-This advanced option allows to fallback on other Representations (a.k.a.) when
-one of them has its decription key refused.
+This advanced option allows to fallback on other Representations (a.k.a.
+quality) when one of them has its decription key refused.
 
 This option is thus only useful for contents depending on multiple keys.
 
