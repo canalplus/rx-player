@@ -14,76 +14,73 @@
  * limitations under the License.
  */
 
-import {
-  Observable,
-  Subject,
-} from "rxjs";
+import { Observable } from "rxjs";
 import config from "../../../config";
-import { formatError, ICustomError } from "../../../errors";
+import {
+  formatError,
+  ICustomError,
+} from "../../../errors";
+import log from "../../../log";
 import Manifest, {
   Adaptation,
+  getLoggableSegmentId,
   ISegment,
   Period,
   Representation,
 } from "../../../manifest";
 import {
+  IChunkCompleteInformation,
   ISegmentLoadingProgressInformation,
-  ISegmentParserParsedInitSegment,
-  ISegmentParserParsedSegment,
+  ISegmentParserParsedInitChunk,
+  ISegmentParserParsedMediaChunk,
   ISegmentPipeline,
 } from "../../../transports";
 import arrayIncludes from "../../../utils/array_includes";
 import idGenerator from "../../../utils/id_generator";
 import InitializationSegmentCache from "../../../utils/initialization_segment_cache";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import objectAssign from "../../../utils/object_assign";
 import TaskCanceller, {
   CancellationSignal,
 } from "../../../utils/task_canceller";
 import {
-  IABRMetricsEvent,
-  IABRRequestBeginEvent,
-  IABRRequestEndEvent,
-  IABRRequestProgressEvent,
+  IABRMetricsEventValue,
+  IABRRequestBeginEventValue,
+  IABRRequestEndEventValue,
+  IABRRequestProgressEventValue,
 } from "../../abr";
 import { IBufferType } from "../../segment_buffers";
 import errorSelector from "../utils/error_selector";
 import { tryURLsWithBackoff } from "../utils/try_urls_with_backoff";
 
-const { DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
-        DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
-        INITIAL_BACKOFF_DELAY_BASE,
-        MAX_BACKOFF_DELAY_BASE } = config;
 
 const generateRequestID = idGenerator();
 
 /**
- * Create a function which will fetch and parse segments.
+ * Create an `ISegmentFetcher` object which will allow to easily fetch and parse
+ * segments.
+ * An `ISegmentFetcher` also implements a retry mechanism, based on the given
+ * `options` argument, which may retry a segment request when it fails.
+ *
  * @param {string} bufferType
  * @param {Object} transport
- * @param {Subject} requests$
+ * @param {Object} callbacks
  * @param {Object} options
  * @returns {Function}
  */
-export default function createSegmentFetcher<
-  LoadedFormat,
-  TSegmentDataType,
->(
+export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
   bufferType : IBufferType,
-  pipeline : ISegmentPipeline<LoadedFormat, TSegmentDataType>,
-  requests$ : Subject<IABRMetricsEvent |
-                      IABRRequestBeginEvent |
-                      IABRRequestProgressEvent |
-                      IABRRequestEndEvent>,
+  pipeline : ISegmentPipeline<TLoadedFormat, TSegmentDataType>,
+  callbacks : ISegmentFetcherCreatorCallbacks,
   options : ISegmentFetcherOptions
 ) : ISegmentFetcher<TSegmentDataType> {
-
   /**
    * Cache audio and video initialization segments.
    * This allows to avoid doing too many requests for what are usually very
    * small files.
    */
   const cache = arrayIncludes(["audio", "video"], bufferType) ?
-    new InitializationSegmentCache<LoadedFormat>() :
+    new InitializationSegmentCache<TLoadedFormat>() :
     undefined;
 
   const { loadSegment, parseSegment } = pipeline;
@@ -91,11 +88,13 @@ export default function createSegmentFetcher<
   /**
    * Fetch a specific segment.
    *
-   * This function returns an Observable which will fetch the segment on
+   * This function returns an Observable which will fetch segments on
    * subscription.
+   * If the corresponding request fails, it may retry it based on the given
+   * options.
+   *
    * This Observable will emit various events during that request lifecycle and
    * throw if the segment request(s) (including potential retries) fail.
-   *
    * The Observable will automatically complete once no events are left to be
    * sent.
    * @param {Object} content
@@ -105,27 +104,44 @@ export default function createSegmentFetcher<
     content : ISegmentLoaderContent
   ) : Observable<ISegmentFetcherEvent<TSegmentDataType>> {
     const { segment } = content;
+
+    // used by logs
+    const segmentIdString = getLoggableSegmentId(content);
+
     return new Observable((obs) => {
-      // Retrieve from cache if it exists
-      const cached = cache !== undefined ? cache.get(content) :
-                                           null;
-      if (cached !== null) {
-        obs.next({ type: "chunk" as const,
-                   parse: generateParserFunction(cached, false) });
-        obs.next({ type: "chunk-complete" as const });
-        obs.complete();
-        return undefined;
-      }
-
-      const id = generateRequestID();
-      requests$.next({ type: "requestBegin",
-                       value: { duration: segment.duration,
-                                time: segment.time,
-                                requestTimestamp: performance.now(),
-                                id } });
-
+      const requestId = generateRequestID();
       const canceller = new TaskCanceller();
-      let hasRequestEnded = false;
+
+      /**
+       * If the request succeeded, set to the corresponding
+       * `IChunkCompleteInformation` object.
+       * For any other completion cases: if the request either failed, was
+       * cancelled or just if no request was needed, set to `null`.
+       *
+       * Stays to `undefined` when the request is still pending.
+       */
+      let requestInfo : IChunkCompleteInformation | null | undefined;
+
+      /**
+       * Array containing one entry per loaded chunk, in chronological order.
+       * The boolean indicates if the chunk has been parsed at least once.
+       *
+       * This is used to know when all loaded chunks have been parsed, which
+       * can be useful to e.g. construct metrics about the loaded segment.
+       */
+      const parsedChunks : boolean[] = [];
+
+      /**
+       * Addition of the duration of each encountered and parsed chunks.
+       * Allows to have an idea of the real duration of the full segment once
+       * all chunks have been parsed.
+       *
+       * `undefined` if at least one of the parsed chunks has unknown duration.
+       */
+      let segmentDurationAcc : number | undefined = 0;
+
+      /** Set to `true` once network metrics have been sent. */
+      let metricsSent = false;
 
       const loaderCallbacks = {
         /**
@@ -135,12 +151,11 @@ export default function createSegmentFetcher<
          */
         onProgress(info : ISegmentLoadingProgressInformation) : void {
           if (info.totalSize !== undefined && info.size < info.totalSize) {
-            requests$.next({ type: "progress",
-                             value: { duration: info.duration,
-                                      size: info.size,
-                                      totalSize: info.totalSize,
-                                      timestamp: performance.now(),
-                                      id } });
+            callbacks.onProgress?.({ duration: info.duration,
+                                     size: info.size,
+                                     totalSize: info.totalSize,
+                                     timestamp: performance.now(),
+                                     id: requestId });
           }
         },
 
@@ -150,18 +165,36 @@ export default function createSegmentFetcher<
          * argument.
          * @param {*} chunkData
          */
-        onNewChunk(chunkData : LoadedFormat) : void {
+        onNewChunk(chunkData : TLoadedFormat) : void {
           obs.next({ type: "chunk" as const,
                      parse: generateParserFunction(chunkData, true) });
         },
       };
 
+      // Retrieve from cache if it exists
+      const cached = cache !== undefined ? cache.get(content) :
+                                           null;
+      if (cached !== null) {
+        log.debug("SF: Found wanted segment in cache", segmentIdString);
+        obs.next({ type: "chunk" as const,
+                   parse: generateParserFunction(cached, false) });
+        obs.next({ type: "chunk-complete" as const });
+        obs.complete();
+        return undefined;
+      }
+
+      log.debug("SF: Beginning request", segmentIdString);
+      callbacks.onRequestBegin?.({ requestTimestamp: performance.now(),
+                                   id: requestId,
+                                   content });
 
       tryURLsWithBackoff(segment.mediaURLs ?? [null],
                          callLoaderWithUrl,
                          objectAssign({ onRetry }, options),
                          canceller.signal)
         .then((res) => {
+          log.debug("SF: Segment request ended with success", segmentIdString);
+
           if (res.resultType === "segment-loaded") {
             const loadedData = res.resultData.responseData;
             if (cache !== undefined) {
@@ -174,18 +207,14 @@ export default function createSegmentFetcher<
                        parse: generateParserFunction(res.resultData, false) });
           }
 
-          hasRequestEnded = true;
+          log.debug("SF: Segment request ended with success", segmentIdString);
           obs.next({ type: "chunk-complete" as const });
 
-          if ((res.resultType === "segment-loaded" ||
-               res.resultType === "chunk-complete") &&
-               res.resultData.size !== undefined &&
-               res.resultData.duration !== undefined)
-          {
-            requests$.next({ type: "metrics",
-                             value: { size: res.resultData.size,
-                                      duration: res.resultData.duration,
-                                      content } });
+          if (res.resultType !== "segment-created") {
+            requestInfo = res.resultData;
+            sendNetworkMetricsIfAvailable();
+          } else {
+            requestInfo = null;
           }
 
           if (!canceller.isUsed) {
@@ -193,24 +222,28 @@ export default function createSegmentFetcher<
             // of the previous `next` calls. In that case, we don't want to send
             // a "requestEnd" again as it has already been sent on cancellation.
             //
-            // Note that we only perform this check for `"requestEnd"` on
+            // Note that we only perform this check for `onRequestEnd` on
             // purpose. Observable's events should have been ignored by RxJS if
             // the Observable has already been canceled and we don't care if
             // `"metrics"` is sent there.
-            requests$.next({ type: "requestEnd", value: { id } });
+            callbacks.onRequestEnd?.({ id: requestId });
           }
           obs.complete();
         })
         .catch((err) => {
-          hasRequestEnded = true;
+          log.debug("SF: Segment request failed", segmentIdString);
+          requestInfo = null;
           obs.error(errorSelector(err));
         });
 
       return () => {
-        if (!hasRequestEnded) {
-          canceller.cancel();
-          requests$.next({ type: "requestEnd", value: { id } });
+        if (requestInfo !== undefined) {
+          return; // Request already terminated
         }
+        log.debug("SF: Segment request cancelled", segmentIdString);
+        requestInfo = null;
+        canceller.cancel();
+        callbacks.onRequestEnd?.({ id: requestId });
       };
 
       /**
@@ -232,15 +265,30 @@ export default function createSegmentFetcher<
        * @param {Boolean} isChunked
        * @returns {Function}
        */
-      function generateParserFunction(data : LoadedFormat, isChunked : boolean)  {
+      function generateParserFunction(data : TLoadedFormat, isChunked : boolean)  {
+        parsedChunks.push(false);
+        const parsedChunkId = parsedChunks.length - 1;
         return function parse(initTimescale? : number) :
-          ISegmentParserParsedInitSegment<TSegmentDataType> |
-          ISegmentParserParsedSegment<TSegmentDataType>
+          ISegmentParserParsedInitChunk<TSegmentDataType> |
+          ISegmentParserParsedMediaChunk<TSegmentDataType>
         {
           const loaded = { data, isChunked };
 
           try {
-            return parseSegment(loaded, content, initTimescale);
+            const parsed = parseSegment(loaded, content, initTimescale);
+
+            if (!parsedChunks[parsedChunkId]) {
+              segmentDurationAcc = segmentDurationAcc !== undefined &&
+                                   parsed.segmentType === "media" &&
+                                   parsed.chunkInfos !== null &&
+                                   parsed.chunkInfos.duration !== undefined ?
+                segmentDurationAcc + parsed.chunkInfos.duration :
+                undefined;
+              parsedChunks[parsedChunkId] = true;
+
+              sendNetworkMetricsIfAvailable();
+            }
+            return parsed;
           } catch (error) {
             throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",
                                        defaultReason: "Unknown parsing error" });
@@ -253,8 +301,30 @@ export default function createSegmentFetcher<
        * @param {*} err
        */
       function onRetry(err: unknown) : void {
-        obs.next({ type: "warning" as const,
+        obs.next({ type: "retry" as const,
                    value: errorSelector(err) });
+      }
+
+      /**
+       * Send netork metrics if they haven't yet been sent and if all data to
+       * define them is available.
+       */
+      function sendNetworkMetricsIfAvailable() : void {
+        if (metricsSent) {
+          return;
+        }
+        if (!isNullOrUndefined(requestInfo) &&
+            requestInfo.size !== undefined &&
+            requestInfo.requestDuration !== undefined &&
+            parsedChunks.length > 0 &&
+            parsedChunks.every(isParsed => isParsed))
+        {
+          metricsSent = true;
+          callbacks.onMetrics?.({ size: requestInfo.size,
+                                  requestDuration: requestInfo.requestDuration,
+                                  content,
+                                  segmentDuration: segmentDurationAcc });
+        }
       }
     });
   };
@@ -265,10 +335,9 @@ export type ISegmentFetcher<TSegmentDataType> = (content : ISegmentLoaderContent
 
 /** Event sent by the SegmentFetcher when fetching a segment. */
 export type ISegmentFetcherEvent<TSegmentDataType> =
-  ISegmentFetcherChunkCompleteEvent |
   ISegmentFetcherChunkEvent<TSegmentDataType> |
-  ISegmentFetcherWarning;
-
+  ISegmentFetcherChunkCompleteEvent |
+  ISegmentFetcherRetry;
 
 /**
  * Event sent when a new "chunk" of the segment is available.
@@ -288,8 +357,8 @@ export interface ISegmentFetcherChunkEvent<TSegmentDataType> {
    * @param {number} initTimescale
    * @returns {Object}
    */
-  parse(initTimescale? : number) : ISegmentParserParsedInitSegment<TSegmentDataType> |
-                                   ISegmentParserParsedSegment<TSegmentDataType>;
+  parse(initTimescale? : number) : ISegmentParserParsedInitChunk<TSegmentDataType> |
+                                   ISegmentParserParsedMediaChunk<TSegmentDataType>;
 }
 
 /**
@@ -305,10 +374,38 @@ export interface ISegmentLoaderContent { manifest : Manifest;
                                          representation : Representation;
                                          segment : ISegment; }
 
-/** An Error happened while loading (usually a request error). */
-export interface ISegmentFetcherWarning { type : "warning";
-                                          value : ICustomError; }
+/**
+ * An Error happened while loading which led to a retry.
+ * The request is retried from scratch.
+ */
+export interface ISegmentFetcherRetry { type : "retry";
+                                        value : ICustomError; }
 
+/**
+ * Callbacks that can be bound when creating an `ISegmentFetcher`.
+ * Those allows to be notified of an `ISegmentFetcher` various lifecycles and of
+ * network information.
+ */
+export interface ISegmentFetcherCreatorCallbacks {
+  /** Called when a segment request begins. */
+  onRequestBegin? : (arg : IABRRequestBeginEventValue) => void;
+  /** Called when progress information is available on a pending segment request. */
+  onProgress? : (arg : IABRRequestProgressEventValue) => void;
+  /**
+   * Called when a segment request ends (either because it completed, it failed
+   * or was canceled).
+   */
+  onRequestEnd? : (arg : IABRRequestEndEventValue) => void;
+  /**
+   * Called when network metrics linked to a segment request are available,
+   * once the request has terminated.
+   * This callback may be called before or after the corresponding
+   * `onRequestEnd` callback, you should not rely on the order between the two.
+   */
+  onMetrics? : (arg : IABRMetricsEventValue) => void;
+}
+
+/** Options allowing to configure an `ISegmentFetcher`'s behavior. */
 export interface ISegmentFetcherOptions {
   /**
    * Initial delay to wait if a request fails before making a new request, in
@@ -341,10 +438,14 @@ export function getSegmentFetcherOptions(
   bufferType : string,
   { maxRetryRegular,
     maxRetryOffline,
-    lowLatencyMode } : { maxRetryRegular? : number;
-                         maxRetryOffline? : number;
+    lowLatencyMode } : { maxRetryRegular? : number | undefined;
+                         maxRetryOffline? : number | undefined;
                          lowLatencyMode : boolean; }
 ) : ISegmentFetcherOptions {
+  const { DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
+          DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
+          INITIAL_BACKOFF_DELAY_BASE,
+          MAX_BACKOFF_DELAY_BASE } = config.getCurrent();
   return { maxRetryRegular: bufferType === "image" ? 0 :
                             maxRetryRegular ?? DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
            maxRetryOffline: maxRetryOffline ?? DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,

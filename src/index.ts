@@ -28,8 +28,8 @@ import logger from "./log";
 // set initial features according to environment variables
 initializeFeatures();
 
-if (__DEV__) {
-  logger.setLevel(__LOGGER_LEVEL__);
+if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
+  logger.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL);
 }
 
 export default Player;

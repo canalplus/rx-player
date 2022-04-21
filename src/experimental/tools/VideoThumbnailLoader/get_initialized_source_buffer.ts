@@ -17,7 +17,6 @@
 import {
   EMPTY,
   map,
-  mapTo,
   merge as observableMerge,
   mergeMap,
   Observable,
@@ -147,7 +146,7 @@ export function getInitializedSourceBuffer$(
                                  initSegment,
                                  sourceBuffer,
                                  segmentFetcher)
-        .pipe(mapTo(sourceBuffer));
+        .pipe(map(() => sourceBuffer));
     }),
     tap(() => { sourceBufferContent = contentInfos; })
   );

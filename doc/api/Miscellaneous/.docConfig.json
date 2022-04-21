@@ -1,0 +1,61 @@
+{
+  "pages": [
+    {
+      "path": "./plugins.md",
+      "displayName": "Plugins"
+    },
+    {
+      "path": "./Low_Latency.md",
+      "displayName": "Low Latency"
+    },
+    {
+      "path": "./DASH_WASM_Parser.md",
+      "displayName": "DASH WASM Parser"
+    },
+    {
+      "path": "./hdr.md",
+      "displayName": "HDR"
+    },
+    {
+      "path": "./Local_Contents.md",
+      "displayName": "Local Contents"
+    },
+    {
+      "path": "./Local_Manifest_v0.1.md",
+      "displayName": "Local Manifest v0.1"
+    },
+    {
+      "path": "./Text_Tracks.md",
+      "displayName": "Text Tracks"
+    },
+    {
+      "path": "./images.md",
+      "displayName": "Images"
+    },
+    {
+      "path": "./MetaPlaylist.md",
+      "displayName": "MetaPlaylist"
+    },
+    {
+      "path": "./Manifest_Object.md",
+      "displayName": "Manifest Object"
+    },
+    {
+      "path": "./Deprecated_APIs.md",
+      "displayName": "Deprecated APIs"
+    },
+    {
+      "path": "./Initial_Position.md",
+      "displayName": "Initial Position"
+    },
+    {
+      "path": "./presentationTimeOffset.md",
+      "displayName": "presentationTimeOffset"
+    },
+    {
+      "path": "./DASH_Adaptation_Difference.md",
+      "displayName": "Differences between DASH' AdaptationSets and `Adaptation`"
+    }
+  ]
+}
+

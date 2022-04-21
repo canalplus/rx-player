@@ -88,11 +88,14 @@ export default function parseFromDocument(
           ) : IDashParserResponse<string> {
             const resourceInfos : ILoadedXlinkData[] = [];
             for (let i = 0; i < loadedXlinks.length; i++) {
-              const { responseData: xlinkData,
+              const { responseData: xlinkResp,
                       receivedTime,
                       sendingTime,
                       url } = loadedXlinks[i];
-              const wrappedData = "<root>" + xlinkData + "</root>";
+              if (!xlinkResp.success) {
+                throw xlinkResp.error;
+              }
+              const wrappedData = "<root>" + xlinkResp.data + "</root>";
               const dataAsXML = new DOMParser().parseFromString(wrappedData, "text/xml");
               if (dataAsXML == null || dataAsXML.children.length === 0) {
                 throw new Error("DASH parser: Invalid external ressources");

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import request, {
   fetchIsSupported,
 } from "../../utils/request";
@@ -43,7 +42,7 @@ import lowLatencySegmentLoader from "./low_latency_segment_loader";
 export default function generateTextTrackLoader(
   { lowLatencyMode,
     checkMediaSegmentIntegrity } : { lowLatencyMode: boolean;
-                                     checkMediaSegmentIntegrity? : boolean; }
+                                     checkMediaSegmentIntegrity? : boolean | undefined; }
 ) : ISegmentLoader<Uint8Array | ArrayBuffer | string | null> {
   return checkMediaSegmentIntegrity !== true ? textTrackLoader :
                                                addSegmentIntegrityChecks(textTrackLoader);
@@ -68,8 +67,8 @@ export default function generateTextTrackLoader(
     const { range } = segment;
 
     if (url === null) {
-      return PPromise.resolve({ resultType: "segment-created",
-                                resultData: null });
+      return Promise.resolve({ resultType: "segment-created",
+                               resultData: null });
     }
 
     if (segment.isInit) {

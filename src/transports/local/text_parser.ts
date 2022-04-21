@@ -23,8 +23,8 @@ import takeFirstSet from "../../utils/take_first_set";
 import {
   ILoadedTextSegmentFormat,
   ISegmentContext,
-  ISegmentParserParsedInitSegment,
-  ISegmentParserParsedSegment,
+  ISegmentParserParsedInitChunk,
+  ISegmentParserParsedMediaChunk,
   ITextTrackSegmentData,
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
@@ -54,8 +54,8 @@ function parseISOBMFFEmbeddedTextTrack(
   isChunked : boolean,
   content : ISegmentContext,
   initTimescale : number | undefined
-) : ISegmentParserParsedInitSegment<null> |
-    ISegmentParserParsedSegment<ITextTrackSegmentData | null>
+) : ISegmentParserParsedInitChunk<null> |
+    ISegmentParserParsedMediaChunk<ITextTrackSegmentData | null>
 {
   const { period, segment } = content;
 
@@ -66,6 +66,7 @@ function parseISOBMFFEmbeddedTextTrack(
     const mdhdTimescale = getMDHDTimescale(chunkBytes);
     return { segmentType: "init",
              initializationData: null,
+             initializationDataSize: 0,
              initTimescale: mdhdTimescale,
              protectionDataUpdate: false };
   }
@@ -80,6 +81,7 @@ function parseISOBMFFEmbeddedTextTrack(
   const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
   return { segmentType: "media",
            chunkData,
+           chunkSize: chunkBytes.length,
            chunkInfos,
            chunkOffset,
            protectionDataUpdate: false,
@@ -100,22 +102,25 @@ function parsePlainTextTrack(
   data : string | Uint8Array | ArrayBuffer,
   isChunked : boolean,
   content : ISegmentContext
-) : ISegmentParserParsedInitSegment<null> |
-    ISegmentParserParsedSegment<ITextTrackSegmentData | null>
+) : ISegmentParserParsedInitChunk<null> |
+    ISegmentParserParsedMediaChunk<ITextTrackSegmentData | null>
 {
   const { period, segment } = content;
   if (segment.isInit) {
     return { segmentType: "init",
              initializationData: null,
+             initializationDataSize: 0,
              initTimescale: undefined,
              protectionDataUpdate: false };
   }
 
   let textTrackData : string;
+  let chunkSize : number | undefined;
   if (typeof data !== "string") {
     const bytesData = data instanceof Uint8Array ? data :
                                                    new Uint8Array(data);
     textTrackData = utf8ToStr(bytesData);
+    chunkSize = bytesData.length;
   } else {
     textTrackData = data;
   }
@@ -123,6 +128,7 @@ function parsePlainTextTrack(
   const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
   return { segmentType: "media",
            chunkData,
+           chunkSize,
            chunkInfos: null,
            chunkOffset,
            protectionDataUpdate: false,
@@ -141,8 +147,8 @@ export default function textTrackParser(
                     isChunked : boolean; },
   content : ISegmentContext,
   initTimescale : number | undefined
-) : ISegmentParserParsedInitSegment<null> |
-    ISegmentParserParsedSegment<ITextTrackSegmentData | null>
+) : ISegmentParserParsedInitChunk<null> |
+    ISegmentParserParsedMediaChunk<ITextTrackSegmentData | null>
 {
   const { period, adaptation, representation, segment } = content;
   const { data, isChunked } = loadedSegment;
@@ -152,12 +158,14 @@ export default function textTrackParser(
     if (segment.isInit) {
       return { segmentType: "init",
                initializationData: null,
+               initializationDataSize: 0,
                protectionDataUpdate: false,
                initTimescale: undefined };
     }
     const chunkOffset = segment.timestampOffset ?? 0;
     return { segmentType: "media",
              chunkData: null,
+             chunkSize: 0,
              chunkInfos: null,
              chunkOffset,
              protectionDataUpdate: false,

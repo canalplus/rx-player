@@ -20,6 +20,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
+import { IReadOnlyPlaybackObserver } from "../../api";
 import {
   IBufferedChunk,
   IEndOfSegmentOperation,
@@ -34,7 +35,6 @@ import checkForDiscontinuity from "./check_for_discontinuity";
 import getNeededSegments from "./get_needed_segments";
 import getSegmentPriority from "./get_segment_priority";
 
-const { MINIMUM_SEGMENT_SIZE } = config;
 
 /** Analysis of the current buffer's status. */
 export interface IBufferStatus {
@@ -61,6 +61,11 @@ export interface IBufferStatus {
    * on which segments should be loaded.
    */
   shouldRefreshManifest : boolean;
+  /**
+   * If 'true', the buffer memory is saturated, thus we may have issues loading
+   * new segments.
+   */
+  isBufferFull: boolean;
 }
 
 /**
@@ -71,7 +76,7 @@ export interface IBufferStatus {
  * be filled by any segment, even in the future.
  *
  * @param {Object} content
- * @param {Object} tick
+ * @param {Object} playbackInfo
  * @param {number|undefined} fastSwitchThreshold
  * @param {number} bufferGoal
  * @param {Object} segmentBuffer
@@ -82,18 +87,15 @@ export default function getBufferStatus(
              manifest : Manifest;
              period : Period;
              representation : Representation; },
-  tick : { position : number;
-           wantedTimeOffset: number;
-           liveGap? : number;
-           getCurrentTime() : number; },
+  wantedStartPosition : number,
+  playbackObserver : IReadOnlyPlaybackObserver<unknown>,
   fastSwitchThreshold : number | undefined,
   bufferGoal : number,
+  maxBufferSize : number,
   segmentBuffer : SegmentBuffer
 ) : IBufferStatus {
   const { period, representation } = content;
   segmentBuffer.synchronizeInventory();
-
-  const wantedStartPosition = tick.position + tick.wantedTimeOffset;
   const wantedEndPosition = wantedStartPosition + bufferGoal;
   const neededRange = { start: Math.max(wantedStartPosition, period.start),
                         end: Math.min(wantedEndPosition, period.end ?? Infinity) };
@@ -115,20 +117,29 @@ export default function getBufferStatus(
     getPlayableBufferedSegments({ start: Math.max(neededRange.start - 0.5, 0),
                                   end: neededRange.end + 0.5 },
                                 segmentBuffer.getInventory());
+  const currentPlaybackTime = playbackObserver.getCurrentTime();
 
   /** Callback allowing to retrieve a segment's history in the buffer. */
   const getBufferedHistory = segmentBuffer.getSegmentHistory.bind(segmentBuffer);
 
   /** List of segments we will need to download. */
-  const neededSegments = getNeededSegments({ content,
-                                             bufferedSegments,
-                                             currentPlaybackTime: tick.getCurrentTime(),
-                                             fastSwitchThreshold,
-                                             getBufferedHistory,
-                                             neededRange,
-                                             segmentsBeingPushed })
-    .map((segment) => ({ priority: getSegmentPriority(segment.time, tick),
-                         segment }));
+  const { segmentsToLoad,
+          segmentsOnHold,
+          isBufferFull } = getNeededSegments({ content,
+                                               bufferedSegments,
+                                               currentPlaybackTime,
+                                               fastSwitchThreshold,
+                                               getBufferedHistory,
+                                               neededRange,
+                                               segmentsBeingPushed,
+                                               maxBufferSize });
+
+  const prioritizedNeededSegments: IQueuedSegment[] = segmentsToLoad.map((segment) => (
+    {
+      priority: getSegmentPriority(segment.time, wantedStartPosition),
+      segment,
+    }
+  ));
 
   /**
    * `true` if the current `RepresentationStream` has loaded all the
@@ -139,7 +150,8 @@ export default function getBufferStatus(
   const lastPosition = representation.index.getLastPosition();
   if (!representation.index.isInitialized() ||
       period.end === undefined ||
-      neededSegments.length > 0)
+      prioritizedNeededSegments.length > 0 ||
+      segmentsOnHold.length  > 0)
   {
     hasFinishedLoading = false;
   } else {
@@ -183,10 +195,15 @@ export default function getBufferStatus(
     if (segmentsBeingPushed.length > 0) {
       nextSegmentStart = Math.min(...segmentsBeingPushed.map(info => info.segment.time));
     }
-    if (neededSegments.length > 0) {
+    if (segmentsOnHold.length > 0) {
       nextSegmentStart = nextSegmentStart !== null ?
-        Math.min(nextSegmentStart, neededSegments[0].segment.time) :
-        neededSegments[0].segment.time;
+        Math.min(nextSegmentStart, segmentsOnHold[0].time) :
+        segmentsOnHold[0].time;
+    }
+    if (prioritizedNeededSegments.length > 0) {
+      nextSegmentStart = nextSegmentStart !== null ?
+        Math.min(nextSegmentStart, prioritizedNeededSegments[0].segment.time) :
+        prioritizedNeededSegments[0].segment.time;
     }
     imminentDiscontinuity = checkForDiscontinuity(content,
                                                   neededRange,
@@ -196,7 +213,8 @@ export default function getBufferStatus(
   }
   return { imminentDiscontinuity,
            hasFinishedLoading,
-           neededSegments,
+           neededSegments: prioritizedNeededSegments,
+           isBufferFull,
            shouldRefreshManifest };
 }
 
@@ -212,6 +230,7 @@ function getPlayableBufferedSegments(
   neededRange : { start : number; end : number },
   segmentInventory : IBufferedChunk[]
 ) : IBufferedChunk[] {
+  const { MINIMUM_SEGMENT_SIZE } = config.getCurrent();
   const segmentRoundingError = Math.max(1 / 60, MINIMUM_SEGMENT_SIZE);
   const minEnd = neededRange.start + segmentRoundingError;
   const maxStart = neededRange.end - segmentRoundingError;
@@ -228,10 +247,9 @@ function getPlayableBufferedSegments(
       const inventorySegment = eltInventory.infos.segment;
       const eltInventoryStart = inventorySegment.time /
                                 inventorySegment.timescale;
-      const eltInventoryEnd = inventorySegment.duration == null ?
+      const eltInventoryEnd = !inventorySegment.complete ?
         eltInventory.end :
-        eltInventoryStart + inventorySegment.duration /
-          inventorySegment.timescale;
+        eltInventoryStart + inventorySegment.duration / inventorySegment.timescale;
       if ((eltInventoryEnd > minEnd && eltInventoryStart < maxStart) ||
           (eltInventory.end > minEnd && eltInventory.start < maxStart))
       {

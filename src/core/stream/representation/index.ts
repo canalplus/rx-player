@@ -16,13 +16,13 @@
 
 import RepresentationStream, {
   IRepresentationStreamArguments,
-  IRepresentationStreamClockTick,
+  IRepresentationStreamPlaybackObservation,
   ITerminationOrder,
 } from "./representation_stream";
 
 export default RepresentationStream;
 export {
   IRepresentationStreamArguments,
-  IRepresentationStreamClockTick,
+  IRepresentationStreamPlaybackObservation,
   ITerminationOrder,
 };

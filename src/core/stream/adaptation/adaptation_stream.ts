@@ -56,13 +56,18 @@ import {
 } from "../../../utils/reference";
 import ABRManager, {
   IABREstimate,
+  IABRMetricsEventValue,
+  IABRRequestBeginEventValue,
+  IABRRequestEndEventValue,
+  IABRRequestProgressEventValue,
 } from "../../abr";
+import { IReadOnlyPlaybackObserver } from "../../api";
 import { SegmentFetcherCreator } from "../../fetchers";
 import { SegmentBuffer } from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import reloadAfterSwitch from "../reload_after_switch";
 import RepresentationStream, {
-  IRepresentationStreamClockTick,
+  IRepresentationStreamPlaybackObservation,
   ITerminationOrder,
 } from "../representation";
 import {
@@ -71,24 +76,27 @@ import {
 } from "../types";
 import createRepresentationEstimator from "./create_representation_estimator";
 
-const { DELTA_POSITION_AFTER_RELOAD } = config;
 
-/** `Clock tick` information needed by the AdaptationStream. */
-export interface IAdaptationStreamClockTick extends IRepresentationStreamClockTick {
-  /**
-   * For the current SegmentBuffer, difference in seconds between the next position
-   * where no segment data is available and the current position.
-   */
-  bufferGap : number;
-  /** `duration` property of the HTMLMediaElement on which the content plays. */
-  duration : number;
-  /** Allows to fetch the current position at any time. */
-  getCurrentTime : () => number;
-  /** If true, the player has been put on pause. */
-  isPaused: boolean;
-  /** Last "playback rate" asked by the user. */
-  speed : number;
-}
+/** Regular playback information needed by the AdaptationStream. */
+export interface IAdaptationStreamPlaybackObservation extends
+  IRepresentationStreamPlaybackObservation {
+    /**
+     * For the current SegmentBuffer, difference in seconds between the next position
+     * where no segment data is available and the current position.
+     */
+    bufferGap : number;
+    /** `duration` property of the HTMLMediaElement on which the content plays. */
+    duration : number;
+    /** If true, the player has been put on pause. */
+    isPaused: boolean;
+    /** Last "playback rate" asked by the user. */
+    speed : number;
+    /**
+     * Only set for live contents.
+     * Difference between the live edge and the current position, in seconds.
+     */
+    liveGap : number | undefined;
+  }
 
 /** Arguments given when creating a new `AdaptationStream`. */
 export interface IAdaptationStreamArguments {
@@ -97,11 +105,8 @@ export interface IAdaptationStreamArguments {
    * conditions like the current network bandwidth.
    */
   abrManager : ABRManager;
-  /**
-   * Regularly emit playback conditions.
-   * The main AdaptationStream logic will be triggered on each `tick`.
-   */
-  clock$ : Observable<IAdaptationStreamClockTick>;
+  /** Regularly emit playback conditions. */
+  playbackObserver : IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation>;
   /** Content you want to create this Stream for. */
   content : { manifest : Manifest;
               period : Period;
@@ -117,6 +122,7 @@ export interface IAdaptationStreamArguments {
    * this AdaptationStream won't try to download new segments.
    */
   wantedBufferAhead : IReadOnlySharedReference<number>;
+  maxVideoBufferSize : IReadOnlySharedReference<number>;
 }
 
 /**
@@ -177,12 +183,13 @@ export interface IAdaptationStreamOptions {
  */
 export default function AdaptationStream({
   abrManager,
-  clock$,
+  playbackObserver,
   content,
   options,
   segmentBuffer,
   segmentFetcherCreator,
   wantedBufferAhead,
+  maxVideoBufferSize,
 } : IAdaptationStreamArguments) : Observable<IAdaptationStreamEvent> {
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
@@ -197,12 +204,26 @@ export default function AdaptationStream({
    */
   const bufferGoalRatioMap: Partial<Record<string, number>> = {};
 
-  const { estimator$, requestFeedback$, streamFeedback$ } =
-    createRepresentationEstimator(content, abrManager, clock$);
+  const { estimator$, abrFeedbacks$ } =
+    createRepresentationEstimator(content, abrManager, playbackObserver.observe(true));
 
   /** Allows the `RepresentationStream` to easily fetch media segments. */
-  const segmentFetcher = segmentFetcherCreator.createSegmentFetcher(adaptation.type,
-                                                                    requestFeedback$);
+  const segmentFetcher = segmentFetcherCreator
+    .createSegmentFetcher(adaptation.type,
+                          {
+                            onRequestBegin(value : IABRRequestBeginEventValue) {
+                              abrFeedbacks$.next({ type: "requestBegin", value });
+                            },
+                            onRequestEnd(value : IABRRequestEndEventValue) {
+                              abrFeedbacks$.next({ type: "requestEnd", value });
+                            },
+                            onProgress(value : IABRRequestProgressEventValue) {
+                              abrFeedbacks$.next({ type: "progress", value });
+                            },
+                            onMetrics(value : IABRMetricsEventValue) {
+                              abrFeedbacks$.next({ type: "metrics", value });
+                            },
+                          });
 
   /**
    * Stores the last estimate emitted through the `abrEstimate$` Observable,
@@ -260,9 +281,10 @@ export default function AdaptationStream({
         fromEstimate.manual &&
         !isFirstEstimate)
     {
+      const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
       return reloadAfterSwitch(period,
                                adaptation.type,
-                               clock$,
+                               playbackObserver,
                                DELTA_POSITION_AFTER_RELOAD.bitrateSwitch);
     }
 
@@ -320,7 +342,7 @@ export default function AdaptationStream({
         if (evt.type === "representationChange" ||
             evt.type === "added-segment")
         {
-          return streamFeedback$.next(evt);
+          return abrFeedbacks$.next(evt);
         }
       }),
       mergeMap((evt) => {
@@ -355,9 +377,15 @@ export default function AdaptationStream({
       const bufferGoal$ = wantedBufferAhead.asObservable().pipe(
         map((wba) => wba * bufferGoalRatio)
       );
+      // eslint-disable-next-line max-len
+      const maxBufferSize$ = adaptation.type === "video" ? maxVideoBufferSize.asObservable() :
+                                                           observableOf(Infinity);
 
-      log.info("Stream: changing representation", adaptation.type, representation);
-      return RepresentationStream({ clock$,
+      log.info("Stream: changing representation",
+               adaptation.type,
+               representation.id,
+               representation.bitrate);
+      return RepresentationStream({ playbackObserver,
                                     content: { representation,
                                                adaptation,
                                                period,
@@ -366,6 +394,7 @@ export default function AdaptationStream({
                                     segmentFetcher,
                                     terminate$: terminateCurrentStream$,
                                     options: { bufferGoal$,
+                                               maxBufferSize$,
                                                drmSystemId: options.drmSystemId,
                                                fastSwitchThreshold$ } })
         .pipe(catchError((err : unknown) => {

@@ -200,6 +200,13 @@ export function generateAdaptationSetChildrenParser(
                                  generateSegmentTemplateAttrParser(stObj, linearMemory));
         break;
       }
+
+      default:
+        // Allows to make sure we're not mistakenly closing a re-opened
+        // tag.
+        parsersStack.pushParsers(nodeId, noop, noop);
+        break;
+
     }
   };
 }
@@ -312,6 +319,12 @@ export function generateAdaptationSetAttrParser(
         break;
       case AttributeName.MaxSAPPeriod:
         adaptationAttrs.maximumSAPPeriod = dataView.getFloat64(ptr, true);
+        break;
+      case AttributeName.AvailabilityTimeOffset:
+        adaptationAttrs.availabilityTimeOffset = dataView.getFloat64(ptr, true);
+        break;
+      case AttributeName.AvailabilityTimeComplete:
+        adaptationAttrs.availabilityTimeComplete = dataView.getUint8(0) === 0;
         break;
 
       // TODO

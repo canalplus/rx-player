@@ -19,51 +19,22 @@ import {
   Observable,
 } from "rxjs";
 import log from "../../../log";
-import ObservablePrioritizer, { ITaskEvent } from "./prioritizer";
+import ObservablePrioritizer, {
+  IEndedTaskEvent,
+  IInterruptedTaskEvent,
+  ITaskEvent,
+} from "./prioritizer";
 import {
   ISegmentFetcher,
-  ISegmentFetcherEvent,
+  ISegmentFetcherChunkCompleteEvent,
+  ISegmentFetcherChunkEvent,
+  ISegmentFetcherRetry,
   ISegmentLoaderContent,
 } from "./segment_fetcher";
 
 /**
- * Event sent when a segment request has been temporarly interrupted due to
- * another request with a high priority.
- * The request for that segment will restart (from scratch) when requests with
- * more priority are finished.
- */
-export interface ISegmentFetcherInterruptedEvent { type : "interrupted" }
-
-/**
- * Event sent when a segment request just ended.
- * You can use this event to schedule another task you wanted to perform at best
- * immediately after that one (its priority will be checked).
- */
-export interface IEndedTaskEvent { type : "ended" }
-
-/** Event sent by a `IPrioritizedSegmentFetcher`. */
-export type IPrioritizedSegmentFetcherEvent<TSegmentDataType> =
-  ISegmentFetcherEvent<TSegmentDataType> |
-  ISegmentFetcherInterruptedEvent |
-  IEndedTaskEvent;
-
-/** Oject returned by `applyPrioritizerToSegmentFetcher`. */
-export interface IPrioritizedSegmentFetcher<TSegmentDataType> {
-  /** Create a new request for a segment with a given priority. */
-  createRequest : (content : ISegmentLoaderContent,
-                   priority? : number) =>
-    Observable<IPrioritizedSegmentFetcherEvent<TSegmentDataType>>;
-
-  /** Update priority of a request created through `createRequest`. */
-  updatePriority : (
-    observable : Observable<IPrioritizedSegmentFetcherEvent<TSegmentDataType>>,
-    priority : number
-  ) => void;
-}
-
-/**
  * This function basically put in relation:
- *   - a SegmentFetcher, which will be used to perform the segment request
+ *   - an `ISegmentFetcher`, which will be used to perform the segment requests
  *   - a prioritizer, which will handle the priority of a segment request
  *
  * and returns functions to fetch segments with a given priority.
@@ -75,15 +46,12 @@ export default function applyPrioritizerToSegmentFetcher<TSegmentDataType>(
   prioritizer : ObservablePrioritizer<IPrioritizedSegmentFetcherEvent<TSegmentDataType>>,
   fetcher : ISegmentFetcher<TSegmentDataType>
 ) : IPrioritizedSegmentFetcher<TSegmentDataType> {
-  /**
-   * The Observables returned by `createRequest` are not exactly the same than
-   * the one created by the `ObservablePrioritizer`. Because we still have to
-   * keep a handle on that value.
-   */
+  /** Map returned task to the task as returned by the `ObservablePrioritizer`. */
   const taskHandlers = new WeakMap<
     Observable<IPrioritizedSegmentFetcherEvent<TSegmentDataType>>,
     Observable<ITaskEvent<IPrioritizedSegmentFetcherEvent<TSegmentDataType>>>
   >();
+
   return {
     /**
      * Create a Segment request with a given priority.
@@ -126,3 +94,25 @@ export default function applyPrioritizerToSegmentFetcher<TSegmentDataType>(
     },
   };
 }
+
+/** Oject returned by `applyPrioritizerToSegmentFetcher`. */
+export interface IPrioritizedSegmentFetcher<TSegmentDataType> {
+  /** Create a new request for a segment with a given priority. */
+  createRequest : (content : ISegmentLoaderContent,
+                   priority? : number) =>
+    Observable<IPrioritizedSegmentFetcherEvent<TSegmentDataType>>;
+
+  /** Update priority of a request created through `createRequest`. */
+  updatePriority : (
+    observable : Observable<IPrioritizedSegmentFetcherEvent<TSegmentDataType>>,
+    priority : number
+  ) => void;
+}
+
+/** Event sent by a `IPrioritizedSegmentFetcher`. */
+export type IPrioritizedSegmentFetcherEvent<TSegmentDataType> =
+  ISegmentFetcherChunkEvent<TSegmentDataType> |
+  ISegmentFetcherChunkCompleteEvent |
+  ISegmentFetcherRetry |
+  IInterruptedTaskEvent |
+  IEndedTaskEvent;

@@ -26,6 +26,7 @@ import {
   IIndexSegment,
   toIndexTime,
 } from "../../../utils/index_helpers";
+import { IResolvedBaseUrl } from "../resolve_base_urls";
 import getInitSegment from "./get_init_segment";
 import getSegmentsFromTimeline from "./get_segments_from_timeline";
 import { createIndexURLs } from "./tokens";
@@ -37,7 +38,7 @@ import { createIndexURLs } from "./tokens";
  */
 export interface IBaseIndex {
   /** Byte range for a possible index of segments in the server. */
-  indexRange?: [number, number];
+  indexRange?: [number, number] | undefined;
   /**
    * Temporal offset, in the current timescale (see timescale), to add to the
    * presentation time (time a segment has at decoding time) to obtain the
@@ -56,15 +57,15 @@ export interface IBaseIndex {
     /** URLs to access the initialization segment. */
     mediaURLs: string[] | null;
     /** possible byte range to request it. */
-    range?: [number, number];
-  };
+    range?: [number, number] | undefined;
+  } | undefined;
   /**
    * Base URL(s) to access any segment. Can contain tokens to replace to convert
    * it to real URLs.
    */
   mediaURLs : string[] | null;
   /** Number from which the first segments in this index starts with. */
-  startNumber? : number;
+  startNumber? : number | undefined;
   /** Every segments defined in this index. */
   timeline : IIndexSegment[];
   /**
@@ -110,11 +111,11 @@ export interface IBaseIndexContextArgument {
   /** End of the period concerned by this RepresentationIndex, in seconds. */
   periodEnd : number|undefined;
   /** Base URL for the Representation concerned. */
-  representationBaseURLs : string[];
+  representationBaseURLs : IResolvedBaseUrl[];
   /** ID of the Representation concerned. */
-  representationId? : string;
+  representationId? : string | undefined;
   /** Bitrate of the Representation concerned. */
-  representationBitrate? : number;
+  representationBitrate? : number | undefined;
   /* Function that tells if an EMSG is whitelisted by the manifest */
   isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 }
@@ -192,7 +193,8 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
 
     const indexTimeOffset = presentationTimeOffset - periodStart * timescale;
 
-    const mediaURLs = createIndexURLs(representationBaseURLs,
+    const urlSources : string[] = representationBaseURLs.map(b => b.url);
+    const mediaURLs = createIndexURLs(urlSources,
                                      index.initialization !== undefined ?
                                        index.initialization.media :
                                        undefined,
@@ -213,7 +215,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     this._index = { indexRange: index.indexRange,
                     indexTimeOffset,
                     initialization: { mediaURLs, range },
-                    mediaURLs: createIndexURLs(representationBaseURLs,
+                    mediaURLs: createIndexURLs(urlSources,
                                                index.media,
                                                representationId,
                                                representationBitrate),

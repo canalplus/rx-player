@@ -29,7 +29,6 @@ import {
   fromEvent as observableFromEvent,
   interval as observableInterval,
   map,
-  mapTo,
   merge as observableMerge,
   of as observableOf,
   startWith,
@@ -50,7 +49,6 @@ import shouldFavourCustomSafariEME from "./should_favour_custom_safari_EME";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
-const INACTIVITY_DELAY = config.INACTIVITY_DELAY;
 const pixelRatio = isNode ||
                    window.devicePixelRatio == null ||
                    window.devicePixelRatio === 0 ? 1 :
@@ -135,7 +133,7 @@ function compatibleListener<T extends Event>(
       if (isNonEmptyString(mem)) {
         return observableFromEvent(element, mem) as Observable<T>;
       } else {
-        if (__DEV__) {
+        if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
           log.warn(`compat: element ${element.tagName}` +
                    " does not support any of these events: " +
                    prefixedEvents.join(", "));
@@ -187,19 +185,13 @@ function visibilityChange() : Observable<boolean> {
 }
 
 /**
- * @returns {Observable}
- */
-function videoSizeChange() : Observable<unknown> {
-  return observableFromEvent(window, "resize");
-}
-
-/**
  * Emit `true` if the page is considered active.
  * `false` when considered inactive.
  * Emit the original value on subscription.
  * @returns {Observable}
  */
-function isActive() : Observable<boolean> {
+function isPageActive() : Observable<boolean> {
+  const { INACTIVITY_DELAY } = config.getCurrent();
   return visibilityChange().pipe(
     switchMap((x) => {
       if (!x) {
@@ -269,7 +261,7 @@ function onPictureInPictureEvent$(
           }).pictureInPictureWindow ?? null,
         }))),
       observableFromEvent(mediaElement, "leavepictureinpicture")
-        .pipe(mapTo({ isEnabled: false, pipWindow: null }))
+        .pipe(map(() => ({ isEnabled: false, pipWindow: null })))
     ).pipe(startWith(initialState));
   });
 }
@@ -283,6 +275,7 @@ function onPictureInPictureEvent$(
 function isVideoVisible(
   pip$ : Observable<IPictureInPictureEvent>
 ) : Observable<boolean> {
+  const { INACTIVITY_DELAY } = config.getCurrent();
   return observableCombineLatest([visibilityChange(), pip$]).pipe(
     switchMap(([ isVisible, pip ]) => {
       if (pip.isEnabled || isVisible) {
@@ -299,6 +292,7 @@ function isVideoVisible(
  * Get video width from HTML video element, or video estimated dimensions
  * when Picture-in-Picture is activated.
  * @param {HTMLMediaElement} mediaElement
+ * @param {Observable} pip$
  * @returns {Observable}
  */
 function videoWidth$(
@@ -308,7 +302,7 @@ function videoWidth$(
   return observableCombineLatest([
     pip$,
     observableInterval(20000).pipe(startWith(null)),
-    videoSizeChange().pipe(throttleTime(500), startWith(null)),
+    observableFromEvent(window, "resize").pipe(throttleTime(500), startWith(null)),
   ]).pipe(
     switchMap(([ pip ]) : Observable<number> => {
       if (!pip.isEnabled) {
@@ -449,7 +443,7 @@ const onKeyError$ = compatibleListener(["keyerror", "error"]);
 const onKeyStatusesChange$ = compatibleListener(["keystatuseschange"]);
 
 export {
-  isActive,
+  isPageActive,
   isVideoVisible,
   videoWidth$,
   onPlayPause$,

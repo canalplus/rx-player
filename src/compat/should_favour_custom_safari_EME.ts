@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { isSafari } from "./browser_detection";
+import {
+  isSafariDesktop,
+  isSafariMobile,
+} from "./browser_detection";
 import {
   WebKitMediaKeysConstructor,
 } from "./eme/custom_media_keys/webkit_media_keys_constructor";
@@ -27,5 +30,5 @@ import {
  * @returns {boolean}
  */
 export default function shouldFavourCustomSafariEME() : boolean {
-  return isSafari && WebKitMediaKeysConstructor !== undefined;
+  return (isSafariDesktop || isSafariMobile) && WebKitMediaKeysConstructor !== undefined;
 }

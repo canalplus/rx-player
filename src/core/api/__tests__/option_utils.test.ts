@@ -20,6 +20,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import config from "../../../config";
@@ -45,22 +46,6 @@ const normalizeTextTrackMock = normalizeTextTrack as
   jest.Mock<ReturnType<typeof normalizeTextTrack>>;
 const logWarnMock = log.warn as jest.Mock<ReturnType<typeof log.warn>>;
 
-const {
-  // DEFAULT_AUTO_PLAY,
-  DEFAULT_INITIAL_BITRATES,
-  DEFAULT_LIMIT_VIDEO_WIDTH,
-  // DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
-  DEFAULT_MIN_BITRATES,
-  DEFAULT_MAX_BITRATES,
-  DEFAULT_MAX_BUFFER_AHEAD,
-  DEFAULT_MAX_BUFFER_BEHIND,
-  // DEFAULT_SHOW_NATIVE_SUBTITLE,
-  // DEFAULT_TEXT_TRACK_MODE,
-  DEFAULT_THROTTLE_WHEN_HIDDEN,
-  DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
-  DEFAULT_WANTED_BUFFER_AHEAD,
-} = config;
-
 describe("API - parseConstructorOptions", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -74,8 +59,24 @@ describe("API - parseConstructorOptions", () => {
   });
 
   const videoElement = document.createElement("video");
-
+  const {
+    // DEFAULT_AUTO_PLAY,
+    DEFAULT_INITIAL_BITRATES,
+    DEFAULT_LIMIT_VIDEO_WIDTH,
+    // DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
+    DEFAULT_MIN_BITRATES,
+    DEFAULT_MAX_BITRATES,
+    DEFAULT_MAX_BUFFER_AHEAD,
+    DEFAULT_MAX_BUFFER_BEHIND,
+    DEFAULT_MAX_VIDEO_BUFFER_SIZE,
+    // DEFAULT_SHOW_NATIVE_SUBTITLE,
+    // DEFAULT_TEXT_TRACK_MODE,
+    DEFAULT_THROTTLE_WHEN_HIDDEN,
+    DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
+    DEFAULT_WANTED_BUFFER_AHEAD,
+  } = config.getCurrent();
   const defaultConstructorOptions = {
+    maxVideoBufferSize: DEFAULT_MAX_VIDEO_BUFFER_SIZE,
     maxBufferAhead: DEFAULT_MAX_BUFFER_AHEAD,
     maxBufferBehind: DEFAULT_MAX_BUFFER_BEHIND,
     wantedBufferAhead: DEFAULT_WANTED_BUFFER_AHEAD,
@@ -953,6 +954,17 @@ describe("API - parseLoadVideoOptions", () => {
     });
 
     expect(parseLoadVideoOptions({
+      audioTrackSwitchingMode: "reload",
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      audioTrackSwitchingMode: "reload",
+    });
+
+    expect(parseLoadVideoOptions({
       audioTrackSwitchingMode: "seamless",
       url: "foo",
       transport: "bar",
@@ -984,6 +996,7 @@ describe("API - parseLoadVideoOptions", () => {
         `the following strategy name:
 - \`seamless\`
 - \`direct\`
+- \`reload\`
 If badly set, seamless strategy will be used as default`);
     logWarnMock.mockReset();
     logWarnMock.mockReturnValue(undefined);

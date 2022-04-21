@@ -24,8 +24,8 @@ import {
   IMPDIntermediateRepresentation,
   IPeriodIntermediateRepresentation,
 } from "../node_parser_types";
+import { IResponseData } from "../parsers_types";
 // eslint-disable-next-line max-len
-import extractMinimumAvailabilityTimeOffset from "./extract_minimum_availability_time_offset";
 import getClockOffset from "./get_clock_offset";
 import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
 import getMinimumAndMaximumPosition from "./get_minimum_and_maximum_positions";
@@ -33,9 +33,10 @@ import parseAvailabilityStartTime from "./parse_availability_start_time";
 import parsePeriods, {
   IXLinkInfos,
 } from "./parse_periods";
-import resolveBaseURLs from "./resolve_base_urls";
+import resolveBaseURLs, {
+  IResolvedBaseUrl,
+} from "./resolve_base_urls";
 
-const { DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 } = config;
 
 /** Possible options for `parseMPD`.  */
 export interface IMPDParserArguments {
@@ -45,11 +46,11 @@ export interface IMPDParserArguments {
    * If set, offset to add to `performance.now()` to obtain the current server's
    * time.
    */
-  externalClockOffset? : number;
+  externalClockOffset? : number | undefined;
   /** Time, in terms of `performance.now` at which this MPD was received. */
-  manifestReceivedTime? : number;
+  manifestReceivedTime? : number | undefined;
   /** Default base time, in seconds. */
-  referenceDateTime? : number;
+  referenceDateTime? : number | undefined;
   /**
    * The parser should take this Manifest - which is a previously parsed
    * Manifest for the same dynamic content - as a base to speed-up the parsing
@@ -60,13 +61,13 @@ export interface IMPDParserArguments {
    */
   unsafelyBaseOnPreviousManifest : Manifest | null;
   /** URL of the manifest (post-redirection if one). */
-  url? : string;
+  url? : string | undefined;
 }
 
 export interface ILoadedXlinkData {
-  url? : string;
-  sendingTime? : number;
-  receivedTime? : number;
+  url? : string | undefined;
+  sendingTime? : number | undefined;
+  receivedTime? : number | undefined;
   parsed : IPeriodIntermediateRepresentation[];
   warnings : Error[];
 }
@@ -85,7 +86,7 @@ export interface IIrParserResponseNeedsClock {
      * Callback to call with the fetched clock data in argument to continue
      * parsing the MPD.
      */
-    continue : (clockValue : string) => IIrParserResponse;
+    continue : (clockValue : IResponseData<string>) => IIrParserResponse;
   };
 }
 
@@ -125,7 +126,7 @@ export default function parseMpdIr(
   mpdIR : IMPDIntermediateRepresentation,
   args : IMPDParserArguments,
   warnings : Error[],
-  hasLoadedClock? : boolean,
+  hasLoadedClock? : boolean | undefined,
   xlinkInfos : IXLinkInfos = new WeakMap()
 ) : IIrParserResponse {
   const { children: rootChildren,
@@ -157,8 +158,15 @@ export default function parseMpdIr(
           type: "needs-clock",
           value: {
             url: UTCTimingHTTPURL,
-            continue: function continueParsingMPD(clockValue : string) {
-              args.externalClockOffset = getClockOffset(clockValue);
+            continue: function continueParsingMPD(
+              responseDataClock : IResponseData<string>) {
+              if (!responseDataClock.success) {
+                warnings.push(responseDataClock.error);
+                log.warn("DASH Parser: Error on fetching the clock ressource",
+                         responseDataClock.error);
+                return parseMpdIr(mpdIR, args, warnings, true);
+              }
+              args.externalClockOffset = getClockOffset(responseDataClock.data);
               return parseMpdIr(mpdIR, args, warnings, true);
             },
           },
@@ -232,22 +240,21 @@ function parseCompleteIntermediateRepresentation(
   const { children: rootChildren,
           attributes: rootAttributes } = mpdIR;
   const isDynamic : boolean = rootAttributes.type === "dynamic";
-  const baseURLs = resolveBaseURLs(args.url === undefined ?
-                                     [] :
-                                     [normalizeBaseURL(args.url)],
-                                   rootChildren.baseURLs);
+  const initialBaseUrl : IResolvedBaseUrl[] = args.url !== undefined ?
+    [{ url: normalizeBaseURL(args.url),
+       availabilityTimeOffset: 0,
+       availabilityTimeComplete: true }] :
+    [];
+  const mpdBaseUrls = resolveBaseURLs(initialBaseUrl, rootChildren.baseURLs);
   const availabilityStartTime = parseAvailabilityStartTime(rootAttributes,
                                                            args.referenceDateTime);
   const timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
   const { externalClockOffset: clockOffset,
           unsafelyBaseOnPreviousManifest } = args;
-  const availabilityTimeOffset =
-    extractMinimumAvailabilityTimeOffset(rootChildren.baseURLs);
 
   const manifestInfos = { aggressiveMode: args.aggressiveMode,
                           availabilityStartTime,
-                          availabilityTimeOffset,
-                          baseURLs,
+                          baseURLs: mpdBaseUrls,
                           clockOffset,
                           duration: rootAttributes.duration,
                           isDynamic,
@@ -269,7 +276,7 @@ function parseCompleteIntermediateRepresentation(
       rootAttributes.minimumUpdatePeriod >= 0)
   {
     lifetime = rootAttributes.minimumUpdatePeriod === 0 ?
-      DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 :
+      config.getCurrent().DASH_FALLBACK_LIFETIME_WHEN_MINIMUM_UPDATE_PERIOD_EQUAL_0 :
       rootAttributes.minimumUpdatePeriod;
   }
 

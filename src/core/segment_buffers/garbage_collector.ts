@@ -22,6 +22,7 @@ import {
   ignoreElements,
   mergeMap,
   Observable,
+  of as observableOf,
 } from "rxjs";
 import log from "../../log";
 import { getInnerAndOuterTimeRanges } from "../../utils/ranges";
@@ -31,7 +32,7 @@ export interface IGarbageCollectorArgument {
   /** SegmentBuffer implementation */
   segmentBuffer : SegmentBuffer;
   /** Emit current position in seconds regularly */
-  clock$ : Observable<number>;
+  currentTime$ : Observable<number>;
   /** Maximum time to keep behind current time position, in seconds */
   maxBufferBehind$ : Observable<number>;
   /** Minimum time to keep behind current time position, in seconds */
@@ -40,19 +41,19 @@ export interface IGarbageCollectorArgument {
 
 /**
  * Perform cleaning of the buffer according to the values set by the user
- * at each clock tick and each times the maxBufferBehind/maxBufferAhead values
- * change.
+ * each time `currentTime$` emits and each times the
+ * maxBufferBehind/maxBufferAhead values change.
  *
  * @param {Object} opt
  * @returns {Observable}
  */
 export default function BufferGarbageCollector({
   segmentBuffer,
-  clock$,
+  currentTime$,
   maxBufferBehind$,
   maxBufferAhead$,
 } : IGarbageCollectorArgument) : Observable<never> {
-  return observableCombineLatest([clock$, maxBufferBehind$, maxBufferAhead$]).pipe(
+  return observableCombineLatest([currentTime$, maxBufferBehind$, maxBufferAhead$]).pipe(
     mergeMap(([currentTime, maxBufferBehind, maxBufferAhead]) => {
       return clearBuffer(segmentBuffer,
                          currentTime,
@@ -152,9 +153,18 @@ function clearBuffer(
   const clean$ = observableFrom(
     cleanedupRanges.map((range) => {
       log.debug("GC: cleaning range from SegmentBuffer", range);
+      if (range.start >= range.end) {
+        return observableOf(null);
+      }
       return segmentBuffer.removeBuffer(range.start, range.end);
     })
-  ).pipe(concatAll(), ignoreElements());
+  ).pipe(concatAll(),
+        // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
+        // first type parameter as `any` instead of the perfectly fine `unknown`,
+        // leading to linter issues, as it forbids the usage of `any`.
+        // This is why we're disabling the eslint rule.
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
+         ignoreElements());
 
   return clean$;
 }

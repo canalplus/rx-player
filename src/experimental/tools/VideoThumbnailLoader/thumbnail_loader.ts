@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import pinkie from "pinkie";
 import {
   catchError,
   combineLatest,
@@ -52,9 +51,6 @@ import {
 } from "./types";
 import VideoThumbnailLoaderError from "./video_thumbnail_loader_error";
 
-const PPromise = typeof Promise === "function" ? Promise :
-                                                 pinkie;
-
 const MIN_NEEDED_DATA_AFTER_TIME = 2;
 
 interface ITimeSettingTask { contentInfos: IContentInfos;
@@ -75,8 +71,8 @@ export default class VideoThumbnailLoader {
   private readonly _videoElement: HTMLVideoElement;
 
   private _player: Player;
-  private _currentTask?: ITimeSettingTask;
-  private _nextTaskSegmentsCompleteIds?: string[];
+  private _currentTask : ITimeSettingTask | undefined;
+  private _nextTaskSegmentsCompleteIds : string[] | undefined;
   constructor(videoElement: HTMLVideoElement,
               player: Player) {
     this._videoElement = videoElement;
@@ -113,13 +109,13 @@ export default class VideoThumbnailLoader {
 
     const manifest = this._player.getManifest();
     if (manifest === null) {
-      return PPromise.reject(
+      return Promise.reject(
         new VideoThumbnailLoaderError("NO_MANIFEST",
                                       "No manifest available."));
     }
     const contentInfos = getContentInfos(time, manifest);
     if (contentInfos === null) {
-      return PPromise.reject(
+      return Promise.reject(
         new VideoThumbnailLoaderError("NO_TRACK",
                                       "Couldn't find track for this time."));
     }
@@ -128,7 +124,7 @@ export default class VideoThumbnailLoader {
       .representation.index.getSegments(time, MIN_NEEDED_DATA_AFTER_TIME);
 
     if (segments.length === 0) {
-      return PPromise.reject(
+      return Promise.reject(
         new VideoThumbnailLoaderError("NO_THUMBNAIL",
                                       "Couldn't find thumbnail for the given time."));
     }
@@ -150,7 +146,7 @@ export default class VideoThumbnailLoader {
     if (segments.length === 0) {
       this._videoElement.currentTime = time;
       log.debug("VTL: Thumbnails already loaded.", time);
-      return PPromise.resolve(time);
+      return Promise.resolve(time);
     }
 
     log.debug("VTL: Found thumbnail for time", time, segments);
@@ -196,7 +192,7 @@ export default class VideoThumbnailLoader {
                                       "VideoThumbnailLoaderError: No " +
                                       "imported loader for this transport type: " +
                                       contentInfos.manifest.transport);
-      return PPromise.reject(error);
+      return Promise.reject(error);
     }
     const killTask$ = new Subject<void>();
     const abortError$ = killTask$.pipe(
@@ -209,7 +205,8 @@ export default class VideoThumbnailLoader {
     const segmentFetcher = createSegmentFetcher(
       "video",
       loader.video,
-      new Subject(),
+      // We don't care about the SegmentFetcher's lifecycle events
+      {},
       { baseDelay: 0,
         maxDelay: 0,
         maxRetryOffline: 0,
@@ -239,9 +236,20 @@ export default class VideoThumbnailLoader {
                   if (data.segmentType === "init") {
                     throw new Error("Unexpected initialization segment parsed.");
                   }
-                  const start = segment.time / segment.timescale;
-                  const end = start + (segment.duration / segment.timescale);
-                  const inventoryInfos = objectAssign({ segment,
+                  let start;
+                  let end;
+                  if (data.chunkInfos !== null) {
+                    start = data.chunkInfos.time;
+                    end = data.chunkInfos.duration;
+                  } else {
+                    start = segment.time / segment.timescale;
+                  }
+
+                  if (end === undefined) {
+                    end = start + (segment.duration / segment.timescale);
+                  }
+                  const inventoryInfos = objectAssign({ chunkSize: data.chunkSize,
+                                                        segment,
                                                         start,
                                                         end }, contentInfos);
                   return pushData(inventoryInfos,
@@ -249,7 +257,7 @@ export default class VideoThumbnailLoader {
                                   videoSourceBuffer)
                     .pipe(tap(() => {
                       freeRequest(getCompleteSegmentId(inventoryInfos, segment));
-                      log.debug("VTL: Appended segment.", data);
+                      log.debug("VTL: Appended segment.");
                     }));
                 })
               );

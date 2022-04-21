@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import PPromise from "../../../../utils/promise";
 import getProbedConfiguration, { ICapabilitiesTypes } from "../capabilities";
 import log from "../log";
 import probers, {
@@ -36,7 +35,7 @@ export interface IProbedMediaConfiguration {
   globalStatus: ProberStatus;
   resultsFromAPIS: Array<{
     APIName: ICapabilitiesTypes;
-    result?: IResultsFromAPI;
+    result?: IResultsFromAPI | undefined;
   }>;
 }
 
@@ -63,7 +62,7 @@ function probeMediaConfiguration(
   let globalStatus : ProberStatus|undefined;
   const resultsFromAPIS: Array<{
     APIName: ICapabilitiesTypes;
-    result?: IResultsFromAPI;
+    result: IResultsFromAPI | undefined;
   }> = [];
   const promises = [];
   for (const browserAPI of browserAPIS) {
@@ -102,8 +101,8 @@ function probeMediaConfiguration(
     }
   }
 
-  return PPromise.all(promises).then(() => {
-    if (globalStatus == null) {
+  return Promise.all(promises).then(() => {
+    if (globalStatus === undefined) {
       globalStatus = ProberStatus.Unknown;
     }
 

@@ -26,12 +26,13 @@ import {
 import {
   IAdaptationSetIntermediateRepresentation,
   IRepresentationIntermediateRepresentation,
-  ISegmentTemplateIntermediateRepresentation,
   IScheme,
+  IContentProtectionIntermediateRepresentation,
 } from "../node_parser_types";
 import { getWEBMHDRInformation } from "./get_hdr_information";
-import ManifestBoundsCalculator from "./manifest_bounds_calculator";
-import parseRepresentationIndex from "./parse_representation_index";
+import parseRepresentationIndex, {
+  IRepresentationIndexContext,
+} from "./parse_representation_index";
 
 /**
  * Combine inband event streams from representation and
@@ -57,48 +58,6 @@ function combineInbandEventStreams(
   return newSchemeId;
 }
 
-/** Supplementary context needed to parse a Representation. */
-export interface IAdaptationInfos {
-  /** Whether we should request new segments even if they are not yet finished. */
-  aggressiveMode : boolean;
-  /** availability time offset of the concerned Adaptation. */
-  availabilityTimeOffset: number;
-  /** Eventual URLs from which every relative URL will be based on. */
-  baseURLs : string[];
-  /** Allows to obtain the first/last available position of a dynamic content. */
-  manifestBoundsCalculator : ManifestBoundsCalculator;
-  /** End time of the current period, in seconds. */
-  end? : number;
-  /** Whether the Manifest can evolve with time. */
-  isDynamic : boolean;
-  /** Manifest DASH profiles used for signalling some features */
-  manifestProfiles?: string;
-  /**
-   * Parent parsed SegmentTemplate elements.
-   * Sorted by provenance from higher level (e.g. Period) to lower-lever (e.g.
-   * AdaptationSet).
-   */
-  parentSegmentTemplates : ISegmentTemplateIntermediateRepresentation[];
-  /**
-   * Time (in terms of `performance.now`) at which the XML file containing this
-   * Representation was received.
-   */
-  receivedTime? : number;
-  /** Start time of the current period, in seconds. */
-  start : number;
-  /** Depth of the buffer for the whole content, in seconds. */
-  timeShiftBufferDepth? : number;
-  /**
-   * The parser should take this Adaptation - which is from a previously parsed
-   * Manifest for the same dynamic content - as a base to speed-up the parsing
-   * process.
-   * /!\ If unexpected differences exist between both, there is a risk of
-   * de-synchronization with what is actually on the server,
-   * Use with moderation.
-   */
-  unsafelyBaseOnPreviousAdaptation : Adaptation | null;
-}
-
 /**
  * Extract HDR information from manifest and codecs.
  * @param {Object}
@@ -108,9 +67,9 @@ function getHDRInformation(
   { adaptationProfiles,
     manifestProfiles,
     codecs,
-  }: { adaptationProfiles?: string;
-       manifestProfiles?: string;
-       codecs?: string; }
+  }: { adaptationProfiles?: string | undefined;
+       manifestProfiles?: string | undefined;
+       codecs?: string | undefined; }
 ): undefined | IHDRInformation {
   const profiles = (adaptationProfiles ?? "") + (manifestProfiles ?? "");
   if (codecs === undefined) {
@@ -135,13 +94,13 @@ function getHDRInformation(
 /**
  * Process intermediate representations to create final parsed representations.
  * @param {Array.<Object>} representationsIR
- * @param {Object} adaptationInfos
+ * @param {Object} context
  * @returns {Array.<Object>}
  */
 export default function parseRepresentations(
   representationsIR : IRepresentationIntermediateRepresentation[],
   adaptation : IAdaptationSetIntermediateRepresentation,
-  adaptationInfos : IAdaptationInfos
+  context : IRepresentationContext
 ): IParsedRepresentation[] {
   const parsedRepresentations : IParsedRepresentation[] = [];
   for (const representation of representationsIR) {
@@ -168,19 +127,28 @@ export default function parseRepresentations(
     }
 
     // Retrieve previous version of the Representation, if one.
-    const unsafelyBaseOnPreviousRepresentation = adaptationInfos
+    const unsafelyBaseOnPreviousRepresentation = context
       .unsafelyBaseOnPreviousAdaptation?.getRepresentation(representationID) ??
       null;
 
     const inbandEventStreams =
       combineInbandEventStreams(representation, adaptation);
 
-    const representationInfos = objectAssign({}, adaptationInfos,
-                                             { unsafelyBaseOnPreviousRepresentation,
-                                               adaptation,
-                                               inbandEventStreams });
+    const availabilityTimeComplete =
+      representation.attributes.availabilityTimeComplete ??
+      context.availabilityTimeComplete;
+    const availabilityTimeOffset =
+      (representation.attributes.availabilityTimeOffset ?? 0) +
+      context.availabilityTimeOffset;
+    const reprIndexCtxt = objectAssign({},
+                                       context,
+                                       { availabilityTimeOffset,
+                                         availabilityTimeComplete,
+                                         unsafelyBaseOnPreviousRepresentation,
+                                         adaptation,
+                                         inbandEventStreams });
     const representationIndex = parseRepresentationIndex(representation,
-                                                         representationInfos);
+                                                         reprIndexCtxt);
 
     // Find bitrate
     let representationBitrate : number;
@@ -237,8 +205,16 @@ export default function parseRepresentations(
         adaptation.attributes.width;
     }
 
-    if (adaptation.children.contentProtections != null) {
-      const contentProtections = adaptation.children.contentProtections
+    const contentProtectionsIr : IContentProtectionIntermediateRepresentation[] =
+      adaptation.children.contentProtections !== undefined ?
+        adaptation.children.contentProtections :
+        [];
+    if (representation.children.contentProtections !== undefined) {
+      contentProtectionsIr.push(...representation.children.contentProtections);
+    }
+
+    if (contentProtectionsIr.length > 0) {
+      const contentProtections = contentProtectionsIr
         .reduce<IContentProtections>((acc, cp) => {
           let systemId : string|undefined;
           if (cp.attributes.schemeIdUri !== undefined &&
@@ -278,10 +254,34 @@ export default function parseRepresentations(
 
     parsedRepresentation.hdrInfo =
       getHDRInformation({ adaptationProfiles: adaptation.attributes.profiles,
-                          manifestProfiles: adaptationInfos.manifestProfiles,
+                          manifestProfiles: context.manifestProfiles,
                           codecs });
 
     parsedRepresentations.push(parsedRepresentation);
   }
   return parsedRepresentations;
 }
+
+/** Supplementary context needed to parse a Representation. */
+export interface IRepresentationContext extends IInheritedRepresentationIndexContext {
+  /** Manifest DASH profiles used for signalling some features */
+  manifestProfiles?: string | undefined;
+  /**
+   * The parser should take this Adaptation - which is from a previously parsed
+   * Manifest for the same dynamic content - as a base to speed-up the parsing
+   * process.
+   * /!\ If unexpected differences exist between both, there is a risk of
+   * de-synchronization with what is actually on the server,
+   * Use with moderation.
+   */
+  unsafelyBaseOnPreviousAdaptation : Adaptation | null;
+}
+
+/**
+ * Supplementary context needed to parse a Representation common with
+ * `IRepresentationIndexContext`.
+ */
+type IInheritedRepresentationIndexContext = Omit<IRepresentationIndexContext,
+                                                 "adaptation" |
+                                                 "unsafelyBaseOnPreviousRepresentation" |
+                                                 "inbandEventStreams">;

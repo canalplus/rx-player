@@ -232,7 +232,8 @@ export type ISegmentLoader<TLoadedFormat> = (
              ISegmentLoaderResultChunkedComplete>;
 
 /**
- * Segment parser function, allowing to parse a segment of any type.
+ * Segment parser function, allowing to parse a chunk (which may be a sub-part
+ * of a segment) of any type.
  *
  * This function will throw if it encounters any error it cannot recover from.
  */
@@ -268,16 +269,16 @@ export type ISegmentParser<
    * The parsed data.
    *
    * Can be of two types:
-   *   - `ISegmentParserParsedInitSegment`: When the parsed segment was an
+   *   - `ISegmentParserParsedInitChunk`: When the parsed chunk was part of an
    *     initialization segment.
    *     Such segments only serve to initialize the decoder and do not contain
    *     any decodable media data.
-   *   - `ISegmentParserParsedSegment`: When the parsed segment was a media
-   *     segment.
+   *   - `ISegmentParserParsedMediaChunk`: When the parsed chunk was part of a
+   *     media segment.
    *     Such segments generally contain decodable media data.
    */
-  ISegmentParserParsedInitSegment<TParsedSegmentDataFormat> |
-  ISegmentParserParsedSegment<TParsedSegmentDataFormat>;
+  ISegmentParserParsedInitChunk<TParsedSegmentDataFormat> |
+  ISegmentParserParsedMediaChunk<TParsedSegmentDataFormat>;
 
 export interface IManifestParserOptions {
   /**
@@ -372,7 +373,7 @@ export interface IManifestParserResult {
    * This property should only be set when a unique URL is sufficient to
    * retrieve the whole data.
    */
-  url? : string;
+  url? : string | undefined;
 }
 
 /**
@@ -392,7 +393,10 @@ export interface IManifestParserRequestNeeded {
 export interface IChunkTimeInfo {
   /**
    * Difference between the latest and the earliest presentation time
-   * available in that segment, in seconds.
+   * available in that chunk, in seconds.
+   *
+   * If multiple chunks are present in a single segment (e.g. low-latency CMAF
+   * chunks, this is only the duration of the current chunk).
    *
    * Either `undefined` or set to `0` for an initialization segment.
    */
@@ -412,11 +416,11 @@ export interface ITextTrackSegmentData {
    * This is mostly needed for "sami" subtitles, to know which cues can / should
    * be parsed.
    */
-  language? : string;
+  language? : string | undefined;
   /** start time from which the segment apply, in seconds. */
-  start? : number;
+  start? : number | undefined;
   /** end time until which the segment apply, in seconds. */
-  end? : number;
+  end? : number | undefined;
 }
 
 /** Format under which image data is decodable by the RxPlayer. */
@@ -483,21 +487,21 @@ interface IServerSyncInfos { serverTimestamp : number;
                              clientTime : number; }
 
 export interface ITransportOptions {
-  aggressiveMode? : boolean;
-  checkMediaSegmentIntegrity? : boolean;
+  aggressiveMode? : boolean | undefined;
+  checkMediaSegmentIntegrity? : boolean | undefined;
   lowLatencyMode : boolean;
-  manifestLoader?: ICustomManifestLoader;
-  manifestUpdateUrl? : string;
-  referenceDateTime? : number;
-  representationFilter? : IRepresentationFilter;
-  segmentLoader? : ICustomSegmentLoader;
-  serverSyncInfos? : IServerSyncInfos;
+  manifestLoader?: ICustomManifestLoader | undefined;
+  manifestUpdateUrl? : string | undefined;
+  referenceDateTime? : number | undefined;
+  representationFilter? : IRepresentationFilter | undefined;
+  segmentLoader? : ICustomSegmentLoader | undefined;
+  serverSyncInfos? : IServerSyncInfos | undefined;
   /* eslint-disable import/no-deprecated */
-  supplementaryImageTracks? : ISupplementaryImageTrack[];
-  supplementaryTextTracks? : ISupplementaryTextTrack[];
+  supplementaryImageTracks? : ISupplementaryImageTrack[] | undefined;
+  supplementaryTextTracks? : ISupplementaryTextTrack[] | undefined;
   /* eslint-enable import/no-deprecated */
 
-  __priv_patchLastSegmentInSidx? : boolean;
+  __priv_patchLastSegmentInSidx? : boolean | undefined;
 }
 
 export type ICustomSegmentLoader = (
@@ -517,7 +521,13 @@ export type ICustomSegmentLoader = (
                                      duration? : number | undefined; }) => void;
 
                  reject : (err? : unknown) => void;
-                 fallback? : (() => void) | undefined; }
+                 fallback : () => void;
+                 progress : (
+                   info : { duration : number;
+                            size : number;
+                            totalSize? : number | undefined; }
+                 ) => void;
+  }
 ) =>
   // returns either the aborting callback or nothing
   (() => void)|void;
@@ -528,14 +538,15 @@ export type ICustomManifestLoader = (
 
   // second argument: callbacks
   callbacks : { resolve : (args : { data : ILoadedManifestFormat;
-                                    sendingTime? : number;
-                                    receivingTime? : number;
-                                    size? : number;
-                                    duration? : number; })
+                                    url? : string | undefined;
+                                    sendingTime? : number | undefined;
+                                    receivingTime? : number | undefined;
+                                    size? : number | undefined;
+                                    duration? : number | undefined; })
                           => void;
 
                  reject : (err? : Error) => void;
-                 fallback? : () => void; }
+                 fallback : () => void; }
 ) =>
   // returns either the aborting callback or nothing
   (() => void)|void;
@@ -586,13 +597,14 @@ export interface ISegmentLoaderCallbacks<T> {
   onNewChunk : (data : T) => void;
 }
 
+/** Information related to a pending Segment request progressing. */
 export interface ISegmentLoadingProgressInformation {
   /** Time since the beginning of the request so far, in seconds. */
   duration : number;
   /** Size of the data already downloaded, in bytes. */
   size : number;
   /** Size of whole data to download (data already-loaded included), in bytes. */
-  totalSize? : number;
+  totalSize? : number | undefined;
 }
 
 /**
@@ -632,7 +644,7 @@ export interface ISegmentLoaderResultSegmentCreated<T> {
 /** Data emitted in a `ISegmentLoaderResultChunkedComplete`. */
 export interface IChunkCompleteInformation {
   /** Duration the request took to be performed, in seconds. */
-  duration : number | undefined;
+  requestDuration : number | undefined;
   /**
    * "Real" URL (post-redirection) at which the segment was loaded.
    *
@@ -641,19 +653,19 @@ export interface IChunkCompleteInformation {
    * This property should only be set when a unique URL is sufficient to
    * retrieve the whole data.
    */
-  url? : string;
+  url? : string | undefined;
   /**
    * Time at which the request began in terms of `performance.now`.
    * If fetching the corresponding data necessitated to perform multiple
    * requests, this time corresponds to the first request made.
    */
-  sendingTime? : number;
+  sendingTime? : number | undefined;
   /**
    * Time at which the request ended in terms of `performance.now`.
    * If fetching the corresponding data necessitated to perform multiple
    * requests, this time corresponds to the last request to end.
    */
-  receivedTime? : number;
+  receivedTime? : number | undefined;
   /** Size in bytes of the loaded data.  `undefined` if we don't know.  */
   size : number | undefined;
 }
@@ -682,8 +694,11 @@ export type ILoadedImageSegmentFormat = Uint8Array |
                                         ArrayBuffer |
                                         null;
 
-/** Result returned by a segment parser when it parsed an initialization segment. */
-export interface ISegmentParserParsedInitSegment<DataType> {
+/**
+ * Result returned by a segment parser when it parsed a chunk from an init
+ * segment (which does not contain media data).
+ */
+export interface ISegmentParserParsedInitChunk<DataType> {
   segmentType : "init";
   /**
    * Initialization segment that can be directly pushed to the corresponding
@@ -694,7 +709,7 @@ export interface ISegmentParserParsedInitSegment<DataType> {
    * Timescale metadata found inside this initialization segment.
    * That timescale might be useful when parsing further merdia segments.
    */
-  initTimescale? : number;
+  initTimescale? : number | undefined;
   /**
    * If set to `true`, some protection information has been found in this
    * initialization segment and lead the corresponding `Representation`
@@ -707,18 +722,46 @@ export interface ISegmentParserParsedInitSegment<DataType> {
    * protection initialization data to have been encountered.
    */
   protectionDataUpdate : boolean;
+  /**
+   * Size in bytes of `initializationData`.
+   * `undefined` if unknown.
+   *
+   * Note: In some cases, such as when `initializationData` is under a format
+   * whose size is difficult to estimate (e.g. a JavaScript object), the
+   * `initializationDataSize` may either be set to `undefined` or, if available,
+   * to a sensible estimate (e.g. when a JavaScript object wraps large binary
+   * data, `initializationDataSize` may refer to that binary data only).
+   */
+  initializationDataSize : number | undefined;
 }
 
 /**
- * Result returned by a segment parser when it parsed a media (not an
- * initialization segment).
+ * Result returned by a segment parser when it parsed a chunk from a media
+ * segment (which contains media data, unlike an initialization segment).
  */
-export interface ISegmentParserParsedSegment<DataType> {
+export interface ISegmentParserParsedMediaChunk<DataType> {
   segmentType : "media";
-  /** Parsed chunk of data that can be decoded. */
+  /**
+   * Parsed chunk of data that can be decoded.
+   * `null` if no data was parsed.
+   */
   chunkData : DataType | null;
-  /** Time information on this parsed chunk. */
+  /**
+   * Time information on this parsed chunk.
+   * `null` if unknown.
+   */
   chunkInfos : IChunkTimeInfo | null;
+  /**
+   * Size in bytes of `chunkData`.
+   * `undefined` if unknown.
+   *
+   * Note: In some cases, such as when `chunkData` is under a format whose size
+   * is difficult to estimate (e.g. a JavaScript object), the `chunkSize` may
+   * either be set to `undefined` or, if available, to a sensible estimate (e.g.
+   * when a JavaScript object wraps large binary data, `chunkSize` may refer to
+   * that binary data only).
+   */
+  chunkSize : number | undefined;
   /**
    * time offset, in seconds, to add to the absolute timed data defined in
    * `chunkData` to obtain the "real" wanted effective time.
@@ -743,7 +786,7 @@ export interface ISegmentParserParsedSegment<DataType> {
    * If set and not empty, then "events" have been encountered in this parsed
    * chunks.
    */
-  inbandEvents? : IInbandEvent[]; // Inband events parsed from segment data
+  inbandEvents? : IInbandEvent[] | undefined;
   /**
    * If set to `true`, then parsing this chunk revealed that the current
    * Manifest instance needs to be refreshed.
@@ -768,7 +811,7 @@ export interface IRequestedData<T> {
   /** The loaded response data. */
   responseData : T;
   /** Duration the request took to be performed, in seconds. */
-  duration : number | undefined;
+  requestDuration : number | undefined;
   /**
    * "Real" URL (post-redirection) at which the data can be loaded.
    *
@@ -777,19 +820,19 @@ export interface IRequestedData<T> {
    * This property should only be set when a unique URL is sufficient to
    * retrieve the whole data.
    */
-  url? : string;
+  url? : string | undefined;
   /**
    * Time at which the request began in terms of `performance.now`.
    * If fetching the corresponding data necessitated to perform multiple
    * requests, this time corresponds to the first request made.
    */
-  sendingTime? : number;
+  sendingTime? : number | undefined;
   /**
    * Time at which the request ended in terms of `performance.now`.
    * If fetching the corresponding data necessitated to perform multiple
    * requests, this time corresponds to the last request to end.
    */
-  receivedTime? : number;
+  receivedTime? : number | undefined;
   /** Size in bytes of the loaded data.  `undefined` if we don't know.  */
   size : number | undefined;
 }

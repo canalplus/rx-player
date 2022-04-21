@@ -18,46 +18,49 @@ import {
   defer as observableDefer,
   EMPTY,
   filter,
-  mapTo,
+  map,
   merge as observableMerge,
   Observable,
   startWith,
-  switchMapTo,
+  switchMap,
   take,
 } from "rxjs";
-import { IClockTick } from "./clock";
+import { IPlaybackObservation } from "./playback_observer";
 
 /**
  * Returns Observable which will emit:
  *   - `"seeking"` when we are seeking in the given mediaElement
- *   - `"seeked"` when a seek is considered as finished by the given clock$
+ *   - `"seeked"` when a seek is considered as finished by the given observation$
  *     Observable.
  * @param {HTMLMediaElement} mediaElement
- * @param {Observable} clock$
+ * @param {Observable} observation$
  * @returns {Observable}
  */
 export default function emitSeekEvents(
   mediaElement : HTMLMediaElement | null,
-  clock$ : Observable<IClockTick>
+  observation$ : Observable<IPlaybackObservation>
 ) : Observable<"seeking" | "seeked"> {
   return observableDefer(() => {
     if (mediaElement === null) {
       return EMPTY;
     }
 
-    const isSeeking$ = clock$.pipe(
-      filter((tick : IClockTick) => tick.event === "seeking"),
-      mapTo("seeking" as const)
+    let isSeeking$ = observation$.pipe(
+      filter((observation : IPlaybackObservation) => observation.event === "seeking"),
+      map(() => "seeking" as const)
     );
+
+    if (mediaElement.seeking) {
+      isSeeking$ = isSeeking$.pipe(startWith("seeking" as const));
+    }
+
     const hasSeeked$ = isSeeking$.pipe(
-      switchMapTo(
-        clock$.pipe(
-          filter((tick : IClockTick) => tick.event === "seeked"),
-          mapTo("seeked" as const),
+      switchMap(() =>
+        observation$.pipe(
+          filter((observation : IPlaybackObservation) => observation.event === "seeked"),
+          map(() => "seeked" as const),
           take(1)))
     );
-    const seekingEvents$ = observableMerge(isSeeking$, hasSeeked$);
-    return mediaElement.seeking ? seekingEvents$.pipe(startWith("seeking" as const)) :
-                                  seekingEvents$;
+    return observableMerge(isSeeking$, hasSeeked$);
   });
 }

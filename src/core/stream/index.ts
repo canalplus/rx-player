@@ -15,13 +15,14 @@
  */
 
 import StreamOrchestrator, {
-  IStreamOrchestratorClockTick,
   IStreamOrchestratorOptions,
+  IStreamOrchestratorPlaybackObservation,
 } from "./orchestrator";
+export { IAudioTrackSwitchingMode } from "./period";
 export * from "./types";
 
 export default StreamOrchestrator;
 export {
-  IStreamOrchestratorClockTick,
+  IStreamOrchestratorPlaybackObservation,
   IStreamOrchestratorOptions,
 };

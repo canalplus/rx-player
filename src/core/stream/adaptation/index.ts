@@ -16,13 +16,13 @@
 
 import AdaptationStream, {
   IAdaptationStreamArguments,
-  IAdaptationStreamClockTick,
+  IAdaptationStreamPlaybackObservation,
   IAdaptationStreamOptions,
 } from "./adaptation_stream";
 
 export default AdaptationStream;
 export {
   IAdaptationStreamArguments,
-  IAdaptationStreamClockTick,
+  IAdaptationStreamPlaybackObservation,
   IAdaptationStreamOptions,
 };

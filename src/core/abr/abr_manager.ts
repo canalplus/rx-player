@@ -15,23 +15,26 @@
  */
 
 import {
+  combineLatest as observableCombineLatest,
+  map,
   Observable,
   of as observableOf,
 } from "rxjs";
 import log from "../../log";
 import { Representation } from "../../manifest";
+import objectAssign from "../../utils/object_assign";
 import { ISharedReference } from "../../utils/reference";
 import takeFirstSet from "../../utils/take_first_set";
 import { IBufferType } from "../segment_buffers";
 import BandwidthEstimator from "./bandwidth_estimator";
-import createFilters from "./create_filters";
 import RepresentationEstimator, {
   IABREstimate,
+  IABRFiltersObject,
   IABRStreamEvents,
-  IRepresentationEstimatorClockTick,
+  IRepresentationEstimatorPlaybackObservation,
 } from "./representation_estimator";
 
-export type IABRManagerClockTick = IRepresentationEstimatorClockTick;
+export type IABRManagerPlaybackObservation = IRepresentationEstimatorPlaybackObservation;
 
 // Options for every RepresentationEstimator
 interface IRepresentationEstimatorsThrottlers {
@@ -97,14 +100,14 @@ export default class ABRManager {
    * state).
    * @param {string} type
    * @param {Array.<Representation>} representations
-   * @param {Observable<Object>} clock$
+   * @param {Observable<Object>} observation$
    * @param {Observable<Object>} streamEvents$
    * @returns {Observable}
    */
   public get$(
     type : IBufferType,
     representations : Representation[],
-    clock$ : Observable<IABRManagerClockTick>,
+    observation$ : Observable<IABRManagerPlaybackObservation>,
     streamEvents$ : Observable<IABRStreamEvents>
   ) : Observable<IABREstimate> {
     const bandwidthEstimator = this._getBandwidthEstimator(type);
@@ -123,7 +126,7 @@ export default class ABRManager {
                                    this._throttlers.throttle[type]);
     return RepresentationEstimator({ bandwidthEstimator,
                                      streamEvents$,
-                                     clock$,
+                                     observation$,
                                      filters$,
                                      initialBitrate,
                                      manualBitrate$,
@@ -147,4 +150,39 @@ export default class ABRManager {
     }
     return originalBandwidthEstimator;
   }
+}
+
+/**
+ * Create Observable that merge several throttling Observables into one.
+ * @param {Observable} limitWidth$ - Emit the width at which the chosen
+ * Representation should be limited.
+ * @param {Observable} throttleBitrate$ - Emit the maximum bitrate authorized.
+ * @param {Observable} throttle$ - Also emit the maximum bitrate authorized.
+ * Here for legacy reasons.
+ * @returns {Observable}
+ */
+function createFilters(
+  limitWidth$? : Observable<number>,
+  throttleBitrate$? : Observable<number>,
+  throttle$? : Observable<number>
+) : Observable<IABRFiltersObject> {
+  const deviceEventsArray : Array<Observable<IABRFiltersObject>> = [];
+
+  if (limitWidth$ != null) {
+    deviceEventsArray.push(limitWidth$.pipe(map(width => ({ width }))));
+  }
+  if (throttle$ != null) {
+    deviceEventsArray.push(throttle$.pipe(map(bitrate => ({ bitrate }))));
+  }
+  if (throttleBitrate$ != null) {
+    deviceEventsArray.push(throttleBitrate$.pipe(map(bitrate => ({ bitrate }))));
+  }
+
+  // Emit restrictions on the pools of available representations to choose
+  // from.
+  return deviceEventsArray.length > 0 ?
+    observableCombineLatest(deviceEventsArray)
+      .pipe(map((args : IABRFiltersObject[]) =>
+        objectAssign({}, ...args) as IABRFiltersObject)) :
+    observableOf({});
 }

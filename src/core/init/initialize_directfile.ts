@@ -25,7 +25,6 @@ import {
   ignoreElements,
   merge as observableMerge,
   mergeMap,
-  mergeMapTo,
   switchMap,
   Observable,
   of as observableOf,
@@ -38,18 +37,23 @@ import {
 } from "../../compat";
 import log from "../../log";
 import deferSubscriptions from "../../utils/defer_subscriptions";
-import { IKeySystemOption } from "../eme";
-import createEMEManager from "./create_eme_manager";
+import { IReadOnlySharedReference } from "../../utils/reference";
+import { PlaybackObserver } from "../api";
+import { IKeySystemOption } from "../decrypt";
 import emitLoadedEvent from "./emit_loaded_event";
 import { IInitialTimeOptions } from "./get_initial_time";
 import initialSeekAndPlay from "./initial_seek_and_play";
+import linkDrmAndContent from "./link_drm_and_content";
 import StallAvoider from "./stall_avoider";
 import throwOnMediaError from "./throw_on_media_error";
-import {
-  IDirectfileEvent,
-  IInitClockTick,
-} from "./types";
+import { IDirectfileEvent } from "./types";
 import updatePlaybackRate from "./update_playback_rate";
+
+// NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
+// first type parameter as `any` instead of the perfectly fine `unknown`,
+// leading to linter issues, as it forbids the usage of `any`.
+// This is why we're disabling the eslint rule.
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 /**
  * calculate initial time as a position in seconds.
@@ -98,13 +102,12 @@ function getDirectFileInitialTime(
 
 // Argument used by `initializeDirectfileContent`
 export interface IDirectFileOptions { autoPlay : boolean;
-                                      clock$ : Observable<IInitClockTick>;
                                       keySystems : IKeySystemOption[];
                                       mediaElement : HTMLMediaElement;
-                                      speed$ : Observable<number>;
-                                      setCurrentTime: (nb: number) => void;
-                                      startAt? : IInitialTimeOptions;
-                                      url? : string; }
+                                      playbackObserver : PlaybackObserver;
+                                      speed : IReadOnlySharedReference<number>;
+                                      startAt? : IInitialTimeOptions | undefined;
+                                      url? : string | undefined; }
 
 /**
  * Launch a content in "Directfile mode".
@@ -113,11 +116,10 @@ export interface IDirectFileOptions { autoPlay : boolean;
  */
 export default function initializeDirectfileContent({
   autoPlay,
-  clock$,
   keySystems,
   mediaElement,
-  speed$,
-  setCurrentTime,
+  playbackObserver,
+  speed,
   startAt,
   url,
 } : IDirectFileOptions) : Observable<IDirectfileEvent> {
@@ -135,17 +137,16 @@ export default function initializeDirectfileContent({
   const initialTime = () => getDirectFileInitialTime(mediaElement, startAt);
   log.debug("Init: Initial time calculated:", initialTime);
 
-  const { seekAndPlay$ } = initialSeekAndPlay({ clock$,
-                                                mediaElement,
+  const { seekAndPlay$ } = initialSeekAndPlay({ mediaElement,
+                                                playbackObserver,
                                                 startTime: initialTime,
-                                                mustAutoPlay: autoPlay,
-                                                setCurrentTime,
-                                                isDirectfile: true });
+                                                mustAutoPlay: autoPlay });
 
-  // Create EME Manager, an observable which will manage every EME-related
-  // issue.
-  const emeManager$ = linkURL$.pipe(
-    mergeMap(() => createEMEManager(mediaElement, keySystems, EMPTY)),
+  /** Initialize decryption capabilities and the HTMLMediaElement's src attribute. */
+  const drmEvents$ = linkDrmAndContent(mediaElement,
+                                       keySystems,
+                                       EMPTY,
+                                       linkURL$).pipe(
     deferSubscriptions(),
     share()
   );
@@ -154,47 +155,39 @@ export default function initializeDirectfileContent({
   // through a throwing Observable.
   const mediaError$ = throwOnMediaError(mediaElement);
 
+  const observation$ = playbackObserver.observe(true);
+
   // Set the speed set by the user on the media element while pausing a
   // little longer while the buffer is empty.
   const playbackRate$ =
-    updatePlaybackRate(mediaElement, speed$, clock$)
+    updatePlaybackRate(mediaElement, speed, observation$)
       .pipe(ignoreElements());
 
   /**
    * Observable trying to avoid various stalling situations, emitting "stalled"
    * events when it cannot, as well as "unstalled" events when it get out of one.
    */
-  const stallAvoider$ = StallAvoider(clock$,
-                                     mediaElement,
-                                     null,
-                                     EMPTY,
-                                     EMPTY,
-                                     setCurrentTime);
+  const stallAvoider$ = StallAvoider(playbackObserver, null, EMPTY, EMPTY);
 
   /**
    * Emit a "loaded" events once the initial play has been performed and the
    * media can begin playback.
    * Also emits warning events if issues arise when doing so.
    */
-  const loadingEvts$ = emeManager$.pipe(
-    filter(function isEMEReady(evt) {
-      if (evt.type === "created-media-keys") {
-        evt.value.canAttachMediaKeys.setValue(true);
-        return true;
-      }
-      return evt.type === "eme-disabled" || evt.type === "attached-media-keys";
-    }),
+  const loadingEvts$ = drmEvents$.pipe(
+    filter((evt) => evt.type === "decryption-ready" ||
+                    evt.type === "decryption-disabled"),
     take(1),
-    mergeMapTo(seekAndPlay$),
+    mergeMap(() => seekAndPlay$),
     switchMap((evt) => {
       if (evt.type === "warning") {
         return observableOf(evt);
       }
-      return emitLoadedEvent(clock$, mediaElement, null, true);
+      return emitLoadedEvent(observation$, mediaElement, null, true);
     }));
 
   return observableMerge(loadingEvts$,
-                         emeManager$,
+                         drmEvents$.pipe(ignoreElements()),
                          mediaError$,
                          playbackRate$,
                          stallAvoider$);

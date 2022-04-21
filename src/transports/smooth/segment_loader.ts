@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import { CustomLoaderError } from "../../errors";
 import assert from "../../utils/assert";
 import request from "../../utils/request";
@@ -51,7 +50,7 @@ function regularSegmentLoader(
   content : ISegmentContext,
   callbacks : ISegmentLoaderCallbacks<Uint8Array | ArrayBuffer | null>,
   cancelSignal : CancellationSignal,
-  checkMediaSegmentIntegrity? : boolean
+  checkMediaSegmentIntegrity? : boolean | undefined
 ) : Promise<ISegmentLoaderResultSegmentLoaded<Uint8Array | ArrayBuffer | null>> {
   let headers;
   const range = content.segment.range;
@@ -85,8 +84,8 @@ const generateSegmentLoader = ({
   checkMediaSegmentIntegrity,
   customSegmentLoader,
 } : {
-  checkMediaSegmentIntegrity? : boolean;
-  customSegmentLoader? : ICustomSegmentLoader;
+  checkMediaSegmentIntegrity? : boolean | undefined;
+  customSegmentLoader? : ICustomSegmentLoader | undefined;
 }) => (
   url : string | null,
   content : ISegmentContext,
@@ -137,17 +136,17 @@ const generateSegmentLoader = ({
         break;
       }
       default:
-        if (__DEV__) {
+        if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
           assert(false, "responseData should have been set");
         }
         responseData = new Uint8Array(0);
     }
 
-    return PPromise.resolve({ resultType: "segment-created" as const,
-                              resultData: responseData });
+    return Promise.resolve({ resultType: "segment-created" as const,
+                             resultData: responseData });
   } else if (url === null) {
-    return PPromise.resolve({ resultType: "segment-created" as const,
-                              resultData: null });
+    return Promise.resolve({ resultType: "segment-created" as const,
+                             resultData: null });
   } else {
     const args = { adaptation,
                    manifest,
@@ -176,8 +175,8 @@ const generateSegmentLoader = ({
        */
       const resolve = (_args : {
         data : ArrayBuffer|Uint8Array;
-        size? : number;
-        duration? : number;
+        size? : number | undefined;
+        duration? : number | undefined;
       }) => {
         if (hasFinished || cancelSignal.isCancelled) {
           return;
@@ -190,7 +189,7 @@ const generateSegmentLoader = ({
           res({ resultType: "segment-loaded" as const,
                 resultData: { responseData: _args.data,
                               size: _args.size,
-                              duration: _args.duration } });
+                              requestDuration: _args.duration } });
         }
 
         const dataU8 = _args.data instanceof Uint8Array ? _args.data :
@@ -199,7 +198,7 @@ const generateSegmentLoader = ({
         res({ resultType: "segment-loaded" as const,
               resultData: { responseData: dataU8,
                             size: _args.size,
-                            duration: _args.duration } });
+                            requestDuration: _args.duration } });
       };
 
       /**
@@ -231,7 +230,7 @@ const generateSegmentLoader = ({
       const progress = (
         _args : { duration : number;
                   size : number;
-                  totalSize? : number; }
+                  totalSize? : number | undefined; }
       ) => {
         if (hasFinished || cancelSignal.isCancelled) {
           return;

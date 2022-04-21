@@ -8,26 +8,6 @@ export default [
     "live": false,
   },
   {
-    "name": "Tears of Steel (DRM Widevine)",
-    "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-dash-widevine.ism/.mpd",
-    "transport": "dash",
-    "live": false,
-    "drmInfos": [{
-      "licenseServerUrl": "https://cwip-shaka-proxy.appspot.com/no_auth",
-      "drm": "Widevine",
-    }],
-  },
-  {
-    "name": "Tears of Steel (DRM PlayReady)",
-    "url": "http://profficialsite.origin.mediaservices.windows.net/c51358ea-9a5e-4322-8951-897d640fdfd7/tearsofsteel_4k.ism/manifest(format=mpd-time-csf)",
-    "transport": "dash",
-    "live": false,
-    "drmInfos": [{
-      "licenseServerUrl": "http://test.playready.microsoft.com/service/rightsmanager.asmx?cfg=(persist:false,sl:150)",
-      "drm": "Playready",
-    }],
-  },
-  {
     "name": "BBC - presentationTimeOffset on audio and video",
     "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-pto_both-events.mpd",
     "transport": "dash",

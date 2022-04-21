@@ -1,0 +1,16 @@
+{
+  "pages": [
+    {
+      "path": "./setPlaybackRate.md",
+      "displayName": "setPlaybackRate"
+    },
+    {
+      "path": "./getPlaybackRate.md",
+      "displayName": "getPlaybackRate"
+    },
+    {
+      "path": "./areTrickModeTracksEnabled.md",
+      "displayName": "areTrickModeTracksEnabled"
+    }
+  ]
+}

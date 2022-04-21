@@ -28,10 +28,8 @@ import {
   EMPTY,
   filter,
   map,
-  mapTo,
   merge as observableMerge,
   mergeMap,
-  mergeMapTo,
   Observable,
   of as observableOf,
   ReplaySubject,
@@ -41,13 +39,14 @@ import {
   startWith,
   Subject,
   Subscription,
-  switchMapTo,
+  switchMap,
   take,
   takeUntil,
 } from "rxjs";
 import {
   events,
   exitFullscreen,
+  getStartDate,
   isFullscreen,
   requestFullscreen,
 } from "../../compat";
@@ -78,7 +77,6 @@ import EventEmitter, {
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import Logger from "../../utils/logger";
 import objectAssign from "../../utils/object_assign";
-import PPromise from "../../utils/promise";
 import {
   getLeftSizeOfRange,
   getPlayedSizeOfRange,
@@ -89,10 +87,10 @@ import createSharedReference, {
 } from "../../utils/reference";
 import warnOnce from "../../utils/warn_once";
 import {
-  clearEMESession,
-  disposeEME,
+  clearOnStop,
+  disposeDecryptionResources,
   getCurrentKeySystem,
-} from "../eme";
+} from "../decrypt";
 import {
   IManifestFetcherParsedResult,
   IManifestFetcherWarningEvent,
@@ -111,9 +109,6 @@ import SegmentBuffersStore, {
   IBufferType,
 } from "../segment_buffers";
 import { IInbandEvent } from "../stream";
-import createClock, {
-  IClockTick,
-} from "./clock";
 import emitSeekEvents from "./emit_seek_events";
 import getPlayerState, {
   IPlayerState,
@@ -128,6 +123,9 @@ import {
   parseConstructorOptions,
   parseLoadVideoOptions,
 } from "./option_utils";
+import PlaybackObserver, {
+  IPlaybackObservation,
+} from "./playback_observer";
 import TrackChoiceManager, {
   IAudioTrackPreference,
   ITextTrackPreference,
@@ -142,9 +140,8 @@ import TrackChoiceManager, {
 
 /* eslint-disable @typescript-eslint/naming-convention */
 
-const { DEFAULT_UNMUTED_VOLUME } = config;
 
-const { isActive,
+const { isPageActive,
         isVideoVisible,
         onEnded$,
         onFullscreenChange$,
@@ -153,74 +150,6 @@ const { isActive,
         onSeeking$,
         onTextTrackChanges$,
         videoWidth$ } = events;
-
-/** Payload emitted with a `positionUpdate` event. */
-interface IPositionUpdateItem {
-  /** current position the player is in, in seconds. */
-  position : number;
-  /** Last position set for the current media currently, in seconds. */
-  duration : number;
-  /** Playback rate (i.e. speed) at which the current media is played. */
-  playbackRate : number;
-  /** Amount of buffer available for now in front of the current position, in seconds. */
-  bufferGap : number;
-  /** Current maximum seekable position. */
-  maximumBufferTime? : number;
-  wallClockTime? : number;
-  /**
-   * Only for live contents. Difference between the "live edge" and the current
-   * position, in seconds.
-   */
-  liveGap? : number;
-}
-
-/** Payload emitted with a `bitrateEstimationChange` event. */
-interface IBitrateEstimate {
-  /** The type of buffer this estimate was done for (e.g. "audio). */
-  type : IBufferType;
-  /** The calculated bitrate, in bits per seconds. */
-  bitrate : number | undefined;
-}
-
-export type IStreamEvent = { data: IStreamEventData;
-                             start: number;
-                             end: number;
-                             onExit?: () => void; } |
-                           { data: IStreamEventData;
-                             start: number; };
-
-/** Every events sent by the RxPlayer's public API. */
-interface IPublicAPIEvent {
-  playerStateChange : string;
-  positionUpdate : IPositionUpdateItem;
-  audioTrackChange : ITMAudioTrack | null;
-  textTrackChange : ITMTextTrack | null;
-  videoTrackChange : ITMVideoTrack | null;
-  audioBitrateChange : number;
-  videoBitrateChange : number;
-  imageTrackUpdate : { data: IBifThumbnail[] };
-  fullscreenChange : boolean;
-  bitrateEstimationChange : IBitrateEstimate;
-  volumeChange : number;
-  error : ICustomError | Error;
-  warning : ICustomError | Error;
-  nativeTextTracksChange : TextTrack[];
-  periodChange : Period;
-  availableAudioBitratesChange : number[];
-  availableVideoBitratesChange : number[];
-  availableAudioTracksChange : ITMAudioTrackListItem[];
-  availableTextTracksChange : ITMTextTrackListItem[];
-  availableVideoTracksChange : ITMVideoTrackListItem[];
-  decipherabilityUpdate : Array<{ manifest : Manifest;
-                                  period : Period;
-                                  adaptation : Adaptation;
-                                  representation : Representation; }>;
-  seeking : null;
-  seeked : null;
-  streamEvent : IStreamEvent;
-  streamEventSkip : IStreamEvent;
-  inbandEvents : IInbandEvent[];
-}
 
 /**
  * @class Player
@@ -282,6 +211,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     maxBufferAhead : ISharedReference<number>;
     /** Maximum kept buffer behind in the current position, in seconds. */
     maxBufferBehind : ISharedReference<number>;
+    /** Maximum size of video buffer , in kiloBytes */
+    maxVideoBufferSize : ISharedReference<number>;
   };
 
   /** Information on the current bitrate settings. */
@@ -323,7 +254,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      * URL of the Manifest (or just of the content for DirectFile contents)
      * currently being played.
      */
-    url? : string;
+    url : string | undefined;
 
     /** Subject allowing to stop playing that content. */
     stop$ : Subject<void>;
@@ -490,13 +421,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             throttleVideoBitrateWhenHidden,
             videoElement,
             wantedBufferAhead,
+            maxVideoBufferSize,
             stopAtEnd } = parseConstructorOptions(options);
-
+    const { DEFAULT_UNMUTED_VOLUME } = config.getCurrent();
     // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /* PLAYER_VERSION */"3.26.1";
+    this.version = /* PLAYER_VERSION */"3.27.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -556,6 +488,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       wantedBufferAhead: createSharedReference(wantedBufferAhead),
       maxBufferAhead: createSharedReference(maxBufferAhead),
       maxBufferBehind: createSharedReference(maxBufferBehind),
+      maxVideoBufferSize: createSharedReference(maxVideoBufferSize),
     };
 
     this._priv_bitrateInfos = {
@@ -615,8 +548,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this.stop();
 
     if (this.videoElement !== null) {
-      // free resources used for EME management
-      disposeEME(this.videoElement);
+      // free resources used for decryption management
+      disposeDecryptionResources(this.videoElement)
+        .catch((err : unknown) => {
+          const message = err instanceof Error ? err.message :
+                                                 "Unknown error";
+          log.error("API: Could not dispose decryption resources: " + message);
+        });
     }
 
     // free Observables linked to the Player instance
@@ -629,6 +567,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_speed.finish();
     this._priv_contentLock.finish();
     this._priv_bufferOptions.wantedBufferAhead.finish();
+    this._priv_bufferOptions.maxVideoBufferSize.finish();
     this._priv_bufferOptions.maxBufferAhead.finish();
     this._priv_bufferOptions.maxBufferBehind.finish();
     this._priv_bitrateInfos.manualBitrates.video.finish();
@@ -746,16 +685,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
 
     const videoElement = this.videoElement;
-    /** Global "clock" used for content playback */
-    const { setCurrentTime, clock$ } = createClock(videoElement, {
+
+    /** Global "playback observer" which will emit playback conditions */
+    const playbackObserver = new PlaybackObserver(videoElement, {
       withMediaSource: !isDirectFile,
       lowLatencyMode,
     });
 
     /** Emit playback events. */
     let playback$ : Connectable<IInitEvent>;
-
-    const speed$ = this._priv_speed.asObservable().pipe(distinctUntilChanged());
 
     if (!isDirectFile) {
       const transportFn = features.transports[transport];
@@ -828,7 +766,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                    "browser can't be trusted for visibility.");
         } else {
           throttlers.throttle = {
-            video: isActive().pipe(
+            video: isPageActive().pipe(
               map(active => active ? Infinity :
                                        0),
               takeUntil(stopContent$)),
@@ -887,7 +825,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       const init$ = initializeMediaSourcePlayback({ adaptiveOptions,
                                                     autoPlay,
                                                     bufferOptions,
-                                                    clock$,
+                                                    playbackObserver,
                                                     keySystems,
                                                     lowLatencyMode,
                                                     manifest$,
@@ -895,8 +833,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                                     mediaElement: videoElement,
                                                     minimumManifestUpdateInterval,
                                                     segmentFetcherCreator,
-                                                    setCurrentTime,
-                                                    speed$,
+                                                    speed: this._priv_speed,
                                                     startAt,
                                                     textTrackOptions })
         .pipe(takeUntil(stopContent$));
@@ -970,12 +907,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
       const directfileInit$ =
         features.directfile.initDirectFile({ autoPlay,
-                                             clock$,
                                              keySystems,
                                              mediaElement: videoElement,
-                                             speed$,
+                                             speed: this._priv_speed,
+                                             playbackObserver,
                                              startAt,
-                                             setCurrentTime,
                                              url })
           .pipe(takeUntil(stopContent$));
 
@@ -1030,28 +966,26 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const playerState$ = observableConcat(
       observableOf(PLAYER_STATES.LOADING), // Begin with LOADING
 
-      // LOADED as soon as the first "loaded" event is sent
-      loaded$.pipe(take(1), mapTo(PLAYER_STATES.LOADED)),
-
-      observableMerge(
-        loadedStateUpdates$
-          .pipe(
-            // From the first reload onward, we enter another dynamic (below)
+      loaded$.pipe(switchMap((_, i) => {
+        const isFirstLoad = i === 0;
+        return observableMerge(
+          // Purposely subscribed first so a RELOADING triggered synchronously
+          // after a LOADED state is catched.
+          reloading$.pipe(map(() => PLAYER_STATES.RELOADING)),
+          // Only switch to LOADED state for the first (i.e. non-RELOADING) load
+          isFirstLoad ? observableOf(PLAYER_STATES.LOADED) :
+                        EMPTY,
+          // Purposely put last so any other state change happens after we've
+          // already switched to LOADED
+          loadedStateUpdates$.pipe(
             takeUntil(reloading$),
-            skipWhile(state => state === PLAYER_STATES.PAUSED)
-          ),
-
-        // when reloading
-        reloading$.pipe(
-          switchMapTo(
-            loaded$.pipe(
-              take(1), // wait for the next loaded event
-              mergeMapTo(loadedStateUpdates$), // to update the state as usual
-              startWith(PLAYER_STATES.RELOADING) // Starts with "RELOADING" state
-            )
+            // For the first load, we prefer staying at the LOADED state over
+            // PAUSED when autoPlay is disabled.
+            // For consecutive loads however, there's no LOADED state.
+            skipWhile(state => isFirstLoad && state === PLAYER_STATES.PAUSED)
           )
-        )
-      )
+        );
+      }))
     ).pipe(distinctUntilChanged());
 
     let playbackSubscription : Subscription|undefined;
@@ -1068,14 +1002,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       .pipe(takeUntil(stopContent$))
       .subscribe(e => this._priv_onPlayPauseNext(e.type === "play"));
 
-    // Link "positionUpdate" events to the clock
-    clock$
+    const observation$ = playbackObserver.observe(true);
+
+    // Link "positionUpdate" events to the PlaybackObserver
+    observation$
       .pipe(takeUntil(stopContent$))
-      .subscribe(x => this._priv_triggerPositionUpdate(x));
+      .subscribe(o => this._priv_triggerPositionUpdate(o));
 
     // Link "seeking" and "seeked" events (once the content is loaded)
     loaded$.pipe(
-      switchMapTo(emitSeekEvents(this.videoElement, clock$)),
+      switchMap(() => emitSeekEvents(this.videoElement, observation$)),
       takeUntil(stopContent$)
     ).subscribe((evt : "seeking" | "seeked") => {
       log.info(`API: Triggering "${evt}" event`);
@@ -1341,7 +1277,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     const { isDirectFile, manifest } = this._priv_contentInfos;
     if (isDirectFile) {
-      return this.videoElement.currentTime;
+      const startDate = getStartDate(this.videoElement);
+      return (startDate ?? 0) + this.videoElement.currentTime;
     }
     if (manifest !== null) {
       const currentTime = this.videoElement.currentTime;
@@ -1586,7 +1523,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     /* eslint-disable @typescript-eslint/unbound-method */
     if (isNullOrUndefined(playPromise) || typeof playPromise.catch !== "function") {
     /* eslint-enable @typescript-eslint/unbound-method */
-      return PPromise.resolve();
+      return Promise.resolve();
     }
     return playPromise.catch((error: Error) => {
       if (error.name === "NotAllowedError") {
@@ -1644,12 +1581,19 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       } else if (!isNullOrUndefined(timeObj.position)) {
         positionWanted = timeObj.position;
       } else if (!isNullOrUndefined(timeObj.wallClockTime)) {
-        positionWanted = (isDirectFile || manifest === null) ?
-          timeObj.wallClockTime :
-          timeObj.wallClockTime - (
-            manifest.availabilityStartTime !== undefined ?
-              manifest.availabilityStartTime :
-              0);
+        if (manifest !== null) {
+          positionWanted = timeObj.wallClockTime - (
+            manifest.availabilityStartTime ?? 0
+          );
+        } else if (isDirectFile && this.videoElement !== null) {
+          const startDate = getStartDate(this.videoElement);
+          if (startDate !== undefined) {
+            positionWanted = timeObj.wallClockTime - startDate;
+          }
+        }
+        if (positionWanted === undefined) {
+          positionWanted = timeObj.wallClockTime;
+        }
       } else {
         throw new Error("invalid time object. You must set one of the " +
                         "following properties: \"relative\", \"position\" or " +
@@ -1760,6 +1704,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * If the volume was set to 0, set a default volume instead (see config).
    */
   unMute() : void {
+    const { DEFAULT_UNMUTED_VOLUME } = config.getCurrent();
     const vol = this.getVolume();
     if (vol === 0) {
       this.setVolume(this._priv_mutedMemory === 0 ? DEFAULT_UNMUTED_VOLUME :
@@ -1869,6 +1814,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Set the max buffer size the buffer should take in memory
+   * The player . will stop downloading chunks when this size is reached.
+   * @param {Number} sizeInKBytes
+   */
+  setMaxVideoBufferSize(sizeInKBytes : number) : void {
+    this._priv_bufferOptions.maxVideoBufferSize.setValue(sizeInKBytes);
+  }
+
+  /**
    * Returns the max buffer size for the buffer behind the current position.
    * @returns {Number}
    */
@@ -1890,6 +1844,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   getWantedBufferAhead() : number {
     return this._priv_bufferOptions.wantedBufferAhead.getValue();
+  }
+
+  /**
+   * Returns the max buffer memory size for the buffer in kilobytes
+   * @returns {Number}
+   */
+  getMaxVideoBufferSize() : number {
+    return this._priv_bufferOptions.maxVideoBufferSize.getValue();
   }
 
   /**
@@ -2339,25 +2301,23 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_contentEventsMemory = {};
 
-    // EME cleaning
+    // DRM-related clean-up
     const freeUpContentLock = () => {
       log.debug("Unlocking `contentLock`. Next content can begin.");
       this._priv_contentLock.setValue(false);
     };
 
     if (!isNullOrUndefined(this.videoElement)) {
-      clearEMESession(this.videoElement)
-        .subscribe({
-          error: (err : unknown) => {
-            log.error("API: An error arised when trying to clean-up the EME session:" +
-                      (err instanceof Error ? err.toString() :
-                                              "Unknown Error"));
-            freeUpContentLock();
-          },
-          complete: () => {
-            log.debug("API: EME session cleaned-up with success!");
-            freeUpContentLock();
-          },
+      clearOnStop(this.videoElement).then(
+        () => {
+          log.debug("API: DRM session cleaned-up with success!");
+          freeUpContentLock();
+        },
+        (err : unknown) => {
+          log.error("API: An error arised when trying to clean-up the DRM session:" +
+                    (err instanceof Error ? err.toString() :
+                                            "Unknown Error"));
+          freeUpContentLock();
         });
     } else {
       freeUpContentLock();
@@ -2881,13 +2841,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Triggered each time a new clock tick object is emitted.
+   * Triggered each time a playback observation.
    *
    * Trigger the right Player Event
    *
-   * @param {Object} clockTick
+   * @param {Object} observation
    */
-  private _priv_triggerPositionUpdate(clockTick : IClockTick) : void {
+  private _priv_triggerPositionUpdate(observation : IPlaybackObservation) : void {
     if (this._priv_contentInfos === null) {
       log.warn("API: Cannot perform time update: no content loaded.");
       return;
@@ -2898,35 +2858,39 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     const { isDirectFile, manifest } = this._priv_contentInfos;
-    if ((!isDirectFile && manifest === null) || isNullOrUndefined(clockTick)) {
+    if ((!isDirectFile && manifest === null) || isNullOrUndefined(observation)) {
       return;
     }
 
-    this._priv_lastContentPlaybackInfos.lastPlaybackPosition = clockTick.position;
+    this._priv_lastContentPlaybackInfos.lastPlaybackPosition = observation.position;
 
     const maximumPosition = manifest !== null ? manifest.getMaximumPosition() :
                                                 undefined;
     const positionData : IPositionUpdateItem = {
-      position: clockTick.position,
-      duration: clockTick.duration,
-      playbackRate: clockTick.playbackRate,
+      position: observation.position,
+      duration: observation.duration,
+      playbackRate: observation.playbackRate,
       maximumBufferTime: maximumPosition,
 
       // TODO fix higher up?
-      bufferGap: isFinite(clockTick.bufferGap) ? clockTick.bufferGap :
+      bufferGap: isFinite(observation.bufferGap) ? observation.bufferGap :
                                                  0,
     };
 
     if (manifest !== null &&
         maximumPosition !== undefined &&
         manifest.isLive &&
-        clockTick.position > 0
+        observation.position > 0
     ) {
       const ast = manifest.availabilityStartTime ?? 0;
-      positionData.wallClockTime = clockTick.position + ast;
-      positionData.liveGap = maximumPosition - clockTick.position;
+      positionData.wallClockTime = observation.position + ast;
+      positionData.liveGap = maximumPosition - observation.position;
+    } else if (isDirectFile && this.videoElement !== null) {
+      const startDate = getStartDate(this.videoElement);
+      if (startDate !== undefined) {
+        positionData.wallClockTime = startDate + observation.position;
+      }
     }
-
     this.trigger("positionUpdate", positionData);
   }
 
@@ -2978,7 +2942,75 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return activeRepresentations[currentPeriod.id];
   }
 }
-Player.version = /* PLAYER_VERSION */"3.26.1";
+Player.version = /* PLAYER_VERSION */"3.27.0";
+
+/** Payload emitted with a `positionUpdate` event. */
+export interface IPositionUpdateItem {
+  /** current position the player is in, in seconds. */
+  position : number;
+  /** Last position set for the current media currently, in seconds. */
+  duration : number;
+  /** Playback rate (i.e. speed) at which the current media is played. */
+  playbackRate : number;
+  /** Amount of buffer available for now in front of the current position, in seconds. */
+  bufferGap : number;
+  /** Current maximum seekable position. */
+  maximumBufferTime? : number | undefined;
+  wallClockTime? : number | undefined;
+  /**
+   * Only for live contents. Difference between the "live edge" and the current
+   * position, in seconds.
+   */
+  liveGap? : number | undefined;
+}
+
+/** Payload emitted with a `bitrateEstimationChange` event. */
+export interface IBitrateEstimate {
+  /** The type of buffer this estimate was done for (e.g. "audio). */
+  type : IBufferType;
+  /** The calculated bitrate, in bits per seconds. */
+  bitrate : number | undefined;
+}
+
+export type IStreamEvent = { data: IStreamEventData;
+                             start: number;
+                             end: number;
+                             onExit?: () => void; } |
+                           { data: IStreamEventData;
+                             start: number; };
+
+/** Every events sent by the RxPlayer's public API. */
+interface IPublicAPIEvent {
+  playerStateChange : string;
+  positionUpdate : IPositionUpdateItem;
+  audioTrackChange : ITMAudioTrack | null;
+  textTrackChange : ITMTextTrack | null;
+  videoTrackChange : ITMVideoTrack | null;
+  audioBitrateChange : number;
+  videoBitrateChange : number;
+  imageTrackUpdate : { data: IBifThumbnail[] };
+  fullscreenChange : boolean;
+  bitrateEstimationChange : IBitrateEstimate;
+  volumeChange : number;
+  error : ICustomError | Error;
+  warning : ICustomError | Error;
+  nativeTextTracksChange : TextTrack[];
+  periodChange : Period;
+  availableAudioBitratesChange : number[];
+  availableVideoBitratesChange : number[];
+  availableAudioTracksChange : ITMAudioTrackListItem[];
+  availableTextTracksChange : ITMTextTrackListItem[];
+  availableVideoTracksChange : ITMVideoTrackListItem[];
+  decipherabilityUpdate : Array<{ manifest : Manifest;
+                                  period : Period;
+                                  adaptation : Adaptation;
+                                  representation : Representation; }>;
+  seeking : null;
+  seeked : null;
+  streamEvent : IStreamEvent;
+  streamEventSkip : IStreamEvent;
+  inbandEvents : IInbandEvent[];
+}
 
 export default Player;
 export { IStreamEventData };

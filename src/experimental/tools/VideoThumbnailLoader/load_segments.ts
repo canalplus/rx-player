@@ -2,8 +2,8 @@ import { combineLatest, Observable } from "rxjs";
 import { ISegmentFetcher } from "../../../core/fetchers/segment/segment_fetcher";
 import { ISegment } from "../../../manifest";
 import {
-  ISegmentParserParsedInitSegment,
-  ISegmentParserParsedSegment,
+  ISegmentParserParsedInitChunk,
+  ISegmentParserParsedMediaChunk,
 } from "../../../transports";
 import { createRequest, freeRequest } from "./create_request";
 import getCompleteSegmentId from "./get_complete_segment_id";
@@ -23,15 +23,15 @@ export default function loadSegments(
   contentInfos: IContentInfos
 ): Observable<Array<{
   segment: ISegment;
-  data: ISegmentParserParsedSegment<ArrayBuffer | Uint8Array> |
-        ISegmentParserParsedInitSegment<ArrayBuffer | Uint8Array>;
+  data: ISegmentParserParsedMediaChunk<ArrayBuffer | Uint8Array> |
+        ISegmentParserParsedInitChunk<ArrayBuffer | Uint8Array>;
 }>> {
   return combineLatest(
     segments.map((segment) => {
       return new Observable<{
         segment: ISegment;
-        data: ISegmentParserParsedSegment<ArrayBuffer | Uint8Array> |
-              ISegmentParserParsedInitSegment<ArrayBuffer | Uint8Array>; }
+        data: ISegmentParserParsedMediaChunk<ArrayBuffer | Uint8Array> |
+              ISegmentParserParsedInitChunk<ArrayBuffer | Uint8Array>; }
       >((obs) => {
         const completeSegmentId = getCompleteSegmentId(contentInfos, segment);
         const request = createRequest(segmentFetcher, contentInfos, segment);
@@ -49,12 +49,18 @@ export default function loadSegments(
 
         if (request.data !== undefined) {
           obs.next({ data: request.data, segment });
+        }
+
+        if (request.isComplete) {
           obs.complete();
           return;
         }
 
         request.onData = (data) => {
           obs.next({ data, segment });
+        };
+
+        request.onComplete = () => {
           obs.complete();
         };
       });

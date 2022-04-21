@@ -31,21 +31,19 @@ import Manifest, {
   Period,
 } from "../../manifest";
 import { getNextRangeGap } from "../../utils/ranges";
+import {
+  IPlaybackObservation,
+  PlaybackObserver,
+} from "../api";
 import { IBufferType } from "../segment_buffers";
 import EVENTS from "../stream/events_generators";
 import {
-  IInitClockTick,
   IStalledEvent,
   IStallingSituation,
   IUnstalledEvent,
   IWarningEvent,
 } from "./types";
 
-const { BUFFER_DISCONTINUITY_THRESHOLD,
-        FORCE_DISCONTINUITY_SEEK_DELAY,
-        FREEZING_STALLED_DELAY,
-        UNFREEZING_SEEK_DELAY,
-        UNFREEZING_DELTA_POSITION } = config;
 
 /**
  * Work-around rounding errors with floating points by setting an acceptable,
@@ -121,10 +119,7 @@ interface IDiscontinuityStoredInfo {
  * Monitor situations where playback is stalled and try to get out of those.
  * Emit "stalled" then "unstalled" respectively when an unavoidable stall is
  * encountered and exited.
- * @param {Observable} clock$ - Observable emitting the current playback
- * conditions.
- * @param {HTMLMediaElement} mediaElement - The HTMLMediaElement on which the
- * media is played.
+ * @param {object} playbackObserver - emit the current playback conditions.
  * @param {Object} manifest - The Manifest of the currently-played content.
  * @param {Observable} discontinuityUpdate$ - Observable emitting encountered
  * discontinuities for loaded Period and buffer types.
@@ -132,12 +127,10 @@ interface IDiscontinuityStoredInfo {
  * @returns {Observable}
  */
 export default function StallAvoider(
-  clock$: Observable<IInitClockTick>,
-  mediaElement : HTMLMediaElement,
+  playbackObserver : PlaybackObserver,
   manifest: Manifest | null,
-  discontinuityUpdate$: Observable<IDiscontinuityEvent>,
   lockedStream$ : Observable<ILockedStreamEvent>,
-  setCurrentTime: (nb: number) => void
+  discontinuityUpdate$: Observable<IDiscontinuityEvent>
 ) : Observable<IStalledEvent | IUnstalledEvent | IWarningEvent> {
   const initialDiscontinuitiesStore : IDiscontinuityStoredInfo[] = [];
 
@@ -146,10 +139,10 @@ export default function StallAvoider(
    * order (first ordered by Period's start, then by bufferType in any order.
    */
   const discontinuitiesStore$ = discontinuityUpdate$.pipe(
-    withLatestFrom(clock$), // listen to clock to clean-up old discontinuities
+    withLatestFrom(playbackObserver.observe(true)),
     scan(
-      (discontinuitiesStore, [evt, tick]) =>
-        updateDiscontinuitiesStore(discontinuitiesStore, evt, tick),
+      (discontinuitiesStore, [evt, observation]) =>
+        updateDiscontinuitiesStore(discontinuitiesStore, evt, observation),
       initialDiscontinuitiesStore));
 
   /**
@@ -186,41 +179,53 @@ export default function StallAvoider(
    * Period handled by that stream to unlock the situation.
    */
   const unlock$ = lockedStream$.pipe(
-    withLatestFrom(clock$),
-    tap(([lockedStreamEvt, tick]) => {
+    withLatestFrom(playbackObserver.observe(true)),
+    tap(([lockedStreamEvt, observation]) => {
       // TODO(PaulB) also skip when the user's wanted speed is set to `0`, as we
       // might not want to seek in that case?
       if (
-        !tick.rebuffering ||
-        tick.paused || (
+        !observation.rebuffering ||
+        observation.paused || (
           lockedStreamEvt.bufferType !== "audio" &&
           lockedStreamEvt.bufferType !== "video"
         )
       ) {
         return;
       }
-      const currPos = tick.position;
-      const rebufferingPos = tick.rebuffering.position ?? currPos;
+      const currPos = observation.position;
+      const rebufferingPos = observation.rebuffering.position ?? currPos;
       const lockedPeriodStart = lockedStreamEvt.period.start;
       if (currPos < lockedPeriodStart &&
           Math.abs(rebufferingPos - lockedPeriodStart) < 1)
       {
         log.warn("Init: rebuffering because of a future locked stream.\n" +
                  "Trying to unlock by seeking to the next Period");
-        setCurrentTime(lockedPeriodStart + 0.001);
+        playbackObserver.setCurrentTime(lockedPeriodStart + 0.001);
       }
     }),
+    // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
+    // first type parameter as `any` instead of the perfectly fine `unknown`,
+    // leading to linter issues, as it forbids the usage of `any`.
+    // This is why we're disabling the eslint rule.
+    /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
     ignoreElements()
   );
 
-  const stall$ = clock$.pipe(
+  const stall$ = playbackObserver.observe(true).pipe(
     withLatestFrom(discontinuitiesStore$),
-    map(([tick, discontinuitiesStore]) => {
+    map(([observation, discontinuitiesStore]) => {
       const { buffered,
               position,
               readyState,
               rebuffering,
-              freezing } = tick;
+              freezing } = observation;
+
+      const { BUFFER_DISCONTINUITY_THRESHOLD,
+              FORCE_DISCONTINUITY_SEEK_DELAY,
+              FREEZING_STALLED_DELAY,
+              UNFREEZING_SEEK_DELAY,
+              UNFREEZING_DELTA_POSITION } = config.getCurrent();
+
       if (freezing !== null) {
         const now = performance.now();
 
@@ -230,7 +235,8 @@ export default function StallAvoider(
 
         if (now - referenceTimestamp > UNFREEZING_SEEK_DELAY) {
           log.warn("Init: trying to seek to un-freeze player");
-          setCurrentTime(tick.getCurrentTime() + UNFREEZING_DELTA_POSITION);
+          playbackObserver.setCurrentTime(
+            playbackObserver.getCurrentTime() + UNFREEZING_DELTA_POSITION);
           prevFreezingState = { attemptTimestamp: now };
         }
 
@@ -247,9 +253,9 @@ export default function StallAvoider(
           // With a readyState set to 1, we should still not be able to play:
           // Return that we're stalled
           let reason : IStallingSituation;
-          if (tick.seeking) {
-            reason = tick.internalSeeking ? "internal-seek" :
-                                            "seeking";
+          if (observation.seeking) {
+            reason = observation.internalSeeking ? "internal-seek" :
+                                                   "seeking";
           } else {
             reason = "not-ready";
           }
@@ -263,18 +269,18 @@ export default function StallAvoider(
       // We want to separate a stall situation when a seek is due to a seek done
       // internally by the player to when its due to a regular user seek.
       const stalledReason = rebuffering.reason === "seeking" &&
-                            tick.internalSeeking ? "internal-seek" as const :
-                                                   rebuffering.reason;
+                            observation.internalSeeking ? "internal-seek" as const :
+                                                          rebuffering.reason;
 
-      if (tick.seeking) {
-        lastSeekingPosition = tick.position;
+      if (observation.seeking) {
+        lastSeekingPosition = observation.position;
       } else if (lastSeekingPosition !== null) {
         const now = performance.now();
         if (ignoredStallTimeStamp === null) {
           ignoredStallTimeStamp = now;
         }
         if (isSeekingApproximate &&
-            tick.position < lastSeekingPosition &&
+            observation.position < lastSeekingPosition &&
             now - ignoredStallTimeStamp < FORCE_DISCONTINUITY_SEEK_DELAY)
         {
           return { type: "stalled" as const,
@@ -299,13 +305,13 @@ export default function StallAvoider(
                                                                  stalledPosition);
         if (skippableDiscontinuity !== null) {
           const realSeekTime = skippableDiscontinuity + 0.001;
-          if (realSeekTime <= mediaElement.currentTime) {
+          if (realSeekTime <= playbackObserver.getCurrentTime()) {
             log.info("Init: position to seek already reached, no seeking",
-                     mediaElement.currentTime, realSeekTime);
+                     playbackObserver.getCurrentTime(), realSeekTime);
           } else {
             log.warn("SA: skippable discontinuity found in the stream",
                      position, realSeekTime);
-            setCurrentTime(realSeekTime);
+            playbackObserver.setCurrentTime(realSeekTime);
             return EVENTS.warning(generateDiscontinuityError(stalledPosition,
                                                              realSeekTime));
           }
@@ -324,10 +330,10 @@ export default function StallAvoider(
       const nextBufferRangeGap = getNextRangeGap(buffered, freezePosition);
       if (nextBufferRangeGap < BUFFER_DISCONTINUITY_THRESHOLD) {
         const seekTo = (freezePosition + nextBufferRangeGap + EPSILON);
-        if (mediaElement.currentTime < seekTo) {
+        if (playbackObserver.getCurrentTime() < seekTo) {
           log.warn("Init: discontinuity encountered inferior to the threshold",
                    freezePosition, seekTo, BUFFER_DISCONTINUITY_THRESHOLD);
-          setCurrentTime(seekTo);
+          playbackObserver.setCurrentTime(seekTo);
           return EVENTS.warning(generateDiscontinuityError(freezePosition, seekTo));
         }
       }
@@ -338,10 +344,10 @@ export default function StallAvoider(
         const period = manifest.periods[i];
         if (period.end !== undefined && period.end <= freezePosition) {
           if (manifest.periods[i + 1].start > freezePosition &&
-              manifest.periods[i + 1].start > mediaElement.currentTime)
+              manifest.periods[i + 1].start > playbackObserver.getCurrentTime())
           {
             const nextPeriod = manifest.periods[i + 1];
-            setCurrentTime(nextPeriod.start);
+            playbackObserver.setCurrentTime(nextPeriod.start);
             return EVENTS.warning(generateDiscontinuityError(freezePosition,
                                                              nextPeriod.start));
 
@@ -430,18 +436,18 @@ function eventContainsDiscontinuity(
  *     store it in Period's chronological order in the Array.
  * @param {Array.<Object>} discontinuitiesStore
  * @param {Object} evt
- * @param {Object} tick
+ * @param {Object} observation
  * @returns {Array.<Object>}
  */
 function updateDiscontinuitiesStore(
   discontinuitiesStore : IDiscontinuityStoredInfo[],
   evt : IDiscontinuityEvent,
-  tick : IInitClockTick
+  observation : IPlaybackObservation
 ) : IDiscontinuityStoredInfo[] {
   // First, perform clean-up of old discontinuities
   while (discontinuitiesStore.length > 0 &&
          discontinuitiesStore[0].period.end !== undefined &&
-         discontinuitiesStore[0].period.end + 10 < tick.position)
+         discontinuitiesStore[0].period.end + 10 < observation.position)
   {
     discontinuitiesStore.shift();
   }

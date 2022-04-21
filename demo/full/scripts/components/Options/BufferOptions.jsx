@@ -11,9 +11,11 @@ import DEFAULT_VALUES from "../../lib/defaultOptionsValues";
  */
 function BufferOptions({
   wantedBufferAhead,
+  maxVideoBufferSize,
   maxBufferAhead,
   maxBufferBehind,
   onWantedBufferAheadInput,
+  onMaxVideoBufferSizeInput,
   onMaxBufferAheadInput,
   onMaxBufferBehindInput,
 }) {
@@ -22,6 +24,10 @@ function BufferOptions({
   );
   const [isMaxBufferBehindLimited, setMaxBufferBehindLimit] = useState(
     maxBufferBehind !== Infinity
+  );
+
+  const [isMaxVideoBufferSizeLimited, setMaxVideoBufferSizeLimit] = useState(
+    maxVideoBufferSize !== Infinity
   );
 
   const onChangeLimitMaxBufferAHead = (evt) => {
@@ -45,6 +51,17 @@ function BufferOptions({
       onMaxBufferAheadInput(DEFAULT_VALUES.maxBufferBehind);
     }
   };
+
+  const onChangeLimitMaxVideoBufferSize = (evt) => {
+    const isNotLimited = getCheckBoxValue(evt.target);
+    if (isNotLimited){
+      setMaxVideoBufferSizeLimit(false);
+      onMaxVideoBufferSizeInput(Infinity)
+    } else {
+      setMaxVideoBufferSizeLimit(true);
+      onMaxVideoBufferSizeInput(DEFAULT_VALUES.maxVideoBufferSize)
+    }
+  }
 
   return (
     <Fragment>
@@ -79,6 +96,50 @@ function BufferOptions({
             />
           </span>
         </div>
+      </li>
+      <li>
+        <div className="playerOptionInput">
+          <label htmlFor="maxVideoBufferSize"> Max Video Buffer Size</label>
+          <span className="wrapperInputWithResetBtn">
+            <input
+              type="text"
+              step="10"
+              aria-label="maxVideoBufferSize option"
+              name="maxVideoBufferSize"
+              id="maxVideoBufferSize"
+              placeholder="Number"
+              onChange={(evt) => onMaxVideoBufferSizeInput(evt.target.value)}
+              value={maxVideoBufferSize}
+              disabled={isMaxVideoBufferSizeLimited === false}
+              className="optionInput"
+            />
+            <Button
+              className={
+                parseFloat(maxVideoBufferSize) ===
+                  DEFAULT_VALUES.maxVideoBufferSize
+                  ? "resetBtn disabledResetBtn"
+                  : "resetBtn"
+              }
+              ariaLabel="Reset option to default value"
+              title="Reset option to default value"
+              onClick={() => {
+                setMaxVideoBufferSizeLimit(DEFAULT_VALUES.maxVideoBufferSize !== 
+                  Infinity);
+                onMaxVideoBufferSizeInput(DEFAULT_VALUES.maxVideoBufferSize);
+              }}
+              value={String.fromCharCode(0xf021)}
+            />
+          </span>
+        </div>
+        <Checkbox
+          className="playerOptionsCheckBox"
+          ariaLabel="Do not limit maxVideoBufferSize option"
+          name="maxVideoBufferSizeLimit"
+          checked={isMaxVideoBufferSizeLimited === false}
+          onChange={onChangeLimitMaxVideoBufferSize}
+        >
+          Do not limit
+        </Checkbox>
       </li>
       <li>
         <div className="playerOptionInput">

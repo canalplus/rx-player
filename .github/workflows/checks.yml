@@ -1,0 +1,99 @@
+# This workflow will do a clean install of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: RxPlayer Tests
+
+on:
+  push:
+    branches: [ master, next ]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: npm install
+    - run: npm run check
+    - run: npm run test:unit
+
+  integration_linux:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    # needed for integration & memory tests codecs support
+    - run: sudo add-apt-repository multiverse && sudo apt update && sudo apt install -y ubuntu-restricted-extras
+    - run: npm install
+    # Firefox seems to have issue with integration tests on GitHub actions only
+    # TODO to check
+    - run: node tests/integration/run.js --bchromehl
+    - run: npm run test:memory
+
+  integration_windows:
+
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: npm install
+    # Firefox seems to have issue with integration tests on GitHub actions only
+    # TODO to check
+    - run: node tests/integration/run.js --bchromehl
+    - run: npm run test:memory
+
+  # MacOS seems to be a lot less stable for some reason.
+  # TODO debug?
+  # integration_macos:
+
+  #   runs-on: macos-latest
+
+  #   strategy:
+  #     matrix:
+  #       node-version: [16.x]
+  #       # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Use Node.js ${{ matrix.node-version }}
+  #     uses: actions/setup-node@v2
+  #     with:
+  #       node-version: ${{ matrix.node-version }}
+  #       cache: 'npm'
+  #   - run: npm install
+  #   - run: npm run test:integration:gh-actions
+  #   - run: npm run test:memory

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import { ISegment } from "../../manifest";
 import { concat } from "../../utils/byte_parsing";
 import request from "../../utils/request";
@@ -86,7 +85,7 @@ export default function initSegmentLoader(
                                   cancelSignal,
                                   onProgress: callbacks.onProgress });
 
-  return PPromise.all([rangeRequest$, indexRequest$])
+  return Promise.all([rangeRequest$, indexRequest$])
     .then(([ initData, indexData ]) => {
       const data = concat(new Uint8Array(initData.responseData),
                           new Uint8Array(indexData.responseData));
@@ -99,7 +98,7 @@ export default function initSegmentLoader(
                resultData: { url,
                              responseData: data,
                              size: initData.size + indexData.size,
-                             duration: receivedTime - sendingTime,
+                             requestDuration: receivedTime - sendingTime,
                              sendingTime,
                              receivedTime } };
 

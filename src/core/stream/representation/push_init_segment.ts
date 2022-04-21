@@ -26,6 +26,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
+import { IReadOnlyPlaybackObserver } from "../../api";
 import {
   IPushedChunkData,
   SegmentBuffer,
@@ -43,18 +44,20 @@ import appendSegmentToBuffer from "./append_segment_to_buffer";
  * @returns {Observable}
  */
 export default function pushInitSegment<T>(
-  { clock$,
+  { playbackObserver,
     content,
     segment,
     segmentData,
-    segmentBuffer } : { clock$ : Observable<{ position : number }>;
-                        content: { adaptation : Adaptation;
-                                   manifest : Manifest;
-                                   period : Period;
-                                   representation : Representation; };
-                        segmentData : T | null;
-                        segment : ISegment;
-                        segmentBuffer : SegmentBuffer; }
+    segmentBuffer } :
+  { playbackObserver : IReadOnlyPlaybackObserver<{ position : number;
+                                                   wantedTimeOffset : number; }>;
+    content: { adaptation : Adaptation;
+               manifest : Manifest;
+               period : Period;
+               representation : Representation; };
+    segmentData : T | null;
+    segment : ISegment;
+    segmentBuffer : SegmentBuffer; }
 ) : Observable< IStreamEventAddedSegment<T> > {
   return observableDefer(() => {
     if (segmentData === null) {
@@ -66,11 +69,11 @@ export default function pushInitSegment<T>(
                                          timestampOffset: 0,
                                          appendWindow: [ undefined, undefined ],
                                          codec };
-    return appendSegmentToBuffer(clock$, segmentBuffer, { data,
-                                                          inventoryInfos: null })
-      .pipe(map(() => {
-        const buffered = segmentBuffer.getBufferedRanges();
-        return EVENTS.addedSegment(content, segment, buffered, segmentData);
-      }));
+    return appendSegmentToBuffer(playbackObserver,
+                                 segmentBuffer,
+                                 { data, inventoryInfos: null }).pipe(map(() => {
+      const buffered = segmentBuffer.getBufferedRanges();
+      return EVENTS.addedSegment(content, segment, buffered, segmentData);
+    }));
   });
 }

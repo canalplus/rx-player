@@ -15,7 +15,6 @@
  */
 
 import arrayFind from "../../../../utils/array_find";
-import PPromise from "../../../../utils/promise";
 import log from "../log";
 import {
   ICompatibleKeySystem,
@@ -79,7 +78,7 @@ const mediaCapabilitiesProber = {
    */
   getStatusForHDCP(hdcp: string) : Promise<string> {
     if (hdcp === undefined || hdcp.length === 0) {
-      return PPromise.reject("MediaCapabilitiesProbers >>> Bad Arguments: " +
+      return Promise.reject("MediaCapabilitiesProbers >>> Bad Arguments: " +
         "No HDCP Policy specified.");
     }
     const config = {
@@ -127,7 +126,7 @@ const mediaCapabilitiesProber = {
     }>
   ) : Promise<ICompatibleKeySystem[]> {
     const promises: Array<Promise<{ globalStatus: ProberStatus;
-                                    result? : ICompatibleKeySystem; }>> = [];
+                                    result? : ICompatibleKeySystem | undefined; }>> = [];
     configurations.forEach((configuration) => {
       const globalConfig = {
         keySystem: configuration,
@@ -152,7 +151,7 @@ const mediaCapabilitiesProber = {
         })
       );
     });
-    return PPromise.all(promises)
+    return Promise.all(promises)
       .then((configs) => {
         // TODO I added those lines to work-around a type issue but does it
         // really correspond to the original intent? I find it hard to

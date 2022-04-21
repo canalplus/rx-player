@@ -27,14 +27,14 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
-import { ISegmentParserParsedSegment } from "../../../transports";
+import { ISegmentParserParsedMediaChunk } from "../../../transports";
 import objectAssign from "../../../utils/object_assign";
+import { IReadOnlyPlaybackObserver } from "../../api";
 import { SegmentBuffer } from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import { IStreamEventAddedSegment } from "../types";
 import appendSegmentToBuffer from "./append_segment_to_buffer";
 
-const { APPEND_WINDOW_SECURITIES } = config;
 
 /**
  * Push a given media segment (non-init segment) to a SegmentBuffer.
@@ -45,20 +45,22 @@ const { APPEND_WINDOW_SECURITIES } = config;
  * @returns {Observable}
  */
 export default function pushMediaSegment<T>(
-  { clock$,
+  { playbackObserver,
     content,
     initSegmentData,
     parsedSegment,
     segment,
-    segmentBuffer } : { clock$ : Observable<{ position : number }>;
-                        content: { adaptation : Adaptation;
-                                   manifest : Manifest;
-                                   period : Period;
-                                   representation : Representation; };
-                        initSegmentData : T | null;
-                        parsedSegment : ISegmentParserParsedSegment<T>;
-                        segment : ISegment;
-                        segmentBuffer : SegmentBuffer; }
+    segmentBuffer } :
+  { playbackObserver : IReadOnlyPlaybackObserver<{ position : number;
+                                                   wantedTimeOffset : number; }>;
+    content: { adaptation : Adaptation;
+               manifest : Manifest;
+               period : Period;
+               representation : Representation; };
+    initSegmentData : T | null;
+    parsedSegment : ISegmentParserParsedMediaChunk<T>;
+    segment : ISegment;
+    segmentBuffer : SegmentBuffer; }
 ) : Observable< IStreamEventAddedSegment<T> > {
   return observableDefer(() => {
     if (parsedSegment.chunkData === null) {
@@ -67,9 +69,10 @@ export default function pushMediaSegment<T>(
     const { chunkData,
             chunkInfos,
             chunkOffset,
+            chunkSize,
             appendWindow } = parsedSegment;
     const codec = content.representation.getMimeTypeString();
-
+    const { APPEND_WINDOW_SECURITIES } = config.getCurrent();
     // Cutting exactly at the start or end of the appendWindow can lead to
     // cases of infinite rebuffering due to how browser handle such windows.
     // To work-around that, we add a small offset before and after those.
@@ -99,14 +102,16 @@ export default function pushMediaSegment<T>(
     }
 
     const inventoryInfos = objectAssign({ segment,
+                                          chunkSize,
                                           start: estimatedStart,
                                           end: estimatedEnd },
                                         content);
 
-    return appendSegmentToBuffer(clock$, segmentBuffer, { data, inventoryInfos })
-      .pipe(map(() => {
-        const buffered = segmentBuffer.getBufferedRanges();
-        return EVENTS.addedSegment(content, segment, buffered, chunkData);
-      }));
+    return appendSegmentToBuffer(playbackObserver,
+                                 segmentBuffer,
+                                 { data, inventoryInfos }).pipe(map(() => {
+      const buffered = segmentBuffer.getBufferedRanges();
+      return EVENTS.addedSegment(content, segment, buffered, chunkData);
+    }));
   });
 }

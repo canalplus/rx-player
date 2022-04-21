@@ -1,19 +1,22 @@
 <p align="center">
-  <img src="./doc/assets/logo.png" />
+  <img src="./doc/static/img/logo.png" />
   <br /><br />
-  <a href="https://canalplus.github.io/rx-player/doc/pages/api/index.html">📖 <b>API documentation</b></a>
+  <a href="https://developers.canal-plus.com/rx-player/doc/api/Overview.html">📖 <b>API documentation</b></a>
   -
   <a href="https://developers.canal-plus.com/rx-player/">⏯ <b>Demo</b></a>
   -
-  <a href="https://canalplus.github.io/rx-player/doc/pages/tutorials/index.html">🎓 <b>Tutorials</b></a>
+  <a href="https://developers.canal-plus.com/rx-player/doc/Getting_Started/Welcome.html">🎓 <b>Getting Started</b></a>
   -
   <a href="./CONTRIBUTING.md">🔧 <b>Contributing</b></a>
   <br /><br />
   <a href="https://github.com/canalplus/rx-player/releases">
     <img src="https://img.shields.io/badge/dynamic/json.svg?label=Latest%20release&url=https://api.github.com/repos/canalplus/rx-player/releases/latest&query=$.tag_name&colorB=blue" />
   </a>
-  <a href="https://travis-ci.org/canalplus/rx-player">
-    <img src="https://travis-ci.org/canalplus/rx-player.svg?branch=master" />
+  <a href="https://github.com/canalplus/rx-player/actions/workflows/checks.yml">
+    <img src="https://github.com/canalplus/rx-player/actions/workflows/checks.yml/badge.svg" />
+  </a>
+  <a href="https://sonarcloud.io/summary/new_code?id=rx-player">
+    <img src="https://sonarcloud.io/api/project_badges/measure?project=rx-player&metric=alert_status" />
   </a>
   <a href="https://gitter.im/canalplus/rx-player">
     <img src="https://img.shields.io/gitter/room/canalplus/rx-player.svg" />
@@ -119,13 +122,11 @@ player.loadVideo({
 });
 ```
 
-We've also written [short
-tutorials](https://canalplus.github.io/rx-player/doc/pages/tutorials/index.html)
-to help you familiarize with the RxPlayer API:
-  - [Quick start into the API](https://canalplus.github.io/rx-player/doc/pages/tutorials/quick_start.html).
-  - [Playing contents with DRMs](https://canalplus.github.io/rx-player/doc/pages/tutorials/contents_with_DRM.html).
-  - [Selecting a track](https://developers.canal-plus.com/rx-player/doc/pages/tutorials/track_selection.html)
-  - [Listening to events contained in the content](https://canalplus.github.io/rx-player/doc/pages/tutorials/stream_events.html)
+We've also written short tutorials to help you familiarize with the RxPlayer API:
+  - [Quick start into the API](https://developers.canal-plus.com/rx-player/doc/Getting_Started/Tutorials/Quick_Start.html).
+  - [Playing contents with DRMs](https://developers.canal-plus.com/rx-player/doc/Getting_Started/Tutorials/Content_with_DRM.html).
+  - [Selecting a track](https://developers.canal-plus.com/rx-player/doc/Getting_Started/Tutorials/Selecting_a_Track.html)
+  - [Listening to events contained in the content](https://developers.canal-plus.com/rx-player/doc/Getting_Started/Tutorials/EventStream_Handling.html)
 
 To be able to play with the player without needing to perform any setup we also
 created multiple live-editable demos:
@@ -138,7 +139,7 @@ created multiple live-editable demos:
 To reduce the size of the final code, you might also want to import a minimal
 version of the player and only import the features you need. This is documented
 [here
-](https://canalplus.github.io/rx-player/doc/pages/api/minimal_player.html):
+](https://developers.canal-plus.com/rx-player/doc/Getting_Started/Minimal_Player.html):
 
 For example, to play encrypted DASH contents, you could just write:
 ```js
@@ -153,13 +154,13 @@ RxPlayer.addFeatures([DASH, EME]);
 ## API #########################################################################
 
 We documented the API in every little details in [the API
-documentation](https://canalplus.github.io/rx-player/doc/pages/api/index.html).
+documentation](https://developers.canal-plus.com/rx-player/doc/api/Overview.html).
 
 You can also refer to the documentation of our previous versions
 [here](https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html)
 
 These documentation pages are automatically generated from the content of the
-[doc/api](./doc/api/index.md) directory in this repository.
+[doc/api](./doc/api/Overview.md) directory in this repository.
 
 
 
@@ -251,9 +252,9 @@ Now, more than 6 years later, the RxPlayer continues to evolve at the same fast
 pace to include a lot of features and improvements you may not find in other
 media players.
 You can look at our
-[API documentation](https://canalplus.github.io/rx-player/doc/pages/api/index.html),
-[tutorials](https://canalplus.github.io/rx-player/doc/pages/tutorials/index.html)
-and our [demo page](https://canalplus.github.io/rx-player/doc/pages/api/index.html)
+[API documentation](https://developers.canal-plus.com/rx-player/doc/api/Overview.html),
+[tutorials](https://developers.canal-plus.com/rx-player/doc/Getting_Started/Tutorials/Quick_Start.html)
+and our [demo page](https://developers.canal-plus.com/rx-player/)
 (an RxPlayer instance is available in the console through the global `player`
 variable there) to see if it matches your need.
 

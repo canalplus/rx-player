@@ -397,7 +397,7 @@ function setStatus(fakeXhr, status) {
  */
 function normalizeHeaderValue(value) {
   // https://fetch.spec.whatwg.org/#concept-header-value-normalize
-  return value.replace(/^[\x09\x0A\x0D\x20]+|[\x09\x0A\x0D\x20]+$/g, "");
+  return value.replace(/(^[\x09\x0A\x0D\x20]+)|([\x09\x0A\x0D\x20]+$)/g, "");
 }
 
 /**

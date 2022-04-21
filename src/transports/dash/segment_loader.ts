@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import { CustomLoaderError } from "../../errors";
 import request, {
   fetchIsSupported,
@@ -42,7 +41,7 @@ import lowLatencySegmentLoader from "./low_latency_segment_loader";
 
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
- * @param {string} uri
+ * @param {string} url
  * @param {Object} content
  * @param {boolean} lowLatencyMode
  * @param {Object} callbacks
@@ -94,8 +93,8 @@ export default function generateSegmentLoader(
   { lowLatencyMode,
     segmentLoader: customSegmentLoader,
     checkMediaSegmentIntegrity } : { lowLatencyMode: boolean;
-                                     segmentLoader? : ICustomSegmentLoader;
-                                     checkMediaSegmentIntegrity? : boolean; }
+                                     segmentLoader? : ICustomSegmentLoader | undefined;
+                                     checkMediaSegmentIntegrity? : boolean | undefined; }
 ) : ISegmentLoader<Uint8Array | ArrayBuffer | null> {
   return checkMediaSegmentIntegrity !== true ? segmentLoader :
                                                addSegmentIntegrityChecks(segmentLoader);
@@ -114,8 +113,8 @@ export default function generateSegmentLoader(
               ISegmentLoaderResultChunkedComplete>
   {
     if (url == null) {
-      return PPromise.resolve({ resultType: "segment-created",
-                                resultData: null });
+      return Promise.resolve({ resultType: "segment-created",
+                               resultData: null });
     }
 
     if (lowLatencyMode || customSegmentLoader === undefined) {
@@ -140,8 +139,8 @@ export default function generateSegmentLoader(
        */
       const resolve = (
         _args : { data : ArrayBuffer|Uint8Array;
-                  size? : number;
-                  duration? : number; }
+                  size? : number | undefined;
+                  duration? : number | undefined; }
       ) => {
         if (hasFinished || cancelSignal.isCancelled) {
           return;
@@ -151,7 +150,7 @@ export default function generateSegmentLoader(
         res({ resultType: "segment-loaded",
               resultData: { responseData: _args.data,
                             size: _args.size,
-                            duration: _args.duration } });
+                            requestDuration: _args.duration } });
       };
 
       /**
@@ -183,7 +182,7 @@ export default function generateSegmentLoader(
       const progress = (
         _args : { duration : number;
                   size : number;
-                  totalSize? : number; }
+                  totalSize? : number | undefined; }
       ) => {
         if (hasFinished || cancelSignal.isCancelled) {
           return;

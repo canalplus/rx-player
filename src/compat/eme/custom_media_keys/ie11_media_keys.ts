@@ -20,7 +20,6 @@ import {
   takeUntil,
 } from "rxjs";
 import EventEmitter from "../../../utils/event_emitter";
-import PPromise from "../../../utils/promise";
 import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
 import * as events from "../../event_listeners";
 import {
@@ -45,18 +44,18 @@ class IE11MediaKeySession
   public keyStatuses: ICustomMediaKeyStatusMap;
   private readonly _mk: MSMediaKeys;
   private readonly _closeSession$: Subject<void>;
-  private _ss?: MSMediaKeySession;
+  private _ss: MSMediaKeySession | undefined;
   constructor(mk: MSMediaKeys) {
     super();
     this.expiration = NaN;
     this.keyStatuses = new Map();
     this._mk = mk;
     this._closeSession$ = new Subject();
-    this.closed = new PPromise((resolve) => {
+    this.closed = new Promise((resolve) => {
       this._closeSession$.subscribe(resolve);
     });
     this.update = (license: Uint8Array) => {
-      return new PPromise((resolve, reject) => {
+      return new Promise((resolve, reject) => {
         if (this._ss === undefined) {
           return reject("MediaKeySession not set.");
         }
@@ -74,7 +73,7 @@ class IE11MediaKeySession
     };
   }
   generateRequest(_initDataType: string, initData: BufferSource): Promise<void> {
-    return new PPromise((resolve) => {
+    return new Promise((resolve) => {
       const initDataU8 =
         initData instanceof Uint8Array  ? initData :
         initData instanceof ArrayBuffer ? new Uint8Array(initData) :
@@ -89,7 +88,7 @@ class IE11MediaKeySession
     });
   }
   close(): Promise<void> {
-    return new PPromise((resolve) => {
+    return new Promise((resolve) => {
       if (this._ss != null) {
         this._ss.close();
         this._ss = undefined;
@@ -100,10 +99,10 @@ class IE11MediaKeySession
     });
   }
   load(): Promise<boolean> {
-    return PPromise.resolve(false);
+    return Promise.resolve(false);
   }
   remove(): Promise<void> {
-    return PPromise.resolve();
+    return Promise.resolve();
   }
   get sessionId(): string {
     return this._ss?.sessionId ?? "";

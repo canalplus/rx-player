@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "../../../../../utils/promise";
 import {
   IMediaConfiguration,
   ProberStatus,
@@ -33,7 +32,7 @@ export type ISupportWithFeatures = ""|"Maybe"|"Not Supported"|"Probably";
  * @returns {Promise}
  */
 function isTypeSupportedWithFeaturesAPIAvailable(): Promise<void> {
-  return new PPromise((resolve) => {
+  return new Promise((resolve) => {
     if (!("MSMediaKeys" in window)) {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "MSMediaKeys API not available");

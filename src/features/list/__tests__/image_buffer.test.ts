@@ -15,6 +15,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 import imageBuffer from "../../../core/segment_buffers/implementations/image";
 import addImageBufferFeature from "../image_buffer";

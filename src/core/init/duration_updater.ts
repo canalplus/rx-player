@@ -25,7 +25,6 @@ import {
   ignoreElements,
   interval as observableInterval,
   map,
-  mapTo,
   merge as observableMerge,
   mergeMap,
   Observable,
@@ -81,6 +80,11 @@ export default function DurationUpdater(
           })
         );
       }),
+      // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
+      // first type parameter as `any` instead of the perfectly fine `unknown`,
+      // leading to linter issues, as it forbids the usage of `any`.
+      // This is why we're disabling the eslint rule.
+      /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
       ignoreElements()
     );
   });
@@ -168,9 +172,9 @@ function whenSourceBuffersEndedUpdates$(
     const sourceBuffer = sourceBuffers[i];
     sourceBufferUpdatingStatuses.push(
       observableMerge(
-        observableFromEvent(sourceBuffer, "updatestart").pipe(mapTo(true)),
-        observableFromEvent(sourceBuffer, "update").pipe(mapTo(false)),
-        observableInterval(500).pipe(mapTo(sourceBuffer.updating))
+        observableFromEvent(sourceBuffer, "updatestart").pipe(map(() => true)),
+        observableFromEvent(sourceBuffer, "update").pipe(map(() => false)),
+        observableInterval(500).pipe(map(() => sourceBuffer.updating))
       ).pipe(
         startWith(sourceBuffer.updating),
         distinctUntilChanged()
@@ -181,7 +185,7 @@ function whenSourceBuffersEndedUpdates$(
     filter((areUpdating) => {
       return areUpdating.every((isUpdating) => !isUpdating);
     }),
-    mapTo(undefined)
+    map(() => undefined)
   );
 }
 
@@ -191,11 +195,12 @@ function whenSourceBuffersEndedUpdates$(
  * @returns {Object}
  */
 function isMediaSourceOpened$(mediaSource: MediaSource): Observable<boolean> {
-  return observableMerge(onSourceOpen$(mediaSource).pipe(mapTo(true)),
-                         onSourceEnded$(mediaSource).pipe(mapTo(false)),
-                         onSourceClose$(mediaSource).pipe(mapTo(false))
+  return observableMerge(onSourceOpen$(mediaSource).pipe(map(() => true)),
+                         onSourceEnded$(mediaSource).pipe(map(() => false)),
+                         onSourceClose$(mediaSource).pipe(map(() => false))
   ).pipe(
     startWith(mediaSource.readyState === "open"),
     distinctUntilChanged()
   );
 }
+/* eslint-enable @typescript-eslint/no-unsafe-argument */

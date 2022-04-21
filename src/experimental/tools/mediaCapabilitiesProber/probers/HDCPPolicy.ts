@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-import { lastValueFrom } from "rxjs";
 import { requestMediaKeySystemAccess } from "../../../../compat";
-import PPromise from "../../../../utils/promise";
 import {
   IMediaConfiguration,
   ProberStatus,
@@ -39,11 +37,11 @@ export default function probeHDCPPolicy(
   config: IMediaConfiguration
 ): Promise<[ProberStatus]> {
   if (requestMediaKeySystemAccess == null) {
-    return PPromise.reject("MediaCapabilitiesProber >>> API_CALL: " +
+    return Promise.reject("MediaCapabilitiesProber >>> API_CALL: " +
       "API not available");
   }
   if (config.hdcp == null) {
-    return PPromise.reject("MediaCapabilitiesProber >>> API_CALL: " +
+    return Promise.reject("MediaCapabilitiesProber >>> API_CALL: " +
       "Missing policy argument for calling getStatusForPolicy.");
   }
 
@@ -61,7 +59,7 @@ export default function probeHDCPPolicy(
     }],
   };
 
-  return lastValueFrom(requestMediaKeySystemAccess(keySystem, [drmConfig]))
+  return requestMediaKeySystemAccess(keySystem, [drmConfig])
     .then((mediaKeysSystemAccess) => {
       return mediaKeysSystemAccess.createMediaKeys().then((mediaKeys) => {
         if (!("getStatusForPolicy" in mediaKeys)) {

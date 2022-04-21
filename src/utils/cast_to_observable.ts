@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import {
   from as observableFrom,
   Observable,
@@ -30,12 +29,10 @@ import isNullOrUndefined from "./is_null_or_undefined";
  */
 function castToObservable<T>(value : Observable<T> |
                                      Promise<T> |
-                                     PPromise<T> |
                                      Exclude<T, Observable<T>>) : Observable<T> {
   if (value instanceof Observable) {
     return value;
   } else if (
-    value instanceof PPromise ||
     value instanceof Promise ||
     (
       !isNullOrUndefined(value) &&

@@ -29,14 +29,23 @@ import BufferedHistory, {
 } from "./buffered_history";
 import { IChunkContext } from "./types";
 
-const { BUFFERED_HISTORY_RETENTION_TIME,
-        BUFFERED_HISTORY_MAXIMUM_ENTRIES,
-        MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
-        MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE,
-        MINIMUM_SEGMENT_SIZE } = config;
 
 /** Information stored on a single chunk by the SegmentInventory. */
 export interface IBufferedChunk {
+  /**
+   * Complete size of the pushed chunk, in bytes.
+   * Note that this does not always reflect the memory imprint of the segment in
+   * memory:
+   *
+   *   1. It's the size of the original container file. A browser receiving that
+   *      segment might then transform it under another form that may be more or
+   *      less voluminous.
+   *
+   *   2. It's the size of the full chunk. In some scenarios only a sub-part of
+   *      that chunk is actually considered (examples: when using append
+   *      windows, when another chunk overlap that one etc.).
+   */
+  chunkSize : number | undefined;
   /**
    * Last inferred end in the media buffer this chunk ends at, in seconds.
    *
@@ -51,16 +60,7 @@ export interface IBufferedChunk {
    * synchronization for that chunk this value could be more or less precize.
    */
   bufferedStart : number|undefined;
-  /**
-   * Supposed end, in seconds, the chunk is expected to end at.
-   *
-   * If the current `chunk` is part of a "partially pushed" segment (see
-   * `partiallyPushed`), the definition of this property is flexible in the way
-   * that it can correspond either to the end of the chunk or to the end of the
-   * whole segment the chunk is linked to.
-   * As such, this property should not be relied on until the segment has been
-   * fully-pushed.
-   */
+  /** Supposed end, in seconds, the chunk is expected to end at. */
   end : number;
   /**
    * If `true` the `end` property is an estimate the `SegmentInventory` has
@@ -84,8 +84,6 @@ export interface IBufferedChunk {
   infos : IChunkContext;
   /**
    * If `true`, this chunk is only a partial chunk of a whole segment.
-   * In this condition, the `start` and `end` properties may be ignored, as it
-   * is unclear if they refer to the chunk or to the whole segment.
    *
    * Inversely, if `false`, this chunk is a whole segment whose inner chunks
    * have all been fully pushed.
@@ -125,6 +123,8 @@ export interface IInsertedChunkInfos {
   representation : Representation;
   /** The Segment that chunk is linked to. */
   segment : ISegment;
+  /** Estimated size of the full pushed chunk, in bytes. */
+  chunkSize : number | undefined;
   /**
    * Start time, in seconds, this chunk most probably begins from after being
    * pushed.
@@ -163,6 +163,8 @@ export default class SegmentInventory {
   private _bufferedHistory : BufferedHistory;
 
   constructor() {
+    const { BUFFERED_HISTORY_RETENTION_TIME,
+            BUFFERED_HISTORY_MAXIMUM_ENTRIES } = config.getCurrent();
     this._inventory = [];
     this._bufferedHistory = new BufferedHistory(BUFFERED_HISTORY_RETENTION_TIME,
                                                 BUFFERED_HISTORY_MAXIMUM_ENTRIES);
@@ -191,7 +193,7 @@ export default class SegmentInventory {
     const inventory = this._inventory;
     let inventoryIndex = 0; // Current index considered.
     let thisSegment = inventory[0]; // Current segmentInfos considered
-
+    const { MINIMUM_SEGMENT_SIZE } = config.getCurrent();
     /** Type of buffer considered, used for logs */
     const bufferType : string | undefined = thisSegment?.infos.adaptation.type;
 
@@ -336,6 +338,7 @@ export default class SegmentInventory {
       adaptation,
       representation,
       segment,
+      chunkSize,
       start,
       end } : IInsertedChunkInfos
   ) : void {
@@ -352,6 +355,7 @@ export default class SegmentInventory {
 
     const inventory = this._inventory;
     const newSegment = { partiallyPushed: true,
+                         chunkSize,
                          splitted: false,
                          start,
                          end,
@@ -556,9 +560,16 @@ export default class SegmentInventory {
               //  prevSegment  : |---------|
               //  newSegment   :    |====|
               //  ===>         : |--|====|-|
-              log.debug("SI: Segment pushed is contained in a previous one",
-                        bufferType, start, end, segmentI.start, segmentI.end);
+              log.warn("SI: Segment pushed is contained in a previous one",
+                       bufferType, start, end, segmentI.start, segmentI.end);
               const nextSegment = { partiallyPushed: segmentI.partiallyPushed,
+                                    /**
+                                     * Note: this sadly means we're doing as if
+                                     * that chunk is present two times.
+                                     * Thankfully, this scenario should be
+                                     * fairly rare.
+                                     */
+                                    chunkSize: segmentI.chunkSize,
                                     splitted: true,
                                     start: newSegment.end,
                                     end: segmentI.end,
@@ -692,7 +703,6 @@ export default class SegmentInventory {
     }
     const inventory = this._inventory;
 
-
     const resSegments : IBufferedChunk[] = [];
 
     for (let i = 0; i < inventory.length; i++) {
@@ -707,10 +717,15 @@ export default class SegmentInventory {
         }
 
         const firstI = i;
+        let segmentSize = inventory[i].chunkSize;
         i += 1;
         while (i < inventory.length &&
                areSameContent(inventory[i].infos, content))
         {
+          const chunkSize = inventory[i].chunkSize;
+          if (segmentSize !== undefined && chunkSize !== undefined) {
+            segmentSize += chunkSize;
+          }
           i++;
         }
 
@@ -723,6 +738,7 @@ export default class SegmentInventory {
           i -= length;
         }
         this._inventory[firstI].partiallyPushed = false;
+        this._inventory[firstI].chunkSize = segmentSize;
         this._inventory[firstI].end = lastEnd;
         this._inventory[firstI].bufferedEnd = lastBufferedEnd;
         this._inventory[firstI].splitted = splitted;
@@ -792,6 +808,8 @@ function bufferedStartLooksCoherent(
   }
   const { start, end } = thisSegment;
   const duration = end - start;
+  const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
+          MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE } = config.getCurrent();
   return Math.abs(start - thisSegment.bufferedStart) <=
            MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE &&
          (thisSegment.bufferedEnd === undefined ||
@@ -817,6 +835,8 @@ function bufferedEndLooksCoherent(
   }
   const { start, end } = thisSegment;
   const duration = end - start;
+  const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
+          MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE } = config.getCurrent();
   return Math.abs(end - thisSegment.bufferedEnd) <=
            MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE &&
          thisSegment.bufferedStart != null &&
@@ -840,6 +860,7 @@ function guessBufferedStartFromRangeStart(
                             null,
   bufferType : string
 ) : void {
+  const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE } = config.getCurrent();
   if (firstSegmentInRange.bufferedStart !== undefined) {
     if (firstSegmentInRange.bufferedStart < rangeStart) {
       log.debug("SI: Segment partially GCed at the start",
@@ -904,6 +925,7 @@ function guessBufferedEndFromRangeEnd(
   rangeEnd : number,
   bufferType? : string
 ) : void {
+  const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE } = config.getCurrent();
   if (lastSegmentInRange.bufferedEnd !== undefined) {
     if (lastSegmentInRange.bufferedEnd > rangeEnd) {
       log.debug("SI: Segment partially GCed at the end",

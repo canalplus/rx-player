@@ -24,22 +24,31 @@ import {
 /**
  * Update a complete array of segments in a given timeline with a [generally]
  * smaller but [generally] newer set of segments.
+ *
+ * Returns a boolean:
+ *   - If set to `true`, the old timeline was emptied and completely replaced by
+ *     the content of the newer timeline.
+ *     This could happen either if a problem happened while trying to update or
+ *     when the update is actually bigger than what it is updating.
+ *   - If set to `false`, the older timeline was either updated to add the newer
+ *     segments, or untouched.
+ *
  * @param {Array.<Object>} oldTimeline
  * @param {Array.<Object>} newTimeline
+ * @returns {boolean}
  */
 export default function updateSegmentTimeline(
   oldTimeline : IIndexSegment[],
   newTimeline : IIndexSegment[]
-) : void {
-  const prevTimelineLength = oldTimeline.length;
+) : boolean {
   if (oldTimeline.length === 0) {
-    oldTimeline.splice(0, prevTimelineLength, ...newTimeline);
-    return;
-  }
-  if (newTimeline.length === 0) {
-    return;
+    oldTimeline.push(...newTimeline);
+    return true;
+  } else if (newTimeline.length === 0) {
+    return false;
   }
 
+  const prevTimelineLength = oldTimeline.length;
   const newIndexStart = newTimeline[0].start;
 
   const oldLastElt = oldTimeline[prevTimelineLength - 1];
@@ -53,29 +62,31 @@ export default function updateSegmentTimeline(
     const currStart = oldTimeline[i].start;
     if (currStart === newIndexStart) {
       // replace that one and those after it
-      oldTimeline.splice(i, prevTimelineLength - i, ...newTimeline);
-      return;
+      const nbEltsToRemove = prevTimelineLength - i;
+      oldTimeline.splice(i, nbEltsToRemove, ...newTimeline);
+      return false;
     } else if (currStart < newIndexStart) { // first to be before
       const currElt = oldTimeline[i];
       if (currElt.start + currElt.duration > newIndexStart) {
-        // the new Manifest overlaps a previous segment (weird). Remove the latter.
-        log.warn("RepresentationIndex: Manifest update removed previous segments");
-        oldTimeline.splice(i, prevTimelineLength - i, ...newTimeline);
-        return;
+        // The new Manifest overlaps a previous segment (weird)
+        // In that improbable case, we'll just completely replace segments
+        log.warn("RepresentationIndex: Manifest update removed all previous segments");
+        oldTimeline.splice(0, prevTimelineLength, ...newTimeline);
+        return true;
       } else if (currElt.repeatCount === undefined || currElt.repeatCount <= 0) {
         if (currElt.repeatCount < 0) {
           currElt.repeatCount = Math.floor((newIndexStart - currElt.start) /
                                               currElt.duration) - 1;
         }
         oldTimeline.splice(i + 1, prevTimelineLength - (i + 1), ...newTimeline);
-        return;
+        return false;
       }
       // else, there is a positive repeat we might want to update
       const eltLastTime = currElt.start + currElt.duration * (currElt.repeatCount + 1);
       if (eltLastTime <= newIndexStart) { // our new index comes directly after
         // put it after this one
         oldTimeline.splice(i + 1, prevTimelineLength - (i + 1), ...newTimeline);
-        return;
+        return false;
       }
 
       const newCurrRepeat = ((newIndexStart - currElt.start) / currElt.duration) - 1;
@@ -88,14 +99,14 @@ export default function updateSegmentTimeline(
         oldTimeline.splice(i, prevTimelineLength - i, ...newTimeline);
         oldTimeline[i].start = currElt.start;
         oldTimeline[i].repeatCount = newRepeatCount;
-        return;
+        return false;
       }
       log.warn("RepresentationIndex: Manifest update removed previous segments");
       oldTimeline[i].repeatCount = Math.floor(newCurrRepeat);
 
       // put it after this one
       oldTimeline.splice(i + 1, prevTimelineLength - (i + 1), ...newTimeline);
-      return;
+      return false;
     }
   }
 
@@ -107,11 +118,11 @@ export default function updateSegmentTimeline(
   if (prevLastElt.repeatCount !== undefined && prevLastElt.repeatCount < 0) {
     if (prevLastElt.start > newLastElt.start) {
       log.warn("RepresentationIndex: The new index is older than the previous one");
-      return; // the old comes after
+      return false;
     } else { // the new has more depth
       log.warn("RepresentationIndex: The new index is \"bigger\" than the previous one");
       oldTimeline.splice(0, prevTimelineLength, ...newTimeline);
-      return;
+      return true;
     }
   }
   const prevLastTime = prevLastElt.start + prevLastElt.duration *
@@ -120,11 +131,11 @@ export default function updateSegmentTimeline(
                       (newLastElt.repeatCount + 1);
   if (prevLastTime >= newLastTime) {
     log.warn("RepresentationIndex: The new index is older than the previous one");
-    return; // the old comes after
+    return false;
   }
 
   // the new one has more depth. full update
   log.warn("RepresentationIndex: The new index is \"bigger\" than the previous one");
   oldTimeline.splice(0, prevTimelineLength, ...newTimeline);
-  return;
+  return true;
 }

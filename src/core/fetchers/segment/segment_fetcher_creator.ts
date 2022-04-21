@@ -14,18 +14,11 @@
  * limitations under the License.
  */
 
-import { Subject } from "rxjs";
 import config from "../../../config";
 import {
   ISegmentPipeline,
   ITransportPipelines,
 } from "../../../transports";
-import {
-  IABRMetricsEvent,
-  IABRRequestBeginEvent,
-  IABRRequestEndEvent,
-  IABRRequestProgressEvent,
-} from "../../abr";
 import { IBufferType } from "../../segment_buffers";
 import applyPrioritizerToSegmentFetcher, {
   IPrioritizedSegmentFetcher,
@@ -33,24 +26,10 @@ import applyPrioritizerToSegmentFetcher, {
 import ObservablePrioritizer from "./prioritizer";
 import createSegmentFetcher, {
   getSegmentFetcherOptions,
+  ISegmentFetcherCreatorCallbacks,
   ISegmentFetcherEvent,
 } from "./segment_fetcher";
 
-const { MIN_CANCELABLE_PRIORITY,
-        MAX_HIGH_PRIORITY_LEVEL } = config;
-
-/** Options used by the `SegmentFetcherCreator`. */
-export interface ISegmentFetcherCreatorBackoffOptions {
-  /**
-   * Whether the content is played in a low-latency mode.
-   * This has an impact on default backoff delays.
-   */
-  lowLatencyMode : boolean;
-  /** Maximum number of time a request on error will be retried. */
-  maxRetryRegular : number | undefined;
-  /** Maximum number of time a request be retried when the user is offline. */
-  maxRetryOffline : number | undefined;
-}
 
 /**
  * Interact with the transport pipelines to download segments with the right
@@ -60,12 +39,15 @@ export interface ISegmentFetcherCreatorBackoffOptions {
  *
  * @example
  * ```js
- * const creator = new SegmentFetcherCreator(transport);
+ * const creator = new SegmentFetcherCreator(transport, {
+ *   lowLatencyMode: false,
+ *   maxRetryRegular: Infinity,
+ *   maxRetryOffline: Infinity,
+ * });
  *
  * // 2 - create a new fetcher with its backoff options
  * const fetcher = creator.createSegmentFetcher("audio", {
- *   maxRetryRegular: Infinity,
- *   maxRetryOffline: Infinity,
+ *   // ... (lifecycle callbacks if wanted)
  * });
  *
  * // 3 - load a segment with a given priority
@@ -107,6 +89,8 @@ export default class SegmentFetcherCreator {
     transport : ITransportPipelines,
     options : ISegmentFetcherCreatorBackoffOptions
   ) {
+    const { MIN_CANCELABLE_PRIORITY,
+            MAX_HIGH_PRIORITY_LEVEL } = config.getCurrent();
     this._transport = transport;
     this._prioritizer = new ObservablePrioritizer({
       prioritySteps: { high: MAX_HIGH_PRIORITY_LEVEL,
@@ -119,28 +103,36 @@ export default class SegmentFetcherCreator {
    * Create a segment fetcher, allowing to easily perform segment requests.
    * @param {string} bufferType - The type of buffer concerned (e.g. "audio",
    * "video", etc.)
-   * @param {Subject} requests$ - Subject through which request-related events
-   * (such as those needed by the ABRManager) will be sent.
+   * @param {Object} callbacks
    * @returns {Object}
    */
   createSegmentFetcher(
     bufferType : IBufferType,
-    requests$ : Subject<IABRRequestBeginEvent |
-                        IABRRequestProgressEvent |
-                        IABRRequestEndEvent |
-                        IABRMetricsEvent>
+    callbacks : ISegmentFetcherCreatorCallbacks
   ) : IPrioritizedSegmentFetcher<unknown> {
     const backoffOptions = getSegmentFetcherOptions(bufferType, this._backoffOptions);
     const pipelines = this._transport[bufferType];
 
     // Types are very complicated here as they are per-type of buffer.
-    // This is the reason why `any` is used instead.
     const segmentFetcher = createSegmentFetcher<unknown, unknown>(
       bufferType,
       pipelines as ISegmentPipeline<unknown, unknown>,
-      requests$,
+      callbacks,
       backoffOptions
     );
     return applyPrioritizerToSegmentFetcher(this._prioritizer, segmentFetcher);
   }
+}
+
+/** Options used by the `SegmentFetcherCreator`. */
+export interface ISegmentFetcherCreatorBackoffOptions {
+  /**
+   * Whether the content is played in a low-latency mode.
+   * This has an impact on default backoff delays.
+   */
+  lowLatencyMode : boolean;
+  /** Maximum number of time a request on error will be retried. */
+  maxRetryRegular : number | undefined;
+  /** Maximum number of time a request be retried when the user is offline. */
+  maxRetryOffline : number | undefined;
 }

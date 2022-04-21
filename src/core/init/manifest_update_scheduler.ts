@@ -18,10 +18,9 @@ import {
   defer as observableDefer,
   EMPTY,
   from as observableFrom,
-  mapTo,
+  map,
   merge as observableMerge,
   mergeMap,
-  mergeMapTo,
   Observable,
   of as observableOf,
   share,
@@ -39,9 +38,6 @@ import {
 } from "../fetchers";
 import { IWarningEvent } from "./types";
 
-const { FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY,
-        MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE,
-        MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE } = config;
 
 /** Arguments to give to the `manifestUpdateScheduler` */
 export interface IManifestUpdateSchedulerArguments {
@@ -49,9 +45,9 @@ export interface IManifestUpdateSchedulerArguments {
   manifestFetcher : ManifestFetcher;
   /** Information about the initial load of the manifest */
   initialManifest : { manifest : Manifest;
-                      sendingTime? : number;
-                      receivedTime? : number;
-                      parsingTime? : number; };
+                      sendingTime? : number | undefined;
+                      receivedTime? : number | undefined;
+                      parsingTime? : number | undefined; };
   /** Minimum interval to keep between Manifest updates */
   minimumManifestUpdateInterval : number;
   /** Allows the rest of the code to ask for a Manifest refresh */
@@ -75,7 +71,7 @@ export interface IManifestRefreshSchedulerEvent {
    * Optional wanted refresh delay, which is the minimum time you want to wait
    * before updating the Manifest
    */
-  delay? : number;
+  delay? : number | undefined;
   /**
    * Whether the parsing can be done in the more efficient "unsafeMode".
    * This mode is extremely fast but can lead to de-synchronisation with the
@@ -128,9 +124,9 @@ export default function manifestUpdateScheduler({
    * encountered.
    */
   function handleManifestRefresh$(
-    { sendingTime, parsingTime, updatingTime } : { sendingTime?: number;
-                                                   parsingTime? : number;
-                                                   updatingTime? : number; }
+    { sendingTime, parsingTime, updatingTime } : { sendingTime?: number | undefined;
+                                                   parsingTime? : number | undefined;
+                                                   updatingTime? : number | undefined; }
   ) : Observable<IWarningEvent> {
     /**
      * Total time taken to fully update the last Manifest, in milliseconds.
@@ -140,6 +136,9 @@ export default function manifestUpdateScheduler({
       parsingTime + (updatingTime ?? 0) :
       undefined;
 
+    const { MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE,
+            MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE } = config.getCurrent();
+
     /**
      * "unsafeMode" is a mode where we unlock advanced Manifest parsing
      * optimizations with the added risk to lose some information.
@@ -148,6 +147,7 @@ export default function manifestUpdateScheduler({
      * Only perform parsing in `unsafeMode` when the last full parsing took a
      * lot of time and do not go higher than the maximum consecutive time.
      */
+
     const unsafeModeEnabled = consecutiveUnsafeMode > 0 ?
       consecutiveUnsafeMode < MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE :
       totalUpdateTime !== undefined ?
@@ -168,15 +168,17 @@ export default function manifestUpdateScheduler({
         return startManualRefreshTimer(delay ?? 0,
                                        minimumManifestUpdateInterval,
                                        sendingTime)
-          .pipe(mapTo({ completeRefresh, unsafeMode }));
+          .pipe(map(() => ({ completeRefresh, unsafeMode })));
       }));
 
     /** Emit when the Manifest tells us that it has "expired". */
     const expired$ = manifest.expired === null ?
       EMPTY :
-      observableTimer(minInterval)
-        .pipe(mergeMapTo(observableFrom(manifest.expired)),
-              mapTo({ completeRefresh: true, unsafeMode: unsafeModeEnabled }));
+      observableTimer(minInterval).pipe(
+        mergeMap(() =>
+          manifest.expired === null ? EMPTY :
+                                      observableFrom(manifest.expired)),
+        map(() => ({ completeRefresh: true, unsafeMode: unsafeModeEnabled })));
 
     /** Emit when the Manifest should normally be refreshed. */
     const autoRefresh$ = createAutoRefreshObservable();
@@ -255,7 +257,7 @@ export default function manifestUpdateScheduler({
         actualRefreshInterval = regularRefreshDelay;
       }
       return observableTimer(Math.max(actualRefreshInterval, minInterval))
-        .pipe(mapTo({ completeRefresh: false, unsafeMode: unsafeModeEnabled }));
+        .pipe(map(() => ({ completeRefresh: false, unsafeMode: unsafeModeEnabled })));
     }
   }
 
@@ -308,6 +310,7 @@ export default function manifestUpdateScheduler({
                                                  "unknown error";
             log.warn(`MUS: Attempt to update Manifest failed: ${message}`,
                      "Re-downloading the Manifest fully");
+            const { FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY } = config.getCurrent();
             return startManualRefreshTimer(FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY,
                                            minimumManifestUpdateInterval,
                                            newSendingTime)

@@ -31,61 +31,36 @@ import Manifest, {
 import { fromEvent } from "../../../utils/event_emitter";
 import ABRManager, {
   IABREstimate,
-  IABRManagerClockTick,
-  IABRMetricsEvent,
-  IABRRequestBeginEvent,
-  IABRRequestEndEvent,
-  IABRRequestProgressEvent,
+  IABRManagerPlaybackObservation,
+  IABRStreamEvents,
 } from "../../abr";
-import {
-  IRepresentationChangeEvent,
-  IStreamEventAddedSegment,
-} from "../types";
 
 /**
  * Create an "estimator$" Observable which will emit which Representation (from
  * the given `Adaptation`) is the best fit (see `IABREstimate` type definition)
  * corresponding to the current network and playback conditions.
  *
- * This function also returns two subjects that should be used to add feedback
- * helping the estimator to make its choices:
+ * This function also returns a subject that should be used to add feedback
+ * helping the estimator to make its choices.
  *
- *   - `requestFeedback$`: Subject through which information about new requests
- *     and network metrics should be emitted.
- *
- *   - `streamFeedback$`: Subject through which stream-related events should be
- *      emitted.
- *
- * You can look at the types defined for both of those Subjects to have more
- * information on what data is expected. The idea is to provide as much data as
- * possible so the estimation is as adapted as possible.
+ * You can look at the types defined for this Subject to have more information
+ * on what data is expected. The idea is to provide as much data as possible so
+ * the estimation is as adapted as possible.
  *
  * @param {Object} content
  * @param {Object} abrManager
- * @param {Observable} clock$
+ * @param {Observable} observation$
  * @returns {Object}
  */
 export default function createRepresentationEstimator(
   { manifest, adaptation } : { manifest : Manifest;
                                adaptation : Adaptation; },
   abrManager : ABRManager,
-  clock$ : Observable<IABRManagerClockTick>
+  observation$ : Observable<IABRManagerPlaybackObservation>
 ) : { estimator$ : Observable<IABREstimate>;
-      streamFeedback$ : Subject<IStreamEventAddedSegment<unknown> |
-                                IRepresentationChangeEvent>;
-      requestFeedback$ : Subject<IABRMetricsEvent |
-                                 IABRRequestBeginEvent |
-                                 IABRRequestProgressEvent |
-                                 IABRRequestEndEvent>; }
+      abrFeedbacks$ : Subject<IABRStreamEvents>; }
 {
-  const streamFeedback$ = new Subject<IStreamEventAddedSegment<unknown> |
-                                      IRepresentationChangeEvent>();
-  const requestFeedback$ = new Subject<IABRMetricsEvent |
-                                       IABRRequestBeginEvent |
-                                       IABRRequestProgressEvent |
-                                       IABRRequestEndEvent>();
-  const abrEvents$ = observableMerge(streamFeedback$, requestFeedback$);
-
+  const abrFeedbacks$ = new Subject<IABRStreamEvents>();
   const estimator$ = observableMerge(
     // subscribe "first" (hack as it is a merge here) to event
     fromEvent(manifest, "decipherabilityUpdate"),
@@ -115,9 +90,10 @@ export default function createRepresentationEstimator(
       return true;
     }),
     switchMap((playableRepresentations) =>
-      abrManager.get$(adaptation.type, playableRepresentations, clock$, abrEvents$)));
+      abrManager.get$(adaptation.type,
+                      playableRepresentations,
+                      observation$,
+                      abrFeedbacks$)));
 
-  return { estimator$,
-           streamFeedback$,
-           requestFeedback$ };
+  return { estimator$, abrFeedbacks$ };
 }

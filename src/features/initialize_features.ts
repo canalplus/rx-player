@@ -26,13 +26,14 @@ import features from "./features_object";
  * @param {Object} features
  */
 export default function initializeFeaturesObject() : void {
-  if (__FEATURES__.EME) {
-    features.emeManager = require(__RELATIVE_PATH__.EME_MANAGER).default;
+  if (__FEATURES__.EME === __FEATURES__.IS_ENABLED as number) {
+    features.ContentDecryptor = require("../core/decrypt/index.ts").default;
   }
 
-  if (__FEATURES__.BIF_PARSER) {
-    features.imageBuffer = require(__RELATIVE_PATH__.IMAGE_BUFFER).default;
-    features.imageParser = require(__RELATIVE_PATH__.BIF_PARSER).default;
+  if (__FEATURES__.BIF_PARSER === __FEATURES__.IS_ENABLED as number) {
+    features.imageBuffer =
+      require("../core/segment_buffers/implementations/image/index.ts").default;
+    features.imageParser = require("../parsers/images/bif.ts").default;
   }
 
   // Feature switching the Native TextTrack implementation
@@ -41,41 +42,43 @@ export default function initializeFeaturesObject() : void {
                           __FEATURES__.NATIVE_TTML ||
                           __FEATURES__.NATIVE_SRT;
 
-  if (__FEATURES__.SMOOTH) {
-    features.transports.smooth = require(__RELATIVE_PATH__.SMOOTH).default;
+  if (__FEATURES__.SMOOTH === __FEATURES__.IS_ENABLED as number) {
+    features.transports.smooth = require("../transports/smooth/index.ts").default;
   }
-  if (__FEATURES__.DASH) {
-    features.transports.dash = require(__RELATIVE_PATH__.DASH).default;
-    features.dashParsers.js = require(__RELATIVE_PATH__.DASH_JS_PARSER).default;
+  if (__FEATURES__.DASH === __FEATURES__.IS_ENABLED as number) {
+    features.transports.dash = require("../transports/dash/index.ts").default;
+    features.dashParsers.js =
+      require("../parsers/manifest/dash/js-parser/index.ts").default;
   }
-  if (__FEATURES__.LOCAL_MANIFEST) {
-    features.transports.local = require(__RELATIVE_PATH__.LOCAL_MANIFEST).default;
+  if (__FEATURES__.LOCAL_MANIFEST === __FEATURES__.IS_ENABLED as number) {
+    features.transports.local = require("../transports/local/index.ts").default;
   }
-  if (__FEATURES__.METAPLAYLIST) {
-    features.transports.metaplaylist = require(__RELATIVE_PATH__.METAPLAYLIST).default;
+  if (__FEATURES__.METAPLAYLIST === __FEATURES__.IS_ENABLED as number) {
+    features.transports.metaplaylist =
+      require("../transports/metaplaylist/index.ts").default;
   }
 
-  if (HAS_NATIVE_MODE) {
+  if (HAS_NATIVE_MODE === __FEATURES__.IS_ENABLED as number) {
     features.nativeTextTracksBuffer =
-      require(__RELATIVE_PATH__.NATIVE_TEXT_BUFFER).default;
-    if (__FEATURES__.NATIVE_VTT) {
+      require("../core/segment_buffers/implementations/text/native/index.ts").default;
+    if (__FEATURES__.NATIVE_VTT === __FEATURES__.IS_ENABLED as number) {
       features.nativeTextTracksParsers.vtt =
-        require(__RELATIVE_PATH__.NATIVE_VTT).default;
+        require("../parsers/texttracks/webvtt/native/index.ts").default;
     }
 
-    if (__FEATURES__.NATIVE_TTML) {
+    if (__FEATURES__.NATIVE_TTML === __FEATURES__.IS_ENABLED as number) {
       features.nativeTextTracksParsers.ttml =
-        require(__RELATIVE_PATH__.NATIVE_TTML).default;
+        require("../parsers/texttracks/ttml/native/index.ts").default;
     }
 
-    if (__FEATURES__.NATIVE_SAMI) {
+    if (__FEATURES__.NATIVE_SAMI === __FEATURES__.IS_ENABLED as number) {
       features.nativeTextTracksParsers.sami =
-        require(__RELATIVE_PATH__.NATIVE_SAMI).default;
+        require("../parsers/texttracks/sami/native.ts").default;
     }
 
-    if (__FEATURES__.NATIVE_SRT) {
+    if (__FEATURES__.NATIVE_SRT === __FEATURES__.IS_ENABLED as number) {
       features.nativeTextTracksParsers.srt =
-        require(__RELATIVE_PATH__.NATIVE_SRT).default;
+        require("../parsers/texttracks/srt/native.ts").default;
     }
   }
 
@@ -85,34 +88,34 @@ export default function initializeFeaturesObject() : void {
                         __FEATURES__.HTML_TTML ||
                         __FEATURES__.HTML_SRT;
 
-  if (HAS_HTML_MODE) {
+  if (HAS_HTML_MODE === __FEATURES__.IS_ENABLED as number) {
     features.htmlTextTracksBuffer =
-      require(__RELATIVE_PATH__.HTML_TEXT_BUFFER).default;
-    if (__FEATURES__.HTML_SAMI) {
+      require("../core/segment_buffers/implementations/text/html/index.ts").default;
+    if (__FEATURES__.HTML_SAMI === __FEATURES__.IS_ENABLED as number) {
       features.htmlTextTracksParsers.sami =
-        require(__RELATIVE_PATH__.HTML_SAMI).default;
+        require("../parsers/texttracks/sami/html.ts").default;
     }
 
-    if (__FEATURES__.HTML_TTML) {
+    if (__FEATURES__.HTML_TTML === __FEATURES__.IS_ENABLED as number) {
       features.htmlTextTracksParsers.ttml =
-        require(__RELATIVE_PATH__.HTML_TTML).default;
+        require("../parsers/texttracks/ttml/html/index.ts").default;
     }
 
-    if (__FEATURES__.HTML_SRT) {
+    if (__FEATURES__.HTML_SRT === __FEATURES__.IS_ENABLED as number) {
       features.htmlTextTracksParsers.srt =
-        require(__RELATIVE_PATH__.HTML_SRT).default;
+        require("../parsers/texttracks/srt/html.ts").default;
     }
 
-    if (__FEATURES__.HTML_VTT) {
+    if (__FEATURES__.HTML_VTT === __FEATURES__.IS_ENABLED as number) {
       features.htmlTextTracksParsers.vtt =
-        require(__RELATIVE_PATH__.HTML_VTT).default;
+        require("../parsers/texttracks/webvtt/html/index.ts").default;
     }
   }
 
-  if (__FEATURES__.DIRECTFILE) {
-    const initDirectFile = require(__RELATIVE_PATH__.DIRECTFILE).default;
+  if (__FEATURES__.DIRECTFILE === __FEATURES__.IS_ENABLED as number) {
+    const initDirectFile = require("../core/init/initialize_directfile.ts").default;
     const mediaElementTrackChoiceManager =
-      require(__RELATIVE_PATH__.MEDIA_ELEMENT_TRACK_CHOICE_MANAGER).default;
+      require("../core/api/media_element_track_choice_manager.ts").default;
     features.directfile = { initDirectFile,
                             mediaElementTrackChoiceManager };
   }

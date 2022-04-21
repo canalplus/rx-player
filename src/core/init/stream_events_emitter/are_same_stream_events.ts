@@ -28,12 +28,12 @@
  * @param {Object} evt2
  * @returns {Boolean}
  */
-function areSameStreamEvents(evt1: { id?: string;
+function areSameStreamEvents(evt1: { id?: string | undefined;
                                      start: number;
-                                     end?: number; },
-                             evt2: { id?: string;
+                                     end?: number | undefined; },
+                             evt2: { id?: string | undefined;
                                      start: number;
-                                     end?: number; }): boolean {
+                                     end?: number | undefined; }): boolean {
   return evt1.id === evt2.id &&
          evt1.start === evt2.start &&
          evt1.end === evt2.end;

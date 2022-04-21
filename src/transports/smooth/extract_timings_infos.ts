@@ -111,7 +111,7 @@ export default function extractTimingsInfos(
              scaledSegmentTime: tfxdSegment.time };
   }
 
-  if (isChunked) {
+  if (isChunked || !segment.complete) {
     return { nextSegments,
              chunkInfos: null,
              scaledSegmentTime: undefined };

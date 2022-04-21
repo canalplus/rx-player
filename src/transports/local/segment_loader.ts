@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import { CustomLoaderError } from "../../errors";
 import {
   ILocalManifestInitSegmentLoader,
@@ -39,8 +38,8 @@ import {
 function loadInitSegment(
   customSegmentLoader : ILocalManifestInitSegmentLoader,
   cancelSignal : CancellationSignal
-) : PPromise<ISegmentLoaderResultSegmentLoaded<ArrayBuffer | null>> {
-  return new PPromise((res, rej) => {
+) : Promise<ISegmentLoaderResultSegmentLoaded<ArrayBuffer | null>> {
+  return new Promise((res, rej) => {
     /** `true` when the custom segmentLoader should not be active anymore. */
     let hasFinished = false;
 
@@ -61,7 +60,7 @@ function loadInitSegment(
       res({ resultType: "segment-loaded",
             resultData: { responseData: _args.data,
                           size: _args.size,
-                          duration: _args.duration } });
+                          requestDuration: _args.duration } });
     };
 
     /**
@@ -107,8 +106,8 @@ function loadSegment(
   segment : { time : number; duration : number; timestampOffset? : number },
   customSegmentLoader : ILocalManifestSegmentLoader,
   cancelSignal : CancellationSignal
-) : PPromise< ISegmentLoaderResultSegmentLoaded<ArrayBuffer | null>> {
-  return new PPromise((res, rej) => {
+) : Promise< ISegmentLoaderResultSegmentLoaded<ArrayBuffer | null>> {
+  return new Promise((res, rej) => {
     /** `true` when the custom segmentLoader should not be active anymore. */
     let hasFinished = false;
 
@@ -129,7 +128,7 @@ function loadSegment(
       res({ resultType: "segment-loaded",
             resultData: { responseData: _args.data,
                           size: _args.size,
-                          duration: _args.duration } });
+                          requestDuration: _args.duration } });
     };
 
     /**
@@ -191,7 +190,7 @@ export default function segmentLoader(
   content : ISegmentContext,
   cancelSignal : CancellationSignal,
   _callbacks : ISegmentLoaderCallbacks<ArrayBuffer | null>
-) : PPromise<ISegmentLoaderResultSegmentLoaded<ArrayBuffer | null>> {
+) : Promise<ISegmentLoaderResultSegmentLoaded<ArrayBuffer | null>> {
   const { segment } = content;
   const privateInfos = segment.privateInfos;
   if (segment.isInit) {

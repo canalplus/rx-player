@@ -1,0 +1,76 @@
+{
+  "pages": [
+    {
+      "path": "./getAudioTrack.md",
+      "displayName": "getAudioTrack"
+    },
+    {
+      "path": "./getTextTrack.md",
+      "displayName": "getTextTrack"
+    },
+    {
+      "path": "./getVideoTrack.md",
+      "displayName": "getVideoTrack"
+    },
+    {
+      "path": "./getAvailableAudioTracks.md",
+      "displayName": "getAvailableAudioTracks"
+    },
+    {
+      "path": "./getAvailableTextTracks.md",
+      "displayName": "getAvailableTextTracks"
+    },
+    {
+      "path": "./getAvailableVideoTracks.md",
+      "displayName": "getAvailableVideoTracks"
+    },
+    {
+      "path": "./setAudioTrack.md",
+      "displayName": "setAudioTrack"
+    },
+    {
+      "path": "./setTextTrack.md",
+      "displayName": "setTextTrack"
+    },
+    {
+      "path": "./setVideoTrack.md",
+      "displayName": "setVideoTrack"
+    },
+    {
+      "path": "./disableTextTrack.md",
+      "displayName": "disableTextTrack"
+    },
+    {
+      "path": "./disableVideoTrack.md",
+      "displayName": "disableVideoTrack"
+    },
+    {
+      "path": "./setPreferredAudioTracks.md",
+      "displayName": "setPreferredAudioTracks"
+    },
+    {
+      "path": "./setPreferredTextTracks.md",
+      "displayName": "setPreferredTextTracks"
+    },
+    {
+      "path": "./setPreferredVideoTracks.md",
+      "displayName": "setPreferredVideoTracks"
+    },
+    {
+      "path": "./getPreferredAudioTracks.md",
+      "displayName": "getPreferredAudioTracks"
+    },
+    {
+      "path": "./getPreferredTextTracks.md",
+      "displayName": "getPreferredTextTracks"
+    },
+    {
+      "path": "./getPreferredVideoTracks.md",
+      "displayName": "getPreferredVideoTracks"
+    },
+    {
+      "path": "./isTrickModeEnabled.md",
+      "displayName": "isTrickModeEnabled"
+    }
+  ]
+}

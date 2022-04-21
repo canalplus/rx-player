@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-import TaskCanceller, {
-  CancellationError,
-} from "../../utils/task_canceller";
+import TaskCanceller from "../../utils/task_canceller";
 import { ISegmentLoader } from "../types";
 import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
 import inferSegmentContainer from "../utils/infer_segment_container";
@@ -32,62 +30,60 @@ export default function addSegmentIntegrityChecks<T>(
   segmentLoader : ISegmentLoader<T>
 ) : ISegmentLoader<T> {
   return (url, content, initialCancelSignal, callbacks) => {
-    return new Promise((res, rej) => {
+    return new Promise((resolve, reject) => {
+      const requestCanceller = new TaskCanceller({ cancelOn: initialCancelSignal });
 
-      const canceller = new TaskCanceller();
-      const unregisterCancelLstnr = initialCancelSignal
-        .register(function onCheckCancellation(err : CancellationError) {
-          canceller.cancel();
-          rej(err);
-        });
+      // Reject the `CancellationError` when `requestCanceller`'s signal emits
+      // `stopRejectingOnCancel` here is a function allowing to stop this mechanism
+      const stopRejectingOnCancel = requestCanceller.signal.register(reject);
 
-      /**
-       * If the data's seems to be corrupted, cancel the loading task and reject
-       * with an `INTEGRITY_ERROR` error.
-       * @param {*} data
-       */
-      function cancelAndRejectOnBadIntegrity(data : T) : void {
-        if (!(data instanceof Array) && !(data instanceof Uint8Array) ||
-            inferSegmentContainer(content.adaptation.type,
-                                  content.representation) !== "mp4")
-        {
-          return;
-        }
-        try {
-          checkISOBMFFIntegrity(new Uint8Array(data), content.segment.isInit);
-        } catch (err) {
-          unregisterCancelLstnr();
-          canceller.cancel();
-          rej(err);
-        }
-      }
-
-      segmentLoader(url, content, canceller.signal, {
+      segmentLoader(url, content, requestCanceller.signal, {
         ...callbacks,
         onNewChunk(data) {
-          cancelAndRejectOnBadIntegrity(data);
-          if (!canceller.isUsed) {
+          try {
+            trowOnIntegrityError(data);
             callbacks.onNewChunk(data);
+          } catch (err) {
+            // Do not reject with a `CancellationError` after cancelling the request
+            stopRejectingOnCancel();
+            // Cancel the request
+            requestCanceller.cancel();
+            // Reject with thrown error
+            reject(err);
           }
         },
       }).then((info) => {
-        if (canceller.isUsed) {
+        if (requestCanceller.isUsed) {
           return;
         }
-        unregisterCancelLstnr();
-
+        stopRejectingOnCancel();
         if (info.resultType === "segment-loaded") {
-          cancelAndRejectOnBadIntegrity(info.resultData.responseData);
+          try {
+            trowOnIntegrityError(info.resultData.responseData);
+          } catch (err) {
+            reject(err);
+            return;
+          }
         }
-        res(info);
-
+        resolve(info);
       }, (error : unknown) => {
-        // The segmentLoader's cancellations cases are all handled here
-        if (!TaskCanceller.isCancellationError(error)) {
-          unregisterCancelLstnr();
-          rej(error);
-        }
+        stopRejectingOnCancel();
+        reject(error);
       });
     });
+
+    /**
+     * If the data's seems to be corrupted, throws an `INTEGRITY_ERROR` error.
+     * @param {*} data
+     */
+    function trowOnIntegrityError(data : T) : void {
+      if (!(data instanceof ArrayBuffer) && !(data instanceof Uint8Array) ||
+          inferSegmentContainer(content.adaptation.type,
+                                content.representation) !== "mp4")
+      {
+        return;
+      }
+      checkISOBMFFIntegrity(new Uint8Array(data), content.segment.isInit);
+    }
   };
 }

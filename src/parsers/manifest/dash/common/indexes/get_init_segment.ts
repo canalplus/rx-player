@@ -25,8 +25,10 @@ import { IEMSG } from "../../../../containers/isobmff";
  */
 export default function getInitSegment(
   index: { timescale: number;
-           initialization?: { mediaURLs: string[] | null; range?: [number, number] };
-           indexRange?: [number, number];
+           initialization?: { mediaURLs: string[] | null;
+                              range?: [number, number] | undefined; } |
+                            undefined;
+           indexRange?: [number, number] | undefined;
            indexTimeOffset : number; },
   isEMSGWhitelisted?: (inbandEvent: IEMSG) => boolean
 ) : ISegment {
@@ -45,6 +47,7 @@ export default function getInitSegment(
                                            undefined,
            indexRange: index.indexRange,
            mediaURLs: initialization?.mediaURLs ?? null,
+           complete: true,
            privateInfos,
            timestampOffset: -(index.indexTimeOffset / index.timescale) };
 }

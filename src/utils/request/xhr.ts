@@ -23,7 +23,6 @@ import {
   CancellationSignal,
 } from "../task_canceller";
 
-const { DEFAULT_REQUEST_TIMEOUT } = config;
 
 const DEFAULT_RESPONSE_TYPE : XMLHttpRequestResponseType = "json";
 
@@ -129,6 +128,8 @@ export default function request(
 export default function request<T>(
   options : IRequestOptions< XMLHttpRequestResponseType | null | undefined >
 ) : Promise<IRequestResponse< T, XMLHttpRequestResponseType >> {
+
+  const { DEFAULT_REQUEST_TIMEOUT } = config.getCurrent();
   const requestOptions = {
     url: options.url,
     headers: options.headers,
@@ -247,7 +248,7 @@ export default function request<T>(
                     responseType: loadedResponseType,
                     sendingTime,
                     receivedTime,
-                    duration: receivedTime - sendingTime,
+                    requestDuration: receivedTime - sendingTime,
                     size: totalSize,
                     responseData });
 
@@ -279,31 +280,32 @@ export interface IRequestOptions<ResponseType> {
   url : string;
   /** Dictionary of headers you want to set. `null` or `undefined` for no header. */
   headers? : { [ header: string ] : string } |
-             null;
+             null |
+             undefined;
   /** Wanted format for the response */
-  responseType? : ResponseType;
+  responseType? : ResponseType | undefined;
   /**
    * Optional timeout, in milliseconds, after which we will cancel a request.
    * Set to DEFAULT_REQUEST_TIMEOUT by default.
    */
-  timeout? : number;
+  timeout? : number | undefined;
   /**
    * "Cancelation token" used to be able to cancel the request.
    * When this token is "cancelled", the request will be aborted and the Promise
    * returned by `request` will be rejected.
    */
-  cancelSignal? : CancellationSignal;
+  cancelSignal? : CancellationSignal | undefined;
   /**
    * When defined, this callback will be called on each XHR "progress" event
    * with data related to this request's progress.
    */
-  onProgress? : (info : IProgressInfo) => void;
+  onProgress? : ((info : IProgressInfo) => void) | undefined;
 }
 
 /** Data emitted by `request`'s Promise when the request succeeded. */
 export interface IRequestResponse<T, U> {
   /** Time taken by the request, in milliseconds. */
-  duration : number;
+  requestDuration : number;
   /** Time (relative to the "time origin") at which the request ended. */
   receivedTime : number;
   /** Data requested. Its type will depend on the responseType. */
@@ -330,5 +332,5 @@ export interface IProgressInfo {
   size : number;
   sendingTime : number;
   url : string;
-  totalSize? : number;
+  totalSize? : number | undefined;
 }

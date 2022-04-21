@@ -45,7 +45,7 @@ export default class NativeTextSegmentBuffer extends SegmentBuffer {
 
   private readonly _videoElement : HTMLMediaElement;
   private readonly _track : ICompatTextTrack;
-  private readonly _trackElement? : HTMLTrackElement;
+  private readonly _trackElement : HTMLTrackElement | undefined;
 
   private _buffered : ManualTimeRanges;
 
@@ -268,11 +268,11 @@ export interface INativeTextTracksBufferSegmentData {
    * This is mostly needed for "sami" subtitles, to know which cues can / should
    * be parsed.
    */
-  language? : string;
+  language? : string | undefined;
   /** start time from which the segment apply, in seconds. */
-  start? : number;
+  start? : number | undefined;
   /** end time until which the segment apply, in seconds. */
-  end? : number;
+  end? : number | undefined;
 }
 
 /**
@@ -284,7 +284,7 @@ export interface INativeTextTracksBufferSegmentData {
 function assertChunkIsTextTrackSegmentData(
   chunk : unknown
 ) : asserts chunk is INativeTextTracksBufferSegmentData {
-  if (!__DEV__) {
+  if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.PRODUCTION as number) {
     return;
   }
   if (
@@ -318,7 +318,7 @@ function assertChunkIsTextTrackSegmentData(
  * It doesn't correspond at all to real code that will be called. This is just
  * a hack to tell TypeScript to perform that check.
  */
-if (__DEV__) {
+if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
   /* eslint-disable @typescript-eslint/no-unused-vars */
   /* eslint-disable @typescript-eslint/ban-ts-comment */
   // @ts-ignore

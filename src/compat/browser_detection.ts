@@ -54,13 +54,15 @@ interface ISafariWindowObject extends Window {
   safari? : { pushNotification? : { toString() : string } };
 }
 
-const isSafari : boolean =
+/** `true` on Safari on a PC platform (i.e. not iPhone / iPad etc.) */
+const isSafariDesktop : boolean =
   !isNode && (
     Object.prototype.toString.call(window.HTMLElement).indexOf("Constructor") >= 0 ||
     (window as ISafariWindowObject).safari?.pushNotification?.toString() ===
       "[object SafariRemoteNotification]"
   );
 
+/** `true` on Safari on an iPhone, iPad & iPod platform */
 const isSafariMobile : boolean = !isNode &&
                                  typeof navigator.platform === "string" &&
                                  /iPad|iPhone|iPod/.test(navigator.platform);
@@ -70,7 +72,7 @@ export {
   isIE11,
   isIEOrEdge,
   isFirefox,
-  isSafari,
+  isSafariDesktop,
   isSafariMobile,
   isSamsungBrowser,
   isTizen,

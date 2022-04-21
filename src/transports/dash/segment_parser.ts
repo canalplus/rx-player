@@ -30,8 +30,8 @@ import takeFirstSet from "../../utils/take_first_set";
 import {
   ISegmentContext,
   ISegmentParser,
-  ISegmentParserParsedInitSegment,
-  ISegmentParserParsedSegment,
+  ISegmentParserParsedInitChunk,
+  ISegmentParserParsedMediaChunk,
 } from "../types";
 import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
 import inferSegmentContainer from "../utils/infer_segment_container";
@@ -42,7 +42,9 @@ import getEventsOutOfEMSGs from "./get_events_out_of_emsgs";
  * @returns {Function}
  */
 export default function generateAudioVideoSegmentParser(
-  { __priv_patchLastSegmentInSidx } : { __priv_patchLastSegmentInSidx? : boolean }
+  { __priv_patchLastSegmentInSidx } : {
+    __priv_patchLastSegmentInSidx? : boolean | undefined;
+  }
 ) : ISegmentParser<
   ArrayBuffer | Uint8Array | null,
   ArrayBuffer | Uint8Array | null
@@ -52,8 +54,8 @@ export default function generateAudioVideoSegmentParser(
                       isChunked : boolean; },
     content : ISegmentContext,
     initTimescale : number | undefined
-  ) : ISegmentParserParsedSegment< Uint8Array | ArrayBuffer | null > |
-      ISegmentParserParsedInitSegment< Uint8Array | ArrayBuffer | null > {
+  ) : ISegmentParserParsedMediaChunk< Uint8Array | ArrayBuffer | null > |
+      ISegmentParserParsedInitChunk< Uint8Array | ArrayBuffer | null > {
     const { period, adaptation, representation, segment, manifest } = content;
     const { data, isChunked } = loadedSegment;
     const appendWindow : [number, number | undefined] = [ period.start, period.end ];
@@ -62,11 +64,13 @@ export default function generateAudioVideoSegmentParser(
       if (segment.isInit) {
         return { segmentType: "init",
                  initializationData: null,
+                 initializationDataSize: 0,
                  protectionDataUpdate: false,
                  initTimescale: undefined };
       }
       return { segmentType: "media",
                chunkData: null,
+               chunkSize: 0,
                chunkInfos: null,
                chunkOffset: 0,
                protectionDataUpdate: false,
@@ -113,6 +117,7 @@ export default function generateAudioVideoSegmentParser(
             const { needsManifestRefresh, inbandEvents } = events;
             return { segmentType: "media",
                      chunkData,
+                     chunkSize: chunkData.length,
                      chunkInfos,
                      chunkOffset,
                      appendWindow,
@@ -125,6 +130,7 @@ export default function generateAudioVideoSegmentParser(
 
       return { segmentType: "media",
                chunkData,
+               chunkSize: chunkData.length,
                chunkInfos,
                chunkOffset,
                protectionDataUpdate,
@@ -175,6 +181,7 @@ export default function generateAudioVideoSegmentParser(
 
     return { segmentType: "init",
              initializationData: chunkData,
+             initializationDataSize: chunkData.length,
              protectionDataUpdate,
              initTimescale: parsedTimescale };
   };

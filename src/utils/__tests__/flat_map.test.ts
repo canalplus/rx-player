@@ -19,12 +19,15 @@
 
 import flatMap from "../flat_map";
 
-const proto = Array.prototype as unknown as {
-  flatMap?<U, This = undefined>(
+interface IProtoWithFlatMap {
+  flatMap? : (<U, This = undefined>(
     callback: (this: This, value: unknown, index: number, array: unknown[]) => U | U[],
-    thisArg?: This
-  ): U[];
-};
+    thisArg?: This | undefined
+  ) => U[]) | undefined;
+}
+
+
+const proto = Array.prototype as unknown as IProtoWithFlatMap;
 
 /* eslint-disable @typescript-eslint/unbound-method */
 const initialFlatMap = proto.flatMap;
@@ -32,7 +35,7 @@ const initialFlatMap = proto.flatMap;
 
 describe("utils - starts-with", () => {
   beforeEach(() => {
-    proto.flatMap = undefined;
+    delete proto.flatMap;
   });
 
   afterEach(() => {
@@ -49,7 +52,9 @@ describe("utils - starts-with", () => {
   if (typeof initialFlatMap === "function") {
     it("should call the original flatMap function if available", () => {
       proto.flatMap = initialFlatMap;
-      const flatMapSpy = jest.spyOn(proto, "flatMap");
+      // TODO find what bother typescript here instead of adding "as any"
+      /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+      const flatMapSpy = jest.spyOn(proto as any, "flatMap");
       const func1 = (x : number) : number[] => [x, x + 1, x - 1];
       const func2 = (x : number) : string => String(x) + "a";
       expect(flatMap([1, 2, 3], func1))

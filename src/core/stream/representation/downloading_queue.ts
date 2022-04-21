@@ -39,8 +39,8 @@ import Manifest, {
   Representation,
 } from "../../../manifest";
 import {
-  ISegmentParserParsedInitSegment,
-  ISegmentParserParsedSegment,
+  ISegmentParserParsedInitChunk,
+  ISegmentParserParsedMediaChunk,
 } from "../../../transports";
 import assert from "../../../utils/assert";
 import assertUnreachable from "../../../utils/assert_unreachable";
@@ -260,7 +260,7 @@ export default class DownloadingQueue<T> {
       return request$
         .pipe(mergeMap((evt) => {
           switch (evt.type) {
-            case "warning":
+            case "retry":
               return observableOf({ type: "retry" as const,
                                     value: { segment, error: evt.value } });
             case "interrupted":
@@ -336,7 +336,7 @@ export default class DownloadingQueue<T> {
                                         IEndOfSegmentEvent> =>
       {
         switch (evt.type) {
-          case "warning":
+          case "retry":
             return observableOf({ type: "retry" as const,
                                   value: { segment, error: evt.value } });
           case "interrupted":
@@ -394,7 +394,7 @@ export type IDownloadingQueueEvent<T> = IParsedInitSegmentEvent<T> |
  * In that case, an `IParsedInitSegmentEvent` will always be sent before any
  * `IParsedSegmentEvent` event is sent.
  */
-export type IParsedInitSegmentEvent<T> = ISegmentParserParsedInitSegment<T> &
+export type IParsedInitSegmentEvent<T> = ISegmentParserParsedInitChunk<T> &
                                          { segment : ISegment;
                                            type : "parsed-init"; };
 
@@ -413,7 +413,7 @@ export type IParsedInitSegmentEvent<T> = ISegmentParserParsedInitSegment<T> &
  * You will know that all `IParsedSegmentEvent` have been loaded for a given
  * segment once you received the `IEndOfSegmentEvent` for that segment.
  */
-export type IParsedSegmentEvent<T> = ISegmentParserParsedSegment<T> &
+export type IParsedSegmentEvent<T> = ISegmentParserParsedMediaChunk<T> &
                                      { segment : ISegment;
                                        type : "parsed-media"; };
 

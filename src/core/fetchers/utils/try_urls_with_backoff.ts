@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import { isOffline } from "../../../compat";
 import {
   CustomLoaderError,
@@ -171,7 +170,7 @@ export function tryURLsWithBackoff<T>(
   cancellationSignal : CancellationSignal
 ) : Promise<T> {
   if (cancellationSignal.isCancelled) {
-    return PPromise.reject(cancellationSignal.cancellationError);
+    return Promise.reject(cancellationSignal.cancellationError);
   }
 
   const { baseDelay,
@@ -185,7 +184,7 @@ export function tryURLsWithBackoff<T>(
   const urlsToTry = urls.slice();
   if (urlsToTry.length === 0) {
     log.warn("Fetchers: no URL given to `tryURLsWithBackoff`.");
-    return PPromise.reject(new Error("No URL to request"));
+    return Promise.reject(new Error("No URL to request"));
   }
   return tryURLsRecursively(urlsToTry[0], 0);
 

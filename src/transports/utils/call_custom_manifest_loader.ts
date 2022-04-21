@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import { CustomLoaderError } from "../../errors";
 import {
   CancellationError,
@@ -41,7 +40,7 @@ export default function callCustomManifestLoader(
     url : string | undefined,
     cancelSignal : CancellationSignal
   ) : Promise< IRequestedData<ILoadedManifestFormat> > => {
-    return new PPromise((res, rej) => {
+    return new Promise((res, rej) => {
       const timeAPIsDelta = Date.now() - performance.now();
       /** `true` when the custom segmentLoader should not be active anymore. */
       let hasFinished = false;
@@ -51,11 +50,11 @@ export default function callCustomManifestLoader(
        * @param {Object} args
        */
       const resolve = (_args : { data : ILoadedManifestFormat;
-                                 size? : number;
-                                 duration? : number;
-                                 url? : string;
-                                 receivingTime? : number;
-                                 sendingTime? : number; }) =>
+                                 size? : number | undefined;
+                                 duration? : number | undefined;
+                                 url? : string | undefined;
+                                 receivingTime? : number | undefined;
+                                 sendingTime? : number | undefined; }) =>
       {
         if (hasFinished || cancelSignal.isCancelled) {
           return;
@@ -72,7 +71,7 @@ export default function callCustomManifestLoader(
 
         res({ responseData: _args.data,
               size: _args.size,
-              duration: _args.duration,
+              requestDuration: _args.duration,
               url: _args.url,
               receivedTime, sendingTime });
       };

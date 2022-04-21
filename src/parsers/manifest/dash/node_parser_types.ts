@@ -131,7 +131,7 @@ export interface IPeriodChildren {
   /**
    * Provide a template with which we will be able to request segments.
    */
-  segmentTemplate? : ISegmentTemplateIntermediateRepresentation;
+  segmentTemplate? : ISegmentTemplateIntermediateRepresentation | undefined;
   /**
    * Allows to signal events linked to this Period.
    *
@@ -161,6 +161,8 @@ export interface IPeriodAttributes {
    */
   duration? : number;
   bitstreamSwitching? : boolean;
+  availabilityTimeComplete?: boolean;
+  availabilityTimeOffset?: number;
   xlinkHref? : string;
   xlinkActuate? : string;
 
@@ -187,18 +189,18 @@ export interface IAdaptationSetChildren {
   representations : IRepresentationIntermediateRepresentation[];
 
   // optional
-  accessibilities? : IScheme[];
-  contentComponent? : IContentComponentAttributes;
-  contentProtections? : IContentProtectionIntermediateRepresentation[];
-  essentialProperties? : IScheme[];
-  inbandEventStreams? : IScheme[];
-  label? : ILabelIntermediateRepresentation;
+  accessibilities? : IScheme[] | undefined;
+  contentComponent? : IContentComponentAttributes | undefined;
+  contentProtections? : IContentProtectionIntermediateRepresentation[] | undefined;
+  essentialProperties? : IScheme[] | undefined;
+  inbandEventStreams? : IScheme[] | undefined;
   roles? : IScheme[];
-  supplementalProperties? : IScheme[];
+  supplementalProperties? : IScheme[] | undefined;
 
-  segmentBase? : ISegmentBaseIntermediateRepresentation;
-  segmentList? : ISegmentListIntermediateRepresentation;
-  segmentTemplate? : ISegmentTemplateIntermediateRepresentation;
+  segmentBase? : ISegmentBaseIntermediateRepresentation | undefined;
+  segmentList? : ISegmentListIntermediateRepresentation | undefined;
+  segmentTemplate? : ISegmentTemplateIntermediateRepresentation | undefined;
+  label? : ILabelIntermediateRepresentation | undefined;
 }
 
 /* Intermediate representation for An AdaptationSet node's attributes. */
@@ -231,6 +233,8 @@ export interface IAdaptationSetAttributes {
   segmentProfiles? : string;
   subsegmentAlignment? : number|boolean;
   width? : number;
+  availabilityTimeComplete?: boolean;
+  availabilityTimeOffset?: number;
 }
 
 export interface IRepresentationIntermediateRepresentation {
@@ -243,6 +247,7 @@ export interface IRepresentationChildren {
   baseURLs : IBaseUrlIntermediateRepresentation[];
 
   // optional
+  contentProtections? : IContentProtectionIntermediateRepresentation[];
   inbandEventStreams? : IScheme[];
   segmentBase? : ISegmentBaseIntermediateRepresentation;
   segmentList? : ISegmentListIntermediateRepresentation;
@@ -265,6 +270,8 @@ export interface IRepresentationAttributes {
   qualityRanking? : number;
   segmentProfiles? : string;
   width? : number;
+  availabilityTimeComplete?: boolean;
+  availabilityTimeOffset?: number;
 }
 
 export interface ISegmentBaseIntermediateRepresentation {
@@ -330,20 +337,20 @@ export interface IContentProtectionAttributes {
 }
 
 export interface ISegmentTemplateIntermediateRepresentation {
-  availabilityTimeComplete? : boolean;
-  availabilityTimeOffset?: number;
-  bitstreamSwitching? : boolean;
-  duration? : number;
-  index? : string;
-  indexRange?: [number, number];
-  indexRangeExact? : boolean;
-  media? : string;
-  presentationTimeOffset? : number;
-  startNumber? : number;
-  timescale? : number;
-  initialization? : { media?: string };
-  timeline? : ISegmentTimelineElement[];
-  timelineParser? : ITimelineParser;
+  availabilityTimeComplete? : boolean | undefined;
+  availabilityTimeOffset? : number | undefined;
+  bitstreamSwitching? : boolean | undefined;
+  duration? : number | undefined;
+  index? : string | undefined;
+  indexRange?: [number, number] | undefined;
+  indexRangeExact? : boolean | undefined;
+  media? : string | undefined;
+  presentationTimeOffset? : number | undefined;
+  startNumber? : number | undefined;
+  timescale? : number | undefined;
+  initialization? : { media?: string } | undefined;
+  timeline? : ISegmentTimelineElement[] | undefined;
+  timelineParser? : ITimelineParser | undefined;
 }
 
 export interface ISegmentTimelineElement {
@@ -365,6 +372,7 @@ export interface IBaseUrlIntermediateRepresentation {
   attributes: {
     /** availabilityTimeOffset attribute assiociated to that BaseURL node. */
     availabilityTimeOffset?: number;
+    availabilityTimeComplete?: boolean;
   };
 }
 
@@ -382,9 +390,9 @@ export interface IScheme {
    *
    * `undefined` if no `schemeIdUri` attribute has been found.
    */
-  schemeIdUri? : string;
+  schemeIdUri? : string | undefined;
   /** Inner content of that scheme. */
-  value? : string;
+  value? : string | undefined;
 }
 
 export interface IEventStreamIntermediateRepresentation {
@@ -395,9 +403,9 @@ export interface IEventStreamIntermediateRepresentation {
 }
 
 export interface IEventStreamAttributes {
-  schemeIdUri? : string;
-  timescale? : number;
-  value? : string;
+  schemeIdUri? : string | undefined;
+  timescale? : number | undefined;
+  value? : string | undefined;
 
   /**
    * XML namespaces linked to the `<EventStream>` element.
@@ -406,7 +414,7 @@ export interface IEventStreamAttributes {
    * not parsed through the browser's DOMParser API, and thus might depend on
    * parent namespaces to be parsed correctly.
    */
-  namespaces? : Array<{ key: string; value: string }>;
+  namespaces? : Array<{ key: string; value: string }> | undefined;
 }
 
 export interface IEventStreamChildren {

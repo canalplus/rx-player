@@ -15,7 +15,7 @@
  */
 
 import {
-  mapTo,
+  map,
   mergeMap,
   Observable,
   Observer,
@@ -52,7 +52,7 @@ function resetMediaSource(
       const sourceBuffer = sourceBuffers[i];
       try {
         if (readyState === "open") {
-          log.info("Init: Removing SourceBuffer from mediaSource", sourceBuffer);
+          log.info("Init: Removing SourceBuffer from mediaSource");
           sourceBuffer.abort();
         }
         mediaSource.removeSourceBuffer(sourceBuffer);
@@ -134,7 +134,7 @@ export default function openMediaSource(
     mergeMap(mediaSource => {
       return onSourceOpen$(mediaSource).pipe(
         take(1),
-        mapTo(mediaSource)
+        map(() => mediaSource)
       );
     })
   );

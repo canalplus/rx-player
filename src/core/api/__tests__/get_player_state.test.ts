@@ -128,7 +128,7 @@ describe("API - getLoadedContentState", () => {
     const fakeProps = {
       ended: false,
       duration: 10,
-      currentTime: 10 - config.FORCED_ENDED_THRESHOLD,
+      currentTime: 10 - config.getCurrent().FORCED_ENDED_THRESHOLD,
     };
     const mediaElement = fakeProps as HTMLMediaElement;
     expect(getLoadedContentState(mediaElement, true, "seeking")).toBe("ENDED");
@@ -144,7 +144,7 @@ describe("API - getLoadedContentState", () => {
     const fakeProps1 = {
       ended: false,
       duration: 10,
-      currentTime: 10 - config.FORCED_ENDED_THRESHOLD,
+      currentTime: 10 - config.getCurrent().FORCED_ENDED_THRESHOLD,
     };
     const mediaElement1 = fakeProps1 as HTMLMediaElement;
     expect(getLoadedContentState(mediaElement1, true, "seeking")).toBe("ENDED");
@@ -159,7 +159,7 @@ describe("API - getLoadedContentState", () => {
     const fakeProps2 = {
       ended: false,
       duration: 10,
-      currentTime: config.FORCED_ENDED_THRESHOLD + 10,
+      currentTime: config.getCurrent().FORCED_ENDED_THRESHOLD + 10,
     };
     const mediaElement2 = fakeProps2 as HTMLMediaElement;
     expect(getLoadedContentState(mediaElement2, true, "seeking")).toBe("ENDED");

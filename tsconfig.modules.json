@@ -4,8 +4,7 @@
     "declaration": true,
     "target": "es5",
     "lib": ["es2017", "dom"],
-    // TODO
-    // "exactOptionalPropertyTypes": true,
+    "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": false,
     "noImplicitAny": true,
@@ -18,14 +17,18 @@
     "moduleResolution": "node",
     "module": "es2015",
     "typeRoots": [
-      "./src/typings",
+      "./scripts/build/constants.d.ts",
+      "./src/typings/next-tick.d.ts",
+      "./src/typings/object-assign.d.ts",
       "./node_modules/@types"
     ]
   },
   "include": [
-    "./src/**/*.ts"
+    "./src/**/*.ts",
+    "./scripts/build/constants.d.ts"
   ],
   "exclude":[
-    "./src/**/*.test.ts"
+    "./src/**/*.test.ts",
+    "./src/typings/globals.d.ts"
   ]
 }

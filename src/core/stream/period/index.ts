@@ -16,14 +16,15 @@
 
 import PeriodStream, {
   IPeriodStreamArguments,
-  IPeriodStreamClockTick,
   IPeriodStreamOptions,
+  IPeriodStreamPlaybackObservation,
 } from "./period_stream";
+export { IAudioTrackSwitchingMode } from "./get_adaptation_switch_strategy";
 
 export default PeriodStream;
 
 export {
   IPeriodStreamArguments,
-  IPeriodStreamClockTick,
   IPeriodStreamOptions,
+  IPeriodStreamPlaybackObservation,
 };

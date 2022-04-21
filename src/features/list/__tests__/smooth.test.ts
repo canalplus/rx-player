@@ -15,6 +15,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 import SmoothFeature from "../../../transports/smooth";
 import addSmoothFeature from "../smooth";

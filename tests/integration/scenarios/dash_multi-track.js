@@ -116,7 +116,6 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
 
   function checkVideoTrack(codecRules, isSignInterpreted) {
     const currentVideoTrack = player.getVideoTrack();
-    expect(currentVideoTrack).to.not.equal(null);
 
     if (isSignInterpreted === undefined) {
       expect(Object.prototype.hasOwnProperty.call(currentVideoTrack,
@@ -150,6 +149,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
   });
 
   it("should properly load the content with the right default tracks", async function () {
+    this.timeout(3000);
     xhrMock.lock();
     player.loadVideo({ url: multiAdaptationSetsInfos.url,
                        transport: multiAdaptationSetsInfos.transport });
@@ -162,18 +162,19 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
 
     expect(player.getPlayerState()).to.equal("LOADING");
     await xhrMock.unlock();
-    await sleep(500);
+    await sleep(1500);
 
     expect(player.getPlayerState()).to.equal("LOADED");
 
     // TODO AUDIO codec
     checkAudioTrack("de", "deu", false);
     checkNoTextTrack();
-    checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
+    checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
 
     await goToSecondPeriod();
-    checkAudioTrack("be", "bel", false);
+    checkAudioTrack("fr", "fra", true);
     checkNoTextTrack();
+    checkVideoTrack({ all: false, test: /avc1\.42C014/ }, undefined);
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
   });
 
@@ -326,7 +327,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     // TODO AUDIO codec
     checkAudioTrack("de", "deu", false);
     checkTextTrack("de", "deu", false);
-    checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
+    checkVideoTrack({ all: false, test: /avc1\.640028/ }, true);
 
     await goToSecondPeriod();
     checkAudioTrack("de", "deu", false);
@@ -356,17 +357,18 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     // TODO AUDIO codec
     checkAudioTrack("de", "deu", false);
     checkNoTextTrack();
-    checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
+    checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
 
     await goToSecondPeriod();
-    checkAudioTrack("be", "bel", false);
+    checkAudioTrack("fr", "fra", true);
     checkNoTextTrack();
+    checkVideoTrack({ all: false, test: /avc1\.42C014/ }, undefined);
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
   });
 
   it("should not update the current tracks for non-applied preferences", async () => {
     await loadContent();
-    player.setPreferredAudioTracks([ { language: "fr",
+    player.setPreferredAudioTracks([ { language: "be",
                                        audioDescription: true } ]);
     player.setPreferredVideoTracks([ { codec: { all: false,
                                                 test: /avc1\.640028/},
@@ -376,10 +378,10 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     await sleep(100);
     checkAudioTrack("de", "deu", false);
     checkNoTextTrack();
-    checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
+    checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
 
     await goToSecondPeriod();
-    checkAudioTrack("fr", "fra", true);
+    checkAudioTrack("be", "bel", true);
     checkTextTrack("de", "deu", false);
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, true);
   });
@@ -389,7 +391,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     await sleep(100);
     checkAudioTrack("de", "deu", false);
     checkNoTextTrack();
-    checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
+    checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
 
     await goToSecondPeriod();
     player.setPreferredAudioTracks([ { language: "fr",
@@ -403,7 +405,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     await goToFirstPeriod();
     checkAudioTrack("de", "deu", false);
     checkNoTextTrack();
-    checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
+    checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
   });
 
   it("should update the current tracks for applied preferences", async () => {
@@ -431,7 +433,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     await sleep(100);
     checkAudioTrack("de", "deu", false);
     checkNoTextTrack();
-    checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
+    checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
 
     await goToSecondPeriod();
     player.setPreferredAudioTracks([ { language: "fr",
@@ -458,7 +460,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkNoVideoTrack();
 
     await goToSecondPeriod();
-    checkAudioTrack("be", "bel", false);
+    checkAudioTrack("fr", "fra", true);
     checkNoTextTrack();
     checkNoVideoTrack();
   });
@@ -487,7 +489,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkNoVideoTrack();
 
     await goToSecondPeriod();
-    checkAudioTrack("be", "bel", false);
+    checkAudioTrack("fr", "fra", true);
     checkNoTextTrack();
     checkNoVideoTrack();
   });
@@ -499,7 +501,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     // TODO AUDIO codec
     checkAudioTrack("de", "deu", false);
     checkNoTextTrack();
-    checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
+    checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
 
     setAudioTrack("fr", true);
     setTextTrack("de", false);
@@ -511,8 +513,9 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, true);
 
     await goToSecondPeriod();
-    checkAudioTrack("be", "bel", false);
+    checkAudioTrack("fr", "fra", true);
     checkNoTextTrack();
+    checkVideoTrack({ all: false, test: /avc1\.42C014/ }, undefined);
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
   });
 
@@ -522,22 +525,22 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     // TODO AUDIO codec
     checkAudioTrack("de", "deu", false);
     checkNoTextTrack();
-    checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
+    checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
 
     setAudioTrack("fr", true);
     setTextTrack("de", false);
-    setVideoTrack({ all: false, test: /avc1\.640028/ }, true);
+    setVideoTrack({ all: true, test: /avc1\.42C014/ }, undefined);
 
     await sleep(50);
     checkAudioTrack("fr", "fra", true);
     checkTextTrack("de", "deu", false);
-    checkVideoTrack({ all: false, test: /avc1\.640028/ }, true);
+    checkVideoTrack({ all: false, test: /avc1\.42C014/ }, undefined);
 
     await goToSecondPeriod();
     await goToFirstPeriod();
     checkAudioTrack("fr", "fra", true);
     checkTextTrack("de", "deu", false);
-    checkVideoTrack({ all: false, test: /avc1\.640028/ }, true);
+    checkVideoTrack({ all: false, test: /avc1\.42C014/ }, undefined);
   });
 
   it("preferences should be persisted if already set for a given Period", async function() {

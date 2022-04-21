@@ -20,22 +20,6 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import {
-  IClockMediaEventType,
-  IFreezingStatus,
-  IRebufferingStatus,
-} from "../api";
-import {
-  IAttachedMediaKeysEvent,
-  IBlacklistProtectionDataEvent,
-  ICreatedMediaKeysEvent,
-  IEncryptedEvent,
-  IInitDataIgnoredEvent,
-  IKeysUpdateEvent,
-  INoUpdateEvent,
-  ISessionMessageEvent,
-  ISessionUpdatedEvent,
-} from "../eme";
 import SegmentBuffersStore from "../segment_buffers";
 import {
   IActivePeriodChangedEvent,
@@ -54,31 +38,10 @@ import {
   IStreamManifestMightBeOutOfSync,
   IStreamNeedsManifestRefresh,
 } from "../stream";
-import { IEMEDisabledEvent } from "./create_eme_manager";
 import {
   IStreamEventEvent,
   IStreamEventSkipEvent,
 } from "./stream_events_emitter";
-
-/** Object awaited by the `Init` on each clock tick. */
-export interface IInitClockTick { position : number;
-                                  getCurrentTime : () => number;
-                                  buffered : TimeRanges;
-                                  duration : number;
-                                  bufferGap : number;
-                                  event : IClockMediaEventType;
-                                  playbackRate : number;
-                                  currentRange : { start : number;
-                                                   end : number; } |
-                                                 null;
-                                  readyState : number;
-                                  paused : boolean;
-                                  rebuffering : IRebufferingStatus |
-                                                null;
-                                  freezing : IFreezingStatus |
-                                             null;
-                                  seeking : boolean;
-                                  internalSeeking : boolean; }
 
 /** Event sent after the Manifest has been loaded and parsed for the first time. */
 export interface IManifestReadyEvent {
@@ -179,19 +142,6 @@ export type IInitEvent = IManifestReadyEvent |
                          IReloadingMediaSourceEvent |
                          IDecipherabilityUpdateEvent |
                          IWarningEvent |
-                         IEMEDisabledEvent |
-
-                         // Coming from the `EMEManager`
-
-                         IEncryptedEvent |
-                         ICreatedMediaKeysEvent |
-                         IAttachedMediaKeysEvent |
-                         IInitDataIgnoredEvent |
-                         ISessionMessageEvent |
-                         IKeysUpdateEvent |
-                         INoUpdateEvent |
-                         ISessionUpdatedEvent |
-                         IBlacklistProtectionDataEvent |
 
                          // Coming from the `MediaSourceLoader`
 
@@ -217,17 +167,4 @@ export type IInitEvent = IManifestReadyEvent |
 export type IDirectfileEvent = IStalledEvent |
                                IUnstalledEvent |
                                ILoadedEvent |
-                               IWarningEvent |
-                               IEMEDisabledEvent |
-
-                               // Coming from the `EMEManager`
-
-                               IEncryptedEvent |
-                               ICreatedMediaKeysEvent |
-                               IAttachedMediaKeysEvent |
-                               IInitDataIgnoredEvent |
-                               ISessionMessageEvent |
-                               IKeysUpdateEvent |
-                               INoUpdateEvent |
-                               ISessionUpdatedEvent |
-                               IBlacklistProtectionDataEvent;
+                               IWarningEvent;

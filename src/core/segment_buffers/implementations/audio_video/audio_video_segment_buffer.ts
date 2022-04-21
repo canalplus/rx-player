@@ -29,6 +29,7 @@ import {
 } from "../../../../compat";
 import config from "../../../../config";
 import log from "../../../../log";
+import { getLoggableSegmentId } from "../../../../manifest";
 import areArraysOfNumbersEqual from "../../../../utils/are_arrays_of_numbers_equal";
 import assertUnreachable from "../../../../utils/assert_unreachable";
 import { toUint8Array } from "../../../../utils/byte_parsing";
@@ -47,7 +48,6 @@ import {
   SegmentBufferOperation,
 } from "../types";
 
-const { SOURCE_BUFFER_FLUSHING_INTERVAL } = config;
 
 /**
  * Item added to the AudioVideoSegmentBuffer's queue before being processed into
@@ -171,6 +171,8 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
     this._lastInitSegment = null;
     this.codec = codec;
 
+    const { SOURCE_BUFFER_FLUSHING_INTERVAL } = config.getCurrent();
+
     // Some browsers (happened with firefox 66) sometimes "forget" to send us
     // `update` or `updateend` events.
     // In that case, we're completely unable to continue the queue here and
@@ -222,7 +224,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
     assertPushedDataIsBufferSource(infos);
     log.debug("AVSB: receiving order to push data to the SourceBuffer",
               this.bufferType,
-              infos);
+              getLoggableSegmentId(infos.inventoryInfos));
     return this._addToQueue({ type: SegmentBufferOperation.Push,
                               value: infos });
   }
@@ -254,7 +256,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
   public endOfSegment(infos : IEndOfSegmentInfos) : Observable<void> {
     log.debug("AVSB: receiving order for validating end of segment",
               this.bufferType,
-              infos.segment);
+              getLoggableSegmentId(infos));
     return this._addToQueue({ type: SegmentBufferOperation.EndOfSegment,
                               value: infos });
   }
@@ -447,7 +449,8 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
       switch (this._pendingTask.type) {
         case SegmentBufferOperation.EndOfSegment:
           // nothing to do, we will just acknowledge the segment.
-          log.debug("AVSB: Acknowledging complete segment", this._pendingTask.value);
+          log.debug("AVSB: Acknowledging complete segment",
+                    getLoggableSegmentId(this._pendingTask.value));
           this._flush();
           return;
 
@@ -457,6 +460,9 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
             this._flush();
             return;
           }
+          log.debug("AVSB: pushing segment",
+                    this.bufferType,
+                    getLoggableSegmentId(this._pendingTask.inventoryData));
           this._sourceBuffer.appendBuffer(segmentData);
           break;
 
@@ -591,7 +597,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
 function assertPushedDataIsBufferSource(
   pushedData : IPushChunkInfos<unknown>
 ) : asserts pushedData is IPushChunkInfos<BufferSource> {
-  if (!__DEV__) {
+  if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.PRODUCTION as number) {
     return;
   }
   const { chunk, initSegment } = pushedData.data;

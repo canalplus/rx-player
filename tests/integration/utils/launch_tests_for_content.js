@@ -374,12 +374,12 @@ export default function launchTestsForContent(manifestInfos) {
         });
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.getPosition())
-          .to.be.closeTo(manifestInfos.minimumPosition + 2, 0.1);
+          .to.be.closeTo(manifestInfos.minimumPosition + 2, 1);
         player.stop();
         player.reload({ reloadAt: { relative: 5 }});
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.getPosition())
-          .to.be.closeTo(manifestInfos.minimumPosition + 7, 0.1);
+          .to.be.closeTo(manifestInfos.minimumPosition + 7, 1.5);
       });
       it("should reload when seeking at last playback position", async function () {
         player.setVideoBitrate(0);
@@ -624,7 +624,7 @@ export default function launchTestsForContent(manifestInfos) {
     describe("getVideoBufferGap", () => {
       // TODO handle live contents
       it("should return the buffer gap of the current range", async function() {
-        this.timeout(15000);
+        this.timeout(20000);
 
         player.setVideoBitrate(Infinity);
         player.setWantedBufferAhead(10);
@@ -635,7 +635,7 @@ export default function launchTestsForContent(manifestInfos) {
           autoPlay: false,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        await sleep(1500);
+        await sleep(3000);
 
         let bufferGap = player.getVideoBufferGap();
         expect(bufferGap).to.be.at.least(9.5);
@@ -643,20 +643,20 @@ export default function launchTestsForContent(manifestInfos) {
 
         player.setWantedBufferAhead(20);
         expect(player.getWantedBufferAhead()).to.equal(20);
-        await sleep(1500);
+        await sleep(3000);
         bufferGap = player.getVideoBufferGap();
         expect(bufferGap).to.be.at.least(19.5);
         expect(bufferGap).to.be.at.most(20 + 10);
 
         player.seekTo(minimumPosition + 10);
-        await sleep(1500);
+        await sleep(3000);
         expect(player.getWantedBufferAhead()).to.equal(20);
         bufferGap = player.getVideoBufferGap();
         expect(bufferGap).to.be.at.least(19.5);
         expect(bufferGap).to.be.at.most(20 + 10);
 
         player.seekTo(minimumPosition + 10 + 30);
-        await sleep(1500);
+        await sleep(3000);
         expect(player.getWantedBufferAhead()).to.equal(20);
         bufferGap = player.getVideoBufferGap();
         expect(bufferGap).to.be.at.least(19.5);
@@ -714,7 +714,7 @@ export default function launchTestsForContent(manifestInfos) {
     describe("getVideoPlayedTime", () => {
       // TODO handle live contents
       it("should return the difference between the start of the current range and the current time", async function() {
-        this.timeout(3000);
+        this.timeout(10000);
         player.setWantedBufferAhead(10);
         expect(player.getWantedBufferAhead()).to.equal(10);
 
@@ -722,23 +722,23 @@ export default function launchTestsForContent(manifestInfos) {
                            transport,
                            autoPlay: false });
         await waitForLoadedStateAfterLoadVideo(player);
-        await sleep(100);
+        await sleep(1500);
 
         expect(player.getPosition()).to.be.closeTo(minimumPosition, 0.001);
         expect(player.getVideoPlayedTime()).to.equal(0);
 
         xhrMock.lock();
-        player.seekTo(minimumPosition + 5);
-        await sleep(100);
-        expect(player.getVideoPlayedTime()).to.be.closeTo(5, 0.001);
+        player.seekTo(minimumPosition + 9);
+        await sleep(1500);
+        expect(player.getVideoPlayedTime()).to.be.closeTo(9, 0.001);
 
         await xhrMock.flush();
         xhrMock.unlock();
-        await sleep(300);
-        expect(player.getVideoPlayedTime()).to.be.closeTo(5, 0.001);
+        await sleep(1500);
+        expect(player.getVideoPlayedTime()).to.be.closeTo(9, 0.001);
 
         player.seekTo(minimumPosition + 30);
-        await sleep(800);
+        await sleep(1500);
         const initialLoadedTime = player.getVideoPlayedTime();
         expect(initialLoadedTime).to.be.closeTo(0, 4);
 
@@ -888,7 +888,7 @@ export default function launchTestsForContent(manifestInfos) {
         await sleep(5);
         expect(player.getAvailableVideoBitrates()).to.eql([]);
         await xhrMock.flush();
-        await sleep(10);
+        await sleep(500);
 
         expect(player.getAvailableVideoBitrates()).to.eql(videoBitrates);
       });
@@ -1707,7 +1707,7 @@ export default function launchTestsForContent(manifestInfos) {
     describe("setWantedBufferAhead", () => {
       // TODO handle live contents
       it("should download until a set wanted buffer ahead", async function() {
-        this.timeout(8000);
+        this.timeout(20000);
         player.setVideoBitrate(0);
         player.setWantedBufferAhead(10);
         expect(player.getWantedBufferAhead()).to.equal(10);
@@ -1718,7 +1718,7 @@ export default function launchTestsForContent(manifestInfos) {
           autoPlay: false,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        await sleep(800);
+        await sleep(3000);
         let buffered = player.getVideoElement().buffered;
         expect(buffered.length).to.equal(1);
         expect(buffered.start(0)).to.be.closeTo(minimumPosition, 0.5);
@@ -1730,7 +1730,7 @@ export default function launchTestsForContent(manifestInfos) {
 
         player.setWantedBufferAhead(20);
         expect(player.getWantedBufferAhead()).to.equal(20);
-        await sleep(800);
+        await sleep(3000);
         buffered = player.getVideoElement().buffered;
         expect(buffered.length).to.equal(1);
         expect(buffered.start(0)).to.be.closeTo(minimumPosition, 0.5);
@@ -1741,7 +1741,7 @@ export default function launchTestsForContent(manifestInfos) {
           .at.most(minimumPosition + 20 + 10);
 
         player.seekTo(minimumPosition + 10);
-        await sleep(800);
+        await sleep(3000);
         buffered = player.getVideoElement().buffered;
         expect(player.getWantedBufferAhead()).to.equal(20);
         expect(buffered.length).to.equal(1);
@@ -1756,7 +1756,7 @@ export default function launchTestsForContent(manifestInfos) {
           .at.most(minimumPosition + 10 + 20 + 10);
 
         player.seekTo(minimumPosition + 10 + 20 + 10 + 10);
-        await sleep(1200);
+        await sleep(3000);
         buffered = player.getVideoElement().buffered;
         expect(player.getWantedBufferAhead()).to.equal(20);
         expect(buffered.length).to.equal(2);
@@ -1773,7 +1773,7 @@ export default function launchTestsForContent(manifestInfos) {
 
         player.setWantedBufferAhead(Infinity);
         expect(player.getWantedBufferAhead()).to.equal(Infinity);
-        await sleep(2000);
+        await sleep(3000);
         buffered = player.getVideoElement().buffered;
         expect(buffered.length).to.equal(2);
         expect(buffered.start(1)).to.be

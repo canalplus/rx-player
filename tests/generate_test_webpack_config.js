@@ -11,16 +11,12 @@ const Webpack = require("webpack");
  * @param {string} args.contentServerInfo.url - URL of the content server.
  * @param {number} args.contentServerInfo.port - Port that should be used when
  * requesting the content server.
- * @param {boolean} [coverage] - If set to `true`, supplementary steps will be
- * taken to allow code coverage reports.
  * @returns {Object} - The Webpack config
  */
 module.exports = function generateTestWebpackConfig({
-  contentServerInfo,
-  coverage,
+  contentServerInfo
 }) {
-  const coverageIsWanted = !!coverage;
-  const config = {
+  return {
     mode: "development",
     resolve: {
       extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
@@ -53,80 +49,34 @@ module.exports = function generateTestWebpackConfig({
           PORT: JSON.stringify(String(contentServerInfo.port)),
         },
         __FEATURES__: {
-          BIF_PARSER: true,
-          DASH: true,
-          DIRECTFILE: true,
-          EME: true,
-          HTML_SAMI: true,
-          HTML_SRT: true,
-          HTML_TTML: true,
-          HTML_VTT: true,
-          LOCAL_MANIFEST: true,
-          METAPLAYLIST: true,
-          NATIVE_SAMI: true,
-          NATIVE_SRT: true,
-          NATIVE_TTML: true,
-          NATIVE_VTT: true,
-          SMOOTH: true,
-        },
+          IS_DISABLED: 0,
+          IS_ENABLED: 1,
 
-        // Path relative to src/features where optional features are implemented
-        __RELATIVE_PATH__: {
-          BIF_PARSER: JSON.stringify("../parsers/images/bif.ts"),
-          DASH: JSON.stringify("../transports/dash/index.ts"),
-          DASH_JS_PARSER: JSON.stringify("../parsers/manifest/dash/js-parser/index.ts"),
-          DIRECTFILE: JSON.stringify("../core/init/initialize_directfile.ts"),
-          EME_MANAGER: JSON.stringify("../core/eme/index.ts"),
-          HTML_SAMI: JSON.stringify("../parsers/texttracks/sami/html.ts"),
-          HTML_SRT: JSON.stringify("../parsers/texttracks/srt/html.ts"),
-          HTML_TEXT_BUFFER: JSON.stringify("../core/segment_buffers/implementations/text/html/index.ts"),
-          HTML_TTML: JSON.stringify("../parsers/texttracks/ttml/html/index.ts"),
-          HTML_VTT: JSON.stringify("../parsers/texttracks/webvtt/html/index.ts"),
-          IMAGE_BUFFER: JSON.stringify("../core/segment_buffers/implementations/image/index.ts"),
-          LOCAL_MANIFEST: JSON.stringify("../transports/local/index.ts"),
-          MEDIA_ELEMENT_TRACK_CHOICE_MANAGER: JSON.stringify("../core/api/media_element_track_choice_manager.ts"),
-          METAPLAYLIST: JSON.stringify("../transports/metaplaylist/index.ts"),
-          NATIVE_SAMI: JSON.stringify("../parsers/texttracks/sami/native.ts"),
-          NATIVE_SRT: JSON.stringify("../parsers/texttracks/srt/native.ts"),
-          NATIVE_TEXT_BUFFER: JSON.stringify("../core/segment_buffers/implementations/text/native/index.ts"),
-          NATIVE_TTML: JSON.stringify("../parsers/texttracks/ttml/native/index.ts"),
-          NATIVE_VTT: JSON.stringify("../parsers/texttracks/webvtt/native/index.ts"),
-          SMOOTH: JSON.stringify("../transports/smooth/index.ts"),
+          BIF_PARSER: 1,
+          DASH: 1,
+          DIRECTFILE: 1,
+          EME: 1,
+          HTML_SAMI: 1,
+          HTML_SRT: 1,
+          HTML_TTML: 1,
+          HTML_VTT: 1,
+          LOCAL_MANIFEST: 1,
+          METAPLAYLIST: 1,
+          NATIVE_SAMI: 1,
+          NATIVE_SRT: 1,
+          NATIVE_TTML: 1,
+          NATIVE_VTT: 1,
+          SMOOTH: 1,
         },
-        __DEV__: true,
-        __LOGGER_LEVEL__: "\"NONE\"",
-        "process.env": {
-          NODE_ENV: JSON.stringify("development"),
+        __ENVIRONMENT__: {
+          PRODUCTION: 0,
+          DEV: 1,
+          CURRENT_ENV: 1,
+        },
+        __LOGGER_LEVEL__: {
+          CURRENT_LEVEL: "\"NONE\"",
         },
       }),
     ],
   };
-
-  if (coverageIsWanted) {
-    config.devtool = "inline-source-map";
-    config.module.rules = [
-      {
-        test: /\.tsx?$/,
-        use: [{
-          loader: "ts-loader",
-          options: {
-            compilerOptions: {
-              // needed for istanbul accuracy
-              sourceMap: true,
-            },
-          },
-        }],
-      },
-      {
-        test: /\.ts$/,
-        exclude: [/__tests__/],
-        enforce: "post",
-        use: {
-          loader: "istanbul-instrumenter-loader",
-          options: { esModules: true },
-        },
-      },
-    ];
-  }
-  return config;
-}
+};

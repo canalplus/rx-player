@@ -39,7 +39,7 @@ export interface IHDRInformation {
    * It is used to ask to the user agent if the color depth is supported by the
    * output device.
    */
-  colorDepth?: number;
+  colorDepth? : number | undefined;
   /**
    * It is the HDR eotf. It is the transfer function having the video signal as
    * input and converting it into the linear light output of the display. The
@@ -47,14 +47,14 @@ export interface IHDRInformation {
    *
    * It may be used here to ask the MediaSource if it supported.
    */
-  eotf?: string;
+  eotf? : string | undefined;
   /**
    * It is the video color space used for encoding. An HDR content may not have
    * a wide color gamut.
    *
    * It may be used to ask about output device color space support.
    */
-  colorSpace?: string;
+  colorSpace? : string | undefined;
 }
 
 /** Manifest, as documented in the API documentation. */

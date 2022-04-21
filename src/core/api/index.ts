@@ -14,16 +14,23 @@
  * limitations under the License.
  */
 
+import PlaybackObserver from "./playback_observer";
 import Player from "./public_api";
 export {
+  IBitrateEstimate,
+  IPositionUpdateItem,
   IStreamEvent,
   IStreamEventData,
 } from "./public_api";
+export { PlaybackObserver };
+export { IPlayerState } from "./get_player_state";
 export {
-  IClockMediaEventType,
+  IPlaybackObservation,
+  IPlaybackObserverEventType,
+  IReadOnlyPlaybackObserver,
   IFreezingStatus,
   IRebufferingStatus,
-} from "./clock";
+} from "./playback_observer";
 export {
   IConstructorOptions,
   ILoadVideoOptions,

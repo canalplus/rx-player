@@ -17,10 +17,10 @@
 import {
   catchError,
   concat as observableConcat,
+  defer as observableDefer,
   EMPTY,
   ignoreElements,
   map,
-  mapTo,
   merge as observableMerge,
   mergeMap,
   Observable,
@@ -28,7 +28,6 @@ import {
   ReplaySubject,
   startWith,
   switchMap,
-  take,
 } from "rxjs";
 import config from "../../../config";
 import { formatError } from "../../../errors";
@@ -42,6 +41,7 @@ import { getLeftSizeOfRange } from "../../../utils/ranges";
 import { IReadOnlySharedReference } from "../../../utils/reference";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import ABRManager from "../../abr";
+import { IReadOnlyPlaybackObserver } from "../../api";
 import { SegmentFetcherCreator } from "../../fetchers";
 import SegmentBuffersStore, {
   IBufferType,
@@ -49,7 +49,7 @@ import SegmentBuffersStore, {
   SegmentBuffer,
 } from "../../segment_buffers";
 import AdaptationStream, {
-  IAdaptationStreamOptions,
+  IAdaptationStreamOptions, IAdaptationStreamPlaybackObservation,
 } from "../adaptation";
 import EVENTS from "../events_generators";
 import reloadAfterSwitch from "../reload_after_switch";
@@ -59,55 +59,58 @@ import {
   IStreamWarningEvent,
 } from "../types";
 import createEmptyStream from "./create_empty_adaptation_stream";
-import getAdaptationSwitchStrategy from "./get_adaptation_switch_strategy";
+import getAdaptationSwitchStrategy, {
+  IAudioTrackSwitchingMode,
+} from "./get_adaptation_switch_strategy";
 
-const { DELTA_POSITION_AFTER_RELOAD } = config;
 
-export interface IPeriodStreamClockTick {
-  position : number; // the position we are in the video in s at the time of the tic
-  getCurrentTime : () => number; // fetch the current time
-  duration : number; // duration of the HTMLMediaElement
-  isPaused: boolean; // If true, the player is on pause
-  liveGap? : number; // gap between the current position and the edge of a
-                     // live content. Not set for non-live contents
-  readyState : number; // readyState of the HTMLMediaElement
-  speed : number; // playback rate at which the content plays
-  wantedTimeOffset : number; // offset in s to add to the time to obtain the
-                             // position we actually want to download from
+/** Playback observation required by the `PeriodStream`. */
+export interface IPeriodStreamPlaybackObservation {
+  /** The position we are in the video in seconds at the time of the observation. */
+  position : number;
+  /** `duration` property of the HTMLMediaElement. */
+  duration : number;
+  /** If `true`, the player is currently paused. */
+  isPaused: boolean;
+  /** `readyState` property of the HTMLMediaElement. */
+  readyState : number;
+  /** Target playback rate at which we want to play the content. */
+  speed : number;
+  /**
+   * Offset, in seconds to add to `position` to obtain the starting position at
+   * which we actually want to download segments for.
+   */
+  wantedTimeOffset : number;
+  /**
+   * Only set for live contents.
+   * Difference between the live edge and the current position, in seconds.
+   */
+  liveGap : number | undefined;
 }
 
+/** Arguments required by the `PeriodStream`. */
 export interface IPeriodStreamArguments {
   abrManager : ABRManager;
   bufferType : IBufferType;
-  clock$ : Observable<IPeriodStreamClockTick>;
   content : { manifest : Manifest;
               period : Period; };
   garbageCollectors : WeakMapMemory<SegmentBuffer, Observable<never>>;
   segmentFetcherCreator : SegmentFetcherCreator;
   segmentBuffersStore : SegmentBuffersStore;
+  playbackObserver : IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>;
   options: IPeriodStreamOptions;
   wantedBufferAhead : IReadOnlySharedReference<number>;
+  maxVideoBufferSize : IReadOnlySharedReference<number>;
 }
 
 /** Options tweaking the behavior of the PeriodStream. */
 export type IPeriodStreamOptions =
   IAdaptationStreamOptions &
   {
-    /**
-     * Strategy to adopt when manually switching of audio adaptation.
-     * Can be either:
-     *    - "seamless": transitions are smooth but could be not immediate.
-     *    - "direct": strategy will be "smart", if the mimetype and the codec,
-     *    change, we will perform a hard reload of the media source, however, if it
-     *    doesn't change, we will just perform a small flush by removing buffered range
-     *    and performing, a small seek on the media element.
-     *    Transitions are faster, but, we could see appear a reloading or seeking state.
-     */
-    audioTrackSwitchingMode : "seamless" | "direct";
-
+    /** RxPlayer's behavior when switching the audio track. */
+    audioTrackSwitchingMode : IAudioTrackSwitchingMode;
     /** Behavior when a new video and/or audio codec is encountered. */
     onCodecSwitch : "continue" | "reload";
-
     /** Options specific to the text SegmentBuffer. */
     textTrackOptions? : ITextTrackSegmentBufferOptions;
   };
@@ -124,13 +127,14 @@ export type IPeriodStreamOptions =
 export default function PeriodStream({
   abrManager,
   bufferType,
-  clock$,
   content,
   garbageCollectors,
+  playbackObserver,
   segmentFetcherCreator,
   segmentBuffersStore,
   options,
   wantedBufferAhead,
+  maxVideoBufferSize,
 } : IPeriodStreamArguments) : Observable<IPeriodStreamEvent> {
   const { period } = content;
 
@@ -149,6 +153,7 @@ export default function PeriodStream({
        * This value contains this relative position, in seconds.
        * @see reloadAfterSwitch
        */
+      const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
       const relativePosAfterSwitch =
         switchNb === 0 ? 0 :
         bufferType === "audio" ? DELTA_POSITION_AFTER_RELOAD.trackSwitch.audio :
@@ -156,19 +161,24 @@ export default function PeriodStream({
                                  DELTA_POSITION_AFTER_RELOAD.trackSwitch.other;
 
       if (adaptation === null) { // Current type is disabled for that Period
-        log.info(`Stream: Set no ${bufferType} Adaptation`, period);
+        log.info(`Stream: Set no ${bufferType} Adaptation. P:`, period.start);
         const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
         let cleanBuffer$ : Observable<unknown>;
 
         if (segmentBufferStatus.type === "initialized") {
           log.info(`Stream: Clearing previous ${bufferType} SegmentBuffer`);
           if (SegmentBuffersStore.isNative(bufferType)) {
-            return reloadAfterSwitch(period, bufferType, clock$, 0);
+            return reloadAfterSwitch(period, bufferType, playbackObserver, 0);
           }
-          cleanBuffer$ = segmentBufferStatus.value
-            .removeBuffer(period.start,
-                          period.end == null ? Infinity :
-                                               period.end);
+          if (period.end === undefined) {
+            cleanBuffer$ = segmentBufferStatus.value.removeBuffer(period.start,
+                                                                  Infinity);
+          } else if (period.end <= period.start) {
+            cleanBuffer$ = observableOf(null);
+          } else {
+            cleanBuffer$ = segmentBufferStatus.value.removeBuffer(period.start,
+                                                                  period.end);
+          }
         } else {
           if (segmentBufferStatus.type === "uninitialized") {
             segmentBuffersStore.disableSegmentBuffer(bufferType);
@@ -177,57 +187,69 @@ export default function PeriodStream({
         }
 
         return observableConcat(
-          cleanBuffer$.pipe(mapTo(EVENTS.adaptationChange(bufferType, null, period))),
-          createEmptyStream(clock$, wantedBufferAhead, bufferType, { period })
+          cleanBuffer$.pipe(map(() => EVENTS.adaptationChange(bufferType, null, period))),
+          createEmptyStream(playbackObserver, wantedBufferAhead, bufferType, { period })
         );
       }
 
       if (SegmentBuffersStore.isNative(bufferType) &&
           segmentBuffersStore.getStatus(bufferType).type === "disabled")
       {
-        return reloadAfterSwitch(period, bufferType, clock$, relativePosAfterSwitch);
+        return reloadAfterSwitch(period,
+                                 bufferType,
+                                 playbackObserver,
+                                 relativePosAfterSwitch);
       }
 
-      log.info(`Stream: Updating ${bufferType} adaptation`, adaptation, period);
+      log.info(`Stream: Updating ${bufferType} adaptation`,
+               `A: ${adaptation.id}`,
+               `P: ${period.start}`);
 
-      const newStream$ = clock$.pipe(
-        take(1),
-        mergeMap((tick) => {
-          const segmentBuffer = createOrReuseSegmentBuffer(segmentBuffersStore,
-                                                           bufferType,
-                                                           adaptation,
-                                                           options);
-          const playbackInfos = { currentTime: tick.getCurrentTime(),
-                                  readyState: tick.readyState };
-          const strategy = getAdaptationSwitchStrategy(segmentBuffer,
-                                                       period,
-                                                       adaptation,
-                                                       playbackInfos,
-                                                       options);
-          if (strategy.type === "needs-reload") {
-            return reloadAfterSwitch(period, bufferType, clock$, relativePosAfterSwitch);
-          }
+      const newStream$ = observableDefer(() => {
+        const readyState = playbackObserver.getReadyState();
+        const segmentBuffer = createOrReuseSegmentBuffer(segmentBuffersStore,
+                                                         bufferType,
+                                                         adaptation,
+                                                         options);
+        const playbackInfos = { currentTime: playbackObserver.getCurrentTime(),
+                                readyState };
+        const strategy = getAdaptationSwitchStrategy(segmentBuffer,
+                                                     period,
+                                                     adaptation,
+                                                     playbackInfos,
+                                                     options);
+        if (strategy.type === "needs-reload") {
+          return reloadAfterSwitch(period,
+                                   bufferType,
+                                   playbackObserver,
+                                   relativePosAfterSwitch);
+        }
 
-          const needsBufferFlush$ = strategy.type === "flush-buffer"
-            ? observableOf(EVENTS.needsBufferFlush())
-            : EMPTY;
+        const needsBufferFlush$ = strategy.type === "flush-buffer"
+          ? observableOf(EVENTS.needsBufferFlush())
+          : EMPTY;
 
-          const cleanBuffer$ =
-            strategy.type === "clean-buffer" || strategy.type === "flush-buffer" ?
-              observableConcat(...strategy.value.map(({ start, end }) =>
-                segmentBuffer.removeBuffer(start, end))
-              ).pipe(ignoreElements()) : EMPTY;
+        const cleanBuffer$ =
+          strategy.type === "clean-buffer" || strategy.type === "flush-buffer" ?
+            observableConcat(...strategy.value.map(({ start, end }) =>
+              segmentBuffer.removeBuffer(start, end))
+            // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
+            // first type parameter as `any` instead of the perfectly fine `unknown`,
+            // leading to linter issues, as it forbids the usage of `any`.
+            // This is why we're disabling the eslint rule.
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
+            ).pipe(ignoreElements()) : EMPTY;
 
-          const bufferGarbageCollector$ = garbageCollectors.get(segmentBuffer);
-          const adaptationStream$ = createAdaptationStream(adaptation, segmentBuffer);
+        const bufferGarbageCollector$ = garbageCollectors.get(segmentBuffer);
+        const adaptationStream$ = createAdaptationStream(adaptation, segmentBuffer);
 
-          return segmentBuffersStore.waitForUsableBuffers().pipe(mergeMap(() => {
-            return observableConcat(cleanBuffer$,
-                                    needsBufferFlush$,
-                                    observableMerge(adaptationStream$,
-                                                    bufferGarbageCollector$));
-          }));
+        return segmentBuffersStore.waitForUsableBuffers().pipe(mergeMap(() => {
+          return observableConcat(cleanBuffer$,
+                                  needsBufferFlush$,
+                                  observableMerge(adaptationStream$,
+                                                  bufferGarbageCollector$));
         }));
+      });
 
       return observableConcat(
         observableOf(EVENTS.adaptationChange(bufferType, adaptation, period)),
@@ -247,20 +269,16 @@ export default function PeriodStream({
     segmentBuffer : SegmentBuffer
   ) : Observable<IAdaptationStreamEvent|IStreamWarningEvent> {
     const { manifest } = content;
-    const adaptationStreamClock$ = clock$.pipe(map(tick => {
-      const buffered = segmentBuffer.getBufferedRanges();
-      return objectAssign({},
-                          tick,
-                          { bufferGap: getLeftSizeOfRange(buffered,
-                                                          tick.position) });
-    }));
+    const adaptationPlaybackObserver =
+      createAdaptationStreamPlaybackObserver(playbackObserver, segmentBuffer);
     return AdaptationStream({ abrManager,
-                              clock$: adaptationStreamClock$,
                               content: { manifest, period, adaptation },
                               options,
+                              playbackObserver: adaptationPlaybackObserver,
                               segmentBuffer,
                               segmentFetcherCreator,
-                              wantedBufferAhead }).pipe(
+                              wantedBufferAhead,
+                              maxVideoBufferSize }).pipe(
       catchError((error : unknown) => {
         // Stream linked to a non-native media buffer should not impact the
         // stability of the player. ie: if a text buffer sends an error, we want
@@ -275,7 +293,7 @@ export default function PeriodStream({
           });
           return observableConcat(
             observableOf(EVENTS.warning(formattedError)),
-            createEmptyStream(clock$, wantedBufferAhead, bufferType, { period })
+            createEmptyStream(playbackObserver, wantedBufferAhead, bufferType, { period })
           );
         }
         log.error(`Stream: ${bufferType} Stream crashed. Stopping playback.`, error);
@@ -319,4 +337,30 @@ function getFirstDeclaredMimeType(adaptation : Adaptation) : string {
     return "";
   }
   return representations[0].getMimeTypeString();
+}
+
+/**
+ * Create AdaptationStream's version of a playback observer.
+ * @param {Object} initialPlaybackObserver
+ * @param {Object} segmentBuffer
+ * @returns {Object}
+ */
+function createAdaptationStreamPlaybackObserver(
+  initialPlaybackObserver : IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>,
+  segmentBuffer : SegmentBuffer
+) : IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation> {
+  return initialPlaybackObserver.deriveReadOnlyObserver(
+    (observation$) => observation$.pipe(map(mapObservation)),
+    mapObservation
+  );
+
+  function mapObservation(
+    baseObservation : IPeriodStreamPlaybackObservation
+  ) : IAdaptationStreamPlaybackObservation {
+    const buffered = segmentBuffer.getBufferedRanges();
+    return objectAssign({},
+                        baseObservation,
+                        { bufferGap: getLeftSizeOfRange(buffered,
+                                                        baseObservation.position) });
+  }
 }

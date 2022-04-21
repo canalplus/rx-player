@@ -44,6 +44,7 @@ import {
   isFullscreen,
   requestFullscreen,
 } from "./fullscreen";
+import getStartDate from "./get_start_date";
 import hasEMEAPIs from "./has_eme_apis";
 import isCodecSupported from "./is_codec_supported";
 import isNode from "./is_node";
@@ -79,6 +80,7 @@ export {
   exitFullscreen,
   generateKeyRequest,
   getInitData,
+  getStartDate,
   hasEMEAPIs,
   ICompatTextTrack,
   ICompatVTTCue,

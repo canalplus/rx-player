@@ -69,11 +69,11 @@ export interface IMetaPlaylist {
 export default function parseMetaPlaylist(
   data : unknown,
   parserOptions : {
-    url?: string;
+    url?: string | undefined;
     serverSyncInfos?: {
       serverTimestamp: number;
       clientTime: number;
-    };
+    } | undefined;
   }
 ): IParserResponse<IParsedManifest> {
   let parsedData;
@@ -147,9 +147,9 @@ export default function parseMetaPlaylist(
 function createManifest(
   mplData : IMetaPlaylist,
   manifests : Manifest[],
-  parserOptions:  { url?: string;
+  parserOptions:  { url?: string | undefined;
                     serverSyncInfos?: { serverTimestamp: number;
-                                        clientTime: number; }; }
+                                        clientTime: number; } | undefined; }
 ): IParsedManifest {
   const { url, serverSyncInfos } = parserOptions;
   const clockOffset = serverSyncInfos !== undefined ?

@@ -1,0 +1,28 @@
+{
+  "pages": [
+    {
+      "path": "./TextTrackRenderer.md",
+      "displayName": "TextTrackRenderer"
+    },
+    {
+      "path": "./VideoThumbnailLoader.md",
+      "displayName": "VideoThumbnailLoader"
+    },
+    {
+      "path": "./StringUtils.md",
+      "displayName": "StringUtils"
+    },
+    {
+      "path": "./parseBifThumbnails.md",
+      "displayName": "parseBifThumbnails"
+    },
+    {
+      "path": "./MediaCapabilitiesProber.md",
+      "displayName": "MediaCapabilitiesProber"
+    },
+    {
+      "path": "./createMetaplaylist.md",
+      "displayName": "createMetaplaylist"
+    }
+  ]
+}

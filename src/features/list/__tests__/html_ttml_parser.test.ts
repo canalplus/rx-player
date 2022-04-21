@@ -15,6 +15,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 import ttmlParser from "../../../parsers/texttracks/ttml/html";
 import addHTMLttmlFeature from "../html_ttml_parser";

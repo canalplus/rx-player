@@ -50,13 +50,13 @@ export default class Period {
    * Duration of this Period, in seconds.
    * `undefined` for still-running Periods.
    */
-  public duration? : number;
+  public duration : number | undefined;
 
   /**
    * Absolute end time of the Period, in seconds.
    * `undefined` for still-running Periods.
    */
-  public end? : number;
+  public end : number | undefined;
 
   /**
    * Array containing every errors that happened when the Period has been
@@ -74,7 +74,7 @@ export default class Period {
    */
   constructor(
     args : IParsedPeriod,
-    representationFilter? : IRepresentationFilter
+    representationFilter? : IRepresentationFilter | undefined
   ) {
     this.contentWarnings = [];
     this.id = args.id;

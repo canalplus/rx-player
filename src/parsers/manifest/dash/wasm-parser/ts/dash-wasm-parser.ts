@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import log from "../../../../../log";
 import assertUnreachable from "../../../../../utils/assert_unreachable";
 import noop from "../../../../../utils/noop";
@@ -136,15 +135,15 @@ export default class DashWasmParser {
    */
   public waitForInitialization() : Promise<void> {
     return this._initProm ??
-           PPromise.reject("No initialization performed yet.");
+           Promise.reject("No initialization performed yet.");
   }
 
   public async initialize(opts : IDashWasmParserOptions) : Promise<void> {
     if (this.status !== "uninitialized") {
-      return PPromise.reject(new Error("DashWasmParser already initialized."));
+      return Promise.reject(new Error("DashWasmParser already initialized."));
     } else if (!this.isCompatible()) {
       this.status = "failure";
-      return PPromise.reject(new Error("Target not compatible with WebAssembly."));
+      return Promise.reject(new Error("Target not compatible with WebAssembly."));
     }
     this.status = "initializing";
 
@@ -162,7 +161,7 @@ export default class DashWasmParser {
         memoryBase: 0,
         tableBase: 0,
         memory: new WebAssembly.Memory({ initial: 10 }),
-        table: new WebAssembly.Table({ initial: 2, element: "anyfunc" }),
+        table: new WebAssembly.Table({ initial: 1, element: "anyfunc" }),
         onTagOpen,
         onCustomEvent,
         onAttribute,
@@ -175,7 +174,7 @@ export default class DashWasmParser {
 
     const streamingProm = typeof WebAssembly.instantiateStreaming === "function" ?
       WebAssembly.instantiateStreaming(fetchedWasm, imports) :
-      PPromise.reject("`WebAssembly.instantiateStreaming` API not available");
+      Promise.reject("`WebAssembly.instantiateStreaming` API not available");
 
     this._initProm = streamingProm
       .catch(async (e) => {
@@ -391,7 +390,7 @@ export default class DashWasmParser {
 
     try {
       // TODO better type this
-      (this._instance.instance.exports.parse_xlink as () => void)();
+      (this._instance.instance.exports.parse as () => void)();
     } catch (err) {
       this._parsersStack.reset();
       this._warnings = [];
@@ -441,12 +440,15 @@ export default class DashWasmParser {
       ) : IDashParserResponse<string> | IDashParserResponse<ArrayBuffer> => {
         const resourceInfos : ILoadedXlinkData[] = [];
         for (let i = 0; i < loadedXlinks.length; i++) {
-          const { responseData: xlinkData,
+          const { responseData: xlinkResp,
                   receivedTime,
                   sendingTime,
                   url } = loadedXlinks[i];
+          if (!xlinkResp.success) {
+            throw xlinkResp.error;
+          }
           const [periodsIr,
-                 periodsIRWarnings] = this._parseXlink(xlinkData);
+                 periodsIRWarnings] = this._parseXlink(xlinkResp.data);
           resourceInfos.push({ url,
                                receivedTime,
                                sendingTime,

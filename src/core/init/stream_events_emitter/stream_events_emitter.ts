@@ -34,7 +34,7 @@ import {
 import config from "../../../config";
 import Manifest from "../../../manifest";
 import { fromEvent } from "../../../utils/event_emitter";
-import { IInitClockTick } from "../types";
+import { IPlaybackObservation } from "../../api";
 import refreshScheduledEventsList from "./refresh_scheduled_events_list";
 import {
   INonFiniteStreamEventPayload,
@@ -43,7 +43,6 @@ import {
   IStreamEventPayload,
 } from "./types";
 
-const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config;
 
 /**
  * Tells if a stream event has a duration
@@ -64,7 +63,7 @@ function isFiniteStreamEvent(
  */
 function streamEventsEmitter(manifest: Manifest,
                              mediaElement: HTMLMediaElement,
-                             clock$: Observable<IInitClockTick>
+                             observation$: Observable<IPlaybackObservation>
 ): Observable<IStreamEvent> {
   const eventsBeingPlayed =
     new WeakMap<IStreamEventPayload|INonFiniteStreamEventPayload, true>();
@@ -77,20 +76,20 @@ function streamEventsEmitter(manifest: Manifest,
   );
 
   /**
-   * Examine playback situation from clock ticks to emit stream events and
+   * Examine playback situation from playback observations to emit stream events and
    * prepare set onExit callbacks if needed.
    * @param {Array.<Object>} scheduledEvents
-   * @param {Object} oldTick
-   * @param {Object} newTick
+   * @param {Object} oldObservation
+   * @param {Object} newObservation
    * @returns {Observable}
    */
   function emitStreamEvents$(
     scheduledEvents: Array<IStreamEventPayload|INonFiniteStreamEventPayload>,
-    oldClockTick: { currentTime: number; isSeeking: boolean },
-    newClockTick: { currentTime: number; isSeeking: boolean }
+    oldObservation: { currentTime: number; isSeeking: boolean },
+    newObservation: { currentTime: number; isSeeking: boolean }
   ): Observable<IStreamEvent> {
-    const { currentTime: previousTime } = oldClockTick;
-    const { isSeeking, currentTime } = newClockTick;
+    const { currentTime: previousTime } = oldObservation;
+    const { isSeeking, currentTime } = newObservation;
     const eventsToSend: IStreamEvent[] = [];
     const eventsToExit: IPublicStreamEvent[] = [];
 
@@ -139,6 +138,11 @@ function streamEventsEmitter(manifest: Manifest,
             evt.onExit();
           }
         }),
+        // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
+        // first type parameter as `any` instead of the perfectly fine `unknown`,
+        // leading to linter issues, as it forbids the usage of `any`.
+        // This is why we're disabling the eslint rule.
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
         ignoreElements()
       ) : EMPTY
     );
@@ -156,18 +160,20 @@ function streamEventsEmitter(manifest: Manifest,
       if (!hasEvents) {
         return EMPTY;
       }
+
+      const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config.getCurrent();
       return observableCombineLatest([
         interval(STREAM_EVENT_EMITTER_POLL_INTERVAL).pipe(startWith(null)),
-        clock$,
+        observation$,
       ]).pipe(
-        map(([_, clockTick]) => {
-          const { seeking } = clockTick;
+        map(([_, observation]) => {
+          const { seeking } = observation;
           return { isSeeking: seeking,
                    currentTime: mediaElement.currentTime };
         }),
         pairwise(),
-        mergeMap(([oldTick, newTick]) =>
-          emitStreamEvents$(lastScheduledEvents, oldTick, newTick))
+        mergeMap(([oldObservation, newObservation]) =>
+          emitStreamEvents$(lastScheduledEvents, oldObservation, newObservation))
       );
     })
   );

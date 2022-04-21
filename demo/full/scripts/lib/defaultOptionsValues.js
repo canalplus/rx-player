@@ -14,9 +14,10 @@ const defaultOptionsValues = {
   manifestRetry: 4,
   offlineRetry: Infinity,
   enableFastSwitching: true,
-  audioTrackSwitchingMode: "direct",
+  audioTrackSwitchingMode: "reload",
   onCodecSwitch: "continue",
   wantedBufferAhead: 30,
+  maxVideoBufferSize: Infinity,
   maxBufferAhead: Infinity,
   maxBufferBehind: Infinity,
 };

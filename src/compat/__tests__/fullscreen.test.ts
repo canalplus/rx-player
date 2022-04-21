@@ -23,15 +23,15 @@
 
 interface IFakeDocument {
   createElement(eltType: string) : HTMLElement;
-  fullscreenElement? : Element | null;
-  mozCancelFullScreen? : () => void;
-  mozFullScreenElement? : HTMLElement;
-  msExitFullscreen? : () => void;
-  exitFullscreen? : () => void;
-  msFullscreenElement? : Element | null;
+  fullscreenElement? : Element | null | undefined;
+  mozCancelFullScreen? : (() => void) | undefined;
+  mozFullScreenElement? : HTMLElement | undefined;
+  msExitFullscreen? : (() => void) | undefined;
+  exitFullscreen? : (() => void) | undefined;
+  msFullscreenElement? : Element | null | undefined;
   webkitExitFullscreen : () => void;
   webkitFullscreenElement : Element | null | undefined;
-  webkitHidden? : boolean;
+  webkitHidden? : boolean | undefined;
 }
 
 const doc = document as unknown as IFakeDocument;

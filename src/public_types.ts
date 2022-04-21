@@ -45,13 +45,18 @@ export {
   ITextTrackPreference,
   IVideoTrackPreference,
 
+  IBitrateEstimate,
+  IPositionUpdateItem as IPositionUpdate,
+  IPlayerState,
+
   IStreamEvent,
   IStreamEventData,
 } from "./core/api";
 export {
   IPersistentSessionInfo,
   IPersistentSessionStorage,
-} from "./core/eme";
+} from "./core/decrypt";
+export { IAudioTrackSwitchingMode } from "./core/stream";
 export { ICustomError as IPlayerError } from "./errors";
 export {
   IExposedAdaptation as IAdaptation,

@@ -52,8 +52,9 @@ function getWantedRepeatIndex(
  * @returns {Array.<Object>}
  */
 export default function getSegmentsFromTimeline(
-  index : { mediaURLs : string[] | null;
-            startNumber? : number;
+  index : { availabilityTimeComplete? : boolean | undefined;
+            mediaURLs : string[] | null;
+            startNumber? : number | undefined;
             timeline : IIndexSegment[];
             timescale : number;
             indexTimeOffset : number; },
@@ -66,9 +67,7 @@ export default function getSegmentsFromTimeline(
   const scaledTo = toIndexTime(from + durationWanted, index);
   const { timeline, timescale, mediaURLs, startNumber } = index;
 
-  let currentNumber = startNumber != null ? startNumber :
-                                            undefined;
-
+  let currentNumber = startNumber ?? 1;
   const segments : ISegment[] = [];
 
   const timelineLength = timeline.length;
@@ -85,11 +84,13 @@ export default function getSegmentsFromTimeline(
     maxEncounteredDuration = Math.max(maxEncounteredDuration, duration);
 
     const repeat = calculateRepeat(timelineItem, timeline[i + 1], maximumTime);
+    const complete = index.availabilityTimeComplete !== false ||
+                     i !== timelineLength - 1 &&
+                     repeat !== 0;
     let segmentNumberInCurrentRange = getWantedRepeatIndex(start, duration, scaledUp);
     let segmentTime = start + segmentNumberInCurrentRange * duration;
     while (segmentTime < scaledTo && segmentNumberInCurrentRange <= repeat) {
-      const segmentNumber = currentNumber != null ?
-        currentNumber + segmentNumberInCurrentRange : undefined;
+      const segmentNumber = currentNumber + segmentNumberInCurrentRange;
 
       const detokenizedURLs = mediaURLs === null ?
         null :
@@ -106,6 +107,7 @@ export default function getSegmentsFromTimeline(
                         mediaURLs: detokenizedURLs,
                         number: segmentNumber,
                         timestampOffset: -(index.indexTimeOffset / timescale),
+                        complete,
                         privateInfos: { isEMSGWhitelisted } };
       segments.push(segment);
 
@@ -119,9 +121,7 @@ export default function getSegmentsFromTimeline(
       return segments;
     }
 
-    if (currentNumber != null) {
-      currentNumber += repeat + 1;
-    }
+    currentNumber += repeat + 1;
   }
 
   return segments;

@@ -133,8 +133,7 @@ function constructContentList() {
  */
 function generateLinkForContent(
   content,
-  { autoPlay,
-    transportType,
+  { transportType,
     fallbackKeyError,
     fallbackLicenseRequest },
 ) {
@@ -146,7 +145,6 @@ function generateLinkForContent(
   const serverCertificateUrl = content.drmInfos && content.drmInfos[0] &&
     content.drmInfos[0].serverCertificateUrl;
   return generateLinkForCustomContent({
-    autoPlay,
     chosenDRMType: content.drmInfos &&
       content.drmInfos[0] &&
       content.drmInfos[0].drm,
@@ -250,8 +248,7 @@ class ContentList extends React.Component {
         const { fallbackKeyError,
                 fallbackLicenseRequest,
                 lowLatency } = parsedHash;
-        const newState = { autoPlay: !parsedHash.noAutoplay,
-                           contentChoiceIndex: 0,
+        const newState = { contentChoiceIndex: 0,
                            contentNameField: "",
                            contentList: this.state.contentsPerType[tech],
                            currentManifestURL: parsedHash.manifest,
@@ -288,7 +285,6 @@ class ContentList extends React.Component {
    */
   loadContent(content) {
     const { loadVideo, stopVideo } = this.props;
-    const { autoPlay } = this.state;
     if (content == null) {
       stopVideo();
       return;
@@ -308,7 +304,6 @@ class ContentList extends React.Component {
       .then((keySystems) => {
         loadVideo({ url,
                     transport,
-                    autoPlay,
                     supplementaryImageTracks,
                     supplementaryTextTracks,
                     textTrackMode: "html",
@@ -321,7 +316,6 @@ class ContentList extends React.Component {
   /**
    * @param {string} url
    * @param {Array.<Object>} drmInfos
-   * @param {boolean} autoPlay
    */
   loadUrl(url, drmInfos) {
     const { loadVideo } = this.props;

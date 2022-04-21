@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import features from "../../features";
 import Manifest, {
   Adaptation,
@@ -45,8 +44,8 @@ import {
   ISegmentLoaderResultChunkedComplete,
   ISegmentLoaderResultSegmentCreated,
   ISegmentLoaderResultSegmentLoaded,
-  ISegmentParserParsedInitSegment,
-  ISegmentParserParsedSegment,
+  ISegmentParserParsedInitChunk,
+  ISegmentParserParsedMediaChunk,
   ITextTrackSegmentData,
   ITransportOptions,
   ITransportPipelines,
@@ -156,7 +155,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
       ) : Promise<IManifestParserResult> {
         if (parsedResult.type === "done") {
           const manifest = new Manifest(parsedResult.value, options);
-          return PPromise.resolve({ manifest });
+          return Promise.resolve({ manifest });
         }
 
         const parsedValue = parsedResult.value;
@@ -177,7 +176,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
           }
         });
 
-        return PPromise.all(loaderProms).then(parsedReqs => {
+        return Promise.all(loaderProms).then(parsedReqs => {
           const loadedRessources = parsedReqs.map(e => e.manifest);
           return handleParsedResult(parsedResult.value.continue(loadedRessources));
         });
@@ -207,7 +206,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
   function offsetTimeInfos(
     contentOffset : number,
     contentEnd : number | undefined,
-    segmentResponse : ISegmentParserParsedSegment<unknown>
+    segmentResponse : ISegmentParserParsedMediaChunk<unknown>
   ) : { chunkInfos : IChunkTimeInfo | null;
         chunkOffset : number;
         appendWindow : [ number | undefined, number | undefined ]; } {
@@ -263,8 +262,8 @@ export default function(options : ITransportOptions): ITransportPipelines {
       loadedSegment : { data : ILoadedAudioVideoSegmentFormat; isChunked : boolean },
       content : ISegmentContext,
       initTimescale : number | undefined
-    ) : ISegmentParserParsedInitSegment<ArrayBuffer | Uint8Array | null> |
-        ISegmentParserParsedSegment<ArrayBuffer | Uint8Array | null>
+    ) : ISegmentParserParsedInitChunk<ArrayBuffer | Uint8Array | null> |
+        ISegmentParserParsedMediaChunk<ArrayBuffer | Uint8Array | null>
     {
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
@@ -300,8 +299,8 @@ export default function(options : ITransportOptions): ITransportPipelines {
       loadedSegment : { data : ILoadedAudioVideoSegmentFormat; isChunked : boolean },
       content : ISegmentContext,
       initTimescale : number | undefined
-    ) : ISegmentParserParsedInitSegment<ArrayBuffer | Uint8Array | null> |
-        ISegmentParserParsedSegment<ArrayBuffer | Uint8Array | null>
+    ) : ISegmentParserParsedInitChunk<ArrayBuffer | Uint8Array | null> |
+        ISegmentParserParsedMediaChunk<ArrayBuffer | Uint8Array | null>
     {
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
@@ -337,8 +336,8 @@ export default function(options : ITransportOptions): ITransportPipelines {
       loadedSegment : { data : ILoadedTextSegmentFormat; isChunked : boolean },
       content : ISegmentContext,
       initTimescale : number | undefined
-    ) : ISegmentParserParsedInitSegment<ITextTrackSegmentData | null> |
-        ISegmentParserParsedSegment<ITextTrackSegmentData>
+    ) : ISegmentParserParsedInitChunk<ITextTrackSegmentData | null> |
+        ISegmentParserParsedMediaChunk<ITextTrackSegmentData>
     {
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
@@ -374,8 +373,8 @@ export default function(options : ITransportOptions): ITransportPipelines {
       loadedSegment : { data : ILoadedImageSegmentFormat; isChunked : boolean },
       content : ISegmentContext,
       initTimescale : number | undefined
-    ) : ISegmentParserParsedInitSegment<IImageTrackSegmentData | null> |
-        ISegmentParserParsedSegment<IImageTrackSegmentData>
+    ) : ISegmentParserParsedInitChunk<IImageTrackSegmentData | null> |
+        ISegmentParserParsedMediaChunk<IImageTrackSegmentData>
     {
       const { segment } = content;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);

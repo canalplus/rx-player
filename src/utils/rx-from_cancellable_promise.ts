@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
 import { Observable } from "rxjs";
 import TaskCanceller from "./task_canceller";
 
@@ -41,27 +40,32 @@ import TaskCanceller from "./task_canceller";
  */
 export default function fromCancellablePromise<T>(
   canceller : TaskCanceller,
-  fn : () => PPromise<T>
+  fn : () => Promise<T>
 ) : Observable<T> {
   return new Observable((obs) => {
     let isUnsubscribedFrom = false;
+    let isComplete = false;
     fn().then(
       (i) => {
         if (isUnsubscribedFrom) {
           return;
         }
+        isComplete = true;
         obs.next(i);
         obs.complete();
       },
       (err) => {
+        isComplete = true;
         if (isUnsubscribedFrom) {
           return;
         }
         obs.error(err);
       });
     return () => {
-      isUnsubscribedFrom = true;
-      canceller.cancel();
+      if (!isComplete) {
+        isUnsubscribedFrom = true;
+        canceller.cancel();
+      }
     };
   });
 }

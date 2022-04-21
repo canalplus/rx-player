@@ -1,4 +1,4 @@
-import RxPlayer from "rx-player";
+import RxPlayer from "../../../../src/index.ts";
 import React from "react";
 import Player from "./Player.jsx";
 

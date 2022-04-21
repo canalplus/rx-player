@@ -29,6 +29,7 @@ import Prioritizer, {
 
 /* eslint-disable @typescript-eslint/no-floating-promises */
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable no-restricted-properties */
 
 function assert(condition: boolean, msg?: string): asserts condition {

@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-import PPromise from "pinkie";
+import { formatError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
 import Manifest from "../../manifest";
-import { IDashParserResponse } from "../../parsers/manifest/dash/parsers_types";
+import {
+  IDashParserResponse,
+  ILoadedResource,
+} from "../../parsers/manifest/dash/parsers_types";
 import objectAssign from "../../utils/object_assign";
 import request from "../../utils/request";
 import {
@@ -136,7 +139,7 @@ export default function generateManifestParser(
           onWarnings(parserResponse.value.warnings);
         }
         if (cancelSignal.isCancelled) {
-          return PPromise.reject(cancelSignal.cancellationError);
+          return Promise.reject(cancelSignal.cancellationError);
         }
         const manifest = new Manifest(parserResponse.value.parsed, options);
         return { manifest, url };
@@ -146,40 +149,110 @@ export default function generateManifestParser(
 
       const externalResources = value.urls.map(resourceUrl => {
         return scheduleRequest(() => {
-          const req = value.format === "string" ?
-            request({ url: resourceUrl,
-                      responseType: "text" as const,
-                      cancelSignal }) :
-            request({ url: resourceUrl,
-                      responseType: "arraybuffer" as const,
-                      cancelSignal });
-          return req;
+          return value.format === "string" ? request({ url: resourceUrl,
+                                                       responseType: "text",
+                                                       cancelSignal }) :
+
+                                             request({ url: resourceUrl,
+                                                       responseType: "arraybuffer",
+                                                       cancelSignal });
+        }).then((res) => {
+          if (value.format === "string") {
+            if (typeof res.responseData !== "string") {
+              throw new Error("External DASH resources should have been a string");
+            }
+            return objectAssign(res, {
+              responseData: {
+                success: true as const,
+                data: res.responseData },
+            });
+          } else {
+            if (!(res.responseData instanceof ArrayBuffer)) {
+              throw new Error("External DASH resources should have been ArrayBuffers");
+            }
+            return objectAssign(res, {
+              responseData: {
+                success: true as const,
+                data: res.responseData },
+            });
+          }
+        }, (err) => {
+          const error = formatError(err, {
+            defaultCode: "PIPELINE_PARSE_ERROR",
+            defaultReason: "An unknown error occured when parsing ressources.",
+          });
+          return objectAssign({}, {
+            size: undefined,
+            requestDuration: undefined,
+            responseData: {
+              success: false as const,
+              error },
+          });
         });
       });
 
-      return PPromise.all(externalResources).then(loadedResources => {
+      return Promise.all(externalResources).then(loadedResources => {
         if (value.format === "string") {
-          const resources = loadedResources.map(resource => {
-            if (typeof resource.responseData !== "string") {
-              throw new Error("External DASH resources should have been a string");
-            }
-            // Normally not needed but TypeScript is just dumb here
-            return objectAssign(resource, { responseData: resource.responseData });
-          });
-          return processMpdParserResponse(value.continue(resources));
+          assertLoadedResourcesFormatString(loadedResources);
+          return processMpdParserResponse(value.continue(loadedResources));
         } else {
-          const resources = loadedResources.map(resource => {
-            if (!(resource.responseData instanceof ArrayBuffer)) {
-              throw new Error("External DASH resources should have been ArrayBuffers");
-            }
-            // Normally not needed but TypeScript is just dumb here
-            return objectAssign(resource, { responseData: resource.responseData });
-          });
-          return processMpdParserResponse(value.continue(resources));
+          assertLoadedResourcesFormatArrayBuffer(loadedResources);
+          return processMpdParserResponse(value.continue(loadedResources));
         }
       });
     }
   };
+}
+
+/**
+ * Throw if the given input is not in the expected format.
+ * Allows to enforce runtime type-checking as compile-time type-checking here is
+ * difficult to enforce.
+ *
+ * @param loadedResource
+ * @returns
+ */
+function assertLoadedResourcesFormatString(
+  loadedResources : Array<ILoadedResource<string | ArrayBuffer>>
+) : asserts loadedResources is Array<ILoadedResource<string>> {
+  if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.PRODUCTION as number) {
+    return;
+  }
+  loadedResources.forEach((loadedResource) => {
+    const { responseData } = loadedResource;
+    if (responseData.success && typeof responseData.data === "string") {
+      return;
+    } else if (!responseData.success) {
+      return;
+    }
+    throw new Error("Invalid data given to the LoadedRessource");
+  });
+}
+
+/**
+ * Throw if the given input is not in the expected format.
+ * Allows to enforce runtime type-checking as compile-time type-checking here is
+ * difficult to enforce.
+ *
+ * @param loadedResource
+ * @returns
+ */
+function assertLoadedResourcesFormatArrayBuffer(
+  loadedResources : Array<ILoadedResource<string | ArrayBuffer>>
+) : asserts loadedResources is Array<ILoadedResource<ArrayBuffer>> {
+  if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.PRODUCTION as number) {
+    return;
+  }
+
+  loadedResources.forEach((loadedResource) => {
+    const { responseData } = loadedResource;
+    if (responseData.success && responseData.data instanceof ArrayBuffer) {
+      return;
+    } else if (!responseData.success) {
+      return;
+    }
+    throw new Error("Invalid data given to the LoadedRessource");
+  });
 }
 
 /**

@@ -41,6 +41,7 @@ import {
   takeWhile,
   withLatestFrom,
 } from "rxjs";
+import config from "../../../config";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
@@ -51,10 +52,8 @@ import Manifest, {
 import assertUnreachable from "../../../utils/assert_unreachable";
 import objectAssign from "../../../utils/object_assign";
 import { createSharedReference } from "../../../utils/reference";
-import {
-  IPrioritizedSegmentFetcher,
-  ISegmentFetcherWarning,
-} from "../../fetchers";
+import { IReadOnlyPlaybackObserver } from "../../api";
+import { IPrioritizedSegmentFetcher } from "../../fetchers";
 import { SegmentBuffer } from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import {
@@ -67,6 +66,7 @@ import {
   IStreamStatusEvent,
   IStreamTerminatingEvent,
   IInbandEventsEvent,
+  IStreamWarningEvent,
 } from "../types";
 import DownloadingQueue, {
   IDownloadingQueueEvent,
@@ -79,15 +79,13 @@ import getSegmentPriority from "./get_segment_priority";
 import pushInitSegment from "./push_init_segment";
 import pushMediaSegment from "./push_media_segment";
 
-/** Object emitted by the Stream's clock$ at each tick. */
-export interface IRepresentationStreamClockTick {
-  /** The position, in seconds, the media element was in at the time of the tick. */
+/** Object that should be emitted by the given `IReadOnlyPlaybackObserver`. */
+export interface IRepresentationStreamPlaybackObservation {
+  /**
+   * The position, in seconds, the media element was in at the time of the
+   * playback observation.
+   */
   position : number;
- /**
-  * Gap between the current position and the edge of a live content.
-  * Not set for non-live contents.
-  */
-  liveGap? : number;
   /**
    * Offset in seconds to add to the time to obtain the position we
    * actually want to download from.
@@ -96,8 +94,6 @@ export interface IRepresentationStreamClockTick {
    * starting position different from `0`.
    */
   wantedTimeOffset : number;
-  /** Fetch the precize position currently in the HTMLMediaElement. */
-  getCurrentTime() : number;
 }
 
 /** Item emitted by the `terminate$` Observable given to a RepresentationStream. */
@@ -113,8 +109,6 @@ export interface ITerminationOrder {
 
 /** Arguments to give to the RepresentationStream. */
 export interface IRepresentationStreamArguments<TSegmentDataType> {
-  /** Periodically emits the current playback conditions. */
-  clock$ : Observable<IRepresentationStreamClockTick>;
   /** The context of the Representation you want to load. */
   content: { adaptation : Adaptation;
              manifest : Manifest;
@@ -135,9 +129,12 @@ export interface IRepresentationStreamArguments<TSegmentDataType> {
    * Observable once the corresponding segments have been pushed).
    */
   terminate$ : Observable<ITerminationOrder>;
+  /** Periodically emits the current playback conditions. */
+  playbackObserver : IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>;
   /** Supplementary arguments which configure the RepresentationStream's behavior. */
   options: IRepresentationStreamOptions;
 }
+
 
 /**
  * Various specific stream "options" which tweak the behavior of the
@@ -150,6 +147,14 @@ export interface IRepresentationStreamOptions {
    * goes below that size again.
    */
   bufferGoal$ : Observable<number>;
+
+  /**
+   *  The buffer size limit in memory that we can reach.
+   *  Once reached, no segments will be loaded until it
+   *  goes below that size again
+   */
+  maxBufferSize$ : Observable<number>;
+
   /**
    * Hex-encoded DRM "system ID" as found in:
    * https://dashif.org/identifiers/content_protection/
@@ -214,18 +219,19 @@ interface IInitSegmentState<T> {
  * @returns {Observable}
  */
 export default function RepresentationStream<TSegmentDataType>({
-  clock$,
   content,
+  options,
+  playbackObserver,
   segmentBuffer,
   segmentFetcher,
   terminate$,
-  options,
 } : IRepresentationStreamArguments<TSegmentDataType>
 ) : Observable<IRepresentationStreamEvent> {
   const { period,
           adaptation,
           representation } = content;
   const { bufferGoal$,
+          maxBufferSize$,
           drmSystemId,
           fastSwitchThreshold$ } = options;
   const bufferType = adaptation.type;
@@ -269,7 +275,7 @@ export default function RepresentationStream<TSegmentDataType>({
     const encryptionData = representation.getEncryptionData(drmSystemId);
     if (encryptionData.length > 0) {
       encryptionEvent$ = observableOf(...encryptionData.map(d =>
-        EVENTS.encryptionDataEncountered(d)));
+        EVENTS.encryptionDataEncountered(d, content)));
       hasSentEncryptionData = true;
     }
   }
@@ -280,24 +286,28 @@ export default function RepresentationStream<TSegmentDataType>({
 
   /** Observable emitting the stream "status" and filling `lastSegmentQueue`. */
   const status$ = observableCombineLatest([
-    clock$,
+    playbackObserver.observe(true),
     bufferGoal$,
+    maxBufferSize$,
     terminate$.pipe(take(1),
                     startWith(null)),
     reCheckNeededSegments$.pipe(startWith(undefined)),
   ]).pipe(
     withLatestFrom(fastSwitchThreshold$),
     mergeMap(function (
-      [ [ tick, bufferGoal, terminate ],
+      [ [ observation, bufferGoal, maxBufferSize, terminate ],
         fastSwitchThreshold ]
     ) : Observable<IStreamStatusEvent |
                    IStreamNeedsManifestRefresh |
                    IStreamTerminatingEvent>
     {
+      const wantedStartPosition = observation.position + observation.wantedTimeOffset;
       const status = getBufferStatus(content,
-                                     tick,
+                                     wantedStartPosition,
+                                     playbackObserver,
                                      fastSwitchThreshold,
                                      bufferGoal,
+                                     maxBufferSize,
                                      segmentBuffer);
       const { neededSegments } = status;
 
@@ -311,8 +321,10 @@ export default function RepresentationStream<TSegmentDataType>({
           log.warn("Stream: Uninitialized index with an already loaded " +
                    "initialization segment");
         } else {
+          const wantedStart = observation.position + observation.wantedTimeOffset;
           neededInitSegment = { segment: initSegmentState.segment,
-                                priority: getSegmentPriority(period.start, tick) };
+                                priority: getSegmentPriority(period.start,
+                                                             wantedStart) };
         }
       } else if (neededSegments.length > 0 &&
                  !initSegmentState.isLoaded &&
@@ -361,16 +373,28 @@ export default function RepresentationStream<TSegmentDataType>({
       const bufferStatusEvt : Observable<IStreamStatusEvent> =
         observableOf({ type: "stream-status" as const,
                        value: { period,
-                                position: tick.position,
+                                position: observation.position,
                                 bufferType,
                                 imminentDiscontinuity: status.imminentDiscontinuity,
                                 hasFinishedLoading: status.hasFinishedLoading,
                                 neededSegments: status.neededSegments } });
-
+      let bufferRemoval = EMPTY;
+      const { UPTO_CURRENT_POSITION_CLEANUP } = config.getCurrent();
+      if (status.isBufferFull) {
+        const gcedPosition = Math.max(
+          0,
+          wantedStartPosition - UPTO_CURRENT_POSITION_CLEANUP);
+        if (gcedPosition > 0) {
+          bufferRemoval = segmentBuffer
+            .removeBuffer(0, gcedPosition)
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+            .pipe(ignoreElements());
+        }
+      }
       return status.shouldRefreshManifest ?
         observableConcat(observableOf(EVENTS.needsManifestRefresh()),
-                         bufferStatusEvt) :
-        bufferStatusEvt;
+                         bufferStatusEvt, bufferRemoval) :
+        observableConcat(bufferStatusEvt, bufferRemoval);
     }),
     takeWhile((e) => e.type !== "stream-terminating", true)
   );
@@ -385,7 +409,7 @@ export default function RepresentationStream<TSegmentDataType>({
   function onQueueEvent(
     evt : IDownloadingQueueEvent<TSegmentDataType>
   ) : Observable<IStreamEventAddedSegment<TSegmentDataType> |
-                 ISegmentFetcherWarning |
+                 IStreamWarningEvent |
                  IEncryptionDataEncounteredEvent |
                  IInbandEventsEvent |
                  IStreamNeedsManifestRefresh |
@@ -413,6 +437,11 @@ export default function RepresentationStream<TSegmentDataType>({
       case "end-of-segment": {
         const { segment } = evt.value;
         return segmentBuffer.endOfSegment(objectAssign({ segment }, content))
+          // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
+          // first type parameter as `any` instead of the perfectly fine `unknown`,
+          // leading to linter issues, as it forbids the usage of `any`.
+          // This is why we're disabling the eslint rule.
+          /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
           .pipe(ignoreElements());
       }
 
@@ -454,9 +483,9 @@ export default function RepresentationStream<TSegmentDataType>({
       const initEncEvt$ = !hasSentEncryptionData &&
                           allEncryptionData.length > 0 ?
         observableOf(...allEncryptionData.map(p =>
-          EVENTS.encryptionDataEncountered(p))) :
+          EVENTS.encryptionDataEncountered(p, content))) :
         EMPTY;
-      const pushEvent$ = pushInitSegment({ clock$,
+      const pushEvent$ = pushInitSegment({ playbackObserver,
                                            content,
                                            segment: evt.segment,
                                            segmentData: evt.initializationData,
@@ -472,7 +501,7 @@ export default function RepresentationStream<TSegmentDataType>({
       const segmentEncryptionEvent$ = protectionDataUpdate &&
                                      !hasSentEncryptionData ?
         observableOf(...representation.getAllEncryptionData().map(p =>
-          EVENTS.encryptionDataEncountered(p))) :
+          EVENTS.encryptionDataEncountered(p, content))) :
         EMPTY;
 
       const manifestRefresh$ =  needsManifestRefresh === true ?
@@ -485,7 +514,7 @@ export default function RepresentationStream<TSegmentDataType>({
         EMPTY;
 
       const initSegmentData = initSegmentState.segmentData;
-      const pushMediaSegment$ = pushMediaSegment({ clock$,
+      const pushMediaSegment$ = pushMediaSegment({ playbackObserver,
                                                    content,
                                                    initSegmentData,
                                                    parsedSegment: evt,

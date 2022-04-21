@@ -1,0 +1,69 @@
+{
+  "pages": [
+    {
+      "path": "./getVideoBitrate.md",
+      "displayName": "getVideoBitrate"
+    },
+    {
+      "path": "./getAudioBitrate.md",
+      "displayName": "getAudioBitrate"
+    },
+    {
+      "path": "./getAvailableVideoBitrates.md",
+      "displayName": "getAvailableVideoBitrates"
+    },
+    {
+      "path": "./getAvailableAudioBitrates.md",
+      "displayName": "getAvailableAudioBitrates"
+    },
+    {
+      "path": "./setVideoBitrate.md",
+      "displayName": "setVideoBitrate"
+    },
+    {
+      "path": "./setAudioBitrate.md",
+      "displayName": "setAudioBitrate"
+    },
+    {
+      "path": "./getManualVideoBitrate.md",
+      "displayName": "getManualVideoBitrate"
+    },
+    {
+      "path": "./getManualAudioBitrate.md",
+      "displayName": "getManualAudioBitrate"
+    },
+    {
+      "path": "./setMinVideoBitrate.md",
+      "displayName": "setMinVideoBitrate"
+    },
+    {
+      "path": "./setMinAudioBitrate.md",
+      "displayName": "setMinAudioBitrate"
+    },
+    {
+      "path": "./setMaxVideoBitrate.md",
+      "displayName": "setMaxVideoBitrate"
+    },
+    {
+      "path": "./setMaxAudioBitrate.md",
+      "displayName": "setMaxAudioBitrate"
+    },
+    {
+      "path": "./getMinVideoBitrate.md",
+      "displayName": "getMinVideoBitrate"
+    },
+    {
+      "path": "./getMinAudioBitrate.md",
+      "displayName": "getMinAudioBitrate"
+    },
+    {
+      "path": "./getMaxVideoBitrate.md",
+      "displayName": "getMaxVideoBitrate"
+    },
+    {
+      "path": "./getMaxAudioBitrate.md",
+      "displayName": "getMaxAudioBitrate"
+    }
+  ]
+}
+

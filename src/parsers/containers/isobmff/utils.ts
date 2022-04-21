@@ -40,6 +40,7 @@ import {
   getEMSG,
   getMDIA,
   getTRAF,
+  getTRAFs,
 } from "./read";
 
 /** Information related to a PSSH box. */
@@ -240,68 +241,72 @@ function getDefaultDurationFromTFHDInTRAF(traf : Uint8Array) : number | undefine
  * @returns {number | undefined}
  */
 function getDurationFromTrun(buffer : Uint8Array) : number | undefined {
-  const traf = getTRAF(buffer);
-  if (traf === null) {
+  const trafs = getTRAFs(buffer);
+  if (trafs.length === 0) {
     return undefined;
   }
 
-  const trun = getBoxContent(traf, 0x7472756E /* trun */);
-  if (trun === null) {
-    return undefined;
-  }
-  let cursor = 0;
-  const version = trun[cursor]; cursor += 1;
-  if (version > 1) {
-    return undefined;
-  }
-
-  const flags = be3toi(trun, cursor); cursor += 3;
-  const hasSampleDuration = (flags & 0x000100) > 0;
-
-  let defaultDuration : number | undefined = 0;
-  if (!hasSampleDuration) {
-    defaultDuration = getDefaultDurationFromTFHDInTRAF(traf);
-    if (defaultDuration === undefined) {
+  let completeDuration : number = 0;
+  for (const traf of trafs) {
+    const trun = getBoxContent(traf, 0x7472756E /* trun */);
+    if (trun === null) {
       return undefined;
     }
-  }
-
-  const hasDataOffset = (flags & 0x000001) > 0;
-  const hasFirstSampleFlags = (flags & 0x000004) > 0;
-  const hasSampleSize = (flags & 0x000200) > 0;
-  const hasSampleFlags = (flags & 0x000400) > 0;
-  const hasSampleCompositionOffset = (flags & 0x000800) > 0;
-
-  const sampleCounts = be4toi(trun, cursor); cursor += 4;
-
-  if (hasDataOffset) {
-    cursor += 4;
-  }
-  if (hasFirstSampleFlags) {
-    cursor += 4;
-  }
-
-  let i = sampleCounts;
-  let duration = 0;
-  while (i-- > 0) {
-    if (hasSampleDuration) {
-      duration += be4toi(trun, cursor);
-      cursor += 4;
-    } else {
-      duration += defaultDuration;
+    let cursor = 0;
+    const version = trun[cursor]; cursor += 1;
+    if (version > 1) {
+      return undefined;
     }
-    if (hasSampleSize) {
-      cursor += 4;
+
+    const flags = be3toi(trun, cursor); cursor += 3;
+    const hasSampleDuration = (flags & 0x000100) > 0;
+
+    let defaultDuration : number | undefined = 0;
+    if (!hasSampleDuration) {
+      defaultDuration = getDefaultDurationFromTFHDInTRAF(traf);
+      if (defaultDuration === undefined) {
+        return undefined;
+      }
     }
-    if (hasSampleFlags) {
+
+    const hasDataOffset = (flags & 0x000001) > 0;
+    const hasFirstSampleFlags = (flags & 0x000004) > 0;
+    const hasSampleSize = (flags & 0x000200) > 0;
+    const hasSampleFlags = (flags & 0x000400) > 0;
+    const hasSampleCompositionOffset = (flags & 0x000800) > 0;
+
+    const sampleCounts = be4toi(trun, cursor); cursor += 4;
+
+    if (hasDataOffset) {
       cursor += 4;
     }
-    if (hasSampleCompositionOffset) {
+    if (hasFirstSampleFlags) {
       cursor += 4;
     }
-  }
 
-  return duration;
+    let i = sampleCounts;
+    let duration = 0;
+    while (i-- > 0) {
+      if (hasSampleDuration) {
+        duration += be4toi(trun, cursor);
+        cursor += 4;
+      } else {
+        duration += defaultDuration;
+      }
+      if (hasSampleSize) {
+        cursor += 4;
+      }
+      if (hasSampleFlags) {
+        cursor += 4;
+      }
+      if (hasSampleCompositionOffset) {
+        cursor += 4;
+      }
+    }
+
+    completeDuration += duration;
+  }
+  return completeDuration;
 }
 
 /**

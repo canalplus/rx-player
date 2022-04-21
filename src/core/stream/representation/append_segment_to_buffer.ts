@@ -21,10 +21,13 @@
 import {
   catchError,
   concat as observableConcat,
+  mergeMap,
   ignoreElements,
   Observable,
+  take,
 } from "rxjs";
 import { MediaError } from "../../../errors";
+import { IReadOnlyPlaybackObserver } from "../../api";
 import {
   IPushChunkInfos,
   SegmentBuffer,
@@ -36,13 +39,14 @@ import forceGarbageCollection from "./force_garbage_collection";
  * If it leads to a QuotaExceededError, try to run our custom range
  * _garbage collector_ then retry.
  *
- * @param {Observable} clock$
+ * @param {Observable} playbackObserver
  * @param {Object} segmentBuffer
  * @param {Object} dataInfos
  * @returns {Observable}
  */
 export default function appendSegmentToBuffer<T>(
-  clock$ : Observable<{ position : number }>,
+  playbackObserver : IReadOnlyPlaybackObserver<{ position : number;
+                                                 wantedTimeOffset: number; }>,
   segmentBuffer : SegmentBuffer,
   dataInfos : IPushChunkInfos<T>
 ) : Observable<unknown> {
@@ -57,16 +61,22 @@ export default function appendSegmentToBuffer<T>(
         throw new MediaError("BUFFER_APPEND_ERROR", reason);
       }
 
-      return observableConcat(
-        forceGarbageCollection(clock$, segmentBuffer).pipe(ignoreElements()),
-        append$
-      ).pipe(
-        catchError((forcedGCError : unknown) => {
-          const reason = forcedGCError instanceof Error ? forcedGCError.toString() :
-                                                          "Could not clean the buffer";
+      return playbackObserver.observe(true).pipe(
+        take(1),
+        mergeMap((observation) => {
+          const currentPos = observation.position + observation.wantedTimeOffset;
+          return observableConcat(
+            forceGarbageCollection(currentPos, segmentBuffer).pipe(ignoreElements()),
+            append$
+          ).pipe(
+            catchError((forcedGCError : unknown) => {
+              const reason = forcedGCError instanceof Error ?
+                forcedGCError.toString() :
+                "Could not clean the buffer";
 
-          throw new MediaError("BUFFER_FULL_ERROR", reason);
-        })
-      );
+              throw new MediaError("BUFFER_FULL_ERROR", reason);
+            })
+          );
+        }));
     }));
 }
