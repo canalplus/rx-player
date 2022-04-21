@@ -7802,6 +7802,7 @@ var serverCertificateHashesMap = new WeakMap();
 
 
 
+
 /**
  * @throws {EncryptedMediaError}
  * @param {Object} keySystemOptions
@@ -16459,10 +16460,6 @@ var Adaptation = /*#__PURE__*/function () {
       this.isSignInterpreted = parsedAdaptation.isSignInterpreted;
     }
 
-    if (parsedAdaptation.label !== undefined) {
-      this.label = parsedAdaptation.label;
-    }
-
     if (trickModeTracks !== undefined && trickModeTracks.length > 0) {
       this.trickModeTracks = trickModeTracks.map(function (track) {
         return new Adaptation(track);
@@ -22811,8 +22808,7 @@ function parseAdaptationSets(adaptationsIR, context) {
     var adaptation = adaptationsIR[adaptationIdx];
     var adaptationChildren = adaptation.children;
     var essentialProperties = adaptationChildren.essentialProperties,
-        roles = adaptationChildren.roles,
-        label = adaptationChildren.label;
+        roles = adaptationChildren.roles;
     var isMainAdaptation = Array.isArray(roles) && roles.some(function (role) {
       return role.value === "main";
     }) && roles.some(function (role) {
@@ -24275,41 +24271,6 @@ function parseContentProtection(contentProtectionElement) {
     attributes: attributes
   }, childrenWarnings];
 }
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/js-parser/node_parsers/Label.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * Parse Label element into a Label intermediate
- * representation.
- * @param {Element} adaptationSetElement - The Label root element.
- * @returns {Array.<Object|undefined>}
- */
-function parseLabel(root) {
-  var value = root.textContent;
-  var warnings = [];
-
-  if (value === null || value.length === 0) {
-    return [undefined, warnings];
-  }
-
-  return [{
-    value: value
-  }, warnings];
-}
 ;// CONCATENATED MODULE: ./src/parsers/manifest/dash/js-parser/node_parsers/Initialization.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -25003,7 +24964,6 @@ function createRepresentationIntermediateRepresentation(representationElement) {
 
 
 
-
 /**
  * Parse child nodes from an AdaptationSet.
  * @param {NodeList} adaptationSetChildren - The AdaptationSet child nodes.
@@ -25066,21 +25026,6 @@ function parseAdaptationSetChildren(adaptationSetChildren) {
           }
 
           children.inbandEventStreams.push(parseScheme(currentElement));
-          break;
-
-        case "Label":
-          var _parseLabel = parseLabel(currentElement),
-              labelObj = _parseLabel[0],
-              labelWarnings = _parseLabel[1];
-
-          if (labelObj !== undefined) {
-            children.label = labelObj;
-          }
-
-          if (labelWarnings.length > 0) {
-            warnings = warnings.concat(labelWarnings);
-          }
-
           break;
 
         case "Representation":
@@ -38727,17 +38672,6 @@ __webpack_require__.d(__webpack_exports__, {
   "Z": function() { return /* binding */ deferSubscriptions; }
 });
 
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/util/lift.js
-var lift = __webpack_require__(6798);
-;// CONCATENATED MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/subscribeOn.js
-
-function subscribeOn(scheduler, delay) {
-    if (delay === void 0) { delay = 0; }
-    return (0,lift/* operate */.e)(function (source, subscriber) {
-        subscriber.add(scheduler.schedule(function () { return source.subscribe(subscriber); }, delay));
-    });
-}
-//# sourceMappingURL=subscribeOn.js.map
 // EXTERNAL MODULE: ./node_modules/rxjs/node_modules/tslib/tslib.es6.js
 var tslib_es6 = __webpack_require__(5987);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/scheduler/AsyncAction.js + 2 modules
@@ -51320,6 +51254,7 @@ var types = __webpack_require__(9612);
 
 
 
+
 /**
  * Allows to push and remove new segments to a SourceBuffer in a FIFO queue (not
  * doing so can lead to browser Errors) while keeping an inventory of what has
@@ -59803,8 +59738,7 @@ var TrackChoiceManager = /*#__PURE__*/function () {
         audioDescription: adaptation.isAudioDescription === true,
         id: adaptation.id,
         active: currentId === null ? false : currentId === adaptation.id,
-        representations: adaptation.representations.map(parseAudioRepresentation),
-        label: adaptation.label
+        representations: adaptation.representations.map(parseAudioRepresentation)
       };
 
       if (adaptation.isDub === true) {
@@ -60474,7 +60408,6 @@ function getRightVideoTrack(adaptation, isTrickModeEnabled) {
 
 
 /* eslint-disable-next-line max-len */
-
 
 
 
