@@ -71,7 +71,7 @@ export interface ITMAudioTrack { language : string;
                                  audioDescription : boolean;
                                  dub? : boolean;
                                  id : number|string;
-                                 label?: string;
+                                 label?: string|undefined;
                                  representations: ITMAudioRepresentation[]; }
 
 /** Text track returned by the TrackChoiceManager. */
@@ -79,7 +79,7 @@ export interface ITMTextTrack { language : string;
                                 normalized : string;
                                 closedCaption : boolean;
                                 id : number|string;
-                                label?: string; }
+                                label?: string|undefined; }
 
 /**
  * Definition of a single video Representation as represented by the
@@ -99,7 +99,7 @@ export interface ITMVideoTrack { id : number|string;
                                  isTrickModeTrack?: boolean;
                                  trickModeTracks?: ITMVideoTrack[];
                                  representations: ITMVideoRepresentation[];
-                                 label?: string; }
+                                 label?: string|undefined; }
 
 /** Audio track from a list of audio tracks returned by the TrackChoiceManager. */
 export interface ITMAudioTrackListItem
