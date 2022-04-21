@@ -200,7 +200,7 @@ export interface IAdaptationSetChildren {
   segmentBase? : ISegmentBaseIntermediateRepresentation | undefined;
   segmentList? : ISegmentListIntermediateRepresentation | undefined;
   segmentTemplate? : ISegmentTemplateIntermediateRepresentation | undefined;
-  label? : ILabelIntermediateRepresentation | undefined;
+  label? : string | undefined;
 }
 
 /* Intermediate representation for An AdaptationSet node's attributes. */
@@ -374,13 +374,6 @@ export interface IBaseUrlIntermediateRepresentation {
     availabilityTimeOffset?: number;
     availabilityTimeComplete?: boolean;
   };
-}
-
-export interface ILabelIntermediateRepresentation {
-  /**
-   * The content of the label
-   */
-  value: string;
 }
 
 /** Intermediate representation for a Node following a "scheme" format. */

@@ -27,7 +27,7 @@ import isNonEmptyString from "../../../../utils/is_non_empty_string";
 import {
   IParsedAdaptation,
   IParsedAdaptations,
-} from "../../types";
+} from "../../types";
 import {
   IAdaptationSetIntermediateRepresentation,
   ISegmentTemplateIntermediateRepresentation,
@@ -424,8 +424,9 @@ export default function parseAdaptationSets(
       if (isSignInterpreted === true) {
         parsedAdaptationSet.isSignInterpreted = true;
       }
-      if (label) {
-        parsedAdaptationSet.label = label.value;
+
+      if (label !== undefined) {
+        parsedAdaptationSet.label = label;
       }
 
       if (trickModeAttachedAdaptationIds !== undefined) {
