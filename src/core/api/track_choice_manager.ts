@@ -25,7 +25,7 @@ import {
   Adaptation,
   IHDRInformation,
   Period,
-  Representation
+  Representation,
 } from "../../manifest";
 import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
@@ -683,6 +683,7 @@ export default class TrackChoiceManager {
       audioDescription: chosenTrack.isAudioDescription === true,
       id: chosenTrack.id,
       representations: chosenTrack.representations.map(parseAudioRepresentation),
+      label: chosenTrack.label,
     };
     if (chosenTrack.isDub === true) {
       audioTrack.dub = true;
@@ -718,6 +719,7 @@ export default class TrackChoiceManager {
       normalized: takeFirstSet<string>(chosenTextAdaptation.normalizedLanguage, ""),
       closedCaption: chosenTextAdaptation.isClosedCaption === true,
       id: chosenTextAdaptation.id,
+      label: chosenTextAdaptation.label,
     };
   }
 
@@ -762,6 +764,7 @@ export default class TrackChoiceManager {
     const videoTrack: ITMVideoTrack = {
       id: currAdaptation.id,
       representations: currAdaptation.representations.map(parseVideoRepresentation),
+      label: currAdaptation.label,
     };
     if (currAdaptation.isSignInterpreted === true) {
       videoTrack.signInterpreted = true;
