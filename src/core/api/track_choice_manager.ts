@@ -25,7 +25,7 @@ import {
   Adaptation,
   IHDRInformation,
   Period,
-  Representation,
+  Representation
 } from "../../manifest";
 import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
@@ -78,7 +78,8 @@ export interface ITMAudioTrack { language : string;
 export interface ITMTextTrack { language : string;
                                 normalized : string;
                                 closedCaption : boolean;
-                                id : number|string; }
+                                id : number|string;
+                                label?: string; }
 
 /**
  * Definition of a single video Representation as represented by the
@@ -97,7 +98,8 @@ export interface ITMVideoTrack { id : number|string;
                                  signInterpreted?: boolean;
                                  isTrickModeTrack?: boolean;
                                  trickModeTracks?: ITMVideoTrack[];
-                                 representations: ITMVideoRepresentation[]; }
+                                 representations: ITMVideoRepresentation[];
+                                 label?: string; }
 
 /** Audio track from a list of audio tracks returned by the TrackChoiceManager. */
 export interface ITMAudioTrackListItem
@@ -839,6 +841,7 @@ export default class TrackChoiceManager {
         id: adaptation.id,
         active: currentId === null ? false :
                                      currentId === adaptation.id,
+        label: adaptation.label,
       }));
   }
 
@@ -885,6 +888,7 @@ export default class TrackChoiceManager {
           active: currentId === null ? false :
                                        currentId === adaptation.id,
           representations: adaptation.representations.map(parseVideoRepresentation),
+          label: adaptation.label,
         };
         if (adaptation.isSignInterpreted === true) {
           formatted.signInterpreted = true;
