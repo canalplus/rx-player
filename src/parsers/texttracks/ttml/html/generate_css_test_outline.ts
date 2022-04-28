@@ -30,14 +30,16 @@ export default function generateCSSTextOutline(
   color : string,
   thickness : string|number
 ) : string {
-  if (isNonEmptyString(thickness) && thickness.trim().endsWith("%")){
-    // As em and % are basically equivalent in CSS ( they both are relative to the parent )
-    //  we converted the non supported % into the supported em
-    thickness = thickness.trim().slice(0,-1)
-    thickness = (parseInt(thickness)/100).toString() + "em"
+  let thick = thickness;
+  if (isNonEmptyString(thickness) && thickness.trim().endsWith("%")) {
+    // As em and % are basically equivalent in CSS
+    // (they both are relative to the parent)
+    // We convert the non supported % into the supported em
+    thick = thickness.trim().slice(0, -1);
+    thick = (parseInt(thick, 10) / 100).toString() + "em";
   }
-  return `-1px -1px ${thickness} ${color},` +
-         `1px -1px ${thickness} ${color},` +
-         `-1px 1px ${thickness} ${color},` +
-         `1px 1px ${thickness} ${color}`;
+  return `-1px -1px ${thick} ${color},` +
+         `1px -1px ${thick} ${color},` +
+         `-1px 1px ${thick} ${color},` +
+         `1px 1px ${thick} ${color}`;
 }
