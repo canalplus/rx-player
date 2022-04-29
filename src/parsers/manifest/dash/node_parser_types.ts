@@ -235,6 +235,7 @@ export interface IAdaptationSetAttributes {
   width? : number;
   availabilityTimeComplete?: boolean;
   availabilityTimeOffset?: number;
+  label?: string;
 }
 
 export interface IRepresentationIntermediateRepresentation {
