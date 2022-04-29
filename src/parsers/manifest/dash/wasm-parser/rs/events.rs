@@ -278,6 +278,8 @@ pub enum AttributeName {
     /// format: the browser's `DOMParser` API needs to know all potential
     /// namespaces that will appear in it.
     Namespace = 70,
+    
+    Label = 71, // String
 }
 
 impl TagName {

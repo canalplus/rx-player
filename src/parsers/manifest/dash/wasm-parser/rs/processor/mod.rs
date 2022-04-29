@@ -114,6 +114,7 @@ impl MPDProcessor {
                     },
                     b"cenc:pssh" => self.process_cenc_element(),
                     b"Location" => self.process_location_element(),
+                    b"Label" => self.process_label_element(),
                     b"SegmentTimeline" =>
                         self.process_segment_timeline_element(),
 
@@ -248,6 +249,42 @@ impl MPDProcessor {
                 },
                 Ok(Event::Eof) => {
                     ParsingError("Unexpected end of file in a Location tag.".to_owned())
+                        .report_err();
+                    break;
+                }
+                Err(e) => {
+                    ParsingError::from(e).report_err();
+                    break;
+                },
+                _ => (),
+            }
+            self.reader_buf.clear();
+        }
+    }
+
+    fn process_label_element(&mut self) {
+        // Count inner Label tags if it exists.
+        // Allowing to not close the current node when it is an inner that is closed
+        let mut inner_tag : u32 = 0;
+
+        loop {
+            match self.read_next_event() {
+                Ok(Event::Text(t)) => if t.len() > 0 {
+                    match t.unescaped() {
+                        Ok(unescaped) => AttributeName::Label.report(unescaped),
+                        Err(err) => ParsingError::from(err).report_err(),
+                    }
+                },
+                Ok(Event::Start(tag)) if tag.name() == b"Label" => inner_tag += 1,
+                Ok(Event::End(tag)) if tag.name() == b"Label" => {
+                    if inner_tag > 0 {
+                        inner_tag -= 1;
+                    } else {
+                        break;
+                    }
+                },
+                Ok(Event::Eof) => {
+                    ParsingError("Unexpected end of file in a Label tag.".to_owned())
                         .report_err();
                     break;
                 }
