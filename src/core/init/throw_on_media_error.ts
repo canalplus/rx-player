@@ -20,6 +20,7 @@ import {
   Observable,
 } from "rxjs";
 import { MediaError } from "../../errors";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 
 /**
  * Returns an observable which throws the right MediaError as soon an "error"
@@ -32,27 +33,36 @@ export default function throwOnMediaError(
 ) : Observable<never> {
   return observableFromEvent(mediaElement, "error")
     .pipe(mergeMap(() => {
-      const errorCode = mediaElement.error == null ? 0 :
-                                                    mediaElement.error.code;
+      const mediaError = mediaElement.error;
+      let errorCode : number | undefined;
+      let errorMessage : string | undefined;
+      if (!isNullOrUndefined(mediaError)) {
+        errorCode = mediaError.code;
+        errorMessage = mediaError.message;
+      }
+
       switch (errorCode) {
         case 1:
-          throw new MediaError("MEDIA_ERR_ABORTED",
-                               "The fetching of the associated resource was aborted " +
-                               "by the user's request.");
+          errorMessage = errorMessage ??
+            "The fetching of the associated resource was aborted by the user's request.";
+          throw new MediaError("MEDIA_ERR_ABORTED", errorMessage);
         case 2:
-          throw new MediaError("MEDIA_ERR_NETWORK",
-                               "A network error occurred which prevented the media " +
-                               "from being successfully fetched");
+          errorMessage = errorMessage ??
+            "A network error occurred which prevented the media from being " +
+            "successfully fetched";
+          throw new MediaError("MEDIA_ERR_NETWORK", errorMessage);
         case 3:
-          throw new MediaError("MEDIA_ERR_DECODE",
-                               "An error occurred while trying to decode the media " +
-                               "resource");
+          errorMessage = errorMessage ??
+            "An error occurred while trying to decode the media resource";
+          throw new MediaError("MEDIA_ERR_DECODE", errorMessage);
         case 4:
-          throw new MediaError("MEDIA_ERR_SRC_NOT_SUPPORTED",
-                               "The media resource has been found to be unsuitable.");
+          errorMessage = errorMessage ??
+            "The media resource has been found to be unsuitable.";
+          throw new MediaError("MEDIA_ERR_SRC_NOT_SUPPORTED", errorMessage);
         default:
-          throw new MediaError("MEDIA_ERR_UNKNOWN",
-                               "The HTMLMediaElement errored due to an unknown reason.");
+          errorMessage = errorMessage ??
+            "The HTMLMediaElement errored due to an unknown reason.";
+          throw new MediaError("MEDIA_ERR_UNKNOWN", errorMessage);
       }
     }));
 }
