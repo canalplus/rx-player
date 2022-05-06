@@ -101,6 +101,9 @@ export default class Adaptation {
   /** Tells if the track is a trick mode track. */
   public isTrickModeTrack? : boolean;
 
+  /** Label of the adaptionSet */
+  public label?: string;
+
   public readonly trickModeTracks? : Adaptation[];
 
   /**
@@ -137,6 +140,9 @@ export default class Adaptation {
     }
     if (parsedAdaptation.isSignInterpreted !== undefined) {
       this.isSignInterpreted = parsedAdaptation.isSignInterpreted;
+    }
+    if (parsedAdaptation.label !== undefined) {
+      this.label = parsedAdaptation.label;
     }
 
     if (trickModeTracks !== undefined &&
