@@ -185,6 +185,10 @@ export interface IParsedAdaptation {
    */
   language?: string | undefined;
   /**
+   * Label of the `Adaptation` if it exists.
+   */
+  label?: string;
+  /**
    * TrickMode tracks attached to the adaptation.
    */
   trickModeTracks?: IParsedAdaptation[] | undefined;
