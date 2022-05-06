@@ -691,12 +691,14 @@ export interface IAudioTrack { language : string;
                                audioDescription : boolean;
                                dub? : boolean;
                                id : number|string;
+                               label? : string | undefined;
                                representations: IAudioRepresentation[]; }
 
 /** Text track returned by the RxPlayer. */
 export interface ITextTrack { language : string;
                               normalized : string;
                               closedCaption : boolean;
+                              label? : string | undefined;
                               id : number|string; }
 
 /**
@@ -716,6 +718,7 @@ export interface IVideoTrack { id : number|string;
                                signInterpreted?: boolean;
                                isTrickModeTrack?: boolean;
                                trickModeTracks?: IVideoTrack[];
+                               label? : string | undefined;
                                representations: IVideoRepresentation[]; }
 
 /** Audio track from a list of audio tracks returned by the RxPlayer. */
