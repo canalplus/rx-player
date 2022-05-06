@@ -62,7 +62,16 @@ export default function flattenOverlappingPeriods(
                parsedPeriod.start);
       lastFlattenedPeriod.duration = parsedPeriod.start - lastFlattenedPeriod.start;
       lastFlattenedPeriod.end = parsedPeriod.start;
-      if (lastFlattenedPeriod.duration <= 0) {
+      if (lastFlattenedPeriod.duration > 0) {
+        // Note: Calling `break` to quit the while loop should theoritically be
+        // unnecessary as the previous operations should ensure we do not re-enter
+        // the loop's condition.
+        // Yet we dit encounter infinite loops without it because of float-related
+        // rounding errors.
+        break;
+      } else {
+        // `lastFlattenedPeriod` has now a negative or `0` duration.
+        // Remove it, consider the next Period in its place, and re-start the loop.
         flattenedPeriods.pop();
         lastFlattenedPeriod = flattenedPeriods[flattenedPeriods.length - 1];
       }
