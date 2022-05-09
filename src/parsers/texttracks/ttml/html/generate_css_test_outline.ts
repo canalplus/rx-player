@@ -33,7 +33,8 @@ export default function generateCSSTextOutline(
   let thick = thickness;
   if (isNonEmptyString(thickness) && thickness.trim().endsWith("%")) {
     // As em and % are basically equivalent in CSS
-    // (they both are relative to the parent)
+    // (they both are relative to the font-size 
+    // of the current element)
     // We convert the non supported % into the supported em
     thick = thickness.trim().slice(0, -1);
     thick = (parseInt(thick, 10) / 100).toString() + "em";
