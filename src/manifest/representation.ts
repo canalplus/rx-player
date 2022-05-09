@@ -174,7 +174,7 @@ class Representation {
       for (let j = 0; j < initData.values.length; j++) {
         if (initData.values[j].systemId.toLowerCase() === drmSystemId.toLowerCase()) {
           if (!createdObjForType) {
-            const keyIds = this.contentProtections?.keyIds.map(val => val.keyId);
+            const keyIds = this.contentProtections?.keyIds?.map(val => val.keyId);
             filtered.push({ type: initData.type,
                             keyIds,
                             values: [initData.values[j]] });
@@ -221,7 +221,7 @@ class Representation {
     {
       return [];
     }
-    const keyIds = this.contentProtections?.keyIds.map(val => val.keyId);
+    const keyIds = this.contentProtections?.keyIds?.map(val => val.keyId);
     return this.contentProtections.initData.map((x) => {
       return { type: x.type,
                keyIds,

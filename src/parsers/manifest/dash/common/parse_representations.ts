@@ -225,7 +225,12 @@ export default function parseRepresentations(
               .toLowerCase();
           }
           if (cp.attributes.keyId !== undefined && cp.attributes.keyId.length > 0) {
-            acc.keyIds.push({ keyId: cp.attributes.keyId, systemId });
+            const kidObj = { keyId: cp.attributes.keyId, systemId };
+            if (acc.keyIds === undefined) {
+              acc.keyIds = [kidObj];
+            } else {
+              acc.keyIds.push(kidObj);
+            }
           }
           if (systemId !== undefined) {
             const { cencPssh } = cp.children;
@@ -244,9 +249,10 @@ export default function parseRepresentations(
             }
           }
           return acc;
-        }, { keyIds: [], initData: [] });
+        }, { keyIds: undefined, initData: [] });
       if (Object.keys(contentProtections.initData).length > 0 ||
-          contentProtections.keyIds.length > 0)
+          (contentProtections.keyIds !== undefined &&
+            contentProtections.keyIds.length > 0))
       {
         parsedRepresentation.contentProtections = contentProtections;
       }
