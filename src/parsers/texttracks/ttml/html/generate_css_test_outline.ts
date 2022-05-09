@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import isNonEmptyString from "../../../../utils/is_non_empty_string";
+
 /**
  * Try to replicate the textOutline TTML style property into CSS.
  *
@@ -28,8 +30,17 @@ export default function generateCSSTextOutline(
   color : string,
   thickness : string|number
 ) : string {
-  return `-1px -1px ${thickness} ${color},` +
-         `1px -1px ${thickness} ${color},` +
-         `-1px 1px ${thickness} ${color},` +
-         `1px 1px ${thickness} ${color}`;
+  let thick = thickness;
+  if (isNonEmptyString(thickness) && thickness.trim().endsWith("%")) {
+    // As em and % are basically equivalent in CSS
+    // (they both are relative to the font-size 
+    // of the current element)
+    // We convert the non supported % into the supported em
+    thick = thickness.trim().slice(0, -1);
+    thick = (parseInt(thick, 10) / 100).toString() + "em";
+  }
+  return `-1px -1px ${thick} ${color},` +
+         `1px -1px ${thick} ${color},` +
+         `-1px 1px ${thick} ${color},` +
+         `1px 1px ${thick} ${color}`;
 }
