@@ -22,14 +22,18 @@ const launchStaticServer = require("./launch_static_server");
 const shouldRunFastVersion = process.argv.includes("--fast") ||
                              process.argv.includes("-f");
 
+const includeWasmParser = process.argv.includes("--include-wasm");
+
 if (shouldRunFastVersion) {
   fastBuild({ watch: true,
               minify: false,
-              production: false });
+              production: false,
+             includeWasmParser });
 } else {
   slowBuild({ watch: true,
               minify: false,
-              production: false });
+              production: false,
+              includeWasmParser });
 }
 
 launchStaticServer(path.join(__dirname, "../demo/full/"),

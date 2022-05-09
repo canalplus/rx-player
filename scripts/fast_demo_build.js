@@ -24,9 +24,11 @@ if (require.main === module) {
   const shouldWatch = argv.includes("-w") || argv.includes("--watch");
   const shouldMinify = argv.includes("-m") || argv.includes("--minify");
   const production = argv.includes("-p") || argv.includes("--production-mode");
+  const includeWasmParser = argv.includes("--include-wasm");
   fastDemoBuild({
     watch: shouldWatch,
     minify: shouldMinify,
+    includeWasmParser,
     production,
   });
 } else {
@@ -42,11 +44,14 @@ if (require.main === module) {
  * in "development" mode, which has supplementary assertions.
  * @param {boolean} [options.watch] - If `true`, the RxPlayer's files involve
  * will be watched and the code re-built each time one of them changes.
+ * @param {boolean} [options.includeWasmParser] - If `true`, the WebAssembly MPD
+ * parser of the RxPlayer will be used (if it can be requested).
  */
 function fastDemoBuild(options) {
   const minify = !!options.minify;
   const watch = !!options.watch;
   const isDevMode = !options.production;
+  const includeWasmParser = !!options.includeWasmParser;
   let beforeTime = process.hrtime.bigint();
 
   esbuild.build({
@@ -74,33 +79,14 @@ function fastDemoBuild(options) {
     },
     define: {
       "process.env.NODE_ENV": JSON.stringify(isDevMode ? "development" : "production"),
-      __FEATURES__: JSON.stringify({
-        IS_DISABLED: 0,
-        IS_ENABLED: 1,
-
-        BIF_PARSER: 1,
-        DASH: 1,
-        DIRECTFILE: 1,
-        EME: 1,
-        HTML_SAMI: 1,
-        HTML_SRT: 1,
-        HTML_TTML: 1,
-        HTML_VTT: 1,
-        LOCAL_MANIFEST: 1,
-        METAPLAYLIST: 1,
-        NATIVE_SAMI: 1,
-        NATIVE_SRT: 1,
-        NATIVE_TTML: 1,
-        NATIVE_VTT: 1,
-        SMOOTH: 1,
-      }),
+      __INCLUDE_WASM_PARSER__: includeWasmParser,
       __ENVIRONMENT__: JSON.stringify({
         PRODUCTION: 0,
         DEV: 1,
         CURRENT_ENV: isDevMode ? 1 : 0,
       }),
       __LOGGER_LEVEL__: JSON.stringify({
-        CURRENT_LEVEL: "INFO",
+        CURRENT_LEVEL: isDevMode ? "DEBUG" : "INFO",
       }),
     }
   }).then(
