@@ -15,20 +15,25 @@
  */
 
 import { IParsedPeriod } from "../../types";
-import getMaximumPosition from "../../utils/get_maximum_position";
+import getMaximumPositions from "../../utils/get_maximum_positions";
 import getMinimumPosition from "../../utils/get_minimum_position";
 
 /**
  * @param {Object} periods
  * @returns {Array.<number>}
  */
-export default function getMinimumAndMaximumPosition(
+export default function getMinimumAndMaximumPositions(
   periods: IParsedPeriod[]
-) : [number|undefined, number|undefined] {
+) : { minimumSafePosition : number | undefined;
+      maximumSafePosition : number | undefined;
+      maximumUnsafePosition : number | undefined; } {
   if (periods.length === 0) {
     throw new Error("DASH Parser: no period available for a dynamic content");
   }
 
-  return [ getMinimumPosition(periods),
-           getMaximumPosition(periods) ];
+  const minimumSafePosition = getMinimumPosition(periods);
+  const maxPositions = getMaximumPositions(periods);
+  return { minimumSafePosition,
+           maximumSafePosition: maxPositions.safe,
+           maximumUnsafePosition: maxPositions.unsafe };
 }

@@ -288,9 +288,10 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
       return null;
     }
     const lastTimelineElement = timeline[timeline.length - 1];
-    const lastTime = getIndexSegmentEnd(lastTimelineElement,
-                                        null,
-                                        this._scaledPeriodEnd);
+    const lastTime = Math.min(getIndexSegmentEnd(lastTimelineElement,
+                                                 null,
+                                                 this._scaledPeriodEnd),
+                              this._scaledPeriodEnd ?? Infinity);
     return fromIndexTime(lastTime, this._index);
   }
 

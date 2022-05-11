@@ -81,11 +81,8 @@ export interface IPeriodStreamPlaybackObservation {
    * which we actually want to download segments for.
    */
   wantedTimeOffset : number;
-  /**
-   * Only set for live contents.
-   * Difference between the live edge and the current position, in seconds.
-   */
-  liveGap : number | undefined;
+  /** Theoretical maximum position on the content that can currently be played. */
+  maximumPosition : number;
 }
 
 /** Arguments required by the `PeriodStream`. */

@@ -1604,14 +1604,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (positionWanted === undefined) {
       throw new Error("invalid time given");
     }
-    let seekAt = positionWanted;
-    if (manifest !== null && !manifest.isLive) {
-      const maximumTime = manifest.getMaximumPosition();
-      seekAt = maximumTime !== undefined ? Math.min(positionWanted,
-                                                    maximumTime - 0.001) :
-                                           positionWanted;
-    }
-    this.videoElement.currentTime = seekAt;
+    this.videoElement.currentTime = positionWanted;
     return positionWanted;
   }
 
@@ -2235,7 +2228,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     const { manifest } = this._priv_contentInfos;
     if (manifest !== null) {
-      return manifest.getMinimumPosition();
+      return manifest.getMinimumSafePosition();
     }
     return null;
   }
@@ -2259,7 +2252,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     if (manifest !== null) {
-      return manifest.getMaximumPosition();
+      if (!manifest.isDynamic && this.videoElement !== null) {
+        return this.videoElement.duration;
+      }
+      return manifest.getMaximumSafePosition();
     }
     return null;
   }
@@ -2864,7 +2860,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_lastContentPlaybackInfos.lastPlaybackPosition = observation.position;
 
-    const maximumPosition = manifest !== null ? manifest.getMaximumPosition() :
+    const maximumPosition = manifest !== null ? manifest.getMaximumSafePosition() :
                                                 undefined;
     const positionData : IPositionUpdateItem = {
       position: observation.position,
@@ -2878,13 +2874,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     };
 
     if (manifest !== null &&
-        maximumPosition !== undefined &&
         manifest.isLive &&
         observation.position > 0
     ) {
       const ast = manifest.availabilityStartTime ?? 0;
       positionData.wallClockTime = observation.position + ast;
-      positionData.liveGap = maximumPosition - observation.position;
+      const livePosition = manifest.getLivePosition();
+      if (livePosition !== undefined) {
+        positionData.liveGap = livePosition - observation.position;
+      }
     } else if (isDirectFile && this.videoElement !== null) {
       const startDate = getStartDate(this.videoElement);
       if (startDate !== undefined) {

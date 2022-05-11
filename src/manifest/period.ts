@@ -185,4 +185,14 @@ export default class Period {
       return ada.isSupported;
     });
   }
+
+  /**
+   * Returns true if the give time is in the time boundaries of this `Period`.
+   * @param {number} time
+   * @returns {boolean}
+   */
+  containsTime(time : number) : boolean {
+    return time >= this.start && (this.end === undefined ||
+                                  time < this.end);
+  }
 }

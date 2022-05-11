@@ -218,8 +218,9 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                     startNumber: index.startNumber };
     this._isDynamic = isDynamic;
     this._periodStart = periodStart;
-    this._scaledPeriodEnd = periodEnd == null ? undefined :
-                                                (periodEnd - periodStart) * timescale;
+    this._scaledPeriodEnd = periodEnd === undefined ?
+      undefined :
+      (periodEnd - periodStart) * timescale;
     this._isEMSGWhitelisted = isEMSGWhitelisted;
   }
 
@@ -334,7 +335,11 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       // the two functions. So, we return the result of the latter.
       return lastSegmentStart;
     }
-    const lastSegmentEnd = lastSegmentStart + this._index.duration;
+
+    const lastSegmentEnd = Math.min(
+      lastSegmentStart + this._index.duration,
+      this._scaledPeriodEnd ?? Infinity
+    );
     return (lastSegmentEnd / this._index.timescale) + this._periodStart;
   }
 

@@ -28,7 +28,7 @@ import { IResponseData } from "../parsers_types";
 // eslint-disable-next-line max-len
 import getClockOffset from "./get_clock_offset";
 import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
-import getMinimumAndMaximumPosition from "./get_minimum_and_maximum_positions";
+import getMinimumAndMaximumPositions from "./get_minimum_and_maximum_positions";
 import parseAvailabilityStartTime from "./parse_availability_start_time";
 import parsePeriods, {
   IXLinkInfos,
@@ -270,7 +270,10 @@ function parseCompleteIntermediateRepresentation(
   let lifetime : number | undefined;
   let minimumTime : number | undefined;
   let timeshiftDepth : number | null = null;
-  let maximumTimeData : { isLinear : boolean; value : number; time : number };
+  let maximumTimeData : { isLinear : boolean;
+                          maximumSafePosition : number;
+                          livePosition : number | undefined;
+                          time : number; };
 
   if (rootAttributes.minimumUpdatePeriod !== undefined &&
       rootAttributes.minimumUpdatePeriod >= 0)
@@ -280,58 +283,73 @@ function parseCompleteIntermediateRepresentation(
       rootAttributes.minimumUpdatePeriod;
   }
 
-  const [contentStart, contentEnd] = getMinimumAndMaximumPosition(parsedPeriods);
+  const { minimumSafePosition,
+          maximumSafePosition,
+          maximumUnsafePosition } = getMinimumAndMaximumPositions(parsedPeriods);
   const now = performance.now();
 
   if (!isDynamic) {
-    minimumTime = contentStart !== undefined            ? contentStart :
+    minimumTime = minimumSafePosition !== undefined     ? minimumSafePosition :
                   parsedPeriods[0]?.start !== undefined ? parsedPeriods[0].start :
                                                           0;
-    let maximumTime = mediaPresentationDuration ?? Infinity;
+    let finalMaximumSafePosition = mediaPresentationDuration ?? Infinity;
     if (parsedPeriods[parsedPeriods.length - 1] !== undefined) {
       const lastPeriod = parsedPeriods[parsedPeriods.length - 1];
       const lastPeriodEnd = lastPeriod.end ??
                             (lastPeriod.duration !== undefined ?
                               lastPeriod.start + lastPeriod.duration :
                               undefined);
-      if (lastPeriodEnd !== undefined && lastPeriodEnd < maximumTime) {
-        maximumTime = lastPeriodEnd;
+      if (lastPeriodEnd !== undefined && lastPeriodEnd < finalMaximumSafePosition) {
+        finalMaximumSafePosition = lastPeriodEnd;
       }
     }
-    if (contentEnd !== undefined && contentEnd < maximumTime) {
-      maximumTime = contentEnd;
+    if (maximumSafePosition !== undefined &&
+        maximumSafePosition < finalMaximumSafePosition)
+    {
+      finalMaximumSafePosition = maximumSafePosition;
     }
 
     maximumTimeData = { isLinear: false,
-                        value: maximumTime,
+                        maximumSafePosition: finalMaximumSafePosition,
+                        livePosition: undefined,
                         time: now };
   } else {
-    minimumTime = contentStart;
+    minimumTime = minimumSafePosition;
     timeshiftDepth = timeShiftBufferDepth ?? null;
-    let maximumTime : number;
-    if (contentEnd !== undefined) {
-      maximumTime = contentEnd;
+    let finalMaximumSafePosition : number;
+    let livePosition;
+
+    if (maximumUnsafePosition !== undefined) {
+      livePosition = maximumUnsafePosition;
+    }
+
+    if (maximumSafePosition !== undefined) {
+      finalMaximumSafePosition = maximumSafePosition;
     } else {
       const ast = availabilityStartTime ?? 0;
       const { externalClockOffset } = args;
       if (externalClockOffset === undefined) {
         log.warn("DASH Parser: use system clock to define maximum position");
-        maximumTime = (Date.now() / 1000) - ast;
+        finalMaximumSafePosition = (Date.now() / 1000) - ast;
       } else {
         const serverTime = performance.now() + externalClockOffset;
-        maximumTime = (serverTime / 1000) - ast;
+        finalMaximumSafePosition = (serverTime / 1000) - ast;
       }
     }
+    if (livePosition === undefined) {
+      livePosition = finalMaximumSafePosition;
+    }
     maximumTimeData = { isLinear: true,
-                        value: maximumTime,
+                        maximumSafePosition: finalMaximumSafePosition,
+                        livePosition,
                         time: now };
 
     // if the minimum calculated time is even below the buffer depth, perhaps we
     // can go even lower in terms of depth
     if (timeshiftDepth !== null && minimumTime !== undefined &&
-        maximumTime - minimumTime > timeshiftDepth)
+        finalMaximumSafePosition - minimumTime > timeshiftDepth)
     {
-      timeshiftDepth = maximumTime - minimumTime;
+      timeshiftDepth = finalMaximumSafePosition - minimumTime;
     }
   }
 
@@ -358,7 +376,7 @@ function parseCompleteIntermediateRepresentation(
     publishTime: rootAttributes.publishTime,
     suggestedPresentationDelay: rootAttributes.suggestedPresentationDelay,
     transportType: "dash",
-    timeBounds: { absoluteMinimumTime: minimumTime,
+    timeBounds: { minimumSafePosition: minimumTime,
                   timeshiftDepth,
                   maximumTimeData },
     lifetime,
