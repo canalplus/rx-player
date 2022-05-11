@@ -30,7 +30,10 @@ import {
   switchMap,
 } from "rxjs";
 import config from "../../../config";
-import { formatError } from "../../../errors";
+import {
+  formatError,
+  MediaError,
+} from "../../../errors";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
@@ -329,9 +332,12 @@ function createOrReuseSegmentBuffer(
  * @returns {string}
  */
 function getFirstDeclaredMimeType(adaptation : Adaptation) : string {
-  const { representations } = adaptation;
-  if (representations[0] == null) {
-    return "";
+  const representations = adaptation.getPlayableRepresentations();
+  if (representations.length === 0) {
+    const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION",
+                                    "No Representation in the chosen " +
+                                    adaptation.type + " Adaptation can be played");
+    throw noRepErr;
   }
   return representations[0].getMimeTypeString();
 }
