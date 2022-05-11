@@ -144,7 +144,7 @@ export default class KeySessionRecord {
     initializationData : IProcessedProtectionData
   ) : boolean {
     const { keyIds } = initializationData;
-    if (keyIds !== undefined) {
+    if (keyIds !== undefined && keyIds.length > 0) {
       if (this._keyIds !== null && areAllKeyIdsContainedIn(keyIds, this._keyIds)) {
         return true;
       }
@@ -159,6 +159,7 @@ export default class KeySessionRecord {
     initializationData : IProcessedProtectionData
   ) : boolean {
     if (initializationData.keyIds !== undefined &&
+        initializationData.keyIds.length > 0 &&
         this._initializationData.keyIds !== undefined)
     {
       return areAllKeyIdsContainedIn(initializationData.keyIds,

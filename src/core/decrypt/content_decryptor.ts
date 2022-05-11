@@ -780,16 +780,18 @@ function updateDecipherability(
       return representation.decipherable;
     }
     const contentKIDs = representation.contentProtections.keyIds;
-    for (let i = 0; i < contentKIDs.length; i++) {
-      const elt = contentKIDs[i];
-      for (let j = 0; j < blacklistedKeyIDs.length; j++) {
-        if (areKeyIdsEqual(blacklistedKeyIDs[j], elt.keyId)) {
-          return false;
+    if (contentKIDs !== undefined) {
+      for (let i = 0; i < contentKIDs.length; i++) {
+        const elt = contentKIDs[i];
+        for (let j = 0; j < blacklistedKeyIDs.length; j++) {
+          if (areKeyIdsEqual(blacklistedKeyIDs[j], elt.keyId)) {
+            return false;
+          }
         }
-      }
-      for (let j = 0; j < whitelistedKeyIds.length; j++) {
-        if (areKeyIdsEqual(whitelistedKeyIds[j], elt.keyId)) {
-          return true;
+        for (let j = 0; j < whitelistedKeyIds.length; j++) {
+          if (areKeyIdsEqual(whitelistedKeyIds[j], elt.keyId)) {
+            return true;
+          }
         }
       }
     }
@@ -1157,7 +1159,7 @@ function addKeyIdsFromPeriod(
   for (const adaptation of period.getAdaptations()) {
     for (const representation of adaptation.representations) {
       if (representation.contentProtections !== undefined &&
-          representation.contentProtections.keyIds.length >= - 1)
+          representation.contentProtections.keyIds !== undefined)
       {
         for (const kidInf of representation.contentProtections.keyIds) {
           set.add(kidInf.keyId);

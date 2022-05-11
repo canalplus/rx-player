@@ -69,8 +69,13 @@ export interface IContentProtectionInitData {
  */
 /** Describes every encryption protection parsed for a given media. */
 export interface IContentProtections {
-  /** The different encryption key IDs associated with that content. */
-  keyIds : IContentProtectionKID[];
+  /**
+   * The different encryption key IDs associated with that content.
+   *
+   * `undefined` if the key id(s) associated with that content may exist but are
+   * not known.
+   */
+  keyIds : IContentProtectionKID[] | undefined;
   /** The different encryption initialization data associated with that content. */
   initData : IContentProtectionInitData[];
 }
