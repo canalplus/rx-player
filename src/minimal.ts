@@ -28,7 +28,9 @@ import {
 } from "./features";
 import logger from "./log";
 
-if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
+if (typeof __RX_PLAYER_DEBUG_MODE__ === "boolean" && __RX_PLAYER_DEBUG_MODE__) {
+  logger.setLevel("DEBUG");
+} else if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
   logger.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL);
 }
 
