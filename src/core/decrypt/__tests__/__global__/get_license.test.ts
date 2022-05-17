@@ -221,7 +221,7 @@ describe("core - decrypt - global tests - getLicense", () => {
                             getTimeout: () => undefined,
                             nbRetries: 6,
                             ignoreLicenseRequests: false });
-  }, 15000);
+  }, 25000);
 
   it("should not fail after 5 failures when getLicenseConfig.retry is set to `Infinity`", async () => {
     await checkGetLicense({ isGetLicensePromiseBased: true,
