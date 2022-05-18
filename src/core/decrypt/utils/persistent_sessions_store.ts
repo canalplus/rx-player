@@ -70,7 +70,8 @@ export default class PersistentSessionsStore {
       }
       this._entries = entries;
     } catch (e) {
-      log.warn("DRM-PSS: Could not get entries from license storage", e);
+      log.warn("DRM-PSS: Could not get entries from license storage",
+               e instanceof Error ? e : "");
       this.dispose();
     }
   }
@@ -288,7 +289,8 @@ export default class PersistentSessionsStore {
                   return i;
                 }
               } catch (e) {
-                log.warn("DRM-PSS: Could not decode initialization data.", e);
+                log.warn("DRM-PSS: Could not decode initialization data.",
+                         e instanceof Error ? e : "");
               }
             }
             break;

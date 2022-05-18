@@ -53,7 +53,11 @@ export default function forceGarbageCollection(
       cleanedupRanges = selectGCedRanges(currentPosition, buffered, GC_GAP_BEEFY);
     }
 
-    log.debug("Stream: GC cleaning", cleanedupRanges);
+    if (log.hasLevel("DEBUG")) {
+      log.debug("Stream: GC cleaning",
+                cleanedupRanges.map(({ start, end }) => `start: ${start} - end ${end}`)
+                  .join(", "));
+    }
     return observableFrom(
       cleanedupRanges.map(({ start, end }) =>
         start >= end ? observableOf(null) :
@@ -98,7 +102,11 @@ function selectGCedRanges(
 
   // try to clean up some space in the current range
   if (innerRange !== null) {
-    log.debug("Stream: GC removing part of inner range", cleanedupRanges);
+    if (log.hasLevel("DEBUG")) {
+      log.debug("Stream: GC removing part of inner range",
+                cleanedupRanges.map(({ start, end }) => `start: ${start} - end ${end}`)
+                  .join(", "));
+    }
     if (position - gcGap > innerRange.start) {
       cleanedupRanges.push({ start: innerRange.start,
                              end: position - gcGap });

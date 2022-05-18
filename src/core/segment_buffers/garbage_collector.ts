@@ -152,7 +152,7 @@ function clearBuffer(
   collectBufferAhead();
   const clean$ = observableFrom(
     cleanedupRanges.map((range) => {
-      log.debug("GC: cleaning range from SegmentBuffer", range);
+      log.debug("GC: cleaning range from SegmentBuffer", range.start, range.end);
       if (range.start >= range.end) {
         return observableOf(null);
       }

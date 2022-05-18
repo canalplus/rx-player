@@ -148,9 +148,9 @@ export default function initialSeekAndPlay(
   const seek$ = whenLoadedMetadata$(mediaElement).pipe(
     take(1),
     tap(() => {
-      log.info("Init: Set initial time", startTime);
       const initialTime = typeof startTime === "function" ? startTime() :
                                                             startTime;
+      log.info("Init: Set initial time", initialTime);
       playbackObserver.setCurrentTime(initialTime);
       initialSeekPerformed.setValue(true);
       initialSeekPerformed.finish();

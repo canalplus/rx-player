@@ -264,7 +264,9 @@ export default class DownloadingQueue<T> {
               return observableOf({ type: "retry" as const,
                                     value: { segment, error: evt.value } });
             case "interrupted":
-              log.info("Stream: segment request interrupted temporarly.", segment);
+              log.info("Stream: segment request interrupted temporarly.",
+                       segment.id,
+                       segment.time);
               return EMPTY;
 
             case "ended":
@@ -340,7 +342,8 @@ export default class DownloadingQueue<T> {
             return observableOf({ type: "retry" as const,
                                   value: { segment, error: evt.value } });
           case "interrupted":
-            log.info("Stream: init segment request interrupted temporarly.", segment);
+            log.info("Stream: init segment request interrupted temporarly.",
+                     segment.id);
             return EMPTY;
 
           case "chunk":

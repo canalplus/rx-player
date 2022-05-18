@@ -146,7 +146,9 @@ export default function getNeededSegments({
                                               currentSeg.bufferedStart)) {
           return false;
         }
-        log.debug("Stream: skipping segment gc-ed at the start", currentSeg);
+        log.debug("Stream: skipping segment gc-ed at the start",
+                  currentSeg.start,
+                  currentSeg.bufferedStart);
       }
       if (doesEndSeemGarbageCollected(currentSeg, nextSeg, neededRange.end)) {
         lazySegmentHistory = lazySegmentHistory ?? getBufferedHistory(currentSeg.infos);
@@ -154,7 +156,9 @@ export default function getNeededSegments({
                                             currentSeg.bufferedEnd)) {
           return false;
         }
-        log.debug("Stream: skipping segment gc-ed at the end", currentSeg);
+        log.debug("Stream: skipping segment gc-ed at the end",
+                  currentSeg.end,
+                  currentSeg.bufferedEnd);
       }
       return true;
     });
@@ -411,7 +415,7 @@ function doesStartSeemGarbageCollected(
   if (currentSeg.bufferedStart === undefined)  {
     log.warn("Stream: Start of a segment unknown. " +
              "Assuming it is garbage collected by default.",
-             currentSeg);
+             currentSeg.start);
     return true;
   }
 
@@ -426,7 +430,8 @@ function doesStartSeemGarbageCollected(
         MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT)
   {
     log.info("Stream: The start of the wanted segment has been garbage collected",
-             currentSeg);
+             currentSeg.start,
+             currentSeg.bufferedStart);
     return true;
   }
 
@@ -454,7 +459,7 @@ function doesEndSeemGarbageCollected(
   if (currentSeg.bufferedEnd === undefined)  {
     log.warn("Stream: End of a segment unknown. " +
              "Assuming it is garbage collected by default.",
-             currentSeg);
+             currentSeg.end);
     return true;
   }
 
@@ -468,7 +473,8 @@ function doesEndSeemGarbageCollected(
       currentSeg.end - currentSeg.bufferedEnd > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT)
   {
     log.info("Stream: The end of the wanted segment has been garbage collected",
-             currentSeg);
+             currentSeg.start,
+             currentSeg.bufferedStart);
     return true;
   }
 

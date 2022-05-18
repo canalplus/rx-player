@@ -36,13 +36,14 @@ export default class BufferBasedChooser {
   private _bitrates : number[];
 
   /**
-   * @param {Array.<number>} number;
+   * @param {Array.<number>} bitrates
    */
   constructor(bitrates : number[]) {
     this._levelsMap = getBufferLevels(bitrates);
     this._bitrates = bitrates;
     log.debug("ABR: Steps for buffer based chooser.",
-              this._levelsMap.map((l, i) => ({ bufferLevel: l, bitrate: bitrates[i] })));
+              this._levelsMap.map((l, i) => `bufferLevel: ${l}, bitrate: ${bitrates[i]}`)
+                .join(" ,"));
   }
 
   /**

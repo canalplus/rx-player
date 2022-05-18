@@ -133,9 +133,12 @@ export default function initializeDirectfileContent({
   // Start everything! (Just put the URL in the element's src).
   const linkURL$ = setElementSrc$(mediaElement, url);
 
-  log.debug("Init: Calculating initial time");
-  const initialTime = () => getDirectFileInitialTime(mediaElement, startAt);
-  log.debug("Init: Initial time calculated:", initialTime);
+  const initialTime = () => {
+    log.debug("Init: Calculating initial time");
+    const initTime = getDirectFileInitialTime(mediaElement, startAt);
+    log.debug("Init: Initial time calculated:", initTime);
+    return initTime;
+  };
 
   const { seekAndPlay$ } = initialSeekAndPlay({ mediaElement,
                                                 playbackObserver,

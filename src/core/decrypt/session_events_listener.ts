@@ -116,8 +116,7 @@ export default function SessionEventsListener(
         "license-request";
 
       log.info(`DRM: Received message event, type ${messageType}`,
-               session.sessionId,
-               messageEvent);
+               session.sessionId);
       const getLicense$ = observableDefer(() => {
         const getLicense = keySystemOptions.getLicense(message, messageType);
         const getLicenseTimeout = isNullOrUndefined(getLicenseConfig.timeout) ?

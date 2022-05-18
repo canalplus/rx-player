@@ -149,7 +149,11 @@ export default class VideoThumbnailLoader {
       return Promise.resolve(time);
     }
 
-    log.debug("VTL: Found thumbnail for time", time, segments);
+    if (log.hasLevel("DEBUG")) {
+      log.debug("VTL: Found thumbnail for time", time, segments.map(s =>
+        `start: ${s.time} - end: ${s.end}`
+      ).join(", "));
+    }
 
     if (this._currentTask !== undefined) {
       this._nextTaskSegmentsCompleteIds =

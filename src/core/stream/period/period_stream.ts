@@ -284,7 +284,8 @@ export default function PeriodStream({
         // stability of the player. ie: if a text buffer sends an error, we want
         // to continue playing without any subtitles
         if (!SegmentBuffersStore.isNative(bufferType)) {
-          log.error(`Stream: ${bufferType} Stream crashed. Aborting it.`, error);
+          log.error(`Stream: ${bufferType} Stream crashed. Aborting it.`,
+                    error instanceof Error ? error : "");
           segmentBuffersStore.disposeSegmentBuffer(bufferType);
 
           const formattedError = formatError(error, {
@@ -296,7 +297,8 @@ export default function PeriodStream({
             createEmptyStream(playbackObserver, wantedBufferAhead, bufferType, { period })
           );
         }
-        log.error(`Stream: ${bufferType} Stream crashed. Stopping playback.`, error);
+        log.error(`Stream: ${bufferType} Stream crashed. Stopping playback.`,
+                  error instanceof Error ? error : "");
         throw error;
       }));
   }

@@ -52,7 +52,8 @@ export default function takePSSHOut(data : Uint8Array) : IISOBMFFPSSHInfo[] {
     try {
       psshOffsets = getBoxOffsets(moov, 0x70737368 /* pssh */);
     } catch (e) {
-      log.warn("ISOBMFF:", e);
+      const err = e instanceof Error ? e : "";
+      log.warn("Error while removing PSSH from ISOBMFF", err);
       return psshBoxes;
     }
     if (psshOffsets == null) {
