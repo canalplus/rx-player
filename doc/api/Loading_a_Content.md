@@ -652,7 +652,7 @@ transport option</a>)
 Behavior taken by the player when switching to a different audio track, through
 the `setAudioTrack` method.
 
-There are two possible values:
+Those are the possible values for that option:
 
 - `"seamless"`: The transition between the old audio track and the new one
   happens seamlessly, without interruption.
