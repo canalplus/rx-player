@@ -37,14 +37,14 @@ export interface IISOBMFFPSSHInfo {
  * are encountered.
  */
 export default function takePSSHOut(data: Uint8Array): IISOBMFFPSSHInfo[] {
-  let i = 0;
+  let cursor = 0;
   const moov = getBoxContent(data, 0x6d6f6f76 /* moov */);
   if (moov === null) {
     return [];
   }
 
   const psshBoxes: IISOBMFFPSSHInfo[] = [];
-  while (i < moov.length) {
+  while (cursor < moov.length) {
     let psshOffsets;
     try {
       psshOffsets = getBoxOffsets(moov, 0x70737368 /* pssh */);
@@ -63,11 +63,11 @@ export default function takePSSHOut(data: Uint8Array): IISOBMFFPSSHInfo[] {
     }
 
     // replace by `free` box.
-    moov[psshOffsets[0] + 4] = 0x66;
-    moov[psshOffsets[0] + 5] = 0x72;
-    moov[psshOffsets[0] + 6] = 0x65;
-    moov[psshOffsets[0] + 7] = 0x65;
-    i = psshOffsets[2];
+    moov[psshOffsets[1] - 4] = 0x66;
+    moov[psshOffsets[1] - 3] = 0x72;
+    moov[psshOffsets[1] - 2] = 0x65;
+    moov[psshOffsets[1] - 1] = 0x65;
+    cursor = psshOffsets[2];
   }
   return psshBoxes;
 }
@@ -82,7 +82,7 @@ export default function takePSSHOut(data: Uint8Array): IISOBMFFPSSHInfo[] {
  */
 export function getPsshSystemID(
   buff: Uint8Array,
-  initialDataOffset: number,
+  initialDataOffset: number
 ): string | undefined {
   if (buff[initialDataOffset] > 1) {
     log.warn("ISOBMFF: un-handled PSSH version");
