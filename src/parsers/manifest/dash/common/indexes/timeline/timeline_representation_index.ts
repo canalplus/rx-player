@@ -201,9 +201,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   /** Absolute start of the period, timescaled and converted to index time. */
   private _scaledPeriodStart : number;
 
-  /** Actual un-scaled start of the Period as indicated in the MPD. */
-  private _periodStart : number;
-
   /** Absolute end of the period, timescaled and converted to index time. */
   private _scaledPeriodEnd : number | undefined;
 
@@ -308,7 +305,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
                     startNumber: index.startNumber,
                     timeline: index.timeline ?? null,
                     timescale };
-    this._periodStart = periodStart;
     this._scaledPeriodStart = toIndexTime(periodStart, this._index);
     this._scaledPeriodEnd = periodEnd === undefined ? undefined :
                                                       toIndexTime(periodEnd, this._index);
@@ -465,7 +461,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     this._index = newIndex._index;
     this._isDynamic = newIndex._isDynamic;
     this._scaledPeriodStart = newIndex._scaledPeriodStart;
-    this._periodStart = newIndex._periodStart;
     this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
     this._lastUpdate = newIndex._lastUpdate;
     this._manifestBoundsCalculator = newIndex._manifestBoundsCalculator;
@@ -491,7 +486,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     }
     this._isDynamic = newIndex._isDynamic;
     this._scaledPeriodStart = newIndex._scaledPeriodStart;
-    this._periodStart = newIndex._periodStart;
     this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
     this._lastUpdate = newIndex._lastUpdate;
     this._isLastPeriod = newIndex._isLastPeriod;
@@ -614,13 +608,12 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     const newElements = this._parseTimeline();
     this._parseTimeline = null; // Free memory
 
-    const actualPeriodStart = this._periodStart * this._index.timescale;
     const { MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY } = config.getCurrent();
     if (this._unsafelyBaseOnPreviousIndex === null ||
         newElements.length < MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY)
     {
       // Just completely parse the current timeline
-      return constructTimelineFromElements(newElements, actualPeriodStart);
+      return constructTimelineFromElements(newElements);
     }
 
     // Construct previously parsed timeline if not already done
@@ -633,9 +626,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     }
     this._unsafelyBaseOnPreviousIndex = null; // Free memory
 
-    return constructTimelineFromPreviousTimeline(newElements,
-                                                 prevTimeline,
-                                                 actualPeriodStart);
+    return constructTimelineFromPreviousTimeline(newElements, prevTimeline);
 
   }
 }

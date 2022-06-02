@@ -27,13 +27,10 @@ import parseSElement, {
  * first needed.
  * @param {HTMLCollection} elements - All S nodes constituting the corresponding
  * SegmentTimeline node.
- * @param {number} scaledPeriodStart - Absolute start of the concerned Period,
- * in the same scale than the segments found in `elements`.
  * @returns {Array.<Object>}
  */
 export default function constructTimelineFromElements(
-  elements : HTMLCollection,
-  scaledPeriodStart : number
+  elements : HTMLCollection
 ) : IIndexSegment[] {
   const initialTimeline : IParsedS[] = [];
   for (let i = 0; i < elements.length; i++) {
@@ -48,10 +45,7 @@ export default function constructTimelineFromElements(
     const nextItem = initialTimeline[i + 1] === undefined ?
       null :
       initialTimeline[i + 1];
-    const timelineElement = convertElementsToIndexSegment(item,
-                                                          previousItem,
-                                                          nextItem,
-                                                          scaledPeriodStart);
+    const timelineElement = convertElementsToIndexSegment(item, previousItem, nextItem);
     if (timelineElement !== null) {
       timeline.push(timelineElement);
     }

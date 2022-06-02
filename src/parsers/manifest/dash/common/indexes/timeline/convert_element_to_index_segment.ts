@@ -28,22 +28,19 @@ import { IIndexSegment } from "../../../../utils/index_helpers";
  * segment.
  * @param {Object|null} nextItem - the `S` node coming next. If `null`, we're
  * talking about the last segment.
- * @param {number} timelineStart - Absolute start for the timeline. In the same
- * timescale than the given `S` nodes.
  * @returns {Object|null}
  */
 export default function convertElementsToIndexSegment(
   item : { start? : number; repeatCount? : number; duration? : number },
   previousItem : IIndexSegment|null,
-  nextItem : { start? : number; repeatCount? : number; duration? : number }|null,
-  timelineStart : number
+  nextItem : { start? : number; repeatCount? : number; duration? : number }|null
 ) : IIndexSegment|null {
   let start = item.start;
   let duration = item.duration;
   const repeatCount = item.repeatCount;
   if (start === undefined) {
     if (previousItem === null) {
-      start = timelineStart;
+      start = 0;
     } else if (!isNullOrUndefined(previousItem.duration)) {
       start = previousItem.start +
               (previousItem.duration * (previousItem.repeatCount + 1));
