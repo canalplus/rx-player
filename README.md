@@ -1,5 +1,6 @@
 <p align="center">
-  <img src="./doc/static/img/logo.png" />
+  <img src="./doc/static/img/logo.png#gh-light-mode-only" alt="RxPlayer's logo"/>
+  <img src="./doc/static/img/logo-white.png#gh-dark-mode-only" alt="RxPlayer's logo"/>
   <br /><br />
   <a href="https://developers.canal-plus.com/rx-player/doc/api/Overview.html">📖 <b>API documentation</b></a>
   -
