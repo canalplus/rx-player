@@ -169,6 +169,9 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   /** Underlying structure to retrieve segment information. */
   private _index : IBaseIndex;
 
+  /** Absolute start of the period, timescaled and converted to index time. */
+  private _scaledPeriodStart : number;
+
   /** Absolute end of the period, timescaled and converted to index time. */
   private _scaledPeriodEnd : number | undefined;
 
@@ -222,6 +225,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
                     startNumber: index.startNumber,
                     timeline: index.timeline ?? [],
                     timescale };
+    this._scaledPeriodStart = toIndexTime(periodStart, this._index);
     this._scaledPeriodEnd = periodEnd == null ? undefined :
                                                 toIndexTime(periodEnd, this._index);
     this._isInitialized = this._index.timeline.length > 0;
@@ -275,7 +279,9 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     if (index.timeline.length === 0) {
       return null;
     }
-    return fromIndexTime(index.timeline[0].start, index);
+    return fromIndexTime(Math.max(this._scaledPeriodStart,
+                                  index.timeline[0].start),
+                         index);
   }
 
   /**
