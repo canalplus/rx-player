@@ -47,10 +47,17 @@ export default function getISOBMFFTimingInfos(
     return null;
   }
 
-  const startTime = segment.timestampOffset !== undefined ?
-                      baseDecodeTime + (segment.timestampOffset * initTimescale) :
-                      baseDecodeTime;
-  const trunDuration = getDurationFromTrun(buffer);
+  let startTime = segment.timestampOffset !== undefined ?
+                    baseDecodeTime + (segment.timestampOffset * initTimescale) :
+                    baseDecodeTime;
+  let trunDuration = getDurationFromTrun(buffer);
+  if (startTime < 0) {
+    if (trunDuration !== undefined) {
+      trunDuration += startTime; // remove from duration what comes before `0`
+    }
+    startTime = 0;
+  }
+
   if (isChunked || !segment.complete) {
     if (trunDuration === undefined) {
       log.warn("DASH: Chunked segments should indicate a duration through their" +
