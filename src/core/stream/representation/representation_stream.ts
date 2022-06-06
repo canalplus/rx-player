@@ -271,9 +271,16 @@ export default function RepresentationStream<TSegmentDataType>({
    */
   let hasSentEncryptionData = false;
   let encryptionEvent$ : Observable<IEncryptionDataEncounteredEvent> = EMPTY;
+
+  // If the DRM system id is already known, and if we already have encryption data
+  // for it, we may not need to wait until the initialization segment is loaded to
+  // signal required protection data, thus performing License negotiations sooner
   if (drmSystemId !== undefined) {
     const encryptionData = representation.getEncryptionData(drmSystemId);
-    if (encryptionData.length > 0) {
+
+    // If some key ids are not known yet, it may be safer to wait for this initialization
+    // segment to be loaded first
+    if (encryptionData.length > 0 && encryptionData.every(e => e.keyIds !== undefined)) {
       encryptionEvent$ = observableOf(...encryptionData.map(d =>
         EVENTS.encryptionDataEncountered(d, content)));
       hasSentEncryptionData = true;

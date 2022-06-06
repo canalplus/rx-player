@@ -240,13 +240,14 @@ class Representation {
    *
    * TODO better handle use cases like key rotation by not always grouping
    * every protection data together? To check.
-   * @param {string} initDataArr
-   * @param {string} systemId
+   * @param {string} initDataType
+   * @param {Uint8Array|undefined} keyId
    * @param {Uint8Array} data
    * @returns {boolean}
    */
   public _addProtectionData(
     initDataType : string,
+    keyId: Uint8Array | undefined,
     data : Array<{
       systemId : string;
       data : Uint8Array;
@@ -254,10 +255,28 @@ class Representation {
   ) : boolean {
     let hasUpdatedProtectionData = false;
     if (this.contentProtections === undefined) {
-      this.contentProtections = { keyIds: [],
+      this.contentProtections = { keyIds: keyId !== undefined ? [{ keyId }] : [],
                                   initData: [ { type: initDataType,
                                                 values: data } ] };
       return true;
+    }
+
+    if (keyId !== undefined) {
+      const keyIds = this.contentProtections.keyIds;
+      if (keyIds === undefined) {
+        this.contentProtections.keyIds = [{ keyId }];
+      } else {
+        let foundKeyId = false;
+        for (const knownKeyId of keyIds) {
+          if (areArraysOfNumbersEqual(knownKeyId.keyId, keyId)) {
+            foundKeyId = true;
+          }
+        }
+        if (!foundKeyId) {
+          log.warn("Manifest: found unanounced key id.");
+          keyIds.push({ keyId });
+        }
+      }
     }
 
     const cInitData = this.contentProtections.initData;

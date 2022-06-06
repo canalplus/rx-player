@@ -22,6 +22,29 @@ import {
 } from "../../../utils/byte_parsing";
 
 /**
+ * From a given buffer representing ISOBMFF data, browses inner boxes in
+ * `childNames`, each element being a child box of the one before it.
+ * Returns `null` if one of the child (or if the parent) is not found.
+ * @param {Uint8Array} buf
+ * @param {number[]} childNames
+ * @returns {Uint8Array|null}
+ */
+function getChildBox(
+  buf : Uint8Array,
+  childNames : number[]
+) : Uint8Array | null {
+  let currBox = buf;
+  for (const childName of childNames) {
+    const box = getBoxContent(currBox, childName);
+    if (box === null) {
+      return null;
+    }
+    currBox = box;
+  }
+  return currBox;
+}
+
+/**
  * Returns the content of a box based on its name.
  * `null` if not found.
  * @param {Uint8Array} buf - the isobmff data
@@ -249,6 +272,7 @@ export {
   getBoxContent,
   getBoxesContent,
   getBoxOffsets,
+  getChildBox,
   getNextBoxOffsets,
   getUuidContent,
 };

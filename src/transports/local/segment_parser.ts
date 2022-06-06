@@ -18,6 +18,7 @@ import {
   getMDHDTimescale,
   takePSSHOut,
 } from "../../parsers/containers/isobmff";
+import { getKeyIdFromInitSegment } from "../../parsers/containers/isobmff/utils";
 import { getTimeCodeScale } from "../../parsers/containers/matroska";
 import takeFirstSet from "../../utils/take_first_set";
 import {
@@ -65,8 +66,12 @@ export default function segmentParser(
   let protectionDataUpdate = false;
   if (seemsToBeMP4) {
     const psshInfo = takePSSHOut(chunkData);
-    if (psshInfo.length > 0) {
-      protectionDataUpdate = representation._addProtectionData("cenc", psshInfo);
+    let keyId;
+    if (segment.isInit) {
+      keyId = getKeyIdFromInitSegment(chunkData) ?? undefined;
+    }
+    if (psshInfo.length > 0 || keyId !== undefined) {
+      protectionDataUpdate = representation._addProtectionData("cenc", keyId, psshInfo);
     }
   }
 
