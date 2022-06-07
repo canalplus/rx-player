@@ -16,7 +16,7 @@
 
 import { Observable } from "rxjs";
 // eslint-disable-next-line max-len
-import MediaElementTrackChoiceManager from "../core/api/media_element_track_choice_manager";
+import MediaElementTrackChoiceManager from "../core/api/tracks_management/media_element_track_choice_manager";
 import type ContentDecryptor from "../core/decrypt";
 import {
   IDirectfileEvent,

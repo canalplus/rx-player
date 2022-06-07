@@ -26,8 +26,8 @@ import {
   ICompatTextTrackList,
   ICompatVideoTrack,
   ICompatVideoTrackList,
-} from "../../compat/browser_compatibility_types";
-import { Representation } from "../../manifest";
+} from "../../../compat/browser_compatibility_types";
+import { Representation } from "../../../manifest";
 import {
   IAudioTrack,
   ITextTrack,
@@ -38,10 +38,10 @@ import {
   IAvailableVideoTrack,
   IAvailableAudioTrack,
   IAvailableTextTrack,
-} from "../../public_types";
-import assert from "../../utils/assert";
-import EventEmitter from "../../utils/event_emitter";
-import normalizeLanguage from "../../utils/languages";
+} from "../../../public_types";
+import assert from "../../../utils/assert";
+import EventEmitter from "../../../utils/event_emitter";
+import normalizeLanguage from "../../../utils/languages";
 
 /** Events emitted by the MediaElementTrackChoiceManager. */
 interface IMediaElementTrackChoiceManagerEvents {

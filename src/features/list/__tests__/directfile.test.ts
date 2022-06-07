@@ -18,7 +18,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 // eslint-disable-next-line max-len
-import mediaElementTrackChoiceManager from "../../../core/api/media_element_track_choice_manager";
+import mediaElementTrackChoiceManager from "../../../core/api/tracks_management/media_element_track_choice_manager";
 import initDirectFile from "../../../core/init/initialize_directfile";
 import addDirectfileFeature from "../directfile";
 

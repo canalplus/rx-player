@@ -117,7 +117,9 @@ describe("Features - initializeFeaturesObject", () => {
       directfile: {
         initDirectFile: jest.requireActual("../../core/init/initialize_directfile").default,
         mediaElementTrackChoiceManager:
-          jest.requireActual("../../core/api/media_element_track_choice_manager").default,
+          jest.requireActual(
+            "../../core/api/tracks_management/media_element_track_choice_manager"
+          ).default,
       },
       imageBuffer: jest.requireActual(
         "../../core/segment_buffers/implementations/image/index"
