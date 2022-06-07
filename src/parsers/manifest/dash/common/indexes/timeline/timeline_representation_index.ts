@@ -372,7 +372,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     }
     const timeline = this._index.timeline;
     return timeline.length === 0 ? null :
-                                   fromIndexTime(timeline[0].start,
+                                   fromIndexTime(Math.max(this._scaledPeriodStart,
+                                                          timeline[0].start),
                                                  this._index);
   }
 

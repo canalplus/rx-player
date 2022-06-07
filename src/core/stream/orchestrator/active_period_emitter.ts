@@ -62,11 +62,7 @@ type IPeriodsList = Partial<Record<string, IPeriodObject>>;
  * already inform that it is the current Period.
  * ```
  *
- * @param {Array.<string>} bufferTypes - Every buffer types in the content.
- * @param {Observable} addPeriodStream$ - Emit PeriodStream information when
- * one is added.
- * @param {Observable} removePeriodStream$ - Emit PeriodStream information when
- * one is removed.
+ * @param {Array.<Observable>} buffers$
  * @returns {Observable}
  */
 export default function ActivePeriodEmitter(
