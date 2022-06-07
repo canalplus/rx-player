@@ -72,16 +72,9 @@ export default function getSegmentsFromTimeline(
 
   const timelineLength = timeline.length;
 
-  // TODO(pierre): use @maxSegmentDuration if possible
-  let maxEncounteredDuration = timeline.length > 0 &&
-                               timeline[0].duration != null ? timeline[0].duration :
-                                                               0;
-
   for (let i = 0; i < timelineLength; i++) {
     const timelineItem = timeline[i];
     const { duration, start, range } = timelineItem;
-
-    maxEncounteredDuration = Math.max(maxEncounteredDuration, duration);
 
     const repeat = calculateRepeat(timelineItem, timeline[i + 1], maximumTime);
     const complete = index.availabilityTimeComplete !== false ||
@@ -96,11 +89,17 @@ export default function getSegmentsFromTimeline(
         null :
         mediaURLs.map(createDashUrlDetokenizer(segmentTime, segmentNumber));
 
-      const time = segmentTime - index.indexTimeOffset;
+      let time = segmentTime - index.indexTimeOffset;
+      let realDuration = duration;
+      if (time < 0) {
+        realDuration = duration + time; // Remove from duration the part before `0`
+        time = 0;
+      }
+
       const segment = { id: String(segmentTime),
                         time: time / timescale,
-                        end: (time + duration) / timescale,
-                        duration: duration / timescale,
+                        end: (time + realDuration) / timescale,
+                        duration: realDuration / timescale,
                         isInit: false,
                         range,
                         timescale: 1 as const,
