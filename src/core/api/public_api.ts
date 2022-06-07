@@ -589,7 +589,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   loadVideo(opts : ILoadVideoOptions) : void {
     const options = parseLoadVideoOptions(opts);
-    log.info("API: Calling loadvideo", options);
+    log.info("API: Calling loadvideo", options.url, options.transport);
     this._priv_lastContentPlaybackInfos = { options };
     this._priv_initializeContentPlayback(options);
   }
@@ -2418,7 +2418,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     this._priv_cleanUpCurrentContentState();
     this._priv_currentError = formattedError;
-    log.error("API: The player stopped because of an error:", error);
+    log.error("API: The player stopped because of an error",
+              error instanceof Error ? error : "");
     this._priv_setPlayerState(PLAYER_STATES.STOPPED);
 
     // TODO This condition is here because the eventual callback called when the

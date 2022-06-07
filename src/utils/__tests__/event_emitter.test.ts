@@ -558,9 +558,10 @@ describe("utils - EventEmitter", () => {
       something: undefined|"a"|{ a: string };
       nope: undefined|"a"|{ a: string };
     }>();
-    const err = new Error("Should not be called");
+    const errMessage = "EventEmitter: listener error";
+    const thrownErr = new Error("Error thrown in callback");
     const cb = function() {
-      throw err;
+      throw thrownErr;
     };
     const spy = jest.fn();
     jest.spyOn(log, "error").mockImplementation(spy);
@@ -570,7 +571,7 @@ describe("utils - EventEmitter", () => {
     eventEmitter.trigger("t", undefined);
 
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith(err, err.stack);
+    expect(spy).toHaveBeenCalledWith(errMessage, thrownErr);
     eventEmitter.removeEventListener();
   });
 });

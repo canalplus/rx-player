@@ -121,8 +121,10 @@ function probeMediaConfiguration(
         "lack of arguments to call them. See debug logs for more details.");
     }
 
-    log.info("MediaCapabilitiesProber >>> PROBER: Probed capabilities: ",
-             probedCapabilities);
+    if (log.hasLevel("INFO")) {
+      log.info("MediaCapabilitiesProber >>> PROBER: Probed capabilities: ",
+               JSON.stringify(probedCapabilities));
+    }
 
     return { globalStatus, resultsFromAPIS };
   });

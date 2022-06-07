@@ -58,7 +58,8 @@ function resetMediaSource(
         mediaSource.removeSourceBuffer(sourceBuffer);
       }
       catch (e) {
-        log.warn("Init: Error while disposing SourceBuffer", e);
+        log.warn("Init: Error while disposing SourceBuffer",
+                 e instanceof Error ? e : "");
       }
     }
     if (sourceBuffers.length > 0) {
@@ -73,7 +74,8 @@ function resetMediaSource(
       log.debug("Init: Revoking previous URL");
       URL.revokeObjectURL(mediaSourceURL);
     } catch (e) {
-      log.warn("Init: Error while revoking the media source URL", e);
+      log.warn("Init: Error while revoking the media source URL",
+               e instanceof Error ? e : "");
     }
   }
 }

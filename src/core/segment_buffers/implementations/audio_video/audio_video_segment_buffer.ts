@@ -321,7 +321,8 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
       try {
         this._sourceBuffer.abort();
       } catch (e) {
-        log.warn(`AVSB: Failed to abort a ${this.bufferType} SourceBuffer:`, e);
+        log.warn(`AVSB: Failed to abort a ${this.bufferType} SourceBuffer:`,
+                 e instanceof Error ? e : "");
       }
     }
   }

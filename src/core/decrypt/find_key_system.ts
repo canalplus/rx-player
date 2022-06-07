@@ -330,18 +330,17 @@ export default function getMediaKeySystemAccess(
                                                                  keySystemOptions);
 
     log.debug(`DRM: Request keysystem access ${keyType},` +
-              `${index + 1} of ${keySystemsType.length}`,
-              keySystemConfigurations);
+              `${index + 1} of ${keySystemsType.length}`);
 
     try {
       const keySystemAccess = await requestMediaKeySystemAccess(keyType,
                                                                 keySystemConfigurations);
-      log.info("DRM: Found compatible keysystem", keyType, keySystemConfigurations);
+      log.info("DRM: Found compatible keysystem", keyType, index + 1);
       return { type: "create-media-key-system-access" as const,
                value: { options: keySystemOptions,
                         mediaKeySystemAccess: keySystemAccess } };
     } catch (_) {
-      log.debug("DRM: Rejected access to keysystem", keyType, keySystemConfigurations);
+      log.debug("DRM: Rejected access to keysystem", keyType, index + 1);
       if (cancelSignal.cancellationError !== null) {
         throw cancelSignal.cancellationError;
       }

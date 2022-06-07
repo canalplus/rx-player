@@ -178,7 +178,8 @@ export default class DashWasmParser {
 
     this._initProm = streamingProm
       .catch(async (e) => {
-        log.warn("Unable to call `instantiateStreaming` on WASM:", e);
+        log.warn("Unable to call `instantiateStreaming` on WASM",
+                 e instanceof Error ? e : "");
         const res = await fetchedWasm;
         if (res.status < 200 || res.status >= 300) {
           throw new Error("WebAssembly request failed. status: " + String(res.status));

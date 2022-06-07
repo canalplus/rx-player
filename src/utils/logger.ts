@@ -22,7 +22,9 @@ export type ILoggerLevel = "NONE" |
                            "INFO" |
                            "DEBUG";
 
-type IConsoleFn = (...args : unknown[]) => void;
+type IConsoleFn = (
+  ...args : Array<boolean | string | number | Error | null | undefined>
+) => void;
 
 const DEFAULT_LOG_LEVEL : ILoggerLevel = "NONE";
 
@@ -84,5 +86,15 @@ export default class Logger {
    */
   public getLevel() : ILoggerLevel {
     return this._currentLevel;
+  }
+
+  /**
+   * Returns `true` if the currently set level includes logs of the level given
+   * in argument.
+   * @param {string} logLevel
+   * @returns {boolean}
+   */
+  public hasLevel(logLevel : ILoggerLevel) : boolean {
+    return this._levels[logLevel] >= this._levels[this._currentLevel];
   }
 }

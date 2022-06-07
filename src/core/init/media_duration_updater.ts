@@ -174,7 +174,8 @@ function setMediaSourceDuration(
         log.info("Init: Updating duration to what is currently buffered", maxBufferedEnd);
         mediaSource.duration = newDuration;
       } catch (err) {
-        log.warn("Duration Updater: Can't update duration on the MediaSource.", err);
+        log.warn("Duration Updater: Can't update duration on the MediaSource.",
+                 err instanceof Error ? err : "");
         return MediaSourceDurationUpdateStatus.Failed;
       }
     }
@@ -185,7 +186,8 @@ function setMediaSourceDuration(
       log.info("Init: Updating duration", newDuration);
       mediaSource.duration = newDuration;
     } catch (err) {
-      log.warn("Duration Updater: Can't update duration on the MediaSource.", err);
+      log.warn("Duration Updater: Can't update duration on the MediaSource.",
+               err instanceof Error ? err : "");
       return MediaSourceDurationUpdateStatus.Failed;
     }
     const deltaToExpected = Math.abs(mediaSource.duration - newDuration);

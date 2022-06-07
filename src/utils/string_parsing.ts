@@ -69,8 +69,9 @@ function utf16LEToStr(bytes : Uint8Array) : string {
       const decoder = new TextDecoder("utf-16le");
       return decoder.decode(bytes);
     } catch (e) {
+      const err = e instanceof Error ? e : "";
       log.warn("Utils: could not use TextDecoder to parse UTF-16LE, " +
-        "fallbacking to another implementation", e);
+        "fallbacking to another implementation", err);
     }
   }
 
@@ -93,8 +94,9 @@ function beUtf16ToStr(bytes : Uint8Array) : string {
       const decoder = new TextDecoder("utf-16be");
       return decoder.decode(bytes);
     } catch (e) {
+      const err = e instanceof Error ? e : "";
       log.warn("Utils: could not use TextDecoder to parse UTF-16BE, " +
-        "fallbacking to another implementation", e);
+        "fallbacking to another implementation", err);
     }
   }
 
@@ -117,8 +119,9 @@ function strToUtf8(str : string) : Uint8Array {
       const encoder = new TextEncoder();
       return encoder.encode(str);
     } catch (e) {
+      const err = e instanceof Error ? e : "";
       log.warn("Utils: could not use TextEncoder to encode string into UTF-8, " +
-        "fallbacking to another implementation", e);
+        "fallbacking to another implementation", err);
     }
   }
 
@@ -254,8 +257,9 @@ function utf8ToStr(data : Uint8Array) : string {
       const decoder = new TextDecoder();
       return decoder.decode(data);
     } catch (e) {
+      const err = e instanceof Error ? e : "";
       log.warn("Utils: could not use TextDecoder to parse UTF-8, " +
-               "fallbacking to another implementation", e);
+               "fallbacking to another implementation", err);
     }
   }
 

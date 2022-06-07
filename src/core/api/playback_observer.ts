@@ -234,7 +234,19 @@ export default class PlaybackObserver {
             freezing: freezingStatus,
             internalSeeking },
           mediaTimings);
-        log.debug("API: current media element state", timings);
+        if (log.hasLevel("DEBUG")) {
+          log.debug("API: current media element state tick",
+                    "event", timings.event,
+                    "position", timings.position,
+                    "seeking", timings.seeking,
+                    "internalSeeking", timings.internalSeeking,
+                    "rebuffering", timings.rebuffering !== null,
+                    "freezing", timings.freezing !== null,
+                    "ended", timings.ended,
+                    "paused", timings.paused,
+                    "playbackRate", timings.playbackRate,
+                    "readyState", timings.readyState);
+        }
         return timings;
       };
 
@@ -254,7 +266,7 @@ export default class PlaybackObserver {
       return observableMerge(interval$, ...eventObs).pipe(
         map((event : IPlaybackObserverEventType) => {
           const newObservation = getCurrentObservation(event);
-          if (log.getLevel() === "DEBUG") {
+          if (log.hasLevel("DEBUG")) {
             log.debug("API: current playback timeline:\n" +
                       prettyPrintBuffered(newObservation.buffered,
                                           newObservation.position),

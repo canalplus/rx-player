@@ -173,7 +173,7 @@ export default function fetchRequest(
       clearTimeout(timeout);
     }
     if (response.status >= 300) {
-      log.warn("Fetch: Request HTTP Error", response);
+      log.warn("Fetch: Request HTTP Error", response.status, response.url);
       throw new RequestError(response.url,
                              response.status,
                              NetworkErrorTypes.ERROR_HTTP_CODE);

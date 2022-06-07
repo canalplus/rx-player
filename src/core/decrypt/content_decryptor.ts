@@ -386,7 +386,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
 
         firstCreatedSession.record.associateKeyIds(keyIds);
         if (initializationData.content !== undefined) {
-          if (log.getLevel() === "DEBUG") {
+          if (log.hasLevel("DEBUG")) {
             const hexKids = keyIds
               .reduce((acc, kid) => `${acc}, ${bytesToHex(kid)}`, "");
             log.debug("DRM: Blacklisting new key ids", hexKids);

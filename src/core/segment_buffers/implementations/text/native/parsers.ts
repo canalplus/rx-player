@@ -42,6 +42,6 @@ export default function parseTextTrackToCues(
 
   log.debug("NTSB: Parser found, parsing...");
   const parsed = parser(data, timestampOffset, language);
-  log.debug("NTSB: Parsed successfully!", parsed);
+  log.debug("NTSB: Parsed successfully!", parsed.length);
   return parsed;
 }

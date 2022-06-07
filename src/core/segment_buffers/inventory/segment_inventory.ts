@@ -320,7 +320,7 @@ export default class SegmentInventory {
                 bufferType, inventoryIndex, inventory.length);
       inventory.splice(inventoryIndex, inventory.length - inventoryIndex);
     }
-    if (bufferType !== undefined && log.getLevel() === "DEBUG") {
+    if (bufferType !== undefined && log.hasLevel("DEBUG")) {
       log.debug(`SI: current ${bufferType} inventory timeline:\n` +
                 prettyPrintInventory(this._inventory));
     }
@@ -711,7 +711,10 @@ export default class SegmentInventory {
         if (resSegments.length > 0) {
           splitted = true;
           if (resSegments.length === 1) {
-            log.warn("SI: Completed Segment is splitted.", content);
+            log.warn("SI: Completed Segment is splitted.",
+                     content.segment.id,
+                     content.segment.time,
+                     content.segment.end);
             resSegments[0].splitted = true;
           }
         }
@@ -747,7 +750,9 @@ export default class SegmentInventory {
     }
 
     if (resSegments.length === 0) {
-      log.warn("SI: Completed Segment not found", content);
+      log.warn("SI: Completed Segment not found",
+               content.segment.id,
+               content.segment.time);
     } else {
       this.synchronizeBuffered(newBuffered);
       for (const seg of resSegments) {
@@ -757,7 +762,8 @@ export default class SegmentInventory {
                                                    seg.bufferedEnd);
         } else {
           log.debug("SI: buffered range not known after sync. Skipping history.",
-                    seg);
+                    seg.start,
+                    seg.end);
         }
       }
     }

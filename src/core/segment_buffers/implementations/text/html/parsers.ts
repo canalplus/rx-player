@@ -44,6 +44,6 @@ export default function parseTextTrackToElements(
   }
   log.debug("HTSB: Parser found, parsing...");
   const parsed = parser(data, timestampOffset, language);
-  log.debug("HTTB: Parsed successfully!", parsed);
+  log.debug("HTTB: Parsed successfully!", parsed.length);
   return parsed;
 }

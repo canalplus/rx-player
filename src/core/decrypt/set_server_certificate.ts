@@ -48,7 +48,8 @@ async function setServerCertificate(
     // Thus we prefer to return unknown here.
     return res;
   } catch (error) {
-    log.warn("DRM: mediaKeys.setServerCertificate returned an error", error);
+    log.warn("DRM: mediaKeys.setServerCertificate returned an error",
+             error instanceof Error ? error : "");
     const reason = error instanceof Error ? error.toString() :
                                             "`setServerCertificate` error";
     throw new EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", reason);
