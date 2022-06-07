@@ -1,4 +1,4 @@
-import RxPlayer from "../../../../src/index.ts";
+import RxPlayer from "../../../../src/minimal.ts";
 import React from "react";
 import Player from "./Player.jsx";
 

@@ -30,10 +30,12 @@ if (require.main === module) {
   const shouldWatch = argv.includes("-w") || argv.includes("--watch");
   const shouldMinify = argv.includes("-m") || argv.includes("--minify");
   const production = argv.includes("-p") || argv.includes("--production-mode");
+  const includeWasmParser = argv.includes("--include-wasm");
   generateFullDemo({
     watch: shouldWatch,
     minify: shouldMinify,
     production,
+    includeWasmParser,
   });
 } else {
   // This script is loaded as a module
@@ -48,10 +50,13 @@ if (require.main === module) {
  * in "development" mode, which has supplementary assertions.
  * @param {boolean} [options.watch] - If `true`, the RxPlayer's files involve
  * will be watched and the code re-built each time one of them changes.
+ * @param {boolean} [options.includeWasmParser] - If `true`, the WebAssembly MPD
+ * parser of the RxPlayer will be used (if it can be requested).
  */
 function generateFullDemo(options) {
   const shouldMinify = options.minify === true;
   const isDevMode = options.production !== true;
+  const includeWasmParser = options.includeWasmParser === true;
 
   const webpackDemoConfig = {
     mode: isDevMode ? "development" : "production",
@@ -101,33 +106,14 @@ function generateFullDemo(options) {
     },
     plugins: [
       new Webpack.DefinePlugin({
-        __FEATURES__: {
-          IS_DISABLED: 0,
-          IS_ENABLED: 1,
-
-          BIF_PARSER: 1,
-          DASH: 1,
-          DIRECTFILE: 1,
-          EME: 1,
-          HTML_SAMI: 1,
-          HTML_SRT: 1,
-          HTML_TTML: 1,
-          HTML_VTT: 1,
-          LOCAL_MANIFEST: 1,
-          METAPLAYLIST: 1,
-          NATIVE_SAMI: 1,
-          NATIVE_SRT: 1,
-          NATIVE_TTML: 1,
-          NATIVE_VTT: 1,
-          SMOOTH: 1,
-        },
+        __INCLUDE_WASM_PARSER__: includeWasmParser,
         __ENVIRONMENT__: {
           PRODUCTION: 0,
           DEV: 1,
           CURRENT_ENV: isDevMode ? 1 : 0,
         },
         __LOGGER_LEVEL__: {
-          CURRENT_LEVEL: "\"INFO\"",
+          CURRENT_LEVEL: isDevMode ? "DEBUG" : "\"INFO\"",
         },
       }),
     ],

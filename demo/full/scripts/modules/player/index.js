@@ -10,12 +10,52 @@ import {
   Subject,
   takeUntil,
 } from "rxjs";
-import RxPlayer from "../../../../../src/index.ts";
+import {
+  BIF_PARSER,
+  DASH,
+  DIRECTFILE,
+  EME,
+  HTML_SAMI_PARSER,
+  HTML_SRT_PARSER,
+  HTML_TEXT_BUFFER,
+  HTML_TTML_PARSER,
+  HTML_VTT_PARSER,
+  IMAGE_BUFFER,
+  SMOOTH,
+} from "../../../../../src/features/list";
+import {
+  DASH_WASM,
+  METAPLAYLIST,
+} from "../../../../../src/experimental/features";
+import RxPlayer from "../../../../../src/minimal.ts";
 import { linkPlayerEventsToState } from "./events.js";
 import $handleCatchUpMode from "./catchUp";
 import VideoThumbnailLoader, {
   DASH_LOADER
 } from "../../../../../src/experimental/tools/VideoThumbnailLoader";
+
+RxPlayer.addFeatures([
+  BIF_PARSER,
+  DASH,
+  DIRECTFILE,
+  EME,
+  HTML_SAMI_PARSER,
+  HTML_SRT_PARSER,
+  HTML_TEXT_BUFFER,
+  HTML_TTML_PARSER,
+  HTML_VTT_PARSER,
+  IMAGE_BUFFER,
+  SMOOTH,
+  METAPLAYLIST,
+]);
+
+/* eslint-disable no-undef */
+if (__INCLUDE_WASM_PARSER__) {
+/* eslint-enable no-undef */
+
+  RxPlayer.addFeatures([DASH_WASM]);
+  DASH_WASM.initialize({ wasmUrl: "./mpd-parser.wasm" });
+}
 
 VideoThumbnailLoader.addLoader(DASH_LOADER);
 
