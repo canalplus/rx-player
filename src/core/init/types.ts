@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import { ICustomError } from "../../errors";
 import Manifest, {
   Adaptation,
   Period,
   Representation,
 } from "../../manifest";
+import { IPlayerError } from "../../public_types";
 import SegmentBuffersStore from "../segment_buffers";
 import {
   IActivePeriodChangedEvent,
@@ -71,7 +71,7 @@ export interface IDecipherabilityUpdateEvent {
 
 /** Event sent when a minor happened. */
 export interface IWarningEvent { type : "warning";
-                                 value : ICustomError; }
+                                 value : IPlayerError; }
 
 /**
  * Event sent when we're starting attach a new MediaSource to the media element

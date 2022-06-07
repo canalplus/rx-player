@@ -14,23 +14,19 @@
  * limitations under the License.
  */
 
+import { IPlayerError } from "../public_types";
 import EncryptedMediaError from "./encrypted_media_error";
 import { ErrorTypes } from "./error_codes";
 import MediaError from "./media_error";
 import NetworkError from "./network_error";
 import OtherError from "./other_error";
 
-export type ICustomError = EncryptedMediaError |
-                           MediaError |
-                           OtherError |
-                           NetworkError;
-
 /**
  * Whether the error given is a ICustomError.
  * @param {Error} error
  * @returns {Boolean}
  */
-export default function isKnownError(error : unknown) : error is ICustomError {
+export default function isKnownError(error : unknown) : error is IPlayerError {
   return (error instanceof EncryptedMediaError ||
           error instanceof MediaError ||
           error instanceof OtherError ||

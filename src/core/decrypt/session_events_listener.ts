@@ -37,11 +37,12 @@ import {
   events,
   ICustomMediaKeySession,
 } from "../../compat";
-import {
-  EncryptedMediaError,
-  ICustomError,
-} from "../../errors";
+import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
+import {
+  IKeySystemOption,
+  IPlayerError,
+} from "../../public_types";
 import castToObservable from "../../utils/cast_to_observable";
 import isNonEmptyString from "../../utils/is_non_empty_string";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
@@ -51,7 +52,6 @@ import retryObsWithBackoff, {
 import tryCatch from "../../utils/rx-try_catch";
 import {
   IEMEWarningEvent,
-  IKeySystemOption,
   ILicense,
 } from "./types";
 import checkKeyStatuses, {
@@ -70,8 +70,8 @@ const { onKeyError$,
  * @extends Error
  */
 export class BlacklistedSessionError extends Error {
-  public sessionError : ICustomError;
-  constructor(sessionError : ICustomError) {
+  public sessionError : IPlayerError;
+  constructor(sessionError : IPlayerError) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, BlacklistedSessionError.prototype);
@@ -226,7 +226,7 @@ function getKeyStatusesEvents(
  * @param {*} error
  * @returns {Error}
  */
-function formatGetLicenseError(error: unknown) : ICustomError {
+function formatGetLicenseError(error: unknown) : IPlayerError {
   if (error instanceof TimeoutError) {
     return new EncryptedMediaError("KEY_LOAD_TIMEOUT",
                                    "The license server took too much time to " +

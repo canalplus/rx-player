@@ -23,92 +23,28 @@ import { Subject } from "rxjs";
 import log from "../../log";
 import {
   Adaptation,
-  IHDRInformation,
   Period,
   Representation,
 } from "../../manifest";
+import {
+  IAudioRepresentation,
+  IAudioTrack,
+  IAudioTrackPreference,
+  IAvailableAudioTrack,
+  IAvailableTextTrack,
+  IAvailableVideoTrack,
+  ITextTrack,
+  ITextTrackPreference,
+  IVideoRepresentation,
+  IVideoTrack,
+  IVideoTrackPreference,
+} from "../../public_types";
 import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import normalizeLanguage from "../../utils/languages";
 import SortedList from "../../utils/sorted_list";
 import takeFirstSet from "../../utils/take_first_set";
-
-/** Single preference for an audio track Adaptation. */
-export type IAudioTrackPreference = null |
-                                    { language? : string;
-                                      audioDescription? : boolean;
-                                      codec? : { all: boolean;
-                                                 test: RegExp; }; };
-
-/** Single preference for a text track Adaptation. */
-export type ITextTrackPreference = null |
-                                   { language : string;
-                                     closedCaption : boolean; };
-
-/** Single preference for a video track Adaptation. */
-export type IVideoTrackPreference = null |
-                                    IVideoTrackPreferenceObject;
-
-/** Preference for a video track Adaptation for when it is not set to `null`. */
-interface IVideoTrackPreferenceObject {
-  codec? : { all: boolean;
-             test: RegExp; };
-  signInterpreted? : boolean;
-}
-
-/**
- * Definition of a single audio Representation as represented by the
- * TrackChoiceManager.
- */
-interface ITMAudioRepresentation { id : string|number;
-                                   bitrate : number;
-                                   codec? : string | undefined; }
-
-/** Audio track returned by the TrackChoiceManager. */
-export interface ITMAudioTrack { language : string;
-                                 normalized : string;
-                                 audioDescription : boolean;
-                                 dub? : boolean;
-                                 id : number|string;
-                                 representations: ITMAudioRepresentation[]; }
-
-/** Text track returned by the TrackChoiceManager. */
-export interface ITMTextTrack { language : string;
-                                normalized : string;
-                                closedCaption : boolean;
-                                id : number|string; }
-
-/**
- * Definition of a single video Representation as represented by the
- * TrackChoiceManager.
- */
-interface ITMVideoRepresentation { id : string|number;
-                                   bitrate : number;
-                                   width? : number | undefined;
-                                   height? : number | undefined;
-                                   codec? : string | undefined;
-                                   frameRate? : string | undefined;
-                                   hdrInfo?: IHDRInformation | undefined; }
-
-/** Video track returned by the TrackChoiceManager. */
-export interface ITMVideoTrack { id : number|string;
-                                 signInterpreted?: boolean;
-                                 isTrickModeTrack?: boolean;
-                                 trickModeTracks?: ITMVideoTrack[];
-                                 representations: ITMVideoRepresentation[]; }
-
-/** Audio track from a list of audio tracks returned by the TrackChoiceManager. */
-export interface ITMAudioTrackListItem
-  extends ITMAudioTrack { active : boolean }
-
-/** Text track from a list of text tracks returned by the TrackChoiceManager. */
-export interface ITMTextTrackListItem
-  extends ITMTextTrack { active : boolean }
-
-/** Video track from a list of video tracks returned by the TrackChoiceManager. */
-export interface ITMVideoTrackListItem
-  extends ITMVideoTrack { active : boolean }
 
 /** Audio information stored for a single Period. */
 interface ITMPeriodAudioInfos { adaptations : Adaptation[];
@@ -154,7 +90,7 @@ interface INormalizedPreferredTextTrackObject {
 /**
  * Transform an array of IAudioTrackPreference into an array of
  * INormalizedPreferredAudioTrack to be exploited by the TrackChoiceManager.
- * @param {Array.<Object|null>}
+ * @param {Array.<Object|null>} tracks
  * @returns {Array.<Object|null>}
  */
 function normalizeAudioTracks(
@@ -295,7 +231,7 @@ export default class TrackChoiceManager {
 
   /**
    * Set the list of preferred text tracks, in preference order.
-   * @param {Array.<Object>} tracks
+   * @param {Array.<Object>} preferredVideoTracks
    * @param {boolean} shouldApply - `true` if those preferences should be
    * applied on the currently loaded Period. `false` if it should only
    * be applied to new content.
@@ -632,17 +568,11 @@ export default class TrackChoiceManager {
     videoInfos.adaptation$.next(null);
   }
 
-  /**
-   * @param {Object} period
-   */
   public disableVideoTrickModeTracks(): void {
     this.trickModeTrackEnabled = false;
     this._resetChosenVideoTracks();
   }
 
-  /**
-   * @param {Object} period
-   */
   public enableVideoTrickModeTracks() : void {
     this.trickModeTrackEnabled = true;
     this._resetChosenVideoTracks();
@@ -665,7 +595,7 @@ export default class TrackChoiceManager {
    * @param {Period} period - The concerned Period.
    * @returns {Object|null} - The audio track chosen for this Period
    */
-  public getChosenAudioTrack(period : Period) : ITMAudioTrack|null {
+  public getChosenAudioTrack(period : Period) : IAudioTrack|null {
     const periodItem = getPeriodItem(this._periods, period);
     const audioInfos = periodItem !== undefined ? periodItem.audio :
                                                   null;
@@ -678,7 +608,7 @@ export default class TrackChoiceManager {
       return null;
     }
 
-    const audioTrack : ITMAudioTrack = {
+    const audioTrack : IAudioTrack = {
       language: takeFirstSet<string>(chosenTrack.language, ""),
       normalized: takeFirstSet<string>(chosenTrack.normalizedLanguage, ""),
       audioDescription: chosenTrack.isAudioDescription === true,
@@ -701,7 +631,7 @@ export default class TrackChoiceManager {
    * @param {Period} period - The concerned Period.
    * @returns {Object|null} - The text track chosen for this Period
    */
-  public getChosenTextTrack(period : Period) : ITMTextTrack|null {
+  public getChosenTextTrack(period : Period) : ITextTrack|null {
     const periodItem = getPeriodItem(this._periods, period);
     const textInfos = periodItem !== undefined ? periodItem.text :
                                                  null;
@@ -732,7 +662,7 @@ export default class TrackChoiceManager {
    * @param {Period} period - The concerned Period.
    * @returns {Object|null} - The video track chosen for this Period
    */
-  public getChosenVideoTrack(period : Period) : ITMVideoTrack|null {
+  public getChosenVideoTrack(period : Period) : IVideoTrack|null {
     const periodItem = getPeriodItem(this._periods, period);
     const videoInfos = periodItem !== undefined ? periodItem.video :
                                                   null;
@@ -750,9 +680,9 @@ export default class TrackChoiceManager {
       currAdaptation.trickModeTracks.map((trickModeAdaptation) => {
         const representations = trickModeAdaptation.representations
           .map(parseVideoRepresentation);
-        const trickMode : ITMVideoTrack = { id: trickModeAdaptation.id,
-                                            representations,
-                                            isTrickModeTrack: true };
+        const trickMode : IVideoTrack = { id: trickModeAdaptation.id,
+                                          representations,
+                                          isTrickModeTrack: true };
         if (trickModeAdaptation.isSignInterpreted === true) {
           trickMode.signInterpreted = true;
         }
@@ -760,7 +690,7 @@ export default class TrackChoiceManager {
       }) :
       undefined;
 
-    const videoTrack: ITMVideoTrack = {
+    const videoTrack: IVideoTrack = {
       id: currAdaptation.id,
       representations: currAdaptation.representations.map(parseVideoRepresentation),
     };
@@ -782,7 +712,7 @@ export default class TrackChoiceManager {
    *
    * @returns {Array.<Object>}
    */
-  public getAvailableAudioTracks(period : Period) : ITMAudioTrackListItem[] {
+  public getAvailableAudioTracks(period : Period) : IAvailableAudioTrack[] {
     const periodItem = getPeriodItem(this._periods, period);
     const audioInfos = periodItem !== undefined ? periodItem.audio :
                                                   null;
@@ -797,7 +727,7 @@ export default class TrackChoiceManager {
 
     return audioInfos.adaptations
       .map((adaptation) => {
-        const formatted : ITMAudioTrackListItem = {
+        const formatted : IAvailableAudioTrack = {
           language: takeFirstSet<string>(adaptation.language, ""),
           normalized: takeFirstSet<string>(adaptation.normalizedLanguage, ""),
           audioDescription: adaptation.isAudioDescription === true,
@@ -820,7 +750,7 @@ export default class TrackChoiceManager {
    * @param {Period} period
    * @returns {Array.<Object>}
    */
-  public getAvailableTextTracks(period : Period) : ITMTextTrackListItem[] {
+  public getAvailableTextTracks(period : Period) : IAvailableTextTrack[] {
     const periodItem = getPeriodItem(this._periods, period);
     const textInfos = periodItem !== undefined ? periodItem.text :
                                                  null;
@@ -850,7 +780,7 @@ export default class TrackChoiceManager {
    *
    * @returns {Array.<Object>}
    */
-  public getAvailableVideoTracks(period : Period) : ITMVideoTrackListItem[] {
+  public getAvailableVideoTracks(period : Period) : IAvailableVideoTrack[] {
     const periodItem = getPeriodItem(this._periods, period);
     const videoInfos = periodItem !== undefined ? periodItem.video :
                                                   null;
@@ -871,10 +801,10 @@ export default class TrackChoiceManager {
                                                   currentId === trickModeAdaptation.id;
             const representations = trickModeAdaptation.representations
               .map(parseVideoRepresentation);
-            const trickMode : ITMVideoTrackListItem = { id: trickModeAdaptation.id,
-                                                        representations,
-                                                        isTrickModeTrack: true,
-                                                        active: isActive };
+            const trickMode : IAvailableVideoTrack = { id: trickModeAdaptation.id,
+                                                       representations,
+                                                       isTrickModeTrack: true,
+                                                       active: isActive };
             if (trickModeAdaptation.isSignInterpreted === true) {
               trickMode.signInterpreted = true;
             }
@@ -882,7 +812,7 @@ export default class TrackChoiceManager {
           }) :
           undefined;
 
-        const formatted: ITMVideoTrackListItem = {
+        const formatted: IAvailableVideoTrack = {
           id: adaptation.id,
           active: currentId === null ? false :
                                        currentId === adaptation.id,
@@ -1279,7 +1209,7 @@ function findFirstOptimalTextAdaptation(
  * `false` otherwise.
  */
 function createVideoPreferenceMatcher(
-  preferredVideoTrack : IVideoTrackPreferenceObject
+  preferredVideoTrack : Exclude<IVideoTrackPreference, null>
 ) : (videoAdaptation : Adaptation) => boolean {
   /**
    * Compares a video Adaptation to the given `preferredVideoTrack` preference.
@@ -1313,7 +1243,7 @@ function createVideoPreferenceMatcher(
  *
  * `null` if the most optimal video adaptation is no video adaptation.
  * @param {Array.<Adaptation>} videoAdaptations
- * @param {Array.<Object|null>} preferredvideoTracks
+ * @param {Array.<Object|null>} preferredVideoTracks
  * @returns {Adaptation|null}
  */
 function findFirstOptimalVideoAdaptation(
@@ -1384,13 +1314,13 @@ function getPeriodItem(
 }
 
 /**
- * Parse video Representation into a ITMVideoRepresentation.
+ * Parse video Representation into a IVideoRepresentation.
  * @param {Object} representation
  * @returns {Object}
  */
 function parseVideoRepresentation(
   { id, bitrate, frameRate, width, height, codec, hdrInfo } : Representation
-) : ITMVideoRepresentation {
+) : IVideoRepresentation {
   return { id, bitrate, frameRate, width, height, codec, hdrInfo };
 }
 
@@ -1401,7 +1331,7 @@ function parseVideoRepresentation(
  */
 function parseAudioRepresentation(
   { id, bitrate, codec } : Representation
-)  : ITMAudioRepresentation {
+)  : IAudioRepresentation {
   return { id, bitrate, codec };
 }
 

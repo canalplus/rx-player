@@ -14,12 +14,7 @@
  * limitations under the License.
  */
 
-export interface IStreamEventData {
-  type: "dash-event-stream";
-  value: { schemeIdUri: string;
-           timescale: number;
-           element: Element; };
-}
+import { IStreamEventData } from "../../../public_types";
 
 export interface IStreamEventPayload {
   id?: string | undefined;

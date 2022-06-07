@@ -20,13 +20,11 @@ import {
 } from "../../compat";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
+import { IKeySystemOption } from "../../public_types";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import { CancellationSignal } from "../../utils/task_canceller";
 import getMediaKeySystemAccess from "./find_key_system";
-import {
-  IKeySystemOption,
-  IMediaKeySessionStores,
-} from "./types";
+import { IMediaKeySessionStores } from "./types";
 import LoadedSessionsStore from "./utils/loaded_sessions_store";
 import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 import PersistentSessionsStore from "./utils/persistent_sessions_store";

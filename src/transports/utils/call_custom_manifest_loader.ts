@@ -16,17 +16,19 @@
 
 import { CustomLoaderError } from "../../errors";
 import {
+  IManifestLoader,
+  ILoadedManifestFormat,
+} from "../../public_types";
+import {
   CancellationError,
   CancellationSignal,
 } from "../../utils/task_canceller";
 import {
-  ICustomManifestLoader,
-  ILoadedManifestFormat,
   IRequestedData,
 } from "../types";
 
 export default function callCustomManifestLoader(
-  customManifestLoader : ICustomManifestLoader,
+  customManifestLoader : IManifestLoader,
   fallbackManifestLoader : (
     url : string | undefined,
     cancelSignal : CancellationSignal

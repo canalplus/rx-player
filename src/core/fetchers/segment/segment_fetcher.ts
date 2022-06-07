@@ -16,10 +16,7 @@
 
 import { Observable } from "rxjs";
 import config from "../../../config";
-import {
-  formatError,
-  ICustomError,
-} from "../../../errors";
+import { formatError } from "../../../errors";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
@@ -28,6 +25,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
+import { IPlayerError } from "../../../public_types";
 import {
   IChunkCompleteInformation,
   ISegmentLoadingProgressInformation,
@@ -379,7 +377,7 @@ export interface ISegmentLoaderContent { manifest : Manifest;
  * The request is retried from scratch.
  */
 export interface ISegmentFetcherRetry { type : "retry";
-                                        value : ICustomError; }
+                                        value : IPlayerError; }
 
 /**
  * Callbacks that can be bound when creating an `ISegmentFetcher`.

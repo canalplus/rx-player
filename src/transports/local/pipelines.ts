@@ -23,10 +23,10 @@ import Manifest from "../../manifest";
 import parseLocalManifest, {
   ILocalManifest,
 } from "../../parsers/manifest/local";
+import { ILoadedManifestFormat } from "../../public_types";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import { CancellationSignal } from "../../utils/task_canceller";
 import {
-  ILoadedManifestFormat,
   IManifestParserResult,
   IRequestedData,
   ITransportOptions,

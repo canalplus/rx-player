@@ -15,6 +15,7 @@
  */
 
 import { CustomLoaderError } from "../../errors";
+import { ISegmentLoader as ICustomSegmentLoader } from "../../public_types";
 import assert from "../../utils/assert";
 import request from "../../utils/request";
 import {
@@ -22,7 +23,6 @@ import {
   CancellationSignal,
 } from "../../utils/task_canceller";
 import {
-  ICustomSegmentLoader,
   ISegmentContext,
   ISegmentLoaderCallbacks,
   ISegmentLoaderResultSegmentCreated,

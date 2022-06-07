@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import { ICustomError } from "../../errors";
 import Manifest, {
   Adaptation,
   Period,
   Representation,
 } from "../../manifest";
+import { IPlayerError } from "../../public_types";
 import SegmentBuffersStore, {
   IBufferType,
 } from "../segment_buffers";
@@ -115,7 +115,7 @@ function nullRepresentation(
  * @param {error} value
  * @returns {object}
  */
-function warning(value : ICustomError) : IWarningEvent {
+function warning(value : IPlayerError) : IWarningEvent {
   return { type: "warning", value };
 }
 

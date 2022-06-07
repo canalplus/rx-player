@@ -19,6 +19,7 @@ import {
   Adaptation,
   Period,
 } from "../../../manifest";
+import { IAudioTrackSwitchingMode } from "../../../public_types";
 import areCodecsCompatible from "../../../utils/are_codecs_compatible";
 import {
   convertToRanges,
@@ -46,22 +47,6 @@ export interface IAdaptationSwitchOptions {
   /** Behavior when a new video and/or audio codec is encountered. */
   onCodecSwitch : "continue" | "reload";
 }
-
-/**
- * Strategy to adopt when manually switching of audio adaptation.
- * Can be either:
- *    - "seamless": transitions are smooth but could be not immediate.
- *    - "direct": strategy will be "smart", if the mimetype and the codec,
- *    change, we will perform a hard reload of the media source, however, if it
- *    doesn't change, we will just perform a small flush by removing buffered range
- *    and performing, a small seek on the media element.
- *    Transitions are faster, but, we could see appear a BUFFERING state.
- *    - "reload": completely reload the content. This allows a direct switch
- *    compatible with most device but may necessitate a RELOADING phase.
- */
-export type IAudioTrackSwitchingMode = "seamless" |
-                                       "direct" |
-                                       "reload";
 
 /**
  * Find out what to do when switching Adaptation, based on the current

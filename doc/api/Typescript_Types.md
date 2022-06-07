@@ -62,6 +62,9 @@ Two constructor options have also their type definition exported, those are:
   - `ITextTrackPreference`: which is the type of a single element in the
     `preferredTextTracks` array.
 
+  - `IVideoTrackPreference`: which is the type of a single element in the
+    `preferredVideoTracks` array.
+
 
 ### loadVideo
 
@@ -118,6 +121,12 @@ exported:
   - `IRepresentationInfos`: type for the second argument of the
     `representationFilter` function (defined by `IRepresentationFilter`.)
 
+  - `IServerSyncInfos`: type for the `serverSyncInfos` property
+    optionally set on the `transportOptions` option of `loadVideo`.
+
+  - `IInitialManifest`: type for the `initialManifest` property
+    optionally set on the `transportOptions` option of `loadVideo`.
+
   - `ISegmentLoader`: type for the `segmentLoader` function optionally set on
     the `transportOptions` option of `loadVideo`.
 
@@ -140,6 +149,9 @@ exported:
 
   - `IStartAtOption`: type for the `startAt` property optionally given to
     `loadVideo`.
+
+  - `IAudioTrackSwitchingMode`: The various values accepted on the
+    `audioTrackSwitchingMode` property optionally given to `loadVideo`.
 
 
 ### Manifest structure
@@ -192,6 +204,9 @@ function getAvailableAudioTracks() : IAvailableAudioTrack[] {
 }
 ```
 
+The property of each track's `representations` property corresponds to the
+`IAudioRepresentation` type.
+
 
 ### getAvailableTextTracks method / availabletextTracksChange event
 
@@ -238,6 +253,9 @@ function getAvailableVideoTracks() : IAvailableVideoTrack[] {
 }
 ```
 
+The property of each track's `representations` property corresponds to the
+`IVideoRepresentation` type.
+
 
 ### getAudioTrack method /audioTrackChange event
 
@@ -264,6 +282,8 @@ function getCurrentlyDownloadedAudioTrack() : IAudioTrack {
   return rxPlayer.getAudioTrack();
 }
 ```
+
+The `representations` property also has an exported type: `IAudioRepresentation`.
 
 
 ### getTextTrack method / textTrackChange event
@@ -318,6 +338,8 @@ function getCurrentlyDownloadedVideoTrack() : IVideoTrack {
   return rxPlayer.getVideoTrack();
 }
 ```
+
+The `representations` property also has an exported type: `IAudioRepresentation`.
 
 ### positionUpdate event
 
@@ -384,6 +406,24 @@ rxPlayer.addEventListener("bitrateEstimationChange", (evt : IBitrateEstimate) {
 });
 ```
 
+### decipherabilityUpdate event
+
+The type `IDecipherabilityUpdateContent` corresponds to the payload of a
+`decipherabilityUpdate` event.
+
+Example:
+
+```ts
+// the type(s) wanted
+import { IDecipherabilityUpdateContent } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+rxPlayer.addEventListener("decipherabilityUpdate", (evt : IDecipherabilityUpdateContent) {
+  console.log(evt);
+});
+```
 
 ### RxPlayer errors and warnings
 

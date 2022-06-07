@@ -39,6 +39,7 @@ import Manifest, {
   Adaptation,
   Period,
 } from "../../../manifest";
+import { IAudioTrackSwitchingMode } from "../../../public_types";
 import objectAssign from "../../../utils/object_assign";
 import { getLeftSizeOfRange } from "../../../utils/ranges";
 import { IReadOnlySharedReference } from "../../../utils/reference";
@@ -62,9 +63,7 @@ import {
   IStreamWarningEvent,
 } from "../types";
 import createEmptyStream from "./create_empty_adaptation_stream";
-import getAdaptationSwitchStrategy, {
-  IAudioTrackSwitchingMode,
-} from "./get_adaptation_switch_strategy";
+import getAdaptationSwitchStrategy from "./get_adaptation_switch_strategy";
 
 
 /** Playback observation required by the `PeriodStream`. */

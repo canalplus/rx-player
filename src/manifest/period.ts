@@ -13,19 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  ICustomError,
-  MediaError,
-} from "../errors";
+import { MediaError } from "../errors";
 import {
   IManifestStreamEvent,
   IParsedPeriod,
 } from "../parsers/manifest";
+import {
+  IPlayerError,
+  IRepresentationFilter,
+} from "../public_types";
 import arrayFind from "../utils/array_find";
 import objectValues from "../utils/object_values";
-import Adaptation, {
-  IRepresentationFilter,
-} from "./adaptation";
+import Adaptation from "./adaptation";
 import { IAdaptationType } from "./types";
 
 /** Structure listing every `Adaptation` in a Period. */
@@ -62,7 +61,7 @@ export default class Period {
    * Array containing every errors that happened when the Period has been
    * created, in the order they have happened.
    */
-  public readonly contentWarnings : ICustomError[];
+  public readonly contentWarnings : IPlayerError[];
 
   /** Array containing every stream event happening on the period */
   public streamEvents : IManifestStreamEvent[];

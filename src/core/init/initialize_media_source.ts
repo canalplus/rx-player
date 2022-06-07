@@ -35,6 +35,7 @@ import {
 import { shouldReloadMediaSourceOnDecipherabilityUpdate } from "../../compat";
 import config from "../../config";
 import log from "../../log";
+import { IKeySystemOption } from "../../public_types";
 import deferSubscriptions from "../../utils/defer_subscriptions";
 import { fromEvent } from "../../utils/event_emitter";
 import filterMap from "../../utils/filter_map";
@@ -47,7 +48,6 @@ import { PlaybackObserver } from "../api";
 import {
   getCurrentKeySystem,
   IContentProtection,
-  IKeySystemOption,
 } from "../decrypt";
 import {
   IManifestFetcherParsedResult,

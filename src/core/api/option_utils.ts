@@ -21,13 +21,27 @@
 
 import config from "../../config";
 import log from "../../log";
-import { IRepresentationFilter } from "../../manifest";
 import {
-  ICustomManifestLoader,
-  ICustomSegmentLoader,
+  ISupplementaryImageTrack,
+  ISupplementaryTextTrack,
+} from "../../manifest";
+import {
+  IAudioTrackPreference,
+  IAudioTrackSwitchingMode,
+  IConstructorOptions,
+  IKeySystemOption,
   ILoadedManifestFormat,
-  ITransportOptions as IParsedTransportOptions,
-} from "../../transports";
+  ILoadVideoOptions,
+  IManifestLoader,
+  INetworkConfigOption,
+  IRepresentationFilter,
+  ISegmentLoader,
+  IServerSyncInfos,
+  ISupplementaryImageTrackOption,
+  ISupplementaryTextTrackOption,
+  ITextTrackPreference,
+  IVideoTrackPreference,
+} from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import {
@@ -36,166 +50,31 @@ import {
 } from "../../utils/languages";
 import objectAssign from "../../utils/object_assign";
 import warnOnce from "../../utils/warn_once";
-import { IKeySystemOption } from "../decrypt";
-import { IAudioTrackSwitchingMode } from "../stream";
-import {
-  IAudioTrackPreference,
-  ITextTrackPreference,
-  IVideoTrackPreference,
-} from "./track_choice_manager";
-
-export { IKeySystemOption };
-
-/** Value of the `serverSyncInfos` transport option. */
-interface IServerSyncInfos {
-  /** The server timestamp at a given time. */
-  serverTimestamp : number;
-  /**
-   * The client monotonic clock (performance.now) at which `serverTimestamp`
-   * was valid.
-   */
-  clientTime : number;
-}
-
-/** Value of the `transportOptions` option of the `loadVideo` method. */
-export interface ITransportOptions {
-  /** Whether we can perform request for segments in advance. */
-  aggressiveMode? : boolean;
-  /**
-   * Whether we should check that an obtain segment is truncated and retry the
-   * request if that's the case.
-   */
-  checkMediaSegmentIntegrity? : boolean;
-  /** Manifest object that will be used initially. */
-  initialManifest? : ILoadedManifestFormat;
-  /** Custom implementation for performing Manifest requests. */
-  manifestLoader? : ICustomManifestLoader;
-  /** Possible custom URL pointing to a shorter form of the Manifest. */
-  manifestUpdateUrl? : string;
-  /** Minimum bound for Manifest updates, in milliseconds. */
-  minimumManifestUpdateInterval? : number;
-  /** Custom implementation for performing segment requests. */
-  segmentLoader? : ICustomSegmentLoader;
-  /** Custom logic to filter out unwanted qualities. */
-  representationFilter? : IRepresentationFilter;
-  /** Base time for the segments in case it is not found in the Manifest. */
-  referenceDateTime? : number;
-  /** Allows to synchronize the server's time with the client's. */
-  serverSyncInfos? : IServerSyncInfos;
-}
-
-/**
- * External text track we have to add to the Manifest once downloaded.
- * @deprecated
- */
-export interface ISupplementaryTextTrackOption {
-  /** URL the external text track can be found at. */
-  url : string;
-  /** Language the text track is in. */
-  language : string;
-  /** If `true` the text track contains closed captions. */
-  closedCaption : boolean;
-  /** Mime-type used to know the container and/or format of the text track. */
-  mimeType : string;
-  /** Codec used to know the format of the text track. */
-  codecs? : string;
-}
-
-/**
- * External image (".bif") track we have to add to the Manifest once downloaded.
- * @deprecated
- */
-export interface ISupplementaryImageTrackOption {
-  /** URL the external image track can be found at. */
-  url : string;
-  /** Mime-type used to know the format of the image track. */
-  mimeType : string;
-}
-
-/**
- * Value for the `defaultAudioTrack` option of the `loadVideo` method.
- * @deprecated
- */
-export interface IDefaultAudioTrackOption {
-  /** The language wanted for the audio track. */
-  language : string;
-  /** The language normalized into ISO639-3 */
-  normalized : string;
-  /** If `true`, this is an audio description for the visually impaired. */
-  audioDescription : boolean;
-}
-
-/**
- * Value for the `defaultTextTrack` option of the `loadVideo` method.
- * @deprecated
- */
-export interface IDefaultTextTrackOption {
-  /** The language wanted for the text track. */
-  language : string;
-  /** The language normalized into ISO639-3 */
-  normalized : string;
-  /** If `true`, this is closed captions for the hard of hearing. */
-  closedCaption : boolean;
-}
-
-/** Value for the `networkConfig` option of the `loadVideo` method. */
-export interface INetworkConfigOption {
-  /**
-   * The amount of time maximum we should retry a Manifest or Manifest-related
-   * request before failing on Error.
-   * Set to `Infinity` for an infinite number of requests.
-   */
-  manifestRetry? : number;
-  /**
-   * The amount of time maximum we should retry a request in general when the
-   * user is offline.
-   * Set to `Infinity` for an infinite number of requests.
-   */
-  offlineRetry? : number;
-  /**
-   * The amount of time maximum we should retry a segment or segment-related
-   * request before failing on Error.
-   * Set to `Infinity` for an infinite number of requests.
-   */
-  segmentRetry? : number;
-}
-
-/** Possible values for the `startAt` option of the `loadVideo` method. */
-export type IStartAtOption = { position : number } |
-                             { wallClockTime : Date|number } |
-                             { percentage : number } |
-                             { fromLastPosition : number } |
-                             { fromFirstPosition : number };
 
 /** Value once parsed for the `startAt` option of the `loadVideo` method. */
-type IParsedStartAtOption = { position : number } |
-                            { wallClockTime : number } |
-                            { percentage : number } |
-                            { fromLastPosition : number } |
-                            { fromFirstPosition : number };
+export type IParsedStartAtOption = { position : number } |
+                                   { wallClockTime : number } |
+                                   { percentage : number } |
+                                   { fromLastPosition : number } |
+                                   { fromFirstPosition : number };
 
-/** Every options that can be given to the RxPlayer's constructor. */
-export interface IConstructorOptions { maxBufferAhead? : number;
-                                       maxBufferBehind? : number;
-                                       wantedBufferAhead? : number;
-                                       maxVideoBufferSize?: number;
+export interface IParsedTransportOptions {
+  aggressiveMode? : boolean | undefined;
+  checkMediaSegmentIntegrity? : boolean | undefined;
+  lowLatencyMode : boolean;
+  manifestLoader?: IManifestLoader | undefined;
+  manifestUpdateUrl? : string | undefined;
+  referenceDateTime? : number | undefined;
+  representationFilter? : IRepresentationFilter | undefined;
+  segmentLoader? : ISegmentLoader | undefined;
+  serverSyncInfos? : IServerSyncInfos | undefined;
+  /* eslint-disable import/no-deprecated */
+  supplementaryImageTracks? : ISupplementaryImageTrack[] | undefined;
+  supplementaryTextTracks? : ISupplementaryTextTrack[] | undefined;
+  /* eslint-enable import/no-deprecated */
 
-                                       limitVideoWidth? : boolean;
-                                       throttleWhenHidden? : boolean;
-                                       throttleVideoBitrateWhenHidden? : boolean;
-
-                                       preferredAudioTracks? : IAudioTrackPreference[];
-                                       preferredTextTracks? : ITextTrackPreference[];
-                                       preferredVideoTracks? : IVideoTrackPreference[];
-
-                                       videoElement? : HTMLMediaElement;
-                                       initialVideoBitrate? : number;
-                                       initialAudioBitrate? : number;
-                                       minAudioBitrate? : number;
-                                       minVideoBitrate? : number;
-                                       maxAudioBitrate? : number;
-                                       maxVideoBitrate? : number;
-                                       stopAtEnd? : boolean; }
+  __priv_patchLastSegmentInSidx? : boolean | undefined;
+}
 
 /** Options of the RxPlayer's constructor once parsed. */
 export interface IParsedConstructorOptions {
@@ -219,33 +98,6 @@ export interface IParsedConstructorOptions {
   maxAudioBitrate : number;
   maxVideoBitrate : number;
   stopAtEnd : boolean;
-}
-
-/** Every options that can be given to the RxPlayer's `loadVideo` method. */
-export interface ILoadVideoOptions {
-  transport : string;
-
-  url? : string;
-  autoPlay? : boolean;
-  keySystems? : IKeySystemOption[];
-  transportOptions? : ITransportOptions|undefined;
-  lowLatencyMode? : boolean;
-  networkConfig? : INetworkConfigOption;
-  startAt? : IStartAtOption;
-  textTrackMode? : "native"|"html";
-  hideNativeSubtitle? : boolean;
-  textTrackElement? : HTMLElement;
-  manualBitrateSwitchingMode? : "seamless"|"direct";
-  enableFastSwitching? : boolean;
-  audioTrackSwitchingMode? : IAudioTrackSwitchingMode;
-  onCodecSwitch? : "continue"|"reload";
-
-  /* eslint-disable import/no-deprecated */
-  supplementaryTextTracks? : ISupplementaryTextTrackOption[];
-  supplementaryImageTracks? : ISupplementaryImageTrackOption[];
-  defaultAudioTrack? : IDefaultAudioTrackOption|null|undefined;
-  defaultTextTrack? : IDefaultTextTrackOption|null|undefined;
-  /* eslint-enable import/no-deprecated */
 }
 
 /**

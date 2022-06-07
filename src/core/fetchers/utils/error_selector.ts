@@ -16,10 +16,10 @@
 
 import {
   formatError,
-  ICustomError,
   NetworkError,
   RequestError,
 } from "../../../errors";
+import { IPlayerError } from "../../../public_types";
 
 /**
  * Generate a new error from the infos given.
@@ -27,7 +27,7 @@ import {
  * @param {Error} error
  * @returns {Error}
  */
-export default function errorSelector(error : unknown) : ICustomError {
+export default function errorSelector(error : unknown) : IPlayerError {
   if (error instanceof RequestError) {
     return new NetworkError("PIPELINE_LOAD_ERROR", error);
   }

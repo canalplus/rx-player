@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-import {
-  ICustomError,
-  NetworkError,
-} from "../../../errors";
+import { NetworkError } from "../../../errors";
 import log from "../../../log";
 import {
   IRepresentationIndex,
   ISegment,
 } from "../../../manifest";
+import { IPlayerError } from "../../../public_types";
 import clearTimelineFromPosition from "../utils/clear_timeline_from_position";
 import {
   checkDiscontinuity,
@@ -516,7 +514,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    * @param {Error} error
    * @returns {Boolean}
    */
-  canBeOutOfSyncError(error : ICustomError) : boolean {
+  canBeOutOfSyncError(error : IPlayerError) : boolean {
     if (!this._isLive) {
       return false;
     }

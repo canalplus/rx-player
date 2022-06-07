@@ -23,13 +23,16 @@ import {
 import config from "../../config";
 import {
   EncryptedMediaError,
-  ICustomError,
   OtherError,
 } from "../../errors";
 import log from "../../log";
 import Manifest, {
   Period,
 } from "../../manifest";
+import {
+  IKeySystemOption,
+  IPlayerError,
+} from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
@@ -47,7 +50,6 @@ import SessionEventsListener, {
 import setServerCertificate from "./set_server_certificate";
 import {
   IProtectionData,
-  IKeySystemOption,
   IMediaKeySessionStores,
   MediaKeySessionLoadingType,
   IProcessedProtectionData,
@@ -844,7 +846,7 @@ export interface IContentDecryptorEvent {
    * Event emitted when a minor error occured which the ContentDecryptor can
    * recover from.
    */
-  warning : ICustomError;
+  warning : IPlayerError;
 
   /**
    * Event emitted when the `ContentDecryptor`'s state changed.

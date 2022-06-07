@@ -16,14 +16,7 @@
 
 import PlaybackObserver from "./playback_observer";
 import Player from "./public_api";
-export {
-  IBitrateEstimate,
-  IPositionUpdateItem,
-  IStreamEvent,
-  IStreamEventData,
-} from "./public_api";
 export { PlaybackObserver };
-export { IPlayerState } from "./get_player_state";
 export {
   IPlaybackObservation,
   IPlaybackObserverEventType,
@@ -31,31 +24,4 @@ export {
   IFreezingStatus,
   IRebufferingStatus,
 } from "./playback_observer";
-export {
-  IConstructorOptions,
-  ILoadVideoOptions,
-
-  // loadVideo arguments:
-  ITransportOptions,
-  IKeySystemOption,
-  ISupplementaryTextTrackOption,
-  ISupplementaryImageTrackOption,
-  IDefaultAudioTrackOption,
-  IDefaultTextTrackOption,
-  INetworkConfigOption,
-  IStartAtOption,
-} from "./option_utils";
-export {
-  ITMAudioTrackListItem,
-  ITMTextTrackListItem,
-  ITMVideoTrackListItem,
-
-  ITMAudioTrack,
-  ITMTextTrack,
-  ITMVideoTrack,
-
-  IAudioTrackPreference,
-  ITextTrackPreference,
-  IVideoTrackPreference,
-} from "./track_choice_manager";
 export default Player;

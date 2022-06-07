@@ -15,12 +15,12 @@
  */
 
 import log from "../../log";
+import { IKeySystemOption } from "../../public_types";
 import { CancellationSignal } from "../../utils/task_canceller";
 import { disableMediaKeys } from "./attach_media_keys";
 import getMediaKeysInfos, {
   IMediaKeysInfos,
 } from "./get_media_keys";
-import { IKeySystemOption } from "./types";
 
 /**
  * Get media keys infos from key system configs then attach media keys to media element.

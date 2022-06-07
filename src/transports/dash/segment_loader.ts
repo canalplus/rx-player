@@ -15,6 +15,7 @@
  */
 
 import { CustomLoaderError } from "../../errors";
+import { ISegmentLoader as ICustomSegmentLoader } from "../../public_types";
 import request, {
   fetchIsSupported,
 } from "../../utils/request";
@@ -24,7 +25,6 @@ import {
 } from "../../utils/task_canceller";
 import warnOnce from "../../utils/warn_once";
 import {
-  ICustomSegmentLoader,
   ILoadedAudioVideoSegmentFormat,
   ISegmentContext,
   ISegmentLoader,

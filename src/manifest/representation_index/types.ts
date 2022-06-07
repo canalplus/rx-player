@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { ICustomError } from "../../errors";
 import Manifest, {
   Adaptation,
   Period,
@@ -26,6 +25,7 @@ import {
   ILocalManifestInitSegmentLoader,
   ILocalManifestSegmentLoader,
 } from "../../parsers/manifest/local";
+import { IPlayerError } from "../../public_types";
 
 /**
  * Supplementary information specific to Smooth Initialization segments.
@@ -306,7 +306,7 @@ export interface IRepresentationIndex {
    * @param {Object} segment
    * @returns {Boolean}
    */
-  canBeOutOfSyncError(error : ICustomError, segment : ISegment) : boolean;
+  canBeOutOfSyncError(error : IPlayerError, segment : ISegment) : boolean;
 
   /**
    * Checks if the given time - in seconds - is in a discontinuity.

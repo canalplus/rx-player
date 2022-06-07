@@ -15,18 +15,8 @@
  */
 
 import config from "../../config";
+import { IPlayerState } from "../../public_types";
 import { IStallingSituation } from "../init";
-
-
-export type IPlayerState = "STOPPED" |
-                           "LOADED" |
-                           "LOADING" |
-                           "PLAYING" |
-                           "PAUSED" |
-                           "ENDED" |
-                           "BUFFERING" |
-                           "SEEKING" |
-                           "RELOADING";
 
 /** Player state dictionnary. */
 export const PLAYER_STATES =

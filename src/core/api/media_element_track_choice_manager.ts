@@ -28,29 +28,29 @@ import {
   ICompatVideoTrackList,
 } from "../../compat/browser_compatibility_types";
 import { Representation } from "../../manifest";
+import {
+  IAudioTrack,
+  ITextTrack,
+  IVideoTrack,
+  IAudioTrackPreference,
+  ITextTrackPreference,
+  IVideoTrackPreference,
+  IAvailableVideoTrack,
+  IAvailableAudioTrack,
+  IAvailableTextTrack,
+} from "../../public_types";
 import assert from "../../utils/assert";
 import EventEmitter from "../../utils/event_emitter";
 import normalizeLanguage from "../../utils/languages";
-import {
-  IAudioTrackPreference,
-  ITextTrackPreference,
-  ITMAudioTrack,
-  ITMAudioTrackListItem,
-  ITMTextTrack,
-  ITMTextTrackListItem,
-  ITMVideoTrack,
-  ITMVideoTrackListItem,
-  IVideoTrackPreference,
-} from "./track_choice_manager";
 
 /** Events emitted by the MediaElementTrackChoiceManager. */
 interface IMediaElementTrackChoiceManagerEvents {
-  availableVideoTracksChange: ITMVideoTrackListItem[];
-  availableAudioTracksChange: ITMAudioTrackListItem[];
-  availableTextTracksChange: ITMTextTrackListItem[];
-  videoTrackChange: ITMVideoTrack|null;
-  audioTrackChange: ITMAudioTrack|null;
-  textTrackChange: ITMTextTrack|null;
+  availableVideoTracksChange: IAvailableVideoTrack[];
+  availableAudioTracksChange: IAvailableAudioTrack[];
+  availableTextTracksChange: IAvailableTextTrack[];
+  videoTrackChange: IVideoTrack|null;
+  audioTrackChange: IAudioTrack|null;
+  textTrackChange: ITextTrack|null;
 }
 
 /**
@@ -198,11 +198,11 @@ export default class MediaElementTrackChoiceManager
   private _preferredVideoTracks : IVideoTrackPreference[];
 
   /** List every available audio tracks available on the media element. */
-  private _audioTracks : Array<{ track: ITMAudioTrack; nativeTrack: ICompatAudioTrack }>;
+  private _audioTracks : Array<{ track: IAudioTrack; nativeTrack: ICompatAudioTrack }>;
   /** List every available text tracks available on the media element. */
-  private _textTracks : Array<{ track: ITMTextTrack; nativeTrack: TextTrack }>;
+  private _textTracks : Array<{ track: ITextTrack; nativeTrack: TextTrack }>;
   /** List every available video tracks available on the media element. */
-  private _videoTracks : Array<{ track: ITMVideoTrack; nativeTrack: ICompatVideoTrack }>;
+  private _videoTracks : Array<{ track: IVideoTrack; nativeTrack: ICompatVideoTrack }>;
 
   /** Last audio track emitted as active. */
   private _lastEmittedNativeAudioTrack : ICompatAudioTrack | null | undefined;
@@ -410,7 +410,7 @@ export default class MediaElementTrackChoiceManager
    * Returns `undefined` if we cannot know which audio track is active.
    * @returns {Object|null|undefined}
    */
-  public getChosenAudioTrack(): ITMAudioTrack|null|undefined {
+  public getChosenAudioTrack(): IAudioTrack|null|undefined {
     const chosenPrivateAudioTrack = this._getPrivateChosenAudioTrack();
     if (chosenPrivateAudioTrack != null) {
       return chosenPrivateAudioTrack.track;
@@ -424,7 +424,7 @@ export default class MediaElementTrackChoiceManager
    * Returns `undefined` if we cannot know which text track is active.
    * @returns {Object|null|undefined}
    */
-  public getChosenTextTrack(): ITMTextTrack|null|undefined {
+  public getChosenTextTrack(): ITextTrack|null|undefined {
     const chosenPrivateTextTrack = this._getPrivateChosenTextTrack();
     if (chosenPrivateTextTrack != null) {
       return chosenPrivateTextTrack.track;
@@ -438,7 +438,7 @@ export default class MediaElementTrackChoiceManager
    * Returns `undefined` if we cannot know which video track is active.
    * @returns {Object|null|undefined}
    */
-  public getChosenVideoTrack(): ITMVideoTrack|null|undefined {
+  public getChosenVideoTrack(): IVideoTrack|null|undefined {
     const chosenPrivateVideoTrack = this._getPrivateChosenVideoTrack();
     if (chosenPrivateVideoTrack != null) {
       return chosenPrivateVideoTrack.track;
@@ -450,7 +450,7 @@ export default class MediaElementTrackChoiceManager
    * Returns a description of every available audio tracks.
    * @returns {Array.<Object>}
    */
-  public getAvailableAudioTracks(): ITMAudioTrackListItem[] {
+  public getAvailableAudioTracks(): IAvailableAudioTrack[] {
     return this._audioTracks.map(({ track, nativeTrack }) => {
       return { id: track.id,
                language: track.language,
@@ -465,7 +465,7 @@ export default class MediaElementTrackChoiceManager
    * Returns a description of every available text tracks.
    * @returns {Array.<Object>}
    */
-  public getAvailableTextTracks(): ITMTextTrackListItem[] {
+  public getAvailableTextTracks(): IAvailableTextTrack[] {
     return this._textTracks.map(({ track, nativeTrack }) => {
       return { id: track.id,
                language: track.language,
@@ -479,7 +479,7 @@ export default class MediaElementTrackChoiceManager
    * Returns a description of every available video tracks.
    * @returns {Array.<Object>}
    */
-  public getAvailableVideoTracks(): ITMVideoTrackListItem[] {
+  public getAvailableVideoTracks(): IAvailableVideoTrack[] {
     return this._videoTracks.map(({ track, nativeTrack }) => {
       return { id: track.id,
                representations: track.representations,
@@ -518,7 +518,7 @@ export default class MediaElementTrackChoiceManager
    * `null` if no audio track is chosen.
    * @returns {Object|undefined|null}
    */
-  private _getPrivateChosenAudioTrack(): { track: ITMAudioTrack;
+  private _getPrivateChosenAudioTrack(): { track: IAudioTrack;
                                            nativeTrack: ICompatAudioTrack; } |
                                          undefined |
                                          null {
@@ -540,7 +540,7 @@ export default class MediaElementTrackChoiceManager
    * `null` if no video track is chosen.
    * @returns {Object|undefined|null}
    */
-  private _getPrivateChosenVideoTrack(): { track: ITMVideoTrack;
+  private _getPrivateChosenVideoTrack(): { track: IVideoTrack;
                                            nativeTrack: ICompatVideoTrack; } |
                                          undefined |
                                          null {
@@ -562,7 +562,7 @@ export default class MediaElementTrackChoiceManager
    * `null` if no text track is chosen.
    * @returns {Object|undefined|null}
    */
-  private _getPrivateChosenTextTrack(): { track: ITMTextTrack;
+  private _getPrivateChosenTextTrack(): { track: ITextTrack;
                                           nativeTrack: TextTrack; } |
                                         undefined |
                                         null {

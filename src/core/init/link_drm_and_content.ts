@@ -27,9 +27,9 @@ import {
 import { EncryptedMediaError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
+import { IKeySystemOption } from "../../public_types";
 import {
   IContentProtection,
-  IKeySystemOption,
   ContentDecryptorState,
 } from "../decrypt";
 import { IWarningEvent } from "./types";

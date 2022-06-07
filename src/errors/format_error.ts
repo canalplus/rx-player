@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-import isKnownError, {
-  ICustomError,
-} from "./is_known_error";
+import { IPlayerError } from "../public_types";
+import isKnownError from "./is_known_error";
 import OtherError from "./other_error";
 
 /*
@@ -30,7 +29,7 @@ export default function formatError(
                                                    "PIPELINE_PARSE_ERROR" |
                                                    "NONE";
                                      defaultReason : string; }
-) : ICustomError {
+) : IPlayerError {
   if (isKnownError(error)) {
     return error;
   }

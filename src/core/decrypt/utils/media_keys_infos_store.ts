@@ -18,7 +18,7 @@ import {
   ICustomMediaKeys,
   ICustomMediaKeySystemAccess,
 } from "../../../compat";
-import { IKeySystemOption } from "../types";
+import { IKeySystemOption } from "../../../public_types";
 import LoadedSessionsStore from "./loaded_sessions_store";
 
 /** DRM-related state that can be associated to a single HTMLMediaElement. */

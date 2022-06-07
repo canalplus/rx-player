@@ -15,7 +15,7 @@
  */
 
 import { IRepresentationIndex } from "../../manifest";
-import { IHDRInformation } from "../../manifest/types";
+import { IHDRInformation } from "../../public_types";
 
 export interface IManifestStreamEvent { start: number;
                                         end?: number | undefined;
