@@ -144,14 +144,20 @@ export default class PersistentSessionsStore {
       return;
     }
     const { sessionId } = session;
-    const currentEntry = this.get(initData);
-    if (currentEntry !== null && currentEntry.sessionId === sessionId) {
-      return;
-    } else if (currentEntry !== null) { // currentEntry has a different sessionId
-      this.delete(currentEntry.sessionId);
+    const currentIndex = this._getIndex(initData);
+    if (currentIndex >= 0) {
+      const currVersion = keyIds === undefined ? 3 :
+                                                 4;
+      const currentEntry = this._entries[currentIndex];
+      const entryVersion = currentEntry.version ?? -1;
+      if (entryVersion >= currVersion && sessionId === currentEntry.sessionId) {
+        return;
+      }
+      log.info("DRM-PSS: Updating session info.", sessionId);
+      this._entries.splice(currentIndex, 1);
+    } else {
+      log.info("DRM-PSS: Add new session", sessionId);
     }
-
-    log.info("DRM-PSS: Add new session", sessionId);
 
     const storedValues = prepareValuesForStore(initData.values.getFormattedValues());
     if (keyIds === undefined) {
