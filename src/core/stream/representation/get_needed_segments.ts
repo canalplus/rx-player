@@ -240,7 +240,7 @@ export default function getNeededSegments({
       }
     }
 
-    const estimatedSegmentSize = (duration * content.representation.bitrate) / 8000;
+    const estimatedSegmentSize = (duration * content.representation.bitrate); // in bits
     if (availableBufferSize - estimatedSegmentSize < 0) {
       isBufferFull = true;
       if (time > neededRange.start + MIN_BUFFER_AHEAD) {
@@ -277,24 +277,24 @@ export default function getNeededSegments({
  * @param bufferedSegments
  * @param segmentsBeingPushed
  * @param maxVideoBufferSize
- * @returns availableBufferSize in kilobytes
+ * @returns availableBufferSize in bits
  */
 function getAvailableBufferSize(
   bufferedSegments: IBufferedChunk[],
   segmentsBeingPushed: IEndOfSegmentInfos[],
   maxVideoBufferSize: number
 ) : number {
-  let availableBufferSize = maxVideoBufferSize;
+  let availableBufferSize = maxVideoBufferSize * 8000; // in bits
   availableBufferSize -= segmentsBeingPushed.reduce((size, segment) => {
     const { bitrate } = segment.representation;
     // Not taking into account the fact that the segment
     // can still be generated and the duration not fully exact
     const { duration } = segment.segment;
-    return size + ((bitrate / 8000) * duration);
+    return size + (bitrate * duration);
   }, 0);
   return bufferedSegments.reduce((size, chunk) => {
     if (chunk.chunkSize !== undefined) {
-      return size - (chunk.chunkSize / 1000);
+      return size - (chunk.chunkSize * 8); // in bits
     } else {
       return size;
     }
