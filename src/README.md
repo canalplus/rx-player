@@ -68,16 +68,16 @@ Stream (./core/stream)           | ~                                            
 |                          | ~            | ~            | ~     |                    | ~
 |                  (audio) v ~    (video) V ~     (text) v ~     |  +--------------+  | ~
 |                  +----------+   +----------+    +----------+ ---> |              |  | ~
-| Create the right |          |   |          |    |          | <~~~ |  ABRManager  |  | ~
-| Representation-  |Adaptation|-+ |Adaptation|-+  |Adaptation|-+ |  | (./core/abr) |  | ~
-| Stream depending |  Stream  | | |  Stream  | |  |  Stream  | | |  |              |  | ~
+| Create the right |          |   |          |    |          | <~~~ |     ARS*     |  | ~
+| Representation-  |Adaptation|-+ |Adaptation|-+  |Adaptation|-+ |  |(./core/adapti|  | ~
+| Stream depending |  Stream  | | |  Stream  | |  |  Stream  | | |  |ve)           |  | ~
 | on the current   |          | | |          | |  |          | | |  +--------------+  | ~
-| network,         +----------+ | +----------+ |  +----------+ | |   Find the best    | ~
-| settings...       |        (./core/stream/adaptation)        | |   profile to play  | ~
-|                   +-----------+  +-----------+   +-----------+ |                    | ~
-|                          | ^            | ^            | ^     |                    | ~
-|                          | ~            | ~            | ~     |                    | ~
-|                          | ~            | ~            | ~     |                    | ~
+| network,         +----------+ | +----------+ |  +----------+ | |   *Adaptive        | ~
+| settings...       |        (./core/stream/adaptation)        | |   Representation   | ~
+|                   +-----------+  +-----------+   +-----------+ |   Selector:        | ~
+|                          | ^            | ^            | ^     |   Find the best    | ~
+|                          | ~            | ~            | ~     |   Representation   | ~
+|                          | ~            | ~            | ~     |   to play          | ~
 |                          | ~            | ~            | ~     |                    | ~
 |                  (audio) v ~    (video) V ~     (text) v ~     |                    | ~
 |                  +----------+   +----------+    +----------+ ----> +------------+   | ~

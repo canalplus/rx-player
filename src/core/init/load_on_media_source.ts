@@ -32,7 +32,7 @@ import { MediaError } from "../../errors";
 import log from "../../log";
 import Manifest from "../../manifest";
 import { IReadOnlySharedReference } from "../../utils/reference";
-import ABRManager from "../abr";
+import { IRepresentationEstimator } from "../adaptive";
 import { PlaybackObserver } from "../api";
 import { SegmentFetcherCreator } from "../fetchers";
 import SegmentBuffersStore from "../segment_buffers";
@@ -61,8 +61,6 @@ import updatePlaybackRate from "./update_playback_rate";
 
 /** Arguments needed by `createMediaSourceLoader`. */
 export interface IMediaSourceLoaderArguments {
-  /** Module helping to choose the right Representation. */
-  abrManager : ABRManager;
   /** Various stream-related options. */
   bufferOptions : IStreamOrchestratorOptions;
   /* Manifest of the content we want to play. */
@@ -71,6 +69,8 @@ export interface IMediaSourceLoaderArguments {
   mediaElement : HTMLMediaElement;
   /** Emit playback conditions regularly. */
   playbackObserver : PlaybackObserver;
+  /** Estimate the right Representation. */
+  representationEstimator : IRepresentationEstimator;
   /** Module to facilitate segment fetching. */
   segmentFetcherCreator : SegmentFetcherCreator;
   /** Last wanted playback rate. */
@@ -88,7 +88,7 @@ export default function createMediaSourceLoader(
     manifest,
     speed,
     bufferOptions,
-    abrManager,
+    representationEstimator,
     playbackObserver,
     segmentFetcherCreator } : IMediaSourceLoaderArguments
 ) : (mediaSource : MediaSource, initialTime : number, autoPlay : boolean) =>
@@ -150,7 +150,7 @@ export default function createMediaSourceLoader(
     // Creates Observable which will manage every Stream for the given Content.
     const streams$ = StreamOrchestrator({ manifest, initialPeriod },
                                         streamObserver,
-                                        abrManager,
+                                        representationEstimator,
                                         segmentBuffersStore,
                                         segmentFetcherCreator,
                                         bufferOptions
