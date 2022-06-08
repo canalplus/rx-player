@@ -35,6 +35,7 @@ import { getPlayReadyKIDFromPrivateData } from "./drm";
 import {
   getBoxContent,
   getBoxOffsets,
+  getChildBox,
 } from "./get_box";
 import {
   getEMSG,
@@ -430,7 +431,7 @@ function updateBoxLength(buf : Uint8Array) : Uint8Array {
 
 /**
  * Parse EMSG boxes from ISOBMFF data.
- * @param {Uint8Array} buf
+ * @param {Uint8Array} buffer
  * @returns {Array.<Object> | undefined}
  */
 function parseEmsgBoxes(buffer: Uint8Array) : IEMSG[] | undefined {
@@ -488,7 +489,61 @@ function parseEmsgBoxes(buffer: Uint8Array) : IEMSG[] | undefined {
   return emsgs;
 }
 
+/**
+ * @param {Uint8Array} segment
+ * @returns {Uint8Array|null}
+ */
+function getKeyIdFromInitSegment(
+  segment: Uint8Array
+): Uint8Array | null {
+  const stsd = getChildBox(segment, [ 0x6D6F6F76 /* moov */,
+                                      0x7472616B /* trak */,
+                                      0x6D646961 /* mdia */,
+                                      0x6D696E66 /* minf */,
+                                      0x7374626C /* stbl */,
+                                      0x73747364 /* stsd */ ]);
+  if (stsd === null) {
+    return null;
+  }
+  const stsdSubBoxes = stsd.subarray(8);
+  let encBox = getBoxContent(stsdSubBoxes, 0x656E6376 /* encv */);
+  let encContentOffset = 0;
+  if (encBox === null) {
+    encContentOffset = 8 + // sample entry header
+      8 + // reserved
+      2 + // channelcount
+      2 + // samplesize
+      2 + // predefined
+      2 + // reserved
+      4; // samplerate
+    encBox = getBoxContent(stsdSubBoxes, 0x656E6361 /* enca */);
+  } else {
+    encContentOffset = 8 + // sample entry header
+      2 + 2 + 12 + // predefined + reserved + predefined
+      2 + 2 + // width + height
+      4 + 4 + // horizresolution + vertresolution
+      4 + // reserved
+      2 + // frame_count
+      32 +
+      2 + // depth
+      2; // pre-defined;
+  }
+  if (encBox === null) {
+    // There's no encryption data here
+    return null;
+  }
+  const tenc = getChildBox(encBox.subarray(encContentOffset),
+                           [ 0x73696e66 /* sinf */,
+                             0x73636869 /* schi */,
+                             0x74656e63 /* tenc */ ]);
+  if (tenc === null || tenc.byteLength < 24) {
+    return null;
+  }
+  return tenc.subarray(8, 24);
+}
+
 export {
+  getKeyIdFromInitSegment,
   getMDHDTimescale,
   getPlayReadyKIDFromPrivateData,
   getTrackFragmentDecodeTime,

@@ -19,7 +19,10 @@ import {
   getSegmentsFromSidx,
   takePSSHOut,
 } from "../../parsers/containers/isobmff";
-import { parseEmsgBoxes } from "../../parsers/containers/isobmff/utils";
+import {
+  getKeyIdFromInitSegment,
+  parseEmsgBoxes,
+} from "../../parsers/containers/isobmff/utils";
 import {
   getSegmentsFromCues,
   getTimeCodeScale,
@@ -88,8 +91,12 @@ export default function generateAudioVideoSegmentParser(
     let protectionDataUpdate = false;
     if (seemsToBeMP4) {
       const psshInfo = takePSSHOut(chunkData);
-      if (psshInfo.length > 0) {
-        protectionDataUpdate = representation._addProtectionData("cenc", psshInfo);
+      let keyId;
+      if (segment.isInit) {
+        keyId = getKeyIdFromInitSegment(chunkData) ?? undefined;
+      }
+      if (psshInfo.length > 0 || keyId !== undefined) {
+        protectionDataUpdate = representation._addProtectionData("cenc", keyId, psshInfo);
       }
     }
 
