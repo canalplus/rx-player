@@ -16,7 +16,7 @@
 
 import log from "../../log";
 import arrayFindIndex from "../../utils/array_find_index";
-import getBufferLevels from "./get_buffer_levels";
+import getBufferLevels from "./utils/get_buffer_levels";
 
 /**
  * Choose a bitrate based on the currently available buffer.

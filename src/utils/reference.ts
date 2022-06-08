@@ -72,6 +72,24 @@ export interface ISharedReference<T> {
    * @returns {Observable}
    */
   asObservable(skipCurrentValue? : boolean) : Observable<T>;
+  /**
+   * Triggers a callback each time this reference's value is updated.
+   *
+   * Can be given several options as argument:
+   *   - clearSignal: When the attach `CancellationSignal` emits, the given
+   *     callback will not be called anymore on reference updates.
+   *   - emitCurrentValue: If `true`, the callback will be called directly and
+   *     synchronously on this call with its current value.
+   * @param {Function} cb
+   * @param {Object} [options]
+   */
+  onUpdate(
+    cb : (val : T) => void,
+    options? : {
+      clearSignal?: CancellationSignal;
+      emitCurrentValue?: boolean;
+    },
+  ) : void;
 
   /**
    * Allows to register a callback to be called each time the value inside the
@@ -133,12 +151,24 @@ export interface IReadOnlySharedReference<T> {
    * `true`.
    */
   asObservable(skipCurrentValue? : boolean) : Observable<T>;
+
+  /**
+   * Triggers a callback each time this reference's value is updated.
+   *
+   * Can be given several options as argument:
+   *   - clearSignal: When the attach `CancellationSignal` emits, the given
+   *     callback will not be called anymore on reference updates.
+   *   - emitCurrentValue: If `true`, the callback will be called directly and
+   *     synchronously on this call with its current value.
+   * @param {Function} cb
+   * @param {Object} [options]
+   */
   onUpdate(
     cb : (val : T) => void,
     options? : {
-      clearSignal?: CancellationSignal;
-      emitCurrentValue?: boolean;
-    },
+      clearSignal?: CancellationSignal | undefined;
+      emitCurrentValue?: boolean | undefined;
+    } | undefined,
   ) : void;
 }
 
@@ -155,10 +185,10 @@ export function createSharedReference<T>(initialValue : T) : ISharedReference<T>
   let value = initialValue;
 
   /**
-   * List of currently subscribed listeners which listen to the referenced
-   * value's updates.
+   * Attributes each linked to a single registered callbacks which listen to the
+   * referenced value's updates.
    *
-   * Contains three properties:
+   * Contains the following properties:
    *   - `trigger`: Function which will be called with the new reference's value
    *     once it changes
    *   - `complete`: Allows to clean-up the listener, will be called once the
@@ -166,8 +196,9 @@ export function createSharedReference<T>(initialValue : T) : ISharedReference<T>
    *   - `hasBeenCleared`: becomes `true` when the Observable becomes
    *     unsubscribed and thus when it is removed from the `cbs` array.
    *     Adding this property allows to detect when a previously-added
-   *     Observable has since been unsubscribed e.g. as a side-effect during a
+   *     listener has since been removed e.g. as a side-effect during a
    *     function call.
+   *   - `complete`: Callback to call when the current Reference is "finished".
    */
   const cbs : Array<{ trigger : (a: T) => void;
                       complete : () => void;
@@ -259,18 +290,18 @@ export function createSharedReference<T>(initialValue : T) : ISharedReference<T>
      * reference is updated.
      * @param {Function} cb - Callback to be called each time the reference is
      * updated. Takes the new value im argument.
-     * @param {Object} [options]
-     * @param {Object} [options.clearSignal] - Allows to provide a
+     * @param {Object|undefined} [options]
+     * @param {Object|undefined} [options.clearSignal] - Allows to provide a
      * CancellationSignal which will unregister the callback when it emits.
-     * @param {boolean} [options.emitCurrentValue] - If `true`, the callback will
-     * also be immediately called with the current value.
+     * @param {boolean|undefined} [options.emitCurrentValue] - If `true`, the
+     * callback will also be immediately called with the current value.
      */
     onUpdate(
       cb : (val : T) => void,
       options? : {
-        clearSignal?: CancellationSignal;
-        emitCurrentValue?: boolean;
-      }
+        clearSignal?: CancellationSignal | undefined;
+        emitCurrentValue?: boolean | undefined;
+      } | undefined
     ) : void {
       if (options?.emitCurrentValue === true) {
         cb(value);
@@ -320,6 +351,27 @@ export function createSharedReference<T>(initialValue : T) : ISharedReference<T>
       }
     },
   };
+}
+
+export function createMappedReference<T, U>(
+  originalRef : IReadOnlySharedReference<T>,
+  mappingFn : (x : T) => U,
+  cancellationSignal? : CancellationSignal
+) : IReadOnlySharedReference<U> {
+  const newRef = createSharedReference(mappingFn(originalRef.getValue()));
+  originalRef.onUpdate(function mapOriginalReference(x) {
+    newRef.setValue(mappingFn(x));
+  }, { clearSignal: cancellationSignal });
+
+  // TODO nothing is done if `originalRef` is finished, though the returned
+  // reference could also be finished in that case. To do?
+  if (cancellationSignal !== undefined) {
+    cancellationSignal.register(() => {
+      newRef.finish();
+    });
+  }
+
+  return newRef;
 }
 
 export default createSharedReference;

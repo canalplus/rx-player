@@ -41,9 +41,9 @@ import { fromEvent } from "../../utils/event_emitter";
 import filterMap from "../../utils/filter_map";
 import objectAssign from "../../utils/object_assign";
 import { IReadOnlySharedReference } from "../../utils/reference";
-import ABRManager, {
-  IABRManagerArguments,
-} from "../abr";
+import AdaptiveRepresentationSelector, {
+  IAdaptiveRepresentationSelectorArguments,
+} from "../adaptive";
 import { PlaybackObserver } from "../api";
 import {
   getCurrentKeySystem,
@@ -85,7 +85,7 @@ import {
 /** Arguments to give to the `InitializeOnMediaSource` function. */
 export interface IInitializeArguments {
   /** Options concerning the ABR logic. */
-  adaptiveOptions: IABRManagerArguments;
+  adaptiveOptions: IAdaptiveRepresentationSelectorArguments;
   /** `true` if we should play when loaded. */
   autoPlay : boolean;
   /** Options concerning the media buffers. */
@@ -183,7 +183,7 @@ export default function InitializeOnMediaSource(
     textTrackOptions } : IInitializeArguments
 ) : Observable<IInitEvent> {
   /** Choose the right "Representation" for a given "Adaptation". */
-  const abrManager = new ABRManager(adaptiveOptions);
+  const representationEstimator = AdaptiveRepresentationSelector(adaptiveOptions);
 
   /**
    * Create and open a new MediaSource object on the given media element on
@@ -245,12 +245,12 @@ export default function InitializeOnMediaSource(
       log.debug("Init: Initial time calculated:", initialTime);
 
       const mediaSourceLoader = createMediaSourceLoader({
-        abrManager,
         bufferOptions: objectAssign({ textTrackOptions, drmSystemId },
                                     bufferOptions),
         manifest,
         mediaElement,
         playbackObserver,
+        representationEstimator,
         segmentFetcherCreator,
         speed,
       });

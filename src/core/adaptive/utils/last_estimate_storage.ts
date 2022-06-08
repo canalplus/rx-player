@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../manifest";
+import { Representation } from "../../../manifest";
 
 /** Stores the last estimate made by the `RepresentationEstimator`. */
 export default class LastEstimateStorage {

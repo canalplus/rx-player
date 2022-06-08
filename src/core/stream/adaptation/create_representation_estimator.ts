@@ -14,89 +14,98 @@
  * limitations under the License.
  */
 
-import {
-  Observable,
-  Subject,
-  distinctUntilChanged,
-  map,
-  merge as observableMerge,
-  of as observableOf,
-  switchMap,
-} from "rxjs";
-import { MediaError } from "../../../errors";
+import { ICustomError, MediaError } from "../../../errors";
 import Manifest, {
   Adaptation,
   Period,
   Representation,
 } from "../../../manifest";
-import { fromEvent } from "../../../utils/event_emitter";
-import ABRManager, {
+import createSharedReference, {
+  IReadOnlySharedReference,
+} from "../../../utils/reference";
+import { CancellationSignal } from "../../../utils/task_canceller";
+import {
   IABREstimate,
-  IABRManagerPlaybackObservation,
-  IABRStreamEvents,
-} from "../../abr";
+  IRepresentationEstimatorPlaybackObservation,
+  IRepresentationEstimator,
+  IRepresentationEstimatorCallbacks,
+} from "../../adaptive";
+import { IReadOnlyPlaybackObserver } from "../../api";
 
 /**
- * Create an "estimator$" Observable which will emit which Representation (from
- * the given `Adaptation`) is the best fit (see `IABREstimate` type definition)
- * corresponding to the current network and playback conditions.
- *
- * This function also returns a subject that should be used to add feedback
- * helping the estimator to make its choices.
- *
- * You can look at the types defined for this Subject to have more information
- * on what data is expected. The idea is to provide as much data as possible so
- * the estimation is as adapted as possible.
- *
- * @param {Object} content
- * @param {Object} abrManager
- * @param {Observable} observation$
- * @returns {Object}
+ * Produce estimates to know which Representation should be played.
+ * @param {Object} content - The Manifest, Period and Adaptation wanted.
+ * @param {Object} representationEstimator - `IRepresentationEstimator` which
+ * will produce Representation estimates.
+ * @param {Object} currentRepresentation - Reference emitting the
+ * currently-loaded Representation.
+ * @param {Object} playbackObserver - Allows to observe the current playback
+ * conditions.
+ * @param {Function} onFatalError - Callback called when a fatal error was
+ * thrown. Once this callback is called, no estimate will be produced.
+ * @param {Object} cancellationSignal - `CancellationSignal` allowing to abort
+ * the production of estimates (and clean-up all linked resources).
+ * @returns {Object} - Returns an object with the following properties:
+ *   - `estimateRef`: Reference emitting the last estimate
+ *   - `abrCallbacks`: Callbacks allowing to report back network and playback
+ *     activities to improve the estimates given.
  */
-export default function createRepresentationEstimator(
+export default function getRepresentationEstimate(
   content : { manifest : Manifest;
               period : Period;
               adaptation : Adaptation; },
-  abrManager : ABRManager,
-  observation$ : Observable<IABRManagerPlaybackObservation>
-) : { estimator$ : Observable<IABREstimate>;
-      abrFeedbacks$ : Subject<IABRStreamEvents>; }
+  representationEstimator : IRepresentationEstimator,
+  currentRepresentation : IReadOnlySharedReference<Representation | null>,
+  playbackObserver : IReadOnlyPlaybackObserver<
+    IRepresentationEstimatorPlaybackObservation
+  >,
+  onFatalError: (err : ICustomError) => void,
+  cancellationSignal : CancellationSignal
+) : { estimateRef : IReadOnlySharedReference<IABREstimate>;
+      abrCallbacks : IRepresentationEstimatorCallbacks; }
 {
   const { manifest, adaptation } = content;
-  const abrFeedbacks$ = new Subject<IABRStreamEvents>();
-  const estimator$ = observableMerge(
-    // subscribe "first" (hack as it is a merge here) to event
-    fromEvent(manifest, "decipherabilityUpdate"),
-    // Emit directly a first time on subscription (after subscribing to event)
-    observableOf(null)
-  ).pipe(
-    map(() : Representation[] => {
-      /** Representations for which a `RepresentationStream` can be created. */
-      const playableRepresentations = adaptation.getPlayableRepresentations();
-      if (playableRepresentations.length <= 0) {
-        const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION",
-                                        "No Representation in the chosen " +
-                                        adaptation.type + " Adaptation can be played");
-        throw noRepErr;
-      }
-      return playableRepresentations;
-    }),
-    distinctUntilChanged((prevRepr, newRepr) => {
-      if (prevRepr.length !== newRepr.length) {
-        return false;
-      }
-      for (let i = 0; i < newRepr.length; i++) {
-        if (prevRepr[i].id !== newRepr[i].id) {
-          return false;
-        }
-      }
-      return true;
-    }),
-    switchMap((playableRepresentations) =>
-      abrManager.get$(content,
-                      playableRepresentations,
-                      observation$,
-                      abrFeedbacks$)));
+  const representations = createSharedReference<Representation[]>([]);
+  updateRepresentationsReference();
+  manifest.addEventListener("decipherabilityUpdate", updateRepresentationsReference);
+  const unregisterCleanUp = cancellationSignal.register(cleanUp);
+  const [ estimateRef,
+          abrCallbacks ] = representationEstimator(content,
+                                                   currentRepresentation,
+                                                   representations,
+                                                   playbackObserver,
+                                                   cancellationSignal);
+  return { abrCallbacks, estimateRef };
 
-  return { estimator$, abrFeedbacks$ };
+  function updateRepresentationsReference() : void {
+    /** Representations for which a `RepresentationStream` can be created. */
+    const newRepr = adaptation.getPlayableRepresentations();
+    if (newRepr.length === 0) {
+      const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION",
+                                      "No Representation in the chosen " +
+                                      adaptation.type + " Adaptation can be played");
+      cleanUp();
+      onFatalError(noRepErr);
+      return;
+    }
+
+    const prevRepr = representations.getValue();
+    if (prevRepr.length === newRepr.length) {
+      if (prevRepr.every((r, idx) => r.id === newRepr[idx].id)) {
+        return ;
+      }
+    }
+    representations.setValue(newRepr);
+  }
+
+  /** Clean-up all resources taken here. */
+  function cleanUp() : void {
+    manifest.removeEventListener("decipherabilityUpdate", updateRepresentationsReference);
+    representations.finish();
+
+    // check to protect against the case where it is not yet defined.
+    if (typeof unregisterCleanUp !== "undefined") {
+      unregisterCleanUp();
+    }
+  }
 }

@@ -18,12 +18,12 @@ import config from "../../config";
 import log from "../../log";
 import { Representation } from "../../manifest";
 import arrayFind from "../../utils/array_find";
-import BandwidthEstimator from "./bandwidth_estimator";
+import BandwidthEstimator from "./utils/bandwidth_estimator";
+import EWMA from "./utils/ewma";
 import {
   IPendingRequestStoreProgress,
   IRequestInfo,
-} from "./pending_requests_store";
-import EWMA from "./utils/ewma";
+} from "./utils/pending_requests_store";
 
 
 /** Object describing the current playback conditions. */

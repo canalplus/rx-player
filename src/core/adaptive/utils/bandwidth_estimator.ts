@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import config from "../../config";
-import EWMA from "./utils/ewma";
+import config from "../../../config";
+import EWMA from "./ewma";
 
 
 /**

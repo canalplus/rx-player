@@ -22,7 +22,7 @@ Those modules are:
     Only used for contents with DRM (Digital Right Management).
 
 
-  - __the `ABRManager` (./abr)__
+  - __the `AdaptiveRepresentationSelector` (./adaptive)__
 
     Helps to choose the best quality in the current content by analyzing the
     current network, user settings and viewing conditions.
