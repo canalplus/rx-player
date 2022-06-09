@@ -160,17 +160,6 @@ export const enum MediaKeySessionLoadingType {
   LoadedPersistentSession = "loaded-persistent-session",
 }
 
-/**
- * Data stored in a persistent MediaKeySession storage.
- * Has to be versioned to be able to play MediaKeySessions persisted in an old
- * RxPlayer version when in a new one.
- */
-export type IPersistentSessionInfo = IPersistentSessionInfoV4 |
-                                     IPersistentSessionInfoV3 |
-                                     IPersistentSessionInfoV2 |
-                                     IPersistentSessionInfoV1 |
-                                     IPersistentSessionInfoV0;
-
 /** Wrap an Uint8Array and allow serialization of it into base64. */
 interface ByteArrayContainer {
   /**

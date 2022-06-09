@@ -15,7 +15,13 @@
  */
 
 import { ICustomMediaKeySession } from "./compat";
-import { IPersistentSessionInfo } from "./core/decrypt";
+import {
+  IPersistentSessionInfoV0,
+  IPersistentSessionInfoV1,
+  IPersistentSessionInfoV2,
+  IPersistentSessionInfoV3,
+  IPersistentSessionInfoV4,
+} from "./core/decrypt";
 import { IBufferType } from "./core/segment_buffers";
 import {
   EncryptedMediaError,
@@ -520,6 +526,17 @@ export interface IKeySystemOption {
     keyOutputRestricted? : boolean;
   };
 }
+
+/**
+ * Data stored in a persistent MediaKeySession storage.
+ * Has to be versioned to be able to play MediaKeySessions persisted in an old
+ * RxPlayer version when in a new one.
+ */
+export type IPersistentSessionInfo = IPersistentSessionInfoV4 |
+                                     IPersistentSessionInfoV3 |
+                                     IPersistentSessionInfoV2 |
+                                     IPersistentSessionInfoV1 |
+                                     IPersistentSessionInfoV0;
 
 /** Persistent MediaKeySession storage interface. */
 export interface IPersistentSessionStorage {

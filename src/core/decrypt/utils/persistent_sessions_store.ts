@@ -16,17 +16,17 @@
 
 import { ICustomMediaKeySession } from "../../../compat";
 import log from "../../../log";
-import { IPersistentSessionStorage } from "../../../public_types";
+import {
+  IPersistentSessionInfo,
+  IPersistentSessionStorage,
+} from "../../../public_types";
 import areArraysOfNumbersEqual from "../../../utils/are_arrays_of_numbers_equal";
 import { assertInterface } from "../../../utils/assert";
 import { bytesToBase64 } from "../../../utils/base64";
 import hashBuffer from "../../../utils/hash_buffer";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import {
-  IPersistentSessionInfo,
-  IProcessedProtectionData,
-} from "../types";
+import { IProcessedProtectionData } from "../types";
 import areInitializationValuesCompatible from "./are_init_values_compatible";
 import { IFormattedInitDataValue } from "./init_data_values_container";
 import { areKeyIdsEqual } from "./key_id_comparison";
