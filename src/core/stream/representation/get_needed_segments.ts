@@ -517,7 +517,7 @@ function shouldReloadSegmentGCedAtTheStart(
   }
 
   const lastEntry = segmentEntries[segmentEntries.length - 1];
-  const lastBufferedStart = lastEntry.buffered?.[0];
+  const lastBufferedStart = lastEntry.buffered?.start;
 
   // If the current segment's buffered start is much higher than what it
   // initially was when we pushed it, the segment has a very high chance of
@@ -530,7 +530,7 @@ function shouldReloadSegmentGCedAtTheStart(
   }
 
   const prevEntry = segmentEntries[segmentEntries.length - 2];
-  const prevBufferedStart = prevEntry.buffered?.[0];
+  const prevBufferedStart = prevEntry.buffered?.start;
 
   if (prevBufferedStart === undefined || lastBufferedStart === undefined) {
     return true;
@@ -574,7 +574,7 @@ function shouldReloadSegmentGCedAtTheEnd(
     return true;
   }
   const lastEntry = segmentEntries[segmentEntries.length - 1];
-  const lastBufferedEnd = lastEntry.buffered?.[1];
+  const lastBufferedEnd = lastEntry.buffered?.end;
 
   // If the current segment's buffered end is much lower than what it
   // initially was when we pushed it, the segment has a very high chance of
@@ -587,7 +587,7 @@ function shouldReloadSegmentGCedAtTheEnd(
   }
 
   const prevEntry = segmentEntries[segmentEntries.length - 2];
-  const prevBufferedEnd = prevEntry.buffered?.[1];
+  const prevBufferedEnd = prevEntry.buffered?.end;
 
   if (prevBufferedEnd === undefined || lastBufferedEnd === undefined) {
     return true;

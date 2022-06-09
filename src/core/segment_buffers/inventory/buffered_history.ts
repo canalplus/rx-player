@@ -30,12 +30,12 @@ export interface IBufferedHistoryEntry {
    * Timestamps of what has been buffered with that segment.
    * `null` if it has been immediately garbage collected.
    */
-  buffered : null | [
+  buffered : null | {
     /** Start time at which we observed that segment/chunk starts at, in seconds. */
-    number,
+    start: number;
     /** *End time at which we observed that segment/chunk ends at, in seconds. */
-    number,
-  ];
+    end: number;
+  };
   /** Content metadata linked to the segment, allowing to recognize it. */
   context : IChunkContext;
 
@@ -84,7 +84,7 @@ export default class BufferedHistory {
    */
   public addBufferedSegment(
     context : IChunkContext,
-    buffered : [number, number] | null
+    buffered : { start: number; end: number } | null
   ) : void {
     const now = performance.now();
     this._history.push({ date: now,

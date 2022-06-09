@@ -762,8 +762,8 @@ export default class SegmentInventory {
       this.synchronizeBuffered(newBuffered);
       for (const seg of resSegments) {
         if (seg.bufferedStart !== undefined && seg.bufferedEnd !== undefined) {
-          this._bufferedHistory.addBufferedSegment(seg.infos, [seg.bufferedStart,
-                                                               seg.bufferedEnd]);
+          this._bufferedHistory.addBufferedSegment(seg.infos, { start: seg.bufferedStart,
+                                                                end: seg.bufferedEnd });
         } else {
           log.debug("SI: buffered range not known after sync. Skipping history.",
                     seg);
