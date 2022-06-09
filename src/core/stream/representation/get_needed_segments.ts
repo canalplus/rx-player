@@ -254,7 +254,12 @@ export default function getNeededSegments({
       if (lastTimeItWasPushed.buffered === null &&
           beforeLastTimeItWasPushed.buffered === null
       ) {
-        log.warn("Stream: Segment GCed each time, ignoring it",
+        log.warn("Stream: Segment GCed multiple times in a row, ignoring it.",
+                 "If this happens a lot and lead to unpleasant experience, please " +
+                 " check your device's available memory. If it's low when this message " +
+                 "is emitted, you might want to update the RxPlayer's settings (" +
+                 "`maxBufferAhead`, `maxVideoBufferSize` etc.) so less memory is used " +
+                 "by regular media data buffering." +
                  adaptation.type,
                  representation.id,
                  segment.time);
