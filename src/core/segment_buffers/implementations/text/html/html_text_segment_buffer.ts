@@ -15,24 +15,15 @@
  */
 
 import {
-  concat as observableConcat,
-  interval as observableInterval,
-  map,
-  merge as observableMerge,
-  Observable,
-  of as observableOf,
-  startWith,
-  switchMap,
-  takeUntil,
-} from "rxjs";
-import {
   events,
   onHeightWidthChange,
 } from "../../../../../compat";
 import config from "../../../../../config";
 import log from "../../../../../log";
 import { ITextTrackSegmentData } from "../../../../../transports";
-import TaskCanceller from "../../../../../utils/task_canceller";
+import TaskCanceller, {
+  CancellationSignal,
+} from "../../../../../utils/task_canceller";
 import {
   IEndOfSegmentInfos,
   IPushChunkInfos,
@@ -43,31 +34,7 @@ import parseTextTrackToElements from "./parsers";
 import TextTrackCuesStore from "./text_track_cues_store";
 import updateProportionalElements from "./update_proportional_elements";
 
-const { onEnded$,
-        onSeeked$,
-        onSeeking$ } = events;
-
-
-/**
- * Generate the interval at which TextTrack HTML Cues should be refreshed.
- * @param {HTMLMediaElement} videoElement
- * @returns {Observable}
- */
-function generateRefreshInterval(videoElement : HTMLMediaElement) : Observable<boolean> {
-  const seeking$ = onSeeking$(videoElement);
-  const seeked$ = onSeeked$(videoElement);
-  const ended$ = onEnded$(videoElement);
-  const { MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL } = config.getCurrent();
-  const manualRefresh$ = observableMerge(seeked$, ended$);
-  const autoRefresh$ = observableInterval(MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL)
-    .pipe(startWith(null));
-
-  return manualRefresh$.pipe(
-    startWith(null),
-    switchMap(() => observableConcat(autoRefresh$.pipe(map(() => true),
-                                                       takeUntil(seeking$)),
-                                     observableOf(false))));
-}
+const { onEnded, onSeeked, onSeeking } = events;
 
 /**
  * @param {Element} element
@@ -167,34 +134,7 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
     this._buffer = new TextTrackCuesStore();
     this._currentCues = [];
 
-    // update text tracks
-    const refreshSub = generateRefreshInterval(this._videoElement)
-      .subscribe((shouldDisplay) => {
-        if (!shouldDisplay) {
-          this._disableCurrentCues();
-          return;
-        }
-        const videoElt = this._videoElement;
-        const { MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL } = config.getCurrent();
-        let time;
-        if (videoElt.paused || videoElt.playbackRate <= 0) {
-          time = videoElt.currentTime;
-        } else {
-          // to spread the time error, we divide the regular chosen interval.
-          time = Math.max(this._videoElement.currentTime +
-                           (MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL / 1000) / 2,
-                          0);
-        }
-        const cues = this._buffer.get(time);
-        if (cues.length === 0) {
-          this._disableCurrentCues();
-        } else {
-          this._displayCues(cues);
-        }
-      });
-    this._canceller.signal.register(() => {
-      refreshSub.unsubscribe();
-    });
+    this.autoRefreshSubtitles(this._canceller.signal);
   }
 
   /**
@@ -259,7 +199,7 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
    *
    * /!\ This method won't add any data to the linked inventory.
    * Please use the `pushChunk` method for most use-cases.
-   * @param {Object} data
+   * @param {Object} infos
    * @returns {boolean}
    */
   public pushChunkSync(infos : IPushChunkInfos<unknown>) : void {
@@ -381,7 +321,7 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
 
   /**
    * Display a new Cue. If one was already present, it will be replaced.
-   * @param {HTMLElement} element
+   * @param {HTMLElement} elements
    */
   private _displayCues(elements : HTMLElement[]) : void {
     const nothingChanged = this._currentCues.length === elements.length &&
@@ -426,6 +366,66 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
         }
       }, { clearSignal: this._sizeUpdateCanceller.signal,
            emitCurrentValue: true });
+    }
+  }
+
+  /**
+   * Auto-refresh the display of subtitles according to the media element's
+   * position and events.
+   * @param {Object} cancellationSignal
+   */
+  private autoRefreshSubtitles(
+    cancellationSignal : CancellationSignal
+  ) : void {
+    let autoRefreshCanceller : TaskCanceller | null = null;
+    const { MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL } = config.getCurrent();
+
+    const startAutoRefresh = () => {
+      stopAutoRefresh();
+      autoRefreshCanceller = new TaskCanceller({ cancelOn: cancellationSignal });
+      const intervalId = setInterval(() => this.refreshSubtitles(),
+                                     MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL);
+      autoRefreshCanceller.signal.register(() => {
+        clearInterval(intervalId);
+      });
+      this.refreshSubtitles();
+    };
+
+    onSeeking(this._videoElement, () => {
+      stopAutoRefresh();
+      this._disableCurrentCues();
+    }, cancellationSignal);
+    onSeeked(this._videoElement, startAutoRefresh, cancellationSignal);
+    onEnded(this._videoElement, startAutoRefresh, cancellationSignal);
+
+    function stopAutoRefresh() {
+      if (autoRefreshCanceller !== null) {
+        autoRefreshCanceller.cancel();
+        autoRefreshCanceller = null;
+      }
+    }
+  }
+
+  /**
+   * Refresh current subtitles according to the current media element's
+   * position.
+   */
+  private refreshSubtitles() : void {
+    const { MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL } = config.getCurrent();
+    let time;
+    if (this._videoElement.paused || this._videoElement.playbackRate <= 0) {
+      time = this._videoElement.currentTime;
+    } else {
+      // to spread the time error, we divide the regular chosen interval.
+      time = Math.max(this._videoElement.currentTime +
+                       (MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL / 1000) / 2,
+                      0);
+    }
+    const cues = this._buffer.get(time);
+    if (cues.length === 0) {
+      this._disableCurrentCues();
+    } else {
+      this._displayCues(cues);
     }
   }
 }
