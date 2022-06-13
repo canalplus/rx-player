@@ -48,3 +48,5 @@ declare const enum __FEATURES__ {
   NATIVE_VTT = IS_DISABLED,
   SMOOTH = IS_DISABLED,
 }
+
+declare const __RX_PLAYER_DEBUG_MODE__ : boolean | undefined;
