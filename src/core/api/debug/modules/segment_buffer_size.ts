@@ -29,7 +29,7 @@ export default function createSegmentBufferSizeGraph(
   return bufferSizeGraphWrapperElt;
 
   function addBufferSize() {
-    if (instance.getMediaElement() === null) {
+    if (instance.getVideoElement() === null) {
       // disposed player. Clean-up everything
       bufferSizeGraphWrapperElt.innerHTML = "";
       clearInterval(intervalId);
