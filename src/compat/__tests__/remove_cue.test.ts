@@ -55,7 +55,7 @@ describe("compat - removeCue", () => {
       isFirefox: false,
     }));
 
-    const removeCue = require("../remove_cue").default;
+    const removeCue = jest.requireActual("../remove_cue").default;
     removeCue(fakeTrack, { id: "1" });
 
     expect(fakeTrack.cues.length).toBe(0);
@@ -99,7 +99,7 @@ describe("compat - removeCue", () => {
       isFirefox: true,
     }));
 
-    const removeCue = require("../remove_cue").default;
+    const removeCue = jest.requireActual("../remove_cue").default;
     removeCue(fakeTrack, fakeCue);
 
     expect(fakeTrack.cues.length).toBe(0);
@@ -143,7 +143,7 @@ describe("compat - removeCue", () => {
       isFirefox: true,
     }));
 
-    const removeCue = require("../remove_cue").default;
+    const removeCue = jest.requireActual("../remove_cue").default;
     removeCue(fakeTrack, fakeCue);
 
     expect(fakeTrack.cues.length).toBe(0);
@@ -180,7 +180,7 @@ describe("compat - removeCue", () => {
       removeCue: mockRemoveCue,
     };
 
-    const removeCue = require("../remove_cue").default;
+    const removeCue = jest.requireActual("../remove_cue").default;
     removeCue(fakeTrack, fakeCue);
 
     expect(fakeTrack.cues.length).toBe(1);
@@ -216,7 +216,7 @@ describe("compat - removeCue", () => {
       removeCue: mockRemoveCue,
     };
 
-    const removeCue = require("../remove_cue").default;
+    const removeCue = jest.requireActual("../remove_cue").default;
     removeCue(fakeTrack, { id: "1" });
 
     expect(fakeTrack.cues.length).toBe(1);

@@ -27,39 +27,39 @@ describe("DASH Parser - getClockOffset", () => {
   });
 
   it("should calculate a millisecond offset relatively to performance.now", () => {
-    const warnSpy = jest.fn();
+    const mockWarn = jest.fn();
     jest.mock("../../../../../log", () => ({
-      __esModule: true as const,
-      default: { warn: warnSpy },
+      __esModule: true,
+      default: { warn: mockWarn },
     }));
 
-    const getClockOffset = require("../get_clock_offset").default;
-    const dateSpy = jest.spyOn(performance, "now")
+    const getClockOffset = jest.requireActual("../get_clock_offset").default;
+    const mockDate = jest.spyOn(performance, "now")
       .mockReturnValue(Date.parse("2019-03-24T13:00:00Z"));
 
     expect(getClockOffset("2019-03-25T12:00:00Z")).toEqual(82800000);
-    expect(warnSpy).not.toHaveBeenCalled();
-    dateSpy.mockRestore();
+    expect(mockWarn).not.toHaveBeenCalled();
+    mockDate.mockRestore();
   });
 
   it("should return undefined and warn if an invalid date is given", () => {
-    const warnSpy = jest.fn();
+    const mockWarn = jest.fn();
     jest.mock("../../../../../log", () => ({
-      __esModule: true as const,
-      default: { warn: warnSpy },
+      __esModule: true,
+      default: { warn: mockWarn },
     }));
-    const getClockOffset = require("../get_clock_offset").default;
+    const getClockOffset = jest.requireActual("../get_clock_offset").default;
 
     expect(getClockOffset("2018/412/13")).toEqual(undefined);
-    expect(warnSpy).toHaveBeenCalledTimes(1);
-    expect(warnSpy)
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+    expect(mockWarn)
       .toHaveBeenCalledWith("DASH Parser: Invalid clock received: ", "2018/412/13");
-    warnSpy.mockReset();
+    mockWarn.mockReset();
 
     expect(getClockOffset("foo")).toEqual(undefined);
-    expect(warnSpy).toHaveBeenCalledTimes(1);
-    expect(warnSpy)
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+    expect(mockWarn)
       .toHaveBeenCalledWith("DASH Parser: Invalid clock received: ", "foo");
-    warnSpy.mockReset();
+    mockWarn.mockReset();
   });
 });

@@ -16,7 +16,6 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
@@ -38,7 +37,8 @@ describe("MediaCapabilitiesProber probers - findDefaultVideoCodec", () => {
         isTypeSupported: mockIsTypeSupported,
       },
     }));
-    const { findDefaultVideoCodec } = require("../../probers/defaultCodecsFinder");
+    const { findDefaultVideoCodec } =
+      jest.requireActual("../../probers/defaultCodecsFinder");
     expect(findDefaultVideoCodec()).toBe("video/mp4;codecs=\"avc1.4d401e\"");
     expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
   });
@@ -50,7 +50,8 @@ describe("MediaCapabilitiesProber probers - findDefaultVideoCodec", () => {
         isTypeSupported: mockIsTypeSupported,
       },
     }));
-    const { findDefaultVideoCodec } = require("../../probers/defaultCodecsFinder");
+    const { findDefaultVideoCodec } =
+      jest.requireActual("../../probers/defaultCodecsFinder");
     expect(() => { findDefaultVideoCodec(); }).toThrowError(
       "No default video codec found.");
     expect(mockIsTypeSupported).toHaveBeenCalledTimes(3);
@@ -60,7 +61,8 @@ describe("MediaCapabilitiesProber probers - findDefaultVideoCodec", () => {
     jest.mock("../../../../../compat", () => ({
       MediaSource_: null,
     }));
-    const { findDefaultVideoCodec } = require("../../probers/defaultCodecsFinder");
+    const { findDefaultVideoCodec } =
+      jest.requireActual("../../probers/defaultCodecsFinder");
     expect(() => { findDefaultVideoCodec(); }).toThrowError(
       "Cannot check video codec support: No API available.");
   });
@@ -69,7 +71,8 @@ describe("MediaCapabilitiesProber probers - findDefaultVideoCodec", () => {
     jest.mock("../../../../../compat", () => ({
       MediaSource_: {},
     }));
-    const { findDefaultVideoCodec } = require("../../probers/defaultCodecsFinder");
+    const { findDefaultVideoCodec } =
+      jest.requireActual("../../probers/defaultCodecsFinder");
     expect(() => { findDefaultVideoCodec(); }).toThrowError(
       "Cannot check video codec support: No API available.");
   });
@@ -90,7 +93,8 @@ describe("MediaCapabilitiesProber probers - findDefaultAudioCodec", () => {
         isTypeSupported: mockIsTypeSupported,
       },
     }));
-    const { findDefaultAudioCodec } = require("../../probers/defaultCodecsFinder");
+    const { findDefaultAudioCodec } =
+      jest.requireActual("../../probers/defaultCodecsFinder");
     expect(findDefaultAudioCodec()).toBe("audio/mp4;codecs=\"mp4a.40.2\"");
     expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
   });
@@ -102,7 +106,8 @@ describe("MediaCapabilitiesProber probers - findDefaultAudioCodec", () => {
         isTypeSupported: mockIsTypeSupported,
       },
     }));
-    const { findDefaultAudioCodec } = require("../../probers/defaultCodecsFinder");
+    const { findDefaultAudioCodec } =
+      jest.requireActual("../../probers/defaultCodecsFinder");
     expect(() => { findDefaultAudioCodec(); })
       .toThrowError("No default audio codec found.");
     expect(mockIsTypeSupported).toHaveBeenCalledTimes(2);
@@ -112,7 +117,8 @@ describe("MediaCapabilitiesProber probers - findDefaultAudioCodec", () => {
     jest.mock("../../../../../compat", () => ({
       MediaSource_: null,
     }));
-    const { findDefaultAudioCodec } = require("../../probers/defaultCodecsFinder");
+    const { findDefaultAudioCodec } =
+      jest.requireActual("../../probers/defaultCodecsFinder");
     expect(() => { findDefaultAudioCodec(); }).toThrowError(
       "Cannot check audio codec support: No API available.");
   });
@@ -121,7 +127,8 @@ describe("MediaCapabilitiesProber probers - findDefaultAudioCodec", () => {
     jest.mock("../../../../../compat", () => ({
       MediaSource_: {},
     }));
-    const { findDefaultAudioCodec } = require("../../probers/defaultCodecsFinder");
+    const { findDefaultAudioCodec } =
+      jest.requireActual("../../probers/defaultCodecsFinder");
     expect(() => { findDefaultAudioCodec(); }).toThrow(
       "Cannot check audio codec support: No API available.");
   });

@@ -50,16 +50,16 @@ describe("utils - starts-with", () => {
   if (typeof initialStartsWith === "function") {
     it("should call the original startsWith function if available", () => {
       String.prototype.startsWith = initialStartsWith;
-      const startsWithSpy = jest.spyOn(String.prototype, "startsWith");
+      const mockStartsWith = jest.spyOn(String.prototype, "startsWith");
       const str = "Street Halo";
       expect(startsWith(str, "Stree")).toBe(true);
       expect(startsWith(str, "Halo")).toBe(false);
       expect(startsWith(str, "Stree", 1)).toBe(false);
 
-      expect(startsWithSpy).toHaveBeenCalledTimes(3);
-      expect(startsWithSpy).toHaveBeenNthCalledWith(1, "Stree", undefined);
-      expect(startsWithSpy).toHaveBeenNthCalledWith(2, "Halo", undefined);
-      expect(startsWithSpy).toHaveBeenNthCalledWith(3, "Stree", 1);
+      expect(mockStartsWith).toHaveBeenCalledTimes(3);
+      expect(mockStartsWith).toHaveBeenNthCalledWith(1, "Stree", undefined);
+      expect(mockStartsWith).toHaveBeenNthCalledWith(2, "Halo", undefined);
+      expect(mockStartsWith).toHaveBeenNthCalledWith(3, "Stree", 1);
     });
   }
 });

@@ -252,7 +252,7 @@ export function mockCompat(exportedFunctions = {}) {
   const triggerKeyMessage = new Subject();
   const triggerKeyError = new Subject();
   const triggerKeyStatusesChange = new Subject();
-  const eventSpies : Record<string, jest.Mock> = {
+  const mockEvents : Record<string, jest.Mock> = {
     onEncrypted$: jest.fn(() => triggerEncrypted),
     onKeyMessage$: jest.fn((mediaKeySession : MediaKeySessionImpl) => {
       return fromEvent(mediaKeySession, "message");
@@ -265,9 +265,9 @@ export function mockCompat(exportedFunctions = {}) {
     }),
   };
 
-  const rmksaSpy = jest.fn(requestMediaKeySystemAccessImpl);
-  const setMediaKeysSpy = jest.fn();
-  const generateKeyRequestSpy = jest.fn((
+  const mockRmksa = jest.fn(requestMediaKeySystemAccessImpl);
+  const mockSetMediaKeys = jest.fn();
+  const mockGenerateKeyRequest = jest.fn((
     mks : MediaKeySessionImpl,
     initializationDataType,
     initializationData
@@ -276,27 +276,27 @@ export function mockCompat(exportedFunctions = {}) {
                                initializationData);
   });
 
-  const getInitDataSpy = jest.fn((encryptedEvent : IEncryptedEventData) => {
+  const mockGetInitData = jest.fn((encryptedEvent : IEncryptedEventData) => {
     return encryptedEvent;
   });
 
   jest.mock("../../../../compat", () => (
-    { events: eventSpies,
-      requestMediaKeySystemAccess: rmksaSpy,
-      setMediaKeys: setMediaKeysSpy,
-      getInitData: getInitDataSpy,
-      generateKeyRequest: generateKeyRequestSpy,
+    { events: mockEvents,
+      requestMediaKeySystemAccess: mockRmksa,
+      setMediaKeys: mockSetMediaKeys,
+      getInitData: mockGetInitData,
+      generateKeyRequest: mockGenerateKeyRequest,
       ...exportedFunctions }));
 
-  return { eventSpies,
+  return { mockEvents,
            eventTriggers: { triggerEncrypted,
                             triggerKeyMessage,
                             triggerKeyError,
                             triggerKeyStatusesChange },
-           requestMediaKeySystemAccessSpy: rmksaSpy,
-           getInitDataSpy,
-           setMediaKeysSpy,
-           generateKeyRequestSpy };
+           mockRequestMediaKeySystemAccess: mockRmksa,
+           mockGetInitData,
+           mockSetMediaKeys,
+           mockGenerateKeyRequest };
 }
 
 /**
@@ -305,7 +305,7 @@ export function mockCompat(exportedFunctions = {}) {
  * Else, reject.
  * @param {HTMLMediaElement} mediaElement
  * @param {Array.<Object>} keySystemsConfigs
- * @param {Observable} contentProtections$
+ * @param {Array} keySystemsConfigs
  * @returns {Promise}
  */
 export function testContentDecryptorError(

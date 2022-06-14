@@ -33,7 +33,7 @@ describe("compat - shouldRenewMediaKeys", () => {
         isIE11: false,
       };
     });
-    const shouldRenewMediaKeys = require("../should_renew_media_keys");
+    const shouldRenewMediaKeys = jest.requireActual("../should_renew_media_keys");
     expect(shouldRenewMediaKeys.default()).toBe(false);
   });
 
@@ -44,7 +44,7 @@ describe("compat - shouldRenewMediaKeys", () => {
         isIE11: true,
       };
     });
-    const shouldRenewMediaKeys = require("../should_renew_media_keys");
+    const shouldRenewMediaKeys = jest.requireActual("../should_renew_media_keys");
     expect(shouldRenewMediaKeys.default()).toBe(true);
   });
   beforeEach(() => {

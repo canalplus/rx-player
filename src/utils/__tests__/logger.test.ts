@@ -87,35 +87,35 @@ describe("utils - Logger", () => {
   });
 
   it("should never call console.* functions if logger level is set to \"NONE\"", () => {
-    const logSpy = jest.spyOn(console, "log").mockImplementation(jest.fn());
-    const errorSpy = jest.spyOn(console, "error").mockImplementation(jest.fn());
-    const warnSpy = jest.spyOn(console, "warn").mockImplementation(jest.fn());
-    const infoSpy = jest.spyOn(console, "info").mockImplementation(jest.fn());
-    const debugSpy = jest.spyOn(console, "debug").mockImplementation(jest.fn());
+    const mockLog = jest.spyOn(console, "log").mockImplementation(jest.fn());
+    const mockError = jest.spyOn(console, "error").mockImplementation(jest.fn());
+    const mockWarn = jest.spyOn(console, "warn").mockImplementation(jest.fn());
+    const mockInfo = jest.spyOn(console, "info").mockImplementation(jest.fn());
+    const mockDebug = jest.spyOn(console, "debug").mockImplementation(jest.fn());
 
     const logger = new Logger();
     logger.error("test");
     logger.warn("test");
     logger.info("test");
     logger.debug("test");
-    expect(logSpy).not.toHaveBeenCalled();
-    expect(errorSpy).not.toHaveBeenCalled();
-    expect(warnSpy).not.toHaveBeenCalled();
-    expect(infoSpy).not.toHaveBeenCalled();
-    expect(debugSpy).not.toHaveBeenCalled();
-    logSpy.mockRestore();
-    errorSpy.mockRestore();
-    warnSpy.mockRestore();
-    infoSpy.mockRestore();
-    debugSpy.mockRestore();
+    expect(mockLog).not.toHaveBeenCalled();
+    expect(mockError).not.toHaveBeenCalled();
+    expect(mockWarn).not.toHaveBeenCalled();
+    expect(mockInfo).not.toHaveBeenCalled();
+    expect(mockDebug).not.toHaveBeenCalled();
+    mockLog.mockRestore();
+    mockError.mockRestore();
+    mockWarn.mockRestore();
+    mockInfo.mockRestore();
+    mockDebug.mockRestore();
   });
 
   it("should only call console.error if logger level is set to \"ERROR\"", () => {
-    const logSpy = jest.spyOn(console, "log").mockImplementation(jest.fn());
-    const errorSpy = jest.spyOn(console, "error").mockImplementation(jest.fn());
-    const warnSpy = jest.spyOn(console, "warn").mockImplementation(jest.fn());
-    const infoSpy = jest.spyOn(console, "info").mockImplementation(jest.fn());
-    const debugSpy = jest.spyOn(console, "debug").mockImplementation(jest.fn());
+    const mockLog = jest.spyOn(console, "log").mockImplementation(jest.fn());
+    const mockError = jest.spyOn(console, "error").mockImplementation(jest.fn());
+    const mockWarn = jest.spyOn(console, "warn").mockImplementation(jest.fn());
+    const mockInfo = jest.spyOn(console, "info").mockImplementation(jest.fn());
+    const mockDebug = jest.spyOn(console, "debug").mockImplementation(jest.fn());
 
     const logger = new Logger();
     logger.setLevel("ERROR");
@@ -123,24 +123,24 @@ describe("utils - Logger", () => {
     logger.warn("test");
     logger.info("test");
     logger.debug("test");
-    expect(logSpy).not.toHaveBeenCalled();
-    expect(errorSpy).toHaveBeenCalled();
-    expect(warnSpy).not.toHaveBeenCalled();
-    expect(infoSpy).not.toHaveBeenCalled();
-    expect(debugSpy).not.toHaveBeenCalled();
-    logSpy.mockRestore();
-    errorSpy.mockRestore();
-    warnSpy.mockRestore();
-    infoSpy.mockRestore();
-    debugSpy.mockRestore();
+    expect(mockLog).not.toHaveBeenCalled();
+    expect(mockError).toHaveBeenCalled();
+    expect(mockWarn).not.toHaveBeenCalled();
+    expect(mockInfo).not.toHaveBeenCalled();
+    expect(mockDebug).not.toHaveBeenCalled();
+    mockLog.mockRestore();
+    mockError.mockRestore();
+    mockWarn.mockRestore();
+    mockInfo.mockRestore();
+    mockDebug.mockRestore();
   });
 
   it("should call console.{error,warn} if logger level is set to \"WARNING\"", () => {
-    const logSpy = jest.spyOn(console, "log").mockImplementation(jest.fn());
-    const errorSpy = jest.spyOn(console, "error").mockImplementation(jest.fn());
-    const warnSpy = jest.spyOn(console, "warn").mockImplementation(jest.fn());
-    const infoSpy = jest.spyOn(console, "info").mockImplementation(jest.fn());
-    const debugSpy = jest.spyOn(console, "debug").mockImplementation(jest.fn());
+    const mockLog = jest.spyOn(console, "log").mockImplementation(jest.fn());
+    const mockError = jest.spyOn(console, "error").mockImplementation(jest.fn());
+    const mockWarn = jest.spyOn(console, "warn").mockImplementation(jest.fn());
+    const mockInfo = jest.spyOn(console, "info").mockImplementation(jest.fn());
+    const mockDebug = jest.spyOn(console, "debug").mockImplementation(jest.fn());
 
     const logger = new Logger();
     logger.setLevel("WARNING");
@@ -148,24 +148,24 @@ describe("utils - Logger", () => {
     logger.warn("test");
     logger.info("test");
     logger.debug("test");
-    expect(logSpy).not.toHaveBeenCalled();
-    expect(errorSpy).toHaveBeenCalled();
-    expect(warnSpy).toHaveBeenCalled();
-    expect(infoSpy).not.toHaveBeenCalled();
-    expect(debugSpy).not.toHaveBeenCalled();
-    logSpy.mockRestore();
-    errorSpy.mockRestore();
-    warnSpy.mockRestore();
-    infoSpy.mockRestore();
-    debugSpy.mockRestore();
+    expect(mockLog).not.toHaveBeenCalled();
+    expect(mockError).toHaveBeenCalled();
+    expect(mockWarn).toHaveBeenCalled();
+    expect(mockInfo).not.toHaveBeenCalled();
+    expect(mockDebug).not.toHaveBeenCalled();
+    mockLog.mockRestore();
+    mockError.mockRestore();
+    mockWarn.mockRestore();
+    mockInfo.mockRestore();
+    mockDebug.mockRestore();
   });
 
   it("should call console.{error,warn,info} if logger level is set to \"INFO\"", () => {
-    const logSpy = jest.spyOn(console, "log").mockImplementation(jest.fn());
-    const errorSpy = jest.spyOn(console, "error").mockImplementation(jest.fn());
-    const warnSpy = jest.spyOn(console, "warn").mockImplementation(jest.fn());
-    const infoSpy = jest.spyOn(console, "info").mockImplementation(jest.fn());
-    const debugSpy = jest.spyOn(console, "debug").mockImplementation(jest.fn());
+    const mockLog = jest.spyOn(console, "log").mockImplementation(jest.fn());
+    const mockError = jest.spyOn(console, "error").mockImplementation(jest.fn());
+    const mockWarn = jest.spyOn(console, "warn").mockImplementation(jest.fn());
+    const mockInfo = jest.spyOn(console, "info").mockImplementation(jest.fn());
+    const mockDebug = jest.spyOn(console, "debug").mockImplementation(jest.fn());
 
     const logger = new Logger();
     logger.setLevel("INFO");
@@ -173,26 +173,26 @@ describe("utils - Logger", () => {
     logger.warn("test");
     logger.info("test");
     logger.debug("test");
-    expect(logSpy).not.toHaveBeenCalled();
-    expect(errorSpy).toHaveBeenCalled();
-    expect(warnSpy).toHaveBeenCalled();
-    expect(infoSpy).toHaveBeenCalled();
-    expect(debugSpy).not.toHaveBeenCalled();
-    logSpy.mockRestore();
-    errorSpy.mockRestore();
-    warnSpy.mockRestore();
-    infoSpy.mockRestore();
-    debugSpy.mockRestore();
+    expect(mockLog).not.toHaveBeenCalled();
+    expect(mockError).toHaveBeenCalled();
+    expect(mockWarn).toHaveBeenCalled();
+    expect(mockInfo).toHaveBeenCalled();
+    expect(mockDebug).not.toHaveBeenCalled();
+    mockLog.mockRestore();
+    mockError.mockRestore();
+    mockWarn.mockRestore();
+    mockInfo.mockRestore();
+    mockDebug.mockRestore();
   });
 
   /* eslint-disable max-len */
   it("should call console.{error,warn,info, log} if logger level is set to \"DEBUG\"", () => {
   /* eslint-enable max-len */
-    const logSpy = jest.spyOn(console, "log").mockImplementation(jest.fn());
-    const errorSpy = jest.spyOn(console, "error").mockImplementation(jest.fn());
-    const warnSpy = jest.spyOn(console, "warn").mockImplementation(jest.fn());
-    const infoSpy = jest.spyOn(console, "info").mockImplementation(jest.fn());
-    const debugSpy = jest.spyOn(console, "debug").mockImplementation(jest.fn());
+    const mockLog = jest.spyOn(console, "log").mockImplementation(jest.fn());
+    const mockError = jest.spyOn(console, "error").mockImplementation(jest.fn());
+    const mockWarn = jest.spyOn(console, "warn").mockImplementation(jest.fn());
+    const mockInfo = jest.spyOn(console, "info").mockImplementation(jest.fn());
+    const mockDebug = jest.spyOn(console, "debug").mockImplementation(jest.fn());
 
     const logger = new Logger();
     logger.setLevel("DEBUG");
@@ -200,15 +200,15 @@ describe("utils - Logger", () => {
     logger.warn("test");
     logger.info("test");
     logger.debug("test");
-    expect(logSpy).toHaveBeenCalled();
-    expect(errorSpy).toHaveBeenCalled();
-    expect(warnSpy).toHaveBeenCalled();
-    expect(infoSpy).toHaveBeenCalled();
-    expect(debugSpy).not.toHaveBeenCalled();
-    logSpy.mockRestore();
-    errorSpy.mockRestore();
-    warnSpy.mockRestore();
-    infoSpy.mockRestore();
-    debugSpy.mockRestore();
+    expect(mockLog).toHaveBeenCalled();
+    expect(mockError).toHaveBeenCalled();
+    expect(mockWarn).toHaveBeenCalled();
+    expect(mockInfo).toHaveBeenCalled();
+    expect(mockDebug).not.toHaveBeenCalled();
+    mockLog.mockRestore();
+    mockError.mockRestore();
+    mockWarn.mockRestore();
+    mockInfo.mockRestore();
+    mockDebug.mockRestore();
   });
 });

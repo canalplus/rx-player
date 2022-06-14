@@ -39,7 +39,7 @@ describe("parsers - webvtt - toHTML", () => {
       },
     }));
 
-    const toHTML = require("../to_html").default;
+    const toHTML = jest.requireActual("../to_html").default;
     const cueObject = {
       start: 0,
       end: 100,
@@ -80,7 +80,7 @@ describe("parsers - webvtt - toHTML", () => {
       },
     }));
 
-    const toHTML = require("../to_html").default;
+    const toHTML = jest.requireActual("../to_html").default;
     const cueObject = {
       start: 0,
       end: 100,
@@ -123,7 +123,7 @@ describe("parsers - webvtt - toHTML", () => {
       },
     }));
 
-    const toHTML = require("../to_html").default;
+    const toHTML = jest.requireActual("../to_html").default;
     const cueObject = {
       start: 0,
       end: 100,
@@ -165,7 +165,7 @@ describe("parsers - webvtt - toHTML", () => {
       },
     }));
 
-    const toHTML = require("../to_html").default;
+    const toHTML = jest.requireActual("../to_html").default;
     const cueObject = {
       start: 0,
       end: 100,
@@ -205,7 +205,7 @@ describe("parsers - webvtt - toHTML", () => {
       },
     }));
 
-    const toHTML = require("../to_html").default;
+    const toHTML = jest.requireActual("../to_html").default;
     const cueObject = {
       start: 0,
       end: 100,

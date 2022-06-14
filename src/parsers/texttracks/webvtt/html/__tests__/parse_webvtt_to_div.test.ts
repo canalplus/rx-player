@@ -27,13 +27,13 @@ describe("parsers - webvtt - parseWebVTT", () => {
   });
 
   it("should throw if text is empty", () => {
-    const parseWebVTT = require("../parse_webvtt_to_div").default;
+    const parseWebVTT = jest.requireActual("../parse_webvtt_to_div").default;
     expect(() => parseWebVTT("", 0))
       .toThrowError("Can't parse WebVTT: Invalid File.");
   });
 
   it("should throw if file seems to be invalid", () => {
-    const parseWebVTT = require("../parse_webvtt_to_div").default;
+    const parseWebVTT = jest.requireActual("../parse_webvtt_to_div").default;
     expect(() => parseWebVTT("WEBWTT\n", 0))
       .toThrowError("Can't parse WebVTT: Invalid File.");
   });
@@ -95,7 +95,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
       getFirstLineAfterHeader: spyGetFirstLineAfterHeader,
     }));
 
-    const parseWebVTT = require("../parse_webvtt_to_div").default;
+    const parseWebVTT = jest.requireActual("../parse_webvtt_to_div").default;
     expect(parseWebVTT("WEBVTT\n", 0)).toEqual(
       [
         {
@@ -169,7 +169,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
       getFirstLineAfterHeader: spyGetFirstLineAfterHeader,
     }));
 
-    const parseWebVTT = require("../parse_webvtt_to_div").default;
+    const parseWebVTT = jest.requireActual("../parse_webvtt_to_div").default;
     expect(parseWebVTT("WEBVTT\n", 0)).toEqual([]);
     expect(spyGetFirstLineAfterHeader).toHaveBeenCalledTimes(1);
     expect(spyGetStyleBlock).toHaveBeenCalledTimes(1);
