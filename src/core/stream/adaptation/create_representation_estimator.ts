@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import { ICustomError, MediaError } from "../../../errors";
+import { MediaError } from "../../../errors";
 import Manifest, {
   Adaptation,
   Period,
   Representation,
 } from "../../../manifest";
+import { IPlayerError } from "../../../public_types";
 import createSharedReference, {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
@@ -59,7 +60,7 @@ export default function getRepresentationEstimate(
   playbackObserver : IReadOnlyPlaybackObserver<
     IRepresentationEstimatorPlaybackObservation
   >,
-  onFatalError: (err : ICustomError) => void,
+  onFatalError: (err : IPlayerError) => void,
   cancellationSignal : CancellationSignal
 ) : { estimateRef : IReadOnlySharedReference<IABREstimate>;
       abrCallbacks : IRepresentationEstimatorCallbacks; }
