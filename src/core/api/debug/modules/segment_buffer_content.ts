@@ -1,8 +1,8 @@
 import {
-  IAdaptation,
-  IPeriod,
-  IRepresentation,
-} from "../../../../public_types";
+  Adaptation,
+  Period,
+} from "../../../../manifest";
+import { IRepresentation } from "../../../../public_types";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import { CancellationSignal } from "../../../../utils/task_canceller";
 import { IBufferType } from "../../../segment_buffers";
@@ -42,7 +42,7 @@ export default function createSegmentBufferGraph(
   return bufferGraphWrapper;
 
   function update() {
-    if (instance.getMediaElement() === null) {
+    if (instance.getVideoElement() === null) {
       // disposed player. Clean-up everything
       bufferGraphWrapper.style.display = "none";
       bufferGraphWrapper.innerHTML = "";
@@ -112,8 +112,8 @@ export default function createSegmentBufferGraph(
 
 function constructRepresentationInfo(
   content : {
-    period : IPeriod;
-    adaptation : IAdaptation;
+    period : Period;
+    adaptation : Adaptation;
     representation : IRepresentation;
   }
 ) : string {
