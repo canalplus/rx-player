@@ -146,44 +146,6 @@ export type IInitialManifest = Document |
 export type IRepresentationFilter = (representation: IRepresentation,
                                      adaptationInfos: IRepresentationInfos) => boolean;
 
-/** Manifest, as documented in the API documentation. */
-export interface IManifest {
-  periods : IPeriod[];
-  /**
-   * @deprecated
-   */
-  adaptations : { audio? : IAdaptation[];
-                  video? : IAdaptation[];
-                  text? : IAdaptation[]; };
-  isLive : boolean;
-  transport : string;
-}
-
-/** Period, as documented in the API documentation. */
-export interface IPeriod {
-  id : string;
-  start : number;
-  end? : number | undefined;
-  adaptations : { audio? : IAdaptation[];
-                  video? : IAdaptation[];
-                  text? : IAdaptation[]; };
-}
-
-/** Adaptation (represents a track), as documented in the API documentation. */
-export interface IAdaptation {
-  /** String identifying the Adaptation, unique per Period. */
-  id : string;
-  type : "video" | "audio" | "text";
-  language? : string | undefined;
-  normalizedLanguage? : string | undefined;
-  isAudioDescription? : boolean | undefined;
-  isClosedCaption? : boolean | undefined;
-  isTrickModeTrack? : boolean | undefined;
-  representations : IRepresentation[];
-
-  getAvailableBitrates() : number[];
-}
-
 interface IRepresentationIndex {
   getSegments(up : number, duration : number) : IExposedSegment[];
 }
