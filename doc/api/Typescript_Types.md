@@ -140,16 +140,6 @@ exported:
     `audioTrackSwitchingMode` property optionally given to `loadVideo`.
 
 
-### Manifest structure
-
-Several `RxPlayer` methods rely on a `Manifest` structure and one of its
-"children": the `Period`, the `Adaptation`, the `Representation` or the
-`Segment`.
-
-All of those can be imported from `"rx-player/types"` respectively as
-`IManifest`, `IPeriod`, `IAdaptation`, `IRepresentation` and `ISegment`
-
-
 ### getPlayerState method / playerStateChange event
 
 The return type of the `getPlayerState` state method and of the
