@@ -25,10 +25,17 @@ import { IChunkContext } from "./types";
 export interface IBufferedHistoryEntry {
   /** `performance.now()` when the event happened. */
   date : number;
-  /** Start time at which we observed that segment/chunk starts at, in seconds. */
-  bufferedStart : number;
-  /** *End time at which we observed that segment/chunk ends at, in seconds. */
-  bufferedEnd : number;
+
+  /**
+   * Timestamps of what has been buffered with that segment.
+   * `null` if it has been immediately garbage collected.
+   */
+  buffered : null | {
+    /** Start time at which we observed that segment/chunk starts at, in seconds. */
+    start: number;
+    /** *End time at which we observed that segment/chunk ends at, in seconds. */
+    end: number;
+  };
   /** Content metadata linked to the segment, allowing to recognize it. */
   context : IChunkContext;
 
@@ -73,18 +80,15 @@ export default class BufferedHistory {
    * To call when the full range of a given segment becomes known.
    *
    * @param {Object} context
-   * @param {number} bufferedStart
-   * @param {number} bufferedEnd
+   * @param {Array.<number>|null} buffered
    */
   public addBufferedSegment(
     context : IChunkContext,
-    bufferedStart : number,
-    bufferedEnd : number
+    buffered : { start: number; end: number } | null
   ) : void {
     const now = performance.now();
     this._history.push({ date: now,
-                         bufferedStart,
-                         bufferedEnd,
+                         buffered,
                          context });
     this._cleanHistory(now);
 

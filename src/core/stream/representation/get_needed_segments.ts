@@ -117,7 +117,7 @@ export default function getNeededSegments({
   segmentsBeingPushed,
   maxBufferSize,
 } : IGetNeededSegmentsArguments) : INeededSegments {
-  const { representation } = content;
+  const { adaptation, representation } = content;
   let availableBufferSize = getAvailableBufferSize(bufferedSegments,
                                                    segmentsBeingPushed,
                                                    maxBufferSize);
@@ -246,6 +246,27 @@ export default function getNeededSegments({
       if (time > neededRange.start + MIN_BUFFER_AHEAD) {
         shouldStopLoadingSegments = true;
         segmentsOnHold.push(segment);
+        return false;
+      }
+    }
+
+    // check if the browser is not just garbage collecting it
+    const segmentHistory = getBufferedHistory(contentObject);
+    if (segmentHistory.length > 1) {
+      const lastTimeItWasPushed = segmentHistory[segmentHistory.length - 1];
+      const beforeLastTimeItWasPushed = segmentHistory[segmentHistory.length - 2];
+      if (lastTimeItWasPushed.buffered === null &&
+          beforeLastTimeItWasPushed.buffered === null
+      ) {
+        log.warn("Stream: Segment GCed multiple times in a row, ignoring it.",
+                 "If this happens a lot and lead to unpleasant experience, please " +
+                 " check your device's available memory. If it's low when this message " +
+                 "is emitted, you might want to update the RxPlayer's settings (" +
+                 "`maxBufferAhead`, `maxVideoBufferSize` etc.) so less memory is used " +
+                 "by regular media data buffering." +
+                 adaptation.type,
+                 representation.id,
+                 segment.time);
         return false;
       }
     }
@@ -507,19 +528,24 @@ function shouldReloadSegmentGCedAtTheStart(
   }
 
   const lastEntry = segmentEntries[segmentEntries.length - 1];
-  const lastBufferedStart = lastEntry.bufferedStart;
+  const lastBufferedStart = lastEntry.buffered?.start;
 
   // If the current segment's buffered start is much higher than what it
   // initially was when we pushed it, the segment has a very high chance of
   // having been truly garbage-collected.
   if (currentBufferedStart !== undefined &&
+      lastBufferedStart !== undefined &&
       currentBufferedStart - lastBufferedStart > 0.05)
   {
     return true;
   }
 
   const prevEntry = segmentEntries[segmentEntries.length - 2];
-  const prevBufferedStart = prevEntry.bufferedStart;
+  const prevBufferedStart = prevEntry.buffered?.start;
+
+  if (prevBufferedStart === undefined || lastBufferedStart === undefined) {
+    return true;
+  }
 
   // Compare `bufferedStart` from the last time this segment was pushed
   // (`entry.bufferedStart`) to the previous time it was pushed
@@ -548,7 +574,7 @@ function shouldReloadSegmentGCedAtTheStart(
  * of classical garbage collection.
  *
  * @param {Array.<Object>} segmentEntries
- * @param {number|undefined} currentBufferedStart
+ * @param {number|undefined} currentBufferedEnd
  * @returns {boolean}
  */
 function shouldReloadSegmentGCedAtTheEnd(
@@ -559,19 +585,24 @@ function shouldReloadSegmentGCedAtTheEnd(
     return true;
   }
   const lastEntry = segmentEntries[segmentEntries.length - 1];
-  const lastBufferedEnd = lastEntry.bufferedEnd;
+  const lastBufferedEnd = lastEntry.buffered?.end;
 
   // If the current segment's buffered end is much lower than what it
   // initially was when we pushed it, the segment has a very high chance of
   // having been truly garbage-collected.
   if (currentBufferedEnd !== undefined &&
+      lastBufferedEnd !== undefined &&
       lastBufferedEnd - currentBufferedEnd > 0.05)
   {
     return true;
   }
 
   const prevEntry = segmentEntries[segmentEntries.length - 2];
-  const prevBufferedEnd = prevEntry.bufferedEnd;
+  const prevBufferedEnd = prevEntry.buffered?.end;
+
+  if (prevBufferedEnd === undefined || lastBufferedEnd === undefined) {
+    return true;
+  }
 
   // Compare `bufferedEnd` from the last time this segment was pushed
   // (`entry.bufferedEnd`) to the previous time it was pushed

@@ -187,7 +187,7 @@ export default class SegmentInventory {
    * /!\ A SegmentInventory should not be associated to multiple media buffers
    * at a time, so each `synchronizeBuffered` call should be given a TimeRanges
    * coming from the same buffer.
-   * @param {TimeRanges}
+   * @param {TimeRanges} buffered
    */
   public synchronizeBuffered(buffered : TimeRanges) : void {
     const inventory = this._inventory;
@@ -244,7 +244,12 @@ export default class SegmentInventory {
           precizeEnd: lastDeletedSegment.precizeEnd,
         };
         log.debug(`SI: ${numberOfSegmentToDelete} segments GCed.`, bufferType);
-        inventory.splice(indexBefore, numberOfSegmentToDelete);
+        const removed = inventory.splice(indexBefore, numberOfSegmentToDelete);
+        for (const seg of removed) {
+          if (seg.bufferedStart === undefined && seg.bufferedEnd === undefined) {
+            this._bufferedHistory.addBufferedSegment(seg.infos, null);
+          }
+        }
         inventoryIndex = indexBefore;
       }
 
@@ -318,7 +323,12 @@ export default class SegmentInventory {
     if (thisSegment != null) {
       log.debug("SI: last segments have been GCed",
                 bufferType, inventoryIndex, inventory.length);
-      inventory.splice(inventoryIndex, inventory.length - inventoryIndex);
+      const removed = inventory.splice(inventoryIndex, inventory.length - inventoryIndex);
+      for (const seg of removed) {
+        if (seg.bufferedStart === undefined && seg.bufferedEnd === undefined) {
+          this._bufferedHistory.addBufferedSegment(seg.infos, null);
+        }
+      }
     }
     if (bufferType !== undefined && log.hasLevel("DEBUG")) {
       log.debug(`SI: current ${bufferType} inventory timeline:\n` +
@@ -757,9 +767,8 @@ export default class SegmentInventory {
       this.synchronizeBuffered(newBuffered);
       for (const seg of resSegments) {
         if (seg.bufferedStart !== undefined && seg.bufferedEnd !== undefined) {
-          this._bufferedHistory.addBufferedSegment(seg.infos,
-                                                   seg.bufferedStart,
-                                                   seg.bufferedEnd);
+          this._bufferedHistory.addBufferedSegment(seg.infos, { start: seg.bufferedStart,
+                                                                end: seg.bufferedEnd });
         } else {
           log.debug("SI: buffered range not known after sync. Skipping history.",
                     seg.start,
@@ -922,9 +931,9 @@ function guessBufferedStartFromRangeStart(
 /**
  * Evaluate the given buffered Chunk's buffered end from its range's end,
  * considering that this chunk is the last one in it.
- * @param {Object} firstSegmentInRange
- * @param {number} rangeStart
- * @param {Object} infos
+ * @param {Object} lastSegmentInRange
+ * @param {number} rangeEnd
+ * @param {string} bufferType
  */
 function guessBufferedEndFromRangeEnd(
   lastSegmentInRange : IBufferedChunk,
