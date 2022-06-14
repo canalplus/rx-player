@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-import {
-  ICustomError,
-  MediaError,
-} from "../errors";
+import { MediaError } from "../errors";
 import { IParsedManifest } from "../parsers/manifest";
+import {
+  IPlayerError,
+  IRepresentationFilter,
+} from "../public_types";
 import arrayFind from "../utils/array_find";
 import EventEmitter from "../utils/event_emitter";
 import idGenerator from "../utils/id_generator";
 import warnOnce from "../utils/warn_once";
-import Adaptation, {
-  IRepresentationFilter,
-} from "./adaptation";
+import Adaptation from "./adaptation";
 import Period, {
   IManifestAdaptations,
 } from "./period";
@@ -232,7 +231,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * Array containing every minor errors that happened when the Manifest has
    * been created, in the order they have happened.
    */
-  public contentWarnings : ICustomError[];
+  public contentWarnings : IPlayerError[];
 
   /*
    * Difference between the server's clock in milliseconds and the return of the

@@ -23,7 +23,7 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable no-restricted-properties */
 
-import { ICustomError } from "../../../../errors";
+import { IPlayerError } from "../../../../public_types";
 import { concat } from "../../../../utils/byte_parsing";
 import {
   formatFakeChallengeFromInitData,
@@ -334,10 +334,10 @@ function checkGetLicense(
     function checkKeyLoadError(error : unknown) {
       try {
         expect(error).toBeInstanceOf(Error);
-        expect((error as ICustomError).name).toEqual("EncryptedMediaError");
-        expect((error as ICustomError).type).toEqual("ENCRYPTED_MEDIA_ERROR");
-        expect((error as ICustomError).code).toEqual("KEY_LOAD_ERROR");
-        expect((error as ICustomError).message).toEqual("AAAA");
+        expect((error as IPlayerError).name).toEqual("EncryptedMediaError");
+        expect((error as IPlayerError).type).toEqual("ENCRYPTED_MEDIA_ERROR");
+        expect((error as IPlayerError).code).toEqual("KEY_LOAD_ERROR");
+        expect((error as IPlayerError).message).toEqual("AAAA");
       } catch (e) {
         rej(e);
       }

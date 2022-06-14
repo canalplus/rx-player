@@ -15,8 +15,6 @@
  */
 
 import Adaptation, {
-  IRepresentationFilter,
-  IRepresentationInfos,
   SUPPORTED_ADAPTATIONS_TYPE,
 } from "./adaptation";
 import Manifest, {
@@ -33,10 +31,7 @@ import {
   ISegment,
   StaticRepresentationIndex,
 } from "./representation_index";
-import {
-  IAdaptationType,
-  IHDRInformation,
-} from "./types";
+import { IAdaptationType } from "./types";
 import {
   areSameContent,
   getLoggableSegmentId,
@@ -59,11 +54,8 @@ export {
   // types
   IAdaptationType,
   IBaseContentInfos,
-  IHDRInformation,
   IManifestParsingOptions,
   IMetaPlaylistPrivateInfos,
-  IRepresentationFilter,
-  IRepresentationInfos,
   IRepresentationIndex,
   ISegment,
   ISupplementaryImageTrack,

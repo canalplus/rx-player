@@ -57,7 +57,6 @@ import {
   ErrorCodes,
   ErrorTypes,
   formatError,
-  ICustomError,
   IErrorCode,
   IErrorType,
   MediaError,
@@ -69,7 +68,29 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import { IBifThumbnail } from "../../parsers/images/bif";
+import {
+  IAdaptation,
+  IAudioTrack,
+  IAudioTrackPreference,
+  IAvailableAudioTrack,
+  IAvailableTextTrack,
+  IAvailableVideoTrack,
+  IBifThumbnail,
+  IBitrateEstimate,
+  IConstructorOptions,
+  IDecipherabilityUpdateContent,
+  ILoadVideoOptions,
+  IPeriod,
+  IPlayerError,
+  IPlayerState,
+  IPositionUpdate,
+  IRepresentation,
+  IStreamEvent,
+  ITextTrack,
+  ITextTrackPreference,
+  IVideoTrack,
+  IVideoTrackPreference,
+} from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import EventEmitter, {
   fromEvent,
@@ -103,7 +124,6 @@ import initializeMediaSourcePlayback, {
   IReloadingMediaSourceEvent,
   IStalledEvent,
 } from "../init";
-import { IStreamEventData } from "../init/stream_events_emitter";
 import SegmentBuffersStore, {
   IBufferedChunk,
   IBufferType,
@@ -111,14 +131,11 @@ import SegmentBuffersStore, {
 import { IInbandEvent } from "../stream";
 import emitSeekEvents from "./emit_seek_events";
 import getPlayerState, {
-  IPlayerState,
   PLAYER_STATES,
 } from "./get_player_state";
 import MediaElementTrackChoiceManager from "./media_element_track_choice_manager";
 import {
   checkReloadOptions,
-  IConstructorOptions,
-  ILoadVideoOptions,
   IParsedLoadVideoOptions,
   parseConstructorOptions,
   parseLoadVideoOptions,
@@ -126,17 +143,7 @@ import {
 import PlaybackObserver, {
   IPlaybackObservation,
 } from "./playback_observer";
-import TrackChoiceManager, {
-  IAudioTrackPreference,
-  ITextTrackPreference,
-  ITMAudioTrack,
-  ITMAudioTrackListItem,
-  ITMTextTrack,
-  ITMTextTrackListItem,
-  ITMVideoTrack,
-  ITMVideoTrackListItem,
-  IVideoTrackPreference,
-} from "./track_choice_manager";
+import TrackChoiceManager from "./track_choice_manager";
 
 /* eslint-disable @typescript-eslint/naming-convention */
 
@@ -1084,7 +1091,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * when none is known for now.
    */
   getCurrentAdaptations(
-  ) : Partial<Record<IBufferType, Adaptation|null>> | null {
+  ) : Partial<Record<IBufferType, IAdaptation|null>> | null {
     warnOnce("getCurrentAdaptations is deprecated." +
              " Please open an issue if you used this API.");
     if (this._priv_contentInfos === null) {
@@ -1108,7 +1115,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * (`null` when none is known for now.
    */
   getCurrentRepresentations(
-  ) : Partial<Record<IBufferType, Representation|null>> | null {
+  ) : Partial<Record<IBufferType, IRepresentation|null>> | null {
     warnOnce("getCurrentRepresentations is deprecated." +
              " Please open an issue if you used this API.");
     return this._priv_getCurrentRepresentations();
@@ -1863,7 +1870,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Returns every available audio tracks for the current Period.
    * @returns {Array.<Object>|null}
    */
-  getAvailableAudioTracks() : ITMAudioTrackListItem[] {
+  getAvailableAudioTracks() : IAvailableAudioTrack[] {
     if (this._priv_contentInfos === null) {
       return [];
     }
@@ -1881,7 +1888,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Returns every available text tracks for the current Period.
    * @returns {Array.<Object>|null}
    */
-  getAvailableTextTracks() : ITMTextTrackListItem[] {
+  getAvailableTextTracks() : IAvailableTextTrack[] {
     if (this._priv_contentInfos === null) {
       return [];
     }
@@ -1899,7 +1906,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Returns every available video tracks for the current Period.
    * @returns {Array.<Object>|null}
    */
-  getAvailableVideoTracks() : ITMVideoTrackListItem[] {
+  getAvailableVideoTracks() : IAvailableVideoTrack[] {
     if (this._priv_contentInfos === null) {
       return [];
     }
@@ -1917,7 +1924,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Returns currently chosen audio language for the current Period.
    * @returns {string}
    */
-  getAudioTrack() : ITMAudioTrack|null|undefined {
+  getAudioTrack() : IAudioTrack|null|undefined {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
@@ -1938,7 +1945,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Returns currently chosen subtitle for the current Period.
    * @returns {string}
    */
-  getTextTrack() : ITMTextTrack|null|undefined {
+  getTextTrack() : ITextTrack|null|undefined {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
@@ -1959,7 +1966,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Returns currently chosen video track for the current Period.
    * @returns {string}
    */
-  getVideoTrack() : ITMVideoTrack|null|undefined {
+  getVideoTrack() : IVideoTrack|null|undefined {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
@@ -2450,7 +2457,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Trigger the right API event.
    * @param {Error} error
    */
-  private _priv_onPlaybackWarning(error : ICustomError) : void {
+  private _priv_onPlaybackWarning(error : IPlayerError) : void {
     const formattedError = formatError(error, {
       defaultCode: "NONE",
       defaultReason: "An unknown error happened.",
@@ -2863,7 +2870,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     const maximumPosition = manifest !== null ? manifest.getMaximumSafePosition() :
                                                 undefined;
-    const positionData : IPositionUpdateItem = {
+    const positionData : IPositionUpdate = {
       position: observation.position,
       duration: observation.duration,
       playbackRate: observation.playbackRate,
@@ -2943,67 +2950,29 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 }
 Player.version = /* PLAYER_VERSION */"3.27.0";
 
-/** Payload emitted with a `positionUpdate` event. */
-export interface IPositionUpdateItem {
-  /** current position the player is in, in seconds. */
-  position : number;
-  /** Last position set for the current media currently, in seconds. */
-  duration : number;
-  /** Playback rate (i.e. speed) at which the current media is played. */
-  playbackRate : number;
-  /** Amount of buffer available for now in front of the current position, in seconds. */
-  bufferGap : number;
-  /** Current maximum seekable position. */
-  maximumBufferTime? : number | undefined;
-  wallClockTime? : number | undefined;
-  /**
-   * Only for live contents. Difference between the "live edge" and the current
-   * position, in seconds.
-   */
-  liveGap? : number | undefined;
-}
-
-/** Payload emitted with a `bitrateEstimationChange` event. */
-export interface IBitrateEstimate {
-  /** The type of buffer this estimate was done for (e.g. "audio). */
-  type : IBufferType;
-  /** The calculated bitrate, in bits per seconds. */
-  bitrate : number | undefined;
-}
-
-export type IStreamEvent = { data: IStreamEventData;
-                             start: number;
-                             end: number;
-                             onExit?: () => void; } |
-                           { data: IStreamEventData;
-                             start: number; };
-
 /** Every events sent by the RxPlayer's public API. */
 interface IPublicAPIEvent {
   playerStateChange : string;
-  positionUpdate : IPositionUpdateItem;
-  audioTrackChange : ITMAudioTrack | null;
-  textTrackChange : ITMTextTrack | null;
-  videoTrackChange : ITMVideoTrack | null;
+  positionUpdate : IPositionUpdate;
+  audioTrackChange : IAudioTrack | null;
+  textTrackChange : ITextTrack | null;
+  videoTrackChange : IVideoTrack | null;
   audioBitrateChange : number;
   videoBitrateChange : number;
   imageTrackUpdate : { data: IBifThumbnail[] };
   fullscreenChange : boolean;
   bitrateEstimationChange : IBitrateEstimate;
   volumeChange : number;
-  error : ICustomError | Error;
-  warning : ICustomError | Error;
+  error : IPlayerError | Error;
+  warning : IPlayerError | Error;
   nativeTextTracksChange : TextTrack[];
-  periodChange : Period;
+  periodChange : IPeriod;
   availableAudioBitratesChange : number[];
   availableVideoBitratesChange : number[];
-  availableAudioTracksChange : ITMAudioTrackListItem[];
-  availableTextTracksChange : ITMTextTrackListItem[];
-  availableVideoTracksChange : ITMVideoTrackListItem[];
-  decipherabilityUpdate : Array<{ manifest : Manifest;
-                                  period : Period;
-                                  adaptation : Adaptation;
-                                  representation : Representation; }>;
+  availableAudioTracksChange : IAvailableAudioTrack[];
+  availableTextTracksChange : IAvailableTextTrack[];
+  availableVideoTracksChange : IAvailableVideoTrack[];
+  decipherabilityUpdate : IDecipherabilityUpdateContent[];
   seeking : null;
   seeked : null;
   streamEvent : IStreamEvent;
@@ -3012,4 +2981,3 @@ interface IPublicAPIEvent {
 }
 
 export default Player;
-export { IStreamEventData };

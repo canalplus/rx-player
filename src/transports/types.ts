@@ -17,21 +17,20 @@
 import { IInbandEvent } from "../core/stream";
 import Manifest, {
   Adaptation,
-  IExposedAdaptation,
-  IExposedManifest,
-  IExposedPeriod,
-  IExposedRepresentation,
-  IExposedSegment,
-  IRepresentationFilter,
   ISegment,
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
   Period,
   Representation,
 } from "../manifest";
-import { IBifThumbnail } from "../parsers/images/bif";
-import { ILocalManifest } from "../parsers/manifest/local";
-import { IMetaPlaylist } from "../parsers/manifest/metaplaylist";
+import {
+  IBifThumbnail,
+  ILoadedManifestFormat,
+  IManifestLoader,
+  IRepresentationFilter,
+  ISegmentLoader as ICustomSegmentLoader,
+  IServerSyncInfos,
+} from "../public_types";
 import TaskCanceller, {
   CancellationSignal,
 } from "../utils/task_canceller";
@@ -483,74 +482,6 @@ export type ITransportSegmentPipeline = ITransportAudioVideoSegmentPipeline |
 export type ITransportPipeline = ITransportManifestPipeline |
                                  ITransportSegmentPipeline;
 
-interface IServerSyncInfos { serverTimestamp : number;
-                             clientTime : number; }
-
-export interface ITransportOptions {
-  aggressiveMode? : boolean | undefined;
-  checkMediaSegmentIntegrity? : boolean | undefined;
-  lowLatencyMode : boolean;
-  manifestLoader?: ICustomManifestLoader | undefined;
-  manifestUpdateUrl? : string | undefined;
-  referenceDateTime? : number | undefined;
-  representationFilter? : IRepresentationFilter | undefined;
-  segmentLoader? : ICustomSegmentLoader | undefined;
-  serverSyncInfos? : IServerSyncInfos | undefined;
-  /* eslint-disable import/no-deprecated */
-  supplementaryImageTracks? : ISupplementaryImageTrack[] | undefined;
-  supplementaryTextTracks? : ISupplementaryTextTrack[] | undefined;
-  /* eslint-enable import/no-deprecated */
-
-  __priv_patchLastSegmentInSidx? : boolean | undefined;
-}
-
-export type ICustomSegmentLoader = (
-  // first argument: infos on the segment
-  infos : { url : string;
-            manifest : IExposedManifest;
-            period : IExposedPeriod;
-            adaptation : IExposedAdaptation;
-            representation : IExposedRepresentation;
-            segment : IExposedSegment; },
-
-  // second argument: callbacks
-  callbacks : { resolve : (rArgs : { data : ArrayBuffer | Uint8Array;
-                                     sendingTime? : number | undefined;
-                                     receivingTime? : number | undefined;
-                                     size? : number | undefined;
-                                     duration? : number | undefined; }) => void;
-
-                 reject : (err? : unknown) => void;
-                 fallback : () => void;
-                 progress : (
-                   info : { duration : number;
-                            size : number;
-                            totalSize? : number | undefined; }
-                 ) => void;
-  }
-) =>
-  // returns either the aborting callback or nothing
-  (() => void)|void;
-
-export type ICustomManifestLoader = (
-  // first argument: url of the manifest
-  url : string | undefined,
-
-  // second argument: callbacks
-  callbacks : { resolve : (args : { data : ILoadedManifestFormat;
-                                    url? : string | undefined;
-                                    sendingTime? : number | undefined;
-                                    receivingTime? : number | undefined;
-                                    size? : number | undefined;
-                                    duration? : number | undefined; })
-                          => void;
-
-                 reject : (err? : Error) => void;
-                 fallback : () => void; }
-) =>
-  // returns either the aborting callback or nothing
-  (() => void)|void;
-
 export interface ISegmentContext {
   /** Manifest object related to this segment. */
   manifest : Manifest;
@@ -669,14 +600,6 @@ export interface IChunkCompleteInformation {
   /** Size in bytes of the loaded data.  `undefined` if we don't know.  */
   size : number | undefined;
 }
-
-/** Format of a loaded Manifest before parsing. */
-export type ILoadedManifestFormat = Document |
-                                    string |
-                                    ArrayBuffer |
-                                    IMetaPlaylist |
-                                    ILocalManifest |
-                                    Manifest;
 
 /** Format of a loaded audio and video segment before parsing. */
 export type ILoadedAudioVideoSegmentFormat = Uint8Array |
@@ -835,4 +758,22 @@ export interface IRequestedData<T> {
   receivedTime? : number | undefined;
   /** Size in bytes of the loaded data.  `undefined` if we don't know.  */
   size : number | undefined;
+}
+
+export interface ITransportOptions {
+  aggressiveMode? : boolean | undefined;
+  checkMediaSegmentIntegrity? : boolean | undefined;
+  lowLatencyMode : boolean;
+  manifestLoader?: IManifestLoader | undefined;
+  manifestUpdateUrl? : string | undefined;
+  referenceDateTime? : number | undefined;
+  representationFilter? : IRepresentationFilter | undefined;
+  segmentLoader? : ICustomSegmentLoader | undefined;
+  serverSyncInfos? : IServerSyncInfos | undefined;
+  /* eslint-disable import/no-deprecated */
+  supplementaryImageTracks? : ISupplementaryImageTrack[] | undefined;
+  supplementaryTextTracks? : ISupplementaryTextTrack[] | undefined;
+  /* eslint-enable import/no-deprecated */
+
+  __priv_patchLastSegmentInSidx? : boolean | undefined;
 }

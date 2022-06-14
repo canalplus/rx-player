@@ -25,9 +25,7 @@ import {
   NetworkErrorTypes,
 } from "./error_codes";
 import formatError from "./format_error";
-import isKnownError, {
-  ICustomError,
-} from "./is_known_error";
+import isKnownError from "./is_known_error";
 import MediaError from "./media_error";
 import NetworkError from "./network_error";
 import OtherError from "./other_error";
@@ -42,7 +40,6 @@ export {
   IErrorCode,
   IErrorType,
   formatError,
-  ICustomError,
   MediaError as MediaError,
   NetworkError,
   OtherError,

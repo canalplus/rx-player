@@ -36,10 +36,10 @@ import {
   setElementSrc$,
 } from "../../compat";
 import log from "../../log";
+import { IKeySystemOption } from "../../public_types";
 import deferSubscriptions from "../../utils/defer_subscriptions";
 import { IReadOnlySharedReference } from "../../utils/reference";
 import { PlaybackObserver } from "../api";
-import { IKeySystemOption } from "../decrypt";
 import emitLoadedEvent from "./emit_loaded_event";
 import { IInitialTimeOptions } from "./get_initial_time";
 import initialSeekAndPlay from "./initial_seek_and_play";

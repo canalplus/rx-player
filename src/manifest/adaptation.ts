@@ -15,37 +15,19 @@
  */
 
 import { IParsedAdaptation } from "../parsers/manifest";
+import { IRepresentationFilter } from "../public_types";
 import arrayFind from "../utils/array_find";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import normalizeLanguage from "../utils/languages";
 import uniq from "../utils/uniq";
 import Representation from "./representation";
-import {
-  IAdaptationType,
-  IExposedRepresentation,
-} from "./types";
+import { IAdaptationType } from "./types";
 
 /** List in an array every possible value for the Adaptation's `type` property. */
 export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] = [ "audio",
                                                                "video",
                                                                "text",
                                                                "image" ];
-
-/**
- * Information describing a single Representation from an Adaptation, to be used
- * in the `representationFilter` API.
- */
-export interface IRepresentationInfos { bufferType: IAdaptationType;
-                                        language?: string | undefined;
-                                        isAudioDescription? : boolean | undefined;
-                                        isClosedCaption? : boolean | undefined;
-                                        isDub? : boolean | undefined;
-                                        isSignInterpreted?: boolean | undefined;
-                                        normalizedLanguage? : string | undefined; }
-
-/** Type for the `representationFilter` API. */
-export type IRepresentationFilter = (representation: IExposedRepresentation,
-                                     adaptationInfos: IRepresentationInfos) => boolean;
 
 /**
  * Normalized Adaptation structure.

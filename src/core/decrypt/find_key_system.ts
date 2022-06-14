@@ -22,10 +22,10 @@ import {
 import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
+import { IKeySystemOption } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
 import flatMap from "../../utils/flat_map";
 import { CancellationSignal } from "../../utils/task_canceller";
-import { IKeySystemOption } from "./types";
 import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 
 type MediaKeysRequirement = "optional" |

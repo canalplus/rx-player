@@ -15,7 +15,6 @@
  */
 
 import { Subject } from "rxjs";
-import { ICustomError } from "../../errors";
 import {
   Adaptation,
   ISegment,
@@ -23,6 +22,7 @@ import {
   Representation,
 } from "../../manifest";
 import { IEMSG } from "../../parsers/containers/isobmff";
+import { IPlayerError } from "../../public_types";
 import { IContentProtection } from "../decrypt";
 import { IBufferType } from "../segment_buffers";
 
@@ -111,7 +111,7 @@ export interface IStreamStatusEvent {
 export interface IStreamWarningEvent {
   type : "warning";
   /** The error corresponding to the warning given. */
-  value : ICustomError;
+  value : IPlayerError;
 }
 
 /** Emitted after a new segment has been succesfully added to the SegmentBuffer */

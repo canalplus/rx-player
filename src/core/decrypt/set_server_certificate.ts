@@ -17,10 +17,10 @@
 import { ICustomMediaKeys } from "../../compat";
 import {
   EncryptedMediaError,
-  ICustomError,
   isKnownError,
 } from "../../errors";
 import log from "../../log";
+import { IPlayerError } from "../../public_types";
 import ServerCertificateStore from "./utils/server_certificate_store";
 
 /**
@@ -69,7 +69,7 @@ export default async function trySettingServerCertificate(
 ) : Promise<{ type: "success"; value: unknown } |
             { type: "already-has-one" } |
             { type: "method-not-implemented" } |
-            { type: "error"; value: ICustomError }> {
+            { type: "error"; value: IPlayerError }> {
   if (ServerCertificateStore.hasOne(mediaKeys) === true) {
     log.info("DRM: The MediaKeys already has a server certificate, skipping...");
     return { type: "already-has-one" };

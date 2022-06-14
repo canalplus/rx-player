@@ -16,7 +16,7 @@
 
 import log from "../../../../log";
 import { Adaptation } from "../../../../manifest";
-import { IHDRInformation } from "../../../../manifest/types";
+import { IHDRInformation } from "../../../../public_types";
 import arrayFind from "../../../../utils/array_find";
 import objectAssign from "../../../../utils/object_assign";
 import {

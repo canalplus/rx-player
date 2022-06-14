@@ -21,9 +21,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
-import {
-  IRepresentationInfos,
-} from "../adaptation";
+import { IRepresentationInfos } from "../../public_types";
 import Representation from "../representation";
 
 const minimalRepresentationIndex = {

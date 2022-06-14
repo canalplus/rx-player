@@ -20,10 +20,8 @@ import {
   setMediaKeys,
 } from "../../compat";
 import log from "../../log";
+import { IKeySystemOption } from "../../public_types";
 import { CancellationSignal } from "../../utils/task_canceller";
-import {
-  IKeySystemOption,
-} from "./types";
 import LoadedSessionsStore from "./utils/loaded_sessions_store";
 import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 

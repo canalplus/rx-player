@@ -30,7 +30,6 @@ import {
   switchMap,
   take,
 } from "rxjs";
-import { ICustomError } from "../../../errors";
 import log from "../../../log";
 import Manifest, {
   Adaptation,
@@ -38,6 +37,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
+import { IPlayerError } from "../../../public_types";
 import {
   ISegmentParserParsedInitChunk,
   ISegmentParserParsedMediaChunk,
@@ -430,7 +430,7 @@ export interface IEndOfSegmentEvent { type : "end-of-segment";
  */
 export interface ILoaderRetryEvent { type : "retry";
                                      value : { segment : ISegment;
-                                               error : ICustomError; }; }
+                                               error : IPlayerError; }; }
 
 /**
  * Notify that the media segment queue is now empty.

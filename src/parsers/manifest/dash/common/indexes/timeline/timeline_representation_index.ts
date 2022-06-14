@@ -15,16 +15,14 @@
  */
 
 import config from "../../../../../../config";
-import {
-  ICustomError,
-  NetworkError,
-} from "../../../../../../errors";
+import { NetworkError } from "../../../../../../errors";
 import log from "../../../../../../log";
 import {
   IRepresentationIndex,
   ISegment,
   Representation,
 } from "../../../../../../manifest";
+import { IPlayerError } from "../../../../../../public_types";
 import { IEMSG } from "../../../../../containers/isobmff";
 import clearTimelineFromPosition from "../../../../utils/clear_timeline_from_position";
 import {
@@ -440,7 +438,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * @param {Error} error
    * @returns {Boolean}
    */
-  canBeOutOfSyncError(error : ICustomError) : boolean {
+  canBeOutOfSyncError(error : IPlayerError) : boolean {
     if (!this._isDynamic) {
       return false;
     }

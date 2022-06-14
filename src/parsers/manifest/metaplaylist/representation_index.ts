@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import { ICustomError } from "../../../errors";
 import {
   IBaseContentInfos,
   IRepresentationIndex,
   ISegment,
 } from "../../../manifest";
+import { IPlayerError } from "../../../public_types";
 import objectAssign from "../../../utils/object_assign";
 
 /**
@@ -149,7 +149,7 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    * @param {Object} segment
    * @returns {Boolean}
    */
-  public canBeOutOfSyncError(error : ICustomError, segment : ISegment) : boolean {
+  public canBeOutOfSyncError(error : IPlayerError, segment : ISegment) : boolean {
     if (segment.privateInfos?.metaplaylistInfos === undefined) {
       return false;
     }

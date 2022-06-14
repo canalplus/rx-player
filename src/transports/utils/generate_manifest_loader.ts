@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
+import {
+  IManifestLoader,
+  ILoadedManifestFormat,
+} from "../../public_types";
 import assertUnreachable from "../../utils/assert_unreachable";
 import request from "../../utils/request";
 import { CancellationSignal } from "../../utils/task_canceller";
 import {
-  ICustomManifestLoader,
-  ILoadedManifestFormat,
   IRequestedData,
 } from "../types";
 import callCustomManifestLoader from "./call_custom_manifest_loader";
@@ -66,7 +68,7 @@ function generateRegularManifestLoader(
  * @returns {Function}
  */
 export default function generateManifestLoader(
-  { customManifestLoader } : { customManifestLoader?: ICustomManifestLoader | undefined },
+  { customManifestLoader } : { customManifestLoader?: IManifestLoader | undefined },
   preferredType: "arraybuffer" | "text" | "document"
 ) : (
     url : string | undefined,

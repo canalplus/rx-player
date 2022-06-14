@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
+export { IAudioTrackSwitchingMode } from "../../../public_types";
 import PeriodStream, {
   IPeriodStreamArguments,
   IPeriodStreamOptions,
   IPeriodStreamPlaybackObservation,
 } from "./period_stream";
-export { IAudioTrackSwitchingMode } from "./get_adaptation_switch_strategy";
 
 export default PeriodStream;
 

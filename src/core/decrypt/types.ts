@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-import { ICustomMediaKeySession } from "../../compat";
-import { ICustomError } from "../../errors";
 import Manifest, {
   Adaptation,
   Period,
   Representation,
 } from "../../manifest";
+import { IPlayerError } from "../../public_types";
 import InitDataValuesContainer from "./utils/init_data_values_container";
 import LoadedSessionsStore from "./utils/loaded_sessions_store";
 import PersistentSessionsStore from "./utils/persistent_sessions_store";
@@ -77,7 +76,7 @@ export interface IInitDataValue {
 
 /** Event emitted when a minor - recoverable - error happened. */
 export interface IEMEWarningEvent { type : "warning";
-                                    value : ICustomError; }
+                                    value : IPlayerError; }
 
 export type ILicense = BufferSource |
                        ArrayBuffer;
@@ -160,17 +159,6 @@ export const enum MediaKeySessionLoadingType {
    */
   LoadedPersistentSession = "loaded-persistent-session",
 }
-
-/**
- * Data stored in a persistent MediaKeySession storage.
- * Has to be versioned to be able to play MediaKeySessions persisted in an old
- * RxPlayer version when in a new one.
- */
-export type IPersistentSessionInfo = IPersistentSessionInfoV4 |
-                                     IPersistentSessionInfoV3 |
-                                     IPersistentSessionInfoV2 |
-                                     IPersistentSessionInfoV1 |
-                                     IPersistentSessionInfoV0;
 
 /** Wrap an Uint8Array and allow serialization of it into base64. */
 interface ByteArrayContainer {
@@ -349,126 +337,4 @@ export interface IPersistentSessionInfoV0 {
   initData : number;
   /** Type giving information about the format of the initialization data. */
   initDataType? : string | undefined;
-}
-
-/** Persistent MediaKeySession storage interface. */
-export interface IPersistentSessionStorage {
-  /** Load persistent MediaKeySessions previously saved through the `save` callback. */
-  load() : IPersistentSessionInfo[] | undefined | null;
-  /**
-   * Save new persistent MediaKeySession information.
-   * The given argument should be returned by the next `load` call.
-   */
-  save(x : IPersistentSessionInfo[]) : void;
-  /**
-   * By default, MediaKeySessions persisted through an older version of the
-   * RxPlayer will still be available under this version.
-   *
-   * By setting this value to `true`, we can disable that condition in profit of
-   * multiple optimizations (to load a content faster, use less CPU resources
-   * etc.).
-   *
-   * As such, if being able to load MediaKeySession persisted via older version
-   * is not important to you, we recommend setting that value to `true`.
-   */
-  disableRetroCompatibility? : boolean;
-}
-
-/** Options related to a single key system. */
-export interface IKeySystemOption {
-  /**
-   * Key system wanted.
-   *
-   * Either as a canonical name (like "widevine" or "playready") or as  the
-   * complete reverse domain name denomination (e.g. "com.widevine.alpha").
-   */
-  type : string;
-  /** Logic used to fetch the license */
-  getLicense : (message : Uint8Array, messageType : string)
-                 => Promise<BufferSource | null> |
-                    BufferSource |
-                    null;
-  /** Supplementary optional configuration for the getLicense call. */
-  getLicenseConfig? : { retry? : number;
-                        timeout? : number; };
-  /**
-   * Optional `serverCertificate` we will try to set to speed-up the
-   * license-fetching process.
-   * `null` or `undefined` indicates that no serverCertificate should be
-   * set.
-   */
-  serverCertificate? : BufferSource | null;
-  /**
-   * If `true`, we will try to persist the licenses obtained as well as try to
-   * load already-persisted licenses.
-   */
-  persistentLicense? : boolean;
-  /** Storage mechanism used to store and retrieve information on stored licenses. */
-  licenseStorage? : IPersistentSessionStorage;
-  /**
-   * If true, we will require that the CDM is able to persist state.
-   * See EME specification related to the `persistentState` configuration.
-   */
-  persistentStateRequired? : boolean;
-  /**
-   * If true, we will require that the CDM should use distinctive identyfiers.
-   * See EME specification related to the `distinctiveIdentifier` configuration.
-   */
-  distinctiveIdentifierRequired? : boolean;
-  /**
-   * If true, all open MediaKeySession (used to decrypt the content) will be
-   * closed when the current playback stops.
-   */
-  closeSessionsOnStop? : boolean;
-
-  singleLicensePer? : "content" |
-                      "periods" |
-                      "init-data";
-  /**
-   * Maximum number of `MediaKeySession` that should be created on the same
-   * MediaKeys.
-   */
-  maxSessionCacheSize? : number;
-  /** Callback called when one of the key's status change. */
-  onKeyStatusesChange? : (evt : Event, session : MediaKeySession |
-                                                 ICustomMediaKeySession)
-                           => Promise<BufferSource | null> |
-                              BufferSource |
-                              null;
-  /** Allows to define custom robustnesses value for the video data. */
-  videoRobustnesses?: Array<string|undefined>;
-  /** Allows to define custom robustnesses value for the audio data. */
-  audioRobustnesses?: Array<string|undefined>;
-  /**
-   * If explicitely set to `false`, we won't throw on error when a used license
-   * is expired.
-   */
-  throwOnLicenseExpiration? : boolean;
-  /**
-   * If set to `true`, we will not wait until the MediaKeys instance is attached
-   * to the media element before pushing segments to it.
-   * Setting it to `true` might be needed on some targets to work-around a
-   * deadlock in the browser-side logic (or most likely the CDM implementation)
-   * but it can also break playback of contents with both encrypted and
-   * unencrypted data, most especially on Chromium and Chromium-derived browsers.
-   */
-  disableMediaKeysAttachmentLock? : boolean;
-  /**
-   * Enable fallback logic, to switch to other Representations when a key linked
-   * to another one fails with an error.
-   * Configure only this if you have contents with multiple keys depending on
-   * the Representation (also known as qualities/profiles).
-   */
-  fallbackOn? : {
-    /**
-     * If `true`, we will fallback when a key obtain the "internal-error" status.
-     * If `false`, we fill just throw a fatal error instead.
-     */
-    keyInternalError? : boolean;
-    /**
-     * If `true`, we will fallback when a key obtain the "internal-error" status.
-     * If `false`, we fill just throw a fatal error instead.
-     */
-    keyOutputRestricted? : boolean;
-  };
 }

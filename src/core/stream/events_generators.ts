@@ -15,7 +15,6 @@
  */
 
 import { Subject } from "rxjs";
-import { ICustomError } from "../../errors";
 import Manifest, {
   Adaptation,
   ISegment,
@@ -23,6 +22,7 @@ import Manifest, {
   Representation,
 } from "../../manifest";
 import { IRepresentationProtectionData } from "../../manifest/representation";
+import { IPlayerError } from "../../public_types";
 import objectAssign from "../../utils/object_assign";
 import { IBufferType } from "../segment_buffers";
 import {
@@ -199,7 +199,7 @@ const EVENTS = {
              value: undefined };
   },
 
-  warning(value : ICustomError) : IStreamWarningEvent {
+  warning(value : IPlayerError) : IStreamWarningEvent {
     return { type: "warning", value };
   },
 

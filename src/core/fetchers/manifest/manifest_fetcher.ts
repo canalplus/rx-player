@@ -18,12 +18,10 @@ import {
   Observable,
 } from "rxjs";
 import config from "../../../config";
-import {
-  formatError,
-  ICustomError,
-} from "../../../errors";
+import { formatError } from "../../../errors";
 import log from "../../../log";
 import Manifest from "../../../manifest";
+import { IPlayerError } from "../../../public_types";
 import {
   IRequestedData,
   ITransportManifestPipeline,
@@ -62,7 +60,7 @@ export interface IManifestFetcherWarningEvent {
   type : "warning";
 
   /** The error in question. */
-  value : ICustomError;
+  value : IPlayerError;
 }
 
 /** Response emitted by a Manifest fetcher. */

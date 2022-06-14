@@ -20,7 +20,7 @@ import {
   Observable,
   timer as observableTimer,
 } from "rxjs";
-import { ICustomError } from "../errors";
+import { IPlayerError } from "../public_types";
 import getFuzzedDelay from "./get_fuzzed_delay";
 import isNullOrUndefined from "./is_null_or_undefined";
 
@@ -29,7 +29,7 @@ export interface IBackoffOptions {
   maxDelay : number;
   totalRetry : number;
   shouldRetry? : (error : unknown) => boolean;
-  errorSelector? : (error : unknown, retryCount : number) => Error|ICustomError;
+  errorSelector? : (error : unknown, retryCount : number) => Error | IPlayerError;
   onRetry? : (error : unknown, retryCount : number) => void;
 }
 
