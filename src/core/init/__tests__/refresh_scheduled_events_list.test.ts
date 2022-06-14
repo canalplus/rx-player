@@ -16,7 +16,6 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
@@ -46,7 +45,7 @@ describe("core - init - refreshScheduledEventsList", () => {
         data: undefined,
         id: "1" },
     ];
-    const refreshScheduledEventsList = require(
+    const refreshScheduledEventsList = jest.requireActual(
       "../stream_events_emitter/refresh_scheduled_events_list.ts"
     ).default;
 

@@ -35,7 +35,7 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
       },
       attributes: {},
     };
-    const getHTTPUTCTimingURL = require("../get_http_utc-timing_url").default;
+    const getHTTPUTCTimingURL = jest.requireActual("../get_http_utc-timing_url").default;
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual(undefined);
   });
 
@@ -57,7 +57,7 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
       },
       attributes: {},
     };
-    const getHTTPUTCTimingURL = require("../get_http_utc-timing_url").default;
+    const getHTTPUTCTimingURL = jest.requireActual("../get_http_utc-timing_url").default;
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual(undefined);
   });
 
@@ -81,7 +81,7 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
       },
       attributes: {},
     };
-    const getHTTPUTCTimingURL = require("../get_http_utc-timing_url").default;
+    const getHTTPUTCTimingURL = jest.requireActual("../get_http_utc-timing_url").default;
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual(undefined);
   });
 
@@ -99,7 +99,7 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
       },
       attributes: {},
     };
-    const getHTTPUTCTimingURL = require("../get_http_utc-timing_url").default;
+    const getHTTPUTCTimingURL = jest.requireActual("../get_http_utc-timing_url").default;
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual("foobar2000");
   });
 
@@ -125,7 +125,7 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
       },
       attributes: {},
     };
-    const getHTTPUTCTimingURL = require("../get_http_utc-timing_url").default;
+    const getHTTPUTCTimingURL = jest.requireActual("../get_http_utc-timing_url").default;
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual("foobar1000");
   });
 
@@ -159,7 +159,7 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
       },
       attributes: {},
     };
-    const getHTTPUTCTimingURL = require("../get_http_utc-timing_url").default;
+    const getHTTPUTCTimingURL = jest.requireActual("../get_http_utc-timing_url").default;
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual("foobar2000");
   });
 });

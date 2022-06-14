@@ -52,7 +52,7 @@ describe("compat - whenLoadedMetadata$", () => {
       onLoadedMetadata$: mockOnLoadedMetadata$,
     }));
 
-    const whenLoadedMetadata$ = require("../when_loaded_metadata").default;
+    const whenLoadedMetadata$ = jest.requireActual("../when_loaded_metadata").default;
     whenLoadedMetadata$(fakeMediaElement).subscribe(() => {
       expect(fakeMediaElement.readyState).toBe(1);
       expect(mockOnLoadedMetadata$).toHaveBeenCalledTimes(1);
@@ -77,7 +77,7 @@ describe("compat - whenLoadedMetadata$", () => {
       onLoadedMetadata$: mockOnLoadedMetadata$,
     }));
 
-    const whenLoadedMetadata$ = require("../when_loaded_metadata").default;
+    const whenLoadedMetadata$ = jest.requireActual("../when_loaded_metadata").default;
     whenLoadedMetadata$(fakeMediaElement).pipe(
       finalize(() => {
         expect(fakeMediaElement.readyState).toBe(1);
@@ -99,7 +99,7 @@ describe("compat - whenLoadedMetadata$", () => {
       onLoadedMetadata$: mockOnLoadedMetadata$,
     }));
 
-    const whenLoadedMetadata$ = require("../when_loaded_metadata").default;
+    const whenLoadedMetadata$ = jest.requireActual("../when_loaded_metadata").default;
     whenLoadedMetadata$(fakeMediaElement).subscribe(() => {
       expect(fakeMediaElement.readyState).toBe(1);
       expect(mockOnLoadedMetadata$).not.toHaveBeenCalled();

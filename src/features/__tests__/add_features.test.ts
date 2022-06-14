@@ -32,7 +32,7 @@ describe("Features - addFeatures", () => {
       __esModule: true as const,
       default: feat,
     }));
-    const addFeatures = require("../add_features").default;
+    const addFeatures = jest.requireActual("../add_features").default;
 
     expect(() => addFeatures([])).not.toThrow();
   });
@@ -43,7 +43,7 @@ describe("Features - addFeatures", () => {
       __esModule: true as const,
       default: feat,
     }));
-    const addFeatures = require("../add_features").default;
+    const addFeatures = jest.requireActual("../add_features").default;
 
     expect(() => addFeatures([ 5 ])).toThrow(new Error("Unrecognized feature"));
     expect(() => addFeatures([ () => {/* noop */}, {} ]))
@@ -56,7 +56,7 @@ describe("Features - addFeatures", () => {
       __esModule: true as const,
       default: feat,
     }));
-    const addFeatures = require("../add_features").default;
+    const addFeatures = jest.requireActual("../add_features").default;
 
     const fakeFeat1 = jest.fn();
     const fakeFeat2 = jest.fn();

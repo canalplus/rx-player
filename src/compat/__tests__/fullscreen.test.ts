@@ -52,7 +52,7 @@ describe("compat - isFullScreen", () => {
     doc.webkitFullscreenElement = undefined;
     doc.msFullscreenElement = undefined;
 
-    const { isFullscreen } = require("../fullscreen");
+    const { isFullscreen } = jest.requireActual("../fullscreen");
     expect(isFullscreen()).toBe(false);
 
     doc.fullscreenElement = origFullscreenElement;
@@ -72,7 +72,7 @@ describe("compat - isFullScreen", () => {
     doc.webkitFullscreenElement = undefined;
     doc.msFullscreenElement = undefined;
 
-    const { isFullscreen } = require("../fullscreen");
+    const { isFullscreen } = jest.requireActual("../fullscreen");
     expect(isFullscreen()).toBe(true);
 
     doc.fullscreenElement = origFullscreenElement;
@@ -87,7 +87,7 @@ describe("compat - requestFullscreen", () => {
     const origFullscreenElement = doc.fullscreenElement;
     doc.fullscreenElement = undefined;
 
-    const { requestFullscreen } = require("../fullscreen");
+    const { requestFullscreen } = jest.requireActual("../fullscreen");
     const videoElt = doc.createElement("video");
     const mockRequestFullscreen = jest.fn(() =>
       doc.fullscreenElement = videoElt);
@@ -108,7 +108,7 @@ describe("compat - requestFullscreen", () => {
     doc.fullscreenElement = undefined;
     doc.msFullscreenElement = undefined;
 
-    const { requestFullscreen } = require("../fullscreen");
+    const { requestFullscreen } = jest.requireActual("../fullscreen");
     const videoElt = doc.createElement("video");
     const mockRequestFullscreen =
       jest.fn(() => doc.msFullscreenElement = videoElt);
@@ -132,7 +132,7 @@ describe("compat - requestFullscreen", () => {
     doc.msFullscreenElement = undefined;
     doc.mozFullScreenElement = undefined;
 
-    const { requestFullscreen } = require("../fullscreen");
+    const { requestFullscreen } = jest.requireActual("../fullscreen");
     const videoElt = doc.createElement("video");
     const mockRequestFullscreen =
       jest.fn(() => doc.mozFullScreenElement = videoElt);
@@ -159,7 +159,7 @@ describe("compat - requestFullscreen", () => {
     doc.mozFullScreenElement = undefined;
     doc.webkitFullscreenElement = undefined;
 
-    const { requestFullscreen } = require("../fullscreen");
+    const { requestFullscreen } = jest.requireActual("../fullscreen");
     const videoElt = doc.createElement("video");
     const mockRequestFullscreen =
       jest.fn(() => doc.webkitFullscreenElement = videoElt);
@@ -187,7 +187,7 @@ describe("compat - exitFullScreen", () => {
       doc.fullscreenElement = undefined;
     });
 
-    const { exitFullscreen } = require("../fullscreen");
+    const { exitFullscreen } = jest.requireActual("../fullscreen");
 
     exitFullscreen();
     expect(doc.fullscreenElement).toBe(undefined);
@@ -209,7 +209,7 @@ describe("compat - exitFullScreen", () => {
       doc.msFullscreenElement = undefined;
     });
 
-    const { exitFullscreen } = require("../fullscreen");
+    const { exitFullscreen } = jest.requireActual("../fullscreen");
 
     exitFullscreen();
     expect(doc.msFullscreenElement).toBe(undefined);
@@ -236,7 +236,7 @@ describe("compat - exitFullScreen", () => {
     doc.mozCancelFullScreen = jest.fn(() =>
       doc.mozFullScreenElement = undefined);
 
-    const { exitFullscreen } = require("../fullscreen");
+    const { exitFullscreen } = jest.requireActual("../fullscreen");
 
     exitFullscreen();
     expect(doc.mozFullScreenElement).toBe(undefined);
@@ -269,7 +269,7 @@ describe("compat - exitFullScreen", () => {
     doc.webkitExitFullscreen = jest.fn(() =>
       doc.webkitFullscreenElement = undefined);
 
-    const { exitFullscreen } = require("../fullscreen");
+    const { exitFullscreen } = jest.requireActual("../fullscreen");
 
     exitFullscreen();
     expect(doc.webkitFullscreenElement).toBe(undefined);

@@ -30,7 +30,7 @@ describe("BufferBasedChooser", () => {
     const logger = { debug: jest.fn() };
     jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
-    const BufferBasedChooser = require("../buffer_based_chooser").default;
+    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
     expect(new BufferBasedChooser([]).getEstimate({ bufferGap: 0, speed: 1 }))
       .toEqual(undefined);
     expect(new BufferBasedChooser([1, 2, 3]).getEstimate({
@@ -62,7 +62,7 @@ describe("BufferBasedChooser", () => {
     const logger = { debug: jest.fn(), error: jest.fn() };
     jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
-    const BufferBasedChooser = require("../buffer_based_chooser").default;
+    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
 
     expect(new BufferBasedChooser([10, 20]).getEstimate({
       bufferGap: 0,
@@ -81,7 +81,7 @@ describe("BufferBasedChooser", () => {
     const logger = { debug: jest.fn() };
     jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
-    const BufferBasedChooser = require("../buffer_based_chooser").default;
+    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 16,
       speed: 1,
@@ -126,7 +126,7 @@ describe("BufferBasedChooser", () => {
     const logger = { debug: jest.fn() };
     jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
-    const BufferBasedChooser = require("../buffer_based_chooser").default;
+    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 15,
       speed: 1,
@@ -171,7 +171,7 @@ describe("BufferBasedChooser", () => {
     const logger = { debug: jest.fn() };
     jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
-    const BufferBasedChooser = require("../buffer_based_chooser").default;
+    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 6,
       speed: 1,
@@ -210,7 +210,7 @@ describe("BufferBasedChooser", () => {
     const logger = { debug: jest.fn() };
     jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
-    const BufferBasedChooser = require("../buffer_based_chooser")
+    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser")
       .default;
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 100000000000,
@@ -232,7 +232,7 @@ describe("BufferBasedChooser", () => {
     const logger = { debug: jest.fn() };
     jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
-    const BufferBasedChooser = require("../buffer_based_chooser").default;
+    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 15,
       speed: 2,
@@ -271,7 +271,7 @@ describe("BufferBasedChooser", () => {
     const logger = { debug: jest.fn() };
     jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
-    const BufferBasedChooser = require("../buffer_based_chooser").default;
+    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 15,
       speed: 1,

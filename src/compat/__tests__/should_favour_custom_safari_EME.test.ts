@@ -43,7 +43,8 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
                isSafariDesktop: false,
                isSafariMobile: false };
     });
-    const shouldFavourCustomSafariEME = require("../should_favour_custom_safari_EME");
+    const shouldFavourCustomSafariEME =
+      jest.requireActual("../should_favour_custom_safari_EME");
     expect(shouldFavourCustomSafariEME.default()).toBe(false);
   });
 
@@ -57,7 +58,8 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
                isSafariDesktop: true,
                isSafariMobile: false };
     });
-    const shouldFavourCustomSafariEME = require("../should_favour_custom_safari_EME");
+    const shouldFavourCustomSafariEME =
+      jest.requireActual("../should_favour_custom_safari_EME");
     expect(shouldFavourCustomSafariEME.default()).toBe(false);
   });
 
@@ -71,7 +73,8 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
                isSafariDesktop: false,
                isSafariMobile: true };
     });
-    const shouldFavourCustomSafariEME = require("../should_favour_custom_safari_EME");
+    const shouldFavourCustomSafariEME =
+      jest.requireActual("../should_favour_custom_safari_EME");
     expect(shouldFavourCustomSafariEME.default()).toBe(false);
   });
 
@@ -94,7 +97,8 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
                isSafariDesktop: true,
                isSafariMobile: false };
     });
-    const shouldFavourCustomSafariEME = require("../should_favour_custom_safari_EME");
+    const shouldFavourCustomSafariEME =
+      jest.requireActual("../should_favour_custom_safari_EME");
     expect(shouldFavourCustomSafariEME.default()).toBe(true);
   });
 
@@ -117,7 +121,8 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
                isSafariDesktop: false,
                isSafariMobile: true };
     });
-    const shouldFavourCustomSafariEME = require("../should_favour_custom_safari_EME");
+    const shouldFavourCustomSafariEME =
+      jest.requireActual("../should_favour_custom_safari_EME");
     expect(shouldFavourCustomSafariEME.default()).toBe(true);
   });
 });

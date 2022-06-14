@@ -30,9 +30,9 @@ describe("DASH Node Parsers - Initialization", () => {
     const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../../log", () => log);
-    const logSpy = jest.spyOn(log.default, "warn");
+    const mockLog = jest.spyOn(log.default, "warn");
 
-    const parseInitialization = require("../Initialization").default;
+    const parseInitialization = jest.requireActual("../Initialization").default;
     const element1 = new DOMParser()
       .parseFromString("<Foo />", "text/xml")
       .childNodes[0] as Element;
@@ -43,17 +43,17 @@ describe("DASH Node Parsers - Initialization", () => {
       .childNodes[0] as Element;
     expect(parseInitialization(element2)).toEqual([{}, []]);
 
-    expect(logSpy).not.toHaveBeenCalled();
-    logSpy.mockRestore();
+    expect(mockLog).not.toHaveBeenCalled();
+    mockLog.mockRestore();
   });
 
   it("should correctly parse an element with a well-formed `range` attribute", () => {
     const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../../log", () => log);
-    const logSpy = jest.spyOn(log.default, "warn");
+    const mockLog = jest.spyOn(log.default, "warn");
 
-    const parseInitialization = require("../Initialization").default;
+    const parseInitialization = jest.requireActual("../Initialization").default;
     const element1 = new DOMParser()
       .parseFromString("<Foo range=\"0-1\" />", "text/xml")
       .childNodes[0] as Element;
@@ -64,26 +64,26 @@ describe("DASH Node Parsers - Initialization", () => {
       .childNodes[0] as Element;
     expect(parseInitialization(element2)).toEqual([{ range: [100, 1000] }, []]);
 
-    expect(logSpy).not.toHaveBeenCalled();
-    logSpy.mockRestore();
+    expect(mockLog).not.toHaveBeenCalled();
+    mockLog.mockRestore();
   });
 
   it("should correctly parse an element with an incorrect `range` attribute", () => {
     const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../../log", () => log);
-    const logSpy = jest.spyOn(log.default, "warn").mockImplementation(jest.fn());
+    const mockLog = jest.spyOn(log.default, "warn").mockImplementation(jest.fn());
 
-    const parseInitialization = require("../Initialization").default;
-    const MPDError = require("../utils").MPDError;
+    const parseInitialization = jest.requireActual("../Initialization").default;
+    const MPDError = jest.requireActual("../utils").MPDError;
     const element1 = new DOMParser()
       .parseFromString("<Foo range=\"a\" />", "text/xml")
       .childNodes[0] as Element;
     const error1 = new MPDError("`range` property has an unrecognized format \"a\"");
     expect(parseInitialization(element1)).toEqual([{}, [error1]]);
 
-    expect(logSpy).toHaveBeenCalledTimes(1);
-    expect(logSpy).toHaveBeenCalledWith(error1.message);
+    expect(mockLog).toHaveBeenCalledTimes(1);
+    expect(mockLog).toHaveBeenCalledWith(error1.message);
 
     const element2 = new DOMParser()
       .parseFromString("<Foo range=\"\" />", "text/xml")
@@ -91,19 +91,19 @@ describe("DASH Node Parsers - Initialization", () => {
     const error2 = new MPDError("`range` property has an unrecognized format \"\"");
     expect(parseInitialization(element2)).toEqual([{}, [error2]]);
 
-    expect(logSpy).toHaveBeenCalledTimes(2);
-    expect(logSpy).toHaveBeenCalledWith(error2.message);
+    expect(mockLog).toHaveBeenCalledTimes(2);
+    expect(mockLog).toHaveBeenCalledWith(error2.message);
 
-    logSpy.mockRestore();
+    mockLog.mockRestore();
   });
 
   it("should correctly parse an element with a sourceURL attribute", () => {
     const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../../log", () => log);
-    const logSpy = jest.spyOn(log.default, "warn");
+    const mockLog = jest.spyOn(log.default, "warn");
 
-    const parseInitialization = require("../Initialization").default;
+    const parseInitialization = jest.requireActual("../Initialization").default;
     const element1 = new DOMParser()
       .parseFromString("<Foo sourceURL=\"a\" />", "text/xml")
       .childNodes[0] as Element;
@@ -114,8 +114,8 @@ describe("DASH Node Parsers - Initialization", () => {
       .childNodes[0] as Element;
     expect(parseInitialization(element2)).toEqual([{ media: "" }, []]);
 
-    expect(logSpy).not.toHaveBeenCalled();
-    logSpy.mockRestore();
+    expect(mockLog).not.toHaveBeenCalled();
+    mockLog.mockRestore();
   });
 
   /* eslint-disable max-len */
@@ -124,16 +124,16 @@ describe("DASH Node Parsers - Initialization", () => {
     const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../../log", () => log);
-    const logSpy = jest.spyOn(log.default, "warn");
+    const mockLog = jest.spyOn(log.default, "warn");
 
-    const parseInitialization = require("../Initialization").default;
+    const parseInitialization = jest.requireActual("../Initialization").default;
     const element1 = new DOMParser()
       .parseFromString("<Foo sourceURL=\"a\" range=\"4-10\" />", "text/xml")
       .childNodes[0] as Element;
     expect(parseInitialization(element1)).toEqual([ { media: "a", range: [4, 10] },
                                                     [] ]);
 
-    expect(logSpy).not.toHaveBeenCalled();
-    logSpy.mockRestore();
+    expect(mockLog).not.toHaveBeenCalled();
+    mockLog.mockRestore();
   });
 });

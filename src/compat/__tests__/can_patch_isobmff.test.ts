@@ -33,7 +33,7 @@ describe("compat - canPatchISOBMFFSegment", () => {
         isIEOrEdge: false,
       };
     });
-    const canPatchISOBMFFSegment = require("../can_patch_isobmff");
+    const canPatchISOBMFFSegment = jest.requireActual("../can_patch_isobmff");
     expect(canPatchISOBMFFSegment.default()).toBe(true);
   });
 
@@ -44,7 +44,7 @@ describe("compat - canPatchISOBMFFSegment", () => {
         isIEOrEdge: true,
       };
     });
-    const canPatchISOBMFFSegment = require("../can_patch_isobmff");
+    const canPatchISOBMFFSegment = jest.requireActual("../can_patch_isobmff");
     expect(canPatchISOBMFFSegment.default()).toBe(false);
   });
 });

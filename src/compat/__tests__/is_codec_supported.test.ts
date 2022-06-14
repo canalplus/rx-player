@@ -33,7 +33,7 @@ describe("Compat - isCodecSupported", () => {
         MediaSource_: undefined,
       };
     });
-    const isCodecSupported = require("../is_codec_supported").default;
+    const isCodecSupported = jest.requireActual("../is_codec_supported").default;
     expect(isCodecSupported("foo")).toEqual(false);
     expect(isCodecSupported("")).toEqual(false);
   });
@@ -47,7 +47,7 @@ describe("Compat - isCodecSupported", () => {
         MediaSource_: { isTypeSupported: undefined },
       };
     });
-    const isCodecSupported = require("../is_codec_supported").default;
+    const isCodecSupported = jest.requireActual("../is_codec_supported").default;
     expect(isCodecSupported("foo")).toEqual(true);
     expect(isCodecSupported("")).toEqual(true);
   });
@@ -59,7 +59,7 @@ describe("Compat - isCodecSupported", () => {
         MediaSource_: { isTypeSupported(_codec : string) { return true; } },
       };
     });
-    const isCodecSupported = require("../is_codec_supported").default;
+    const isCodecSupported = jest.requireActual("../is_codec_supported").default;
     expect(isCodecSupported("foo")).toEqual(true);
     expect(isCodecSupported("")).toEqual(true);
   });
@@ -71,7 +71,7 @@ describe("Compat - isCodecSupported", () => {
         MediaSource_: { isTypeSupported(_codec : string) { return false; } },
       };
     });
-    const isCodecSupported = require("../is_codec_supported").default;
+    const isCodecSupported = jest.requireActual("../is_codec_supported").default;
     expect(isCodecSupported("foo")).toEqual(false);
     expect(isCodecSupported("")).toEqual(false);
   });

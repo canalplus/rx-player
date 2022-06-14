@@ -30,7 +30,7 @@ describe("Compat - canRelyOnVideoVisibilityAndSize", () => {
                isFirefox: false };
     });
     const canRelyOnVideoVisibilityAndSize =
-      require("../can_rely_on_video_visibility_and_size.ts");
+      jest.requireActual("../can_rely_on_video_visibility_and_size.ts");
     expect(canRelyOnVideoVisibilityAndSize.default()).toBe(true);
   });
 
@@ -44,7 +44,7 @@ describe("Compat - canRelyOnVideoVisibilityAndSize", () => {
                getFirefoxVersion: () => -1 };
     });
     const canRelyOnVideoVisibilityAndSize =
-      require("../can_rely_on_video_visibility_and_size.ts");
+      jest.requireActual("../can_rely_on_video_visibility_and_size.ts");
     expect(canRelyOnVideoVisibilityAndSize.default()).toBe(true);
   });
 
@@ -58,7 +58,7 @@ describe("Compat - canRelyOnVideoVisibilityAndSize", () => {
                getFirefoxVersion: () => 60 };
     });
     const canRelyOnVideoVisibilityAndSize =
-      require("../can_rely_on_video_visibility_and_size.ts");
+      jest.requireActual("../can_rely_on_video_visibility_and_size.ts");
     expect(canRelyOnVideoVisibilityAndSize.default()).toBe(true);
   });
 
@@ -72,7 +72,7 @@ describe("Compat - canRelyOnVideoVisibilityAndSize", () => {
                getFirefoxVersion: () => 83 };
     });
     const canRelyOnVideoVisibilityAndSize =
-      require("../can_rely_on_video_visibility_and_size.ts");
+      jest.requireActual("../can_rely_on_video_visibility_and_size.ts");
     expect(canRelyOnVideoVisibilityAndSize.default()).toBe(false);
   });
 });

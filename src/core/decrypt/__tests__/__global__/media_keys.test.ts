@@ -16,7 +16,6 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
@@ -63,7 +62,7 @@ describe("core - decrypt - global tests - media key system access", () => {
     mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessBadMediaKeys });
 
     // == test ==
-    const ContentDecryptor = require("../../content_decryptor").default;
+    const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
     const error : any =
       await testContentDecryptorError(ContentDecryptor, videoElt, ksConfig);
     expect(error).toBeInstanceOf(Error);
@@ -89,7 +88,7 @@ describe("core - decrypt - global tests - media key system access", () => {
     mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessRejMediaKeys });
 
     // == test ==
-    const ContentDecryptor = require("../../content_decryptor").default;
+    const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
     const error : any =
       await testContentDecryptorError(ContentDecryptor, videoElt, ksConfig);
     expect(error).toBeInstanceOf(Error);
@@ -105,8 +104,8 @@ describe("core - decrypt - global tests - media key system access", () => {
   /* eslint-enable max-len */
     return new Promise<void>((res, rej) => {
       mockCompat({});
-      const { ContentDecryptorState } = require("../../content_decryptor");
-      const ContentDecryptor = require("../../content_decryptor").default;
+      const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+      const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       let receivedStateChange = 0;
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
@@ -132,22 +131,22 @@ describe("core - decrypt - global tests - media key system access", () => {
   /* eslint-enable max-len */
 
     // == mocks ==
-    const setMediaKeysSpy = jest.fn(() => Promise.resolve());
-    mockCompat({ setMediaKeys: setMediaKeysSpy });
-    const createSessionSpy = jest.spyOn(MediaKeysImpl.prototype, "createSession");
+    const mockSetMediaKeys = jest.fn(() => Promise.resolve());
+    mockCompat({ setMediaKeys: mockSetMediaKeys });
+    const mockCreateSession = jest.spyOn(MediaKeysImpl.prototype, "createSession");
 
     // == test ==
-    const { ContentDecryptorState } = require("../../content_decryptor");
-    const ContentDecryptor = require("../../content_decryptor").default;
+    const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+    const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
     contentDecryptor.addEventListener("stateChange", (newState: any) => {
       if (newState === ContentDecryptorState.WaitingForAttachment) {
         contentDecryptor.removeEventListener("stateChange");
         contentDecryptor.attach();
         setTimeout(() => {
-          expect(setMediaKeysSpy).toHaveBeenCalledTimes(1);
-          expect(setMediaKeysSpy).toHaveBeenCalledWith(videoElt, new MediaKeysImpl());
-          expect(createSessionSpy).not.toHaveBeenCalled();
+          expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
+          expect(mockSetMediaKeys).toHaveBeenCalledWith(videoElt, new MediaKeysImpl());
+          expect(mockCreateSession).not.toHaveBeenCalled();
           done();
         }, 5);
       }

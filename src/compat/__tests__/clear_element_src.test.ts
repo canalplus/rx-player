@@ -32,7 +32,7 @@ describe("Compat - clearElementSrc", () => {
       src: "foo",
       removeAttribute() { return null; },
     };
-    const clearElementSrc = require("../clear_element_src").default;
+    const clearElementSrc = jest.requireActual("../clear_element_src").default;
 
     const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
     clearElementSrc(fakeElement);
@@ -46,7 +46,7 @@ describe("Compat - clearElementSrc", () => {
       src: "foo",
       removeAttribute() { throw new Error("Oups, can't remove attribute."); },
     };
-    const clearElementSrc = require("../clear_element_src").default;
+    const clearElementSrc = jest.requireActual("../clear_element_src").default;
     const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
 
     expect(() => clearElementSrc(fakeElement))
@@ -76,7 +76,7 @@ describe("Compat - clearElementSrc", () => {
       },
     };
 
-    const clearElementSrc = require("../clear_element_src").default;
+    const clearElementSrc = jest.requireActual("../clear_element_src").default;
 
     const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
     const spyHasChildNodes = jest.spyOn(fakeElement, "hasChildNodes");
@@ -119,7 +119,7 @@ describe("Compat - clearElementSrc", () => {
       __esModule: true as const,
       default: { warn: mockLogWarn },
     }));
-    const clearElementSrc = require("../clear_element_src").default;
+    const clearElementSrc = jest.requireActual("../clear_element_src").default;
 
     const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
     const spyHasChildNodes = jest.spyOn(fakeElement, "hasChildNodes");
@@ -156,7 +156,7 @@ describe("Compat - clearElementSrc", () => {
       removeChild: () => null,
     };
 
-    const clearElementSrc = require("../clear_element_src").default;
+    const clearElementSrc = jest.requireActual("../clear_element_src").default;
 
     const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
     const spyHasChildNodes = jest.spyOn(fakeElement, "hasChildNodes");
@@ -182,7 +182,7 @@ describe("Compat - clearElementSrc", () => {
       removeChild: () => null,
     };
 
-    const clearElementSrc = require("../clear_element_src").default;
+    const clearElementSrc = jest.requireActual("../clear_element_src").default;
 
     const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
     const spyHasChildNodes = jest.spyOn(fakeElement, "hasChildNodes");
@@ -208,7 +208,7 @@ describe("Compat - clearElementSrc", () => {
       removeChild: () => null,
     };
 
-    const clearElementSrc = require("../clear_element_src").default;
+    const clearElementSrc = jest.requireActual("../clear_element_src").default;
 
     const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
     const spyHasChildNodes = jest.spyOn(fakeElement, "hasChildNodes");
@@ -234,7 +234,7 @@ describe("Compat - clearElementSrc", () => {
       removeChild: () => null,
     };
 
-    const clearElementSrc = require("../clear_element_src").default;
+    const clearElementSrc = jest.requireActual("../clear_element_src").default;
 
     const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
     const spyHasChildNodes = jest.spyOn(fakeElement, "hasChildNodes");

@@ -50,7 +50,7 @@ describe("compat - setElementSrc", () => {
     }));
     const fakeURL = "blob:http://fakeURL";
 
-    const setElementSrc = require("../set_element_src").default;
+    const setElementSrc = jest.requireActual("../set_element_src").default;
 
     const setElementSrc$ = setElementSrc(fakeMediaElement, fakeURL);
     const subscribe = setElementSrc$.pipe(

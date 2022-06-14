@@ -30,7 +30,7 @@ describe("Features list - METAPLAYLIST", () => {
     const feat = {};
     jest.mock("../../../transports/metaplaylist", () => ({ __esModule: true as const,
                                                            default: feat }));
-    const addDASHFeature = require("../metaplaylist").default;
+    const addDASHFeature = jest.requireActual("../metaplaylist").default;
 
     const featureObject : {
       transports : { [featureName : string] : unknown };
