@@ -30,7 +30,7 @@ export default function constructDebugGeneralInfo(
     representationsElt,
   ]);
   function updateGeneralInfo() {
-    const videoElement = instance.getMediaElement();
+    const videoElement = instance.getVideoElement();
     if (videoElement === null) {
       // disposed player. Clean-up everything
       generalInfoElt.innerHTML = "";
