@@ -38,7 +38,6 @@ export default class PendingRequestsStore {
 
   /**
    * Add information about a new pending request.
-   * @param {string} id
    * @param {Object} payload
    */
   public add(payload : IPendingRequestStoreBegin) : void {

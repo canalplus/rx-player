@@ -48,7 +48,7 @@ interface IPlaybackConditionsInfo {
  * Get pending segment request(s) starting with the asked segment position.
  * @param {Object} requests - Every requests pending, in a chronological
  * order in terms of segment time.
- * @param {number} position
+ * @param {number} neededPosition
  * @returns {Array.<Object>}
  */
 function getConcernedRequests(

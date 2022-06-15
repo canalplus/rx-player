@@ -21,43 +21,32 @@ import EWMA from "./ewma";
 /**
  * Calculate a mean bandwidth based on the bytes downloaded and the amount
  * of time needed to do so.
- *
- * Heavily "inspired" from the Shaka-Player's "ewma bandwidth estimator".
  * @class BandwidthEstimator
  */
 export default class BandwidthEstimator {
+  /**
+   * Slowly-moving exponentially weighted moving average.
+   * It reacts fastly to changing network conditions such as sudden slowing/bursts.
+   */
   private _fastEWMA : EWMA;
+  /** Slowly-moving exponentially weighted moving average. */
   private _slowEWMA : EWMA;
+  /** Amount of bytes currently used to produce a bandwidth estimate. */
   private _bytesSampled : number;
 
   constructor() {
     const { ABR_FAST_EMA, ABR_SLOW_EMA } = config.getCurrent();
-    /**
-     * A fast-moving average.
-     * @private
-     */
     this._fastEWMA = new EWMA(ABR_FAST_EMA);
-
-    /**
-     * A slow-moving average.
-     * @private
-     */
     this._slowEWMA = new EWMA(ABR_SLOW_EMA);
-
-    /**
-     * Number of bytes sampled.
-     * @private
-     */
     this._bytesSampled = 0;
-
   }
 
   /**
    * Takes a bandwidth sample.
-   * @param {number} durationMs - The amount of time, in milliseconds, for a
-   *   particular request.
-   * @param {number} numBytes - The total number of bytes transferred in that
-   *   request.
+   * @param {number} durationInMs - The amount of time, in milliseconds, for a
+   * particular request.
+   * @param {number} numberOfBytes - The total number of bytes transferred in
+   * that request.
    */
   public addSample(durationInMs : number, numberOfBytes : number) : void {
     const { ABR_MINIMUM_CHUNK_SIZE } = config.getCurrent();
@@ -83,15 +72,13 @@ export default class BandwidthEstimator {
       return undefined;
     }
 
-    // Take the minimum of these two estimates.  This should have the effect of
-    // adapting down quickly, but up more slowly.
+    // Take the minimum of these two estimates.
+    // This should have the effect of adapting down quickly, but up more slowly.
     return Math.min(this._fastEWMA.getEstimate(),
                     this._slowEWMA.getEstimate());
   }
 
-  /**
-   * Reset the bandwidth estimation.
-   */
+  /** Reset the bandwidth estimation. */
   public reset() : void {
     const { ABR_FAST_EMA, ABR_SLOW_EMA } = config.getCurrent();
     this._fastEWMA = new EWMA(ABR_FAST_EMA);

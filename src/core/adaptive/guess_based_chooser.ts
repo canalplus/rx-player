@@ -285,7 +285,7 @@ function getNextRepresentation(
  * bitrate immediately inferior.
  * Returns `null` if that "previous" Representation is not found.
  * @param {Array.<Object>} representations
- * @param {Object} representation
+ * @param {Object} currentRepresentation
  * @returns {Object|null}
  */
 function getPreviousRepresentation(
