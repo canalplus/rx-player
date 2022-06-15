@@ -16,7 +16,6 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
@@ -30,7 +29,7 @@ describe("core - init - areSameStreamEvents", () => {
                    end: 10,
                    id: "1" };
     const areSameStreamEvents =
-      require("../stream_events_emitter/are_same_stream_events.ts").default;
+      jest.requireActual("../stream_events_emitter/are_same_stream_events.ts").default;
     const result = areSameStreamEvents(evt1, evt2);
     expect(result).toBe(true);
   });
@@ -42,7 +41,7 @@ describe("core - init - areSameStreamEvents", () => {
                    end: undefined,
                    id: "1" };
     const areSameStreamEvents =
-      require("../stream_events_emitter/are_same_stream_events.ts").default;
+      jest.requireActual("../stream_events_emitter/are_same_stream_events.ts").default;
     const result = areSameStreamEvents(evt1, evt2);
     expect(result).toBe(true);
   });
@@ -54,7 +53,7 @@ describe("core - init - areSameStreamEvents", () => {
                    end: undefined,
                    id: "2" };
     const areSameStreamEvents =
-      require("../stream_events_emitter/are_same_stream_events.ts").default;
+      jest.requireActual("../stream_events_emitter/are_same_stream_events.ts").default;
     const result = areSameStreamEvents(evt1, evt2);
     expect(result).toBe(false);
   });
@@ -66,7 +65,7 @@ describe("core - init - areSameStreamEvents", () => {
                    end: undefined,
                    id: "1" };
     const areSameStreamEvents =
-      require("../stream_events_emitter/are_same_stream_events.ts").default;
+      jest.requireActual("../stream_events_emitter/are_same_stream_events.ts").default;
     const result = areSameStreamEvents(evt1, evt2);
     expect(result).toBe(false);
   });
@@ -78,7 +77,7 @@ describe("core - init - areSameStreamEvents", () => {
                    end: 30,
                    id: "1" };
     const areSameStreamEvents =
-      require("../stream_events_emitter/are_same_stream_events.ts").default;
+      jest.requireActual("../stream_events_emitter/are_same_stream_events.ts").default;
     const result = areSameStreamEvents(evt1, evt2);
     expect(result).toBe(false);
   });

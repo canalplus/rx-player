@@ -16,7 +16,6 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
@@ -77,10 +76,10 @@ async function checkNothingHappen(
   loadedSessionsStore : LoadedSessionsStore,
   limit : number
 ) : Promise<void> {
-  const closeSessionSpy = jest.spyOn(loadedSessionsStore, "closeSession");
+  const mockCloseSession = jest.spyOn(loadedSessionsStore, "closeSession");
   await cleanOldLoadedSessions(loadedSessionsStore, limit);
-  expect(closeSessionSpy).not.toHaveBeenCalled();
-  closeSessionSpy.mockRestore();
+  expect(mockCloseSession).not.toHaveBeenCalled();
+  mockCloseSession.mockRestore();
 }
 
 /**
@@ -98,14 +97,14 @@ async function checkEntriesCleaned(
   limit : number,
   entries : Array<{ sessionId: string }>
 ) : Promise<void> {
-  const closeSessionSpy = jest.spyOn(loadedSessionsStore, "closeSession");
+  const mockCloseSession = jest.spyOn(loadedSessionsStore, "closeSession");
   const prom = cleanOldLoadedSessions(loadedSessionsStore, limit).then(() => {
-    expect(closeSessionSpy).toHaveBeenCalledTimes(entries.length);
-    closeSessionSpy.mockRestore();
+    expect(mockCloseSession).toHaveBeenCalledTimes(entries.length);
+    mockCloseSession.mockRestore();
   });
-  expect(closeSessionSpy).toHaveBeenCalledTimes(entries.length);
+  expect(mockCloseSession).toHaveBeenCalledTimes(entries.length);
   for (let i = 0; i < entries.length; i++) {
-    expect(closeSessionSpy)
+    expect(mockCloseSession)
       .toHaveBeenNthCalledWith(i + 1, entries[i]);
   }
   return prom;

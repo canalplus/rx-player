@@ -30,9 +30,9 @@ describe("DASH Node Parsers - SegmentURL", () => {
     const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../../log", () => log);
-    const logSpy = jest.spyOn(log.default, "warn");
+    const mockLog = jest.spyOn(log.default, "warn");
 
-    const parseSegmentURL = require("../SegmentURL").default;
+    const parseSegmentURL = jest.requireActual("../SegmentURL").default;
     const element1 = new DOMParser()
       .parseFromString("<Foo />", "text/xml")
       .childNodes[0] as Element;
@@ -43,8 +43,8 @@ describe("DASH Node Parsers - SegmentURL", () => {
       .childNodes[0] as Element;
     expect(parseSegmentURL(element2)).toEqual([{}, []]);
 
-    expect(logSpy).not.toHaveBeenCalled();
-    logSpy.mockRestore();
+    expect(mockLog).not.toHaveBeenCalled();
+    mockLog.mockRestore();
   });
 
   /* eslint-disable max-len */
@@ -53,9 +53,9 @@ describe("DASH Node Parsers - SegmentURL", () => {
     const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../../log", () => log);
-    const logSpy = jest.spyOn(log.default, "warn");
+    const mockLog = jest.spyOn(log.default, "warn");
 
-    const parseSegmentURL = require("../SegmentURL").default;
+    const parseSegmentURL = jest.requireActual("../SegmentURL").default;
     const element1 = new DOMParser()
       .parseFromString("<Foo mediaRange=\"10-100\" />", "text/xml")
       .childNodes[0] as Element;
@@ -66,18 +66,18 @@ describe("DASH Node Parsers - SegmentURL", () => {
       .childNodes[0] as Element;
     expect(parseSegmentURL(element2)).toEqual([{ mediaRange: [0, 1] }, []]);
 
-    expect(logSpy).not.toHaveBeenCalled();
-    logSpy.mockRestore();
+    expect(mockLog).not.toHaveBeenCalled();
+    mockLog.mockRestore();
   });
 
   it("should correctly parse an element with an incorrect `mediaRange` attribute", () => {
     const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../../log", () => log);
-    const logSpy = jest.spyOn(log.default, "warn").mockImplementation(jest.fn());
+    const mockLog = jest.spyOn(log.default, "warn").mockImplementation(jest.fn());
 
-    const parseSegmentURL = require("../SegmentURL").default;
-    const MPDError = require("../utils").MPDError;
+    const parseSegmentURL = jest.requireActual("../SegmentURL").default;
+    const MPDError = jest.requireActual("../utils").MPDError;
     const element1 = new DOMParser()
       .parseFromString("<Foo mediaRange=\"a\" />", "text/xml")
       .childNodes[0] as Element;
@@ -86,8 +86,8 @@ describe("DASH Node Parsers - SegmentURL", () => {
     );
     expect(parseSegmentURL(element1)).toEqual([{}, [error1]]);
 
-    expect(logSpy).toHaveBeenCalledTimes(1);
-    expect(logSpy).toHaveBeenCalledWith(error1.message);
+    expect(mockLog).toHaveBeenCalledTimes(1);
+    expect(mockLog).toHaveBeenCalledWith(error1.message);
 
     const element2 = new DOMParser()
       .parseFromString("<Foo mediaRange=\"\" />", "text/xml")
@@ -97,10 +97,10 @@ describe("DASH Node Parsers - SegmentURL", () => {
     );
     expect(parseSegmentURL(element2)).toEqual([{}, [error2]]);
 
-    expect(logSpy).toHaveBeenCalledTimes(2);
-    expect(logSpy).toHaveBeenCalledWith(error2.message);
+    expect(mockLog).toHaveBeenCalledTimes(2);
+    expect(mockLog).toHaveBeenCalledWith(error2.message);
 
-    logSpy.mockRestore();
+    mockLog.mockRestore();
   });
 
   /* eslint-disable max-len */
@@ -111,9 +111,9 @@ describe("DASH Node Parsers - SegmentURL", () => {
       default: { warn: () => null },
     };
     jest.mock("../../../../../../log", () => log);
-    const logSpy = jest.spyOn(log.default, "warn");
+    const mockLog = jest.spyOn(log.default, "warn");
 
-    const parseSegmentURL = require("../SegmentURL").default;
+    const parseSegmentURL = jest.requireActual("../SegmentURL").default;
     const element1 = new DOMParser()
       .parseFromString("<Foo indexRange=\"0-100\" />", "text/xml")
       .childNodes[0] as Element;
@@ -124,18 +124,18 @@ describe("DASH Node Parsers - SegmentURL", () => {
       .childNodes[0] as Element;
     expect(parseSegmentURL(element2)).toEqual([{ indexRange: [72, 47] }, []]);
 
-    expect(logSpy).not.toHaveBeenCalled();
-    logSpy.mockRestore();
+    expect(mockLog).not.toHaveBeenCalled();
+    mockLog.mockRestore();
   });
 
   it("should correctly parse an element with an incorrect `indexRange` attribute", () => {
     const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../../log", () => log);
-    const logSpy = jest.spyOn(log.default, "warn").mockImplementation(jest.fn());
+    const mockLog = jest.spyOn(log.default, "warn").mockImplementation(jest.fn());
 
-    const parseSegmentURL = require("../SegmentURL").default;
-    const MPDError = require("../utils").MPDError;
+    const parseSegmentURL = jest.requireActual("../SegmentURL").default;
+    const MPDError = jest.requireActual("../utils").MPDError;
     const element1 = new DOMParser()
       .parseFromString("<Foo indexRange=\"a\" />", "text/xml")
       .childNodes[0] as Element;
@@ -144,8 +144,8 @@ describe("DASH Node Parsers - SegmentURL", () => {
     );
     expect(parseSegmentURL(element1)).toEqual([{}, [error1]]);
 
-    expect(logSpy).toHaveBeenCalledTimes(1);
-    expect(logSpy).toHaveBeenCalledWith(error1.message);
+    expect(mockLog).toHaveBeenCalledTimes(1);
+    expect(mockLog).toHaveBeenCalledWith(error1.message);
 
     const element2 = new DOMParser()
       .parseFromString("<Foo indexRange=\"\" />", "text/xml")
@@ -155,19 +155,19 @@ describe("DASH Node Parsers - SegmentURL", () => {
     );
     expect(parseSegmentURL(element2)).toEqual([{}, [error2]]);
 
-    expect(logSpy).toHaveBeenCalledTimes(2);
-    expect(logSpy).toHaveBeenCalledWith(error2.message);
+    expect(mockLog).toHaveBeenCalledTimes(2);
+    expect(mockLog).toHaveBeenCalledWith(error2.message);
 
-    logSpy.mockRestore();
+    mockLog.mockRestore();
   });
 
   it("should correctly parse an element with a media attribute", () => {
     const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../../log", () => log);
-    const logSpy = jest.spyOn(log.default, "warn");
+    const mockLog = jest.spyOn(log.default, "warn");
 
-    const parseSegmentURL = require("../SegmentURL").default;
+    const parseSegmentURL = jest.requireActual("../SegmentURL").default;
     const element1 = new DOMParser()
       .parseFromString("<Foo media=\"a\" />", "text/xml")
       .childNodes[0] as Element;
@@ -178,17 +178,17 @@ describe("DASH Node Parsers - SegmentURL", () => {
       .childNodes[0] as Element;
     expect(parseSegmentURL(element2)).toEqual([{ media: "" }, []]);
 
-    expect(logSpy).not.toHaveBeenCalled();
-    logSpy.mockRestore();
+    expect(mockLog).not.toHaveBeenCalled();
+    mockLog.mockRestore();
   });
 
   it("should correctly parse an element with a index attribute", () => {
     const log = { __esModule: true as const,
                   default: { warn: () => null } };
     jest.mock("../../../../../../log", () => log);
-    const logSpy = jest.spyOn(log.default, "warn");
+    const mockLog = jest.spyOn(log.default, "warn");
 
-    const parseSegmentURL = require("../SegmentURL").default;
+    const parseSegmentURL = jest.requireActual("../SegmentURL").default;
     const element1 = new DOMParser()
       .parseFromString("<Foo index=\"a\" />", "text/xml")
       .childNodes[0] as Element;
@@ -199,7 +199,7 @@ describe("DASH Node Parsers - SegmentURL", () => {
       .childNodes[0] as Element;
     expect(parseSegmentURL(element2)).toEqual([{ index: "" }, []]);
 
-    expect(logSpy).not.toHaveBeenCalled();
-    logSpy.mockRestore();
+    expect(mockLog).not.toHaveBeenCalled();
+    mockLog.mockRestore();
   });
 });

@@ -49,7 +49,7 @@ describe("Manifest - replacePeriods", () => {
     const newPeriods = [
       { id: "p2" },
     ] as any;
-    const replacePeriods = require("../update_periods").replacePeriods;
+    const replacePeriods = jest.requireActual("../update_periods").replacePeriods;
     replacePeriods(oldPeriods, newPeriods);
     expect(oldPeriods.length).toBe(1);
     expect(oldPeriods[0].id).toBe("p2");
@@ -77,7 +77,7 @@ describe("Manifest - replacePeriods", () => {
       { id: "p2" },
       { id: "p3" },
     ] as any;
-    const replacePeriods = require("../update_periods").replacePeriods;
+    const replacePeriods = jest.requireActual("../update_periods").replacePeriods;
     replacePeriods(oldPeriods, newPeriods);
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p2");
@@ -105,7 +105,7 @@ describe("Manifest - replacePeriods", () => {
     const newPeriods = [
       { id: "p2" },
     ] as any;
-    const replacePeriods = require("../update_periods").replacePeriods;
+    const replacePeriods = jest.requireActual("../update_periods").replacePeriods;
     replacePeriods(oldPeriods, newPeriods);
     expect(oldPeriods.length).toBe(1);
     expect(oldPeriods[0].id).toBe("p2");
@@ -134,7 +134,7 @@ describe("Manifest - replacePeriods", () => {
       { id: "p2", start: 2 },
       { id: "p3" },
     ] as any;
-    const replacePeriods = require("../update_periods").replacePeriods;
+    const replacePeriods = jest.requireActual("../update_periods").replacePeriods;
     replacePeriods(oldPeriods, newPeriods);
     expect(oldPeriods.length).toBe(5);
 
@@ -171,7 +171,7 @@ describe("Manifest - replacePeriods", () => {
       { id: "p1" },
       { id: "p2" },
     ] as any;
-    const replacePeriods = require("../update_periods").replacePeriods;
+    const replacePeriods = jest.requireActual("../update_periods").replacePeriods;
     replacePeriods(oldPeriods, newPeriods);
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p1");
@@ -198,7 +198,7 @@ describe("Manifest - replacePeriods", () => {
       { id: "p2" },
     ] as any;
     const newPeriods = [] as any;
-    const replacePeriods = require("../update_periods").replacePeriods;
+    const replacePeriods = jest.requireActual("../update_periods").replacePeriods;
     replacePeriods(oldPeriods, newPeriods);
     expect(oldPeriods.length).toBe(0);
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(0);
@@ -219,7 +219,7 @@ describe("Manifest - replacePeriods", () => {
       { id: "p1" },
       { id: "p2" },
     ] as any;
-    const replacePeriods = require("../update_periods").replacePeriods;
+    const replacePeriods = jest.requireActual("../update_periods").replacePeriods;
     replacePeriods(oldPeriods, newPeriods);
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p1");
@@ -247,7 +247,7 @@ describe("updatePeriods", () => {
                          { id: "p2", start: 60 } ] as any;
     const newPeriods = [ { id: "p2", start: 60 } ] as any;
 
-    const updatePeriods = require("../update_periods").updatePeriods;
+    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
     updatePeriods(oldPeriods, newPeriods);
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p1");
@@ -271,7 +271,7 @@ describe("updatePeriods", () => {
     const oldPeriods = [ { id: "p2", start: 60 } ] as any;
     const newPeriods = [ { id: "p2", start: 60, end: 80 },
                          { id: "p3", start: 80 } ] as any;
-    const updatePeriods = require("../update_periods").updatePeriods;
+    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
     updatePeriods(oldPeriods, newPeriods);
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p2");
@@ -296,7 +296,7 @@ describe("updatePeriods", () => {
     }));
     const oldPeriods = [ { id: "p1", start: 50, end: 60 } ] as any;
     const newPeriods = [ { id: "p3", start: 70, end: 80 } ] as any;
-    const updatePeriods = require("../update_periods").updatePeriods;
+    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
 
     let error = null;
     try {
@@ -337,7 +337,7 @@ describe("updatePeriods", () => {
                          { id: "b", start: 68, end: 70 },
                          { id: "p2", start: 70, end: 80  },
                          { id: "p3", start: 80 } ] as any;
-    const updatePeriods = require("../update_periods").updatePeriods;
+    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
     updatePeriods(oldPeriods, newPeriods);
     expect(oldPeriods.length).toBe(6);
 
@@ -367,7 +367,7 @@ describe("updatePeriods", () => {
     const newPeriods = [ { id: "p1", start: 50, end: 70 },
                          { id: "p2", start: 70 } ] as any;
 
-    const updatePeriods = require("../update_periods").updatePeriods;
+    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
 
     let error = null;
     try {
@@ -402,7 +402,7 @@ describe("updatePeriods", () => {
                                                     default: fakeUpdatePeriodInPlace }));
     const oldPeriods = [ { id: "p1" }, { id: "p2" } ] as any;
     const newPeriods = [] as any;
-    const updatePeriods = require("../update_periods").updatePeriods;
+    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
     updatePeriods(oldPeriods, newPeriods);
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p1");
@@ -420,7 +420,7 @@ describe("updatePeriods", () => {
                                                     default: fakeUpdatePeriodInPlace }));
     const oldPeriods = [] as any;
     const newPeriods = [ { id: "p1" }, { id: "p2" } ] as any;
-    const updatePeriods = require("../update_periods").updatePeriods;
+    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
     updatePeriods(oldPeriods, newPeriods);
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p1");
@@ -436,7 +436,7 @@ describe("updatePeriods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => { return; });
     jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
                                                     default: fakeUpdatePeriodInPlace }));
-    const updatePeriods = require("../update_periods").updatePeriods;
+    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
     const oldPeriods = [ { id: "p0", start: 50, end: 60 },
                          { id: "p1", start: 60, end: 70 } ] as any;
     const newPeriods = [ { id: "p3", start: 80 } ] as any;
@@ -477,7 +477,7 @@ describe("updatePeriods", () => {
     }));
     const oldPeriods = [ { id: "p1", start: 50, end: 60 } ] as any;
     const newPeriods = [ { id: "p2", start: 60, end: 80 } ] as any;
-    const updatePeriods = require("../update_periods").updatePeriods;
+    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
 
     updatePeriods(oldPeriods, newPeriods);
     expect(oldPeriods.length).toBe(2);
@@ -500,7 +500,7 @@ describe("updatePeriods", () => {
     }));
     const oldPeriods = [ { id: "p1", start: 50, end: 60 } ] as any;
     const newPeriods = [ { id: "px", start: 50, end: 70 } ] as any;
-    const updatePeriods = require("../update_periods").updatePeriods;
+    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
 
     let error = null;
     try {
@@ -539,7 +539,7 @@ describe("updatePeriods", () => {
     const newPeriods = [ { id: "p1", start: 60, end: 65  },
                          { id: "p2", start: 65, end: 80  },
                          { id: "p3", start: 80 } ] as any;
-    const updatePeriods = require("../update_periods").updatePeriods;
+    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
     updatePeriods(oldPeriods, newPeriods);
     expect(oldPeriods.length).toBe(4);
 
@@ -574,7 +574,7 @@ describe("updatePeriods", () => {
                          { id: "p3", start: 80 } ] as any;
     const newPeriods = [ { id: "p1", start: 60, end: 70  },
                          { id: "p3", start: 80 } ] as any;
-    const updatePeriods = require("../update_periods").updatePeriods;
+    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
     updatePeriods(oldPeriods, newPeriods);
     expect(oldPeriods.length).toBe(3);
 
@@ -609,7 +609,7 @@ describe("updatePeriods", () => {
                          { id: "p4", start: 90 } ] as any;
     const newPeriods = [ { id: "p1", start: 60, end: 70  },
                          { id: "p3", start: 80, end: 90 } ] as any;
-    const updatePeriods = require("../update_periods").updatePeriods;
+    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
     updatePeriods(oldPeriods, newPeriods);
     expect(oldPeriods.length).toBe(3);
 

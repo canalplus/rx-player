@@ -284,9 +284,9 @@ function checkGetLicense(
     mockCompat();
     const mediaKeySession = new MediaKeySessionImpl();
     jest.spyOn(MediaKeysImpl.prototype, "createSession").mockReturnValue(mediaKeySession);
-    const updateSpy = jest.spyOn(mediaKeySession, "update");
+    const mockUpdate = jest.spyOn(mediaKeySession, "update");
     let remainingRetries = nbRetries;
-    const getLicenseSpy = jest.fn(() => {
+    const mockGetLicense = jest.fn(() => {
       const callIdx = nbRetries - remainingRetries;
       const timeout = getTimeout(callIdx);
       if (remainingRetries === 0) {
@@ -322,7 +322,7 @@ function checkGetLicense(
     const shouldFail = nbRetries >= maxRetries;
     let warningsLeft = nbRetries;
     const ksConfig = [{ type: "com.widevine.alpha",
-                        getLicense: getLicenseSpy,
+                        getLicense: mockGetLicense,
                         getLicenseConfig: configuredRetries !== undefined ||
                                           configuredTimeout !== undefined ?
                                             { retry: configuredRetries,
@@ -344,8 +344,8 @@ function checkGetLicense(
     }
 
     // == test ==
-    const { ContentDecryptorState } = require("../../content_decryptor");
-    const ContentDecryptor = require("../../content_decryptor").default;
+    const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+    const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
 
     contentDecryptor.addEventListener("stateChange", (newState: number) => {
@@ -360,9 +360,9 @@ function checkGetLicense(
       if (shouldFail) {
         try {
           checkKeyLoadError(error);
-          expect(getLicenseSpy).toHaveBeenCalledTimes(maxRetries);
-          expect(getLicenseSpy).toHaveBeenNthCalledWith(maxRetries, challenge, "license-request");
-          expect(updateSpy).toHaveBeenCalledTimes(0);
+          expect(mockGetLicense).toHaveBeenCalledTimes(maxRetries);
+          expect(mockGetLicense).toHaveBeenNthCalledWith(maxRetries, challenge, "license-request");
+          expect(mockUpdate).toHaveBeenCalledTimes(0);
           res();
         } catch (e) {
           rej(e);
@@ -377,8 +377,8 @@ function checkGetLicense(
         try {
           checkKeyLoadError(warning);
           const requestIdx = nbRetries - remainingRetries;
-          expect(getLicenseSpy).toHaveBeenCalledTimes(requestIdx);
-          expect(getLicenseSpy).toHaveBeenNthCalledWith(requestIdx, challenge, "license-request");
+          expect(mockGetLicense).toHaveBeenCalledTimes(requestIdx);
+          expect(mockGetLicense).toHaveBeenNthCalledWith(requestIdx, challenge, "license-request");
         } catch (e) {
           rej(e);
         }
@@ -398,15 +398,15 @@ function checkGetLicense(
     setTimeout(() => {
       try {
         if (ignoreLicenseRequests) {
-          expect(updateSpy).toHaveBeenCalledTimes(0);
+          expect(mockUpdate).toHaveBeenCalledTimes(0);
         } else {
           const license = concat(challenge, challenge);
-          expect(updateSpy).toHaveBeenCalledTimes(1);
-          expect(updateSpy).toHaveBeenCalledWith(license);
+          expect(mockUpdate).toHaveBeenCalledTimes(1);
+          expect(mockUpdate).toHaveBeenCalledWith(license);
         }
-        expect(getLicenseSpy).toHaveBeenCalledTimes(nbRetries + 1);
+        expect(mockGetLicense).toHaveBeenCalledTimes(nbRetries + 1);
         for (let i = 1; i <= nbRetries + 1; i++) {
-          expect(getLicenseSpy).toHaveBeenNthCalledWith(i, challenge, "license-request");
+          expect(mockGetLicense).toHaveBeenNthCalledWith(i, challenge, "license-request");
         }
         contentDecryptor.dispose();
         res();

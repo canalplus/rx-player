@@ -54,7 +54,7 @@ describe("utils - starts-with", () => {
       proto.flatMap = initialFlatMap;
       // TODO find what bother typescript here instead of adding "as any"
       /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-      const flatMapSpy = jest.spyOn(proto as any, "flatMap");
+      const mockFlatMap = jest.spyOn(proto as any, "flatMap");
       const func1 = (x : number) : number[] => [x, x + 1, x - 1];
       const func2 = (x : number) : string => String(x) + "a";
       expect(flatMap([1, 2, 3], func1))
@@ -62,10 +62,10 @@ describe("utils - starts-with", () => {
       expect(flatMap([1, 2, 3], func2))
         .toEqual([ "1a", "2a", "3a" ]);
 
-      expect(flatMapSpy).toHaveBeenCalledTimes(2);
-      expect(flatMapSpy).toHaveBeenNthCalledWith(1, func1);
-      expect(flatMapSpy).toHaveBeenNthCalledWith(2, func2);
-      flatMapSpy.mockRestore();
+      expect(mockFlatMap).toHaveBeenCalledTimes(2);
+      expect(mockFlatMap).toHaveBeenNthCalledWith(1, func1);
+      expect(mockFlatMap).toHaveBeenNthCalledWith(2, func2);
+      mockFlatMap.mockRestore();
     });
   }
 });

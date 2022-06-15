@@ -47,14 +47,14 @@ describe("Compat - makeVTTCue", () => {
   });
 
   it("should throw if nor VTTCue nor TextTrackCue is available", () => {
-    const logSpy = { warn: jest.fn() };
+    const mockLog = { warn: jest.fn() };
     win.VTTCue = undefined;
     win.TextTrackCue = undefined;
     jest.mock("../../log", () => ({
       __esModule: true as const,
-      default: logSpy,
+      default: mockLog,
     }));
-    const makeCue = require("../make_vtt_cue").default;
+    const makeCue = jest.requireActual("../make_vtt_cue").default;
     let result;
     let error;
     try {
@@ -65,33 +65,33 @@ describe("Compat - makeVTTCue", () => {
     expect(error).toBeInstanceOf(Error);
     expect((error as Error).message).toEqual("VTT cues not supported in your target");
     expect(result).toBe(undefined);
-    expect(logSpy.warn).not.toHaveBeenCalled();
+    expect(mockLog.warn).not.toHaveBeenCalled();
   });
 
   it("should warn and not create anything if start time is after end time", () => {
-    const logSpy = { warn: jest.fn() };
+    const mockLog = { warn: jest.fn() };
     win.VTTCue = MockVTTCue;
     jest.mock("../../log", () => ({
       __esModule: true as const,
-      default: logSpy,
+      default: mockLog,
     }));
-    const makeCue = require("../make_vtt_cue").default;
+    const makeCue = jest.requireActual("../make_vtt_cue").default;
     const result = makeCue(12, 10, "toto");
     expect(result).toBeNull();
-    expect(logSpy.warn).toHaveBeenCalledTimes(1);
-    expect(logSpy.warn).toHaveBeenCalledWith("Compat: Invalid cue times: 12 - 10");
+    expect(mockLog.warn).toHaveBeenCalledTimes(1);
+    expect(mockLog.warn).toHaveBeenCalledWith("Compat: Invalid cue times: 12 - 10");
   });
 
   it("should create a new VTT Cue in other cases", () => {
-    const logSpy = { warn: jest.fn() };
+    const mockLog = { warn: jest.fn() };
     win.VTTCue = MockVTTCue;
     jest.mock("../../log", () => ({
       __esModule: true as const,
-      default: logSpy,
+      default: mockLog,
     }));
-    const makeCue = require("../make_vtt_cue").default;
+    const makeCue = jest.requireActual("../make_vtt_cue").default;
     const result = makeCue(10, 12, "toto");
     expect(result).toEqual(new MockVTTCue(10, 12, "toto"));
-    expect(logSpy.warn).not.toHaveBeenCalled();
+    expect(mockLog.warn).not.toHaveBeenCalled();
   });
 });

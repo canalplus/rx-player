@@ -36,7 +36,7 @@ describe("compat - hasEMEAPIs", () => {
         requestMediaKeySystemAccess: () => null,
       };
     });
-    const hasEMEAPIs = require("../has_eme_apis");
+    const hasEMEAPIs = jest.requireActual("../has_eme_apis");
     expect(hasEMEAPIs.default()).toBe(true);
   });
 
@@ -50,7 +50,7 @@ describe("compat - hasEMEAPIs", () => {
         requestMediaKeySystemAccess: null,
       };
     });
-    const hasEMEAPIs = require("../has_eme_apis");
+    const hasEMEAPIs = jest.requireActual("../has_eme_apis");
     expect(hasEMEAPIs.default()).toBe(false);
   });
 });

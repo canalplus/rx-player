@@ -44,7 +44,7 @@ describe("Compat - Browser version", () => {
       return { __esModule: true as const,
                isFirefox: true };
     });
-    const { getFirefoxVersion } = require("../browser_version");
+    const { getFirefoxVersion } = jest.requireActual("../browser_version");
     nav.userAgent = "Firefox/60.0";
     const version = getFirefoxVersion();
     expect(version).toBe(60);
@@ -55,7 +55,7 @@ describe("Compat - Browser version", () => {
       return { __esModule: true as const,
                isFirefox: true };
     });
-    const { getFirefoxVersion } = require("../browser_version");
+    const { getFirefoxVersion } = jest.requireActual("../browser_version");
     nav.userAgent = "Firefox/80.0";
     const version = getFirefoxVersion();
     expect(version).toBe(80);
@@ -66,7 +66,7 @@ describe("Compat - Browser version", () => {
       return { __esModule: true as const,
                isFirefox: false };
     });
-    const { getFirefoxVersion } = require("../browser_version");
+    const { getFirefoxVersion } = jest.requireActual("../browser_version");
     const version = getFirefoxVersion();
     expect(version).toBe(null);
   });
@@ -76,7 +76,7 @@ describe("Compat - Browser version", () => {
       return { __esModule: true as const,
                isFirefox: true };
     });
-    const { getFirefoxVersion } = require("../browser_version");
+    const { getFirefoxVersion } = jest.requireActual("../browser_version");
     nav.userAgent = "FireFennec/80.0";
     const version = getFirefoxVersion();
     expect(version).toBe(-1);

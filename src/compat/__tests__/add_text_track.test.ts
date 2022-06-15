@@ -44,7 +44,7 @@ describe("compat - addTextTrack", () => {
       isIEOrEdge: true,
     }));
 
-    const addTextTrack = require("../add_text_track").default;
+    const addTextTrack = jest.requireActual("../add_text_track").default;
     const { track, trackElement } = addTextTrack(fakeMediaElement, true);
     expect(trackElement).toBe(undefined);
     expect(track).toBe(fakeTextTrack);
@@ -74,7 +74,7 @@ describe("compat - addTextTrack", () => {
       isIEOrEdge: true,
     }));
 
-    const addTextTrack = require("../add_text_track").default;
+    const addTextTrack = jest.requireActual("../add_text_track").default;
     const { track, trackElement } = addTextTrack(fakeMediaElement, false);
     expect(trackElement).toBe(undefined);
     expect(track).toBe(fakeTextTrack);
@@ -117,7 +117,7 @@ describe("compat - addTextTrack", () => {
     const spyOnCreateElement = jest.spyOn(document, "createElement")
       .mockImplementation(() => fakeTextTrackElement as unknown as HTMLElement);
 
-    const addTextTrack = require("../add_text_track").default;
+    const addTextTrack = jest.requireActual("../add_text_track").default;
     const { track, trackElement } = addTextTrack(fakeMediaElement, true);
     expect(track).toBe(fakeTextTrack);
     expect(track.mode).toBe("hidden");
@@ -162,7 +162,7 @@ describe("compat - addTextTrack", () => {
     const spyOnCreateElement = jest.spyOn(document, "createElement")
       .mockImplementation(() => fakeTextTrackElement as unknown as HTMLElement);
 
-    const addTextTrack = require("../add_text_track").default;
+    const addTextTrack = jest.requireActual("../add_text_track").default;
     const { track, trackElement } = addTextTrack(fakeMediaElement, false);
     expect(track).toBe(fakeTextTrack);
     expect(track.mode).toBe("showing");

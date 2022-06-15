@@ -27,35 +27,39 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
   });
 
   it("should check just ftyp and and moov integrity for init segments", () => {
-    const findCompleteBoxSpy = jest.fn(() => 45);
+    const mockFindCompleteBox = jest.fn(() => 45);
     jest.mock("../find_complete_box", () => ({ __esModule: true as const,
-                                               default: findCompleteBoxSpy }));
-    const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;
+                                               default: mockFindCompleteBox }));
+    const checkISOBMFFIntegrity =
+      jest.requireActual("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
     expect(() => checkISOBMFFIntegrity(myUint8Array, true)).not.toThrow();
-    expect(findCompleteBoxSpy).toHaveBeenCalledTimes(2);
-    expect(findCompleteBoxSpy).toHaveBeenCalledWith(myUint8Array, 0x66747970);
-    expect(findCompleteBoxSpy).toHaveBeenCalledWith(myUint8Array, 0x6D6F6F76);
+    expect(mockFindCompleteBox).toHaveBeenCalledTimes(2);
+    expect(mockFindCompleteBox).toHaveBeenCalledWith(myUint8Array, 0x66747970);
+    expect(mockFindCompleteBox).toHaveBeenCalledWith(myUint8Array, 0x6D6F6F76);
   });
 
   it("should check just moof and and mdat integrity for regular segments", () => {
-    const findCompleteBoxSpy = jest.fn(() => 45);
+    const mockFindCompleteBox = jest.fn(() => 45);
     jest.mock("../find_complete_box", () => ({ __esModule: true as const,
-                                               default: findCompleteBoxSpy }));
-    const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;
+                                               default: mockFindCompleteBox }));
+    const checkISOBMFFIntegrity =
+      jest.requireActual("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
     expect(() => checkISOBMFFIntegrity(myUint8Array, false)).not.toThrow();
-    expect(findCompleteBoxSpy).toHaveBeenCalledTimes(2);
-    expect(findCompleteBoxSpy).toHaveBeenCalledWith(myUint8Array, 0x6D6F6F66);
-    expect(findCompleteBoxSpy).toHaveBeenCalledWith(myUint8Array, 0x6D646174);
+    expect(mockFindCompleteBox).toHaveBeenCalledTimes(2);
+    expect(mockFindCompleteBox).toHaveBeenCalledWith(myUint8Array, 0x6D6F6F66);
+    expect(mockFindCompleteBox).toHaveBeenCalledWith(myUint8Array, 0x6D646174);
   });
 
   it("should throw an other error if an init segment is missing a complete ftyp", () => {
-    const findCompleteBoxSpy = jest.fn((_, box) => box === 0x66747970 ? -1 : 45);
+    const mockFindCompleteBox = jest.fn((_, box) => box === 0x66747970 ? -1 : 45);
     jest.mock("../find_complete_box", () => ({ __esModule: true as const,
-                                               default: findCompleteBoxSpy }));
-    const OtherError = require("../../../errors").OtherError;
-    const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;
+                                               default: mockFindCompleteBox }));
+    const OtherError =
+      jest.requireActual("../../../errors").OtherError;
+    const checkISOBMFFIntegrity =
+      jest.requireActual("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
     let error : unknown | null = null;
     try {
@@ -72,11 +76,13 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
   });
 
   it("should throw an other error if an init segment is missing a complete moov", () => {
-    const findCompleteBoxSpy = jest.fn((_, box) => box === 0x6D6F6F76 ? -1 : 45);
+    const mockFindCompleteBox = jest.fn((_, box) => box === 0x6D6F6F76 ? -1 : 45);
     jest.mock("../find_complete_box", () => ({ __esModule: true as const,
-                                               default: findCompleteBoxSpy }));
-    const OtherError = require("../../../errors").OtherError;
-    const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;
+                                               default: mockFindCompleteBox }));
+    const OtherError =
+      jest.requireActual("../../../errors").OtherError;
+    const checkISOBMFFIntegrity =
+      jest.requireActual("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
     let error : unknown | null = null;
     try {
@@ -95,11 +101,12 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
   /* eslint-disable max-len */
   it("should throw an other error if a regular segment is missing a complete moof", () => {
   /* eslint-enable max-len */
-    const findCompleteBoxSpy = jest.fn((_, box) => box === 0x6D6F6F66 ? -1 : 45);
+    const mockFindCompleteBox = jest.fn((_, box) => box === 0x6D6F6F66 ? -1 : 45);
     jest.mock("../find_complete_box", () => ({ __esModule: true as const,
-                                               default: findCompleteBoxSpy }));
-    const OtherError = require("../../../errors").OtherError;
-    const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;
+                                               default: mockFindCompleteBox }));
+    const OtherError = jest.requireActual("../../../errors").OtherError;
+    const checkISOBMFFIntegrity =
+      jest.requireActual("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
     let error : unknown | null = null;
     try {
@@ -118,11 +125,12 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
   /* eslint-disable max-len */
   it("should throw an other error if a regular segment is missing a complete mdat", () => {
   /* eslint-enable max-len */
-    const findCompleteBoxSpy = jest.fn((_, box) => box === 0x6D646174 ? -1 : 45);
+    const mockFindCompleteBox = jest.fn((_, box) => box === 0x6D646174 ? -1 : 45);
     jest.mock("../find_complete_box", () => ({ __esModule: true as const,
-                                               default: findCompleteBoxSpy }));
-    const OtherError = require("../../../errors").OtherError;
-    const checkISOBMFFIntegrity = require("../check_isobmff_integrity").default;
+                                               default: mockFindCompleteBox }));
+    const OtherError = jest.requireActual("../../../errors").OtherError;
+    const checkISOBMFFIntegrity =
+      jest.requireActual("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
     let error : unknown | null = null;
     try {
