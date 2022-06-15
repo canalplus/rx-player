@@ -34,7 +34,7 @@ xdescribe("Compat - isOffline", () => {
   it("should return true if navigator.onLine is `false`", () => {
     const oldNavigator = win.navigator;
     win.navigator = { onLine: false };
-    const isOffline = require("../is_offline").default;
+    const isOffline = jest.requireActual("../is_offline").default;
     expect(isOffline()).toEqual(true);
     win.navigator = oldNavigator;
   });
@@ -42,7 +42,7 @@ xdescribe("Compat - isOffline", () => {
   it("should return false if navigator.onLine is `true`", () => {
     const oldNavigator = win.navigator;
     win.navigator = { onLine: true };
-    const isOffline = require("../is_offline").default;
+    const isOffline = jest.requireActual("../is_offline").default;
     expect(isOffline()).toEqual(false);
     win.navigator = oldNavigator;
   });
@@ -50,7 +50,7 @@ xdescribe("Compat - isOffline", () => {
   it("should return false if navigator.onLine is `undefined`", () => {
     const oldNavigator = win.navigator;
     win.navigator = {};
-    const isOffline = require("../is_offline").default;
+    const isOffline = jest.requireActual("../is_offline").default;
     expect(isOffline()).toEqual(false);
     win.navigator = oldNavigator;
   });
@@ -58,7 +58,7 @@ xdescribe("Compat - isOffline", () => {
   it("should return false if navigator.onLine is `null`", () => {
     const oldNavigator = win.navigator;
     win.navigator = { onLine: null };
-    const isOffline = require("../is_offline").default;
+    const isOffline = jest.requireActual("../is_offline").default;
     expect(isOffline()).toEqual(false);
     win.navigator = oldNavigator;
   });

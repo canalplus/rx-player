@@ -46,15 +46,15 @@ const emptyPersistentSessionsStore = {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function checkNothingHappen(persistentSessionsStore : any, limit : number) {
-  const deleteLastSpy = jest.spyOn(persistentSessionsStore, "deleteOldSessions");
-  const logInfoSpy = jest.fn();
+  const mockDeleteLast = jest.spyOn(persistentSessionsStore, "deleteOldSessions");
+  const mockLogInfo = jest.fn();
   jest.mock("../../../../log", () => ({ __esModule: true as const,
-                                        default: { info: logInfoSpy } }));
-  const cleanOldStoredPersistentInfo = require("../clean_old_stored_persistent_info")
-    .default;
+                                        default: { info: mockLogInfo } }));
+  const cleanOldStoredPersistentInfo =
+    jest.requireActual("../clean_old_stored_persistent_info").default;
   cleanOldStoredPersistentInfo(persistentSessionsStore, limit);
-  expect(deleteLastSpy).not.toHaveBeenCalled();
-  expect(logInfoSpy).not.toHaveBeenCalled();
+  expect(mockDeleteLast).not.toHaveBeenCalled();
+  expect(mockLogInfo).not.toHaveBeenCalled();
   jest.resetModules();
 }
 
@@ -71,20 +71,20 @@ function checkRemoved(
   limit : number,
   numberToRemove : number
 ) {
-  const deleteLastSpy = jest.spyOn(persistentSessionsStore, "deleteOldSessions");
-  const logInfoSpy = jest.fn();
+  const mockDeleteLast = jest.spyOn(persistentSessionsStore, "deleteOldSessions");
+  const mockLogInfo = jest.fn();
   jest.mock("../../../../log", () => ({ __esModule: true as const,
-                                        default: { info: logInfoSpy } }));
-  const cleanOldStoredPersistentInfo = require("../clean_old_stored_persistent_info")
-    .default;
+                                        default: { info: mockLogInfo } }));
+  const cleanOldStoredPersistentInfo =
+    jest.requireActual("../clean_old_stored_persistent_info").default;
   cleanOldStoredPersistentInfo(persistentSessionsStore, limit);
-  expect(deleteLastSpy).toHaveBeenCalledTimes(1);
-  expect(deleteLastSpy).toHaveBeenCalledWith(numberToRemove);
-  expect(logInfoSpy).toHaveBeenCalledTimes(1);
-  expect(logInfoSpy).toHaveBeenCalledWith("DRM: Too many stored persistent sessions," +
+  expect(mockDeleteLast).toHaveBeenCalledTimes(1);
+  expect(mockDeleteLast).toHaveBeenCalledWith(numberToRemove);
+  expect(mockLogInfo).toHaveBeenCalledTimes(1);
+  expect(mockLogInfo).toHaveBeenCalledWith("DRM: Too many stored persistent sessions," +
                                             " removing some.",
-                                          persistentSessionsStore.getLength(),
-                                          numberToRemove);
+                                           persistentSessionsStore.getLength(),
+                                           numberToRemove);
   jest.resetModules();
 }
 

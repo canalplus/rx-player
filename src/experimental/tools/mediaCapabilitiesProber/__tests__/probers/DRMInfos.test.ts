@@ -32,7 +32,7 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
 
   it("should throw if no keySystem provided", () => {
     const configuration = {};
-    const probeDRMInfos = require("../../probers/DRMInfos").default;
+    const probeDRMInfos = jest.requireActual("../../probers/DRMInfos").default;
     /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeDRMInfos(configuration)).rejects.toEqual(
       "MediaCapabilitiesProber >>> API_CALL: " +
@@ -45,7 +45,7 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
     const configuration = {
       keySystem: {},
     };
-    const probeDRMInfos = require("../../probers/DRMInfos").default;
+    const probeDRMInfos = jest.requireActual("../../probers/DRMInfos").default;
     /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeDRMInfos(configuration)).rejects.toEqual(
       "MediaCapabilitiesProber >>> API_CALL: " +
@@ -63,7 +63,7 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
     jest.mock("../../../../../compat", () => ({
       requestMediaKeySystemAccess: null,
     }));
-    const probeDRMInfos = require("../../probers/DRMInfos").default;
+    const probeDRMInfos = jest.requireActual("../../probers/DRMInfos").default;
     /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeDRMInfos(configuration)).resolves.toEqual(
       [ProberStatus.NotSupported, { configuration: {}, type: "clearkick" }]
@@ -85,7 +85,7 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
     jest.mock("../../../../../compat", () => ({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     }));
-    const probeDRMInfos = require("../../probers/DRMInfos").default;
+    const probeDRMInfos = jest.requireActual("../../probers/DRMInfos").default;
     expect.assertions(2);
     probeDRMInfos(configuration)
       .then((res: unknown) => {
@@ -118,7 +118,7 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     }));
 
-    const probeDRMInfos = require("../../probers/DRMInfos").default;
+    const probeDRMInfos = jest.requireActual("../../probers/DRMInfos").default;
     expect.assertions(2);
     probeDRMInfos(configuration)
       .then((res: unknown) => {

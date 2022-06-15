@@ -56,7 +56,7 @@ describe("Manifest - Manifest", () => {
                                                } },
                                  periods: [] };
 
-    const Manifest = require("../manifest").default;
+    const Manifest = jest.requireActual("../manifest").default;
     const manifest = new Manifest(simpleFakeManifest, {});
 
     expect(manifest.adaptations).toEqual({});
@@ -100,7 +100,7 @@ describe("Manifest - Manifest", () => {
     jest.mock("../period", () =>  ({ __esModule: true as const,
                                      default: fakePeriod }));
 
-    const Manifest = require("../manifest").default;
+    const Manifest = jest.requireActual("../manifest").default;
     const manifest = new Manifest(simpleFakeManifest, {});
     expect(fakePeriod).toHaveBeenCalledTimes(2);
     expect(fakePeriod).toHaveBeenCalledWith(period1, undefined);
@@ -143,7 +143,7 @@ describe("Manifest - Manifest", () => {
     });
     jest.mock("../period", () =>  ({ __esModule: true as const,
                                      default: fakePeriod }));
-    const Manifest = require("../manifest").default;
+    const Manifest = jest.requireActual("../manifest").default;
 
     /* eslint-disable @typescript-eslint/no-unused-expressions */
     new Manifest(simpleFakeManifest, { representationFilter });
@@ -181,7 +181,7 @@ describe("Manifest - Manifest", () => {
     });
     jest.mock("../period", () =>  ({ __esModule: true as const,
                                      default: fakePeriod }));
-    const Manifest = require("../manifest").default;
+    const Manifest = jest.requireActual("../manifest").default;
 
     const manifest = new Manifest(simpleFakeManifest, {});
     expect(fakePeriod).toHaveBeenCalledTimes(2);
@@ -225,7 +225,7 @@ describe("Manifest - Manifest", () => {
       __esModule: true as const,
       default: fakePeriod,
     }));
-    const Manifest = require("../manifest").default;
+    const Manifest = jest.requireActual("../manifest").default;
 
     const manifest = new Manifest(simpleFakeManifest, {});
     expect(manifest.contentWarnings).toHaveLength(4);
@@ -267,7 +267,7 @@ describe("Manifest - Manifest", () => {
     });
     jest.mock("../period", () =>  ({ __esModule: true as const,
                                      default: fakePeriod }));
-    const Manifest = require("../manifest").default;
+    const Manifest = jest.requireActual("../manifest").default;
     const manifest = new Manifest(oldManifestArgs, {});
 
     expect(manifest.adaptations).toEqual({});
@@ -303,7 +303,7 @@ describe("Manifest - Manifest", () => {
       __esModule: true as const,
       default: fakePeriod,
     }));
-    const Manifest = require("../manifest").default;
+    const Manifest = jest.requireActual("../manifest").default;
 
     const oldManifestArgs1 = { availabilityStartTime: 5,
                                duration: 12,
@@ -386,10 +386,10 @@ describe("Manifest - Manifest", () => {
                               suggestedPresentationDelay: 99,
                               uris: ["url1", "url2"] };
 
-    const Manifest = require("../manifest").default;
+    const Manifest = jest.requireActual("../manifest").default;
     const manifest = new Manifest(oldManifestArgs, {});
 
-    const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
+    const mockTrigger = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
 
     const [oldPeriod1, oldPeriod2] = manifest.periods;
 
@@ -433,13 +433,13 @@ describe("Manifest - Manifest", () => {
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod1, 0);
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod2, newPeriod2, 0);
-    expect(eeSpy).toHaveBeenCalledTimes(1);
-    expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
+    expect(mockTrigger).toHaveBeenCalledTimes(1);
+    expect(mockTrigger).toHaveBeenCalledWith("manifestUpdate", null);
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     expect(fakeLogger.info).not.toHaveBeenCalled();
     expect(fakeLogger.warn).not.toHaveBeenCalled();
-    eeSpy.mockRestore();
+    mockTrigger.mockRestore();
   });
 
   it("should prepend older Periods when calling `replace`", () => {
@@ -483,11 +483,11 @@ describe("Manifest - Manifest", () => {
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const Manifest = require("../manifest").default;
+    const Manifest = jest.requireActual("../manifest").default;
     const manifest = new Manifest(oldManifestArgs, {});
     const [oldPeriod1] = manifest.periods;
 
-    const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
+    const mockTrigger = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
 
     const newPeriod1 = { id: "pre0",
                          start: 0,
@@ -526,8 +526,8 @@ describe("Manifest - Manifest", () => {
 
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod3, 0);
-    expect(eeSpy).toHaveBeenCalledTimes(1);
-    expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
+    expect(mockTrigger).toHaveBeenCalledTimes(1);
+    expect(mockTrigger).toHaveBeenCalledWith("manifestUpdate", null);
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     // expect(fakeLogger.info).toHaveBeenCalledTimes(2);
@@ -535,7 +535,7 @@ describe("Manifest - Manifest", () => {
     //   "Manifest: Adding new Period pre0 after update.");
     // expect(fakeLogger.info).toHaveBeenCalledWith(
     //   "Manifest: Adding new Period pre1 after update.");
-    eeSpy.mockRestore();
+    mockTrigger.mockRestore();
   });
 
   it("should append newer Periods when calling `replace`", () => {
@@ -574,11 +574,11 @@ describe("Manifest - Manifest", () => {
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const Manifest = require("../manifest").default;
+    const Manifest = jest.requireActual("../manifest").default;
     const manifest = new Manifest(oldManifestArgs, {});
     const [oldPeriod1] = manifest.periods;
 
-    const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
+    const mockTrigger = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
 
     const newPeriod1 = { id: "foo1" };
     const newPeriod2 = { id: "post0" };
@@ -605,14 +605,14 @@ describe("Manifest - Manifest", () => {
 
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod1, 0);
-    expect(eeSpy).toHaveBeenCalledTimes(1);
-    expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
+    expect(mockTrigger).toHaveBeenCalledTimes(1);
+    expect(mockTrigger).toHaveBeenCalledWith("manifestUpdate", null);
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     // expect(fakeLogger.warn).toHaveBeenCalledTimes(1);
     // expect(fakeLogger.warn)
     // .toHaveBeenCalledWith("Manifest: Adding new Periods after update.");
-    eeSpy.mockRestore();
+    mockTrigger.mockRestore();
   });
 
   it("should replace different Periods when calling `replace`", () => {
@@ -651,10 +651,10 @@ describe("Manifest - Manifest", () => {
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const Manifest = require("../manifest").default;
+    const Manifest = jest.requireActual("../manifest").default;
     const manifest = new Manifest(oldManifestArgs, {});
 
-    const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
+    const mockTrigger = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
 
     const newPeriod1 = { id: "diff0" };
     const newPeriod2 = { id: "diff1" };
@@ -680,12 +680,12 @@ describe("Manifest - Manifest", () => {
     expect(manifest.periods).toEqual([newPeriod1, newPeriod2, newPeriod3]);
 
     expect(fakeUpdatePeriodInPlace).not.toHaveBeenCalled();
-    expect(eeSpy).toHaveBeenCalledTimes(1);
-    expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
+    expect(mockTrigger).toHaveBeenCalledTimes(1);
+    expect(mockTrigger).toHaveBeenCalledWith("manifestUpdate", null);
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     // expect(fakeLogger.info).toHaveBeenCalledTimes(4);
-    eeSpy.mockRestore();
+    mockTrigger.mockRestore();
   });
 
   it("should merge overlapping Periods when calling `replace`", () => {
@@ -727,11 +727,11 @@ describe("Manifest - Manifest", () => {
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const Manifest = require("../manifest").default;
+    const Manifest = jest.requireActual("../manifest").default;
     const manifest = new Manifest(oldManifestArgs, {});
     const [oldPeriod1, oldPeriod2] = manifest.periods;
 
-    const eeSpy = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
+    const mockTrigger = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
 
     const newPeriod1 = { id: "pre0", start: 0 };
     const newPeriod2 = { id: "foo1", start: 2 };
@@ -769,11 +769,11 @@ describe("Manifest - Manifest", () => {
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod1, newPeriod2, 0);
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledWith(oldPeriod2, newPeriod4, 0);
-    expect(eeSpy).toHaveBeenCalledTimes(1);
-    expect(eeSpy).toHaveBeenCalledWith("manifestUpdate", null);
+    expect(mockTrigger).toHaveBeenCalledTimes(1);
+    expect(mockTrigger).toHaveBeenCalledWith("manifestUpdate", null);
     expect(fakeIdGenerator).toHaveBeenCalledTimes(2);
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     // expect(fakeLogger.info).toHaveBeenCalledTimes(5);
-    eeSpy.mockRestore();
+    mockTrigger.mockRestore();
   });
 });

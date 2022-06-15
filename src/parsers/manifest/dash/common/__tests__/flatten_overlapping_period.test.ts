@@ -20,17 +20,17 @@ import flattenOverlappingPeriods from "../flatten_overlapping_periods";
 describe("flattenOverlappingPeriods", function() {
 
   it("should do nothing when no period is given", () => {
-    const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const mockLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
 
     expect(flattenOverlappingPeriods([])).toEqual([]);
-    expect(logSpy).not.toHaveBeenCalled();
-    logSpy.mockRestore();
+    expect(mockLog).not.toHaveBeenCalled();
+    mockLog.mockRestore();
   });
 
   // [ Period 1 ][ Period 2 ]       ------>  [ Period 1 ][ Period 3 ]
   //             [ Period 3 ]
   it("should replace a period with an other if same start and duration", function() {
-    const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const mockLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
 
     const periods = [
       { id: "1", start: 0, duration: 60, adaptations: {} },
@@ -47,16 +47,16 @@ describe("flattenOverlappingPeriods", function() {
     expect(flattenPeriods[1].duration).toBe(60);
     expect(flattenPeriods[1].id).toBe("3");
 
-    expect(logSpy).toHaveBeenCalledTimes(1);
-    expect(logSpy).toHaveBeenCalledWith(
+    expect(mockLog).toHaveBeenCalledTimes(1);
+    expect(mockLog).toHaveBeenCalledWith(
       "DASH: Updating overlapping Periods.", 60, 60);
-    logSpy.mockRestore();
+    mockLog.mockRestore();
   });
 
   // [ Period 1 ][ Period 2 ]       ------>  [ Period 1 ][  2  ][ Period 3 ]
   //                  [ Period 3 ]
   it("should replace part of period if part of next one is overlapping it", function() {
-    const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const mockLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
 
     const periods = [
       { id: "1", start: 0, duration: 60, adaptations: {} },
@@ -76,16 +76,16 @@ describe("flattenOverlappingPeriods", function() {
     expect(flattenPeriods[2].duration).toBe(60);
     expect(flattenPeriods[2].id).toBe("3");
 
-    expect(logSpy).toHaveBeenCalledTimes(1);
-    expect(logSpy).toHaveBeenCalledWith(
+    expect(mockLog).toHaveBeenCalledTimes(1);
+    expect(mockLog).toHaveBeenCalledWith(
       "DASH: Updating overlapping Periods.", 60, 90);
-    logSpy.mockRestore();
+    mockLog.mockRestore();
   });
 
   // [ Period 1 ][ Period 2 ]       ------>  [  1  ][      Period 3     ]
   //        [      Period 3     ]
   it("should erase period if a next period starts before and ends after it", function() {
-    const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const mockLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
 
     const periods = [
       { id: "1", start: 0, duration: 60, adaptations: {} },
@@ -102,12 +102,12 @@ describe("flattenOverlappingPeriods", function() {
     expect(flattenPeriods[1].duration).toBe(120);
     expect(flattenPeriods[1].id).toBe("3");
 
-    expect(logSpy).toHaveBeenCalledTimes(2);
-    expect(logSpy).toHaveBeenCalledWith(
+    expect(mockLog).toHaveBeenCalledTimes(2);
+    expect(mockLog).toHaveBeenCalledWith(
       "DASH: Updating overlapping Periods.", 60, 50);
-    expect(logSpy).toHaveBeenCalledWith(
+    expect(mockLog).toHaveBeenCalledWith(
       "DASH: Updating overlapping Periods.", 0, 50);
-    logSpy.mockRestore();
+    mockLog.mockRestore();
   });
 
   // [ Period 1 ][ Period 2 ]       ------>  [  1  ][  100   ]
@@ -117,7 +117,7 @@ describe("flattenOverlappingPeriods", function() {
   /* eslint-disable max-len */
   it("should keep last announced period from multiple periods with same start and end", function() {
   /* eslint-enable max-len */
-    const logSpy = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const mockLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
 
     const periods = [
       { id: "1", start: 0, duration: 60, adaptations: {} },
@@ -136,7 +136,7 @@ describe("flattenOverlappingPeriods", function() {
     expect(flattenPeriods[1].duration).toBe(60);
     expect(flattenPeriods[1].id).toBe("100");
 
-    expect(logSpy).toHaveBeenCalledTimes(99);
-    logSpy.mockRestore();
+    expect(mockLog).toHaveBeenCalledTimes(99);
+    mockLog.mockRestore();
   });
 });

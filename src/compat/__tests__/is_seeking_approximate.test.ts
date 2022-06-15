@@ -32,7 +32,7 @@ describe("isSeekingApproximate", () => {
                isTizen: true };
     });
     const shouldAppendBufferAfterPadding =
-      require("../is_seeking_approximate").default;
+      jest.requireActual("../is_seeking_approximate").default;
     expect(shouldAppendBufferAfterPadding).toBe(true);
   });
 
@@ -42,7 +42,7 @@ describe("isSeekingApproximate", () => {
                isTizen: false };
     });
     const shouldAppendBufferAfterPadding =
-      require("../is_seeking_approximate").default;
+      jest.requireActual("../is_seeking_approximate").default;
     expect(shouldAppendBufferAfterPadding).toBe(false);
   });
 });

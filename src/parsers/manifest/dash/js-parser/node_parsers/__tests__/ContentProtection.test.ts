@@ -26,7 +26,7 @@ function testStringAttribute(attributeName : string, variableName? : string) : v
   const _variableName = variableName == null ? attributeName : variableName;
 
   it(`should correctly parse a ContentProtection element with a correct ${attributeName} attribute`, () => {
-    const parseContentProtection = require("../ContentProtection").default;
+    const parseContentProtection = jest.requireActual("../ContentProtection").default;
     const element1 = new DOMParser()
       .parseFromString(`<ContentProtection ${attributeName}="foobar" />`, "text/xml")
       .childNodes[0] as Element;
@@ -51,7 +51,7 @@ describe("DASH Node Parsers - ContentProtection", () => {
   });
 
   it("should correctly parse a ContentProtection element without attributes", () => {
-    const parseContentProtection = require("../ContentProtection").default;
+    const parseContentProtection = jest.requireActual("../ContentProtection").default;
     const element = new DOMParser().parseFromString("<ContentProtection />", "text/xml")
       .childNodes[0] as Element;
     expect(parseContentProtection(element))
@@ -66,13 +66,13 @@ describe("DASH Node Parsers - ContentProtection", () => {
   it("should correctly parse a ContentProtection element with a correct cenc:default_KID attribute", () => {
 
     const keyId = new Uint8Array([0, 1, 2, 3]);
-    const hexToBytesSpy = jest.fn().mockImplementation(() => {
+    const mockHexToBytes = jest.fn().mockImplementation(() => {
       return keyId;
     });
     jest.mock("../../../../../../utils/string_parsing", () => ({
-      hexToBytes: hexToBytesSpy,
+      hexToBytes: mockHexToBytes,
     }));
-    const parseContentProtection = require("../ContentProtection").default;
+    const parseContentProtection = jest.requireActual("../ContentProtection").default;
     const element1 = new DOMParser()
       .parseFromString(`<?xml version="1.0" encoding="utf-8"?>
 <MPD
@@ -91,19 +91,19 @@ describe("DASH Node Parsers - ContentProtection", () => {
       .toEqual([ { attributes: { keyId },
                    children: { cencPssh: [] } },
                  [] ]);
-    expect(hexToBytesSpy).toHaveBeenCalledTimes(1);
-    expect(hexToBytesSpy).toHaveBeenCalledWith("deadbeef");
+    expect(mockHexToBytes).toHaveBeenCalledTimes(1);
+    expect(mockHexToBytes).toHaveBeenCalledWith("deadbeef");
   });
 
   it("should correctly parse a ContentProtection with every attributes", () => {
     const keyId = new Uint8Array([0, 1, 2, 3]);
-    const hexToBytesSpy = jest.fn().mockImplementation(() => {
+    const mockHexToBytes = jest.fn().mockImplementation(() => {
       return keyId;
     });
     jest.mock("../../../../../../utils/string_parsing", () => ({
-      hexToBytes: hexToBytesSpy,
+      hexToBytes: mockHexToBytes,
     }));
-    const parseContentProtection = require("../ContentProtection").default;
+    const parseContentProtection = jest.requireActual("../ContentProtection").default;
     const element = new DOMParser()
       .parseFromString(`<?xml version="1.0" encoding="utf-8"?>
 <MPD
@@ -130,7 +130,7 @@ describe("DASH Node Parsers - ContentProtection", () => {
   });
 
   it("should correctly parse a ContentProtection with cenc:pssh children", () => {
-    const parseContentProtection = require("../ContentProtection").default;
+    const parseContentProtection = jest.requireActual("../ContentProtection").default;
     const element = new DOMParser()
       .parseFromString(`<?xml version="1.0" encoding="utf-8"?>
 <MPD
@@ -156,13 +156,13 @@ describe("DASH Node Parsers - ContentProtection", () => {
 
   it("should correctly parse a ContentProtection with both cenc:pssh children and every attributes", () => {
     const keyId = new Uint8Array([0, 1, 2, 3]);
-    const hexToBytesSpy = jest.fn().mockImplementation(() => {
+    const mockHexToBytes = jest.fn().mockImplementation(() => {
       return keyId;
     });
     jest.mock("../../../../../../utils/string_parsing", () => ({
-      hexToBytes: hexToBytesSpy,
+      hexToBytes: mockHexToBytes,
     }));
-    const parseContentProtection = require("../ContentProtection").default;
+    const parseContentProtection = jest.requireActual("../ContentProtection").default;
     const element = new DOMParser()
       .parseFromString(`<?xml version="1.0" encoding="utf-8"?>
 <MPD
@@ -193,7 +193,7 @@ describe("DASH Node Parsers - ContentProtection", () => {
   });
 
   it("should return a warning if one of the cenc:pssh is invalid base64", () => {
-    const parseContentProtection = require("../ContentProtection").default;
+    const parseContentProtection = jest.requireActual("../ContentProtection").default;
     const element = new DOMParser()
       .parseFromString(`<?xml version="1.0" encoding="utf-8"?>
 <MPD

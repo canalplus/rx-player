@@ -33,7 +33,8 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
     jest.mock("../../../../../compat", () => ({
       MediaSource_: null,
     }));
-    const probeMediaContentType = require("../../probers/mediaContentType").default;
+    const probeMediaContentType =
+      jest.requireActual("../../probers/mediaContentType").default;
     /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeMediaContentType({})).rejects.toThrowError(
       "MediaCapabilitiesProber >>> API_CALL: " +
@@ -48,7 +49,8 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         isTypeSupported: false,
       },
     }));
-    const probeMediaContentType = require("../../probers/mediaContentType").default;
+    const probeMediaContentType =
+      jest.requireActual("../../probers/mediaContentType").default;
     /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeMediaContentType({})).rejects.toThrowError(
       "MediaCapabilitiesProber >>> API_CALL: " +
@@ -67,7 +69,8 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
     const config = {
       type: "media-source",
     };
-    const probeMediaContentType = require("../../probers/mediaContentType").default;
+    const probeMediaContentType =
+      jest.requireActual("../../probers/mediaContentType").default;
 
     expect.assertions(1);
     probeMediaContentType(config)
@@ -94,7 +97,8 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         contentType: "video/mp5",
       },
     };
-    const probeMediaContentType = require("../../probers/mediaContentType").default;
+    const probeMediaContentType =
+      jest.requireActual("../../probers/mediaContentType").default;
 
     expect.assertions(2);
     probeMediaContentType(config)
@@ -121,7 +125,8 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         contentType: "audio/wma",
       },
     };
-    const probeMediaContentType = require("../../probers/mediaContentType").default;
+    const probeMediaContentType =
+      jest.requireActual("../../probers/mediaContentType").default;
 
     expect.assertions(2);
     probeMediaContentType(config)
@@ -151,7 +156,8 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         contentType: "video/mp5",
       },
     };
-    const probeMediaContentType = require("../../probers/mediaContentType").default;
+    const probeMediaContentType =
+      jest.requireActual("../../probers/mediaContentType").default;
 
     expect.assertions(2);
     probeMediaContentType(config)
@@ -178,7 +184,8 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         contentType: "audio/wma",
       },
     };
-    const probeMediaContentType = require("../../probers/mediaContentType").default;
+    const probeMediaContentType =
+      jest.requireActual("../../probers/mediaContentType").default;
 
     expect.assertions(2);
     probeMediaContentType(config)
@@ -205,7 +212,8 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         contentType: "video/mp5",
       },
     };
-    const probeMediaContentType = require("../../probers/mediaContentType").default;
+    const probeMediaContentType =
+      jest.requireActual("../../probers/mediaContentType").default;
 
     expect.assertions(2);
     probeMediaContentType(config)
@@ -235,7 +243,8 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         contentType: "audio/wma",
       },
     };
-    const probeMediaContentType = require("../../probers/mediaContentType").default;
+    const probeMediaContentType =
+      jest.requireActual("../../probers/mediaContentType").default;
 
     expect.assertions(2);
     probeMediaContentType(config)
@@ -267,7 +276,8 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         contentType: "audio/wma",
       },
     };
-    const probeMediaContentType = require("../../probers/mediaContentType").default;
+    const probeMediaContentType =
+      jest.requireActual("../../probers/mediaContentType").default;
 
     expect.assertions(2);
     probeMediaContentType(config)

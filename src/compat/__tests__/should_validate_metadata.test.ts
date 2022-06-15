@@ -33,7 +33,7 @@ describe("compat - shouldValidateMetadata", () => {
         isSamsungBrowser: false,
       };
     });
-    const shouldValidateMetadata = require("../should_validate_metadata");
+    const shouldValidateMetadata = jest.requireActual("../should_validate_metadata");
     expect(shouldValidateMetadata.default()).toBe(false);
   });
 
@@ -44,7 +44,7 @@ describe("compat - shouldValidateMetadata", () => {
         isSamsungBrowser: true,
       };
     });
-    const shouldValidateMetadata = require("../should_validate_metadata");
+    const shouldValidateMetadata = jest.requireActual("../should_validate_metadata");
     expect(shouldValidateMetadata.default()).toBe(true);
   });
   beforeEach(() => {

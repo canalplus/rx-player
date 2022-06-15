@@ -28,17 +28,17 @@ jest.mock("../../../transports/dash", () => ({
 
 describe("Features list - DASH WASM Parser", () => {
   it("should add DASH WASM parser in the current features", () => {
-    const initializeSpy = jest.spyOn(DashWasmParser.prototype, "initialize")
+    const mockInitialize = jest.spyOn(DashWasmParser.prototype, "initialize")
       .mockImplementation(jest.fn());
 
     const DASH_WASM = dashWasmFeature;
-    expect(initializeSpy).not.toHaveBeenCalled();
+    expect(mockInitialize).not.toHaveBeenCalled();
 
     /* eslint-disable @typescript-eslint/no-floating-promises */
     DASH_WASM.initialize({ wasmUrl: "blank" });
     /* eslint-enable @typescript-eslint/no-floating-promises */
 
-    expect(initializeSpy).toHaveBeenCalledTimes(1);
+    expect(mockInitialize).toHaveBeenCalledTimes(1);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = { transports: {},

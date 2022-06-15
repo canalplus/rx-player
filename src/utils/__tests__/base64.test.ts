@@ -52,13 +52,13 @@ describe("base64ToBytes", () => {
   });
 
   it("should return an empty Uint8Array for an empty string", () => {
-    const base64ToBytes = require("../base64").base64ToBytes;
+    const base64ToBytes = jest.requireActual("../base64").base64ToBytes;
     expect(base64ToBytes("")).toEqual(new Uint8Array([]));
     expect(logWarn).not.toHaveBeenCalled();
   });
 
   it("should convert a base64 to an Uint8Array", () => {
-    const base64ToBytes = require("../base64").base64ToBytes;
+    const base64ToBytes = jest.requireActual("../base64").base64ToBytes;
     expect(base64ToBytes("woDCge+/vg=="))
       .toEqual(new Uint8Array([194, 128, 194, 129, 239, 191, 190]));
     expect(base64ToBytes("dG90b/CfjIM="))
@@ -71,7 +71,7 @@ describe("base64ToBytes", () => {
       .toEqual(new Uint8Array([ 116, 111, 116, 111 ]));
     expect(logWarn).not.toHaveBeenCalled();
 
-    const bytesToBase64 = require("../base64").bytesToBase64;
+    const bytesToBase64 = jest.requireActual("../base64").bytesToBase64;
 
     for (let i = 0; i < CHARS.length; i++) {
       const char1 = CHARS[i];
@@ -91,7 +91,7 @@ describe("base64ToBytes", () => {
   });
 
   it("should convert a non-padded base64 to an Uint8Array", () => {
-    const base64ToBytes = require("../base64").base64ToBytes;
+    const base64ToBytes = jest.requireActual("../base64").base64ToBytes;
     expect(base64ToBytes("woDCge+/vg"))
       .toEqual(new Uint8Array([194, 128, 194, 129, 239, 191, 190]));
     expect(logWarn).toHaveBeenCalledTimes(1);
@@ -105,7 +105,7 @@ describe("base64ToBytes", () => {
   });
 
   it("should fail on invalid data", () => {
-    const base64ToBytes = require("../base64").base64ToBytes;
+    const base64ToBytes = jest.requireActual("../base64").base64ToBytes;
     expect(() => base64ToBytes("woD=Cge+/vg="))
       .toThrowError("Unable to parse base64 string.");
     expect(() => base64ToBytes("woDCg{+/vg=="))
@@ -125,13 +125,13 @@ describe("bytesToBase64", () => {
   });
 
   it("should return an empty string for an empty Uint8Array", () => {
-    const bytesToBase64 = require("../base64").bytesToBase64;
+    const bytesToBase64 = jest.requireActual("../base64").bytesToBase64;
     expect(bytesToBase64(new Uint8Array([]))).toEqual("");
     expect(logWarn).not.toHaveBeenCalled();
   });
 
   it("should convert a base64 to an Uint8Array", () => {
-    const bytesToBase64 = require("../base64").bytesToBase64;
+    const bytesToBase64 = jest.requireActual("../base64").bytesToBase64;
     expect(bytesToBase64(new Uint8Array([194, 128, 194, 129, 239, 191, 190])))
       .toEqual("woDCge+/vg==");
     expect(bytesToBase64(new Uint8Array([116, 111, 116, 111, 240, 159, 140, 131])))

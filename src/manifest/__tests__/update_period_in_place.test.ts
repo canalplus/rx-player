@@ -64,91 +64,91 @@ const newAudioRepresentation = { contentWarnings: [],
                                           _replace() { /* noop */ } } };
 
 describe("Manifest - updatePeriodInPlace", () => {
-  let oldVideoRepresentation1ReplaceSpy : jest.MockInstance<void, []> | undefined;
-  let oldVideoRepresentation2ReplaceSpy : jest.MockInstance<void, []> | undefined;
-  let oldVideoRepresentation3ReplaceSpy : jest.MockInstance<void, []> | undefined;
-  let oldVideoRepresentation4ReplaceSpy : jest.MockInstance<void, []> | undefined;
-  let oldAudioRepresentationReplaceSpy : jest.MockInstance<void, []> | undefined;
-  let oldVideoRepresentation1UpdateSpy : jest.MockInstance<void, []> | undefined;
-  let oldVideoRepresentation2UpdateSpy : jest.MockInstance<void, []> | undefined;
-  let oldVideoRepresentation3UpdateSpy : jest.MockInstance<void, []> | undefined;
-  let oldVideoRepresentation4UpdateSpy : jest.MockInstance<void, []> | undefined;
-  let oldAudioRepresentationUpdateSpy : jest.MockInstance<void, []> | undefined;
-  let newVideoRepresentation1ReplaceSpy : jest.MockInstance<void, []> | undefined;
-  let newVideoRepresentation2ReplaceSpy : jest.MockInstance<void, []> | undefined;
-  let newVideoRepresentation3ReplaceSpy : jest.MockInstance<void, []> | undefined;
-  let newVideoRepresentation4ReplaceSpy : jest.MockInstance<void, []> | undefined;
-  let newAudioRepresentationReplaceSpy : jest.MockInstance<void, []> | undefined;
-  let newVideoRepresentation1UpdateSpy : jest.MockInstance<void, []> | undefined;
-  let newVideoRepresentation2UpdateSpy : jest.MockInstance<void, []> | undefined;
-  let newVideoRepresentation3UpdateSpy : jest.MockInstance<void, []> | undefined;
-  let newVideoRepresentation4UpdateSpy : jest.MockInstance<void, []> | undefined;
-  let newAudioRepresentationUpdateSpy : jest.MockInstance<void, []> | undefined;
+  let mockOldVideoRepresentation1Replace : jest.MockInstance<void, []> | undefined;
+  let mockOldVideoRepresentation2Replace : jest.MockInstance<void, []> | undefined;
+  let mockOldVideoRepresentation3Replace : jest.MockInstance<void, []> | undefined;
+  let mockOldVideoRepresentation4Replace : jest.MockInstance<void, []> | undefined;
+  let mockOldAudioRepresentationReplace : jest.MockInstance<void, []> | undefined;
+  let mockOldVideoRepresentation1Update : jest.MockInstance<void, []> | undefined;
+  let mockOldVideoRepresentation2Update : jest.MockInstance<void, []> | undefined;
+  let mockOldVideoRepresentation3Update : jest.MockInstance<void, []> | undefined;
+  let mockOldVideoRepresentation4Update : jest.MockInstance<void, []> | undefined;
+  let mockOldAudioRepresentationUpdate : jest.MockInstance<void, []> | undefined;
+  let mockNewVideoRepresentation1Replace : jest.MockInstance<void, []> | undefined;
+  let mockNewVideoRepresentation2Replace : jest.MockInstance<void, []> | undefined;
+  let mockNewVideoRepresentation3Replace : jest.MockInstance<void, []> | undefined;
+  let mockNewVideoRepresentation4Replace : jest.MockInstance<void, []> | undefined;
+  let mockNewAudioRepresentationReplace : jest.MockInstance<void, []> | undefined;
+  let mockNewVideoRepresentation1Update : jest.MockInstance<void, []> | undefined;
+  let mockNewVideoRepresentation2Update : jest.MockInstance<void, []> | undefined;
+  let mockNewVideoRepresentation3Update : jest.MockInstance<void, []> | undefined;
+  let mockNewVideoRepresentation4Update : jest.MockInstance<void, []> | undefined;
+  let mockNewAudioRepresentationUpdate : jest.MockInstance<void, []> | undefined;
 
   beforeEach(() => {
-    oldVideoRepresentation1ReplaceSpy =
+    mockOldVideoRepresentation1Replace =
       jest.spyOn(oldVideoRepresentation1.index, "_replace");
-    oldVideoRepresentation2ReplaceSpy =
+    mockOldVideoRepresentation2Replace =
       jest.spyOn(oldVideoRepresentation2.index, "_replace");
-    oldVideoRepresentation3ReplaceSpy =
+    mockOldVideoRepresentation3Replace =
       jest.spyOn(oldVideoRepresentation3.index, "_replace");
-    oldVideoRepresentation4ReplaceSpy =
+    mockOldVideoRepresentation4Replace =
       jest.spyOn(oldVideoRepresentation4.index, "_replace");
-    oldAudioRepresentationReplaceSpy =
+    mockOldAudioRepresentationReplace =
       jest.spyOn(oldAudioRepresentation.index, "_replace");
-    oldVideoRepresentation1UpdateSpy =
+    mockOldVideoRepresentation1Update =
       jest.spyOn(oldVideoRepresentation1.index, "_update");
-    oldVideoRepresentation2UpdateSpy =
+    mockOldVideoRepresentation2Update =
       jest.spyOn(oldVideoRepresentation2.index, "_update");
-    oldVideoRepresentation3UpdateSpy =
+    mockOldVideoRepresentation3Update =
       jest.spyOn(oldVideoRepresentation3.index, "_update");
-    oldVideoRepresentation4UpdateSpy =
+    mockOldVideoRepresentation4Update =
       jest.spyOn(oldVideoRepresentation4.index, "_update");
-    oldAudioRepresentationUpdateSpy =
+    mockOldAudioRepresentationUpdate =
       jest.spyOn(oldAudioRepresentation.index, "_update");
-    newVideoRepresentation1ReplaceSpy =
+    mockNewVideoRepresentation1Replace =
       jest.spyOn(newVideoRepresentation1.index, "_replace");
-    newVideoRepresentation2ReplaceSpy =
+    mockNewVideoRepresentation2Replace =
       jest.spyOn(newVideoRepresentation2.index, "_replace");
-    newVideoRepresentation3ReplaceSpy =
+    mockNewVideoRepresentation3Replace =
       jest.spyOn(newVideoRepresentation3.index, "_replace");
-    newVideoRepresentation4ReplaceSpy =
+    mockNewVideoRepresentation4Replace =
       jest.spyOn(newVideoRepresentation4.index, "_replace");
-    newAudioRepresentationReplaceSpy =
+    mockNewAudioRepresentationReplace =
       jest.spyOn(newAudioRepresentation.index, "_replace");
-    newVideoRepresentation1UpdateSpy =
+    mockNewVideoRepresentation1Update =
       jest.spyOn(newVideoRepresentation1.index, "_update");
-    newVideoRepresentation2UpdateSpy =
+    mockNewVideoRepresentation2Update =
       jest.spyOn(newVideoRepresentation2.index, "_update");
-    newVideoRepresentation3UpdateSpy =
+    mockNewVideoRepresentation3Update =
       jest.spyOn(newVideoRepresentation3.index, "_update");
-    newVideoRepresentation4UpdateSpy =
+    mockNewVideoRepresentation4Update =
       jest.spyOn(newVideoRepresentation4.index, "_update");
-    newAudioRepresentationUpdateSpy =
+    mockNewAudioRepresentationUpdate =
       jest.spyOn(newAudioRepresentation.index, "_update");
   });
 
   afterEach(() => {
-    oldVideoRepresentation1ReplaceSpy?.mockRestore();
-    oldVideoRepresentation2ReplaceSpy?.mockRestore();
-    oldVideoRepresentation3ReplaceSpy?.mockRestore();
-    oldVideoRepresentation4ReplaceSpy?.mockRestore();
-    oldAudioRepresentationReplaceSpy?.mockRestore();
-    oldVideoRepresentation1UpdateSpy?.mockRestore();
-    oldVideoRepresentation2UpdateSpy?.mockRestore();
-    oldVideoRepresentation3UpdateSpy?.mockRestore();
-    oldVideoRepresentation4UpdateSpy?.mockRestore();
-    oldAudioRepresentationUpdateSpy?.mockRestore();
-    newVideoRepresentation1ReplaceSpy?.mockRestore();
-    newVideoRepresentation2ReplaceSpy?.mockRestore();
-    newVideoRepresentation3ReplaceSpy?.mockRestore();
-    newVideoRepresentation4ReplaceSpy?.mockRestore();
-    newAudioRepresentationReplaceSpy?.mockRestore();
-    newVideoRepresentation1UpdateSpy?.mockRestore();
-    newVideoRepresentation2UpdateSpy?.mockRestore();
-    newVideoRepresentation3UpdateSpy?.mockRestore();
-    newVideoRepresentation4UpdateSpy?.mockRestore();
-    newAudioRepresentationUpdateSpy?.mockRestore();
+    mockOldVideoRepresentation1Replace?.mockRestore();
+    mockOldVideoRepresentation2Replace?.mockRestore();
+    mockOldVideoRepresentation3Replace?.mockRestore();
+    mockOldVideoRepresentation4Replace?.mockRestore();
+    mockOldAudioRepresentationReplace?.mockRestore();
+    mockOldVideoRepresentation1Update?.mockRestore();
+    mockOldVideoRepresentation2Update?.mockRestore();
+    mockOldVideoRepresentation3Update?.mockRestore();
+    mockOldVideoRepresentation4Update?.mockRestore();
+    mockOldAudioRepresentationUpdate?.mockRestore();
+    mockNewVideoRepresentation1Replace?.mockRestore();
+    mockNewVideoRepresentation2Replace?.mockRestore();
+    mockNewVideoRepresentation3Replace?.mockRestore();
+    mockNewVideoRepresentation4Replace?.mockRestore();
+    mockNewAudioRepresentationReplace?.mockRestore();
+    mockNewVideoRepresentation1Update?.mockRestore();
+    mockNewVideoRepresentation2Update?.mockRestore();
+    mockNewVideoRepresentation3Update?.mockRestore();
+    mockNewVideoRepresentation4Update?.mockRestore();
+    mockNewAudioRepresentationUpdate?.mockRestore();
   });
 
 /* eslint-disable max-len */
@@ -205,9 +205,9 @@ describe("Manifest - updatePeriodInPlace", () => {
       },
     };
 
-    const oldPeriodAdaptationsSpy = jest.spyOn(oldPeriod, "getAdaptations");
-    const newPeriodAdaptationsSpy = jest.spyOn(newPeriod, "getAdaptations");
-    const logSpy = jest.spyOn(log, "warn");
+    const oldPeriodAdaptations = jest.spyOn(oldPeriod, "getAdaptations");
+    const newPeriodAdaptations = jest.spyOn(newPeriod, "getAdaptations");
+    const mockLog = jest.spyOn(log, "warn");
 
     updatePeriodInPlace(oldPeriod as unknown as Period,
                         newPeriod as unknown as Period,
@@ -216,52 +216,52 @@ describe("Manifest - updatePeriodInPlace", () => {
     expect(oldPeriod.start).toEqual(500);
     expect(oldPeriod.end).toEqual(520);
     expect(oldPeriod.duration).toEqual(20);
-    expect(oldPeriodAdaptationsSpy).toHaveBeenCalledTimes(1);
+    expect(oldPeriodAdaptations).toHaveBeenCalledTimes(1);
 
-    expect(oldVideoRepresentation1ReplaceSpy).toHaveBeenCalledTimes(1);
-    expect(oldVideoRepresentation1ReplaceSpy)
+    expect(mockOldVideoRepresentation1Replace).toHaveBeenCalledTimes(1);
+    expect(mockOldVideoRepresentation1Replace)
       .toHaveBeenCalledWith(newVideoRepresentation1.index);
 
-    expect(oldVideoRepresentation2ReplaceSpy).toHaveBeenCalledTimes(1);
-    expect(oldVideoRepresentation2ReplaceSpy)
+    expect(mockOldVideoRepresentation2Replace).toHaveBeenCalledTimes(1);
+    expect(mockOldVideoRepresentation2Replace)
       .toHaveBeenCalledWith(newVideoRepresentation2.index);
 
-    expect(oldVideoRepresentation3ReplaceSpy).toHaveBeenCalledTimes(1);
-    expect(oldVideoRepresentation3ReplaceSpy)
+    expect(mockOldVideoRepresentation3Replace).toHaveBeenCalledTimes(1);
+    expect(mockOldVideoRepresentation3Replace)
       .toHaveBeenCalledWith(newVideoRepresentation3.index);
 
-    expect(oldVideoRepresentation4ReplaceSpy).toHaveBeenCalledTimes(1);
-    expect(oldVideoRepresentation4ReplaceSpy)
+    expect(mockOldVideoRepresentation4Replace).toHaveBeenCalledTimes(1);
+    expect(mockOldVideoRepresentation4Replace)
       .toHaveBeenCalledWith(newVideoRepresentation4.index);
 
-    expect(oldAudioRepresentationReplaceSpy).toHaveBeenCalledTimes(1);
-    expect(oldAudioRepresentationReplaceSpy)
+    expect(mockOldAudioRepresentationReplace).toHaveBeenCalledTimes(1);
+    expect(mockOldAudioRepresentationReplace)
       .toHaveBeenCalledWith(newAudioRepresentation.index);
 
     expect(newPeriod.start).toEqual(500);
     expect(newPeriod.end).toEqual(520);
     expect(newPeriod.duration).toEqual(20);
-    expect(newPeriodAdaptationsSpy).toHaveBeenCalledTimes(1);
+    expect(newPeriodAdaptations).toHaveBeenCalledTimes(1);
 
-    expect(newVideoRepresentation1ReplaceSpy).not.toHaveBeenCalled();
-    expect(newVideoRepresentation2ReplaceSpy).not.toHaveBeenCalled();
-    expect(newVideoRepresentation3ReplaceSpy).not.toHaveBeenCalled();
-    expect(newVideoRepresentation4ReplaceSpy).not.toHaveBeenCalled();
-    expect(newAudioRepresentationReplaceSpy).not.toHaveBeenCalled();
+    expect(mockNewVideoRepresentation1Replace).not.toHaveBeenCalled();
+    expect(mockNewVideoRepresentation2Replace).not.toHaveBeenCalled();
+    expect(mockNewVideoRepresentation3Replace).not.toHaveBeenCalled();
+    expect(mockNewVideoRepresentation4Replace).not.toHaveBeenCalled();
+    expect(mockNewAudioRepresentationReplace).not.toHaveBeenCalled();
 
-    expect(oldVideoRepresentation1UpdateSpy).not.toHaveBeenCalled();
-    expect(oldVideoRepresentation2UpdateSpy).not.toHaveBeenCalled();
-    expect(oldVideoRepresentation3UpdateSpy).not.toHaveBeenCalled();
-    expect(oldVideoRepresentation4UpdateSpy).not.toHaveBeenCalled();
-    expect(oldAudioRepresentationUpdateSpy).not.toHaveBeenCalled();
-    expect(newVideoRepresentation1UpdateSpy).not.toHaveBeenCalled();
-    expect(newVideoRepresentation2UpdateSpy).not.toHaveBeenCalled();
-    expect(newVideoRepresentation3UpdateSpy).not.toHaveBeenCalled();
-    expect(newVideoRepresentation4UpdateSpy).not.toHaveBeenCalled();
-    expect(newAudioRepresentationUpdateSpy).not.toHaveBeenCalled();
+    expect(mockOldVideoRepresentation1Update).not.toHaveBeenCalled();
+    expect(mockOldVideoRepresentation2Update).not.toHaveBeenCalled();
+    expect(mockOldVideoRepresentation3Update).not.toHaveBeenCalled();
+    expect(mockOldVideoRepresentation4Update).not.toHaveBeenCalled();
+    expect(mockOldAudioRepresentationUpdate).not.toHaveBeenCalled();
+    expect(mockNewVideoRepresentation1Update).not.toHaveBeenCalled();
+    expect(mockNewVideoRepresentation2Update).not.toHaveBeenCalled();
+    expect(mockNewVideoRepresentation3Update).not.toHaveBeenCalled();
+    expect(mockNewVideoRepresentation4Update).not.toHaveBeenCalled();
+    expect(mockNewAudioRepresentationUpdate).not.toHaveBeenCalled();
 
-    expect(logSpy).not.toHaveBeenCalled();
-    logSpy.mockRestore();
+    expect(mockLog).not.toHaveBeenCalled();
+    mockLog.mockRestore();
   });
 
 /* eslint-disable max-len */
@@ -318,9 +318,9 @@ describe("Manifest - updatePeriodInPlace", () => {
       },
     };
 
-    const oldPeriodAdaptationsSpy = jest.spyOn(oldPeriod, "getAdaptations");
-    const newPeriodAdaptationsSpy = jest.spyOn(newPeriod, "getAdaptations");
-    const logSpy = jest.spyOn(log, "warn");
+    const mockOldPeriodGetAdaptations = jest.spyOn(oldPeriod, "getAdaptations");
+    const mockNewPeriodGetAdaptations = jest.spyOn(newPeriod, "getAdaptations");
+    const mockLog = jest.spyOn(log, "warn");
 
     updatePeriodInPlace(oldPeriod as unknown as Period,
                         newPeriod as unknown as Period,
@@ -329,52 +329,52 @@ describe("Manifest - updatePeriodInPlace", () => {
     expect(oldPeriod.start).toEqual(500);
     expect(oldPeriod.end).toEqual(520);
     expect(oldPeriod.duration).toEqual(20);
-    expect(oldPeriodAdaptationsSpy).toHaveBeenCalledTimes(1);
+    expect(mockOldPeriodGetAdaptations).toHaveBeenCalledTimes(1);
 
-    expect(oldVideoRepresentation1UpdateSpy).toHaveBeenCalledTimes(1);
-    expect(oldVideoRepresentation1UpdateSpy)
+    expect(mockOldVideoRepresentation1Update).toHaveBeenCalledTimes(1);
+    expect(mockOldVideoRepresentation1Update)
       .toHaveBeenCalledWith(newVideoRepresentation1.index);
 
-    expect(oldVideoRepresentation2UpdateSpy).toHaveBeenCalledTimes(1);
-    expect(oldVideoRepresentation2UpdateSpy)
+    expect(mockOldVideoRepresentation2Update).toHaveBeenCalledTimes(1);
+    expect(mockOldVideoRepresentation2Update)
       .toHaveBeenCalledWith(newVideoRepresentation2.index);
 
-    expect(oldVideoRepresentation3UpdateSpy).toHaveBeenCalledTimes(1);
-    expect(oldVideoRepresentation3UpdateSpy)
+    expect(mockOldVideoRepresentation3Update).toHaveBeenCalledTimes(1);
+    expect(mockOldVideoRepresentation3Update)
       .toHaveBeenCalledWith(newVideoRepresentation3.index);
 
-    expect(oldVideoRepresentation4UpdateSpy).toHaveBeenCalledTimes(1);
-    expect(oldVideoRepresentation4UpdateSpy)
+    expect(mockOldVideoRepresentation4Update).toHaveBeenCalledTimes(1);
+    expect(mockOldVideoRepresentation4Update)
       .toHaveBeenCalledWith(newVideoRepresentation4.index);
 
-    expect(oldAudioRepresentationUpdateSpy).toHaveBeenCalledTimes(1);
-    expect(oldAudioRepresentationUpdateSpy)
+    expect(mockOldAudioRepresentationUpdate).toHaveBeenCalledTimes(1);
+    expect(mockOldAudioRepresentationUpdate)
       .toHaveBeenCalledWith(newAudioRepresentation.index);
 
     expect(newPeriod.start).toEqual(500);
     expect(newPeriod.end).toEqual(520);
     expect(newPeriod.duration).toEqual(20);
-    expect(newPeriodAdaptationsSpy).toHaveBeenCalledTimes(1);
+    expect(mockNewPeriodGetAdaptations).toHaveBeenCalledTimes(1);
 
-    expect(newVideoRepresentation1UpdateSpy).not.toHaveBeenCalled();
-    expect(newVideoRepresentation2UpdateSpy).not.toHaveBeenCalled();
-    expect(newVideoRepresentation3UpdateSpy).not.toHaveBeenCalled();
-    expect(newVideoRepresentation4UpdateSpy).not.toHaveBeenCalled();
-    expect(newAudioRepresentationUpdateSpy).not.toHaveBeenCalled();
+    expect(mockNewVideoRepresentation1Update).not.toHaveBeenCalled();
+    expect(mockNewVideoRepresentation2Update).not.toHaveBeenCalled();
+    expect(mockNewVideoRepresentation3Update).not.toHaveBeenCalled();
+    expect(mockNewVideoRepresentation4Update).not.toHaveBeenCalled();
+    expect(mockNewAudioRepresentationUpdate).not.toHaveBeenCalled();
 
-    expect(oldVideoRepresentation1ReplaceSpy).not.toHaveBeenCalled();
-    expect(oldVideoRepresentation2ReplaceSpy).not.toHaveBeenCalled();
-    expect(oldVideoRepresentation3ReplaceSpy).not.toHaveBeenCalled();
-    expect(oldVideoRepresentation4ReplaceSpy).not.toHaveBeenCalled();
-    expect(oldAudioRepresentationReplaceSpy).not.toHaveBeenCalled();
-    expect(newVideoRepresentation1ReplaceSpy).not.toHaveBeenCalled();
-    expect(newVideoRepresentation2ReplaceSpy).not.toHaveBeenCalled();
-    expect(newVideoRepresentation3ReplaceSpy).not.toHaveBeenCalled();
-    expect(newVideoRepresentation4ReplaceSpy).not.toHaveBeenCalled();
-    expect(newAudioRepresentationReplaceSpy).not.toHaveBeenCalled();
+    expect(mockOldVideoRepresentation1Replace).not.toHaveBeenCalled();
+    expect(mockOldVideoRepresentation2Replace).not.toHaveBeenCalled();
+    expect(mockOldVideoRepresentation3Replace).not.toHaveBeenCalled();
+    expect(mockOldVideoRepresentation4Replace).not.toHaveBeenCalled();
+    expect(mockOldAudioRepresentationReplace).not.toHaveBeenCalled();
+    expect(mockNewVideoRepresentation1Replace).not.toHaveBeenCalled();
+    expect(mockNewVideoRepresentation2Replace).not.toHaveBeenCalled();
+    expect(mockNewVideoRepresentation3Replace).not.toHaveBeenCalled();
+    expect(mockNewVideoRepresentation4Replace).not.toHaveBeenCalled();
+    expect(mockNewAudioRepresentationReplace).not.toHaveBeenCalled();
 
-    expect(logSpy).not.toHaveBeenCalled();
-    logSpy.mockRestore();
+    expect(mockLog).not.toHaveBeenCalled();
+    mockLog.mockRestore();
   });
 
   it("should do nothing with new Adaptations", () => {
@@ -423,18 +423,18 @@ describe("Manifest - updatePeriodInPlace", () => {
       },
     };
 
-    const logSpy = jest.spyOn(log, "warn");
+    const mockLog = jest.spyOn(log, "warn");
     updatePeriodInPlace(oldPeriod as unknown as Period,
                         newPeriod as unknown as Period,
                         MANIFEST_UPDATE_TYPE.Full);
-    expect(logSpy).not.toHaveBeenCalled();
+    expect(mockLog).not.toHaveBeenCalled();
     expect(oldPeriod.adaptations.video).toHaveLength(1);
     updatePeriodInPlace(oldPeriod as unknown as Period,
                         newPeriod as unknown as Period,
                         MANIFEST_UPDATE_TYPE.Partial);
-    expect(logSpy).not.toHaveBeenCalled();
+    expect(mockLog).not.toHaveBeenCalled();
     expect(oldPeriod.adaptations.video).toHaveLength(1);
-    logSpy.mockRestore();
+    mockLog.mockRestore();
   });
 
   it("should warn if an old Adaptation is not found", () => {
@@ -482,25 +482,25 @@ describe("Manifest - updatePeriodInPlace", () => {
       },
     };
 
-    const logSpy = jest.spyOn(log, "warn");
+    const mockLog = jest.spyOn(log, "warn");
     updatePeriodInPlace(oldPeriod as unknown as Period,
                         newPeriod as unknown as Period,
                         MANIFEST_UPDATE_TYPE.Full);
-    expect(logSpy).toHaveBeenCalledTimes(1);
-    expect(logSpy).toHaveBeenCalledWith(
+    expect(mockLog).toHaveBeenCalledTimes(1);
+    expect(mockLog).toHaveBeenCalledWith(
       "Manifest: Adaptation \"ada-video-2\" not found when merging."
     );
     expect(oldPeriod.adaptations.video).toHaveLength(2);
-    logSpy.mockClear();
+    mockLog.mockClear();
     updatePeriodInPlace(oldPeriod as unknown as Period,
                         newPeriod as unknown as Period,
                         MANIFEST_UPDATE_TYPE.Partial);
-    expect(logSpy).toHaveBeenCalledTimes(1);
-    expect(logSpy).toHaveBeenCalledWith(
+    expect(mockLog).toHaveBeenCalledTimes(1);
+    expect(mockLog).toHaveBeenCalledWith(
       "Manifest: Adaptation \"ada-video-2\" not found when merging."
     );
     expect(oldPeriod.adaptations.video).toHaveLength(2);
-    logSpy.mockRestore();
+    mockLog.mockRestore();
   });
 
   it("should do nothing with new Representations", () => {
@@ -538,18 +538,18 @@ describe("Manifest - updatePeriodInPlace", () => {
       },
     };
 
-    const logSpy = jest.spyOn(log, "warn");
+    const mockLog = jest.spyOn(log, "warn");
     updatePeriodInPlace(oldPeriod as unknown as Period,
                         newPeriod as unknown as Period,
                         MANIFEST_UPDATE_TYPE.Full);
-    expect(logSpy).not.toHaveBeenCalled();
+    expect(mockLog).not.toHaveBeenCalled();
     expect(oldVideoAdaptation1.representations).toHaveLength(1);
     updatePeriodInPlace(oldPeriod as unknown as Period,
                         newPeriod as unknown as Period,
                         MANIFEST_UPDATE_TYPE.Partial);
-    expect(logSpy).not.toHaveBeenCalled();
+    expect(mockLog).not.toHaveBeenCalled();
     expect(oldVideoAdaptation1.representations).toHaveLength(1);
-    logSpy.mockRestore();
+    mockLog.mockRestore();
   });
 
   it("should warn if an old Representation is not found", () => {
@@ -586,24 +586,24 @@ describe("Manifest - updatePeriodInPlace", () => {
                         },
     };
 
-    const logSpy = jest.spyOn(log, "warn");
+    const mockLog = jest.spyOn(log, "warn");
     updatePeriodInPlace(oldPeriod as unknown as Period,
                         newPeriod as unknown as Period,
                         MANIFEST_UPDATE_TYPE.Full);
-    expect(logSpy).toHaveBeenCalledTimes(1);
-    expect(logSpy).toHaveBeenCalledWith(
+    expect(mockLog).toHaveBeenCalledTimes(1);
+    expect(mockLog).toHaveBeenCalledWith(
       "Manifest: Representation \"rep-video-2\" not found when merging."
     );
     expect(oldVideoAdaptation1.representations).toHaveLength(2);
-    logSpy.mockClear();
+    mockLog.mockClear();
     updatePeriodInPlace(oldPeriod as unknown as Period,
                         newPeriod as unknown as Period,
                         MANIFEST_UPDATE_TYPE.Partial);
-    expect(logSpy).toHaveBeenCalledTimes(1);
-    expect(logSpy).toHaveBeenCalledWith(
+    expect(mockLog).toHaveBeenCalledTimes(1);
+    expect(mockLog).toHaveBeenCalledWith(
       "Manifest: Representation \"rep-video-2\" not found when merging."
     );
     expect(oldVideoAdaptation1.representations).toHaveLength(2);
-    logSpy.mockRestore();
+    mockLog.mockRestore();
   });
 });

@@ -33,7 +33,7 @@ describe("compat - shouldUnsetMediaKeys", () => {
         isIE11: false,
       };
     });
-    const shouldUnsetMediaKeys = require("../should_unset_media_keys");
+    const shouldUnsetMediaKeys = jest.requireActual("../should_unset_media_keys");
     expect(shouldUnsetMediaKeys.default()).toBe(false);
   });
 
@@ -44,7 +44,7 @@ describe("compat - shouldUnsetMediaKeys", () => {
         isIE11: true,
       };
     });
-    const shouldUnsetMediaKeys = require("../should_unset_media_keys");
+    const shouldUnsetMediaKeys = jest.requireActual("../should_unset_media_keys");
     expect(shouldUnsetMediaKeys.default()).toBe(true);
   });
   beforeEach(() => {

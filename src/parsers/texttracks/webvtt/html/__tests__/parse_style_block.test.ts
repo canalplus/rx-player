@@ -38,7 +38,7 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
     }));
-    const parseStyleBlock = require("../parse_style_block").default;
+    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
       {
         classes: {},
@@ -63,7 +63,7 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
     }));
-    const parseStyleBlock = require("../parse_style_block").default;
+    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
       {
         classes: {},
@@ -88,7 +88,7 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
     }));
-    const parseStyleBlock = require("../parse_style_block").default;
+    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
       {
         classes: {
@@ -121,7 +121,7 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
     }));
-    const parseStyleBlock = require("../parse_style_block").default;
+    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
       {
         global: "background-image: linear-gradient(to bottom, dimgray, lightgray);" +
@@ -151,7 +151,7 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
     }));
-    const parseStyleBlock = require("../parse_style_block").default;
+    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
       {
         classes: {
@@ -183,7 +183,7 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
     }));
-    const parseStyleBlock = require("../parse_style_block").default;
+    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
       {
         classes: {
@@ -212,7 +212,7 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
     }));
-    const parseStyleBlock = require("../parse_style_block").default;
+    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
       {
         classes: {
@@ -247,7 +247,7 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
     }));
-    const parseStyleBlock = require("../parse_style_block").default;
+    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
       {
         classes: {
@@ -281,7 +281,7 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
     }));
-    const parseStyleBlock = require("../parse_style_block").default;
+    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
       {
         classes: {
@@ -315,7 +315,7 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
     }));
-    const parseStyleBlock = require("../parse_style_block").default;
+    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual(
       {
         classes: {
@@ -336,7 +336,7 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       __esModule: true as const,
       default: () => { return mockCreateDefaultStyleElements(); },
     }));
-    const parseStyleBlock = require("../parse_style_block").default;
+    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {},
       global: "",
