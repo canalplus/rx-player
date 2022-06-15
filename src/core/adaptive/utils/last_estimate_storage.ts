@@ -43,8 +43,8 @@ export default class LastEstimateStorage {
    * Update this `LastEstimateStorage` with new values.
    * @param {Object} representation - Estimated Representation.
    * @param {number|undefined} bandwidth - Estimated bandwidth.
-   * @param {boolean} wasGuessed - If `true`, this estimate was a guess made by
-   * the `GuessingEstimator`.
+   * @param {number} algorithmType - The type of algorithm used to produce that
+   * estimate.
    */
   public update(
     representation : Representation,

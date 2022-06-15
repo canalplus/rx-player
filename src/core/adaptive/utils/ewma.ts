@@ -16,12 +16,13 @@
 
 /**
  * Tweaked implementation of an exponential weighted Moving Average.
- * Heavily "inspired" from the shaka-player one (Ewma).
  * @class EWMA
  */
 export default class EWMA {
   private readonly _alpha : number;
+  /** Last average available. `0` if none is available yet. */
   private _lastEstimate : number;
+  /** Sum of all "weights" given until now. */
   private _totalWeight : number;
 
   /**
