@@ -478,13 +478,14 @@ export interface IBitrateEstimate {
 }
 
 export interface IDecipherabilityUpdateContent {
-  periodStart : number;
-  periodEnd? : number | undefined;
   trackType : IBufferType;
   trackId : string;
   representationId : string;
   isDecipherable? : boolean | undefined;
+  periodInfo : IDecipherabilityUpdatePeriodInfo;
 }
+
+export type IDecipherabilityUpdatePeriodInfo = IPeriod;
 
 /** Payload emitted with a `positionUpdate` event. */
 export interface IPositionUpdate {

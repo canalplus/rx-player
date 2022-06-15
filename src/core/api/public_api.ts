@@ -2152,8 +2152,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         break;
       case "decipherabilityUpdate":
         this.trigger("decipherabilityUpdate", event.value.map((i) => {
-          return { periodStart: i.period.start,
-                   periodEnd: i.period.end,
+          return { periodInfo: { start: i.period.start,
+                                 end: i.period.end,
+                                 id: i.period.id },
                    trackType: i.adaptation.type,
                    trackId: i.adaptation.id,
                    representationId: i.representation.id,
