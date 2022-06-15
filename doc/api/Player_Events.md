@@ -560,15 +560,22 @@ Each of those objects have the following keys:
     to identify the track with methods such as `getAvailableAudioTracks` /
     `getVideoTrack` and so on...
 
-    XXX TODO Period object?
-  - `periodStart` (`number`): The starting position at which the corresponding
-    Period starts, in seconds.
+  - `periodInfo` (`Object`): Information about the concerned
+    [Period](../Getting_Started/Glossary.md#period).
 
-  - `periodEnd` (`number|undefined`): The position at which the corresponding
-    Period ends, in seconds.
+    It contains the following properties:
 
-    `undefined` either if not known or if the Period has no end yet (e.g. for
-    live contents, the end might not be known for now).
+      - `start` (`number`): The starting position at which the corresponding
+        Period starts, in seconds.
+
+      - `end` (`number|undefined`): The position at which the corresponding
+        Period ends, in seconds.
+
+        `undefined` either if not known or if the Period has no end yet (e.g.
+        for live contents, the end might not be known for now).
+
+      - `id` (`string`): Identifier for the `Period`, which can then be used
+        through API like `getAvailableAudioTracks`,
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
