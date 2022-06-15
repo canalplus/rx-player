@@ -17,12 +17,16 @@
 import { addClassName } from "../../../../compat";
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
 import objectAssign from "../../../../utils/object_assign";
-import getParentElementsByTagName from "../get_parent_elements_by_tag_name";
 import {
   getStylingAttributes,
   IStyleList,
   IStyleObject,
 } from "../get_styling";
+import {
+  getParentDivElements,
+  isLineBreakElement,
+  isSpanElement,
+} from "../xml_utils";
 import applyExtent from "./apply_extent";
 import applyFontSize from "./apply_font_size";
 import applyLineHeight from "./apply_line_height";
@@ -425,10 +429,10 @@ function generateTextContent(
         }
         const el = createTextElement(currentNode, style, shouldTrimWhiteSpaceFromParent);
         elements.push(el);
-      } else if (currentNode.nodeName === "br") {
+      } else if (isLineBreakElement(currentNode)) {
         const br = document.createElement("BR");
         elements.push(br);
-      } else if (currentNode.nodeName === "span" &&
+      } else if (isSpanElement(currentNode) &&
                  currentNode.nodeType === Node.ELEMENT_NODE &&
                  currentNode.childNodes.length > 0)
       {
@@ -479,8 +483,7 @@ export default function createElement(
                                cellResolution : { columns : number;
                                                   rows : number; }; }
 ) : HTMLElement {
-  const divs = getParentElementsByTagName(paragraph, "div");
-
+  const divs = getParentDivElements(paragraph);
   const parentElement = document.createElement("DIV");
   parentElement.className = "rxp-texttrack-region";
   parentElement.setAttribute("data-resolution-columns",
