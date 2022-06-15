@@ -1,5 +1,33 @@
 # Changelog
 
+## v3.28.0
+
+### Features
+
+  - Add `label` to audio, video and text track APIs (such as `getAvailableAudioTracks`) which gives a human-readable description of the corresponding track, if available in the Manifest [#1105, #1109]
+  - Automatically set the LogLevel to `"DEBUG"` if a global `__RX_PLAYER_DEBUG_MODE__` constant is set to `true`, to simplify debugging [#1115]
+  - TTML: Add support for percent based thickness for textOutline in TTML Subtitles [#1108]
+
+### Bug fixes
+
+  - Use the first **compatible** codec of the current AdaptationSet when creating a SourceBuffer [#1094]
+  - DASH/DRM: Fix potential infinite rebuffering when a KID is not anounced in the MPD [#1113]
+  - DASH: Avoid infinite loop due to rounding errors while parsing multi-Periods MPDs [#1111, #1110]
+  - Fix issue with `maxVideoBufferSize` setting which could lead to too much data being buffered [#1125]
+  - Prevent possibility of requests loops and infinite rebuffering when a pushed segment is always completely and immediately garbage collected by the browser [#1123]
+  - DASH: Fix issues that could arise if a segment is calculated to start at a negative position [#1122]
+  - DASH: Fix possibility of wrong segments being requested when a SegmentTimeline in a given Period (whose Period@end is set) had an S@r set to `-1` at its end [#1098]
+  - DASH: If the first `<S>` has its S@t attribute not set, make as if it is set to `0` [#1118]
+
+### Other improvements
+
+  - If seeking after the last potential position, load last segments before ending [#1097]
+  - The duration set on the media element is now only relative to the current chosen tracks (it was previously relative to all potential track). This allows to seek later when switching e.g. to a longer video track [#1102]
+  - Errors coming from an HTMLMediaElement now have the browser's error message if it exists [#1112]
+  - DRM: Information on persisted DRM sessions are now automatically updated to their last version when possible [#1096]
+  - Only log values which are relatively inexpensive to stringify to reduce the difference between debugging sessions and what is usually seen in production [#1116]
+
+
 ## v3.27.0 (2022-03-31)
 
 ### Features
