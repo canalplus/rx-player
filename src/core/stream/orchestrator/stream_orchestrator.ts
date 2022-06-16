@@ -142,7 +142,7 @@ export default function StreamOrchestrator(
       return BufferGarbageCollector({
         segmentBuffer,
         currentTime$: playbackObserver.observe(true)
-          .pipe(map(o => o.position + o.wantedTimeOffset)),
+          .pipe(map(o => o.position.pending ?? o.position.last)),
         maxBufferBehind$: maxBufferBehind.asObservable().pipe(
           map(val => Math.min(val, defaultMaxBehind))),
         maxBufferAhead$: maxBufferAhead.asObservable().pipe(
@@ -268,8 +268,8 @@ export default function StreamOrchestrator(
         IStreamOrchestratorPlaybackObservation,
         Period,
         null
-      >(({ position, wantedTimeOffset }) => {
-        const time = wantedTimeOffset + position;
+      >(({ position }) => {
+        const time = position.pending ?? position.last;
         if (!enableOutOfBoundsCheck || !isOutOfPeriodList(time)) {
           return null;
         }
@@ -281,7 +281,7 @@ export default function StreamOrchestrator(
         log.info("SO: Current position out of the bounds of the active periods," +
                  "re-creating Streams.",
                  bufferType,
-                 position + wantedTimeOffset);
+                 time);
         enableOutOfBoundsCheck = false;
         destroyStreams$.next();
         return nextPeriod;
@@ -326,13 +326,15 @@ export default function StreamOrchestrator(
           playbackObserver.observe(true).pipe(
             take(1),
             mergeMap((observation) => {
+              const shouldAutoPlay = !(observation.paused.pending ??
+                                       observation.paused.last);
               return observableConcat(
-                observableOf(EVENTS.needsDecipherabilityFlush(observation.position,
-                                                              !observation.isPaused,
+                observableOf(EVENTS.needsDecipherabilityFlush(observation.position.last,
+                                                              shouldAutoPlay,
                                                               observation.duration)),
                 observableDefer(() => {
-                  const lastPosition = observation.position +
-                                       observation.wantedTimeOffset;
+                  const lastPosition = observation.position.pending ??
+                                       observation.position.last;
                   const newInitialPeriod = manifest.getPeriodForTime(lastPosition);
                   if (newInitialPeriod == null) {
                     throw new MediaError(
@@ -392,9 +394,9 @@ export default function StreamOrchestrator(
 
     // Emits when the current position goes over the end of the current Stream.
     const endOfCurrentStream$ = playbackObserver.observe(true)
-      .pipe(filter(({ position, wantedTimeOffset }) =>
+      .pipe(filter(({ position }) =>
         basePeriod.end != null &&
-                    (position + wantedTimeOffset) >= basePeriod.end));
+                    (position.pending ?? position.last) >= basePeriod.end));
 
     // Create Period Stream for the next Period.
     const nextPeriodStream$ = createNextPeriodStream$

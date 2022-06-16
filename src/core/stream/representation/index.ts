@@ -15,6 +15,7 @@
  */
 
 import RepresentationStream, {
+  IPositionPlaybackObservation,
   IRepresentationStreamArguments,
   IRepresentationStreamPlaybackObservation,
   ITerminationOrder,
@@ -22,6 +23,7 @@ import RepresentationStream, {
 
 export default RepresentationStream;
 export {
+  IPositionPlaybackObservation,
   IRepresentationStreamArguments,
   IRepresentationStreamPlaybackObservation,
   ITerminationOrder,
