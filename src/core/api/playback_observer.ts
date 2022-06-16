@@ -127,6 +127,17 @@ export default class PlaybackObserver {
   }
 
   /**
+   * Returns the current `paused` status advertised by the `HTMLMediaElement`.
+   *
+   * Use this instead of the same status emitted on an observation when you want
+   * to be sure you're using the current value.
+   * @returns {boolean}
+   */
+  public getIsPaused() : boolean {
+    return this._mediaElement.paused;
+  }
+
+  /**
    * Update the current position (seek) on the `HTMLMediaElement`, by giving a
    * new position in seconds.
    *
@@ -134,7 +145,7 @@ export default class PlaybackObserver {
    * "internal" seeks. They don't result into the exact same playback
    * observation than regular seeks (which most likely comes from the outside,
    * e.g. the user).
-   * @param {number}
+   * @param {number} time
    */
   public setCurrentTime(time: number) : void {
     this._internalSeekingEventsIncomingCounter += 1;
@@ -449,6 +460,14 @@ export interface IReadOnlyPlaybackObserver<TObservationType> {
   getCurrentTime() : number;
   /** Get the HTMLMediaElement's current `readyState`. */
   getReadyState() : number;
+  /**
+   * Returns the current `paused` status advertised by the `HTMLMediaElement`.
+   *
+   * Use this instead of the same status emitted on an observation when you want
+   * to be sure you're using the current value.
+   * @returns {boolean}
+   */
+  getIsPaused() : boolean;
   /**
    * Returns an Observable regularly emitting playback observation, optionally
    * starting with the last one.
@@ -820,6 +839,9 @@ function generateReadOnlyObserver<TSource, TDest>(
     },
     getReadyState() {
       return src.getReadyState();
+    },
+    getIsPaused() {
+      return src.getIsPaused();
     },
     observe(includeLastObservation : boolean) : Observable<TDest> {
       return includeLastObservation ? newObs :

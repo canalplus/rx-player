@@ -61,7 +61,7 @@ export default function reloadAfterSwitch(
       // Bind to Period start and end
       const reloadAt = Math.min(Math.max(period.start, pos),
                                 period.end ?? Infinity);
-      const autoPlay = !(observation.paused.pending ?? observation.paused.last);
+      const autoPlay = !(observation.paused.pending ?? playbackObserver.getIsPaused());
       return EVENTS.waitingMediaSourceReload(bufferType, period, reloadAt, autoPlay);
     }));
 }
