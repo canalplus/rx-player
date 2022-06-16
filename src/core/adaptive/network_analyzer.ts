@@ -18,6 +18,9 @@ import config from "../../config";
 import log from "../../log";
 import { Representation } from "../../manifest";
 import arrayFind from "../../utils/array_find";
+import {
+  IRepresentationEstimatorPlaybackObservation,
+} from "./adaptive_representation_selector";
 import BandwidthEstimator from "./utils/bandwidth_estimator";
 import EWMA from "./utils/ewma";
 import {
@@ -25,24 +28,10 @@ import {
   IRequestInfo,
 } from "./utils/pending_requests_store";
 
-
-/** Object describing the current playback conditions. */
-interface IPlaybackConditionsInfo {
-  /**
-   * For the concerned media buffer, difference in seconds between the next
-   * position where no segment data is available and the current position.
-   */
-  bufferGap : number;
-  /** Current playback position on the concerned media element, in seconds. */
-  position : number;
-  /**
-   * Last "playback rate" set by the user. This is the ideal "playback rate" at
-   * which the media should play.
-   */
-  speed : number;
-  /** `duration` property of the HTMLMediaElement on which the content plays. */
-  duration : number;
-}
+ /** Object describing the current playback conditions. */
+type IPlaybackConditionsInfo = Pick<
+  IRepresentationEstimatorPlaybackObservation,
+  "bufferGap" | "position" | "speed" | "duration">;
 
 /**
  * Get pending segment request(s) starting with the asked segment position.
@@ -163,7 +152,7 @@ function estimateStarvationModeBitrate(
   const { bufferGap, speed, position } = playbackInfo;
   const realBufferGap = isFinite(bufferGap) ? bufferGap :
                                               0;
-  const nextNeededPosition = position + realBufferGap;
+  const nextNeededPosition = position.last + realBufferGap;
   const concernedRequests = getConcernedRequests(pendingRequests, nextNeededPosition);
 
   if (concernedRequests.length !== 1) { // 0  == no request
@@ -240,7 +229,7 @@ function shouldDirectlySwitchToLowBitrate(
   }
   const realBufferGap = isFinite(playbackInfo.bufferGap) ? playbackInfo.bufferGap :
                                                            0;
-  const nextNeededPosition = playbackInfo.position + realBufferGap;
+  const nextNeededPosition = playbackInfo.position.last + realBufferGap;
   const nextRequest = arrayFind(requests, ({ content }) =>
     content.segment.duration > 0 &&
     (content.segment.time + content.segment.duration) > nextNeededPosition);
@@ -336,7 +325,7 @@ export default class NetworkAnalyzer {
     const { ABR_STARVATION_DURATION_DELTA } = config.getCurrent();
     // check if should get in/out of starvation mode
     if (isNaN(duration) ||
-        realBufferGap + position < duration - ABR_STARVATION_DURATION_DELTA)
+        realBufferGap + position.last < duration - ABR_STARVATION_DURATION_DELTA)
     {
       if (!this._inStarvationMode && realBufferGap <= localConf.starvationGap) {
         log.info("ABR: enter starvation mode.");

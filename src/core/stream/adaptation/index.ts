@@ -18,6 +18,7 @@ import AdaptationStream, {
   IAdaptationStreamArguments,
   IAdaptationStreamPlaybackObservation,
   IAdaptationStreamOptions,
+  IPausedPlaybackObservation,
 } from "./adaptation_stream";
 
 export default AdaptationStream;
@@ -25,4 +26,5 @@ export {
   IAdaptationStreamArguments,
   IAdaptationStreamPlaybackObservation,
   IAdaptationStreamOptions,
+  IPausedPlaybackObservation,
 };

@@ -49,8 +49,7 @@ export default function reloadAfterSwitch(
   period : Period,
   bufferType : IBufferType,
   playbackObserver : IReadOnlyPlaybackObserver<{
-    position : number;
-    isPaused : boolean;
+    paused : { last: boolean; pending: boolean | undefined };
   }>,
   deltaPos : number
 ) : Observable<IWaitingMediaSourceReloadInternalEvent> {
@@ -62,9 +61,7 @@ export default function reloadAfterSwitch(
       // Bind to Period start and end
       const reloadAt = Math.min(Math.max(period.start, pos),
                                 period.end ?? Infinity);
-      return EVENTS.waitingMediaSourceReload(bufferType,
-                                             period,
-                                             reloadAt,
-                                             !observation.isPaused);
+      const autoPlay = !(observation.paused.pending ?? observation.paused.last);
+      return EVENTS.waitingMediaSourceReload(bufferType, period, reloadAt, autoPlay);
     }));
 }

@@ -297,7 +297,7 @@ function getEstimateReference(
       }
       const { position, speed } = lastPlaybackObservation;
       const timeRanges = val.buffered;
-      const bufferGap = getLeftSizeOfRange(timeRanges, position);
+      const bufferGap = getLeftSizeOfRange(timeRanges, position.last);
       const { representation } = val.content;
       const scoreData = scoreCalculator.getEstimate(representation);
       const currentScore = scoreData?.[0];
@@ -409,7 +409,7 @@ function getEstimateReference(
       if (lowLatencyMode &&
           currentRepresentationVal !== null &&
           context.manifest.isDynamic &&
-          maximumPosition - position < 40)
+          maximumPosition - position.last < 40)
       {
         chosenRepFromGuessMode = guessBasedChooser
           .getGuess(representations,
@@ -621,10 +621,27 @@ export interface IRepresentationEstimatorPlaybackObservation {
    */
   bufferGap : number;
   /**
-   * The position, in seconds, the media element was in at the time of the
-   * observation.
+   * Information on the current media position in seconds at the time of a
+   * Playback Observation.
    */
-  position : number;
+  position : {
+    /**
+     * Known position at the time the Observation was emitted, in seconds.
+     *
+     * Note that it might have changed since. If you want truly precize
+     * information, you should recuperate it from the HTMLMediaElement directly
+     * through another mean.
+     */
+    last : number;
+    /**
+     * Actually wanted position in seconds that is not yet reached.
+     *
+     * This might for example be set to the initial position when the content is
+     * loading (and thus potentially at a `0` position) but which will be seeked
+     * to a given position once possible.
+     */
+    pending : number | undefined;
+  };
   /**
    * Last "playback rate" set by the user. This is the ideal "playback rate" at
    * which the media should play.

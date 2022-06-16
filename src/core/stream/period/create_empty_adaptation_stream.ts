@@ -26,6 +26,7 @@ import { IReadOnlySharedReference } from "../../../utils/reference";
 import { IReadOnlyPlaybackObserver } from "../../api";
 import { IBufferType } from "../../segment_buffers";
 import { IStreamStatusEvent } from "../types";
+import { IPeriodStreamPlaybackObservation } from "./period_stream";
 
 /**
  * Create empty AdaptationStream Observable, linked to a Period.
@@ -39,7 +40,7 @@ import { IStreamStatusEvent } from "../types";
  * @returns {Observable}
  */
 export default function createEmptyAdaptationStream(
-  playbackObserver : IReadOnlyPlaybackObserver<{ position : number }>,
+  playbackObserver : IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>,
   wantedBufferAhead : IReadOnlySharedReference<number>,
   bufferType : IBufferType,
   content : { period : Period }
@@ -51,7 +52,7 @@ export default function createEmptyAdaptationStream(
   return observableCombineLatest([observation$,
                                   wantedBufferAhead$]).pipe(
     mergeMap(([observation, wba]) => {
-      const { position } = observation;
+      const position = observation.position.last;
       if (period.end !== undefined && position + wba >= period.end) {
         log.debug("Stream: full \"empty\" AdaptationStream", bufferType);
         hasFinishedLoading = true;
@@ -59,7 +60,7 @@ export default function createEmptyAdaptationStream(
       return observableOf({ type: "stream-status" as const,
                             value: { period,
                                      bufferType,
-                                     position: observation.position,
+                                     position,
                                      imminentDiscontinuity: null,
                                      hasFinishedLoading,
                                      neededSegments: [],
