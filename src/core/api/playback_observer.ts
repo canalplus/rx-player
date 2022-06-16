@@ -40,6 +40,7 @@ import { CancellationSignal } from "../../utils/task_canceller";
  * @type {Array.<string>}
  */
 const SCANNED_MEDIA_ELEMENTS_EVENTS : IPlaybackObserverEventType[] = [ "canplay",
+                                                                       "ended",
                                                                        "play",
                                                                        "pause",
                                                                        "seeking",
@@ -338,6 +339,8 @@ export type IPlaybackObserverEventType =
   "timeupdate" |
   /** On the HTML5 event with the same name */
   "canplay" |
+  /** On the HTML5 event with the same name */
+  "ended" |
   /** On the HTML5 event with the same name */
   "canplaythrough" | // HTML5 Event
   /** On the HTML5 event with the same name */

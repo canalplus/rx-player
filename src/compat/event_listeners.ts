@@ -433,14 +433,6 @@ const onFullscreenChange$ = compatibleListener(
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
-const onPlayPause$ = (mediaElement : HTMLMediaElement) : Observable<Event> =>
-  observableMerge(compatibleListener(["play"])(mediaElement),
-                  compatibleListener(["pause"])(mediaElement));
-
-/**
- * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
- */
 const onTextTrackChanges$ =
   (textTrackList : TextTrackList) : Observable<TrackEvent> =>
     observableMerge(compatibleListener<TrackEvent>(["addtrack"])(textTrackList),
@@ -544,7 +536,6 @@ export {
   onKeyMessage$,
   onKeyStatusesChange$,
   onLoadedMetadata$,
-  onPlayPause$,
   onRemoveSourceBuffers$,
   onSeeked$,
   onSeeking$,

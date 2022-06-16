@@ -155,10 +155,7 @@ const { getPageActivityRef,
         getPictureOnPictureStateRef,
         getVideoVisibilityRef,
         getVideoWidthRef,
-        onEnded$,
         onFullscreenChange$,
-        onPlayPause$,
-        onSeeking$,
         onTextTrackChanges$ } = events;
 
 /**
@@ -986,11 +983,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       ),
             share());
 
-    /** Emit when the media element emits an "ended" event. */
-    const endedEvent$ = onEnded$(videoElement);
-
     /** Emit when the media element emits a "seeking" event. */
-    const seekingEvent$ = onSeeking$(videoElement);
+    const observation$ = playbackObserver.observe(true);
+
+    const seekingEvent$ = observation$.pipe(filter(o => {
+      return o.event === "seeking";
+    }));
+
+    const endedEvent$ = observation$.pipe(filter(o => {
+      return o.event === "ended";
+    }));
 
     /** Emit state updates once the content is considered "loaded". */
     const loadedStateUpdates$ = observableCombineLatest([
@@ -1038,17 +1040,19 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       }
     });
 
-    // Link `_priv_onPlayPauseNext` Observable to "play"/"pause" events
-    onPlayPause$(videoElement)
-      .pipe(takeUntil(stoppedContent$))
-      .subscribe(e => this._priv_onPlayPauseNext(e.type === "play"));
-
-    const observation$ = playbackObserver.observe(true);
-
     // Link "positionUpdate" events to the PlaybackObserver
     observation$
       .pipe(takeUntil(stoppedContent$))
       .subscribe(o => this._priv_triggerPositionUpdate(o));
+    observation$
+      .pipe(takeUntil(stoppedContent$))
+      .subscribe(o => {
+        if (o.event === "play") {
+          this._priv_onPlayPauseNext(true);
+        } else if (o.event === "pause") {
+          this._priv_onPlayPauseNext(false);
+        }
+      });
 
     // Link "seeking" and "seeked" events (once the content is loaded)
     loaded$.pipe(
@@ -1064,7 +1068,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       .pipe(takeUntil(stoppedContent$))
       .subscribe(x => this._priv_setPlayerState(x));
 
-    (this._priv_stopAtEnd ? onEnded$(videoElement) :
+    (this._priv_stopAtEnd ? endedEvent$ :
                             EMPTY)
       .pipe(takeUntil(stoppedContent$))
       .subscribe(() => {
