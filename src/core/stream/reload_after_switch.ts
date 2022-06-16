@@ -16,9 +16,11 @@
 
 import {
   map,
+  mergeMap,
   Observable,
 } from "rxjs";
 import { Period } from "../../manifest";
+import nextTickObs from "../../utils/rx-next-tick";
 import { IReadOnlyPlaybackObserver } from "../api";
 import { IBufferType } from "../segment_buffers";
 import EVENTS from "./events_generators";
@@ -53,7 +55,14 @@ export default function reloadAfterSwitch(
   }>,
   deltaPos : number
 ) : Observable<IWaitingMediaSourceReloadInternalEvent> {
-  return playbackObserver.observe(true).pipe(
+  // We begin by scheduling a micro-task to reduce the possibility of race
+  // conditions where `reloadAfterSwitch` would be called synchronously before
+  // the next observation (which may reflect very different playback conditions)
+  // is actually received.
+  // It can happen when `reloadAfterSwitch` is called as a side-effect of the
+  // same event that triggers the playback observation to be emitted.
+  return nextTickObs().pipe(
+    mergeMap(() => playbackObserver.observe(true)),
     map((observation) => {
       const currentTime = playbackObserver.getCurrentTime();
       const pos = currentTime + deltaPos;

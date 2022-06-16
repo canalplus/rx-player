@@ -45,6 +45,7 @@ import deferSubscriptions from "../../../utils/defer_subscriptions";
 import { fromEvent } from "../../../utils/event_emitter";
 import filterMap from "../../../utils/filter_map";
 import { IReadOnlySharedReference } from "../../../utils/reference";
+import nextTickObs from "../../../utils/rx-next-tick";
 import SortedList from "../../../utils/sorted_list";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import { IRepresentationEstimator } from "../../adaptive";
@@ -323,6 +324,11 @@ export default function StreamOrchestrator(
           ...rangesToClean.map(({ start, end }) =>
             start >= end ? EMPTY :
                            segmentBuffer.removeBuffer(start, end).pipe(ignoreElements())),
+
+          // Schedule micro task before checking the last playback observation
+          // to reduce the risk of race conditions where the next observation
+          // was going to be emitted synchronously.
+          nextTickObs().pipe(ignoreElements()),
           playbackObserver.observe(true).pipe(
             take(1),
             mergeMap((observation) => {
