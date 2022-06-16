@@ -327,7 +327,7 @@ export default function StreamOrchestrator(
             take(1),
             mergeMap((observation) => {
               const shouldAutoPlay = !(observation.paused.pending ??
-                                       observation.paused.last);
+                                       playbackObserver.getIsPaused());
               return observableConcat(
                 observableOf(EVENTS.needsDecipherabilityFlush(observation.position.last,
                                                               shouldAutoPlay,
