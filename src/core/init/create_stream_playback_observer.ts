@@ -92,9 +92,9 @@ export default function createStreamPlaybackObserver(
           duration: observation.duration,
           paused: {
             last: observation.paused,
-            pending: initialPlayPerformed.getValue() ?
-              undefined :
-              !autoPlay,
+            pending: initialPlayPerformed.getValue()  ? undefined :
+                     !autoPlay === observation.paused ? undefined :
+                                                        !autoPlay,
           },
           readyState: observation.readyState,
           speed: lastSpeed,
