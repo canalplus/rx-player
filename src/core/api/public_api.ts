@@ -197,14 +197,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private readonly _priv_contentLock : ISharedReference<boolean>;
 
   /**
-   * Changes on "play" and "pause" events from the media elements.
-   * Switches to ``true`` whent the "play" event was the last received.
-   * Switches to ``false`` whent the "pause" event was the last received.
-   * ``false`` if no such event was received for the current loaded content.
-   */
-  private readonly _priv_isPlaying : ISharedReference<boolean>;
-
-  /**
    * The speed that should be applied to playback.
    * Used instead of videoElement.playbackRate to allow more flexibility.
    */
@@ -490,7 +482,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       )
       .subscribe((x : TextTrack[]) => this._priv_onNativeTextTracksNext(x));
 
-    this._priv_isPlaying = createSharedReference(false);
     this._priv_speed = createSharedReference(videoElement.playbackRate);
     this._priv_preferTrickModeTracks = false;
     this._priv_contentLock = createSharedReference<boolean>(false);
@@ -591,7 +582,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_destroy$.complete();
 
     // Complete all subjects and references
-    this._priv_isPlaying.finish();
     this._priv_speed.finish();
     this._priv_contentLock.finish();
     this._priv_bufferOptions.wantedBufferAhead.finish();
@@ -739,7 +729,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         // Stop previous content and reset its state
         this.stop();
         this._priv_currentError = null;
-        this._priv_isPlaying.setValue(false);
         throw new Error(`transport "${transport}" not supported`);
       }
 
@@ -790,7 +779,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this.stop();
 
       this._priv_currentError = null;
-      this._priv_isPlaying.setValue(false);
       this._priv_contentInfos = contentInfos;
 
       const relyOnVideoVisibilityAndSize = canRelyOnVideoVisibilityAndSize();
@@ -884,7 +872,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       // Stop previous content and reset its state
       this.stop();
       this._priv_currentError = null;
-      this._priv_isPlaying.setValue(false);
       if (features.directfile === null) {
         throw new Error("DirectFile feature not activated in your build.");
       }
@@ -986,24 +973,19 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     /** Emit when the media element emits a "seeking" event. */
     const observation$ = playbackObserver.observe(true);
 
-    const seekingEvent$ = observation$.pipe(filter(o => {
-      return o.event === "seeking";
-    }));
-
-    const endedEvent$ = observation$.pipe(filter(o => {
-      return o.event === "ended";
+    const stateChangingEvent$ = observation$.pipe(filter(o => {
+      return o.event === "seeking" || o.event === "ended" ||
+             o.event === "play" || o.event === "pause";
     }));
 
     /** Emit state updates once the content is considered "loaded". */
     const loadedStateUpdates$ = observableCombineLatest([
-      this._priv_isPlaying.asObservable(),
       stalled$.pipe(startWith(null)),
-      endedEvent$.pipe(startWith(null)),
-      seekingEvent$.pipe(startWith(null)),
+      stateChangingEvent$.pipe(startWith(null)),
     ]).pipe(
       takeUntil(stoppedContent$),
-      map(([isPlaying, stalledStatus]) =>
-        getPlayerState(videoElement, isPlaying, stalledStatus)
+      map(([stalledStatus]) =>
+        getPlayerState(videoElement, stalledStatus)
       )
     );
 
@@ -1044,15 +1026,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     observation$
       .pipe(takeUntil(stoppedContent$))
       .subscribe(o => this._priv_triggerPositionUpdate(o));
-    observation$
-      .pipe(takeUntil(stoppedContent$))
-      .subscribe(o => {
-        if (o.event === "play") {
-          this._priv_onPlayPauseNext(true);
-        } else if (o.event === "pause") {
-          this._priv_onPlayPauseNext(false);
-        }
-      });
 
     // Link "seeking" and "seeked" events (once the content is loaded)
     loaded$.pipe(
@@ -1068,6 +1041,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       .pipe(takeUntil(stoppedContent$))
       .subscribe(x => this._priv_setPlayerState(x));
 
+    const endedEvent$ = observation$.pipe(filter(o => {
+      return o.event === "ended";
+    }));
     (this._priv_stopAtEnd ? endedEvent$ :
                             EMPTY)
       .pipe(takeUntil(stoppedContent$))
@@ -2833,21 +2809,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_bitrateInfos.lastBitrates[type] = bitrate;
     }
     this.trigger("bitrateEstimationChange", { type, bitrate });
-  }
-
-  /**
-   * Triggered each time the videoElement alternates between play and pause.
-   *
-   * Emit the info through the right Subject.
-   *
-   * @param {Boolean} isPlaying
-   */
-  private _priv_onPlayPauseNext(isPlaying : boolean) : void {
-    if (this.videoElement === null) {
-      throw new Error("Disposed player");
-    }
-
-    this._priv_isPlaying.setValue(isPlaying);
   }
 
   /**
