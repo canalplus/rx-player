@@ -70,12 +70,12 @@ export default function getRepresentationEstimate(
   updateRepresentationsReference();
   manifest.addEventListener("decipherabilityUpdate", updateRepresentationsReference);
   const unregisterCleanUp = cancellationSignal.register(cleanUp);
-  const [ estimateRef,
-          abrCallbacks ] = representationEstimator(content,
-                                                   currentRepresentation,
-                                                   representations,
-                                                   playbackObserver,
-                                                   cancellationSignal);
+  const { estimates: estimateRef,
+          callbacks: abrCallbacks } = representationEstimator(content,
+                                                              currentRepresentation,
+                                                              representations,
+                                                              playbackObserver,
+                                                              cancellationSignal);
   return { abrCallbacks, estimateRef };
 
   function updateRepresentationsReference() : void {

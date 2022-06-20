@@ -52,8 +52,10 @@ import selectOptimalRepresentation from "./utils/select_optimal_representation";
 /**
  * Select the most adapted Representation according to the network and buffer
  * metrics it receives.
+ *
  * @param {Object} options - Initial configuration (see type definition)
- * @returns {Object} - Interface allowing to select a Representation
+ * @returns {Object} - Interface allowing to select a Representation.
+ * @see IRepresentationEstimator
  */
 export default function createAdaptiveRepresentationSelector(
   options : IAdaptiveRepresentationSelectorArguments
@@ -73,14 +75,13 @@ export default function createAdaptiveRepresentationSelector(
   /**
    * Returns Object emitting Representation estimates as well as callbacks
    * allowing to helping it produce them.
+   *
+   * @see IRepresentationEstimator
    * @param {Object} context
-   * @param {Object} currentRepresentation - Reference emitting the
-   * Representation currently loaded.
-   * @param {Object} representations - Reference emitting the list of available
-   * Representations to choose from.
-   * @param {Object} playbackObserver - Emits regularly playback conditions
-   * @param {Object} cancellationSignal - After this `CancellationSignal` emits,
-   * estimates will stop to be emitted.
+   * @param {Object} currentRepresentation
+   * @param {Object} representations
+   * @param {Object} playbackObserver
+   * @param {Object} stopAllEstimates
    * @returns {Array.<Object>}
    */
   return function getEstimates(
@@ -92,9 +93,8 @@ export default function createAdaptiveRepresentationSelector(
     playbackObserver : IReadOnlyPlaybackObserver<
       IRepresentationEstimatorPlaybackObservation
     >,
-    cancellationSignal : CancellationSignal
-  ) : [ IReadOnlySharedReference<IABREstimate>,
-        IRepresentationEstimatorCallbacks ] {
+    stopAllEstimates : CancellationSignal
+  ) : IRepresentationEstimatorResponse {
     const { type } = context.adaptation;
     const bandwidthEstimator = _getBandwidthEstimator(type);
     const manualBitrate = takeFirstSet<IReadOnlySharedReference<number>>(
@@ -127,7 +127,7 @@ export default function createAdaptiveRepresentationSelector(
                                   playbackObserver,
                                   representations,
                                   lowLatencyMode },
-                                cancellationSignal);
+                                stopAllEstimates);
   };
 
   /**
@@ -163,7 +163,7 @@ export default function createAdaptiveRepresentationSelector(
  *     events to help it doing those estimates.
  *
  * @param {Object} args
- * @param {Object} cancellationSignal
+ * @param {Object} stopAllEstimates
  * @returns {Array.<Object>}
  */
 function getEstimateReference(
@@ -178,10 +178,8 @@ function getEstimateReference(
     minAutoBitrate,
     playbackObserver,
     representations : representationsRef } : IRepresentationEstimatorArguments,
-  cancellationSignal : CancellationSignal
-) : [ IReadOnlySharedReference<IABREstimate>,
-      IRepresentationEstimatorCallbacks ] {
-
+  stopAllEstimates : CancellationSignal
+) : IRepresentationEstimatorResponse {
   const scoreCalculator = new RepresentationScoreCalculator();
   const networkAnalyzer = new NetworkAnalyzer(initialBitrate ?? 0, lowLatencyMode);
   const requestsStore = new PendingRequestsStore();
@@ -200,10 +198,7 @@ function getEstimateReference(
    * This TaskCanceller is used both for restarting estimates with a new
    * configuration and to cancel them altogether.
    */
-  let currentEstimatesCanceller = new TaskCanceller();
-  cancellationSignal.register(() => {
-    currentEstimatesCanceller.cancel();
-  });
+  let currentEstimatesCanceller = new TaskCanceller({ cancelOn: stopAllEstimates });
 
   // Create `ISharedReference` on which estimates will be emitted.
   const estimateRef = createEstimateReference(manualBitrate.getValue(),
@@ -211,11 +206,11 @@ function getEstimateReference(
                                               currentEstimatesCanceller.signal);
 
   manualBitrate.onUpdate(restartEstimatesProductionFromCurrentConditions,
-                         { clearSignal: currentEstimatesCanceller.signal });
+                         { clearSignal: stopAllEstimates });
   representationsRef.onUpdate(restartEstimatesProductionFromCurrentConditions,
-                              { clearSignal: currentEstimatesCanceller.signal });
+                              { clearSignal: stopAllEstimates });
 
-  return [estimateRef, callbacks];
+  return { estimates: estimateRef, callbacks };
 
   function createEstimateReference(
     manualBitrateVal : number,
@@ -475,12 +470,13 @@ function getEstimateReference(
     const manualBitrateVal = manualBitrate.getValue();
     const representations = representationsRef.getValue();
     currentEstimatesCanceller.cancel();
-    currentEstimatesCanceller = new TaskCanceller();
+    currentEstimatesCanceller = new TaskCanceller({ cancelOn: stopAllEstimates });
     const newRef = createEstimateReference(
       manualBitrateVal,
       representations,
       currentEstimatesCanceller.signal
     );
+
     newRef.onUpdate(function onNewEstimate(newEstimate : IABREstimate) : void {
       estimateRef.setValue(newEstimate);
     }, { clearSignal: currentEstimatesCanceller.signal,
@@ -683,11 +679,7 @@ export interface IABRFiltersObject {
   width?: number;
 }
 
-/**
- * Callbacks returned by `getEstimateReference`.
- * Those needs to be called as soon as the corresponding events to obtain
- * coherent Representation estimates.
- */
+/** Callbacks returned by `getEstimateReference`. */
 export interface IRepresentationEstimatorCallbacks {
   /** Callback to call when a segment has been completely pushed to the buffer. */
   addedSegment(val : IAddedSegmentCallbackPayload) : void;
@@ -815,17 +807,38 @@ export interface IRepresentationEstimatorArguments {
  * allowing to estimate the most adapted `Representation`.
  */
 export type IRepresentationEstimator = (
+  /** Information on the content for which a Representation will be chosen */
   context : { manifest : Manifest;
               period : Period;
               adaptation : Adaptation; },
+  /** Reference emitting the Representation currently loaded. */
   currentRepresentation : IReadOnlySharedReference<Representation | null>,
+  /** Reference emitting the list of available Representations to choose from. */
   representations : IReadOnlySharedReference<Representation[]>,
+  /** Regularly emits playback conditions */
   playbackObserver : IReadOnlyPlaybackObserver<
     IRepresentationEstimatorPlaybackObservation
   >,
-  cancellationSignal : CancellationSignal
-) => [ IReadOnlySharedReference<IABREstimate>,
-       IRepresentationEstimatorCallbacks ];
+  /**
+   * After this `CancellationSignal` emits, resources will be disposed and
+   * estimates will stop to be emitted.
+   */
+  stopAllEstimates : CancellationSignal
+) => IRepresentationEstimatorResponse;
+
+/** Value returned by an `IRepresentationEstimator` */
+export interface IRepresentationEstimatorResponse {
+  /**
+   * Regularly produces estimates of the best Representation to play (from the
+   * list given).
+   */
+  estimates: IReadOnlySharedReference<IABREstimate>;
+  /**
+   * Callback which need to be called as soon as the corresponding events to
+   * obtain accurate Representation estimates.
+   */
+  callbacks: IRepresentationEstimatorCallbacks;
+}
 
 /** Arguments received by `createAdaptiveRepresentationSelector`. */
 export interface IAdaptiveRepresentationSelectorArguments {
