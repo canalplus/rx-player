@@ -14,6 +14,7 @@
   - DASH/DRM: Fix potential infinite rebuffering when a KID is not anounced in the MPD [#1113]
   - DRM: Fix quality fallback when loading a content whose license has been cached under an extended `singleLicensePer` setting and when starting (and staying) with a quality whose key id is not in it [#1133]
   - DASH: Avoid infinite loop due to rounding errors while parsing multi-Periods MPDs [#1111, #1110]
+  - After a `RELOADING` state, stay in `PAUSED` if the media element was paused synchronously before the side-effect which triggered the reloading (usually coming from the API) was perform [#1132]
   - Fix issue with `maxVideoBufferSize` setting which could lead to too much data being buffered [#1125]
   - Prevent possibility of requests loops and infinite rebuffering when a pushed segment is always completely and immediately garbage collected by the browser [#1123]
   - DASH: Fix issues that could arise if a segment is calculated to start at a negative position [#1122]
@@ -25,6 +26,7 @@
   - If seeking after the last potential position, load last segments before ending [#1097]
   - The duration set on the media element is now only relative to the current chosen tracks (it was previously relative to all potential track). This allows to seek later when switching e.g. to a longer video track [#1102]
   - Errors coming from an HTMLMediaElement now have the browser's error message if it exists [#1112]
+  - TTML: Better handle EBU-TT subtitles by handling the `tt` XML namespace in our TTML parser [#1131]
   - DRM: Information on persisted DRM sessions are now automatically updated to their last version when possible [#1096]
   - Only log values which are relatively inexpensive to stringify to reduce the difference between debugging sessions and what is usually seen in production [#1116]
 
