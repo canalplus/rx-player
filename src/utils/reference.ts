@@ -57,11 +57,26 @@ import { CancellationSignal } from "./task_canceller";
  * those use cases makes the intent of the corresponding code clearer.
  */
 export interface ISharedReference<T> {
-  /** Get the last set value for this shared reference. */
+  /**
+   * Get the last set value for this shared reference.
+   * @returns {*}
+   */
   getValue() : T;
 
-  /** Update the value of this shared reference. */
+  /**
+   * Update the value of this shared reference.
+   * @param {*} newVal
+   */
   setValue(newVal : T) : void;
+
+  /**
+   * Update the value of this shared reference only if the value changed.
+   *
+   * Note that this function only performs a strict equality reference through
+   * the "===" operator. Different objects that are structurally the same will
+   * thus be considered different.
+   * @param {*} newVal
+   */
   setValueIfChanged(newVal : T) : void;
 
   /**
@@ -72,25 +87,6 @@ export interface ISharedReference<T> {
    * @returns {Observable}
    */
   asObservable(skipCurrentValue? : boolean) : Observable<T>;
-  /**
-   * Triggers a callback each time this reference's value is updated.
-   *
-   * Can be given several options as argument:
-   *   - clearSignal: When the attach `CancellationSignal` emits, the given
-   *     callback will not be called anymore on reference updates.
-   *   - emitCurrentValue: If `true`, the callback will be called directly and
-   *     synchronously on this call with its current value.
-   * @param {Function} cb
-   * @param {Object} [options]
-   */
-  onUpdate(
-    cb : (val : T) => void,
-    options? : {
-      clearSignal?: CancellationSignal;
-      emitCurrentValue?: boolean;
-    },
-  ) : void;
-
   /**
    * Allows to register a callback to be called each time the value inside the
    * reference is updated.
@@ -109,7 +105,6 @@ export interface ISharedReference<T> {
       emitCurrentValue?: boolean;
     },
   ) : void;
-
   /**
    * Indicate that no new values will be emitted.
    * Allows to automatically close all Observables generated from this shared
@@ -217,7 +212,7 @@ export function createSharedReference<T>(initialValue : T) : ISharedReference<T>
 
     /**
      * Update the value of this shared reference.
-     * @param {*}
+     * @param {*} newVal
      */
     setValue(newVal : T) : void {
       if (isFinished) {
@@ -244,6 +239,10 @@ export function createSharedReference<T>(initialValue : T) : ISharedReference<T>
       }
     },
 
+    /**
+     * Update the value of this shared reference only if it changed.
+     * @param {*} newVal
+     */
     setValueIfChanged(newVal : T) : void {
       if (newVal !== value) {
         this.setValue(newVal);
@@ -353,6 +352,17 @@ export function createSharedReference<T>(initialValue : T) : ISharedReference<T>
   };
 }
 
+/**
+ * Create a new `ISharedReference` based on another one by mapping over its
+ * referenced value each time it is updated.
+ * @param {Object} originalRef - The Original `ISharedReference` you wish to map
+ * over.
+ * @param {Function} mappingFn - The mapping function which will receives
+ * `originalRef`'s value and outputs this new reference's value.
+ * @param {Object | undefined} [cancellationSignal] - Optionally, a
+ * `CancellationSignal` which will finish that reference when it emits.
+ * @returns {Object} - The new, mapped, reference.
+ */
 export function createMappedReference<T, U>(
   originalRef : IReadOnlySharedReference<T>,
   mappingFn : (x : T) => U,
