@@ -491,20 +491,13 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
               return;
           }
 
-          let linkedKeys;
-          if (sessionInfo.source === MediaKeySessionLoadingType.Created) {
-            // When the license has been fetched, there might be implicit key ids
-            // linked to the session depending on the `singleLicensePer` option.
-            linkedKeys = getFetchedLicenseKeysInfo(initializationData,
-                                                   options.singleLicensePer,
-                                                   evt.value.whitelistedKeyIds,
-                                                   evt.value.blacklistedKeyIDs);
-          } else {
-            // When the MediaKeySession is just a cached/persisted one, we don't
-            // have any concept of "implicit key id".
-            linkedKeys = { whitelisted: evt.value.whitelistedKeyIds,
-                           blacklisted: evt.value.blacklistedKeyIDs };
-          }
+          const linkedKeys = getKeyIdsLinkedToSession(
+            initializationData,
+            sessionInfo.record,
+            options.singleLicensePer,
+            sessionInfo.source === MediaKeySessionLoadingType.Created,
+            evt.value.whitelistedKeyIds,
+            evt.value.blacklistedKeyIDs);
 
           sessionInfo.record.associateKeyIds(linkedKeys.whitelisted);
           sessionInfo.record.associateKeyIds(linkedKeys.blacklisted);
@@ -1053,22 +1046,46 @@ interface IAttachedMediaKeysData {
 }
 
 /**
- * Returns information on all keys - explicit or implicit - that are linked to
- * a loaded license.
+ * Returns set of all usable and unusable keys - explicit or implicit - that are
+ * linked to a `MediaKeySession`.
  *
  * In the RxPlayer, there is a concept of "explicit" key ids, which are key ids
  * found in a license whose status can be known through the `keyStatuses`
  * property from a `MediaKeySession`, and of "implicit" key ids, which are key
  * ids which were expected to be in a fetched license, but apparently weren't.
- * @param {Object} initializationData
- * @param {string|undefined} singleLicensePer
- * @param {Array.<Uint8Array>} usableKeyIds
- * @param {Array.<Uint8Array>} unusableKeyIds
- * @returns {Object}
+ *
+ * @param {Object} initializationData - Initialization data object used to make
+ * the request for the current license.
+ * @param {Object} keySessionRecord - The `KeySessionRecord` associated with the
+ * session that has been loaded. It might give supplementary information on
+ * keys implicitly linked to the license.
+ * @param {string|undefined} singleLicensePer - Setting allowing to indicate the
+ * scope a given license should have.
+ * @param {boolean} isCurrentLicense - If `true` the license has been fetched
+ * especially for the current content.
+ *
+ * Knowing this allows to determine that if decryption keys that should have
+ * been referenced in the fetched license (according to the `singleLicensePer`
+ * setting) are missing, then the keys surely must have been voluntarly
+ * removed from the license.
+ *
+ * If it is however set to `false`, it means that the license is an older
+ * license that might have been linked to another content, thus we cannot make
+ * that assumption.
+ * @param {Array.<Uint8Array>} usableKeyIds - Key ids that are present in the
+ * license and can be used.
+ * @param {Array.<Uint8Array>} unusableKeyIds - Key ids that are present in the
+ * license yet cannot be used.
+ * @returns {Object} - Returns an object with the following properties:
+ *   - `whitelisted`: Array of key ids for keys that are known to be usable
+ *   - `blacklisted`: Array of key ids for keys that are considered unusable.
+ *     The qualities linked to those keys should not be played.
  */
-function getFetchedLicenseKeysInfo(
+function getKeyIdsLinkedToSession(
   initializationData : IProcessedProtectionData,
+  keySessionRecord : KeySessionRecord,
   singleLicensePer : undefined | "init-data" | "content" | "periods",
+  isCurrentLicense : boolean,
   usableKeyIds : Uint8Array[],
   unusableKeyIds : Uint8Array[]
 ) : { whitelisted : Uint8Array[];
@@ -1080,6 +1097,19 @@ function getFetchedLicenseKeysInfo(
    */
   const associatedKeyIds = [...usableKeyIds,
                             ...unusableKeyIds];
+
+  // Add all key ids associated to the `KeySessionRecord` yet not in
+  // `usableKeyIds` nor in `unusableKeyIds`
+  const allKnownKeyIds = keySessionRecord.getAssociatedKeyIds();
+  for (const kid of allKnownKeyIds) {
+    if (!associatedKeyIds.some(ak => areKeyIdsEqual(ak, kid))) {
+      if (log.hasLevel("DEBUG")) {
+        log.debug("DRM: KeySessionRecord's key missing in the license, blacklisting it",
+                  bytesToHex(kid));
+      }
+      associatedKeyIds.push(kid);
+    }
+  }
 
   if (singleLicensePer !== undefined && singleLicensePer !== "init-data") {
     // We want to add the current key ids in the blacklist if it is
@@ -1102,11 +1132,15 @@ function getFetchedLicenseKeysInfo(
         return !associatedKeyIds.some(k => areKeyIdsEqual(k, expected));
       });
       if (missingKeyIds.length > 0) {
+        if (log.hasLevel("DEBUG")) {
+          log.debug("DRM: init data keys missing in the license, blacklisting them",
+                    missingKeyIds.map(m => bytesToHex(m)).join(", "));
+        }
         associatedKeyIds.push(...missingKeyIds) ;
       }
     }
 
-    if (content !== undefined) {
+    if (isCurrentLicense && content !== undefined) {
       if (singleLicensePer === "content") {
         // Put it in a Set to automatically filter out duplicates (by ref)
         const contentKeys = new Set<Uint8Array>();
