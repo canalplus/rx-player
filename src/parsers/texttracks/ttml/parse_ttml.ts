@@ -18,19 +18,19 @@ import arrayFind from "../../../utils/array_find";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import objectAssign from "../../../utils/object_assign";
 import getParameters, { ITTParameters } from "./get_parameters";
-import getParentElementsByTagName from "./get_parent_elements_by_tag_name";
 import {
   getStylingAttributes,
   getStylingFromElement,
   IStyleObject,
 } from "./get_styling";
+import resolveStylesInheritance from "./resolve_styles_inheritance";
 import {
+  getParentDivElements,
   getBodyNode,
   getRegionNodes,
   getStyleNodes,
   getTextNodes,
-} from "./nodes";
-import resolveStylesInheritance from "./resolve_styles_inheritance";
+} from "./xml_utils";
 
 const STYLE_ATTRIBUTES = [ "align",
                            "backgroundColor",
@@ -62,7 +62,7 @@ const STYLE_ATTRIBUTES = [ "align",
 ];
 
 export interface IParsedTTMLCue { /** The DOM Element that contains text node */
-                                  paragraph: HTMLParagraphElement;
+                                  paragraph: Element;
                                   /** An offset to apply to cues start and end */
                                   timeOffset: number;
                                   /** An array of objects containing TTML styles */
@@ -95,9 +95,15 @@ export default function parseTTMLString(
 
   if (xml !== null && xml !== undefined) {
     const tts = xml.getElementsByTagName("tt");
-    const tt = tts[0];
+    let tt = tts[0];
     if (tt === undefined) {
-      throw new Error("invalid XML");
+      // EBU-TT sometimes namespaces tt, by "tt:"
+      // Just catch all namespaces to play it safe
+      const namespacedTT = xml.getElementsByTagNameNS("*", "tt");
+      tt = namespacedTT[0];
+      if (tt === undefined) {
+        throw new Error("invalid XML");
+      }
     }
 
     const body = getBodyNode(tt);
@@ -166,7 +172,7 @@ export default function parseTTMLString(
     for (let i = 0; i < paragraphNodes.length; i++) {
       const paragraph = paragraphNodes[i];
       if (paragraph instanceof Element) {
-        const divs = getParentElementsByTagName(paragraph , "div");
+        const divs = getParentDivElements(paragraph);
         const paragraphStyle = objectAssign({},
                                             bodyStyle,
                                             getStylingAttributes(STYLE_ATTRIBUTES,
