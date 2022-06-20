@@ -33,7 +33,10 @@ import { fromEvent } from "../../utils/event_emitter";
 import filterMap from "../../utils/filter_map";
 import createSharedReference from "../../utils/reference";
 import { IReadOnlyPlaybackObserver } from "../api";
-import { IStreamOrchestratorEvent } from "../stream";
+import {
+  IStreamOrchestratorEvent,
+  IStreamOrchestratorPlaybackObservation,
+} from "../stream";
 import EVENTS from "./events_generators";
 import { IWarningEvent } from "./types";
 
@@ -72,18 +75,18 @@ export default function ContentTimeBoundariesObserver(
   // segments
   const outOfManifest$ = playbackObserver.observe(true).pipe(
     filterMap<IContentTimeObserverPlaybackObservation, IWarningEvent, null>((
-      { position, wantedTimeOffset }
+      { position }
     ) => {
-      const offsetedPosition = wantedTimeOffset + position;
+      const wantedPosition = position.pending ?? position.last;
       if (
-        offsetedPosition < manifest.getMinimumSafePosition()
+        wantedPosition < manifest.getMinimumSafePosition()
       ) {
         const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST",
                                        "The current position is behind the " +
                                        "earliest time announced in the Manifest.");
         return EVENTS.warning(warning);
       } else if (
-        offsetedPosition > maximumPositionCalculator.getCurrentMaximumPosition()
+        wantedPosition > maximumPositionCalculator.getCurrentMaximumPosition()
       ) {
         const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST",
                                        "The current position is after the latest " +
@@ -301,12 +304,5 @@ export interface IContentDurationUpdateEvent {
   value : number | undefined;
 }
 
-export interface IContentTimeObserverPlaybackObservation {
-  /** The position we are in the video in seconds at the time of the observation. */
-  position : number;
-  /**
-   * Offset, in seconds to add to `position` to obtain the starting position at
-   * which we actually want to download segments for.
-   */
-  wantedTimeOffset : number;
-}
+export type IContentTimeObserverPlaybackObservation =
+  Pick<IStreamOrchestratorPlaybackObservation, "position">;

@@ -44,6 +44,7 @@ export interface IStreamPlaybackObserverArguments {
 
 /**
  * Create PlaybackObserver for the `Stream` part of the code.
+ * @param {Object} manifest
  * @param {Object} playbackObserver
  * @param {Object} args
  * @returns {Observable}
@@ -62,37 +63,41 @@ export default function createStreamPlaybackObserver(
   ) : Observable<IStreamOrchestratorPlaybackObservation> {
     return observableCombineLatest([observation$, speed.asObservable()]).pipe(
       map(([observation, lastSpeed]) => {
-        let wantedTimeOffset = 0;
+        let pendingPosition : number | undefined;
         if (!initialSeekPerformed.getValue()) {
-          wantedTimeOffset = startTime - observation.position;
+          pendingPosition = startTime;
         } else if (!manifest.isDynamic || manifest.isLastPeriodKnown) {
+          // HACK: When the position is actually further than the maximum
+          // position for a finished content, we actually want to be loading
+          // the last segment before ending.
+          // For now, this behavior is implicitely forced by making as if we
+          // want to seek one second before the period's end (despite never
+          // doing it).
           const lastPeriod = manifest.periods[manifest.periods.length - 1];
           if (lastPeriod !== undefined &&
               lastPeriod.end !== undefined &&
               observation.position > lastPeriod.end)
           {
-            wantedTimeOffset = lastPeriod.end -
-                               observation.position -
-                               1;
+            pendingPosition = lastPeriod.end - 1;
           }
         }
 
         return {
           // TODO more exact according to the current Adaptation chosen?
           maximumPosition: manifest.getMaximumSafePosition(),
-          position: observation.position,
+          position: {
+            last: observation.position,
+            pending: pendingPosition,
+          },
           duration: observation.duration,
-          isPaused: initialPlayPerformed.getValue() ? observation.paused :
-                                                      !autoPlay,
+          paused: {
+            last: observation.paused,
+            pending: initialPlayPerformed.getValue()  ? undefined :
+                     !autoPlay === observation.paused ? undefined :
+                                                        !autoPlay,
+          },
           readyState: observation.readyState,
           speed: lastSpeed,
-          // wantedTimeOffset is an offset to add to the timing's current time to have
-          // the "real" wanted position.
-          // For now, this is seen when the media element has not yet seeked to its
-          // initial position, the currentTime will most probably be 0 where the
-          // effective starting position will be _startTime_.
-          // Thus we initially set a wantedTimeOffset equal to startTime.
-          wantedTimeOffset,
         };
       }));
   });

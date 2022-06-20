@@ -53,10 +53,13 @@ import SegmentBuffersStore, {
   SegmentBuffer,
 } from "../../segment_buffers";
 import AdaptationStream, {
-  IAdaptationStreamOptions, IAdaptationStreamPlaybackObservation,
+  IAdaptationStreamOptions,
+  IAdaptationStreamPlaybackObservation,
+  IPausedPlaybackObservation,
 } from "../adaptation";
 import EVENTS from "../events_generators";
 import reloadAfterSwitch from "../reload_after_switch";
+import { IPositionPlaybackObservation } from "../representation";
 import {
   IAdaptationStreamEvent,
   IPeriodStreamEvent,
@@ -68,21 +71,22 @@ import getAdaptationSwitchStrategy from "./get_adaptation_switch_strategy";
 
 /** Playback observation required by the `PeriodStream`. */
 export interface IPeriodStreamPlaybackObservation {
-  /** The position we are in the video in seconds at the time of the observation. */
-  position : number;
+  /**
+   * Information on whether the media element was paused at the time of the
+   * Observation.
+   */
+  paused : IPausedPlaybackObservation;
+  /**
+   * Information on the current media position in seconds at the time of the
+   * Observation.
+   */
+  position : IPositionPlaybackObservation;
   /** `duration` property of the HTMLMediaElement. */
   duration : number;
-  /** If `true`, the player is currently paused. */
-  isPaused: boolean;
   /** `readyState` property of the HTMLMediaElement. */
   readyState : number;
   /** Target playback rate at which we want to play the content. */
   speed : number;
-  /**
-   * Offset, in seconds to add to `position` to obtain the starting position at
-   * which we actually want to download segments for.
-   */
-  wantedTimeOffset : number;
   /** Theoretical maximum position on the content that can currently be played. */
   maximumPosition : number;
 }
@@ -365,6 +369,6 @@ function createAdaptationStreamPlaybackObserver(
     return objectAssign({},
                         baseObservation,
                         { bufferGap: getLeftSizeOfRange(buffered,
-                                                        baseObservation.position) });
+                                                        baseObservation.position.last) });
   }
 }

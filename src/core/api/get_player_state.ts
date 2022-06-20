@@ -33,7 +33,6 @@ export const PLAYER_STATES =
 /**
  * Get state string for a _loaded_ content.
  * @param {HTMLMediaElement} mediaElement
- * @param {boolean} isPlaying - false when the player is paused. true otherwise.
  * @param {Object} stalledStatus - Current stalled state:
  *   - null when not stalled
  *   - a description of the situation if stalled.
@@ -41,7 +40,6 @@ export const PLAYER_STATES =
  */
 export default function getLoadedContentState(
   mediaElement : HTMLMediaElement,
-  isPlaying : boolean,
   stalledStatus : IStallingSituation |
                   null
 ) : IPlayerState {
@@ -66,6 +64,6 @@ export default function getLoadedContentState(
     return stalledStatus === "seeking" ? PLAYER_STATES.SEEKING :
                                          PLAYER_STATES.BUFFERING;
   }
-  return isPlaying ? PLAYER_STATES.PLAYING :
-                     PLAYER_STATES.PAUSED;
+  return mediaElement.paused ? PLAYER_STATES.PAUSED :
+                               PLAYER_STATES.PLAYING;
 }

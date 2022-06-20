@@ -16,9 +16,11 @@
 
 import {
   map,
+  mergeMap,
   Observable,
 } from "rxjs";
 import { Period } from "../../manifest";
+import nextTickObs from "../../utils/rx-next-tick";
 import { IReadOnlyPlaybackObserver } from "../api";
 import { IBufferType } from "../segment_buffers";
 import EVENTS from "./events_generators";
@@ -49,12 +51,18 @@ export default function reloadAfterSwitch(
   period : Period,
   bufferType : IBufferType,
   playbackObserver : IReadOnlyPlaybackObserver<{
-    position : number;
-    isPaused : boolean;
+    paused : { last: boolean; pending: boolean | undefined };
   }>,
   deltaPos : number
 ) : Observable<IWaitingMediaSourceReloadInternalEvent> {
-  return playbackObserver.observe(true).pipe(
+  // We begin by scheduling a micro-task to reduce the possibility of race
+  // conditions where `reloadAfterSwitch` would be called synchronously before
+  // the next observation (which may reflect very different playback conditions)
+  // is actually received.
+  // It can happen when `reloadAfterSwitch` is called as a side-effect of the
+  // same event that triggers the playback observation to be emitted.
+  return nextTickObs().pipe(
+    mergeMap(() => playbackObserver.observe(true)),
     map((observation) => {
       const currentTime = playbackObserver.getCurrentTime();
       const pos = currentTime + deltaPos;
@@ -62,9 +70,7 @@ export default function reloadAfterSwitch(
       // Bind to Period start and end
       const reloadAt = Math.min(Math.max(period.start, pos),
                                 period.end ?? Infinity);
-      return EVENTS.waitingMediaSourceReload(bufferType,
-                                             period,
-                                             reloadAt,
-                                             !observation.isPaused);
+      const autoPlay = !(observation.paused.pending ?? playbackObserver.getIsPaused());
+      return EVENTS.waitingMediaSourceReload(bufferType, period, reloadAt, autoPlay);
     }));
 }
