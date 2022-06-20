@@ -6,7 +6,6 @@
 
   - Add `label` to audio, video and text track APIs (such as `getAvailableAudioTracks`) which gives a human-readable description of the corresponding track, if available in the Manifest [#1105, #1109]
   - Automatically set the LogLevel to `"DEBUG"` if a global `__RX_PLAYER_DEBUG_MODE__` constant is set to `true`, to simplify debugging [#1115]
-  - TTML: Add support for percent based thickness for textOutline in TTML Subtitles [#1108]
 
 ### Bug fixes
 
@@ -23,6 +22,7 @@
 
 ### Other improvements
 
+  - TTML: Add support for percent based thickness for textOutline in TTML Subtitles [#1108]
   - If seeking after the last potential position, load last segments before ending [#1097]
   - The duration set on the media element is now only relative to the current chosen tracks (it was previously relative to all potential track). This allows to seek later when switching e.g. to a longer video track [#1102]
   - Errors coming from an HTMLMediaElement now have the browser's error message if it exists [#1112]
