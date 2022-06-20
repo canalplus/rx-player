@@ -12,6 +12,7 @@
 
   - Use the first **compatible** codec of the current AdaptationSet when creating a SourceBuffer [#1094]
   - DASH/DRM: Fix potential infinite rebuffering when a KID is not anounced in the MPD [#1113]
+  - DRM: Fix quality fallback when loading a content whose license has been cached under an extended `singleLicensePer` setting and when starting (and staying) with a quality whose key id is not in it [#1133]
   - DASH: Avoid infinite loop due to rounding errors while parsing multi-Periods MPDs [#1111, #1110]
   - Fix issue with `maxVideoBufferSize` setting which could lead to too much data being buffered [#1125]
   - Prevent possibility of requests loops and infinite rebuffering when a pushed segment is always completely and immediately garbage collected by the browser [#1123]
