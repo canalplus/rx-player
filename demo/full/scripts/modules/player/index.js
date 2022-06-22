@@ -11,7 +11,6 @@ import {
   takeUntil,
 } from "rxjs";
 import {
-  BIF_PARSER,
   DASH,
   DIRECTFILE,
   EME,
@@ -20,7 +19,6 @@ import {
   HTML_TEXT_BUFFER,
   HTML_TTML_PARSER,
   HTML_VTT_PARSER,
-  IMAGE_BUFFER,
   SMOOTH,
 } from "../../../../../src/features/list";
 import {
@@ -35,7 +33,6 @@ import VideoThumbnailLoader, {
 } from "../../../../../src/experimental/tools/VideoThumbnailLoader";
 
 RxPlayer.addFeatures([
-  BIF_PARSER,
   DASH,
   DIRECTFILE,
   EME,
@@ -44,7 +41,6 @@ RxPlayer.addFeatures([
   HTML_TEXT_BUFFER,
   HTML_TTML_PARSER,
   HTML_VTT_PARSER,
-  IMAGE_BUFFER,
   SMOOTH,
   METAPLAYLIST,
 ]);
@@ -69,13 +65,11 @@ const PLAYER = ({ $destroy, state }, initOpts) => {
 
   // initial state. Written here to easily showcase it exhaustively
   state.set({
-    audioBitrate: undefined,
+    audioRepresentation: null,
     audioBitrateAuto: true,
     autoPlayBlocked: false,
-    availableAudioBitrates: [],
-    availableLanguages: [],
+    availableAudioTracks: [],
     availableSubtitles: [],
-    availableVideoBitrates: [],
     availableVideoTracks: [],
     bufferGap: undefined,
     bufferedData: null,
@@ -95,7 +89,7 @@ const PLAYER = ({ $destroy, state }, initOpts) => {
     isReloading: false,
     isSeeking: false,
     isStopped: true,
-    language: undefined,
+    audioTrack: undefined,
     liveGap: undefined,
     loadedVideo: null,
     lowLatencyMode: false,
@@ -103,9 +97,9 @@ const PLAYER = ({ $destroy, state }, initOpts) => {
     minimumPosition: undefined,
     playbackRate: player.getPlaybackRate(),
     subtitle: undefined,
-    videoBitrate: undefined,
+    videoRepresentation: undefined,
     videoBitrateAuto: true,
-    videoTrackId: undefined,
+    videoTrack: undefined,
     volume: player.getVolume(),
     wallClockDiff: undefined,
     /**

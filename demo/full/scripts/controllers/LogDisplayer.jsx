@@ -67,19 +67,23 @@ class LogDisplayer extends React.Component {
       this.addLog(text);
     });
 
-    player.$get("videoBitrate").pipe(
+    player.$get("videoRepresentation").pipe(
       skip(1), // skip initial value
       takeUntil(this.destructionSubject),
-    ).subscribe(vb => {
-      const text = "Video Bitrate changed to " + vb;
+    ).subscribe(r => {
+      const text = r === undefined || r === null ?
+        "No video Representation anymore" :
+        "Video Representation changed to " + r.id;
       this.addLog(text);
     });
 
-    player.$get("audioBitrate").pipe(
+    player.$get("audioRepresentation").pipe(
       takeUntil(this.destructionSubject),
       skip(1), // skip initial value
-    ).subscribe(ab => {
-      const text = "Audio Bitrate changed to " + ab;
+    ).subscribe(r => {
+      const text = r === undefined || r === null ?
+        "No audio Representation anymore" :
+        "Audio Representation changed to " + r.id;
       this.addLog(text);
     });
 
@@ -149,7 +153,7 @@ class LogDisplayer extends React.Component {
       this.addLog(text);
     });
 
-    player.$get("availableLanguages").pipe(
+    player.$get("availableAudioTracks").pipe(
       skip(1), // skip initial value
       takeUntil(this.destructionSubject),
     ).subscribe(() => {
@@ -170,22 +174,6 @@ class LogDisplayer extends React.Component {
       takeUntil(this.destructionSubject),
     ).subscribe(() => {
       const text = "The video track list has changed";
-      this.addLog(text);
-    });
-
-    player.$get("availableAudioBitrates").pipe(
-      skip(1), // skip initial value
-      takeUntil(this.destructionSubject),
-    ).subscribe(() => {
-      const text = "The audio bitrate list has changed";
-      this.addLog(text);
-    });
-
-    player.$get("availableVideoBitrates").pipe(
-      skip(1), // skip initial value
-      takeUntil(this.destructionSubject),
-    ).subscribe(() => {
-      const text = "The video bitrate list has changed";
       this.addLog(text);
     });
 
