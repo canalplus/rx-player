@@ -340,77 +340,72 @@ video track when in directfile mode to avoid that case (this is documented
 in the corresponding APIs).
 </div>
 
+
+## Representation selection events
+
+This chapter describes events linked to the current audio, video or
+Representation / quality.
+
+### videoRepresentationChange
+
+_payload type_: `Object|null`
+
+Emitted when the current video Representation being considered by the RxPlayer
+changes.
+
+The payload is an object describing this new Representation, with the following
+properties:
+  - `id` (`string`): The id used to identify this Representation.
+
+  - `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits
+    per seconds.
+
+    `undefined` if unknown.
+
+  - `width` (`Number|undefined`): The width of video, in pixels.
+
+  - `height` (`Number|undefined`): The height of video, in pixels.
+
+  - `codec` (`string|undefined`): The codec of the Representation.
+
+  - `frameRate` (`number|undefined`): The video framerate.
+
+A `null` payload means that no video track is available now.
+
+This event only concerns the currently-playing Period.
+
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.md#transport">transport option</a>)
+</div>
+
+### audioRepresentationChange
+
+_payload type_: `Object|null`
+
+Emitted when the current audio Representation being considered by the RxPlayer
+changes.
+
+The payload is an object describing the new Representation, with the following
+properties:
+  - `id` (`string`): The id used to identify this Representation.
+
+  - `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits
+    per seconds.
+
+  - `codec` (`string|undefined`): The codec of the representation
+
+This event only concerns the currently-playing Period.
+
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.md#transport">transport option</a>)
+</div>
+
+
 ## Bitrate selection events
 
 This chapter describes events linked to audio and/or video bitrates and quality.
-
-### availableAudioBitratesChange
-
-_payload type_: `Array.<Number>`
-
-Triggered when the currently available audio bitrates change (e.g.: at the
-beginning of the content, when switching the current audio track, when period
-changes...).
-
-The payload is an array of the different bitrates available, in bits per
-seconds.
-
-This event only concerns the currently-playing Period.
-
-<div class="warning">
-This event is not sent in <i>DirectFile</i> mode (see
-<a href="./Loading_a_Content.md#transport">transport option</a>)
-</div>
-
-### availableVideoBitratesChange
-
-_payload type_: `Array.<Number>`
-
-Triggered when the currently available video bitrates change (e.g.: at the
-beginning of the content, when switching the current video track, when period
-changes...).
-
-The payload is an array of the different bitrates available, in bits per
-seconds.
-
-This event only concerns the currently-playing Period.
-
-<div class="warning">
-This event is not sent in <i>DirectFile</i> mode (see
-<a href="./Loading_a_Content.md#transport">transport option</a>)
-</div>
-
-### audioBitrateChange
-
-_payload type_: `Number`
-
-The payload is the new audio bitrate, in bits per seconds. It is emitted every
-time it changes (based on the last received segment).
-
-`-1` when the bitrate is not known.
-
-This event only concerns the currently-playing Period.
-
-<div class="warning">
-This event is not sent in <i>DirectFile</i> mode (see
-<a href="./Loading_a_Content.md#transport">transport option</a>)
-</div>
-
-### videoBitrateChange
-
-_payload type_: `Number`
-
-The payload is the new video bitrate, in bits per seconds. It is emitted every
-time it changes (based on the last received segment).
-
-`-1` when the bitrate is not known.
-
-This event only concerns the currently-playing Period.
-
-<div class="warning">
-This event is not sent in <i>DirectFile</i> mode (see
-<a href="./Loading_a_Content.md#transport">transport option</a>)
-</div>
 
 ### bitrateEstimationChange
 
