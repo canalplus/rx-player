@@ -16,25 +16,35 @@ function AudioBitrateKnob({
   className?: string;
 }): JSX.Element {
   const audioBitrateAuto = useModuleState(player, "audioBitrateAuto");
-  const audioBitrate = useModuleState(player, "audioBitrate");
-  const availableAudioBitrates =
-    useModuleState(player, "availableAudioBitrates");
+  const audioRepresentation = useModuleState(player, "audioRepresentation");
+  const audioTrack = useModuleState(player, "audioTrack");
 
+  const availableAudioBitrates =
+    audioTrack === null || audioTrack === undefined ?
+      [] :
+      audioTrack.representations
+        .map(r => r.bitrate)
+        .filter(b => b !== undefined);
   const [options, selectedIndex]: [string[], number] = React.useMemo(() => {
     if (!availableAudioBitrates.length) {
       return [["Not available"], 0];
     }
     if (availableAudioBitrates.length > 1) {
-      const autoValue = audioBitrateAuto ?
-        `auto (${audioBitrate ?? "unknown"})` : "auto";
+      const autoValue =
+        audioBitrateAuto &&
+        typeof audioRepresentation?.bitrate === "number" ?
+          `auto (${audioRepresentation.bitrate})` :
+          "auto";
       return [
         [autoValue, ...availableAudioBitrates.map(String)],
-        audioBitrateAuto || audioBitrate === undefined ?
-          0 : (availableAudioBitrates.indexOf(audioBitrate) + 1 || 0)
+        audioBitrateAuto || audioRepresentation?.bitrate === undefined ?
+          0 : (
+            availableAudioBitrates.indexOf(audioRepresentation.bitrate) + 1 || 0
+          )
       ];
     }
     return [availableAudioBitrates.map(String), 0];
-  }, [availableAudioBitrates, audioBitrateAuto, audioBitrate]);
+  }, [availableAudioBitrates, audioBitrateAuto, audioRepresentation]);
 
   const onAudioBitrateChange = React.useCallback(
     ({ index }: { index: number }) => {
