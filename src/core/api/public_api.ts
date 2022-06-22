@@ -45,6 +45,7 @@ import Manifest, {
   Representation,
 } from "../../manifest";
 import {
+  IAudioRepresentation,
   IAudioTrack,
   IAudioTrackPreference,
   IAvailableAudioTrack,
@@ -62,10 +63,10 @@ import {
   IStreamEvent,
   ITextTrack,
   ITextTrackPreference,
+  IVideoRepresentation,
   IVideoTrack,
   IVideoTrackPreference,
 } from "../../public_types";
-import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import arrayIncludes from "../../utils/array_includes";
 import assert from "../../utils/assert";
 import assertUnreachable from "../../utils/assert_unreachable";
@@ -2169,7 +2170,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * null if the player is STOPPED.
    * @returns {Manifest|null} - The current Manifest (`null` when not known).
    */
-  // TODO remove the need for that method
+  // TODO remove the need for that public method
   __priv_getManifest() : Manifest|null {
     if (this._priv_contentInfos === null) {
       return null;
@@ -2177,7 +2178,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return this._priv_contentInfos.manifest;
   }
 
-  // TODO remove the need for that method
+  // TODO remove the need for that public method
   __priv_getCurrentAdaptation(
   ) : Partial<Record<IBufferType, Adaptation|null>> | null {
     if (this._priv_contentInfos === null) {
@@ -2193,7 +2194,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return activeAdaptations[currentPeriod.id];
   }
 
-  // TODO remove the need for that method
+  // TODO remove the need for that public method
   __priv_getCurrentRepresentations(
   ) : Partial<Record<IBufferType, Representation|null>> | null {
     if (this._priv_contentInfos === null) {
@@ -2371,30 +2372,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_triggerEventIfNotStopped("videoTrackChange", null, cancelSignal);
     }
 
-    this._priv_triggerAvailableBitratesChangeEvent("availableAudioBitratesChange",
-                                                   this.getAvailableAudioBitrates(),
-                                                   cancelSignal);
-    if (contentInfos.currentContentCanceller.isUsed()) {
-      return;
-    }
-    this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange",
-                                                   this.getAvailableVideoBitrates(),
-                                                   cancelSignal);
-    if (contentInfos.currentContentCanceller.isUsed()) {
-      return;
-    }
-    const audioBitrate = this.__priv_getCurrentRepresentations()?.audio?.bitrate ?? -1;
-    this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange",
-                                                audioBitrate,
-                                                cancelSignal);
-    if (contentInfos.currentContentCanceller.isUsed()) {
-      return;
-    }
-
-    const videoBitrate = this.__priv_getCurrentRepresentations()?.video?.bitrate ?? -1;
-    this._priv_triggerCurrentBitrateChangeEvent("videoBitrateChange",
-                                                videoBitrate,
-                                                cancelSignal);
+    const audioRepresentation = this.__priv_getCurrentRepresentations()?.audio ?? null;
+    this._priv_triggerEventIfNotStopped("audioRepresentationChange",
+                                        audioRepresentation,
+                                        cancelSignal);
+    const videoRepresentation = this.__priv_getCurrentRepresentations()?.video ?? null;
+    this._priv_triggerEventIfNotStopped("videoRepresentationChange",
+                                        videoRepresentation,
+                                        cancelSignal);
   }
 
   /**
@@ -2544,11 +2529,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           this._priv_triggerEventIfNotStopped("audioTrackChange",
                                               audioTrack,
                                               cancelSignal);
-
-          const availableAudioBitrates = this.getAvailableAudioBitrates();
-          this._priv_triggerAvailableBitratesChangeEvent("availableAudioBitratesChange",
-                                                         availableAudioBitrates,
-                                                         cancelSignal);
           break;
         case "text":
           const textTrack = trackChoiceManager.getChosenTextTrack(currentPeriod);
@@ -2559,11 +2539,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           this._priv_triggerEventIfNotStopped("videoTrackChange",
                                               videoTrack,
                                               cancelSignal);
-
-          const availableVideoBitrates = this.getAvailableVideoBitrates();
-          this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange",
-                                                         availableVideoBitrates,
-                                                         cancelSignal);
           break;
       }
     }
@@ -2601,20 +2576,19 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       activePeriodRepresentations[type] = representation;
     }
 
-    const bitrate = representation?.bitrate ?? -1;
     if (!isNullOrUndefined(period) &&
         currentPeriod !== null &&
         currentPeriod.id === period.id)
     {
       const cancelSignal = this._priv_contentInfos.currentContentCanceller.signal;
       if (type === "video") {
-        this._priv_triggerCurrentBitrateChangeEvent("videoBitrateChange",
-                                                    bitrate,
-                                                    cancelSignal);
+        this._priv_triggerEventIfNotStopped("videoRepresentationChange",
+                                            representation,
+                                            cancelSignal);
       } else if (type === "audio") {
-        this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange",
-                                                    bitrate,
-                                                    cancelSignal);
+        this._priv_triggerEventIfNotStopped("audioRepresentationChange",
+                                            representation,
+                                            cancelSignal);
       }
     }
   }
@@ -2706,47 +2680,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       }
     }
     this.trigger("positionUpdate", positionData);
-  }
-
-  /**
-   * Trigger one of the "availableBitratesChange" event only if it changed from
-   * the previously stored value.
-   * @param {string} event
-   * @param {Array.<number>} newVal
-   * @param {Object} currentContentCancelSignal
-   */
-  private _priv_triggerAvailableBitratesChangeEvent(
-    event : "availableAudioBitratesChange" | "availableVideoBitratesChange",
-    newVal : number[],
-    currentContentCancelSignal  : CancellationSignal
-  ) : void {
-    const prevVal = this._priv_contentEventsMemory[event];
-    if (!currentContentCancelSignal.isCancelled() &&
-        (prevVal === undefined || !areArraysOfNumbersEqual(newVal, prevVal)))
-    {
-      this._priv_contentEventsMemory[event] = newVal;
-      this.trigger(event, newVal);
-    }
-  }
-
-  /**
-   * Trigger one of the "bitrateChange" event only if it changed from the
-   * previously stored value.
-   * @param {string} event
-   * @param {number} newVal
-   * @param {Object} currentContentCancelSignal
-   */
-  private _priv_triggerCurrentBitrateChangeEvent(
-    event : "audioBitrateChange" | "videoBitrateChange",
-    newVal : number,
-    currentContentCancelSignal  : CancellationSignal
-  ) : void {
-    if (!currentContentCancelSignal.isCancelled() &&
-        newVal !== this._priv_contentEventsMemory[event])
-    {
-      this._priv_contentEventsMemory[event] = newVal;
-      this.trigger(event, newVal);
-    }
   }
 
   /**
@@ -2843,15 +2776,13 @@ interface IPublicAPIEvent {
   audioTrackChange : IAudioTrack | null;
   textTrackChange : ITextTrack | null;
   videoTrackChange : IVideoTrack | null;
-  audioBitrateChange : number;
-  videoBitrateChange : number;
+  audioRepresentationChange : IVideoRepresentation | null;
+  videoRepresentationChange : IAudioRepresentation | null;
   bitrateEstimationChange : IBitrateEstimate;
   volumeChange : number;
   error : IPlayerError | Error;
   warning : IPlayerError | Error;
   periodChange : IPeriodChangeEvent;
-  availableAudioBitratesChange : number[];
-  availableVideoBitratesChange : number[];
   availableAudioTracksChange : IAvailableAudioTrack[];
   availableTextTracksChange : IAvailableTextTrack[];
   availableVideoTracksChange : IAvailableVideoTrack[];
