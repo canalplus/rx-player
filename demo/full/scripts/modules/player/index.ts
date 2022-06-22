@@ -30,7 +30,7 @@ import VideoThumbnailLoader, {
 import CatchUpModeController from "./catchUp";
 import { declareModule } from "../../lib/declareModule";
 import type {
-  IAdaptation,
+  IAudioRepresentation,
   IAudioTrack,
   IAvailableAudioTrack,
   IAvailableTextTrack,
@@ -39,6 +39,7 @@ import type {
   ILoadVideoOptions,
   IRepresentation,
   ITextTrack,
+  IVideoRepresentation,
   IVideoTrack
 } from "../../../../../src/public_types";
 
@@ -89,19 +90,23 @@ export interface IBufferedData {
   bufferedStart: number|undefined;
   bufferedEnd: number|undefined;
   infos: {
-    adaptation: IAdaptation;
+    adaptation: {
+      id: string;
+      type: string;
+      language?: string | undefined;
+      isAudioDescription?: boolean | undefined;
+      isClosedCaption?: boolean | undefined;
+    };
     representation: IRepresentation;
   };
 }
 
 export interface IPlayerModuleState {
-  audioBitrate: number | undefined;
+  audioRepresentation: IAudioRepresentation | undefined | null;
   audioBitrateAuto: boolean;
   autoPlayBlocked: boolean;
-  availableAudioBitrates: number[];
-  availableLanguages: IAvailableAudioTrack[];
+  availableAudioTracks: IAvailableAudioTrack[];
   availableSubtitles: IAvailableTextTrack[];
-  availableVideoBitrates: number[];
   availableVideoTracks: IAvailableVideoTrack[];
   bufferGap: number;
   bufferedData: null | {
@@ -125,7 +130,7 @@ export interface IPlayerModuleState {
   isReloading: boolean;
   isSeeking: boolean;
   isStopped: boolean;
-  language: IAudioTrack | undefined | null;
+  audioTrack: IAudioTrack | undefined | null;
   liveGap: number | undefined;
   loadedVideo: ILoadVideoOptions | null;
   lowLatencyMode: boolean;
@@ -134,7 +139,7 @@ export interface IPlayerModuleState {
   minimumPosition: null | undefined | number;
   playbackRate: number;
   subtitle: ITextTrack | undefined | null;
-  videoBitrate: number | undefined;
+  videoRepresentation: IVideoRepresentation | undefined | null;
   videoBitrateAuto: boolean;
   videoTrack: IVideoTrack | undefined | null;
   volume: number;
@@ -150,13 +155,11 @@ export interface IPlayerModuleState {
 
 const PlayerModule = declareModule(
   (): IPlayerModuleState => ({
-    audioBitrate: undefined,
+    audioRepresentation: undefined,
     audioBitrateAuto: true,
     autoPlayBlocked: false,
-    availableAudioBitrates: [],
-    availableLanguages: [],
+    availableAudioTracks: [],
     availableSubtitles: [],
-    availableVideoBitrates: [],
     availableVideoTracks: [],
     bufferGap: 0,
     bufferedData: null,
@@ -176,7 +179,7 @@ const PlayerModule = declareModule(
     isReloading: false,
     isSeeking: false,
     isStopped: true,
-    language: undefined,
+    audioTrack: undefined,
     liveGap: undefined,
     loadedVideo: null,
     lowLatencyMode: false,
@@ -185,7 +188,7 @@ const PlayerModule = declareModule(
     minimumPosition: undefined,
     playbackRate: 1,
     subtitle: undefined,
-    videoBitrate: undefined,
+    videoRepresentation: undefined,
     videoBitrateAuto: true,
     videoTrack: undefined,
     volume: 1,
