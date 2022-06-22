@@ -5,37 +5,37 @@ import Knob from "../../components/Knob.jsx";
 
 const AUDIO_DESCRIPTION_ICON = "(AD)"; // String.fromCharCode(0xf29e);
 
-const findLanguageIndex = (language, languages) => {
-  return languages.findIndex(ln => ln.id === language.id);
+const findAudioTrackIndex = (audioTrack, allAudioTracks) => {
+  return allAudioTracks.findIndex(ln => ln.id === audioTrack.id);
 };
 
 const AudioTrackKnobBase = ({
   player,
   className,
-  currentLanguage,
-  availableLanguages = [],
+  currentAudioTrack,
+  availableAudioTracks = [],
 }) => {
   let options = [];
   let selectedIndex;
 
-  if (!availableLanguages.length) {
+  if (!availableAudioTracks.length) {
     options = ["Not available"];
     selectedIndex = 0;
   } else {
-    options = availableLanguages
-      .map(language => {
-        return translateLanguageCode(language.normalized) +
-          (language.audioDescription ?
+    options = availableAudioTracks
+      .map(audioTrack => {
+        return translateLanguageCode(audioTrack.normalized) +
+          (audioTrack.audioDescription ?
             (" " + AUDIO_DESCRIPTION_ICON) : "");
       });
 
-    selectedIndex = currentLanguage ?
-      Math.max(findLanguageIndex(currentLanguage, availableLanguages), 0)
+    selectedIndex = currentAudioTrack ?
+      Math.max(findAudioTrackIndex(currentAudioTrack, availableAudioTracks), 0)
       : 0;
   }
 
-  const onLanguageChange = ({ index }) => {
-    const track = availableLanguages[index];
+  const onAudioTrackChange = ({ index }) => {
+    const track = availableAudioTracks[index];
     player.dispatch("SET_AUDIO_TRACK", track);
   };
 
@@ -44,8 +44,8 @@ const AudioTrackKnobBase = ({
       name="Audio Language"
       ariaLabel="Update the audio track"
       className={className}
-      disabled={availableLanguages.length < 2}
-      onChange={onLanguageChange}
+      disabled={availableAudioTracks.length < 2}
+      onChange={onAudioTrackChange}
       options={options}
       selected={{ index: selectedIndex }}
     />
@@ -54,7 +54,7 @@ const AudioTrackKnobBase = ({
 
 export default React.memo(withModulesState({
   player: {
-    language: "currentLanguage",
-    availableLanguages: "availableLanguages",
+    audioTrack: "currentAudioTrack",
+    availableAudioTracks: "availableAudioTracks",
   },
 })(AudioTrackKnobBase));

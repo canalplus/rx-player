@@ -6,22 +6,33 @@ const AudioBitrateKnobBase = ({
   player,
   className,
   audioBitrateAuto,
-  audioBitrate,
-  availableAudioBitrates = [],
+  audioRepresentation,
+  audioTrack = [],
 }) => {
   let options = [];
   let selectedIndex;
+
+  const availableAudioBitrates =
+    audioTrack === null || audioTrack === undefined ?
+      [] :
+      audioTrack.representations
+        .map(r => r.bitrate)
+        .filter(b => b !== undefined);
 
   if (!availableAudioBitrates.length) {
     options = ["Not available"];
     selectedIndex = 0;
   } else if (availableAudioBitrates.length > 1) {
-    const autoValue = audioBitrateAuto ?
-      `auto (${audioBitrate})` : "auto";
+    const autoValue =
+      audioBitrateAuto &&
+      typeof audioRepresentation.bitrate === "number" ?
+        `auto (${audioRepresentation.bitrate})` :
+        "auto";
     options = [autoValue, ...availableAudioBitrates];
 
     selectedIndex = audioBitrateAuto ?
-      0 : (availableAudioBitrates.indexOf(audioBitrate) + 1 || 0);
+      0 :
+      (availableAudioBitrates.indexOf(audioRepresentation.bitrate) + 1 || 0);
   } else {
     options = availableAudioBitrates;
     selectedIndex = 0;
@@ -52,7 +63,7 @@ const AudioBitrateKnobBase = ({
 export default React.memo(withModulesState({
   player: {
     audioBitrateAuto: "audioBitrateAuto",
-    audioBitrate: "audioBitrate",
-    availableAudioBitrates: "availableAudioBitrates",
+    audioRepresentation: "audioRepresentation",
+    audioTrack: "audioTrack",
   },
 })(AudioBitrateKnobBase));

@@ -6,22 +6,33 @@ const VideoBitrateKnobBase = ({
   player,
   className,
   videoBitrateAuto,
-  videoBitrate,
-  availableVideoBitrates = [],
+  videoRepresentation,
+  videoTrack = [],
 }) => {
   let options = [];
   let selectedIndex;
+
+  const availableVideoBitrates =
+    videoTrack === null || videoTrack === undefined ?
+      [] :
+      videoTrack.representations
+        .map(r => r.bitrate)
+        .filter(b => b !== undefined);
 
   if (!availableVideoBitrates.length) {
     options = ["Not available"];
     selectedIndex = 0;
   } else if (availableVideoBitrates.length > 1) {
-    const autoValue = videoBitrateAuto ?
-      `auto (${videoBitrate})` : "auto";
+    const autoValue =
+      videoBitrateAuto &&
+      typeof videoRepresentation.bitrate === "number" ?
+        `auto (${videoRepresentation.bitrate})` :
+        "auto";
     options = [autoValue, ...availableVideoBitrates];
 
     selectedIndex = videoBitrateAuto ?
-      0 : (availableVideoBitrates.indexOf(videoBitrate) + 1 || 0);
+      0 :
+      (availableVideoBitrates.indexOf(videoRepresentation.bitrate) + 1 || 0);
   } else {
     options = availableVideoBitrates;
     selectedIndex = 0;
@@ -52,7 +63,7 @@ const VideoBitrateKnobBase = ({
 export default React.memo(withModulesState({
   player: {
     videoBitrateAuto: "videoBitrateAuto",
-    videoBitrate: "videoBitrate",
-    availableVideoBitrates: "availableVideoBitrates",
+    videoRepresentation: "videoRepresentation",
+    videoTrack: "videoTrack",
   },
 })(VideoBitrateKnobBase));
