@@ -65,6 +65,7 @@ import Manifest, {
   Representation,
 } from "../../manifest";
 import {
+  IAudioRepresentation,
   IAudioTrack,
   IAudioTrackPreference,
   IAvailableAudioTrack,
@@ -81,10 +82,10 @@ import {
   IStreamEvent,
   ITextTrack,
   ITextTrackPreference,
+  IVideoRepresentation,
   IVideoTrack,
   IVideoTrackPreference,
 } from "../../public_types";
-import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import EventEmitter, {
   IListener,
 } from "../../utils/event_emitter";
@@ -2286,16 +2287,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this.trigger("videoTrackChange", null);
     }
 
-    this._priv_triggerAvailableBitratesChangeEvent("availableAudioBitratesChange",
-                                                   this.getAvailableAudioBitrates());
-    this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange",
-                                                   this.getAvailableVideoBitrates());
+    const audioRepresentation = this._priv_getCurrentRepresentations()?.audio ?? null;
+    this.trigger("audioRepresentationChange", audioRepresentation);
 
-    const audioBitrate = this._priv_getCurrentRepresentations()?.audio?.bitrate ?? -1;
-    this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange", audioBitrate);
-
-    const videoBitrate = this._priv_getCurrentRepresentations()?.video?.bitrate ?? -1;
-    this._priv_triggerCurrentBitrateChangeEvent("videoBitrateChange", videoBitrate);
+    const videoRepresentation = this._priv_getCurrentRepresentations()?.video ?? null;
+    this.trigger("videoRepresentationChange", videoRepresentation);
   }
 
   /**
@@ -2445,10 +2441,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           const audioTrack = this._priv_trackChoiceManager
             .getChosenAudioTrack(currentPeriod);
           this.trigger("audioTrackChange", audioTrack);
-
-          const availableAudioBitrates = this.getAvailableAudioBitrates();
-          this._priv_triggerAvailableBitratesChangeEvent("availableAudioBitratesChange",
-                                                         availableAudioBitrates);
           break;
         case "text":
           const textTrack = this._priv_trackChoiceManager
@@ -2459,10 +2451,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           const videoTrack = this._priv_trackChoiceManager
             .getChosenVideoTrack(currentPeriod);
           this.trigger("videoTrackChange", videoTrack);
-
-          const availableVideoBitrates = this.getAvailableVideoBitrates();
-          this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange",
-                                                         availableVideoBitrates);
           break;
       }
     }
@@ -2503,15 +2491,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       activePeriodRepresentations[type] = representation;
     }
 
-    const bitrate = representation?.bitrate ?? -1;
     if (!isNullOrUndefined(period) &&
         currentPeriod !== null &&
         currentPeriod.id === period.id)
     {
       if (type === "video") {
-        this._priv_triggerCurrentBitrateChangeEvent("videoBitrateChange", bitrate);
+        this.trigger("videoRepresentationChange", representation);
       } else if (type === "audio") {
-        this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange", bitrate);
+        this.trigger("audioRepresentationChange", representation);
       }
     }
   }
@@ -2606,39 +2593,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this.trigger("positionUpdate", positionData);
   }
 
-  /**
-   * Trigger one of the "availableBitratesChange" event only if it changed from
-   * the previously stored value.
-   * @param {string} event
-   * @param {Array.<number>} newVal
-   */
-  private _priv_triggerAvailableBitratesChangeEvent(
-    event : "availableAudioBitratesChange" | "availableVideoBitratesChange",
-    newVal : number[]
-  ) : void {
-    const prevVal = this._priv_contentEventsMemory[event];
-    if (prevVal === undefined || !areArraysOfNumbersEqual(newVal, prevVal)) {
-      this._priv_contentEventsMemory[event] = newVal;
-      this.trigger(event, newVal);
-    }
-  }
-
-  /**
-   * Trigger one of the "bitrateChange" event only if it changed from the
-   * previously stored value.
-   * @param {string} event
-   * @param {number} newVal
-   */
-  private _priv_triggerCurrentBitrateChangeEvent(
-    event : "audioBitrateChange" | "videoBitrateChange",
-    newVal : number
-  ) : void {
-    if (newVal !== this._priv_contentEventsMemory[event]) {
-      this._priv_contentEventsMemory[event] = newVal;
-      this.trigger(event, newVal);
-    }
-  }
-
   private _priv_getCurrentRepresentations(
   ) : Partial<Record<IBufferType, Representation|null>> | null {
     if (this._priv_contentInfos === null) {
@@ -2663,15 +2617,13 @@ interface IPublicAPIEvent {
   audioTrackChange : IAudioTrack | null;
   textTrackChange : ITextTrack | null;
   videoTrackChange : IVideoTrack | null;
-  audioBitrateChange : number;
-  videoBitrateChange : number;
+  audioRepresentationChange : IVideoRepresentation | null;
+  videoRepresentationChange : IAudioRepresentation | null;
   bitrateEstimationChange : IBitrateEstimate;
   volumeChange : number;
   error : IPlayerError | Error;
   warning : IPlayerError | Error;
   periodChange : IPeriodChangeEvent;
-  availableAudioBitratesChange : number[];
-  availableVideoBitratesChange : number[];
   availableAudioTracksChange : IAvailableAudioTrack[];
   availableTextTracksChange : IAvailableTextTrack[];
   availableVideoTracksChange : IAvailableVideoTrack[];
