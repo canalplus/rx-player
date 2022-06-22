@@ -28,17 +28,15 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
       .subscribe(arg => state.set({ [stateItem]: arg }));
 
   linkPlayerEventToState("textTrackChange", "subtitle");
-  linkPlayerEventToState("audioTrackChange", "language");
-  linkPlayerEventToState("videoTrackChange", "videoTrack");
-  linkPlayerEventToState("videoBitrateChange", "videoBitrate");
-  linkPlayerEventToState("audioBitrateChange", "audioBitrate");
+  linkPlayerEventToState("videoRepresentationChange", "videoRepresentation");
+  linkPlayerEventToState("audioRepresentationChange", "audioRepresentation");
   linkPlayerEventToState("error", "error");
   linkPlayerEventToState("volumeChange", "volume");
-  linkPlayerEventToState("availableAudioTracksChange", "availableLanguages");
+  linkPlayerEventToState("audioTrackChange", "audioTrack");
+  linkPlayerEventToState("videoTrackChange", "videoTrack");
+  linkPlayerEventToState("availableAudioTracksChange", "availableAudioTracks");
   linkPlayerEventToState("availableVideoTracksChange", "availableVideoTracks");
   linkPlayerEventToState("availableTextTracksChange", "availableSubtitles");
-  linkPlayerEventToState("availableAudioBitratesChange", "availableAudioBitrates");
-  linkPlayerEventToState("availableVideoBitratesChange", "availableVideoBitrates");
 
   // use an interval for current position
   // TODO Only active for content playback
@@ -100,17 +98,15 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
         stateUpdates.isLive = player.isLive();
         break;
       case "STOPPED":
-        stateUpdates.audioBitrate = undefined;
+        stateUpdates.audioRepresentation = undefined;
         stateUpdates.autoPlayBlocked = false;
-        stateUpdates.videoBitrate = undefined;
-        stateUpdates.availableAudioBitrates = [];
-        stateUpdates.availableVideoBitrates = [];
+        stateUpdates.videoRepresentation = undefined;
         stateUpdates.availableVideoTracks = [];
-        stateUpdates.availableLanguages = [];
+        stateUpdates.availableAudioTracks = [];
         stateUpdates.availableSubtitles = [];
         stateUpdates.lowLatencyMode = false;
         stateUpdates.subtitle = null;
-        stateUpdates.language = null;
+        stateUpdates.audioTrack = null;
         stateUpdates.videoTrack = null;
         stateUpdates.currentTime = undefined;
         stateUpdates.wallClockDiff = undefined;
