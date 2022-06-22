@@ -1051,12 +1051,18 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         currentContentCanceller.cancel();
       });
 
-
     // Link playback events to the corresponding callbacks
     playback$.subscribe({
       next: (x) => this._priv_onPlaybackEvent(x),
       error: (err : Error) => this._priv_onPlaybackError(err),
-      complete: () => this._priv_onPlaybackFinished(),
+      complete: () => {
+        if (!contentInfos.currentContentCanceller.isUsed) {
+          log.info("API: Previous playback finished. Stopping and cleaning-up...");
+          contentInfos.currentContentCanceller.cancel();
+          this._priv_cleanUpCurrentContentState();
+          this._priv_setPlayerState(PLAYER_STATES.STOPPED);
+        }
+      },
     });
 
     // initialize the content only when the lock is inactive
@@ -2448,19 +2454,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_currentError === formattedError) {
       this.trigger("error", formattedError);
     }
-  }
-
-  /**
-   * Triggered when the playback Observable completes.
-   * Clean-up ressources and signal that the content has ended.
-   */
-  private _priv_onPlaybackFinished() : void {
-    log.info("API: Previous playback finished. Stopping and cleaning-up...");
-    if (this._priv_contentInfos !== null) {
-      this._priv_contentInfos.currentContentCanceller.cancel();
-    }
-    this._priv_cleanUpCurrentContentState();
-    this._priv_setPlayerState(PLAYER_STATES.ENDED);
   }
 
   /**
