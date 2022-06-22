@@ -66,17 +66,23 @@ import Manifest, {
 } from "../../manifest";
 import {
   IAudioRepresentation,
-  IAdaptationType,
   IAudioRepresentationsSwitchingMode,
   IAudioTrack,
+  IAudioTrackSetting,
   IAudioTrackSwitchingMode,
   IAvailableAudioTrack,
   IAvailableTextTrack,
   IAvailableVideoTrack,
   IBitrateEstimate,
+  IBrokenRepresentationsLockContext,
   IConstructorOptions,
   IDecipherabilityUpdateContent,
   ILoadVideoOptions,
+  ILockedAudioRepresentationsProperties,
+  ILockedVideoRepresentationsProperties,
+  ILostAudioTrackEventPayload,
+  ILostTextTrackEventPayload,
+  ILostVideoTrackEventPayload,
   IPeriod,
   IPeriodChangeEvent,
   IPlayerError,
@@ -85,8 +91,10 @@ import {
   IStreamEvent,
   ITextTrack,
   IVideoRepresentation,
+  ITextTrackSetting,
   IVideoRepresentationsSwitchingMode,
   IVideoTrack,
+  IVideoTrackSetting,
   IVideoTrackSwitchingMode,
 } from "../../public_types";
 import EventEmitter, {
@@ -1545,6 +1553,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return getCurrentKeySystem(this.videoElement);
   }
 
+  getCurrentPeriod() : IPeriod | null {
+    const currentPeriod = this._priv_contentInfos?.currentPeriod;
+    if (isNullOrUndefined(currentPeriod)) {
+      return null;
+    }
+    return { id: currentPeriod.id, start: currentPeriod.start, end: currentPeriod.end };
+  }
+
   /**
    * Returns the list of available Periods for which the current audio, video or
    * text track can now be changed.
@@ -1732,7 +1748,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   /**
    * Update the text language for the current Period.
-   * @param {string | Object} textId
+   * @param {string | Object} arg
    * @throws Error - the current content has no TracksStore.
    * @throws Error - the given id is linked to no text track.
    */
@@ -1790,7 +1806,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   /**
    * Update the video track for the current Period.
-   * @param {string | Object} videoId
+   * @param {string | Object} arg
    * @throws Error - the current content has no TracksStore.
    * @throws Error - the given id is linked to no video track.
    */
@@ -2231,7 +2247,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_tracksStore.addEventListener("brokenRepresentationsLock", (e) => {
       this.trigger("brokenRepresentationsLock", e);
     });
-
+    this._priv_tracksStore.addEventListener("lostVideoTrack", (e) => {
+      this.trigger("lostVideoTrack", e);
+    });
+    this._priv_tracksStore.addEventListener("lostAudioTrack", (e) => {
+      this.trigger("lostAudioTrack", e);
+    });
+    this._priv_tracksStore.addEventListener("lostTextTrack", (e) => {
+      this.trigger("lostTextTrack", e);
+    });
 
     this._priv_tracksStore.updatePeriodList(manifest);
 
@@ -2636,44 +2660,15 @@ interface IPublicAPIEvent {
   availableVideoTracksChange : IAvailableVideoTrack[];
   decipherabilityUpdate : IDecipherabilityUpdateContent[];
   newAvailablePeriods : IPeriod[];
-  brokenRepresentationsLock : { period : IPeriod;
-                                trackType : IAdaptationType; };
+  brokenRepresentationsLock : IBrokenRepresentationsLockContext;
+  lostVideoTrack : ILostVideoTrackEventPayload;
+  lostAudioTrack : ILostAudioTrackEventPayload;
+  lostTextTrack : ILostTextTrackEventPayload;
   seeking : null;
   seeked : null;
   streamEvent : IStreamEvent;
   streamEventSkip : IStreamEvent;
   inbandEvents : IInbandEvent[];
-}
-
-export interface ILockedVideoRepresentationsProperties {
-  representations : string[];
-  periodId? : string | undefined;
-  switchingMode? : IVideoRepresentationsSwitchingMode | undefined;
-}
-
-export interface ILockedAudioRepresentationsProperties {
-  representations : string[];
-  periodId? : string | undefined;
-  switchingMode? : IAudioRepresentationsSwitchingMode | undefined;
-}
-
-export interface IAudioTrackSetting {
-  trackId : string;
-  periodId? : string | undefined;
-  switchingMode? : IAudioTrackSwitchingMode | undefined;
-  lockedRepresentations? : string[] | undefined;
-}
-
-export interface IVideoTrackSetting {
-  trackId : string;
-  periodId? : string | undefined;
-  switchingMode? : IVideoTrackSwitchingMode | undefined;
-  lockedRepresentations? : string[] | undefined;
-}
-
-export interface ITextTrackSetting {
-  trackId : string;
-  periodId? : string | undefined;
 }
 
 export default Player;

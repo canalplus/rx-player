@@ -751,3 +751,51 @@ type IRepresentationsSwitchingMode = "direct" |
                                      "seamless" |
                                      "reload" |
                                      "lazy";
+
+export interface IBrokenRepresentationsLockContext {
+  period : IPeriod;
+  trackType : IAdaptationType;
+}
+
+export interface ILostVideoTrackEventPayload {
+  period : IPeriod;
+}
+
+export interface ILostAudioTrackEventPayload {
+  period : IPeriod;
+}
+
+export interface ILostTextTrackEventPayload {
+  period : IPeriod;
+}
+
+export interface ILockedVideoRepresentationsProperties {
+  representations : string[];
+  periodId? : string | undefined;
+  switchingMode? : IVideoRepresentationsSwitchingMode | undefined;
+}
+
+export interface ILockedAudioRepresentationsProperties {
+  representations : string[];
+  periodId? : string | undefined;
+  switchingMode? : IAudioRepresentationsSwitchingMode | undefined;
+}
+
+export interface IAudioTrackSetting {
+  trackId : string;
+  periodId? : string | undefined;
+  switchingMode? : IAudioTrackSwitchingMode | undefined;
+  lockedRepresentations? : string[] | undefined;
+}
+
+export interface IVideoTrackSetting {
+  trackId : string;
+  periodId? : string | undefined;
+  switchingMode? : IVideoTrackSwitchingMode | undefined;
+  lockedRepresentations? : string[] | undefined;
+}
+
+export interface ITextTrackSetting {
+  trackId : string;
+  periodId? : string | undefined;
+}
