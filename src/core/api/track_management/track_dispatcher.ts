@@ -114,12 +114,6 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
       return;
     }
     const { adaptation, switchingMode } = newTrackInfo;
-    if (this._lastEmitted?.adaptation.id === adaptation.id &&
-        this._lastEmitted.switchingMode === switchingMode)
-    {
-      return; // nothing to do
-    }
-
     this._canceller.cancel();
     this._canceller = new TaskCanceller();
     const reference = this._constructLockedRepresentationsReference(newTrackInfo);
