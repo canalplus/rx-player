@@ -16,25 +16,37 @@ function VideoBitrateKnob({
   className?: string;
 }): JSX.Element {
   const videoBitrateAuto = useModuleState(player, "videoBitrateAuto");
-  const videoBitrate = useModuleState(player, "videoBitrate");
+  const videoRepresentation = useModuleState(player, "videoRepresentation");
+  const videoTrack =
+    useModuleState(player, "videoTrack");
+
   const availableVideoBitrates =
-    useModuleState(player, "availableVideoBitrates");
+    videoTrack === null || videoTrack === undefined ?
+      [] :
+      videoTrack.representations
+        .map(r => r.bitrate)
+        .filter(b => b !== undefined);
 
   const [options, selectedIndex]: [string[], number] = React.useMemo(() => {
     if (!availableVideoBitrates.length) {
       return [["Not available"], 0];
     }
     if (availableVideoBitrates.length > 1) {
-      const autoValue = videoBitrateAuto ?
-        `auto (${videoBitrate ?? "unknown"})` : "auto";
+      const autoValue =
+        videoBitrateAuto &&
+        typeof videoRepresentation?.bitrate === "number" ?
+          `auto (${videoRepresentation.bitrate})` :
+          "auto";
       return [
         [autoValue, ...availableVideoBitrates.map(String)],
-        videoBitrateAuto || videoBitrate === undefined ?
-          0 : (availableVideoBitrates.indexOf(videoBitrate) + 1 || 0)
+        videoBitrateAuto || videoRepresentation?.bitrate === undefined ?
+          0 : (
+            availableVideoBitrates.indexOf(videoRepresentation.bitrate) + 1 || 0
+          )
       ];
     }
     return [availableVideoBitrates.map(String), 0];
-  }, [availableVideoBitrates, videoBitrateAuto, videoBitrate]);
+  }, [availableVideoBitrates, videoBitrateAuto, videoRepresentation]);
 
   const onVideoBitrateChange = React.useCallback(
     ({ index }: { index: number }) => {
