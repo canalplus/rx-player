@@ -384,6 +384,8 @@ describe("DASH multi-Period with same choices", function () {
     expect(availableVideoTracksChange).to.have.length(1);
     expect(audioTrackChangeEvents).to.have.length(1);
     expect(videoTrackChangeEvents).to.have.length(1);
+    expect(periodChangeEvents).to.have.length(1);
+
     await sleep(4000);
     expect(player.getPosition()).to.be.at.least(102);
 
@@ -398,6 +400,7 @@ describe("DASH multi-Period with same choices", function () {
 
     expect(videoTrackChangeEvents).to.have.length(2);
     expect(videoTrackChangeEvents[1].id).to.equal("video-video-video/mp4-dup");
+
     expect(periodChangeEvents).to.have.length(2);
   });
 });
