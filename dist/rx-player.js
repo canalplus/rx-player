@@ -11807,11 +11807,17 @@ function StallAvoider(playbackObserver, manifest, lockedStream$, discontinuityUp
         ignoredStallTimeStamp = _now;
       }
 
-      if (is_seeking_approximate && observation.position < lastSeekingPosition && _now - ignoredStallTimeStamp < FORCE_DISCONTINUITY_SEEK_DELAY) {
-        return {
-          type: "stalled",
-          value: stalledReason
-        };
+      if (is_seeking_approximate && observation.position < lastSeekingPosition) {
+        log/* default.debug */.Z.debug("Init: the device appeared to have seeked back by itself.");
+
+        if (_now - ignoredStallTimeStamp < FORCE_DISCONTINUITY_SEEK_DELAY) {
+          return {
+            type: "stalled",
+            value: stalledReason
+          };
+        } else {
+          log/* default.warn */.Z.warn("Init: ignored stall for too long, checking discontinuity", _now - ignoredStallTimeStamp);
+        }
       }
 
       lastSeekingPosition = null;
@@ -39539,8 +39545,8 @@ __webpack_require__.d(__webpack_exports__, {
   "Z": function() { return /* binding */ deferSubscriptions; }
 });
 
-// EXTERNAL MODULE: ./node_modules/tslib/tslib.es6.js
-var tslib_es6 = __webpack_require__(655);
+// EXTERNAL MODULE: ./node_modules/rxjs/node_modules/tslib/tslib.es6.js
+var tslib_es6 = __webpack_require__(5987);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/scheduler/AsyncAction.js + 2 modules
 var AsyncAction = __webpack_require__(8337);
 ;// CONCATENATED MODULE: ./node_modules/rxjs/dist/esm5/internal/util/Immediate.js
@@ -43137,7 +43143,7 @@ function isSubscriber(value) {
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "t": function() { return /* binding */ ReplaySubject; }
 /* harmony export */ });
-/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(655);
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5987);
 /* harmony import */ var _Subject__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6716);
 /* harmony import */ var _scheduler_dateTimestampProvider__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4318);
 
@@ -43213,8 +43219,8 @@ __webpack_require__.d(__webpack_exports__, {
 
 // UNUSED EXPORTS: AnonymousSubject
 
-// EXTERNAL MODULE: ./node_modules/tslib/tslib.es6.js
-var tslib_es6 = __webpack_require__(655);
+// EXTERNAL MODULE: ./node_modules/rxjs/node_modules/tslib/tslib.es6.js
+var tslib_es6 = __webpack_require__(5987);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/Observable.js + 1 modules
 var Observable = __webpack_require__(1480);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/Subscription.js + 1 modules
@@ -43404,8 +43410,8 @@ __webpack_require__.d(__webpack_exports__, {
 
 // UNUSED EXPORTS: EMPTY_OBSERVER
 
-// EXTERNAL MODULE: ./node_modules/tslib/tslib.es6.js
-var tslib_es6 = __webpack_require__(655);
+// EXTERNAL MODULE: ./node_modules/rxjs/node_modules/tslib/tslib.es6.js
+var tslib_es6 = __webpack_require__(5987);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/util/isFunction.js
 var isFunction = __webpack_require__(8474);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/Subscription.js + 1 modules
@@ -43600,8 +43606,8 @@ __webpack_require__.d(__webpack_exports__, {
   "Nn": function() { return /* binding */ isSubscription; }
 });
 
-// EXTERNAL MODULE: ./node_modules/tslib/tslib.es6.js
-var tslib_es6 = __webpack_require__(655);
+// EXTERNAL MODULE: ./node_modules/rxjs/node_modules/tslib/tslib.es6.js
+var tslib_es6 = __webpack_require__(5987);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/util/isFunction.js
 var isFunction = __webpack_require__(8474);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/util/createErrorClass.js
@@ -44056,7 +44062,7 @@ function from(input, scheduler) {
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "R": function() { return /* binding */ fromEvent; }
 /* harmony export */ });
-/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(655);
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5987);
 /* harmony import */ var _observable_innerFrom__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(7878);
 /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(1480);
 /* harmony import */ var _operators_mergeMap__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(7877);
@@ -44133,7 +44139,7 @@ function isEventTarget(target) {
 /* harmony export */   "Xf": function() { return /* binding */ innerFrom; }
 /* harmony export */ });
 /* unused harmony exports fromInteropObservable, fromArrayLike, fromPromise, fromIterable, fromAsyncIterable, fromReadableStreamLike */
-/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(655);
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(5987);
 /* harmony import */ var _util_isArrayLike__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5685);
 /* harmony import */ var _util_isPromise__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(3841);
 /* harmony import */ var _Observable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1480);
@@ -44452,7 +44458,7 @@ function timer(dueTime, intervalOrScheduler, scheduler) {
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Q": function() { return /* binding */ OperatorSubscriber; }
 /* harmony export */ });
-/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(655);
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5987);
 /* harmony import */ var _Subscriber__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6267);
 
 
@@ -44847,7 +44853,7 @@ function scan(accumulator, seed) {
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "B": function() { return /* binding */ share; }
 /* harmony export */ });
-/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(655);
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(5987);
 /* harmony import */ var _observable_from__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(3102);
 /* harmony import */ var _operators_take__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(4727);
 /* harmony import */ var _Subject__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6716);
@@ -45173,7 +45179,7 @@ function tap(observerOrNext, error, complete) {
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "M": function() { return /* binding */ withLatestFrom; }
 /* harmony export */ });
-/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(655);
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(5987);
 /* harmony import */ var _util_lift__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6798);
 /* harmony import */ var _OperatorSubscriber__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(2566);
 /* harmony import */ var _observable_innerFrom__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7878);
@@ -45232,8 +45238,8 @@ __webpack_require__.d(__webpack_exports__, {
   "o": function() { return /* binding */ AsyncAction; }
 });
 
-// EXTERNAL MODULE: ./node_modules/tslib/tslib.es6.js
-var tslib_es6 = __webpack_require__(655);
+// EXTERNAL MODULE: ./node_modules/rxjs/node_modules/tslib/tslib.es6.js
+var tslib_es6 = __webpack_require__(5987);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/Subscription.js + 1 modules
 var Subscription = __webpack_require__(5720);
 ;// CONCATENATED MODULE: ./node_modules/rxjs/dist/esm5/internal/scheduler/Action.js
@@ -45373,8 +45379,8 @@ __webpack_require__.d(__webpack_exports__, {
   "v": function() { return /* binding */ AsyncScheduler; }
 });
 
-// EXTERNAL MODULE: ./node_modules/tslib/tslib.es6.js
-var tslib_es6 = __webpack_require__(655);
+// EXTERNAL MODULE: ./node_modules/rxjs/node_modules/tslib/tslib.es6.js
+var tslib_es6 = __webpack_require__(5987);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/scheduler/dateTimestampProvider.js
 var dateTimestampProvider = __webpack_require__(4318);
 ;// CONCATENATED MODULE: ./node_modules/rxjs/dist/esm5/internal/Scheduler.js
@@ -45477,7 +45483,7 @@ var dateTimestampProvider = {
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "z": function() { return /* binding */ timeoutProvider; }
 /* harmony export */ });
-/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(655);
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5987);
 
 var timeoutProvider = {
     setTimeout: function () {
@@ -45794,7 +45800,7 @@ function isPromise(value) {
 /* harmony export */   "L": function() { return /* binding */ isReadableStreamLike; },
 /* harmony export */   "Q": function() { return /* binding */ readableStreamLikeToAsyncGenerator; }
 /* harmony export */ });
-/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(655);
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5987);
 /* harmony import */ var _isFunction__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8474);
 
 
@@ -45893,7 +45899,7 @@ function operate(init) {
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Z": function() { return /* binding */ mapOneOrManyArgs; }
 /* harmony export */ });
-/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(655);
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5987);
 /* harmony import */ var _operators_map__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9127);
 
 
@@ -45960,7 +45966,7 @@ function createInvalidObservableTypeError(input) {
 
 /***/ }),
 
-/***/ 655:
+/***/ 5987:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -57132,8 +57138,8 @@ function raceInit(sources) {
     };
 }
 //# sourceMappingURL=race.js.map
-// EXTERNAL MODULE: ./node_modules/tslib/tslib.es6.js
-var tslib_es6 = __webpack_require__(655);
+// EXTERNAL MODULE: ./node_modules/rxjs/node_modules/tslib/tslib.es6.js
+var tslib_es6 = __webpack_require__(5987);
 ;// CONCATENATED MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/takeLast.js
 
 
@@ -61870,7 +61876,14 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
         return _this2._priv_onPlaybackError(err);
       },
       complete: function complete() {
-        return _this2._priv_onPlaybackFinished();
+        if (!contentInfos.currentContentCanceller.isUsed) {
+          log/* default.info */.Z.info("API: Previous playback finished. Stopping and cleaning-up...");
+          contentInfos.currentContentCanceller.cancel();
+
+          _this2._priv_cleanUpCurrentContentState();
+
+          _this2._priv_setPlayerState(PLAYER_STATES.STOPPED);
+        }
       }
     }); // initialize the content only when the lock is inactive
 
@@ -63501,23 +63514,6 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     if (this._priv_currentError === formattedError) {
       this.trigger("error", formattedError);
     }
-  }
-  /**
-   * Triggered when the playback Observable completes.
-   * Clean-up ressources and signal that the content has ended.
-   */
-  ;
-
-  _proto._priv_onPlaybackFinished = function _priv_onPlaybackFinished() {
-    log/* default.info */.Z.info("API: Previous playback finished. Stopping and cleaning-up...");
-
-    if (this._priv_contentInfos !== null) {
-      this._priv_contentInfos.currentContentCanceller.cancel();
-    }
-
-    this._priv_cleanUpCurrentContentState();
-
-    this._priv_setPlayerState(PLAYER_STATES.ENDED);
   }
   /**
    * Triggered when we received a warning event during playback.
