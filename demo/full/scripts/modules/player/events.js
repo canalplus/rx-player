@@ -42,7 +42,6 @@ const linkPlayerEventsToState = (player, state, abortSignal) => {
     }
     const position = player.getPosition();
     const duration = player.getMediaDuration();
-    const videoTrack = player.getVideoTrack();
     state.set({
       currentTime: player.getPosition(),
       wallClockDiff: player.getWallClockTime() - position,
@@ -52,15 +51,41 @@ const linkPlayerEventsToState = (player, state, abortSignal) => {
       maximumPosition: player.getMaximumPosition(),
       liveGap: player.getMaximumPosition() - player.getPosition(),
       playbackPosition: player.getPlaybackRate(),
-      videoTrackHasTrickMode: videoTrack !== null &&
-        videoTrack !== undefined &&
-        videoTrack.trickModeTracks !== undefined &&
-        videoTrack.trickModeTracks.length > 0,
     });
   }, POSITION_UPDATES_INTERVAL);
   abortSignal.addEventListener("abort", () => {
     clearInterval(intervalId);
   });
+
+  addEventListener(player, "brokenRepresentationsLock", (evt) => {
+    const currentPeriod = player.getCurrentPeriod();
+    if (evt.id !== currentPeriod.id) {
+      return;
+    }
+    if (evt.adaptationType === "video") {
+      state.set({ videoRepresentationsLocked: false });
+    } else if (evt.adaptationType === "audio") {
+      state.set({ audioRepresentationsLocked: false });
+    }
+  }, abortSignal);
+
+  addEventListener(player, "videoTrackChange", (videoTrack) => {
+    const videoRepresentationsLocked =
+      player.getLockedVideoRepresentations() !== null;
+    state.set({
+      videoRepresentationsLocked,
+      videoTrackHasTrickMode: videoTrack !== null &&
+        videoTrack !== undefined &&
+        videoTrack.trickModeTracks !== undefined &&
+        videoTrack.trickModeTracks.length > 0,
+    });
+  }, abortSignal);
+
+  addEventListener(player, "audioTrackChange", () => {
+    const audioRepresentationsLocked =
+      player.getLockedAudioRepresentations() !== null;
+    state.set({ audioRepresentationsLocked });
+  }, abortSignal);
 
   addEventListener(player, "playerStateChange", (playerState) => {
     const stateUpdates = {

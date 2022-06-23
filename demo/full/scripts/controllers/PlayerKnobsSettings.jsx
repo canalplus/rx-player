@@ -1,7 +1,7 @@
 import React from "react";
 import withModulesState from "../lib/withModulesState.jsx";
-import AudioBitrateKnob from "./knobs/AudioBitrate.jsx";
-import VideoBitrateKnob from "./knobs/VideoBitrate.jsx";
+import AudioRepresentationKnob from "./knobs/AudioRepresentation.jsx";
+import VideoRepresentationKnob from "./knobs/VideoRepresentation.jsx";
 import LanguageKnob from "./knobs/AudioTrack.jsx";
 import SubtitlesKnob from "./knobs/Subtitles.jsx";
 import VideoTrack from "./knobs/VideoTrack.jsx";
@@ -38,8 +38,8 @@ function PlayerKnobsSettings({
             null : // In lowLatencyMode, we take back control of the rate
             <PlaybackRateKnob className="black-knob" player={player} />
         }
-        <AudioBitrateKnob className="black-knob" player={player} />
-        <VideoBitrateKnob className="black-knob" player={player} />
+        <AudioRepresentationKnob className="black-knob" player={player} />
+        <VideoRepresentationKnob className="black-knob" player={player} />
         <LanguageKnob className="black-knob" player={player} />
         <SubtitlesKnob className="black-knob" player={player} />
         <VideoTrack className="black-knob" player={player} />

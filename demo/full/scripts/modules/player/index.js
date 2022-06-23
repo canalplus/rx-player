@@ -70,7 +70,7 @@ function PLAYER(state, initOpts, abortSignal) {
   // initial state. Written here to easily showcase it exhaustively
   state.set({
     audioRepresentation: null,
-    audioBitrateAuto: true,
+    audioRepresentationsLocked: false,
     autoPlayBlocked: false,
     availableAudioTracks: [],
     availableSubtitles: [],
@@ -102,7 +102,7 @@ function PLAYER(state, initOpts, abortSignal) {
     playbackRate: player.getPlaybackRate(),
     subtitle: undefined,
     videoRepresentation: undefined,
-    videoBitrateAuto: true,
+    videoRepresentationsLocked: false,
     videoTrack: undefined,
     volume: player.getVolume(),
     wallClockDiff: undefined,
@@ -208,14 +208,42 @@ function PLAYER(state, initOpts, abortSignal) {
       player.unMute();
     },
 
-    SET_AUDIO_BITRATE: (bitrate) => {
-      player.setAudioBitrate(bitrate || -1);
-      state.set({ audioBitrateAuto: !bitrate });
+    LOCK_VIDEO_REPRESENTATIONS: (reps) => {
+      player.lockVideoRepresentations({
+        representations: reps.map(r => r.id),
+        switchingMode: "reload",
+      });
+      state.set({
+        videoRepresentationsLocked:
+          player.getLockedVideoRepresentations() !== null
+      });
     },
 
-    SET_VIDEO_BITRATE: (bitrate) => {
-      player.setVideoBitrate(bitrate || -1);
-      state.set({ videoBitrateAuto: !bitrate });
+    UNLOCK_VIDEO_REPRESENTATIONS: () => {
+      player.unlockVideoRepresentations();
+      state.set({
+        videoRepresentationsLocked:
+          player.getLockedVideoRepresentations() !== null,
+      });
+    },
+
+    LOCK_AUDIO_REPRESENTATIONS: (reps) => {
+      player.lockAudioRepresentations({
+        representations: reps.map(r => r.id),
+        switchingMode: "reload",
+      });
+      state.set({
+        audioRepresentationsLocked:
+          player.getLockedAudioRepresentations() !== null,
+      });
+    },
+
+    UNLOCK_AUDIO_REPRESENTATIONS: () => {
+      player.unlockAudioRepresentations();
+      state.set({
+        audioRepresentationsLocked:
+          player.getLockedAudioRepresentations() !== null,
+      });
     },
 
     SET_AUDIO_TRACK: (track) => {
