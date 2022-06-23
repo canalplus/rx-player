@@ -32,7 +32,7 @@
     "build:modular": "./scripts/build/generate_build.js",
     "build:report": "webpack --progress --config webpack.config.js --env production --env reportSize",
     "build:rxp:all": "npm run build && npm run build:min && npm run build:modular",
-    "build:watch": "webpack --progress --config webpack.config.js -w -env production",
+    "build:watch": "webpack --progress --config webpack.config.js -w --env production",
     "build:min:watch": "webpack --progress --config webpack.config.js -w --env production --env minify",
     "build:wasm:debug": "cd ./src/parsers/manifest/dash/wasm-parser && cargo build --target wasm32-unknown-unknown && cp target/wasm32-unknown-unknown/debug/mpd_node_parser.wasm ../../../../../dist/mpd-parser.wasm",
     "build:wasm:release": "cd ./src/parsers/manifest/dash/wasm-parser && cargo build --target wasm32-unknown-unknown --release && wasm-opt -O3 -o ../../../../../dist/mpd-parser.wasm target/wasm32-unknown-unknown/release/mpd_node_parser.wasm && cd ../../../../../ && npm run wasm-strip",
