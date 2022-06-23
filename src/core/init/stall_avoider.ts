@@ -279,12 +279,15 @@ export default function StallAvoider(
         if (ignoredStallTimeStamp === null) {
           ignoredStallTimeStamp = now;
         }
-        if (isSeekingApproximate &&
-            observation.position < lastSeekingPosition &&
-            now - ignoredStallTimeStamp < FORCE_DISCONTINUITY_SEEK_DELAY)
-        {
-          return { type: "stalled" as const,
-                   value: stalledReason };
+        if (isSeekingApproximate && observation.position < lastSeekingPosition) {
+          log.debug("Init: the device appeared to have seeked back by itself.");
+          if (now - ignoredStallTimeStamp < FORCE_DISCONTINUITY_SEEK_DELAY) {
+            return { type: "stalled" as const,
+                     value: stalledReason };
+          } else {
+            log.warn("Init: ignored stall for too long, checking discontinuity",
+                     now - ignoredStallTimeStamp);
+          }
         }
         lastSeekingPosition = null;
       }
