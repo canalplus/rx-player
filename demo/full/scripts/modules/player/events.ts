@@ -1,6 +1,10 @@
 import type { IPlayerModuleState } from ".";
 import type RxPlayer from "../../../../../src";
-import type { IPlayerError } from "../../../../../src/public_types";
+import type {
+  IBrokenRepresentationsLockContext,
+  IPlayerError,
+  IVideoTrack,
+} from "../../../../../src/public_types";
 import type { IStateUpdater } from "../../lib/declareModule";
 
 const POSITION_UPDATES_INTERVAL = 100;
@@ -125,6 +129,59 @@ function linkPlayerEventsToState(
   abortSignal.addEventListener("abort", () => {
     player.removeEventListener("warning", onWarning);
   });
+
+  player.addEventListener(
+    "brokenRepresentationsLock",
+    onBrokenRepresentationsLock
+  );
+  abortSignal.addEventListener("abort", () => {
+    player.removeEventListener(
+      "brokenRepresentationsLock",
+      onBrokenRepresentationsLock
+    );
+  });
+
+  player.addEventListener("videoTrackChange", onVideoTrackChange);
+  abortSignal.addEventListener("abort", () => {
+    player.removeEventListener("videoTrackChange", onVideoTrackChange);
+  });
+
+  player.addEventListener("audioTrackChange", onAudioTrackChange);
+  abortSignal.addEventListener("abort", () => {
+    player.removeEventListener("audioTrackChange", onAudioTrackChange);
+  });
+
+  function onBrokenRepresentationsLock(
+    evt: IBrokenRepresentationsLockContext
+  ): void {
+    const currentPeriod = player.getCurrentPeriod();
+    if (evt.period.id !== currentPeriod?.id) {
+      return;
+    }
+    if (evt.trackType === "video") {
+      state.update("videoRepresentationsLocked", false);
+    } else if (evt.trackType === "audio") {
+      state.update("audioRepresentationsLocked", false);
+    }
+  }
+
+  function onVideoTrackChange(videoTrack: IVideoTrack | null): void {
+    const videoRepresentationsLocked =
+      player.getLockedVideoRepresentations() !== null;
+    state.updateBulk({
+      videoRepresentationsLocked,
+      videoTrackHasTrickMode: videoTrack !== null &&
+        videoTrack !== undefined &&
+        videoTrack.trickModeTracks !== undefined &&
+        videoTrack.trickModeTracks.length > 0,
+    });
+  }
+
+  function onAudioTrackChange(): void {
+    const audioRepresentationsLocked =
+      player.getLockedAudioRepresentations() !== null;
+    state.update("audioRepresentationsLocked", audioRepresentationsLocked);
+  }
 
   function onWarning(warning: IPlayerError | Error) {
     if ("code" in warning) {
