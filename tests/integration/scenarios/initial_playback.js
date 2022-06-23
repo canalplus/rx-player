@@ -391,14 +391,28 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
 
   it("should respect a set max buffer size", async function () {
     this.timeout(4000);
+
+    // Force a given video Representation
+    let hasLockedRepresentation = false;
     const chosenVideoRepresentation = manifestInfos
-                                        .periods[0]
-                                        .adaptations
-                                        .video[0]
-                                        .representations[0];
+      .periods[0]
+      .adaptations
+      .video[0]
+      .representations[0];
+    player.addEventListener("newAvailablePeriods", (p) => {
+      if (hasLockedRepresentation || p.length === 0) {
+        return;
+      }
+      player.setVideoTrack({
+        periodId: p[0].id,
+        trackId: manifestInfos.periods[0].adaptations.video[0].id,
+        lockedRepresentations: [chosenVideoRepresentation.id],
+      });
+      hasLockedRepresentation = true;
+    });
+
     player.setWantedBufferAhead(100);
     const {bitrate} = chosenVideoRepresentation;
-    player.setVideoBitrate(0);
     // A segment is a little bit more than 4sec, so not enough for MIN_BUFF_SIZE
     // ( MIN_BUFF_SIZE is 5sec) so the rx player will download 2 segments
     // So we take two segments : a bit more than 8sec
@@ -417,14 +431,26 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
   });
 
   it("should remove behind if buffer full", async function() {
+    // Force a given video Representation
+    let hasLockedRepresentation = false;
     const chosenVideoRepresentation = manifestInfos
-                                        .periods[0]
-                                        .adaptations
-                                        .video[0]
-                                        .representations[0];
+      .periods[0]
+      .adaptations
+      .video[0]
+      .representations[0];
+    player.addEventListener("newAvailablePeriods", (p) => {
+      if (hasLockedRepresentation || p.length === 0) {
+        return;
+      }
+      player.setVideoTrack({
+        periodId: p[0].id,
+        trackId: manifestInfos.periods[0].adaptations.video[0].id,
+        lockedRepresentations: [chosenVideoRepresentation.id],
+      });
+      hasLockedRepresentation = true;
+    });
     player.setWantedBufferAhead(20);
     const {bitrate} = chosenVideoRepresentation;
-    player.setVideoBitrate(0) ;
     player.loadVideo({
       transport: manifestInfos.transport,
       url: manifestInfos.url,
