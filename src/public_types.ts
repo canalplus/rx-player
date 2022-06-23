@@ -128,14 +128,10 @@ export type IInitialManifest = Document |
                                Manifest;
 
 /** Type for the `representationFilter` API. */
-export type IRepresentationFilter = (representation: IRepresentation,
+export type IRepresentationFilter = (representation: IRepresentationFilterRepresentation,
                                      adaptationInfos: IRepresentationInfos) => boolean;
 
 export type ITrackType = "video" | "audio" | "text";
-
-interface IRepresentationIndex {
-  getSegments(up : number, duration : number) : IExposedSegment[];
-}
 
 /** Segment, as documented in the API documentation. */
 export interface IExposedSegment {
@@ -149,23 +145,13 @@ export interface IExposedSegment {
   number? : number | undefined;
 }
 
-/** Representation (represents a quality), as documented in the API documentation. */
-export interface IRepresentation {
+/** Representation object given to the `representationFilter` API. */
+export interface IRepresentationFilterRepresentation {
   /** String identifying the Representation, unique per Adaptation. */
   id : string;
   bitrate? : number | undefined;
-  /** Codec used by the segment in that Representation. */
+  /** Codec used by the media segments of that Representation. */
   codec? : string | undefined;
-  /**
-   * Whether we are able to decrypt this Representation / unable to decrypt it or
-   * if we don't know yet:
-   *   - if `true`, it means that we know we were able to decrypt this
-   *     Representation in the current content.
-   *   - if `false`, it means that we know we were unable to decrypt this
-   *     Representation
-   *   - if `undefined` there is no certainty on this matter
-   */
-  decipherable? : boolean | undefined;
   /**
    * This property makes the most sense for video Representations.
    * It defines the height of the video, in pixels.
@@ -180,10 +166,6 @@ export interface IRepresentation {
   frameRate? : number | undefined;
   /** If the track is HDR, gives the HDR characteristics of the content */
   hdrInfo? : IHDRInformation;
-  index : IRepresentationIndex;
-
-  /** NOTE: not part of the API. */
-  isSupported: boolean;
 }
 
 export interface IHDRInformation {
