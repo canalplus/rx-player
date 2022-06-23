@@ -47,7 +47,6 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
       }
       const position = player.getPosition();
       const duration = player.getMediaDuration();
-      const videoTrack = player.getVideoTrack();
       return {
         currentTime: player.getPosition(),
         wallClockDiff: player.getWallClockTime() - position,
@@ -57,15 +56,47 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
         maximumPosition: player.getMaximumPosition(),
         liveGap: player.getMaximumPosition() - player.getPosition(),
         playbackPosition: player.getPlaybackRate(),
-        videoTrackHasTrickMode: videoTrack !== null &&
-          videoTrack !== undefined &&
-          videoTrack.trickModeTracks !== undefined &&
-          videoTrack.trickModeTracks.length > 0,
       };
     }),
     takeUntil($destroy)
   ).subscribe(arg => {
     state.set(arg);
+  });
+
+  fromPlayerEvent(player, "brokenRepresentationsLock").pipe(
+    takeUntil($destroy)
+  ).subscribe((evt) => {
+    const currentPeriod = player.getCurrentPeriod();
+    if (evt.id !== currentPeriod.id) {
+      return;
+    }
+    if (evt.adaptationType === "video") {
+      state.set({ videoRepresentationsLocked: false });
+    } else if (evt.adaptationType === "audio") {
+      state.set({ audioRepresentationsLocked: false });
+    }
+  });
+
+  fromPlayerEvent(player, "videoTrackChange").pipe(
+    takeUntil($destroy)
+  ).subscribe((videoTrack) => {
+    const videoRepresentationsLocked =
+      player.getLockedVideoRepresentations() !== null;
+    state.set({
+      videoRepresentationsLocked,
+      videoTrackHasTrickMode: videoTrack !== null &&
+        videoTrack !== undefined &&
+        videoTrack.trickModeTracks !== undefined &&
+        videoTrack.trickModeTracks.length > 0,
+    });
+  });
+
+  fromPlayerEvent(player, "audioTrackChange").pipe(
+    takeUntil($destroy)
+  ).subscribe(() => {
+    const audioRepresentationsLocked =
+      player.getLockedAudioRepresentations() !== null;
+    state.set({ audioRepresentationsLocked });
   });
 
   fromPlayerEvent(player, "playerStateChange").pipe(
