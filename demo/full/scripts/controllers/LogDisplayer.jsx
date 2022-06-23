@@ -49,21 +49,21 @@ class LogDisplayer extends React.Component {
     this.destructionSubject = new Subject();
     const { player } = this.props;
 
-    player.$get("videoBitrateAuto").pipe(
+    player.$get("videoRepresentationsLocked").pipe(
       skip(1), // skip initial value
       takeUntil(this.destructionSubject),
-    ).subscribe(vbAuto => {
-      const text = "Video Bitrate selection changed to " +
-        (vbAuto ? "automatic" : "manual");
+    ).subscribe(isLocked => {
+      const text = "Video quality selection changed to " +
+        (isLocked ? "manual" : "automatic");
       this.addLog(text);
     });
 
-    player.$get("audioBitrateAuto").pipe(
+    player.$get("audioRepresentationsLocked").pipe(
       skip(1), // skip initial value
       takeUntil(this.destructionSubject),
-    ).subscribe(abAuto => {
-      const text = "Audio Bitrate selection changed to " +
-        (abAuto ? "automatic" : "manual");
+    ).subscribe(isLocked => {
+      const text = "Audio quality selection changed to " +
+        (isLocked ? "manual" : "automatic");
       this.addLog(text);
     });
 
