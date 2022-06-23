@@ -140,7 +140,13 @@ export default class Adaptation {
                                                 { type: this.type });
       const shouldAdd =
         isNullOrUndefined(representationFilter) ||
-        representationFilter(representation,
+        representationFilter({ id: representation.id,
+                               bitrate: representation.bitrate,
+                               codec: representation.codec,
+                               height: representation.height,
+                               width: representation.width,
+                               frameRate: representation.frameRate,
+                               hdrInfo: representation.hdrInfo },
                              { bufferType: this.type,
                                language: this.language,
                                normalizedLanguage: this.normalizedLanguage,
