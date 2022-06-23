@@ -37,7 +37,6 @@ import type {
   IAvailableVideoTrack,
   IConstructorOptions,
   ILoadVideoOptions,
-  IRepresentation,
   ITextTrack,
   IVideoRepresentation,
   IVideoTrack
@@ -93,13 +92,13 @@ export interface IBufferedData {
       isAudioDescription?: boolean | undefined;
       isClosedCaption?: boolean | undefined;
     };
-    representation: IRepresentation;
+    representation: IAudioRepresentation | IVideoRepresentation;
   };
 }
 
 export interface IPlayerModuleState {
   audioRepresentation: IAudioRepresentation | undefined | null;
-  audioBitrateAuto: boolean;
+  audioRepresentationsLocked: boolean;
   autoPlayBlocked: boolean;
   availableAudioTracks: IAvailableAudioTrack[];
   availableSubtitles: IAvailableTextTrack[];
@@ -135,7 +134,7 @@ export interface IPlayerModuleState {
   playbackRate: number;
   subtitle: ITextTrack | undefined | null;
   videoRepresentation: IVideoRepresentation | undefined | null;
-  videoBitrateAuto: boolean;
+  videoRepresentationsLocked: boolean;
   videoTrack: IVideoTrack | undefined | null;
   volume: number;
   wallClockDiff: number | undefined;
@@ -151,7 +150,7 @@ export interface IPlayerModuleState {
 const PlayerModule = declareModule(
   (): IPlayerModuleState => ({
     audioRepresentation: undefined,
-    audioBitrateAuto: true,
+    audioRepresentationsLocked: false,
     autoPlayBlocked: false,
     availableAudioTracks: [],
     availableSubtitles: [],
@@ -183,7 +182,7 @@ const PlayerModule = declareModule(
     playbackRate: 1,
     subtitle: undefined,
     videoRepresentation: undefined,
-    videoBitrateAuto: true,
+    videoRepresentationsLocked: false,
     videoTrack: undefined,
     volume: 1,
     wallClockDiff: undefined,
@@ -291,14 +290,42 @@ const PlayerModule = declareModule(
         player.unMute();
       },
 
-      setAudioBitrate(bitrate: number | undefined) {
-        player.setAudioBitrate(bitrate || -1);
-        state.update("audioBitrateAuto", bitrate === undefined);
+      lockVideoRepresentations(reps: IVideoRepresentation[]) {
+        player.lockVideoRepresentations({
+          representations: reps.map(r => r.id),
+          switchingMode: "reload",
+        });
+        state.update(
+          "videoRepresentationsLocked",
+          player.getLockedVideoRepresentations() !== null
+        );
       },
 
-      setVideoBitrate(bitrate: number | undefined) {
-        player.setVideoBitrate(bitrate || -1);
-        state.update("videoBitrateAuto", bitrate === undefined);
+      unlockVideoRepresentations: () => {
+        player.unlockVideoRepresentations();
+        state.update(
+          "videoRepresentationsLocked",
+          player.getLockedVideoRepresentations() !== null
+        );
+      },
+
+      lockAudioRepresentations(reps: IAudioRepresentation[]) {
+        player.lockAudioRepresentations({
+          representations: reps.map(r => String(r.id)),
+          switchingMode: "reload",
+        });
+        state.update(
+          "audioRepresentationsLocked",
+          player.getLockedAudioRepresentations() !== null
+        );
+      },
+
+      unlockAudioRepresentations: () => {
+        player.unlockAudioRepresentations();
+        state.update(
+          "audioRepresentationsLocked",
+          player.getLockedAudioRepresentations() !== null
+        );
       },
 
       setAudioTrack(track: IAudioTrack) {
@@ -306,7 +333,7 @@ const PlayerModule = declareModule(
       },
 
       setVideoTrack(track: IVideoTrack) {
-        player.setVideoTrack(track.id as string);
+        player.setVideoTrack(track.id);
       },
 
       disableVideoTrack() {
