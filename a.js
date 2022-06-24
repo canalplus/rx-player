@@ -274,3 +274,100 @@ function getAvailableVideoRepresentations() {
 // singleLicensePer: "periods"
 
 // test Samsung
+
+
+// Example: Know when the video Representations lock is enabled / disabled for
+// the Period currently being played
+
+let areVideoRepresentationsLocked = false;
+
+function updateAreVideoRepresentationsLocked() {
+ areVideoRepresentationsLocked =
+   rxPlayer.getLockedVideoRepresentations() !== null;
+}
+
+// Update it each time the video lock for the current Period is "broken"
+rxPlayer.addEventListener("brokenRepresentationsLock", (info) => {
+  const currentPeriod = rxPlayer.getCurrentPeriod();
+  if (
+    info.trackType === "video" &&
+    currentPeriod !== null && info.period.id === currentPeriod.id
+  ) {
+    updateAreVideoRepresentationsLocked();
+  }
+});
+
+// Update it each time the video track for the current Period changes, whether
+// it was done explicitely (through setVideoTrack/disableVideoTrack),
+// implicitely (the RxPlayer automatically switched by itself) or just because
+// a new Period is now being played.
+rxPlayer.addEventListener("videoTrackChange", () => {
+  updateAreVideoRepresentationsLocked();
+});
+
+// And update it each time the lock API are called for the current Period
+function lockVideoRepresentations(reps) {
+ rxPlayer.lockVideoRepresentations(reps);
+ updateAreVideoRepresentationsLocked();
+}
+function unlockVideoRepresentations() {
+ rxPlayer.unlockVideoRepresentations();
+ updateAreVideoRepresentationsLocked();
+}
+
+
+// Example: Know when the video Representations lock is enabled / disabled for
+// any Period
+
+// First let's consider a given period `id` named `PERIOD_ID`
+const PERIOD_ID = "<SOME_PERIOD_ID>";
+
+let areVideoRepresentationsLockedForPeriod = false;
+
+function updateAreVideoRepresentationsLocked() {
+ areVideoRepresentationsLockedForPeriod =
+   rxPlayer.getLockedVideoRepresentations(PERIOD_ID) !== null;
+}
+
+// Update it each time the video lock for the corresponding Period is "broken"
+rxPlayer.addEventListener("brokenRepresentationsLock", (info) => {
+  if (info.trackType === "video" && info.period.id === PERIOD_ID) {
+    updateAreVideoRepresentationsLocked();
+  }
+});
+
+// Update it each time the video track is voluntarly changed/disabled for that Period
+function setVideoTrackForPeriod(periodId, trackId) {
+  rxPlayer.setVideoTrack({ periodId, trackId });
+  if (periodId === PERIOD_ID) {
+    updateAreVideoRepresentationsLocked();
+  }
+}
+function disableVideoTrackForPeriod() {
+  rxPlayer.setVideoTrack({ periodId, trackId });
+  if (periodId === PERIOD_ID) {
+    updateAreVideoRepresentationsLocked();
+  }
+}
+
+// Update it each time, the RxPlayer decides to automatically change the video
+// track for that Period (extremely rare)
+rxPlayer.addEventListener("autoTrackSwitch", (info) => {
+  if (info.trackType === "video" && info.period.id === PERIOD_ID) {
+    updateAreVideoRepresentationsLocked();
+  }
+});
+
+// And update it each time the lock API are called for that Period
+function lockVideoRepresentations(periodId, representations) {
+ rxPlayer.lockVideoRepresentations({ periodId, representations });
+ if (periodId === PERIOD_ID) {
+  updateAreVideoRepresentationsLocked();
+ }
+}
+function unlockVideoRepresentations(periodId) {
+ rxPlayer.unlockVideoRepresentations(periodId);
+ if (periodId === PERIOD_ID) {
+  updateAreVideoRepresentationsLocked();
+ }
+}
