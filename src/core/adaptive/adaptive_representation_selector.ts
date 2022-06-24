@@ -294,6 +294,9 @@ function getEstimateReference(
       currentBufferBasedEstimate = bufferBasedChooser.getEstimate(observation);
       updateEstimate();
     };
+    innerCancellationSignal.register(() => {
+      onAddedSegment = noop;
+    });
 
     minAutoBitrate.onUpdate(updateEstimate, { clearSignal: innerCancellationSignal });
     maxAutoBitrate.onUpdate(updateEstimate, { clearSignal: innerCancellationSignal });
