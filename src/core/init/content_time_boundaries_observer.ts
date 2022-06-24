@@ -73,7 +73,7 @@ export default function ContentTimeBoundariesObserver(
 
   // trigger warnings when the wanted time is before or after the manifest's
   // segments
-  const outOfManifest$ = playbackObserver.observe(true).pipe(
+  const outOfManifest$ = playbackObserver.getReference().asObservable().pipe(
     filterMap<IContentTimeObserverPlaybackObservation, IWarningEvent, null>((
       { position }
     ) => {

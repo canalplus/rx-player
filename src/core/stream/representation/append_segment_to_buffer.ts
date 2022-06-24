@@ -61,7 +61,7 @@ export default function appendSegmentToBuffer<T>(
         throw new MediaError("BUFFER_APPEND_ERROR", reason);
       }
 
-      return playbackObserver.observe(true).pipe(
+      return playbackObserver.getReference().asObservable().pipe(
         take(1),
         mergeMap((observation) => {
           const currentPos = observation.position.pending ??

@@ -158,7 +158,7 @@ export default function initializeDirectfileContent({
   // through a throwing Observable.
   const mediaError$ = throwOnMediaError(mediaElement);
 
-  const observation$ = playbackObserver.observe(true);
+  const observation$ = playbackObserver.getReference().asObservable();
 
   // Set the speed set by the user on the media element while pausing a
   // little longer while the buffer is empty.

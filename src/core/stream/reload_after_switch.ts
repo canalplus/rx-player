@@ -62,7 +62,7 @@ export default function reloadAfterSwitch(
   // It can happen when `reloadAfterSwitch` is called as a side-effect of the
   // same event that triggers the playback observation to be emitted.
   return nextTickObs().pipe(
-    mergeMap(() => playbackObserver.observe(true)),
+    mergeMap(() => playbackObserver.getReference().asObservable()),
     map((observation) => {
       const currentTime = playbackObserver.getCurrentTime();
       const pos = currentTime + deltaPos;

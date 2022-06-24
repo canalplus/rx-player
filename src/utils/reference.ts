@@ -101,8 +101,8 @@ export interface ISharedReference<T> {
   onUpdate(
     cb : (val : T) => void,
     options? : {
-      clearSignal?: CancellationSignal;
-      emitCurrentValue?: boolean;
+      clearSignal?: CancellationSignal | undefined;
+      emitCurrentValue?: boolean | undefined;
     },
   ) : void;
   /**
@@ -217,10 +217,10 @@ export function createSharedReference<T>(initialValue : T) : ISharedReference<T>
     setValue(newVal : T) : void {
       if (isFinished) {
         if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
-          throw new Error("Finished shared references cannot be updated");
-        } else {
-          return;
+          /* eslint-disable-next-line no-console */
+          console.error("Finished shared references cannot be updated");
         }
+        return;
       }
       value = newVal;
 
@@ -344,10 +344,12 @@ export function createSharedReference<T>(initialValue : T) : ISharedReference<T>
           if (!cbObj.hasBeenCleared) {
             cbObj.complete();
           }
+          cbObj.hasBeenCleared = true;
         } catch (_) {
           /* nothing */
         }
       }
+      cbs.length = 0;
     },
   };
 }

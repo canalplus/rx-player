@@ -166,7 +166,7 @@ export default function RepresentationStream<TSegmentDataType>({
 
   /** Observable emitting the stream "status" and filling `lastSegmentQueue`. */
   const status$ = observableCombineLatest([
-    playbackObserver.observe(true),
+    playbackObserver.getReference().asObservable(),
     bufferGoal$,
     maxBufferSize$,
     terminate$.pipe(take(1),

@@ -125,7 +125,7 @@ export default function createMediaSourceLoader(
                                                           startTime: initialTime,
                                                           mustAutoPlay: autoPlay });
 
-    const observation$ = playbackObserver.observe(true);
+    const observation$ = playbackObserver.getReference().asObservable();
     const streamEvents$ = initialPlayPerformed.asObservable().pipe(
       filter((hasPlayed) => hasPlayed),
       mergeMap(() => streamEventsEmitter(manifest, mediaElement, observation$)));

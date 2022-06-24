@@ -83,7 +83,7 @@ export function waitUntilPlayable(
 
 /**
  * Try to play content then handle autoplay errors.
- * @param {HTMLMediaElement} - mediaElement
+ * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
 function autoPlay(
@@ -161,12 +161,12 @@ export default function initialSeekAndPlay(
   const seekAndPlay$ = seek$.pipe(
     mergeMap(() : Observable<IWarningEvent | undefined> => {
       if (!shouldValidateMetadata() || mediaElement.duration > 0) {
-        return waitUntilPlayable(playbackObserver.observe(true));
+        return waitUntilPlayable(playbackObserver.getReference().asObservable());
       } else {
         const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA",
                                      "Cannot load automatically: your browser " +
                                      "falsely announced having loaded the content.");
-        return waitUntilPlayable(playbackObserver.observe(true))
+        return waitUntilPlayable(playbackObserver.getReference().asObservable())
           .pipe(startWith(EVENTS.warning(error)));
       }
     }),

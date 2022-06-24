@@ -142,7 +142,7 @@ export default function StreamOrchestrator(
                                 Infinity;
       return BufferGarbageCollector({
         segmentBuffer,
-        currentTime$: playbackObserver.observe(true)
+        currentTime$: playbackObserver.getReference().asObservable()
           .pipe(map(o => o.position.pending ?? o.position.last)),
         maxBufferBehind$: maxBufferBehind.asObservable().pipe(
           map(val => Math.min(val, defaultMaxBehind))),
@@ -264,7 +264,8 @@ export default function StreamOrchestrator(
 
     // Restart the current Stream when the wanted time is in another period
     // than the ones already considered
-    const restartStreamsWhenOutOfBounds$ = playbackObserver.observe(true).pipe(
+    const observation$ = playbackObserver.getReference().asObservable();
+    const restartStreamsWhenOutOfBounds$ = observation$.pipe(
       filterMap<
         IStreamOrchestratorPlaybackObservation,
         Period,
@@ -329,7 +330,7 @@ export default function StreamOrchestrator(
           // to reduce the risk of race conditions where the next observation
           // was going to be emitted synchronously.
           nextTickObs().pipe(ignoreElements()),
-          playbackObserver.observe(true).pipe(
+          playbackObserver.getReference().asObservable().pipe(
             take(1),
             mergeMap((observation) => {
               const shouldAutoPlay = !(observation.paused.pending ??
@@ -399,7 +400,7 @@ export default function StreamOrchestrator(
     const destroyNextStreams$ = new Subject<void>();
 
     // Emits when the current position goes over the end of the current Stream.
-    const endOfCurrentStream$ = playbackObserver.observe(true)
+    const endOfCurrentStream$ = playbackObserver.getReference().asObservable()
       .pipe(filter(({ position }) =>
         basePeriod.end != null &&
                     (position.pending ?? position.last) >= basePeriod.end));

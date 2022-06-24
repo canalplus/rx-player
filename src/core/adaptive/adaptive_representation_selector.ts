@@ -268,14 +268,8 @@ function getEstimateReference(
      */
     const guessBasedChooser = new GuessBasedChooser(scoreCalculator, prevEstimate);
 
-    let lastPlaybackObservation : IRepresentationEstimatorPlaybackObservation;
-
     // get initial observation for initial estimate
-    const unregisterInitial = playbackObserver.listen(obs => {
-      lastPlaybackObservation = obs;
-    }, { includeLastObservation: true });
-    unregisterInitial(); // The initial is emitted synchronously, we can now remove it
-                         // TODO cleaner playbackObserver.getLast() or something?
+    let lastPlaybackObservation = playbackObserver.getReference().getValue();
 
     /** Reference through which estimates are emitted. */
     const innerEstimateRef = createSharedReference<IABREstimate>(getCurrentEstimate());

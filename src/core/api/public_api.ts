@@ -170,7 +170,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /** Current version of the RxPlayer.  */
   public readonly version : string;
 
-  /** Media element attached to the RxPlayer.  */
+  /**
+   * Media element attached to the RxPlayer.
+   * Set to `null` when the RxPlayer is disposed.
+   */
   public videoElement : HTMLMediaElement|null; // null on dispose
 
   /** Logger the RxPlayer uses.  */
@@ -720,6 +723,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       lowLatencyMode,
     });
 
+    currentContentCanceller.signal.register(() => {
+      playbackObserver.stop();
+    });
+
     /** Emit playback events. */
     let playback$ : Connectable<IInitEvent>;
 
@@ -971,7 +978,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             share());
 
     /** Emit when the media element emits a "seeking" event. */
-    const observation$ = playbackObserver.observe(true);
+    const observation$ = playbackObserver.getReference().asObservable();
 
     const stateChangingEvent$ = observation$.pipe(filter(o => {
       return o.event === "seeking" || o.event === "ended" ||
@@ -2325,8 +2332,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     // DRM-related clean-up
     const freeUpContentLock = () => {
-      log.debug("Unlocking `contentLock`. Next content can begin.");
-      this._priv_contentLock.setValue(false);
+      if (this.videoElement !== null) { // If not disposed
+        log.debug("Unlocking `contentLock`. Next content can begin.");
+        this._priv_contentLock.setValue(false);
+      }
     };
 
     if (!isNullOrUndefined(this.videoElement)) {
