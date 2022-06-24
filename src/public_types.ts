@@ -834,16 +834,11 @@ export interface IBrokenRepresentationsLockContext {
   trackType : ITrackType;
 }
 
-export interface ILostVideoTrackEventPayload {
+export interface IAutoTrackSwitchEventPayload {
   period : IPeriod;
-}
-
-export interface ILostAudioTrackEventPayload {
-  period : IPeriod;
-}
-
-export interface ILostTextTrackEventPayload {
-  period : IPeriod;
+  trackType : IAdaptationType;
+  reason : "missing" |
+           string;
 }
 
 export interface ILockedVideoRepresentationsProperties {
