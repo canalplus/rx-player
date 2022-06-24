@@ -62,9 +62,7 @@ import {
   ILoadVideoOptions,
   ILockedAudioRepresentationsProperties,
   ILockedVideoRepresentationsProperties,
-  ILostAudioTrackEventPayload,
-  ILostTextTrackEventPayload,
-  ILostVideoTrackEventPayload,
+  IAutoTrackSwitchEventPayload,
   IPeriod,
   IPeriodChangeEvent,
   IPlayerError,
@@ -2290,14 +2288,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     contentInfos.tracksStore.addEventListener("brokenRepresentationsLock", (e) => {
       this.trigger("brokenRepresentationsLock", e);
     });
-    contentInfos.tracksStore.addEventListener("lostVideoTrack", (e) => {
-      this.trigger("lostVideoTrack", e);
-    });
-    contentInfos.tracksStore.addEventListener("lostAudioTrack", (e) => {
-      this.trigger("lostAudioTrack", e);
-    });
-    contentInfos.tracksStore.addEventListener("lostTextTrack", (e) => {
-      this.trigger("lostTextTrack", e);
+    contentInfos.tracksStore.addEventListener("autoTrackSwitch", (e) => {
+      this.trigger("autoTrackSwitch", e);
     });
 
     contentInfos.tracksStore.updatePeriodList(manifest);
@@ -2787,7 +2779,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null ||
         this._priv_contentInfos.tracksStore === null)
     {
-      log.warn("API: Trying to call TracksStore method while not created");
+      log.warn("API: Trying to call track API too soon");
       return defaultValue;
     }
     const { tracksStore } = this._priv_contentInfos;
@@ -2830,9 +2822,7 @@ interface IPublicAPIEvent {
   pause: null;
   newAvailablePeriods : IPeriod[];
   brokenRepresentationsLock : IBrokenRepresentationsLockContext;
-  lostVideoTrack : ILostVideoTrackEventPayload;
-  lostAudioTrack : ILostAudioTrackEventPayload;
-  lostTextTrack : ILostTextTrackEventPayload;
+  autoTrackSwitch : IAutoTrackSwitchEventPayload;
   seeking : null;
   seeked : null;
   streamEvent : IStreamEvent;
