@@ -42,7 +42,10 @@ import Manifest, {
 import { IAudioTrackSwitchingMode } from "../../../public_types";
 import objectAssign from "../../../utils/object_assign";
 import { getLeftSizeOfRange } from "../../../utils/ranges";
-import { IReadOnlySharedReference } from "../../../utils/reference";
+import createSharedReference, {
+  IReadOnlySharedReference,
+} from "../../../utils/reference";
+import { CancellationSignal } from "../../../utils/task_canceller";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import { IRepresentationEstimator } from "../../adaptive";
 import { IReadOnlyPlaybackObserver } from "../../api";
@@ -357,18 +360,34 @@ function createAdaptationStreamPlaybackObserver(
   initialPlaybackObserver : IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>,
   segmentBuffer : SegmentBuffer
 ) : IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation> {
-  return initialPlaybackObserver.deriveReadOnlyObserver(
-    (observation$) => observation$.pipe(map(mapObservation)),
-    mapObservation
-  );
+  return initialPlaybackObserver.deriveReadOnlyObserver(function transform(
+    observationRef : IReadOnlySharedReference<IPeriodStreamPlaybackObservation>,
+    cancellationSignal : CancellationSignal
+  ) : IReadOnlySharedReference<IAdaptationStreamPlaybackObservation> {
+    const newRef = createSharedReference(constructAdaptationStreamPlaybackObservation());
 
-  function mapObservation(
-    baseObservation : IPeriodStreamPlaybackObservation
-  ) : IAdaptationStreamPlaybackObservation {
-    const buffered = segmentBuffer.getBufferedRanges();
-    return objectAssign({},
-                        baseObservation,
-                        { bufferGap: getLeftSizeOfRange(buffered,
-                                                        baseObservation.position.last) });
-  }
+    observationRef.onUpdate(emitAdaptationStreamPlaybackObservation, {
+      clearSignal: cancellationSignal,
+      emitCurrentValue: false,
+    });
+
+    cancellationSignal.register(() => {
+      newRef.finish();
+    });
+
+    return newRef;
+
+    function constructAdaptationStreamPlaybackObservation(
+    ) : IAdaptationStreamPlaybackObservation {
+      const baseObservation = observationRef.getValue();
+      const buffered = segmentBuffer.getBufferedRanges();
+      const bufferGap = getLeftSizeOfRange(buffered, baseObservation.position.last);
+      return objectAssign({}, baseObservation, { bufferGap });
+    }
+
+    function emitAdaptationStreamPlaybackObservation() {
+      newRef.setValue(constructAdaptationStreamPlaybackObservation());
+    }
+  });
+
 }
