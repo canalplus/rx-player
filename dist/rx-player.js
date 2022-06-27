@@ -11035,7 +11035,7 @@ function waitUntilPlayable(observation$) {
 }
 /**
  * Try to play content then handle autoplay errors.
- * @param {HTMLMediaElement} - mediaElement
+ * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
 
@@ -11078,10 +11078,10 @@ function initialSeekAndPlay(_ref2) {
   }));
   var seekAndPlay$ = seek$.pipe((0,mergeMap/* mergeMap */.z)(function () {
     if (!(0,should_validate_metadata/* default */.Z)() || mediaElement.duration > 0) {
-      return waitUntilPlayable(playbackObserver.observe(true));
+      return waitUntilPlayable(playbackObserver.getReference().asObservable());
     } else {
       var error = new media_error/* default */.Z("MEDIA_ERR_NOT_LOADED_METADATA", "Cannot load automatically: your browser " + "falsely announced having loaded the content.");
-      return waitUntilPlayable(playbackObserver.observe(true)).pipe((0,startWith/* startWith */.O)(events_generators/* default.warning */.Z.warning(error)));
+      return waitUntilPlayable(playbackObserver.getReference().asObservable()).pipe((0,startWith/* startWith */.O)(events_generators/* default.warning */.Z.warning(error)));
     }
   }), (0,mergeMap/* mergeMap */.z)(function (evt) {
     if (evt !== undefined) {
@@ -11342,7 +11342,7 @@ function initializeDirectfileContent(_ref) {
   // through a throwing Observable.
 
   var mediaError$ = (0,throw_on_media_error/* default */.Z)(mediaElement);
-  var observation$ = playbackObserver.observe(true); // Set the speed set by the user on the media element while pausing a
+  var observation$ = playbackObserver.getReference().asObservable(); // Set the speed set by the user on the media element while pausing a
   // little longer while the buffer is empty.
 
   var playbackRate$ = (0,update_playback_rate/* default */.Z)(mediaElement, speed, observation$).pipe((0,ignoreElements/* ignoreElements */.l)());
@@ -11667,7 +11667,7 @@ function StallAvoider(playbackObserver, manifest, lockedStream$, discontinuityUp
    * order (first ordered by Period's start, then by bufferType in any order.
    */
 
-  var discontinuitiesStore$ = discontinuityUpdate$.pipe((0,withLatestFrom/* withLatestFrom */.M)(playbackObserver.observe(true)), (0,scan/* scan */.R)(function (discontinuitiesStore, _ref) {
+  var discontinuitiesStore$ = discontinuityUpdate$.pipe((0,withLatestFrom/* withLatestFrom */.M)(playbackObserver.getReference().asObservable()), (0,scan/* scan */.R)(function (discontinuitiesStore, _ref) {
     var evt = _ref[0],
         observation = _ref[1];
     return updateDiscontinuitiesStore(discontinuitiesStore, evt, observation);
@@ -11705,7 +11705,7 @@ function StallAvoider(playbackObserver, manifest, lockedStream$, discontinuityUp
    * Period handled by that stream to unlock the situation.
    */
 
-  var unlock$ = lockedStream$.pipe((0,withLatestFrom/* withLatestFrom */.M)(playbackObserver.observe(true)), (0,tap/* tap */.b)(function (_ref2) {
+  var unlock$ = lockedStream$.pipe((0,withLatestFrom/* withLatestFrom */.M)(playbackObserver.getReference().asObservable()), (0,tap/* tap */.b)(function (_ref2) {
     var lockedStreamEvt = _ref2[0],
         observation = _ref2[1];
 
@@ -11732,7 +11732,7 @@ function StallAvoider(playbackObserver, manifest, lockedStream$, discontinuityUp
 
   /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
   (0,ignoreElements/* ignoreElements */.l)());
-  var stall$ = playbackObserver.observe(true).pipe((0,withLatestFrom/* withLatestFrom */.M)(discontinuitiesStore$), (0,map/* map */.U)(function (_ref3) {
+  var stall$ = playbackObserver.getReference().asObservable().pipe((0,withLatestFrom/* withLatestFrom */.M)(discontinuitiesStore$), (0,map/* map */.U)(function (_ref3) {
     var observation = _ref3[0],
         discontinuitiesStore = _ref3[1];
     var buffered = observation.buffered,
@@ -41424,9 +41424,9 @@ function createSharedReference(initialValue) {
      */
     setValue: function setValue(newVal) {
       if (isFinished) {
-        if (false) {} else {
-          return;
-        }
+        if (false) {}
+
+        return;
       }
 
       value = newVal;
@@ -41564,10 +41564,14 @@ function createSharedReference(initialValue) {
           if (!cbObj.hasBeenCleared) {
             cbObj.complete();
           }
+
+          cbObj.hasBeenCleared = true;
         } catch (_) {
           /* nothing */
         }
       }
+
+      cbs.length = 0;
     }
   };
 }
@@ -50812,17 +50816,9 @@ function getEstimateReference(_ref, stopAllEstimates) {
      * Only used in very specific scenarios.
      */
 
-    var guessBasedChooser = new GuessBasedChooser(scoreCalculator, prevEstimate);
-    var lastPlaybackObservation; // get initial observation for initial estimate
+    var guessBasedChooser = new GuessBasedChooser(scoreCalculator, prevEstimate); // get initial observation for initial estimate
 
-    var unregisterInitial = playbackObserver.listen(function (obs) {
-      lastPlaybackObservation = obs;
-    }, {
-      includeLastObservation: true
-    });
-    unregisterInitial(); // The initial is emitted synchronously, we can now remove it
-    // TODO cleaner playbackObserver.getLast() or something?
-
+    var lastPlaybackObservation = playbackObserver.getReference().getValue();
     /** Reference through which estimates are emitted. */
 
     var innerEstimateRef = (0,reference/* default */.ZP)(getCurrentEstimate()); // subscribe to subsequent playback observations
@@ -51343,7 +51339,7 @@ var link_drm_and_content = __webpack_require__(9607);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/throwError.js
 var throwError = __webpack_require__(3610);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/interval.js
-var observable_interval = __webpack_require__(6697);
+var interval = __webpack_require__(6697);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/tap.js
 var tap = __webpack_require__(2006);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/fromEvent.js
@@ -51468,7 +51464,7 @@ var AudioVideoSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
     // SourceBuffer is currently updating.
 
 
-    (0,observable_interval/* interval */.F)(SOURCE_BUFFER_FLUSHING_INTERVAL).pipe((0,tap/* tap */.b)(function () {
+    (0,interval/* interval */.F)(SOURCE_BUFFER_FLUSHING_INTERVAL).pipe((0,tap/* tap */.b)(function () {
       return _this._flush();
     }), (0,takeUntil/* takeUntil */.R)(_this._destroy$)).subscribe();
     (0,fromEvent/* fromEvent */.R)(_this._sourceBuffer, "error").pipe((0,tap/* tap */.b)(function (err) {
@@ -52938,7 +52934,7 @@ function reloadAfterSwitch(period, bufferType, playbackObserver, deltaPos) {
   // It can happen when `reloadAfterSwitch` is called as a side-effect of the
   // same event that triggers the playback observation to be emitted.
   return nextTickObs().pipe((0,mergeMap/* mergeMap */.z)(function () {
-    return playbackObserver.observe(true);
+    return playbackObserver.getReference().asObservable();
   }), (0,map/* map */.U)(function (observation) {
     var _a, _b;
 
@@ -54523,7 +54519,7 @@ function appendSegmentToBuffer(playbackObserver, segmentBuffer, dataInfos) {
       throw new media_error/* default */.Z("BUFFER_APPEND_ERROR", reason);
     }
 
-    return playbackObserver.observe(true).pipe((0,take/* take */.q)(1), (0,mergeMap/* mergeMap */.z)(function (observation) {
+    return playbackObserver.getReference().asObservable().pipe((0,take/* take */.q)(1), (0,mergeMap/* mergeMap */.z)(function (observation) {
       var _a;
 
       var currentPos = (_a = observation.position.pending) !== null && _a !== void 0 ? _a : observation.position.last;
@@ -54804,7 +54800,7 @@ function RepresentationStream(_ref) {
   var queue$ = downloadingQueue.start().pipe((0,mergeMap/* mergeMap */.z)(onQueueEvent));
   /** Observable emitting the stream "status" and filling `lastSegmentQueue`. */
 
-  var status$ = combineLatest([playbackObserver.observe(true), bufferGoal$, maxBufferSize$, terminate$.pipe((0,take/* take */.q)(1), (0,startWith/* startWith */.O)(null)), reCheckNeededSegments$.pipe((0,startWith/* startWith */.O)(undefined))]).pipe((0,withLatestFrom/* withLatestFrom */.M)(fastSwitchThreshold$), (0,mergeMap/* mergeMap */.z)(function (_ref2) {
+  var status$ = combineLatest([playbackObserver.getReference().asObservable(), bufferGoal$, maxBufferSize$, terminate$.pipe((0,take/* take */.q)(1), (0,startWith/* startWith */.O)(null)), reCheckNeededSegments$.pipe((0,startWith/* startWith */.O)(undefined))]).pipe((0,withLatestFrom/* withLatestFrom */.M)(fastSwitchThreshold$), (0,mergeMap/* mergeMap */.z)(function (_ref2) {
     var _ref2$ = _ref2[0],
         observation = _ref2$[0],
         bufferGoal = _ref2$[1],
@@ -55456,7 +55452,7 @@ function createEmptyAdaptationStream(playbackObserver, wantedBufferAhead, buffer
   var period = content.period;
   var hasFinishedLoading = false;
   var wantedBufferAhead$ = wantedBufferAhead.asObservable();
-  var observation$ = playbackObserver.observe(true);
+  var observation$ = playbackObserver.getReference().asObservable();
   return combineLatest([observation$, wantedBufferAhead$]).pipe((0,mergeMap/* mergeMap */.z)(function (_ref) {
     var observation = _ref[0],
         wba = _ref[1];
@@ -55846,6 +55842,7 @@ function getFirstSegmentAfterPeriod(inventory, period) {
 
 
 
+
 /**
  * Create single PeriodStream Observable:
  *   - Lazily create (or reuse) a SegmentBuffer for the given type.
@@ -56042,16 +56039,30 @@ function getFirstDeclaredMimeType(adaptation) {
 
 
 function createAdaptationStreamPlaybackObserver(initialPlaybackObserver, segmentBuffer) {
-  return initialPlaybackObserver.deriveReadOnlyObserver(function (observation$) {
-    return observation$.pipe((0,map/* map */.U)(mapObservation));
-  }, mapObservation);
-
-  function mapObservation(baseObservation) {
-    var buffered = segmentBuffer.getBufferedRanges();
-    return (0,object_assign/* default */.Z)({}, baseObservation, {
-      bufferGap: (0,ranges/* getLeftSizeOfRange */.L7)(buffered, baseObservation.position.last)
+  return initialPlaybackObserver.deriveReadOnlyObserver(function transform(observationRef, cancellationSignal) {
+    var newRef = (0,reference/* default */.ZP)(constructAdaptationStreamPlaybackObservation());
+    observationRef.onUpdate(emitAdaptationStreamPlaybackObservation, {
+      clearSignal: cancellationSignal,
+      emitCurrentValue: false
     });
-  }
+    cancellationSignal.register(function () {
+      newRef.finish();
+    });
+    return newRef;
+
+    function constructAdaptationStreamPlaybackObservation() {
+      var baseObservation = observationRef.getValue();
+      var buffered = segmentBuffer.getBufferedRanges();
+      var bufferGap = (0,ranges/* getLeftSizeOfRange */.L7)(buffered, baseObservation.position.last);
+      return (0,object_assign/* default */.Z)({}, baseObservation, {
+        bufferGap: bufferGap
+      });
+    }
+
+    function emitAdaptationStreamPlaybackObservation() {
+      newRef.setValue(constructAdaptationStreamPlaybackObservation());
+    }
+  });
 }
 ;// CONCATENATED MODULE: ./src/core/stream/period/index.ts
 /**
@@ -56432,7 +56443,7 @@ function StreamOrchestrator(content, playbackObserver, representationEstimator, 
     var defaultMaxAhead = MAXIMUM_MAX_BUFFER_AHEAD[bufferType] != null ? MAXIMUM_MAX_BUFFER_AHEAD[bufferType] : Infinity;
     return BufferGarbageCollector({
       segmentBuffer: segmentBuffer,
-      currentTime$: playbackObserver.observe(true).pipe((0,map/* map */.U)(function (o) {
+      currentTime$: playbackObserver.getReference().asObservable().pipe((0,map/* map */.U)(function (o) {
         var _a;
 
         return (_a = o.position.pending) !== null && _a !== void 0 ? _a : o.position.last;
@@ -56550,7 +56561,8 @@ function StreamOrchestrator(content, playbackObserver, representationEstimator, 
     // than the ones already considered
 
 
-    var restartStreamsWhenOutOfBounds$ = playbackObserver.observe(true).pipe((0,filter_map/* default */.Z)(function (_ref2) {
+    var observation$ = playbackObserver.getReference().asObservable();
+    var restartStreamsWhenOutOfBounds$ = observation$.pipe((0,filter_map/* default */.Z)(function (_ref2) {
       var position = _ref2.position;
 
       var _a, _b;
@@ -56611,7 +56623,7 @@ function StreamOrchestrator(content, playbackObserver, representationEstimator, 
       }).concat([// Schedule micro task before checking the last playback observation
       // to reduce the risk of race conditions where the next observation
       // was going to be emitted synchronously.
-      nextTickObs().pipe((0,ignoreElements/* ignoreElements */.l)()), playbackObserver.observe(true).pipe((0,take/* take */.q)(1), (0,mergeMap/* mergeMap */.z)(function (observation) {
+      nextTickObs().pipe((0,ignoreElements/* ignoreElements */.l)()), playbackObserver.getReference().asObservable().pipe((0,take/* take */.q)(1), (0,mergeMap/* mergeMap */.z)(function (observation) {
         var _a;
 
         var shouldAutoPlay = !((_a = observation.paused.pending) !== null && _a !== void 0 ? _a : playbackObserver.getIsPaused());
@@ -56668,7 +56680,7 @@ function StreamOrchestrator(content, playbackObserver, representationEstimator, 
 
     var destroyNextStreams$ = new Subject/* Subject */.x(); // Emits when the current position goes over the end of the current Stream.
 
-    var endOfCurrentStream$ = playbackObserver.observe(true).pipe((0,filter/* filter */.h)(function (_ref4) {
+    var endOfCurrentStream$ = playbackObserver.getReference().asObservable().pipe((0,filter/* filter */.h)(function (_ref4) {
       var position = _ref4.position;
 
       var _a;
@@ -56820,7 +56832,7 @@ function ContentTimeBoundariesObserver(manifest, streams, playbackObserver) {
   var maximumPositionCalculator = new MaximumPositionCalculator(manifest); // trigger warnings when the wanted time is before or after the manifest's
   // segments
 
-  var outOfManifest$ = playbackObserver.observe(true).pipe((0,filter_map/* default */.Z)(function (_ref) {
+  var outOfManifest$ = playbackObserver.getReference().asObservable().pipe((0,filter_map/* default */.Z)(function (_ref) {
     var position = _ref.position;
 
     var _a;
@@ -57048,7 +57060,7 @@ function getLastPositionFromAdaptation(adaptation) {
  * @param {Object} manifest
  * @param {Object} playbackObserver
  * @param {Object} args
- * @returns {Observable}
+ * @returns {Object}
  */
 
 function createStreamPlaybackObserver(manifest, playbackObserver, _ref) {
@@ -57057,10 +57069,24 @@ function createStreamPlaybackObserver(manifest, playbackObserver, _ref) {
       initialSeekPerformed = _ref.initialSeekPerformed,
       speed = _ref.speed,
       startTime = _ref.startTime;
-  return playbackObserver.deriveReadOnlyObserver(function mapObservable(observation$) {
-    return combineLatest([observation$, speed.asObservable()]).pipe((0,map/* map */.U)(function (_ref2) {
-      var observation = _ref2[0],
-          lastSpeed = _ref2[1];
+  return playbackObserver.deriveReadOnlyObserver(function transform(observationRef, cancellationSignal) {
+    var newRef = (0,reference/* default */.ZP)(constructStreamPlaybackObservation());
+    speed.onUpdate(emitStreamPlaybackObservation, {
+      clearSignal: cancellationSignal,
+      emitCurrentValue: false
+    });
+    observationRef.onUpdate(emitStreamPlaybackObservation, {
+      clearSignal: cancellationSignal,
+      emitCurrentValue: false
+    });
+    cancellationSignal.register(function () {
+      newRef.finish();
+    });
+    return newRef;
+
+    function constructStreamPlaybackObservation() {
+      var observation = observationRef.getValue();
+      var lastSpeed = speed.getValue();
       var pendingPosition;
 
       if (!initialSeekPerformed.getValue()) {
@@ -57094,7 +57120,11 @@ function createStreamPlaybackObserver(manifest, playbackObserver, _ref) {
         readyState: observation.readyState,
         speed: lastSpeed
       };
-    }));
+    }
+
+    function emitStreamPlaybackObservation() {
+      newRef.setValue(constructStreamPlaybackObservation());
+    }
   });
 }
 // EXTERNAL MODULE: ./src/core/init/emit_loaded_event.ts + 1 modules
@@ -57484,7 +57514,7 @@ function areSourceBuffersUpdating$(sourceBuffers) {
       return true;
     })), (0,fromEvent/* fromEvent */.R)(sourceBuffer, "update").pipe((0,map/* map */.U)(function () {
       return false;
-    })), (0,observable_interval/* interval */.F)(500).pipe((0,map/* map */.U)(function () {
+    })), (0,interval/* interval */.F)(500).pipe((0,map/* map */.U)(function () {
       return sourceBuffer.updating;
     }))).pipe((0,startWith/* startWith */.O)(sourceBuffer.updating), (0,distinctUntilChanged/* distinctUntilChanged */.x)()));
   };
@@ -57779,7 +57809,7 @@ function streamEventsEmitter(manifest, mediaElement, observation$) {
     var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
         STREAM_EVENT_EMITTER_POLL_INTERVAL = _config$getCurrent.STREAM_EVENT_EMITTER_POLL_INTERVAL;
 
-    return combineLatest([(0,observable_interval/* interval */.F)(STREAM_EVENT_EMITTER_POLL_INTERVAL).pipe((0,startWith/* startWith */.O)(null)), observation$]).pipe((0,map/* map */.U)(function (_ref) {
+    return combineLatest([(0,interval/* interval */.F)(STREAM_EVENT_EMITTER_POLL_INTERVAL).pipe((0,startWith/* startWith */.O)(null)), observation$]).pipe((0,map/* map */.U)(function (_ref) {
       var _ = _ref[0],
           observation = _ref[1];
       var seeking = observation.seeking;
@@ -57897,7 +57927,7 @@ function createMediaSourceLoader(_ref) {
         initialPlayPerformed = _initialSeekAndPlay.initialPlayPerformed,
         initialSeekPerformed = _initialSeekAndPlay.initialSeekPerformed;
 
-    var observation$ = playbackObserver.observe(true);
+    var observation$ = playbackObserver.getReference().asObservable();
     var streamEvents$ = initialPlayPerformed.asObservable().pipe((0,filter/* filter */.h)(function (hasPlayed) {
       return hasPlayed;
     }), (0,mergeMap/* mergeMap */.z)(function () {
@@ -59224,12 +59254,6 @@ function parseLoadVideoOptions(options) {
 }
 
 
-;// CONCATENATED MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/skip.js
-
-function skip(count) {
-    return (0,filter/* filter */.h)(function (_, index) { return count <= index; });
-}
-//# sourceMappingURL=skip.js.map
 ;// CONCATENATED MODULE: ./src/core/api/playback_observer.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -59246,6 +59270,7 @@ function skip(count) {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 
 
 
@@ -59275,6 +59300,12 @@ var SCANNED_MEDIA_ELEMENTS_EVENTS = ["canplay", "ended", "play", "pause", "seeki
 
 var PlaybackObserver = /*#__PURE__*/function () {
   /**
+   * Create a new `PlaybackObserver`, which allows to produce new "playback
+   * observations" on various media events and intervals.
+   *
+   * Note that creating a `PlaybackObserver` lead to the usage of resources,
+   * such as event listeners which will only be freed once the `stop` method is
+   * called.
    * @param {HTMLMediaElement} mediaElement
    * @param {Object} options
    */
@@ -59283,17 +59314,32 @@ var PlaybackObserver = /*#__PURE__*/function () {
     this._mediaElement = mediaElement;
     this._withMediaSource = options.withMediaSource;
     this._lowLatencyMode = options.lowLatencyMode;
-    this._lastObservation = null;
-    this._observation$ = null;
+    this._canceller = new task_canceller/* default */.ZP();
+    this._observationRef = this._createSharedReference();
+  }
+  /**
+   * Stop the `PlaybackObserver` from emitting playback observations and free all
+   * resources reserved to emitting them such as event listeners, intervals and
+   * subscribing callbacks.
+   *
+   * Once `stop` is called, no new playback observation will ever be emitted.
+   *
+   * Note that it is important to call stop once the `PlaybackObserver` is no
+   * more needed to avoid unnecessarily leaking resources.
+   */
+
+
+  var _proto = PlaybackObserver.prototype;
+
+  _proto.stop = function stop() {
+    this._canceller.cancel();
   }
   /**
    * Returns the current position advertised by the `HTMLMediaElement`, in
    * seconds.
    * @returns {number}
    */
-
-
-  var _proto = PlaybackObserver.prototype;
+  ;
 
   _proto.getCurrentTime = function getCurrentTime() {
     return this._mediaElement.currentTime;
@@ -59336,31 +59382,19 @@ var PlaybackObserver = /*#__PURE__*/function () {
     return this._mediaElement.readyState;
   }
   /**
-   * Returns an Observable regularly emitting playback observation, optionally
-   * starting with the last one.
+   * Returns an `IReadOnlySharedReference` storing the last playback observation
+   * produced by the `PlaybackObserver` and updated each time a new one is
+   * produced.
    *
-   * Note that this Observable is shared and unique, so that multiple `observe`
-   * call will return the exact same Observable and multiple concurrent
-   * `subscribe` will receive the same events at the same time.
-   * This was done for performance and simplicity reasons.
+   * This value can then be for example subscribed to to be notified of future
+   * playback observations.
    *
-   * @param {boolean} includeLastObservation
-   * @returns {Observable}
+   * @returns {Object}
    */
   ;
 
-  _proto.observe = function observe(includeLastObservation) {
-    var _this = this;
-
-    return (0,defer/* defer */.P)(function () {
-      if (_this._observation$ === null || _this._lastObservation === null) {
-        _this._lastObservation = _this._generateInitialObservation();
-        _this._observation$ = _this._createInnerObservable().pipe((0,share/* share */.B)());
-        return _this.observe(includeLastObservation);
-      } else {
-        return includeLastObservation ? _this._observation$.pipe((0,startWith/* startWith */.O)(_this._lastObservation)) : _this._observation$;
-      }
-    });
+  _proto.getReference = function getReference() {
+    return this._observationRef;
   }
   /**
    * Register a callback so it regularly receives playback observations.
@@ -59370,25 +59404,20 @@ var PlaybackObserver = /*#__PURE__*/function () {
    *     be first emitted synchronously.
    *   - `clearSignal`: If set, the callback will be unregistered when this
    *     CancellationSignal emits.
-   * @returns {Function} - Allows to easily unregister the callback
    */
   ;
 
   _proto.listen = function listen(cb, options) {
-    var _a, _b, _c, _d;
+    var _a;
 
-    if (((_a = options === null || options === void 0 ? void 0 : options.clearSignal) === null || _a === void 0 ? void 0 : _a.isCancelled) === true) {
+    if (this._canceller.isUsed || ((_a = options === null || options === void 0 ? void 0 : options.clearSignal) === null || _a === void 0 ? void 0 : _a.isCancelled) === true) {
       return noop/* default */.Z;
     }
 
-    var sub = this.observe((_b = options === null || options === void 0 ? void 0 : options.includeLastObservation) !== null && _b !== void 0 ? _b : false).subscribe(cb);
-    var unregister = (_d = (_c = options === null || options === void 0 ? void 0 : options.clearSignal) === null || _c === void 0 ? void 0 : _c.register(function () {
-      sub.unsubscribe();
-    })) !== null && _d !== void 0 ? _d : noop/* default */.Z;
-    return function () {
-      unregister();
-      sub.unsubscribe();
-    };
+    this._observationRef.onUpdate(cb, {
+      clearSignal: options === null || options === void 0 ? void 0 : options.clearSignal,
+      emitCurrentValue: options === null || options === void 0 ? void 0 : options.includeLastObservation
+    });
   }
   /**
    * Generate a new playback observer which can listen to other
@@ -59401,82 +59430,113 @@ var PlaybackObserver = /*#__PURE__*/function () {
    *
    * As argument, this method takes a function which will allow to produce
    * the new set of properties to be present on each observation.
-   * @param {Function} mapObservable
+   * @param {Function} transform
    * @returns {Object}
    */
   ;
 
-  _proto.deriveReadOnlyObserver = function deriveReadOnlyObserver(mapObservable) {
-    return generateReadOnlyObserver(this, mapObservable);
+  _proto.deriveReadOnlyObserver = function deriveReadOnlyObserver(transform) {
+    return generateReadOnlyObserver(this, transform, this._canceller.signal);
   }
   /**
-   * Creates the observable that will generate playback observations.
+   * Creates the `IReadOnlySharedReference` that will generate playback
+   * observations.
    * @returns {Observable}
    */
   ;
 
-  _proto._createInnerObservable = function _createInnerObservable() {
-    var _this2 = this;
+  _proto._createSharedReference = function _createSharedReference() {
+    var _this = this;
 
-    return (0,defer/* defer */.P)(function () {
-      var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
-          SAMPLING_INTERVAL_MEDIASOURCE = _config$getCurrent.SAMPLING_INTERVAL_MEDIASOURCE,
-          SAMPLING_INTERVAL_LOW_LATENCY = _config$getCurrent.SAMPLING_INTERVAL_LOW_LATENCY,
-          SAMPLING_INTERVAL_NO_MEDIASOURCE = _config$getCurrent.SAMPLING_INTERVAL_NO_MEDIASOURCE;
+    if (this._observationRef !== undefined) {
+      return this._observationRef;
+    }
 
-      var getCurrentObservation = function getCurrentObservation(event) {
-        var _a;
+    var lastObservation;
 
-        var tmpEvt = event;
+    var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+        SAMPLING_INTERVAL_MEDIASOURCE = _config$getCurrent.SAMPLING_INTERVAL_MEDIASOURCE,
+        SAMPLING_INTERVAL_LOW_LATENCY = _config$getCurrent.SAMPLING_INTERVAL_LOW_LATENCY,
+        SAMPLING_INTERVAL_NO_MEDIASOURCE = _config$getCurrent.SAMPLING_INTERVAL_NO_MEDIASOURCE;
 
-        if (tmpEvt === "seeking" && _this2._internalSeekingEventsIncomingCounter > 0) {
-          tmpEvt = "internal-seeking";
-          _this2._internalSeekingEventsIncomingCounter -= 1;
-        }
+    var getCurrentObservation = function getCurrentObservation(event) {
+      var tmpEvt = event;
 
-        var lastObservation = (_a = _this2._lastObservation) !== null && _a !== void 0 ? _a : _this2._generateInitialObservation();
-        var mediaTimings = getMediaInfos(_this2._mediaElement, tmpEvt);
-        var internalSeeking = mediaTimings.seeking && ( // We've just received the event for internally seeking
-        tmpEvt === "internal-seeking" || // or We're still waiting on the previous internal-seek
-        lastObservation.internalSeeking && tmpEvt !== "seeking");
-        var rebufferingStatus = getRebufferingStatus(lastObservation, mediaTimings, {
-          lowLatencyMode: _this2._lowLatencyMode,
-          withMediaSource: _this2._withMediaSource
-        });
-        var freezingStatus = getFreezingStatus(lastObservation, mediaTimings);
-        var timings = (0,object_assign/* default */.Z)({}, {
-          rebuffering: rebufferingStatus,
-          freezing: freezingStatus,
-          internalSeeking: internalSeeking
-        }, mediaTimings);
+      if (tmpEvt === "seeking" && _this._internalSeekingEventsIncomingCounter > 0) {
+        tmpEvt = "internal-seeking";
+        _this._internalSeekingEventsIncomingCounter -= 1;
+      }
 
-        if (log/* default.hasLevel */.Z.hasLevel("DEBUG")) {
-          log/* default.debug */.Z.debug("API: current media element state tick", "event", timings.event, "position", timings.position, "seeking", timings.seeking, "internalSeeking", timings.internalSeeking, "rebuffering", timings.rebuffering !== null, "freezing", timings.freezing !== null, "ended", timings.ended, "paused", timings.paused, "playbackRate", timings.playbackRate, "readyState", timings.readyState);
-        }
+      var _lastObservation = lastObservation !== null && lastObservation !== void 0 ? lastObservation : _this._generateInitialObservation();
 
-        return timings;
-      };
-
-      var eventObs = SCANNED_MEDIA_ELEMENTS_EVENTS.map(function (eventName) {
-        return (0,fromEvent/* fromEvent */.R)(_this2._mediaElement, eventName).pipe((0,map/* map */.U)(function () {
-          return eventName;
-        }));
+      var mediaTimings = getMediaInfos(_this._mediaElement, tmpEvt);
+      var internalSeeking = mediaTimings.seeking && ( // We've just received the event for internally seeking
+      tmpEvt === "internal-seeking" || // or We're still waiting on the previous internal-seek
+      _lastObservation.internalSeeking && tmpEvt !== "seeking");
+      var rebufferingStatus = getRebufferingStatus(_lastObservation, mediaTimings, {
+        lowLatencyMode: _this._lowLatencyMode,
+        withMediaSource: _this._withMediaSource
       });
-      var interval = _this2._lowLatencyMode ? SAMPLING_INTERVAL_LOW_LATENCY : _this2._withMediaSource ? SAMPLING_INTERVAL_MEDIASOURCE : SAMPLING_INTERVAL_NO_MEDIASOURCE;
-      var interval$ = (0,observable_interval/* interval */.F)(interval).pipe((0,map/* map */.U)(function () {
-        return "timeupdate";
-      }));
-      return merge/* merge.apply */.T.apply(void 0, [interval$].concat(eventObs)).pipe((0,map/* map */.U)(function (event) {
-        var newObservation = getCurrentObservation(event);
+      var freezingStatus = getFreezingStatus(_lastObservation, mediaTimings);
+      var timings = (0,object_assign/* default */.Z)({}, {
+        rebuffering: rebufferingStatus,
+        freezing: freezingStatus,
+        internalSeeking: internalSeeking
+      }, mediaTimings);
 
-        if (log/* default.hasLevel */.Z.hasLevel("DEBUG")) {
-          log/* default.debug */.Z.debug("API: current playback timeline:\n" + prettyPrintBuffered(newObservation.buffered, newObservation.position), "\n" + event);
-        }
+      if (log/* default.hasLevel */.Z.hasLevel("DEBUG")) {
+        log/* default.debug */.Z.debug("API: current media element state tick", "event", timings.event, "position", timings.position, "seeking", timings.seeking, "internalSeeking", timings.internalSeeking, "rebuffering", timings.rebuffering !== null, "freezing", timings.freezing !== null, "ended", timings.ended, "paused", timings.paused, "playbackRate", timings.playbackRate, "readyState", timings.readyState);
+      }
 
-        _this2._lastObservation = newObservation;
-        return newObservation;
-      }));
+      return timings;
+    };
+
+    var returnedSharedReference = (0,reference/* default */.ZP)(getCurrentObservation("init"));
+
+    var generateObservationForEvent = function generateObservationForEvent(event) {
+      var newObservation = getCurrentObservation(event);
+
+      if (log/* default.hasLevel */.Z.hasLevel("DEBUG")) {
+        log/* default.debug */.Z.debug("API: current playback timeline:\n" + prettyPrintBuffered(newObservation.buffered, newObservation.position), "\n" + event);
+      }
+
+      lastObservation = newObservation;
+      returnedSharedReference.setValue(newObservation);
+    };
+
+    var interval = this._lowLatencyMode ? SAMPLING_INTERVAL_LOW_LATENCY : this._withMediaSource ? SAMPLING_INTERVAL_MEDIASOURCE : SAMPLING_INTERVAL_NO_MEDIASOURCE;
+    var intervalId = setInterval(onInterval, interval);
+    var removeEventListeners = SCANNED_MEDIA_ELEMENTS_EVENTS.map(function (eventName) {
+      _this._mediaElement.addEventListener(eventName, onMediaEvent);
+
+      function onMediaEvent() {
+        restartInterval();
+        generateObservationForEvent(eventName);
+      }
+
+      return function () {
+        _this._mediaElement.removeEventListener(eventName, onMediaEvent);
+      };
     });
+
+    this._canceller.signal.register(function () {
+      clearInterval(intervalId);
+      removeEventListeners.forEach(function (cb) {
+        return cb();
+      });
+      returnedSharedReference.finish();
+    });
+
+    return returnedSharedReference;
+
+    function onInterval() {
+      generateObservationForEvent("timeupdate");
+    }
+
+    function restartInterval() {
+      clearInterval(intervalId);
+      intervalId = setInterval(onInterval, interval);
+    }
   };
 
   _proto._generateInitialObservation = function _generateInitialObservation() {
@@ -59775,18 +59835,13 @@ function prettyPrintBuffered(buffered, currentTime) {
  * Create `IReadOnlyPlaybackObserver` from a source `IReadOnlyPlaybackObserver`
  * and a mapping function.
  * @param {Object} src
- * @param {Function} mapObservable
+ * @param {Function} transform
  * @returns {Object}
  */
 
 
-function generateReadOnlyObserver(src, mapObservable) {
-  var newObs = (0,defer/* defer */.P)(function () {
-    return mapObservable(src.observe(true));
-  }).pipe((0,shareReplay/* shareReplay */.d)({
-    bufferSize: 1,
-    refCount: true
-  }));
+function generateReadOnlyObserver(src, transform, cancellationSignal) {
+  var mappedRef = transform(src.getReference(), cancellationSignal);
   return {
     getCurrentTime: function getCurrentTime() {
       return src.getCurrentTime();
@@ -59797,28 +59852,23 @@ function generateReadOnlyObserver(src, mapObservable) {
     getIsPaused: function getIsPaused() {
       return src.getIsPaused();
     },
-    observe: function observe(includeLastObservation) {
-      return includeLastObservation ? newObs : newObs.pipe(skip(1));
+    getReference: function getReference() {
+      return mappedRef;
     },
     listen: function listen(cb, options) {
-      var _a, _b, _c;
+      var _a;
 
-      if (((_a = options === null || options === void 0 ? void 0 : options.clearSignal) === null || _a === void 0 ? void 0 : _a.isCancelled) === true) {
-        return noop/* default */.Z;
+      if (cancellationSignal.isCancelled || ((_a = options === null || options === void 0 ? void 0 : options.clearSignal) === null || _a === void 0 ? void 0 : _a.isCancelled) === true) {
+        return;
       }
 
-      var obs = (options === null || options === void 0 ? void 0 : options.includeLastObservation) === true ? newObs : newObs.pipe(skip(1));
-      var sub = obs.subscribe(cb);
-      var unregister = (_c = (_b = options === null || options === void 0 ? void 0 : options.clearSignal) === null || _b === void 0 ? void 0 : _b.register(function () {
-        sub.unsubscribe();
-      })) !== null && _c !== void 0 ? _c : noop/* default */.Z;
-      return function () {
-        unregister();
-        sub.unsubscribe();
-      };
+      mappedRef.onUpdate(cb, {
+        clearSignal: options === null || options === void 0 ? void 0 : options.clearSignal,
+        emitCurrentValue: options === null || options === void 0 ? void 0 : options.includeLastObservation
+      });
     },
-    deriveReadOnlyObserver: function deriveReadOnlyObserver(newUdateObserver) {
-      return generateReadOnlyObserver(this, newUdateObserver);
+    deriveReadOnlyObserver: function deriveReadOnlyObserver(newTransformFn) {
+      return generateReadOnlyObserver(this, newTransformFn, cancellationSignal);
     }
   };
 }
@@ -61246,7 +61296,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     videoElement.preload = "auto";
     _this.version =
     /* PLAYER_VERSION */
-    "3.27.0";
+    "3.28.0";
     _this.log = log/* default */.Z;
     _this.state = "STOPPED";
     _this.videoElement = videoElement;
@@ -61565,6 +61615,9 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       withMediaSource: !isDirectFile,
       lowLatencyMode: lowLatencyMode
     });
+    currentContentCanceller.signal.register(function () {
+      playbackObserver.stop();
+    });
     /** Emit playback events. */
 
     var playback$;
@@ -61810,7 +61863,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     }), (0,share/* share */.B)());
     /** Emit when the media element emits a "seeking" event. */
 
-    var observation$ = playbackObserver.observe(true);
+    var observation$ = playbackObserver.getReference().asObservable();
     var stateChangingEvent$ = observation$.pipe((0,filter/* filter */.h)(function (o) {
       return o.event === "seeking" || o.event === "ended" || o.event === "play" || o.event === "pause";
     }));
@@ -63356,9 +63409,12 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     this._priv_contentEventsMemory = {}; // DRM-related clean-up
 
     var freeUpContentLock = function freeUpContentLock() {
-      log/* default.debug */.Z.debug("Unlocking `contentLock`. Next content can begin.");
+      if (_this4.videoElement !== null) {
+        // If not disposed
+        log/* default.debug */.Z.debug("Unlocking `contentLock`. Next content can begin.");
 
-      _this4._priv_contentLock.setValue(false);
+        _this4._priv_contentLock.setValue(false);
+      }
     };
 
     if (!(0,is_null_or_undefined/* default */.Z)(this.videoElement)) {
@@ -64061,7 +64117,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
 
 Player.version =
 /* PLAYER_VERSION */
-"3.27.0";
+"3.28.0";
 /* harmony default export */ var public_api = (Player);
 ;// CONCATENATED MODULE: ./src/core/api/index.ts
 /**
