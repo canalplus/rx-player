@@ -16,6 +16,7 @@
   - After a `RELOADING` state, stay in `PAUSED` if the media element was paused synchronously before the side-effect which triggered the reloading (usually coming from the API) was perform [#1132]
   - Fix issue with `maxVideoBufferSize` setting which could lead to too much data being buffered [#1125]
   - Prevent possibility of requests loops and infinite rebuffering when a pushed segment is always completely and immediately garbage collected by the browser [#1123]
+  - DASH: Fix potential rare memory leak when stopping the content after it has reloaded at least once [#1135]
   - DASH: Fix issues that could arise if a segment is calculated to start at a negative position [#1122]
   - DASH: Fix possibility of wrong segments being requested when a SegmentTimeline in a given Period (whose Period@end is set) had an S@r set to `-1` at its end [#1098]
   - DASH: If the first `<S>` has its S@t attribute not set, make as if it is set to `0` [#1118]
