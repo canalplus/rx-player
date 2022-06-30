@@ -175,7 +175,7 @@ function getDocumentVisibilityRef(
                                                            "visibilitychange";
 
   const isHidden = document[hidden as "hidden"];
-  const ref = createSharedReference(isHidden);
+  const ref = createSharedReference(!isHidden);
 
   addEventListener(document, visibilityChangeEvent, () => {
     const isVisible = !(document[hidden as "hidden"]);
