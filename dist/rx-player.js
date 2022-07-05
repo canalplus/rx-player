@@ -1981,7 +1981,7 @@ function getDocumentVisibilityRef(stopListening) {
   var hidden = (0,is_non_empty_string/* default */.Z)(prefix) ? prefix + "Hidden" : "hidden";
   var visibilityChangeEvent = (0,is_non_empty_string/* default */.Z)(prefix) ? prefix + "visibilitychange" : "visibilitychange";
   var isHidden = document[hidden];
-  var ref = (0,reference/* default */.ZP)(isHidden);
+  var ref = (0,reference/* default */.ZP)(!isHidden);
   addEventListener(document, visibilityChangeEvent, function () {
     var isVisible = !document[hidden];
     ref.setValueIfChanged(isVisible);
