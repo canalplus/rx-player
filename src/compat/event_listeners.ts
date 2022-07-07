@@ -205,11 +205,13 @@ function getPageActivityRef(
   const ref = createSharedReference(true);
   stopListening.register(() => {
     clearTimeout(currentTimeout);
+    currentTimeout = undefined;
     ref.finish();
   });
 
   isDocVisibleRef.onUpdate(function onDocVisibilityChange(isVisible : boolean) : void {
     clearTimeout(currentTimeout); // clear potential previous timeout
+    currentTimeout = undefined;
     if (!isVisible) {
       const { INACTIVITY_DELAY } = config.getCurrent();
       currentTimeout = window.setTimeout(() => {
@@ -313,6 +315,7 @@ function getVideoVisibilityRef(
   const ref = createSharedReference(true);
   stopListening.register(() => {
     clearTimeout(currentTimeout);
+    currentTimeout = undefined;
     ref.finish();
   });
 
@@ -324,6 +327,8 @@ function getVideoVisibilityRef(
   return ref;
 
   function checkCurrentVisibility() : void {
+    clearTimeout(currentTimeout);
+    currentTimeout = undefined;
     if (pipStatus.getValue().isEnabled || isDocVisibleRef.getValue()) {
       ref.setValueIfChanged(true);
     } else {
