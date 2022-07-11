@@ -126,7 +126,9 @@ interface ICompatAudioTrackList extends EventTarget {
  */
 interface ICompatAudioTrack {
   id : string;
-  kind : string;
+  kind : "" | "alternative" | "main"
+            | "main-desc" | "translation"
+            | "commentary" | "descriptions";
   label : string;
   language : string;
   enabled : boolean;

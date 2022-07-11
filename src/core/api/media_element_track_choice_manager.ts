@@ -53,6 +53,26 @@ interface IMediaElementTrackChoiceManagerEvents {
   textTrackChange: ITextTrack|null;
 }
 
+interface ICreatedAudioTrack {
+  track: IAudioTrack;
+  nativeTrack: ICompatAudioTrack;
+}
+
+interface ICreatedTextTrack {
+  track: ITextTrack;
+  nativeTrack: TextTrack;
+}
+
+interface ICreatedVideoTrack {
+  track: IVideoTrack;
+  nativeTrack: ICompatVideoTrack;
+}
+
+
+interface INativeTrackArray {
+  nativeTrack: ICompatVideoTrack|ICompatAudioTrack|TextTrack;
+}
+
 /**
  * Check if track array is different from an other one
  * @param {Array.<Object>} oldTrackArray
@@ -60,14 +80,14 @@ interface IMediaElementTrackChoiceManagerEvents {
  * @returns {boolean}
  */
 function areTrackArraysDifferent(
-  oldTrackArray: Array<{ nativeTrack: ICompatVideoTrack|ICompatAudioTrack|TextTrack }>,
-  newTrackArray: Array<{ nativeTrack: ICompatVideoTrack|ICompatAudioTrack|TextTrack }>
+  oldTrackArray: INativeTrackArray[],
+  newTrackArray: INativeTrackArray[]
 ): boolean {
   if (newTrackArray.length !== oldTrackArray.length) {
     return true;
   }
   for (let i = 0; i < newTrackArray.length; i++) {
-    if (newTrackArray[i].nativeTrack !== oldTrackArray[i]?.nativeTrack) {
+    if (newTrackArray[i].nativeTrack !== oldTrackArray[i].nativeTrack) {
       return true;
     }
   }
@@ -81,12 +101,7 @@ function areTrackArraysDifferent(
  */
 function createAudioTracks(
   audioTracks: ICompatAudioTrackList
-): Array<{ track: { id: string;
-                    normalized: string;
-                    language: string;
-                    audioDescription: boolean;
-                    representations: Representation[]; };
-           nativeTrack: ICompatAudioTrack; }> {
+): ICreatedAudioTrack[] {
   const newAudioTracks = [];
   const languagesOccurences: Partial<Record<string, number>> = {};
   for (let i = 0; i < audioTracks.length; i++) {
@@ -94,10 +109,7 @@ function createAudioTracks(
     const language = audioTrack.language === "" ? "nolang" :
                                                   audioTrack.language;
     const occurences = languagesOccurences[language] ?? 1;
-    const id = "gen_audio_" +
-               language +
-               "_" +
-               occurences.toString();
+    const id = `gen_audio_${language}_${occurences}`;
     languagesOccurences[language] = occurences + 1;
     const track = { language: audioTrack.language,
                     id,
@@ -117,11 +129,7 @@ function createAudioTracks(
  */
 function createTextTracks(
   textTracks: ICompatTextTrackList
-): Array<{ track: { id: string;
-                    normalized: string;
-                    language: string;
-                    closedCaption: boolean; };
-           nativeTrack: TextTrack; }> {
+): ICreatedTextTrack[] {
   const newTextTracks = [];
   const languagesOccurences: Partial<Record<string, number>> = {};
   for (let i = 0; i < textTracks.length; i++) {
@@ -129,15 +137,13 @@ function createTextTracks(
     const language = textTrack.language === "" ? "nolang" :
                                                  textTrack.language;
     const occurences = languagesOccurences[language] ?? 1;
-    const id = "gen_text_" +
-               language +
-               "_" +
-               occurences.toString();
+    const id = `gen_text_${language}_${occurences}`;
     languagesOccurences[language] = occurences + 1;
-    const track =  { language: textTrack.language,
-                     id,
-                     normalized: normalizeLanguage(textTrack.language),
-                     closedCaption: textTrack.kind === "captions" };
+    const track: ITextTrack =  { language: textTrack.language,
+                                 id,
+                                 normalized: normalizeLanguage(textTrack.language),
+                                 closedCaption: textTrack.kind === "captions",
+    };
     newTextTracks.push({ track,
                          nativeTrack: textTrack });
   }
@@ -151,9 +157,7 @@ function createTextTracks(
  */
 function createVideoTracks(
   videoTracks: ICompatVideoTrackList
-): Array<{ track: { id: string;
-                    representations: Representation[]; };
-           nativeTrack: ICompatVideoTrack; }> {
+): ICreatedVideoTrack[] {
   const newVideoTracks = [];
   const languagesOccurences: Partial<Record<string, number>> = {};
   for (let i = 0; i < videoTracks.length; i++) {
@@ -161,10 +165,7 @@ function createVideoTracks(
     const language = videoTrack.language === "" ? "nolang" :
                                                   videoTrack.language;
     const occurences = languagesOccurences[language] ?? 1;
-    const id = "gen_video_" +
-               language +
-               "_" +
-               occurences.toString();
+    const id = `gen_video_${language}_${occurences}`;
     languagesOccurences[language] = occurences + 1;
     newVideoTracks.push({ track: { id,
                                    representations: [] as Representation[] },
@@ -172,6 +173,7 @@ function createVideoTracks(
   }
   return newVideoTracks;
 }
+
 
 /**
  * Manage video, audio and text tracks for current direct file content.
@@ -198,11 +200,11 @@ export default class MediaElementTrackChoiceManager
   private _preferredVideoTracks : IVideoTrackPreference[];
 
   /** List every available audio tracks available on the media element. */
-  private _audioTracks : Array<{ track: IAudioTrack; nativeTrack: ICompatAudioTrack }>;
+  private _audioTracks : ICreatedAudioTrack[];
   /** List every available text tracks available on the media element. */
-  private _textTracks : Array<{ track: ITextTrack; nativeTrack: TextTrack }>;
+  private _textTracks : ICreatedTextTrack[];
   /** List every available video tracks available on the media element. */
-  private _videoTracks : Array<{ track: IVideoTrack; nativeTrack: ICompatVideoTrack }>;
+  private _videoTracks : ICreatedVideoTrack[];
 
   /** Last audio track emitted as active. */
   private _lastEmittedNativeAudioTrack : ICompatAudioTrack | null | undefined;
@@ -667,15 +669,13 @@ export default class MediaElementTrackChoiceManager
     this._textTrackLockedOn = undefined;
 
     const preferredTextTracks = this._preferredTextTracks;
-    for (let i = 0; i < preferredTextTracks.length; i++) {
-      const track = preferredTextTracks[i];
+    for (const track of preferredTextTracks) {
       if (track === null) {
         disableTextTracks(this._textTracks);
         return;
       }
       const normalized = normalizeLanguage(track.language);
-      for (let j = 0; j < this._textTracks.length; j++) {
-        const textTrack = this._textTracks[j];
+      for (const textTrack of this._textTracks) {
         if (textTrack.track.normalized === normalized &&
             textTrack.track.closedCaption === track.closedCaption
         ) {
@@ -706,8 +706,7 @@ export default class MediaElementTrackChoiceManager
       disableVideoTracks(this._videoTracks);
       return;
     } else if (this._videoTrackLockedOn !== undefined) {
-      for (let i = 0; i < this._videoTracks.length; i++) {
-        const { nativeTrack } = this._videoTracks[i];
+      for (const { nativeTrack } of this._videoTracks) {
         if (nativeTrack === this._videoTrackLockedOn) {
           nativeTrack.selected = true;
           return;
@@ -780,8 +779,7 @@ export default class MediaElementTrackChoiceManager
       };
       this._nativeAudioTracks.onchange = () => {
         if (this._audioTracks !== undefined) {
-          for (let i = 0; i < this._audioTracks.length; i++) {
-            const { track, nativeTrack } = this._audioTracks[i];
+          for (const { track, nativeTrack } of this._audioTracks) {
             if (nativeTrack.enabled) {
               if (nativeTrack !== this._lastEmittedNativeAudioTrack) {
                 this.trigger("audioTrackChange", track);
@@ -795,12 +793,12 @@ export default class MediaElementTrackChoiceManager
           this.trigger("audioTrackChange", null);
           this._lastEmittedNativeAudioTrack = null;
         }
-        return;
       };
     }
 
     if (this._nativeTextTracks !== undefined) {
-      this._nativeTextTracks.onaddtrack = () => {
+
+      const onTextTrackAddAndRemove = () => () => {
         if (this._nativeTextTracks !== undefined) {
           const newTextTracks = createTextTracks(this._nativeTextTracks);
           if (areTrackArraysDifferent(this._textTracks, newTextTracks)) {
@@ -815,21 +813,8 @@ export default class MediaElementTrackChoiceManager
           }
         }
       };
-      this._nativeTextTracks.onremovetrack = () => {
-        if (this._nativeTextTracks !== undefined) {
-          const newTextTracks = createTextTracks(this._nativeTextTracks);
-          if (areTrackArraysDifferent(this._textTracks, newTextTracks)) {
-            this._textTracks = newTextTracks;
-            this._setOptimalTextTrack();
-            this.trigger("availableTextTracksChange", this.getAvailableTextTracks());
-            const chosenTextTrack = this._getPrivateChosenTextTrack();
-            if (chosenTextTrack?.nativeTrack !== this._lastEmittedNativeTextTrack) {
-              this.trigger("textTrackChange", chosenTextTrack?.track ?? null);
-              this._lastEmittedNativeTextTrack = chosenTextTrack?.nativeTrack ?? null;
-            }
-          }
-        }
-      };
+      this._nativeTextTracks.onaddtrack = onTextTrackAddAndRemove;
+      this._nativeTextTracks.onremovetrack = () => onTextTrackAddAndRemove;
       this._nativeTextTracks.onchange = () => {
         if (this._textTracks !== undefined) {
           for (let i = 0; i < this._textTracks.length; i++) {
@@ -847,12 +832,11 @@ export default class MediaElementTrackChoiceManager
           this.trigger("textTrackChange", null);
           this._lastEmittedNativeTextTrack = null;
         }
-        return;
       };
     }
 
     if (this._nativeVideoTracks !== undefined) {
-      this._nativeVideoTracks.onaddtrack = () => {
+      const onVideoTrackAddAndRemove  = () => {
         if (this._nativeVideoTracks !== undefined) {
           const newVideoTracks = createVideoTracks(this._nativeVideoTracks);
           if (areTrackArraysDifferent(this._videoTracks, newVideoTracks)) {
@@ -867,25 +851,11 @@ export default class MediaElementTrackChoiceManager
           }
         }
       };
-      this._nativeVideoTracks.onremovetrack = () => {
-        if (this._nativeVideoTracks !== undefined) {
-          const newVideoTracks = createVideoTracks(this._nativeVideoTracks);
-          if (areTrackArraysDifferent(this._videoTracks, newVideoTracks)) {
-            this._videoTracks = newVideoTracks;
-            this._setOptimalVideoTrack();
-            this.trigger("availableVideoTracksChange", this.getAvailableVideoTracks());
-            const chosenVideoTrack = this._getPrivateChosenVideoTrack();
-            if (chosenVideoTrack?.nativeTrack !== this._lastEmittedNativeVideoTrack) {
-              this.trigger("videoTrackChange", chosenVideoTrack?.track ?? null);
-              this._lastEmittedNativeVideoTrack = chosenVideoTrack?.nativeTrack ?? null;
-            }
-          }
-        }
-      };
+      this._nativeVideoTracks.onaddtrack = onVideoTrackAddAndRemove;
+      this._nativeVideoTracks.onremovetrack = onVideoTrackAddAndRemove;
       this._nativeVideoTracks.onchange = () => {
         if (this._videoTracks !== undefined) {
-          for (let i = 0; i < this._videoTracks.length; i++) {
-            const { track, nativeTrack } = this._videoTracks[i];
+          for (const { track, nativeTrack } of this._videoTracks) {
             if (nativeTrack.selected) {
               if (nativeTrack !== this._lastEmittedNativeVideoTrack) {
                 this.trigger("videoTrackChange", track);
@@ -899,7 +869,6 @@ export default class MediaElementTrackChoiceManager
           this.trigger("videoTrackChange", null);
           this._lastEmittedNativeVideoTrack = null;
         }
-        return;
       };
     }
   }
@@ -919,7 +888,6 @@ export default class MediaElementTrackChoiceManager
     }
 
     this._audioTracks[index].nativeTrack.enabled = true;
-    return;
   }
 }
 
