@@ -3931,7 +3931,7 @@ function createAudioTracks(audioTracks) {
       language: audioTrack.language,
       id: id,
       normalized: (0,_utils_languages__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .ZP)(audioTrack.language),
-      audioDescription: false,
+      audioDescription: audioTrack.kind === "descriptions",
       representations: []
     };
     newAudioTracks.push({
