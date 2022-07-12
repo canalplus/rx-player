@@ -34,6 +34,7 @@ import { SegmentBuffer } from "../../segment_buffers";
 import EVENTS from "../events_generators";
 import { IStreamEventAddedSegment } from "../types";
 import appendSegmentToBuffer from "./append_segment_to_buffer";
+import { IRepresentationStreamPlaybackObservation } from "./representation_stream";
 
 
 /**
@@ -51,8 +52,9 @@ export default function pushMediaSegment<T>(
     parsedSegment,
     segment,
     segmentBuffer } :
-  { playbackObserver : IReadOnlyPlaybackObserver<{ position : number;
-                                                   wantedTimeOffset : number; }>;
+  { playbackObserver : IReadOnlyPlaybackObserver<
+      IRepresentationStreamPlaybackObservation
+    >;
     content: { adaptation : Adaptation;
                manifest : Manifest;
                period : Period;

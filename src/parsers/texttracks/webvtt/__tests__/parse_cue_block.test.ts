@@ -91,7 +91,7 @@ describe("parsers - srt - parseCueBlocks", () => {
   });
 
   it("should correctly parse regular cue blocks", () => {
-    const parseCueBlock = require("../parse_cue_block").default;
+    const parseCueBlock = jest.requireActual("../parse_cue_block").default;
     expect(parseCueBlock(cueBlock1, 0)).toEqual({
       start: 31.08,
       end: 452.2,
@@ -142,7 +142,7 @@ describe("parsers - srt - parseCueBlocks", () => {
   });
 
   it("should add timeOffset in seconds", () => {
-    const parseCueBlock = require("../parse_cue_block").default;
+    const parseCueBlock = jest.requireActual("../parse_cue_block").default;
     expect(parseCueBlock(cueBlock1, 10.1)).toEqual({
       start: 41.18,
       end: 462.3,
@@ -206,7 +206,7 @@ describe("parsers - srt - parseCueBlocks", () => {
   });
 
   it("should return null for invalid cue blocks", () => {
-    const parseCueBlock = require("../parse_cue_block").default;
+    const parseCueBlock = jest.requireActual("../parse_cue_block").default;
     expect(parseCueBlock(notCueBlock1, 0)).toEqual(null);
     expect(parseCueBlock(notCueBlock1, 5)).toEqual(null);
     expect(parseCueBlock(notCueBlock2, 0)).toEqual(null);
@@ -227,7 +227,7 @@ describe("parsers - srt - parseCueBlocks", () => {
       __esModule: true as const,
       default: parseTimestamp,
     }));
-    const parseCueBlock = require("../parse_cue_block").default;
+    const parseCueBlock = jest.requireActual("../parse_cue_block").default;
 
     expect(parseCueBlock(cueBlock1, 0)).toEqual(null);
     expect(parseTimestamp).toHaveBeenCalledTimes(2);
@@ -241,7 +241,7 @@ describe("parsers - srt - parseCueBlocks", () => {
       __esModule: true as const,
       default: parseTimestamp,
     }));
-    const parseCueBlock = require("../parse_cue_block").default;
+    const parseCueBlock = jest.requireActual("../parse_cue_block").default;
 
     expect(parseCueBlock(cueBlock1, 0)).toEqual(null);
     expect(parseTimestamp).toHaveBeenCalledTimes(2);

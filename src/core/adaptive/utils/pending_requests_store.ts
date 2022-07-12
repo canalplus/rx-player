@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import log from "../../log";
+import log from "../../../log";
 import Manifest, {
   Adaptation,
   ISegment,
   Period,
   Representation,
-} from "../../manifest";
-import objectValues from "../../utils/object_values";
+} from "../../../manifest";
+import objectValues from "../../../utils/object_values";
 
 /**
  * Store information about pending requests, like information about:
@@ -38,7 +38,6 @@ export default class PendingRequestsStore {
 
   /**
    * Add information about a new pending request.
-   * @param {string} id
    * @param {Object} payload
    */
   public add(payload : IPendingRequestStoreBegin) : void {

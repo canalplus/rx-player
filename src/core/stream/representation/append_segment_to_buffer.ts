@@ -33,6 +33,7 @@ import {
   SegmentBuffer,
 } from "../../segment_buffers";
 import forceGarbageCollection from "./force_garbage_collection";
+import { IRepresentationStreamPlaybackObservation } from "./representation_stream";
 
 /**
  * Append a segment to the given segmentBuffer.
@@ -45,8 +46,7 @@ import forceGarbageCollection from "./force_garbage_collection";
  * @returns {Observable}
  */
 export default function appendSegmentToBuffer<T>(
-  playbackObserver : IReadOnlyPlaybackObserver<{ position : number;
-                                                 wantedTimeOffset: number; }>,
+  playbackObserver : IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
   segmentBuffer : SegmentBuffer,
   dataInfos : IPushChunkInfos<T>
 ) : Observable<unknown> {
@@ -61,10 +61,11 @@ export default function appendSegmentToBuffer<T>(
         throw new MediaError("BUFFER_APPEND_ERROR", reason);
       }
 
-      return playbackObserver.observe(true).pipe(
+      return playbackObserver.getReference().asObservable().pipe(
         take(1),
         mergeMap((observation) => {
-          const currentPos = observation.position + observation.wantedTimeOffset;
+          const currentPos = observation.position.pending ??
+                             observation.position.last;
           return observableConcat(
             forceGarbageCollection(currentPos, segmentBuffer).pipe(ignoreElements()),
             append$

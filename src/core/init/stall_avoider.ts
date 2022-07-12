@@ -139,7 +139,7 @@ export default function StallAvoider(
    * order (first ordered by Period's start, then by bufferType in any order.
    */
   const discontinuitiesStore$ = discontinuityUpdate$.pipe(
-    withLatestFrom(playbackObserver.observe(true)),
+    withLatestFrom(playbackObserver.getReference().asObservable()),
     scan(
       (discontinuitiesStore, [evt, observation]) =>
         updateDiscontinuitiesStore(discontinuitiesStore, evt, observation),
@@ -179,7 +179,7 @@ export default function StallAvoider(
    * Period handled by that stream to unlock the situation.
    */
   const unlock$ = lockedStream$.pipe(
-    withLatestFrom(playbackObserver.observe(true)),
+    withLatestFrom(playbackObserver.getReference().asObservable()),
     tap(([lockedStreamEvt, observation]) => {
       // TODO(PaulB) also skip when the user's wanted speed is set to `0`, as we
       // might not want to seek in that case?
@@ -211,7 +211,7 @@ export default function StallAvoider(
     ignoreElements()
   );
 
-  const stall$ = playbackObserver.observe(true).pipe(
+  const stall$ = playbackObserver.getReference().asObservable().pipe(
     withLatestFrom(discontinuitiesStore$),
     map(([observation, discontinuitiesStore]) => {
       const { buffered,

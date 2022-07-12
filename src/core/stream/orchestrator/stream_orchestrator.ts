@@ -45,9 +45,10 @@ import deferSubscriptions from "../../../utils/defer_subscriptions";
 import { fromEvent } from "../../../utils/event_emitter";
 import filterMap from "../../../utils/filter_map";
 import { IReadOnlySharedReference } from "../../../utils/reference";
+import nextTickObs from "../../../utils/rx-next-tick";
 import SortedList from "../../../utils/sorted_list";
 import WeakMapMemory from "../../../utils/weak_map_memory";
-import ABRManager from "../../abr";
+import { IRepresentationEstimator } from "../../adaptive";
 import type { IReadOnlyPlaybackObserver } from "../../api";
 import { SegmentFetcherCreator } from "../../fetchers";
 import SegmentBuffersStore, {
@@ -103,8 +104,8 @@ export type IStreamOrchestratorOptions =
  *
  * @param {Object} content
  * @param {Observable} playbackObserver - Emit position information
- * @param {Object} abrManager - Emit bitrate estimates and best Representation
- * to play.
+ * @param {Object} representationEstimator - Emit bitrate estimates and best
+ * Representation to play.
  * @param {Object} segmentBuffersStore - Will be used to lazily create
  * SegmentBuffer instances associated with the current content.
  * @param {Object} segmentFetcherCreator - Allow to download segments.
@@ -115,7 +116,7 @@ export default function StreamOrchestrator(
   content : { manifest : Manifest;
               initialPeriod : Period; },
   playbackObserver : IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>,
-  abrManager : ABRManager,
+  representationEstimator : IRepresentationEstimator,
   segmentBuffersStore : SegmentBuffersStore,
   segmentFetcherCreator : SegmentFetcherCreator,
   options: IStreamOrchestratorOptions
@@ -141,8 +142,8 @@ export default function StreamOrchestrator(
                                 Infinity;
       return BufferGarbageCollector({
         segmentBuffer,
-        currentTime$: playbackObserver.observe(true)
-          .pipe(map(o => o.position + o.wantedTimeOffset)),
+        currentTime$: playbackObserver.getReference().asObservable()
+          .pipe(map(o => o.position.pending ?? o.position.last)),
         maxBufferBehind$: maxBufferBehind.asObservable().pipe(
           map(val => Math.min(val, defaultMaxBehind))),
         maxBufferAhead$: maxBufferAhead.asObservable().pipe(
@@ -263,13 +264,14 @@ export default function StreamOrchestrator(
 
     // Restart the current Stream when the wanted time is in another period
     // than the ones already considered
-    const restartStreamsWhenOutOfBounds$ = playbackObserver.observe(true).pipe(
+    const observation$ = playbackObserver.getReference().asObservable();
+    const restartStreamsWhenOutOfBounds$ = observation$.pipe(
       filterMap<
         IStreamOrchestratorPlaybackObservation,
         Period,
         null
-      >(({ position, wantedTimeOffset }) => {
-        const time = wantedTimeOffset + position;
+      >(({ position }) => {
+        const time = position.pending ?? position.last;
         if (!enableOutOfBoundsCheck || !isOutOfPeriodList(time)) {
           return null;
         }
@@ -281,7 +283,7 @@ export default function StreamOrchestrator(
         log.info("SO: Current position out of the bounds of the active periods," +
                  "re-creating Streams.",
                  bufferType,
-                 position + wantedTimeOffset);
+                 time);
         enableOutOfBoundsCheck = false;
         destroyStreams$.next();
         return nextPeriod;
@@ -323,16 +325,23 @@ export default function StreamOrchestrator(
           ...rangesToClean.map(({ start, end }) =>
             start >= end ? EMPTY :
                            segmentBuffer.removeBuffer(start, end).pipe(ignoreElements())),
-          playbackObserver.observe(true).pipe(
+
+          // Schedule micro task before checking the last playback observation
+          // to reduce the risk of race conditions where the next observation
+          // was going to be emitted synchronously.
+          nextTickObs().pipe(ignoreElements()),
+          playbackObserver.getReference().asObservable().pipe(
             take(1),
             mergeMap((observation) => {
+              const shouldAutoPlay = !(observation.paused.pending ??
+                                       playbackObserver.getIsPaused());
               return observableConcat(
-                observableOf(EVENTS.needsDecipherabilityFlush(observation.position,
-                                                              !observation.isPaused,
+                observableOf(EVENTS.needsDecipherabilityFlush(observation.position.last,
+                                                              shouldAutoPlay,
                                                               observation.duration)),
                 observableDefer(() => {
-                  const lastPosition = observation.position +
-                                       observation.wantedTimeOffset;
+                  const lastPosition = observation.position.pending ??
+                                       observation.position.last;
                   const newInitialPeriod = manifest.getPeriodForTime(lastPosition);
                   if (newInitialPeriod == null) {
                     throw new MediaError(
@@ -391,10 +400,10 @@ export default function StreamOrchestrator(
     const destroyNextStreams$ = new Subject<void>();
 
     // Emits when the current position goes over the end of the current Stream.
-    const endOfCurrentStream$ = playbackObserver.observe(true)
-      .pipe(filter(({ position, wantedTimeOffset }) =>
+    const endOfCurrentStream$ = playbackObserver.getReference().asObservable()
+      .pipe(filter(({ position }) =>
         basePeriod.end != null &&
-                    (position + wantedTimeOffset) >= basePeriod.end));
+                    (position.pending ?? position.last) >= basePeriod.end));
 
     // Create Period Stream for the next Period.
     const nextPeriodStream$ = createNextPeriodStream$
@@ -422,16 +431,16 @@ export default function StreamOrchestrator(
     // Will emit when the current Stream should be destroyed.
     const killCurrentStream$ = observableMerge(endOfCurrentStream$, destroyAll$);
 
-    const periodStream$ = PeriodStream({ abrManager,
-                                         bufferType,
+    const periodStream$ = PeriodStream({ bufferType,
                                          content: { manifest, period: basePeriod },
                                          garbageCollectors,
+                                         maxVideoBufferSize,
                                          segmentFetcherCreator,
                                          segmentBuffersStore,
                                          options,
                                          playbackObserver,
-                                         wantedBufferAhead,
-                                         maxVideoBufferSize }
+                                         representationEstimator,
+                                         wantedBufferAhead }
     ).pipe(
       mergeMap((evt : IPeriodStreamEvent) : Observable<IMultiplePeriodStreamsEvent> => {
         if (evt.type === "stream-status") {

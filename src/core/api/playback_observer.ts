@@ -14,23 +14,17 @@
  * limitations under the License.
  */
 
-import {
-  defer as observableDefer,
-  fromEvent as observableFromEvent,
-  interval as observableInterval,
-  map,
-  merge as observableMerge,
-  Observable,
-  share,
-  shareReplay,
-  skip,
-  startWith,
-} from "rxjs";
 import config from "../../config";
 import log from "../../log";
+import noop from "../../utils/noop";
 import objectAssign from "../../utils/object_assign";
 import { getRange } from "../../utils/ranges";
-
+import createSharedReference, {
+  IReadOnlySharedReference,
+} from "../../utils/reference";
+import TaskCanceller, {
+  CancellationSignal,
+} from "../../utils/task_canceller";
 
 /**
  * HTMLMediaElement Events for which playback observations are calculated and
@@ -38,7 +32,9 @@ import { getRange } from "../../utils/ranges";
  * @type {Array.<string>}
  */
 const SCANNED_MEDIA_ELEMENTS_EVENTS : IPlaybackObserverEventType[] = [ "canplay",
+                                                                       "ended",
                                                                        "play",
+                                                                       "pause",
                                                                        "seeking",
                                                                        "seeked",
                                                                        "loadedmetadata",
@@ -89,19 +85,23 @@ export default class PlaybackObserver {
   private _internalSeekingEventsIncomingCounter : number;
 
   /**
-   * Last playback observation made by the `PlaybackObserver`.
+   * Stores the last playback observation produced by the `PlaybackObserver`.:
+   */
+  private _observationRef : IReadOnlySharedReference<IPlaybackObservation>;
+
+  /**
+   * `TaskCanceller` allowing to free all resources and stop producing playback
+   * observations.
+   */
+  private _canceller : TaskCanceller;
+
+  /**
+   * Create a new `PlaybackObserver`, which allows to produce new "playback
+   * observations" on various media events and intervals.
    *
-   * `null` if no observation has been made yet.
-   */
-  private _lastObservation : IPlaybackObservation | null;
-
-  /**
-   * Lazily-created shared Observable that will emit playback observations.
-   * Set to `null` until the first time it is generated.
-   */
-  private _observation$ : Observable<IPlaybackObservation> | null;
-
-  /**
+   * Note that creating a `PlaybackObserver` lead to the usage of resources,
+   * such as event listeners which will only be freed once the `stop` method is
+   * called.
    * @param {HTMLMediaElement} mediaElement
    * @param {Object} options
    */
@@ -110,8 +110,22 @@ export default class PlaybackObserver {
     this._mediaElement = mediaElement;
     this._withMediaSource = options.withMediaSource;
     this._lowLatencyMode = options.lowLatencyMode;
-    this._lastObservation = null;
-    this._observation$ = null;
+    this._canceller = new TaskCanceller();
+    this._observationRef = this._createSharedReference();
+  }
+
+  /**
+   * Stop the `PlaybackObserver` from emitting playback observations and free all
+   * resources reserved to emitting them such as event listeners, intervals and
+   * subscribing callbacks.
+   *
+   * Once `stop` is called, no new playback observation will ever be emitted.
+   *
+   * Note that it is important to call stop once the `PlaybackObserver` is no
+   * more needed to avoid unnecessarily leaking resources.
+   */
+  public stop() {
+    this._canceller.cancel();
   }
 
   /**
@@ -124,6 +138,17 @@ export default class PlaybackObserver {
   }
 
   /**
+   * Returns the current `paused` status advertised by the `HTMLMediaElement`.
+   *
+   * Use this instead of the same status emitted on an observation when you want
+   * to be sure you're using the current value.
+   * @returns {boolean}
+   */
+  public getIsPaused() : boolean {
+    return this._mediaElement.paused;
+  }
+
+  /**
    * Update the current position (seek) on the `HTMLMediaElement`, by giving a
    * new position in seconds.
    *
@@ -131,7 +156,7 @@ export default class PlaybackObserver {
    * "internal" seeks. They don't result into the exact same playback
    * observation than regular seeks (which most likely comes from the outside,
    * e.g. the user).
-   * @param {number}
+   * @param {number} time
    */
   public setCurrentTime(time: number) : void {
     this._internalSeekingEventsIncomingCounter += 1;
@@ -147,28 +172,39 @@ export default class PlaybackObserver {
   }
 
   /**
-   * Returns an Observable regularly emitting playback observation, optionally
-   * starting with the last one.
+   * Returns an `IReadOnlySharedReference` storing the last playback observation
+   * produced by the `PlaybackObserver` and updated each time a new one is
+   * produced.
    *
-   * Note that this Observable is shared and unique, so that multiple `observe`
-   * call will return the exact same Observable and multiple concurrent
-   * `subscribe` will receive the same events at the same time.
-   * This was done for performance and simplicity reasons.
+   * This value can then be for example subscribed to to be notified of future
+   * playback observations.
    *
-   * @param {boolean} includeLastObservation
-   * @returns {Observable}
+   * @returns {Object}
    */
-  public observe(includeLastObservation : boolean) : Observable<IPlaybackObservation> {
-    return observableDefer(() : Observable<IPlaybackObservation> => {
-      if (this._observation$ === null || this._lastObservation === null) {
-        this._lastObservation = this._generateInitialObservation();
-        this._observation$ = this._createInnerObservable().pipe(share());
-        return this.observe(includeLastObservation);
-      } else {
-        return includeLastObservation ?
-          this._observation$.pipe(startWith(this._lastObservation)) :
-          this._observation$;
-      }
+  public getReference() : IReadOnlySharedReference<IPlaybackObservation> {
+    return this._observationRef;
+  }
+
+  /**
+   * Register a callback so it regularly receives playback observations.
+   * @param {Function} cb
+   * @param {Object} options - Configuration options:
+   *   - `includeLastObservation`: If set to `true` the last observation will
+   *     be first emitted synchronously.
+   *   - `clearSignal`: If set, the callback will be unregistered when this
+   *     CancellationSignal emits.
+   */
+  public listen(
+    cb : (observation : IPlaybackObservation) => void,
+    options? : { includeLastObservation? : boolean | undefined;
+                 clearSignal? : CancellationSignal | undefined; }
+  ) {
+    if (this._canceller.isUsed || options?.clearSignal?.isCancelled === true) {
+      return noop;
+    }
+    this._observationRef.onUpdate(cb, {
+      clearSignal: options?.clearSignal,
+      emitCurrentValue: options?.includeLastObservation,
     });
   }
 
@@ -183,99 +219,122 @@ export default class PlaybackObserver {
    *
    * As argument, this method takes a function which will allow to produce
    * the new set of properties to be present on each observation.
-   * @param {Function} mapObservable
+   * @param {Function} transform
    * @returns {Object}
    */
   public deriveReadOnlyObserver<TDest>(
-    mapObservable : (
-      observation$ : Observable<IPlaybackObservation>
-    ) => Observable<TDest>
+    transform : (
+      observationRef : IReadOnlySharedReference<IPlaybackObservation>,
+      cancellationSignal : CancellationSignal
+    ) => IReadOnlySharedReference<TDest>
   ) : IReadOnlyPlaybackObserver<TDest> {
-    return generateReadOnlyObserver(this, mapObservable);
+    return generateReadOnlyObserver(this, transform, this._canceller.signal);
   }
 
   /**
-   * Creates the observable that will generate playback observations.
+   * Creates the `IReadOnlySharedReference` that will generate playback
+   * observations.
    * @returns {Observable}
    */
-  private _createInnerObservable() : Observable<IPlaybackObservation> {
+  private _createSharedReference() : IReadOnlySharedReference<IPlaybackObservation> {
+    if (this._observationRef !== undefined) {
+      return this._observationRef;
+    }
 
+    let lastObservation : IPlaybackObservation | null;
+    const { SAMPLING_INTERVAL_MEDIASOURCE,
+            SAMPLING_INTERVAL_LOW_LATENCY,
+            SAMPLING_INTERVAL_NO_MEDIASOURCE } = config.getCurrent();
 
-    return observableDefer(() : Observable<IPlaybackObservation> => {
-      const { SAMPLING_INTERVAL_MEDIASOURCE,
-              SAMPLING_INTERVAL_LOW_LATENCY,
-              SAMPLING_INTERVAL_NO_MEDIASOURCE } = config.getCurrent();
-      const getCurrentObservation = (
-        event : IPlaybackObserverEventType
-      ) : IPlaybackObservation => {
-        let tmpEvt: IPlaybackObserverEventType = event;
-        if (tmpEvt === "seeking" && this._internalSeekingEventsIncomingCounter > 0) {
-          tmpEvt = "internal-seeking";
-          this._internalSeekingEventsIncomingCounter -= 1;
-        }
-        const lastObservation = this._lastObservation ??
-                                this._generateInitialObservation();
-        const mediaTimings = getMediaInfos(this._mediaElement, tmpEvt);
-        const internalSeeking = mediaTimings.seeking &&
-          // We've just received the event for internally seeking
-          (tmpEvt === "internal-seeking" ||
-            // or We're still waiting on the previous internal-seek
-            (lastObservation.internalSeeking && tmpEvt !== "seeking"));
-        const rebufferingStatus = getRebufferingStatus(
-          lastObservation,
-          mediaTimings,
-          { lowLatencyMode: this._lowLatencyMode,
-            withMediaSource: this._withMediaSource });
+    const getCurrentObservation = (
+      event : IPlaybackObserverEventType
+    ) : IPlaybackObservation => {
+      let tmpEvt: IPlaybackObserverEventType = event;
+      if (tmpEvt === "seeking" && this._internalSeekingEventsIncomingCounter > 0) {
+        tmpEvt = "internal-seeking";
+        this._internalSeekingEventsIncomingCounter -= 1;
+      }
+      const _lastObservation = lastObservation ?? this._generateInitialObservation();
+      const mediaTimings = getMediaInfos(this._mediaElement, tmpEvt);
+      const internalSeeking = mediaTimings.seeking &&
+        // We've just received the event for internally seeking
+        (tmpEvt === "internal-seeking" ||
+          // or We're still waiting on the previous internal-seek
+          (_lastObservation.internalSeeking && tmpEvt !== "seeking"));
+      const rebufferingStatus = getRebufferingStatus(
+        _lastObservation,
+        mediaTimings,
+        { lowLatencyMode: this._lowLatencyMode,
+          withMediaSource: this._withMediaSource });
 
-        const freezingStatus = getFreezingStatus(lastObservation, mediaTimings);
-        const timings = objectAssign(
-          {},
-          { rebuffering: rebufferingStatus,
-            freezing: freezingStatus,
-            internalSeeking },
-          mediaTimings);
-        if (log.hasLevel("DEBUG")) {
-          log.debug("API: current media element state tick",
-                    "event", timings.event,
-                    "position", timings.position,
-                    "seeking", timings.seeking,
-                    "internalSeeking", timings.internalSeeking,
-                    "rebuffering", timings.rebuffering !== null,
-                    "freezing", timings.freezing !== null,
-                    "ended", timings.ended,
-                    "paused", timings.paused,
-                    "playbackRate", timings.playbackRate,
-                    "readyState", timings.readyState);
-        }
-        return timings;
+      const freezingStatus = getFreezingStatus(_lastObservation, mediaTimings);
+      const timings = objectAssign(
+        {},
+        { rebuffering: rebufferingStatus,
+          freezing: freezingStatus,
+          internalSeeking },
+        mediaTimings);
+      if (log.hasLevel("DEBUG")) {
+        log.debug("API: current media element state tick",
+                  "event", timings.event,
+                  "position", timings.position,
+                  "seeking", timings.seeking,
+                  "internalSeeking", timings.internalSeeking,
+                  "rebuffering", timings.rebuffering !== null,
+                  "freezing", timings.freezing !== null,
+                  "ended", timings.ended,
+                  "paused", timings.paused,
+                  "playbackRate", timings.playbackRate,
+                  "readyState", timings.readyState);
+      }
+      return timings;
+    };
+
+    const returnedSharedReference = createSharedReference(getCurrentObservation("init"));
+
+    const generateObservationForEvent = (event : IPlaybackObserverEventType) => {
+      const newObservation = getCurrentObservation(event);
+      if (log.hasLevel("DEBUG")) {
+        log.debug("API: current playback timeline:\n" +
+                  prettyPrintBuffered(newObservation.buffered,
+                                      newObservation.position),
+                  `\n${event}`);
+      }
+      lastObservation = newObservation;
+      returnedSharedReference.setValue(newObservation);
+    };
+
+    const interval = this._lowLatencyMode  ? SAMPLING_INTERVAL_LOW_LATENCY :
+                     this._withMediaSource ? SAMPLING_INTERVAL_MEDIASOURCE :
+                                             SAMPLING_INTERVAL_NO_MEDIASOURCE;
+    let intervalId = setInterval(onInterval, interval);
+    const removeEventListeners = SCANNED_MEDIA_ELEMENTS_EVENTS.map((eventName) => {
+      this._mediaElement.addEventListener(eventName, onMediaEvent);
+      function onMediaEvent() {
+        restartInterval();
+        generateObservationForEvent(eventName);
+      }
+      return () => {
+        this._mediaElement.removeEventListener(eventName, onMediaEvent);
       };
-
-      const eventObs : Array< Observable< IPlaybackObserverEventType > > =
-        SCANNED_MEDIA_ELEMENTS_EVENTS.map((eventName) =>
-          observableFromEvent(this._mediaElement, eventName)
-            .pipe(map(() => eventName)));
-
-      const interval = this._lowLatencyMode  ? SAMPLING_INTERVAL_LOW_LATENCY :
-                       this._withMediaSource ? SAMPLING_INTERVAL_MEDIASOURCE :
-                                               SAMPLING_INTERVAL_NO_MEDIASOURCE;
-
-      const interval$ : Observable<"timeupdate"> =
-        observableInterval(interval)
-          .pipe(map(() => "timeupdate"));
-
-      return observableMerge(interval$, ...eventObs).pipe(
-        map((event : IPlaybackObserverEventType) => {
-          const newObservation = getCurrentObservation(event);
-          if (log.hasLevel("DEBUG")) {
-            log.debug("API: current playback timeline:\n" +
-                      prettyPrintBuffered(newObservation.buffered,
-                                          newObservation.position),
-                      `\n${event}`);
-          }
-          this._lastObservation = newObservation;
-          return newObservation;
-        }));
     });
+
+    this._canceller.signal.register(() => {
+      clearInterval(intervalId);
+      removeEventListeners.forEach(cb => cb());
+      returnedSharedReference.finish();
+    });
+
+    return returnedSharedReference;
+
+    function onInterval() {
+      generateObservationForEvent("timeupdate");
+    }
+
+    function restartInterval() {
+      clearInterval(intervalId);
+      intervalId = setInterval(onInterval, interval);
+    }
   }
 
   private _generateInitialObservation() : IPlaybackObservation {
@@ -295,9 +354,13 @@ export type IPlaybackObserverEventType =
   /** On the HTML5 event with the same name */
   "canplay" |
   /** On the HTML5 event with the same name */
+  "ended" |
+  /** On the HTML5 event with the same name */
   "canplaythrough" | // HTML5 Event
   /** On the HTML5 event with the same name */
   "play" |
+  /** On the HTML5 event with the same name */
+  "pause" |
   /** On the HTML5 event with the same name */
   "seeking" |
   /** On the HTML5 event with the same name */
@@ -415,29 +478,52 @@ export interface IReadOnlyPlaybackObserver<TObservationType> {
   /** Get the HTMLMediaElement's current `readyState`. */
   getReadyState() : number;
   /**
-   * Returns an Observable regularly emitting playback observation, optionally
-   * starting with the last one.
+   * Returns the current `paused` status advertised by the `HTMLMediaElement`.
    *
-   * Note that this Observable is shared and unique, so that multiple `observe`
-   * call will return the exact same Observable and multiple concurrent
-   * `subscribe` will receive the same events at the same time.
-   * This was done for performance and simplicity reasons.
-   *
-   * @param {boolean} includeLastObservation
-   * @returns {Observable}
+   * Use this instead of the same status emitted on an observation when you want
+   * to be sure you're using the current value.
+   * @returns {boolean}
    */
-  observe(includeLastObservation : boolean) : Observable<TObservationType>;
+  getIsPaused() : boolean;
+  /**
+   * Returns an `IReadOnlySharedReference` storing the last playback observation
+   * produced by the `IReadOnlyPlaybackObserver` and updated each time a new one
+   * is produced.
+   *
+   * This value can then be for example subscribed to to be notified of future
+   * playback observations.
+   *
+   * @returns {Object}
+   */
+  getReference() : IReadOnlySharedReference<TObservationType>;
+  /**
+   * Register a callback so it regularly receives playback observations.
+   * @param {Function} cb
+   * @param {Object} options - Configuration options:
+   *   - `includeLastObservation`: If set to `true` the last observation will
+   *     be first emitted synchronously.
+   *   - `clearSignal`: If set, the callback will be unregistered when this
+   *     CancellationSignal emits.
+   * @returns {Function} - Allows to easily unregister the callback
+   */
+  listen(
+    cb : (observation : TObservationType) => void,
+    options? : { includeLastObservation? : boolean | undefined;
+                 clearSignal? : CancellationSignal | undefined; }
+  ) : void;
   /**
    * Generate a new `IReadOnlyPlaybackObserver` from this one.
    *
    * As argument, this method takes a function which will allow to produce
    * the new set of properties to be present on each observation.
-   * @param {Function} mapObservable
+   * @param {Function} transform
    * @returns {Object}
    */
   deriveReadOnlyObserver<TDest>(
-    mapObservable : (observation$ : Observable<TObservationType>) => Observable<TDest>,
-    mapObservation : (observation : TObservationType) => TDest
+    transform : (
+      observationRef : IReadOnlySharedReference<TObservationType>,
+      cancellationSignal : CancellationSignal
+    ) => IReadOnlySharedReference<TDest>
   ) : IReadOnlyPlaybackObserver<TDest>;
 }
 
@@ -754,16 +840,18 @@ function prettyPrintBuffered(
  * Create `IReadOnlyPlaybackObserver` from a source `IReadOnlyPlaybackObserver`
  * and a mapping function.
  * @param {Object} src
- * @param {Function} mapObservable
+ * @param {Function} transform
  * @returns {Object}
  */
 function generateReadOnlyObserver<TSource, TDest>(
   src : IReadOnlyPlaybackObserver<TSource>,
-  mapObservable : (observation$ : Observable<TSource>) => Observable<TDest>
+  transform : (
+    observationRef : IReadOnlySharedReference<TSource>,
+    cancellationSignal : CancellationSignal
+  ) => IReadOnlySharedReference<TDest>,
+  cancellationSignal : CancellationSignal
 ) : IReadOnlyPlaybackObserver<TDest> {
-  const newObs = observableDefer(() =>
-    mapObservable(src.observe(true))
-  ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  const mappedRef = transform(src.getReference(), cancellationSignal);
   return {
     getCurrentTime() {
       return src.getCurrentTime();
@@ -771,14 +859,32 @@ function generateReadOnlyObserver<TSource, TDest>(
     getReadyState() {
       return src.getReadyState();
     },
-    observe(includeLastObservation : boolean) : Observable<TDest> {
-      return includeLastObservation ? newObs :
-                                      newObs.pipe(skip(1));
+    getIsPaused() {
+      return src.getIsPaused();
+    },
+    getReference() : IReadOnlySharedReference<TDest> {
+      return mappedRef;
+    },
+    listen(
+      cb : (observation : TDest) => void,
+      options? : { includeLastObservation? : boolean | undefined;
+                   clearSignal? : CancellationSignal | undefined; }
+    ) : void {
+      if (cancellationSignal.isCancelled || options?.clearSignal?.isCancelled === true) {
+        return ;
+      }
+      mappedRef.onUpdate(cb, {
+        clearSignal: options?.clearSignal,
+        emitCurrentValue: options?.includeLastObservation,
+      });
     },
     deriveReadOnlyObserver<TNext>(
-      newUdateObserver : (observation$ : Observable<TDest>) => Observable<TNext>
+      newTransformFn : (
+        observationRef : IReadOnlySharedReference<TDest>,
+        signal : CancellationSignal
+      ) => IReadOnlySharedReference<TNext>
     ) : IReadOnlyPlaybackObserver<TNext> {
-      return generateReadOnlyObserver(this, newUdateObserver);
+      return generateReadOnlyObserver(this, newTransformFn, cancellationSignal);
     },
   };
 }

@@ -614,6 +614,7 @@ export default class TrackChoiceManager {
       audioDescription: chosenTrack.isAudioDescription === true,
       id: chosenTrack.id,
       representations: chosenTrack.representations.map(parseAudioRepresentation),
+      label: chosenTrack.label,
     };
     if (chosenTrack.isDub === true) {
       audioTrack.dub = true;
@@ -649,6 +650,7 @@ export default class TrackChoiceManager {
       normalized: takeFirstSet<string>(chosenTextAdaptation.normalizedLanguage, ""),
       closedCaption: chosenTextAdaptation.isClosedCaption === true,
       id: chosenTextAdaptation.id,
+      label: chosenTextAdaptation.label,
     };
   }
 
@@ -693,6 +695,7 @@ export default class TrackChoiceManager {
     const videoTrack: IVideoTrack = {
       id: currAdaptation.id,
       representations: currAdaptation.representations.map(parseVideoRepresentation),
+      label: currAdaptation.label,
     };
     if (currAdaptation.isSignInterpreted === true) {
       videoTrack.signInterpreted = true;
@@ -735,6 +738,7 @@ export default class TrackChoiceManager {
           active: currentId === null ? false :
                                        currentId === adaptation.id,
           representations: adaptation.representations.map(parseAudioRepresentation),
+          label: adaptation.label,
         };
         if (adaptation.isDub === true) {
           formatted.dub = true;
@@ -771,6 +775,7 @@ export default class TrackChoiceManager {
         id: adaptation.id,
         active: currentId === null ? false :
                                      currentId === adaptation.id,
+        label: adaptation.label,
       }));
   }
 
@@ -817,6 +822,7 @@ export default class TrackChoiceManager {
           active: currentId === null ? false :
                                        currentId === adaptation.id,
           representations: adaptation.representations.map(parseVideoRepresentation),
+          label: adaptation.label,
         };
         if (adaptation.isSignInterpreted === true) {
           formatted.signInterpreted = true;

@@ -5,9 +5,10 @@ import "core-js/stable";
 import "regenerator-runtime/runtime";
 
 import React from "react";
-import ReactDOM from "react-dom";
+import ReactDOM from "react-dom/client";
 import Main from "./controllers/Main.jsx";
 
 window.onload = function() {
-  ReactDOM.render(<Main />, document.getElementById("player-container"));
+  const root = ReactDOM.createRoot(document.getElementById("player-container"));
+  root.render(<Main />);
 };

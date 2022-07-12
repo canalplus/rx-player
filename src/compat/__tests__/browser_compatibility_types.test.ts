@@ -49,7 +49,7 @@ describe("compat - browser compatibility types", () => {
     win.WebKitMediaSource = { a: 3 };
     win.MSMediaSource = { a: 4 };
 
-    const { MediaSource_ } = require("../browser_compatibility_types");
+    const { MediaSource_ } = jest.requireActual("../browser_compatibility_types");
     expect(MediaSource_).toEqual(undefined);
 
     win.MediaSource = origMediaSource;
@@ -72,7 +72,7 @@ describe("compat - browser compatibility types", () => {
     win.WebKitMediaSource = { a: 3 };
     win.MSMediaSource = { a: 4 };
 
-    const { MediaSource_ } = require("../browser_compatibility_types");
+    const { MediaSource_ } = jest.requireActual("../browser_compatibility_types");
     expect(MediaSource_).toEqual({ a: 1 });
 
     win.MediaSource = origMediaSource;
@@ -95,7 +95,7 @@ describe("compat - browser compatibility types", () => {
     win.WebKitMediaSource = undefined;
     win.MSMediaSource = undefined;
 
-    const { MediaSource_ } = require("../browser_compatibility_types");
+    const { MediaSource_ } = jest.requireActual("../browser_compatibility_types");
     expect(MediaSource_).toEqual({ a: 2 });
 
     win.MediaSource = origMediaSource;
@@ -118,7 +118,7 @@ describe("compat - browser compatibility types", () => {
     win.WebKitMediaSource = { a: 3 };
     win.MSMediaSource = undefined;
 
-    const { MediaSource_ } = require("../browser_compatibility_types");
+    const { MediaSource_ } = jest.requireActual("../browser_compatibility_types");
     expect(MediaSource_).toEqual({ a: 3 });
 
     win.MediaSource = origMediaSource;
@@ -141,7 +141,7 @@ describe("compat - browser compatibility types", () => {
     win.WebKitMediaSource = undefined;
     win.MSMediaSource = { a: 4 };
 
-    const { MediaSource_ } = require("../browser_compatibility_types");
+    const { MediaSource_ } = jest.requireActual("../browser_compatibility_types");
     expect(MediaSource_).toEqual({ a: 4 });
 
     win.MediaSource = origMediaSource;

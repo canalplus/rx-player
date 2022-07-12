@@ -41,7 +41,7 @@ describe("Compat - isVTTCue", () => {
     const originalVTTCue = window.VTTCue;
     win.VTTCue = MockVTTCue;
     const cue = new VTTCue(0, 10, "");
-    const isVTTCue = require("../is_vtt_cue").default;
+    const isVTTCue = jest.requireActual("../is_vtt_cue").default;
     expect(isVTTCue(cue)).toEqual(true);
     window.VTTCue = originalVTTCue;
   });
@@ -54,7 +54,7 @@ describe("Compat - isVTTCue", () => {
       endTime: 10,
       text: "toto",
     };
-    const isVTTCue = require("../is_vtt_cue").default;
+    const isVTTCue = jest.requireActual("../is_vtt_cue").default;
     expect(isVTTCue(cue)).toEqual(false);
     window.VTTCue = originalVTTCue;
   });
@@ -64,7 +64,7 @@ describe("Compat - isVTTCue", () => {
     win.VTTCue = MockVTTCue;
     const cue = new VTTCue(0, 10, "");
     delete win.VTTCue;
-    const isVTTCue = require("../is_vtt_cue").default;
+    const isVTTCue = jest.requireActual("../is_vtt_cue").default;
     expect(isVTTCue(cue)).toEqual(false);
     window.VTTCue = originalVTTCue;
   });

@@ -16,12 +16,12 @@
 
 import log from "../../log";
 import arrayFindIndex from "../../utils/array_find_index";
-import getBufferLevels from "./get_buffer_levels";
+import getBufferLevels from "./utils/get_buffer_levels";
 
 /**
  * Choose a bitrate based on the currently available buffer.
  *
- * This algorithm is based on the deviation of the BOLA algorithm.
+ * This algorithm is based on a deviation of the BOLA algorithm.
  * It is a hybrid solution that also relies on a given bitrate's
  * "maintainability".
  * Each time a chunk is downloaded, from the ratio between the chunk duration
@@ -106,13 +106,14 @@ export default class BufferBasedChooser {
 export interface IBufferBasedChooserPlaybackObservation {
   /**
    * Difference in seconds between the current position and the next
-   * non-buffered position
+   * non-buffered position in the buffer for the currently-considered
+   * media type.
    */
   bufferGap : number;
   /** The bitrate of the currently downloaded segments, in bps. */
   currentBitrate? : number | undefined;
   /** The "maintainability score" of the currently downloaded segments. */
   currentScore? : number | undefined;
-  /** Playback rate wanted */
+  /** Playback rate wanted (e.g. `1` is regular playback, `2` is double speed etc.). */
   speed : number;
 }

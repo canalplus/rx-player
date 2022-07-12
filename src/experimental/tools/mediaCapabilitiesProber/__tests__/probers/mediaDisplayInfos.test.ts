@@ -31,7 +31,8 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
     const origWindowMatchMedia = window.matchMedia;
     /* eslint-enable @typescript-eslint/unbound-method */
     (window as any).matchMedia = undefined;
-    const probeMediaDisplayInfos = require("../../probers/mediaDisplayInfos").default;
+    const probeMediaDisplayInfos =
+      jest.requireActual("../../probers/mediaDisplayInfos").default;
     /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeMediaDisplayInfos({})).rejects.toThrowError(
       "MediaCapabilitiesProber >>> API_CALL: matchMedia not available");
@@ -49,7 +50,8 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
       display: {},
     };
 
-    const probeMediaDisplayInfos = require("../../probers/mediaDisplayInfos").default;
+    const probeMediaDisplayInfos =
+      jest.requireActual("../../probers/mediaDisplayInfos").default;
 
     expect.assertions(1);
     probeMediaDisplayInfos(config)
@@ -73,7 +75,8 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
     (window as any).matchMedia = mockMatchMedia;
     const config = {};
 
-    const probeMediaDisplayInfos = require("../../probers/mediaDisplayInfos").default;
+    const probeMediaDisplayInfos =
+      jest.requireActual("../../probers/mediaDisplayInfos").default;
 
     expect.assertions(1);
     probeMediaDisplayInfos(config)
@@ -103,7 +106,8 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
       },
     };
 
-    const probeMediaDisplayInfos = require("../../probers/mediaDisplayInfos").default;
+    const probeMediaDisplayInfos =
+      jest.requireActual("../../probers/mediaDisplayInfos").default;
 
     expect.assertions(2);
     probeMediaDisplayInfos(config)
@@ -134,7 +138,8 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
       },
     };
 
-    const probeMediaDisplayInfos = require("../../probers/mediaDisplayInfos").default;
+    const probeMediaDisplayInfos =
+      jest.requireActual("../../probers/mediaDisplayInfos").default;
 
     expect.assertions(2);
     probeMediaDisplayInfos(config)
@@ -164,7 +169,8 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
       },
     };
 
-    const probeMediaDisplayInfos = require("../../probers/mediaDisplayInfos").default;
+    const probeMediaDisplayInfos =
+      jest.requireActual("../../probers/mediaDisplayInfos").default;
 
     expect.assertions(2);
     probeMediaDisplayInfos(config)

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import log from "../../log";
-import { Representation } from "../../manifest";
-import EWMA from "./utils/ewma";
+import log from "../../../log";
+import { Representation } from "../../../manifest";
+import EWMA from "./ewma";
 
 /**
  * Calculate the "maintainability score" of a given Representation:
@@ -135,7 +135,14 @@ export default class RepresentationScoreCalculator {
   }
 }
 
+/**
+ * Value representing the level of confidence to have on a given score.
+ * A low confidence level is most likely linked to too few samples to be relied
+ * on without adapted considerations.
+ */
 export const enum ScoreConfidenceLevel {
+  /** High confidence level: the score can be relied on. */
   HIGH = 1,
+  /** Low confidence level: the score may still incorrectly reflect the truth. */
   LOW = 0,
 }

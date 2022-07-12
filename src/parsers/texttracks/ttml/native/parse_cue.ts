@@ -26,6 +26,10 @@ import {
 import getTimeDelimiters from "../get_time_delimiters";
 import { IParsedTTMLCue } from "../parse_ttml";
 import { REGXP_PERCENT_VALUES } from "../regexps";
+import {
+  isLineBreakElement,
+  isSpanElement,
+} from "../xml_utils";
 
 const TEXT_ALIGN_TO_LIGN_ALIGN : Partial<Record<string, string>> = {
   left: "start",
@@ -140,10 +144,10 @@ function generateTextContent(
           .replace(/\u00A0/g, "&nbsp;");
 
         text += escapedTextContent;
-      } else if (currentNode.nodeName === "br") {
+      } else if (isLineBreakElement(currentNode)) {
         text += "\n";
       } else if (
-        currentNode.nodeName === "span" &&
+        isSpanElement(currentNode) &&
         currentNode.nodeType === Node.ELEMENT_NODE &&
         currentNode.childNodes.length > 0
       ) {

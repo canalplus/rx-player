@@ -34,7 +34,7 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
     jest.mock("../../../../../compat", () => ({
       requestMediaKeySystemAccess: null,
     }));
-    const probeHDCPPolicy = require("../../probers/HDCPPolicy").default;
+    const probeHDCPPolicy = jest.requireActual("../../probers/HDCPPolicy").default;
     /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeHDCPPolicy({})).rejects.toEqual(
       "MediaCapabilitiesProber >>> API_CALL: API not available");
@@ -45,7 +45,7 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
     jest.mock("../../../../../compat", () => ({
       requestMediaKeySystemAccess: {},
     }));
-    const probeHDCPPolicy = require("../../probers/HDCPPolicy").default;
+    const probeHDCPPolicy = jest.requireActual("../../probers/HDCPPolicy").default;
     /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeHDCPPolicy({})).rejects.toEqual(
       "MediaCapabilitiesProber >>> API_CALL: " +
@@ -67,7 +67,7 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAcces,
     }));
 
-    const probeHDCPPolicy = require("../../probers/HDCPPolicy").default;
+    const probeHDCPPolicy = jest.requireActual("../../probers/HDCPPolicy").default;
 
     expect.assertions(3);
     probeHDCPPolicy({ hdcp: "1.1" })
@@ -97,7 +97,7 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAcces,
     }));
 
-    const probeHDCPPolicy = require("../../probers/HDCPPolicy").default;
+    const probeHDCPPolicy = jest.requireActual("../../probers/HDCPPolicy").default;
 
     expect.assertions(3);
     probeHDCPPolicy({ hdcp: "1.1" })
@@ -127,7 +127,7 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAcces,
     }));
 
-    const probeHDCPPolicy = require("../../probers/HDCPPolicy").default;
+    const probeHDCPPolicy = jest.requireActual("../../probers/HDCPPolicy").default;
 
     expect.assertions(3);
     probeHDCPPolicy({ hdcp: "1.1" })

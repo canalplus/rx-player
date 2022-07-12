@@ -94,6 +94,14 @@ function parseAdaptationSetChildren(
           children.inbandEventStreams.push(parseScheme(currentElement));
           break;
 
+        case "Label":
+          const label = currentElement.textContent;
+
+          if (label !== null && label !== undefined) {
+            children.label = label;
+          }
+          break;
+
         case "Representation":
           const [representation, representationWarnings] =
             createRepresentationIntermediateRepresentation(currentElement);

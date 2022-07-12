@@ -19,10 +19,10 @@ import objectAssign from "../object_assign";
 describe("utils - objectAssign", () => {
   it("should throw if target is not an object", () => {
     expect(() => {
-      objectAssign(null, {});
+      objectAssign(null as unknown as object, {});
     }).toThrow("Cannot convert undefined or null to object");
     expect(() => {
-      objectAssign(undefined, {});
+      objectAssign(undefined as unknown as object, {});
     }).toThrow("Cannot convert undefined or null to object");
   });
 

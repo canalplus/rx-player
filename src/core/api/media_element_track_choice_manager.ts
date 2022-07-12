@@ -102,7 +102,7 @@ function createAudioTracks(
     const track = { language: audioTrack.language,
                     id,
                     normalized: normalizeLanguage(audioTrack.language),
-                    audioDescription: false,
+                    audioDescription: audioTrack.kind === "descriptions",
                     representations: [] as Representation[] };
     newAudioTracks.push({ track,
                           nativeTrack: audioTrack });

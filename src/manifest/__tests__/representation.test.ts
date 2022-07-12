@@ -47,7 +47,7 @@ describe("Manifest - Representation", () => {
   it("should be able to create Representation with the minimum arguments given", () => {
     jest.mock("../../compat", () => ({ __esModule: true as const,
                                        isCodecSupported: defaultIsCodecSupported }));
-    const Representation = require("../representation").default;
+    const Representation = jest.requireActual("../representation").default;
     const args = { bitrate: 12,
                    id: "test",
                    index: minimalIndex };
@@ -70,7 +70,7 @@ describe("Manifest - Representation", () => {
   it("should be able to add a height attribute", () => {
     jest.mock("../../compat", () => ({ __esModule: true as const,
                                        isCodecSupported: defaultIsCodecSupported }));
-    const Representation = require("../representation").default;
+    const Representation = jest.requireActual("../representation").default;
     const args = { bitrate: 12, id: "test", height: 57, index: minimalIndex };
     const representation = new Representation(args, { type: "video" });
     expect(representation.id).toBe("test");
@@ -91,7 +91,7 @@ describe("Manifest - Representation", () => {
   it("should be able to add a width attribute", () => {
     jest.mock("../../compat", () => ({ __esModule: true as const,
                                        isCodecSupported: defaultIsCodecSupported }));
-    const Representation = require("../representation").default;
+    const Representation = jest.requireActual("../representation").default;
     const args = { bitrate: 12, id: "test", width: 2, index: minimalIndex };
     const representation = new Representation(args, { type: "video" });
     expect(representation.id).toBe("test");
@@ -112,7 +112,7 @@ describe("Manifest - Representation", () => {
   it("should be able to add a codecs attribute", () => {
     jest.mock("../../compat", () => ({ __esModule: true as const,
                                        isCodecSupported: defaultIsCodecSupported }));
-    const Representation = require("../representation").default;
+    const Representation = jest.requireActual("../representation").default;
     const args = { bitrate: 12,
                    id: "test",
                    codecs: "vp9",
@@ -136,7 +136,7 @@ describe("Manifest - Representation", () => {
   it("should be able to add a mimeType attribute", () => {
     jest.mock("../../compat", () => ({ __esModule: true as const,
                                        isCodecSupported: defaultIsCodecSupported }));
-    const Representation = require("../representation").default;
+    const Representation = jest.requireActual("../representation").default;
     const args = { bitrate: 12,
                    id: "test",
                    mimeType: "audio/mp4",
@@ -160,7 +160,7 @@ describe("Manifest - Representation", () => {
   it("should be able to add a contentProtections attribute", () => {
     jest.mock("../../compat", () => ({ __esModule: true as const,
                                        isCodecSupported: defaultIsCodecSupported }));
-    const Representation = require("../representation").default;
+    const Representation = jest.requireActual("../representation").default;
     const args = { bitrate: 12,
                    id: "test",
                    index: minimalIndex,
@@ -189,7 +189,7 @@ describe("Manifest - Representation", () => {
   it("should be able to add a frameRate attribute", () => {
     jest.mock("../../compat", () => ({ __esModule: true as const,
                                        isCodecSupported: defaultIsCodecSupported }));
-    const Representation = require("../representation").default;
+    const Representation = jest.requireActual("../representation").default;
     const args = { bitrate: 12,
                    id: "test",
                    frameRate: "1/60",
@@ -215,7 +215,7 @@ describe("Manifest - Representation", () => {
   it("should be able to return an exploitable codecs + mimeType string", () => {
     jest.mock("../../compat", () => ({ __esModule: true as const,
                                        isCodecSupported: defaultIsCodecSupported }));
-    const Representation = require("../representation").default;
+    const Representation = jest.requireActual("../representation").default;
     const args1 = { bitrate: 12,
                     id: "test",
                     index: minimalIndex };
@@ -246,10 +246,10 @@ describe("Manifest - Representation", () => {
   });
 
   it("should set `isSupported` of non-supported codecs or mime-type to `false`", () => {
-    const notSupportedSpy = jest.fn(() => false);
+    const mockIsCodecSupportedFalse = jest.fn(() => false);
     jest.mock("../../compat", () => ({ __esModule: true as const,
-                                       isCodecSupported: notSupportedSpy }));
-    const Representation = require("../representation").default;
+                                       isCodecSupported: mockIsCodecSupportedFalse }));
+    const Representation = jest.requireActual("../representation").default;
     const args = { bitrate: 12,
                    id: "test",
                    frameRate: "1/60",
@@ -269,15 +269,16 @@ describe("Manifest - Representation", () => {
     expect(representation.getMimeTypeString()).toBe("audio/mp4;codecs=\"mp4a.40.2\"");
     expect(representation.isSupported).toBe(false);
     expect(representation.decipherable).toBe(undefined);
-    expect(notSupportedSpy).toHaveBeenCalledTimes(1);
-    expect(notSupportedSpy).toHaveBeenCalledWith("audio/mp4;codecs=\"mp4a.40.2\"");
+    expect(mockIsCodecSupportedFalse).toHaveBeenCalledTimes(1);
+    expect(mockIsCodecSupportedFalse)
+      .toHaveBeenCalledWith("audio/mp4;codecs=\"mp4a.40.2\"");
   });
 
   it("should not check support for a custom media buffer", () => {
-    const notSupportedSpy = jest.fn(() => false);
+    const mockIsCodecSupportedFalse = jest.fn(() => false);
     jest.mock("../../compat", () => ({ __esModule: true as const,
-                                       isCodecSupported: notSupportedSpy }));
-    const Representation = require("../representation").default;
+                                       isCodecSupported: mockIsCodecSupportedFalse }));
+    const Representation = jest.requireActual("../representation").default;
     const args = { bitrate: 12,
                    id: "test",
                    frameRate: "1/60",
@@ -290,6 +291,6 @@ describe("Manifest - Representation", () => {
     expect(representation.getMimeTypeString()).toBe("bip;codecs=\"boop\"");
     expect(representation.isSupported).toBe(true);
     expect(representation.decipherable).toBe(undefined);
-    expect(notSupportedSpy).toHaveBeenCalledTimes(0);
+    expect(mockIsCodecSupportedFalse).toHaveBeenCalledTimes(0);
   });
 });

@@ -27,7 +27,7 @@ import isNonEmptyString from "../../../../utils/is_non_empty_string";
 import {
   IParsedAdaptation,
   IParsedAdaptations,
-} from "../../types";
+} from "../../types";
 import {
   IAdaptationSetIntermediateRepresentation,
   ISegmentTemplateIntermediateRepresentation,
@@ -266,7 +266,7 @@ export default function parseAdaptationSets(
     const adaptation = adaptationsIR[adaptationIdx];
     const adaptationChildren = adaptation.children;
     const { essentialProperties,
-            roles } = adaptationChildren;
+            roles, label } = adaptationChildren;
 
     const isMainAdaptation = Array.isArray(roles) &&
       roles.some((role) => role.value === "main") &&
@@ -423,6 +423,10 @@ export default function parseAdaptationSets(
       }
       if (isSignInterpreted === true) {
         parsedAdaptationSet.isSignInterpreted = true;
+      }
+
+      if (label !== undefined) {
+        parsedAdaptationSet.label = label;
       }
 
       if (trickModeAttachedAdaptationIds !== undefined) {

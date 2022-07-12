@@ -200,6 +200,7 @@ export interface IAdaptationSetChildren {
   segmentBase? : ISegmentBaseIntermediateRepresentation | undefined;
   segmentList? : ISegmentListIntermediateRepresentation | undefined;
   segmentTemplate? : ISegmentTemplateIntermediateRepresentation | undefined;
+  label? : string | undefined;
 }
 
 /* Intermediate representation for An AdaptationSet node's attributes. */
@@ -234,6 +235,7 @@ export interface IAdaptationSetAttributes {
   width? : number;
   availabilityTimeComplete?: boolean;
   availabilityTimeOffset?: number;
+  label?: string;
 }
 
 export interface IRepresentationIntermediateRepresentation {

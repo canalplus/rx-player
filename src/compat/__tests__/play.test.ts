@@ -26,7 +26,7 @@ describe("compat - play", () => {
     const mockPlay = jest.fn(() => Promise.resolve());
     const fakeMediaElement = { play: mockPlay };
 
-    const play$ = require("../play").default;
+    const play$ = jest.requireActual("../play").default;
     play$(fakeMediaElement).subscribe(() => {
       expect(mockPlay).toHaveBeenCalledTimes(1);
       done();
@@ -37,7 +37,7 @@ describe("compat - play", () => {
     const mockPlay = jest.fn();
     const fakeMediaElement = { play: mockPlay };
 
-    const play$ = require("../play").default;
+    const play$ = jest.requireActual("../play").default;
     play$(fakeMediaElement).subscribe(() => {
       done();
     });
@@ -50,7 +50,7 @@ describe("compat - play", () => {
     });
     const fakeMediaElement = { play: mockPlay };
 
-    const play$ = require("../play").default;
+    const play$ = jest.requireActual("../play").default;
     play$(fakeMediaElement).subscribe(() => null, (err: unknown) => {
       expect(err).toBe(notAllowedError);
       done();
@@ -64,7 +64,7 @@ describe("compat - play", () => {
     });
     const fakeMediaElement = { play: mockPlay };
 
-    const play$ = require("../play").default;
+    const play$ = jest.requireActual("../play").default;
     play$(fakeMediaElement).subscribe(() => null, (err: unknown) => {
       expect(err).toBe(notAllowedError);
       done();

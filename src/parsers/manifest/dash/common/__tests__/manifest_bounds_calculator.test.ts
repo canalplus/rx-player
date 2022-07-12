@@ -91,7 +91,7 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
   it("should return how much time has elapsed through `estimateMinimumBound` since the live edge was set for a dynamic content", () => {
   /* eslint-enable max-len */
     let date = 5000;
-    const performanceSpy = jest.spyOn(performance, "now")
+    const mockPerformanceNow = jest.spyOn(performance, "now")
       .mockImplementation(jest.fn(() => date));
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
       isDynamic: true,
@@ -102,14 +102,14 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
     expect(manifestBoundsCalculator.estimateMinimumBound()).toEqual(1010);
     date = 35000;
     expect(manifestBoundsCalculator.estimateMinimumBound()).toEqual(1020);
-    performanceSpy.mockRestore();
+    mockPerformanceNow.mockRestore();
   });
 
   /* eslint-disable max-len */
   it("should return 0 even when a last position has been set for a static content", () => {
   /* eslint-enable max-len */
     let date = 5000;
-    const performanceSpy = jest.spyOn(performance, "now")
+    const mockPerformanceNow = jest.spyOn(performance, "now")
       .mockImplementation(jest.fn(() => date));
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
       isDynamic: false,
@@ -120,14 +120,14 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
     expect(manifestBoundsCalculator.estimateMinimumBound()).toEqual(0);
     date = 35000;
     expect(manifestBoundsCalculator.estimateMinimumBound()).toEqual(0);
-    performanceSpy.mockRestore();
+    mockPerformanceNow.mockRestore();
   });
 
   /* eslint-disable max-len */
   it("should authorize and handle multiple `setLastPositionOffset` calls for dynamic contents", () => {
   /* eslint-enable max-len */
     let date = 5000;
-    const performanceSpy = jest.spyOn(performance, "now")
+    const mockPerformanceNow = jest.spyOn(performance, "now")
       .mockImplementation(jest.fn(() => date));
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
       isDynamic: true,
@@ -139,6 +139,6 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
     manifestBoundsCalculator.setLastPosition(0, 0);
     date = 55000;
     expect(manifestBoundsCalculator.estimateMinimumBound()).toEqual(50);
-    performanceSpy.mockRestore();
+    mockPerformanceNow.mockRestore();
   });
 });

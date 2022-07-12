@@ -34,7 +34,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
       };
     });
     const shouldWaitForDataBeforeLoaded =
-      require("../should_wait_for_data_before_loaded");
+      jest.requireActual("../should_wait_for_data_before_loaded");
     expect(shouldWaitForDataBeforeLoaded.default(false, true)).toBe(true);
   });
 
@@ -46,7 +46,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
       };
     });
     const shouldWaitForDataBeforeLoaded =
-      require("../should_wait_for_data_before_loaded");
+      jest.requireActual("../should_wait_for_data_before_loaded");
     expect(shouldWaitForDataBeforeLoaded.default(true, false)).toBe(true);
   });
 
@@ -60,7 +60,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
       };
     });
     const shouldWaitForDataBeforeLoaded =
-      require("../should_wait_for_data_before_loaded");
+      jest.requireActual("../should_wait_for_data_before_loaded");
     expect(shouldWaitForDataBeforeLoaded.default(false, false)).toBe(true);
   });
 
@@ -73,7 +73,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
       };
     });
     const shouldWaitForDataBeforeLoaded =
-      require("../should_wait_for_data_before_loaded");
+      jest.requireActual("../should_wait_for_data_before_loaded");
     expect(shouldWaitForDataBeforeLoaded.default(true, false)).toBe(false);
   });
 
@@ -86,7 +86,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
       };
     });
     const shouldWaitForDataBeforeLoaded =
-      require("../should_wait_for_data_before_loaded");
+      jest.requireActual("../should_wait_for_data_before_loaded");
     expect(shouldWaitForDataBeforeLoaded.default(true, true)).toBe(true);
   });
 
@@ -99,7 +99,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
       };
     });
     const shouldWaitForDataBeforeLoaded =
-      require("../should_wait_for_data_before_loaded");
+      jest.requireActual("../should_wait_for_data_before_loaded");
     expect(shouldWaitForDataBeforeLoaded.default(false, true)).toBe(true);
   });
 
@@ -112,7 +112,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
       };
     });
     const shouldWaitForDataBeforeLoaded =
-      require("../should_wait_for_data_before_loaded");
+      jest.requireActual("../should_wait_for_data_before_loaded");
     expect(shouldWaitForDataBeforeLoaded.default(true, false)).toBe(true);
   });
   beforeEach(() => {

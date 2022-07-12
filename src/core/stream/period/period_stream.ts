@@ -42,9 +42,12 @@ import Manifest, {
 import { IAudioTrackSwitchingMode } from "../../../public_types";
 import objectAssign from "../../../utils/object_assign";
 import { getLeftSizeOfRange } from "../../../utils/ranges";
-import { IReadOnlySharedReference } from "../../../utils/reference";
+import createSharedReference, {
+  IReadOnlySharedReference,
+} from "../../../utils/reference";
+import { CancellationSignal } from "../../../utils/task_canceller";
 import WeakMapMemory from "../../../utils/weak_map_memory";
-import ABRManager from "../../abr";
+import { IRepresentationEstimator } from "../../adaptive";
 import { IReadOnlyPlaybackObserver } from "../../api";
 import { SegmentFetcherCreator } from "../../fetchers";
 import SegmentBuffersStore, {
@@ -53,10 +56,13 @@ import SegmentBuffersStore, {
   SegmentBuffer,
 } from "../../segment_buffers";
 import AdaptationStream, {
-  IAdaptationStreamOptions, IAdaptationStreamPlaybackObservation,
+  IAdaptationStreamOptions,
+  IAdaptationStreamPlaybackObservation,
+  IPausedPlaybackObservation,
 } from "../adaptation";
 import EVENTS from "../events_generators";
 import reloadAfterSwitch from "../reload_after_switch";
+import { IPositionPlaybackObservation } from "../representation";
 import {
   IAdaptationStreamEvent,
   IPeriodStreamEvent,
@@ -68,28 +74,28 @@ import getAdaptationSwitchStrategy from "./get_adaptation_switch_strategy";
 
 /** Playback observation required by the `PeriodStream`. */
 export interface IPeriodStreamPlaybackObservation {
-  /** The position we are in the video in seconds at the time of the observation. */
-  position : number;
+  /**
+   * Information on whether the media element was paused at the time of the
+   * Observation.
+   */
+  paused : IPausedPlaybackObservation;
+  /**
+   * Information on the current media position in seconds at the time of the
+   * Observation.
+   */
+  position : IPositionPlaybackObservation;
   /** `duration` property of the HTMLMediaElement. */
   duration : number;
-  /** If `true`, the player is currently paused. */
-  isPaused: boolean;
   /** `readyState` property of the HTMLMediaElement. */
   readyState : number;
   /** Target playback rate at which we want to play the content. */
   speed : number;
-  /**
-   * Offset, in seconds to add to `position` to obtain the starting position at
-   * which we actually want to download segments for.
-   */
-  wantedTimeOffset : number;
   /** Theoretical maximum position on the content that can currently be played. */
   maximumPosition : number;
 }
 
 /** Arguments required by the `PeriodStream`. */
 export interface IPeriodStreamArguments {
-  abrManager : ABRManager;
   bufferType : IBufferType;
   content : { manifest : Manifest;
               period : Period; };
@@ -98,6 +104,7 @@ export interface IPeriodStreamArguments {
   segmentBuffersStore : SegmentBuffersStore;
   playbackObserver : IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>;
   options: IPeriodStreamOptions;
+  representationEstimator : IRepresentationEstimator;
   wantedBufferAhead : IReadOnlySharedReference<number>;
   maxVideoBufferSize : IReadOnlySharedReference<number>;
 }
@@ -124,11 +131,11 @@ export type IPeriodStreamOptions =
  * @returns {Observable}
  */
 export default function PeriodStream({
-  abrManager,
   bufferType,
   content,
   garbageCollectors,
   playbackObserver,
+  representationEstimator,
   segmentFetcherCreator,
   segmentBuffersStore,
   options,
@@ -270,10 +277,10 @@ export default function PeriodStream({
     const { manifest } = content;
     const adaptationPlaybackObserver =
       createAdaptationStreamPlaybackObserver(playbackObserver, segmentBuffer);
-    return AdaptationStream({ abrManager,
-                              content: { manifest, period, adaptation },
+    return AdaptationStream({ content: { manifest, period, adaptation },
                               options,
                               playbackObserver: adaptationPlaybackObserver,
+                              representationEstimator,
                               segmentBuffer,
                               segmentFetcherCreator,
                               wantedBufferAhead,
@@ -353,18 +360,34 @@ function createAdaptationStreamPlaybackObserver(
   initialPlaybackObserver : IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>,
   segmentBuffer : SegmentBuffer
 ) : IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation> {
-  return initialPlaybackObserver.deriveReadOnlyObserver(
-    (observation$) => observation$.pipe(map(mapObservation)),
-    mapObservation
-  );
+  return initialPlaybackObserver.deriveReadOnlyObserver(function transform(
+    observationRef : IReadOnlySharedReference<IPeriodStreamPlaybackObservation>,
+    cancellationSignal : CancellationSignal
+  ) : IReadOnlySharedReference<IAdaptationStreamPlaybackObservation> {
+    const newRef = createSharedReference(constructAdaptationStreamPlaybackObservation());
 
-  function mapObservation(
-    baseObservation : IPeriodStreamPlaybackObservation
-  ) : IAdaptationStreamPlaybackObservation {
-    const buffered = segmentBuffer.getBufferedRanges();
-    return objectAssign({},
-                        baseObservation,
-                        { bufferGap: getLeftSizeOfRange(buffered,
-                                                        baseObservation.position) });
-  }
+    observationRef.onUpdate(emitAdaptationStreamPlaybackObservation, {
+      clearSignal: cancellationSignal,
+      emitCurrentValue: false,
+    });
+
+    cancellationSignal.register(() => {
+      newRef.finish();
+    });
+
+    return newRef;
+
+    function constructAdaptationStreamPlaybackObservation(
+    ) : IAdaptationStreamPlaybackObservation {
+      const baseObservation = observationRef.getValue();
+      const buffered = segmentBuffer.getBufferedRanges();
+      const bufferGap = getLeftSizeOfRange(buffered, baseObservation.position.last);
+      return objectAssign({}, baseObservation, { bufferGap });
+    }
+
+    function emitAdaptationStreamPlaybackObservation() {
+      newRef.setValue(constructAdaptationStreamPlaybackObservation());
+    }
+  });
+
 }

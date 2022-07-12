@@ -17,14 +17,14 @@
 import log from "../../log";
 import { Representation } from "../../manifest";
 import arrayFindIndex from "../../utils/array_find_index";
+import { estimateRequestBandwidth } from "./network_analyzer";
 import LastEstimateStorage, {
   ABRAlgorithmType,
-} from "./last_estimate_storage";
-import { estimateRequestBandwidth } from "./network_analyzer";
-import { IRequestInfo } from "./pending_requests_store";
+} from "./utils/last_estimate_storage";
+import { IRequestInfo } from "./utils/pending_requests_store";
 import RepresentationScoreCalculator, {
   ScoreConfidenceLevel,
-} from "./representation_score_calculator";
+} from "./utils/representation_score_calculator";
 
 /**
  * Estimate which Representation should be played based on risky "guesses".
@@ -285,7 +285,7 @@ function getNextRepresentation(
  * bitrate immediately inferior.
  * Returns `null` if that "previous" Representation is not found.
  * @param {Array.<Object>} representations
- * @param {Object} representation
+ * @param {Object} currentRepresentation
  * @returns {Object|null}
  */
 function getPreviousRepresentation(
