@@ -2007,10 +2007,13 @@ function getPageActivityRef(stopListening) {
   var ref = (0,reference/* default */.ZP)(true);
   stopListening.register(function () {
     clearTimeout(currentTimeout);
+    currentTimeout = undefined;
     ref.finish();
   });
   isDocVisibleRef.onUpdate(function onDocVisibilityChange(isVisible) {
     clearTimeout(currentTimeout); // clear potential previous timeout
+
+    currentTimeout = undefined;
 
     if (!isVisible) {
       var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
@@ -2117,6 +2120,7 @@ function getVideoVisibilityRef(pipStatus, stopListening) {
   var ref = (0,reference/* default */.ZP)(true);
   stopListening.register(function () {
     clearTimeout(currentTimeout);
+    currentTimeout = undefined;
     ref.finish();
   });
   isDocVisibleRef.onUpdate(checkCurrentVisibility, {
@@ -2129,6 +2133,9 @@ function getVideoVisibilityRef(pipStatus, stopListening) {
   return ref;
 
   function checkCurrentVisibility() {
+    clearTimeout(currentTimeout);
+    currentTimeout = undefined;
+
     if (pipStatus.getValue().isEnabled || isDocVisibleRef.getValue()) {
       ref.setValueIfChanged(true);
     } else {
