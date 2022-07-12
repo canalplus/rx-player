@@ -12,6 +12,11 @@ Each of the objects in the returned array have the following properties:
   - `active` (`Boolean`): Whether this track is the one currently
     active or not.
 
+  - `label` (`string|undefined`): A human readable label that may be displayed in
+    the user interface providing a choice between video tracks.
+
+    This information is usually set only if the current Manifest contains one.
+
   - `representations` (`Array.<Object>`):
     [Representations](../../Getting_Started/Glossary.md#representation) of this
     video track, with attributes:

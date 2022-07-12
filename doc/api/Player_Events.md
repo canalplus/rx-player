@@ -141,6 +141,11 @@ The array emitted contains object describing each available audio track:
   This property is `undefined` if we do not known whether it is in an original
   language.
 
+- `label` (`string|undefined`): A human readable label that may be displayed in
+  the user interface providing a choice between audio tracks.
+
+  This information is usually set only if the current Manifest contains one.
+
 This event only concerns the currently-playing Period.
 
 ### availableVideoTracksChange
@@ -157,6 +162,11 @@ The array emitted contains object describing each available video track:
 
 - `active` (`Boolean`): Whether this track is the one currently
   active or not.
+
+- `label` (`string|undefined`): A human readable label that may be displayed in
+  the user interface providing a choice between video tracks.
+
+  This information is usually set only if the current Manifest contains one.
 
 - `representations` (`Array.<Object>`):
   [Representations](../Getting_Started/Glossary.md#representation) of this video track, with
@@ -199,6 +209,11 @@ The array emitted contains object describing each available text track:
   fails (no corresponding ISO 639-3 language code is found), it will equal the
   value of `language`
 
+- `label` (`string|undefined`): A human readable label that may be displayed in
+  the user interface providing a choice between text tracks.
+
+  This information is usually set only if the current Manifest contains one.
+
 - `closedCaption` (`Boolean`): Whether the track is specially adapted for
   the hard of hearing or not.
 
@@ -226,6 +241,10 @@ properties:
   If set to `false`, we know that this audio track is in an original language.
   This property is `undefined` if we do not known whether it is in an original
   language.
+- `label` (`string|undefined`): A human readable label that may be displayed in
+  the user interface providing a choice between audio tracks.
+
+  This information is usually set only if the current Manifest contains one.
 
 This event only concerns the currently-playing Period.
 
@@ -243,6 +262,10 @@ properties:
 - `language` (`string`): The language the text track is in.
 - `closedCaption` (`Boolean`): Whether the track is specially adapted for
   the hard of hearing or not.
+- `label` (`string|undefined`): A human readable label that may be displayed in
+  the user interface providing a choice between text tracks.
+
+  This information is usually set only if the current Manifest contains one.
 
 This event only concerns the currently-playing Period.
 
@@ -258,6 +281,11 @@ properties:
 
 - `id` (`string`): The id used to identify the track. Use it for setting
   the track via `setVideoTrack`.
+
+- `label` (`string|undefined`): A human readable label that may be displayed in
+  the user interface providing a choice between video tracks.
+
+  This information is usually set only if the current Manifest contains one.
 
 - `representations` (`Array.<Object>`):
   [Representations](../Getting_Started/Glossary.md#representation) of this video track, with

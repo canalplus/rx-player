@@ -23,6 +23,11 @@ return an object with the following properties:
   fails (no corresponding ISO./../Basic_Methods/loadVideo.md#transport found), it will equal the
   value of `language`
 
+- `label` (`string|undefined`): A human readable label that may be displayed in
+  the user interface providing a choice between text tracks.
+
+  This information is usually set only if the current Manifest contains one.
+
 - `closedCaption` (`Boolean`): Whether the track is specially adapted for
   the hard of hearing or not.
 

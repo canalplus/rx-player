@@ -18,6 +18,11 @@ return an object with the following properties:
     This can be useful when setting the track through the `setVideoTrack`
     method.
 
+  - `label` (`string|undefined`): A human readable label that may be displayed in
+    the user interface providing a choice between video tracks.
+
+    This information is usually set only if the current Manifest contains one.
+
   - `representations` (`Array.<Object>`):
     [Representations](../../Getting_Started/Glossary.md#representation) of this video track, with
     attributes:
