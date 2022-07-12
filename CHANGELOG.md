@@ -1,6 +1,6 @@
 # Changelog
 
-## v3.28.0
+## v3.28.0 (2022-07-12)
 
 ### Features
 
@@ -17,6 +17,7 @@
   - Fix issue with `maxVideoBufferSize` setting which could lead to too much data being buffered [#1125]
   - Prevent possibility of requests loops and infinite rebuffering when a pushed segment is always completely and immediately garbage collected by the browser [#1123]
   - DASH: Fix potential rare memory leak when stopping the content after it has reloaded at least once [#1135]
+  - Directfile: Properly anounce the audio track's `audioDescription` accessibility attribute in directfile mode on Safari [#1136]
   - DASH: Fix issues that could arise if a segment is calculated to start at a negative position [#1122]
   - DASH: Fix possibility of wrong segments being requested when a SegmentTimeline in a given Period (whose Period@end is set) had an S@r set to `-1` at its end [#1098]
   - DASH: If the first `<S>` has its S@t attribute not set, make as if it is set to `0` [#1118]
