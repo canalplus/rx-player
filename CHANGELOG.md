@@ -25,6 +25,7 @@
 ### Other improvements
 
   - TTML: Add support for percent based thickness for textOutline in TTML Subtitles [#1108]
+  - Improve TypeScript's language servers auto import feature with the RxPlayer by better redirecting to the exported type [#1126]
   - If seeking after the last potential position, load last segments before ending [#1097]
   - The duration set on the media element is now only relative to the current chosen tracks (it was previously relative to all potential track). This allows to seek later when switching e.g. to a longer video track [#1102]
   - Errors coming from an HTMLMediaElement now have the browser's error message if it exists [#1112]
