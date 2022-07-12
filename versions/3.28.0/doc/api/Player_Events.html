@@ -140,6 +140,11 @@ If set to <code>false</code>, we know that this audio track is in an original la
 This property is <code>undefined</code> if we do not known whether it is in an original
 language.</p>
 </li>
+<li>
+<p><code>label</code> (<code>string|undefined</code>): A human readable label that may be displayed in
+the user interface providing a choice between audio tracks.</p>
+<p>This information is usually set only if the current Manifest contains one.</p>
+</li>
 </ul>
 <p>This event only concerns the currently-playing Period.</p>
 <p><a name="availablevideotrackschange"></a></p>
@@ -156,6 +161,11 @@ setting the track via <code>setVideoTrack</code>.</p>
 <li>
 <p><code>active</code> (<code>Boolean</code>): Whether this track is the one currently
 active or not.</p>
+</li>
+<li>
+<p><code>label</code> (<code>string|undefined</code>): A human readable label that may be displayed in
+the user interface providing a choice between video tracks.</p>
+<p>This information is usually set only if the current Manifest contains one.</p>
 </li>
 <li>
 <p><code>representations</code> (<code>Array.&lt;Object&gt;</code>):
@@ -209,6 +219,11 @@ fails (no corresponding ISO 639-3 language code is found), it will equal the
 value of <code>language</code></p>
 </li>
 <li>
+<p><code>label</code> (<code>string|undefined</code>): A human readable label that may be displayed in
+the user interface providing a choice between text tracks.</p>
+<p>This information is usually set only if the current Manifest contains one.</p>
+</li>
+<li>
 <p><code>closedCaption</code> (<code>Boolean</code>): Whether the track is specially adapted for
 the hard of hearing or not.</p>
 </li>
@@ -226,15 +241,28 @@ received segment got a new one).</p>
 <p>The payload is an object describing the new track, with the following
 properties:</p>
 <ul>
-<li><code>id</code> (<code>Number|string</code>): The id used to identify the track.</li>
-<li><code>language</code> (<code>string</code>): The language the audio track is in.</li>
-<li><code>audioDescription</code> (<code>Boolean</code>): Whether the track is an audio
-description of what is happening at the screen.</li>
-<li><code>dub</code> (<code>Boolean|undefined</code>): If set to <code>true</code>, this audio track is a
+<li>
+<p><code>id</code> (<code>Number|string</code>): The id used to identify the track.</p>
+</li>
+<li>
+<p><code>language</code> (<code>string</code>): The language the audio track is in.</p>
+</li>
+<li>
+<p><code>audioDescription</code> (<code>Boolean</code>): Whether the track is an audio
+description of what is happening at the screen.</p>
+</li>
+<li>
+<p><code>dub</code> (<code>Boolean|undefined</code>): If set to <code>true</code>, this audio track is a
 “dub”, meaning it was recorded in another language than the original.
 If set to <code>false</code>, we know that this audio track is in an original language.
 This property is <code>undefined</code> if we do not known whether it is in an original
-language.</li>
+language.</p>
+</li>
+<li>
+<p><code>label</code> (<code>string|undefined</code>): A human readable label that may be displayed in
+the user interface providing a choice between audio tracks.</p>
+<p>This information is usually set only if the current Manifest contains one.</p>
+</li>
 </ul>
 <p>This event only concerns the currently-playing Period.</p>
 <p><a name="texttrackchange"></a></p>
@@ -245,10 +273,21 @@ received segment got a new one).</p>
 <p>The payload is an object describing the new track, with the following
 properties:</p>
 <ul>
-<li><code>id</code> (<code>Number|string</code>): The id used to identify the track.</li>
-<li><code>language</code> (<code>string</code>): The language the text track is in.</li>
-<li><code>closedCaption</code> (<code>Boolean</code>): Whether the track is specially adapted for
-the hard of hearing or not.</li>
+<li>
+<p><code>id</code> (<code>Number|string</code>): The id used to identify the track.</p>
+</li>
+<li>
+<p><code>language</code> (<code>string</code>): The language the text track is in.</p>
+</li>
+<li>
+<p><code>closedCaption</code> (<code>Boolean</code>): Whether the track is specially adapted for
+the hard of hearing or not.</p>
+</li>
+<li>
+<p><code>label</code> (<code>string|undefined</code>): A human readable label that may be displayed in
+the user interface providing a choice between text tracks.</p>
+<p>This information is usually set only if the current Manifest contains one.</p>
+</li>
 </ul>
 <p>This event only concerns the currently-playing Period.</p>
 <p><a name="videotrackchange"></a></p>
@@ -262,6 +301,11 @@ properties:</p>
 <li>
 <p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for setting
 the track via <code>setVideoTrack</code>.</p>
+</li>
+<li>
+<p><code>label</code> (<code>string|undefined</code>): A human readable label that may be displayed in
+the user interface providing a choice between video tracks.</p>
+<p>This information is usually set only if the current Manifest contains one.</p>
 </li>
 <li>
 <p><code>representations</code> (<code>Array.&lt;Object&gt;</code>):
