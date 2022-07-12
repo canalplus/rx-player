@@ -1,0 +1,749 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../styles/style.css"/><link rel="stylesheet" href="../styles/code.css"/><title>Creating a Player - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../static/img/logo.png" /></a><a class="navbar-item hideable"href="../Getting_Started/Welcome.html">Getting Started</a>
+<a class="navbar-item navbar-active hideable"href="./Overview.html">API</a>
+<a class="navbar-item hideable"href="../reference/API_Reference.html">Reference</a>
+<a class="navbar-item hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
+<span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
+<a aria-label="Link to repository" class="navbar-item first-right hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 3.28.0</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="./Overview.html">Overview</a></li><li class="sidebar-item"><a class="sidebar-link active" href="./Creating_a_Player.html">Creating a Player</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Loading_a_Content.html">Loading a Content</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Decryption_Options.html">Decryption Options</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Basic Methods</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getPlayerState.html">getPlayerState</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/addEventListener.html">addEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/removeEventListener.html">removeEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/play.html">play</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/pause.html">pause</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/stop.html">stop</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getPosition.html">getPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getWallClockTime.html">getWallClockTime</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/seekTo.html">seekTo</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getVideoDuration.html">getVideoDuration</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getError.html">getError</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getVideoElement.html">getVideoElement</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/dispose.html">dispose</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/reload.html">reload</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="./Player_States.html">Player States</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Player_Events.html">Player Events</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Player_Errors.html">Player Errors</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Track Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getAudioTrack.html">getAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getTextTrack.html">getTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getVideoTrack.html">getVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setAudioTrack.html">setAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setTextTrack.html">setTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setVideoTrack.html">setVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/disableTextTrack.html">disableTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setPreferredAudioTracks.html">setPreferredAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setPreferredTextTracks.html">setPreferredTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setPreferredVideoTracks.html">setPreferredVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getPreferredAudioTracks.html">getPreferredAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getPreferredTextTracks.html">getPreferredTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getPreferredVideoTracks.html">getPreferredVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Bitrate Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getVideoBitrate.html">getVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getAudioBitrate.html">getAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getAvailableVideoBitrates.html">getAvailableVideoBitrates</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getAvailableAudioBitrates.html">getAvailableAudioBitrates</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/setVideoBitrate.html">setVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/setAudioBitrate.html">setAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getManualVideoBitrate.html">getManualVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getManualAudioBitrate.html">getManualAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/setMinVideoBitrate.html">setMinVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/setMinAudioBitrate.html">setMinAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/setMaxVideoBitrate.html">setMaxVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/setMaxAudioBitrate.html">setMaxAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getMinVideoBitrate.html">getMinVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getMinAudioBitrate.html">getMinAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getMaxVideoBitrate.html">getMaxVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getMaxAudioBitrate.html">getMaxAudioBitrate</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Speed Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Volume Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/setVolume.html">setVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/getVolume.html">getVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/mute.html">mute</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/isMute.html">isMute</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/unMute.html">unMute</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Information/getVideoBufferGap.html">getVideoBufferGap</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Information/getVideoLoadedTime.html">getVideoLoadedTime</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Information/getVideoPlayedTime.html">getVideoPlayedTime</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Content Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/getUrl.html">getUrl</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/isLive.html">isLive</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/getCurrentKeySystem.html">getCurrentKeySystem</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="./Static_Properties.html">RxPlayer Static Properties</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Typescript_Types.html">Typescript Types</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Tools</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Tools/TextTrackRenderer.html">TextTrackRenderer</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/StringUtils.html">StringUtils</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/parseBifThumbnails.html">parseBifThumbnails</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Miscellaneous</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/plugins.html">Plugins</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Low_Latency.html">Low Latency</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/hdr.html">HDR</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Local_Contents.html">Local Contents</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Text_Tracks.html">Text Tracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/images.html">Images</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Manifest_Object.html">Manifest Object</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Deprecated_APIs.html">Deprecated APIs</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Initial_Position.html">Initial Position</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Deprecated Methods</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/getManifest.html">getManifest</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/getCurrentAdaptations.html">getCurrentAdaptations</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/getCurrentRepresentations.html">getCurrentRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/setFullscreen.html">setFullscreen</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/isFullscreen.html">isFullscreen</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/exitFullscreen.html">exitFullscreen</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/getImageTrackData.html">getImageTrackData</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/getNativeTextTrack.html">getNativeTextTrack</a></li></ul></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="creating_a_rxplayer"></a></p>
+<h1>Creating a RxPlayer</h1>
+<p><a name="instantiation"></a></p>
+<h2>Instantiation</h2>
+<p>Instantiating a new RxPlayer is necessary before being able to load a content.
+Doing so is straightforward:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> <span class="hljs-title class_">RxPlayer</span> <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player"</span>;
+<span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayer</span>(options);
+</code></pre>
+<p><a name="player_options"></a></p>
+<h2>Player options</h2>
+<p>Player options are options given to the player on instantiation.</p>
+<p>It’s an object with multiple properties. None of them are mandatory.
+For most usecase though, you might want to set at least the associated video
+element via the <code>videoElement</code> property.</p>
+<p><a name="videoelement"></a></p>
+<h3>videoElement</h3>
+<p><em>type</em>: <code>HTMLMediaElement|undefined</code></p>
+<p>The media element the player will use.</p>
+<pre><code class="language-js"><span class="hljs-comment">// Instantiate the player with the first video element in the DOM</span>
+<span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">videoElement</span>: <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementsByTagName</span>(<span class="hljs-string">"VIDEO"</span>)[<span class="hljs-number">0</span>],
+});
+</code></pre>
+<p>If not defined, a <code>&lt;video&gt;</code> element will be created without being inserted in
+the document. You will have to do it yourself through the <code>getVideoElement</code>
+method to add it yourself:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Player</span>();
+
+<span class="hljs-keyword">const</span> videoElement = player.<span class="hljs-title function_">getVideoElement</span>();
+<span class="hljs-variable language_">document</span>.<span class="hljs-property">body</span>.<span class="hljs-title function_">appendChild</span>(videoElement);
+</code></pre>
+<p><a name="initialvideobitrate"></a></p>
+<h3>initialVideoBitrate</h3>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p><em>defaults</em>: <code>0</code></p>
+<p>This is a ceil value for the initial video bitrate chosen.</p>
+<p>That is, the first video
+<a href="../Getting_Started/Glossary.html#representation">Representation</a> chosen will be
+both:</p>
+<ul>
+<li>inferior or equal to this value.</li>
+<li>the closest possible to this value (after filtering out the ones with a
+superior bitrate).</li>
+</ul>
+<p>If no Representation is found to respect those rules, the Representation with
+the lowest bitrate will be chosen instead. Thus, the default value - <code>0</code> -
+will lead to the lowest bitrate being chosen at first.</p>
+<pre><code class="language-js"><span class="hljs-comment">// Begin either by the video bitrate just below or equal to 700000 bps if found</span>
+<span class="hljs-comment">// or the lowest bitrate available if not.</span>
+<span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">initialVideoBitrate</span>: <span class="hljs-number">700000</span>,
+});
+</code></pre>
+<div class="warning">
+This option will have no effect for contents loaded in <i>Directfile</i>
+mode (see <a href="./Loading_a_Content.html#transport">loadVideo options</a>).
+</div>
+<p><a name="initialaudiobitrate"></a></p>
+<h3>initialAudioBitrate</h3>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p><em>defaults</em>: <code>0</code></p>
+<p>This is a ceil value for the initial audio bitrate chosen.</p>
+<p>That is, the first audio
+<a href="../Getting_Started/Glossary.html#representation">Representation</a> chosen will be:</p>
+<ul>
+<li>inferior or equal to this value.</li>
+<li>the closest possible to this value (after filtering out the ones with a
+superior bitrate).</li>
+</ul>
+<p>If no Representation is found to respect those rules, the Representation with
+the lowest bitrate will be chosen instead. Thus, the default value - <code>0</code> -
+will lead to the lowest bitrate being chosen at first.</p>
+<pre><code class="language-js"><span class="hljs-comment">// Begin either by the audio bitrate just below or equal to 5000 bps if found</span>
+<span class="hljs-comment">// or the lowest bitrate available if not.</span>
+<span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">initialAudioBitrate</span>: <span class="hljs-number">5000</span>,
+});
+</code></pre>
+<div class="warning">
+This option will have no effect for contents loaded in <i>Directfile</i>
+mode (see <a href="./Loading_a_Content.html#transport">loadVideo options</a>).
+</div>
+<p><a name="minvideobitrate"></a></p>
+<h3>minVideoBitrate</h3>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p><em>defaults</em>: <code>0</code></p>
+<p>Minimum video bitrate reachable through adaptive streaming.</p>
+<p>When the bitrate is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as <code>setVideoBitrate</code>), the player will never switch
+to a video quality with a bitrate lower than that value.</p>
+<p>The exception being when no quality has a higher bitrate, in which case the
+maximum quality will always be chosen instead.</p>
+<p>For example, if you want that video qualities chosen automatically never have
+a bitrate lower than 100 kilobits per second you can call:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">minVideoBitrate</span>: <span class="hljs-number">100000</span>,
+});
+</code></pre>
+<p>Any limit can be removed just by setting that value to <code>0</code>:</p>
+<pre><code class="language-js"><span class="hljs-comment">// remove video bitrate lower limit</span>
+player.<span class="hljs-title function_">setMinVideoBitrate</span>(<span class="hljs-number">0</span>);
+</code></pre>
+<p>You can update this limit at any moment with the <code>setMinVideoBitrate</code> API
+call.</p>
+<p>Note that this only affects adaptive strategies. Forcing the bitrate manually
+(for example by calling <code>setVideoBitrate</code>) bypass this limit completely.</p>
+<div class="warning">
+This option will have no effect for contents loaded in <i>Directfile</i>
+mode (see <a href="./Loading_a_Content.html#transport">loadVideo options</a>).
+</div>
+<p><a name="minaudiobitrate"></a></p>
+<h3>minAudioBitrate</h3>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p><em>defaults</em>: <code>0</code></p>
+<p>Minimum audio bitrate reachable through adaptive streaming.</p>
+<p>When the bitrate is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as <code>setAudioBitrate</code>), the player will never switch
+to an audio quality with a bitrate higher than that value.</p>
+<p>The exception being when no quality has a higher bitrate, in which case the
+minimum quality will always be chosen instead.</p>
+<p>For example, if you want that audio qualities chosen automatically never have
+a bitrate higher than 100 kilobits per second you can call:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">minAudioBitrate</span>: <span class="hljs-number">100000</span>,
+});
+</code></pre>
+<p>Any limit can be removed just by setting that value to <code>0</code>:</p>
+<pre><code class="language-js"><span class="hljs-comment">// remove audio bitrate lower limit</span>
+player.<span class="hljs-title function_">setMinAudioBitrate</span>(<span class="hljs-number">0</span>);
+</code></pre>
+<p>You can update this limit at any moment with the <code>setMinAudioBitrate</code> API
+call.</p>
+<p>Note that this only affects adaptive strategies. Forcing the bitrate manually
+(for example by calling <code>setAudioBitrate</code>) bypass this limit completely.</p>
+<div class="warning">
+This option will have no effect for contents loaded in <i>Directfile</i>
+mode (see <a href="./Loading_a_Content.html#transport">loadVideo options</a>).
+</div>
+<p><a name="maxvideobitrate"></a></p>
+<h3>maxVideoBitrate</h3>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p><em>defaults</em>: <code>Infinity</code></p>
+<p>Maximum video bitrate reachable through adaptive streaming.</p>
+<p>When the bitrate is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as <code>setVideoBitrate</code>), the player will never switch
+to an video quality with a bitrate higher than that value.</p>
+<p>The exception being when no quality has a lower bitrate, in which case the
+minimum quality will always be chosen instead.</p>
+<p>For example, if you want that video qualities chosen automatically never have
+a bitrate higher than 1 Megabits per second you can call:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">maxVideoBitrate</span>: <span class="hljs-number">1e6</span>,
+});
+</code></pre>
+<p>Any limit can be removed just by setting that value to <code>Infinity</code>:</p>
+<pre><code class="language-js"><span class="hljs-comment">// remove video bitrate higher limit</span>
+player.<span class="hljs-title function_">setMaxVideoBitrate</span>(<span class="hljs-title class_">Infinity</span>);
+</code></pre>
+<p>You can update this limit at any moment with the <code>setMaxVideoBitrate</code> API
+call.</p>
+<p>Note that this only affects adaptive strategies. Forcing the bitrate manually
+(for example by calling <code>setVideoBitrate</code>) bypass this limit completely.</p>
+<div class="warning">
+This option will have no effect for contents loaded in <i>Directfile</i>
+mode (see <a href="./Loading_a_Content.html#transport">loadVideo options</a>).
+</div>
+<p><a name="maxaudiobitrate"></a></p>
+<h3>maxAudioBitrate</h3>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p><em>defaults</em>: <code>Infinity</code></p>
+<p>Maximum audio bitrate reachable through adaptive streaming.</p>
+<p>When the bitrate is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as <code>setAudioBitrate</code>), the player will never switch
+to an audio quality with a bitrate higher than that value.</p>
+<p>The exception being when no quality has a lower bitrate, in which case the
+minimum quality will always be chosen instead.</p>
+<p>For example, if you want that audio qualities chosen automatically never have
+a bitrate higher than 1 Megabits per second you can call:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">maxAudioBitrate</span>: <span class="hljs-number">1e6</span>,
+});
+</code></pre>
+<p>Any limit can be removed just by setting that value to <code>Infinity</code>:</p>
+<pre><code class="language-js"><span class="hljs-comment">// remove audio bitrate higher limit</span>
+player.<span class="hljs-title function_">setMaxAudioBitrate</span>(<span class="hljs-title class_">Infinity</span>);
+</code></pre>
+<p>You can update this limit at any moment with the <code>setMaxAudioBitrate</code> API
+call.</p>
+<p>Note that this only affects adaptive strategies. Forcing the bitrate manually
+(for example by calling <code>setAudioBitrate</code>) bypass this limit completely.</p>
+<div class="warning">
+This option will have no effect for contents loaded in <i>Directfile</i>
+mode (see <a href="./Loading_a_Content.html#transport">loadVideo options</a>).
+</div>
+<p><a name="wantedbufferahead"></a></p>
+<h3>wantedBufferAhead</h3>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p><em>defaults</em>: <code>30</code></p>
+<p>Set the default buffering goal, as a duration ahead of the current position, in
+seconds.</p>
+<p>Once this size of buffer is reached, the player won’t try to download new
+segments anymore.</p>
+<div class="warning">
+This option will have no effect for contents loaded in <i>Directfile</i>
+mode (see <a href="./Loading_a_Content.html#transport">loadVideo options</a>).
+</div>
+<p><a name="maxvideobuffersize"></a></p>
+<h3>maxVideoBufferSize</h3>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p><em>defaults</em>: <code>Infinity</code></p>
+<p>Set the maximum size the video buffer can take in the memory, in kilobytes (kb).
+Once this value is reached, the player won’t try to download new video
+segments anymore. The limit is approximative as it’s based on internal estimation.</p>
+<div class="warning">
+The internal checks of the RxPlayer is based on an estimation of what the RxPlayer think
+is currently buffered and an estimation of the size of the next segments.
+</div>
+<div class="warning">
+In <i>DirectFile</i> mode (see <a href="../Loading_a_Content.md#transport">loadVideo options</a>),
+this method has no effect.
+</div>
+<div class="warning">
+This option will have no effects if we didn't buffer at least <b>MIN_BUFFER_LENGTH</b>
+<i>( defaults at 5sec )</i>
+</div>
+<div class="warning">
+This option will have no effect for contents loaded in <i>Directfile</i>
+mode (see <a href="./Loading_a_Content.html#transport">loadVideo options</a>).
+</div>
+<p><a name="preferredaudiotracks"></a></p>
+<h3>preferredAudioTracks</h3>
+<p><em>type</em>: <code>Array.&lt;Object|null&gt;</code></p>
+<p><em>defaults</em>: <code>[]</code></p>
+<p>This option allows to help the RxPlayer choose an initial audio track based on
+either language preferences, codec preferences or both.</p>
+<p>It is defined as an array of objects, each object describing constraints a
+track should respect.</p>
+<p>If the first object - defining the first set of constraints - cannot be
+respected under the currently available audio tracks, the RxPlayer will skip
+it and check with the second object and so on.
+As such, this array should be sorted by order of preference: from the most
+wanted constraints to the least.</p>
+<p>Here is all the possible constraints you can set in any one of those objects
+(note that all properties are optional here, only those set will have an effect
+on which tracks will be filtered):</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-comment">// {string|undefined} The language the track should be in</span>
+                   <span class="hljs-comment">// (in preference as an ISO 639-1, ISO 639-2 or ISO 639-3</span>
+                   <span class="hljs-comment">// language code).</span>
+                   <span class="hljs-comment">// If not set or set to `undefined`, the RxPlayer won't</span>
+                   <span class="hljs-comment">// filter based on the language of the track.</span>
+
+  <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean|undefined} Whether the audio track should</span>
+                          <span class="hljs-comment">// be an audio description for the visually impaired</span>
+                          <span class="hljs-comment">// or not.</span>
+                          <span class="hljs-comment">// If not set or set to `undefined`, the RxPlayer</span>
+                          <span class="hljs-comment">// won't filter based on that status.</span>
+
+  <span class="hljs-attr">codec</span>: { <span class="hljs-comment">// {Object|undefined} Constraints about the codec wanted.</span>
+           <span class="hljs-comment">// if not set or set to `undefined` we won't filter based on codecs.</span>
+
+    <span class="hljs-attr">test</span>: <span class="hljs-regexp">/ec-3/</span>, <span class="hljs-comment">// {RegExp} RegExp validating the type of codec you want.</span>
+
+    <span class="hljs-attr">all</span>: <span class="hljs-literal">true</span>, <span class="hljs-comment">// {Boolean} Whether all the profiles (i.e. Representation) in a</span>
+               <span class="hljs-comment">// track should be checked against the RegExp given in `test`.</span>
+               <span class="hljs-comment">// If `true`, we will only choose a track if EVERY profiles for</span>
+               <span class="hljs-comment">// it have a codec information that is validated by that RegExp.</span>
+               <span class="hljs-comment">// If `false`, we will choose a track if we know that at least</span>
+               <span class="hljs-comment">// A SINGLE profile from it has codec information validated by</span>
+               <span class="hljs-comment">// that RegExp.</span>
+  }
+}
+</code></pre>
+<p>This array of preferrences can be updated at any time through the
+<code>setPreferredAudioTracks</code> method, documented <a href="./Track_Selection/getPreferredAudioTracks.html">here</a>.</p>
+<h4>Examples</h4>
+<p>Let’s imagine that you prefer to have french or italian over all other audio
+languages. If not found, you want to fallback to english:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayer</span>({
+  <span class="hljs-attr">preferredAudioTracks</span>: [
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">"ita"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">"eng"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+  ],
+});
+</code></pre>
+<p>Now let’s imagine that you want to have in priority a track that contain at
+least one profile in Dolby Digital Plus (ec-3 codec) without caring about the
+language:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayer</span>({
+  <span class="hljs-attr">preferredAudioTracks</span>: [ { <span class="hljs-attr">codec</span>: { <span class="hljs-attr">all</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">test</span>: <span class="hljs-regexp">/ec-3/</span> } ]
+});
+</code></pre>
+<p>At last, let’s combine both examples by preferring french over itialian, italian
+over english while preferring it to be in Dolby Digital Plus:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayer</span>({
+  <span class="hljs-attr">preferredAudioTracks</span>: [
+    {
+      <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>,
+      <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span>,
+      <span class="hljs-attr">codec</span>: { <span class="hljs-attr">all</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">test</span>: <span class="hljs-regexp">/ec-3/</span> }
+    },
+
+    <span class="hljs-comment">// We still prefer non-DD+ french over DD+ italian</span>
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+
+    {
+      <span class="hljs-attr">language</span>: <span class="hljs-string">"ita"</span>,
+      <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span>,
+      <span class="hljs-attr">codec</span>: { <span class="hljs-attr">all</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">test</span>: <span class="hljs-regexp">/ec-3/</span> }
+    },
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">"ita"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> },
+
+    {
+      <span class="hljs-attr">language</span>: <span class="hljs-string">"eng"</span>,
+      <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span>,
+      <span class="hljs-attr">codec</span>: { <span class="hljs-attr">all</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">test</span>: <span class="hljs-regexp">/ec-3/</span> }
+    },
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">"eng"</span>, <span class="hljs-attr">audioDescription</span>: <span class="hljs-literal">false</span> }
+  ]
+</code></pre>
+<div class="warning">
+This option will have no effect in <i>Directfile</i> mode
+(see <a href="./Loading_a_Content.html#transport">loadVideo options</a>) when either :
+<ul>
+<li>No audio track API is supported on the current browser</li>
+<li>The media file tracks are not supported on the browser</li>
+</ul>
+</div>
+<p><a name="preferredtexttracks"></a></p>
+<h3>preferredTextTracks</h3>
+<p><em>type</em>: <code>Array.&lt;Object|null&gt;</code></p>
+<p><em>defaults</em>: <code>[]</code></p>
+<p>Set the initial text track languages preferences.</p>
+<p>This option takes an array of objects describing the languages wanted for
+subtitles:</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-comment">// {string} The wanted language</span>
+                   <span class="hljs-comment">// (ISO 639-1, ISO 639-2 or ISO 639-3 language code)</span>
+  <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> <span class="hljs-comment">// {Boolean} Whether the text track should be a closed</span>
+                       <span class="hljs-comment">// caption for the hard of hearing</span>
+}
+</code></pre>
+<p>All elements in that Array should be set in preference order: from the most
+preferred to the least preferred. You can set <code>null</code> in that array for no
+subtitles.</p>
+<p>When loading a content, the RxPlayer will then try to choose its text track by
+comparing what is available with your current preferences (i.e. if the most
+preferred is not available, it will look if the second one etc.).</p>
+<p>This array of preferrences can be updated at any time through the
+<code>setPreferredTextTracks</code> method, documented
+<a href="./Track_Selection/getPreferredTextTracks.html">here</a>.</p>
+<h4>Example</h4>
+<p>Let’s imagine that you prefer to have french or italian subtitles.If not found,
+you want no subtitles at all.</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayer</span>({
+  <span class="hljs-attr">preferredTextTracks</span>: [
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">"fra"</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> },
+    { <span class="hljs-attr">language</span>: <span class="hljs-string">"ita"</span>, <span class="hljs-attr">closedCaption</span>: <span class="hljs-literal">false</span> },
+    <span class="hljs-literal">null</span>,
+  ],
+});
+</code></pre>
+<div class="warning">
+This option will have no effect in <i>Directfile</i> mode
+(see <a href="./Loading_a_Content.html#transport">loadVideo options</a>) when either :
+<ul>
+<li>No text track API is supported on the current browser</li>
+<li>The media file tracks are not supported on the browser</li>
+</ul>
+</div>
+<p><a name="preferredvideotracks"></a></p>
+<h3>preferredVideoTracks</h3>
+<p><em>type</em>: <code>Array.&lt;Object|null&gt;</code></p>
+<p><em>defaults</em>: <code>[]</code></p>
+<p>This option allows to help the RxPlayer choose an initial video track.</p>
+<p>It is defined as an array of objects, each object describing constraints a
+track should respect.</p>
+<p>If the first object - defining the first set of constraints - cannot be
+respected under the currently available video tracks, the RxPlayer will skip
+it and check with the second object and so on.
+As such, this array should be sorted by order of preference: from the most
+wanted constraints to the least.</p>
+<p>When the next encountered constraint is set to <code>null</code>, the player will simply
+disable the video track. If you want to disable the video track by default,
+you can just set <code>null</code> as the first element of this array (e.g. <code>[null]</code>).</p>
+<p>Here is all the possible constraints you can set in any one of those objects
+(note that all properties are optional here, only those set will have an effect
+on which tracks will be filtered):</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">codec</span>: { <span class="hljs-comment">// {Object|undefined} Constraints about the codec wanted.</span>
+           <span class="hljs-comment">// if not set or set to `undefined` we won't filter based on codecs.</span>
+
+    <span class="hljs-attr">test</span>: <span class="hljs-regexp">/hvc/</span>, <span class="hljs-comment">// {RegExp} RegExp validating the type of codec you want.</span>
+
+    <span class="hljs-attr">all</span>: <span class="hljs-literal">true</span>, <span class="hljs-comment">// {Boolean} Whether all the profiles (i.e. Representation) in a</span>
+               <span class="hljs-comment">// track should be checked against the RegExp given in `test`.</span>
+               <span class="hljs-comment">// If `true`, we will only choose a track if EVERY profiles for</span>
+               <span class="hljs-comment">// it have a codec information that is validated by that RegExp.</span>
+               <span class="hljs-comment">// If `false`, we will choose a track if we know that at least</span>
+               <span class="hljs-comment">// A SINGLE profile from it has codec information validated by</span>
+               <span class="hljs-comment">// that RegExp.</span>
+  }
+  <span class="hljs-attr">signInterpreted</span>: <span class="hljs-literal">true</span>, <span class="hljs-comment">// {Boolean|undefined} If set to `true`, only tracks</span>
+                         <span class="hljs-comment">// which are known to contains a sign language</span>
+                         <span class="hljs-comment">// interpretation will be considered.</span>
+                         <span class="hljs-comment">// If set to `false`, only tracks which are known</span>
+                         <span class="hljs-comment">// to not contain it will be considered.</span>
+                         <span class="hljs-comment">// if not set or set to `undefined` we won't filter</span>
+                         <span class="hljs-comment">// based on that status.</span>
+}
+</code></pre>
+<p>This array of preferrences can be updated at any time through the
+<code>setPreferredVideoTracks</code> method, documented
+<a href="./Track_Selection/getPreferredVideoTracks.html">here</a>.</p>
+<h4>Examples</h4>
+<p>Let’s imagine that you prefer to have a track which contains at least one H265
+profile. You can do:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayer</span>({
+  <span class="hljs-attr">preferredVideoTracks</span>: [{ <span class="hljs-attr">codec</span>: { <span class="hljs-attr">all</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">test</span>: <span class="hljs-regexp">/^hvc/</span> } }],
+});
+</code></pre>
+<p>With that same constraint, let’s no consider that the current user is deaf and
+would thus prefer the video to contain a sign language interpretation.
+We could set both the previous and that new constraint that way:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayer</span>({
+  <span class="hljs-attr">preferredVideoTracks</span>: [
+    <span class="hljs-comment">// first let's consider the best case: H265 + sign language interpretation</span>
+    {
+      <span class="hljs-attr">codec</span>: { <span class="hljs-attr">all</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">test</span>: <span class="hljs-regexp">/^hvc/</span> }
+      <span class="hljs-attr">signInterpreted</span>: <span class="hljs-literal">true</span>,
+    },
+
+    <span class="hljs-comment">// If not available, we still prefer a sign interpreted track without H265</span>
+    { <span class="hljs-attr">signInterpreted</span>: <span class="hljs-literal">true</span> },
+
+    <span class="hljs-comment">// If not available either, we would prefer an H265 content</span>
+    { <span class="hljs-attr">codec</span>: { <span class="hljs-attr">all</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">test</span>: <span class="hljs-regexp">/^hvc/</span> } },
+
+    <span class="hljs-comment">// Note: If this is also unavailable, we will here still have a video track</span>
+    <span class="hljs-comment">// but which do not respect any of the constraints set here.</span>
+  ]
+});
+</code></pre>
+<p>For a totally different example, let’s imagine you want to start without any
+video track enabled (e.g. to start in an audio-only mode). To do that, you can
+simply do:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayer</span>({
+  <span class="hljs-attr">preferredVideoTracks</span>: [<span class="hljs-literal">null</span>],
+});
+</code></pre>
+<div class="warning">
+This option will have no effect in <i>Directfile</i> mode
+(see <a href="./Loading_a_Content.html#transport">loadVideo options</a>) when either :
+<ul>
+<li>No video track API is supported on the current browser</li>
+<li>The media file tracks are not supported on the browser</li>
+</ul>
+</div>
+<p><a name="maxbufferahead"></a></p>
+<h3>maxBufferAhead</h3>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p><em>defaults</em>: <code>Infinity</code></p>
+<p>Set the maximum kept buffer ahead of the current position, in seconds.</p>
+<p>Everything superior to that limit (<code>currentPosition + maxBufferAhead</code>) will
+be automatically garbage collected.</p>
+<p>This feature is not necessary as the browser should by default correctly
+remove old segments from memory if/when the memory is scarce.</p>
+<p>However on some custom targets, or just to better control the memory footprint
+of the player, you might want to set this limit.</p>
+<p>Its default value, <code>Infinity</code>, will remove this limit and just let the browser
+do this job instead.</p>
+<p>The minimum value between this one and the one returned by
+<code>getWantedBufferAhead</code> will be considered when downloading new segments.</p>
+<div class="warning">
+Bear in mind that a too-low configuration there (e.g. inferior to
+`10`) might prevent the browser to play the content at all.
+</div>
+<p>You can update that limit at any time through the
+<a href="./Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a> method.</p>
+<div class="warning">
+This option will have no effect for contents loaded in <i>Directfile</i>
+mode (see <a href="./Loading_a_Content.html#transport">loadVideo options</a>).
+</div>
+<p><a name="maxbufferbehind"></a></p>
+<h3>maxBufferBehind</h3>
+<p><em>type</em>: <code>Number|undefined</code></p>
+<p><em>defaults</em>: <code>Infinity</code></p>
+<p>Set the maximum kept buffer before the current position, in seconds.</p>
+<p>Everything before that limit (<code>currentPosition - maxBufferBehind</code>) will be
+automatically garbage collected.</p>
+<p>This feature is not necessary as the browser should by default correctly
+remove old segments from memory if/when the memory is scarce.</p>
+<p>However on some custom targets, or just to better control the memory footprint
+of the player, you might want to set this limit.</p>
+<p>Its default value, <code>Infinity</code>, will remove this limit and just let the browser
+do this job instead.</p>
+<p>You can update that limit at any time through the
+<a href="./Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a> method.</p>
+<div class="warning">
+This option will have no effect for contents loaded in <i>Directfile</i>
+mode (see <a href="./Loading_a_Content.html#transport">loadVideo options</a>).
+</div>
+<p><a name="limitvideowidth"></a></p>
+<h3>limitVideoWidth</h3>
+<p><em>type</em>: <code>Boolean</code></p>
+<p><em>defaults</em>: <code>false</code></p>
+<p>With this feature, the possible video
+<a href="../Getting_Started/Glossary.html#representation">Representations</a> considered are
+filtered by width:</p>
+<p>The maximum width considered is the closest superior or equal to the video
+element’s width.</p>
+<p>This is done because the other, “superior” Representations will not have any
+difference in glossary of pixels (as in most case, the display limits the maximum
+resolution displayable). It thus save bandwidth with no visible difference.</p>
+<p>To activate this feature, set it to <code>true</code>.</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">limitVideoWidth</span>: <span class="hljs-literal">true</span>,
+});
+</code></pre>
+<p>For some reasons (displaying directly a good quality when switching to
+fullscreen, specific environments), you might not want to activate this limit.</p>
+<div class="warning">
+This option will have no effect for contents loaded :
+<ul>
+<li>In <i>DirectFile</i> mode (see <a href="./Loading_a_Content.html#transport">loadVideo options</a>).</li>
+<li>On Firefox browsers (version &gt;= 67) : We can’t know if the Picture-In-Picture
+feature or window is enabled and we can’t know PIP window size. Thus we can’t
+rely on video element size attributes, that may not reflect the real video size
+when PIP is enabled.</li>
+</ul>
+</div>
+<p><a name="throttlevideobitratewhenhidden"></a></p>
+<h3>throttleVideoBitrateWhenHidden</h3>
+<p><em>type</em>: <code>Boolean</code></p>
+<p><em>defaults</em>: <code>false</code></p>
+<p>The player has a specific feature which throttle the video to the minimum
+bitrate when the current video element is considered hidden (e.g. the containing
+page is hidden and the Picture-In-Picture mode is disabled) for more than a
+minute.</p>
+<p>To activate this feature, set it to <code>true</code>.</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">throttleVideoBitrateWhenHidden</span>: <span class="hljs-literal">true</span>,
+});
+</code></pre>
+<div class="warning">
+This option will have no effect for contents loaded :
+<ul>
+<li>In <i>DirectFile</i> mode (see <a href="./Loading_a_Content.html#transport">loadVideo options</a>).</li>
+<li>On Firefox browsers (version &gt;= 67) : We can’t know if the Picture-In-Picture
+feature or window is enabled. Thus we can’t rely on document hiddenness
+attributes, as the video may be visible, through the PIP window.</li>
+</ul>
+</div>
+<p><a name="stopatend"></a></p>
+<h3>stopAtEnd</h3>
+<p><em>type</em>: <code>Boolean</code></p>
+<p><em>defaults</em>: <code>true</code></p>
+<p>By default, the player automatically <em>unload</em> the content once it reaches its
+end (the player goes to the <code>"ENDED"</code> state).</p>
+<p>In that case, the only way to play the content again is to (re-)call the
+<code>loadVideo</code> API, which will trigger another download of the
+<a href="../Getting_Started/Glossary.html#manifest">Manifest</a> and segments.</p>
+<p>If you want to be able to seek back in the content after it ended, you may want
+to deactivate this behavior. To do so, set <code>stopAtEnd</code> to <code>false</code>.</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">stopAtEnd</span>: <span class="hljs-literal">false</span>,
+});
+</code></pre>
+<p><a name="throttlewhenhidden"></a></p>
+<h3>throttleWhenHidden</h3>
+<div class="warning">
+This option is deprecated, it will disappear in the next major release
+`v4.0.0` (see <a href="./Miscellaneous/Deprecated_APIs.html">Deprecated
+APIs</a>).
+<p>This option will have no effect for contents loaded :</p>
+<ul>
+<li>In <i>DirectFile</i> mode (see <a href="./Loading_a_Content.html#transport">loadVideo options</a>).</li>
+<li>On Firefox browsers (version &gt;= 67) : We can’t know if the Picture-In-Picture
+feature or window is enabled. Thus we can’t rely on document hiddenness
+attributes, as the video may be visible, through the PIP window.</li>
+</ul>
+</div>
+<p>Please use the <a href="#throttlevideobitratewhenhidden">throttleVideoBitrateWhenHidden</a> property
+instead, which is better defined for advanced cases, such as Picture-In-Picture.</p>
+<p><em>type</em>: <code>Boolean</code></p>
+<p><em>defaults</em>: <code>false</code></p>
+<p>The player has a specific feature which throttle the video to the minimum
+bitrate when the current page is hidden for more than a minute.</p>
+<p>To activate this feature, set it to <code>true</code>.</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> player = <span class="hljs-title class_">Player</span>({
+  <span class="hljs-attr">throttleWhenHidden</span>: <span class="hljs-literal">true</span>,
+});
+</code></pre>
+</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="./Overview.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">Overview</div></a></div><div class="next-or-previous-page next-page"><a class="next-or-previous-page-link" href="./Loading_a_Content.html"><div class="next-or-previous-page-link-label">Next</div><div class="next-or-previous-page-link-name">Loading a Content</div></a></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#creating_a_rxplayer">Creating a RxPlayer</a></p>
+<ul>
+<li><a href="#instantiation">Instantiation</a></li>
+<li><a href="#player_options">Player options</a>
+<ul>
+<li><a href="#videoelement">videoElement</a></li>
+<li><a href="#initialvideobitrate">initialVideoBitrate</a></li>
+<li><a href="#initialaudiobitrate">initialAudioBitrate</a></li>
+<li><a href="#minvideobitrate">minVideoBitrate</a></li>
+<li><a href="#minaudiobitrate">minAudioBitrate</a></li>
+<li><a href="#maxvideobitrate">maxVideoBitrate</a></li>
+<li><a href="#maxaudiobitrate">maxAudioBitrate</a></li>
+<li><a href="#wantedbufferahead">wantedBufferAhead</a></li>
+<li><a href="#maxvideobuffersize">maxVideoBufferSize</a></li>
+<li><a href="#preferredaudiotracks">preferredAudioTracks</a></li>
+<li><a href="#preferredtexttracks">preferredTextTracks</a></li>
+<li><a href="#preferredvideotracks">preferredVideoTracks</a></li>
+<li><a href="#maxbufferahead">maxBufferAhead</a></li>
+<li><a href="#maxbufferbehind">maxBufferBehind</a></li>
+<li><a href="#limitvideowidth">limitVideoWidth</a></li>
+<li><a href="#throttlevideobitratewhenhidden">throttleVideoBitrateWhenHidden</a></li>
+<li><a href="#stopatend">stopAtEnd</a></li>
+<li><a href="#throttlewhenhidden">throttleWhenHidden</a></li>
+</ul>
+</li>
+</ul>
+</div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../Getting_Started/Welcome.html">Welcome</a></li>
+<li><div class="page-list-item page-list-group">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Getting_Started/Tutorials/Quick_Start.html">Quick Start</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Tutorials/Content_with_DRM.html">Contents with DRM</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Tutorials/Selecting_a_Track.html">Selecting a Track</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li>
+<li class="page-list-item"><a href="../Getting_Started/Minimal_Player.html">Importing a minimal RxPlayer</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Glossary.html">Glossary</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Troubleshooting.html">Troubleshooting</a></li></ul></li>
+<li class="page-list-item"><div class="page-list-group opened active">API</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="./Overview.html">Overview</a></li>
+<li class="page-list-item active"><a href="./Creating_a_Player.html">Creating a Player</a></li>
+<li class="page-list-item"><a href="./Loading_a_Content.html">Loading a Content</a></li>
+<li class="page-list-item"><a href="./Decryption_Options.html">Decryption Options</a></li>
+<li><div class="page-list-item page-list-group">Basic Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Basic_Methods/getPlayerState.html">getPlayerState</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/addEventListener.html">addEventListener</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/removeEventListener.html">removeEventListener</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/play.html">play</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/pause.html">pause</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/stop.html">stop</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getPosition.html">getPosition</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getWallClockTime.html">getWallClockTime</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/seekTo.html">seekTo</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getVideoDuration.html">getVideoDuration</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getError.html">getError</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getVideoElement.html">getVideoElement</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/dispose.html">dispose</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/reload.html">reload</a></li></ul></li>
+<li class="page-list-item"><a href="./Player_States.html">Player States</a></li>
+<li class="page-list-item"><a href="./Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="./Player_Errors.html">Player Errors</a></li>
+<li><div class="page-list-item page-list-group">Track Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Track_Selection/getAudioTrack.html">getAudioTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getTextTrack.html">getTextTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getVideoTrack.html">getVideoTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setAudioTrack.html">setAudioTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setTextTrack.html">setTextTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setVideoTrack.html">setVideoTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/disableTextTrack.html">disableTextTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setPreferredAudioTracks.html">setPreferredAudioTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setPreferredTextTracks.html">setPreferredTextTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setPreferredVideoTracks.html">setPreferredVideoTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getPreferredAudioTracks.html">getPreferredAudioTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getPreferredTextTracks.html">getPreferredTextTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getPreferredVideoTracks.html">getPreferredVideoTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Bitrate Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Bitrate_Selection/getVideoBitrate.html">getVideoBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getAudioBitrate.html">getAudioBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getAvailableVideoBitrates.html">getAvailableVideoBitrates</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getAvailableAudioBitrates.html">getAvailableAudioBitrates</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/setVideoBitrate.html">setVideoBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/setAudioBitrate.html">setAudioBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getManualVideoBitrate.html">getManualVideoBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getManualAudioBitrate.html">getManualAudioBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/setMinVideoBitrate.html">setMinVideoBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/setMinAudioBitrate.html">setMinAudioBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/setMaxVideoBitrate.html">setMaxVideoBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/setMaxAudioBitrate.html">setMaxAudioBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getMinVideoBitrate.html">getMinVideoBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getMinAudioBitrate.html">getMinAudioBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getMaxVideoBitrate.html">getMaxVideoBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getMaxAudioBitrate.html">getMaxAudioBitrate</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Speed Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li>
+<li class="page-list-item"><a href="./Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li>
+<li class="page-list-item"><a href="./Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Volume Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Volume_Control/setVolume.html">setVolume</a></li>
+<li class="page-list-item"><a href="./Volume_Control/getVolume.html">getVolume</a></li>
+<li class="page-list-item"><a href="./Volume_Control/mute.html">mute</a></li>
+<li class="page-list-item"><a href="./Volume_Control/isMute.html">isMute</a></li>
+<li class="page-list-item"><a href="./Volume_Control/unMute.html">unMute</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Buffer_Information/getVideoBufferGap.html">getVideoBufferGap</a></li>
+<li class="page-list-item"><a href="./Buffer_Information/getVideoLoadedTime.html">getVideoLoadedTime</a></li>
+<li class="page-list-item"><a href="./Buffer_Information/getVideoPlayedTime.html">getVideoPlayedTime</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Content Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Content_Information/getUrl.html">getUrl</a></li>
+<li class="page-list-item"><a href="./Content_Information/isLive.html">isLive</a></li>
+<li class="page-list-item"><a href="./Content_Information/getCurrentKeySystem.html">getCurrentKeySystem</a></li></ul></li>
+<li class="page-list-item"><a href="./Static_Properties.html">RxPlayer Static Properties</a></li>
+<li class="page-list-item"><a href="./Typescript_Types.html">Typescript Types</a></li>
+<li><div class="page-list-item page-list-group">Tools</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Tools/TextTrackRenderer.html">TextTrackRenderer</a></li>
+<li class="page-list-item"><a href="./Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li>
+<li class="page-list-item"><a href="./Tools/StringUtils.html">StringUtils</a></li>
+<li class="page-list-item"><a href="./Tools/parseBifThumbnails.html">parseBifThumbnails</a></li>
+<li class="page-list-item"><a href="./Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li>
+<li class="page-list-item"><a href="./Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Miscellaneous</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Miscellaneous/plugins.html">Plugins</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Low_Latency.html">Low Latency</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/hdr.html">HDR</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Local_Contents.html">Local Contents</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Text_Tracks.html">Text Tracks</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/images.html">Images</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Manifest_Object.html">Manifest Object</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Deprecated_APIs.html">Deprecated APIs</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Initial_Position.html">Initial Position</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Deprecated Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Deprecated/getManifest.html">getManifest</a></li>
+<li class="page-list-item"><a href="./Deprecated/getCurrentAdaptations.html">getCurrentAdaptations</a></li>
+<li class="page-list-item"><a href="./Deprecated/getCurrentRepresentations.html">getCurrentRepresentations</a></li>
+<li class="page-list-item"><a href="./Deprecated/setFullscreen.html">setFullscreen</a></li>
+<li class="page-list-item"><a href="./Deprecated/isFullscreen.html">isFullscreen</a></li>
+<li class="page-list-item"><a href="./Deprecated/exitFullscreen.html">exitFullscreen</a></li>
+<li class="page-list-item"><a href="./Deprecated/getImageTrackData.html">getImageTrackData</a></li>
+<li class="page-list-item"><a href="./Deprecated/getNativeTextTrack.html">getNativeTextTrack</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">Reference</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../reference/API_Reference.html">API Reference</a></li></ul></li>
+<li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
+
+<li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
+</ul></div><script type="text/javascript" src="../scripts/lunr.js" charset="utf-8"></script><script type="text/javascript" src="../scripts/script.js" charset="utf-8"></script></body></html>
