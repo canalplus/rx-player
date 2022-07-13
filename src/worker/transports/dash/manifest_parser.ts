@@ -1,3 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -15,7 +21,6 @@
  */
 
 import { formatError } from "../../errors";
-import features from "../../features";
 import log from "../../log";
 import Manifest from "../../manifest";
 import {
@@ -26,7 +31,6 @@ import objectAssign from "../../utils/object_assign";
 import request from "../../utils/request";
 import {
   strToUtf8,
-  utf8ToStr,
 } from "../../utils/string_parsing";
 import { CancellationSignal } from "../../utils/task_canceller";
 import {
@@ -74,19 +78,22 @@ export default function generateManifestParser(
                              referenceDateTime,
                              externalClockOffset };
 
-    const parsers = features.dashParsers;
+    const parsers = {
+      wasm: (globalThis as any).parser,
+      js: null,
+    };
     if (parsers.wasm === null ||
         parsers.wasm.status === "uninitialized" ||
         parsers.wasm.status === "failure")
     {
       log.debug("DASH: WASM MPD Parser not initialized. Running JS one.");
-      return runDefaultJsParser();
+      throw new Error("Not implemented");
     } else {
       const manifestAB = getManifestAsArrayBuffer(responseData);
       if (!doesXmlSeemsUtf8Encoded(manifestAB)) {
         log.info("DASH: MPD doesn't seem to be UTF-8-encoded. " +
                  "Running JS parser instead of the WASM one.");
-        return runDefaultJsParser();
+                 throw new Error("Not implemented");
       }
 
       if (parsers.wasm.status === "initialized") {
@@ -101,7 +108,7 @@ export default function generateManifestParser(
           if (parsers.wasm === null || parsers.wasm.status !== "initialized") {
             log.warn("DASH: WASM MPD parser initialization failed. " +
                      "Running JS parser instead");
-            return runDefaultJsParser();
+                     throw new Error("Not implemented");
           }
           log.debug("DASH: Running WASM MPD Parser.");
           const parsed = parsers.wasm.runWasmParser(manifestAB, dashParserOpts);
@@ -116,14 +123,6 @@ export default function generateManifestParser(
      * If it is not defined, throws.
      * @returns {Observable}
      */
-    function runDefaultJsParser() {
-      if (parsers.js === null) {
-        throw new Error("No MPD parser is imported");
-      }
-      const manifestDoc = getManifestAsDocument(responseData);
-      const parsedManifest = parsers.js(manifestDoc, dashParserOpts);
-      return processMpdParserResponse(parsedManifest);
-    }
 
     /**
      * Process return of one of the MPD parser.
@@ -263,18 +262,6 @@ function assertLoadedResourcesFormatArrayBuffer(
  * @param {*} manifestSrc
  * @returns {Document}
  */
-function getManifestAsDocument(manifestSrc : unknown) : Document {
-  if (manifestSrc instanceof ArrayBuffer) {
-    return new DOMParser()
-      .parseFromString(utf8ToStr(new Uint8Array(manifestSrc)), "text/xml");
-  } else if (typeof manifestSrc === "string") {
-    return new DOMParser().parseFromString(manifestSrc, "text/xml");
-  } else if (manifestSrc instanceof Document) {
-    return manifestSrc;
-  } else {
-    throw new Error("DASH Manifest Parser: Unrecognized Manifest format");
-  }
-}
 
 /**
  * Try to convert a Manifest from an unknown format to an `ArrayBuffer` format.
@@ -287,8 +274,6 @@ function getManifestAsArrayBuffer(manifestSrc : unknown) : ArrayBuffer {
     return manifestSrc;
   } else if (typeof manifestSrc === "string") {
     return strToUtf8(manifestSrc).buffer;
-  } else if (manifestSrc instanceof Document) {
-    return strToUtf8(manifestSrc.documentElement.innerHTML).buffer;
   } else {
     throw new Error("DASH Manifest Parser: Unrecognized Manifest format");
   }

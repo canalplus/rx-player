@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -13,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 
 import {
   Observable,
@@ -36,7 +39,7 @@ const POSSIBLE_BUFFER_TYPES : IBufferType[] = [ "audio",
 export type ITextTrackSegmentBufferOptions = { textTrackMode? : "native";
                                                hideNativeSubtitle? : boolean; } |
                                              { textTrackMode : "html";
-                                               textTrackElement : HTMLElement; };
+                                               textTrackElement : any; };
 
 /** General Options available for any SegmentBuffer */
 export type ISegmentBufferOptions = ITextTrackSegmentBufferOptions;
@@ -80,7 +83,6 @@ export default class SegmentBuffersStore {
   }
 
   /** HTMLMediaElement on which the MediaSource is attached.  */
-  private readonly _mediaElement : HTMLMediaElement;
 
   /** MediaSource on which SourceBuffer objects will be attached. */
   private readonly _mediaSource : MediaSource;
@@ -105,8 +107,7 @@ export default class SegmentBuffersStore {
    * @param {MediaSource} mediaSource
    * @constructor
    */
-  constructor(mediaElement : HTMLMediaElement, mediaSource : MediaSource) {
-    this._mediaElement = mediaElement;
+  constructor(mediaSource : MediaSource) {
     this._mediaSource = mediaSource;
     this._initializedSegmentBuffers = {};
     this._onNativeBufferAddedOrDisabled = [];
@@ -136,8 +137,7 @@ export default class SegmentBuffersStore {
    * @returns {Array.<string>}
    */
   public getNativeBufferTypes() : IBufferType[] {
-    return this._mediaElement.nodeName === "AUDIO" ? ["audio"] :
-                                                     ["video", "audio"];
+    return ["video", "audio"];
   }
 
   /**
@@ -241,7 +241,7 @@ export default class SegmentBuffersStore {
   public createSegmentBuffer(
     bufferType : IBufferType,
     codec : string,
-    options : ISegmentBufferOptions = {}
+    _options : ISegmentBufferOptions = {}
   ) : SegmentBuffer {
     const memorizedSegmentBuffer = this._initializedSegmentBuffers[bufferType];
     if (shouldHaveNativeBuffer(bufferType)) {
@@ -271,26 +271,7 @@ export default class SegmentBuffersStore {
     }
 
     let segmentBuffer : SegmentBuffer;
-    if (bufferType === "text") {
-      log.info("SB: Creating a new text SegmentBuffer");
-
-      if (options.textTrackMode === "html") {
-        if (features.htmlTextTracksBuffer == null) {
-          throw new Error("HTML Text track feature not activated");
-        }
-        segmentBuffer = new features.htmlTextTracksBuffer(this._mediaElement,
-                                                          options.textTrackElement);
-      } else {
-        if (features.nativeTextTracksBuffer == null) {
-          throw new Error("Native Text track feature not activated");
-        }
-        segmentBuffer = new features
-          .nativeTextTracksBuffer(this._mediaElement,
-                                  options.hideNativeSubtitle === true);
-      }
-      this._initializedSegmentBuffers.text = segmentBuffer;
-      return segmentBuffer;
-    } else if (bufferType === "image") {
+    if (bufferType === "image") {
       if (features.imageBuffer == null) {
         throw new Error("Image buffer feature not activated");
       }

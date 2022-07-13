@@ -14,6 +14,7 @@
         "noUnusedParameters": true,
         "noUnusedLocals": true,
         "types": ["rxjs", "node", "jest"],
-        "moduleResolution": "node"
+        "moduleResolution": "node",
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"]
     }
 }

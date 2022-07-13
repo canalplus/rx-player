@@ -16,7 +16,6 @@
 
 import {
   defer as observableDefer,
-  fromEvent as observableFromEvent,
   interval as observableInterval,
   map,
   merge as observableMerge,
@@ -26,10 +25,12 @@ import {
   skip,
   startWith,
 } from "rxjs";
+import { READY_STATES } from "../../compat/browser_compatibility_types";
 import config from "../../config";
 import log from "../../log";
 import objectAssign from "../../utils/object_assign";
 import { getRange } from "../../utils/ranges";
+import ManualTimeRanges from "../segment_buffers/implementations/utils/manual_time_ranges";
 
 
 /**
@@ -37,12 +38,7 @@ import { getRange } from "../../utils/ranges";
  * emitted.
  * @type {Array.<string>}
  */
-const SCANNED_MEDIA_ELEMENTS_EVENTS : IPlaybackObserverEventType[] = [ "canplay",
-                                                                       "play",
-                                                                       "seeking",
-                                                                       "seeked",
-                                                                       "loadedmetadata",
-                                                                       "ratechange" ];
+
 
 /**
  * Class allowing to "observe" current playback conditions so the RxPlayer is
@@ -60,7 +56,6 @@ const SCANNED_MEDIA_ELEMENTS_EVENTS : IPlaybackObserverEventType[] = [ "canplay"
 export default class PlaybackObserver {
 
   /** HTMLMediaElement which we want to observe. */
-  private _mediaElement : HTMLMediaElement;
 
   /** If `true`, a `MediaSource` object is linked to `_mediaElement`. */
   private _withMediaSource : boolean;
@@ -105,9 +100,8 @@ export default class PlaybackObserver {
    * @param {HTMLMediaElement} mediaElement
    * @param {Object} options
    */
-  constructor(mediaElement : HTMLMediaElement, options : IPlaybackObserverOptions) {
+  constructor(options : IPlaybackObserverOptions) {
     this._internalSeekingEventsIncomingCounter = 0;
-    this._mediaElement = mediaElement;
     this._withMediaSource = options.withMediaSource;
     this._lowLatencyMode = options.lowLatencyMode;
     this._lastObservation = null;
@@ -120,7 +114,7 @@ export default class PlaybackObserver {
    * @returns {number}
    */
   public getCurrentTime() : number {
-    return this._mediaElement.currentTime;
+    return 0;
   }
 
   /**
@@ -133,9 +127,8 @@ export default class PlaybackObserver {
    * e.g. the user).
    * @param {number}
    */
-  public setCurrentTime(time: number) : void {
+  public setCurrentTime(_time: number) : void {
     this._internalSeekingEventsIncomingCounter += 1;
-    this._mediaElement.currentTime = time;
   }
 
   /**
@@ -143,7 +136,7 @@ export default class PlaybackObserver {
    * @returns {number}
    */
   public getReadyState() : number {
-    return this._mediaElement.readyState;
+    return READY_STATES.HAVE_NOTHING;
   }
 
   /**
@@ -215,7 +208,7 @@ export default class PlaybackObserver {
         }
         const lastObservation = this._lastObservation ??
                                 this._generateInitialObservation();
-        const mediaTimings = getMediaInfos(this._mediaElement, tmpEvt);
+        const mediaTimings = getMediaInfos(tmpEvt);
         const internalSeeking = mediaTimings.seeking &&
           // We've just received the event for internally seeking
           (tmpEvt === "internal-seeking" ||
@@ -250,10 +243,6 @@ export default class PlaybackObserver {
         return timings;
       };
 
-      const eventObs : Array< Observable< IPlaybackObserverEventType > > =
-        SCANNED_MEDIA_ELEMENTS_EVENTS.map((eventName) =>
-          observableFromEvent(this._mediaElement, eventName)
-            .pipe(map(() => eventName)));
 
       const interval = this._lowLatencyMode  ? SAMPLING_INTERVAL_LOW_LATENCY :
                        this._withMediaSource ? SAMPLING_INTERVAL_MEDIASOURCE :
@@ -263,7 +252,7 @@ export default class PlaybackObserver {
         observableInterval(interval)
           .pipe(map(() => "timeupdate"));
 
-      return observableMerge(interval$, ...eventObs).pipe(
+      return observableMerge(interval$).pipe(
         map((event : IPlaybackObserverEventType) => {
           const newObservation = getCurrentObservation(event);
           if (log.hasLevel("DEBUG")) {
@@ -279,7 +268,7 @@ export default class PlaybackObserver {
   }
 
   private _generateInitialObservation() : IPlaybackObservation {
-    return objectAssign(getMediaInfos(this._mediaElement, "init"),
+    return objectAssign(getMediaInfos("init"),
                         { rebuffering: null,
                           freezing: null,
                           internalSeeking: false });
@@ -316,7 +305,7 @@ interface IMediaInfos {
   /** Gap between `currentTime` and the next position with un-buffered data. */
   bufferGap : number;
   /** Value of `buffered` (buffered ranges) for the media element. */
-  buffered : TimeRanges;
+  buffered : ManualTimeRanges;
   /** The buffered range we are currently playing. */
   currentRange : { start : number;
                    end : number; } |
@@ -500,17 +489,17 @@ function hasLoadedUntilTheEnd(
  * @returns {Object}
  */
 function getMediaInfos(
-  mediaElement : HTMLMediaElement,
   event : IPlaybackObserverEventType
 ) : IMediaInfos {
-  const { buffered,
-          currentTime,
-          duration,
-          ended,
-          paused,
-          playbackRate,
-          readyState,
-          seeking } = mediaElement;
+
+  const buffered = new ManualTimeRanges();
+  const currentTime = 0;
+  const duration = 1000000;
+  const ended = false;
+  const paused = false;
+  const playbackRate = 1;
+  const readyState = READY_STATES.HAVE_NOTHING;
+  const seeking = false;
 
   const currentRange = getRange(buffered, currentTime);
   return { bufferGap: currentRange !== null ? currentRange.end - currentTime :
@@ -715,7 +704,7 @@ export interface IPlaybackObserverOptions {
  * @returns {string}
  */
 function prettyPrintBuffered(
-  buffered : TimeRanges,
+  buffered : ManualTimeRanges,
   currentTime : number
 ) : string {
   let str = "";

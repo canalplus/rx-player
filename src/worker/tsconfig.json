@@ -2,5 +2,14 @@
     "extends": "../generic-tsconfig.json",
     "compilerOptions": {
       "lib": ["esnext", "webworker"],
+      "typeRoots": [
+        "./src/typings/next-tick.d.ts",
+        "./src/typings/object-assign.d.ts",
+        "./src/typings/globals.d.ts",
+        "./node_modules/@types"
+      ],
+      "types": ["rxjs", "node", "jest"],
+
     }
+    
   }
