@@ -754,22 +754,22 @@ const DEFAULT_CONFIG = {
     END: 0.1,
   },
 
-    /**
-     * Maximum interval at which text tracks are refreshed in an "html"
-     * textTrackMode.
-     *
-     * The text tracks are also refreshed on various video events, this interval
-     * will only trigger a refresh if none of those events was received during
-     * that timespan.
-     *
-     * Note that if the TextTrack cue did not change between two intervals or
-     * events, the DOM won't be refreshed.
-     * The TextTrack cues structure is also optimized for fast retrieval.
-     * We should thus not have much of a performance impact here if we set a low
-     * interval.
-     *
-     * @type {Number}
-     */
+  /**
+   * Maximum interval at which text tracks are refreshed in an "html"
+   * textTrackMode.
+   *
+   * The text tracks are also refreshed on various video events, this interval
+   * will only trigger a refresh if none of those events was received during
+   * that timespan.
+   *
+   * Note that if the TextTrack cue did not change between two intervals or
+   * events, the DOM won't be refreshed.
+   * The TextTrack cues structure is also optimized for fast retrieval.
+   * We should thus not have much of a performance impact here if we set a low
+   * interval.
+   *
+   * @type {Number}
+   */
   MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL: 50,
 
     /**

@@ -121,8 +121,6 @@ interface IDiscontinuityStoredInfo {
  * encountered and exited.
  * @param {object} playbackObserver - emit the current playback conditions.
  * @param {Object} manifest - The Manifest of the currently-played content.
- * @param {Observable} discontinuityUpdate$ - Observable emitting encountered
- * discontinuities for loaded Period and buffer types.
  * @param {Observable} lockedStream$
  * @param {Observable} discontinuityUpdate$
  * @returns {Observable}
@@ -182,11 +180,10 @@ export default function StallAvoider(
   const unlock$ = lockedStream$.pipe(
     withLatestFrom(playbackObserver.getReference().asObservable()),
     tap(([lockedStreamEvt, observation]) => {
-      // TODO(PaulB) also skip when the user's wanted speed is set to `0`, as we
-      // might not want to seek in that case?
       if (
         !observation.rebuffering ||
-        observation.paused || (
+        observation.paused ||
+        observation.playbackRate <= 0 || (
           lockedStreamEvt.bufferType !== "audio" &&
           lockedStreamEvt.bufferType !== "video"
         )
@@ -219,6 +216,8 @@ export default function StallAvoider(
               position,
               readyState,
               rebuffering,
+              paused,
+              playbackRate,
               freezing } = observation;
 
       const { BUFFER_DISCONTINUITY_THRESHOLD,
@@ -341,7 +340,11 @@ export default function StallAvoider(
       // implementation that might drop an injected segment, or in
       // case of small discontinuity in the content.
       const nextBufferRangeGap = getNextRangeGap(buffered, freezePosition);
-      if (nextBufferRangeGap < BUFFER_DISCONTINUITY_THRESHOLD) {
+      if (
+        !paused &&
+        playbackRate > 0 &&
+        nextBufferRangeGap < BUFFER_DISCONTINUITY_THRESHOLD
+      ) {
         const seekTo = (freezePosition + nextBufferRangeGap + EPSILON);
         if (playbackObserver.getCurrentTime() < seekTo) {
           log.warn("Init: discontinuity encountered inferior to the threshold",
