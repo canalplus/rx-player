@@ -212,6 +212,7 @@ export default function createMediaSourceLoader(
      */
     const stallAvoider$ = StallAvoider(playbackObserver,
                                        manifest,
+                                       speed,
                                        lockedStream$,
                                        discontinuityUpdate$);
 

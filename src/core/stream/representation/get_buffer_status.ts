@@ -100,8 +100,12 @@ export default function getBufferStatus(
   segmentBuffer.synchronizeInventory();
 
   const { representation } = content;
+  const askedStart = playbackObserver.getIsPaused() ||
+                     playbackObserver.getPlaybackRate() <= 0 ?
+    initialWantedTime - 0.1 :
+    initialWantedTime;
   const neededRange = getRangeOfNeededSegments(content,
-                                               initialWantedTime,
+                                               askedStart,
                                                bufferGoal);
   const shouldRefreshManifest = representation.index.shouldRefresh(neededRange.start,
                                                                    neededRange.end);
@@ -139,7 +143,7 @@ export default function getBufferStatus(
 
   const prioritizedNeededSegments: IQueuedSegment[] = segmentsToLoad.map((segment) => (
     {
-      priority: getSegmentPriority(segment.time, initialWantedTime),
+      priority: getSegmentPriority(segment.time, askedStart),
       segment,
     }
   ));
@@ -228,7 +232,7 @@ function getRangeOfNeededSegments(
   {
     wantedStartPosition = lastIndexPosition - 1;
   } else {
-    wantedStartPosition = initialWantedTime;
+    wantedStartPosition = initialWantedTime - 0.1;
   }
 
   const wantedEndPosition = wantedStartPosition + bufferGoal;
