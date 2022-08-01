@@ -117,8 +117,18 @@ async function createAndTryToRetrievePersistentSession(
     if (!hasLoadedSession) {
       log.warn("DRM: No data stored for the loaded session");
       persistentSessionsStore.delete(storedEntry.sessionId);
+
+      // The EME specification is kind of implicit about it but it seems from my
+      // understanding (Paul B.) that a MediaKeySession on wich a `load` attempt
+      // did not succeed due to the loaded session not being found by the
+      // browser/CDM, should neither be used anymore nor closed.
+      // Thus, we're creating another `"persistent-license"` `MediaKeySession`
+      // in that specific case.
+      loadedSessionsStore.removeSessionWithoutClosingIt(entry.mediaKeySession);
+      const newEntry = loadedSessionsStore.createSession(initData,
+                                                         "persistent-license");
       return { type: MediaKeySessionLoadingType.Created,
-               value: entry };
+               value: newEntry };
     }
 
     if (hasLoadedSession && isSessionUsable(entry.mediaKeySession)) {
@@ -153,7 +163,23 @@ async function createAndTryToRetrievePersistentSession(
       persistentSessionsStore.delete(persistentEntry.sessionId);
     }
 
-    await loadedSessionsStore.closeSession(entry.mediaKeySession);
+    try {
+      await loadedSessionsStore.closeSession(entry.mediaKeySession);
+    } catch (err) {
+      // From reading the EME specification in details, it seems that a
+      // `MediaKeySession`'s ability to be closed is tightly linked to its
+      // possession of a "sanitized session ID" set as `sessionId`.
+      // This is never clearly stated however and I'm (Paul B.) always afraid of
+      // breaking compatibility when it comes to EME code.
+      // So we still try to close the `MediaKeySession` in any case, only, if it
+      // fails and it didn't had any `sessionId` set, we just ignore the error.
+      // Note that trying to close the `MediaKeySession` might incur some delays
+      // in those rare cases.
+      if (entry.mediaKeySession.sessionId !== "") {
+        throw err;
+      }
+      loadedSessionsStore.removeSessionWithoutClosingIt(entry.mediaKeySession);
+    }
     if (cancelSignal.cancellationError !== null) {
       throw cancelSignal.cancellationError;
     }

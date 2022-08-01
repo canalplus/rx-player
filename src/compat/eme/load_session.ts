@@ -23,15 +23,14 @@ const EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES = 100;
  * Load a persistent session, based on its `sessionId`, on the given
  * MediaKeySession.
  *
- * Returns an Observable which emits:
- *   - true if the persistent MediaKeySession was found and loaded
- *   - false if no persistent MediaKeySession was found with that `sessionId`.
- * Then completes.
+ * Returns a Promise which resolves with:
+ *   - `true` if the persistent MediaKeySession was found and loaded
+ *   - `false` if no persistent MediaKeySession was found with that `sessionId`.
  *
- * The Observable throws if anything goes wrong in the process.
+ * The Promise rejects if anything goes wrong in the process.
  * @param {MediaKeySession} session
  * @param {string} sessionId
- * @returns {Observable}
+ * @returns {Promise.<boolean>}
  */
 export default async function loadSession(
   session : MediaKeySession | ICustomMediaKeySession,
