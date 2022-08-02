@@ -82,7 +82,7 @@ export default class PlaybackObserver {
    * This allows us to correctly characterize seeking events: if the counter is
    * superior to `0`, it is probably due to an internal "seek".
    */
-  private _internalSeekingEventsIncomingCounter : number;
+  private _internalSeeksIncoming : number[];
 
   /**
    * Stores the last playback observation produced by the `PlaybackObserver`.:
@@ -106,7 +106,7 @@ export default class PlaybackObserver {
    * @param {Object} options
    */
   constructor(mediaElement : HTMLMediaElement, options : IPlaybackObserverOptions) {
-    this._internalSeekingEventsIncomingCounter = 0;
+    this._internalSeeksIncoming = [];
     this._mediaElement = mediaElement;
     this._withMediaSource = options.withMediaSource;
     this._lowLatencyMode = options.lowLatencyMode;
@@ -159,7 +159,7 @@ export default class PlaybackObserver {
    * @param {number} time
    */
   public setCurrentTime(time: number) : void {
-    this._internalSeekingEventsIncomingCounter += 1;
+    this._internalSeeksIncoming.push(time);
     this._mediaElement.currentTime = time;
   }
 
@@ -250,17 +250,21 @@ export default class PlaybackObserver {
       event : IPlaybackObserverEventType
     ) : IPlaybackObservation => {
       let tmpEvt: IPlaybackObserverEventType = event;
-      if (tmpEvt === "seeking" && this._internalSeekingEventsIncomingCounter > 0) {
+      let startedInternalSeekTime : number | undefined;
+      if (tmpEvt === "seeking" && this._internalSeeksIncoming.length > 0) {
         tmpEvt = "internal-seeking";
-        this._internalSeekingEventsIncomingCounter -= 1;
+        startedInternalSeekTime = this._internalSeeksIncoming.shift();
       }
       const _lastObservation = lastObservation ?? this._generateInitialObservation();
       const mediaTimings = getMediaInfos(this._mediaElement, tmpEvt);
-      const internalSeeking = mediaTimings.seeking &&
-        // We've just received the event for internally seeking
-        (tmpEvt === "internal-seeking" ||
-          // or We're still waiting on the previous internal-seek
-          (_lastObservation.internalSeeking && tmpEvt !== "seeking"));
+      let pendingInternalSeek : number | null = null;
+      if (mediaTimings.seeking) {
+        if (typeof startedInternalSeekTime === "number") {
+          pendingInternalSeek = startedInternalSeekTime;
+        } else if (_lastObservation.pendingInternalSeek !== null && event !== "seeking") {
+          pendingInternalSeek = _lastObservation.pendingInternalSeek;
+        }
+      }
       const rebufferingStatus = getRebufferingStatus(
         _lastObservation,
         mediaTimings,
@@ -272,14 +276,14 @@ export default class PlaybackObserver {
         {},
         { rebuffering: rebufferingStatus,
           freezing: freezingStatus,
-          internalSeeking },
+          pendingInternalSeek },
         mediaTimings);
       if (log.hasLevel("DEBUG")) {
         log.debug("API: current media element state tick",
                   "event", timings.event,
                   "position", timings.position,
                   "seeking", timings.seeking,
-                  "internalSeeking", timings.internalSeeking,
+                  "internalSeek", timings.pendingInternalSeek,
                   "rebuffering", timings.rebuffering !== null,
                   "freezing", timings.freezing !== null,
                   "ended", timings.ended,
@@ -341,7 +345,7 @@ export default class PlaybackObserver {
     return objectAssign(getMediaInfos(this._mediaElement, "init"),
                         { rebuffering: null,
                           freezing: null,
-                          internalSeeking: false });
+                          pendingInternalSeek: null });
   }
 }
 
@@ -457,7 +461,7 @@ export interface IPlaybackObservation extends IMediaInfos {
    * If `true`, an "internal seek" (a seeking operation triggered by the
    * RxPlayer code) is currently pending.
    */
-  internalSeeking : boolean;
+  pendingInternalSeek : number | null;
 }
 
 /**

@@ -123,7 +123,8 @@ interface IDiscontinuityStoredInfo {
  * @param {Object} manifest - The Manifest of the currently-played content.
  * @param {Observable} discontinuityUpdate$ - Observable emitting encountered
  * discontinuities for loaded Period and buffer types.
- * @param {Function} setCurrentTime
+ * @param {Observable} lockedStream$
+ * @param {Observable} discontinuityUpdate$
  * @returns {Observable}
  */
 export default function StallAvoider(
@@ -226,6 +227,22 @@ export default function StallAvoider(
               UNFREEZING_SEEK_DELAY,
               UNFREEZING_DELTA_POSITION } = config.getCurrent();
 
+      if (
+        !observation.seeking &&
+        isSeekingApproximate &&
+        ignoredStallTimeStamp === null &&
+        lastSeekingPosition !== null &&
+        observation.position < lastSeekingPosition
+      ) {
+        log.debug("Init: the device appeared to have seeked back by itself.");
+        const now = performance.now();
+        ignoredStallTimeStamp = now;
+      }
+
+      lastSeekingPosition = observation.seeking ?
+        Math.max(observation.pendingInternalSeek ?? 0, observation.position) :
+        null;
+
       if (freezing !== null) {
         const now = performance.now();
 
@@ -254,8 +271,8 @@ export default function StallAvoider(
           // Return that we're stalled
           let reason : IStallingSituation;
           if (observation.seeking) {
-            reason = observation.internalSeeking ? "internal-seek" :
-                                                   "seeking";
+            reason = observation.pendingInternalSeek !== null ? "internal-seek" :
+                                                                "seeking";
           } else {
             reason = "not-ready";
           }
@@ -269,27 +286,20 @@ export default function StallAvoider(
       // We want to separate a stall situation when a seek is due to a seek done
       // internally by the player to when its due to a regular user seek.
       const stalledReason = rebuffering.reason === "seeking" &&
-                            observation.internalSeeking ? "internal-seek" as const :
-                                                          rebuffering.reason;
+                            observation.pendingInternalSeek !== null ?
+        "internal-seek" as const :
+        rebuffering.reason;
 
-      if (observation.seeking) {
-        lastSeekingPosition = observation.position;
-      } else if (lastSeekingPosition !== null) {
+      if (ignoredStallTimeStamp !== null) {
         const now = performance.now();
-        if (ignoredStallTimeStamp === null) {
-          ignoredStallTimeStamp = now;
+        if (now - ignoredStallTimeStamp < FORCE_DISCONTINUITY_SEEK_DELAY) {
+          log.debug("Init: letting the device get out of a stall by itself");
+          return { type: "stalled" as const,
+                   value: stalledReason };
+        } else {
+          log.warn("Init: ignored stall for too long, checking discontinuity",
+                   now - ignoredStallTimeStamp);
         }
-        if (isSeekingApproximate && observation.position < lastSeekingPosition) {
-          log.debug("Init: the device appeared to have seeked back by itself.");
-          if (now - ignoredStallTimeStamp < FORCE_DISCONTINUITY_SEEK_DELAY) {
-            return { type: "stalled" as const,
-                     value: stalledReason };
-          } else {
-            log.warn("Init: ignored stall for too long, checking discontinuity",
-                     now - ignoredStallTimeStamp);
-          }
-        }
-        lastSeekingPosition = null;
       }
 
       ignoredStallTimeStamp = null;
