@@ -737,12 +737,12 @@ export default function launchTestsForContent(manifestInfos) {
         await sleep(1500);
         expect(player.getVideoPlayedTime()).to.be.closeTo(9, 0.001);
 
-        player.seekTo(minimumPosition + 30);
+        player.seekTo(minimumPosition + 31);
         await sleep(1500);
         const initialLoadedTime = player.getVideoPlayedTime();
-        expect(initialLoadedTime).to.be.closeTo(0, 4);
+        expect(initialLoadedTime).to.be.closeTo(1, 4);
 
-        player.seekTo(minimumPosition + 30 + 5);
+        player.seekTo(minimumPosition + 31 + 5);
         expect(player.getVideoPlayedTime()).to.be
           .closeTo(initialLoadedTime + 5, 1);
       });

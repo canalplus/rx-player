@@ -221,7 +221,6 @@ export default function StallAvoider(
               position,
               readyState,
               rebuffering,
-              paused,
               freezing } = observation;
 
       const { BUFFER_DISCONTINUITY_THRESHOLD,
@@ -315,7 +314,7 @@ export default function StallAvoider(
       /** Position at which data is awaited. */
       const { position: stalledPosition } = rebuffering;
 
-      if (stalledPosition !== null && !paused && speed.getValue() > 0) {
+      if (stalledPosition !== null && speed.getValue() > 0) {
         const skippableDiscontinuity = findSeekableDiscontinuity(discontinuitiesStore,
                                                                  manifest,
                                                                  stalledPosition);
@@ -345,7 +344,6 @@ export default function StallAvoider(
       // case of small discontinuity in the content.
       const nextBufferRangeGap = getNextRangeGap(buffered, freezePosition);
       if (
-        !paused &&
         speed.getValue() > 0 &&
         nextBufferRangeGap < BUFFER_DISCONTINUITY_THRESHOLD
       ) {
