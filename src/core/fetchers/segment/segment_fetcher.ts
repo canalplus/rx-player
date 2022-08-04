@@ -61,7 +61,7 @@ const generateRequestID = idGenerator();
  * `options` argument, which may retry a segment request when it fails.
  *
  * @param {string} bufferType
- * @param {Object} transport
+ * @param {Object} pipeline
  * @param {Object} callbacks
  * @param {Object} options
  * @returns {Function}

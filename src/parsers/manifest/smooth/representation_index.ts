@@ -318,7 +318,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    * Generate a list of Segments for a particular period of time.
    *
    * @param {Number} from
-   * @param {Number} duration
+   * @param {Number} dur
    * @returns {Array.<Object>}
    */
   getSegments(from : number, dur : number) : ISegment[] {

@@ -38,7 +38,7 @@ import { isMP4EmbeddedTrack } from "./utils";
 
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
- * @param {string} uri
+ * @param {string} url
  * @param {Object} content
  * @param {Object} callbacks
  * @param {Object} cancelSignal

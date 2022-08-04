@@ -60,7 +60,10 @@ export interface IListIndex {
   } | undefined;
   /** Information on the list of segments for this index. */
   list: Array<{
-    /** URLs of the segment. */
+    /**
+     * URLs of the segment.
+     * `null` if no URL exists.
+     */
     mediaURLs : string[] | null;
     /** Possible byte-range of the segment. */
     mediaRange? : [number, number] | undefined;
@@ -188,7 +191,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
 
   /**
    * @param {Number} fromTime
-   * @param {Number} duration
+   * @param {Number} dur
    * @returns {Array.<Object>}
    */
   getSegments(fromTime : number, dur : number) : ISegment[] {
@@ -261,7 +264,6 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   /**
    * Returns true if a Segment returned by this index is still considered
    * available.
-   * @param {Object} segment
    * @returns {Boolean}
    */
   isSegmentStillAvailable() : true {
@@ -313,9 +315,6 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
     this._index = newIndex._index;
   }
 
-  /**
-   * @param {Object} newIndex
-   */
   _update() : void {
     log.error("List RepresentationIndex: Cannot update a SegmentList");
   }

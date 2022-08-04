@@ -59,6 +59,7 @@ export interface ITemplateIndex {
   /**
    * URL base to access any segment.
    * Can contain token to replace to convert it to real URLs.
+   * `null` if no URL exists.
    */
   mediaURLs : string[] | null;
   /**

@@ -207,7 +207,7 @@ export interface ISegmentPipeline<
 
 /**
  * Segment loader function, allowing to load a segment of any type.
- * @param {stop|null} url - URL at which the segment should be downloaded.
+ * @param {string|null} url - URL at which the segment should be downloaded.
  * `null` if we do not have an URL (in which case the segment should be loaded
  * through other means, such as information taken from the segment's content).
  * @param {Object} content - Content linked to the wanted segment.

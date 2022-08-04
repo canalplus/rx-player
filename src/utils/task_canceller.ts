@@ -308,9 +308,6 @@ export class CancellationError extends Error {
   public readonly name : "CancellationError";
   public readonly message : string;
 
-  /**
-   * @param {string} message
-   */
   constructor() {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class

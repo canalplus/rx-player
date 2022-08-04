@@ -112,11 +112,28 @@ export interface ILocalManifestSegmentPrivateInfos {
  * exploited by the corresponding transport logic.
  */
 export interface IPrivateInfos {
+  /** Smooth-specific information allowing to generate an initialization segment. */
   smoothInitSegment? : ISmoothInitSegmentPrivateInfos | undefined;
+
+  /** Smooth-specific information linked to all Smooth media segments. */
   smoothMediaSegment? : ISmoothSegmentPrivateInfos | undefined;
+
+  /** Information that should be present on all MetaPlaylist segments. */
   metaplaylistInfos? : IMetaPlaylistPrivateInfos | undefined;
+
+  /**
+   * Local Manifest-specific information allowing to request the
+   * initialization segment.
+   */
   localManifestInitSegment? : ILocalManifestInitSegmentPrivateInfos | undefined;
+
+  /** Local Manifest-specific information allowing to request any media segment. */
   localManifestSegment? : ILocalManifestSegmentPrivateInfos | undefined;
+
+  /**
+   * Function allowing to know if a given emsg's event name has been
+   * explicitely authorized.
+   */
   isEMSGWhitelisted? : ((evt: IEMSG) => boolean) | undefined;
 }
 
@@ -142,26 +159,16 @@ export interface ISegment {
    * segments" in the code.
    */
   isInit : boolean;
-  /** URLs where this segment is available. From the most to least prioritary. */
+  /**
+   * URLs where this segment is available. From the most to least prioritary.
+   * `null` if no URL exists.
+   */
   mediaURLs : string[]|null;
-  /**
-   * If set, the corresponding byte-range in the downloaded segment will
-   * contain an index describing other Segments
-   * TODO put in privateInfos?
-   */
-  indexRange? : [number, number] | undefined;
-  /**
-   * Optional number of the Segment
-   * TODO put in privateInfos?
-   */
-  number? : number | undefined;
   /**
    * Allows to store supplementary information on a segment that can be later
    * exploited by the transport logic.
    */
-  privateInfos? : IPrivateInfos | undefined;
-  /** Optional byte range to retrieve the Segment from its URL(s) */
-  range? : [number, number] | undefined;
+  privateInfos : IPrivateInfos | undefined;
   /**
    * Estimated time, in seconds, at which the concerned segment should be
    * offseted when decoded.
@@ -213,7 +220,6 @@ export interface ISegment {
    * As both are always in seconds now, this property became unneeded.
    */
   timescale : 1;
-
   /**
    * If `false`, this segment's `duration` property may not be the duration of
    * the full segment as it could still be in the process of being generated
@@ -224,6 +230,31 @@ export interface ISegment {
    * generated.
    */
   complete : boolean;
+  /**
+   * Optional byte range to retrieve the Segment from its URL(s).
+   * TODO this should probably moved to `privateInfos` as this is
+   * transport-specific metadata only useful for performing requests, but it is
+   * sadly documented in the API, so moving it is actuall a v3.X.X breaking
+   * change.
+   */
+  range? : [number, number] | undefined;
+  /**
+   * If set, the corresponding byte-range in the downloaded segment will
+   * contain an index describing other Segments
+   * TODO this should probably moved to `privateInfos` as this is
+   * transport-specific metadata only useful for performing requests, but it is
+   * sadly documented in the API, so moving it is actuall a v3.X.X breaking
+   * change.
+   */
+  indexRange? : [number, number] | undefined;
+  /**
+   * Optional number of the Segment.
+   * TODO this should probably moved to `privateInfos` as this is
+   * transport-specific metadata only useful for performing requests, but it is
+   * sadly documented in the API, so moving it is actuall a v3.X.X breaking
+   * change.
+   */
+  number? : number | undefined;
 }
 
 /** Interface that should be implemented by any Representation's `index` value. */

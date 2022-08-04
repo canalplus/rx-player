@@ -55,7 +55,6 @@ import generateManifestLoader from "./manifest_loader";
 /**
  * Get base - real - content from an offseted metaplaylist content.
  * @param {Object} segment
- * @param {number} offset
  * @returns {Object}
  */
 function getOriginalContent(segment : ISegment) : { manifest : Manifest;
@@ -198,7 +197,6 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
   /**
    * @param {number} contentOffset
-   * @param {number} scaledContentOffset
    * @param {number|undefined} contentEnd
    * @param {Object} segmentResponse
    * @returns {Object}
