@@ -112,6 +112,11 @@ impl MPDProcessor {
                         attributes::report_base_url_attrs(&tag);
                         self.process_base_url_element();
                     },
+                    b"ContentSteering" => {
+                        TagName::ContentSteering.report_tag_open();
+                        attributes::report_content_steering_attrs(&tag);
+                        self.process_content_steering_element();
+                    },
                     b"cenc:pssh" => self.process_cenc_element(),
                     b"Location" => self.process_location_element(),
                     b"Label" => self.process_label_element(),
@@ -322,6 +327,43 @@ impl MPDProcessor {
                 },
                 Ok(Event::Eof) => {
                     ParsingError("Unexpected end of file in a BaseURL.".to_owned())
+                        .report_err();
+                    break;
+                }
+                Err(e) => {
+                    ParsingError::from(e).report_err();
+                    break;
+                },
+                _ => (),
+            }
+            self.reader_buf.clear();
+        }
+    }
+
+    fn process_content_steering_element(&mut self) {
+        // Count inner ContentSteering tags if it exists.
+        // Allowing to not close the current node when it is an inner that is closed
+        let mut inner_tag : u32 = 0;
+
+        loop {
+            match self.read_next_event() {
+                Ok(Event::Text(t)) => if t.len() > 0 {
+                    match t.unescaped() {
+                        Ok(unescaped) => AttributeName::Text.report(unescaped),
+                        Err(err) => ParsingError::from(err).report_err(),
+                    }
+                },
+                Ok(Event::Start(tag)) if tag.name() == b"ContentSteering" => inner_tag += 1,
+                Ok(Event::End(tag)) if tag.name() == b"ContentSteering" => {
+                    if inner_tag > 0 {
+                        inner_tag -= 1;
+                    } else {
+                        TagName::ContentSteering.report_tag_close();
+                        break;
+                    }
+                },
+                Ok(Event::Eof) => {
+                    ParsingError("Unexpected end of file in a ContentSteering.".to_owned())
                         .report_err();
                     break;
                 }

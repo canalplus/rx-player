@@ -37,10 +37,9 @@ import isSegmentStillAvailable from "../../../../utils/is_segment_still_availabl
 import updateSegmentTimeline from "../../../../utils/update_segment_timeline";
 import { ISegmentTimelineElement } from "../../../node_parser_types";
 import ManifestBoundsCalculator from "../../manifest_bounds_calculator";
-import { IResolvedBaseUrl } from "../../resolve_base_urls";
 import getInitSegment from "../get_init_segment";
 import getSegmentsFromTimeline from "../get_segments_from_timeline";
-import { createIndexURLs } from "../tokens";
+import { constructRepresentationUrl } from "../tokens";
 import { getSegmentTimeRoundingError } from "../utils";
 import constructTimelineFromElements from "./construct_timeline_from_elements";
 // eslint-disable-next-line max-len
@@ -71,16 +70,22 @@ export interface ITimelineIndex {
   indexTimeOffset : number;
   /** Information on the initialization segment. */
   initialization? : {
-    /** URLs to access the initialization segment. */
-    mediaURLs: string[] | null;
+    /**
+     * URL path, to add to the wanted CDN, to access the initialization segment.
+     * `null` if no URL exists.
+     */
+    url: string | null;
     /** possible byte range to request it. */
     range?: [number, number] | undefined;
   } | undefined;
   /**
-   * Base URL(s) to access any segment. Can contain tokens to replace to convert
-   * it to real URLs.
+   * Template for the URL suffix (to concatenate to the wanted CDN), to access any
+   * media segment.
+   * Can contain tokens to replace to convert it to real URLs.
+   *
+   * `null` if no URL exists.
    */
-  mediaURLs : string[] | null ;
+  segmentUrlTemplate : string | null ;
   /** Number from which the first segments in this index starts with. */
   startNumber? : number | undefined;
   /**
@@ -158,8 +163,6 @@ export interface ITimelineIndexContextArgument {
    * index was received
    */
   receivedTime? : number | undefined;
-  /** Base URL for the Representation concerned. */
-  representationBaseURLs : IResolvedBaseUrl[];
   /** ID of the Representation concerned. */
   representationId? : string | undefined;
   /** Bitrate of the Representation concerned. */
@@ -247,7 +250,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
             manifestBoundsCalculator,
             isDynamic,
             isLastPeriod,
-            representationBaseURLs,
             representationId,
             representationBitrate,
             periodStart,
@@ -284,23 +286,25 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
 
     this._isDynamic = isDynamic;
     this._parseTimeline = index.timelineParser ?? null;
-    const urlSources : string[] = representationBaseURLs.map(b => b.url);
+    const initializationUrl = index.initialization?.media === undefined ?
+      null :
+      constructRepresentationUrl(index.initialization.media,
+                                 representationId,
+                                 representationBitrate);
+
+    const segmentUrlTemplate = index.media === undefined ?
+      null :
+      constructRepresentationUrl(index.media, representationId, representationBitrate);
     this._index = { availabilityTimeComplete,
                     indexRange: index.indexRange,
                     indexTimeOffset,
                     initialization: index.initialization == null ?
                       undefined :
                       {
-                        mediaURLs: createIndexURLs(urlSources,
-                                                   index.initialization.media,
-                                                   representationId,
-                                                   representationBitrate),
+                        url: initializationUrl,
                         range: index.initialization.range,
                       },
-                    mediaURLs: createIndexURLs(urlSources,
-                                               index.media,
-                                               representationId,
-                                               representationBitrate),
+                    segmentUrlTemplate,
                     startNumber: index.startNumber,
                     timeline: index.timeline ?? null,
                     timescale };
@@ -330,12 +334,12 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     }
 
     // destructuring to please TypeScript
-    const { mediaURLs,
+    const { segmentUrlTemplate,
             startNumber,
             timeline,
             timescale,
             indexTimeOffset } = this._index;
-    return getSegmentsFromTimeline({ mediaURLs,
+    return getSegmentsFromTimeline({ segmentUrlTemplate,
                                      startNumber,
                                      timeline,
                                      timescale,
@@ -348,8 +352,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
 
   /**
    * Returns true if the index should be refreshed.
-   * @param {Number} _up
-   * @param {Number} to
    * @returns {Boolean}
    */
   shouldRefresh() : false {

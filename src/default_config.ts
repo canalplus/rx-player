@@ -396,6 +396,33 @@ const DEFAULT_CONFIG = {
   DEFAULT_MAX_MANIFEST_REQUEST_RETRY: 4,
 
     /**
+     * The default number of times a Content Steering Manifest request will be
+     * re-performed when loaded/refreshed if the request finishes on an error
+     * which justify an retry.
+     *
+     * Note that some errors do not use this counter:
+     *   - if the error is not due to the xhr, no retry will be peformed
+     *   - if the error is an HTTP error code, but not a 500-smthg or a 404, no
+     *     retry will be performed.
+     *   - if it has a high chance of being due to the user being offline, a
+     *     separate counter is used (see DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE).
+     * @type Number
+     */
+  DEFAULT_MAX_CONTENT_STEERING_MANIFEST_REQUEST_RETRY: 4,
+
+  /**
+   * Default delay, in seconds, during which a CDN will be "downgraded".
+   *
+   * For example in case of media content being available on multiple CDNs, the
+   * RxPlayer may decide that a CDN is less reliable (for example, it returned a
+   * server error) and should thus be avoided, at least for some time
+   *
+   * This value is the amount of time this CDN will be "less considered" than the
+   * alternatives.
+   */
+  DEFAULT_CDN_DOWNGRADE_TIME: 60,
+
+    /**
      * The default number of times a segment request will be re-performed when
      * on error which justify a retry.
      *

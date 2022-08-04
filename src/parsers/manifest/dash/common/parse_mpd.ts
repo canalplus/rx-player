@@ -18,8 +18,11 @@ import config from "../../../../config";
 import log from "../../../../log";
 import Manifest from "../../../../manifest";
 import arrayFind from "../../../../utils/array_find";
-import { normalizeBaseURL } from "../../../../utils/resolve_url";
-import { IParsedManifest } from "../../types";
+import { getFilenameIndexInUrl } from "../../../../utils/resolve_url";
+import {
+  IContentSteeringMetadata,
+  IParsedManifest,
+} from "../../types";
 import {
   IMPDIntermediateRepresentation,
   IPeriodIntermediateRepresentation,
@@ -241,9 +244,7 @@ function parseCompleteIntermediateRepresentation(
           attributes: rootAttributes } = mpdIR;
   const isDynamic : boolean = rootAttributes.type === "dynamic";
   const initialBaseUrl : IResolvedBaseUrl[] = args.url !== undefined ?
-    [{ url: normalizeBaseURL(args.url),
-       availabilityTimeOffset: 0,
-       availabilityTimeComplete: true }] :
+    [{ url: args.url.substring(0, getFilenameIndexInUrl(args.url)) }] :
     [];
   const mpdBaseUrls = resolveBaseURLs(initialBaseUrl, rootChildren.baseURLs);
   const availabilityStartTime = parseAvailabilityStartTime(rootAttributes,
@@ -274,6 +275,16 @@ function parseCompleteIntermediateRepresentation(
                           maximumSafePosition : number;
                           livePosition : number | undefined;
                           time : number; };
+
+  let contentSteering : IContentSteeringMetadata | null = null;
+  if (rootChildren.contentSteering !== undefined) {
+    const { attributes } = rootChildren.contentSteering;
+    contentSteering = { url: rootChildren.contentSteering.value,
+                        defaultId: attributes.defaultServiceLocation,
+                        queryBeforeStart: attributes.queryBeforeStart === true,
+                        proxyUrl: attributes.proxyServerUrl };
+
+  }
 
   if (rootAttributes.minimumUpdatePeriod !== undefined &&
       rootAttributes.minimumUpdatePeriod >= 0)
@@ -369,6 +380,7 @@ function parseCompleteIntermediateRepresentation(
   const parsedMPD : IParsedManifest = {
     availabilityStartTime,
     clockOffset: args.externalClockOffset,
+    contentSteering,
     isDynamic,
     isLive: isDynamic,
     isLastPeriodKnown,

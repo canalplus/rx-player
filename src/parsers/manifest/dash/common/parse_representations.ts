@@ -20,6 +20,7 @@ import { IHDRInformation } from "../../../../public_types";
 import arrayFind from "../../../../utils/array_find";
 import objectAssign from "../../../../utils/object_assign";
 import {
+  ICdnMetadata,
   IContentProtections,
   IParsedRepresentation,
 } from "../../types";
@@ -33,6 +34,7 @@ import { getWEBMHDRInformation } from "./get_hdr_information";
 import parseRepresentationIndex, {
   IRepresentationIndexContext,
 } from "./parse_representation_index";
+import resolveBaseURLs from "./resolve_base_urls";
 
 /**
  * Combine inband event streams from representation and
@@ -159,9 +161,16 @@ export default function parseRepresentations(
       representationBitrate = representation.attributes.bitrate;
     }
 
+    const representationBaseURLs = resolveBaseURLs(context.baseURLs,
+                                                   representation.children.baseURLs);
+    const cdnMetadata : ICdnMetadata[] = representationBaseURLs.map(x =>
+      ({ baseUrl: x.url, id: x.serviceLocation }));
+
+
     // Construct Representation Base
     const parsedRepresentation : IParsedRepresentation =
       { bitrate: representationBitrate,
+        cdnMetadata,
         index: representationIndex,
         id: representationID };
 

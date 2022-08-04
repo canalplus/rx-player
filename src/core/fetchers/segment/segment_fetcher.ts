@@ -24,6 +24,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
+import { ICdnMetadata } from "../../../parsers/manifest";
 import { IPlayerError } from "../../../public_types";
 import {
   IChunkCompleteInformation,
@@ -48,9 +49,10 @@ import {
   IRequestEndCallbackPayload,
   IRequestProgressCallbackPayload,
 } from "../../adaptive";
+import CdnPrioritizer from "../../init/cdn_prioritizer";
 import { IBufferType } from "../../segment_buffers";
 import errorSelector from "../utils/error_selector";
-import { tryURLsWithBackoff } from "../utils/try_urls_with_backoff";
+import { scheduleRequestWithCdns } from "../utils/schedule_request";
 
 
 /** Allows to generate a unique identifies for each request. */
@@ -71,6 +73,7 @@ const generateRequestID = idGenerator();
 export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
   bufferType : IBufferType,
   pipeline : ISegmentPipeline<TLoadedFormat, TSegmentDataType>,
+  cdnPrioritizer : CdnPrioritizer | null,
   lifecycleCallbacks : ISegmentFetcherLifecycleCallbacks,
   options : ISegmentFetcherOptions
 ) : ISegmentFetcher<TSegmentDataType> {
@@ -102,8 +105,6 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
     fetcherCallbacks : ISegmentFetcherCallbacks<TSegmentDataType>,
     cancellationSignal : CancellationSignal
   ) : Promise<void> {
-    const { segment } = content;
-
     // used by logs
     const segmentIdString = getLoggableSegmentId(content);
     const requestId = generateRequestID();
@@ -193,10 +194,11 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
     });
 
     try {
-      const res = await tryURLsWithBackoff(segment.mediaURLs ?? [null],
-                                           callLoaderWithUrl,
-                                           objectAssign({ onRetry }, options),
-                                           cancellationSignal);
+      const res = await scheduleRequestWithCdns(content.representation.cdnMetadata,
+                                                cdnPrioritizer,
+                                                callLoaderWithUrl,
+                                                objectAssign({ onRetry }, options),
+                                                cancellationSignal);
 
       if (res.resultType === "segment-loaded") {
         const loadedData = res.resultData.responseData;
@@ -236,13 +238,13 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
 
     /**
      * Call a segment loader for the given URL with the right arguments.
-     * @param {string|null} url
+     * @param {Object|null} cdnMetadata
      * @returns {Promise}
      */
     function callLoaderWithUrl(
-      url : string | null
+      cdnMetadata : ICdnMetadata | null
     ) : ReturnType<ISegmentLoader<TLoadedFormat>> {
-      return loadSegment(url,
+      return loadSegment(cdnMetadata,
                          content,
                          requestOptions,
                          cancellationSignal,

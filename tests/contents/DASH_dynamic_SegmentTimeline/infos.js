@@ -28,26 +28,26 @@ export default {
                 mimeType: "audio/mp4",
                 index: {
                   init: {
-                    mediaURLs: [BASE_URL + "A48/init.mp4"],
+                    url: "A48/init.mp4",
                   },
                   segments: [
                     // {
                     //   time: 73320372578304 / 48000,
                     //   duration: 288768 / 48000,
                     //   timescale: 1,
-                    //   mediaURLs: [BASE_URL + "A48/t73320372578304.m4s"],
+                    //   url: "A48/t73320372578304.m4s",
                     // },
                     {
                       time: 73320372867072 / 48000,
                       duration: 287744 / 48000,
                       timescale: 1,
-                      mediaURLs: [BASE_URL + "A48/t73320372867072.m4s"],
+                      url: "A48/t73320372867072.m4s",
                     },
                     {
                       time: 73320373154816 / 48000,
                       duration: 288768 / 48000,
                       timescale: 1,
-                      mediaURLs: ["http://127.0.0.1:3000/DASH_dynamic_SegmentTimeline/media/A48/t73320373154816.m4s"],
+                      url: "A48/t73320373154816.m4s",
                     },
                   ],
                   // ...
@@ -70,26 +70,26 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURLs: [BASE_URL + "V300/init.mp4"],
+                    url: "V300/init.mp4",
                   },
                   segments: [
                     // {
                     //   time: 137475698580000 / 90000,
                     //   duration: 540000 / 90000,
                     //   timescale: 1,
-                    //   mediaURLs: [BASE_URL + "V300/t137475698580000.m4s"],
+                    //   url: "V300/t137475698580000.m4s",
                     // },
                     {
                       time: 137475699120000 / 90000,
                       duration: 540000 / 90000,
                       timescale: 1,
-                      mediaURLs: [BASE_URL + "V300/t137475699120000.m4s"],
+                      url: "V300/t137475699120000.m4s",
                     },
                     {
                       time: 137475699660000 / 90000,
                       duration: 540000 / 90000,
                       timescale: 1,
-                      mediaURLs: ["http://127.0.0.1:3000/DASH_dynamic_SegmentTimeline/media/V300/t137475699660000.m4s"],
+                      url: "V300/t137475699660000.m4s",
                     },
                   ],
                   // ...

@@ -15,6 +15,7 @@
  */
 
 import { ISegment } from "../../../../../manifest";
+import { IPrivateInfos } from "../../../../../manifest/representation_index/types";
 import { IEMSG } from "../../../../containers/isobmff";
 
 /**
@@ -25,7 +26,7 @@ import { IEMSG } from "../../../../containers/isobmff";
  */
 export default function getInitSegment(
   index: { timescale: number;
-           initialization?: { mediaURLs: string[] | null;
+           initialization?: { url: string | null;
                               range?: [number, number] | undefined; } |
                             undefined;
            indexRange?: [number, number] | undefined;
@@ -33,10 +34,11 @@ export default function getInitSegment(
   isEMSGWhitelisted?: (inbandEvent: IEMSG) => boolean
 ) : ISegment {
   const { initialization } = index;
-  let privateInfos;
+  const privateInfos : IPrivateInfos = {};
   if (isEMSGWhitelisted !== undefined) {
-    privateInfos = { isEMSGWhitelisted };
+    privateInfos.isEMSGWhitelisted = isEMSGWhitelisted;
   }
+
   return { id: "init",
            isInit: true,
            time: 0,
@@ -46,7 +48,7 @@ export default function getInitSegment(
            range: initialization != null ? initialization.range :
                                            undefined,
            indexRange: index.indexRange,
-           mediaURLs: initialization?.mediaURLs ?? null,
+           url: initialization?.url ?? null,
            complete: true,
            privateInfos,
            timestampOffset: -(index.indexTimeOffset / index.timescale) };

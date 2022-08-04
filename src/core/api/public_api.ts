@@ -120,7 +120,6 @@ import {
   IManifestFetcherParsedResult,
   IManifestFetcherWarningEvent,
   ManifestFetcher,
-  SegmentFetcherCreator,
 } from "../fetchers";
 import initializeMediaSourcePlayback, {
   IInitEvent,
@@ -790,14 +789,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           maxRetryOffline: offlineRetry,
           requestTimeout:  manifestRequestTimeout });
 
-      /** Interface used to download segments. */
-      const segmentFetcherCreator = new SegmentFetcherCreator(
-        transportPipelines,
-        { lowLatencyMode,
-          maxRetryOffline: offlineRetry,
-          maxRetryRegular: segmentRetry,
-          requestTimeout: segmentRequestTimeout });
-
       /** Observable emitting the initial Manifest */
       let manifest$ : Observable<IManifestFetcherParsedResult |
                                  IManifestFetcherWarningEvent>;
@@ -897,6 +888,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                            onCodecSwitch },
                                          this._priv_bufferOptions);
 
+      const segmentRequestOptions = { regularError: segmentRetry,
+                                      requestTimeout: segmentRequestTimeout,
+                                      offlineError: offlineRetry };
+
       // We've every options set up. Start everything now
       const init$ = initializeMediaSourcePlayback({ adaptiveOptions,
                                                     autoPlay,
@@ -908,9 +903,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                                     manifestFetcher,
                                                     mediaElement: videoElement,
                                                     minimumManifestUpdateInterval,
-                                                    segmentFetcherCreator,
+                                                    segmentRequestOptions,
                                                     speed: this._priv_speed,
                                                     startAt,
+                                                    transport: transportPipelines,
                                                     textTrackOptions })
         .pipe(takeUntil(stoppedContent$));
 
