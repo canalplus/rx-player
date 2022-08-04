@@ -15,6 +15,7 @@
  */
 
 import { CustomLoaderError } from "../../errors";
+import { ICdnMetadata } from "../../parsers/manifest";
 import {
   ILocalManifestInitSegmentLoader,
   ILocalManifestSegmentLoader,
@@ -180,14 +181,14 @@ function loadSegment(
 
 /**
  * Generic segment loader for the local Manifest.
- * @param {string | null} _url
+ * @param {string | null} _wantedCdn
  * @param {Object} content
  * @param {Object} cancelSignal
  * @param {Object} _callbacks
  * @returns {Promise}
  */
 export default function segmentLoader(
-  _url : string | null,
+  _wantedCdn : ICdnMetadata | null,
   content : ISegmentContext,
   _loaderOptions : ISegmentLoaderOptions, // TODO use timeout?
   cancelSignal : CancellationSignal,

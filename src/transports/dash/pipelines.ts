@@ -27,6 +27,10 @@ import {
 import generateManifestParser from "./manifest_parser";
 import generateSegmentLoader from "./segment_loader";
 import generateAudioVideoSegmentParser from "./segment_parser";
+import {
+  loadSteeringManifest,
+  parseSteeringManifest,
+} from "./steering_manifest_pipeline";
 import generateTextTrackLoader from "./text_loader";
 import generateTextTrackParser from "./text_parser";
 
@@ -57,7 +61,9 @@ export default function(options : ITransportOptions) : ITransportPipelines {
            text: { loadSegment: textTrackLoader,
                    parseSegment: textTrackParser },
            image: { loadSegment: imageLoader,
-                    parseSegment: imageParser } };
+                    parseSegment: imageParser },
+           steeringManifest: { loadSteeringManifest,
+                               parseSteeringManifest } };
 }
 
 /**

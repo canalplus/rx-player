@@ -34,7 +34,7 @@ describe("manifest - StaticRepresentationIndex", () => {
                                               end: Number.MAX_VALUE,
                                               timescale: 1,
                                               privateInfos: {},
-                                              mediaURLs: ["foo"] }]);
+                                              url: "foo" }]);
   });
 
   it("should return no first position", () => {

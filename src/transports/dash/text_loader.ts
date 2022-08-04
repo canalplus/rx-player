@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { ICdnMetadata } from "../../parsers/manifest";
 import request, {
   fetchIsSupported,
 } from "../../utils/request";
@@ -32,6 +33,7 @@ import {
 import byteRange from "../utils/byte_range";
 import inferSegmentContainer from "../utils/infer_segment_container";
 import addSegmentIntegrityChecks from "./add_segment_integrity_checks_to_loader";
+import constructSegmentUrl from "./construct_segment_url";
 import initSegmentLoader from "./init_segment_loader";
 import lowLatencySegmentLoader from "./low_latency_segment_loader";
 
@@ -49,7 +51,7 @@ export default function generateTextTrackLoader(
                                                addSegmentIntegrityChecks(textTrackLoader);
 
   /**
-   * @param {string|null} url
+   * @param {Object|null} wantedCdn
    * @param {Object} content
    * @param {Object} options
    * @param {Object} cancelSignal
@@ -57,7 +59,7 @@ export default function generateTextTrackLoader(
    * @returns {Promise}
    */
   function textTrackLoader(
-    url : string | null,
+    wantedCdn : ICdnMetadata | null,
     content : ISegmentContext,
     options : ISegmentLoaderOptions,
     cancelSignal : CancellationSignal,
@@ -69,6 +71,7 @@ export default function generateTextTrackLoader(
     const { adaptation, representation, segment } = content;
     const { range } = segment;
 
+    const url = constructSegmentUrl(wantedCdn, segment);
     if (url === null) {
       return Promise.resolve({ resultType: "segment-created",
                                resultData: null });

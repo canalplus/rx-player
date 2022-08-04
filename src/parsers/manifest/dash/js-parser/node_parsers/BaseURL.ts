@@ -15,27 +15,19 @@
  */
 
 import { IBaseUrlIntermediateRepresentation } from "../../node_parser_types";
-import {
-  parseBoolean,
-  parseMPDFloat,
-  ValueParser,
-} from "./utils";
 
 /**
  * Parse an BaseURL element into an BaseURL intermediate
  * representation.
- * @param {Element} adaptationSetElement - The BaseURL root element.
+ * @param {Element} root - The BaseURL root element.
  * @returns {Array.<Object|undefined>}
  */
 export default function parseBaseURL(
   root: Element
 ) : [IBaseUrlIntermediateRepresentation | undefined, Error[]] {
-  const attributes : { availabilityTimeOffset?: number;
-                       availabilityTimeComplete?: boolean; } = {};
+  const attributes : { serviceLocation? : string } = {};
   const value = root.textContent;
-
   const warnings : Error[] = [];
-  const parseValue = ValueParser(attributes, warnings);
   if (value === null || value.length === 0) {
     return [undefined, warnings];
   }
@@ -43,16 +35,8 @@ export default function parseBaseURL(
     const attribute = root.attributes[i];
 
     switch (attribute.name) {
-      case "availabilityTimeOffset":
-        parseValue(attribute.value, { asKey: "availabilityTimeOffset",
-                                      parser: parseMPDFloat,
-                                      dashName: "availabilityTimeOffset" });
-        break;
-
-      case "availabilityTimeComplete":
-        parseValue(attribute.value, { asKey: "availabilityTimeComplete",
-                                      parser: parseBoolean,
-                                      dashName: "availabilityTimeComplete" });
+      case "serviceLocation":
+        attributes.serviceLocation = attribute.value;
         break;
     }
   }

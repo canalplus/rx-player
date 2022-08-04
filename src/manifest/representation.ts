@@ -17,6 +17,7 @@
 import { isCodecSupported } from "../compat";
 import log from "../log";
 import {
+  ICdnMetadata,
   IContentProtections,
   IParsedRepresentation,
 } from "../parsers/manifest";
@@ -40,6 +41,18 @@ class Representation {
    * Representation.
    */
   public index : IRepresentationIndex;
+
+  /**
+   * Information on the CDN(s) on which requests should be done to request this
+   * Representation's initialization and media segments.
+   *
+   * `null` if there's no CDN involved here (e.g. resources are not requested
+   * through the network).
+   *
+   * An empty array means that no CDN are left to request the resource. As such,
+   * no resource can be loaded in that situation.
+   */
+  public cdnMetadata : ICdnMetadata[] | null;
 
   /** Bitrate this Representation is in, in bits per seconds. */
   public bitrate : number;
@@ -128,6 +141,8 @@ class Representation {
     if (args.hdrInfo !== undefined) {
       this.hdrInfo = args.hdrInfo;
     }
+
+    this.cdnMetadata = args.cdnMetadata;
 
     this.index = args.index;
     this.isSupported = opts.type === "audio" ||

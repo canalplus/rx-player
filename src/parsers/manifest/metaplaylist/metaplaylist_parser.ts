@@ -20,6 +20,7 @@ import Manifest, {
   SUPPORTED_ADAPTATIONS_TYPE,
 } from "../../../manifest";
 import idGenerator from "../../../utils/id_generator";
+import { getFilenameIndexInUrl } from "../../../utils/resolve_url";
 import {
   IParsedAdaptation,
   IParsedAdaptations,
@@ -213,6 +214,7 @@ function createManifest(
               representations.push({
                 bitrate: currentRepresentation.bitrate,
                 index: newIndex,
+                cdnMetadata: currentRepresentation.cdnMetadata,
                 id: currentRepresentation.id,
                 height: currentRepresentation.height,
                 width: currentRepresentation.width,
@@ -244,6 +246,9 @@ function createManifest(
       const newTextAdaptations : IParsedAdaptation[] = textTracks.map((track) => {
         const adaptationID = "gen-text-ada-" + generateAdaptationID();
         const representationID = "gen-text-rep-" + generateRepresentationID();
+        const indexOfFilename = getFilenameIndexInUrl(track.url);
+        const cdnUrl = track.url.substring(0, indexOfFilename);
+        const filename = track.url.substring(indexOfFilename);
         return {
           id: adaptationID,
           type: "text",
@@ -252,10 +257,11 @@ function createManifest(
           manuallyAdded: true,
           representations: [
             { bitrate: 0,
+              cdnMetadata: [{ baseUrl: cdnUrl }],
               id: representationID,
               mimeType: track.mimeType,
               codecs: track.codecs,
-              index: new StaticRepresentationIndex({ media: track.url }),
+              index: new StaticRepresentationIndex({ media: filename }),
             },
           ],
         };
@@ -300,6 +306,7 @@ function createManifest(
                              manifests[manifests.length - 1].isLastPeriodKnown);
   const manifest = { availabilityStartTime: 0,
                      clockOffset,
+                     contentSteering: null,
                      suggestedPresentationDelay: 10,
                      periods,
                      transportType: "metaplaylist",
