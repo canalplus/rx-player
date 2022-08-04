@@ -37,7 +37,7 @@ import TaskCanceller, {
   CancellationError,
   CancellationSignal,
 } from "../../utils/task_canceller";
-import SteeringManifestFetcher from "../fetchers/steering_manifest";
+import SteeringManifestFetcher from "./steering_manifest";
 
 /**
  * Class signaling the priority between multiple CDN available for any given

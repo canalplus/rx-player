@@ -49,8 +49,8 @@ import {
   IRequestEndCallbackPayload,
   IRequestProgressCallbackPayload,
 } from "../../adaptive";
-import CdnPrioritizer from "../../init/cdn_prioritizer";
 import { IBufferType } from "../../segment_buffers";
+import CdnPrioritizer from "../cdn_prioritizer";
 import errorSelector from "../utils/error_selector";
 import { scheduleRequestWithCdns } from "../utils/schedule_request";
 
