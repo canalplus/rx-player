@@ -26,7 +26,10 @@ import Manifest, {
 import parseMetaPlaylist, {
   IParserResponse as IMPLParserResponse,
 } from "../../parsers/manifest/metaplaylist";
-import { IParsedManifest } from "../../parsers/manifest/types";
+import {
+  ICdnMetadata,
+  IParsedManifest,
+} from "../../parsers/manifest/types";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import objectAssign from "../../utils/object_assign";
 import { CancellationSignal } from "../../utils/task_canceller";
@@ -248,7 +251,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
   const audioPipeline = {
     loadSegment(
-      url : string | null,
+      wantedCdn : ICdnMetadata | null,
       content : ISegmentContext,
       loaderOptions : ISegmentLoaderOptions,
       cancelToken : CancellationSignal,
@@ -260,7 +263,11 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const { segment } = content;
       const { audio } = getTransportPipelinesFromSegment(segment);
       const ogContent = getOriginalContent(segment);
-      return audio.loadSegment(url, ogContent, loaderOptions, cancelToken, callbacks);
+      return audio.loadSegment(wantedCdn,
+                               ogContent,
+                               loaderOptions,
+                               cancelToken,
+                               callbacks);
     },
 
     parseSegment(
@@ -286,7 +293,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
   const videoPipeline = {
     loadSegment(
-      url : string | null,
+      wantedCdn : ICdnMetadata | null,
       content : ISegmentContext,
       loaderOptions : ISegmentLoaderOptions,
       cancelToken : CancellationSignal,
@@ -298,7 +305,11 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const { segment } = content;
       const { video } = getTransportPipelinesFromSegment(segment);
       const ogContent = getOriginalContent(segment);
-      return video.loadSegment(url, ogContent, loaderOptions, cancelToken, callbacks);
+      return video.loadSegment(wantedCdn,
+                               ogContent,
+                               loaderOptions,
+                               cancelToken,
+                               callbacks);
     },
 
     parseSegment(
@@ -324,7 +335,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
   const textTrackPipeline = {
     loadSegment(
-      url : string | null,
+      wantedCdn : ICdnMetadata | null,
       content : ISegmentContext,
       loaderOptions : ISegmentLoaderOptions,
       cancelToken : CancellationSignal,
@@ -336,7 +347,11 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const { segment } = content;
       const { text } = getTransportPipelinesFromSegment(segment);
       const ogContent = getOriginalContent(segment);
-      return text.loadSegment(url, ogContent, loaderOptions, cancelToken, callbacks);
+      return text.loadSegment(wantedCdn,
+                              ogContent,
+                              loaderOptions,
+                              cancelToken,
+                              callbacks);
     },
 
     parseSegment(
@@ -362,7 +377,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
   const imageTrackPipeline = {
     loadSegment(
-      url : string | null,
+      wantedCdn : ICdnMetadata | null,
       content : ISegmentContext,
       loaderOptions : ISegmentLoaderOptions,
       cancelToken : CancellationSignal,
@@ -374,7 +389,11 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const { segment } = content;
       const { image } = getTransportPipelinesFromSegment(segment);
       const ogContent = getOriginalContent(segment);
-      return image.loadSegment(url, ogContent, loaderOptions, cancelToken, callbacks);
+      return image.loadSegment(wantedCdn,
+                               ogContent,
+                               loaderOptions,
+                               cancelToken,
+                               callbacks);
     },
 
     parseSegment(
@@ -402,5 +421,6 @@ export default function(options : ITransportOptions): ITransportPipelines {
            audio: audioPipeline,
            video: videoPipeline,
            text: textTrackPipeline,
-           image: imageTrackPipeline };
+           image: imageTrackPipeline,
+           steeringManifest: null };
 }

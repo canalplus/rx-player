@@ -15,6 +15,7 @@
  */
 
 import features from "../../features";
+import { ICdnMetadata } from "../../parsers/manifest";
 import request from "../../utils/request";
 import takeFirstSet from "../../utils/take_first_set";
 import { CancellationSignal } from "../../utils/task_canceller";
@@ -29,10 +30,11 @@ import {
   ISegmentParserParsedInitChunk,
   ISegmentParserParsedMediaChunk,
 } from "../types";
+import constructSegmentUrl from "./construct_segment_url";
 
 /**
  * Loads an image segment.
- * @param {string|null} url
+ * @param {Object|null} wantedCdn
  * @param {Object} content
  * @param {Object} options
  * @param {Object} cancelSignal
@@ -40,7 +42,7 @@ import {
  * @returns {Promise}
  */
 export async function imageLoader(
-  url : string | null,
+  wantedCdn : ICdnMetadata | null,
   content : ISegmentContext,
   options : ISegmentLoaderOptions,
   cancelSignal : CancellationSignal,
@@ -49,6 +51,7 @@ export async function imageLoader(
             ISegmentLoaderResultSegmentCreated<ILoadedImageSegmentFormat>>
 {
   const { segment } = content;
+  const url = constructSegmentUrl(wantedCdn, segment);
   if (segment.isInit || url === null) {
     return { resultType: "segment-created",
              resultData: null };

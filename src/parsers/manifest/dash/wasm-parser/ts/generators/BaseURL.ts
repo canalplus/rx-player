@@ -30,22 +30,17 @@ export function generateBaseUrlAttrParser(
   linearMemory : WebAssembly.Memory
 )  : IAttributeParser {
   const textDecoder = new TextDecoder();
-  let dataView;
   return function onMPDAttribute(attr : number, ptr : number, len : number) {
     switch (attr) {
       case AttributeName.Text:
         baseUrlAttrs.value = parseString(textDecoder, linearMemory.buffer, ptr, len);
         break;
 
-      case AttributeName.AvailabilityTimeOffset: {
-        dataView = new DataView(linearMemory.buffer);
-        baseUrlAttrs.attributes.availabilityTimeOffset = dataView.getFloat64(ptr, true);
-        break;
-      }
-
-      case AttributeName.AvailabilityTimeComplete: {
-        baseUrlAttrs.attributes.availabilityTimeComplete =
-          new DataView(linearMemory.buffer).getUint8(0) === 0;
+      case AttributeName.ServiceLocation: {
+        baseUrlAttrs.attributes.serviceLocation = parseString(textDecoder,
+                                                              linearMemory.buffer,
+                                                              ptr,
+                                                              len);
         break;
       }
     }

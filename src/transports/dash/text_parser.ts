@@ -185,7 +185,9 @@ export default function generateTextTrackParser(
                     ITextTrackSegmentData | null > {
   /**
    * Parse TextTrack data.
-   * @param {Object} infos
+   * @param {Object} loadedSegment
+   * @param {Object} content
+   * @param {number|undefined} initTimescale
    * @returns {Observable.<Object>}
    */
   return function textTrackParser(

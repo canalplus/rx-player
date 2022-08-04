@@ -22,11 +22,10 @@ import {
 import assert from "../../../../../utils/assert";
 import { IEMSG } from "../../../../containers/isobmff";
 import ManifestBoundsCalculator from "../manifest_bounds_calculator";
-import { IResolvedBaseUrl } from "../resolve_base_urls";
 import getInitSegment from "./get_init_segment";
 import {
   createDashUrlDetokenizer,
-  createIndexURLs,
+  constructRepresentationUrl,
 } from "./tokens";
 import { getSegmentTimeRoundingError } from "./utils";
 
@@ -52,8 +51,10 @@ export interface ITemplateIndex {
   indexRange?: [number, number] | undefined;
   /** Information on the initialization segment. */
   initialization? : {
-    /** URLs to access the initialization segment. */
-    mediaURLs: string[] | null;
+    /**
+     * URL path, to add to the wanted CDN, to access the initialization segment.
+     */
+    url: string | null;
     /** possible byte range to request it. */
     range?: [number, number] | undefined;
   } | undefined;
@@ -62,7 +63,7 @@ export interface ITemplateIndex {
    * Can contain token to replace to convert it to real URLs.
    * `null` if no URL exists.
    */
-  mediaURLs : string[] | null;
+  url : string | null;
   /**
    * Temporal offset, in the current timescale (see timescale), to add to the
    * presentation time (time a segment has at decoding time) to obtain the
@@ -124,8 +125,6 @@ export interface ITemplateIndexContextArgument {
   periodEnd : number|undefined;
   /** Whether the corresponding Manifest can be updated and changed. */
   isDynamic : boolean;
-  /** Base URL for the Representation concerned. */
-  representationBaseURLs : IResolvedBaseUrl[];
   /** ID of the Representation concerned. */
   representationId? : string | undefined;
   /** Bitrate of the Representation concerned. */
@@ -174,18 +173,12 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
             isDynamic,
             periodEnd,
             periodStart,
-            representationBaseURLs,
             representationId,
             representationBitrate,
             isEMSGWhitelisted } = context;
     const timescale = index.timescale ?? 1;
 
-    const minBaseUrlAto = representationBaseURLs.length === 0 ?
-      0 :
-      representationBaseURLs.reduce((acc, rbu) => {
-        return Math.min(acc, rbu.availabilityTimeOffset);
-      }, Infinity);
-    this._availabilityTimeOffset = availabilityTimeOffset + minBaseUrlAto;
+    this._availabilityTimeOffset = availabilityTimeOffset;
 
     this._manifestBoundsCalculator = manifestBoundsCalculator;
     this._aggressiveMode = aggressiveMode;
@@ -200,22 +193,25 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       throw new Error("Invalid SegmentTemplate: no duration");
     }
 
-    const urlSources : string[] = representationBaseURLs.map(b => b.url);
+    const initializationUrl = index.initialization?.media === undefined ?
+      null :
+      constructRepresentationUrl(index.initialization.media,
+                                 representationId,
+                                 representationBitrate);
+
+    const segmentUrlTemplate = index.media === undefined ?
+      null :
+      constructRepresentationUrl(index.media, representationId, representationBitrate);
+
     this._index = { duration: index.duration,
                     timescale,
                     indexRange: index.indexRange,
                     indexTimeOffset,
                     initialization: index.initialization == null ?
                       undefined :
-                      { mediaURLs: createIndexURLs(urlSources,
-                                                   index.initialization.media,
-                                                   representationId,
-                                                   representationBitrate),
+                      { url: initializationUrl,
                         range: index.initialization.range },
-                    mediaURLs: createIndexURLs(urlSources,
-                                               index.media,
-                                               representationId,
-                                               representationBitrate),
+                    url: segmentUrlTemplate,
                     presentationTimeOffset,
                     startNumber: index.startNumber };
     this._isDynamic = isDynamic;
@@ -244,7 +240,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const { duration,
             startNumber,
             timescale,
-            mediaURLs } = index;
+            url } = index;
 
     const scaledStart = this._periodStart * timescale;
     const scaledEnd = this._scaledRelativePeriodEnd;
@@ -288,9 +284,9 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       const realTime = timeFromPeriodStart + scaledStart;
       const manifestTime = timeFromPeriodStart + this._index.presentationTimeOffset;
 
-      const detokenizedURLs = mediaURLs === null ?
+      const detokenizedURL = url === null ?
         null :
-        mediaURLs.map(createDashUrlDetokenizer(manifestTime, realNumber));
+        createDashUrlDetokenizer(manifestTime, realNumber)(url);
 
       const args = { id: String(realNumber),
                      number: realNumber,
@@ -300,7 +296,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                      timescale: 1 as const,
                      isInit: false,
                      scaledDuration: realDuration / timescale,
-                     mediaURLs: detokenizedURLs,
+                     url: detokenizedURL,
                      timestampOffset: -(index.indexTimeOffset / timescale),
                      complete: true,
                      privateInfos: {

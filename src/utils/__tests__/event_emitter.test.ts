@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { take } from "rxjs";
 import log from "../../log";
 import EventEmitter, {
@@ -32,9 +37,9 @@ describe("utils - EventEmitter", () => {
     });
 
     expect(wasCalled).toEqual(0);
-    eventEmitter.trigger("something", undefined);
+    (eventEmitter as any).trigger("something", undefined);
     expect(wasCalled).toEqual(1);
-    eventEmitter.trigger("nope", undefined);
+    (eventEmitter as any).trigger("nope", undefined);
     expect(wasCalled).toEqual(1);
     eventEmitter.removeEventListener();
   });
@@ -59,33 +64,33 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString).toEqual(0);
     expect(wasCalledWithObject).toEqual(0);
 
-    eventEmitter.trigger("something", undefined);
+    (eventEmitter as any).trigger("something", undefined);
     expect(wasCalledWithString).toEqual(0);
     expect(wasCalledWithObject).toEqual(0);
 
-    eventEmitter.trigger("something", "a");
+    (eventEmitter as any).trigger("something", "a");
     expect(wasCalledWithString).toEqual(1);
     expect(wasCalledWithObject).toEqual(0);
 
-    eventEmitter.trigger("nope", undefined);
+    (eventEmitter as any).trigger("nope", undefined);
     expect(wasCalledWithString).toEqual(1);
     expect(wasCalledWithObject).toEqual(0);
 
-    eventEmitter.trigger("nope", undefined);
+    (eventEmitter as any).trigger("nope", undefined);
     expect(wasCalledWithString).toEqual(1);
     expect(wasCalledWithObject).toEqual(0);
 
-    eventEmitter.trigger("something", { a: "b" });
+    (eventEmitter as any).trigger("something", { a: "b" });
     expect(wasCalledWithString).toEqual(1);
     expect(wasCalledWithObject).toEqual(1);
 
-    eventEmitter.trigger("something", "a");
-    eventEmitter.trigger("something", "a");
-    eventEmitter.trigger("something", "a");
+    (eventEmitter as any).trigger("something", "a");
+    (eventEmitter as any).trigger("something", "a");
+    (eventEmitter as any).trigger("something", "a");
     expect(wasCalledWithString).toEqual(4);
     expect(wasCalledWithObject).toEqual(1);
 
-    eventEmitter.trigger("nope", undefined);
+    (eventEmitter as any).trigger("nope", undefined);
     expect(wasCalledWithString).toEqual(4);
     expect(wasCalledWithObject).toEqual(1);
     eventEmitter.removeEventListener();
@@ -111,38 +116,38 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString).toEqual(0);
     expect(wasCalledWithObject).toEqual(0);
 
-    eventEmitter.trigger("something", undefined);
+    (eventEmitter as any).trigger("something", undefined);
     expect(wasCalledWithString).toEqual(0);
     expect(wasCalledWithObject).toEqual(0);
 
-    eventEmitter.trigger("something", "a");
+    (eventEmitter as any).trigger("something", "a");
     expect(wasCalledWithString).toEqual(1);
     expect(wasCalledWithObject).toEqual(0);
 
-    eventEmitter.trigger("nope", undefined);
+    (eventEmitter as any).trigger("nope", undefined);
     expect(wasCalledWithString).toEqual(1);
     expect(wasCalledWithObject).toEqual(0);
 
-    eventEmitter.trigger("nope", "a");
+    (eventEmitter as any).trigger("nope", "a");
     expect(wasCalledWithString).toEqual(2);
     expect(wasCalledWithObject).toEqual(0);
 
-    eventEmitter.trigger("something", { a: "b" });
+    (eventEmitter as any).trigger("something", { a: "b" });
     expect(wasCalledWithString).toEqual(2);
     expect(wasCalledWithObject).toEqual(1);
 
     eventEmitter.removeEventListener("something", callback);
-    eventEmitter.trigger("something", "a");
-    eventEmitter.trigger("something", "a");
-    eventEmitter.trigger("something", "a");
+    (eventEmitter as any).trigger("something", "a");
+    (eventEmitter as any).trigger("something", "a");
+    (eventEmitter as any).trigger("something", "a");
     expect(wasCalledWithString).toEqual(2);
     expect(wasCalledWithObject).toEqual(1);
 
-    eventEmitter.trigger("nope", undefined);
+    (eventEmitter as any).trigger("nope", undefined);
     expect(wasCalledWithString).toEqual(2);
     expect(wasCalledWithObject).toEqual(1);
 
-    eventEmitter.trigger("nope", "a");
+    (eventEmitter as any).trigger("nope", "a");
     expect(wasCalledWithString).toEqual(3);
     expect(wasCalledWithObject).toEqual(1);
     eventEmitter.removeEventListener();
@@ -192,7 +197,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(0);
     expect(wasCalledWithObject3).toEqual(0);
 
-    eventEmitter.trigger("something", undefined);
+    (eventEmitter as any).trigger("something", undefined);
     expect(wasCalledWithString1).toEqual(0);
     expect(wasCalledWithObject1).toEqual(0);
     expect(wasCalledWithString2).toEqual(0);
@@ -200,7 +205,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(0);
     expect(wasCalledWithObject3).toEqual(0);
 
-    eventEmitter.trigger("something", "a");
+    (eventEmitter as any).trigger("something", "a");
     expect(wasCalledWithString1).toEqual(1);
     expect(wasCalledWithObject1).toEqual(0);
     expect(wasCalledWithString2).toEqual(1);
@@ -216,7 +221,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(0);
     expect(wasCalledWithObject3).toEqual(0);
 
-    eventEmitter.trigger("something", "a");
+    (eventEmitter as any).trigger("something", "a");
     expect(wasCalledWithString1).toEqual(2);
     expect(wasCalledWithObject1).toEqual(0);
     expect(wasCalledWithString2).toEqual(2);
@@ -224,7 +229,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(1);
     expect(wasCalledWithObject3).toEqual(0);
 
-    eventEmitter.trigger("nope", undefined);
+    (eventEmitter as any).trigger("nope", undefined);
     expect(wasCalledWithString1).toEqual(2);
     expect(wasCalledWithObject1).toEqual(0);
     expect(wasCalledWithString2).toEqual(2);
@@ -232,7 +237,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(1);
     expect(wasCalledWithObject3).toEqual(0);
 
-    eventEmitter.trigger("nope", "a");
+    (eventEmitter as any).trigger("nope", "a");
     expect(wasCalledWithString1).toEqual(3);
     expect(wasCalledWithObject1).toEqual(0);
     expect(wasCalledWithString2).toEqual(2);
@@ -240,7 +245,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(2);
     expect(wasCalledWithObject3).toEqual(0);
 
-    eventEmitter.trigger("something", { a: "b" });
+    (eventEmitter as any).trigger("something", { a: "b" });
     expect(wasCalledWithString1).toEqual(3);
     expect(wasCalledWithObject1).toEqual(1);
     expect(wasCalledWithString2).toEqual(2);
@@ -256,7 +261,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(2);
     expect(wasCalledWithObject3).toEqual(1);
 
-    eventEmitter.trigger("something", { a: "b" });
+    (eventEmitter as any).trigger("something", { a: "b" });
     expect(wasCalledWithString1).toEqual(3);
     expect(wasCalledWithObject1).toEqual(2);
     expect(wasCalledWithString2).toEqual(2);
@@ -264,7 +269,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(2);
     expect(wasCalledWithObject3).toEqual(2);
 
-    eventEmitter.trigger("nope", { a: "b" });
+    (eventEmitter as any).trigger("nope", { a: "b" });
     expect(wasCalledWithString1).toEqual(3);
     expect(wasCalledWithObject1).toEqual(3);
     expect(wasCalledWithString2).toEqual(2);
@@ -320,7 +325,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(0);
     expect(wasCalledWithObject3).toEqual(0);
 
-    eventEmitter.trigger("something", undefined);
+    (eventEmitter as any).trigger("something", undefined);
     expect(wasCalledWithString1).toEqual(0);
     expect(wasCalledWithObject1).toEqual(0);
     expect(wasCalledWithString2).toEqual(0);
@@ -328,7 +333,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(0);
     expect(wasCalledWithObject3).toEqual(0);
 
-    eventEmitter.trigger("something", "a");
+    (eventEmitter as any).trigger("something", "a");
     expect(wasCalledWithString1).toEqual(1);
     expect(wasCalledWithObject1).toEqual(0);
     expect(wasCalledWithString2).toEqual(1);
@@ -344,7 +349,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(0);
     expect(wasCalledWithObject3).toEqual(0);
 
-    eventEmitter.trigger("something", "a");
+    (eventEmitter as any).trigger("something", "a");
     expect(wasCalledWithString1).toEqual(2);
     expect(wasCalledWithObject1).toEqual(0);
     expect(wasCalledWithString2).toEqual(2);
@@ -352,7 +357,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(1);
     expect(wasCalledWithObject3).toEqual(0);
 
-    eventEmitter.trigger("nope", undefined);
+    (eventEmitter as any).trigger("nope", undefined);
     expect(wasCalledWithString1).toEqual(2);
     expect(wasCalledWithObject1).toEqual(0);
     expect(wasCalledWithString2).toEqual(2);
@@ -360,7 +365,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(1);
     expect(wasCalledWithObject3).toEqual(0);
 
-    eventEmitter.trigger("nope", "a");
+    (eventEmitter as any).trigger("nope", "a");
     expect(wasCalledWithString1).toEqual(3);
     expect(wasCalledWithObject1).toEqual(0);
     expect(wasCalledWithString2).toEqual(2);
@@ -368,7 +373,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(2);
     expect(wasCalledWithObject3).toEqual(0);
 
-    eventEmitter.trigger("something", { a: "b" });
+    (eventEmitter as any).trigger("something", { a: "b" });
     expect(wasCalledWithString1).toEqual(3);
     expect(wasCalledWithObject1).toEqual(1);
     expect(wasCalledWithString2).toEqual(2);
@@ -384,7 +389,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(2);
     expect(wasCalledWithObject3).toEqual(1);
 
-    eventEmitter.trigger("something", { a: "b" });
+    (eventEmitter as any).trigger("something", { a: "b" });
     expect(wasCalledWithString1).toEqual(3);
     expect(wasCalledWithObject1).toEqual(1);
     expect(wasCalledWithString2).toEqual(2);
@@ -392,7 +397,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(2);
     expect(wasCalledWithObject3).toEqual(1);
 
-    eventEmitter.trigger("nope", { a: "b" });
+    (eventEmitter as any).trigger("nope", { a: "b" });
     expect(wasCalledWithString1).toEqual(3);
     expect(wasCalledWithObject1).toEqual(2);
     expect(wasCalledWithString2).toEqual(2);
@@ -448,7 +453,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(0);
     expect(wasCalledWithObject3).toEqual(0);
 
-    eventEmitter.trigger("something", undefined);
+    (eventEmitter as any).trigger("something", undefined);
     expect(wasCalledWithString1).toEqual(0);
     expect(wasCalledWithObject1).toEqual(0);
     expect(wasCalledWithString2).toEqual(0);
@@ -456,7 +461,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(0);
     expect(wasCalledWithObject3).toEqual(0);
 
-    eventEmitter.trigger("something", "a");
+    (eventEmitter as any).trigger("something", "a");
     expect(wasCalledWithString1).toEqual(1);
     expect(wasCalledWithObject1).toEqual(0);
     expect(wasCalledWithString2).toEqual(1);
@@ -472,7 +477,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(0);
     expect(wasCalledWithObject3).toEqual(0);
 
-    eventEmitter.trigger("something", "a");
+    (eventEmitter as any).trigger("something", "a");
     expect(wasCalledWithString1).toEqual(2);
     expect(wasCalledWithObject1).toEqual(0);
     expect(wasCalledWithString2).toEqual(2);
@@ -480,7 +485,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(1);
     expect(wasCalledWithObject3).toEqual(0);
 
-    eventEmitter.trigger("nope", undefined);
+    (eventEmitter as any).trigger("nope", undefined);
     expect(wasCalledWithString1).toEqual(2);
     expect(wasCalledWithObject1).toEqual(0);
     expect(wasCalledWithString2).toEqual(2);
@@ -488,7 +493,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(1);
     expect(wasCalledWithObject3).toEqual(0);
 
-    eventEmitter.trigger("nope", "a");
+    (eventEmitter as any).trigger("nope", "a");
     expect(wasCalledWithString1).toEqual(3);
     expect(wasCalledWithObject1).toEqual(0);
     expect(wasCalledWithString2).toEqual(2);
@@ -496,7 +501,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(2);
     expect(wasCalledWithObject3).toEqual(0);
 
-    eventEmitter.trigger("something", { a: "b" });
+    (eventEmitter as any).trigger("something", { a: "b" });
     expect(wasCalledWithString1).toEqual(3);
     expect(wasCalledWithObject1).toEqual(1);
     expect(wasCalledWithString2).toEqual(2);
@@ -512,7 +517,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(2);
     expect(wasCalledWithObject3).toEqual(1);
 
-    eventEmitter.trigger("something", { a: "b" });
+    (eventEmitter as any).trigger("something", { a: "b" });
     expect(wasCalledWithString1).toEqual(3);
     expect(wasCalledWithObject1).toEqual(1);
     expect(wasCalledWithString2).toEqual(2);
@@ -520,7 +525,7 @@ describe("utils - EventEmitter", () => {
     expect(wasCalledWithString3).toEqual(2);
     expect(wasCalledWithObject3).toEqual(1);
 
-    eventEmitter.trigger("nope", { a: "b" });
+    (eventEmitter as any).trigger("nope", { a: "b" });
     expect(wasCalledWithString1).toEqual(3);
     expect(wasCalledWithObject1).toEqual(1);
     expect(wasCalledWithString2).toEqual(2);
@@ -568,7 +573,7 @@ describe("utils - EventEmitter", () => {
     eventEmitter.addEventListener("t", cb);
 
     expect(spy).toHaveBeenCalledTimes(0);
-    eventEmitter.trigger("t", undefined);
+    (eventEmitter as any).trigger("t", undefined);
 
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith(errMessage, thrownErr);
@@ -595,23 +600,23 @@ describe("utils - fromEvent", () => {
           }
         },
         complete() {
-          eventEmitter.trigger("fooba", 6);
+          (eventEmitter as any).trigger("fooba", 6);
           expect(numberItemsReceived).toBe(2);
           expect(stringItemsReceived).toBe(3);
           done();
         },
       });
 
-    eventEmitter.trigger("test", undefined);
-    eventEmitter.trigger("fooba", undefined);
-    eventEmitter.trigger("fooba", 5);
-    eventEmitter.trigger("fooba", "a");
-    eventEmitter.trigger("test", undefined);
-    eventEmitter.trigger("test", undefined);
-    eventEmitter.trigger("test", undefined);
-    eventEmitter.trigger("fooba", "b");
-    eventEmitter.trigger("fooba", "c");
-    eventEmitter.trigger("fooba", 6);
+    (eventEmitter as any).trigger("test", undefined);
+    (eventEmitter as any).trigger("fooba", undefined);
+    (eventEmitter as any).trigger("fooba", 5);
+    (eventEmitter as any).trigger("fooba", "a");
+    (eventEmitter as any).trigger("test", undefined);
+    (eventEmitter as any).trigger("test", undefined);
+    (eventEmitter as any).trigger("test", undefined);
+    (eventEmitter as any).trigger("fooba", "b");
+    (eventEmitter as any).trigger("fooba", "c");
+    (eventEmitter as any).trigger("fooba", 6);
   });
 
   it("should remove the event listener on unsubscription", () => {
@@ -631,17 +636,17 @@ describe("utils - fromEvent", () => {
         }
       });
 
-    eventEmitter.trigger("test", undefined);
-    eventEmitter.trigger("fooba", undefined);
-    eventEmitter.trigger("fooba", 5);
-    eventEmitter.trigger("fooba", "a");
+    (eventEmitter as any).trigger("test", undefined);
+    (eventEmitter as any).trigger("fooba", undefined);
+    (eventEmitter as any).trigger("fooba", 5);
+    (eventEmitter as any).trigger("fooba", "a");
     subscription.unsubscribe();
-    eventEmitter.trigger("test", undefined);
-    eventEmitter.trigger("test", undefined);
-    eventEmitter.trigger("test", undefined);
-    eventEmitter.trigger("fooba", "b");
-    eventEmitter.trigger("fooba", "c");
-    eventEmitter.trigger("fooba", 6);
+    (eventEmitter as any).trigger("test", undefined);
+    (eventEmitter as any).trigger("test", undefined);
+    (eventEmitter as any).trigger("test", undefined);
+    (eventEmitter as any).trigger("fooba", "b");
+    (eventEmitter as any).trigger("fooba", "c");
+    (eventEmitter as any).trigger("fooba", 6);
 
     expect(stringItemsReceived).toBe(1);
     expect(numberItemsReceived).toBe(1);

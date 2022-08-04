@@ -15,7 +15,10 @@
  */
 
 import { MediaError } from "../errors";
-import { IParsedManifest } from "../parsers/manifest";
+import {
+  IContentSteeringMetadata,
+  IParsedManifest,
+} from "../parsers/manifest";
 import {
   IPlayerError,
   IRepresentationFilter,
@@ -23,6 +26,7 @@ import {
 import arrayFind from "../utils/array_find";
 import EventEmitter from "../utils/event_emitter";
 import idGenerator from "../utils/id_generator";
+import { getFilenameIndexInUrl } from "../utils/resolve_url";
 import warnOnce from "../utils/warn_once";
 import Adaptation from "./adaptation";
 import Period, {
@@ -241,6 +245,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    */
   public clockOffset : number | undefined;
 
+  public contentSteering : IContentSteeringMetadata | null;
+
   /**
    * Data allowing to calculate the minimum and maximum seekable positions at
    * any given time.
@@ -380,6 +386,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.suggestedPresentationDelay = parsedManifest.suggestedPresentationDelay;
     this.availabilityStartTime = parsedManifest.availabilityStartTime;
     this.publishTime = parsedManifest.publishTime;
+    this.contentSteering = parsedManifest.contentSteering;
     if (supplementaryImageTracks.length > 0) {
       this._addSupplementaryImageAdaptations(supplementaryImageTracks);
     }
@@ -612,14 +619,18 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
       const adaptationID = "gen-image-ada-" + generateSupplementaryTrackID();
       const representationID = "gen-image-rep-" + generateSupplementaryTrackID();
+      const indexOfFilename = getFilenameIndexInUrl(url);
+      const cdnUrl = url.substring(0, indexOfFilename);
+      const filename = url.substring(indexOfFilename);
       const newAdaptation = new Adaptation({ id: adaptationID,
                                              type: "image",
                                              representations: [{
                                                bitrate: 0,
+                                               cdnMetadata: [ { baseUrl: cdnUrl } ],
                                                id: representationID,
                                                mimeType,
                                                index: new StaticRepresentationIndex({
-                                                 media: url,
+                                                 media: filename,
                                                }) }] },
                                            { isManuallyAdded: true });
       if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
@@ -664,6 +675,9 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
                                       languages != null ? languages :
                                                           [];
 
+      const indexOfFilename = getFilenameIndexInUrl(url);
+      const cdnUrl = url.substring(0, indexOfFilename);
+      const filename = url.substring(indexOfFilename);
       return allSubs.concat(langsToMapOn.map((_language) => {
         const adaptationID = "gen-text-ada-" + generateSupplementaryTrackID();
         const representationID = "gen-text-rep-" + generateSupplementaryTrackID();
@@ -673,11 +687,12 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
                                                closedCaption,
                                                representations: [{
                                                  bitrate: 0,
+                                                 cdnMetadata: [{ baseUrl: cdnUrl }],
                                                  id: representationID,
                                                  mimeType,
                                                  codecs,
                                                  index: new StaticRepresentationIndex({
-                                                   media: url,
+                                                   media: filename,
                                                  }) }] },
                                              { isManuallyAdded: true });
         if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
@@ -716,6 +731,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
     this.transport = newManifest.transport;
     this.publishTime = newManifest.publishTime;
+    this.contentSteering = newManifest.contentSteering;
 
     if (updateType === MANIFEST_UPDATE_TYPE.Full) {
       this._timeBounds = newManifest._timeBounds;

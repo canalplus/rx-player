@@ -96,5 +96,6 @@ export default function getLocalManifestPipelines(
            audio: segmentPipeline,
            video: segmentPipeline,
            text: textTrackPipeline,
-           image: imageTrackPipeline };
+           image: imageTrackPipeline,
+           steeringManifest: null };
 }

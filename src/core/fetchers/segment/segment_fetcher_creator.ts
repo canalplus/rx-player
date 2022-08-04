@@ -19,6 +19,7 @@ import {
   ISegmentPipeline,
   ITransportPipelines,
 } from "../../../transports";
+import CdnPrioritizer from "../../init/cdn_prioritizer";
 import { IBufferType } from "../../segment_buffers";
 import applyPrioritizerToSegmentFetcher, {
   IPrioritizedSegmentFetcher,
@@ -81,11 +82,14 @@ export default class SegmentFetcherCreator {
    */
   private readonly _backoffOptions : ISegmentFetcherCreatorBackoffOptions;
 
+  private readonly _cdnPrioritizer : CdnPrioritizer;
+
   /**
    * @param {Object} transport
    */
   constructor(
     transport : ITransportPipelines,
+    cdnPrioritizer : CdnPrioritizer,
     options : ISegmentFetcherCreatorBackoffOptions
   ) {
     const { MIN_CANCELABLE_PRIORITY,
@@ -95,6 +99,7 @@ export default class SegmentFetcherCreator {
       prioritySteps: { high: MAX_HIGH_PRIORITY_LEVEL,
                        low: MIN_CANCELABLE_PRIORITY },
     });
+    this._cdnPrioritizer = cdnPrioritizer;
     this._backoffOptions = options;
   }
 
@@ -116,6 +121,7 @@ export default class SegmentFetcherCreator {
     const segmentFetcher = createSegmentFetcher<unknown, unknown>(
       bufferType,
       pipelines as ISegmentPipeline<unknown, unknown>,
+      this._cdnPrioritizer,
       callbacks,
       backoffOptions
     );

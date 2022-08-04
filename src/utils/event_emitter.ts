@@ -29,8 +29,6 @@ export interface IEventEmitter<T> {
   removeEventListener<TEventName extends keyof T>(evt : TEventName,
                                                   fn : IListener<T, TEventName>) :
                                                    void;
-  trigger?<TEventName extends keyof T>(evt : TEventName,
-                                       arg : IArgs<T, TEventName>) : void;
 }
 
 // Type of the argument in the listener's callback
@@ -131,7 +129,7 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
    * @param {*} arg - The eventual payload for that event. All triggered
    * callbacks will recieve this payload as argument.
    */
-  public trigger<TEventName extends keyof T>(
+  protected trigger<TEventName extends keyof T>(
     evt : TEventName,
     arg : IArgs<T, TEventName>
   ) : void {

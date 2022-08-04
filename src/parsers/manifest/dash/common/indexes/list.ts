@@ -21,9 +21,8 @@ import {
 } from "../../../../../manifest";
 import { IEMSG } from "../../../../containers/isobmff";
 import { getTimescaledRange } from "../../../utils/index_helpers";
-import { IResolvedBaseUrl } from "../resolve_base_urls";
 import getInitSegment from "./get_init_segment";
-import { createIndexURLs } from "./tokens";
+import { constructRepresentationUrl } from "./tokens";
 
 /**
  * Index property defined for a SegmentList RepresentationIndex
@@ -53,18 +52,21 @@ export interface IListIndex {
   indexTimeOffset : number;
   /** Information on the initialization segment. */
   initialization? : {
-    /** URLs to access the initialization segment. */
-    mediaURLs: string[] | null;
+    /**
+     * URL path, to add to the wanted CDN, to access the initialization segment.
+     * `null` if no URL exists.
+     */
+    url: string | null;
     /** possible byte range to request it. */
     range?: [number, number] | undefined;
   } | undefined;
   /** Information on the list of segments for this index. */
   list: Array<{
     /**
-     * URLs of the segment.
+     * URL path, to add to the wanted CDN, to access this media segment.
      * `null` if no URL exists.
      */
-    mediaURLs : string[] | null;
+    url : string | null;
     /** Possible byte-range of the segment. */
     mediaRange? : [number, number] | undefined;
   }>;
@@ -111,8 +113,6 @@ export interface IListIndexContextArgument {
   periodStart : number;
   /** End of the period concerned by this RepresentationIndex, in seconds. */
   periodEnd : number | undefined;
-  /** Base URL for the Representation concerned. */
-  representationBaseURLs : IResolvedBaseUrl[];
   /** ID of the Representation concerned. */
   representationId? : string | undefined;
   /** Bitrate of the Representation concerned. */
@@ -142,7 +142,6 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
 
     const { periodStart,
             periodEnd,
-            representationBaseURLs,
             representationId,
             representationBitrate,
             isEMSGWhitelisted } = context;
@@ -155,12 +154,15 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
     const timescale = index.timescale ?? 1;
     const indexTimeOffset = presentationTimeOffset - periodStart * timescale;
 
-    const urlSources : string[] = representationBaseURLs.map(b => b.url);
-    const list = index.list.map((lItem) => ({
-      mediaURLs: createIndexURLs(urlSources,
-                                 lItem.media,
+    const initializationUrl = index.initialization?.media === undefined ?
+      null :
+      constructRepresentationUrl(index.initialization.media,
                                  representationId,
-                                 representationBitrate),
+                                 representationBitrate);
+    const list = index.list.map((lItem) => ({
+      url: lItem.media === undefined ?
+        null :
+        constructRepresentationUrl(lItem.media, representationId, representationBitrate),
       mediaRange: lItem.mediaRange }));
     this._index = { list,
                     timescale,
@@ -169,10 +171,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
                     indexRange: index.indexRange,
                     initialization: index.initialization == null ?
                       undefined :
-                      { mediaURLs: createIndexURLs(urlSources,
-                                                   index.initialization.media,
-                                                   representationId,
-                                                   representationBitrate),
+                      { url: initializationUrl,
                         range: index.initialization.range } };
   }
 
@@ -206,7 +205,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
     let i = Math.floor(up / duration);
     while (i <= length) {
       const range = list[i].mediaRange;
-      const mediaURLs = list[i].mediaURLs;
+      const url = list[i].url;
       const time = i * durationInSeconds + this._periodStart;
       const segment =
         { id: String(i),
@@ -216,7 +215,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
           duration: durationInSeconds,
           timescale: 1 as const,
           end: time + durationInSeconds,
-          mediaURLs,
+          url,
           timestampOffset: -(index.indexTimeOffset / timescale),
           complete: true,
           privateInfos: { isEMSGWhitelisted:

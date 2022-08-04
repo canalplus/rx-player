@@ -108,6 +108,9 @@ export const enum TagName {
 
   /// Indicate a <SegmentURL> node
   SegmentUrl = 20,
+
+  /// Indicate a <ContentSteering> node
+  ContentSteering = 21
 }
 
 /**
@@ -282,4 +285,12 @@ export const enum AttributeName {
   Namespace = 70,
 
   Label = 71, // String
+
+  ServiceLocation = 72, // String
+
+  QueryBeforeStart = 73, // Boolean
+
+  ProxyServerUrl = 74, // String
+
+  DefaultServiceLocation = 75,
 }
