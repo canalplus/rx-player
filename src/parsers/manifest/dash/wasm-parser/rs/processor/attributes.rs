@@ -142,14 +142,21 @@ pub fn report_base_url_attrs(tag_bs : &quick_xml::events::BytesStart) {
     for res_attr in tag_bs.attributes() {
         match res_attr {
             Ok(attr) => match attr.key {
-                b"availabilityTimeOffset" => {
-                    match attr.value.as_ref() {
-                        b"INF" => AvailabilityTimeOffset.report(f64::INFINITY),
-                        _ => AvailabilityTimeOffset.try_report_as_u64(&attr),
-                    }
-                },
-                b"availabilityTimeComplete" =>
-                    AvailabilityTimeComplete.try_report_as_bool(&attr),
+                b"serviceLocation" => ServiceLocation.try_report_as_string(&attr),
+                _ => {},
+            },
+            Err(err) => ParsingError::from(err).report_err(),
+        };
+    };
+}
+
+pub fn report_content_steering_attrs(tag_bs : &quick_xml::events::BytesStart) {
+    for res_attr in tag_bs.attributes() {
+        match res_attr {
+            Ok(attr) => match attr.key {
+                b"serviceLocation" => ServiceLocation.try_report_as_string(&attr),
+                b"proxyServerUrl" => ProxyServerUrl.try_report_as_string(&attr),
+                b"queryBeforeStart" => QueryBeforeStart.try_report_as_bool(&attr),
                 _ => {},
             },
             Err(err) => ParsingError::from(err).report_err(),

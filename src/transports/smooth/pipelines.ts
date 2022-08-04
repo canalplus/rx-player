@@ -21,6 +21,7 @@ import Manifest, {
   ISegment,
 } from "../../manifest";
 import { getMDAT } from "../../parsers/containers/isobmff";
+import { ICdnMetadata } from "../../parsers/manifest";
 import createSmoothManifestParser, {
   SmoothRepresentationIndex,
 } from "../../parsers/manifest/smooth";
@@ -59,6 +60,7 @@ import extractTimingsInfos, {
 import { patchSegment } from "./isobmff";
 import generateSegmentLoader from "./segment_loader";
 import {
+  constructSegmentUrl,
   extractISML,
   extractToken,
   isMP4EmbeddedTrack,
@@ -167,7 +169,7 @@ export default function(transportOptions : ITransportOptions) : ITransportPipeli
   const audioVideoPipeline = {
     /**
      * Load a Smooth audio/video segment.
-     * @param {string|null} url
+     * @param {Object|null} wantedCdn
      * @param {Object} content
      * @param {Object} loaderOptions
      * @param {Object} cancelSignal
@@ -175,7 +177,7 @@ export default function(transportOptions : ITransportOptions) : ITransportPipeli
      * @returns {Promise}
      */
     loadSegment(
-      url : string | null,
+      wantedCdn : ICdnMetadata | null,
       content : ISegmentContext,
       loaderOptions : ISegmentLoaderOptions,
       cancelSignal : CancellationSignal,
@@ -183,6 +185,7 @@ export default function(transportOptions : ITransportOptions) : ITransportPipeli
     ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedAudioVideoSegmentFormat> |
                 ISegmentLoaderResultSegmentCreated<ILoadedAudioVideoSegmentFormat>>
     {
+      const url = constructSegmentUrl(wantedCdn, content.segment);
       return segmentLoader(url, content, loaderOptions, cancelSignal, callbacks);
     },
 
@@ -257,7 +260,7 @@ export default function(transportOptions : ITransportOptions) : ITransportPipeli
 
   const textTrackPipeline = {
     loadSegment(
-      url : string | null,
+      wantedCdn : ICdnMetadata | null,
       content : ISegmentContext,
       loaderOptions : ISegmentLoaderOptions,
       cancelSignal : CancellationSignal,
@@ -265,6 +268,7 @@ export default function(transportOptions : ITransportOptions) : ITransportPipeli
     ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedTextSegmentFormat> |
                 ISegmentLoaderResultSegmentCreated<ILoadedTextSegmentFormat>> {
       const { segment, representation } = content;
+      const url = constructSegmentUrl(wantedCdn, segment);
       if (segment.isInit || url === null) {
         return Promise.resolve({ resultType: "segment-created",
                                  resultData: null });
@@ -447,19 +451,21 @@ export default function(transportOptions : ITransportOptions) : ITransportPipeli
 
   const imageTrackPipeline = {
     async loadSegment(
-      url : string | null,
+      wantedCdn : ICdnMetadata | null,
       content : ISegmentContext,
       loaderOptions : ISegmentLoaderOptions,
       cancelSignal : CancellationSignal,
       callbacks : ISegmentLoaderCallbacks<ILoadedImageSegmentFormat>
     ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedImageSegmentFormat> |
                 ISegmentLoaderResultSegmentCreated<ILoadedImageSegmentFormat>> {
-      if (content.segment.isInit || url === null) {
+
+      const { segment } = content;
+      const url = constructSegmentUrl(wantedCdn, segment);
+      if (segment.isInit || url === null) {
         // image do not need an init segment. Passthrough directly to the parser
         return { resultType: "segment-created" as const,
                  resultData: null };
       }
-
       const data = await request({ url,
                                    responseType: "arraybuffer",
                                    timeout: loaderOptions.timeout,
@@ -523,5 +529,6 @@ export default function(transportOptions : ITransportOptions) : ITransportPipeli
            audio: audioVideoPipeline,
            video: audioVideoPipeline,
            text: textTrackPipeline,
-           image: imageTrackPipeline };
+           image: imageTrackPipeline,
+           steeringManifest: null };
 }
