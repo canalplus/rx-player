@@ -48,7 +48,7 @@
     "doc": "rm -rf doc/generated; node ./scripts/doc-generator/index.js doc/ doc/generated \"$(cat VERSION)\"",
     "lint": "eslint src -c .eslintrc.js",
     "lint:demo": "eslint demo/full/scripts",
-    "lint:tests": "eslint tests/**/*.js",
+    "lint:tests": "eslint tests/**/*.js --ignore-pattern '/tests/performance/bundle*'",
     "list": "node scripts/list-npm-scripts.js",
     "prepublishOnly": "npm run build:modular",
     "standalone": "node ./scripts/run_standalone_demo.js",
