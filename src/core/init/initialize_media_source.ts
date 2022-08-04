@@ -57,10 +57,8 @@ import {
   ManifestFetcher,
   SegmentFetcherCreator,
 } from "../fetchers";
-import SteeringManifestFetcher from "../fetchers/steering_manifest";
 import { ITextTrackSegmentBufferOptions } from "../segment_buffers";
 import { IAudioTrackSwitchingMode } from "../stream";
-import CdnPrioritizer from "./cdn_prioritizer";
 import openMediaSource from "./create_media_source";
 import EVENTS from "./events_generators";
 import getInitialTime, {
@@ -203,7 +201,7 @@ export default function InitializeOnMediaSource(
   /** Choose the right "Representation" for a given "Adaptation". */
   const representationEstimator = AdaptiveRepresentationSelector(adaptiveOptions);
 
-  const contentPlaybackCanceller = new TaskCanceller();
+  const playbackCanceller = new TaskCanceller();
 
   /**
    * Create and open a new MediaSource object on the given media element on
@@ -264,20 +262,14 @@ export default function InitializeOnMediaSource(
       const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
       log.debug("Init: Initial time calculated:", initialTime);
 
-      const steeringManifestFetcher = transport.steeringManifest === null ?
-        null :
-        new SteeringManifestFetcher(transport.steeringManifest,
-                                    { maxRetryOffline: undefined,
-                                      maxRetryRegular: undefined });
-      const cdnPrioritizer = new CdnPrioritizer(manifest,
-                                                steeringManifestFetcher,
-                                                contentPlaybackCanceller.signal);
       const requestOptions = { lowLatencyMode,
                                requestTimeout: segmentRequestOptions.requestTimeout,
                                maxRetryRegular: segmentRequestOptions.regularError,
                                maxRetryOffline: segmentRequestOptions.offlineError };
-      const segmentFetcherCreator =
-        new SegmentFetcherCreator(transport, cdnPrioritizer, requestOptions);
+      const segmentFetcherCreator = new SegmentFetcherCreator(transport,
+                                                              manifest,
+                                                              requestOptions,
+                                                              playbackCanceller.signal);
 
       const mediaSourceLoader = createMediaSourceLoader({
         bufferOptions: objectAssign({ textTrackOptions, drmSystemId },
@@ -394,5 +386,5 @@ export default function InitializeOnMediaSource(
     }));
 
   return observableMerge(loadContent$, mediaError$, drmEvents$.pipe(ignoreElements()))
-    .pipe(finalize(() => { contentPlaybackCanceller.cancel(); }));
+    .pipe(finalize(() => { playbackCanceller.cancel(); }));
 }

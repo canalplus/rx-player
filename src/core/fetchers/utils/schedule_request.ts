@@ -32,7 +32,7 @@ import SyncOrAsync, {
 import TaskCanceller, {
   CancellationSignal,
 } from "../../../utils/task_canceller";
-import CdnPrioritizer from "../../init/cdn_prioritizer";
+import CdnPrioritizer from "../cdn_prioritizer";
 
 /**
  * Called on a loader error.
