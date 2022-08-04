@@ -129,10 +129,18 @@ export default function launchTestsForContent(manifestInfos) {
             const requestsDone = xhrMock.getLockedXHR().map(({ url }) => url);
 
             const hasRequestedVideoInitSegment = requestsDone.some(r => {
-              return r.endsWith(videoRepresentationInfos.index.init.url ?? "");
+              const relativeUrl =
+                videoRepresentationInfos.index.init.url === null ?
+                  "" :
+                  videoRepresentationInfos.index.init.url;
+              return r.endsWith(relativeUrl);
             });
             const hasRequestedAudioInitSegment = requestsDone.some(r => {
-              return r.endsWith(audioRepresentationInfos.index.init.url ?? "");
+              const relativeUrl =
+                audioRepresentationInfos.index.init.url === null ?
+                  "" :
+                  audioRepresentationInfos.index.init.url;
+              return r.endsWith(relativeUrl);
             });
             expect(hasRequestedVideoInitSegment).to.equal(true);
             expect(hasRequestedAudioInitSegment).to.equal(true);
