@@ -46,6 +46,7 @@ const initSegment1 = {
   timescale: 1 as const,
   mediaURLs: ["http://www.example.com/some.URLinit1"],
   complete: true,
+  privateInfos: {},
 };
 
 const initSegment2 = {
@@ -57,6 +58,7 @@ const initSegment2 = {
   timescale: 1 as const,
   mediaURLs: ["http://www.example.com/some.URLinit2"],
   complete: true,
+  privateInfos: {},
 };
 
 const initSegment3 = {
@@ -68,6 +70,7 @@ const initSegment3 = {
   timescale: 1 as const,
   mediaURLs: ["http://www.example.com/some.URLinit3"],
   complete: true,
+  privateInfos: {},
 };
 
 const segment1 = {
@@ -79,6 +82,7 @@ const segment1 = {
   timescale: 1 as const,
   mediaURLs: ["http://www.example.com/some.URL2"],
   complete: true,
+  privateInfos: {},
 };
 
 const segment2 = {
@@ -90,6 +94,7 @@ const segment2 = {
   timescale: 1 as const,
   mediaURLs: ["http://www.example.com/some.URL2"],
   complete: true,
+  privateInfos: {},
 };
 
 const segment3 = {
@@ -101,6 +106,7 @@ const segment3 = {
   timescale: 1 as const,
   mediaURLs: ["http://www.example.com/some.URL3"],
   complete: true,
+  privateInfos: {},
 };
 
 const segment4 = {
@@ -112,6 +118,7 @@ const segment4 = {
   timescale: 1 as const,
   mediaURLs: ["http://www.example.com/some.URL4"],
   complete: true,
+  privateInfos: {},
 };
 
 const data1 = new Uint8Array([0]);
