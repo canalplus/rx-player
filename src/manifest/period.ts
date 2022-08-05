@@ -19,7 +19,7 @@ import {
   IParsedPeriod,
 } from "../parsers/manifest";
 import {
-  IAdaptationType,
+  ITrackType,
   IPlayerError,
   IRepresentationFilter,
 } from "../public_types";
@@ -28,7 +28,7 @@ import objectValues from "../utils/object_values";
 import Adaptation from "./adaptation";
 
 /** Structure listing every `Adaptation` in a Period. */
-export type IManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
+export type IManifestAdaptations = Partial<Record<ITrackType, Adaptation[]>>;
 
 /**
  * Class representing the tracks and qualities available from a given time
@@ -77,7 +77,7 @@ export default class Period {
   ) {
     this.contentWarnings = [];
     this.id = args.id;
-    this.adaptations = (Object.keys(args.adaptations) as IAdaptationType[])
+    this.adaptations = (Object.keys(args.adaptations) as ITrackType[])
       .reduce<IManifestAdaptations>((acc, type) => {
         const adaptationsForType = args.adaptations[type];
         if (adaptationsForType == null) {
@@ -149,7 +149,7 @@ export default class Period {
    * @param {string} adaptationType
    * @returns {Array.<Object>}
    */
-  getAdaptationsForType(adaptationType : IAdaptationType) : Adaptation[] {
+  getAdaptationsForType(adaptationType : ITrackType) : Adaptation[] {
     const adaptationsForType = this.adaptations[adaptationType];
     return adaptationsForType == null ? [] :
                                         adaptationsForType;
@@ -170,7 +170,7 @@ export default class Period {
    * type. Will return for all types if `undefined`.
    * @returns {Array.<Adaptation>}
    */
-  getSupportedAdaptations(type? : IAdaptationType) : Adaptation[] {
+  getSupportedAdaptations(type? : ITrackType) : Adaptation[] {
     if (type === undefined) {
       return this.getAdaptations().filter(ada => {
         return ada.isSupported;

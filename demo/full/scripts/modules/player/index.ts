@@ -329,7 +329,7 @@ const PlayerModule = declareModule(
       },
 
       setAudioTrack(track: IAudioTrack) {
-        player.setAudioTrack(track.id as string);
+        player.setAudioTrack(track.id);
       },
 
       setVideoTrack(track: IVideoTrack) {

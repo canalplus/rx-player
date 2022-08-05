@@ -393,16 +393,38 @@ its attributes.
 The representationFilter will be called each time we load a
 [Manifest](../../Getting_Started/Glossary.md#manifest) with two arguments:
 
-- representation `{Representation}`: The concerned `Representation`.
-  A `Representation` structure's is described [in the Manifest structure
-  documentation](./Manifest_Object.md#representation).
+- representation `{Object}`: An object describing the `Representation`.
 
-- representationInfos `{Object}`: Basic information about this
-  `Representation`. Contains the following keys:
+  This object contains the following properties:
+   - `id` (`string`): The id used to identify this Representation.
+
+   - `bitrate` (`Number|undefined`): The bitrate of this Representation, in
+      bits per seconds.
+
+      `undefined` if unknown.
+
+   - `width` (`Number|undefined`): If the `Representation` is from a video
+     track and if its width is known, this is the width of video, in pixels.
+
+   - `height` (`Number|undefined`): If the `Representation` is from a video
+     track and if its height is known, this is the height of video, in pixels.
+
+   - `codec` (`string|undefined`): The codec the Representation is in.
+
+   - `frameRate` (`Number|undefined`): If the `Representation` is from a video
+     track and if its frame rate is known, this is the frame rate of video, in
+     image per seconds.
+
+   - `hdrInfo` (`Object|undefined`): If the `Representation` is from a video
+     track and if it has HDR information associated to it, this is set to an
+     object describing the hdr characteristics of the track.
+     (see [HDR support documentation](../Miscellaneous/hdr.md#hdrinfo))
+
+- context `{Object}`: Basic context about this `Representation`.
+  Contains the following keys:
 
   - bufferType `{string}`: The concerned type of buffer. Can be
     `"video"`, `"audio"`, `"text"` (for subtitles)
-    (for thumbnail).
 
   - language `{string|undefined}`: The language the `Representation`
     is in, as announced by the Manifest.
@@ -412,19 +434,25 @@ The representationFilter will be called each time we load a
     If the translation attempt fails (no corresponding ISO 639-3 language
     code is found), it will equal the value of `language`
 
-  - isClosedCaption `{Boolean|undefined}`: If true, the `Representation`
-    links to subtitles with added hints for the hard of hearing.
+  - isClosedCaption `{Boolean|undefined}`: If set to `true` and if this is a
+    text track, the `Representation` links to subtitles with added hints for
+    the hard of hearing.
 
-  - isAudioDescription `{Boolean|undefined}`: If true, the
-    `Representation` links to an audio track with added commentary for
-    the visually impaired.
+  - isAudioDescription `{Boolean|undefined}`: If set to `true` and if this is an
+    audio track, the `Representation` links to an audio track with added
+    commentary for the visually impaired.
 
-  - isDub `{Boolean|undefined}`): If set to `true`, this audio track is a
-    "dub", meaning it was recorded in another language than the original.
+  - isDub `{Boolean|undefined}`): If set to `true` and if this is an audio
+    track, then this audio track is a "dub", meaning it was recorded in
+    another language than the original.
     If set to `false`, we know that this audio track is in an original
     language.
+
     This property is `undefined` if we do not known whether it is in an
-    original language.
+    original language or if does not apply for the track type.
+
+  - isSignInterpreted `{Boolean|undefined}`): If set to `true` and if this is a
+    video track, then it contains visual sign interpretation.
 
 This function should then returns `true` if the `Representation` should be
 kept or `false` if it should be removed.
