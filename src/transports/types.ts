@@ -19,7 +19,7 @@ import Manifest, {
   ISegment,
 } from "../manifest";
 import {
-  IAdaptationType,
+  ITrackType,
   ILoadedManifestFormat,
   IManifestLoader,
   IRepresentationFilter,
@@ -455,7 +455,7 @@ export interface ISegmentContext {
   /** Metadata about the wanted segment. */
   segment : ISegment;
   /** Type of the corresponding track. */
-  type : IAdaptationType;
+  type : ITrackType;
   /** Language of the corresponding track. */
   language? : string | undefined;
   /** If `true`, the corresponding `Manifest` if for a live content. */

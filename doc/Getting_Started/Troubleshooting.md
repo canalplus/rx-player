@@ -50,16 +50,13 @@ If that solution does not work for you, do not hesitate to create an issue.
     to how often low-level audio buffers are updated (from higher-level browser
     audio buffers) on that device.
 
-    To fix that solution, you might want to set the
-    [`audioTrackSwitchingMode`](../api/Loading_a_Content.md#audiotrackswitchingmode)
-    `loadVideo` option to `"direct"` or `"reload"`, if you have issues with the
-    former value.
+    To fix that solution, you might want to set [the `switchingMode` property on
+    calls to `setAudioTrack`](../api/Track_Selection/setAudioTrack.md) to
+    `"direct"` or `"reload"`, if you have issues with the former value.
 
   - If you lose sound after switching the audio track and you're in the
-    `"direct"`
-    [`audioTrackSwitchingMode`](../api/Loading_a_Content.md#audiotrackswitchingmode),
-    this is a known issue on some browser versions.
-    Please change the `audioTrackSwitchingMode` to any other value (the closest to
+    `"direct"` `switchingMode`, this is a known issue on some browser versions.
+    Please change the `switchingMode` to any other value (the closest to
     `"direct"` being `"reload"`.
 
 
