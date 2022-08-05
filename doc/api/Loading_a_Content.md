@@ -612,51 +612,7 @@ subtitles position without polling where the video is in your UI).
 You can however re-size or update the style of it as you wish, to better suit
 your UI needs.
 
-### audioTrackSwitchingMode
-
-_type_: `string`
-
-_defaults_: `"seamless"`
-
-<div class="warning">
-This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
-transport option</a>)
-</div>
-
-Behavior taken by the player when switching to a different audio track, through
-the `setAudioTrack` method.
-
-Those are the possible values for that option:
-
-- `"seamless"`: The transition between the old audio track and the new one
-  happens seamlessly, without interruption.
-  This is the default behavior.
-
-  As an inconvenient, you might have at worst a few seconds in the previous
-  audio track before the new one can be heard.
-
-- `"direct"`: The player will try to switch to the new audio track as soon
-  as possible, which might lead to a brief interruption and rebuffering period
-  (where the RxPlayer is in the `BUFFERING` state) while it is doing so.
-
-- `"reload"` The player will directly switch to the new audio track (like
-  direct) but may reload the media to do so.
-  During this reloading step, there might be a black screen instead of the
-  video and the RxPlayer might go into the `RELOADING` state temporarily.
-
-  Although it provides a more aggressive transition than the `"direct"` mode
-  (because it goes through a reloading step with a black screen), the
-  `"reload"` mode might be preferable in specific situations where `"direct"`
-  is seen to have compatibility issues.
-
-  We observed such issues with some contents and devices combinations, if you
-  observe issues such as losing the audio or video glitches just after changing
-  the audio track while the `"direct"` mode is used, you may want to use the
-  `"reload"` mode instead.
-
-  More information about the `"RELOADING"` state can be found in [the
-  player states documentation](./Player_States.md).
-
+XXX TODO
 ### manualBitrateSwitchingMode
 
 _type_: `string`
@@ -669,8 +625,8 @@ transport option</a>)
 </div>
 
 Strategy you want to adopt when updating "manually" the video and audio quality
-through respectively the `setVideoBitrate` and `setAudioBitrate` API while
-the content is playing.
+through respectively the `lockVideoRepresentations` and
+`lockAudioRepresentations` API while the content is playing.
 
 There is two possible values:
 

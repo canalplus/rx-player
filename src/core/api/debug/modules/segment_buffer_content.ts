@@ -1,8 +1,8 @@
 import {
   Adaptation,
   Period,
+  Representation,
 } from "../../../../manifest";
-import { IRepresentation } from "../../../../public_types";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import { CancellationSignal } from "../../../../utils/task_canceller";
 import { IBufferType } from "../../../segment_buffers";
@@ -114,7 +114,7 @@ function constructRepresentationInfo(
   content : {
     period : Period;
     adaptation : Adaptation;
-    representation : IRepresentation;
+    representation : Representation;
   }
 ) : string {
   const period = content.period;
