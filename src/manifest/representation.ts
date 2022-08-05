@@ -21,7 +21,7 @@ import {
   IParsedRepresentation,
 } from "../parsers/manifest";
 import {
-  IAdaptationType,
+  ITrackType,
   IHDRInformation,
 } from "../public_types";
 import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
@@ -100,7 +100,7 @@ class Representation {
   /**
    * @param {Object} args
    */
-  constructor(args : IParsedRepresentation, opts : { type : IAdaptationType }) {
+  constructor(args : IParsedRepresentation, opts : { type : ITrackType }) {
     this.id = args.id;
     this.bitrate = args.bitrate;
     this.codec = args.codecs;

@@ -57,6 +57,14 @@
       "displayName": "getVideoElement"
     },
     {
+      "path": "./getAvailablePeriod.md",
+      "displayName": "getAvailablePeriods"
+    },
+    {
+      "path": "./getCurrentPeriod.md",
+      "displayName": "getCurrentPeriod"
+    },
+    {
       "path": "./dispose.md",
       "displayName": "dispose"
     },
