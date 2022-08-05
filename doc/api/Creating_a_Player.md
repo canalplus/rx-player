@@ -117,9 +117,9 @@ _defaults_: `0`
 
 Minimum video bitrate reachable through adaptive streaming.
 
-When the bitrate is chosen through adaptive streaming (i.e., not enforced
-manually through APIs such as `setVideoBitrate`), the player will never switch
-to a video quality with a bitrate lower than that value.
+When the quality is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as `lockVideoRepresentations`), the player will
+never switch to a video quality with a bitrate lower than that value.
 
 The exception being when no quality has a higher bitrate, in which case the
 maximum quality will always be chosen instead.
@@ -143,8 +143,8 @@ player.setMinVideoBitrate(0);
 You can update this limit at any moment with the `setMinVideoBitrate` API
 call.
 
-Note that this only affects adaptive strategies. Forcing the bitrate manually
-(for example by calling `setVideoBitrate`) bypass this limit completely.
+Note that this only affects adaptive strategies. Forcing the quality manually
+(by calling `lockVideoRepresentations`) bypasses this limit completely.
 
 <div class="warning">
 This option will have no effect for contents loaded in <i>Directfile</i>
@@ -159,9 +159,9 @@ _defaults_: `0`
 
 Minimum audio bitrate reachable through adaptive streaming.
 
-When the bitrate is chosen through adaptive streaming (i.e., not enforced
-manually through APIs such as `setAudioBitrate`), the player will never switch
-to an audio quality with a bitrate higher than that value.
+When the quality is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as `lockAudioRepresentations`), the player will never
+switch to an audio quality with a bitrate higher than that value.
 
 The exception being when no quality has a higher bitrate, in which case the
 minimum quality will always be chosen instead.
@@ -185,8 +185,8 @@ player.setMinAudioBitrate(0);
 You can update this limit at any moment with the `setMinAudioBitrate` API
 call.
 
-Note that this only affects adaptive strategies. Forcing the bitrate manually
-(for example by calling `setAudioBitrate`) bypass this limit completely.
+Note that this only affects adaptive strategies. Forcing the quality manually
+(by calling `lockAudioRepresentations`) bypasses this limit completely.
 
 <div class="warning">
 This option will have no effect for contents loaded in <i>Directfile</i>
@@ -201,9 +201,9 @@ _defaults_: `Infinity`
 
 Maximum video bitrate reachable through adaptive streaming.
 
-When the bitrate is chosen through adaptive streaming (i.e., not enforced
-manually through APIs such as `setVideoBitrate`), the player will never switch
-to an video quality with a bitrate higher than that value.
+When the quality is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as `lockVideoRepresentations`), the player will never
+switch to an video quality with a bitrate higher than that value.
 
 The exception being when no quality has a lower bitrate, in which case the
 minimum quality will always be chosen instead.
@@ -227,8 +227,8 @@ player.setMaxVideoBitrate(Infinity);
 You can update this limit at any moment with the `setMaxVideoBitrate` API
 call.
 
-Note that this only affects adaptive strategies. Forcing the bitrate manually
-(for example by calling `setVideoBitrate`) bypass this limit completely.
+Note that this only affects adaptive strategies. Forcing the quality manually
+(by calling `lockVideoRepresentations`) bypasses this limit completely.
 
 <div class="warning">
 This option will have no effect for contents loaded in <i>Directfile</i>
@@ -243,9 +243,9 @@ _defaults_: `Infinity`
 
 Maximum audio bitrate reachable through adaptive streaming.
 
-When the bitrate is chosen through adaptive streaming (i.e., not enforced
-manually through APIs such as `setAudioBitrate`), the player will never switch
-to an audio quality with a bitrate higher than that value.
+When the quality is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as `lockAudioRepresentations`), the player will
+never switch to an audio quality with a bitrate higher than that value.
 
 The exception being when no quality has a lower bitrate, in which case the
 minimum quality will always be chosen instead.
@@ -269,8 +269,8 @@ player.setMaxAudioBitrate(Infinity);
 You can update this limit at any moment with the `setMaxAudioBitrate` API
 call.
 
-Note that this only affects adaptive strategies. Forcing the bitrate manually
-(for example by calling `setAudioBitrate`) bypass this limit completely.
+Note that this only affects adaptive strategies. Forcing the quality manually
+(by calling `lockAudioRepresentations`) bypasses this limit completely.
 
 <div class="warning">
 This option will have no effect for contents loaded in <i>Directfile</i>

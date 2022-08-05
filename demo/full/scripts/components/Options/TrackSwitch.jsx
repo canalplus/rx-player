@@ -6,34 +6,12 @@ import Select from "../Select";
  * @param {Object} props
  * @returns {Object}
  */
-function NetworkConfig({
+function TrackSwitchConfig({
   enableFastSwitching,
-  audioTrackSwitchingMode,
   onCodecSwitch,
   onEnableFastSwitchingClick,
-  onAudioTrackSwitchingModeChange,
   onCodecSwitchChange,
 }) {
-  let audioTrackSwitchingModeDescMsg;
-  switch (audioTrackSwitchingMode) {
-    case "reload":
-      audioTrackSwitchingModeDescMsg =
-        "Reloading when the audio track is changed";
-      break;
-    case "direct":
-      audioTrackSwitchingModeDescMsg =
-        "Directly audible transition when the audio track is changed";
-      break;
-    case "seamless":
-      audioTrackSwitchingModeDescMsg =
-        "Smooth transition when the audio track is changed";
-      break;
-    default:
-      audioTrackSwitchingModeDescMsg =
-        "Unknown value";
-      break;
-  }
-
   let onCodecSwitchDescMsg;
   switch (onCodecSwitch) {
     case "reload":
@@ -71,20 +49,6 @@ function NetworkConfig({
       <li className="featureWrapperWithSelectMode">
         <Select
           className="playerOptionInput"
-          name="audioTrackSwitchingMode"
-          onChange={({ value }) => onAudioTrackSwitchingModeChange(value)}
-          selected={{ value: audioTrackSwitchingMode }}
-          options={["seamless", "direct", "reload"]}
-        >
-          Audio track switching mode
-        </Select>
-        <span className="option-desc">
-          {audioTrackSwitchingModeDescMsg}
-        </span>
-      </li>
-      <li className="featureWrapperWithSelectMode">
-        <Select
-          className="playerOptionInput"
           name="onCodecSwitch"
           onChange={({ value }) => onCodecSwitchChange(value)}
           selected={{ value: onCodecSwitch }}
@@ -100,4 +64,4 @@ function NetworkConfig({
   );
 }
 
-export default React.memo(NetworkConfig);
+export default React.memo(TrackSwitchConfig);
