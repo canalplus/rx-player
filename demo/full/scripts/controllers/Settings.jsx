@@ -29,7 +29,6 @@ function Settings({
     wantedBufferAhead,
   } = playerOptions;
   const {
-    audioTrackSwitchingMode,
     autoPlay,
     enableFastSwitching,
     manualBitrateSwitchingMode,
@@ -221,17 +220,6 @@ function Settings({
     });
   }, [updateLoadVideoOptions]);
 
-  const onAudioTrackSwitchingModeChange = useCallback((value) => {
-    updateLoadVideoOptions((prevOptions) => {
-      if (value === prevOptions.audioTrackSwitchingMode) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, {
-        audioTrackSwitchingMode: value,
-      });
-    });
-  }, [updateLoadVideoOptions]);
-
   const onCodecSwitchChange = useCallback((value) => {
     updateLoadVideoOptions((prevOptions) => {
       if (value === prevOptions.onCodecSwitch) {
@@ -348,10 +336,8 @@ function Settings({
         <Option title="Track Switch Mode">
           <TrackSwitch
             enableFastSwitching={enableFastSwitching}
-            audioTrackSwitchingMode={audioTrackSwitchingMode}
             onCodecSwitch={onCodecSwitch}
             onEnableFastSwitchingChange={onEnableFastSwitchingChange}
-            onAudioTrackSwitchingModeChange={onAudioTrackSwitchingModeChange}
             onCodecSwitchChange={onCodecSwitchChange}
           />
         </Option>

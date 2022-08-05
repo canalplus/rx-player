@@ -4,9 +4,9 @@
 
 Set a maximum video bitrate reachable through adaptive streaming.
 
-When the bitrate is chosen through adaptive streaming (i.e., not enforced
-manually through APIs such as `setVideoBitrate`), the player will never switch
-to a video quality with a bitrate higher than that value.
+When the quality is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as `lockVideoRepresentations`), the player will never
+switch to a video quality with a bitrate higher than that value.
 
 The exception being when no quality has a lower bitrate, in which case the
 minimum quality will always be chosen instead.
@@ -29,7 +29,7 @@ The effect of this method is persisted from content to content. As such, it can
 even be called when no content is currently loaded.
 
 Note that this only affects adaptive strategies. Forcing the bitrate manually
-(for example by calling `setVideoBitrate`) bypass this limit completely.
+(by calling `lockVideoRepresentations`) bypasses this limit completely.
 
 <div class="warning">
 In <i>DirectFile</i> mode (see <a

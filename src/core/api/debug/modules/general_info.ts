@@ -84,14 +84,6 @@ export default function constructDebugGeneralInfo(
       if (mav !== Infinity) {
         valuesLine2.push(["mav", String(mav)]);
       }
-      const fab = instance.getManualAudioBitrate();
-      if (fab >= 0) {
-        valuesLine2.push(["fab", String(fab)]);
-      }
-      const fvb = instance.getManualVideoBitrate();
-      if (fvb >= 0) {
-        valuesLine2.push(["fvb", String(fvb)]);
-      }
       const mbs = instance.getMaxVideoBufferSize();
       if (mbs !== Infinity) {
         valuesLine2.push(["mbs", String(mbs)]);
@@ -181,8 +173,12 @@ export default function constructDebugGeneralInfo(
         ]);
         adaptationsElt.appendChild(textAdaps);
       }
-      const videoBitrates = instance.getAvailableVideoBitrates();
-      const audioBitrates = instance.getAvailableAudioBitrates();
+      const videoBitrates = instance.getVideoTrack()?.representations.map(r => {
+        return r.bitrate;
+      }).filter(bitrate => bitrate !== undefined) ?? [];
+      const audioBitrates = instance.getAudioTrack()?.representations.map(r => {
+        return r.bitrate;
+      }).filter(bitrate => bitrate !== undefined) ?? [];
       representationsElt.innerHTML = "";
       if (videoBitrates.length > 0) {
         representationsElt.appendChild(createMetricTitle("vb"));
