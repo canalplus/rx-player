@@ -4,9 +4,9 @@
 
 Set a maximum audio bitrate reachable through adaptive streaming.
 
-When the bitrate is chosen through adaptive streaming (i.e., not enforced
-manually through APIs such as `setAudioBitrate`), the player will never switch
-to an audio quality with a bitrate higher than that value.
+When the quality is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as `lockAudioRepresentations`), the player will never
+switch to an audio quality with a bitrate higher than that value.
 
 The exception being when no quality has a lower bitrate, in which case the
 minimum quality will always be chosen instead.
@@ -28,8 +28,8 @@ player.setMaxAudioBitrate(Infinity);
 The effect of this method is persisted from content to content. As such, it can
 even be called when no content is currently loaded.
 
-Note that this only affects adaptive strategies. Forcing the bitrate manually
-(for example by calling `setAudioBitrate`) bypass this limit completely.
+Note that this only affects adaptive strategies. Forcing the quality manually
+(by calling `lockAudioRepresentations`) bypasses this limit completely.
 
 <div class="warning">
 In <i>DirectFile</i> mode (see <a
