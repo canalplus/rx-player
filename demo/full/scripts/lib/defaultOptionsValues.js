@@ -15,7 +15,6 @@ const defaultOptionsValues = {
   segmentTimeout: 30000,
   manifestTimeout: 30000,
   enableFastSwitching: true,
-  audioTrackSwitchingMode: "reload",
   onCodecSwitch: "continue",
   wantedBufferAhead: 30,
   maxVideoBufferSize: Infinity,
