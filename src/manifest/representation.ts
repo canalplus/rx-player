@@ -22,8 +22,8 @@ import {
   IParsedRepresentation,
 } from "../parsers/manifest";
 import {
-  ITrackType,
   IAudioRepresentation,
+  ITrackType,
   IHDRInformation,
   IVideoRepresentation,
 } from "../public_types";
