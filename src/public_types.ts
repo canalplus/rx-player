@@ -129,21 +129,7 @@ export type IInitialManifest = Document |
 
 /** Type for the `representationFilter` API. */
 export type IRepresentationFilter = (representation: IRepresentationFilterRepresentation,
-                                     adaptationInfos: IRepresentationInfos) => boolean;
-
-export type ITrackType = "video" | "audio" | "text";
-
-/** Segment, as documented in the API documentation. */
-export interface IExposedSegment {
-  id : string;
-  timescale : number;
-  duration? : number | undefined;
-  time : number;
-  isInit? : boolean | undefined;
-  range? : number[] | null | undefined;
-  indexRange? : number[] | null | undefined;
-  number? : number | undefined;
-}
+                                     context: IRepresentationContext) => boolean;
 
 /** Representation object given to the `representationFilter` API. */
 export interface IRepresentationFilterRepresentation {
@@ -335,6 +321,9 @@ export interface ISegmentLoaderContext {
   /** Type of the corresponding track. */
   type : ITrackType;
 }
+
+/** Every possible value for the Adaptation's `type` property. */
+export type ITrackType = "video" | "audio" | "text";
 
 export type ILoadedManifestFormat = IInitialManifest;
 
@@ -544,6 +533,8 @@ export interface IBitrateEstimate {
   bitrate : number | undefined;
 }
 
+// XXX TODO wouldn't it be more pertinent to directly give more Representation
+// and track information here?
 export interface IDecipherabilityUpdateContent {
   trackType : IBufferType;
   trackId : string;
@@ -613,13 +604,13 @@ export type IPlayerError = EncryptedMediaError |
  * Information describing a single Representation from an Adaptation, to be used
  * in the `representationFilter` API.
  */
-export interface IRepresentationInfos { bufferType: string;
-                                        language?: string | undefined;
-                                        isAudioDescription? : boolean | undefined;
-                                        isClosedCaption? : boolean | undefined;
-                                        isDub? : boolean | undefined;
-                                        isSignInterpreted?: boolean | undefined;
-                                        normalizedLanguage? : string | undefined; }
+export interface IRepresentationContext { bufferType: string;
+                                          language?: string | undefined;
+                                          isAudioDescription? : boolean | undefined;
+                                          isClosedCaption? : boolean | undefined;
+                                          isDub? : boolean | undefined;
+                                          isSignInterpreted?: boolean | undefined;
+                                          normalizedLanguage? : string | undefined; }
 
 /**
  * Definition of a single audio Representation as represented by the
@@ -645,7 +636,7 @@ export interface IAudioTrack {
   normalized : string;
   audioDescription : boolean;
   dub? : boolean | undefined;
-  id : number | string;
+  id : string;
   label? : string | undefined;
   representations: IAudioRepresentation[];
 }
@@ -852,18 +843,18 @@ export interface IBrokenRepresentationsLockContext {
 
 export interface IAutoTrackSwitchEventPayload {
   period : IPeriod;
-  trackType : IAdaptationType;
+  trackType : ITrackType;
   reason : "missing" |
            string;
 }
 
-export interface ILockedVideoRepresentationsProperties {
+export interface ILockedVideoRepresentationsSettings {
   representations : string[];
   periodId? : string | undefined;
   switchingMode? : IVideoRepresentationsSwitchingMode | undefined;
 }
 
-export interface ILockedAudioRepresentationsProperties {
+export interface ILockedAudioRepresentationsSettings {
   representations : string[];
   periodId? : string | undefined;
   switchingMode? : IAudioRepresentationsSwitchingMode | undefined;
