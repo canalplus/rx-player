@@ -84,14 +84,6 @@ export default function constructDebugGeneralInfo(
       if (mav !== Infinity) {
         valuesLine2.push(["mav", String(mav)]);
       }
-      const fab = instance.getManualAudioBitrate();
-      if (fab >= 0) {
-        valuesLine2.push(["fab", String(fab)]);
-      }
-      const fvb = instance.getManualVideoBitrate();
-      if (fvb >= 0) {
-        valuesLine2.push(["fvb", String(fvb)]);
-      }
       const mbs = instance.getMaxVideoBufferSize();
       if (mbs !== Infinity) {
         valuesLine2.push(["mbs", String(mbs)]);
@@ -181,14 +173,14 @@ export default function constructDebugGeneralInfo(
         ]);
         adaptationsElt.appendChild(textAdaps);
       }
-      const adaptations = instance.getCurrentAdaptations();
+      const adaptations = instance.__priv_getCurrentAdaptation();
       const videoBitratesStr = adaptations?.video?.representations.map((r) => {
-        return String(r.bitrate) +
+        return String(r.bitrate ?? "N/A") +
                (r.isSupported ? "" : " U!") +
                (r.decipherable !== false ? "" : " E!");
       }) ?? [];
       const audioBitratesStr = adaptations?.video?.representations.map((r) => {
-        return String(r.bitrate) +
+        return String(r.bitrate ?? "N/A") +
                (r.isSupported ? "" : " U!") +
                (r.decipherable !== false ? "" : " E!");
       }) ?? [];
