@@ -9,8 +9,8 @@ As [documented in the API](./Basic_Methods/addEventListener.md), you can call
 `addEventListener` to register a callback for a particular event, like:
 
 ```js
-player.addEventListener("videoBitrateChange", (newVideoBitrate) => {
-  console.log("the video bitrate changed to:", newVideoBitrate);
+player.addEventListener("playerStateChange", (newState) => {
+  console.log("the RxPlayer's state changed to:", newState);
 });
 ```
 
@@ -146,6 +146,17 @@ The array emitted contains object describing each available audio track:
 
   This information is usually set only if the current Manifest contains one.
 
+- `representations` (`Array.<Object>`):
+
+  Array listing the available audio Representations linked to this audio track.
+  Each object describing a single Representation, with the following properties:
+    - `id` (`string`): The id used to identify this Representation.
+
+    - `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits
+      per seconds.
+
+    - `codec` (`string|undefined`): The codec of the representation
+
 This event only concerns the currently-playing
 [Period](../Getting_Started/Glossary.md).
 
@@ -189,6 +200,8 @@ The array emitted contains object describing each available video track:
 
   - `frameRate` (`number|undefined`): The video framerate.
 
+- `signInterpreted` (`Boolean`): Whether the track contains sign interpretation.
+
 This event only concerns the currently-playing
 [Period](../Getting_Started/Glossary.md).
 
@@ -231,14 +244,19 @@ This event only concerns the currently-playing
 
 _payload type_: `Object|null`
 
-Information about the current audio track, each time it changes (the last
-received segment got a new one).
+Information about the current audio track, each time it changes for the
+currently-playing [Period](../Getting_Started/Glossary.md).
 
 The payload is an object describing the new track, with the following
 properties:
 
-- `id` (`Number|string`): The id used to identify the track.
+- `id` (`string`): The id used to identify the track.
 - `language` (`string`): The language the audio track is in.
+- `normalized` (`string`): An attempt to translate the `language`
+  property into an ISO 639-3 language code (for now only support translations
+  from ISO 639-1 and ISO 639-2 language codes). If the translation attempt
+  fails (no corresponding ISO 639-3 language code is found), it will equal the
+  value of `language`
 - `audioDescription` (`Boolean`): Whether the track is an audio
   description of what is happening at the screen.
 - `dub` (`Boolean|undefined`): If set to `true`, this audio track is a
@@ -250,6 +268,16 @@ properties:
   the user interface providing a choice between audio tracks.
 
   This information is usually set only if the current Manifest contains one.
+- `representations` (`Array.<Object>`):
+
+  Array listing the available audio Representations linked to this audio track.
+  Each object describing a single Representation, with the following properties:
+    - `id` (`string`): The id used to identify this Representation.
+
+    - `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits
+      per seconds.
+
+    - `codec` (`string|undefined`): The codec of the representation
 
 This event only concerns the currently-playing
 [Period](../Getting_Started/Glossary.md).
@@ -258,14 +286,19 @@ This event only concerns the currently-playing
 
 _payload type_: `Object|null`
 
-Information about the current text track, each time it changes (the last
-received segment got a new one).
+Information about the current audio track, each time it changes for the
+currently-playing [Period](../Getting_Started/Glossary.md).
 
 The payload is an object describing the new track, with the following
 properties:
 
-- `id` (`Number|string`): The id used to identify the track.
+- `id` (`string`): The id used to identify the track.
 - `language` (`string`): The language the text track is in.
+- `normalized` (`string`): An attempt to translate the `language`
+  property into an ISO 639-3 language code (for now only support translations
+  from ISO 639-1 and ISO 639-2 language codes). If the translation attempt
+  fails (no corresponding ISO 639-3 language code is found), it will equal the
+  value of `language`
 - `closedCaption` (`Boolean`): Whether the track is specially adapted for
   the hard of hearing or not.
 - `label` (`string|undefined`): A human readable label that may be displayed in
@@ -279,6 +312,9 @@ This event only concerns the currently-playing
 ### videoTrackChange
 
 _payload type_: `Object|null`
+
+Information about the current audio track, each time it changes for the
+currently-playing [Period](../Getting_Started/Glossary.md).
 
 Information about the current video track, each time it changes (the last
 received segment got a new one).
@@ -330,6 +366,8 @@ properties:
 
   It this property is either `undefined` or not set, then this track has no
   linked trickmode video track.
+
+- `signInterpreted` (`Boolean`): Whether the track contains sign interpretation.
 
 A `null` payload means that video track has been disabled.
 
@@ -404,36 +442,6 @@ properties:
 
 This event only concerns the currently-playing
 [Period](../Getting_Started/Glossary.md).
-
-<div class="warning">
-This event is not sent in <i>DirectFile</i> mode (see
-<a href="./Loading_a_Content.md#transport">transport option</a>)
-</div>
-
-
-## Bitrate selection events
-
-This chapter describes events linked to audio and/or video bitrates and quality.
-
-### bitrateEstimationChange
-
-_payload type_: `Object`
-
-Information about the last bitrate estimation performed, by type of buffer
-(`audio`, `video` etc.).
-
-Note that this event is sent only if the corresponding buffer type has multiple
-[Representations](../Getting_Started/Glossary.md#representation) for the given content (as bitrate
-estimations are only useful in that case).
-
-The payload is an object with the following properties:
-
-- `type` (`string`): The buffer type
-
-- `bitrate` (`Number`): The last estimated bandwidth for this buffer type,
-  in bits per seconds.
-  This bitrate is smoothed by doing a (complex) mean on an extended period of
-  time, so it often does not link directly to the current calculated bitrate.
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
@@ -594,7 +602,8 @@ Representations instead.
 
 This event is sent strictly before the RxPlayer had the chance to actually load
 those other Representations. You can thus profit from this event by
-synchronously locking only Representations you wish to play.
+synchronously locking Representations you wish to play and thus avoid playing
+the others.
 
 The payload for this event is an object with the following properties:
   - `period` (`Object`): Information about the concerned
@@ -616,6 +625,53 @@ The payload for this event is an object with the following properties:
 
   - `trackType` (`string`): The type of track concerned. Can for example be
     `audio` for audio Representations or `video` for video Representations.
+
+
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.md#transport">transport option</a>)
+</div>
+
+
+### autoTrackSwitch
+
+_payload type_: `Object`
+
+Extremely rare event triggered if a video, audio or text track set for any
+[Period](../Getting_Started/Glossary.md#period) was automatically changed by the
+RxPlayer, due to an unexpected event.
+
+For now this only happens in the extremely rare situation (it was actually never
+seen, but it is possible) where a refreshed content's Manifest would remove the
+previously-chosen track. There, the RxPlayer will send the `autoTrackSwitch`
+event and - if no new track is chosen - will automatically switch to another
+track so playback can continue.
+
+The payload for this event is an object with the following properties:
+  - `trackType` (`string`): The type of track concerned. Can for example be
+    `audio` for an audio track, `video` for a video track or `text` for a text
+    track.
+
+  - `period` (`Object`): Information about the concerned
+    [Period](../Getting_Started/Glossary.md#period). This object contains as
+    properties:
+
+    - `start` (`number`): The starting position at which the Period starts, in
+      seconds.
+
+    - `end` (`number|undefined`): The position at which the Period ends, in
+      seconds.
+
+      `undefined` either if not known or if the Period has no end yet (e.g. for
+      live contents, the end might not be known for now).
+
+    - `id` (`string`): `id` of the Period, allowing to call track and
+      Representation selection APIs (such as `setAudioTrack` and
+      `lockVideoRepresentations` for example) even when the Period changes.
+
+  - `reason` (`string`): The reason for the automatic track switch. For now,
+    can only be `"missing"` indicating that the previously chosen track was
+    missing from the content's refreshed Manifest.
 
 
 <div class="warning">
@@ -732,6 +788,32 @@ tutorial](../Getting_Started/Tutorials/EventStream_Handling.md).
 Note that unlike `streamEvent` events, there's no point to define an `onExit`
 callback on the payload of a `streamEventSkip` event. This is because this event
 was not entered, and will thus not be exited.
+
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.md#transport">transport option</a>)
+</div>
+
+
+### bitrateEstimationChange
+
+_payload type_: `Object`
+
+Information about the last bitrate estimation performed, by type of buffer
+(`audio`, `video` etc.).
+
+Note that this event is sent only if the corresponding buffer type has multiple
+[Representations](../Getting_Started/Glossary.md#representation) for the given content (as bitrate
+estimations are only useful in that case).
+
+The payload is an object with the following properties:
+
+- `type` (`string`): The buffer type
+
+- `bitrate` (`Number`): The last estimated bandwidth for this buffer type,
+  in bits per seconds.
+  This bitrate is smoothed by doing a (complex) mean on an extended period of
+  time, so it often does not link directly to the current calculated bitrate.
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see

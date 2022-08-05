@@ -132,6 +132,9 @@ const audioTracks = rxPlayer.getAvailableAudioTracks();
 const wantedAudioTrack = audioTracks[1];
 rxPlayer.setAudioTrack({
   trackId: wantedAudioTrack.id,
+
+  // "Locking" only the first audio Representation
+  // (it will be the only Representation being played)
   lockedRepresentations: [wantedAudioTrack.representations[0]],
 });
 ```
@@ -143,9 +146,9 @@ call, you can read its documentation page for more information on its behavior.
 
 ### Setting the audio track as soon as possible
 
-It is possible to set the audio track before any other is chosen for that
-Period, by reacting to the `newAvailablePeriods` event:
-
+If you want to set an audio track as soon as possible, for example to choose an
+initial audio track before any other one had time to be loaded, you can
+perform the `setAudioTrack` call on the `newAvailablePeriods` event:
 ```js
 rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
   for (const period of periods) {
@@ -161,9 +164,13 @@ rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
 });
 ```
 
-If the current content was already playing, you can also call the
-`getAvailablePeriods` method to obtain their `id` property and update their
-audio trackss right away:
+This will set the audio track for any future
+[Period](../../Getting_Started/Glossary.md#period) being loaded, including in
+future and not-yet-loaded contents.
+
+If you want to also update the audio track of already-loaded Periods, you can
+also call the `getAvailablePeriods` method to obtain their `id` property and
+update their audio tracks right away:
 
 ```js
 const periods = rxPlayer.getAvailablePeriods();

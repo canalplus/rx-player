@@ -1789,13 +1789,11 @@ if (!_is_node__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z) {
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
-  "XR": function() { return /* binding */ getPageActivityRef; },
   "w0": function() { return /* binding */ getPictureOnPictureStateRef; },
   "it": function() { return /* binding */ getVideoVisibilityRef; },
   "O0": function() { return /* binding */ getVideoWidthRef; },
   "Oh": function() { return /* binding */ onEncrypted$; },
   "C1": function() { return /* binding */ onEnded$; },
-  "Q1": function() { return /* binding */ onFullscreenChange$; },
   "GV": function() { return /* binding */ onKeyAdded$; },
   "Xe": function() { return /* binding */ onKeyError$; },
   "GJ": function() { return /* binding */ onKeyMessage$; },
@@ -1807,11 +1805,10 @@ __webpack_require__.d(__webpack_exports__, {
   "UG": function() { return /* binding */ onSourceClose$; },
   "ep": function() { return /* binding */ onSourceEnded$; },
   "ym": function() { return /* binding */ onSourceOpen$; },
-  "UA": function() { return /* binding */ onTextTrackChanges$; },
   "_E": function() { return /* binding */ onUpdate$; }
 });
 
-// UNUSED EXPORTS: addEventListener, onTimeUpdate$
+// UNUSED EXPORTS: addEventListener, onTextTrackChanges$, onTimeUpdate$
 
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/Observable.js + 1 modules
 var Observable = __webpack_require__(1480);
@@ -1992,46 +1989,6 @@ function getDocumentVisibilityRef(stopListening) {
   return ref;
 }
 /**
- * Returns a reference:
- *   - Set to `true` when the current page is considered visible and active.
- *   - Set to `false` otherwise.
- * @param {Object} stopListening - `CancellationSignal` allowing to free the
- * resources allocated to update this value.
- * @returns {Object}
- */
-
-
-function getPageActivityRef(stopListening) {
-  var isDocVisibleRef = getDocumentVisibilityRef(stopListening);
-  var currentTimeout;
-  var ref = (0,reference/* default */.ZP)(true);
-  stopListening.register(function () {
-    clearTimeout(currentTimeout);
-    currentTimeout = undefined;
-    ref.finish();
-  });
-  isDocVisibleRef.onUpdate(function onDocVisibilityChange(isVisible) {
-    clearTimeout(currentTimeout); // clear potential previous timeout
-
-    currentTimeout = undefined;
-
-    if (!isVisible) {
-      var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
-          INACTIVITY_DELAY = _config$getCurrent.INACTIVITY_DELAY;
-
-      currentTimeout = window.setTimeout(function () {
-        ref.setValueIfChanged(false);
-      }, INACTIVITY_DELAY);
-    }
-
-    ref.setValueIfChanged(true);
-  }, {
-    clearSignal: stopListening,
-    emitCurrentValue: true
-  });
-  return ref;
-}
-/**
  * Get video width from Picture-in-Picture window
  * @param {HTMLMediaElement} mediaElement
  * @param {Object} pipWindow
@@ -2139,8 +2096,8 @@ function getVideoVisibilityRef(pipStatus, stopListening) {
     if (pipStatus.getValue().isEnabled || isDocVisibleRef.getValue()) {
       ref.setValueIfChanged(true);
     } else {
-      var _config$getCurrent2 = config/* default.getCurrent */.Z.getCurrent(),
-          INACTIVITY_DELAY = _config$getCurrent2.INACTIVITY_DELAY;
+      var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+          INACTIVITY_DELAY = _config$getCurrent.INACTIVITY_DELAY;
 
       currentTimeout = window.setTimeout(function () {
         ref.setValueIfChanged(false);
@@ -2235,19 +2192,12 @@ var onEnded$ = compatibleListener(["ended"]);
 
 var onTimeUpdate$ = compatibleListener(["timeupdate"]);
 /**
- * @param {HTMLElement} element
- * @returns {Observable}
- */
-
-var onFullscreenChange$ = compatibleListener(["fullscreenchange", "FullscreenChange"], // On IE11, fullscreen change events is called MSFullscreenChange
-BROWSER_PREFIXES.concat("MS"));
-/**
  * @param {HTMLMediaElement} mediaElement
  * @returns {Observable}
  */
 
 var onTextTrackChanges$ = function onTextTrackChanges$(textTrackList) {
-  return (0,merge/* merge */.T)(compatibleListener(["addtrack"])(textTrackList), compatibleListener(["removetrack"])(textTrackList));
+  return observableMerge(compatibleListener(["addtrack"])(textTrackList), compatibleListener(["removetrack"])(textTrackList));
 };
 /**
  * @param {MediaSource} mediaSource
@@ -2598,17 +2548,6 @@ var DEFAULT_CONFIG = {
   DEFAULT_ENABLE_FAST_SWITCHING: true,
 
   /**
-   * Strategy to adopt when manually switching of audio adaptation.
-   * Can be either:
-   *    - "seamless": transitions are smooth but could be not immediate.
-   *    - "direct": that strategy will perform a very small seek that result
-   *    most of the time by a flush of the current buffered data, by doing
-   *    that we allow quicker transition between audio track, but we could
-   *    see appear a RELOADING or a SEEKING state.
-   */
-  DEFAULT_AUDIO_TRACK_SWITCHING_MODE: "seamless",
-
-  /**
    * In some cases after switching the current track or bitrate, the RxPlayer
    * could be led to go into the `"RELOADING"` state, which corresponds to
    * visually a black screen (with nothing audible) before restarting playback.
@@ -2673,25 +2612,6 @@ var DEFAULT_CONFIG = {
    * @type {Boolean}
    */
   DEFAULT_AUTO_PLAY: false,
-
-  /**
-   * If set to false, "native" subtitles (in a <track> element) will be hidden
-   * by default.
-   * @type {Boolean}
-   */
-  DEFAULT_SHOW_NATIVE_SUBTITLE: true,
-
-  /**
-   * If set to true, the player will by default stop immediately and unload the
-   * content on reaching the end of the media.
-   *
-   * If set to false, it will not unload nor stop by default, leaving the user
-   * free to seek in the already-loaded content.
-   *
-   * Set to `true` for legacy reasons.
-   * @type {Boolean}
-   */
-  DEFAULT_STOP_AT_END: true,
 
   /**
    * Default buffer goal in seconds.
@@ -2770,7 +2690,7 @@ var DEFAULT_CONFIG = {
   DEFAULT_INITIAL_BITRATES: {
     audio: 0,
     video: 0,
-    other: 0 // tracks which are not audio/video (text images).
+    other: 0 // tracks which are not audio/video (like text).
     // Though those are generally at a single bitrate, so no adaptive
     // mechanism is triggered for them.
 
@@ -2831,14 +2751,6 @@ var DEFAULT_CONFIG = {
    * @type {Number}
    */
   INACTIVITY_DELAY: 60 * 1000,
-
-  /**
-   * If true, if the player is in a "hidden" state for a delay specified by the
-   * INACTIVITY DELAY config property, we throttle automatically to the video
-   * representation with the lowest bitrate.
-   * @type {Boolean}
-   */
-  DEFAULT_THROTTLE_WHEN_HIDDEN: false,
 
   /**
    * If true, if the video is considered in a "hidden" state for a delay specified by
@@ -3359,7 +3271,7 @@ var DEFAULT_CONFIG = {
   BUFFER_PADDING: {
     audio: 1,
     video: 3,
-    other: 1 // tracks which are not audio/video (text images).
+    other: 1 // tracks which are not audio/video (like text).
 
   },
 
@@ -3633,7 +3545,7 @@ var DEFAULT_CONFIG = {
 
   /**
    * Maximum duration from the current position we will let in the buffer when
-   * switching an Adaptation of a given type.
+   * switching an Adaptation/Representations of a given type.
    *
    * For example, if we have ``text: { before: 1, after: 4 }``, it means that
    * when switching subtitles, we will let 1 second before and 4 second after
@@ -3643,7 +3555,7 @@ var DEFAULT_CONFIG = {
    * can happen when removing the content being decoded.
    * @type {Object}
    */
-  ADAPTATION_SWITCH_BUFFER_PADDINGS: {
+  ADAP_REP_SWITCH_BUFFER_PADDINGS: {
     video: {
       before: 5,
       after: 5
@@ -3653,10 +3565,6 @@ var DEFAULT_CONFIG = {
       after: 2.5
     },
     text: {
-      before: 0,
-      after: 0
-    },
-    image: {
       before: 0,
       after: 0
     } // not managed natively, so no problem here
@@ -3750,7 +3658,39 @@ var DEFAULT_CONFIG = {
    * the player will free up to in the case we agressively free up memory
    * It is set to avoid playback issues
    */
-  UPTO_CURRENT_POSITION_CLEANUP: 5
+  UPTO_CURRENT_POSITION_CLEANUP: 5,
+
+  /**
+   * Default "switching mode" used when locking video Representations.
+   * That is, which behavior the RxPlayer should have by default when
+   * explicitely and manually switching from a previous set of video
+   * Representations to a new one.
+   */
+  DEFAULT_VIDEO_REPRESENTATIONS_SWITCHING_MODE: "seamless",
+
+  /**
+   * Default "switching mode" used when locking audio Representations.
+   * That is, which behavior the RxPlayer should have by default when
+   * explicitely and manually switching from a previous set of audio
+   * Representations to a new one.
+   */
+  DEFAULT_AUDIO_REPRESENTATIONS_SWITCHING_MODE: "seamless",
+
+  /**
+   * Default "switching mode" used when switching between video tracks.
+   * That is, which behavior the RxPlayer should have by default when
+   * explicitely and manually switching from a previous video track to a new
+   * one.
+   */
+  DEFAULT_VIDEO_TRACK_SWITCHING_MODE: "reload",
+
+  /**
+   * Default "switching mode" used when switching between audio tracks.
+   * That is, which behavior the RxPlayer should have by default when
+   * explicitely and manually switching from a previous audio track to a new
+   * one.
+   */
+  DEFAULT_AUDIO_TRACK_SWITCHING_MODE: "seamless"
 };
 /* harmony default export */ var default_config = (DEFAULT_CONFIG);
 // EXTERNAL MODULE: ./src/utils/object_assign.ts
@@ -3849,17 +3789,18 @@ var configHandler = new ConfigHandler();
 
 /***/ }),
 
-/***/ 7794:
+/***/ 2694:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Z": function() { return /* binding */ MediaElementTrackChoiceManager; }
+/* harmony export */   "Z": function() { return /* binding */ MediaElementTracksStore; }
 /* harmony export */ });
 /* harmony import */ var _babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4578);
-/* harmony import */ var _utils_assert__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(811);
-/* harmony import */ var _utils_event_emitter__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(1959);
-/* harmony import */ var _utils_languages__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(7829);
+/* harmony import */ var _utils_assert__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(811);
+/* harmony import */ var _utils_event_emitter__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(1959);
+/* harmony import */ var _utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(1946);
+/* harmony import */ var _utils_languages__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5288);
 
 
 function _createForOfIteratorHelperLoose(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (it) return (it = it.call(o)).next.bind(it); if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -3883,6 +3824,7 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 
 
 
@@ -4007,22 +3949,19 @@ function createVideoTracks(videoTracks) {
 }
 /**
  * Manage video, audio and text tracks for current direct file content.
- * @class MediaElementTrackChoiceManager
+ * @class MediaElementTracksStore
  */
 
 
-var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
-  (0,_babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .Z)(MediaElementTrackChoiceManager, _EventEmitter);
+var MediaElementTracksStore = /*#__PURE__*/function (_EventEmitter) {
+  (0,_babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .Z)(MediaElementTracksStore, _EventEmitter);
 
-  function MediaElementTrackChoiceManager(mediaElement) {
+  function MediaElementTracksStore(mediaElement) {
     var _this;
 
     var _a, _b, _c;
 
-    _this = _EventEmitter.call(this) || this;
-    _this._preferredAudioTracks = [];
-    _this._preferredTextTracks = [];
-    _this._preferredVideoTracks = []; // TODO In practice, the audio/video/text tracks API are not always implemented on
+    _this = _EventEmitter.call(this) || this; // TODO In practice, the audio/video/text tracks API are not always implemented on
     // the media element, although Typescript HTMLMediaElement types tend to mean
     // that can't be undefined.
 
@@ -4032,63 +3971,13 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
     _this._audioTracks = _this._nativeAudioTracks !== undefined ? createAudioTracks(_this._nativeAudioTracks) : [];
     _this._videoTracks = _this._nativeVideoTracks !== undefined ? createVideoTracks(_this._nativeVideoTracks) : [];
     _this._textTracks = _this._nativeTextTracks !== undefined ? createTextTracks(_this._nativeTextTracks) : [];
-    _this._lastEmittedNativeAudioTrack = (_a = _this._getPrivateChosenAudioTrack()) === null || _a === void 0 ? void 0 : _a.nativeTrack;
-    _this._lastEmittedNativeVideoTrack = (_b = _this._getPrivateChosenVideoTrack()) === null || _b === void 0 ? void 0 : _b.nativeTrack;
-    _this._lastEmittedNativeTextTrack = (_c = _this._getPrivateChosenTextTrack()) === null || _c === void 0 ? void 0 : _c.nativeTrack;
+    _this._lastEmittedNativeAudioTrack = (_a = _this._getCurrentAudioTrack()) === null || _a === void 0 ? void 0 : _a.nativeTrack;
+    _this._lastEmittedNativeVideoTrack = (_b = _this._getCurrentVideoTrack()) === null || _b === void 0 ? void 0 : _b.nativeTrack;
+    _this._lastEmittedNativeTextTrack = (_c = _this._getCurrentTextTrack()) === null || _c === void 0 ? void 0 : _c.nativeTrack;
 
     _this._handleNativeTracksCallbacks();
 
     return _this;
-  }
-  /**
-   * Set the list of preferred audio tracks, in preference order.
-   * @param {Array.<Object>} preferredAudioTracks
-   * @param {boolean} shouldApply - `true` if those preferences should be
-   * applied on the currently loaded Period. `false` if it should only
-   * be applied to new content.
-   */
-
-
-  var _proto = MediaElementTrackChoiceManager.prototype;
-
-  _proto.setPreferredAudioTracks = function setPreferredAudioTracks(preferredAudioTracks, shouldApply) {
-    this._preferredAudioTracks = preferredAudioTracks;
-
-    if (shouldApply) {
-      this._applyAudioPreferences();
-    }
-  }
-  /**
-   * Set the list of preferred text tracks, in preference order.
-   * @param {Array.<Object>} preferredTextTracks
-   * @param {boolean} shouldApply - `true` if those preferences should be
-   * applied on the currently loaded Period. `false` if it should only
-   * be applied to new content.
-   */
-  ;
-
-  _proto.setPreferredTextTracks = function setPreferredTextTracks(preferredTextTracks, shouldApply) {
-    this._preferredTextTracks = preferredTextTracks;
-
-    if (shouldApply) {
-      this._applyTextPreferences();
-    }
-  }
-  /**
-   * Set the list of preferred video tracks, in preference order.
-   * @param {Array.<Object>} preferredVideoTracks
-   * @param {boolean} shouldApply - `true` if those preferences should be
-   * applied on the currently loaded Period. `false` if it should only
-   * be applied to new content.
-   */
-  ;
-
-  _proto.setPreferredVideoTracks = function setPreferredVideoTracks(preferredVideoTracks, shouldApply) {
-    this._preferredVideoTracks = preferredVideoTracks;
-
-    if (shouldApply) {
-      this._applyVideoPreferences();
-    }
   }
   /**
    * Update the currently active audio track by setting the wanted audio track's
@@ -4096,7 +3985,9 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
    * Throws if the wanted audio track is not found.
    * @param {string|number|undefined} id
    */
-  ;
+
+
+  var _proto = MediaElementTracksStore.prototype;
 
   _proto.setAudioTrackById = function setAudioTrackById(id) {
     for (var i = 0; i < this._audioTracks.length; i++) {
@@ -4193,13 +4084,9 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
   ;
 
   _proto.getChosenAudioTrack = function getChosenAudioTrack() {
-    var chosenPrivateAudioTrack = this._getPrivateChosenAudioTrack();
+    var currentAudioTrack = this._getCurrentAudioTrack();
 
-    if (chosenPrivateAudioTrack != null) {
-      return chosenPrivateAudioTrack.track;
-    }
-
-    return chosenPrivateAudioTrack;
+    return (0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .Z)(currentAudioTrack) ? currentAudioTrack : currentAudioTrack.track;
   }
   /**
    * Returns the currently active text track.
@@ -4210,13 +4097,9 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
   ;
 
   _proto.getChosenTextTrack = function getChosenTextTrack() {
-    var chosenPrivateTextTrack = this._getPrivateChosenTextTrack();
+    var currentTextTrack = this._getCurrentTextTrack();
 
-    if (chosenPrivateTextTrack != null) {
-      return chosenPrivateTextTrack.track;
-    }
-
-    return chosenPrivateTextTrack;
+    return (0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .Z)(currentTextTrack) ? currentTextTrack : currentTextTrack.track;
   }
   /**
    * Returns the currently active video track.
@@ -4227,13 +4110,9 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
   ;
 
   _proto.getChosenVideoTrack = function getChosenVideoTrack() {
-    var chosenPrivateVideoTrack = this._getPrivateChosenVideoTrack();
+    var currentVideoTrack = this._getCurrentVideoTrack();
 
-    if (chosenPrivateVideoTrack != null) {
-      return chosenPrivateVideoTrack.track;
-    }
-
-    return chosenPrivateVideoTrack;
+    return (0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .Z)(currentVideoTrack) ? currentVideoTrack : currentVideoTrack.track;
   }
   /**
    * Returns a description of every available audio tracks.
@@ -4292,7 +4171,7 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
     });
   }
   /**
-   * Free the resources used by the MediaElementTrackChoiceManager.
+   * Free the resources used by the MediaElementTracksStore.
    */
   ;
 
@@ -4325,7 +4204,7 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
    */
   ;
 
-  _proto._getPrivateChosenAudioTrack = function _getPrivateChosenAudioTrack() {
+  _proto._getCurrentAudioTrack = function _getCurrentAudioTrack() {
     if (this._nativeAudioTracks === undefined) {
       return undefined;
     }
@@ -4348,7 +4227,7 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
    */
   ;
 
-  _proto._getPrivateChosenVideoTrack = function _getPrivateChosenVideoTrack() {
+  _proto._getCurrentVideoTrack = function _getCurrentVideoTrack() {
     if (this._nativeVideoTracks === undefined) {
       return undefined;
     }
@@ -4371,7 +4250,7 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
    */
   ;
 
-  _proto._getPrivateChosenTextTrack = function _getPrivateChosenTextTrack() {
+  _proto._getCurrentTextTrack = function _getCurrentTextTrack() {
     if (this._nativeTextTracks === undefined) {
       return undefined;
     }
@@ -4389,72 +4268,44 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
   /**
    * Iterate over every available audio tracks on the media element and either:
    *   - if the last manually set audio track is found, set that one.
-   *   - if not, set the most preferred one
    *   - if we still do not find an optimal track, let the one chosen by default
    */
   ;
 
-  _proto._setOptimalAudioTrack = function _setOptimalAudioTrack() {
-    // First check if the last set track is available, set it if that's the case
-    if (this._audioTrackLockedOn !== undefined) {
+  _proto._setPreviouslyLockedAudioTrack = function _setPreviouslyLockedAudioTrack() {
+    if (this._audioTrackLockedOn === undefined) {
+      return;
+    } else if (this._audioTrackLockedOn === null) {
       for (var i = 0; i < this._audioTracks.length; i++) {
         var nativeTrack = this._audioTracks[i].nativeTrack;
+        nativeTrack.enabled = false;
+      }
+    } else {
+      for (var _i = 0; _i < this._audioTracks.length; _i++) {
+        var _nativeTrack = this._audioTracks[_i].nativeTrack;
 
-        if (nativeTrack === this._audioTrackLockedOn) {
-          this._enableAudioTrackFromIndex(i);
+        if (_nativeTrack === this._audioTrackLockedOn) {
+          this._enableAudioTrackFromIndex(_i);
 
           return;
         }
       }
     }
-
-    this._applyAudioPreferences();
-  }
-  /**
-   * Try to find a track corresponding to the audio track preferences:
-   *   - if found, set it as the active track
-   *   - if not found, let the chosen audio track by default
-   */
-  ;
-
-  _proto._applyAudioPreferences = function _applyAudioPreferences() {
-    // Re-set the last manually set audio track
-    this._audioTrackLockedOn = undefined;
-    var preferredAudioTracks = this._preferredAudioTracks;
-
-    for (var i = 0; i < preferredAudioTracks.length; i++) {
-      var track = preferredAudioTracks[i];
-
-      if (track !== null && track.language !== undefined) {
-        var normalized = (0,_utils_languages__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .ZP)(track.language);
-
-        for (var j = 0; j < this._audioTracks.length; j++) {
-          var audioTrack = this._audioTracks[j];
-
-          if (audioTrack.track.normalized === normalized && audioTrack.track.audioDescription === track.audioDescription) {
-            this._enableAudioTrackFromIndex(j);
-
-            return;
-          }
-        }
-      }
-    } // else just let the default one instead
-
   }
   /**
    * Iterate over every available text tracks on the media element and either:
    *   - if the last manually set text track is found, set that one.
-   *   - if not, set the most preferred one
    *   - if we still do not find an optimal track, just disable it.
    */
   ;
 
-  _proto._setOptimalTextTrack = function _setOptimalTextTrack() {
-    // First check if the last set track is available, set it if that's the case
-    if (this._textTrackLockedOn === null) {
+  _proto._setPreviouslyLockedTextTrack = function _setPreviouslyLockedTextTrack() {
+    if (this._textTrackLockedOn === undefined) {
+      return;
+    } else if (this._textTrackLockedOn === null) {
       disableTextTracks(this._textTracks);
       return;
-    } else if (this._textTrackLockedOn !== undefined) {
+    } else {
       for (var i = 0; i < this._textTracks.length; i++) {
         var nativeTrack = this._textTracks[i].nativeTrack;
 
@@ -4469,66 +4320,22 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
           return;
         }
       }
-    } // Else set the preferred one
-
-
-    this._applyTextPreferences();
-  }
-  /**
-   * Try to find a track corresponding to the text track preferences:
-   *   - if found, set it as the active track
-   *   - if not found, let the chosen text track by default
-   */
-  ;
-
-  _proto._applyTextPreferences = function _applyTextPreferences() {
-    // Re-set the last manually set audio track
-    this._textTrackLockedOn = undefined;
-    var preferredTextTracks = this._preferredTextTracks;
-
-    for (var i = 0; i < preferredTextTracks.length; i++) {
-      var track = preferredTextTracks[i];
-
-      if (track === null) {
-        disableTextTracks(this._textTracks);
-        return;
-      }
-
-      var normalized = (0,_utils_languages__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .ZP)(track.language);
-
-      for (var j = 0; j < this._textTracks.length; j++) {
-        var textTrack = this._textTracks[j];
-
-        if (textTrack.track.normalized === normalized && textTrack.track.closedCaption === track.closedCaption) {
-          // disable the rest
-          disableAllTextTracksBut(this._textTracks, textTrack.nativeTrack);
-
-          if (textTrack.nativeTrack.mode !== "showing") {
-            textTrack.nativeTrack.mode = "showing";
-          }
-
-          return;
-        }
-      }
-    } // Else just disable text tracks
-
-
-    disableTextTracks(this._textTracks);
+    }
   }
   /**
    * Iterate over every available video tracks on the media element and either:
    *   - if the last manually set video track is found, set that one.
-   *   - if not, set the most preferred one
    *   - if we still do not find an optimal track, let the one chosen by default
    */
   ;
 
-  _proto._setOptimalVideoTrack = function _setOptimalVideoTrack() {
-    // 1. first check if the last set track is available, set it if that's the case
-    if (this._videoTrackLockedOn === null) {
+  _proto._setPreviouslyLockedVideoTrack = function _setPreviouslyLockedVideoTrack() {
+    if (this._videoTrackLockedOn === undefined) {
+      return;
+    } else if (this._videoTrackLockedOn === null) {
       disableVideoTracks(this._videoTracks);
       return;
-    } else if (this._videoTrackLockedOn !== undefined) {
+    } else {
       for (var i = 0; i < this._videoTracks.length; i++) {
         var nativeTrack = this._videoTracks[i].nativeTrack;
 
@@ -4537,37 +4344,7 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
           return;
         }
       }
-    } // Else set the preferred one
-
-
-    this._applyVideoPreferences();
-  }
-  /**
-   * Try to find a track corresponding to the text track preferences:
-   *   - if found, set it as the active track
-   *   - if not found, let the chosen text track by default
-   */
-  ;
-
-  _proto._applyVideoPreferences = function _applyVideoPreferences() {
-    // Re-set the last manually set video track
-    this._videoTrackLockedOn = undefined; // NOTE: As we cannot access either codec information or sign interpretation
-    // information easily about the different codecs. It is the same case than
-    // if we had only tracks where those were set to undefined.
-    // Based on that, we should disable the video track as long as one of the
-    // set preferrence is "no video track" (i.e. `null`) as this is the only
-    // constraint that we know we can respect.
-    // Else, just chose the first track.
-
-    var preferredVideoTracks = this._preferredVideoTracks;
-    var hasNullPreference = preferredVideoTracks.some(function (p) {
-      return p === null;
-    });
-
-    if (hasNullPreference) {
-      disableVideoTracks(this._videoTracks);
-    } // else just let the default one instead
-
+    }
   }
   /**
    * Monitor native tracks add, remove and change callback and trigger the
@@ -4588,11 +4365,11 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
           if (areTrackArraysDifferent(_this2._audioTracks, newAudioTracks)) {
             _this2._audioTracks = newAudioTracks;
 
-            _this2._setOptimalAudioTrack();
+            _this2._setPreviouslyLockedAudioTrack();
 
             _this2.trigger("availableAudioTracksChange", _this2.getAvailableAudioTracks());
 
-            var chosenAudioTrack = _this2._getPrivateChosenAudioTrack();
+            var chosenAudioTrack = _this2._getCurrentAudioTrack();
 
             if ((chosenAudioTrack === null || chosenAudioTrack === void 0 ? void 0 : chosenAudioTrack.nativeTrack) !== _this2._lastEmittedNativeAudioTrack) {
               _this2.trigger("audioTrackChange", (_a = chosenAudioTrack === null || chosenAudioTrack === void 0 ? void 0 : chosenAudioTrack.track) !== null && _a !== void 0 ? _a : null);
@@ -4614,7 +4391,7 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
 
             _this2.trigger("availableAudioTracksChange", _this2.getAvailableAudioTracks());
 
-            var chosenAudioTrack = _this2._getPrivateChosenAudioTrack();
+            var chosenAudioTrack = _this2._getCurrentAudioTrack();
 
             if ((chosenAudioTrack === null || chosenAudioTrack === void 0 ? void 0 : chosenAudioTrack.nativeTrack) !== _this2._lastEmittedNativeAudioTrack) {
               _this2.trigger("audioTrackChange", (_a = chosenAudioTrack === null || chosenAudioTrack === void 0 ? void 0 : chosenAudioTrack.track) !== null && _a !== void 0 ? _a : null);
@@ -4664,11 +4441,11 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
           if (areTrackArraysDifferent(_this2._textTracks, newTextTracks)) {
             _this2._textTracks = newTextTracks;
 
-            _this2._setOptimalTextTrack();
+            _this2._setPreviouslyLockedTextTrack();
 
             _this2.trigger("availableTextTracksChange", _this2.getAvailableTextTracks());
 
-            var chosenTextTrack = _this2._getPrivateChosenTextTrack();
+            var chosenTextTrack = _this2._getCurrentTextTrack();
 
             if ((chosenTextTrack === null || chosenTextTrack === void 0 ? void 0 : chosenTextTrack.nativeTrack) !== _this2._lastEmittedNativeTextTrack) {
               _this2.trigger("textTrackChange", (_a = chosenTextTrack === null || chosenTextTrack === void 0 ? void 0 : chosenTextTrack.track) !== null && _a !== void 0 ? _a : null);
@@ -4688,11 +4465,11 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
           if (areTrackArraysDifferent(_this2._textTracks, newTextTracks)) {
             _this2._textTracks = newTextTracks;
 
-            _this2._setOptimalTextTrack();
+            _this2._setPreviouslyLockedTextTrack();
 
             _this2.trigger("availableTextTracksChange", _this2.getAvailableTextTracks());
 
-            var chosenTextTrack = _this2._getPrivateChosenTextTrack();
+            var chosenTextTrack = _this2._getCurrentTextTrack();
 
             if ((chosenTextTrack === null || chosenTextTrack === void 0 ? void 0 : chosenTextTrack.nativeTrack) !== _this2._lastEmittedNativeTextTrack) {
               _this2.trigger("textTrackChange", (_a = chosenTextTrack === null || chosenTextTrack === void 0 ? void 0 : chosenTextTrack.track) !== null && _a !== void 0 ? _a : null);
@@ -4742,11 +4519,11 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
           if (areTrackArraysDifferent(_this2._videoTracks, newVideoTracks)) {
             _this2._videoTracks = newVideoTracks;
 
-            _this2._setOptimalVideoTrack();
+            _this2._setPreviouslyLockedVideoTrack();
 
             _this2.trigger("availableVideoTracksChange", _this2.getAvailableVideoTracks());
 
-            var chosenVideoTrack = _this2._getPrivateChosenVideoTrack();
+            var chosenVideoTrack = _this2._getCurrentVideoTrack();
 
             if ((chosenVideoTrack === null || chosenVideoTrack === void 0 ? void 0 : chosenVideoTrack.nativeTrack) !== _this2._lastEmittedNativeVideoTrack) {
               _this2.trigger("videoTrackChange", (_a = chosenVideoTrack === null || chosenVideoTrack === void 0 ? void 0 : chosenVideoTrack.track) !== null && _a !== void 0 ? _a : null);
@@ -4766,11 +4543,11 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
           if (areTrackArraysDifferent(_this2._videoTracks, newVideoTracks)) {
             _this2._videoTracks = newVideoTracks;
 
-            _this2._setOptimalVideoTrack();
+            _this2._setPreviouslyLockedVideoTrack();
 
             _this2.trigger("availableVideoTracksChange", _this2.getAvailableVideoTracks());
 
-            var chosenVideoTrack = _this2._getPrivateChosenVideoTrack();
+            var chosenVideoTrack = _this2._getCurrentVideoTrack();
 
             if ((chosenVideoTrack === null || chosenVideoTrack === void 0 ? void 0 : chosenVideoTrack.nativeTrack) !== _this2._lastEmittedNativeVideoTrack) {
               _this2.trigger("videoTrackChange", (_a = chosenVideoTrack === null || chosenVideoTrack === void 0 ? void 0 : chosenVideoTrack.track) !== null && _a !== void 0 ? _a : null);
@@ -4818,7 +4595,7 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
   ;
 
   _proto._enableAudioTrackFromIndex = function _enableAudioTrackFromIndex(index) {
-    (0,_utils_assert__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .Z)(index < this._audioTracks.length); // Seen on Safari MacOS only (2022-02-14), not disabling ALL audio tracks
+    (0,_utils_assert__WEBPACK_IMPORTED_MODULE_3__/* ["default"] */ .Z)(index < this._audioTracks.length); // Seen on Safari MacOS only (2022-02-14), not disabling ALL audio tracks
     // first (even the wanted one), can lead to the media not playing.
 
     for (var _iterator = _createForOfIteratorHelperLoose(this._audioTracks), _step; !(_step = _iterator()).done;) {
@@ -4830,8 +4607,8 @@ var MediaElementTrackChoiceManager = /*#__PURE__*/function (_EventEmitter) {
     return;
   };
 
-  return MediaElementTrackChoiceManager;
-}(_utils_event_emitter__WEBPACK_IMPORTED_MODULE_3__/* ["default"] */ .Z);
+  return MediaElementTracksStore;
+}(_utils_event_emitter__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .Z);
 /**
  * Disable all text track elements in the given array from showing.
  * @param {Array.<Object>} textTracks
@@ -6221,15 +5998,14 @@ var EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES = 100;
  * Load a persistent session, based on its `sessionId`, on the given
  * MediaKeySession.
  *
- * Returns an Observable which emits:
- *   - true if the persistent MediaKeySession was found and loaded
- *   - false if no persistent MediaKeySession was found with that `sessionId`.
- * Then completes.
+ * Returns a Promise which resolves with:
+ *   - `true` if the persistent MediaKeySession was found and loaded
+ *   - `false` if no persistent MediaKeySession was found with that `sessionId`.
  *
- * The Observable throws if anything goes wrong in the process.
+ * The Promise rejects if anything goes wrong in the process.
  * @param {MediaKeySession} session
  * @param {string} sessionId
- * @returns {Observable}
+ * @returns {Promise.<boolean>}
  */
 
 function loadSession(_x, _x2) {
@@ -12174,190 +11950,6 @@ function updatePlaybackRate(mediaElement, speed, observation$) {
 
 /***/ }),
 
-/***/ 7127:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-
-// EXPORTS
-__webpack_require__.d(__webpack_exports__, {
-  "Z": function() { return /* binding */ implementations_image; }
-});
-
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/inheritsLoose.js
-var inheritsLoose = __webpack_require__(4578);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/defer.js
-var defer = __webpack_require__(9917);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/of.js
-var of = __webpack_require__(2817);
-// EXTERNAL MODULE: ./src/log.ts + 1 modules
-var log = __webpack_require__(3887);
-// EXTERNAL MODULE: ./src/core/segment_buffers/implementations/types.ts + 3 modules
-var types = __webpack_require__(9612);
-// EXTERNAL MODULE: ./src/core/segment_buffers/implementations/utils/manual_time_ranges.ts
-var manual_time_ranges = __webpack_require__(4309);
-;// CONCATENATED MODULE: ./src/core/segment_buffers/implementations/image/image_segment_buffer.ts
-
-
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
-
-/**
- * Image SegmentBuffer implementation.
- * @class ImageSegmentBuffer
- */
-
-var ImageSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
-  (0,inheritsLoose/* default */.Z)(ImageSegmentBuffer, _SegmentBuffer);
-
-  function ImageSegmentBuffer() {
-    var _this;
-
-    log/* default.debug */.Z.debug("ISB: Creating ImageSegmentBuffer");
-    _this = _SegmentBuffer.call(this) || this;
-    _this.bufferType = "image";
-    _this._buffered = new manual_time_ranges/* default */.Z();
-    return _this;
-  }
-  /**
-   * @param {Object} data
-   */
-
-
-  var _proto = ImageSegmentBuffer.prototype;
-
-  _proto.pushChunk = function pushChunk(infos) {
-    var _this2 = this;
-
-    return (0,defer/* defer */.P)(function () {
-      var _a, _b;
-
-      log/* default.debug */.Z.debug("ISB: appending new data.");
-
-      if (infos.data.chunk === null) {
-        return (0,of.of)(undefined);
-      }
-
-      var _infos$data = infos.data,
-          appendWindow = _infos$data.appendWindow,
-          chunk = _infos$data.chunk; // The following check is ugly. I don't care, the image buffer is there
-      // due to an ugly deprecated API that will soon disappear
-
-      var start = chunk.start,
-          end = chunk.end,
-          timescale = chunk.timescale;
-      var appendWindowStart = (_a = appendWindow[0]) !== null && _a !== void 0 ? _a : 0;
-      var appendWindowEnd = (_b = appendWindow[1]) !== null && _b !== void 0 ? _b : Infinity;
-      var timescaledStart = start / timescale;
-      var timescaledEnd = end / timescale;
-      var startTime = Math.max(appendWindowStart, timescaledStart);
-      var endTime = Math.min(appendWindowEnd, timescaledEnd);
-
-      _this2._buffered.insert(startTime, endTime);
-
-      if (infos.inventoryInfos !== null) {
-        _this2._segmentInventory.insertChunk(infos.inventoryInfos);
-      }
-
-      return (0,of.of)(undefined);
-    });
-  }
-  /**
-   * @param {Number} from
-   * @param {Number} to
-   */
-  ;
-
-  _proto.removeBuffer = function removeBuffer(start, end) {
-    return (0,defer/* defer */.P)(function () {
-      log/* default.info */.Z.info("ISB: ignored image data remove order", start, end); // Logic removed as it caused more problems than it resolved:
-      // Image thumbnails are always downloaded as a single BIF file, meaning that
-      // any removing might necessitate to re-load the whole file in the future
-      // which seems pointless.
-      // In any case, image handling through the regular RxPlayer APIs has been
-      // completely deprecated now for several reasons, and should disappear in
-      // the next major version.
-
-      return (0,of.of)(undefined);
-    });
-  }
-  /**
-   * Indicate that every chunks from a Segment has been given to pushChunk so
-   * far.
-   * This will update our internal Segment inventory accordingly.
-   * The returned Observable will emit and complete successively once the whole
-   * segment has been pushed and this indication is acknowledged.
-   * @param {Object} infos
-   * @returns {Observable}
-   */
-  ;
-
-  _proto.endOfSegment = function endOfSegment(_infos) {
-    var _this3 = this;
-
-    return (0,defer/* defer */.P)(function () {
-      _this3._segmentInventory.completeSegment(_infos, _this3._buffered);
-
-      return (0,of.of)(undefined);
-    });
-  }
-  /**
-   * Returns the currently buffered data, in a TimeRanges object.
-   * @returns {TimeRanges}
-   */
-  ;
-
-  _proto.getBufferedRanges = function getBufferedRanges() {
-    return this._buffered;
-  };
-
-  _proto.dispose = function dispose() {
-    log/* default.debug */.Z.debug("ISB: disposing image SegmentBuffer");
-
-    this._buffered.remove(0, Infinity);
-  };
-
-  return ImageSegmentBuffer;
-}(types/* SegmentBuffer */.C);
-
-
-;// CONCATENATED MODULE: ./src/core/segment_buffers/implementations/image/index.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/* harmony default export */ var implementations_image = (ImageSegmentBuffer);
-
-/***/ }),
-
 /***/ 5192:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
@@ -13637,13 +13229,11 @@ var browser_detection = __webpack_require__(3666);
  *     undefined if no trackElement was added.
  *
  * @param {HTMLMediaElement} mediaElement
- * @param {Boolean} hidden - If `true`, the text track will be hidden by
- * default. If `false`, the text track will be directly showing.
  * @returns {Object}
  */
 
-function addTextTrack(mediaElement, hidden) {
-  var _a, _b;
+function addTextTrack(mediaElement) {
+  var _a;
 
   var track;
   var trackElement;
@@ -13652,13 +13242,13 @@ function addTextTrack(mediaElement, hidden) {
   if (browser_detection/* isIEOrEdge */.YM) {
     var tracksLength = mediaElement.textTracks.length;
     track = tracksLength > 0 ? mediaElement.textTracks[tracksLength - 1] : mediaElement.addTextTrack(kind);
-    track.mode = hidden ? (_a = track.HIDDEN) !== null && _a !== void 0 ? _a : "hidden" : (_b = track.SHOWING) !== null && _b !== void 0 ? _b : "showing";
+    track.mode = (_a = track.SHOWING) !== null && _a !== void 0 ? _a : "showing";
   } else {
     trackElement = document.createElement("track");
     mediaElement.appendChild(trackElement);
     track = trackElement.track;
     trackElement.kind = kind;
-    track.mode = hidden ? "hidden" : "showing";
+    track.mode = "showing";
   }
 
   return {
@@ -13823,15 +13413,14 @@ var NativeTextSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
 
   /**
    * @param {HTMLMediaElement} videoElement
-   * @param {Boolean} hideNativeSubtitle
    */
-  function NativeTextSegmentBuffer(videoElement, hideNativeSubtitle) {
+  function NativeTextSegmentBuffer(videoElement) {
     var _this;
 
     log/* default.debug */.Z.debug("NTSB: Creating NativeTextSegmentBuffer");
     _this = _SegmentBuffer.call(this) || this;
 
-    var _addTextTrack = addTextTrack(videoElement, hideNativeSubtitle),
+    var _addTextTrack = addTextTrack(videoElement),
         track = _addTextTrack.track,
         trackElement = _addTextTrack.trackElement;
 
@@ -15199,6 +14788,7 @@ function prettyPrintInventory(inventory) {
  */
 
 /* harmony default export */ var inventory = (SegmentInventory);
+
 ;// CONCATENATED MODULE: ./src/core/segment_buffers/implementations/types.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -15568,21 +15158,23 @@ var EVENTS = {
       }
     };
   },
-  periodStreamReady: function periodStreamReady(type, period, adaptation$) {
+  periodStreamReady: function periodStreamReady(type, manifest, period, adaptation$) {
     return {
       type: "periodStreamReady",
       value: {
         type: type,
+        manifest: manifest,
         period: period,
         adaptation$: adaptation$
       }
     };
   },
-  periodStreamCleared: function periodStreamCleared(type, period) {
+  periodStreamCleared: function periodStreamCleared(type, manifest, period) {
     return {
       type: "periodStreamCleared",
       value: {
         type: type,
+        manifest: manifest,
         period: period
       }
     };
@@ -16109,7 +15701,6 @@ var NetworkError = /*#__PURE__*/function (_Error) {
     Object.setPrototypeOf((0,_babel_runtime_helpers_assertThisInitialized__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .Z)(_this), NetworkError.prototype);
     _this.name = "NetworkError";
     _this.type = _error_codes__WEBPACK_IMPORTED_MODULE_2__/* .ErrorTypes.NETWORK_ERROR */ .ZB.NETWORK_ERROR;
-    _this.xhr = baseError.xhr === undefined ? null : baseError.xhr;
     _this.url = baseError.url;
     _this.status = baseError.status;
     _this.errorType = baseError.type;
@@ -16248,11 +15839,11 @@ var RequestError = /*#__PURE__*/function (_Error) {
   (0,_babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z)(RequestError, _Error);
 
   /**
-   * @param {XMLHttpRequest} xhr
    * @param {string} url
+   * @param {number} status
    * @param {string} type
    */
-  function RequestError(url, status, type, xhr) {
+  function RequestError(url, status, type) {
     var _this;
 
     _this = _Error.call(this) || this; // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
@@ -16260,11 +15851,6 @@ var RequestError = /*#__PURE__*/function (_Error) {
     Object.setPrototypeOf((0,_babel_runtime_helpers_assertThisInitialized__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .Z)(_this), RequestError.prototype);
     _this.name = "RequestError";
     _this.url = url;
-
-    if (xhr !== undefined) {
-      _this.xhr = xhr;
-    }
-
     _this.status = status;
     _this.type = type;
     _this.message = type;
@@ -16311,8 +15897,6 @@ var features = {
   ContentDecryptor: null,
   htmlTextTracksBuffer: null,
   htmlTextTracksParsers: {},
-  imageBuffer: null,
-  imageParser: null,
   nativeTextTracksBuffer: null,
   nativeTextTracksParsers: {},
   transports: {}
@@ -16492,7 +16076,7 @@ var logger = new Logger();
 
 /***/ }),
 
-/***/ 8999:
+/***/ 9665:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -16507,56 +16091,8 @@ __webpack_require__.d(__webpack_exports__, {
 var array_find = __webpack_require__(3274);
 // EXTERNAL MODULE: ./src/utils/is_null_or_undefined.ts
 var is_null_or_undefined = __webpack_require__(1946);
-// EXTERNAL MODULE: ./src/utils/languages/index.ts
-var languages = __webpack_require__(7829);
-;// CONCATENATED MODULE: ./src/utils/uniq.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * Uniq implementation by combining a filter and an indexOf.
- * @param {Array.<*>} arr
- * @returns {Array.<*>}
- */
-function uniqFromFilter(arr) {
-  return arr.filter(function (val, i, self) {
-    return self.indexOf(val) === i;
-  });
-}
-/**
- * Uniq implementation by using the Set browser API.
- * @param {Array.<*>} arr
- * @returns {Array.<*>}
- */
-
-
-function uniqFromSet(arr) {
-  return Array.from(new Set(arr));
-}
-/**
- * Returns the input array without duplicates values.
- * All values are unique.
- * @param {Array.<*>} arr
- * @returns {Array.<*>}
- */
-
-
-/* harmony default export */ var uniq = (typeof window !== "undefined" && // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-typeof window.Set === "function" && typeof Array.from === "function" ? uniqFromSet : uniqFromFilter);
-
+// EXTERNAL MODULE: ./src/utils/languages/index.ts + 3 modules
+var languages = __webpack_require__(5288);
 // EXTERNAL MODULE: ./src/compat/browser_compatibility_types.ts
 var browser_compatibility_types = __webpack_require__(3774);
 ;// CONCATENATED MODULE: ./src/compat/is_codec_supported.ts
@@ -16801,7 +16337,7 @@ var Representation = /*#__PURE__*/function () {
    */
   ;
 
-  _proto._addProtectionData = function _addProtectionData(initDataType, keyId, data) {
+  _proto.addProtectionData = function addProtectionData(initDataType, keyId, data) {
     var hasUpdatedProtectionData = false;
 
     if (this.contentProtections === undefined) {
@@ -16883,6 +16419,16 @@ var Representation = /*#__PURE__*/function () {
       values: data
     });
     return true;
+  }
+  /**
+   * Returns `true` if this Representation can be played (that is: not
+   * undecipherable and with a supported codec).
+   * @returns {Array.<Representation>}
+   */
+  ;
+
+  _proto.isPlayable = function isPlayable() {
+    return this.isSupported && this.decipherable !== false;
   };
 
   return Representation;
@@ -16909,10 +16455,9 @@ var Representation = /*#__PURE__*/function () {
 
 
 
-
 /** List in an array every possible value for the Adaptation's `type` property. */
 
-var SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text", "image"];
+var SUPPORTED_ADAPTATIONS_TYPE = ["audio", "video", "text"];
 /**
  * Normalized Adaptation structure.
  * An Adaptation describes a single `Track`. For example a specific audio
@@ -16983,7 +16528,15 @@ var Adaptation = /*#__PURE__*/function () {
       var representation = new manifest_representation(argsRepresentations[i], {
         type: this.type
       });
-      var shouldAdd = (0,is_null_or_undefined/* default */.Z)(representationFilter) || representationFilter(representation, {
+      var shouldAdd = (0,is_null_or_undefined/* default */.Z)(representationFilter) || representationFilter({
+        id: representation.id,
+        bitrate: representation.bitrate,
+        codec: representation.codec,
+        height: representation.height,
+        width: representation.width,
+        frameRate: representation.frameRate,
+        hdrInfo: representation.hdrInfo
+      }, {
         bufferType: this.type,
         language: this.language,
         normalizedLanguage: this.normalizedLanguage,
@@ -17011,36 +16564,17 @@ var Adaptation = /*#__PURE__*/function () {
     this.manuallyAdded = isManuallyAdded === true;
   }
   /**
-   * Returns unique bitrate for every Representation in this Adaptation.
-   * @returns {Array.<Number>}
+   * Returns all Representation in this Adaptation that can be played (that is:
+   * not undecipherable and with a supported codec).
+   * @returns {Array.<Representation>}
    */
 
 
   var _proto = Adaptation.prototype;
 
-  _proto.getAvailableBitrates = function getAvailableBitrates() {
-    var bitrates = [];
-
-    for (var i = 0; i < this.representations.length; i++) {
-      var representation = this.representations[i];
-
-      if (representation.decipherable !== false) {
-        bitrates.push(representation.bitrate);
-      }
-    }
-
-    return uniq(bitrates);
-  }
-  /**
-   * Returns all Representation in this Adaptation that can be played (that is:
-   * not undecipherable and with a supported codec).
-   * @returns {Array.<Representation>}
-   */
-  ;
-
   _proto.getPlayableRepresentations = function getPlayableRepresentations() {
     return this.representations.filter(function (rep) {
-      return rep.isSupported && rep.decipherable !== false;
+      return rep.isPlayable();
     });
   }
   /**
@@ -17064,7 +16598,7 @@ var Adaptation = /*#__PURE__*/function () {
 
 /***/ }),
 
-/***/ 1989:
+/***/ 8619:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -17078,8 +16612,6 @@ __webpack_require__.d(__webpack_exports__, {
 
 // EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/inheritsLoose.js
 var inheritsLoose = __webpack_require__(4578);
-// EXTERNAL MODULE: ./src/errors/media_error.ts
-var media_error = __webpack_require__(3714);
 // EXTERNAL MODULE: ./src/utils/array_find.ts
 var array_find = __webpack_require__(3274);
 // EXTERNAL MODULE: ./src/utils/event_emitter.ts
@@ -17088,10 +16620,12 @@ var event_emitter = __webpack_require__(1959);
 var id_generator = __webpack_require__(908);
 // EXTERNAL MODULE: ./src/utils/warn_once.ts
 var warn_once = __webpack_require__(8806);
-// EXTERNAL MODULE: ./src/manifest/adaptation.ts + 3 modules
-var manifest_adaptation = __webpack_require__(8999);
+// EXTERNAL MODULE: ./src/errors/media_error.ts
+var media_error = __webpack_require__(3714);
 // EXTERNAL MODULE: ./src/utils/object_values.ts
 var object_values = __webpack_require__(1679);
+// EXTERNAL MODULE: ./src/manifest/adaptation.ts + 2 modules
+var manifest_adaptation = __webpack_require__(9665);
 ;// CONCATENATED MODULE: ./src/manifest/period.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -17259,157 +16793,6 @@ var Period = /*#__PURE__*/function () {
 }();
 
 
-// EXTERNAL MODULE: ./src/log.ts + 1 modules
-var log = __webpack_require__(3887);
-;// CONCATENATED MODULE: ./src/manifest/representation_index/static.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * Simple RepresentationIndex implementation for static files.
- * @class StaticRepresentationIndex
- */
-
-var StaticRepresentationIndex = /*#__PURE__*/function () {
-  /**
-   * @param {Object} infos
-   */
-  function StaticRepresentationIndex(infos) {
-    this._mediaURLs = infos.media;
-  }
-  /**
-   * Static contents do not have any initialization segments.
-   * Just return null.
-   * @returns {null}
-   */
-
-
-  var _proto = StaticRepresentationIndex.prototype;
-
-  _proto.getInitSegment = function getInitSegment() {
-    return null;
-  }
-  /**
-   * Returns the only Segment available here.
-   * @returns {Array.<Object>}
-   */
-  ;
-
-  _proto.getSegments = function getSegments() {
-    return [{
-      id: "0",
-      isInit: false,
-      number: 0,
-      mediaURLs: [this._mediaURLs],
-      time: 0,
-      end: Number.MAX_VALUE,
-      duration: Number.MAX_VALUE,
-      complete: true,
-      timescale: 1
-    }];
-  }
-  /**
-   * Returns first position in index.
-   * @returns {undefined}
-   */
-  ;
-
-  _proto.getFirstPosition = function getFirstPosition() {
-    return;
-  }
-  /**
-   * Returns last position in index.
-   * @returns {undefined}
-   */
-  ;
-
-  _proto.getLastPosition = function getLastPosition() {
-    return;
-  }
-  /**
-   * Returns false as a static file never need to be refreshed.
-   * @returns {Boolean}
-   */
-  ;
-
-  _proto.shouldRefresh = function shouldRefresh() {
-    return false;
-  }
-  /**
-   * @returns {null}
-   */
-  ;
-
-  _proto.checkDiscontinuity = function checkDiscontinuity() {
-    return null;
-  }
-  /**
-   * @returns {boolean}
-   */
-  ;
-
-  _proto.areSegmentsChronologicallyGenerated = function areSegmentsChronologicallyGenerated() {
-    return true;
-  }
-  /**
-   * Returns true as a static file should never need lose availability.
-   * @returns {Boolean}
-   */
-  ;
-
-  _proto.isSegmentStillAvailable = function isSegmentStillAvailable() {
-    return true;
-  }
-  /**
-   * @returns {Boolean}
-   */
-  ;
-
-  _proto.canBeOutOfSyncError = function canBeOutOfSyncError() {
-    return false;
-  }
-  /**
-   * @returns {Boolean}
-   */
-  ;
-
-  _proto.isFinished = function isFinished() {
-    return true;
-  }
-  /**
-   * @returns {Boolean}
-   */
-  ;
-
-  _proto.isInitialized = function isInitialized() {
-    return true;
-  };
-
-  _proto._replace = function _replace() {
-    log/* default.warn */.Z.warn("Tried to replace a static RepresentationIndex");
-  };
-
-  _proto._update = function _update() {
-    log/* default.warn */.Z.warn("Tried to update a static RepresentationIndex");
-  };
-
-  return StaticRepresentationIndex;
-}();
-
-
 ;// CONCATENATED MODULE: ./src/manifest/types.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -17444,6 +16827,8 @@ var MANIFEST_UPDATE_TYPE;
 
   MANIFEST_UPDATE_TYPE[MANIFEST_UPDATE_TYPE["Partial"] = 1] = "Partial";
 })(MANIFEST_UPDATE_TYPE || (MANIFEST_UPDATE_TYPE = {}));
+// EXTERNAL MODULE: ./src/log.ts + 1 modules
+var log = __webpack_require__(3887);
 // EXTERNAL MODULE: ./src/utils/array_find_index.ts
 var array_find_index = __webpack_require__(5138);
 ;// CONCATENATED MODULE: ./src/manifest/update_period_in_place.ts
@@ -17686,10 +17071,6 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 
 
 
-
-
-
-var generateSupplementaryTrackID = (0,id_generator/* default */.Z)();
 var generateNewManifestId = (0,id_generator/* default */.Z)();
 /**
  * Normalized Manifest structure.
@@ -17729,11 +17110,7 @@ var Manifest = /*#__PURE__*/function (_EventEmitter) {
     var _a;
 
     _this = _EventEmitter.call(this) || this;
-    var _options$supplementar = options.supplementaryTextTracks,
-        supplementaryTextTracks = _options$supplementar === void 0 ? [] : _options$supplementar,
-        _options$supplementar2 = options.supplementaryImageTracks,
-        supplementaryImageTracks = _options$supplementar2 === void 0 ? [] : _options$supplementar2,
-        representationFilter = options.representationFilter,
+    var representationFilter = options.representationFilter,
         manifestUpdateUrl = options.manifestUpdateUrl;
     _this.contentWarnings = [];
     _this.id = generateNewManifestId();
@@ -17771,15 +17148,6 @@ var Manifest = /*#__PURE__*/function (_EventEmitter) {
     _this.suggestedPresentationDelay = parsedManifest.suggestedPresentationDelay;
     _this.availabilityStartTime = parsedManifest.availabilityStartTime;
     _this.publishTime = parsedManifest.publishTime;
-
-    if (supplementaryImageTracks.length > 0) {
-      _this._addSupplementaryImageAdaptations(supplementaryImageTracks);
-    }
-
-    if (supplementaryTextTracks.length > 0) {
-      _this._addSupplementaryTextAdaptations(supplementaryTextTracks);
-    }
-
     return _this;
   }
   /**
@@ -18020,114 +17388,6 @@ var Manifest = /*#__PURE__*/function (_EventEmitter) {
       return wantedId === id;
     });
     /* eslint-enable import/no-deprecated */
-  }
-  /**
-   * Add supplementary image Adaptation(s) to the manifest.
-   * @private
-   * @param {Object|Array.<Object>} imageTracks
-   */
-  ;
-
-  _proto._addSupplementaryImageAdaptations = function _addSupplementaryImageAdaptations(
-  /* eslint-disable import/no-deprecated */
-  imageTracks) {
-    var _this2 = this;
-
-    var _imageTracks = Array.isArray(imageTracks) ? imageTracks : [imageTracks];
-
-    var newImageTracks = _imageTracks.map(function (_ref2) {
-      var mimeType = _ref2.mimeType,
-          url = _ref2.url;
-      var adaptationID = "gen-image-ada-" + generateSupplementaryTrackID();
-      var representationID = "gen-image-rep-" + generateSupplementaryTrackID();
-      var newAdaptation = new manifest_adaptation/* default */.Z({
-        id: adaptationID,
-        type: "image",
-        representations: [{
-          bitrate: 0,
-          id: representationID,
-          mimeType: mimeType,
-          index: new StaticRepresentationIndex({
-            media: url
-          })
-        }]
-      }, {
-        isManuallyAdded: true
-      });
-
-      if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
-        var error = new media_error/* default */.Z("MANIFEST_INCOMPATIBLE_CODECS_ERROR", "An Adaptation contains only incompatible codecs.");
-
-        _this2.contentWarnings.push(error);
-      }
-
-      return newAdaptation;
-    });
-
-    if (newImageTracks.length > 0 && this.periods.length > 0) {
-      var adaptations = this.periods[0].adaptations;
-      adaptations.image = adaptations.image != null ? adaptations.image.concat(newImageTracks) : newImageTracks;
-    }
-  }
-  /**
-   * Add supplementary text Adaptation(s) to the manifest.
-   * @private
-   * @param {Object|Array.<Object>} textTracks
-   */
-  ;
-
-  _proto._addSupplementaryTextAdaptations = function _addSupplementaryTextAdaptations(
-  /* eslint-disable import/no-deprecated */
-  textTracks
-  /* eslint-enable import/no-deprecated */
-  ) {
-    var _this3 = this;
-
-    var _textTracks = Array.isArray(textTracks) ? textTracks : [textTracks];
-
-    var newTextAdaptations = _textTracks.reduce(function (allSubs, _ref3) {
-      var mimeType = _ref3.mimeType,
-          codecs = _ref3.codecs,
-          url = _ref3.url,
-          language = _ref3.language,
-          languages = _ref3.languages,
-          closedCaption = _ref3.closedCaption;
-      var langsToMapOn = language != null ? [language] : languages != null ? languages : [];
-      return allSubs.concat(langsToMapOn.map(function (_language) {
-        var adaptationID = "gen-text-ada-" + generateSupplementaryTrackID();
-        var representationID = "gen-text-rep-" + generateSupplementaryTrackID();
-        var newAdaptation = new manifest_adaptation/* default */.Z({
-          id: adaptationID,
-          type: "text",
-          language: _language,
-          closedCaption: closedCaption,
-          representations: [{
-            bitrate: 0,
-            id: representationID,
-            mimeType: mimeType,
-            codecs: codecs,
-            index: new StaticRepresentationIndex({
-              media: url
-            })
-          }]
-        }, {
-          isManuallyAdded: true
-        });
-
-        if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
-          var error = new media_error/* default */.Z("MANIFEST_INCOMPATIBLE_CODECS_ERROR", "An Adaptation contains only incompatible codecs.");
-
-          _this3.contentWarnings.push(error);
-        }
-
-        return newAdaptation;
-      }));
-    }, []);
-
-    if (newTextAdaptations.length > 0 && this.periods.length > 0) {
-      var adaptations = this.periods[0].adaptations;
-      adaptations.text = adaptations.text != null ? adaptations.text.concat(newTextAdaptations) : newTextAdaptations;
-    }
   }
   /**
    * @param {Object} newManifest
@@ -19550,739 +18810,7 @@ function getKeyIdFromInitSegment(segment) {
 
 /***/ }),
 
-/***/ 3203:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var _utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6968);
-/* harmony import */ var _utils_string_parsing__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3635);
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * /!\ This file is feature-switchable.
- * It always should be imported through the `features` object.
- */
-
-
-/**
- * @param {UInt8Array} buf
- * @returns {Object}
- */
-
-function parseBif(buf) {
-  var pos = 0;
-  var length = buf.length;
-  var fileFormat = (0,_utils_string_parsing__WEBPACK_IMPORTED_MODULE_0__/* .utf8ToStr */ .uR)(buf.subarray(pos + 1, pos + 8));
-  pos += 8;
-
-  if (buf[0] !== 0x89 || fileFormat !== "BIF\r\n\x1A\n") {
-    throw new Error("Invalid BIF file");
-  }
-
-  var minorVersion = buf[pos];
-  pos += 1;
-  var majorVersion = buf[pos];
-  pos += 1;
-  var patchVersion = buf[pos];
-  pos += 1;
-  var increVersion = buf[pos];
-  pos += 1;
-  var version = [minorVersion, majorVersion, patchVersion, increVersion].join(".");
-
-  if (majorVersion > 0) {
-    throw new Error("Unhandled version: " + majorVersion);
-  }
-
-  var imageCount = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .le4toi */ .dN)(buf, pos);
-  pos += 4;
-  var framewiseSeparation = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .le4toi */ .dN)(buf, pos);
-  pos += 4;
-  var format = (0,_utils_string_parsing__WEBPACK_IMPORTED_MODULE_0__/* .utf8ToStr */ .uR)(buf.subarray(pos, pos + 4));
-  pos += 4;
-  var width = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .le2toi */ .qb)(buf, pos);
-  pos += 2;
-  var height = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .le2toi */ .qb)(buf, pos);
-  pos += 2;
-  var aspectRatio = [buf[pos], buf[pos + 1]].join(":");
-  pos += 2;
-  var isVod = buf[pos] === 1; // bytes 0x1F to 0x40 is unused data for now
-
-  pos = 0x40;
-  var thumbs = [];
-
-  if (imageCount === 0) {
-    throw new Error("bif: no images to parse");
-  }
-
-  var index = 0;
-  var previousImageInfo = null;
-
-  while (pos < length) {
-    var currentImageTimestamp = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .le4toi */ .dN)(buf, pos);
-    pos += 4;
-    var currentImageOffset = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .le4toi */ .dN)(buf, pos);
-    pos += 4;
-
-    if (previousImageInfo !== null) {
-      // calculate for index-1
-      var ts = previousImageInfo.timestamp * framewiseSeparation;
-      var duration = framewiseSeparation;
-      var data = buf.slice(previousImageInfo.offset, currentImageOffset);
-      thumbs.push({
-        index: index,
-        duration: duration,
-        ts: ts,
-        data: data
-      });
-      index++;
-    }
-
-    if (currentImageTimestamp === 0xFFFFFFFF) {
-      break;
-    }
-
-    previousImageInfo = {
-      timestamp: currentImageTimestamp,
-      offset: currentImageOffset
-    };
-  }
-
-  return {
-    fileFormat: "BIF",
-    version: version,
-    imageCount: imageCount,
-    timescale: 1000,
-    format: format,
-    width: width,
-    height: height,
-    aspectRatio: aspectRatio,
-    isVod: isVod,
-    thumbs: thumbs
-  };
-}
-
-/* harmony default export */ __webpack_exports__["Z"] = (parseBif);
-
-/***/ }),
-
-/***/ 7403:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Z": function() { return /* binding */ BaseRepresentationIndex; }
-/* harmony export */ });
-/* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(3887);
-/* harmony import */ var _utils_index_helpers__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3911);
-/* harmony import */ var _get_init_segment__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(1915);
-/* harmony import */ var _get_segments_from_timeline__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(6394);
-/* harmony import */ var _tokens__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(4784);
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
-
-
-/**
- * Add a new segment to the index.
- *
- * /!\ Mutate the given index
- * @param {Object} index
- * @param {Object} segmentInfos
- * @returns {Boolean} - true if the segment has been added
- */
-
-function _addSegmentInfos(index, segmentInfos) {
-  if (segmentInfos.timescale !== index.timescale) {
-    var timescale = index.timescale;
-    index.timeline.push({
-      start: segmentInfos.time / segmentInfos.timescale * timescale,
-      duration: segmentInfos.duration / segmentInfos.timescale * timescale,
-      repeatCount: segmentInfos.count === undefined ? 0 : segmentInfos.count,
-      range: segmentInfos.range
-    });
-  } else {
-    index.timeline.push({
-      start: segmentInfos.time,
-      duration: segmentInfos.duration,
-      repeatCount: segmentInfos.count === undefined ? 0 : segmentInfos.count,
-      range: segmentInfos.range
-    });
-  }
-
-  return true;
-}
-
-var BaseRepresentationIndex = /*#__PURE__*/function () {
-  /**
-   * @param {Object} index
-   * @param {Object} context
-   */
-  function BaseRepresentationIndex(index, context) {
-    var _a, _b;
-
-    var periodStart = context.periodStart,
-        periodEnd = context.periodEnd,
-        representationBaseURLs = context.representationBaseURLs,
-        representationId = context.representationId,
-        representationBitrate = context.representationBitrate,
-        isEMSGWhitelisted = context.isEMSGWhitelisted;
-    var timescale = (_a = index.timescale) !== null && _a !== void 0 ? _a : 1;
-    var presentationTimeOffset = index.presentationTimeOffset != null ? index.presentationTimeOffset : 0;
-    var indexTimeOffset = presentationTimeOffset - periodStart * timescale;
-    var urlSources = representationBaseURLs.map(function (b) {
-      return b.url;
-    });
-    var mediaURLs = (0,_tokens__WEBPACK_IMPORTED_MODULE_0__/* .createIndexURLs */ .k6)(urlSources, index.initialization !== undefined ? index.initialization.media : undefined, representationId, representationBitrate); // TODO If indexRange is either undefined or behind the initialization segment
-    // the following logic will not work.
-    // However taking the nth first bytes like `dash.js` does (where n = 1500) is
-    // not straightforward as we would need to clean-up the segment after that.
-    // The following logic corresponds to 100% of tested cases, so good enough for
-    // now.
-
-    var range = index.initialization !== undefined ? index.initialization.range : index.indexRange !== undefined ? [0, index.indexRange[0] - 1] : undefined;
-    this._index = {
-      indexRange: index.indexRange,
-      indexTimeOffset: indexTimeOffset,
-      initialization: {
-        mediaURLs: mediaURLs,
-        range: range
-      },
-      mediaURLs: (0,_tokens__WEBPACK_IMPORTED_MODULE_0__/* .createIndexURLs */ .k6)(urlSources, index.media, representationId, representationBitrate),
-      startNumber: index.startNumber,
-      timeline: (_b = index.timeline) !== null && _b !== void 0 ? _b : [],
-      timescale: timescale
-    };
-    this._scaledPeriodStart = (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_1__/* .toIndexTime */ .gT)(periodStart, this._index);
-    this._scaledPeriodEnd = periodEnd == null ? undefined : (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_1__/* .toIndexTime */ .gT)(periodEnd, this._index);
-    this._isInitialized = this._index.timeline.length > 0;
-    this._isEMSGWhitelisted = isEMSGWhitelisted;
-  }
-  /**
-   * Construct init Segment.
-   * @returns {Object}
-   */
-
-
-  var _proto = BaseRepresentationIndex.prototype;
-
-  _proto.getInitSegment = function getInitSegment() {
-    return (0,_get_init_segment__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .Z)(this._index, this._isEMSGWhitelisted);
-  }
-  /**
-   * Get the list of segments that are currently available from the `from`
-   * position, in seconds, ending `dur` seconds after that position.
-   *
-   * Note that if not already done, you might need to "initialize" the
-   * `BaseRepresentationIndex` first so that the list of available segments
-   * is known.
-   *
-   * @see isInitialized for more information on `BaseRepresentationIndex`
-   * initialization.
-   * @param {Number} from
-   * @param {Number} dur
-   * @returns {Array.<Object>}
-   */
-  ;
-
-  _proto.getSegments = function getSegments(from, dur) {
-    return (0,_get_segments_from_timeline__WEBPACK_IMPORTED_MODULE_3__/* ["default"] */ .Z)(this._index, from, dur, this._isEMSGWhitelisted, this._scaledPeriodEnd);
-  }
-  /**
-   * Returns false as no Segment-Base based index should need to be refreshed.
-   * @returns {Boolean}
-   */
-  ;
-
-  _proto.shouldRefresh = function shouldRefresh() {
-    return false;
-  }
-  /**
-   * Returns first position in index.
-   * @returns {Number|null}
-   */
-  ;
-
-  _proto.getFirstPosition = function getFirstPosition() {
-    var index = this._index;
-
-    if (index.timeline.length === 0) {
-      return null;
-    }
-
-    return (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_1__/* .fromIndexTime */ .zG)(Math.max(this._scaledPeriodStart, index.timeline[0].start), index);
-  }
-  /**
-   * Returns last position in index.
-   * @returns {Number|null}
-   */
-  ;
-
-  _proto.getLastPosition = function getLastPosition() {
-    var _a;
-
-    var timeline = this._index.timeline;
-
-    if (timeline.length === 0) {
-      return null;
-    }
-
-    var lastTimelineElement = timeline[timeline.length - 1];
-    var lastTime = Math.min((0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_1__/* .getIndexSegmentEnd */ .jH)(lastTimelineElement, null, this._scaledPeriodEnd), (_a = this._scaledPeriodEnd) !== null && _a !== void 0 ? _a : Infinity);
-    return (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_1__/* .fromIndexTime */ .zG)(lastTime, this._index);
-  }
-  /**
-   * Segments in a segmentBase scheme should stay available.
-   * @returns {Boolean|undefined}
-   */
-  ;
-
-  _proto.isSegmentStillAvailable = function isSegmentStillAvailable() {
-    return true;
-  }
-  /**
-   * We do not check for discontinuity in SegmentBase-based indexes.
-   * @returns {null}
-   */
-  ;
-
-  _proto.checkDiscontinuity = function checkDiscontinuity() {
-    return null;
-  }
-  /**
-   * `BaseRepresentationIndex` should just already all be generated.
-   * Return `true` as a default value here.
-   * @returns {boolean}
-   */
-  ;
-
-  _proto.areSegmentsChronologicallyGenerated = function areSegmentsChronologicallyGenerated() {
-    return true;
-  }
-  /**
-   * No segment in a `BaseRepresentationIndex` are known initially.
-   * It is only defined generally in an "index segment" that will thus need to
-   * be first loaded and parsed.
-   * Until then, this `BaseRepresentationIndex` is considered as `uninitialized`
-   * (@see isInitialized).
-   *
-   * Once that those information are available, the present
-   * `BaseRepresentationIndex` can be "initialized" by adding that parsed
-   * segment information through this method.
-   * @param {Array.<Object>} indexSegments
-   * @returns {Array.<Object>}
-   */
-  ;
-
-  _proto.initializeIndex = function initializeIndex(indexSegments) {
-    for (var i = 0; i < indexSegments.length; i++) {
-      _addSegmentInfos(this._index, indexSegments[i]);
-    }
-
-    this._isInitialized = true;
-  }
-  /**
-   * Returns `false` as a `BaseRepresentationIndex` should not be dynamic and as
-   * such segments should never fall out-of-sync.
-   * @returns {Boolean}
-   */
-  ;
-
-  _proto.canBeOutOfSyncError = function canBeOutOfSyncError() {
-    return false;
-  }
-  /**
-   * Returns `true` as SegmentBase are not dynamic and as such no new segment
-   * should become available in the future.
-   * @returns {Boolean}
-   */
-  ;
-
-  _proto.isFinished = function isFinished() {
-    return true;
-  }
-  /**
-   * No segment in a `BaseRepresentationIndex` are known initially.
-   * It is only defined generally in an "index segment" that will thus need to
-   * be first loaded and parsed.
-   *
-   * Once the index segment or equivalent has been parsed, the `initializeIndex`
-   * method have to be called with the corresponding segment information so the
-   * `BaseRepresentationIndex` can be considered as "initialized" (and so this
-   * method can return `true`).
-   * Until then this method will return `false` and segments linked to that
-   * Representation may be missing.
-   * @returns {Boolean}
-   */
-  ;
-
-  _proto.isInitialized = function isInitialized() {
-    return this._isInitialized;
-  }
-  /**
-   * Replace in-place this `BaseRepresentationIndex` information by the
-   * information from another one.
-   * @param {Object} newIndex
-   */
-  ;
-
-  _proto._replace = function _replace(newIndex) {
-    this._index = newIndex._index;
-    this._isInitialized = newIndex._isInitialized;
-    this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
-    this._isEMSGWhitelisted = newIndex._isEMSGWhitelisted;
-  };
-
-  _proto._update = function _update() {
-    _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"].error */ .Z.error("Base RepresentationIndex: Cannot update a SegmentList");
-  };
-
-  return BaseRepresentationIndex;
-}();
-
-
-
-/***/ }),
-
-/***/ 1915:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Z": function() { return /* binding */ getInitSegment; }
-/* harmony export */ });
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * Construct init segment for the given index.
- * @param {Object} index
- * @param {function} isEMSGWhitelisted
- * @returns {Object}
- */
-function getInitSegment(index, isEMSGWhitelisted) {
-  var _a;
-
-  var initialization = index.initialization;
-  var privateInfos;
-
-  if (isEMSGWhitelisted !== undefined) {
-    privateInfos = {
-      isEMSGWhitelisted: isEMSGWhitelisted
-    };
-  }
-
-  return {
-    id: "init",
-    isInit: true,
-    time: 0,
-    end: 0,
-    duration: 0,
-    timescale: 1,
-    range: initialization != null ? initialization.range : undefined,
-    indexRange: index.indexRange,
-    mediaURLs: (_a = initialization === null || initialization === void 0 ? void 0 : initialization.mediaURLs) !== null && _a !== void 0 ? _a : null,
-    complete: true,
-    privateInfos: privateInfos,
-    timestampOffset: -(index.indexTimeOffset / index.timescale)
-  };
-}
-
-/***/ }),
-
-/***/ 6394:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Z": function() { return /* binding */ getSegmentsFromTimeline; }
-/* harmony export */ });
-/* harmony import */ var _utils_index_helpers__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3911);
-/* harmony import */ var _tokens__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4784);
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-/**
- * For the given start time and duration of a timeline element, calculate how
- * much this element should be repeated to contain the time given.
- * 0 being the same element, 1 being the next one etc.
- * @param {Number} segmentStartTime
- * @param {Number} segmentDuration
- * @param {Number} wantedTime
- * @returns {Number}
- */
-
-function getWantedRepeatIndex(segmentStartTime, segmentDuration, wantedTime) {
-  var diff = wantedTime - segmentStartTime;
-  return diff > 0 ? Math.floor(diff / segmentDuration) : 0;
-}
-/**
- * Get a list of Segments for the time range wanted.
- * @param {Object} index - index object, constructed by parsing the manifest.
- * @param {number} from - starting timestamp wanted, in seconds
- * @param {number} durationWanted - duration wanted, in seconds
- * @param {function} isEMSGWhitelisted
- * @param {number|undefined} maximumTime
- * @returns {Array.<Object>}
- */
-
-
-function getSegmentsFromTimeline(index, from, durationWanted, isEMSGWhitelisted, maximumTime) {
-  var scaledUp = (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_0__/* .toIndexTime */ .gT)(from, index);
-  var scaledTo = (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_0__/* .toIndexTime */ .gT)(from + durationWanted, index);
-  var timeline = index.timeline,
-      timescale = index.timescale,
-      mediaURLs = index.mediaURLs,
-      startNumber = index.startNumber;
-  var currentNumber = startNumber !== null && startNumber !== void 0 ? startNumber : 1;
-  var segments = [];
-  var timelineLength = timeline.length;
-
-  for (var i = 0; i < timelineLength; i++) {
-    var timelineItem = timeline[i];
-    var duration = timelineItem.duration,
-        start = timelineItem.start,
-        range = timelineItem.range;
-    var repeat = (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_0__/* .calculateRepeat */ .KF)(timelineItem, timeline[i + 1], maximumTime);
-    var complete = index.availabilityTimeComplete !== false || i !== timelineLength - 1 && repeat !== 0;
-    var segmentNumberInCurrentRange = getWantedRepeatIndex(start, duration, scaledUp);
-    var segmentTime = start + segmentNumberInCurrentRange * duration;
-
-    while (segmentTime < scaledTo && segmentNumberInCurrentRange <= repeat) {
-      var segmentNumber = currentNumber + segmentNumberInCurrentRange;
-      var detokenizedURLs = mediaURLs === null ? null : mediaURLs.map((0,_tokens__WEBPACK_IMPORTED_MODULE_1__/* .createDashUrlDetokenizer */ .QB)(segmentTime, segmentNumber));
-      var time = segmentTime - index.indexTimeOffset;
-      var realDuration = duration;
-
-      if (time < 0) {
-        realDuration = duration + time; // Remove from duration the part before `0`
-
-        time = 0;
-      }
-
-      var segment = {
-        id: String(segmentTime),
-        time: time / timescale,
-        end: (time + realDuration) / timescale,
-        duration: realDuration / timescale,
-        isInit: false,
-        range: range,
-        timescale: 1,
-        mediaURLs: detokenizedURLs,
-        number: segmentNumber,
-        timestampOffset: -(index.indexTimeOffset / timescale),
-        complete: complete,
-        privateInfos: {
-          isEMSGWhitelisted: isEMSGWhitelisted
-        }
-      };
-      segments.push(segment); // update segment number and segment time for the next segment
-
-      segmentNumberInCurrentRange++;
-      segmentTime = start + segmentNumberInCurrentRange * duration;
-    }
-
-    if (segmentTime >= scaledTo) {
-      // we reached ``scaledTo``, we're done
-      return segments;
-    }
-
-    currentNumber += repeat + 1;
-  }
-
-  return segments;
-}
-
-/***/ }),
-
-/***/ 4784:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "QB": function() { return /* binding */ createDashUrlDetokenizer; },
-/* harmony export */   "k6": function() { return /* binding */ createIndexURLs; }
-/* harmony export */ });
-/* unused harmony export replaceRepresentationDASHTokens */
-/* harmony import */ var _utils_is_non_empty_string__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6923);
-/* harmony import */ var _utils_resolve_url__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9829);
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-/**
- * Pad with 0 in the left of the given n argument to reach l length
- * @param {Number|string} n
- * @param {Number} l
- * @returns {string}
- */
-
-function padLeftWithZeros(n, l) {
-  var nToString = n.toString();
-
-  if (nToString.length >= l) {
-    return nToString;
-  }
-
-  var arr = new Array(l + 1).join("0") + nToString;
-  return arr.slice(-l);
-}
-/**
- * @param {string|number} replacer
- * @returns {Function}
- */
-
-
-function processFormatedToken(replacer) {
-  return function (_match, _format, widthStr) {
-    var width = (0,_utils_is_non_empty_string__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z)(widthStr) ? parseInt(widthStr, 10) : 1;
-    return padLeftWithZeros(String(replacer), width);
-  };
-}
-/**
- * @param {string} baseURLs
- * @param {string|undefined} media
- * @param {string|undefined} id
- * @param {number|undefined} bitrate
- * @returns {string}
- */
-
-
-function createIndexURLs(baseURLs, media, id, bitrate) {
-  if (baseURLs.length === 0) {
-    return media !== undefined ? [replaceRepresentationDASHTokens(media, id, bitrate)] : null;
-  }
-
-  return baseURLs.map(function (baseURL) {
-    return replaceRepresentationDASHTokens((0,_utils_resolve_url__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .Z)(baseURL, media), id, bitrate);
-  });
-}
-/**
- * Replace "tokens" written in a given path (e.g. $RepresentationID$) by the corresponding
- * infos, taken from the given segment.
- * @param {string} path
- * @param {string|undefined} id
- * @param {number|undefined} bitrate
- * @returns {string}
- */
-
-function replaceRepresentationDASHTokens(path, id, bitrate) {
-  if (path.indexOf("$") === -1) {
-    return path;
-  } else {
-    return path.replace(/\$\$/g, "$").replace(/\$RepresentationID\$/g, String(id)).replace(/\$Bandwidth(\%0(\d+)d)?\$/g, processFormatedToken(bitrate === undefined ? 0 : bitrate));
-  }
-}
-/**
- * Create function allowing to replace "tokens" in a given DASH segment URL
- * (e.g. $Time$, which has to be replaced by the segment's start time) by the
- * right information.
- * @param {number|undefined} time
- * @param {number|undefined} nb
- * @returns {Function}
- */
-
-function createDashUrlDetokenizer(time, nb) {
-  /**
-   * Replace the tokens in the given `url` by the segment information defined
-   * by the outer function.
-   * @param {string} url
-   * @returns {string}
-   *
-   * @throws Error - Throws if we do not have enough data to construct the URL
-   */
-  return function replaceTokensInUrl(url) {
-    if (url.indexOf("$") === -1) {
-      return url;
-    } else {
-      return url.replace(/\$\$/g, "$").replace(/\$Number(\%0(\d+)d)?\$/g, function (_x, _y, widthStr) {
-        if (nb === undefined) {
-          throw new Error("Segment number not defined in a $Number$ scheme");
-        }
-
-        return processFormatedToken(nb)(_x, _y, widthStr);
-      }).replace(/\$Time(\%0(\d+)d)?\$/g, function (_x, _y, widthStr) {
-        if (time === undefined) {
-          throw new Error("Segment time not defined in a $Time$ scheme");
-        }
-
-        return processFormatedToken(time)(_x, _y, widthStr);
-      });
-    }
-  };
-}
-
-/***/ }),
-
-/***/ 4846:
+/***/ 7144:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -20992,8 +19520,8 @@ var ManifestBoundsCalculator = /*#__PURE__*/function () {
 }();
 
 
-// EXTERNAL MODULE: ./src/manifest/adaptation.ts + 3 modules
-var manifest_adaptation = __webpack_require__(8999);
+// EXTERNAL MODULE: ./src/manifest/adaptation.ts + 2 modules
+var manifest_adaptation = __webpack_require__(9665);
 // EXTERNAL MODULE: ./src/utils/array_find_index.ts
 var array_find_index = __webpack_require__(5138);
 // EXTERNAL MODULE: ./src/utils/array_includes.ts
@@ -21100,7 +19628,7 @@ var SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
  * @param {string|null} adaptationMimeType
  * @param {string|null} adaptationCodecs
  * @param {Array.<Object>|null} adaptationRoles
- * @returns {string} - "audio"|"video"|"text"|"image"|"metadata"|"unknown"
+ * @returns {string} - "audio"|"video"|"text"|"metadata"|"unknown"
  */
 
 function inferAdaptationType(representations, adaptationMimeType, adaptationCodecs, adaptationRoles) {
@@ -21109,10 +19637,6 @@ function inferAdaptationType(representations, adaptationMimeType, adaptationCode
 
     if ((0,array_includes/* default */.Z)(manifest_adaptation/* SUPPORTED_ADAPTATIONS_TYPE */.r, topLevel)) {
       return topLevel;
-    }
-
-    if (mimeType === "application/bif") {
-      return "image";
     }
 
     if (mimeType === "application/ttml+xml") {
@@ -21145,9 +19669,6 @@ function inferAdaptationType(representations, adaptationMimeType, adaptationCode
 
       case "vtt":
         return "text";
-
-      case "bif":
-        return "image";
     }
 
     switch (codecs.substring(0, 4)) {
@@ -21273,14 +19794,573 @@ function getWEBMHDRInformation(codecString) {
     colorSpace: colorSpace
   };
 }
-// EXTERNAL MODULE: ./src/parsers/manifest/dash/common/indexes/base.ts
-var base = __webpack_require__(7403);
 // EXTERNAL MODULE: ./src/parsers/manifest/utils/index_helpers.ts
 var index_helpers = __webpack_require__(3911);
-// EXTERNAL MODULE: ./src/parsers/manifest/dash/common/indexes/get_init_segment.ts
-var get_init_segment = __webpack_require__(1915);
-// EXTERNAL MODULE: ./src/parsers/manifest/dash/common/indexes/tokens.ts
-var tokens = __webpack_require__(4784);
+;// CONCATENATED MODULE: ./src/parsers/manifest/dash/common/indexes/get_init_segment.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * Construct init segment for the given index.
+ * @param {Object} index
+ * @param {function} isEMSGWhitelisted
+ * @returns {Object}
+ */
+function get_init_segment_getInitSegment(index, isEMSGWhitelisted) {
+  var _a;
+
+  var initialization = index.initialization;
+  var privateInfos;
+
+  if (isEMSGWhitelisted !== undefined) {
+    privateInfos = {
+      isEMSGWhitelisted: isEMSGWhitelisted
+    };
+  }
+
+  return {
+    id: "init",
+    isInit: true,
+    time: 0,
+    end: 0,
+    duration: 0,
+    timescale: 1,
+    range: initialization != null ? initialization.range : undefined,
+    indexRange: index.indexRange,
+    mediaURLs: (_a = initialization === null || initialization === void 0 ? void 0 : initialization.mediaURLs) !== null && _a !== void 0 ? _a : null,
+    complete: true,
+    privateInfos: privateInfos,
+    timestampOffset: -(index.indexTimeOffset / index.timescale)
+  };
+}
+;// CONCATENATED MODULE: ./src/parsers/manifest/dash/common/indexes/tokens.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+/**
+ * Pad with 0 in the left of the given n argument to reach l length
+ * @param {Number|string} n
+ * @param {Number} l
+ * @returns {string}
+ */
+
+function padLeftWithZeros(n, l) {
+  var nToString = n.toString();
+
+  if (nToString.length >= l) {
+    return nToString;
+  }
+
+  var arr = new Array(l + 1).join("0") + nToString;
+  return arr.slice(-l);
+}
+/**
+ * @param {string|number} replacer
+ * @returns {Function}
+ */
+
+
+function processFormatedToken(replacer) {
+  return function (_match, _format, widthStr) {
+    var width = (0,is_non_empty_string/* default */.Z)(widthStr) ? parseInt(widthStr, 10) : 1;
+    return padLeftWithZeros(String(replacer), width);
+  };
+}
+/**
+ * @param {string} baseURLs
+ * @param {string|undefined} media
+ * @param {string|undefined} id
+ * @param {number|undefined} bitrate
+ * @returns {string}
+ */
+
+
+function createIndexURLs(baseURLs, media, id, bitrate) {
+  if (baseURLs.length === 0) {
+    return media !== undefined ? [replaceRepresentationDASHTokens(media, id, bitrate)] : null;
+  }
+
+  return baseURLs.map(function (baseURL) {
+    return replaceRepresentationDASHTokens((0,resolve_url/* default */.Z)(baseURL, media), id, bitrate);
+  });
+}
+/**
+ * Replace "tokens" written in a given path (e.g. $RepresentationID$) by the corresponding
+ * infos, taken from the given segment.
+ * @param {string} path
+ * @param {string|undefined} id
+ * @param {number|undefined} bitrate
+ * @returns {string}
+ */
+
+function replaceRepresentationDASHTokens(path, id, bitrate) {
+  if (path.indexOf("$") === -1) {
+    return path;
+  } else {
+    return path.replace(/\$\$/g, "$").replace(/\$RepresentationID\$/g, String(id)).replace(/\$Bandwidth(\%0(\d+)d)?\$/g, processFormatedToken(bitrate === undefined ? 0 : bitrate));
+  }
+}
+/**
+ * Create function allowing to replace "tokens" in a given DASH segment URL
+ * (e.g. $Time$, which has to be replaced by the segment's start time) by the
+ * right information.
+ * @param {number|undefined} time
+ * @param {number|undefined} nb
+ * @returns {Function}
+ */
+
+function createDashUrlDetokenizer(time, nb) {
+  /**
+   * Replace the tokens in the given `url` by the segment information defined
+   * by the outer function.
+   * @param {string} url
+   * @returns {string}
+   *
+   * @throws Error - Throws if we do not have enough data to construct the URL
+   */
+  return function replaceTokensInUrl(url) {
+    if (url.indexOf("$") === -1) {
+      return url;
+    } else {
+      return url.replace(/\$\$/g, "$").replace(/\$Number(\%0(\d+)d)?\$/g, function (_x, _y, widthStr) {
+        if (nb === undefined) {
+          throw new Error("Segment number not defined in a $Number$ scheme");
+        }
+
+        return processFormatedToken(nb)(_x, _y, widthStr);
+      }).replace(/\$Time(\%0(\d+)d)?\$/g, function (_x, _y, widthStr) {
+        if (time === undefined) {
+          throw new Error("Segment time not defined in a $Time$ scheme");
+        }
+
+        return processFormatedToken(time)(_x, _y, widthStr);
+      });
+    }
+  };
+}
+;// CONCATENATED MODULE: ./src/parsers/manifest/dash/common/indexes/get_segments_from_timeline.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+/**
+ * For the given start time and duration of a timeline element, calculate how
+ * much this element should be repeated to contain the time given.
+ * 0 being the same element, 1 being the next one etc.
+ * @param {Number} segmentStartTime
+ * @param {Number} segmentDuration
+ * @param {Number} wantedTime
+ * @returns {Number}
+ */
+
+function getWantedRepeatIndex(segmentStartTime, segmentDuration, wantedTime) {
+  var diff = wantedTime - segmentStartTime;
+  return diff > 0 ? Math.floor(diff / segmentDuration) : 0;
+}
+/**
+ * Get a list of Segments for the time range wanted.
+ * @param {Object} index - index object, constructed by parsing the manifest.
+ * @param {number} from - starting timestamp wanted, in seconds
+ * @param {number} durationWanted - duration wanted, in seconds
+ * @param {function} isEMSGWhitelisted
+ * @param {number|undefined} maximumTime
+ * @returns {Array.<Object>}
+ */
+
+
+function getSegmentsFromTimeline(index, from, durationWanted, isEMSGWhitelisted, maximumTime) {
+  var scaledUp = (0,index_helpers/* toIndexTime */.gT)(from, index);
+  var scaledTo = (0,index_helpers/* toIndexTime */.gT)(from + durationWanted, index);
+  var timeline = index.timeline,
+      timescale = index.timescale,
+      mediaURLs = index.mediaURLs,
+      startNumber = index.startNumber;
+  var currentNumber = startNumber !== null && startNumber !== void 0 ? startNumber : 1;
+  var segments = [];
+  var timelineLength = timeline.length;
+
+  for (var i = 0; i < timelineLength; i++) {
+    var timelineItem = timeline[i];
+    var duration = timelineItem.duration,
+        start = timelineItem.start,
+        range = timelineItem.range;
+    var repeat = (0,index_helpers/* calculateRepeat */.KF)(timelineItem, timeline[i + 1], maximumTime);
+    var complete = index.availabilityTimeComplete !== false || i !== timelineLength - 1 && repeat !== 0;
+    var segmentNumberInCurrentRange = getWantedRepeatIndex(start, duration, scaledUp);
+    var segmentTime = start + segmentNumberInCurrentRange * duration;
+
+    while (segmentTime < scaledTo && segmentNumberInCurrentRange <= repeat) {
+      var segmentNumber = currentNumber + segmentNumberInCurrentRange;
+      var detokenizedURLs = mediaURLs === null ? null : mediaURLs.map(createDashUrlDetokenizer(segmentTime, segmentNumber));
+      var time = segmentTime - index.indexTimeOffset;
+      var realDuration = duration;
+
+      if (time < 0) {
+        realDuration = duration + time; // Remove from duration the part before `0`
+
+        time = 0;
+      }
+
+      var segment = {
+        id: String(segmentTime),
+        time: time / timescale,
+        end: (time + realDuration) / timescale,
+        duration: realDuration / timescale,
+        isInit: false,
+        range: range,
+        timescale: 1,
+        mediaURLs: detokenizedURLs,
+        number: segmentNumber,
+        timestampOffset: -(index.indexTimeOffset / timescale),
+        complete: complete,
+        privateInfos: {
+          isEMSGWhitelisted: isEMSGWhitelisted
+        }
+      };
+      segments.push(segment); // update segment number and segment time for the next segment
+
+      segmentNumberInCurrentRange++;
+      segmentTime = start + segmentNumberInCurrentRange * duration;
+    }
+
+    if (segmentTime >= scaledTo) {
+      // we reached ``scaledTo``, we're done
+      return segments;
+    }
+
+    currentNumber += repeat + 1;
+  }
+
+  return segments;
+}
+;// CONCATENATED MODULE: ./src/parsers/manifest/dash/common/indexes/base.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+
+
+/**
+ * Add a new segment to the index.
+ *
+ * /!\ Mutate the given index
+ * @param {Object} index
+ * @param {Object} segmentInfos
+ * @returns {Boolean} - true if the segment has been added
+ */
+
+function _addSegmentInfos(index, segmentInfos) {
+  if (segmentInfos.timescale !== index.timescale) {
+    var timescale = index.timescale;
+    index.timeline.push({
+      start: segmentInfos.time / segmentInfos.timescale * timescale,
+      duration: segmentInfos.duration / segmentInfos.timescale * timescale,
+      repeatCount: segmentInfos.count === undefined ? 0 : segmentInfos.count,
+      range: segmentInfos.range
+    });
+  } else {
+    index.timeline.push({
+      start: segmentInfos.time,
+      duration: segmentInfos.duration,
+      repeatCount: segmentInfos.count === undefined ? 0 : segmentInfos.count,
+      range: segmentInfos.range
+    });
+  }
+
+  return true;
+}
+
+var BaseRepresentationIndex = /*#__PURE__*/function () {
+  /**
+   * @param {Object} index
+   * @param {Object} context
+   */
+  function BaseRepresentationIndex(index, context) {
+    var _a, _b;
+
+    var periodStart = context.periodStart,
+        periodEnd = context.periodEnd,
+        representationBaseURLs = context.representationBaseURLs,
+        representationId = context.representationId,
+        representationBitrate = context.representationBitrate,
+        isEMSGWhitelisted = context.isEMSGWhitelisted;
+    var timescale = (_a = index.timescale) !== null && _a !== void 0 ? _a : 1;
+    var presentationTimeOffset = index.presentationTimeOffset != null ? index.presentationTimeOffset : 0;
+    var indexTimeOffset = presentationTimeOffset - periodStart * timescale;
+    var urlSources = representationBaseURLs.map(function (b) {
+      return b.url;
+    });
+    var mediaURLs = createIndexURLs(urlSources, index.initialization !== undefined ? index.initialization.media : undefined, representationId, representationBitrate); // TODO If indexRange is either undefined or behind the initialization segment
+    // the following logic will not work.
+    // However taking the nth first bytes like `dash.js` does (where n = 1500) is
+    // not straightforward as we would need to clean-up the segment after that.
+    // The following logic corresponds to 100% of tested cases, so good enough for
+    // now.
+
+    var range = index.initialization !== undefined ? index.initialization.range : index.indexRange !== undefined ? [0, index.indexRange[0] - 1] : undefined;
+    this._index = {
+      indexRange: index.indexRange,
+      indexTimeOffset: indexTimeOffset,
+      initialization: {
+        mediaURLs: mediaURLs,
+        range: range
+      },
+      mediaURLs: createIndexURLs(urlSources, index.media, representationId, representationBitrate),
+      startNumber: index.startNumber,
+      timeline: (_b = index.timeline) !== null && _b !== void 0 ? _b : [],
+      timescale: timescale
+    };
+    this._scaledPeriodStart = (0,index_helpers/* toIndexTime */.gT)(periodStart, this._index);
+    this._scaledPeriodEnd = periodEnd == null ? undefined : (0,index_helpers/* toIndexTime */.gT)(periodEnd, this._index);
+    this._isInitialized = this._index.timeline.length > 0;
+    this._isEMSGWhitelisted = isEMSGWhitelisted;
+  }
+  /**
+   * Construct init Segment.
+   * @returns {Object}
+   */
+
+
+  var _proto = BaseRepresentationIndex.prototype;
+
+  _proto.getInitSegment = function getInitSegment() {
+    return get_init_segment_getInitSegment(this._index, this._isEMSGWhitelisted);
+  }
+  /**
+   * Get the list of segments that are currently available from the `from`
+   * position, in seconds, ending `dur` seconds after that position.
+   *
+   * Note that if not already done, you might need to "initialize" the
+   * `BaseRepresentationIndex` first so that the list of available segments
+   * is known.
+   *
+   * @see isInitialized for more information on `BaseRepresentationIndex`
+   * initialization.
+   * @param {Number} from
+   * @param {Number} dur
+   * @returns {Array.<Object>}
+   */
+  ;
+
+  _proto.getSegments = function getSegments(from, dur) {
+    return getSegmentsFromTimeline(this._index, from, dur, this._isEMSGWhitelisted, this._scaledPeriodEnd);
+  }
+  /**
+   * Returns false as no Segment-Base based index should need to be refreshed.
+   * @returns {Boolean}
+   */
+  ;
+
+  _proto.shouldRefresh = function shouldRefresh() {
+    return false;
+  }
+  /**
+   * Returns first position in index.
+   * @returns {Number|null}
+   */
+  ;
+
+  _proto.getFirstPosition = function getFirstPosition() {
+    var index = this._index;
+
+    if (index.timeline.length === 0) {
+      return null;
+    }
+
+    return (0,index_helpers/* fromIndexTime */.zG)(Math.max(this._scaledPeriodStart, index.timeline[0].start), index);
+  }
+  /**
+   * Returns last position in index.
+   * @returns {Number|null}
+   */
+  ;
+
+  _proto.getLastPosition = function getLastPosition() {
+    var _a;
+
+    var timeline = this._index.timeline;
+
+    if (timeline.length === 0) {
+      return null;
+    }
+
+    var lastTimelineElement = timeline[timeline.length - 1];
+    var lastTime = Math.min((0,index_helpers/* getIndexSegmentEnd */.jH)(lastTimelineElement, null, this._scaledPeriodEnd), (_a = this._scaledPeriodEnd) !== null && _a !== void 0 ? _a : Infinity);
+    return (0,index_helpers/* fromIndexTime */.zG)(lastTime, this._index);
+  }
+  /**
+   * Segments in a segmentBase scheme should stay available.
+   * @returns {Boolean|undefined}
+   */
+  ;
+
+  _proto.isSegmentStillAvailable = function isSegmentStillAvailable() {
+    return true;
+  }
+  /**
+   * We do not check for discontinuity in SegmentBase-based indexes.
+   * @returns {null}
+   */
+  ;
+
+  _proto.checkDiscontinuity = function checkDiscontinuity() {
+    return null;
+  }
+  /**
+   * `BaseRepresentationIndex` should just already all be generated.
+   * Return `true` as a default value here.
+   * @returns {boolean}
+   */
+  ;
+
+  _proto.areSegmentsChronologicallyGenerated = function areSegmentsChronologicallyGenerated() {
+    return true;
+  }
+  /**
+   * Returns `false` as a `BaseRepresentationIndex` should not be dynamic and as
+   * such segments should never fall out-of-sync.
+   * @returns {Boolean}
+   */
+  ;
+
+  _proto.canBeOutOfSyncError = function canBeOutOfSyncError() {
+    return false;
+  }
+  /**
+   * Returns `true` as SegmentBase are not dynamic and as such no new segment
+   * should become available in the future.
+   * @returns {Boolean}
+   */
+  ;
+
+  _proto.isFinished = function isFinished() {
+    return true;
+  }
+  /**
+   * No segment in a `BaseRepresentationIndex` are known initially.
+   * It is only defined generally in an "index segment" that will thus need to
+   * be first loaded and parsed.
+   *
+   * Once the index segment or equivalent has been parsed, the `initializeIndex`
+   * method have to be called with the corresponding segment information so the
+   * `BaseRepresentationIndex` can be considered as "initialized" (and so this
+   * method can return `true`).
+   * Until then this method will return `false` and segments linked to that
+   * Representation may be missing.
+   * @returns {Boolean}
+   */
+  ;
+
+  _proto.isInitialized = function isInitialized() {
+    return this._isInitialized;
+  }
+  /**
+   * No segment in a `BaseRepresentationIndex` are known initially.
+   *
+   * It is only defined generally in an "index segment" that will thus need to
+   * be first loaded and parsed.
+   * Until then, this `BaseRepresentationIndex` is considered as `uninitialized`
+   * (@see isInitialized).
+   *
+   * Once that those information are available, the present
+   * `BaseRepresentationIndex` can be "initialized" by adding that parsed
+   * segment information through this method.
+   * @param {Array.<Object>} indexSegments
+   * @returns {Array.<Object>}
+   */
+  ;
+
+  _proto.initialize = function initialize(indexSegments) {
+    if (this._isInitialized) {
+      return;
+    }
+
+    for (var i = 0; i < indexSegments.length; i++) {
+      _addSegmentInfos(this._index, indexSegments[i]);
+    }
+
+    this._isInitialized = true;
+  };
+
+  _proto.addPredictedSegments = function addPredictedSegments() {
+    log/* default.warn */.Z.warn("Cannot add predicted segments to a `BaseRepresentationIndex`");
+  }
+  /**
+   * Replace in-place this `BaseRepresentationIndex` information by the
+   * information from another one.
+   * @param {Object} newIndex
+   */
+  ;
+
+  _proto._replace = function _replace(newIndex) {
+    this._index = newIndex._index;
+    this._isInitialized = newIndex._isInitialized;
+    this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
+    this._isEMSGWhitelisted = newIndex._isEMSGWhitelisted;
+  };
+
+  _proto._update = function _update() {
+    log/* default.error */.Z.error("Base RepresentationIndex: Cannot update a SegmentList");
+  };
+
+  return BaseRepresentationIndex;
+}();
+
+
 ;// CONCATENATED MODULE: ./src/parsers/manifest/dash/common/indexes/list.ts
 /*
  * Copyright 2015 CANAL+ Group
@@ -21331,7 +20411,7 @@ var ListRepresentationIndex = /*#__PURE__*/function () {
     });
     var list = index.list.map(function (lItem) {
       return {
-        mediaURLs: (0,tokens/* createIndexURLs */.k6)(urlSources, lItem.media, representationId, representationBitrate),
+        mediaURLs: createIndexURLs(urlSources, lItem.media, representationId, representationBitrate),
         mediaRange: lItem.mediaRange
       };
     });
@@ -21342,7 +20422,7 @@ var ListRepresentationIndex = /*#__PURE__*/function () {
       indexTimeOffset: indexTimeOffset,
       indexRange: index.indexRange,
       initialization: index.initialization == null ? undefined : {
-        mediaURLs: (0,tokens/* createIndexURLs */.k6)(urlSources, index.initialization.media, representationId, representationBitrate),
+        mediaURLs: createIndexURLs(urlSources, index.initialization.media, representationId, representationBitrate),
         range: index.initialization.range
       }
     };
@@ -21356,7 +20436,7 @@ var ListRepresentationIndex = /*#__PURE__*/function () {
   var _proto = ListRepresentationIndex.prototype;
 
   _proto.getInitSegment = function getInitSegment() {
-    var initSegment = (0,get_init_segment/* default */.Z)(this._index);
+    var initSegment = get_init_segment_getInitSegment(this._index);
 
     if (initSegment.privateInfos === undefined) {
       initSegment.privateInfos = {};
@@ -21367,7 +20447,7 @@ var ListRepresentationIndex = /*#__PURE__*/function () {
   }
   /**
    * @param {Number} fromTime
-   * @param {Number} duration
+   * @param {Number} dur
    * @returns {Array.<Object>}
    */
   ;
@@ -21455,7 +20535,6 @@ var ListRepresentationIndex = /*#__PURE__*/function () {
   /**
    * Returns true if a Segment returned by this index is still considered
    * available.
-   * @param {Object} segment
    * @returns {Boolean}
    */
   ;
@@ -21504,6 +20583,14 @@ var ListRepresentationIndex = /*#__PURE__*/function () {
 
   _proto.isInitialized = function isInitialized() {
     return true;
+  };
+
+  _proto.initialize = function initialize() {
+    log/* default.error */.Z.error("A `ListRepresentationIndex` does not need to be initialized");
+  };
+
+  _proto.addPredictedSegments = function addPredictedSegments() {
+    log/* default.warn */.Z.warn("Cannot add predicted segments to a `ListRepresentationIndex`");
   }
   /**
    * @param {Object} newIndex
@@ -21512,14 +20599,10 @@ var ListRepresentationIndex = /*#__PURE__*/function () {
 
   _proto._replace = function _replace(newIndex) {
     this._index = newIndex._index;
-  }
-  /**
-   * @param {Object} newIndex
-   */
-  ;
+  };
 
   _proto._update = function _update() {
-    log/* default.error */.Z.error("List RepresentationIndex: Cannot update a SegmentList");
+    log/* default.error */.Z.error("A `ListRepresentationIndex` cannot be updated");
   };
 
   return ListRepresentationIndex;
@@ -21534,8 +20617,6 @@ var clear_timeline_from_position = __webpack_require__(8232);
 var is_segment_still_available = __webpack_require__(1091);
 // EXTERNAL MODULE: ./src/parsers/manifest/utils/update_segment_timeline.ts
 var update_segment_timeline = __webpack_require__(5505);
-// EXTERNAL MODULE: ./src/parsers/manifest/dash/common/indexes/get_segments_from_timeline.ts
-var get_segments_from_timeline = __webpack_require__(6394);
 ;// CONCATENATED MODULE: ./src/parsers/manifest/dash/common/indexes/is_period_fulfilled.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -22073,10 +21154,10 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
       indexRange: index.indexRange,
       indexTimeOffset: indexTimeOffset,
       initialization: index.initialization == null ? undefined : {
-        mediaURLs: (0,tokens/* createIndexURLs */.k6)(urlSources, index.initialization.media, representationId, representationBitrate),
+        mediaURLs: createIndexURLs(urlSources, index.initialization.media, representationId, representationBitrate),
         range: index.initialization.range
       },
-      mediaURLs: (0,tokens/* createIndexURLs */.k6)(urlSources, index.media, representationId, representationBitrate),
+      mediaURLs: createIndexURLs(urlSources, index.media, representationId, representationBitrate),
       startNumber: index.startNumber,
       timeline: (_c = index.timeline) !== null && _c !== void 0 ? _c : null,
       timescale: timescale
@@ -22093,7 +21174,7 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
   var _proto = TimelineRepresentationIndex.prototype;
 
   _proto.getInitSegment = function getInitSegment() {
-    return (0,get_init_segment/* default */.Z)(this._index, this._isEMSGWhitelisted);
+    return get_init_segment_getInitSegment(this._index, this._isEMSGWhitelisted);
   }
   /**
    * Asks for segments to download for a given time range.
@@ -22118,7 +21199,7 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
         timeline = _this$_index.timeline,
         timescale = _this$_index.timescale,
         indexTimeOffset = _this$_index.indexTimeOffset;
-    return (0,get_segments_from_timeline/* default */.Z)({
+    return getSegmentsFromTimeline({
       mediaURLs: mediaURLs,
       startNumber: startNumber,
       timeline: timeline,
@@ -22330,6 +21411,14 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
 
   _proto.isInitialized = function isInitialized() {
     return true;
+  };
+
+  _proto.initialize = function initialize() {
+    log/* default.error */.Z.error("A `TimelineRepresentationIndex` does not need to be initialized");
+  };
+
+  _proto.addPredictedSegments = function addPredictedSegments() {
+    log/* default.warn */.Z.warn("Cannot add predicted segments to a `TimelineRepresentationIndex`");
   }
   /**
    * Returns `true` if the given object can be used as an "index" argument to
@@ -22481,6 +21570,7 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
 
 
 
+
 /**
  * IRepresentationIndex implementation for DASH' SegmentTemplate without a
  * SegmentTimeline.
@@ -22495,8 +21585,7 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
   function TemplateRepresentationIndex(index, context) {
     var _a;
 
-    var aggressiveMode = context.aggressiveMode,
-        availabilityTimeOffset = context.availabilityTimeOffset,
+    var availabilityTimeOffset = context.availabilityTimeOffset,
         manifestBoundsCalculator = context.manifestBoundsCalculator,
         isDynamic = context.isDynamic,
         periodEnd = context.periodEnd,
@@ -22511,7 +21600,6 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
     }, Infinity);
     this._availabilityTimeOffset = availabilityTimeOffset + minBaseUrlAto;
     this._manifestBoundsCalculator = manifestBoundsCalculator;
-    this._aggressiveMode = aggressiveMode;
     var presentationTimeOffset = index.presentationTimeOffset != null ? index.presentationTimeOffset : 0;
     var scaledStart = periodStart * timescale;
     var indexTimeOffset = presentationTimeOffset - scaledStart;
@@ -22529,10 +21617,10 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
       indexRange: index.indexRange,
       indexTimeOffset: indexTimeOffset,
       initialization: index.initialization == null ? undefined : {
-        mediaURLs: (0,tokens/* createIndexURLs */.k6)(urlSources, index.initialization.media, representationId, representationBitrate),
+        mediaURLs: createIndexURLs(urlSources, index.initialization.media, representationId, representationBitrate),
         range: index.initialization.range
       },
-      mediaURLs: (0,tokens/* createIndexURLs */.k6)(urlSources, index.media, representationId, representationBitrate),
+      mediaURLs: createIndexURLs(urlSources, index.media, representationId, representationBitrate),
       presentationTimeOffset: presentationTimeOffset,
       startNumber: index.startNumber
     };
@@ -22550,7 +21638,7 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
   var _proto = TemplateRepresentationIndex.prototype;
 
   _proto.getInitSegment = function getInitSegment() {
-    return (0,get_init_segment/* default */.Z)(this._index, this._isEMSGWhitelisted);
+    return get_init_segment_getInitSegment(this._index, this._isEMSGWhitelisted);
   }
   /**
    * @param {Number} fromTime
@@ -22600,7 +21688,7 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
       var realDuration = scaledEnd != null && timeFromPeriodStart + duration > scaledEnd ? scaledEnd - timeFromPeriodStart : duration;
       var realTime = timeFromPeriodStart + scaledStart;
       var manifestTime = timeFromPeriodStart + this._index.presentationTimeOffset;
-      var detokenizedURLs = mediaURLs === null ? null : mediaURLs.map((0,tokens/* createDashUrlDetokenizer */.QB)(manifestTime, realNumber));
+      var detokenizedURLs = mediaURLs === null ? null : mediaURLs.map(createDashUrlDetokenizer(manifestTime, realNumber));
       var args = {
         id: String(realNumber),
         number: realNumber,
@@ -22752,6 +21840,14 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
 
   _proto.isInitialized = function isInitialized() {
     return true;
+  };
+
+  _proto.initialize = function initialize() {
+    log/* default.error */.Z.error("A `TemplateRepresentationIndex` does not need to be initialized");
+  };
+
+  _proto.addPredictedSegments = function addPredictedSegments() {
+    log/* default.warn */.Z.warn("Cannot add predicted segments to a `TemplateRepresentationIndex`");
   }
   /**
    * @param {Object} newIndex
@@ -22760,7 +21856,6 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
 
   _proto._replace = function _replace(newIndex) {
     this._index = newIndex._index;
-    this._aggressiveMode = newIndex._aggressiveMode;
     this._isDynamic = newIndex._isDynamic;
     this._periodStart = newIndex._periodStart;
     this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
@@ -22838,9 +21933,7 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
         return undefined;
       }
 
-      var agressiveModeOffset = this._aggressiveMode ? duration / timescale : 0;
-
-      if (this._scaledPeriodEnd != null && this._scaledPeriodEnd < (lastPos + agressiveModeOffset - this._periodStart) * this._index.timescale) {
+      if (this._scaledPeriodEnd !== undefined && this._scaledPeriodEnd < (lastPos - this._periodStart) * this._index.timescale) {
         if (this._scaledPeriodEnd < duration) {
           return null;
         }
@@ -22858,7 +21951,7 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
         return null;
       }
 
-      var availabilityTimeOffset = ((this._availabilityTimeOffset !== undefined ? this._availabilityTimeOffset : 0) + agressiveModeOffset) * timescale;
+      var availabilityTimeOffset = (this._availabilityTimeOffset !== undefined ? this._availabilityTimeOffset : 0) * timescale;
       var numberOfSegmentsAvailable = Math.floor((scaledLastPosition + availabilityTimeOffset) / duration);
       return numberOfSegmentsAvailable <= 0 ? null : (numberOfSegmentsAvailable - 1) * duration;
     } else {
@@ -22975,8 +22068,7 @@ function parseRepresentationIndex(representation, context) {
   var _a, _b;
 
   var representationBaseURLs = resolveBaseURLs(context.baseURLs, representation.children.baseURLs);
-  var aggressiveMode = context.aggressiveMode,
-      availabilityTimeOffset = context.availabilityTimeOffset,
+  var availabilityTimeOffset = context.availabilityTimeOffset,
       manifestBoundsCalculator = context.manifestBoundsCalculator,
       isDynamic = context.isDynamic,
       periodEnd = context.end,
@@ -22999,7 +22091,6 @@ function parseRepresentationIndex(representation, context) {
   };
 
   var reprIndexCtxt = {
-    aggressiveMode: aggressiveMode,
     availabilityTimeComplete: true,
     availabilityTimeOffset: availabilityTimeOffset,
     unsafelyBaseOnPreviousRepresentation: unsafelyBaseOnPreviousRepresentation,
@@ -23019,7 +22110,7 @@ function parseRepresentationIndex(representation, context) {
 
   if (representation.children.segmentBase !== undefined) {
     var segmentBase = representation.children.segmentBase;
-    representationIndex = new base/* default */.Z(segmentBase, reprIndexCtxt);
+    representationIndex = new BaseRepresentationIndex(segmentBase, reprIndexCtxt);
   } else if (representation.children.segmentList !== undefined) {
     var segmentList = representation.children.segmentList;
     representationIndex = new ListRepresentationIndex(segmentList, reprIndexCtxt);
@@ -23040,7 +22131,7 @@ function parseRepresentationIndex(representation, context) {
 
     if (adaptationChildren.segmentBase !== undefined) {
       var _segmentBase = adaptationChildren.segmentBase;
-      representationIndex = new base/* default */.Z(_segmentBase, reprIndexCtxt);
+      representationIndex = new BaseRepresentationIndex(_segmentBase, reprIndexCtxt);
     } else if (adaptationChildren.segmentList !== undefined) {
       var _segmentList = adaptationChildren.segmentList;
       representationIndex = new ListRepresentationIndex(_segmentList, reprIndexCtxt);
@@ -23448,8 +22539,8 @@ function getAdaptationID(adaptation, infos) {
     idString += "-" + adaptation.attributes.mimeType;
   }
 
-  if ((0,is_non_empty_string/* default */.Z)(adaptation.attributes.frameRate)) {
-    idString += "-" + adaptation.attributes.frameRate;
+  if (adaptation.attributes.frameRate !== undefined) {
+    idString += "-" + String(adaptation.attributes.frameRate);
   }
 
   return idString;
@@ -23497,8 +22588,7 @@ function parseAdaptationSets(adaptationsIR, context) {
   var parsedAdaptations = {
     video: [],
     audio: [],
-    text: [],
-    image: []
+    text: []
   };
   var trickModeAdaptations = [];
   var adaptationSwitchingInfos = {};
@@ -23550,7 +22640,6 @@ function parseAdaptationSets(adaptationsIR, context) {
     }
 
     var reprCtxt = {
-      aggressiveMode: context.aggressiveMode,
       availabilityTimeComplete: availabilityTimeComplete,
       availabilityTimeOffset: availabilityTimeOffset,
       baseURLs: resolveBaseURLs(context.baseURLs, adaptationChildren.baseURLs),
@@ -23861,11 +22950,9 @@ function parsePeriods(periodsIR, context) {
     var unsafelyBaseOnPreviousPeriod = (_b = (_a = context.unsafelyBaseOnPreviousManifest) === null || _a === void 0 ? void 0 : _a.getPeriod(periodID)) !== null && _b !== void 0 ? _b : null;
     var availabilityTimeComplete = (_c = periodIR.attributes.availabilityTimeComplete) !== null && _c !== void 0 ? _c : true;
     var availabilityTimeOffset = (_d = periodIR.attributes.availabilityTimeOffset) !== null && _d !== void 0 ? _d : 0;
-    var aggressiveMode = context.aggressiveMode,
-        manifestProfiles = context.manifestProfiles;
+    var manifestProfiles = context.manifestProfiles;
     var segmentTemplate = periodIR.children.segmentTemplate;
     var adapCtxt = {
-      aggressiveMode: aggressiveMode,
       availabilityTimeComplete: availabilityTimeComplete,
       availabilityTimeOffset: availabilityTimeOffset,
       baseURLs: periodBaseURLs,
@@ -24281,7 +23368,6 @@ function parseCompleteIntermediateRepresentation(mpdIR, args, warnings, xlinkInf
   var clockOffset = args.externalClockOffset,
       unsafelyBaseOnPreviousManifest = args.unsafelyBaseOnPreviousManifest;
   var manifestInfos = {
-    aggressiveMode: args.aggressiveMode,
     availabilityStartTime: availabilityStartTime,
     baseURLs: mpdBaseUrls,
     clockOffset: clockOffset,
@@ -24546,7 +23632,7 @@ function parseMPDFloat(val, displayName) {
   var toInt = parseFloat(val);
 
   if (isNaN(toInt)) {
-    var error = new MPDError("`" + displayName + "` property is not an integer value but \"" + val + "\"");
+    var error = new MPDError("`" + displayName + "` property is invalid: \"" + val + "\"");
     return [null, error];
   }
 
@@ -24689,6 +23775,26 @@ function parseBase64(val, displayName) {
     var error = new MPDError("`" + displayName + "` is not a valid base64 string: \"" + val + "\"");
     return [null, error];
   }
+}
+/**
+ * Some values in the MPD can be expressed as divisions of integers (e.g. frame
+ * rates).
+ * This function tries to convert it to a floating point value.
+ * @param {string} val
+ * @param {string} displayName
+ * @returns {Array.<number | Error | null>}
+ */
+
+
+function parseMaybeDividedNumber(val, displayName) {
+  var matches = /^(\d+)\/(\d+)$/.exec(val);
+
+  if (matches !== null) {
+    // No need to check, we know both are numbers
+    return [+matches[1] / +matches[2], null];
+  }
+
+  return parseMPDFloat(val, displayName);
 }
 /**
  * @param {Element} root
@@ -25563,7 +24669,11 @@ function parseRepresentationAttributes(representationElement) {
         break;
 
       case "frameRate":
-        attributes.frameRate = attr.value;
+        parseValue(attr.value, {
+          asKey: "frameRate",
+          parser: parseMaybeDividedNumber,
+          dashName: "frameRate"
+        });
         break;
 
       case "height":
@@ -25954,13 +25064,19 @@ function parseAdaptationSetAttributes(root) {
         break;
 
       case "minFrameRate":
-        {
-          parsedAdaptation.minFrameRate = attribute.value;
-        }
+        parseValue(attribute.value, {
+          asKey: "minFrameRate",
+          parser: parseMaybeDividedNumber,
+          dashName: "minFrameRate"
+        });
         break;
 
       case "maxFrameRate":
-        parsedAdaptation.maxFrameRate = attribute.value;
+        parseValue(attribute.value, {
+          asKey: "maxFrameRate",
+          parser: parseMaybeDividedNumber,
+          dashName: "maxFrameRate"
+        });
         break;
 
       case "selectionPriority":
@@ -26012,7 +25128,11 @@ function parseAdaptationSetAttributes(root) {
         break;
 
       case "frameRate":
-        parsedAdaptation.frameRate = attribute.value;
+        parseValue(attribute.value, {
+          asKey: "frameRate",
+          parser: parseMaybeDividedNumber,
+          dashName: "frameRate"
+        });
         break;
 
       case "height":
@@ -31985,7 +31105,7 @@ function findEndOfCueBlock(linified, startOfCueBlock) {
 
 /***/ }),
 
-/***/ 5877:
+/***/ 6779:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -31999,168 +31119,16 @@ __webpack_require__.d(__webpack_exports__, {
 var features = __webpack_require__(7874);
 // EXTERNAL MODULE: ./src/transports/utils/generate_manifest_loader.ts + 1 modules
 var generate_manifest_loader = __webpack_require__(8791);
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js
-var asyncToGenerator = __webpack_require__(5861);
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/regenerator/index.js
-var regenerator = __webpack_require__(7757);
-var regenerator_default = /*#__PURE__*/__webpack_require__.n(regenerator);
-// EXTERNAL MODULE: ./src/utils/request/index.ts + 1 modules
-var request = __webpack_require__(4597);
-// EXTERNAL MODULE: ./src/utils/take_first_set.ts
-var take_first_set = __webpack_require__(5278);
-;// CONCATENATED MODULE: ./src/transports/dash/image_pipelines.ts
-
-
-
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
-/**
- * Loads an image segment.
- * @param {string|null} url
- * @param {Object} content
- * @param {Object} cancelSignal
- * @param {Object} callbacks
- * @returns {Promise}
- */
-
-function imageLoader(_x, _x2, _x3, _x4) {
-  return _imageLoader.apply(this, arguments);
-}
-/**
- * Parses an image segment.
- * @param {Object} loadedSegment
- * @param {Object} content
- * @returns {Object}
- */
-
-function _imageLoader() {
-  _imageLoader = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee(url, content, cancelSignal, callbacks) {
-    var segment, data;
-    return regenerator_default().wrap(function _callee$(_context) {
-      while (1) {
-        switch (_context.prev = _context.next) {
-          case 0:
-            segment = content.segment;
-
-            if (!(segment.isInit || url === null)) {
-              _context.next = 3;
-              break;
-            }
-
-            return _context.abrupt("return", {
-              resultType: "segment-created",
-              resultData: null
-            });
-
-          case 3:
-            _context.next = 5;
-            return (0,request/* default */.ZP)({
-              url: url,
-              responseType: "arraybuffer",
-              onProgress: callbacks.onProgress,
-              cancelSignal: cancelSignal
-            });
-
-          case 5:
-            data = _context.sent;
-            return _context.abrupt("return", {
-              resultType: "segment-loaded",
-              resultData: data
-            });
-
-          case 7:
-          case "end":
-            return _context.stop();
-        }
-      }
-    }, _callee);
-  }));
-  return _imageLoader.apply(this, arguments);
-}
-
-function imageParser(loadedSegment, content) {
-  var segment = content.segment,
-      period = content.period;
-  var data = loadedSegment.data,
-      isChunked = loadedSegment.isChunked;
-
-  if (content.segment.isInit) {
-    // image init segment has no use
-    return {
-      segmentType: "init",
-      initializationData: null,
-      initializationDataSize: 0,
-      protectionDataUpdate: false,
-      initTimescale: undefined
-    };
-  }
-
-  if (isChunked) {
-    throw new Error("Image data should not be downloaded in chunks");
-  }
-
-  var chunkOffset = (0,take_first_set/* default */.Z)(segment.timestampOffset, 0); // TODO image Parsing should be more on the buffer side, no?
-
-  if (data === null || features/* default.imageParser */.Z.imageParser === null) {
-    return {
-      segmentType: "media",
-      chunkData: null,
-      chunkSize: 0,
-      chunkInfos: {
-        duration: segment.duration,
-        time: segment.time
-      },
-      chunkOffset: chunkOffset,
-      protectionDataUpdate: false,
-      appendWindow: [period.start, period.end]
-    };
-  }
-
-  var bifObject = features/* default.imageParser */.Z.imageParser(new Uint8Array(data));
-  var thumbsData = bifObject.thumbs;
-  return {
-    segmentType: "media",
-    chunkData: {
-      data: thumbsData,
-      start: 0,
-      end: Number.MAX_VALUE,
-      timescale: 1,
-      type: "bif"
-    },
-    chunkSize: undefined,
-    chunkInfos: {
-      time: 0,
-      duration: Number.MAX_VALUE
-    },
-    chunkOffset: chunkOffset,
-    protectionDataUpdate: false,
-    appendWindow: [period.start, period.end]
-  };
-}
 // EXTERNAL MODULE: ./src/errors/format_error.ts
 var format_error = __webpack_require__(8750);
 // EXTERNAL MODULE: ./src/log.ts + 1 modules
 var log = __webpack_require__(3887);
-// EXTERNAL MODULE: ./src/manifest/index.ts + 6 modules
-var src_manifest = __webpack_require__(1989);
+// EXTERNAL MODULE: ./src/manifest/index.ts + 5 modules
+var src_manifest = __webpack_require__(8619);
 // EXTERNAL MODULE: ./src/utils/object_assign.ts
 var object_assign = __webpack_require__(8026);
+// EXTERNAL MODULE: ./src/utils/request/index.ts + 1 modules
+var request = __webpack_require__(4597);
 // EXTERNAL MODULE: ./src/utils/string_parsing.ts
 var string_parsing = __webpack_require__(3635);
 ;// CONCATENATED MODULE: ./src/transports/dash/manifest_parser.ts
@@ -32187,8 +31155,7 @@ var string_parsing = __webpack_require__(3635);
 
 
 function generateManifestParser(options) {
-  var aggressiveMode = options.aggressiveMode,
-      referenceDateTime = options.referenceDateTime;
+  var referenceDateTime = options.referenceDateTime;
   var serverTimeOffset = options.serverSyncInfos !== undefined ? options.serverSyncInfos.serverTimestamp - options.serverSyncInfos.clientTime : undefined;
   return function manifestParser(manifestData, parserOptions, onWarnings, cancelSignal, scheduleRequest) {
     var _a;
@@ -32196,11 +31163,9 @@ function generateManifestParser(options) {
     var responseData = manifestData.responseData;
     var argClockOffset = parserOptions.externalClockOffset;
     var url = (_a = manifestData.url) !== null && _a !== void 0 ? _a : parserOptions.originalUrl;
-    var optAggressiveMode = aggressiveMode === true;
     var externalClockOffset = serverTimeOffset !== null && serverTimeOffset !== void 0 ? serverTimeOffset : argClockOffset;
     var unsafelyBaseOnPreviousManifest = parserOptions.unsafeMode ? parserOptions.previousManifest : null;
     var dashParserOpts = {
-      aggressiveMode: optAggressiveMode,
       unsafelyBaseOnPreviousManifest: unsafelyBaseOnPreviousManifest,
       url: url,
       referenceDateTime: referenceDateTime,
@@ -32463,6 +31428,11 @@ function doesXmlSeemsUtf8Encoded(xmlData) {
 }
 // EXTERNAL MODULE: ./src/errors/custom_loader_error.ts
 var custom_loader_error = __webpack_require__(7839);
+// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js
+var asyncToGenerator = __webpack_require__(5861);
+// EXTERNAL MODULE: ./node_modules/@babel/runtime/regenerator/index.js
+var regenerator = __webpack_require__(7757);
+var regenerator_default = /*#__PURE__*/__webpack_require__.n(regenerator);
 // EXTERNAL MODULE: ./src/config.ts + 2 modules
 var config = __webpack_require__(6872);
 // EXTERNAL MODULE: ./src/errors/request_error.ts
@@ -32696,22 +31666,22 @@ var byte_range = __webpack_require__(281);
  *   - `undefined` if we cannot say with confidence in which container the
  *     segment will be in.
  * @param {string} adaptationType
- * @param {Object} representation
+ * @param {string} mimeType
  * @returns {string | undefined}
  */
-function inferSegmentContainer(adaptationType, representation) {
+function inferSegmentContainer(adaptationType, mimeType) {
   if (adaptationType === "audio" || adaptationType === "video") {
-    if (representation.mimeType === "video/mp4" || representation.mimeType === "audio/mp4") {
+    if (mimeType === "video/mp4" || mimeType === "audio/mp4") {
       return "mp4";
     }
 
-    if (representation.mimeType === "video/webm" || representation.mimeType === "audio/webm") {
+    if (mimeType === "video/webm" || mimeType === "audio/webm") {
       return "webm";
     }
 
     return undefined;
   } else if (adaptationType === "text") {
-    return representation.mimeType === "application/mp4" ? "mp4" : undefined;
+    return mimeType === "application/mp4" ? "mp4" : undefined;
   }
 
   return undefined;
@@ -32748,7 +31718,7 @@ var check_isobmff_integrity = __webpack_require__(4460);
  */
 
 function addSegmentIntegrityChecks(segmentLoader) {
-  return function (url, content, initialCancelSignal, callbacks) {
+  return function (url, context, initialCancelSignal, callbacks) {
     return new Promise(function (resolve, reject) {
       var requestCanceller = new task_canceller/* default */.ZP({
         cancelOn: initialCancelSignal
@@ -32756,7 +31726,7 @@ function addSegmentIntegrityChecks(segmentLoader) {
       // `stopRejectingOnCancel` here is a function allowing to stop this mechanism
 
       var stopRejectingOnCancel = requestCanceller.signal.register(reject);
-      segmentLoader(url, content, requestCanceller.signal, Object.assign(Object.assign({}, callbacks), {
+      segmentLoader(url, context, requestCanceller.signal, Object.assign(Object.assign({}, callbacks), {
         onNewChunk: function onNewChunk(data) {
           try {
             trowOnIntegrityError(data);
@@ -32798,11 +31768,11 @@ function addSegmentIntegrityChecks(segmentLoader) {
      */
 
     function trowOnIntegrityError(data) {
-      if (!(data instanceof ArrayBuffer) && !(data instanceof Uint8Array) || inferSegmentContainer(content.adaptation.type, content.representation) !== "mp4") {
+      if (!(data instanceof ArrayBuffer) && !(data instanceof Uint8Array) || inferSegmentContainer(context.type, context.mimeType) !== "mp4") {
         return;
       }
 
-      (0,check_isobmff_integrity/* default */.Z)(new Uint8Array(data), content.segment.isInit);
+      (0,check_isobmff_integrity/* default */.Z)(new Uint8Array(data), context.segment.isInit);
     }
   };
 }
@@ -33108,29 +32078,29 @@ function lowLatencySegmentLoader(url, content, callbacks, cancelSignal) {
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
  * @param {string} url
- * @param {Object} content
+ * @param {Object} context
  * @param {boolean} lowLatencyMode
  * @param {Object} callbacks
  * @param {Object} cancelSignal
  * @returns {Promise}
  */
 
-function regularSegmentLoader(url, content, lowLatencyMode, callbacks, cancelSignal) {
-  if (content.segment.isInit) {
-    return initSegmentLoader(url, content.segment, cancelSignal, callbacks);
+function regularSegmentLoader(url, context, lowLatencyMode, callbacks, cancelSignal) {
+  if (context.segment.isInit) {
+    return initSegmentLoader(url, context.segment, cancelSignal, callbacks);
   }
 
-  var containerType = inferSegmentContainer(content.adaptation.type, content.representation);
+  var containerType = inferSegmentContainer(context.type, context.mimeType);
 
   if (lowLatencyMode && (containerType === "mp4" || containerType === undefined)) {
     if (fetchIsSupported()) {
-      return lowLatencySegmentLoader(url, content, callbacks, cancelSignal);
+      return lowLatencySegmentLoader(url, context, callbacks, cancelSignal);
     } else {
       (0,warn_once/* default */.Z)("DASH: Your browser does not have the fetch API. You will have " + "a higher chance of rebuffering when playing close to the live edge");
     }
   }
 
-  var segment = content.segment;
+  var segment = context.segment;
   return (0,request/* default */.ZP)({
     url: url,
     responseType: "arraybuffer",
@@ -33157,11 +32127,11 @@ function generateSegmentLoader(_ref) {
       checkMediaSegmentIntegrity = _ref.checkMediaSegmentIntegrity;
   return checkMediaSegmentIntegrity !== true ? segmentLoader : addSegmentIntegrityChecks(segmentLoader);
   /**
-   * @param {Object} content
+   * @param {Object} context
    * @returns {Observable}
    */
 
-  function segmentLoader(url, content, cancelSignal, callbacks) {
+  function segmentLoader(url, context, cancelSignal, callbacks) {
     if (url == null) {
       return Promise.resolve({
         resultType: "segment-created",
@@ -33170,18 +32140,9 @@ function generateSegmentLoader(_ref) {
     }
 
     if (lowLatencyMode || customSegmentLoader === undefined) {
-      return regularSegmentLoader(url, content, lowLatencyMode, callbacks, cancelSignal);
+      return regularSegmentLoader(url, context, lowLatencyMode, callbacks, cancelSignal);
     }
 
-    var args = {
-      adaptation: content.adaptation,
-      manifest: content.manifest,
-      period: content.period,
-      representation: content.representation,
-      segment: content.segment,
-      transport: "dash",
-      url: url
-    };
     return new Promise(function (res, rej) {
       /** `true` when the custom segmentLoader should not be active anymore. */
       var hasFinished = false;
@@ -33252,7 +32213,7 @@ function generateSegmentLoader(_ref) {
 
         hasFinished = true;
         cancelSignal.deregister(abortCustomLoader);
-        regularSegmentLoader(url, content, lowLatencyMode, callbacks, cancelSignal).then(res, rej);
+        regularSegmentLoader(url, context, lowLatencyMode, callbacks, cancelSignal).then(res, rej);
       };
 
       var customCallbacks = {
@@ -33260,6 +32221,13 @@ function generateSegmentLoader(_ref) {
         resolve: resolve,
         progress: progress,
         fallback: fallback
+      };
+      var args = {
+        isInit: context.segment.isInit,
+        range: context.segment.range,
+        indexRange: context.segment.indexRange,
+        type: context.type,
+        url: url
       };
       var abort = customSegmentLoader(args, customCallbacks);
       cancelSignal.register(abortCustomLoader);
@@ -33592,8 +32560,8 @@ function bytesToNumber(buffer, offset, length) {
 
   return value;
 }
-// EXTERNAL MODULE: ./src/parsers/manifest/dash/common/indexes/base.ts
-var base = __webpack_require__(7403);
+// EXTERNAL MODULE: ./src/utils/take_first_set.ts
+var take_first_set = __webpack_require__(5278);
 ;// CONCATENATED MODULE: ./src/transports/utils/get_isobmff_timing_infos.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -33803,7 +32771,6 @@ function getEventsOutOfEMSGs(parsedEMSGs, manifestPublishTime) {
 
 
 
-
 /**
  * @param {Object} config
  * @returns {Function}
@@ -33811,17 +32778,15 @@ function getEventsOutOfEMSGs(parsedEMSGs, manifestPublishTime) {
 
 function generateAudioVideoSegmentParser(_ref) {
   var __priv_patchLastSegmentInSidx = _ref.__priv_patchLastSegmentInSidx;
-  return function audioVideoSegmentParser(loadedSegment, content, initTimescale) {
+  return function audioVideoSegmentParser(loadedSegment, context, initTimescale) {
     var _a;
 
-    var period = content.period,
-        adaptation = content.adaptation,
-        representation = content.representation,
-        segment = content.segment,
-        manifest = content.manifest;
+    var segment = context.segment,
+        periodStart = context.periodStart,
+        periodEnd = context.periodEnd;
     var data = loadedSegment.data,
         isChunked = loadedSegment.isChunked;
-    var appendWindow = [period.start, period.end];
+    var appendWindow = [periodStart, periodEnd];
 
     if (data === null) {
       if (segment.isInit) {
@@ -33829,7 +32794,7 @@ function generateAudioVideoSegmentParser(_ref) {
           segmentType: "init",
           initializationData: null,
           initializationDataSize: 0,
-          protectionDataUpdate: false,
+          protectionData: [],
           initTimescale: undefined
         };
       }
@@ -33840,16 +32805,16 @@ function generateAudioVideoSegmentParser(_ref) {
         chunkSize: 0,
         chunkInfos: null,
         chunkOffset: 0,
-        protectionDataUpdate: false,
+        protectionData: [],
         appendWindow: appendWindow
       };
     }
 
     var chunkData = data instanceof Uint8Array ? data : new Uint8Array(data);
-    var containerType = inferSegmentContainer(adaptation.type, representation); // TODO take a look to check if this is an ISOBMFF/webm?
+    var containerType = inferSegmentContainer(context.type, context.mimeType); // TODO take a look to check if this is an ISOBMFF/webm?
 
     var seemsToBeMP4 = containerType === "mp4" || containerType === undefined;
-    var protectionDataUpdate = false;
+    var protectionData = [];
 
     if (seemsToBeMP4) {
       var psshInfo = (0,take_pssh_out/* default */.Z)(chunkData);
@@ -33860,7 +32825,11 @@ function generateAudioVideoSegmentParser(_ref) {
       }
 
       if (psshInfo.length > 0 || keyId !== undefined) {
-        protectionDataUpdate = representation._addProtectionData("cenc", keyId, psshInfo);
+        protectionData.push({
+          initDataType: "cenc",
+          keyId: keyId,
+          initData: psshInfo
+        });
       }
     }
 
@@ -33880,7 +32849,7 @@ function generateAudioVideoSegmentParser(_ref) {
 
             return segment.privateInfos.isEMSGWhitelisted(evt);
           });
-          var events = getEventsOutOfEMSGs(whitelistedEMSGs, manifest.publishTime);
+          var events = getEventsOutOfEMSGs(whitelistedEMSGs, context.manifestPublishTime);
 
           if (events !== undefined) {
             var needsManifestRefresh = events.needsManifestRefresh,
@@ -33893,7 +32862,7 @@ function generateAudioVideoSegmentParser(_ref) {
               chunkOffset: chunkOffset,
               appendWindow: appendWindow,
               inbandEvents: inbandEvents,
-              protectionDataUpdate: protectionDataUpdate,
+              protectionData: protectionData,
               needsManifestRefresh: needsManifestRefresh
             };
           }
@@ -33906,19 +32875,19 @@ function generateAudioVideoSegmentParser(_ref) {
         chunkSize: chunkData.length,
         chunkInfos: chunkInfos,
         chunkOffset: chunkOffset,
-        protectionDataUpdate: protectionDataUpdate,
+        protectionData: protectionData,
         appendWindow: appendWindow
       };
     } // we're handling an initialization segment
 
 
     var indexRange = segment.indexRange;
-    var nextSegments = null;
+    var segmentList;
 
     if (containerType === "webm") {
-      nextSegments = getSegmentsFromCues(chunkData, 0);
+      segmentList = getSegmentsFromCues(chunkData, 0);
     } else if (seemsToBeMP4) {
-      nextSegments = (0,utils/* getSegmentsFromSidx */.Wf)(chunkData, Array.isArray(indexRange) ? indexRange[0] : 0); // This is a very specific handling for streams we know have a very
+      segmentList = (0,utils/* getSegmentsFromSidx */.Wf)(chunkData, Array.isArray(indexRange) ? indexRange[0] : 0); // This is a very specific handling for streams we know have a very
       // specific problem at Canal+: The last reference gives a truncated
       // segment.
       // Sadly, people on the packaging side could not fix all legacy contents.
@@ -33926,17 +32895,13 @@ function generateAudioVideoSegmentParser(_ref) {
       // TODO Cleaner way? I tried to always check the obtained segment after
       // a byte-range request but it leads to a lot of code.
 
-      if (__priv_patchLastSegmentInSidx === true && nextSegments !== null && nextSegments.length > 0) {
-        var lastSegment = nextSegments[nextSegments.length - 1];
+      if (__priv_patchLastSegmentInSidx === true && segmentList !== null && segmentList.length > 0) {
+        var lastSegment = segmentList[segmentList.length - 1];
 
         if (Array.isArray(lastSegment.range)) {
           lastSegment.range[1] = Infinity;
         }
       }
-    }
-
-    if (representation.index instanceof base/* default */.Z && nextSegments !== null && nextSegments.length > 0) {
-      representation.index.initializeIndex(nextSegments);
     }
 
     var timescale = seemsToBeMP4 ? (0,utils/* getMDHDTimescale */.LD)(chunkData) : containerType === "webm" ? getTimeCodeScale(chunkData, 0) : undefined;
@@ -33945,8 +32910,9 @@ function generateAudioVideoSegmentParser(_ref) {
       segmentType: "init",
       initializationData: chunkData,
       initializationDataSize: chunkData.length,
-      protectionDataUpdate: protectionDataUpdate,
-      initTimescale: parsedTimescale
+      protectionData: protectionData,
+      initTimescale: parsedTimescale,
+      segmentList: segmentList !== null && segmentList !== void 0 ? segmentList : undefined
     };
   };
 }
@@ -33991,10 +32957,8 @@ function generateTextTrackLoader(_ref) {
    * @returns {Promise}
    */
 
-  function textTrackLoader(url, content, cancelSignal, callbacks) {
-    var adaptation = content.adaptation,
-        representation = content.representation,
-        segment = content.segment;
+  function textTrackLoader(url, context, cancelSignal, callbacks) {
+    var segment = context.segment;
     var range = segment.range;
 
     if (url === null) {
@@ -34008,12 +32972,12 @@ function generateTextTrackLoader(_ref) {
       return initSegmentLoader(url, segment, cancelSignal, callbacks);
     }
 
-    var containerType = inferSegmentContainer(adaptation.type, representation);
+    var containerType = inferSegmentContainer(context.type, context.mimeType);
     var seemsToBeMP4 = containerType === "mp4" || containerType === undefined;
 
     if (lowLatencyMode && seemsToBeMP4) {
       if (fetchIsSupported()) {
-        return lowLatencySegmentLoader(url, content, callbacks, cancelSignal);
+        return lowLatencySegmentLoader(url, context, callbacks, cancelSignal);
       } else {
         (0,warn_once/* default */.Z)("DASH: Your browser does not have the fetch API. You will have " + "a higher chance of rebuffering when playing close to the live edge");
       }
@@ -34090,14 +33054,12 @@ function extractTextTrackFromISOBMFF(chunkBytes) {
  * @returns {string}
  */
 
-function getISOBMFFTextTrackFormat(representation) {
-  var codec = representation.codec;
-
-  if (codec === undefined) {
+function getISOBMFFTextTrackFormat(codecs) {
+  if (codecs === undefined) {
     throw new Error("Cannot parse subtitles: unknown format");
   }
 
-  switch (codec.toLowerCase()) {
+  switch (codecs.toLowerCase()) {
     case "stpp": // stpp === TTML in MP4
 
     case "stpp.ttml.im1t":
@@ -34108,7 +33070,7 @@ function getISOBMFFTextTrackFormat(representation) {
       return "vtt";
   }
 
-  throw new Error("The codec used for the subtitles " + ("\"" + codec + "\" is not managed yet."));
+  throw new Error("The codec used for the subtitles " + ("\"" + codecs + "\" is not managed yet."));
 }
 /**
  * Returns the a string expliciting the format of a text track in plain text.
@@ -34116,11 +33078,8 @@ function getISOBMFFTextTrackFormat(representation) {
  * @returns {string}
  */
 
-function getPlainTextTrackFormat(representation) {
-  var _representation$mimeT = representation.mimeType,
-      mimeType = _representation$mimeT === void 0 ? "" : _representation$mimeT;
-
-  switch (representation.mimeType) {
+function getPlainTextTrackFormat(codecs, mimeType) {
+  switch (mimeType) {
     case "application/ttml+xml":
       return "ttml";
 
@@ -34132,15 +33091,15 @@ function getPlainTextTrackFormat(representation) {
       return "vtt";
   }
 
-  var _representation$codec = representation.codec,
-      codec = _representation$codec === void 0 ? "" : _representation$codec;
-  var codeLC = codec.toLowerCase();
+  if (codecs !== undefined) {
+    var codeLC = codecs.toLowerCase();
 
-  if (codeLC === "srt") {
-    return "srt";
+    if (codeLC === "srt") {
+      return "srt";
+    }
   }
 
-  throw new Error("could not find a text-track parser for the type " + mimeType);
+  throw new Error("could not find a text-track parser for the type " + (mimeType !== null && mimeType !== void 0 ? mimeType : ""));
 }
 /**
  * @param {Object} content
@@ -34152,8 +33111,8 @@ function getPlainTextTrackFormat(representation) {
 
 function getISOBMFFEmbeddedTextTrackData(_ref, chunkBytes, chunkInfos, isChunked) {
   var segment = _ref.segment,
-      adaptation = _ref.adaptation,
-      representation = _ref.representation;
+      language = _ref.language,
+      codecs = _ref.codecs;
 
   if (segment.isInit) {
     return null;
@@ -34179,12 +33138,12 @@ function getISOBMFFEmbeddedTextTrackData(_ref, chunkBytes, chunkInfos, isChunked
     }
   }
 
-  var type = getISOBMFFTextTrackFormat(representation);
+  var type = getISOBMFFTextTrackFormat(codecs);
   var textData = extractTextTrackFromISOBMFF(chunkBytes);
   return {
     data: textData,
     type: type,
-    language: adaptation.language,
+    language: language,
     start: startTime,
     end: endTime
   };
@@ -34197,10 +33156,8 @@ function getISOBMFFEmbeddedTextTrackData(_ref, chunkBytes, chunkInfos, isChunked
  * @returns {Object|null}
  */
 
-function getPlainTextTrackData(_ref2, textTrackData, isChunked) {
-  var segment = _ref2.segment,
-      adaptation = _ref2.adaptation,
-      representation = _ref2.representation;
+function getPlainTextTrackData(context, textTrackData, isChunked) {
+  var segment = context.segment;
 
   if (segment.isInit) {
     return null;
@@ -34219,11 +33176,11 @@ function getPlainTextTrackData(_ref2, textTrackData, isChunked) {
     }
   }
 
-  var type = getPlainTextTrackFormat(representation);
+  var type = getPlainTextTrackFormat(context.codecs, context.mimeType);
   return {
     data: textTrackData,
     type: type,
-    language: adaptation.language,
+    language: context.language,
     start: start,
     end: end
   };
@@ -34250,14 +33207,13 @@ function getPlainTextTrackData(_ref2, textTrackData, isChunked) {
 
 
 
-
 /**
  * Parse TextTrack data when it is embedded in an ISOBMFF file.
  *
  * @param {ArrayBuffer|Uint8Array|string} data - The segment data.
  * @param {boolean} isChunked - If `true`, the `data` may contain only a
  * decodable subpart of the full data in the linked segment.
- * @param {Object} content - Object describing the context of the given
+ * @param {Object} context - Object describing the context of the given
  * segment's data: of which segment, `Representation`, `Adaptation`, `Period`,
  * `Manifest` it is a part of etc.
  * @param {number|undefined} initTimescale - `timescale` value - encountered
@@ -34271,16 +33227,14 @@ function getPlainTextTrackData(_ref2, textTrackData, isChunked) {
  * @returns {Observable.<Object>}
  */
 
-function parseISOBMFFEmbeddedTextTrack(data, isChunked, content, initTimescale, __priv_patchLastSegmentInSidx) {
-  var period = content.period,
-      representation = content.representation,
-      segment = content.segment;
+function parseISOBMFFEmbeddedTextTrack(data, isChunked, context, initTimescale, __priv_patchLastSegmentInSidx) {
+  var segment = context.segment;
   var isInit = segment.isInit,
       indexRange = segment.indexRange;
   var chunkBytes = typeof data === "string" ? (0,string_parsing/* strToUtf8 */.tG)(data) : data instanceof Uint8Array ? data : new Uint8Array(data);
 
   if (isInit) {
-    var sidxSegments = (0,utils/* getSegmentsFromSidx */.Wf)(chunkBytes, Array.isArray(indexRange) ? indexRange[0] : 0); // This is a very specific handling for streams we know have a very
+    var segmentList = (0,utils/* getSegmentsFromSidx */.Wf)(chunkBytes, Array.isArray(indexRange) ? indexRange[0] : 0); // This is a very specific handling for streams we know have a very
     // specific problem at Canal+: The last reference gives a truncated
     // segment.
     // Sadly, people on the packaging side could not fix all legacy contents.
@@ -34288,8 +33242,8 @@ function parseISOBMFFEmbeddedTextTrack(data, isChunked, content, initTimescale, 
     // TODO Cleaner way? I tried to always check the obtained segment after
     // a byte-range request but it leads to a lot of code.
 
-    if (__priv_patchLastSegmentInSidx === true && sidxSegments !== null && sidxSegments.length > 0) {
-      var lastSegment = sidxSegments[sidxSegments.length - 1];
+    if (__priv_patchLastSegmentInSidx === true && segmentList !== null && segmentList.length > 0) {
+      var lastSegment = segmentList[segmentList.length - 1];
 
       if (Array.isArray(lastSegment.range)) {
         lastSegment.range[1] = Infinity;
@@ -34297,22 +33251,18 @@ function parseISOBMFFEmbeddedTextTrack(data, isChunked, content, initTimescale, 
     }
 
     var mdhdTimescale = (0,utils/* getMDHDTimescale */.LD)(chunkBytes);
-
-    if (representation.index instanceof base/* default */.Z && sidxSegments !== null && sidxSegments.length > 0) {
-      representation.index.initializeIndex(sidxSegments);
-    }
-
     return {
       segmentType: "init",
       initializationData: null,
       initializationDataSize: 0,
-      protectionDataUpdate: false,
-      initTimescale: mdhdTimescale
+      protectionData: [],
+      initTimescale: mdhdTimescale,
+      segmentList: segmentList !== null && segmentList !== void 0 ? segmentList : undefined
     };
   }
 
   var chunkInfos = getISOBMFFTimingInfos(chunkBytes, isChunked, segment, initTimescale);
-  var chunkData = getISOBMFFEmbeddedTextTrackData(content, chunkBytes, chunkInfos, isChunked);
+  var chunkData = getISOBMFFEmbeddedTextTrackData(context, chunkBytes, chunkInfos, isChunked);
   var chunkOffset = (0,take_first_set/* default */.Z)(segment.timestampOffset, 0);
   return {
     segmentType: "media",
@@ -34320,8 +33270,8 @@ function parseISOBMFFEmbeddedTextTrack(data, isChunked, content, initTimescale, 
     chunkSize: chunkBytes.length,
     chunkInfos: chunkInfos,
     chunkOffset: chunkOffset,
-    protectionDataUpdate: false,
-    appendWindow: [period.start, period.end]
+    protectionData: [],
+    appendWindow: [context.periodStart, context.periodEnd]
   };
 }
 /**
@@ -34330,16 +33280,17 @@ function parseISOBMFFEmbeddedTextTrack(data, isChunked, content, initTimescale, 
  * @param {ArrayBuffer|Uint8Array|string} data - The segment data.
  * @param {boolean} isChunked - If `true`, the `data` may contain only a
  * decodable subpart of the full data in the linked segment.
- * @param {Object} content - Object describing the context of the given
+ * @param {Object} context - Object describing the context of the given
  * segment's data: of which segment, `Representation`, `Adaptation`, `Period`,
  * `Manifest` it is a part of etc.
  * @returns {Observable.<Object>}
  */
 
 
-function parsePlainTextTrack(data, isChunked, content) {
-  var period = content.period,
-      segment = content.segment;
+function parsePlainTextTrack(data, isChunked, context) {
+  var periodStart = context.periodStart,
+      periodEnd = context.periodEnd,
+      segment = context.segment;
   var _segment$timestampOff = segment.timestampOffset,
       timestampOffset = _segment$timestampOff === void 0 ? 0 : _segment$timestampOff;
 
@@ -34348,7 +33299,7 @@ function parsePlainTextTrack(data, isChunked, content) {
       segmentType: "init",
       initializationData: null,
       initializationDataSize: 0,
-      protectionDataUpdate: false,
+      protectionData: [],
       initTimescale: undefined
     };
   }
@@ -34364,15 +33315,15 @@ function parsePlainTextTrack(data, isChunked, content) {
     textTrackData = data;
   }
 
-  var chunkData = getPlainTextTrackData(content, textTrackData, isChunked);
+  var chunkData = getPlainTextTrackData(context, textTrackData, isChunked);
   return {
     segmentType: "media",
     chunkData: chunkData,
     chunkSize: chunkSize,
     chunkInfos: null,
     chunkOffset: timestampOffset,
-    protectionDataUpdate: false,
-    appendWindow: [period.start, period.end]
+    protectionData: [],
+    appendWindow: [periodStart, periodEnd]
   };
 }
 /**
@@ -34391,13 +33342,12 @@ function generateTextTrackParser(_ref) {
    * @param {Object} infos
    * @returns {Observable.<Object>}
    */
-  return function textTrackParser(loadedSegment, content, initTimescale) {
+  return function textTrackParser(loadedSegment, context, initTimescale) {
     var _a;
 
-    var period = content.period,
-        adaptation = content.adaptation,
-        representation = content.representation,
-        segment = content.segment;
+    var periodStart = context.periodStart,
+        periodEnd = context.periodEnd,
+        segment = context.segment;
     var data = loadedSegment.data,
         isChunked = loadedSegment.isChunked;
 
@@ -34407,7 +33357,7 @@ function generateTextTrackParser(_ref) {
         segmentType: "init",
         initializationData: null,
         initializationDataSize: 0,
-        protectionDataUpdate: false,
+        protectionData: [],
         initTimescale: undefined
       } : {
         segmentType: "media",
@@ -34415,20 +33365,20 @@ function generateTextTrackParser(_ref) {
         chunkSize: 0,
         chunkInfos: null,
         chunkOffset: (_a = segment.timestampOffset) !== null && _a !== void 0 ? _a : 0,
-        protectionDataUpdate: false,
-        appendWindow: [period.start, period.end]
+        protectionData: [],
+        appendWindow: [periodStart, periodEnd]
       };
     }
 
-    var containerType = inferSegmentContainer(adaptation.type, representation); // TODO take a look to check if this is an ISOBMFF/webm when undefined?
+    var containerType = inferSegmentContainer(context.type, context.mimeType); // TODO take a look to check if this is an ISOBMFF/webm when undefined?
 
     if (containerType === "webm") {
       // TODO Handle webm containers
       throw new Error("Text tracks with a WEBM container are not yet handled.");
     } else if (containerType === "mp4") {
-      return parseISOBMFFEmbeddedTextTrack(data, isChunked, content, initTimescale, __priv_patchLastSegmentInSidx);
+      return parseISOBMFFEmbeddedTextTrack(data, isChunked, context, initTimescale, __priv_patchLastSegmentInSidx);
     } else {
-      return parsePlainTextTrack(data, isChunked, content);
+      return parsePlainTextTrack(data, isChunked, context);
     }
   };
 }
@@ -34448,7 +33398,6 @@ function generateTextTrackParser(_ref) {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 
 
 
@@ -34488,10 +33437,6 @@ function generateTextTrackParser(_ref) {
     text: {
       loadSegment: textTrackLoader,
       parseSegment: textTrackParser
-    },
-    image: {
-      loadSegment: imageLoader,
-      parseSegment: imageParser
     }
   };
 }
@@ -34530,7 +33475,7 @@ function mightUseDashWasmFeature() {
 
 /***/ }),
 
-/***/ 2339:
+/***/ 9774:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -34540,21 +33485,14 @@ __webpack_require__.d(__webpack_exports__, {
   "Z": function() { return /* binding */ transports_smooth; }
 });
 
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js
-var asyncToGenerator = __webpack_require__(5861);
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/regenerator/index.js
-var regenerator = __webpack_require__(7757);
-var regenerator_default = /*#__PURE__*/__webpack_require__.n(regenerator);
-// EXTERNAL MODULE: ./src/features/index.ts
-var features = __webpack_require__(7874);
 // EXTERNAL MODULE: ./src/log.ts + 1 modules
 var log = __webpack_require__(3887);
-// EXTERNAL MODULE: ./src/manifest/index.ts + 6 modules
-var src_manifest = __webpack_require__(1989);
+// EXTERNAL MODULE: ./src/manifest/index.ts + 5 modules
+var src_manifest = __webpack_require__(8619);
 // EXTERNAL MODULE: ./src/parsers/containers/isobmff/read.ts
 var read = __webpack_require__(6807);
-// EXTERNAL MODULE: ./src/manifest/adaptation.ts + 3 modules
-var adaptation = __webpack_require__(8999);
+// EXTERNAL MODULE: ./src/manifest/adaptation.ts + 2 modules
+var adaptation = __webpack_require__(9665);
 // EXTERNAL MODULE: ./src/utils/array_includes.ts
 var array_includes = __webpack_require__(7714);
 // EXTERNAL MODULE: ./src/utils/assert.ts
@@ -34963,82 +33901,10 @@ function parseProtectionNode(protectionNode, keySystemCreator) {
 }
 // EXTERNAL MODULE: ./src/errors/network_error.ts
 var network_error = __webpack_require__(9362);
-// EXTERNAL MODULE: ./src/parsers/manifest/utils/clear_timeline_from_position.ts
-var clear_timeline_from_position = __webpack_require__(8232);
 // EXTERNAL MODULE: ./src/parsers/manifest/utils/index_helpers.ts
 var index_helpers = __webpack_require__(3911);
 // EXTERNAL MODULE: ./src/parsers/manifest/utils/is_segment_still_available.ts
 var is_segment_still_available = __webpack_require__(1091);
-// EXTERNAL MODULE: ./src/parsers/manifest/utils/update_segment_timeline.ts
-var update_segment_timeline = __webpack_require__(5505);
-;// CONCATENATED MODULE: ./src/parsers/manifest/smooth/utils/add_segment_infos.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * Add a new segment to the index.
- *
- * /!\ Mutate the given index
- * @param {Object} index
- * @param {Object} newSegment
- * @param {Object} currentSegment
- * @returns {Boolean} - true if the segment has been added
- */
-
-function _addSegmentInfos(index, newSegment, currentSegment) {
-  var timeline = index.timeline,
-      timescale = index.timescale;
-  var timelineLength = timeline.length;
-  var last = timeline[timelineLength - 1];
-  var scaledNewSegment = newSegment.timescale === timescale ? {
-    time: newSegment.time,
-    duration: newSegment.duration
-  } : {
-    time: newSegment.time / newSegment.timescale * timescale,
-    duration: newSegment.duration / newSegment.timescale * timescale
-  }; // in some circumstances, the new segment information are only duration
-  // information that we could use to deduct the start of the next segment.
-  // This is the case where the new segment are associated to a current
-  // segment and have the same start.
-  // However, we prefer to be sure of the duration of the new segments
-  // before adding such segments.
-
-  var shouldDeductNextSegment = currentSegment.time === scaledNewSegment.time;
-
-  if (shouldDeductNextSegment) {
-    return false;
-  } else if (scaledNewSegment.time >= (0,index_helpers/* getIndexSegmentEnd */.jH)(last, null)) {
-    // if the given timing has a timestamp after the timeline end we
-    // just need to push a new element in the timeline, or increase
-    // the @r attribute of the last element.
-    if (last.duration === scaledNewSegment.duration) {
-      last.repeatCount++;
-    } else {
-      index.timeline.push({
-        duration: scaledNewSegment.duration,
-        start: scaledNewSegment.time,
-        repeatCount: 0
-      });
-    }
-
-    return true;
-  }
-
-  return false;
-}
 ;// CONCATENATED MODULE: ./src/parsers/manifest/smooth/utils/tokens.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -35097,9 +33963,6 @@ function replaceSegmentSmoothTokens(url, time) {
 
 
 
-
-
-
 /**
  * @param {Number} start
  * @param {Number} up
@@ -35123,11 +33986,11 @@ function getSegmentNumber(start, up, duration) {
  */
 
 
-function normalizeRange(index, start, duration) {
-  var timescale = index.timescale === undefined || index.timescale === 0 ? 1 : index.timescale;
+function normalizeRange(timescale, start, duration) {
+  var ts = timescale === undefined || timescale === 0 ? 1 : timescale;
   return {
-    up: start * timescale,
-    to: (start + duration) * timescale
+    up: start * ts,
+    to: (start + duration) * ts
   };
 }
 /**
@@ -35145,7 +34008,7 @@ function calculateRepeat(segment, nextSegment) {
   // next MPD update.
   // TODO Also for SMOOTH????
 
-  if (segment.duration != null && repeatCount < 0) {
+  if (segment.duration !== undefined && repeatCount < 0) {
     var repeatEnd = nextSegment !== undefined ? nextSegment.start : Infinity;
     repeatCount = Math.ceil((repeatEnd - segment.start) / segment.duration) - 1;
   }
@@ -35167,36 +34030,33 @@ var SmoothRepresentationIndex = /*#__PURE__*/function () {
    * @param {Object} index
    * @param {Object} options
    */
-  function SmoothRepresentationIndex(index, options) {
-    var aggressiveMode = options.aggressiveMode,
-        isLive = options.isLive,
+  function SmoothRepresentationIndex(options) {
+    var isLive = options.isLive,
         segmentPrivateInfos = options.segmentPrivateInfos,
-        timeShiftBufferDepth = options.timeShiftBufferDepth;
-    var estimatedReceivedTime = options.manifestReceivedTime == null ? performance.now() : options.manifestReceivedTime;
-    this._index = index;
-    this._indexValidityTime = estimatedReceivedTime;
-    this._timeShiftBufferDepth = timeShiftBufferDepth;
+        media = options.media,
+        sharedSmoothTimeline = options.sharedSmoothTimeline;
+    this._sharedSmoothTimeline = sharedSmoothTimeline;
     this._initSegmentInfos = {
       bitsPerSample: segmentPrivateInfos.bitsPerSample,
       channels: segmentPrivateInfos.channels,
       codecPrivateData: segmentPrivateInfos.codecPrivateData,
       packetSize: segmentPrivateInfos.packetSize,
       samplingRate: segmentPrivateInfos.samplingRate,
-      timescale: index.timescale,
+      timescale: sharedSmoothTimeline.timescale,
+      height: segmentPrivateInfos.height,
+      width: segmentPrivateInfos.width,
       protection: segmentPrivateInfos.protection
     };
-    this._isAggressiveMode = aggressiveMode;
     this._isLive = isLive;
+    this._media = media;
 
-    if (index.timeline.length !== 0) {
-      var lastItem = index.timeline[index.timeline.length - 1];
+    if (sharedSmoothTimeline.timeline.length !== 0 && isLive) {
+      var timeline = sharedSmoothTimeline.timeline,
+          validityTime = sharedSmoothTimeline.validityTime;
+      var lastItem = timeline[timeline.length - 1];
       var scaledEnd = (0,index_helpers/* getIndexSegmentEnd */.jH)(lastItem, null);
-      this._initialScaledLastPosition = scaledEnd;
-
-      if (isLive) {
-        var scaledReceivedTime = estimatedReceivedTime / 1000 * index.timescale;
-        this._scaledLiveGap = scaledReceivedTime - scaledEnd;
-      }
+      var scaledTimelineValidityTime = validityTime / 1000 * sharedSmoothTimeline.timescale;
+      this._scaledLiveGap = scaledTimelineValidityTime - scaledEnd;
     }
   }
   /**
@@ -35226,7 +34086,7 @@ var SmoothRepresentationIndex = /*#__PURE__*/function () {
    * Generate a list of Segments for a particular period of time.
    *
    * @param {Number} from
-   * @param {Number} duration
+   * @param {Number} dur
    * @returns {Array.<Object>}
    */
   ;
@@ -35234,19 +34094,19 @@ var SmoothRepresentationIndex = /*#__PURE__*/function () {
   _proto.getSegments = function getSegments(from, dur) {
     this._refreshTimeline();
 
-    var _normalizeRange = normalizeRange(this._index, from, dur),
+    var _this$_sharedSmoothTi = this._sharedSmoothTimeline,
+        timescale = _this$_sharedSmoothTi.timescale,
+        timeline = _this$_sharedSmoothTi.timeline;
+
+    var _normalizeRange = normalizeRange(timescale, from, dur),
         up = _normalizeRange.up,
         to = _normalizeRange.to;
 
-    var _this$_index = this._index,
-        timeline = _this$_index.timeline,
-        timescale = _this$_index.timescale,
-        media = _this$_index.media;
-    var isAggressive = this._isAggressiveMode;
+    var media = this._media;
     var currentNumber;
     var segments = [];
     var timelineLength = timeline.length;
-    var maxPosition = this._scaledLiveGap == null ? undefined : performance.now() / 1000 * timescale - this._scaledLiveGap;
+    var maxPosition = this._scaledLiveGap === undefined ? undefined : performance.now() / 1000 * timescale - this._scaledLiveGap;
 
     for (var i = 0; i < timelineLength; i++) {
       var segmentRange = timeline[i];
@@ -35255,11 +34115,11 @@ var SmoothRepresentationIndex = /*#__PURE__*/function () {
       var repeat = calculateRepeat(segmentRange, timeline[i + 1]);
       var segmentNumberInCurrentRange = getSegmentNumber(start, up, duration);
       var segmentTime = start + segmentNumberInCurrentRange * duration;
-      var timeToAddToCheckMaxPosition = isAggressive ? 0 : duration;
+      var timeToAddToCheckMaxPosition = duration;
 
-      while (segmentTime < to && segmentNumberInCurrentRange <= repeat && (maxPosition == null || segmentTime + timeToAddToCheckMaxPosition <= maxPosition)) {
+      while (segmentTime < to && segmentNumberInCurrentRange <= repeat && (maxPosition === undefined || segmentTime + timeToAddToCheckMaxPosition <= maxPosition)) {
         var time = segmentTime;
-        var number = currentNumber != null ? currentNumber + segmentNumberInCurrentRange : undefined;
+        var number = currentNumber !== undefined ? currentNumber + segmentNumberInCurrentRange : undefined;
         var segment = {
           id: String(segmentTime),
           isInit: false,
@@ -35288,7 +34148,7 @@ var SmoothRepresentationIndex = /*#__PURE__*/function () {
         return segments;
       }
 
-      if (currentNumber != null) {
+      if (currentNumber !== undefined) {
         currentNumber += repeat + 1;
       }
     }
@@ -35311,9 +34171,9 @@ var SmoothRepresentationIndex = /*#__PURE__*/function () {
       return false;
     }
 
-    var _this$_index2 = this._index,
-        timeline = _this$_index2.timeline,
-        timescale = _this$_index2.timescale;
+    var _this$_sharedSmoothTi2 = this._sharedSmoothTimeline,
+        timeline = _this$_sharedSmoothTi2.timeline,
+        timescale = _this$_sharedSmoothTi2.timescale;
     var lastSegmentInCurrentTimeline = timeline[timeline.length - 1];
 
     if (lastSegmentInCurrentTimeline === undefined) {
@@ -35346,17 +34206,18 @@ var SmoothRepresentationIndex = /*#__PURE__*/function () {
   _proto.getFirstPosition = function getFirstPosition() {
     this._refreshTimeline();
 
-    var index = this._index;
+    var _this$_sharedSmoothTi3 = this._sharedSmoothTimeline,
+        timeline = _this$_sharedSmoothTi3.timeline,
+        timescale = _this$_sharedSmoothTi3.timescale;
 
-    if (index.timeline.length === 0) {
+    if (timeline.length === 0) {
       return null;
     }
 
-    return index.timeline[0].start / index.timescale;
+    return timeline[0].start / timescale;
   }
   /**
    * Returns last position available in the index.
-   * @param {Object} index
    * @returns {Number}
    */
   ;
@@ -35364,26 +34225,28 @@ var SmoothRepresentationIndex = /*#__PURE__*/function () {
   _proto.getLastPosition = function getLastPosition() {
     this._refreshTimeline();
 
-    var index = this._index;
+    var _this$_sharedSmoothTi4 = this._sharedSmoothTimeline,
+        timeline = _this$_sharedSmoothTi4.timeline,
+        timescale = _this$_sharedSmoothTi4.timescale;
 
-    if (this._scaledLiveGap == null) {
-      var lastTimelineElement = index.timeline[index.timeline.length - 1];
-      return (0,index_helpers/* getIndexSegmentEnd */.jH)(lastTimelineElement, null) / index.timescale;
+    if (this._scaledLiveGap === undefined) {
+      var lastTimelineElement = timeline[timeline.length - 1];
+      return (0,index_helpers/* getIndexSegmentEnd */.jH)(lastTimelineElement, null) / timescale;
     }
 
-    for (var i = index.timeline.length - 1; i >= 0; i--) {
-      var timelineElt = index.timeline[i];
-      var timescaledNow = performance.now() / 1000 * index.timescale;
+    for (var i = timeline.length - 1; i >= 0; i--) {
+      var timelineElt = timeline[i];
+      var timescaledNow = performance.now() / 1000 * timescale;
       var start = timelineElt.start,
           duration = timelineElt.duration,
           repeatCount = timelineElt.repeatCount;
 
       for (var j = repeatCount; j >= 0; j--) {
         var end = start + duration * (j + 1);
-        var positionToReach = this._isAggressiveMode ? end - duration : end;
+        var positionToReach = end;
 
         if (positionToReach <= timescaledNow - this._scaledLiveGap) {
-          return end / index.timescale;
+          return end / timescale;
         }
       }
     }
@@ -35404,7 +34267,7 @@ var SmoothRepresentationIndex = /*#__PURE__*/function () {
   _proto.checkDiscontinuity = function checkDiscontinuity(timeSec) {
     this._refreshTimeline();
 
-    return (0,index_helpers/* checkDiscontinuity */._j)(this._index, timeSec, undefined);
+    return (0,index_helpers/* checkDiscontinuity */._j)(this._sharedSmoothTimeline, timeSec, undefined);
   }
   /**
    * Returns `true` as Smooth segments should always be generated in
@@ -35433,9 +34296,9 @@ var SmoothRepresentationIndex = /*#__PURE__*/function () {
 
     this._refreshTimeline();
 
-    var _this$_index3 = this._index,
-        timeline = _this$_index3.timeline,
-        timescale = _this$_index3.timescale;
+    var _this$_sharedSmoothTi5 = this._sharedSmoothTimeline,
+        timeline = _this$_sharedSmoothTi5.timeline,
+        timescale = _this$_sharedSmoothTi5.timescale;
     return (0,is_segment_still_available/* default */.Z)(segment, timeline, timescale, 0);
   }
   /**
@@ -35460,68 +34323,10 @@ var SmoothRepresentationIndex = /*#__PURE__*/function () {
   ;
 
   _proto._replace = function _replace(newIndex) {
-    var oldTimeline = this._index.timeline;
-    var newTimeline = newIndex._index.timeline;
-    var oldTimescale = this._index.timescale;
-    var newTimescale = newIndex._index.timescale;
-    this._index = newIndex._index;
     this._initialScaledLastPosition = newIndex._initialScaledLastPosition;
-    this._indexValidityTime = newIndex._indexValidityTime;
     this._scaledLiveGap = newIndex._scaledLiveGap;
 
-    if (oldTimeline.length === 0 || newTimeline.length === 0 || oldTimescale !== newTimescale) {
-      return; // don't take risk, if something is off, take the new one
-    }
-
-    var lastOldTimelineElement = oldTimeline[oldTimeline.length - 1];
-    var lastNewTimelineElement = newTimeline[newTimeline.length - 1];
-    var newEnd = (0,index_helpers/* getIndexSegmentEnd */.jH)(lastNewTimelineElement, null);
-
-    if ((0,index_helpers/* getIndexSegmentEnd */.jH)(lastOldTimelineElement, null) <= newEnd) {
-      return;
-    }
-
-    for (var i = 0; i < oldTimeline.length; i++) {
-      var oldTimelineRange = oldTimeline[i];
-      var oldEnd = (0,index_helpers/* getIndexSegmentEnd */.jH)(oldTimelineRange, null);
-
-      if (oldEnd === newEnd) {
-        // just add the supplementary segments
-        this._index.timeline = this._index.timeline.concat(oldTimeline.slice(i + 1));
-        return;
-      }
-
-      if (oldEnd > newEnd) {
-        // adjust repeatCount + add supplementary segments
-        if (oldTimelineRange.duration !== lastNewTimelineElement.duration) {
-          return;
-        }
-
-        var rangeDuration = newEnd - oldTimelineRange.start;
-
-        if (rangeDuration === 0) {
-          log/* default.warn */.Z.warn("Smooth Parser: a discontinuity detected in the previous manifest" + " has been resolved.");
-          this._index.timeline = this._index.timeline.concat(oldTimeline.slice(i));
-          return;
-        }
-
-        if (rangeDuration < 0 || rangeDuration % oldTimelineRange.duration !== 0) {
-          return;
-        }
-
-        var repeatWithOld = rangeDuration / oldTimelineRange.duration - 1;
-        var relativeRepeat = oldTimelineRange.repeatCount - repeatWithOld;
-
-        if (relativeRepeat < 0) {
-          return;
-        }
-
-        lastNewTimelineElement.repeatCount += relativeRepeat;
-        var supplementarySegments = oldTimeline.slice(i + 1);
-        this._index.timeline = this._index.timeline.concat(supplementarySegments);
-        return;
-      }
-    }
+    this._sharedSmoothTimeline.replace(newIndex._sharedSmoothTimeline);
   }
   /**
    * Update the current index with a new, partial, version.
@@ -35531,10 +34336,9 @@ var SmoothRepresentationIndex = /*#__PURE__*/function () {
   ;
 
   _proto._update = function _update(newIndex) {
-    (0,update_segment_timeline/* default */.Z)(this._index.timeline, newIndex._index.timeline);
-    this._initialScaledLastPosition = newIndex._initialScaledLastPosition;
-    this._indexValidityTime = newIndex._indexValidityTime;
     this._scaledLiveGap = newIndex._scaledLiveGap;
+
+    this._sharedSmoothTimeline.update(newIndex._sharedSmoothTimeline);
   }
   /**
    * Returns `true` if the last segments in this index have already been
@@ -35559,21 +34363,22 @@ var SmoothRepresentationIndex = /*#__PURE__*/function () {
 
   _proto.isInitialized = function isInitialized() {
     return true;
+  };
+
+  _proto.initialize = function initialize() {
+    log/* default.error */.Z.error("A `SmoothRepresentationIndex` does not need to be initialized");
   }
   /**
-   * Add new segments to a `SmoothRepresentationIndex`.
+   * Add segments to a `SharedSmoothSegmentTimeline` that were predicted to come
+   * after `currentSegment`.
    * @param {Array.<Object>} nextSegments - The segment information parsed.
    * @param {Object} segment - Information on the segment which contained that
    * new segment information.
    */
   ;
 
-  _proto.addNewSegments = function addNewSegments(nextSegments, currentSegment) {
-    this._refreshTimeline();
-
-    for (var i = 0; i < nextSegments.length; i++) {
-      _addSegmentInfos(this._index, nextSegments[i], currentSegment);
-    }
+  _proto.addPredictedSegments = function addPredictedSegments(nextSegments, currentSegment) {
+    this._sharedSmoothTimeline.addPredictedSegments(nextSegments, currentSegment);
   }
   /**
    * Clean-up timeline to remove segment information which should not be
@@ -35582,23 +34387,271 @@ var SmoothRepresentationIndex = /*#__PURE__*/function () {
   ;
 
   _proto._refreshTimeline = function _refreshTimeline() {
-    // clean segments before time shift buffer depth
-    if (this._initialScaledLastPosition == null) {
-      return;
-    }
-
-    var index = this._index;
-    var timeShiftBufferDepth = this._timeShiftBufferDepth;
-    var timeSinceLastRealUpdate = (performance.now() - this._indexValidityTime) / 1000;
-    var lastPositionEstimate = timeSinceLastRealUpdate + this._initialScaledLastPosition / index.timescale;
-
-    if (timeShiftBufferDepth != null) {
-      var minimumPosition = (lastPositionEstimate - timeShiftBufferDepth) * index.timescale;
-      (0,clear_timeline_from_position/* default */.Z)(index.timeline, minimumPosition);
-    }
+    this._sharedSmoothTimeline.refresh();
   };
 
   return SmoothRepresentationIndex;
+}();
+
+
+// EXTERNAL MODULE: ./src/parsers/manifest/utils/clear_timeline_from_position.ts
+var clear_timeline_from_position = __webpack_require__(8232);
+// EXTERNAL MODULE: ./src/parsers/manifest/utils/update_segment_timeline.ts
+var update_segment_timeline = __webpack_require__(5505);
+;// CONCATENATED MODULE: ./src/parsers/manifest/smooth/utils/add_segment_infos.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * Add a new segment to the index.
+ *
+ * /!\ Mutate the given index
+ * @param {Array.<Object>} timeline
+ * @param {number} timescale
+ * @param {Object} newSegment
+ * @param {Object} currentSegment
+ * @returns {Boolean} - true if the segment has been added
+ */
+
+function _addSegmentInfos(timeline, timescale, newSegment, currentSegment) {
+  var timelineLength = timeline.length;
+  var last = timeline[timelineLength - 1];
+  var scaledNewSegment = newSegment.timescale === timescale ? {
+    time: newSegment.time,
+    duration: newSegment.duration
+  } : {
+    time: newSegment.time / newSegment.timescale * timescale,
+    duration: newSegment.duration / newSegment.timescale * timescale
+  }; // in some circumstances, the new segment information are only duration
+  // information that we could use to deduct the start of the next segment.
+  // This is the case where the new segment are associated to a current
+  // segment and have the same start.
+  // However, we prefer to be sure of the duration of the new segments
+  // before adding such segments.
+
+  var shouldDeductNextSegment = currentSegment.time === scaledNewSegment.time;
+
+  if (shouldDeductNextSegment) {
+    return false;
+  } else if (scaledNewSegment.time >= (0,index_helpers/* getIndexSegmentEnd */.jH)(last, null)) {
+    // if the given timing has a timestamp after the timeline end we
+    // just need to push a new element in the timeline, or increase
+    // the @r attribute of the last element.
+    if (last.duration === scaledNewSegment.duration) {
+      last.repeatCount++;
+    } else {
+      timeline.push({
+        duration: scaledNewSegment.duration,
+        start: scaledNewSegment.time,
+        repeatCount: 0
+      });
+    }
+
+    return true;
+  }
+
+  return false;
+}
+;// CONCATENATED MODULE: ./src/parsers/manifest/smooth/shared_smooth_segment_timeline.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+
+
+/**
+ * Smooth contents provide the index of segments under a "StreamIndex", the
+ * smooth equivalent of an AdaptationSet.
+ *
+ * This means that multiple "QualityLevel" (smooth's Representation) are going
+ * to rely on the exact same list of segments. This also means that all
+ * mutations on that timeline (whether it is to evict old segments or to add
+ * new ones) should presumably happen for all of them at the same time.
+ *
+ * The `SharedSmoothSegmentTimeline` is an abstraction over that index of
+ * segments whose goal is to explicitely provide a data structure that can be
+ * shared to every `RepresentationIndex` linked to Representations being part
+ * of the same smooth Adaptation, thus allowing to mutualize any side-effect
+ * done to it automatically.
+ *
+ * @class SharedSmoothSegmentTimeline
+ */
+
+var SharedSmoothSegmentTimeline = /*#__PURE__*/function () {
+  function SharedSmoothSegmentTimeline(args) {
+    var timeline = args.timeline,
+        timescale = args.timescale,
+        timeShiftBufferDepth = args.timeShiftBufferDepth,
+        manifestReceivedTime = args.manifestReceivedTime;
+    this.timeline = timeline;
+    this.timescale = timescale;
+    var estimatedReceivedTime = manifestReceivedTime !== null && manifestReceivedTime !== void 0 ? manifestReceivedTime : performance.now();
+    this.validityTime = estimatedReceivedTime;
+    this._timeShiftBufferDepth = timeShiftBufferDepth;
+
+    if (timeline.length !== 0) {
+      var lastItem = timeline[timeline.length - 1];
+      var scaledEnd = (0,index_helpers/* getIndexSegmentEnd */.jH)(lastItem, null);
+      this._initialScaledLastPosition = scaledEnd;
+    }
+  }
+  /**
+   * Clean-up timeline to remove segment information which should not be
+   * available due to the timeshift window
+   */
+
+
+  var _proto = SharedSmoothSegmentTimeline.prototype;
+
+  _proto.refresh = function refresh() {
+    // clean segments before time shift buffer depth
+    if (this._initialScaledLastPosition === undefined) {
+      return;
+    }
+
+    var timeShiftBufferDepth = this._timeShiftBufferDepth;
+    var timeSinceLastRealUpdate = (performance.now() - this.validityTime) / 1000;
+    var lastPositionEstimate = timeSinceLastRealUpdate + this._initialScaledLastPosition / this.timescale;
+
+    if (timeShiftBufferDepth !== undefined) {
+      var minimumPosition = (lastPositionEstimate - timeShiftBufferDepth) * this.timescale;
+      (0,clear_timeline_from_position/* default */.Z)(this.timeline, minimumPosition);
+    }
+  }
+  /**
+   * Replace this SharedSmoothSegmentTimeline by a newly downloaded one.
+   * Check if the old timeline had more information about new segments and re-add
+   * them if that's the case.
+   * @param {Object} newSmoothTimeline
+   */
+  ;
+
+  _proto.replace = function replace(newSmoothTimeline) {
+    var oldTimeline = this.timeline;
+    var newTimeline = newSmoothTimeline.timeline;
+    var oldTimescale = this.timescale;
+    var newTimescale = newSmoothTimeline.timescale;
+    this._initialScaledLastPosition = newSmoothTimeline._initialScaledLastPosition;
+    this.validityTime = newSmoothTimeline.validityTime;
+
+    if (oldTimeline.length === 0 || newTimeline.length === 0 || oldTimescale !== newTimescale) {
+      return; // don't take risk, if something is off, take the new one
+    }
+
+    var lastOldTimelineElement = oldTimeline[oldTimeline.length - 1];
+    var lastNewTimelineElement = newTimeline[newTimeline.length - 1];
+    var newEnd = (0,index_helpers/* getIndexSegmentEnd */.jH)(lastNewTimelineElement, null);
+
+    if ((0,index_helpers/* getIndexSegmentEnd */.jH)(lastOldTimelineElement, null) <= newEnd) {
+      return;
+    }
+
+    for (var i = 0; i < oldTimeline.length; i++) {
+      var oldTimelineRange = oldTimeline[i];
+      var oldEnd = (0,index_helpers/* getIndexSegmentEnd */.jH)(oldTimelineRange, null);
+
+      if (oldEnd === newEnd) {
+        // just add the supplementary segments
+        this.timeline = this.timeline.concat(oldTimeline.slice(i + 1));
+        return;
+      }
+
+      if (oldEnd > newEnd) {
+        // adjust repeatCount + add supplementary segments
+        if (oldTimelineRange.duration !== lastNewTimelineElement.duration) {
+          return;
+        }
+
+        var rangeDuration = newEnd - oldTimelineRange.start;
+
+        if (rangeDuration === 0) {
+          log/* default.warn */.Z.warn("Smooth Parser: a discontinuity detected in the previous manifest" + " has been resolved.");
+          this.timeline = this.timeline.concat(oldTimeline.slice(i));
+          return;
+        }
+
+        if (rangeDuration < 0 || rangeDuration % oldTimelineRange.duration !== 0) {
+          return;
+        }
+
+        var repeatWithOld = rangeDuration / oldTimelineRange.duration - 1;
+        var relativeRepeat = oldTimelineRange.repeatCount - repeatWithOld;
+
+        if (relativeRepeat < 0) {
+          return;
+        }
+
+        lastNewTimelineElement.repeatCount += relativeRepeat;
+        var supplementarySegments = oldTimeline.slice(i + 1);
+        this.timeline = this.timeline.concat(supplementarySegments);
+        return;
+      }
+    }
+  }
+  /**
+   * Update the current SharedSmoothSegmentTimeline with a new, partial, version.
+   * This method might be use to only add information about new segments.
+   * @param {Object} newSmoothTimeline
+   */
+  ;
+
+  _proto.update = function update(newSmoothTimeline) {
+    (0,update_segment_timeline/* default */.Z)(this.timeline, newSmoothTimeline.timeline);
+    this._initialScaledLastPosition = newSmoothTimeline._initialScaledLastPosition;
+    this.validityTime = newSmoothTimeline.validityTime;
+  }
+  /**
+   * Add segments to a `SharedSmoothSegmentTimeline` that were predicted to come
+   * after `currentSegment`.
+   * @param {Array.<Object>} nextSegments - The segment information parsed.
+   * @param {Object} segment - Information on the segment which contained that
+   * new segment information.
+   */
+  ;
+
+  _proto.addPredictedSegments = function addPredictedSegments(nextSegments, currentSegment) {
+    var _a;
+
+    if (((_a = currentSegment.privateInfos) === null || _a === void 0 ? void 0 : _a.smoothMediaSegment) === undefined) {
+      log/* default.warn */.Z.warn("Smooth Parser: should only encounter SmoothRepresentationIndex");
+      return;
+    }
+
+    this.refresh();
+
+    for (var i = 0; i < nextSegments.length; i++) {
+      _addSegmentInfos(this.timeline, this.timescale, nextSegments[i], currentSegment.privateInfos.smoothMediaSegment);
+    }
+  };
+
+  return SharedSmoothSegmentTimeline;
 }();
 
 
@@ -35702,13 +34755,7 @@ function reduceChildren(root, fn, init) {
 
 
 
-/**
- * Default value for the aggressive `mode`.
- * In this mode, segments will be returned even if we're not sure those had time
- * to be generated.
- */
 
-var DEFAULT_AGGRESSIVE_MODE = false;
 var DEFAULT_MIME_TYPES = {
   audio: "audio/mp4",
   video: "video/mp4",
@@ -35927,21 +34974,19 @@ function createSmoothStreamingParser(parserOptions) {
         qualityLevels = _reduceChildren.qualityLevels,
         cNodes = _reduceChildren.cNodes;
 
-    var index = {
+    var sharedSmoothTimeline = new SharedSmoothSegmentTimeline({
       timeline: parseCNodes(cNodes),
-      timescale: _timescale
-    }; // we assume that all qualityLevels have the same
+      timescale: _timescale,
+      timeShiftBufferDepth: timeShiftBufferDepth,
+      manifestReceivedTime: manifestReceivedTime
+    }); // we assume that all qualityLevels have the same
     // codec and mimeType
 
     (0,assert/* default */.Z)(qualityLevels.length !== 0, "Adaptation should have at least one playable representation.");
     var adaptationID = adaptationType + ((0,is_non_empty_string/* default */.Z)(language) ? "_" + language : "");
     var representations = qualityLevels.map(function (qualityLevel) {
       var path = (0,resolve_url/* default */.Z)(rootURL, baseURL);
-      var repIndex = {
-        timeline: index.timeline,
-        timescale: index.timescale,
-        media: replaceRepresentationSmoothTokens(path, qualityLevel.bitrate, qualityLevel.customAttributes)
-      };
+      var media = replaceRepresentationSmoothTokens(path, qualityLevel.bitrate, qualityLevel.customAttributes);
       var mimeType = (0,is_non_empty_string/* default */.Z)(qualityLevel.mimeType) ? qualityLevel.mimeType : DEFAULT_MIME_TYPES[adaptationType];
       var codecs = qualityLevel.codecs;
       var id = adaptationID + "_" + (adaptationType != null ? adaptationType + "-" : "") + (mimeType != null ? mimeType + "-" : "") + (codecs != null ? codecs + "-" : "") + String(qualityLevel.bitrate);
@@ -35967,19 +35012,19 @@ function createSmoothStreamingParser(parserOptions) {
         codecPrivateData: qualityLevel.codecPrivateData,
         packetSize: qualityLevel.packetSize,
         samplingRate: qualityLevel.samplingRate,
+        height: qualityLevel.height,
+        width: qualityLevel.width,
         // TODO set multiple protections here
         // instead of the first one
         protection: firstProtection != null ? {
           keyId: firstProtection.keyId
         } : undefined
       };
-      var aggressiveMode = parserOptions.aggressiveMode == null ? DEFAULT_AGGRESSIVE_MODE : parserOptions.aggressiveMode;
-      var reprIndex = new SmoothRepresentationIndex(repIndex, {
-        aggressiveMode: aggressiveMode,
+      var reprIndex = new SmoothRepresentationIndex({
         isLive: isLive,
-        manifestReceivedTime: manifestReceivedTime,
-        segmentPrivateInfos: segmentPrivateInfos,
-        timeShiftBufferDepth: timeShiftBufferDepth
+        sharedSmoothTimeline: sharedSmoothTimeline,
+        media: media,
+        segmentPrivateInfos: segmentPrivateInfos
       });
       var representation = (0,object_assign/* default */.Z)({}, qualityLevel, {
         index: reprIndex,
@@ -36289,8 +35334,6 @@ function createPSSHBox(systemId, privateData) {
 
 // EXTERNAL MODULE: ./src/utils/request/index.ts + 1 modules
 var request = __webpack_require__(4597);
-// EXTERNAL MODULE: ./src/utils/warn_once.ts
-var warn_once = __webpack_require__(8806);
 // EXTERNAL MODULE: ./src/transports/utils/check_isobmff_integrity.ts
 var check_isobmff_integrity = __webpack_require__(4460);
 // EXTERNAL MODULE: ./src/transports/utils/generate_manifest_loader.ts + 1 modules
@@ -36490,6 +35533,32 @@ function extractTimingsInfos(data, isChunked, initTimescale, segment, isLive) {
     chunkInfos: chunkInfos,
     scaledSegmentTime: scaledSegmentTime
   };
+}
+;// CONCATENATED MODULE: ./src/transports/smooth/is_mp4_embedded_track.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * Returns `true` if the given Representation refers to segments in an MP4
+ * container
+ * @param {Representation} representation
+ * @returns {Boolean}
+ */
+function isMP4EmbeddedTrack(mimeType) {
+  return typeof mimeType === "string" && mimeType.indexOf("mp4") >= 0;
 }
 // EXTERNAL MODULE: ./src/compat/browser_detection.ts
 var browser_detection = __webpack_require__(3666);
@@ -37321,98 +36390,6 @@ function createAudioInitSegment(timescale, channelsCount, sampleSize, packetSize
 
   return createInitSegment(timescale, "audio", stsd, createSMHDBox(), 0, 0);
 }
-;// CONCATENATED MODULE: ./src/transports/smooth/utils.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-var ISM_REG = /(\.isml?)(\?token=\S+)?$/;
-var TOKEN_REG = /\?token=(\S+)/;
-/**
- * TODO Remove this logic completely from the player
- * @param {Document} doc
- * @returns {string|null}
- */
-
-function extractISML(doc) {
-  return doc.getElementsByTagName("media")[0].getAttribute("src");
-}
-/**
- * Returns string corresponding to the token contained in the url's querystring.
- * Empty string if no token is found.
- * @param {string} url
- * @returns {string}
- */
-
-
-function extractToken(url) {
-  var tokenMatch = TOKEN_REG.exec(url);
-
-  if (tokenMatch !== null) {
-    var match = tokenMatch[1];
-
-    if (match !== undefined) {
-      return match;
-    }
-  }
-
-  return "";
-}
-/**
- * Replace/Remove token from the url's querystring
- * @param {string} url
- * @param {string} [token]
- * @returns {string}
- */
-
-
-function replaceToken(url, token) {
-  if ((0,is_non_empty_string/* default */.Z)(token)) {
-    return url.replace(TOKEN_REG, "?token=" + token);
-  } else {
-    return url.replace(TOKEN_REG, "");
-  }
-}
-/**
- * @param {string} url
- * @returns {string}
- */
-
-
-function resolveManifest(url) {
-  if (ISM_REG.test(url)) {
-    (0,warn_once/* default */.Z)("Giving a isml URL to loadVideo is deprecated." + " Please give the Manifest URL directly");
-    return url.replace(ISM_REG, "$1/manifest$2");
-  }
-
-  return url;
-}
-/**
- * Returns `true` if the given Representation refers to segments in an MP4
- * container
- * @param {Representation} representation
- * @returns {Boolean}
- */
-
-
-function isMP4EmbeddedTrack(representation) {
-  return typeof representation.mimeType === "string" && representation.mimeType.indexOf("mp4") >= 0;
-}
-
-
 ;// CONCATENATED MODULE: ./src/transports/smooth/segment_loader.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -37438,17 +36415,17 @@ function isMP4EmbeddedTrack(representation) {
 
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
- * @param {string} uri
- * @param {Object} content
+ * @param {string} url
+ * @param {Object} context
  * @param {Object} callbacks
  * @param {Object} cancelSignal
  * @param {boolean} checkMediaSegmentIntegrity
  * @returns {Promise}
  */
 
-function regularSegmentLoader(url, content, callbacks, cancelSignal, checkMediaSegmentIntegrity) {
+function regularSegmentLoader(url, context, callbacks, cancelSignal, checkMediaSegmentIntegrity) {
   var headers;
-  var range = content.segment.range;
+  var range = context.segment.range;
 
   if (Array.isArray(range)) {
     headers = {
@@ -37463,7 +36440,7 @@ function regularSegmentLoader(url, content, callbacks, cancelSignal, checkMediaS
     cancelSignal: cancelSignal,
     onProgress: callbacks.onProgress
   }).then(function (data) {
-    var isMP4 = isMP4EmbeddedTrack(content.representation);
+    var isMP4 = isMP4EmbeddedTrack(context.mimeType);
 
     if (!isMP4 || checkMediaSegmentIntegrity !== true) {
       return {
@@ -37473,7 +36450,7 @@ function regularSegmentLoader(url, content, callbacks, cancelSignal, checkMediaS
     }
 
     var dataU8 = new Uint8Array(data.responseData);
-    (0,check_isobmff_integrity/* default */.Z)(dataU8, content.segment.isInit);
+    (0,check_isobmff_integrity/* default */.Z)(dataU8, context.segment.isInit);
     return {
       resultType: "segment-loaded",
       resultData: Object.assign(Object.assign({}, data), {
@@ -37491,12 +36468,8 @@ function regularSegmentLoader(url, content, callbacks, cancelSignal, checkMediaS
 var generateSegmentLoader = function generateSegmentLoader(_ref) {
   var checkMediaSegmentIntegrity = _ref.checkMediaSegmentIntegrity,
       customSegmentLoader = _ref.customSegmentLoader;
-  return function (url, content, cancelSignal, callbacks) {
-    var segment = content.segment,
-        manifest = content.manifest,
-        period = content.period,
-        adaptation = content.adaptation,
-        representation = content.representation;
+  return function (url, context, cancelSignal, callbacks) {
+    var segment = context.segment;
 
     if (segment.isInit) {
       if (segment.privateInfos === undefined || segment.privateInfos.smoothInitSegment === undefined) {
@@ -37507,6 +36480,8 @@ var generateSegmentLoader = function generateSegmentLoader(_ref) {
       var responseData;
       var codecPrivateData = smoothInitPrivateInfos.codecPrivateData,
           timescale = smoothInitPrivateInfos.timescale,
+          height = smoothInitPrivateInfos.height,
+          width = smoothInitPrivateInfos.width,
           _smoothInitPrivateInf = smoothInitPrivateInfos.protection,
           protection = _smoothInitPrivateInf === void 0 ? {
         keyId: undefined,
@@ -37517,14 +36492,10 @@ var generateSegmentLoader = function generateSegmentLoader(_ref) {
         throw new Error("Smooth: no codec private data.");
       }
 
-      switch (adaptation.type) {
+      switch (context.type) {
         case "video":
           {
-            var _representation$width = representation.width,
-                width = _representation$width === void 0 ? 0 : _representation$width,
-                _representation$heigh = representation.height,
-                height = _representation$heigh === void 0 ? 0 : _representation$heigh;
-            responseData = createVideoInitSegment(timescale, width, height, 72, 72, 4, // vRes, hRes, nal
+            responseData = createVideoInitSegment(timescale, width !== null && width !== void 0 ? width : 0, height !== null && height !== void 0 ? height : 0, 72, 72, 4, // vRes, hRes, nal
             codecPrivateData, protection.keyId);
             break;
           }
@@ -37559,18 +36530,8 @@ var generateSegmentLoader = function generateSegmentLoader(_ref) {
         resultData: null
       });
     } else {
-      var args = {
-        adaptation: adaptation,
-        manifest: manifest,
-        period: period,
-        representation: representation,
-        segment: segment,
-        transport: "smooth",
-        url: url
-      };
-
       if (typeof customSegmentLoader !== "function") {
-        return regularSegmentLoader(url, content, callbacks, cancelSignal, checkMediaSegmentIntegrity);
+        return regularSegmentLoader(url, context, callbacks, cancelSignal, checkMediaSegmentIntegrity);
       }
 
       return new Promise(function (res, rej) {
@@ -37588,7 +36549,7 @@ var generateSegmentLoader = function generateSegmentLoader(_ref) {
 
           hasFinished = true;
           cancelSignal.deregister(abortCustomLoader);
-          var isMP4 = isMP4EmbeddedTrack(content.representation);
+          var isMP4 = isMP4EmbeddedTrack(context.mimeType);
 
           if (!isMP4 || checkMediaSegmentIntegrity !== true) {
             res({
@@ -37602,7 +36563,7 @@ var generateSegmentLoader = function generateSegmentLoader(_ref) {
           }
 
           var dataU8 = _args.data instanceof Uint8Array ? _args.data : new Uint8Array(_args.data);
-          (0,check_isobmff_integrity/* default */.Z)(dataU8, content.segment.isInit);
+          (0,check_isobmff_integrity/* default */.Z)(dataU8, context.segment.isInit);
           res({
             resultType: "segment-loaded",
             resultData: {
@@ -37653,7 +36614,7 @@ var generateSegmentLoader = function generateSegmentLoader(_ref) {
 
           hasFinished = true;
           cancelSignal.deregister(abortCustomLoader);
-          regularSegmentLoader(url, content, callbacks, cancelSignal, checkMediaSegmentIntegrity).then(res, rej);
+          regularSegmentLoader(url, context, callbacks, cancelSignal, checkMediaSegmentIntegrity).then(res, rej);
         };
 
         var customCallbacks = {
@@ -37661,6 +36622,13 @@ var generateSegmentLoader = function generateSegmentLoader(_ref) {
           resolve: resolve,
           fallback: fallback,
           progress: progress
+        };
+        var args = {
+          isInit: context.segment.isInit,
+          range: context.segment.range,
+          indexRange: context.segment.indexRange,
+          type: context.type,
+          url: url
         };
         var abort = customSegmentLoader(args, customCallbacks);
         cancelSignal.register(abortCustomLoader);
@@ -37689,9 +36657,6 @@ var generateSegmentLoader = function generateSegmentLoader(_ref) {
 
 /* harmony default export */ var segment_loader = (generateSegmentLoader);
 ;// CONCATENATED MODULE: ./src/transports/smooth/pipelines.ts
-
-
-
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -37719,32 +36684,6 @@ var generateSegmentLoader = function generateSegmentLoader(_ref) {
 
 
 
-
-
-var WSX_REG = /\.wsx?(\?token=\S+)?/;
-/**
- * @param {Object} adaptation
- * @param {Object} dlSegment
- * @param {Object} nextSegments
- */
-
-function addNextSegments(adaptation, nextSegments, dlSegment) {
-  var _a;
-
-  log/* default.debug */.Z.debug("Smooth Parser: update segments information.");
-  var representations = adaptation.representations;
-
-  for (var i = 0; i < representations.length; i++) {
-    var representation = representations[i];
-
-    if (representation.index instanceof SmoothRepresentationIndex && ((_a = dlSegment === null || dlSegment === void 0 ? void 0 : dlSegment.privateInfos) === null || _a === void 0 ? void 0 : _a.smoothMediaSegment) !== undefined) {
-      representation.index.addNewSegments(nextSegments, dlSegment.privateInfos.smoothMediaSegment);
-    } else {
-      log/* default.warn */.Z.warn("Smooth Parser: should only encounter SmoothRepresentationIndex");
-    }
-  }
-}
-
 /* harmony default export */ function pipelines(options) {
   var smoothManifestParser = smooth(options);
   var segmentLoader = segment_loader(options);
@@ -37753,38 +36692,6 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
   };
   var manifestLoader = (0,generate_manifest_loader/* default */.Z)(manifestLoaderOptions, "text");
   var manifestPipeline = {
-    // TODO (v4.x.x) Remove that function
-    resolveManifestUrl: function resolveManifestUrl(url, cancelSignal) {
-      if (url === undefined) {
-        return Promise.resolve(undefined);
-      }
-
-      var resolving;
-
-      if (WSX_REG.test(url)) {
-        (0,warn_once/* default */.Z)("Giving WSX URL to loadVideo is deprecated." + " You should only give Manifest URLs.");
-        resolving = (0,request/* default */.ZP)({
-          url: replaceToken(url, ""),
-          responseType: "document",
-          cancelSignal: cancelSignal
-        }).then(function (value) {
-          var extractedURL = extractISML(value.responseData);
-
-          if (extractedURL === null || extractedURL.length === 0) {
-            throw new Error("Invalid ISML");
-          }
-
-          return extractedURL;
-        });
-      } else {
-        resolving = Promise.resolve(url);
-      }
-
-      var token = extractToken(url);
-      return resolving.then(function (_url) {
-        return replaceToken(resolveManifest(_url), token);
-      });
-    },
     loadManifest: manifestLoader,
     parseManifest: function parseManifest(manifestData, parserOptions) {
       var _a;
@@ -37796,9 +36703,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
 
       var parserResult = smoothManifestParser(documentData, url, manifestReceivedTime);
       var manifest = new src_manifest/* default */.ZP(parserResult, {
-        representationFilter: options.representationFilter,
-        supplementaryImageTracks: options.supplementaryImageTracks,
-        supplementaryTextTracks: options.supplementaryTextTracks
+        representationFilter: options.representationFilter
       });
       return {
         manifest: manifest,
@@ -37815,20 +36720,18 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
     /**
      * Load a Smooth audio/video segment.
      * @param {string|null} url
-     * @param {Object} content
+     * @param {Object} context
      * @param {Object} cancelSignal
      * @param {Object} callbacks
      * @returns {Promise}
      */
-    loadSegment: function loadSegment(url, content, cancelSignal, callbacks) {
-      return segmentLoader(url, content, cancelSignal, callbacks);
+    loadSegment: function loadSegment(url, context, cancelSignal, callbacks) {
+      return segmentLoader(url, context, cancelSignal, callbacks);
     },
-    parseSegment: function parseSegment(loadedSegment, content, initTimescale) {
+    parseSegment: function parseSegment(loadedSegment, context, initTimescale) {
       var _a, _b;
 
-      var segment = content.segment,
-          adaptation = content.adaptation,
-          manifest = content.manifest;
+      var segment = context.segment;
       var data = loadedSegment.data,
           isChunked = loadedSegment.isChunked;
 
@@ -37838,7 +36741,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
             segmentType: "init",
             initializationData: null,
             initializationDataSize: 0,
-            protectionDataUpdate: false,
+            protectionData: [],
             initTimescale: undefined
           };
         }
@@ -37849,7 +36752,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
           chunkInfos: null,
           chunkOffset: 0,
           chunkSize: 0,
-          protectionDataUpdate: false,
+          protectionData: [],
           appendWindow: [undefined, undefined]
         };
       }
@@ -37865,11 +36768,11 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
           // smooth init segments are crafted by hand.
           // Their timescale is the one from the manifest.
           initTimescale: timescale,
-          protectionDataUpdate: false
+          protectionData: []
         };
       }
 
-      var timingInfos = initTimescale !== undefined ? extractTimingsInfos(responseBuffer, isChunked, initTimescale, segment, manifest.isLive) : null;
+      var timingInfos = initTimescale !== undefined ? extractTimingsInfos(responseBuffer, isChunked, initTimescale, segment, context.isLive) : null;
 
       if (timingInfos === null || timingInfos.chunkInfos === null || timingInfos.scaledSegmentTime === undefined) {
         throw new Error("Smooth Segment without time information");
@@ -37879,26 +36782,22 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
           chunkInfos = timingInfos.chunkInfos,
           scaledSegmentTime = timingInfos.scaledSegmentTime;
       var chunkData = patchSegment(responseBuffer, scaledSegmentTime);
-
-      if (nextSegments.length > 0) {
-        addNextSegments(adaptation, nextSegments, segment);
-      }
-
+      var predictedSegments = nextSegments.length > 0 ? nextSegments : undefined;
       return {
         segmentType: "media",
         chunkData: chunkData,
         chunkInfos: chunkInfos,
         chunkOffset: 0,
         chunkSize: chunkData.length,
-        protectionDataUpdate: false,
+        protectionData: [],
+        predictedSegments: predictedSegments,
         appendWindow: [undefined, undefined]
       };
     }
   };
   var textTrackPipeline = {
-    loadSegment: function loadSegment(url, content, cancelSignal, callbacks) {
-      var segment = content.segment,
-          representation = content.representation;
+    loadSegment: function loadSegment(url, context, cancelSignal, callbacks) {
+      var segment = context.segment;
 
       if (segment.isInit || url === null) {
         return Promise.resolve({
@@ -37907,7 +36806,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
         });
       }
 
-      var isMP4 = isMP4EmbeddedTrack(representation);
+      var isMP4 = isMP4EmbeddedTrack(context.mimeType);
 
       if (!isMP4) {
         return (0,request/* default */.ZP)({
@@ -37936,7 +36835,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
           }
 
           var dataU8 = new Uint8Array(data.responseData);
-          (0,check_isobmff_integrity/* default */.Z)(dataU8, content.segment.isInit);
+          (0,check_isobmff_integrity/* default */.Z)(dataU8, context.segment.isInit);
           return {
             resultType: "segment-loaded",
             resultData: Object.assign(Object.assign({}, data), {
@@ -37946,19 +36845,16 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
         });
       }
     },
-    parseSegment: function parseSegment(loadedSegment, content, initTimescale) {
+    parseSegment: function parseSegment(loadedSegment, context, initTimescale) {
       var _a;
 
-      var manifest = content.manifest,
-          adaptation = content.adaptation,
-          representation = content.representation,
-          segment = content.segment;
-      var language = adaptation.language;
-      var isMP4 = isMP4EmbeddedTrack(representation);
-      var _representation$mimeT = representation.mimeType,
-          mimeType = _representation$mimeT === void 0 ? "" : _representation$mimeT,
-          _representation$codec = representation.codec,
-          codec = _representation$codec === void 0 ? "" : _representation$codec;
+      var segment = context.segment,
+          language = context.language,
+          _context$mimeType = context.mimeType,
+          mimeType = _context$mimeType === void 0 ? "" : _context$mimeType,
+          _context$codecs = context.codecs,
+          codecs = _context$codecs === void 0 ? "" : _context$codecs;
+      var isMP4 = isMP4EmbeddedTrack(context.mimeType);
       var data = loadedSegment.data,
           isChunked = loadedSegment.isChunked;
       var chunkSize;
@@ -37969,7 +36865,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
           segmentType: "init",
           initializationData: null,
           initializationDataSize: 0,
-          protectionDataUpdate: false,
+          protectionData: [],
           initTimescale: undefined
         };
       }
@@ -37981,7 +36877,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
           chunkInfos: null,
           chunkOffset: 0,
           chunkSize: 0,
-          protectionDataUpdate: false,
+          protectionData: [],
           appendWindow: [undefined, undefined]
         };
       }
@@ -38005,7 +36901,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
         }
 
         chunkSize = chunkBytes.length;
-        var timingInfos = initTimescale !== undefined ? extractTimingsInfos(chunkBytes, isChunked, initTimescale, segment, manifest.isLive) : null;
+        var timingInfos = initTimescale !== undefined ? extractTimingsInfos(chunkBytes, isChunked, initTimescale, segment, context.isLive) : null;
         nextSegments = timingInfos === null || timingInfos === void 0 ? void 0 : timingInfos.nextSegments;
         chunkInfos = (_a = timingInfos === null || timingInfos === void 0 ? void 0 : timingInfos.chunkInfos) !== null && _a !== void 0 ? _a : null;
 
@@ -38021,7 +36917,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
           segmentEnd = chunkInfos.duration !== undefined ? chunkInfos.time + chunkInfos.duration : segment.end;
         }
 
-        var lcCodec = codec.toLowerCase();
+        var lcCodec = codecs.toLowerCase();
 
         if (mimeType === "application/ttml+xml+mp4" || lcCodec === "stpp" || lcCodec === "stpp.ttml.im1t") {
           _sdType = "ttml";
@@ -38064,7 +36960,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
         }
 
         if (_sdType === undefined) {
-          var _lcCodec = codec.toLowerCase();
+          var _lcCodec = codecs.toLowerCase();
 
           if (_lcCodec === "srt") {
             _sdType = "srt";
@@ -38076,10 +36972,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
         _sdData = chunkString;
       }
 
-      if (chunkInfos !== null && Array.isArray(nextSegments) && nextSegments.length > 0) {
-        addNextSegments(adaptation, nextSegments, segment);
-      }
-
+      var predictedSegments = Array.isArray(nextSegments) && nextSegments.length > 0 ? nextSegments : undefined;
       var chunkOffset = segmentStart !== null && segmentStart !== void 0 ? segmentStart : 0;
       return {
         segmentType: "media",
@@ -38093,103 +36986,8 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
         chunkSize: chunkSize,
         chunkInfos: chunkInfos,
         chunkOffset: chunkOffset,
-        protectionDataUpdate: false,
-        appendWindow: [undefined, undefined]
-      };
-    }
-  };
-  var imageTrackPipeline = {
-    loadSegment: function loadSegment(url, content, cancelSignal, callbacks) {
-      return (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee() {
-        var data;
-        return regenerator_default().wrap(function _callee$(_context) {
-          while (1) {
-            switch (_context.prev = _context.next) {
-              case 0:
-                if (!(content.segment.isInit || url === null)) {
-                  _context.next = 2;
-                  break;
-                }
-
-                return _context.abrupt("return", {
-                  resultType: "segment-created",
-                  resultData: null
-                });
-
-              case 2:
-                _context.next = 4;
-                return (0,request/* default */.ZP)({
-                  url: url,
-                  responseType: "arraybuffer",
-                  onProgress: callbacks.onProgress,
-                  cancelSignal: cancelSignal
-                });
-
-              case 4:
-                data = _context.sent;
-                return _context.abrupt("return", {
-                  resultType: "segment-loaded",
-                  resultData: data
-                });
-
-              case 6:
-              case "end":
-                return _context.stop();
-            }
-          }
-        }, _callee);
-      }))();
-    },
-    parseSegment: function parseSegment(loadedSegment, content, _initTimescale) {
-      var data = loadedSegment.data,
-          isChunked = loadedSegment.isChunked;
-
-      if (content.segment.isInit) {
-        // image init segment has no use
-        return {
-          segmentType: "init",
-          initializationData: null,
-          initializationDataSize: 0,
-          protectionDataUpdate: false,
-          initTimescale: undefined
-        };
-      }
-
-      if (isChunked) {
-        throw new Error("Image data should not be downloaded in chunks");
-      } // TODO image Parsing should be more on the buffer side, no?
-
-
-      if (data === null || features/* default.imageParser */.Z.imageParser === null) {
-        return {
-          segmentType: "media",
-          chunkData: null,
-          chunkInfos: null,
-          chunkOffset: 0,
-          chunkSize: 0,
-          protectionDataUpdate: false,
-          appendWindow: [undefined, undefined]
-        };
-      }
-
-      var bifObject = features/* default.imageParser */.Z.imageParser(new Uint8Array(data));
-      var thumbsData = bifObject.thumbs;
-      return {
-        segmentType: "media",
-        chunkData: {
-          data: thumbsData,
-          start: 0,
-          end: Number.MAX_VALUE,
-          timescale: 1,
-          type: "bif"
-        },
-        chunkInfos: {
-          time: 0,
-          duration: Number.MAX_VALUE
-        },
-        chunkSize: undefined,
-        chunkOffset: 0,
-        protectionDataUpdate: false,
+        protectionData: [],
+        predictedSegments: predictedSegments,
         appendWindow: [undefined, undefined]
       };
     }
@@ -38198,8 +36996,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
     manifest: manifestPipeline,
     audio: audioVideoPipeline,
     video: audioVideoPipeline,
-    text: textTrackPipeline,
-    image: imageTrackPipeline
+    text: textTrackPipeline
   };
 }
 ;// CONCATENATED MODULE: ./src/transports/smooth/index.ts
@@ -38515,7 +37312,9 @@ function callCustomManifestLoader(customManifestLoader, fallbackManifestLoader) 
         resolve: resolve,
         fallback: fallback
       };
-      var abort = customManifestLoader(url, callbacks);
+      var abort = customManifestLoader({
+        url: url
+      }, callbacks);
       cancelSignal.register(abortCustomLoader);
       /**
        * The logic to run when the custom loader is cancelled while pending.
@@ -40247,43 +39046,17 @@ function isNullOrUndefined(x) {
 
 /***/ }),
 
-/***/ 7829:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var _normalize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5553);
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/* harmony default export */ __webpack_exports__["ZP"] = (_normalize__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .ZP);
-
-
-/***/ }),
-
-/***/ 5553:
+/***/ 5288:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
-  "ZP": function() { return /* binding */ normalize; },
-  "iH": function() { return /* binding */ normalizeAudioTrack; },
-  "Y1": function() { return /* binding */ normalizeTextTrack; }
+  "ZP": function() { return /* binding */ languages; }
 });
+
+// UNUSED EXPORTS: normalizeAudioTrack, normalizeTextTrack
 
 // EXTERNAL MODULE: ./src/utils/is_non_empty_string.ts
 var is_non_empty_string = __webpack_require__(6923);
@@ -40623,7 +39396,7 @@ function normalizeBase(base) {
 
 
 function normalizeTextTrack(_language) {
-  if (!(0,is_null_or_undefined/* default */.Z)(_language)) {
+  if (!isNullOrUndefined(_language)) {
     var language;
     var closedCaption = false;
 
@@ -40660,7 +39433,7 @@ function normalizeTextTrack(_language) {
 
 
 function normalizeAudioTrack(_language) {
-  if ((0,is_null_or_undefined/* default */.Z)(_language)) {
+  if (isNullOrUndefined(_language)) {
     return _language;
   }
 
@@ -40686,6 +39459,25 @@ function normalizeAudioTrack(_language) {
 }
 
 /* harmony default export */ var normalize = (normalizeLanguage);
+
+;// CONCATENATED MODULE: ./src/utils/languages/index.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* harmony default export */ var languages = (normalize);
 
 
 /***/ }),
@@ -40820,19 +39612,17 @@ function objectValues(o) {
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "A1": function() { return /* binding */ isTimeInRanges; },
-/* harmony export */   "DD": function() { return /* binding */ getPlayedSizeOfRange; },
 /* harmony export */   "F_": function() { return /* binding */ getInnerAndOuterTimeRanges; },
 /* harmony export */   "JN": function() { return /* binding */ convertToRanges; },
 /* harmony export */   "L7": function() { return /* binding */ getLeftSizeOfRange; },
 /* harmony export */   "Ti": function() { return /* binding */ isTimeInRange; },
 /* harmony export */   "XS": function() { return /* binding */ getNextRangeGap; },
-/* harmony export */   "at": function() { return /* binding */ getSizeOfRange; },
 /* harmony export */   "kR": function() { return /* binding */ insertInto; },
 /* harmony export */   "rx": function() { return /* binding */ getRange; },
 /* harmony export */   "tn": function() { return /* binding */ keepRangeIntersection; },
 /* harmony export */   "uH": function() { return /* binding */ excludeFromRanges; }
 /* harmony export */ });
-/* unused harmony exports isAfter, isBefore, isTimeInTimeRanges, mergeContiguousRanges, removeEmptyRanges */
+/* unused harmony exports getPlayedSizeOfRange, getSizeOfRange, isAfter, isBefore, isTimeInTimeRanges, mergeContiguousRanges, removeEmptyRanges */
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -41719,7 +40509,7 @@ function request(options) {
         deregisterCancellationListener();
       }
 
-      reject(new request_error/* default */.Z(url, xhr.status, "ERROR_EVENT", xhr));
+      reject(new request_error/* default */.Z(url, xhr.status, "ERROR_EVENT"));
     };
 
     xhr.ontimeout = function onXHRTimeout() {
@@ -41727,7 +40517,7 @@ function request(options) {
         deregisterCancellationListener();
       }
 
-      reject(new request_error/* default */.Z(url, xhr.status, "TIMEOUT", xhr));
+      reject(new request_error/* default */.Z(url, xhr.status, "TIMEOUT"));
     };
 
     if (onProgress !== undefined) {
@@ -41770,7 +40560,7 @@ function request(options) {
           }
 
           if ((0,is_null_or_undefined/* default */.Z)(responseData)) {
-            reject(new request_error/* default */.Z(url, xhr.status, "PARSE_ERROR", xhr));
+            reject(new request_error/* default */.Z(url, xhr.status, "PARSE_ERROR"));
             return;
           }
 
@@ -41785,7 +40575,7 @@ function request(options) {
             responseData: responseData
           });
         } else {
-          reject(new request_error/* default */.Z(url, xhr.status, "ERROR_HTTP_CODE", xhr));
+          reject(new request_error/* default */.Z(url, xhr.status, "ERROR_HTTP_CODE"));
         }
       }
     };
@@ -42842,9 +41632,6 @@ var CancellationSignal = /*#__PURE__*/function () {
 var CancellationError = /*#__PURE__*/function (_Error) {
   (0,_babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .Z)(CancellationError, _Error);
 
-  /**
-   * @param {string} message
-   */
   function CancellationError() {
     var _this4;
 
@@ -46529,18 +45316,14 @@ var inheritsLoose = __webpack_require__(4578);
 var Subject = __webpack_require__(6716);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/take.js
 var take = __webpack_require__(4727);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/takeUntil.js
-var takeUntil = __webpack_require__(3505);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/map.js
-var map = __webpack_require__(9127);
-// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/distinctUntilChanged.js
-var distinctUntilChanged = __webpack_require__(3741);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/Observable.js + 1 modules
 var Observable = __webpack_require__(1480);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/of.js
 var of = __webpack_require__(2817);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/mergeMap.js + 1 modules
 var mergeMap = __webpack_require__(7877);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/takeUntil.js
+var takeUntil = __webpack_require__(3505);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/shareReplay.js
 var shareReplay = __webpack_require__(8515);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/observable/defer.js
@@ -46575,6 +45358,10 @@ function connectable(source, config) {
 //# sourceMappingURL=connectable.js.map
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/filter.js
 var filter = __webpack_require__(4975);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/map.js
+var map = __webpack_require__(9127);
+// EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/distinctUntilChanged.js
+var distinctUntilChanged = __webpack_require__(3741);
 // EXTERNAL MODULE: ./node_modules/rxjs/dist/esm5/internal/operators/share.js
 var share = __webpack_require__(5583);
 ;// CONCATENATED MODULE: ./node_modules/rxjs/dist/esm5/internal/util/argsArgArrayOrObject.js
@@ -46761,86 +45548,6 @@ function getStartDate(mediaElement) {
     }
   }
 }
-;// CONCATENATED MODULE: ./src/compat/fullscreen.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * Request fullScreen action on a given element.
- * @param {HTMLElement} elt
- */
-function requestFullscreen(element) {
-  if (!fullscreen_isFullscreen()) {
-    var elt = element;
-    /* eslint-disable @typescript-eslint/unbound-method */
-
-    if (typeof elt.requestFullscreen === "function") {
-      /* eslint-enable @typescript-eslint/unbound-method */
-
-      /* eslint-disable @typescript-eslint/no-floating-promises */
-      elt.requestFullscreen();
-      /* eslint-enable @typescript-eslint/no-floating-promises */
-    } else if (typeof elt.msRequestFullscreen === "function") {
-      elt.msRequestFullscreen();
-    } else if (typeof elt.mozRequestFullScreen === "function") {
-      elt.mozRequestFullScreen();
-    } else if (typeof elt.webkitRequestFullscreen === "function") {
-      elt.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-    }
-  }
-}
-/**
- * Exit fullscreen if an element is currently in fullscreen.
- */
-
-
-function fullscreen_exitFullscreen() {
-  if (fullscreen_isFullscreen()) {
-    var doc = document;
-    /* eslint-disable @typescript-eslint/unbound-method */
-
-    if (typeof doc.exitFullscreen === "function") {
-      /* eslint-enable @typescript-eslint/unbound-method */
-
-      /* eslint-disable @typescript-eslint/no-floating-promises */
-      doc.exitFullscreen();
-      /* eslint-enable @typescript-eslint/no-floating-promises */
-    } else if (typeof doc.msExitFullscreen === "function") {
-      doc.msExitFullscreen();
-    } else if (typeof doc.mozCancelFullScreen === "function") {
-      doc.mozCancelFullScreen();
-    } else if (typeof doc.webkitExitFullscreen === "function") {
-      doc.webkitExitFullscreen();
-    }
-  }
-}
-/**
- * Returns true if an element in the document is being displayed in fullscreen
- * mode;
- * otherwise it's false.
- * @returns {boolean}
- */
-
-
-function fullscreen_isFullscreen() {
-  var doc = document;
-  return doc.fullscreenElement != null || doc.mozFullScreenElement != null || doc.webkitFullscreenElement != null || doc.msFullscreenElement != null;
-}
-
-
 // EXTERNAL MODULE: ./src/compat/browser_detection.ts
 var browser_detection = __webpack_require__(3666);
 // EXTERNAL MODULE: ./src/log.ts + 1 modules
@@ -46958,10 +45665,8 @@ var format_error = __webpack_require__(8750);
 var error_codes = __webpack_require__(5992);
 // EXTERNAL MODULE: ./src/features/index.ts
 var features = __webpack_require__(7874);
-// EXTERNAL MODULE: ./src/manifest/index.ts + 6 modules
-var manifest = __webpack_require__(1989);
-// EXTERNAL MODULE: ./src/utils/are_arrays_of_numbers_equal.ts
-var are_arrays_of_numbers_equal = __webpack_require__(4791);
+// EXTERNAL MODULE: ./src/manifest/index.ts + 5 modules
+var manifest = __webpack_require__(8619);
 // EXTERNAL MODULE: ./src/utils/event_emitter.ts
 var event_emitter = __webpack_require__(1959);
 // EXTERNAL MODULE: ./src/utils/is_null_or_undefined.ts
@@ -46971,11 +45676,9 @@ var object_assign = __webpack_require__(8026);
 // EXTERNAL MODULE: ./src/utils/ranges.ts
 var ranges = __webpack_require__(2829);
 // EXTERNAL MODULE: ./src/utils/reference.ts
-var reference = __webpack_require__(5095);
+var utils_reference = __webpack_require__(5095);
 // EXTERNAL MODULE: ./src/utils/task_canceller.ts
 var task_canceller = __webpack_require__(288);
-// EXTERNAL MODULE: ./src/utils/warn_once.ts
-var warn_once = __webpack_require__(8806);
 // EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js
 var asyncToGenerator = __webpack_require__(5861);
 // EXTERNAL MODULE: ./node_modules/@babel/runtime/regenerator/index.js
@@ -47151,8 +45854,6 @@ function clearOnStop(mediaElement) {
   log/* default.info */.Z.info("DRM: Nothing to clear. Returning right away. No state =", currentState === null);
   return Promise.resolve();
 }
-// EXTERNAL MODULE: ./src/utils/assert.ts
-var assert = __webpack_require__(811);
 // EXTERNAL MODULE: ./src/errors/request_error.ts
 var request_error = __webpack_require__(9105);
 // EXTERNAL MODULE: ./src/errors/network_error.ts
@@ -47589,7 +46290,6 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 
 
 
-
 /**
  * Class allowing to facilitate the task of loading and parsing a Manifest.
  * @class ManifestFetcher
@@ -47661,8 +46361,7 @@ var ManifestFetcher = /*#__PURE__*/function () {
         });
       });
 
-      var loadingPromise = pipelines.resolveManifestUrl === undefined ? callLoaderWithRetries(requestUrl) : callResolverWithRetries(requestUrl).then(callLoaderWithRetries);
-      loadingPromise.then(function (response) {
+      callLoaderWithRetries(requestUrl).then(function (response) {
         hasFinishedLoading = true;
         obs.next({
           type: "response",
@@ -47686,32 +46385,12 @@ var ManifestFetcher = /*#__PURE__*/function () {
         }
       };
       /**
-       * Call the resolver part of the pipeline, retrying if it fails according
-       * to the current settings.
-       * Returns the Promise of the last attempt.
-       * /!\ This pipeline should have a `resolveManifestUrl` function defined.
-       * @param {string | undefined}  resolverUrl
-       * @returns {Promise}
-       */
-
-      function callResolverWithRetries(resolverUrl) {
-        var resolveManifestUrl = pipelines.resolveManifestUrl;
-        (0,assert/* default */.Z)(resolveManifestUrl !== undefined);
-
-        var callResolver = function callResolver() {
-          return resolveManifestUrl(resolverUrl, canceller.signal);
-        };
-
-        return tryRequestPromiseWithBackoff(callResolver, backoffSettings, canceller.signal);
-      }
-      /**
        * Call the loader part of the pipeline, retrying if it fails according
        * to the current settings.
        * Returns the Promise of the last attempt.
        * @param {string | undefined}  resolverUrl
        * @returns {Promise}
        */
-
 
       function callLoaderWithRetries(manifestUrl) {
         var loadManifest = pipelines.loadManifest;
@@ -48684,7 +47363,7 @@ var generateRequestID = (0,id_generator/* default */.Z)();
  * `options` argument, which may retry a segment request when it fails.
  *
  * @param {string} bufferType
- * @param {Object} transport
+ * @param {Object} pipeline
  * @param {Object} callbacks
  * @param {Object} options
  * @returns {Function}
@@ -48716,7 +47395,11 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
    */
 
   return function fetchSegment(content) {
-    var segment = content.segment; // used by logs
+    var segment = content.segment,
+        adaptation = content.adaptation,
+        representation = content.representation,
+        manifest = content.manifest,
+        period = content.period; // used by logs
 
     var segmentIdString = (0,utils/* getLoggableSegmentId */.K)(content);
     return new Observable/* Observable */.y(function (obs) {
@@ -48791,6 +47474,19 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
             parse: generateParserFunction(chunkData, true)
           });
         }
+      };
+      /** Segment context given to the transport pipelines. */
+
+      var context = {
+        segment: segment,
+        type: adaptation.type,
+        language: adaptation.language,
+        isLive: manifest.isLive,
+        periodStart: period.start,
+        periodEnd: period.end,
+        mimeType: representation.mimeType,
+        codecs: representation.codec,
+        manifestPublishTime: manifest.publishTime
       }; // Retrieve from cache if it exists
 
       var cached = cache !== undefined ? cache.get(content) : null;
@@ -48893,7 +47589,7 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
        */
 
       function callLoaderWithUrl(url, cancellationSignal) {
-        return loadSegment(url, content, cancellationSignal, loaderCallbacks);
+        return loadSegment(url, context, cancellationSignal, loaderCallbacks);
       }
       /**
        * Generate function allowing to parse a loaded segment.
@@ -48913,7 +47609,7 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
           };
 
           try {
-            var parsed = parseSegment(loaded, content, initTimescale);
+            var parsed = parseSegment(loaded, context, initTimescale);
 
             if (!parsedChunks[parsedChunkId]) {
               segmentDurationAcc = segmentDurationAcc !== undefined && parsed.segmentType === "media" && parsed.chunkInfos !== null && parsed.chunkInfos.duration !== undefined ? segmentDurationAcc + parsed.chunkInfos.duration : undefined;
@@ -48976,7 +47672,7 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, callbacks, o
  * @returns {Object}
  */
 
-function getSegmentFetcherOptions(bufferType, _ref) {
+function getSegmentFetcherOptions(_ref) {
   var maxRetryRegular = _ref.maxRetryRegular,
       maxRetryOffline = _ref.maxRetryOffline,
       lowLatencyMode = _ref.lowLatencyMode;
@@ -48988,7 +47684,7 @@ function getSegmentFetcherOptions(bufferType, _ref) {
       MAX_BACKOFF_DELAY_BASE = _config$getCurrent.MAX_BACKOFF_DELAY_BASE;
 
   return {
-    maxRetryRegular: bufferType === "image" ? 0 : maxRetryRegular !== null && maxRetryRegular !== void 0 ? maxRetryRegular : DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
+    maxRetryRegular: maxRetryRegular !== null && maxRetryRegular !== void 0 ? maxRetryRegular : DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
     maxRetryOffline: maxRetryOffline !== null && maxRetryOffline !== void 0 ? maxRetryOffline : DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
     baseDelay: lowLatencyMode ? INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY : INITIAL_BACKOFF_DELAY_BASE.REGULAR,
     maxDelay: lowLatencyMode ? MAX_BACKOFF_DELAY_BASE.LOW_LATENCY : MAX_BACKOFF_DELAY_BASE.REGULAR
@@ -49075,7 +47771,7 @@ var SegmentFetcherCreator = /*#__PURE__*/function () {
   var _proto = SegmentFetcherCreator.prototype;
 
   _proto.createSegmentFetcher = function createSegmentFetcher(bufferType, callbacks) {
-    var backoffOptions = getSegmentFetcherOptions(bufferType, this._backoffOptions);
+    var backoffOptions = getSegmentFetcherOptions(this._backoffOptions);
     var pipelines = this._transport[bufferType]; // Types are very complicated here as they are per-type of buffer.
 
     var segmentFetcher = segment_fetcher_createSegmentFetcher(bufferType, pipelines, callbacks, backoffOptions);
@@ -50662,13 +49358,13 @@ function createAdaptiveRepresentationSelector(options) {
 
     var bandwidthEstimator = _getBandwidthEstimator(type);
 
-    var manualBitrate = (0,take_first_set/* default */.Z)(manualBitrates[type], (0,reference/* default */.ZP)(-1));
-    var minAutoBitrate = (0,take_first_set/* default */.Z)(minAutoBitrates[type], (0,reference/* default */.ZP)(0));
-    var maxAutoBitrate = (0,take_first_set/* default */.Z)(maxAutoBitrates[type], (0,reference/* default */.ZP)(Infinity));
+    var manualBitrate = (0,take_first_set/* default */.Z)(manualBitrates[type], (0,utils_reference/* default */.ZP)(-1));
+    var minAutoBitrate = (0,take_first_set/* default */.Z)(minAutoBitrates[type], (0,utils_reference/* default */.ZP)(0));
+    var maxAutoBitrate = (0,take_first_set/* default */.Z)(maxAutoBitrates[type], (0,utils_reference/* default */.ZP)(Infinity));
     var initialBitrate = (0,take_first_set/* default */.Z)(initialBitrates[type], 0);
     var filters = {
-      limitWidth: (0,take_first_set/* default */.Z)(throttlers.limitWidth[type], (0,reference/* default */.ZP)(undefined)),
-      throttleBitrate: (0,take_first_set/* default */.Z)(throttlers.throttleBitrate[type], throttlers.throttle[type], (0,reference/* default */.ZP)(Infinity))
+      limitWidth: (0,take_first_set/* default */.Z)(throttlers.limitWidth[type], (0,utils_reference/* default */.ZP)(undefined)),
+      throttleBitrate: (0,take_first_set/* default */.Z)(throttlers.throttleBitrate[type], (0,utils_reference/* default */.ZP)(Infinity))
     };
     return getEstimateReference({
       bandwidthEstimator: bandwidthEstimator,
@@ -50774,7 +49470,7 @@ function getEstimateReference(_ref, stopAllEstimates) {
     if (manualBitrateVal >= 0) {
       // A manual bitrate has been set. Just choose Representation according to it.
       var manualRepresentation = selectOptimalRepresentation(representations, manualBitrateVal, 0, Infinity);
-      return (0,reference/* default */.ZP)({
+      return (0,utils_reference/* default */.ZP)({
         representation: manualRepresentation,
         bitrate: undefined,
         knownStableBitrate: undefined,
@@ -50786,7 +49482,7 @@ function getEstimateReference(_ref, stopAllEstimates) {
 
     if (representations.length === 1) {
       // There's only a single Representation. Just choose it.
-      return (0,reference/* default */.ZP)({
+      return (0,utils_reference/* default */.ZP)({
         bitrate: undefined,
         representation: representations[0],
         manual: false,
@@ -50828,7 +49524,7 @@ function getEstimateReference(_ref, stopAllEstimates) {
     var lastPlaybackObservation = playbackObserver.getReference().getValue();
     /** Reference through which estimates are emitted. */
 
-    var innerEstimateRef = (0,reference/* default */.ZP)(getCurrentEstimate()); // subscribe to subsequent playback observations
+    var innerEstimateRef = (0,utils_reference/* default */.ZP)(getCurrentEstimate()); // subscribe to subsequent playback observations
 
     playbackObserver.listen(function (obs) {
       lastPlaybackObservation = obs;
@@ -50862,6 +49558,9 @@ function getEstimateReference(_ref, stopAllEstimates) {
       updateEstimate();
     };
 
+    innerCancellationSignal.register(function () {
+      onAddedSegment = noop/* default */.Z;
+    });
     minAutoBitrate.onUpdate(updateEstimate, {
       clearSignal: innerCancellationSignal
     });
@@ -51391,6 +50090,8 @@ function tryToChangeSourceBufferType(sourceBuffer, codec) {
 
   return false;
 }
+// EXTERNAL MODULE: ./src/utils/are_arrays_of_numbers_equal.ts
+var are_arrays_of_numbers_equal = __webpack_require__(4791);
 // EXTERNAL MODULE: ./src/utils/assert_unreachable.ts + 1 modules
 var assert_unreachable = __webpack_require__(7904);
 // EXTERNAL MODULE: ./src/utils/byte_parsing.ts
@@ -51988,7 +50689,7 @@ function assertPushedDataIsBufferSource(pushedData) {
 
 
 
-var POSSIBLE_BUFFER_TYPES = ["audio", "video", "text", "image"];
+var POSSIBLE_BUFFER_TYPES = ["audio", "video", "text"];
 /**
  * Allows to easily create and dispose SegmentBuffers, which are interfaces to
  * push and remove segments.
@@ -52051,10 +50752,6 @@ var SegmentBuffersStore = /*#__PURE__*/function () {
 
     if (features/* default.nativeTextTracksBuffer */.Z.nativeTextTracksBuffer != null || features/* default.htmlTextTracksBuffer */.Z.htmlTextTracksBuffer != null) {
       bufferTypes.push("text");
-    }
-
-    if (features/* default.imageBuffer */.Z.imageBuffer != null) {
-      bufferTypes.push("image");
     }
 
     return bufferTypes;
@@ -52231,19 +50928,10 @@ var SegmentBuffersStore = /*#__PURE__*/function () {
           throw new Error("Native Text track feature not activated");
         }
 
-        segmentBuffer = new features/* default.nativeTextTracksBuffer */.Z.nativeTextTracksBuffer(this._mediaElement, options.hideNativeSubtitle === true);
+        segmentBuffer = new features/* default.nativeTextTracksBuffer */.Z.nativeTextTracksBuffer(this._mediaElement);
       }
 
       this._initializedSegmentBuffers.text = segmentBuffer;
-      return segmentBuffer;
-    } else if (bufferType === "image") {
-      if (features/* default.imageBuffer */.Z.imageBuffer == null) {
-        throw new Error("Image buffer feature not activated");
-      }
-
-      log/* default.info */.Z.info("SB: Creating a new image SegmentBuffer");
-      segmentBuffer = new features/* default.imageBuffer */.Z.imageBuffer();
-      this._initializedSegmentBuffers.image = segmentBuffer;
       return segmentBuffer;
     }
 
@@ -52345,6 +51033,7 @@ function shouldHaveNativeBuffer(bufferType) {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 
 
 
@@ -52970,6 +51659,8 @@ function takeWhile(predicate, inclusive) {
     });
 }
 //# sourceMappingURL=takeWhile.js.map
+// EXTERNAL MODULE: ./src/utils/assert.ts
+var assert = __webpack_require__(811);
 ;// CONCATENATED MODULE: ./src/core/stream/representation/downloading_queue.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -54686,6 +53377,12 @@ function pushMediaSegment(_ref) {
   });
 }
 ;// CONCATENATED MODULE: ./src/core/stream/representation/representation_stream.ts
+function representation_stream_createForOfIteratorHelperLoose(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (it) return (it = it.call(o)).next.bind(it); if (Array.isArray(o) || (it = representation_stream_unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function representation_stream_unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return representation_stream_arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return representation_stream_arrayLikeToArray(o, minLen); }
+
+function representation_stream_arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -54763,7 +53460,7 @@ function RepresentationStream(_ref) {
   var reCheckNeededSegments$ = new Subject/* Subject */.x();
   /** Emit the last scheduled downloading queue for segments. */
 
-  var lastSegmentQueue = (0,reference/* createSharedReference */.$l)({
+  var lastSegmentQueue = (0,utils_reference/* createSharedReference */.$l)({
     initSegment: null,
     segmentQueue: []
   });
@@ -54967,19 +53664,37 @@ function RepresentationStream(_ref) {
 
 
   function onParsedChunk(evt) {
-    if (evt.segmentType === "init") {
-      next_tick_default()(function () {
-        reCheckNeededSegments$.next();
-      });
-      initSegmentState.segmentData = evt.initializationData;
-      initSegmentState.isLoaded = true; // Now that the initialization segment has been parsed - which may have
-      // included encryption information - take care of the encryption event
-      // if not already done.
+    // Supplementary encryption information might have been parsed.
+    for (var _iterator = representation_stream_createForOfIteratorHelperLoose(evt.protectionData), _step; !(_step = _iterator()).done;) {
+      var protInfo = _step.value;
+      // TODO better handle use cases like key rotation by not always grouping
+      // every protection data together? To check.
+      representation.addProtectionData(protInfo.initDataType, protInfo.keyId, protInfo.initData);
+    }
 
-      var allEncryptionData = representation.getAllEncryptionData();
-      var initEncEvt$ = !hasSentEncryptionData && allEncryptionData.length > 0 ? of.of.apply(void 0, allEncryptionData.map(function (p) {
+    var segmentEncryptionEvent$ = empty/* EMPTY */.E;
+
+    if (!hasSentEncryptionData) {
+      var protData = representation.getAllEncryptionData().map(function (p) {
         return stream_events_generators/* default.encryptionDataEncountered */.Z.encryptionDataEncountered(p, content);
-      })) : empty/* EMPTY */.E;
+      });
+
+      if (protData.length > 0) {
+        segmentEncryptionEvent$ = of.of.apply(void 0, protData);
+        hasSentEncryptionData = true;
+      }
+    }
+
+    if (evt.segmentType === "init") {
+      if (!representation.index.isInitialized() && evt.segmentList !== undefined) {
+        representation.index.initialize(evt.segmentList);
+        next_tick_default()(function () {
+          reCheckNeededSegments$.next();
+        });
+      }
+
+      initSegmentState.segmentData = evt.initializationData;
+      initSegmentState.isLoaded = true;
       var pushEvent$ = pushInitSegment({
         playbackObserver: playbackObserver,
         content: content,
@@ -54987,16 +53702,16 @@ function RepresentationStream(_ref) {
         segmentData: evt.initializationData,
         segmentBuffer: segmentBuffer
       });
-      return (0,merge/* merge */.T)(initEncEvt$, pushEvent$);
+      return (0,merge/* merge */.T)(segmentEncryptionEvent$, pushEvent$);
     } else {
       var inbandEvents = evt.inbandEvents,
-          needsManifestRefresh = evt.needsManifestRefresh,
-          protectionDataUpdate = evt.protectionDataUpdate; // TODO better handle use cases like key rotation by not always grouping
-      // every protection data together? To check.
+          predictedSegments = evt.predictedSegments,
+          needsManifestRefresh = evt.needsManifestRefresh;
 
-      var segmentEncryptionEvent$ = protectionDataUpdate && !hasSentEncryptionData ? of.of.apply(void 0, representation.getAllEncryptionData().map(function (p) {
-        return stream_events_generators/* default.encryptionDataEncountered */.Z.encryptionDataEncountered(p, content);
-      })) : empty/* EMPTY */.E;
+      if (predictedSegments !== undefined) {
+        representation.index.addPredictedSegments(predictedSegments, evt.segment);
+      }
+
       var manifestRefresh$ = needsManifestRefresh === true ? (0,of.of)(stream_events_generators/* default.needsManifestRefresh */.Z.needsManifestRefresh()) : empty/* EMPTY */.E;
       var inbandEvents$ = inbandEvents !== undefined && inbandEvents.length > 0 ? (0,of.of)({
         type: "inband-events",
@@ -55033,7 +53748,61 @@ function RepresentationStream(_ref) {
  */
 
 /* harmony default export */ var stream_representation = (RepresentationStream);
-;// CONCATENATED MODULE: ./src/core/stream/adaptation/create_representation_estimator.ts
+;// CONCATENATED MODULE: ./src/core/segment_buffers/inventory/utils.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * Returns the last segment in the `inventory` which is linked to a Period
+ * before `period`.
+ * @param {Array.<Object>} inventory
+ * @param {Object} period
+ * @returns {Object|null}
+ */
+function getLastSegmentBeforePeriod(inventory, period) {
+  for (var i = 0; i < inventory.length; i++) {
+    if (inventory[i].infos.period.start >= period.start) {
+      if (i > 0) {
+        return inventory[i - 1];
+      }
+
+      return null;
+    }
+  }
+
+  return inventory.length > 0 ? inventory[inventory.length - 1] : null;
+}
+/**
+ * Returns the first segment in the `inventory` which is linked to a Period
+ * after `period`.
+ * @param {Array.<Object>} inventory
+ * @param {Object} period
+ * @returns {Object|null}
+ */
+
+function getFirstSegmentAfterPeriod(inventory, period) {
+  for (var i = 0; i < inventory.length; i++) {
+    if (inventory[i].infos.period.start > period.start) {
+      return inventory[i];
+    }
+  }
+
+  return null;
+}
+;// CONCATENATED MODULE: ./src/core/stream/adaptation/get_representations_switch_strategy.ts
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -55051,76 +53820,182 @@ function RepresentationStream(_ref) {
  */
 
 
+
+function getRepresentationsSwitchingStrategy(period, adaptation, settings, segmentBuffer, playbackObserver) {
+  if (settings.switchingMode === "lazy") {
+    return {
+      type: "continue",
+      value: undefined
+    };
+  }
+
+  var buffered = segmentBuffer.getBufferedRanges();
+
+  if (buffered.length === 0) {
+    return {
+      type: "continue",
+      value: undefined
+    };
+  }
+
+  var bufferedRanges = (0,ranges/* convertToRanges */.JN)(buffered);
+  var start = period.start;
+  var end = period.end == null ? Infinity : period.end;
+  var intersection = (0,ranges/* keepRangeIntersection */.tn)(bufferedRanges, [{
+    start: start,
+    end: end
+  }]);
+
+  if (intersection.length === 0) {
+    return {
+      type: "continue",
+      value: undefined
+    };
+  }
+
+  segmentBuffer.synchronizeInventory();
+  var inventory = segmentBuffer.getInventory();
+  /** Data already in the right Adaptation */
+
+  var rangesWithReps = getBufferedRangesFromRepresentations(inventory, period, adaptation, settings.representations);
+  /**
+   * Data different from the wanted Adaptation in the Period's range.
+   * /!\ Could contain some data at the end of the previous Period or at the
+   * beginning of the next one.
+   */
+
+  var unwantedRange = (0,ranges/* excludeFromRanges */.uH)(intersection, rangesWithReps);
+
+  if (unwantedRange.length === 0) {
+    return {
+      type: "continue",
+      value: undefined
+    };
+  }
+
+  var currentTime = playbackObserver.getCurrentTime();
+  var readyState = playbackObserver.getReadyState();
+
+  if (settings.switchingMode === "reload" && // We're playing the current Period
+  (0,ranges/* isTimeInRange */.Ti)({
+    start: start,
+    end: end
+  }, currentTime) && // There is data for the current position
+  readyState > 1 && // We're not playing the current wanted video Adaptation
+  !(0,ranges/* isTimeInRanges */.A1)(rangesWithReps, currentTime)) {
+    return {
+      type: "needs-reload",
+      value: undefined
+    };
+  } // From here, clean-up data from the previous Adaptation, if one
+
+
+  var shouldFlush = settings.switchingMode === "direct";
+  var rangesToExclude = []; // First, we don't want to accidentally remove some segments from the previous
+  // Period (which overlap a little with this one)
+
+  /** Last segment before one for the current period. */
+
+  var lastSegmentBefore = getLastSegmentBeforePeriod(inventory, period);
+
+  if (lastSegmentBefore !== null && (lastSegmentBefore.bufferedEnd === undefined || period.start - lastSegmentBefore.bufferedEnd < 1)) // Close to Period's start
+    {
+      // Exclude data close to the period's start to avoid cleaning
+      // to much
+      rangesToExclude.push({
+        start: 0,
+        end: period.start + 1
+      });
+    }
+
+  if (!shouldFlush) {
+    // exclude data around current position to avoid decoding issues
+    var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+        ADAP_REP_SWITCH_BUFFER_PADDINGS = _config$getCurrent.ADAP_REP_SWITCH_BUFFER_PADDINGS;
+
+    var bufferType = adaptation.type;
+    /** Ranges that won't be cleaned from the current buffer. */
+
+    var paddingBefore = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].before;
+
+    if (paddingBefore == null) {
+      paddingBefore = 0;
+    }
+
+    var paddingAfter = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].after;
+
+    if (paddingAfter == null) {
+      paddingAfter = 0;
+    }
+
+    rangesToExclude.push({
+      start: currentTime - paddingBefore,
+      end: currentTime + paddingAfter
+    });
+  } // Now remove possible small range from the end if there is a segment from the
+  // next Period
+
+
+  if (period.end !== undefined) {
+    /** first segment after for the current period. */
+    var firstSegmentAfter = getFirstSegmentAfterPeriod(inventory, period);
+
+    if (firstSegmentAfter !== null && (firstSegmentAfter.bufferedStart === undefined || // Close to Period's end
+    firstSegmentAfter.bufferedStart - period.end < 1)) {
+      rangesToExclude.push({
+        start: period.end - 1,
+        end: Number.MAX_VALUE
+      });
+    }
+  }
+
+  var toRemove = (0,ranges/* excludeFromRanges */.uH)(unwantedRange, rangesToExclude);
+
+  if (toRemove.length === 0) {
+    return {
+      type: "continue",
+      value: undefined
+    };
+  }
+
+  return shouldFlush ? {
+    type: "flush-buffer",
+    value: toRemove
+  } : {
+    type: "clean-buffer",
+    value: toRemove
+  };
+}
 /**
- * Produce estimates to know which Representation should be played.
- * @param {Object} content - The Manifest, Period and Adaptation wanted.
- * @param {Object} representationEstimator - `IRepresentationEstimator` which
- * will produce Representation estimates.
- * @param {Object} currentRepresentation - Reference emitting the
- * currently-loaded Representation.
- * @param {Object} playbackObserver - Allows to observe the current playback
- * conditions.
- * @param {Function} onFatalError - Callback called when a fatal error was
- * thrown. Once this callback is called, no estimate will be produced.
- * @param {Object} cancellationSignal - `CancellationSignal` allowing to abort
- * the production of estimates (and clean-up all linked resources).
- * @returns {Object} - Returns an object with the following properties:
- *   - `estimateRef`: Reference emitting the last estimate
- *   - `abrCallbacks`: Callbacks allowing to report back network and playback
- *     activities to improve the estimates given.
+ * Returns buffered ranges of what we know correspond to the given `adaptation`
+ * in the SegmentBuffer.
+ * @param {Object} segmentBuffer
+ * @param {Object} period
+ * @param {Object} adaptation
+ * @returns {Array.<Object>}
  */
 
-function getRepresentationEstimate(content, representationEstimator, currentRepresentation, playbackObserver, onFatalError, cancellationSignal) {
-  var manifest = content.manifest,
-      adaptation = content.adaptation;
-  var representations = (0,reference/* default */.ZP)([]);
-  updateRepresentationsReference();
-  manifest.addEventListener("decipherabilityUpdate", updateRepresentationsReference);
-  var unregisterCleanUp = cancellationSignal.register(cleanUp);
-
-  var _representationEstima = representationEstimator(content, currentRepresentation, representations, playbackObserver, cancellationSignal),
-      estimateRef = _representationEstima.estimates,
-      abrCallbacks = _representationEstima.callbacks;
-
-  return {
-    abrCallbacks: abrCallbacks,
-    estimateRef: estimateRef
-  };
-
-  function updateRepresentationsReference() {
-    /** Representations for which a `RepresentationStream` can be created. */
-    var newRepr = adaptation.getPlayableRepresentations();
-
-    if (newRepr.length === 0) {
-      var noRepErr = new media_error/* default */.Z("NO_PLAYABLE_REPRESENTATION", "No Representation in the chosen " + adaptation.type + " Adaptation can be played");
-      cleanUp();
-      onFatalError(noRepErr);
-      return;
+function getBufferedRangesFromRepresentations(inventory, period, adaptation, representations) {
+  return inventory.reduce(function (acc, chunk) {
+    if (chunk.infos.period.id !== period.id || chunk.infos.adaptation.id !== adaptation.id || !representations.some(function (rep) {
+      return rep.id === chunk.infos.representation.id;
+    })) {
+      return acc;
     }
 
-    var prevRepr = representations.getValue();
+    var bufferedStart = chunk.bufferedStart,
+        bufferedEnd = chunk.bufferedEnd;
 
-    if (prevRepr.length === newRepr.length) {
-      if (prevRepr.every(function (r, idx) {
-        return r.id === newRepr[idx].id;
-      })) {
-        return;
-      }
+    if (bufferedStart === undefined || bufferedEnd === undefined) {
+      return acc;
     }
 
-    representations.setValue(newRepr);
-  }
-  /** Clean-up all resources taken here. */
-
-
-  function cleanUp() {
-    manifest.removeEventListener("decipherabilityUpdate", updateRepresentationsReference);
-    representations.finish(); // check to protect against the case where it is not yet defined.
-
-    if (typeof unregisterCleanUp !== "undefined") {
-      unregisterCleanUp();
-    }
-  }
+    acc.push({
+      start: bufferedStart,
+      end: bufferedEnd
+    });
+    return acc;
+  }, []);
 }
 ;// CONCATENATED MODULE: ./src/core/stream/adaptation/adaptation_stream.ts
 /**
@@ -55159,7 +54034,6 @@ function getRepresentationEstimate(content, representationEstimator, currentRepr
 
 
 
-
 /**
  * Create new AdaptationStream Observable, which task will be to download the
  * media data for a given Adaptation (i.e. "track").
@@ -55184,7 +54058,6 @@ function AdaptationStream(_ref) {
       segmentFetcherCreator = _ref.segmentFetcherCreator,
       wantedBufferAhead = _ref.wantedBufferAhead,
       maxVideoBufferSize = _ref.maxVideoBufferSize;
-  var directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   var manifest = content.manifest,
       period = content.period,
       adaptation = content.adaptation;
@@ -55198,17 +54071,23 @@ function AdaptationStream(_ref) {
    */
 
   var bufferGoalRatioMap = {};
-  var currentRepresentation = (0,reference/* createSharedReference */.$l)(null);
-  /** Errors when the adaptive logic fails with an error. */
+  /** The Representation currently loaded by the RepresentationStream. */
 
-  var abrErrorSubject = new Subject/* Subject */.x();
+  var currentRepresentation = (0,utils_reference/* createSharedReference */.$l)(null);
+  /** Allows to abort adaptative estimates. */
+
   var adaptiveCanceller = new task_canceller/* default */.ZP();
+  /** The array of Representations the adaptative logic can choose from. */
 
-  var _createRepresentation = getRepresentationEstimate(content, representationEstimator, currentRepresentation, playbackObserver, function (err) {
-    abrErrorSubject.error(err);
-  }, adaptiveCanceller.signal),
-      estimateRef = _createRepresentation.estimateRef,
-      abrCallbacks = _createRepresentation.abrCallbacks;
+  var representationsChoice = (0,utils_reference/* createSharedReference */.$l)(content.representations.getValue().representations); // Start-up Adaptive logic
+
+  var _representationEstima = representationEstimator({
+    manifest: manifest,
+    period: period,
+    adaptation: adaptation
+  }, currentRepresentation, representationsChoice, playbackObserver, adaptiveCanceller.signal),
+      estimateRef = _representationEstima.estimates,
+      abrCallbacks = _representationEstima.callbacks;
   /** Allows the `RepresentationStream` to easily fetch media segments. */
 
 
@@ -55222,190 +54101,213 @@ function AdaptationStream(_ref) {
   });
   /* eslint-enable @typescript-eslint/unbound-method */
 
-  /**
-   * Stores the last estimate emitted through the `abrEstimate$` Observable,
-   * starting with `null`.
-   * This allows to easily rely on that value in inner Observables which might also
-   * need the last already-considered value.
-   */
-
-  var lastEstimate = (0,reference/* createSharedReference */.$l)(null);
-  /** Emits abr estimates on Subscription. */
-
-  var abrEstimate$ = estimateRef.asObservable().pipe((0,tap/* tap */.b)(function (estimate) {
-    lastEstimate.setValue(estimate);
-  }), (0,defer_subscriptions/* default */.Z)(), (0,share/* share */.B)());
-  /** Emit at each bitrate estimate done by the IRepresentationEstimator. */
-
-  var bitrateEstimate$ = abrEstimate$.pipe((0,filter/* filter */.h)(function (_ref2) {
-    var bitrate = _ref2.bitrate;
-    return bitrate != null;
-  }), (0,distinctUntilChanged/* distinctUntilChanged */.x)(function (old, current) {
-    return old.bitrate === current.bitrate;
-  }), (0,map/* map */.U)(function (_ref3) {
-    var bitrate = _ref3.bitrate;
-    log/* default.debug */.Z.debug("Stream: new " + adaptation.type + " bitrate estimate", bitrate);
-    return stream_events_generators/* default.bitrateEstimationChange */.Z.bitrateEstimationChange(adaptation.type, bitrate);
-  }));
-  /** Recursively create `RepresentationStream`s according to the last estimate. */
-
-  var representationStreams$ = abrEstimate$.pipe(exhaustMap(function (estimate, i) {
-    return recursivelyCreateRepresentationStreams(estimate, i === 0);
-  }));
-  return (0,merge/* merge */.T)(abrErrorSubject, representationStreams$, bitrateEstimate$, // Cancel adaptive logic on unsubscription
-  new Observable/* Observable */.y(function () {
-    return function () {
-      return adaptiveCanceller.cancel();
-    };
-  }));
-  /**
-   * Create `RepresentationStream`s starting with the Representation indicated in
-   * `fromEstimate` argument.
-   * Each time a new estimate is made, this function will create a new
-   * `RepresentationStream` corresponding to that new estimate.
-   * @param {Object} fromEstimate - The first estimate we should start with
-   * @param {boolean} isFirstEstimate - Whether this is the first time we're
-   * creating a RepresentationStream in the corresponding `AdaptationStream`.
-   * This is important because manual quality switches might need a full reload
-   * of the MediaSource _except_ if we are talking about the first quality chosen.
-   * @returns {Observable}
-   */
-
-  function recursivelyCreateRepresentationStreams(fromEstimate, isFirstEstimate) {
-    var representation = fromEstimate.representation; // A manual bitrate switch might need an immediate feedback.
-    // To do that properly, we need to reload the MediaSource
-
-    if (directManualBitrateSwitching && fromEstimate.manual && !isFirstEstimate) {
-      var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
-          DELTA_POSITION_AFTER_RELOAD = _config$getCurrent.DELTA_POSITION_AFTER_RELOAD;
-
-      return reloadAfterSwitch(period, adaptation.type, playbackObserver, DELTA_POSITION_AFTER_RELOAD.bitrateSwitch);
+  var representations$ = content.representations.asObservable();
+  return representations$.pipe((0,switchMap/* switchMap */.w)(function (representationsInfo, i) {
+    if (i > 0) {
+      // (first one already has been emitted)
+      representationsChoice.setValue(representationsInfo.representations);
     }
     /**
-     * Emit when the current RepresentationStream should be terminated to make
-     * place for a new one (e.g. when switching quality).
+     * Stores the last estimate emitted, starting with `null`.
+     * This allows to easily rely on that value in inner Observables which might also
+     * need the last already-considered value.
      */
 
 
-    var terminateCurrentStream$ = lastEstimate.asObservable().pipe((0,filter/* filter */.h)(function (newEstimate) {
-      return newEstimate === null || newEstimate.representation.id !== representation.id || newEstimate.manual && !fromEstimate.manual;
-    }), (0,take/* take */.q)(1), (0,map/* map */.U)(function (newEstimate) {
-      if (newEstimate === null) {
-        log/* default.info */.Z.info("Stream: urgent Representation termination", adaptation.type);
-        return {
-          urgent: true
-        };
-      }
+    var lastRepEstimate = (0,utils_reference/* createSharedReference */.$l)(null);
+    /** Emits estimates on Subscription. */
 
-      if (newEstimate.urgent) {
-        log/* default.info */.Z.info("Stream: urgent Representation switch", adaptation.type);
-        return {
-          urgent: true
-        };
-      } else {
-        log/* default.info */.Z.info("Stream: slow Representation switch", adaptation.type);
-        return {
-          urgent: false
-        };
-      }
+    var representationEstimate$ = estimateRef.asObservable().pipe((0,tap/* tap */.b)(function (estimate) {
+      lastRepEstimate.setValue(estimate);
+    }), (0,shareReplay/* shareReplay */.d)({
+      refCount: true
+    }));
+    /** Emit at each bitrate estimate done by the adaptive logic. */
+
+    var bitrateEstimate$ = representationEstimate$.pipe((0,filter/* filter */.h)(function (_ref2) {
+      var bitrate = _ref2.bitrate;
+      return bitrate !== undefined;
+    }), (0,distinctUntilChanged/* distinctUntilChanged */.x)(function (prev, next) {
+      return prev.bitrate === next.bitrate;
+    }), (0,map/* map */.U)(function (_ref3) {
+      var bitrate = _ref3.bitrate;
+      log/* default.debug */.Z.debug("Stream: new " + adaptation.type + " bitrate estimate", bitrate);
+      return stream_events_generators/* default.bitrateEstimationChange */.Z.bitrateEstimationChange(adaptation.type, bitrate);
     }));
     /**
-     * "Fast-switching" is a behavior allowing to replace low-quality segments
-     * (i.e. with a low bitrate) with higher-quality segments (higher bitrate) in
-     * the buffer.
-     * This threshold defines a bitrate from which "fast-switching" is disabled.
-     * For example with a fastSwitchThreshold set to `100`, segments with a
-     * bitrate of `90` can be replaced. But segments with a bitrate of `100`
-     * onward won't be replaced by higher quality segments.
-     * Set to `undefined` to indicate that there's no threshold (anything can be
-     * replaced by higher-quality segments).
+     * Recursively create `RepresentationStream`s according to the last
+     * Representation estimate.
      */
 
-    var fastSwitchThreshold$ = !options.enableFastSwitching ? (0,of.of)(0) : // Do not fast-switch anything
-    lastEstimate.asObservable().pipe((0,map/* map */.U)(function (estimate) {
-      return estimate === null ? undefined : estimate.knownStableBitrate;
-    }), (0,distinctUntilChanged/* distinctUntilChanged */.x)());
-    var representationChange$ = (0,of.of)(stream_events_generators/* default.representationChange */.Z.representationChange(adaptation.type, period, representation));
-    return (0,concat/* concat */.z)(representationChange$, createRepresentationStream(representation, terminateCurrentStream$, fastSwitchThreshold$)).pipe((0,tap/* tap */.b)(function (evt) {
-      if (evt.type === "added-segment") {
-        abrCallbacks.addedSegment(evt.value);
-      }
+    var representationStreams$ = representationEstimate$.pipe(exhaustMap(function (estimate) {
+      return recursivelyCreateRepresentationStreams(estimate);
+    }));
 
-      if (evt.type === "representationChange") {
-        currentRepresentation.setValue(evt.value.representation);
-      }
-    }), (0,mergeMap/* mergeMap */.z)(function (evt) {
-      if (evt.type === "stream-terminating") {
-        var estimate = lastEstimate.getValue();
+    var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+        DELTA_POSITION_AFTER_RELOAD = _config$getCurrent.DELTA_POSITION_AFTER_RELOAD;
 
-        if (estimate === null) {
+    var switchStrat = getRepresentationsSwitchingStrategy(period, adaptation, representationsInfo, segmentBuffer, playbackObserver);
+    var obs$;
+
+    switch (switchStrat.type) {
+      case "continue":
+        obs$ = representationStreams$;
+        break;
+
+      case "needs-reload":
+        obs$ = reloadAfterSwitch(period, adaptation.type, playbackObserver, DELTA_POSITION_AFTER_RELOAD.bitrateSwitch);
+        break;
+
+      default:
+        var needsBufferFlush$ = switchStrat.type === "flush-buffer" ? (0,of.of)(stream_events_generators/* default.needsBufferFlush */.Z.needsBufferFlush()) : empty/* EMPTY */.E;
+        var cleanBuffer$ = concat/* concat.apply */.z.apply(void 0, switchStrat.value.map(function (_ref4) {
+          var start = _ref4.start,
+              end = _ref4.end;
+          return segmentBuffer.removeBuffer(start, end);
+        })).pipe((0,ignoreElements/* ignoreElements */.l)());
+        obs$ = (0,concat/* concat */.z)(cleanBuffer$, needsBufferFlush$, representationStreams$);
+    }
+
+    return (0,merge/* merge */.T)(obs$, bitrateEstimate$);
+    /**
+     * Create `RepresentationStream`s starting with the Representation indicated in
+     * `currEstimate` argument.
+     * Each time a new estimate is made, this function will create a new
+     * `RepresentationStream` corresponding to that new estimate.
+     * @param {Object} currEstimate - The first estimate we should start with
+     * @returns {Observable}
+     */
+
+    function recursivelyCreateRepresentationStreams(currEstimate) {
+      var representation = currEstimate.representation;
+      /**
+       * Emit when the current RepresentationStream should be terminated to make
+       * place for a new one (e.g. when switching quality).
+       */
+
+      var terminateCurrentStream$ = lastRepEstimate.asObservable().pipe((0,filter/* filter */.h)(function (newEstimate) {
+        return newEstimate === null || newEstimate.representation.id !== representation.id || newEstimate.manual && !currEstimate.manual;
+      }), (0,take/* take */.q)(1), (0,map/* map */.U)(function (newEstimate) {
+        if (newEstimate === null) {
+          log/* default.info */.Z.info("Stream: urgent Representation termination", adaptation.type);
+          return {
+            urgent: true
+          };
+        }
+
+        if (newEstimate.urgent) {
+          log/* default.info */.Z.info("Stream: urgent Representation switch", adaptation.type);
+          return {
+            urgent: true
+          };
+        } else {
+          log/* default.info */.Z.info("Stream: slow Representation switch", adaptation.type);
+          return {
+            urgent: false
+          };
+        }
+      }));
+      /**
+       * "Fast-switching" is a behavior allowing to replace low-quality segments
+       * (i.e. with a low bitrate) with higher-quality segments (higher bitrate) in
+       * the buffer.
+       * This threshold defines a bitrate from which "fast-switching" is disabled.
+       * For example with a fastSwitchThreshold set to `100`, segments with a
+       * bitrate of `90` can be replaced. But segments with a bitrate of `100`
+       * onward won't be replaced by higher quality segments.
+       * Set to `undefined` to indicate that there's no threshold (anything can be
+       * replaced by higher-quality segments).
+       */
+
+      var fastSwitchThreshold$ = !options.enableFastSwitching ? (0,of.of)(0) : // Do not fast-switch anything
+      lastRepEstimate.asObservable().pipe((0,map/* map */.U)(function (estimate) {
+        return estimate === null ? undefined : estimate.knownStableBitrate;
+      }), (0,distinctUntilChanged/* distinctUntilChanged */.x)());
+      var representationChange$ = (0,of.of)(stream_events_generators/* default.representationChange */.Z.representationChange(adaptation.type, period, representation));
+      return (0,concat/* concat */.z)(representationChange$, createRepresentationStream(representation, terminateCurrentStream$, fastSwitchThreshold$)).pipe((0,mergeMap/* mergeMap */.z)(function (evt) {
+        if (evt.type === "added-segment") {
+          abrCallbacks.addedSegment(evt.value);
           return empty/* EMPTY */.E;
         }
 
-        return recursivelyCreateRepresentationStreams(estimate, false);
-      }
-
-      return (0,of.of)(evt);
-    }));
-  }
-  /**
-   * Create and returns a new RepresentationStream Observable, linked to the
-   * given Representation.
-   * @param {Representation} representation
-   * @returns {Observable}
-   */
-
-
-  function createRepresentationStream(representation, terminateCurrentStream$, fastSwitchThreshold$) {
-    return (0,defer/* defer */.P)(function () {
-      var oldBufferGoalRatio = bufferGoalRatioMap[representation.id];
-      var bufferGoalRatio = oldBufferGoalRatio != null ? oldBufferGoalRatio : 1;
-      bufferGoalRatioMap[representation.id] = bufferGoalRatio;
-      var bufferGoal$ = wantedBufferAhead.asObservable().pipe((0,map/* map */.U)(function (wba) {
-        return wba * bufferGoalRatio;
-      })); // eslint-disable-next-line max-len
-
-      var maxBufferSize$ = adaptation.type === "video" ? maxVideoBufferSize.asObservable() : (0,of.of)(Infinity);
-      log/* default.info */.Z.info("Stream: changing representation", adaptation.type, representation.id, representation.bitrate);
-      return stream_representation({
-        playbackObserver: playbackObserver,
-        content: {
-          representation: representation,
-          adaptation: adaptation,
-          period: period,
-          manifest: manifest
-        },
-        segmentBuffer: segmentBuffer,
-        segmentFetcher: segmentFetcher,
-        terminate$: terminateCurrentStream$,
-        options: {
-          bufferGoal$: bufferGoal$,
-          maxBufferSize$: maxBufferSize$,
-          drmSystemId: options.drmSystemId,
-          fastSwitchThreshold$: fastSwitchThreshold$
+        if (evt.type === "representationChange") {
+          currentRepresentation.setValue(evt.value.representation);
         }
-      }).pipe((0,catchError/* catchError */.K)(function (err) {
-        var formattedError = (0,format_error/* default */.Z)(err, {
-          defaultCode: "NONE",
-          defaultReason: "Unknown `RepresentationStream` error"
-        });
 
-        if (formattedError.code === "BUFFER_FULL_ERROR") {
-          var wba = wantedBufferAhead.getValue();
-          var lastBufferGoalRatio = bufferGoalRatio;
+        if (evt.type === "stream-terminating") {
+          var lastChoice = lastRepEstimate.getValue();
 
-          if (lastBufferGoalRatio <= 0.25 || wba * lastBufferGoalRatio <= 2) {
-            throw formattedError;
+          if (lastChoice === null) {
+            return empty/* EMPTY */.E;
           }
 
-          bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.25;
-          return createRepresentationStream(representation, terminateCurrentStream$, fastSwitchThreshold$);
+          return recursivelyCreateRepresentationStreams(lastChoice);
         }
 
-        throw formattedError;
+        return (0,of.of)(evt);
       }));
-    });
-  }
+    }
+    /**
+     * Create and returns a new RepresentationStream Observable, linked to the
+     * given Representation.
+     * @param {Representation} representation
+     * @returns {Observable}
+     */
+
+
+    function createRepresentationStream(representation, terminateCurrentStream$, fastSwitchThreshold$) {
+      return (0,defer/* defer */.P)(function () {
+        var oldBufferGoalRatio = bufferGoalRatioMap[representation.id];
+        var bufferGoalRatio = oldBufferGoalRatio != null ? oldBufferGoalRatio : 1;
+        bufferGoalRatioMap[representation.id] = bufferGoalRatio;
+        var bufferGoal$ = wantedBufferAhead.asObservable().pipe((0,map/* map */.U)(function (wba) {
+          return wba * bufferGoalRatio;
+        }));
+        var maxBufferSize$ = adaptation.type === "video" ? maxVideoBufferSize.asObservable() : (0,of.of)(Infinity);
+        log/* default.info */.Z.info("Stream: changing representation", adaptation.type, representation.id, representation.bitrate);
+        return stream_representation({
+          playbackObserver: playbackObserver,
+          content: {
+            representation: representation,
+            adaptation: adaptation,
+            period: period,
+            manifest: manifest
+          },
+          segmentBuffer: segmentBuffer,
+          segmentFetcher: segmentFetcher,
+          terminate$: terminateCurrentStream$,
+          options: {
+            bufferGoal$: bufferGoal$,
+            maxBufferSize$: maxBufferSize$,
+            drmSystemId: options.drmSystemId,
+            fastSwitchThreshold$: fastSwitchThreshold$
+          }
+        }).pipe((0,catchError/* catchError */.K)(function (err) {
+          var formattedError = (0,format_error/* default */.Z)(err, {
+            defaultCode: "NONE",
+            defaultReason: "Unknown `RepresentationStream` error"
+          });
+
+          if (formattedError.code === "BUFFER_FULL_ERROR") {
+            var wba = wantedBufferAhead.getValue();
+            var lastBufferGoalRatio = bufferGoalRatio;
+
+            if (lastBufferGoalRatio <= 0.25 || wba * lastBufferGoalRatio <= 2) {
+              throw formattedError;
+            }
+
+            bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.25;
+            return createRepresentationStream(representation, terminateCurrentStream$, fastSwitchThreshold$);
+          }
+
+          throw formattedError;
+        }));
+      });
+    }
+  }), finalize(function () {
+    // Clean-up adaptive logic
+    adaptiveCanceller.cancel();
+  }));
 }
 ;// CONCATENATED MODULE: ./src/core/stream/adaptation/index.ts
 /**
@@ -55567,6 +54469,7 @@ function areCodecsCompatible(a, b) {
 
 
 
+
 /**
  * Find out what to do when switching Adaptation, based on the current
  * situation.
@@ -55577,7 +54480,7 @@ function areCodecsCompatible(a, b) {
  * @returns {Object}
  */
 
-function getAdaptationSwitchStrategy(segmentBuffer, period, adaptation, playbackInfo, options) {
+function getAdaptationSwitchStrategy(segmentBuffer, period, adaptation, switchingMode, playbackInfo, options) {
   if (segmentBuffer.codec !== undefined && options.onCodecSwitch === "reload" && !hasCompatibleCodec(adaptation, segmentBuffer.codec)) {
     return {
       type: "needs-reload",
@@ -55640,10 +54543,8 @@ function getAdaptationSwitchStrategy(segmentBuffer, period, adaptation, playback
   }
 
   var currentTime = playbackInfo.currentTime;
-  var audioTrackSwitchingMode = options.audioTrackSwitchingMode;
-  var hasReloadSwitchingMode = adaptation.type === "video" || adaptation.type === "audio" && audioTrackSwitchingMode === "reload";
 
-  if (hasReloadSwitchingMode && // We're playing the current Period
+  if (switchingMode === "reload" && // We're playing the current Period
   (0,ranges/* isTimeInRange */.Ti)({
     start: start,
     end: end
@@ -55661,7 +54562,7 @@ function getAdaptationSwitchStrategy(segmentBuffer, period, adaptation, playback
   } // From here, clean-up data from the previous Adaptation, if one
 
 
-  var shouldFlush = adaptation.type === "audio" && audioTrackSwitchingMode === "direct";
+  var shouldCleanAll = switchingMode === "direct";
   var rangesToExclude = []; // First, we don't want to accidentally remove some segments from the previous
   // Period (which overlap a little with this one)
 
@@ -55683,23 +54584,23 @@ function getAdaptationSwitchStrategy(segmentBuffer, period, adaptation, playback
   var bufferType = adaptation.type;
 
   var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
-      ADAPTATION_SWITCH_BUFFER_PADDINGS = _config$getCurrent.ADAPTATION_SWITCH_BUFFER_PADDINGS;
+      ADAP_REP_SWITCH_BUFFER_PADDINGS = _config$getCurrent.ADAP_REP_SWITCH_BUFFER_PADDINGS;
   /** Ranges that won't be cleaned from the current buffer. */
 
 
-  var paddingBefore = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].before;
+  var paddingBefore = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].before;
 
   if (paddingBefore == null) {
     paddingBefore = 0;
   }
 
-  var paddingAfter = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].after;
+  var paddingAfter = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].after;
 
   if (paddingAfter == null) {
     paddingAfter = 0;
   }
 
-  if (!shouldFlush) {
+  if (!shouldCleanAll) {
     rangesToExclude.push({
       start: currentTime - paddingBefore,
       end: currentTime + paddingAfter
@@ -55730,7 +54631,7 @@ function getAdaptationSwitchStrategy(segmentBuffer, period, adaptation, playback
     };
   }
 
-  return shouldFlush ? {
+  return shouldCleanAll && adaptation.type !== "text" ? {
     type: "flush-buffer",
     value: toRemove
   } : {
@@ -55780,46 +54681,6 @@ function getBufferedRangesFromAdaptation(inventory, period, adaptation) {
     });
     return acc;
   }, []);
-}
-/**
- * Returns the last segment in the `inventory` which is linked to a Period
- * before `period`.
- * @param {Array.<Object>} inventory
- * @param {Object} period
- * @returns {Object|null}
- */
-
-
-function getLastSegmentBeforePeriod(inventory, period) {
-  for (var i = 0; i < inventory.length; i++) {
-    if (inventory[i].infos.period.start >= period.start) {
-      if (i > 0) {
-        return inventory[i - 1];
-      }
-
-      return null;
-    }
-  }
-
-  return inventory.length > 0 ? inventory[inventory.length - 1] : null;
-}
-/**
- * Returns the first segment in the `inventory` which is linked to a Period
- * after `period`.
- * @param {Array.<Object>} inventory
- * @param {Object} period
- * @returns {Object|null}
- */
-
-
-function getFirstSegmentAfterPeriod(inventory, period) {
-  for (var i = 0; i < inventory.length; i++) {
-    if (inventory[i].infos.period.start > period.start) {
-      return inventory[i];
-    }
-  }
-
-  return null;
 }
 ;// CONCATENATED MODULE: ./src/core/stream/period/period_stream.ts
 /**
@@ -55872,11 +54733,12 @@ function PeriodStream(_ref) {
       options = _ref.options,
       wantedBufferAhead = _ref.wantedBufferAhead,
       maxVideoBufferSize = _ref.maxVideoBufferSize;
-  var period = content.period; // Emits the chosen Adaptation for the current type.
+  var manifest = content.manifest,
+      period = content.period; // Emits the chosen Adaptation and Representation for the current type.
   // `null` when no Adaptation is chosen (e.g. no subtitles)
 
   var adaptation$ = new ReplaySubject/* ReplaySubject */.t(1);
-  return adaptation$.pipe((0,switchMap/* switchMap */.w)(function (adaptation, switchNb) {
+  return adaptation$.pipe((0,switchMap/* switchMap */.w)(function (choice, switchNb) {
     /**
      * If this is not the first Adaptation choice, we might want to apply a
      * delta to the current position so we can re-play back some media in the
@@ -55889,7 +54751,7 @@ function PeriodStream(_ref) {
 
     var relativePosAfterSwitch = switchNb === 0 ? 0 : bufferType === "audio" ? DELTA_POSITION_AFTER_RELOAD.trackSwitch.audio : bufferType === "video" ? DELTA_POSITION_AFTER_RELOAD.trackSwitch.video : DELTA_POSITION_AFTER_RELOAD.trackSwitch.other;
 
-    if (adaptation === null) {
+    if (choice === null) {
       // Current type is disabled for that Period
       log/* default.info */.Z.info("Stream: Set no " + bufferType + " Adaptation. P:", period.start);
       var segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
@@ -55928,6 +54790,8 @@ function PeriodStream(_ref) {
       return reloadAfterSwitch(period, bufferType, playbackObserver, relativePosAfterSwitch);
     }
 
+    var adaptation = choice.adaptation,
+        representations = choice.representations;
     log/* default.info */.Z.info("Stream: Updating " + bufferType + " adaptation", "A: " + adaptation.id, "P: " + period.start);
     var newStream$ = (0,defer/* defer */.P)(function () {
       var readyState = playbackObserver.getReadyState();
@@ -55936,7 +54800,7 @@ function PeriodStream(_ref) {
         currentTime: playbackObserver.getCurrentTime(),
         readyState: readyState
       };
-      var strategy = getAdaptationSwitchStrategy(segmentBuffer, period, adaptation, playbackInfos, options);
+      var strategy = getAdaptationSwitchStrategy(segmentBuffer, period, adaptation, choice.switchingMode, playbackInfos, options);
 
       if (strategy.type === "needs-reload") {
         return reloadAfterSwitch(period, bufferType, playbackObserver, relativePosAfterSwitch);
@@ -55949,27 +54813,27 @@ function PeriodStream(_ref) {
         return segmentBuffer.removeBuffer(start, end);
       })).pipe((0,ignoreElements/* ignoreElements */.l)()) : empty/* EMPTY */.E;
       var bufferGarbageCollector$ = garbageCollectors.get(segmentBuffer);
-      var adaptationStream$ = createAdaptationStream(adaptation, segmentBuffer);
+      var adaptationStream$ = createAdaptationStream(adaptation, representations, segmentBuffer);
       return segmentBuffersStore.waitForUsableBuffers().pipe((0,mergeMap/* mergeMap */.z)(function () {
         return (0,concat/* concat */.z)(cleanBuffer$, needsBufferFlush$, (0,merge/* merge */.T)(adaptationStream$, bufferGarbageCollector$));
       }));
     });
     return (0,concat/* concat */.z)((0,of.of)(stream_events_generators/* default.adaptationChange */.Z.adaptationChange(bufferType, adaptation, period)), newStream$);
-  }), (0,startWith/* startWith */.O)(stream_events_generators/* default.periodStreamReady */.Z.periodStreamReady(bufferType, period, adaptation$)));
+  }), (0,startWith/* startWith */.O)(stream_events_generators/* default.periodStreamReady */.Z.periodStreamReady(bufferType, manifest, period, adaptation$)));
   /**
    * @param {Object} adaptation
    * @param {Object} segmentBuffer
    * @returns {Observable}
    */
 
-  function createAdaptationStream(adaptation, segmentBuffer) {
-    var manifest = content.manifest;
+  function createAdaptationStream(adaptation, representations, segmentBuffer) {
     var adaptationPlaybackObserver = createAdaptationStreamPlaybackObserver(playbackObserver, segmentBuffer);
     return stream_adaptation({
       content: {
         manifest: manifest,
         period: period,
-        adaptation: adaptation
+        adaptation: adaptation,
+        representations: representations
       },
       options: options,
       playbackObserver: adaptationPlaybackObserver,
@@ -56047,7 +54911,7 @@ function getFirstDeclaredMimeType(adaptation) {
 
 function createAdaptationStreamPlaybackObserver(initialPlaybackObserver, segmentBuffer) {
   return initialPlaybackObserver.deriveReadOnlyObserver(function transform(observationRef, cancellationSignal) {
-    var newRef = (0,reference/* default */.ZP)(constructAdaptationStreamPlaybackObservation());
+    var newRef = (0,utils_reference/* default */.ZP)(constructAdaptationStreamPlaybackObservation());
     observationRef.onUpdate(emitAdaptationStreamPlaybackObservation, {
       clearSignal: cancellationSignal,
       emitCurrentValue: false
@@ -56117,14 +54981,13 @@ var scan = __webpack_require__(3074);
  * Emit null if no Period can be considered active currently.
  *
  * @example
- * For 4 BUFFER_TYPES: "AUDIO", "VIDEO", "TEXT" and "IMAGE":
+ * For 3 BUFFER_TYPES: "AUDIO", "VIDEO" and "TEXT":
  * ```
  *                     +-------------+
  *         Period 1    | Period 2    | Period 3
  * AUDIO   |=========| | |===      | |
  * VIDEO               | |=====    | |
  * TEXT    |(NO TEXT)| | |(NO TEXT)| | |====    |
- * IMAGE   |=========| | |=        | |
  *                     +-------------+
  *
  * The active Period here is Period 2 as Period 1 has no video
@@ -56746,7 +55609,7 @@ function StreamOrchestrator(content, playbackObserver, representationEstimator, 
       return (0,of.of)(evt);
     }), (0,share/* share */.B)()); // Stream for the current Period.
 
-    var currentStream$ = (0,concat/* concat */.z)(periodStream$.pipe((0,takeUntil/* takeUntil */.R)(killCurrentStream$)), (0,of.of)(stream_events_generators/* default.periodStreamCleared */.Z.periodStreamCleared(bufferType, basePeriod)).pipe((0,tap/* tap */.b)(function () {
+    var currentStream$ = (0,concat/* concat */.z)(periodStream$.pipe((0,takeUntil/* takeUntil */.R)(killCurrentStream$)), (0,of.of)(stream_events_generators/* default.periodStreamCleared */.Z.periodStreamCleared(bufferType, manifest, basePeriod)).pipe((0,tap/* tap */.b)(function () {
       log/* default.info */.Z.info("SO: Destroying Stream for", bufferType, basePeriod.start);
     })));
     return (0,merge/* merge */.T)(currentStream$, nextPeriodStream$, destroyAll$.pipe((0,ignoreElements/* ignoreElements */.l)()));
@@ -56863,7 +55726,7 @@ function ContentTimeBoundariesObserver(manifest, streams, playbackObserver) {
    * `undefined` if unknown yet.
    */
 
-  var contentDuration = (0,reference/* default */.ZP)(undefined);
+  var contentDuration = (0,utils_reference/* default */.ZP)(undefined);
   var updateDurationOnManifestUpdate$ = (0,event_emitter/* fromEvent */.R)(manifest, "manifestUpdate").pipe((0,startWith/* startWith */.O)(null), (0,tap/* tap */.b)(function () {
     if (!manifest.isDynamic) {
       var maxPos = maximumPositionCalculator.getCurrentMaximumPosition();
@@ -57077,7 +55940,7 @@ function createStreamPlaybackObserver(manifest, playbackObserver, _ref) {
       speed = _ref.speed,
       startTime = _ref.startTime;
   return playbackObserver.deriveReadOnlyObserver(function transform(observationRef, cancellationSignal) {
-    var newRef = (0,reference/* default */.ZP)(constructStreamPlaybackObservation());
+    var newRef = (0,utils_reference/* default */.ZP)(constructStreamPlaybackObservation());
     speed.onUpdate(emitStreamPlaybackObservation, {
       clearSignal: cancellationSignal,
       emitCurrentValue: false
@@ -57349,7 +56212,7 @@ var MediaDurationUpdater = /*#__PURE__*/function () {
   function MediaDurationUpdater(manifest, mediaSource) {
     var _this = this;
 
-    this._lastKnownDuration = (0,reference/* default */.ZP)(undefined);
+    this._lastKnownDuration = (0,utils_reference/* default */.ZP)(undefined);
     this._subscription = isMediaSourceOpened$(mediaSource).pipe((0,switchMap/* switchMap */.w)(function (canUpdate) {
       return canUpdate ? combineLatest([_this._lastKnownDuration.asObservable(), (0,event_emitter/* fromEvent */.R)(manifest, "manifestUpdate").pipe((0,startWith/* startWith */.O)(null))]) : empty/* EMPTY */.E;
     }), (0,switchMap/* switchMap */.w)(function (_ref) {
@@ -58750,8 +57613,6 @@ function getLoadedContentState(mediaElement, stalledStatus) {
 
   return mediaElement.paused ? PLAYER_STATES.PAUSED : PLAYER_STATES.PLAYING;
 }
-// EXTERNAL MODULE: ./src/utils/languages/normalize.ts + 2 modules
-var normalize = __webpack_require__(5553);
 ;// CONCATENATED MODULE: ./src/core/api/option_utils.ts
 function option_utils_createForOfIteratorHelperLoose(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (it) return (it = it.call(o)).next.bind(it); if (Array.isArray(o) || (it = option_utils_unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 
@@ -58784,8 +57645,6 @@ function option_utils_arrayLikeToArray(arr, len) { if (len == null || len > arr.
 
 
 
-
-
 /**
  * Parse options given to the API constructor and set default options as found
  * in the config.
@@ -58801,11 +57660,6 @@ function parseConstructorOptions(options) {
   var maxBufferBehind;
   var wantedBufferAhead;
   var maxVideoBufferSize;
-  var throttleWhenHidden;
-  var throttleVideoBitrateWhenHidden;
-  var preferredAudioTracks;
-  var preferredTextTracks;
-  var preferredVideoTracks;
   var videoElement;
   var initialVideoBitrate;
   var initialAudioBitrate;
@@ -58822,8 +57676,6 @@ function parseConstructorOptions(options) {
       DEFAULT_MAX_BUFFER_AHEAD = _config$getCurrent.DEFAULT_MAX_BUFFER_AHEAD,
       DEFAULT_MAX_BUFFER_BEHIND = _config$getCurrent.DEFAULT_MAX_BUFFER_BEHIND,
       DEFAULT_MAX_VIDEO_BUFFER_SIZE = _config$getCurrent.DEFAULT_MAX_VIDEO_BUFFER_SIZE,
-      DEFAULT_STOP_AT_END = _config$getCurrent.DEFAULT_STOP_AT_END,
-      DEFAULT_THROTTLE_WHEN_HIDDEN = _config$getCurrent.DEFAULT_THROTTLE_WHEN_HIDDEN,
       DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN = _config$getCurrent.DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
       DEFAULT_WANTED_BUFFER_AHEAD = _config$getCurrent.DEFAULT_WANTED_BUFFER_AHEAD;
 
@@ -58872,54 +57724,7 @@ function parseConstructorOptions(options) {
   }
 
   var limitVideoWidth = (0,is_null_or_undefined/* default */.Z)(options.limitVideoWidth) ? DEFAULT_LIMIT_VIDEO_WIDTH : !!options.limitVideoWidth;
-
-  if (!(0,is_null_or_undefined/* default */.Z)(options.throttleWhenHidden)) {
-    (0,warn_once/* default */.Z)("`throttleWhenHidden` API is deprecated. Consider using " + "`throttleVideoBitrateWhenHidden` instead.");
-    throttleWhenHidden = !!options.throttleWhenHidden;
-  } else {
-    throttleWhenHidden = DEFAULT_THROTTLE_WHEN_HIDDEN;
-  } // `throttleWhenHidden` and `throttleVideoBitrateWhenHidden` can be in conflict
-  // Do not activate the latter if the former is
-
-
-  if (throttleWhenHidden) {
-    throttleVideoBitrateWhenHidden = false;
-  } else {
-    throttleVideoBitrateWhenHidden = (0,is_null_or_undefined/* default */.Z)(options.throttleVideoBitrateWhenHidden) ? DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN : !!options.throttleVideoBitrateWhenHidden;
-  }
-
-  if (options.preferredTextTracks !== undefined) {
-    if (!Array.isArray(options.preferredTextTracks)) {
-      (0,warn_once/* default */.Z)("Invalid `preferredTextTracks` option, it should be an Array");
-      preferredTextTracks = [];
-    } else {
-      preferredTextTracks = options.preferredTextTracks;
-    }
-  } else {
-    preferredTextTracks = [];
-  }
-
-  if (options.preferredAudioTracks !== undefined) {
-    if (!Array.isArray(options.preferredAudioTracks)) {
-      (0,warn_once/* default */.Z)("Invalid `preferredAudioTracks` option, it should be an Array");
-      preferredAudioTracks = [];
-    } else {
-      preferredAudioTracks = options.preferredAudioTracks;
-    }
-  } else {
-    preferredAudioTracks = [];
-  }
-
-  if (options.preferredVideoTracks !== undefined) {
-    if (!Array.isArray(options.preferredVideoTracks)) {
-      (0,warn_once/* default */.Z)("Invalid `preferredVideoTracks` option, it should be an Array");
-      preferredVideoTracks = [];
-    } else {
-      preferredVideoTracks = options.preferredVideoTracks;
-    }
-  } else {
-    preferredVideoTracks = [];
-  }
+  var throttleVideoBitrateWhenHidden = (0,is_null_or_undefined/* default */.Z)(options.throttleVideoBitrateWhenHidden) ? DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN : !!options.throttleVideoBitrateWhenHidden;
 
   if ((0,is_null_or_undefined/* default */.Z)(options.videoElement)) {
     videoElement = document.createElement("video");
@@ -58999,7 +57804,6 @@ function parseConstructorOptions(options) {
     }
   }
 
-  var stopAtEnd = (0,is_null_or_undefined/* default */.Z)(options.stopAtEnd) ? DEFAULT_STOP_AT_END : !!options.stopAtEnd;
   return {
     maxBufferAhead: maxBufferAhead,
     maxBufferBehind: maxBufferBehind,
@@ -59007,18 +57811,13 @@ function parseConstructorOptions(options) {
     videoElement: videoElement,
     wantedBufferAhead: wantedBufferAhead,
     maxVideoBufferSize: maxVideoBufferSize,
-    throttleWhenHidden: throttleWhenHidden,
     throttleVideoBitrateWhenHidden: throttleVideoBitrateWhenHidden,
-    preferredAudioTracks: preferredAudioTracks,
-    preferredTextTracks: preferredTextTracks,
-    preferredVideoTracks: preferredVideoTracks,
     initialAudioBitrate: initialAudioBitrate,
     initialVideoBitrate: initialVideoBitrate,
     minAudioBitrate: minAudioBitrate,
     minVideoBitrate: minVideoBitrate,
     maxAudioBitrate: maxAudioBitrate,
-    maxVideoBitrate: maxVideoBitrate,
-    stopAtEnd: stopAtEnd
+    maxVideoBitrate: maxVideoBitrate
   };
 }
 /**
@@ -59072,12 +57871,10 @@ function parseLoadVideoOptions(options) {
   var startAt;
 
   var _config$getCurrent2 = config/* default.getCurrent */.Z.getCurrent(),
-      DEFAULT_AUDIO_TRACK_SWITCHING_MODE = _config$getCurrent2.DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
       DEFAULT_AUTO_PLAY = _config$getCurrent2.DEFAULT_AUTO_PLAY,
       DEFAULT_CODEC_SWITCHING_BEHAVIOR = _config$getCurrent2.DEFAULT_CODEC_SWITCHING_BEHAVIOR,
       DEFAULT_ENABLE_FAST_SWITCHING = _config$getCurrent2.DEFAULT_ENABLE_FAST_SWITCHING,
       DEFAULT_MANUAL_BITRATE_SWITCHING_MODE = _config$getCurrent2.DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
-      DEFAULT_SHOW_NATIVE_SUBTITLE = _config$getCurrent2.DEFAULT_SHOW_NATIVE_SUBTITLE,
       DEFAULT_TEXT_TRACK_MODE = _config$getCurrent2.DEFAULT_TEXT_TRACK_MODE;
 
   if ((0,is_null_or_undefined/* default */.Z)(options)) {
@@ -59116,13 +57913,6 @@ function parseLoadVideoOptions(options) {
   var transportOptsArg = typeof options.transportOptions === "object" && options.transportOptions !== null ? options.transportOptions : {};
   var initialManifest = (_c = options.transportOptions) === null || _c === void 0 ? void 0 : _c.initialManifest;
   var minimumManifestUpdateInterval = (_e = (_d = options.transportOptions) === null || _d === void 0 ? void 0 : _d.minimumManifestUpdateInterval) !== null && _e !== void 0 ? _e : 0;
-  var audioTrackSwitchingMode = (0,is_null_or_undefined/* default */.Z)(options.audioTrackSwitchingMode) ? DEFAULT_AUDIO_TRACK_SWITCHING_MODE : options.audioTrackSwitchingMode;
-
-  if (!(0,array_includes/* default */.Z)(["seamless", "direct", "reload"], audioTrackSwitchingMode)) {
-    log/* default.warn */.Z.warn("The `audioTrackSwitchingMode` loadVideo option must match one of " + "the following strategy name:\n" + "- `seamless`\n" + "- `direct`\n" + "- `reload`\n" + "If badly set, " + DEFAULT_AUDIO_TRACK_SWITCHING_MODE + " strategy will be used as default");
-    audioTrackSwitchingMode = DEFAULT_AUDIO_TRACK_SWITCHING_MODE;
-  }
-
   var onCodecSwitch = (0,is_null_or_undefined/* default */.Z)(options.onCodecSwitch) ? DEFAULT_CODEC_SWITCHING_BEHAVIOR : options.onCodecSwitch;
 
   if (!(0,array_includes/* default */.Z)(["continue", "reload"], onCodecSwitch)) {
@@ -59131,46 +57921,11 @@ function parseLoadVideoOptions(options) {
   }
 
   var transportOptions = (0,object_assign/* default */.Z)({}, transportOptsArg, {
-    /* eslint-disable import/no-deprecated */
-    supplementaryImageTracks: [],
-    supplementaryTextTracks: [],
-
-    /* eslint-enable import/no-deprecated */
     lowLatencyMode: lowLatencyMode
   }); // remove already parsed data to simplify the `transportOptions` object
 
   delete transportOptions.initialManifest;
   delete transportOptions.minimumManifestUpdateInterval;
-
-  if (options.supplementaryTextTracks !== undefined) {
-    (0,warn_once/* default */.Z)("The `supplementaryTextTracks` loadVideo option is deprecated.\n" + "Please use the `TextTrackRenderer` tool instead.");
-    var supplementaryTextTracks = Array.isArray(options.supplementaryTextTracks) ? options.supplementaryTextTracks : [options.supplementaryTextTracks];
-
-    for (var _iterator2 = option_utils_createForOfIteratorHelperLoose(supplementaryTextTracks), _step2; !(_step2 = _iterator2()).done;) {
-      var supplementaryTextTrack = _step2.value;
-
-      if (typeof supplementaryTextTrack.language !== "string" || typeof supplementaryTextTrack.mimeType !== "string" || typeof supplementaryTextTrack.url !== "string") {
-        throw new Error("Invalid supplementary text track given. " + "Missing either language, mimetype or url");
-      }
-    }
-
-    transportOptions.supplementaryTextTracks = supplementaryTextTracks;
-  }
-
-  if (options.supplementaryImageTracks !== undefined) {
-    (0,warn_once/* default */.Z)("The `supplementaryImageTracks` loadVideo option is deprecated.\n" + "Please use the `parseBifThumbnails` tool instead.");
-    var supplementaryImageTracks = Array.isArray(options.supplementaryImageTracks) ? options.supplementaryImageTracks : [options.supplementaryImageTracks];
-
-    for (var _iterator3 = option_utils_createForOfIteratorHelperLoose(supplementaryImageTracks), _step3; !(_step3 = _iterator3()).done;) {
-      var supplementaryImageTrack = _step3.value;
-
-      if (typeof supplementaryImageTrack.mimeType !== "string" || typeof supplementaryImageTrack.url !== "string") {
-        throw new Error("Invalid supplementary image track given. " + "Missing either mimetype or url");
-      }
-    }
-
-    transportOptions.supplementaryImageTracks = supplementaryImageTracks;
-  }
 
   if ((0,is_null_or_undefined/* default */.Z)(options.textTrackMode)) {
     textTrackMode = DEFAULT_TEXT_TRACK_MODE;
@@ -59180,24 +57935,6 @@ function parseLoadVideoOptions(options) {
     }
 
     textTrackMode = options.textTrackMode;
-  }
-
-  if (!(0,is_null_or_undefined/* default */.Z)(options.defaultAudioTrack)) {
-    (0,warn_once/* default */.Z)("The `defaultAudioTrack` loadVideo option is deprecated.\n" + "Please use the `preferredAudioTracks` constructor option or the" + "`setPreferredAudioTracks` method instead");
-  }
-
-  var defaultAudioTrack = (0,normalize/* normalizeAudioTrack */.iH)(options.defaultAudioTrack);
-
-  if (!(0,is_null_or_undefined/* default */.Z)(options.defaultTextTrack)) {
-    (0,warn_once/* default */.Z)("The `defaultTextTrack` loadVideo option is deprecated.\n" + "Please use the `preferredTextTracks` constructor option or the" + "`setPreferredTextTracks` method instead");
-  }
-
-  var defaultTextTrack = (0,normalize/* normalizeTextTrack */.Y1)(options.defaultTextTrack);
-  var hideNativeSubtitle = !DEFAULT_SHOW_NATIVE_SUBTITLE;
-
-  if (!(0,is_null_or_undefined/* default */.Z)(options.hideNativeSubtitle)) {
-    (0,warn_once/* default */.Z)("The `hideNativeSubtitle` loadVideo option is deprecated");
-    hideNativeSubtitle = !!options.hideNativeSubtitle;
   }
 
   var manualBitrateSwitchingMode = (_f = options.manualBitrateSwitchingMode) !== null && _f !== void 0 ? _f : DEFAULT_MANUAL_BITRATE_SWITCHING_MODE;
@@ -59238,15 +57975,11 @@ function parseLoadVideoOptions(options) {
 
   return {
     autoPlay: autoPlay,
-    defaultAudioTrack: defaultAudioTrack,
-    defaultTextTrack: defaultTextTrack,
     enableFastSwitching: enableFastSwitching,
-    hideNativeSubtitle: hideNativeSubtitle,
     keySystems: keySystems,
     initialManifest: initialManifest,
     lowLatencyMode: lowLatencyMode,
     manualBitrateSwitchingMode: manualBitrateSwitchingMode,
-    audioTrackSwitchingMode: audioTrackSwitchingMode,
     minimumManifestUpdateInterval: minimumManifestUpdateInterval,
     networkConfig: networkConfig,
     onCodecSwitch: onCodecSwitch,
@@ -59498,7 +58231,7 @@ var PlaybackObserver = /*#__PURE__*/function () {
       return timings;
     };
 
-    var returnedSharedReference = (0,reference/* default */.ZP)(getCurrentObservation("init"));
+    var returnedSharedReference = (0,utils_reference/* default */.ZP)(getCurrentObservation("init"));
 
     var generateObservationForEvent = function generateObservationForEvent(event) {
       var newObservation = getCurrentObservation(event);
@@ -59879,9 +58612,217 @@ function generateReadOnlyObserver(src, transform, cancellationSignal) {
     }
   };
 }
-// EXTERNAL MODULE: ./src/utils/languages/index.ts
-var languages = __webpack_require__(7829);
-;// CONCATENATED MODULE: ./src/core/api/track_choice_manager.ts
+// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/assertThisInitialized.js
+var assertThisInitialized = __webpack_require__(7326);
+;// CONCATENATED MODULE: ./src/core/api/track_management/track_dispatcher.ts
+
+
+
+
+
+
+/**
+ * Class handling track changes and quality locking for a single Period and
+ * Adaptation type.
+ * @class TrackDispatcher
+ */
+
+var TrackDispatcher = /*#__PURE__*/function (_EventEmitter) {
+  (0,inheritsLoose/* default */.Z)(TrackDispatcher, _EventEmitter);
+
+  /**
+   * Create a new `TrackDispatcher` by giving its Subject and an initial track
+   * setting.
+   * This constructor will next the subject with the right preferences
+   * synchronously.
+   * @param {Object} manifest
+   * @param {Subject} trackSubject
+   * @param {Object|null} initialTrackInfo
+   */
+  function TrackDispatcher(manifest, trackSubject, initialTrackInfo) {
+    var _this;
+
+    _this = _EventEmitter.call(this) || this;
+    _this._canceller = new task_canceller/* default */.ZP();
+    _this._manifest = manifest;
+    _this._trackSubject = trackSubject;
+
+    if (initialTrackInfo === null) {
+      _this._lastEmitted = initialTrackInfo;
+      trackSubject.next(null);
+      return (0,assertThisInitialized/* default */.Z)(_this);
+    }
+
+    var reference = _this._constructLockedRepresentationsReference(initialTrackInfo);
+
+    _this._lastEmitted = {
+      adaptation: initialTrackInfo.adaptation,
+      switchingMode: initialTrackInfo.switchingMode,
+      lockedRepresentations: null
+    };
+    trackSubject.next({
+      adaptation: initialTrackInfo.adaptation,
+      switchingMode: initialTrackInfo.switchingMode,
+      representations: reference
+    });
+    return _this;
+  }
+  /**
+   * Update the wanted track on the Subject linked to this `TrackDispatcher`.
+   * @param {Object|null} newTrackInfo
+   */
+
+
+  var _proto = TrackDispatcher.prototype;
+
+  _proto.updateTrack = function updateTrack(newTrackInfo) {
+    if (newTrackInfo === null) {
+      if (this._lastEmitted === null) {
+        return;
+      }
+
+      this._canceller.cancel(); // has no point but let's still create one for simplicity sake
+
+
+      this._canceller = new task_canceller/* default */.ZP();
+      this._lastEmitted = null;
+
+      this._trackSubject.next(null);
+
+      return;
+    }
+
+    var adaptation = newTrackInfo.adaptation,
+        switchingMode = newTrackInfo.switchingMode;
+
+    this._canceller.cancel();
+
+    this._canceller = new task_canceller/* default */.ZP();
+
+    var reference = this._constructLockedRepresentationsReference(newTrackInfo);
+
+    this._lastEmitted = {
+      adaptation: adaptation,
+      switchingMode: switchingMode,
+      lockedRepresentations: null
+    };
+
+    this._trackSubject.next({
+      adaptation: adaptation,
+      switchingMode: switchingMode,
+      representations: reference
+    });
+  }
+  /**
+   * Create a shared reference which will emit the wanted locked Representations
+   * based on the current capabilities and the last user settings.
+   *
+   * @param {Object} trackInfo
+   * @returns {Object}
+   */
+  ;
+
+  _proto._constructLockedRepresentationsReference = function _constructLockedRepresentationsReference(trackInfo) {
+    var manifest = this._manifest;
+    /* eslint-disable-next-line @typescript-eslint/no-this-alias */
+
+    var self = this;
+    manifest.addEventListener("decipherabilityUpdate", updateReferenceIfNeeded);
+    manifest.addEventListener("manifestUpdate", updateReferenceIfNeeded);
+    var sub = trackInfo.lockedRepresentations.asObservable(true).subscribe(updateReferenceIfNeeded);
+
+    this._canceller.signal.register(removeListeners);
+    /* Initialize it. Will be at its true value at the end of the function. */
+
+
+    var reference = (0,utils_reference/* default */.ZP)({
+      representations: [],
+      switchingMode: "lazy"
+    });
+    updateReferenceIfNeeded();
+    return reference;
+
+    function updateReferenceIfNeeded() {
+      var repSettings = trackInfo.lockedRepresentations.getValue();
+      var switchingMode;
+      /** Representations for which a `RepresentationStream` can be created. */
+
+      var playableRepresentations;
+
+      if (repSettings === null) {
+        // unlocking
+        playableRepresentations = trackInfo.adaptation.getPlayableRepresentations(); // No need to remove the previous content when unlocking
+
+        switchingMode = "lazy";
+      } else {
+        var representations = repSettings.representations;
+        switchingMode = repSettings.switchingMode;
+        playableRepresentations = representations.filter(function (r) {
+          return r.isPlayable();
+        });
+
+        if (playableRepresentations.length === 0) {
+          self.trigger("noPlayableLockedRepresentation", null);
+          return;
+        }
+      }
+
+      if (playableRepresentations.length <= 0) {
+        var adaptationType = trackInfo.adaptation.type;
+        var noRepErr = new media_error/* default */.Z("NO_PLAYABLE_REPRESENTATION", "No Representation in the chosen " + adaptationType + " Adaptation can be played");
+        throw noRepErr;
+      } // Check if Locked Representations have changed
+
+
+      var oldRef = reference.getValue();
+      var sortedReps = playableRepresentations.slice().sort();
+
+      if (sortedReps.length !== oldRef.representations.length) {
+        reference.setValue({
+          representations: sortedReps,
+          switchingMode: switchingMode
+        });
+        return;
+      }
+
+      for (var i = 0; i < sortedReps.length; i++) {
+        if (oldRef.representations[i].id !== sortedReps[i].id) {
+          reference.setValue({
+            representations: sortedReps,
+            switchingMode: switchingMode
+          });
+          return;
+        }
+      }
+    }
+
+    function removeListeners() {
+      manifest.removeEventListener("decipherabilityUpdate", updateReferenceIfNeeded);
+      manifest.removeEventListener("manifestUpdate", updateReferenceIfNeeded);
+      sub.unsubscribe();
+    }
+  }
+  /**
+   * Free the resources (e.g. `Manifest` event listeners) linked to this
+   * `TrackDispatcher`.
+   */
+  ;
+
+  _proto.dispose = function dispose() {
+    this.removeEventListener();
+
+    this._canceller.cancel();
+
+    this._trackSubject.complete();
+  };
+
+  return TrackDispatcher;
+}(event_emitter/* default */.Z);
+
+
+;// CONCATENATED MODULE: ./src/core/api/track_management/tracks_store.ts
+
+
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -59904,141 +58845,315 @@ var languages = __webpack_require__(7829);
 
 
 
+
 /**
- * Transform an array of IAudioTrackPreference into an array of
- * INormalizedPreferredAudioTrack to be exploited by the TrackChoiceManager.
- * @param {Array.<Object|null>} tracks
- * @returns {Array.<Object|null>}
+ * Class helping with the management of the audio, video and text tracks and
+ * qualities.
+ *
+ * The `TracksStore` allows to choose a track and qualities for different types
+ * of media through a simpler API.
+ *
+ * @class TracksStore
  */
 
-function normalizeAudioTracks(tracks) {
-  return tracks.map(function (t) {
-    return t === null ? t : {
-      normalized: t.language === undefined ? undefined : (0,languages/* default */.ZP)(t.language),
-      audioDescription: t.audioDescription,
-      codec: t.codec
-    };
-  });
-}
-/**
- * Transform an array of ITextTrackPreference into an array of
- * INormalizedPreferredTextTrack to be exploited by the TrackChoiceManager.
- * @param {Array.<Object|null>} tracks
- * @returns {Array.<Object|null>}
- */
+var TracksStore = /*#__PURE__*/function (_EventEmitter) {
+  (0,inheritsLoose/* default */.Z)(TracksStore, _EventEmitter);
+
+  function TracksStore(args) {
+    var _this;
+
+    _this = _EventEmitter.call(this) || this;
+    _this._storedPeriodInfo = [];
+    _this._isDisposed = false;
+    _this._cachedPeriodInfo = new WeakMap();
+    _this._isTrickModeTrackEnabled = args.preferTrickModeTracks;
+    return _this;
+  }
+  /**
+   * Return Array of Period information, to allow an outside application to
+   * modify the track of any Period.
+   * @returns {Array.<Object>}
+   */
 
 
-function normalizeTextTracks(tracks) {
-  return tracks.map(function (t) {
-    return t === null ? t : {
-      normalized: (0,languages/* default */.ZP)(t.language),
-      closedCaption: t.closedCaption
-    };
-  });
-}
-/**
- * Manage audio and text tracks for all active periods.
- * Choose the audio and text tracks for each period and record this choice.
- * @class TrackChoiceManager
- */
+  var _proto = TracksStore.prototype;
 
-
-var TrackChoiceManager = /*#__PURE__*/function () {
-  function TrackChoiceManager(args) {
-    this._periods = new SortedList(function (a, b) {
-      return a.period.start - b.period.start;
+  _proto.getAvailablePeriods = function getAvailablePeriods() {
+    // Note: We voluntarly do not include any Period from `_cachedPeriodInfo` here;
+    // because we do not want to allow the user switching tracks for older
+    // Periods.
+    return this._storedPeriodInfo.map(function (p) {
+      return toExposedPeriod(p.period);
     });
-    this._audioChoiceMemory = new WeakMap();
-    this._textChoiceMemory = new WeakMap();
-    this._videoChoiceMemory = new WeakMap();
-    this._preferredAudioTracks = [];
-    this._preferredTextTracks = [];
-    this._preferredVideoTracks = [];
-    this.trickModeTrackEnabled = args.preferTrickModeTracks;
   }
   /**
-   * Set the list of preferred audio tracks, in preference order.
-   * @param {Array.<Object>} preferredAudioTracks
-   * @param {boolean} shouldApply - `true` if those preferences should be
-   * applied on the currently loaded Period. `false` if it should only
-   * be applied to new content.
-   */
-
-
-  var _proto = TrackChoiceManager.prototype;
-
-  _proto.setPreferredAudioTracks = function setPreferredAudioTracks(preferredAudioTracks, shouldApply) {
-    this._preferredAudioTracks = preferredAudioTracks;
-
-    if (shouldApply) {
-      this._applyAudioPreferences();
-    }
-  }
-  /**
-   * Set the list of preferred text tracks, in preference order.
-   * @param {Array.<Object>} preferredTextTracks
-   * @param {boolean} shouldApply - `true` if those preferences should be
-   * applied on the currently loaded Periods. `false` if it should only
-   * be applied to new content.
+   * Update the list of Periods handled by the TracksStore and make a
+   * track choice decision for each of them.
+   * @param {Object} manifest - The new Manifest object
    */
   ;
 
-  _proto.setPreferredTextTracks = function setPreferredTextTracks(preferredTextTracks, shouldApply) {
-    this._preferredTextTracks = preferredTextTracks;
+  _proto.updatePeriodList = function updatePeriodList(manifest) {
+    var _this2 = this;
 
-    if (shouldApply) {
-      this._applyTextPreferences();
+    var _a, _b, _c;
+
+    var periods = manifest.periods; // We assume that they are always sorted chronologically
+    // In dev mode, perform a runtime check that this is the case
+
+    if (false) { var i; }
+    /** Periods which have just been added. */
+
+
+    var addedPeriods = [];
+    var newPListIdx = 0;
+
+    for (var _i = 0; _i < this._storedPeriodInfo.length; _i++) {
+      var oldPeriod = this._storedPeriodInfo[_i].period;
+      var newPeriod = periods[newPListIdx];
+
+      if (newPeriod === undefined) {
+        // We reached the end of the new Periods, remove remaining old Periods
+        for (var j = this._storedPeriodInfo.length - 1; j >= _i; j--) {
+          this._storedPeriodInfo[j].inManifest = false;
+
+          if (isPeriodItemRemovable(this._storedPeriodInfo[j])) {
+            this._removePeriodObject(j);
+          }
+        }
+      } else if (oldPeriod === newPeriod) {
+        var _ret = function () {
+          newPListIdx++;
+          var curWantedTextTrack = _this2._storedPeriodInfo[_i].text.storedSettings;
+
+          if (curWantedTextTrack !== null) {
+            var textAdaptations = newPeriod.getSupportedAdaptations("text");
+            var stillHere = textAdaptations.some(function (a) {
+              return a.id === curWantedTextTrack.adaptation.id;
+            });
+
+            if (!stillHere) {
+              log/* default.warn */.Z.warn("TracksStore: Chosen text Adaptation not available anymore");
+              var periodInfo = _this2._storedPeriodInfo[_i];
+              periodInfo.text.storedSettings = null;
+
+              _this2.trigger("autoTrackSwitch", {
+                period: toExposedPeriod(newPeriod),
+                trackType: "text",
+                reason: "missing"
+              }); // The previous event trigger could have had side-effects, so we
+              // re-check if we're still mostly in the same state
+
+
+              if (_this2._isDisposed) {
+                return {
+                  v: void 0
+                }; // The current TracksStore is disposed, we can abort
+              }
+
+              var periodItem = getPeriodItem(_this2._storedPeriodInfo, periodInfo.period.id);
+
+              if (periodItem !== undefined && periodItem.text.storedSettings === null) {
+                (_a = periodItem.text.dispatcher) === null || _a === void 0 ? void 0 : _a.updateTrack(null);
+              }
+            }
+          }
+
+          var curWantedVideoTrack = _this2._storedPeriodInfo[_i].video.storedSettings;
+
+          if (curWantedVideoTrack !== null) {
+            var videoAdaptations = newPeriod.getSupportedAdaptations("video");
+
+            var _stillHere = videoAdaptations.some(function (a) {
+              return a.id === curWantedVideoTrack.adaptation.id;
+            });
+
+            if (!_stillHere) {
+              log/* default.warn */.Z.warn("TracksStore: Chosen video Adaptation not available anymore");
+              var _periodItem = _this2._storedPeriodInfo[_i];
+              var storedSettings;
+
+              if (videoAdaptations.length === 0) {
+                storedSettings = null;
+              } else {
+                var adaptationBase = videoAdaptations[0];
+                var adaptation = getRightVideoTrack(adaptationBase, _this2._isTrickModeTrackEnabled);
+                var lockedRepresentations = (0,utils_reference/* default */.ZP)(null);
+                storedSettings = {
+                  adaptationBase: adaptationBase,
+                  adaptation: adaptation,
+                  switchingMode: "seamless",
+                  lockedRepresentations: lockedRepresentations
+                };
+              }
+
+              _periodItem.video.storedSettings = storedSettings;
+
+              _this2.trigger("autoTrackSwitch", {
+                period: toExposedPeriod(newPeriod),
+                trackType: "video",
+                reason: "missing"
+              }); // The previous event trigger could have had side-effects, so we
+              // re-check if we're still mostly in the same state
+
+
+              if (_this2._isDisposed) {
+                return {
+                  v: void 0
+                }; // Someone disposed the `TracksStore` on the previous side-effect
+              }
+
+              var newPeriodItem = getPeriodItem(_this2._storedPeriodInfo, _periodItem.period.id);
+
+              if (newPeriodItem !== undefined && newPeriodItem.video.storedSettings === storedSettings) {
+                (_b = newPeriodItem.video.dispatcher) === null || _b === void 0 ? void 0 : _b.updateTrack(storedSettings);
+              }
+            }
+          }
+
+          var curWantedAudioTrack = _this2._storedPeriodInfo[_i].audio.storedSettings;
+
+          if (curWantedAudioTrack !== null) {
+            var audioAdaptations = newPeriod.getSupportedAdaptations("audio");
+
+            var _stillHere2 = audioAdaptations.some(function (a) {
+              return a.id === curWantedAudioTrack.adaptation.id;
+            });
+
+            if (!_stillHere2) {
+              log/* default.warn */.Z.warn("TracksStore: Chosen audio Adaptation not available anymore");
+              var _periodItem2 = _this2._storedPeriodInfo[_i];
+
+              var _storedSettings = audioAdaptations.length === 0 ? null : {
+                adaptation: audioAdaptations[0],
+                switchingMode: "seamless",
+                lockedRepresentations: (0,utils_reference/* default */.ZP)(null)
+              };
+
+              _periodItem2.audio.storedSettings = _storedSettings;
+
+              _this2.trigger("autoTrackSwitch", {
+                period: toExposedPeriod(newPeriod),
+                trackType: "audio",
+                reason: "missing"
+              }); // The previous event trigger could have had side-effects, so we
+              // re-check if we're still mostly in the same state
+
+
+              if (_this2._isDisposed) {
+                return {
+                  v: void 0
+                }; // Someone disposed the `TracksStore` on the previous side-effect
+              }
+
+              var _newPeriodItem = getPeriodItem(_this2._storedPeriodInfo, _periodItem2.period.id);
+
+              if (_newPeriodItem !== undefined && _newPeriodItem.audio.storedSettings === _storedSettings) {
+                (_c = _newPeriodItem.audio.dispatcher) === null || _c === void 0 ? void 0 : _c.updateTrack(_storedSettings);
+              }
+            }
+          } // (If not, what do?)
+
+        }();
+
+        if (typeof _ret === "object") return _ret.v;
+      } else if (oldPeriod.start <= newPeriod.start) {
+        // This old Period does not exist anymore.
+        this._storedPeriodInfo[_i].inManifest = false;
+
+        if (isPeriodItemRemovable(this._storedPeriodInfo[_i])) {
+          this._removePeriodObject(_i);
+
+          _i--;
+        }
+      } else {
+        var newPeriodInfo = generatePeriodInfo(newPeriod, true, this._isTrickModeTrackEnabled); // oldPeriod.start > newPeriod.start: insert newPeriod before
+
+        this._storedPeriodInfo.splice(_i, 0, newPeriodInfo);
+
+        addedPeriods.push(newPeriodInfo);
+        newPListIdx++; // Note: we don't increment `i` on purpose here, as we want to check the
+        // same oldPeriod at the next loop iteration
+      }
+    }
+
+    if (newPListIdx < periods.length) {
+      var _this$_storedPeriodIn;
+
+      // Add further new Period
+      var periodsToAdd = periods.slice(newPListIdx).map(function (p) {
+        return generatePeriodInfo(p, true, _this2._isTrickModeTrackEnabled);
+      });
+
+      (_this$_storedPeriodIn = this._storedPeriodInfo).push.apply(_this$_storedPeriodIn, periodsToAdd);
+
+      addedPeriods.push.apply(addedPeriods, periodsToAdd);
+    }
+
+    var periodsAdded = addedPeriods.reduce(function (acc, p) {
+      if (!p.isRemoved) {
+        acc.push({
+          id: p.period.id,
+          start: p.period.start,
+          end: p.period.end
+        });
+      }
+
+      return acc;
+    }, []);
+
+    if (periodsAdded.length > 0) {
+      this.trigger("newAvailablePeriods", periodsAdded);
     }
   }
   /**
-   * Set the list of preferred text tracks, in preference order.
-   * @param {Array.<Object>} preferredVideoTracks
-   * @param {boolean} shouldApply - `true` if those preferences should be
-   * applied on the currently loaded Period. `false` if it should only
-   * be applied to new content.
-   */
-  ;
-
-  _proto.setPreferredVideoTracks = function setPreferredVideoTracks(preferredVideoTracks, shouldApply) {
-    this._preferredVideoTracks = preferredVideoTracks;
-
-    if (shouldApply) {
-      this._applyVideoPreferences();
-    }
-  }
-  /**
-   * Add Subject to choose Adaptation for new "audio" or "text" Period.
+   * Add Subject to choose Adaptation for new "audio", "video" or "text" Period.
+   *
+   * Note that such subject has to be removed through `removeTrackSubject` so
+   * ressources can be freed.
    * @param {string} bufferType - The concerned buffer type
+   * @param {Object} manifest
    * @param {Period} period - The concerned Period.
-   * @param {Subject.<Object|null>} adaptation$ - A subject through which the
+   * @param {Subject.<Object|null>} trackSubject - A subject through which the
    * choice will be given
    */
   ;
 
-  _proto.addPeriod = function addPeriod(bufferType, period, adaptation$) {
-    var periodItem = getPeriodItem(this._periods, period);
-    var adaptations = period.getSupportedAdaptations(bufferType);
+  _proto.addTrackSubject = function addTrackSubject(bufferType, manifest, period, trackSubject) {
+    var _this3 = this;
 
-    if (periodItem !== undefined) {
-      if (periodItem[bufferType] !== undefined) {
-        log/* default.warn */.Z.warn("TrackChoiceManager: " + bufferType + " already added for period", period.start);
-        return;
-      } else {
-        periodItem[bufferType] = {
-          adaptations: adaptations,
-          adaptation$: adaptation$
-        };
-      }
-    } else {
-      var _this$_periods$add;
+    var periodObj = getPeriodItem(this._storedPeriodInfo, period.id);
 
-      this._periods.add((_this$_periods$add = {
-        period: period
-      }, _this$_periods$add[bufferType] = {
-        adaptations: adaptations,
-        adaptation$: adaptation$
-      }, _this$_periods$add));
+    if (periodObj === undefined) {
+      // The Period has not yet been added.
+      periodObj = this._manuallyAddPeriod(period);
+      this.trigger("newAvailablePeriods", [{
+        id: period.id,
+        start: period.start,
+        end: period.end
+      }]);
     }
+
+    if (periodObj[bufferType].dispatcher !== null) {
+      log/* default.error */.Z.error("TracksStore: Subject already added for " + bufferType + " " + ("and Period " + period.start));
+      return;
+    }
+
+    var trackSetting = periodObj[bufferType].storedSettings;
+    var dispatcher = new TrackDispatcher(manifest, trackSubject, trackSetting);
+    periodObj[bufferType].dispatcher = dispatcher;
+    dispatcher.addEventListener("noPlayableLockedRepresentation", function () {
+      trackSetting === null || trackSetting === void 0 ? void 0 : trackSetting.lockedRepresentations.setValue(null);
+
+      _this3.trigger("brokenRepresentationsLock", {
+        period: {
+          id: period.id,
+          start: period.start,
+          end: period.end
+        },
+        trackType: bufferType
+      });
+    });
   }
   /**
    * Remove Subject to choose an "audio", "video" or "text" Adaptation for a
@@ -60048,337 +59163,122 @@ var TrackChoiceManager = /*#__PURE__*/function () {
    */
   ;
 
-  _proto.removePeriod = function removePeriod(bufferType, period) {
-    var periodIndex = findPeriodIndex(this._periods, period);
+  _proto.removeTrackSubject = function removeTrackSubject(bufferType, period) {
+    var periodIndex = findPeriodIndex(this._storedPeriodInfo, period);
 
     if (periodIndex === undefined) {
-      log/* default.warn */.Z.warn("TrackChoiceManager: " + bufferType + " not found for period", period.start);
+      log/* default.warn */.Z.warn("TracksStore: " + bufferType + " not found for period", period.start);
       return;
     }
 
-    var periodItem = this._periods.get(periodIndex);
+    var periodObj = this._storedPeriodInfo[periodIndex];
+    var choiceItem = periodObj[bufferType];
 
-    if (periodItem[bufferType] === undefined) {
-      log/* default.warn */.Z.warn("TrackChoiceManager: " + bufferType + " already removed for period", period.start);
+    if ((choiceItem === null || choiceItem === void 0 ? void 0 : choiceItem.dispatcher) === null) {
+      log/* default.warn */.Z.warn("TracksStore: Subject already removed for " + bufferType + " " + ("and Period " + period.start));
       return;
     }
 
-    delete periodItem[bufferType];
+    choiceItem.dispatcher.dispose();
+    choiceItem.dispatcher = null;
 
-    if (periodItem.audio === undefined && periodItem.text === undefined && periodItem.video === undefined) {
-      this._periods.removeElement(periodItem);
-    }
-  };
-
-  _proto.resetPeriods = function resetPeriods() {
-    while (this._periods.length() > 0) {
-      this._periods.pop();
+    if (isPeriodItemRemovable(periodObj)) {
+      this._removePeriodObject(periodIndex);
     }
   }
   /**
-   * Update the choice of all added Periods based on:
-   *   1. What was the last chosen adaptation
-   *   2. If not found, the preferences
-   */
-  ;
-
-  _proto.update = function update() {
-    this._resetChosenAudioTracks();
-
-    this._resetChosenTextTracks();
-
-    this._resetChosenVideoTracks();
-  }
-  /**
-   * Emit initial audio Adaptation through the given Subject based on:
-   *   - the preferred audio tracks
-   *   - the last choice for this period, if one
-   * @param {Period} period - The concerned Period.
-   */
-  ;
-
-  _proto.setInitialAudioTrack = function setInitialAudioTrack(period) {
-    var periodItem = getPeriodItem(this._periods, period);
-    var audioInfos = periodItem !== undefined ? periodItem.audio : null;
-
-    if ((0,is_null_or_undefined/* default */.Z)(audioInfos) || periodItem === undefined) {
-      throw new Error("TrackChoiceManager: Given Period not found.");
-    }
-
-    var audioAdaptations = period.getSupportedAdaptations("audio");
-
-    var chosenAudioAdaptation = this._audioChoiceMemory.get(period);
-
-    if (chosenAudioAdaptation === null) {
-      // If the Period was previously without audio, keep it that way
-      audioInfos.adaptation$.next(null);
-    } else if (chosenAudioAdaptation === undefined || !(0,array_includes/* default */.Z)(audioAdaptations, chosenAudioAdaptation)) {
-      // Find the optimal audio Adaptation
-      var preferredAudioTracks = this._preferredAudioTracks;
-      var normalizedPref = normalizeAudioTracks(preferredAudioTracks);
-      var optimalAdaptation = findFirstOptimalAudioAdaptation(audioAdaptations, normalizedPref);
-
-      this._audioChoiceMemory.set(period, optimalAdaptation);
-
-      audioInfos.adaptation$.next(optimalAdaptation);
-    } else {
-      audioInfos.adaptation$.next(chosenAudioAdaptation); // set last one
-    }
-  }
-  /**
-   * Emit initial text Adaptation through the given Subject based on:
-   *   - the preferred text tracks
-   *   - the last choice for this period, if one
-   * @param {Period} period - The concerned Period.
-   */
-  ;
-
-  _proto.setInitialTextTrack = function setInitialTextTrack(period) {
-    var periodItem = getPeriodItem(this._periods, period);
-    var textInfos = periodItem !== undefined ? periodItem.text : null;
-
-    if ((0,is_null_or_undefined/* default */.Z)(textInfos) || periodItem === undefined) {
-      throw new Error("TrackChoiceManager: Given Period not found.");
-    }
-
-    var textAdaptations = period.getSupportedAdaptations("text");
-
-    var chosenTextAdaptation = this._textChoiceMemory.get(period);
-
-    if (chosenTextAdaptation === null) {
-      // If the Period was previously without text, keep it that way
-      textInfos.adaptation$.next(null);
-    } else if (chosenTextAdaptation === undefined || !(0,array_includes/* default */.Z)(textAdaptations, chosenTextAdaptation)) {
-      // Find the optimal text Adaptation
-      var preferredTextTracks = this._preferredTextTracks;
-      var normalizedPref = normalizeTextTracks(preferredTextTracks);
-      var optimalAdaptation = findFirstOptimalTextAdaptation(textAdaptations, normalizedPref);
-
-      this._textChoiceMemory.set(period, optimalAdaptation);
-
-      textInfos.adaptation$.next(optimalAdaptation);
-    } else {
-      textInfos.adaptation$.next(chosenTextAdaptation); // set last one
-    }
-  }
-  /**
-   * Emit initial video Adaptation through the given Subject based on:
-   *   - the preferred video tracks
-   *   - the last choice for this period, if one
-   * @param {Period} period - The concerned Period.
-   */
-  ;
-
-  _proto.setInitialVideoTrack = function setInitialVideoTrack(period) {
-    var periodItem = getPeriodItem(this._periods, period);
-    var videoInfos = periodItem !== undefined ? periodItem.video : null;
-
-    if ((0,is_null_or_undefined/* default */.Z)(videoInfos) || periodItem === undefined) {
-      throw new Error("TrackChoiceManager: Given Period not found.");
-    }
-
-    var videoAdaptations = period.getSupportedAdaptations("video");
-
-    var prevVideoAdaptation = this._videoChoiceMemory.get(period);
-
-    var newBaseAdaptation;
-
-    if (prevVideoAdaptation === null) {
-      newBaseAdaptation = null;
-    } else if (prevVideoAdaptation !== undefined && (0,array_includes/* default */.Z)(videoAdaptations, prevVideoAdaptation.baseAdaptation)) {
-      // still exists, re-select it
-      newBaseAdaptation = prevVideoAdaptation.baseAdaptation;
-    } else {
-      // If that Adaptation does not exist (e.g. no choice has been made or it
-      // is not in the Manifest anymore), look at preferences
-      var preferredVideoTracks = this._preferredVideoTracks;
-      newBaseAdaptation = findFirstOptimalVideoAdaptation(videoAdaptations, preferredVideoTracks);
-    }
-
-    if (newBaseAdaptation === null) {
-      this._videoChoiceMemory.set(period, null);
-
-      videoInfos.adaptation$.next(null);
-      return;
-    }
-
-    var newVideoAdaptation = getRightVideoTrack(newBaseAdaptation, this.trickModeTrackEnabled);
-
-    this._videoChoiceMemory.set(period, {
-      baseAdaptation: newBaseAdaptation,
-      adaptation: newVideoAdaptation
-    });
-
-    videoInfos.adaptation$.next(newVideoAdaptation);
-  }
-  /**
-   * Set audio track based on the ID of its adaptation for a given added Period.
-   * @param {Period} period - The concerned Period.
-   * @param {string} wantedId - adaptation id of the wanted track
-   */
-  ;
-
-  _proto.setAudioTrackByID = function setAudioTrackByID(period, wantedId) {
-    var periodItem = getPeriodItem(this._periods, period);
-    var audioInfos = periodItem !== undefined ? periodItem.audio : null;
-
-    if ((0,is_null_or_undefined/* default */.Z)(audioInfos)) {
-      throw new Error("TrackChoiceManager: Given Period not found.");
-    }
-
-    var wantedAdaptation = (0,array_find/* default */.Z)(audioInfos.adaptations, function (_ref) {
-      var id = _ref.id;
-      return id === wantedId;
-    });
-
-    if (wantedAdaptation === undefined) {
-      throw new Error("Audio Track not found.");
-    }
-
-    var chosenAudioAdaptation = this._audioChoiceMemory.get(period);
-
-    if (chosenAudioAdaptation === wantedAdaptation) {
-      return;
-    }
-
-    this._audioChoiceMemory.set(period, wantedAdaptation);
-
-    audioInfos.adaptation$.next(wantedAdaptation);
-  }
-  /**
-   * Set text track based on the ID of its adaptation for a given added Period.
-   * @param {Period} period - The concerned Period.
-   * @param {string} wantedId - adaptation id of the wanted track
-   */
-  ;
-
-  _proto.setTextTrackByID = function setTextTrackByID(period, wantedId) {
-    var periodItem = getPeriodItem(this._periods, period);
-    var textInfos = periodItem !== undefined ? periodItem.text : null;
-
-    if ((0,is_null_or_undefined/* default */.Z)(textInfos)) {
-      throw new Error("TrackChoiceManager: Given Period not found.");
-    }
-
-    var wantedAdaptation = (0,array_find/* default */.Z)(textInfos.adaptations, function (_ref2) {
-      var id = _ref2.id;
-      return id === wantedId;
-    });
-
-    if (wantedAdaptation === undefined) {
-      throw new Error("Text Track not found.");
-    }
-
-    var chosenTextAdaptation = this._textChoiceMemory.get(period);
-
-    if (chosenTextAdaptation === wantedAdaptation) {
-      return;
-    }
-
-    this._textChoiceMemory.set(period, wantedAdaptation);
-
-    textInfos.adaptation$.next(wantedAdaptation);
-  }
-  /**
-   * Set video track based on the ID of its adaptation for a given added Period.
-   * @param {Period} period - The concerned Period.
-   * @param {string} wantedId - adaptation id of the wanted track
+   * Allows to recuperate a "Period Object" - used in get/set methods of the
+   * `TracksStore` - by giving the Period itself.
    *
-   * @throws Error - Throws if the period given has not been added
-   * @throws Error - Throws if the given id is not found in any video adaptation
-   * of the given Period.
-   */
-  ;
-
-  _proto.setVideoTrackByID = function setVideoTrackByID(period, wantedId) {
-    var periodItem = getPeriodItem(this._periods, period);
-    var videoInfos = periodItem !== undefined ? periodItem.video : null;
-
-    if ((0,is_null_or_undefined/* default */.Z)(videoInfos)) {
-      throw new Error("LanguageManager: Given Period not found.");
-    }
-
-    var wantedBaseAdaptation = (0,array_find/* default */.Z)(videoInfos.adaptations, function (_ref3) {
-      var id = _ref3.id;
-      return id === wantedId;
-    });
-
-    if (wantedBaseAdaptation === undefined) {
-      throw new Error("Video Track not found.");
-    }
-
-    var newVideoAdaptation = getRightVideoTrack(wantedBaseAdaptation, this.trickModeTrackEnabled);
-
-    this._videoChoiceMemory.set(period, {
-      baseAdaptation: wantedBaseAdaptation,
-      adaptation: newVideoAdaptation
-    });
-
-    videoInfos.adaptation$.next(newVideoAdaptation);
-  }
-  /**
-   * Disable the current text track for a given period.
+   * This method should be preferred when possible over `getPeriodObjectFromId`
+   * because it is able to fallback on an internal cache in case the
+   * corresponding Period is not stored anymore.
+   * This for example could happen when a Period has been removed from the
+   * Manifest yet may still be needed (e.g. because its linked segments might
+   * still live in the buffers).
    *
-   * @param {Period} period - The concerned Period.
+   * Note however that this cache-retrieval logic is based on a Map whose key
+   * is the Period's JavaScript reference. As such, the cache won't be used if
+   * `Period` corresponds to a copy of the original `Period` object.
    *
-   * @throws Error - Throws if the period given has not been added
-   */
-  ;
-
-  _proto.disableTextTrack = function disableTextTrack(period) {
-    var periodItem = getPeriodItem(this._periods, period);
-    var textInfos = periodItem !== undefined ? periodItem.text : null;
-
-    if ((0,is_null_or_undefined/* default */.Z)(textInfos)) {
-      throw new Error("TrackChoiceManager: Given Period not found.");
-    }
-
-    var chosenTextAdaptation = this._textChoiceMemory.get(period);
-
-    if (chosenTextAdaptation === null) {
-      return;
-    }
-
-    this._textChoiceMemory.set(period, null);
-
-    textInfos.adaptation$.next(null);
-  }
-  /**
-   * Disable the current video track for a given period.
    * @param {Object} period
-   * @throws Error - Throws if the period given has not been added
+   * @returns {Object}
    */
   ;
 
-  _proto.disableVideoTrack = function disableVideoTrack(period) {
-    var periodItem = getPeriodItem(this._periods, period);
-    var videoInfos = periodItem === null || periodItem === void 0 ? void 0 : periodItem.video;
+  _proto.getPeriodObjectFromPeriod = function getPeriodObjectFromPeriod(period) {
+    var periodObj = getPeriodItem(this._storedPeriodInfo, period.id);
 
-    if (videoInfos === undefined) {
-      throw new Error("TrackManager: Given Period not found.");
+    if (periodObj === undefined && period !== undefined) {
+      return this._cachedPeriodInfo.get(period);
     }
 
-    var chosenVideoAdaptation = this._videoChoiceMemory.get(period);
+    return periodObj;
+  }
+  /**
+   * Allows to recuperate a "Period Object" - used in get/set methods of the
+   * `TracksStore` - by giving the Period's id.
+   *
+   * Note that unlike `getPeriodObjectFromPeriod` this method is only going to look
+   * into currently stored Period and as such old Periods not in the Manifest
+   * anymore might not be retrievable.
+   * If you want to retrieve Period objects linked to such Period, you might
+   * prefer to use `getPeriodObjectFromPeriod` (which necessitates the original
+   * Period object).
+   *
+   * @param {string} periodId - The concerned Period's id
+   * @returns {Object}
+   */
+  ;
 
-    if (chosenVideoAdaptation === null) {
-      return;
-    }
-
-    this._videoChoiceMemory.set(period, null);
-
-    videoInfos.adaptation$.next(null);
+  _proto.getPeriodObjectFromId = function getPeriodObjectFromId(periodId) {
+    return getPeriodItem(this._storedPeriodInfo, periodId);
   };
 
   _proto.disableVideoTrickModeTracks = function disableVideoTrickModeTracks() {
-    this.trickModeTrackEnabled = false;
+    if (!this._isTrickModeTrackEnabled) {
+      return;
+    }
 
-    this._resetChosenVideoTracks();
+    this._isTrickModeTrackEnabled = false;
+
+    this._resetVideoTrackChoices();
   };
 
   _proto.enableVideoTrickModeTracks = function enableVideoTrickModeTracks() {
-    this.trickModeTrackEnabled = true;
+    if (this._isTrickModeTrackEnabled) {
+      return;
+    }
 
-    this._resetChosenVideoTracks();
+    this._isTrickModeTrackEnabled = true;
+
+    this._resetVideoTrackChoices();
+  }
+  /**
+   * Reset the TracksStore's Period objects:
+   *   - All Period which are not in the manifest currently will be removed.
+   *   - All subjects used to communicate the wanted track will be removed.
+   *
+   * You might want to call this API when restarting playback.
+   */
+  ;
+
+  _proto.resetPeriodObjects = function resetPeriodObjects() {
+    var _a, _b, _c;
+
+    for (var i = this._storedPeriodInfo.length - 1; i >= 0; i--) {
+      var storedObj = this._storedPeriodInfo[i];
+      (_a = storedObj.audio.dispatcher) === null || _a === void 0 ? void 0 : _a.dispose();
+      storedObj.audio.dispatcher = null;
+      (_b = storedObj.video.dispatcher) === null || _b === void 0 ? void 0 : _b.dispose();
+      storedObj.video.dispatcher = null;
+      (_c = storedObj.text.dispatcher) === null || _c === void 0 ? void 0 : _c.dispose();
+      storedObj.text.dispatcher = null;
+
+      if (!storedObj.inManifest) {
+        this._removePeriodObject(i);
+      }
+    }
   }
   /**
    * @returns {boolean}
@@ -60386,48 +59286,191 @@ var TrackChoiceManager = /*#__PURE__*/function () {
   ;
 
   _proto.isTrickModeEnabled = function isTrickModeEnabled() {
-    return this.trickModeTrackEnabled;
+    return this._isTrickModeTrackEnabled;
+  }
+  /**
+   * Set audio track based on the ID of its Adaptation for a given added Period.
+   * @param {Object} periodObj - The concerned Period's object.
+   * @param {string} wantedId - adaptation id of the wanted track.
+   * @param {string} switchingMode - Behavior when replacing the track by
+   * another.
+   * @param {Object|null} reprsToLock - Audio Representations that should be
+   * locked after switchingMode to that track.
+   * `null` if no Audio Representation should be locked.
+   */
+  ;
+
+  _proto.setAudioTrack = function setAudioTrack(periodObj, wantedId, switchingMode, reprsToLock) {
+    var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
+        DEFAULT_AUDIO_TRACK_SWITCHING_MODE = _config$getCurrent.DEFAULT_AUDIO_TRACK_SWITCHING_MODE;
+
+    return this._setAudioOrTextTrack("audio", periodObj, wantedId, switchingMode !== null && switchingMode !== void 0 ? switchingMode : DEFAULT_AUDIO_TRACK_SWITCHING_MODE, reprsToLock);
+  }
+  /**
+   * Set text track based on the ID of its Adaptation for a given added Period.
+   * @param {Object} periodObj - The concerned Period's object.
+   * @param {string} wantedId - adaptation id of the wanted track.
+   */
+  ;
+
+  _proto.setTextTrack = function setTextTrack(periodObj, wantedId) {
+    return this._setAudioOrTextTrack("text", periodObj, wantedId, "direct", null);
+  }
+  /**
+   * Set audio track based on the ID of its Adaptation for a given added Period.
+   * @param {Object} periodObj - The concerned Period's object.
+   * @param {string} wantedId - adaptation id of the wanted track.
+   * @param {string} switchingMode - Behavior when replacing the track by
+   * another.
+   * @param {Array.<string>|null} reprsToLock - Audio Representations that should be
+   * locked after switchingMode to that track.
+   * `null` if no Audio Representation should be locked.
+   */
+  ;
+
+  _proto._setAudioOrTextTrack = function _setAudioOrTextTrack(bufferType, periodObj, wantedId, switchingMode, reprsToLock) {
+    var period = periodObj.period;
+    var wantedAdaptation = (0,array_find/* default */.Z)(period.getSupportedAdaptations(bufferType), function (_ref) {
+      var id = _ref.id;
+      return id === wantedId;
+    });
+
+    if (wantedAdaptation === undefined) {
+      throw new Error("Wanted " + bufferType + " track not found.");
+    }
+
+    var typeInfo = periodObj[bufferType];
+    var lockedRepresentations;
+
+    if (reprsToLock === null) {
+      lockedRepresentations = (0,utils_reference/* default */.ZP)(null);
+    } else {
+      var _config$getCurrent2 = config/* default.getCurrent */.Z.getCurrent(),
+          DEFAULT_AUDIO_TRACK_SWITCHING_MODE = _config$getCurrent2.DEFAULT_AUDIO_TRACK_SWITCHING_MODE;
+
+      var representationsToLock = this._getRepresentationsToLock(wantedAdaptation, reprsToLock);
+
+      var repSwitchingMode = bufferType === "audio" ? DEFAULT_AUDIO_TRACK_SWITCHING_MODE : "direct";
+      lockedRepresentations = (0,utils_reference/* default */.ZP)({
+        representations: representationsToLock,
+        switchingMode: repSwitchingMode
+      });
+    }
+
+    typeInfo.storedSettings = {
+      adaptation: wantedAdaptation,
+      switchingMode: switchingMode,
+      lockedRepresentations: lockedRepresentations
+    };
+
+    if (typeInfo.dispatcher !== null) {
+      typeInfo.dispatcher.updateTrack(typeInfo.storedSettings);
+    }
+  }
+  /**
+   * Set video track based on the ID of its Adaptation for a given added Period.
+   * @param {Object} periodObj - The concerned Period's object.
+   * @param {string} wantedId - adaptation id of the wanted track.
+   * @param {string} switchingMode - Behavior when replacing the track by
+   * another.
+   * @param {Array.<string>|null} reprsToLock - Video Representations that should be
+   * locked after switchingMode to that track.
+   * `null` if no Video Representation should be locked.
+   */
+  ;
+
+  _proto.setVideoTrack = function setVideoTrack(periodObj, wantedId, switchingMode, reprsToLock) {
+    var period = periodObj.period;
+    var wantedAdaptation = (0,array_find/* default */.Z)(period.getSupportedAdaptations("video"), function (_ref2) {
+      var id = _ref2.id;
+      return id === wantedId;
+    });
+
+    if (wantedAdaptation === undefined) {
+      throw new Error("Wanted video track not found.");
+    }
+
+    var _config$getCurrent3 = config/* default.getCurrent */.Z.getCurrent(),
+        DEFAULT_VIDEO_TRACK_SWITCHING_MODE = _config$getCurrent3.DEFAULT_VIDEO_TRACK_SWITCHING_MODE;
+
+    var typeInfo = periodObj.video;
+    var newAdaptation = getRightVideoTrack(wantedAdaptation, this._isTrickModeTrackEnabled);
+    var lockedRepresentations;
+
+    if (reprsToLock === null) {
+      lockedRepresentations = (0,utils_reference/* default */.ZP)(null);
+    } else {
+      var representationsToLock = this._getRepresentationsToLock(wantedAdaptation, reprsToLock);
+
+      var repSwitchingMode = DEFAULT_VIDEO_TRACK_SWITCHING_MODE;
+      lockedRepresentations = (0,utils_reference/* default */.ZP)({
+        representations: representationsToLock,
+        switchingMode: repSwitchingMode
+      });
+    }
+
+    typeInfo.storedSettings = {
+      adaptationBase: wantedAdaptation,
+      switchingMode: switchingMode !== null && switchingMode !== void 0 ? switchingMode : DEFAULT_VIDEO_TRACK_SWITCHING_MODE,
+      adaptation: newAdaptation,
+      lockedRepresentations: lockedRepresentations
+    };
+
+    if (typeInfo.dispatcher !== null) {
+      typeInfo.dispatcher.updateTrack(typeInfo.storedSettings);
+    }
+  }
+  /**
+   * Disable the current text track for a given period.
+   *
+   * @param {Object} periodObj - The concerned Period's object
+   * @param {string} bufferType - The type of track to disable.
+   * @throws Error - Throws if the period given has not been added
+   */
+  ;
+
+  _proto.disableTrack = function disableTrack(periodObj, bufferType) {
+    var _a;
+
+    var trackInfo = periodObj[bufferType];
+
+    if (trackInfo.storedSettings === null) {
+      return;
+    }
+
+    if (bufferType !== "text") {
+      // Potentially unneeded, but let's be clean
+      (_a = periodObj[bufferType].storedSettings) === null || _a === void 0 ? void 0 : _a.lockedRepresentations.finish();
+    }
+
+    trackInfo.storedSettings = null;
+
+    if (trackInfo.dispatcher !== null) {
+      trackInfo.dispatcher.updateTrack(null);
+    }
   }
   /**
    * Returns an object describing the chosen audio track for the given audio
    * Period.
    *
-   * Returns null is the the current audio track is disabled or not
-   * set yet.
+   * Returns `null` is the the current audio track is disabled or not
+   * set yet.a pas bcp de marge de manoeuvre j'ai l'impression
    *
-   * @param {Period} period - The concerned Period.
-   * @returns {Object|null} - The audio track chosen for this Period
+   * Returns `undefined` if the given Period's id is not currently found in the
+   * `TracksStore`. The cause being most probably that the corresponding
+   * Period is not available anymore.
+   * If you're in that case and if still have the corresponding JavaScript
+   * reference to the wanted Period, you can call `getOldAudioTrack` with it. It
+   * will try retrieving the choice it made from its cache.
+   * @param {Object} periodObj - The concerned Period's object
+   * @returns {Object|null|undefined} - The audio track chosen for this Period.
+   * `null` if audio tracks were disabled and `undefined` if the Period is not
+   * known.
    */
   ;
 
-  _proto.getChosenAudioTrack = function getChosenAudioTrack(period) {
-    var periodItem = getPeriodItem(this._periods, period);
-    var audioInfos = periodItem !== undefined ? periodItem.audio : null;
-
-    if ((0,is_null_or_undefined/* default */.Z)(audioInfos)) {
-      return null;
-    }
-
-    var chosenTrack = this._audioChoiceMemory.get(period);
-
-    if ((0,is_null_or_undefined/* default */.Z)(chosenTrack)) {
-      return null;
-    }
-
-    var audioTrack = {
-      language: (0,take_first_set/* default */.Z)(chosenTrack.language, ""),
-      normalized: (0,take_first_set/* default */.Z)(chosenTrack.normalizedLanguage, ""),
-      audioDescription: chosenTrack.isAudioDescription === true,
-      id: chosenTrack.id,
-      representations: chosenTrack.representations.map(parseAudioRepresentation),
-      label: chosenTrack.label
-    };
-
-    if (chosenTrack.isDub === true) {
-      audioTrack.dub = true;
-    }
-
-    return audioTrack;
+  _proto.getChosenAudioTrack = function getChosenAudioTrack(periodObj) {
+    return periodObj.audio.storedSettings === null ? null : toAudioTrack(periodObj.audio.storedSettings.adaptation);
   }
   /**
    * Returns an object describing the chosen text track for the given text
@@ -60436,32 +59479,13 @@ var TrackChoiceManager = /*#__PURE__*/function () {
    * Returns null is the the current text track is disabled or not
    * set yet.
    *
-   * @param {Period} period - The concerned Period.
+   * @param {Object} periodObj - The concerned Period's object
    * @returns {Object|null} - The text track chosen for this Period
    */
   ;
 
-  _proto.getChosenTextTrack = function getChosenTextTrack(period) {
-    var periodItem = getPeriodItem(this._periods, period);
-    var textInfos = periodItem !== undefined ? periodItem.text : null;
-
-    if ((0,is_null_or_undefined/* default */.Z)(textInfos)) {
-      return null;
-    }
-
-    var chosenTextAdaptation = this._textChoiceMemory.get(period);
-
-    if ((0,is_null_or_undefined/* default */.Z)(chosenTextAdaptation)) {
-      return null;
-    }
-
-    return {
-      language: (0,take_first_set/* default */.Z)(chosenTextAdaptation.language, ""),
-      normalized: (0,take_first_set/* default */.Z)(chosenTextAdaptation.normalizedLanguage, ""),
-      closedCaption: chosenTextAdaptation.isClosedCaption === true,
-      id: chosenTextAdaptation.id,
-      label: chosenTextAdaptation.label
-    };
+  _proto.getChosenTextTrack = function getChosenTextTrack(periodObj) {
+    return periodObj.text.storedSettings === null ? null : toTextTrack(periodObj.text.storedSettings.adaptation);
   }
   /**
    * Returns an object describing the chosen video track for the given video
@@ -60470,87 +59494,40 @@ var TrackChoiceManager = /*#__PURE__*/function () {
    * Returns null is the the current video track is disabled or not
    * set yet.
    *
-   * @param {Period} period - The concerned Period.
+   * @param {Object} periodObj - The concerned Period's object
    * @returns {Object|null} - The video track chosen for this Period
    */
   ;
 
-  _proto.getChosenVideoTrack = function getChosenVideoTrack(period) {
-    var periodItem = getPeriodItem(this._periods, period);
-    var videoInfos = periodItem !== undefined ? periodItem.video : null;
-
-    if ((0,is_null_or_undefined/* default */.Z)(videoInfos)) {
+  _proto.getChosenVideoTrack = function getChosenVideoTrack(periodObj) {
+    if (periodObj.video.storedSettings === null) {
       return null;
     }
 
-    var chosenVideoAdaptation = this._videoChoiceMemory.get(period);
-
-    if ((0,is_null_or_undefined/* default */.Z)(chosenVideoAdaptation)) {
-      return null;
-    }
-
-    var currAdaptation = chosenVideoAdaptation.adaptation;
-    var trickModeTracks = currAdaptation.trickModeTracks !== undefined ? currAdaptation.trickModeTracks.map(function (trickModeAdaptation) {
-      var representations = trickModeAdaptation.representations.map(parseVideoRepresentation);
-      var trickMode = {
-        id: trickModeAdaptation.id,
-        representations: representations,
-        isTrickModeTrack: true
-      };
-
-      if (trickModeAdaptation.isSignInterpreted === true) {
-        trickMode.signInterpreted = true;
-      }
-
-      return trickMode;
-    }) : undefined;
-    var videoTrack = {
-      id: currAdaptation.id,
-      representations: currAdaptation.representations.map(parseVideoRepresentation),
-      label: currAdaptation.label
-    };
-
-    if (currAdaptation.isSignInterpreted === true) {
-      videoTrack.signInterpreted = true;
-    }
-
-    if (currAdaptation.isTrickModeTrack === true) {
-      videoTrack.isTrickModeTrack = true;
-    }
-
-    if (trickModeTracks !== undefined) {
-      videoTrack.trickModeTracks = trickModeTracks;
-    }
-
-    return videoTrack;
+    return toVideoTrack(periodObj.video.storedSettings.adaptation);
   }
   /**
    * Returns all available audio tracks for a given Period, as an array of
    * objects.
    *
+   * Returns `undefined` if the given Period's id is not known.
+   *
+   * @param {Object} periodObj - The concerned Period's object
    * @returns {Array.<Object>}
    */
   ;
 
-  _proto.getAvailableAudioTracks = function getAvailableAudioTracks(period) {
-    var periodItem = getPeriodItem(this._periods, period);
-    var audioInfos = periodItem !== undefined ? periodItem.audio : null;
-
-    if ((0,is_null_or_undefined/* default */.Z)(audioInfos)) {
-      return [];
-    }
-
-    var chosenAudioAdaptation = this._audioChoiceMemory.get(period);
-
-    var currentId = !(0,is_null_or_undefined/* default */.Z)(chosenAudioAdaptation) ? chosenAudioAdaptation.id : null;
-    return audioInfos.adaptations.map(function (adaptation) {
+  _proto.getAvailableAudioTracks = function getAvailableAudioTracks(periodObj) {
+    var storedSettings = periodObj.audio.storedSettings;
+    var currentId = storedSettings !== null ? storedSettings.adaptation.id : null;
+    return periodObj.period.getSupportedAdaptations("audio").map(function (adaptation) {
       var formatted = {
         language: (0,take_first_set/* default */.Z)(adaptation.language, ""),
         normalized: (0,take_first_set/* default */.Z)(adaptation.normalizedLanguage, ""),
         audioDescription: adaptation.isAudioDescription === true,
         id: adaptation.id,
         active: currentId === null ? false : currentId === adaptation.id,
-        representations: adaptation.representations.map(parseAudioRepresentation),
+        representations: adaptation.getPlayableRepresentations().map(parseAudioRepresentation),
         label: adaptation.label
       };
 
@@ -60565,23 +59542,17 @@ var TrackChoiceManager = /*#__PURE__*/function () {
    * Returns all available text tracks for a given Period, as an array of
    * objects.
    *
-   * @param {Period} period
+   * Returns `undefined` if the given Period's id is not known.
+   *
+   * @param {Object} periodObj - The concerned Period's object
    * @returns {Array.<Object>}
    */
   ;
 
-  _proto.getAvailableTextTracks = function getAvailableTextTracks(period) {
-    var periodItem = getPeriodItem(this._periods, period);
-    var textInfos = periodItem !== undefined ? periodItem.text : null;
-
-    if ((0,is_null_or_undefined/* default */.Z)(textInfos)) {
-      return [];
-    }
-
-    var chosenTextAdaptation = this._textChoiceMemory.get(period);
-
-    var currentId = !(0,is_null_or_undefined/* default */.Z)(chosenTextAdaptation) ? chosenTextAdaptation.id : null;
-    return textInfos.adaptations.map(function (adaptation) {
+  _proto.getAvailableTextTracks = function getAvailableTextTracks(periodObj) {
+    var storedSettings = periodObj.text.storedSettings;
+    var currentId = storedSettings !== null ? storedSettings.adaptation.id : null;
+    return periodObj.period.getSupportedAdaptations("text").map(function (adaptation) {
       return {
         language: (0,take_first_set/* default */.Z)(adaptation.language, ""),
         normalized: (0,take_first_set/* default */.Z)(adaptation.normalizedLanguage, ""),
@@ -60596,27 +59567,20 @@ var TrackChoiceManager = /*#__PURE__*/function () {
    * Returns all available video tracks for a given Period, as an array of
    * objects.
    *
+   * Returns `undefined` if the given Period's id is not known.
+   *
+   * @param {Object} periodObj - The concerned Period's object
    * @returns {Array.<Object>}
    */
   ;
 
-  _proto.getAvailableVideoTracks = function getAvailableVideoTracks(period) {
-    var _a;
-
-    var periodItem = getPeriodItem(this._periods, period);
-    var videoInfos = periodItem !== undefined ? periodItem.video : null;
-
-    if ((0,is_null_or_undefined/* default */.Z)(videoInfos)) {
-      return [];
-    }
-
-    var chosenVideoAdaptation = this._videoChoiceMemory.get(period);
-
-    var currentId = chosenVideoAdaptation === undefined ? undefined : (_a = chosenVideoAdaptation === null || chosenVideoAdaptation === void 0 ? void 0 : chosenVideoAdaptation.adaptation.id) !== null && _a !== void 0 ? _a : undefined;
-    return videoInfos.adaptations.map(function (adaptation) {
+  _proto.getAvailableVideoTracks = function getAvailableVideoTracks(periodObj) {
+    var storedSettings = periodObj.video.storedSettings;
+    var currentId = storedSettings === null ? undefined : storedSettings.adaptation.id;
+    return periodObj.period.getSupportedAdaptations("video").map(function (adaptation) {
       var trickModeTracks = adaptation.trickModeTracks !== undefined ? adaptation.trickModeTracks.map(function (trickModeAdaptation) {
         var isActive = currentId === null ? false : currentId === trickModeAdaptation.id;
-        var representations = trickModeAdaptation.representations.map(parseVideoRepresentation);
+        var representations = trickModeAdaptation.getPlayableRepresentations().map(parseVideoRepresentation);
         var trickMode = {
           id: trickModeAdaptation.id,
           representations: representations,
@@ -60633,7 +59597,7 @@ var TrackChoiceManager = /*#__PURE__*/function () {
       var formatted = {
         id: adaptation.id,
         active: currentId === null ? false : currentId === adaptation.id,
-        representations: adaptation.representations.map(parseVideoRepresentation),
+        representations: adaptation.getPlayableRepresentations().map(parseVideoRepresentation),
         label: adaptation.label
       };
 
@@ -60647,468 +59611,197 @@ var TrackChoiceManager = /*#__PURE__*/function () {
 
       return formatted;
     });
-  }
-  /**
-   * Reset all audio tracks choices to corresponds to the current preferences.
-   */
-  ;
-
-  _proto._applyAudioPreferences = function _applyAudioPreferences() {
-    // Remove all memorized choices and start over
-    this._audioChoiceMemory = new WeakMap();
-
-    this._resetChosenAudioTracks();
-  }
-  /**
-   * Reset all text tracks choices to corresponds to the current preferences.
-   */
-  ;
-
-  _proto._applyTextPreferences = function _applyTextPreferences() {
-    // Remove all memorized choices and start over
-    this._textChoiceMemory = new WeakMap();
-
-    this._resetChosenTextTracks();
-  }
-  /**
-   * Reset all video tracks choices to corresponds to the current preferences.
-   */
-  ;
-
-  _proto._applyVideoPreferences = function _applyVideoPreferences() {
-    // Remove all memorized choices and start over
-    this._videoChoiceMemory = new WeakMap();
-
-    this._resetChosenVideoTracks();
-  }
-  /**
-   * Choose again the best audio tracks for all current Periods.
-   * This is based on two things:
-   *   1. what was the track previously chosen for that Period (by checking
-   *      `this._audioChoiceMemory`).
-   *   2. If no track were previously chosen or if it is not available anymore
-   *      we check the audio preferences.
-   */
-  ;
-
-  _proto._resetChosenAudioTracks = function _resetChosenAudioTracks() {
-    var _this = this;
-
-    var preferredAudioTracks = this._preferredAudioTracks;
-    var normalizedPref = normalizeAudioTracks(preferredAudioTracks);
-
-    var recursiveUpdateAudioTrack = function recursiveUpdateAudioTrack(index) {
-      if (index >= _this._periods.length()) {
-        // we did all audio Periods, exit
-        return;
-      }
-
-      var periodItem = _this._periods.get(index);
-
-      if ((0,is_null_or_undefined/* default */.Z)(periodItem.audio)) {
-        // No audio choice for this period, check next one
-        recursiveUpdateAudioTrack(index + 1);
-        return;
-      }
-
-      var period = periodItem.period,
-          audioItem = periodItem.audio;
-      var audioAdaptations = period.getSupportedAdaptations("audio");
-
-      var chosenAudioAdaptation = _this._audioChoiceMemory.get(period);
-
-      if (chosenAudioAdaptation === null || chosenAudioAdaptation !== undefined && (0,array_includes/* default */.Z)(audioAdaptations, chosenAudioAdaptation)) {
-        // Already best audio for this Period, check next one
-        recursiveUpdateAudioTrack(index + 1);
-        return;
-      }
-
-      var optimalAdaptation = findFirstOptimalAudioAdaptation(audioAdaptations, normalizedPref);
-
-      _this._audioChoiceMemory.set(period, optimalAdaptation);
-
-      audioItem.adaptation$.next(optimalAdaptation); // previous "next" call could have changed everything, start over
-
-      recursiveUpdateAudioTrack(0);
-    };
-
-    recursiveUpdateAudioTrack(0);
-  }
-  /**
-   * Choose again the best text tracks for all current Periods.
-   * This is based on two things:
-   *   1. what was the track previously chosen for that Period (by checking
-   *      `this._textChoiceMemory`).
-   *   2. If no track were previously chosen or if it is not available anymore
-   *      we check the text preferences.
-   */
-  ;
-
-  _proto._resetChosenTextTracks = function _resetChosenTextTracks() {
-    var _this2 = this;
-
-    var preferredTextTracks = this._preferredTextTracks;
-    var normalizedPref = normalizeTextTracks(preferredTextTracks);
-
-    var recursiveUpdateTextTrack = function recursiveUpdateTextTrack(index) {
-      if (index >= _this2._periods.length()) {
-        // we did all text Periods, exit
-        return;
-      }
-
-      var periodItem = _this2._periods.get(index);
-
-      if ((0,is_null_or_undefined/* default */.Z)(periodItem.text)) {
-        // No text choice for this period, check next one
-        recursiveUpdateTextTrack(index + 1);
-        return;
-      }
-
-      var period = periodItem.period,
-          textItem = periodItem.text;
-      var textAdaptations = period.getSupportedAdaptations("text");
-
-      var chosenTextAdaptation = _this2._textChoiceMemory.get(period);
-
-      if (chosenTextAdaptation === null || chosenTextAdaptation !== undefined && (0,array_includes/* default */.Z)(textAdaptations, chosenTextAdaptation)) {
-        // Already best text for this Period, check next one
-        recursiveUpdateTextTrack(index + 1);
-        return;
-      }
-
-      var optimalAdaptation = findFirstOptimalTextAdaptation(textAdaptations, normalizedPref);
-
-      _this2._textChoiceMemory.set(period, optimalAdaptation);
-
-      textItem.adaptation$.next(optimalAdaptation); // previous "next" call could have changed everything, start over
-
-      recursiveUpdateTextTrack(0);
-    };
-
-    recursiveUpdateTextTrack(0);
-  }
-  /**
-   * Choose again the best video tracks for all current Periods.
-   * This is based on two things:
-   *   1. what was the track previously chosen for that Period (by checking
-   *      `this._videoChoiceMemory`).
-   *   2. If no track were previously chosen or if it is not available anymore
-   *      we check the video preferences.
-   */
-  ;
-
-  _proto._resetChosenVideoTracks = function _resetChosenVideoTracks() {
-    var _this3 = this;
-
-    var preferredVideoTracks = this._preferredVideoTracks;
-
-    var recursiveUpdateVideoTrack = function recursiveUpdateVideoTrack(index) {
-      if (index >= _this3._periods.length()) {
-        // we did all video Periods, exit
-        return;
-      }
-
-      var periodItem = _this3._periods.get(index);
-
-      if ((0,is_null_or_undefined/* default */.Z)(periodItem.video)) {
-        // No video choice for this period, check next one
-        recursiveUpdateVideoTrack(index + 1);
-        return;
-      }
-
-      var period = periodItem.period,
-          videoItem = periodItem.video;
-      var videoAdaptations = period.getSupportedAdaptations("video");
-
-      var chosenVideoAdaptation = _this3._videoChoiceMemory.get(period);
-
-      if (chosenVideoAdaptation === null) {
-        // No video track for that one, so nothing to change.
-        recursiveUpdateVideoTrack(index + 1);
-        return;
-      } else if (chosenVideoAdaptation !== undefined && (0,array_includes/* default */.Z)(videoAdaptations, chosenVideoAdaptation.baseAdaptation)) {
-        // The right Base Adaptation is selected and is still available.
-        // Check if the selected Adaptation is still right
-        var wantedVideoAdaptation = getRightVideoTrack(chosenVideoAdaptation.baseAdaptation, _this3.trickModeTrackEnabled);
-
-        if (wantedVideoAdaptation.id === chosenVideoAdaptation.adaptation.id) {
-          // We're good, continue.
-          recursiveUpdateVideoTrack(index + 1);
-          return;
-        } else {
-          // select the right track
-          _this3._videoChoiceMemory.set(period, {
-            baseAdaptation: chosenVideoAdaptation.baseAdaptation,
-            adaptation: wantedVideoAdaptation
-          });
-
-          videoItem.adaptation$.next(wantedVideoAdaptation); // previous "next" call could have changed everything, start over
-
-          return recursiveUpdateVideoTrack(0);
-        }
-      }
-
-      var optimalAdaptation = findFirstOptimalVideoAdaptation(videoAdaptations, preferredVideoTracks);
-
-      if (optimalAdaptation === null) {
-        _this3._videoChoiceMemory.set(period, null);
-
-        videoItem.adaptation$.next(null); // previous "next" call could have changed everything, start over
-
-        return recursiveUpdateVideoTrack(0);
-      }
-
-      var newVideoAdaptation = getRightVideoTrack(optimalAdaptation, _this3.trickModeTrackEnabled);
-
-      _this3._videoChoiceMemory.set(period, {
-        baseAdaptation: optimalAdaptation,
-        adaptation: newVideoAdaptation
-      });
-
-      videoItem.adaptation$.next(newVideoAdaptation); // previous "next" call could have changed everything, start over
-
-      return recursiveUpdateVideoTrack(0);
-    };
-
-    recursiveUpdateVideoTrack(0);
   };
 
-  return TrackChoiceManager;
-}();
-/**
- * Create a function allowing to compare audio Adaptations with a given
- * `preferredAudioTrack` preference to see if they match.
- *
- * This function is curried to be easily and optimally used in a loop context.
- *
- * @param {Object} preferredAudioTrack - The audio track preference you want to
- * compare audio Adaptations to.
- * @returns {Function} - Function taking in argument an audio Adaptation and
- * returning `true` if it matches the `preferredAudioTrack` preference (and
- * `false` otherwise.
- */
+  _proto.getLockedAudioRepresentations = function getLockedAudioRepresentations(periodObj) {
+    var storedSettings = periodObj.audio.storedSettings;
 
+    if (storedSettings === null) {
+      return null;
+    }
 
+    var lastLockedSettings = storedSettings.lockedRepresentations.getValue();
+    return lastLockedSettings === null ? null : lastLockedSettings.representations.map(function (r) {
+      return r.id;
+    });
+  };
 
+  _proto.getLockedVideoRepresentations = function getLockedVideoRepresentations(periodObj) {
+    var storedSettings = periodObj.video.storedSettings;
 
-function createAudioPreferenceMatcher(preferredAudioTrack) {
-  /**
-   * Compares an audio Adaptation to the given `preferredAudioTrack` preference.
-   * Returns `true` if it matches, false otherwise.
-   * @param {Object} audioAdaptation
-   * @returns {boolean}
-   */
-  return function matchAudioPreference(audioAdaptation) {
+    if (storedSettings === null) {
+      return null;
+    }
+
+    var lastLockedSettings = storedSettings.lockedRepresentations.getValue();
+    return lastLockedSettings === null ? null : lastLockedSettings.representations.map(function (r) {
+      return r.id;
+    });
+  };
+
+  _proto.lockAudioRepresentations = function lockAudioRepresentations(periodObj, lockSettings) {
     var _a;
 
-    if (preferredAudioTrack.normalized !== undefined) {
-      var language = (_a = audioAdaptation.normalizedLanguage) !== null && _a !== void 0 ? _a : "";
+    var storedSettings = periodObj.audio.storedSettings;
 
-      if (language !== preferredAudioTrack.normalized) {
-        return false;
+    if (storedSettings === null) {
+      return;
+    }
+
+    var _config$getCurrent4 = config/* default.getCurrent */.Z.getCurrent(),
+        DEFAULT_AUDIO_REPRESENTATIONS_SWITCHING_MODE = _config$getCurrent4.DEFAULT_AUDIO_REPRESENTATIONS_SWITCHING_MODE;
+
+    var filtered = this._getRepresentationsToLock(storedSettings.adaptation, lockSettings.representations);
+
+    var switchingMode = (_a = lockSettings.switchingMode) !== null && _a !== void 0 ? _a : DEFAULT_AUDIO_REPRESENTATIONS_SWITCHING_MODE;
+    storedSettings.lockedRepresentations.setValue({
+      representations: filtered,
+      switchingMode: switchingMode
+    });
+  };
+
+  _proto.lockVideoRepresentations = function lockVideoRepresentations(periodObj, lockSettings) {
+    var _a;
+
+    var storedSettings = periodObj.video.storedSettings;
+
+    if (storedSettings === null) {
+      return;
+    }
+
+    var _config$getCurrent5 = config/* default.getCurrent */.Z.getCurrent(),
+        DEFAULT_VIDEO_REPRESENTATIONS_SWITCHING_MODE = _config$getCurrent5.DEFAULT_VIDEO_REPRESENTATIONS_SWITCHING_MODE;
+
+    var filtered = this._getRepresentationsToLock(storedSettings.adaptation, lockSettings.representations);
+
+    var switchingMode = (_a = lockSettings.switchingMode) !== null && _a !== void 0 ? _a : DEFAULT_VIDEO_REPRESENTATIONS_SWITCHING_MODE;
+    storedSettings.lockedRepresentations.setValue({
+      representations: filtered,
+      switchingMode: switchingMode
+    });
+  };
+
+  _proto.unlockAudioRepresentations = function unlockAudioRepresentations(periodObj) {
+    var storedSettings = periodObj.audio.storedSettings;
+
+    if (storedSettings === null || storedSettings.lockedRepresentations.getValue() === null) {
+      return;
+    }
+
+    storedSettings.lockedRepresentations.setValue(null);
+  };
+
+  _proto.unlockVideoRepresentations = function unlockVideoRepresentations(periodObj) {
+    var storedSettings = periodObj.video.storedSettings;
+
+    if (storedSettings === null || storedSettings.lockedRepresentations.getValue() === null) {
+      return;
+    }
+
+    storedSettings.lockedRepresentations.setValue(null);
+  };
+
+  _proto.dispose = function dispose() {
+    this._isDisposed = true;
+
+    while (true) {
+      var lastPeriod = this._storedPeriodInfo.pop();
+
+      if (lastPeriod === undefined) {
+        return;
+      }
+
+      lastPeriod.isRemoved = true;
+    }
+  }
+  /**
+   * @param {Period} period
+   * @returns {Object}
+   */
+  ;
+
+  _proto._manuallyAddPeriod = function _manuallyAddPeriod(period) {
+    var periodObj = generatePeriodInfo(period, false, this._isTrickModeTrackEnabled);
+
+    for (var i = 0; i < this._storedPeriodInfo.length; i++) {
+      if (this._storedPeriodInfo[i].period.start > period.start) {
+        this._storedPeriodInfo.splice(i, 0, periodObj);
+
+        return periodObj;
       }
     }
 
-    if (preferredAudioTrack.audioDescription !== undefined) {
-      if (preferredAudioTrack.audioDescription) {
-        if (audioAdaptation.isAudioDescription !== true) {
-          return false;
+    this._storedPeriodInfo.push(periodObj);
+
+    return periodObj;
+  };
+
+  _proto._resetVideoTrackChoices = function _resetVideoTrackChoices() {
+    for (var i = 0; i < this._storedPeriodInfo.length; i++) {
+      var periodObj = this._storedPeriodInfo[i];
+
+      if (periodObj.video.storedSettings !== null) {
+        var chosenBaseTrack = periodObj.video.storedSettings.adaptationBase;
+
+        if (chosenBaseTrack !== null) {
+          var chosenTrack = getRightVideoTrack(chosenBaseTrack, this._isTrickModeTrackEnabled);
+          periodObj.video.storedSettings.adaptationBase = chosenBaseTrack;
+          periodObj.video.storedSettings.adaptation = chosenTrack;
         }
-      } else if (audioAdaptation.isAudioDescription === true) {
-        return false;
+      }
+    } // Clone the current Period list to not be influenced if Periods are removed
+    // or added while the loop is running.
+
+
+    var sliced = this._storedPeriodInfo.slice();
+
+    for (var _i2 = 0; _i2 < sliced.length; _i2++) {
+      var videoItem = sliced[_i2].video;
+
+      if (videoItem.dispatcher !== null) {
+        videoItem.dispatcher.updateTrack(videoItem.storedSettings);
       }
     }
-
-    if (preferredAudioTrack.codec === undefined) {
-      return true;
-    }
-
-    var regxp = preferredAudioTrack.codec.test;
-
-    var codecTestingFn = function codecTestingFn(rep) {
-      return rep.codec !== undefined && regxp.test(rep.codec);
-    };
-
-    if (preferredAudioTrack.codec.all) {
-      return audioAdaptation.representations.every(codecTestingFn);
-    }
-
-    return audioAdaptation.representations.some(codecTestingFn);
   };
-}
-/**
- * Find an optimal audio adaptation given their list and the array of preferred
- * audio tracks sorted from the most preferred to the least preferred.
- *
- * `null` if the most optimal audio adaptation is no audio adaptation.
- * @param {Array.<Adaptation>} audioAdaptations
- * @param {Array.<Object|null>} preferredAudioTracks
- * @returns {Adaptation|null}
- */
 
+  _proto._removePeriodObject = function _removePeriodObject(index) {
+    if (false) {}
 
-function findFirstOptimalAudioAdaptation(audioAdaptations, preferredAudioTracks) {
-  if (audioAdaptations.length === 0) {
-    return null;
-  }
+    var oldPeriodItem = this._storedPeriodInfo[index];
+    this._storedPeriodInfo[index].isRemoved = true;
 
-  for (var i = 0; i < preferredAudioTracks.length; i++) {
-    var preferredAudioTrack = preferredAudioTracks[i];
+    this._storedPeriodInfo.splice(index, 1);
 
-    if (preferredAudioTrack === null) {
-      return null;
-    }
-
-    var matchPreferredAudio = createAudioPreferenceMatcher(preferredAudioTrack);
-    var foundAdaptation = (0,array_find/* default */.Z)(audioAdaptations, matchPreferredAudio);
-
-    if (foundAdaptation !== undefined) {
-      return foundAdaptation;
-    }
-  } // no optimal adaptation, just return the first one
-
-
-  return audioAdaptations[0];
-}
-/**
- * Create a function allowing to compare text Adaptations with a given
- * `preferredTextTrack` preference to see if they match.
- *
- * This function is curried to be easily and optimally used in a loop context.
- *
- * @param {Object} preferredTextTrack - The text track preference you want to
- * compare text Adaptations to.
- * @returns {Function} - Function taking in argument a text Adaptation and
- * returning `true` if it matches the `preferredTextTrack` preference (and
- * `false` otherwise.
- */
-
-
-function createTextPreferenceMatcher(preferredTextTrack) {
-  /**
-   * Compares a text Adaptation to the given `preferredTextTrack` preference.
-   * Returns `true` if it matches, false otherwise.
-   * @param {Object} textAdaptation
-   * @returns {boolean}
-   */
-  return function matchTextPreference(textAdaptation) {
-    return (0,take_first_set/* default */.Z)(textAdaptation.normalizedLanguage, "") === preferredTextTrack.normalized && (preferredTextTrack.closedCaption ? textAdaptation.isClosedCaption === true : textAdaptation.isClosedCaption !== true);
+    this._cachedPeriodInfo.set(oldPeriodItem.period, oldPeriodItem);
   };
-}
-/**
- * Find an optimal text adaptation given their list and the array of preferred
- * text tracks sorted from the most preferred to the least preferred.
- *
- * `null` if the most optimal text adaptation is no text adaptation.
- * @param {Array.<Object>} textAdaptations
- * @param {Array.<Object|null>} preferredTextTracks
- * @returns {Adaptation|null}
- */
 
+  _proto._getRepresentationsToLock = function _getRepresentationsToLock(adaptation, representationIds) {
+    var filtered = representationIds.reduce(function (acc, repId) {
+      var foundRep = (0,array_find/* default */.Z)(adaptation.representations, function (r) {
+        return r.id === repId;
+      });
 
-function findFirstOptimalTextAdaptation(textAdaptations, preferredTextTracks) {
-  if (textAdaptations.length === 0) {
-    return null;
-  }
+      if (foundRep === undefined) {
+        log/* default.warn */.Z.warn("API: Wanted locked Representation not found.");
+      } else {
+        acc.push(foundRep);
+      }
 
-  for (var i = 0; i < preferredTextTracks.length; i++) {
-    var preferredTextTrack = preferredTextTracks[i];
+      return acc;
+    }, []);
 
-    if (preferredTextTrack === null) {
-      return null;
+    if (filtered.length === 0) {
+      throw new Error("Cannot lock Representations: " + "None of the given Representation id are found");
     }
 
-    var matchPreferredText = createTextPreferenceMatcher(preferredTextTrack);
-    var foundAdaptation = (0,array_find/* default */.Z)(textAdaptations, matchPreferredText);
-
-    if (foundAdaptation !== undefined) {
-      return foundAdaptation;
-    }
-  } // no optimal adaptation
-
-
-  return null;
-}
-/**
- * Create a function allowing to compare video Adaptations with a given
- * `preferredVideoTrack` preference to see if they match.
- *
- * This function is curried to be easily and optimally used in a loop context.
- *
- * @param {Object} preferredVideoTrack - The video track preference you want to
- * compare video Adaptations to.
- * @returns {Function} - Function taking in argument a video Adaptation and
- * returning `true` if it matches the `preferredVideoTrack` preference (and
- * `false` otherwise.
- */
-
-
-function createVideoPreferenceMatcher(preferredVideoTrack) {
-  /**
-   * Compares a video Adaptation to the given `preferredVideoTrack` preference.
-   * Returns `true` if it matches, false otherwise.
-   * @param {Object} videoAdaptation
-   * @returns {boolean}
-   */
-  return function matchVideoPreference(videoAdaptation) {
-    if (preferredVideoTrack.signInterpreted !== undefined && preferredVideoTrack.signInterpreted !== videoAdaptation.isSignInterpreted) {
-      return false;
-    }
-
-    if (preferredVideoTrack.codec === undefined) {
-      return true;
-    }
-
-    var regxp = preferredVideoTrack.codec.test;
-
-    var codecTestingFn = function codecTestingFn(rep) {
-      return rep.codec !== undefined && regxp.test(rep.codec);
-    };
-
-    if (preferredVideoTrack.codec.all) {
-      return videoAdaptation.representations.every(codecTestingFn);
-    }
-
-    return videoAdaptation.representations.some(codecTestingFn);
+    return filtered;
   };
-}
-/**
- * Find an optimal video adaptation given their list and the array of preferred
- * video tracks sorted from the most preferred to the least preferred.
- *
- * `null` if the most optimal video adaptation is no video adaptation.
- * @param {Array.<Adaptation>} videoAdaptations
- * @param {Array.<Object|null>} preferredVideoTracks
- * @returns {Adaptation|null}
- */
 
-
-function findFirstOptimalVideoAdaptation(videoAdaptations, preferredVideoTracks) {
-  if (videoAdaptations.length === 0) {
-    return null;
-  }
-
-  for (var i = 0; i < preferredVideoTracks.length; i++) {
-    var preferredVideoTrack = preferredVideoTracks[i];
-
-    if (preferredVideoTrack === null) {
-      return null;
-    }
-
-    var matchPreferredVideo = createVideoPreferenceMatcher(preferredVideoTrack);
-    var foundAdaptation = (0,array_find/* default */.Z)(videoAdaptations, matchPreferredVideo);
-
-    if (foundAdaptation !== undefined) {
-      return foundAdaptation;
-    }
-  } // no optimal adaptation, just return the first one
-
-
-  return videoAdaptations[0];
-}
+  return TracksStore;
+}(event_emitter/* default */.Z);
 /**
  * Returns the index of the given `period` in the given `periods`
- * SortedList.
+ * Array.
  * Returns `undefined` if that `period` is not found.
  * @param {Object} periods
  * @param {Object} period
@@ -61116,9 +59809,11 @@ function findFirstOptimalVideoAdaptation(videoAdaptations, preferredVideoTracks)
  */
 
 
+
+
 function findPeriodIndex(periods, period) {
-  for (var i = 0; i < periods.length(); i++) {
-    var periodI = periods.get(i);
+  for (var i = 0; i < periods.length; i++) {
+    var periodI = periods[i];
 
     if (periodI.period.id === period.id) {
       return i;
@@ -61126,20 +59821,20 @@ function findPeriodIndex(periods, period) {
   }
 }
 /**
- * Returns element in the given `periods` SortedList that corresponds to the
+ * Returns element in the given `periods` Array that corresponds to the
  * `period` given.
  * Returns `undefined` if that `period` is not found.
  * @param {Object} periods
- * @param {Object} period
+ * @param {string} periodId
  * @returns {Object|undefined}
  */
 
 
-function getPeriodItem(periods, period) {
-  for (var i = 0; i < periods.length(); i++) {
-    var periodI = periods.get(i);
+function getPeriodItem(periods, periodId) {
+  for (var i = 0; i < periods.length; i++) {
+    var periodI = periods[i];
 
-    if (periodI.period.id === period.id) {
+    if (periodI.period.id === periodId) {
       return periodI;
     }
   }
@@ -61151,14 +59846,14 @@ function getPeriodItem(periods, period) {
  */
 
 
-function parseVideoRepresentation(_ref4) {
-  var id = _ref4.id,
-      bitrate = _ref4.bitrate,
-      frameRate = _ref4.frameRate,
-      width = _ref4.width,
-      height = _ref4.height,
-      codec = _ref4.codec,
-      hdrInfo = _ref4.hdrInfo;
+function parseVideoRepresentation(_ref3) {
+  var id = _ref3.id,
+      bitrate = _ref3.bitrate,
+      frameRate = _ref3.frameRate,
+      width = _ref3.width,
+      height = _ref3.height,
+      codec = _ref3.codec,
+      hdrInfo = _ref3.hdrInfo;
   return {
     id: id,
     bitrate: bitrate,
@@ -61170,16 +59865,29 @@ function parseVideoRepresentation(_ref4) {
   };
 }
 /**
+ * A `ITMPeriodObject` should only be removed once all subjects linked to it do
+ * not exist anymore, to keep the possibility of making track choices.
+ * @param {Object} periodObj
+ * @returns {boolean}
+ */
+
+
+function isPeriodItemRemovable(periodObj) {
+  var _a, _b, _c;
+
+  return !periodObj.inManifest && ((_a = periodObj.text) === null || _a === void 0 ? void 0 : _a.dispatcher) === null && ((_b = periodObj.audio) === null || _b === void 0 ? void 0 : _b.dispatcher) === null && ((_c = periodObj.video) === null || _c === void 0 ? void 0 : _c.dispatcher) === null;
+}
+/**
  * Parse audio Representation into a ITMAudioRepresentation.
  * @param {Object} representation
  * @returns {Object}
  */
 
 
-function parseAudioRepresentation(_ref5) {
-  var id = _ref5.id,
-      bitrate = _ref5.bitrate,
-      codec = _ref5.codec;
+function parseAudioRepresentation(_ref4) {
+  var id = _ref4.id,
+      bitrate = _ref4.bitrate,
+      codec = _ref4.codec;
   return {
     id: id,
     bitrate: bitrate,
@@ -61196,6 +59904,164 @@ function getRightVideoTrack(adaptation, isTrickModeEnabled) {
 
   return adaptation;
 }
+/**
+ * Generate an `ITMPeriodObject` object for the given Period, selecting the
+ * default track for each type.
+ * @param {Object} period
+ * @param {boolean} inManifest
+ * @param {boolean} isTrickModeTrackEnabled
+ * @returns {object}
+ */
+
+
+function generatePeriodInfo(period, inManifest, isTrickModeTrackEnabled) {
+  var audioAdaptation = period.getSupportedAdaptations("audio")[0];
+  var baseVideoAdaptation = period.getSupportedAdaptations("video")[0];
+  var videoAdaptation = getRightVideoTrack(baseVideoAdaptation, isTrickModeTrackEnabled);
+
+  var _config$getCurrent6 = config/* default.getCurrent */.Z.getCurrent(),
+      DEFAULT_AUDIO_TRACK_SWITCHING_MODE = _config$getCurrent6.DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
+      DEFAULT_VIDEO_TRACK_SWITCHING_MODE = _config$getCurrent6.DEFAULT_VIDEO_TRACK_SWITCHING_MODE;
+
+  var audioSettings = audioAdaptation !== undefined ? {
+    adaptation: audioAdaptation,
+    switchingMode: DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
+    lockedRepresentations: (0,utils_reference/* default */.ZP)(null)
+  } : null;
+  var videoSettings = videoAdaptation !== undefined ? {
+    adaptation: videoAdaptation,
+    adaptationBase: baseVideoAdaptation,
+    switchingMode: DEFAULT_VIDEO_TRACK_SWITCHING_MODE,
+    lockedRepresentations: (0,utils_reference/* default */.ZP)(null)
+  } : null;
+  return {
+    period: period,
+    inManifest: inManifest,
+    isRemoved: false,
+    audio: {
+      storedSettings: audioSettings,
+      dispatcher: null
+    },
+    video: {
+      storedSettings: videoSettings,
+      dispatcher: null
+    },
+    text: {
+      storedSettings: null,
+      dispatcher: null
+    }
+  };
+}
+/**
+ * Format Adaptation structure into the format awaited by the API.
+ * @param {Object} a
+ * @returns {Object}
+ */
+
+
+function toTextTrack(a) {
+  var _a, _b;
+
+  return {
+    language: (_a = a.language) !== null && _a !== void 0 ? _a : "",
+    normalized: (_b = a.normalizedLanguage) !== null && _b !== void 0 ? _b : "",
+    closedCaption: a.isClosedCaption === true,
+    id: a.id,
+    label: a.label
+  };
+}
+/**
+ * Format Adaptation structure into the format awaited by the API.
+ * @param {Object} a
+ * @returns {Object}
+ */
+
+
+function toVideoTrack(a) {
+  var trickModeTracks = a.trickModeTracks !== undefined ? a.trickModeTracks.map(function (trickModeAdaptation) {
+    var representations = trickModeAdaptation.representations.map(parseVideoRepresentation);
+    var trickMode = {
+      id: trickModeAdaptation.id,
+      representations: representations,
+      isTrickModeTrack: true
+    };
+
+    if (trickModeAdaptation.isSignInterpreted === true) {
+      trickMode.signInterpreted = true;
+    }
+
+    return trickMode;
+  }) : undefined;
+  var videoTrack = {
+    id: a.id,
+    representations: a.representations.map(parseVideoRepresentation),
+    label: a.label
+  };
+
+  if (a.isSignInterpreted === true) {
+    videoTrack.signInterpreted = true;
+  }
+
+  if (a.isTrickModeTrack === true) {
+    videoTrack.isTrickModeTrack = true;
+  }
+
+  if (trickModeTracks !== undefined) {
+    videoTrack.trickModeTracks = trickModeTracks;
+  }
+
+  return videoTrack;
+}
+/**
+ * Convert an audio Adaptation into an audio track.
+ * @param {object|null} adaptation - Audio adaptation
+ * @returns {object|null} - corresponding audio track object.
+ */
+
+
+function toAudioTrack(adaptation) {
+  var audioTrack = {
+    language: (0,take_first_set/* default */.Z)(adaptation.language, ""),
+    normalized: (0,take_first_set/* default */.Z)(adaptation.normalizedLanguage, ""),
+    audioDescription: adaptation.isAudioDescription === true,
+    id: adaptation.id,
+    representations: adaptation.representations.map(parseAudioRepresentation),
+    label: adaptation.label
+  };
+
+  if (adaptation.isDub === true) {
+    audioTrack.dub = true;
+  }
+
+  return audioTrack;
+}
+
+function toExposedPeriod(p) {
+  return {
+    start: p.start,
+    end: p.end,
+    id: p.id
+  };
+}
+;// CONCATENATED MODULE: ./src/core/api/track_management/index.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* harmony default export */ var track_management = (TracksStore);
+
 ;// CONCATENATED MODULE: ./src/core/api/public_api.ts
 
 
@@ -61244,16 +60110,11 @@ function getRightVideoTrack(adaptation, isTrickModeEnabled) {
 
 
 
-
-
 /* eslint-disable @typescript-eslint/naming-convention */
 
-var getPageActivityRef = event_listeners/* getPageActivityRef */.XR,
-    getPictureOnPictureStateRef = event_listeners/* getPictureOnPictureStateRef */.w0,
+var getPictureOnPictureStateRef = event_listeners/* getPictureOnPictureStateRef */.w0,
     getVideoVisibilityRef = event_listeners/* getVideoVisibilityRef */.it,
-    getVideoWidthRef = event_listeners/* getVideoWidthRef */.O0,
-    onFullscreenChange$ = event_listeners/* onFullscreenChange$ */.Q1,
-    onTextTrackChanges$ = event_listeners/* onTextTrackChanges$ */.UA;
+    getVideoWidthRef = event_listeners/* getVideoWidthRef */.O0;
 /**
  * @class Player
  * @extends EventEmitter
@@ -61285,15 +60146,10 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
         maxBufferAhead = _parseConstructorOpti.maxBufferAhead,
         maxBufferBehind = _parseConstructorOpti.maxBufferBehind,
         maxVideoBitrate = _parseConstructorOpti.maxVideoBitrate,
-        preferredAudioTracks = _parseConstructorOpti.preferredAudioTracks,
-        preferredTextTracks = _parseConstructorOpti.preferredTextTracks,
-        preferredVideoTracks = _parseConstructorOpti.preferredVideoTracks,
-        throttleWhenHidden = _parseConstructorOpti.throttleWhenHidden,
         throttleVideoBitrateWhenHidden = _parseConstructorOpti.throttleVideoBitrateWhenHidden,
         videoElement = _parseConstructorOpti.videoElement,
         wantedBufferAhead = _parseConstructorOpti.wantedBufferAhead,
-        maxVideoBufferSize = _parseConstructorOpti.maxVideoBufferSize,
-        stopAtEnd = _parseConstructorOpti.stopAtEnd;
+        maxVideoBufferSize = _parseConstructorOpti.maxVideoBufferSize;
 
     var _config$getCurrent = config/* default.getCurrent */.Z.getCurrent(),
         DEFAULT_UNMUTED_VOLUME = _config$getCurrent.DEFAULT_UNMUTED_VOLUME; // Workaround to support Firefox autoplay on FF 42.
@@ -61315,54 +60171,14 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     });
 
     _this._priv_pictureInPictureRef = getPictureOnPictureStateRef(videoElement, destroyCanceller.signal);
-    /** @deprecated */
-
-    onFullscreenChange$(videoElement).pipe((0,takeUntil/* takeUntil */.R)(_this._priv_destroy$))
-    /* eslint-disable import/no-deprecated */
-    .subscribe(function () {
-      return _this.trigger("fullscreenChange", _this.isFullscreen());
-    });
-    /* eslint-enable import/no-deprecated */
-
-    /** @deprecated */
-
-    onTextTrackChanges$(videoElement.textTracks).pipe((0,takeUntil/* takeUntil */.R)(_this._priv_destroy$), (0,map/* map */.U)(function (evt) {
-      var target = evt.target;
-      var arr = [];
-
-      for (var i = 0; i < target.length; i++) {
-        var textTrack = target[i];
-        arr.push(textTrack);
-      }
-
-      return arr;
-    }), // We can have two consecutive textTrackChanges with the exact same
-    // payload when we perform multiple texttrack operations before the event
-    // loop is freed.
-    // In that case we only want to fire one time the observable.
-    (0,distinctUntilChanged/* distinctUntilChanged */.x)(function (textTracksA, textTracksB) {
-      if (textTracksA.length !== textTracksB.length) {
-        return false;
-      }
-
-      for (var i = 0; i < textTracksA.length; i++) {
-        if (textTracksA[i] !== textTracksB[i]) {
-          return false;
-        }
-      }
-
-      return true;
-    })).subscribe(function (x) {
-      return _this._priv_onNativeTextTracksNext(x);
-    });
-    _this._priv_speed = (0,reference/* default */.ZP)(videoElement.playbackRate);
+    _this._priv_speed = (0,utils_reference/* default */.ZP)(videoElement.playbackRate);
     _this._priv_preferTrickModeTracks = false;
-    _this._priv_contentLock = (0,reference/* default */.ZP)(false);
+    _this._priv_contentLock = (0,utils_reference/* default */.ZP)(false);
     _this._priv_bufferOptions = {
-      wantedBufferAhead: (0,reference/* default */.ZP)(wantedBufferAhead),
-      maxBufferAhead: (0,reference/* default */.ZP)(maxBufferAhead),
-      maxBufferBehind: (0,reference/* default */.ZP)(maxBufferBehind),
-      maxVideoBufferSize: (0,reference/* default */.ZP)(maxVideoBufferSize)
+      wantedBufferAhead: (0,utils_reference/* default */.ZP)(wantedBufferAhead),
+      maxBufferAhead: (0,utils_reference/* default */.ZP)(maxBufferAhead),
+      maxBufferBehind: (0,utils_reference/* default */.ZP)(maxBufferBehind),
+      maxVideoBufferSize: (0,utils_reference/* default */.ZP)(maxVideoBufferSize)
     };
     _this._priv_bitrateInfos = {
       lastBitrates: {
@@ -61370,34 +60186,29 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
         video: initialVideoBitrate
       },
       minAutoBitrates: {
-        audio: (0,reference/* default */.ZP)(minAudioBitrate),
-        video: (0,reference/* default */.ZP)(minVideoBitrate)
+        audio: (0,utils_reference/* default */.ZP)(minAudioBitrate),
+        video: (0,utils_reference/* default */.ZP)(minVideoBitrate)
       },
       maxAutoBitrates: {
-        audio: (0,reference/* default */.ZP)(maxAudioBitrate),
-        video: (0,reference/* default */.ZP)(maxVideoBitrate)
+        audio: (0,utils_reference/* default */.ZP)(maxAudioBitrate),
+        video: (0,utils_reference/* default */.ZP)(maxVideoBitrate)
       },
       manualBitrates: {
-        audio: (0,reference/* default */.ZP)(-1),
-        video: (0,reference/* default */.ZP)(-1)
+        audio: (0,utils_reference/* default */.ZP)(-1),
+        video: (0,utils_reference/* default */.ZP)(-1)
       }
     };
-    _this._priv_throttleWhenHidden = throttleWhenHidden;
     _this._priv_throttleVideoBitrateWhenHidden = throttleVideoBitrateWhenHidden;
     _this._priv_limitVideoWidth = limitVideoWidth;
     _this._priv_mutedMemory = DEFAULT_UNMUTED_VOLUME;
-    _this._priv_trackChoiceManager = null;
-    _this._priv_mediaElementTrackChoiceManager = null;
+    _this._priv_tracksStore = null;
+    _this._priv_mediaElementTracksStore = null;
     _this._priv_currentError = null;
     _this._priv_contentInfos = null;
     _this._priv_contentEventsMemory = {};
-    _this._priv_stopAtEnd = stopAtEnd;
 
     _this._priv_setPlayerState(PLAYER_STATES.STOPPED);
 
-    _this._priv_preferredAudioTracks = preferredAudioTracks;
-    _this._priv_preferredTextTracks = preferredTextTracks;
-    _this._priv_preferredVideoTracks = preferredVideoTracks;
     _this._priv_lastContentPlaybackInfos = {};
     return _this;
   }
@@ -61567,9 +60378,6 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     var _a, _b, _c;
 
     var autoPlay = options.autoPlay,
-        audioTrackSwitchingMode = options.audioTrackSwitchingMode,
-        defaultAudioTrack = options.defaultAudioTrack,
-        defaultTextTrack = options.defaultTextTrack,
         enableFastSwitching = options.enableFastSwitching,
         initialManifest = options.initialManifest,
         keySystems = options.keySystems,
@@ -61607,13 +60415,10 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       currentContentCanceller: currentContentCanceller,
       isDirectFile: isDirectFile,
       segmentBuffersStore: null,
-      thumbnails: null,
       manifest: null,
       currentPeriod: null,
       activeAdaptations: null,
-      activeRepresentations: null,
-      initialAudioTrack: defaultAudioTrack,
-      initialTextTrack: defaultTextTrack
+      activeRepresentations: null
     };
     var videoElement = this.videoElement;
     /** Global "playback observer" which will emit playback conditions */
@@ -61693,29 +60498,16 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       this._priv_contentInfos = contentInfos;
       var relyOnVideoVisibilityAndSize = canRelyOnVideoVisibilityAndSize();
       var throttlers = {
-        throttle: {},
         throttleBitrate: {},
         limitWidth: {}
       };
-
-      if (this._priv_throttleWhenHidden) {
-        if (!relyOnVideoVisibilityAndSize) {
-          log/* default.warn */.Z.warn("API: Can't apply throttleWhenHidden because " + "browser can't be trusted for visibility.");
-        } else {
-          throttlers.throttle = {
-            video: (0,reference/* createMappedReference */.lR)(getPageActivityRef(currentContentCanceller.signal), function (isActive) {
-              return isActive ? Infinity : 0;
-            }, currentContentCanceller.signal)
-          };
-        }
-      }
 
       if (this._priv_throttleVideoBitrateWhenHidden) {
         if (!relyOnVideoVisibilityAndSize) {
           log/* default.warn */.Z.warn("API: Can't apply throttleVideoBitrateWhenHidden because " + "browser can't be trusted for visibility.");
         } else {
           throttlers.throttleBitrate = {
-            video: (0,reference/* createMappedReference */.lR)(getVideoVisibilityRef(this._priv_pictureInPictureRef, currentContentCanceller.signal), function (isActive) {
+            video: (0,utils_reference/* createMappedReference */.lR)(getVideoVisibilityRef(this._priv_pictureInPictureRef, currentContentCanceller.signal), function (isActive) {
               return isActive ? Infinity : 0;
             }, currentContentCanceller.signal)
           };
@@ -61745,14 +60537,12 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       /** Options used by the TextTrack SegmentBuffer. */
 
       var textTrackOptions = options.textTrackMode === "native" ? {
-        textTrackMode: "native",
-        hideNativeSubtitle: options.hideNativeSubtitle
+        textTrackMode: "native"
       } : {
         textTrackMode: "html",
         textTrackElement: options.textTrackElement
       };
       var bufferOptions = (0,object_assign/* default */.Z)({
-        audioTrackSwitchingMode: audioTrackSwitchingMode,
         enableFastSwitching: enableFastSwitching,
         manualBitrateSwitchingMode: manualBitrateSwitchingMode,
         onCodecSwitch: onCodecSwitch
@@ -61790,45 +60580,35 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       }
 
       this._priv_contentInfos = contentInfos;
-      this._priv_mediaElementTrackChoiceManager = new features/* default.directfile.mediaElementTrackChoiceManager */.Z.directfile.mediaElementTrackChoiceManager(this.videoElement);
-      var preferredAudioTracks = defaultAudioTrack === undefined ? this._priv_preferredAudioTracks : [defaultAudioTrack];
+      this._priv_mediaElementTracksStore = new features/* default.directfile.mediaElementTracksStore */.Z.directfile.mediaElementTracksStore(this.videoElement);
+      this.trigger("availableAudioTracksChange", this._priv_mediaElementTracksStore.getAvailableAudioTracks());
+      this.trigger("availableVideoTracksChange", this._priv_mediaElementTracksStore.getAvailableVideoTracks());
+      this.trigger("availableTextTracksChange", this._priv_mediaElementTracksStore.getAvailableTextTracks());
+      this.trigger("audioTrackChange", (_a = this._priv_mediaElementTracksStore.getChosenAudioTrack()) !== null && _a !== void 0 ? _a : null);
+      this.trigger("textTrackChange", (_b = this._priv_mediaElementTracksStore.getChosenTextTrack()) !== null && _b !== void 0 ? _b : null);
+      this.trigger("videoTrackChange", (_c = this._priv_mediaElementTracksStore.getChosenVideoTrack()) !== null && _c !== void 0 ? _c : null);
 
-      this._priv_mediaElementTrackChoiceManager.setPreferredAudioTracks(preferredAudioTracks, true);
-
-      var preferredTextTracks = defaultTextTrack === undefined ? this._priv_preferredTextTracks : [defaultTextTrack];
-
-      this._priv_mediaElementTrackChoiceManager.setPreferredTextTracks(preferredTextTracks, true);
-
-      this._priv_mediaElementTrackChoiceManager.setPreferredVideoTracks(this._priv_preferredVideoTracks, true);
-
-      this.trigger("availableAudioTracksChange", this._priv_mediaElementTrackChoiceManager.getAvailableAudioTracks());
-      this.trigger("availableVideoTracksChange", this._priv_mediaElementTrackChoiceManager.getAvailableVideoTracks());
-      this.trigger("availableTextTracksChange", this._priv_mediaElementTrackChoiceManager.getAvailableTextTracks());
-      this.trigger("audioTrackChange", (_a = this._priv_mediaElementTrackChoiceManager.getChosenAudioTrack()) !== null && _a !== void 0 ? _a : null);
-      this.trigger("textTrackChange", (_b = this._priv_mediaElementTrackChoiceManager.getChosenTextTrack()) !== null && _b !== void 0 ? _b : null);
-      this.trigger("videoTrackChange", (_c = this._priv_mediaElementTrackChoiceManager.getChosenVideoTrack()) !== null && _c !== void 0 ? _c : null);
-
-      this._priv_mediaElementTrackChoiceManager.addEventListener("availableVideoTracksChange", function (val) {
+      this._priv_mediaElementTracksStore.addEventListener("availableVideoTracksChange", function (val) {
         return _this2.trigger("availableVideoTracksChange", val);
       });
 
-      this._priv_mediaElementTrackChoiceManager.addEventListener("availableAudioTracksChange", function (val) {
+      this._priv_mediaElementTracksStore.addEventListener("availableAudioTracksChange", function (val) {
         return _this2.trigger("availableAudioTracksChange", val);
       });
 
-      this._priv_mediaElementTrackChoiceManager.addEventListener("availableTextTracksChange", function (val) {
+      this._priv_mediaElementTracksStore.addEventListener("availableTextTracksChange", function (val) {
         return _this2.trigger("availableTextTracksChange", val);
       });
 
-      this._priv_mediaElementTrackChoiceManager.addEventListener("audioTrackChange", function (val) {
+      this._priv_mediaElementTracksStore.addEventListener("audioTrackChange", function (val) {
         return _this2.trigger("audioTrackChange", val);
       });
 
-      this._priv_mediaElementTrackChoiceManager.addEventListener("videoTrackChange", function (val) {
+      this._priv_mediaElementTracksStore.addEventListener("videoTrackChange", function (val) {
         return _this2.trigger("videoTrackChange", val);
       });
 
-      this._priv_mediaElementTrackChoiceManager.addEventListener("textTrackChange", function (val) {
+      this._priv_mediaElementTracksStore.addEventListener("textTrackChange", function (val) {
         return _this2.trigger("textTrackChange", val);
       });
 
@@ -61920,12 +60700,6 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
 
     playerState$.pipe((0,takeUntil/* takeUntil */.R)(stoppedContent$)).subscribe(function (x) {
       return _this2._priv_setPlayerState(x);
-    });
-    var endedEvent$ = observation$.pipe((0,filter/* filter */.h)(function (o) {
-      return o.event === "ended";
-    }));
-    (this._priv_stopAtEnd ? endedEvent$ : empty/* EMPTY */.E).pipe((0,takeUntil/* takeUntil */.R)(stoppedContent$)).subscribe(function () {
-      currentContentCanceller.cancel();
     }); // Link playback events to the corresponding callbacks
 
     playback$.subscribe({
@@ -61965,62 +60739,6 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     return this._priv_currentError;
   }
   /**
-   * Returns manifest/playlist object.
-   * null if the player is STOPPED.
-   * @deprecated
-   * @returns {Manifest|null} - The current Manifest (`null` when not known).
-   */
-  ;
-
-  _proto.getManifest = function getManifest() {
-    (0,warn_once/* default */.Z)("getManifest is deprecated." + " Please open an issue if you used this API.");
-
-    if (this._priv_contentInfos === null) {
-      return null;
-    }
-
-    return this._priv_contentInfos.manifest;
-  }
-  /**
-   * Returns Adaptations (tracks) for every currently playing type
-   * (audio/video/text...).
-   * @deprecated
-   * @returns {Object|null} - The current Adaptation objects, per type (`null`
-   * when none is known for now.
-   */
-  ;
-
-  _proto.getCurrentAdaptations = function getCurrentAdaptations() {
-    (0,warn_once/* default */.Z)("getCurrentAdaptations is deprecated." + " Please open an issue if you used this API.");
-
-    if (this._priv_contentInfos === null) {
-      return null;
-    }
-
-    var _this$_priv_contentIn = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn.currentPeriod,
-        activeAdaptations = _this$_priv_contentIn.activeAdaptations;
-
-    if (currentPeriod === null || activeAdaptations === null || (0,is_null_or_undefined/* default */.Z)(activeAdaptations[currentPeriod.id])) {
-      return null;
-    }
-
-    return activeAdaptations[currentPeriod.id];
-  }
-  /**
-   * Returns representations (qualities) for every currently playing type
-   * (audio/video/text...).
-   * @deprecated
-   * @returns {Object|null} - The current Representation objects, per type
-   * (`null` when none is known for now.
-   */
-  ;
-
-  _proto.getCurrentRepresentations = function getCurrentRepresentations() {
-    (0,warn_once/* default */.Z)("getCurrentRepresentations is deprecated." + " Please open an issue if you used this API.");
-    return this._priv_getCurrentRepresentations();
-  }
-  /**
    * Returns the media DOM element used by the player.
    * You should not its HTML5 API directly and use the player's method instead,
    * to ensure a well-behaved player.
@@ -62031,29 +60749,6 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
 
   _proto.getVideoElement = function getVideoElement() {
     return this.videoElement;
-  }
-  /**
-   * If one returns the first native text-track element attached to the media element.
-   * @deprecated
-   * @returns {TextTrack} - The native TextTrack attached (`null` when none)
-   */
-  ;
-
-  _proto.getNativeTextTrack = function getNativeTextTrack() {
-    (0,warn_once/* default */.Z)("getNativeTextTrack is deprecated." + " Please open an issue if you used this API.");
-
-    if (this.videoElement === null) {
-      throw new Error("Disposed player");
-    }
-
-    var videoElement = this.videoElement;
-    var textTracks = videoElement.textTracks;
-
-    if (textTracks.length > 0) {
-      return videoElement.textTracks[0];
-    } else {
-      return null;
-    }
   }
   /**
    * Returns the player's current state.
@@ -62077,9 +60772,9 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       return false;
     }
 
-    var _this$_priv_contentIn2 = this._priv_contentInfos,
-        isDirectFile = _this$_priv_contentIn2.isDirectFile,
-        manifest = _this$_priv_contentIn2.manifest;
+    var _this$_priv_contentIn = this._priv_contentInfos,
+        isDirectFile = _this$_priv_contentIn.isDirectFile,
+        manifest = _this$_priv_contentIn.manifest;
 
     if (isDirectFile || manifest === null) {
       return false;
@@ -62110,10 +60805,10 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       return undefined;
     }
 
-    var _this$_priv_contentIn3 = this._priv_contentInfos,
-        isDirectFile = _this$_priv_contentIn3.isDirectFile,
-        manifest = _this$_priv_contentIn3.manifest,
-        url = _this$_priv_contentIn3.url;
+    var _this$_priv_contentIn2 = this._priv_contentInfos,
+        isDirectFile = _this$_priv_contentIn2.isDirectFile,
+        manifest = _this$_priv_contentIn2.manifest,
+        url = _this$_priv_contentIn2.url;
 
     if (isDirectFile) {
       return url;
@@ -62132,7 +60827,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
    */
   ;
 
-  _proto.getVideoDuration = function getVideoDuration() {
+  _proto.getMediaDuration = function getMediaDuration() {
     if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
@@ -62147,45 +60842,13 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
    */
   ;
 
-  _proto.getVideoBufferGap = function getVideoBufferGap() {
+  _proto.getCurrentBufferGap = function getCurrentBufferGap() {
     if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
 
     var videoElement = this.videoElement;
     return (0,ranges/* getLeftSizeOfRange */.L7)(videoElement.buffered, videoElement.currentTime);
-  }
-  /**
-   * Returns in seconds the difference between:
-   *   - the end of the current contiguous loaded range.
-   *   - the start of the current contiguous loaded range.
-   * @returns {Number}
-   */
-  ;
-
-  _proto.getVideoLoadedTime = function getVideoLoadedTime() {
-    if (this.videoElement === null) {
-      throw new Error("Disposed player");
-    }
-
-    var videoElement = this.videoElement;
-    return (0,ranges/* getSizeOfRange */.at)(videoElement.buffered, videoElement.currentTime);
-  }
-  /**
-   * Returns in seconds the difference between:
-   *   - the current time.
-   *   - the start of the current contiguous loaded range.
-   * @returns {Number}
-   */
-  ;
-
-  _proto.getVideoPlayedTime = function getVideoPlayedTime() {
-    if (this.videoElement === null) {
-      throw new Error("Disposed player");
-    }
-
-    var videoElement = this.videoElement;
-    return (0,ranges/* getPlayedSizeOfRange */.DD)(videoElement.buffered, videoElement.currentTime);
   }
   /**
    * Get the current position, in s, in wall-clock time.
@@ -62212,9 +60875,9 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       return this.videoElement.currentTime;
     }
 
-    var _this$_priv_contentIn4 = this._priv_contentInfos,
-        isDirectFile = _this$_priv_contentIn4.isDirectFile,
-        manifest = _this$_priv_contentIn4.manifest;
+    var _this$_priv_contentIn3 = this._priv_contentInfos,
+        isDirectFile = _this$_priv_contentIn3.isDirectFile,
+        manifest = _this$_priv_contentIn3.manifest;
 
     if (isDirectFile) {
       var startDate = getStartDate(this.videoElement);
@@ -62329,85 +60992,13 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
 
     this._priv_preferTrickModeTracks = preferTrickModeTracks;
 
-    if (this._priv_trackChoiceManager !== null) {
-      if (preferTrickModeTracks && !this._priv_trackChoiceManager.isTrickModeEnabled()) {
-        this._priv_trackChoiceManager.enableVideoTrickModeTracks();
-      } else if (!preferTrickModeTracks && this._priv_trackChoiceManager.isTrickModeEnabled()) {
-        this._priv_trackChoiceManager.disableVideoTrickModeTracks();
+    if (this._priv_tracksStore !== null) {
+      if (preferTrickModeTracks && !this._priv_tracksStore.isTrickModeEnabled()) {
+        this._priv_tracksStore.enableVideoTrickModeTracks();
+      } else if (!preferTrickModeTracks && this._priv_tracksStore.isTrickModeEnabled()) {
+        this._priv_tracksStore.disableVideoTrickModeTracks();
       }
     }
-  }
-  /**
-   * Returns all available bitrates for the current video Adaptation.
-   * @returns {Array.<Number>}
-   */
-  ;
-
-  _proto.getAvailableVideoBitrates = function getAvailableVideoBitrates() {
-    if (this._priv_contentInfos === null) {
-      return [];
-    }
-
-    var _this$_priv_contentIn5 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn5.currentPeriod,
-        activeAdaptations = _this$_priv_contentIn5.activeAdaptations;
-
-    if (currentPeriod === null || activeAdaptations === null) {
-      return [];
-    }
-
-    var adaptations = activeAdaptations[currentPeriod.id];
-
-    if (adaptations === undefined || (0,is_null_or_undefined/* default */.Z)(adaptations.video)) {
-      return [];
-    }
-
-    return adaptations.video.getAvailableBitrates();
-  }
-  /**
-   * Returns all available bitrates for the current audio Adaptation.
-   * @returns {Array.<Number>}
-   */
-  ;
-
-  _proto.getAvailableAudioBitrates = function getAvailableAudioBitrates() {
-    if (this._priv_contentInfos === null) {
-      return [];
-    }
-
-    var _this$_priv_contentIn6 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn6.currentPeriod,
-        activeAdaptations = _this$_priv_contentIn6.activeAdaptations;
-
-    if (currentPeriod === null || activeAdaptations === null) {
-      return [];
-    }
-
-    var adaptations = activeAdaptations[currentPeriod.id];
-
-    if (adaptations === undefined || (0,is_null_or_undefined/* default */.Z)(adaptations.audio)) {
-      return [];
-    }
-
-    return adaptations.audio.getAvailableBitrates();
-  }
-  /**
-   * Returns the manual audio bitrate set. -1 if in AUTO mode.
-   * @returns {Number}
-   */
-  ;
-
-  _proto.getManualAudioBitrate = function getManualAudioBitrate() {
-    return this._priv_bitrateInfos.manualBitrates.audio.getValue();
-  }
-  /**
-   * Returns the manual video bitrate set. -1 if in AUTO mode.
-   * @returns {Number}
-   */
-  ;
-
-  _proto.getManualVideoBitrate = function getManualVideoBitrate() {
-    return this._priv_bitrateInfos.manualBitrates.video.getValue();
   }
   /**
    * Returns currently considered bitrate for video segments.
@@ -62536,9 +61127,9 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       throw new Error("player: no content loaded");
     }
 
-    var _this$_priv_contentIn7 = this._priv_contentInfos,
-        isDirectFile = _this$_priv_contentIn7.isDirectFile,
-        manifest = _this$_priv_contentIn7.manifest;
+    var _this$_priv_contentIn4 = this._priv_contentInfos,
+        isDirectFile = _this$_priv_contentIn4.isDirectFile,
+        manifest = _this$_priv_contentIn4.manifest;
 
     if (!isDirectFile && manifest === null) {
       throw new Error("player: the content did not load yet");
@@ -62581,52 +61172,6 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
 
     this.videoElement.currentTime = positionWanted;
     return positionWanted;
-  }
-  /**
-   * Returns true if the media element is full screen.
-   * @deprecated
-   * @returns {Boolean}
-   */
-  ;
-
-  _proto.isFullscreen = function isFullscreen() {
-    (0,warn_once/* default */.Z)("isFullscreen is deprecated." + " Fullscreen management should now be managed by the application");
-    return fullscreen_isFullscreen();
-  }
-  /**
-   * Set/exit fullScreen.
-   * @deprecated
-   * @param {Boolean} [goFull=true] - if false, exit full screen.
-   */
-  ;
-
-  _proto.setFullscreen = function setFullscreen(goFull) {
-    if (goFull === void 0) {
-      goFull = true;
-    }
-
-    (0,warn_once/* default */.Z)("setFullscreen is deprecated." + " Fullscreen management should now be managed by the application");
-
-    if (this.videoElement === null) {
-      throw new Error("Disposed player");
-    }
-
-    if (goFull) {
-      requestFullscreen(this.videoElement);
-    } else {
-      fullscreen_exitFullscreen();
-    }
-  }
-  /**
-   * Exit from full screen mode.
-   * @deprecated
-   */
-  ;
-
-  _proto.exitFullscreen = function exitFullscreen() {
-    (0,warn_once/* default */.Z)("exitFullscreen is deprecated." + " Fullscreen management should now be managed by the application");
-
-    fullscreen_exitFullscreen();
   }
   /**
    * Returns the current player's audio volume on the media element.
@@ -62693,26 +61238,6 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     if (vol === 0) {
       this.setVolume(this._priv_mutedMemory === 0 ? DEFAULT_UNMUTED_VOLUME : this._priv_mutedMemory);
     }
-  }
-  /**
-   * Force the video bitrate to a given value. Act as a ceil.
-   * -1 to set it on AUTO Mode
-   * @param {Number} btr
-   */
-  ;
-
-  _proto.setVideoBitrate = function setVideoBitrate(btr) {
-    this._priv_bitrateInfos.manualBitrates.video.setValue(btr);
-  }
-  /**
-   * Force the audio bitrate to a given value. Act as a ceil.
-   * -1 to set it on AUTO Mode
-   * @param {Number} btr
-   */
-  ;
-
-  _proto.setAudioBitrate = function setAudioBitrate(btr) {
-    this._priv_bitrateInfos.manualBitrates.audio.setValue(btr);
   }
   /**
    * Update the minimum video bitrate the user can switch to.
@@ -62863,462 +61388,512 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     }
 
     return get_current_key_system_getCurrentKeySystem(this.videoElement);
+  };
+
+  _proto.getCurrentPeriod = function getCurrentPeriod() {
+    var _a;
+
+    var currentPeriod = (_a = this._priv_contentInfos) === null || _a === void 0 ? void 0 : _a.currentPeriod;
+
+    if ((0,is_null_or_undefined/* default */.Z)(currentPeriod)) {
+      return null;
+    }
+
+    return {
+      id: currentPeriod.id,
+      start: currentPeriod.start,
+      end: currentPeriod.end
+    };
   }
   /**
-   * Returns every available audio tracks for the current Period.
-   * @returns {Array.<Object>|null}
+   * Returns the list of available Periods for which the current audio, video or
+   * text track can now be changed.
+   * @returns {Array.<Object>}
    */
   ;
 
-  _proto.getAvailableAudioTracks = function getAvailableAudioTracks() {
+  _proto.getAvailablePeriods = function getAvailablePeriods() {
+    if (this._priv_contentInfos === null) {
+      return [];
+    }
+
+    var isDirectFile = this._priv_contentInfos.isDirectFile;
+
+    if (isDirectFile) {
+      return [];
+    }
+
+    if (this._priv_tracksStore === null) {
+      return [];
+    }
+
+    return this._priv_tracksStore.getAvailablePeriods().slice();
+  }
+  /**
+   * Returns every available audio tracks for a given Period - or the current
+   * one if no `periodId` is given.
+   * @param {string|undefined} [periodId]
+   * @returns {Array.<Object>}
+   */
+  ;
+
+  _proto.getAvailableAudioTracks = function getAvailableAudioTracks(periodId) {
     var _a, _b;
 
     if (this._priv_contentInfos === null) {
       return [];
     }
 
-    var _this$_priv_contentIn8 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn8.currentPeriod,
-        isDirectFile = _this$_priv_contentIn8.isDirectFile;
+    var isDirectFile = this._priv_contentInfos.isDirectFile;
 
     if (isDirectFile) {
-      return (_b = (_a = this._priv_mediaElementTrackChoiceManager) === null || _a === void 0 ? void 0 : _a.getAvailableAudioTracks()) !== null && _b !== void 0 ? _b : [];
+      return (_b = (_a = this._priv_mediaElementTracksStore) === null || _a === void 0 ? void 0 : _a.getAvailableAudioTracks()) !== null && _b !== void 0 ? _b : [];
     }
 
-    if (this._priv_trackChoiceManager === null || currentPeriod === null) {
-      return [];
-    }
+    return this._priv_callTracksStoreGetterSetter(periodId, [], function (tcm, periodRef) {
+      var _a;
 
-    return this._priv_trackChoiceManager.getAvailableAudioTracks(currentPeriod);
+      return (_a = tcm.getAvailableAudioTracks(periodRef)) !== null && _a !== void 0 ? _a : [];
+    });
   }
   /**
-   * Returns every available text tracks for the current Period.
-   * @returns {Array.<Object>|null}
+   * Returns every available text tracks for a given Period - or the current
+   * one if no `periodId` is given.
+   * @param {string|undefined} [periodId]
+   * @returns {Array.<Object>}
    */
   ;
 
-  _proto.getAvailableTextTracks = function getAvailableTextTracks() {
+  _proto.getAvailableTextTracks = function getAvailableTextTracks(periodId) {
     var _a, _b;
 
     if (this._priv_contentInfos === null) {
       return [];
     }
 
-    var _this$_priv_contentIn9 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn9.currentPeriod,
-        isDirectFile = _this$_priv_contentIn9.isDirectFile;
+    var isDirectFile = this._priv_contentInfos.isDirectFile;
 
     if (isDirectFile) {
-      return (_b = (_a = this._priv_mediaElementTrackChoiceManager) === null || _a === void 0 ? void 0 : _a.getAvailableTextTracks()) !== null && _b !== void 0 ? _b : [];
+      return (_b = (_a = this._priv_mediaElementTracksStore) === null || _a === void 0 ? void 0 : _a.getAvailableTextTracks()) !== null && _b !== void 0 ? _b : [];
     }
 
-    if (this._priv_trackChoiceManager === null || currentPeriod === null) {
-      return [];
-    }
+    return this._priv_callTracksStoreGetterSetter(periodId, [], function (tcm, periodRef) {
+      var _a;
 
-    return this._priv_trackChoiceManager.getAvailableTextTracks(currentPeriod);
+      return (_a = tcm.getAvailableTextTracks(periodRef)) !== null && _a !== void 0 ? _a : [];
+    });
   }
   /**
    * Returns every available video tracks for the current Period.
-   * @returns {Array.<Object>|null}
+   * @param {string|undefined} [periodId]
+   * @returns {Array.<Object>}
    */
   ;
 
-  _proto.getAvailableVideoTracks = function getAvailableVideoTracks() {
+  _proto.getAvailableVideoTracks = function getAvailableVideoTracks(periodId) {
     var _a, _b;
 
     if (this._priv_contentInfos === null) {
       return [];
     }
 
-    var _this$_priv_contentIn10 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn10.currentPeriod,
-        isDirectFile = _this$_priv_contentIn10.isDirectFile;
+    var isDirectFile = this._priv_contentInfos.isDirectFile;
 
     if (isDirectFile) {
-      return (_b = (_a = this._priv_mediaElementTrackChoiceManager) === null || _a === void 0 ? void 0 : _a.getAvailableVideoTracks()) !== null && _b !== void 0 ? _b : [];
+      return (_b = (_a = this._priv_mediaElementTracksStore) === null || _a === void 0 ? void 0 : _a.getAvailableVideoTracks()) !== null && _b !== void 0 ? _b : [];
     }
 
-    if (this._priv_trackChoiceManager === null || currentPeriod === null) {
-      return [];
-    }
+    return this._priv_callTracksStoreGetterSetter(periodId, [], function (tcm, periodRef) {
+      var _a;
 
-    return this._priv_trackChoiceManager.getAvailableVideoTracks(currentPeriod);
+      return (_a = tcm.getAvailableVideoTracks(periodRef)) !== null && _a !== void 0 ? _a : [];
+    });
   }
   /**
    * Returns currently chosen audio language for the current Period.
-   * @returns {string}
+   * @param {string|undefined} [periodId]
+   * @returns {Object|null|undefined}
    */
   ;
 
-  _proto.getAudioTrack = function getAudioTrack() {
+  _proto.getAudioTrack = function getAudioTrack(periodId) {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
 
-    var _this$_priv_contentIn11 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn11.currentPeriod,
-        isDirectFile = _this$_priv_contentIn11.isDirectFile;
+    var isDirectFile = this._priv_contentInfos.isDirectFile;
 
     if (isDirectFile) {
-      if (this._priv_mediaElementTrackChoiceManager === null) {
+      if (this._priv_mediaElementTracksStore === null) {
         return undefined;
       }
 
-      return this._priv_mediaElementTrackChoiceManager.getChosenAudioTrack();
+      return this._priv_mediaElementTracksStore.getChosenAudioTrack();
     }
 
-    if (this._priv_trackChoiceManager === null || currentPeriod === null) {
-      return undefined;
-    }
-
-    return this._priv_trackChoiceManager.getChosenAudioTrack(currentPeriod);
+    return this._priv_callTracksStoreGetterSetter(periodId, undefined, function (tcm, periodRef) {
+      return tcm.getChosenAudioTrack(periodRef);
+    });
   }
   /**
    * Returns currently chosen subtitle for the current Period.
-   * @returns {string}
+   * @param {string|undefined} [periodId]
+   * @returns {Object|null|undefined}
    */
   ;
 
-  _proto.getTextTrack = function getTextTrack() {
+  _proto.getTextTrack = function getTextTrack(periodId) {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
 
-    var _this$_priv_contentIn12 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn12.currentPeriod,
-        isDirectFile = _this$_priv_contentIn12.isDirectFile;
+    var isDirectFile = this._priv_contentInfos.isDirectFile;
 
     if (isDirectFile) {
-      if (this._priv_mediaElementTrackChoiceManager === null) {
+      if (this._priv_mediaElementTracksStore === null) {
         return undefined;
       }
 
-      return this._priv_mediaElementTrackChoiceManager.getChosenTextTrack();
+      return this._priv_mediaElementTracksStore.getChosenTextTrack();
     }
 
-    if (this._priv_trackChoiceManager === null || currentPeriod === null) {
-      return undefined;
-    }
-
-    return this._priv_trackChoiceManager.getChosenTextTrack(currentPeriod);
+    return this._priv_callTracksStoreGetterSetter(periodId, undefined, function (tcm, periodRef) {
+      return tcm.getChosenTextTrack(periodRef);
+    });
   }
   /**
    * Returns currently chosen video track for the current Period.
-   * @returns {string}
+   * @param {string|undefined} [periodId]
+   * @returns {Object|null|undefined}
    */
   ;
 
-  _proto.getVideoTrack = function getVideoTrack() {
+  _proto.getVideoTrack = function getVideoTrack(periodId) {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
 
-    var _this$_priv_contentIn13 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn13.currentPeriod,
-        isDirectFile = _this$_priv_contentIn13.isDirectFile;
+    var isDirectFile = this._priv_contentInfos.isDirectFile;
 
     if (isDirectFile) {
-      if (this._priv_mediaElementTrackChoiceManager === null) {
+      if (this._priv_mediaElementTracksStore === null) {
         return undefined;
       }
 
-      return this._priv_mediaElementTrackChoiceManager.getChosenVideoTrack();
+      return this._priv_mediaElementTracksStore.getChosenVideoTrack();
     }
 
-    if (this._priv_trackChoiceManager === null || currentPeriod === null) {
-      return undefined;
-    }
-
-    return this._priv_trackChoiceManager.getChosenVideoTrack(currentPeriod);
+    return this._priv_callTracksStoreGetterSetter(periodId, undefined, function (tcm, periodRef) {
+      return tcm.getChosenVideoTrack(periodRef);
+    });
   }
   /**
    * Update the audio language for the current Period.
-   * @param {string} audioId
-   * @throws Error - the current content has no TrackChoiceManager.
+   * @param {string | object} arg
+   * @throws Error - the current content has no TracksStore.
    * @throws Error - the given id is linked to no audio track.
    */
   ;
 
-  _proto.setAudioTrack = function setAudioTrack(audioId) {
-    var _a;
+  _proto.setAudioTrack = function setAudioTrack(arg) {
+    var _a, _b;
 
     if (this._priv_contentInfos === null) {
       throw new Error("No content loaded");
     }
 
-    var _this$_priv_contentIn14 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn14.currentPeriod,
-        isDirectFile = _this$_priv_contentIn14.isDirectFile;
+    var isDirectFile = this._priv_contentInfos.isDirectFile;
 
     if (isDirectFile) {
       try {
-        (_a = this._priv_mediaElementTrackChoiceManager) === null || _a === void 0 ? void 0 : _a.setAudioTrackById(audioId);
+        var audioId = typeof arg === "string" ? arg : arg.trackId;
+        (_a = this._priv_mediaElementTracksStore) === null || _a === void 0 ? void 0 : _a.setAudioTrackById(audioId);
         return;
       } catch (e) {
         throw new Error("player: unknown audio track");
       }
     }
 
-    if (this._priv_trackChoiceManager === null || currentPeriod === null) {
-      throw new Error("No compatible content launched.");
+    var periodId;
+    var trackId;
+    var switchingMode;
+    var reprsToLock = null;
+
+    if (typeof arg === "string") {
+      trackId = arg;
+    } else {
+      trackId = arg.trackId;
+      periodId = arg.periodId;
+      switchingMode = arg.switchingMode;
+      reprsToLock = (_b = arg.lockedRepresentations) !== null && _b !== void 0 ? _b : null;
     }
 
-    try {
-      this._priv_trackChoiceManager.setAudioTrackByID(currentPeriod, audioId);
-    } catch (e) {
-      throw new Error("player: unknown audio track");
-    }
+    return this._priv_callTracksStoreGetterSetter(periodId, undefined, function (tcm, periodRef) {
+      return tcm.setAudioTrack(periodRef, trackId, switchingMode, reprsToLock);
+    });
   }
   /**
    * Update the text language for the current Period.
-   * @param {string} sub
-   * @throws Error - the current content has no TrackChoiceManager.
+   * @param {string | Object} arg
+   * @throws Error - the current content has no TracksStore.
    * @throws Error - the given id is linked to no text track.
    */
   ;
 
-  _proto.setTextTrack = function setTextTrack(textId) {
+  _proto.setTextTrack = function setTextTrack(arg) {
     var _a;
 
     if (this._priv_contentInfos === null) {
       throw new Error("No content loaded");
     }
 
-    var _this$_priv_contentIn15 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn15.currentPeriod,
-        isDirectFile = _this$_priv_contentIn15.isDirectFile;
+    var isDirectFile = this._priv_contentInfos.isDirectFile;
 
     if (isDirectFile) {
       try {
-        (_a = this._priv_mediaElementTrackChoiceManager) === null || _a === void 0 ? void 0 : _a.setTextTrackById(textId);
+        var textId = typeof arg === "string" ? arg : arg.trackId;
+        (_a = this._priv_mediaElementTracksStore) === null || _a === void 0 ? void 0 : _a.setTextTrackById(textId);
         return;
       } catch (e) {
         throw new Error("player: unknown text track");
       }
     }
 
-    if (this._priv_trackChoiceManager === null || currentPeriod === null) {
-      throw new Error("No compatible content launched.");
+    var periodId;
+    var trackId;
+
+    if (typeof arg === "string") {
+      trackId = arg;
+    } else {
+      trackId = arg.trackId;
+      periodId = arg.periodId;
     }
 
-    try {
-      this._priv_trackChoiceManager.setTextTrackByID(currentPeriod, textId);
-    } catch (e) {
-      throw new Error("player: unknown text track");
-    }
+    return this._priv_callTracksStoreGetterSetter(periodId, undefined, function (tcm, periodRef) {
+      return tcm.setTextTrack(periodRef, trackId);
+    });
   }
   /**
    * Disable subtitles for the current content.
+   * @param {string|undefined} [periodId]
    */
   ;
 
-  _proto.disableTextTrack = function disableTextTrack() {
+  _proto.disableTextTrack = function disableTextTrack(periodId) {
     var _a;
 
     if (this._priv_contentInfos === null) {
       return;
     }
 
-    var _this$_priv_contentIn16 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn16.currentPeriod,
-        isDirectFile = _this$_priv_contentIn16.isDirectFile;
+    var isDirectFile = this._priv_contentInfos.isDirectFile;
 
     if (isDirectFile) {
-      (_a = this._priv_mediaElementTrackChoiceManager) === null || _a === void 0 ? void 0 : _a.disableTextTrack();
+      (_a = this._priv_mediaElementTracksStore) === null || _a === void 0 ? void 0 : _a.disableTextTrack();
       return;
     }
 
-    if (this._priv_trackChoiceManager === null || currentPeriod === null) {
+    if (this._priv_tracksStore === null) {
       return;
     }
 
-    return this._priv_trackChoiceManager.disableTextTrack(currentPeriod);
+    return this._priv_callTracksStoreGetterSetter(periodId, undefined, function (tcm, periodRef) {
+      return tcm.disableTrack(periodRef, "text");
+    });
   }
   /**
    * Update the video track for the current Period.
-   * @param {string} videoId
-   * @throws Error - the current content has no TrackChoiceManager.
+   * @param {string | Object} arg
+   * @throws Error - the current content has no TracksStore.
    * @throws Error - the given id is linked to no video track.
    */
   ;
 
-  _proto.setVideoTrack = function setVideoTrack(videoId) {
-    var _a;
+  _proto.setVideoTrack = function setVideoTrack(arg) {
+    var _a, _b;
 
     if (this._priv_contentInfos === null) {
       throw new Error("No content loaded");
     }
 
-    var _this$_priv_contentIn17 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn17.currentPeriod,
-        isDirectFile = _this$_priv_contentIn17.isDirectFile;
+    var isDirectFile = this._priv_contentInfos.isDirectFile;
 
     if (isDirectFile) {
       try {
-        (_a = this._priv_mediaElementTrackChoiceManager) === null || _a === void 0 ? void 0 : _a.setVideoTrackById(videoId);
+        var videoId = typeof arg === "string" ? arg : arg.trackId;
+        (_a = this._priv_mediaElementTracksStore) === null || _a === void 0 ? void 0 : _a.setVideoTrackById(videoId);
         return;
       } catch (e) {
         throw new Error("player: unknown video track");
       }
     }
 
-    if (this._priv_trackChoiceManager === null || currentPeriod === null) {
-      throw new Error("No compatible content launched.");
+    var periodId;
+    var trackId;
+    var switchingMode;
+    var reprsToLock = null;
+
+    if (typeof arg === "string") {
+      trackId = arg;
+    } else {
+      trackId = arg.trackId;
+      periodId = arg.periodId;
+      switchingMode = arg.switchingMode;
+      reprsToLock = (_b = arg.lockedRepresentations) !== null && _b !== void 0 ? _b : null;
     }
 
-    try {
-      this._priv_trackChoiceManager.setVideoTrackByID(currentPeriod, videoId);
-    } catch (e) {
-      throw new Error("player: unknown video track");
-    }
+    return this._priv_callTracksStoreGetterSetter(periodId, undefined, function (tcm, periodRef) {
+      return tcm.setVideoTrack(periodRef, trackId, switchingMode, reprsToLock);
+    });
   }
   /**
    * Disable video track for the current content.
+   * @param {string|undefined} [periodId]
    */
   ;
 
-  _proto.disableVideoTrack = function disableVideoTrack() {
+  _proto.disableVideoTrack = function disableVideoTrack(periodId) {
     if (this._priv_contentInfos === null) {
       return;
     }
 
-    var _this$_priv_contentIn18 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn18.currentPeriod,
-        isDirectFile = _this$_priv_contentIn18.isDirectFile;
+    var isDirectFile = this._priv_contentInfos.isDirectFile;
 
-    if (isDirectFile && this._priv_mediaElementTrackChoiceManager !== null) {
-      return this._priv_mediaElementTrackChoiceManager.disableVideoTrack();
+    if (isDirectFile && this._priv_mediaElementTracksStore !== null) {
+      return this._priv_mediaElementTracksStore.disableVideoTrack();
     }
 
-    if (this._priv_trackChoiceManager === null || currentPeriod === null) {
-      return;
+    return this._priv_callTracksStoreGetterSetter(periodId, undefined, function (tcm, periodRef) {
+      return tcm.disableTrack(periodRef, "video");
+    });
+  };
+
+  _proto.lockVideoRepresentations = function lockVideoRepresentations(arg) {
+    if (this._priv_contentInfos === null) {
+      throw new Error("No content loaded");
     }
 
-    return this._priv_trackChoiceManager.disableVideoTrack(currentPeriod);
-  }
-  /**
-   * Returns the current list of preferred audio tracks, in preference order.
-   * @returns {Array.<Object>}
-   */
-  ;
+    var isDirectFile = this._priv_contentInfos.isDirectFile;
 
-  _proto.getPreferredAudioTracks = function getPreferredAudioTracks() {
-    return this._priv_preferredAudioTracks;
-  }
-  /**
-   * Returns the current list of preferred text tracks, in preference order.
-   * @returns {Array.<Object>}
-   */
-  ;
-
-  _proto.getPreferredTextTracks = function getPreferredTextTracks() {
-    return this._priv_preferredTextTracks;
-  }
-  /**
-   * Returns the current list of preferred text tracks, in preference order.
-   * @returns {Array.<Object>}
-   */
-  ;
-
-  _proto.getPreferredVideoTracks = function getPreferredVideoTracks() {
-    return this._priv_preferredVideoTracks;
-  }
-  /**
-   * Set the list of preferred audio tracks, in preference order.
-   * @param {Array.<Object>} tracks
-   * @param {boolean} shouldApply - `true` if those preferences should be
-   * applied on the currently loaded Period. `false` if it should only
-   * be applied to new content.
-   */
-  ;
-
-  _proto.setPreferredAudioTracks = function setPreferredAudioTracks(tracks, shouldApply) {
-    if (shouldApply === void 0) {
-      shouldApply = false;
+    if (isDirectFile) {
+      throw new Error("Cannot lock video Representations in directfile mode.");
     }
 
-    if (!Array.isArray(tracks)) {
-      throw new Error("Invalid `setPreferredAudioTracks` argument. " + "Should have been an Array.");
+    var repsId;
+    var periodId;
+    var switchingMode;
+
+    if (Array.isArray(arg)) {
+      repsId = arg;
+      periodId = undefined;
+    } else {
+      repsId = arg.representations;
+      periodId = arg.periodId;
+      switchingMode = arg.switchingMode;
     }
 
-    this._priv_preferredAudioTracks = tracks;
+    return this._priv_callTracksStoreGetterSetter(periodId, undefined, function (tcm, periodRef) {
+      return tcm.lockVideoRepresentations(periodRef, {
+        representations: repsId,
+        switchingMode: switchingMode
+      });
+    });
+  };
 
-    if (this._priv_trackChoiceManager !== null) {
-      this._priv_trackChoiceManager.setPreferredAudioTracks(tracks, shouldApply);
-    } else if (this._priv_mediaElementTrackChoiceManager !== null) {
-      this._priv_mediaElementTrackChoiceManager.setPreferredAudioTracks(tracks, shouldApply);
-    }
-  }
-  /**
-   * Set the list of preferred text tracks, in preference order.
-   * @param {Array.<Object>} tracks
-   * @param {boolean} shouldApply - `true` if those preferences should be
-   * applied on the currently loaded Periods. `false` if it should only
-   * be applied to new content.
-   */
-  ;
-
-  _proto.setPreferredTextTracks = function setPreferredTextTracks(tracks, shouldApply) {
-    if (shouldApply === void 0) {
-      shouldApply = false;
+  _proto.lockAudioRepresentations = function lockAudioRepresentations(arg) {
+    if (this._priv_contentInfos === null) {
+      throw new Error("No content loaded");
     }
 
-    if (!Array.isArray(tracks)) {
-      throw new Error("Invalid `setPreferredTextTracks` argument. " + "Should have been an Array.");
+    var isDirectFile = this._priv_contentInfos.isDirectFile;
+
+    if (isDirectFile) {
+      throw new Error("Cannot lock audio Representations in directfile mode.");
     }
 
-    this._priv_preferredTextTracks = tracks;
+    var repsId;
+    var periodId;
+    var switchingMode;
 
-    if (this._priv_trackChoiceManager !== null) {
-      this._priv_trackChoiceManager.setPreferredTextTracks(tracks, shouldApply);
-    } else if (this._priv_mediaElementTrackChoiceManager !== null) {
-      this._priv_mediaElementTrackChoiceManager.setPreferredTextTracks(tracks, shouldApply);
-    }
-  }
-  /**
-   * Set the list of preferred text tracks, in preference order.
-   * @param {Array.<Object>} tracks
-   * @param {boolean} shouldApply - `true` if those preferences should be
-   * applied on the currently loaded Period. `false` if it should only
-   * be applied to new content.
-   */
-  ;
-
-  _proto.setPreferredVideoTracks = function setPreferredVideoTracks(tracks, shouldApply) {
-    if (shouldApply === void 0) {
-      shouldApply = false;
+    if (Array.isArray(arg)) {
+      repsId = arg;
+      periodId = undefined;
+    } else {
+      repsId = arg.representations;
+      periodId = arg.periodId;
+      switchingMode = arg.switchingMode;
     }
 
-    if (!Array.isArray(tracks)) {
-      throw new Error("Invalid `setPreferredVideoTracks` argument. " + "Should have been an Array.");
-    }
+    return this._priv_callTracksStoreGetterSetter(periodId, undefined, function (tcm, periodRef) {
+      return tcm.lockAudioRepresentations(periodRef, {
+        representations: repsId,
+        switchingMode: switchingMode
+      });
+    });
+  };
 
-    this._priv_preferredVideoTracks = tracks;
-
-    if (this._priv_trackChoiceManager !== null) {
-      this._priv_trackChoiceManager.setPreferredVideoTracks(tracks, shouldApply);
-    } else if (this._priv_mediaElementTrackChoiceManager !== null) {
-      this._priv_mediaElementTrackChoiceManager.setPreferredVideoTracks(tracks, shouldApply);
-    }
-  }
-  /**
-   * @returns {Array.<Object>|null}
-   * @deprecated
-   */
-  ;
-
-  _proto.getImageTrackData = function getImageTrackData() {
-    (0,warn_once/* default */.Z)("`getImageTrackData` is deprecated." + "Please use the `parseBifThumbnails` tool instead.");
-
+  _proto.getLockedVideoRepresentations = function getLockedVideoRepresentations(periodId) {
     if (this._priv_contentInfos === null) {
       return null;
     }
-    /* eslint-disable import/no-deprecated */
 
+    var isDirectFile = this._priv_contentInfos.isDirectFile;
 
-    return this._priv_contentInfos.thumbnails;
-    /* eslint-enable import/no-deprecated */
+    if (isDirectFile) {
+      return null;
+    }
+
+    return this._priv_callTracksStoreGetterSetter(periodId, null, function (tcm, periodRef) {
+      return tcm.getLockedVideoRepresentations(periodRef);
+    });
+  };
+
+  _proto.getLockedAudioRepresentations = function getLockedAudioRepresentations(periodId) {
+    if (this._priv_contentInfos === null) {
+      return null;
+    }
+
+    var isDirectFile = this._priv_contentInfos.isDirectFile;
+
+    if (isDirectFile) {
+      return null;
+    }
+
+    return this._priv_callTracksStoreGetterSetter(periodId, null, function (tcm, periodRef) {
+      return tcm.getLockedAudioRepresentations(periodRef);
+    });
+  };
+
+  _proto.unlockVideoRepresentations = function unlockVideoRepresentations(periodId) {
+    if (this._priv_contentInfos === null) {
+      return;
+    }
+
+    var isDirectFile = this._priv_contentInfos.isDirectFile;
+
+    if (isDirectFile) {
+      return;
+    }
+
+    return this._priv_callTracksStoreGetterSetter(periodId, undefined, function (tcm, periodRef) {
+      return tcm.unlockVideoRepresentations(periodRef);
+    });
+  };
+
+  _proto.unlockAudioRepresentations = function unlockAudioRepresentations(periodId) {
+    if (this._priv_contentInfos === null) {
+      return;
+    }
+
+    var isDirectFile = this._priv_contentInfos.isDirectFile;
+
+    if (isDirectFile) {
+      return;
+    }
+
+    return this._priv_callTracksStoreGetterSetter(periodId, undefined, function (tcm, periodRef) {
+      return tcm.unlockAudioRepresentations(periodRef);
+    });
   }
   /**
    * Get minimum seek-able position.
@@ -63354,9 +61929,9 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       return null;
     }
 
-    var _this$_priv_contentIn19 = this._priv_contentInfos,
-        isDirectFile = _this$_priv_contentIn19.isDirectFile,
-        manifest = _this$_priv_contentIn19.manifest;
+    var _this$_priv_contentIn5 = this._priv_contentInfos,
+        isDirectFile = _this$_priv_contentIn5.isDirectFile,
+        manifest = _this$_priv_contentIn5.manifest;
 
     if (isDirectFile) {
       if (this.videoElement === null) {
@@ -63375,7 +61950,13 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     }
 
     return null;
-  }
+  } // ---- Undocumented Private methods. ----
+  //
+  // Those methods are just here either to allow some tools relying on the
+  // RxPlayer instance to work or to improve the RxPlayer's demo.
+  //
+  // They should not be used by any external code.
+
   /**
    * /!\ For demo use only! Do not touch!
    *
@@ -63396,6 +61977,23 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     return segmentBufferStatus.type === "initialized" ? segmentBufferStatus.value.getInventory() : null;
   }
   /**
+   * /!\ For tools use only! Do not touch!
+   *
+   * Returns manifest/playlist object.
+   * null if the player is STOPPED.
+   * @returns {Manifest|null} - The current Manifest (`null` when not known).
+   */
+  ;
+
+  _proto.__priv_getManifest = function __priv_getManifest() {
+    if (this._priv_contentInfos === null) {
+      return null;
+    }
+
+    return this._priv_contentInfos.manifest;
+  } // ---- Private methods ----
+
+  /**
    * Reset all state properties relative to a playing content.
    */
   ;
@@ -63403,16 +62001,17 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
   _proto._priv_cleanUpCurrentContentState = function _priv_cleanUpCurrentContentState() {
     var _this4 = this;
 
-    var _a;
+    var _a, _b;
 
     log/* default.debug */.Z.debug("Locking `contentLock` to clean-up the current content."); // lock playback of new contents while cleaning up is pending
 
     this._priv_contentLock.setValue(true);
 
     this._priv_contentInfos = null;
-    this._priv_trackChoiceManager = null;
-    (_a = this._priv_mediaElementTrackChoiceManager) === null || _a === void 0 ? void 0 : _a.dispose();
-    this._priv_mediaElementTrackChoiceManager = null;
+    (_a = this._priv_tracksStore) === null || _a === void 0 ? void 0 : _a.dispose();
+    this._priv_tracksStore = null;
+    (_b = this._priv_mediaElementTracksStore) === null || _b === void 0 ? void 0 : _b.dispose();
+    this._priv_mediaElementTracksStore = null;
     this._priv_contentEventsMemory = {}; // DRM-related clean-up
 
     var freeUpContentLock = function freeUpContentLock() {
@@ -63515,34 +62114,20 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
         break;
 
       case "decipherabilityUpdate":
-        this.trigger("decipherabilityUpdate", event.value);
+        this.trigger("decipherabilityUpdate", event.value.map(function (i) {
+          return {
+            periodInfo: {
+              start: i.period.start,
+              end: i.period.end,
+              id: i.period.id
+            },
+            trackType: i.adaptation.type,
+            trackId: i.adaptation.id,
+            representationId: i.representation.id,
+            isDecipherable: i.representation.decipherable
+          };
+        }));
         break;
-
-      case "added-segment":
-        if (this._priv_contentInfos === null) {
-          log/* default.error */.Z.error("API: Added segment while no content is loaded");
-          return;
-        } // Manage image tracks
-        // @deprecated
-
-
-        var _event$value = event.value,
-            content = _event$value.content,
-            segmentData = _event$value.segmentData;
-
-        if (content.adaptation.type === "image") {
-          if (!(0,is_null_or_undefined/* default */.Z)(segmentData) && segmentData.type === "bif") {
-            var imageData = segmentData.data;
-            /* eslint-disable import/no-deprecated */
-
-            this._priv_contentInfos.thumbnails = imageData;
-            this.trigger("imageTrackUpdate", {
-              data: this._priv_contentInfos.thumbnails
-            });
-            /* eslint-enable import/no-deprecated */
-          }
-        }
-
     }
   }
   /**
@@ -63613,25 +62198,28 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
 
     contentInfos.manifest = manifest;
     this._priv_lastContentPlaybackInfos.manifest = manifest;
-    var initialAudioTrack = contentInfos.initialAudioTrack,
-        initialTextTrack = contentInfos.initialTextTrack;
-    this._priv_trackChoiceManager = new TrackChoiceManager({
+    this._priv_tracksStore = new track_management({
       preferTrickModeTracks: this._priv_preferTrickModeTracks
     });
-    var preferredAudioTracks = initialAudioTrack === undefined ? this._priv_preferredAudioTracks : [initialAudioTrack];
 
-    this._priv_trackChoiceManager.setPreferredAudioTracks(preferredAudioTracks, true);
+    this._priv_tracksStore.addEventListener("newAvailablePeriods", function (p) {
+      _this5.trigger("newAvailablePeriods", p);
+    });
 
-    var preferredTextTracks = initialTextTrack === undefined ? this._priv_preferredTextTracks : [initialTextTrack];
+    this._priv_tracksStore.addEventListener("brokenRepresentationsLock", function (e) {
+      _this5.trigger("brokenRepresentationsLock", e);
+    });
 
-    this._priv_trackChoiceManager.setPreferredTextTracks(preferredTextTracks, true);
+    this._priv_tracksStore.addEventListener("autoTrackSwitch", function (e) {
+      _this5.trigger("autoTrackSwitch", e);
+    });
 
-    this._priv_trackChoiceManager.setPreferredVideoTracks(this._priv_preferredVideoTracks, true);
+    this._priv_tracksStore.updatePeriodList(manifest);
 
     manifest.addEventListener("manifestUpdate", function () {
       // Update the tracks chosen if it changed
-      if (_this5._priv_trackChoiceManager !== null) {
-        _this5._priv_trackChoiceManager.update();
+      if (_this5._priv_tracksStore !== null) {
+        _this5._priv_tracksStore.updatePeriodList(manifest);
       }
     }, contentInfos.currentContentCanceller.signal);
   }
@@ -63646,7 +62234,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
   _proto._priv_onActivePeriodChanged = function _priv_onActivePeriodChanged(_ref3) {
     var period = _ref3.period;
 
-    var _a, _b, _c, _d, _e, _f;
+    var _a, _b, _c, _d;
 
     if (this._priv_contentInfos === null) {
       log/* default.error */.Z.error("API: The active period changed but no content is loaded");
@@ -63657,40 +62245,41 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
 
     if (this._priv_contentEventsMemory.periodChange !== period) {
       this._priv_contentEventsMemory.periodChange = period;
-      this.trigger("periodChange", period);
+      this.trigger("periodChange", {
+        start: period.start,
+        end: period.end,
+        id: period.id
+      });
     }
 
     this.trigger("availableAudioTracksChange", this.getAvailableAudioTracks());
     this.trigger("availableTextTracksChange", this.getAvailableTextTracks());
-    this.trigger("availableVideoTracksChange", this.getAvailableVideoTracks()); // Emit intial events for the Period
+    this.trigger("availableVideoTracksChange", this.getAvailableVideoTracks()); // Emit initial events for the Period
 
-    if (this._priv_trackChoiceManager !== null) {
-      var audioTrack = this._priv_trackChoiceManager.getChosenAudioTrack(period);
+    if (this._priv_tracksStore !== null) {
+      var periodRef = this._priv_tracksStore.getPeriodObjectFromPeriod(period);
 
-      var textTrack = this._priv_trackChoiceManager.getChosenTextTrack(period);
+      if (periodRef) {
+        var audioTrack = this._priv_tracksStore.getChosenAudioTrack(periodRef);
 
-      var videoTrack = this._priv_trackChoiceManager.getChosenVideoTrack(period);
+        var textTrack = this._priv_tracksStore.getChosenTextTrack(periodRef);
 
-      this.trigger("audioTrackChange", audioTrack);
-      this.trigger("textTrackChange", textTrack);
-      this.trigger("videoTrackChange", videoTrack);
+        var videoTrack = this._priv_tracksStore.getChosenVideoTrack(periodRef);
+
+        this.trigger("audioTrackChange", audioTrack);
+        this.trigger("textTrackChange", textTrack);
+        this.trigger("videoTrackChange", videoTrack);
+      }
     } else {
       this.trigger("audioTrackChange", null);
       this.trigger("textTrackChange", null);
       this.trigger("videoTrackChange", null);
     }
 
-    this._priv_triggerAvailableBitratesChangeEvent("availableAudioBitratesChange", this.getAvailableAudioBitrates());
-
-    this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange", this.getAvailableVideoBitrates());
-
-    var audioBitrate = (_c = (_b = (_a = this._priv_getCurrentRepresentations()) === null || _a === void 0 ? void 0 : _a.audio) === null || _b === void 0 ? void 0 : _b.bitrate) !== null && _c !== void 0 ? _c : -1;
-
-    this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange", audioBitrate);
-
-    var videoBitrate = (_f = (_e = (_d = this._priv_getCurrentRepresentations()) === null || _d === void 0 ? void 0 : _d.video) === null || _e === void 0 ? void 0 : _e.bitrate) !== null && _f !== void 0 ? _f : -1;
-
-    this._priv_triggerCurrentBitrateChangeEvent("videoBitrateChange", videoBitrate);
+    var audioRepresentation = (_b = (_a = this._priv_getCurrentRepresentations()) === null || _a === void 0 ? void 0 : _a.audio) !== null && _b !== void 0 ? _b : null;
+    this.trigger("audioRepresentationChange", audioRepresentation);
+    var videoRepresentation = (_d = (_c = this._priv_getCurrentRepresentations()) === null || _c === void 0 ? void 0 : _c.video) !== null && _d !== void 0 ? _d : null;
+    this.trigger("videoRepresentationChange", videoRepresentation);
   }
   /**
    * Triggered each times a new "PeriodStream" is ready.
@@ -63701,53 +62290,19 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
 
   _proto._priv_onPeriodStreamReady = function _priv_onPeriodStreamReady(value) {
     var type = value.type,
+        manifest = value.manifest,
         period = value.period,
         adaptation$ = value.adaptation$;
 
     switch (type) {
       case "video":
-        if (this._priv_trackChoiceManager === null) {
-          log/* default.error */.Z.error("API: TrackChoiceManager not instanciated for a new video period");
-          adaptation$.next(null);
-        } else {
-          this._priv_trackChoiceManager.addPeriod(type, period, adaptation$);
-
-          this._priv_trackChoiceManager.setInitialVideoTrack(period);
-        }
-
-        break;
-
       case "audio":
-        if (this._priv_trackChoiceManager === null) {
-          log/* default.error */.Z.error("API: TrackChoiceManager not instanciated for a new " + type + " period");
-          adaptation$.next(null);
-        } else {
-          this._priv_trackChoiceManager.addPeriod(type, period, adaptation$);
-
-          this._priv_trackChoiceManager.setInitialAudioTrack(period);
-        }
-
-        break;
-
       case "text":
-        if (this._priv_trackChoiceManager === null) {
-          log/* default.error */.Z.error("API: TrackChoiceManager not instanciated for a new " + type + " period");
+        if (this._priv_tracksStore === null) {
+          log/* default.error */.Z.error("API: TracksStore not instanciated for a new " + type + " period");
           adaptation$.next(null);
         } else {
-          this._priv_trackChoiceManager.addPeriod(type, period, adaptation$);
-
-          this._priv_trackChoiceManager.setInitialTextTrack(period);
-        }
-
-        break;
-
-      default:
-        var adaptations = period.adaptations[type];
-
-        if (!(0,is_null_or_undefined/* default */.Z)(adaptations) && adaptations.length > 0) {
-          adaptation$.next(adaptations[0]);
-        } else {
-          adaptation$.next(null);
+          this._priv_tracksStore.addTrackSubject(type, manifest, period, adaptation$);
         }
 
         break;
@@ -63761,14 +62316,14 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
 
   _proto._priv_onPeriodStreamCleared = function _priv_onPeriodStreamCleared(value) {
     var type = value.type,
-        period = value.period; // Clean-up track choice from TrackChoiceManager
+        period = value.period; // Clean-up track choices from TracksStore
 
     switch (type) {
       case "audio":
       case "text":
       case "video":
-        if (this._priv_trackChoiceManager !== null) {
-          this._priv_trackChoiceManager.removePeriod(type, period);
+        if (this._priv_tracksStore !== null) {
+          this._priv_tracksStore.removeTrackSubject(type, period);
         }
 
         break;
@@ -63779,9 +62334,9 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       return;
     }
 
-    var _this$_priv_contentIn20 = this._priv_contentInfos,
-        activeAdaptations = _this$_priv_contentIn20.activeAdaptations,
-        activeRepresentations = _this$_priv_contentIn20.activeRepresentations;
+    var _this$_priv_contentIn6 = this._priv_contentInfos,
+        activeAdaptations = _this$_priv_contentIn6.activeAdaptations,
+        activeRepresentations = _this$_priv_contentIn6.activeRepresentations;
 
     if (!(0,is_null_or_undefined/* default */.Z)(activeAdaptations) && !(0,is_null_or_undefined/* default */.Z)(activeAdaptations[period.id])) {
       var activePeriodAdaptations = activeAdaptations[period.id];
@@ -63811,8 +62366,8 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       this._priv_contentInfos.segmentBuffersStore = null;
     }
 
-    if (this._priv_trackChoiceManager !== null) {
-      this._priv_trackChoiceManager.resetPeriods();
+    if (this._priv_tracksStore) {
+      this._priv_tracksStore.resetPeriodObjects();
     }
   }
   /**
@@ -63838,9 +62393,9 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       this._priv_contentInfos.activeAdaptations = {};
     }
 
-    var _this$_priv_contentIn21 = this._priv_contentInfos,
-        activeAdaptations = _this$_priv_contentIn21.activeAdaptations,
-        currentPeriod = _this$_priv_contentIn21.currentPeriod;
+    var _this$_priv_contentIn7 = this._priv_contentInfos,
+        activeAdaptations = _this$_priv_contentIn7.activeAdaptations,
+        currentPeriod = _this$_priv_contentIn7.currentPeriod;
     var activePeriodAdaptations = activeAdaptations[period.id];
 
     if ((0,is_null_or_undefined/* default */.Z)(activePeriodAdaptations)) {
@@ -63851,32 +62406,30 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       activePeriodAdaptations[type] = adaptation;
     }
 
-    if (this._priv_trackChoiceManager !== null && currentPeriod !== null && !(0,is_null_or_undefined/* default */.Z)(period) && period.id === currentPeriod.id) {
+    if (this._priv_tracksStore !== null && currentPeriod !== null && !(0,is_null_or_undefined/* default */.Z)(period) && period.id === currentPeriod.id) {
+      var periodRef = this._priv_tracksStore.getPeriodObjectFromPeriod(period);
+
+      if (periodRef === undefined) {
+        return;
+      }
+
       switch (type) {
         case "audio":
-          var audioTrack = this._priv_trackChoiceManager.getChosenAudioTrack(currentPeriod);
+          var audioTrack = this._priv_tracksStore.getChosenAudioTrack(periodRef);
 
           this.trigger("audioTrackChange", audioTrack);
-          var availableAudioBitrates = this.getAvailableAudioBitrates();
-
-          this._priv_triggerAvailableBitratesChangeEvent("availableAudioBitratesChange", availableAudioBitrates);
-
           break;
 
         case "text":
-          var textTrack = this._priv_trackChoiceManager.getChosenTextTrack(currentPeriod);
+          var textTrack = this._priv_tracksStore.getChosenTextTrack(periodRef);
 
           this.trigger("textTrackChange", textTrack);
           break;
 
         case "video":
-          var videoTrack = this._priv_trackChoiceManager.getChosenVideoTrack(currentPeriod);
+          var videoTrack = this._priv_tracksStore.getChosenVideoTrack(periodRef);
 
           this.trigger("videoTrackChange", videoTrack);
-          var availableVideoBitrates = this.getAvailableVideoBitrates();
-
-          this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange", availableVideoBitrates);
-
           break;
       }
     }
@@ -63895,8 +62448,6 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
         period = _ref5.period,
         representation = _ref5.representation;
 
-    var _a;
-
     if (this._priv_contentInfos === null) {
       log/* default.error */.Z.error("API: The representations changed but no content is loaded");
       return;
@@ -63907,9 +62458,9 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       this._priv_contentInfos.activeRepresentations = {};
     }
 
-    var _this$_priv_contentIn22 = this._priv_contentInfos,
-        activeRepresentations = _this$_priv_contentIn22.activeRepresentations,
-        currentPeriod = _this$_priv_contentIn22.currentPeriod;
+    var _this$_priv_contentIn8 = this._priv_contentInfos,
+        activeRepresentations = _this$_priv_contentIn8.activeRepresentations,
+        currentPeriod = _this$_priv_contentIn8.currentPeriod;
     var activePeriodRepresentations = activeRepresentations[period.id];
 
     if ((0,is_null_or_undefined/* default */.Z)(activePeriodRepresentations)) {
@@ -63920,13 +62471,11 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       activePeriodRepresentations[type] = representation;
     }
 
-    var bitrate = (_a = representation === null || representation === void 0 ? void 0 : representation.bitrate) !== null && _a !== void 0 ? _a : -1;
-
     if (!(0,is_null_or_undefined/* default */.Z)(period) && currentPeriod !== null && currentPeriod.id === period.id) {
       if (type === "video") {
-        this._priv_triggerCurrentBitrateChangeEvent("videoBitrateChange", bitrate);
+        this.trigger("videoRepresentationChange", representation);
       } else if (type === "audio") {
-        this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange", bitrate);
+        this.trigger("audioRepresentationChange", representation);
       }
     }
   }
@@ -63951,18 +62500,6 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       type: type,
       bitrate: bitrate
     });
-  }
-  /**
-   * Triggered each time a textTrack is added to the video DOM Element.
-   *
-   * Trigger the right Player Event.
-   *
-   * @param {Array.<TextTrackElement>} tracks
-   */
-  ;
-
-  _proto._priv_onNativeTextTracksNext = function _priv_onNativeTextTracksNext(tracks) {
-    this.trigger("nativeTextTracksChange", tracks);
   }
   /**
    * Triggered each time the player state updates.
@@ -64001,9 +62538,9 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       return;
     }
 
-    var _this$_priv_contentIn23 = this._priv_contentInfos,
-        isDirectFile = _this$_priv_contentIn23.isDirectFile,
-        manifest = _this$_priv_contentIn23.manifest;
+    var _this$_priv_contentIn9 = this._priv_contentInfos,
+        isDirectFile = _this$_priv_contentIn9.isDirectFile,
+        manifest = _this$_priv_contentIn9.manifest;
 
     if (!isDirectFile && manifest === null || (0,is_null_or_undefined/* default */.Z)(observation)) {
       return;
@@ -64015,7 +62552,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       position: observation.position,
       duration: observation.duration,
       playbackRate: observation.playbackRate,
-      maximumBufferTime: maximumPosition,
+      maximumPosition: maximumPosition,
       // TODO fix higher up?
       bufferGap: isFinite(observation.bufferGap) ? observation.bufferGap : 0
     };
@@ -64037,36 +62574,6 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     }
 
     this.trigger("positionUpdate", positionData);
-  }
-  /**
-   * Trigger one of the "availableBitratesChange" event only if it changed from
-   * the previously stored value.
-   * @param {string} event
-   * @param {Array.<number>} newVal
-   */
-  ;
-
-  _proto._priv_triggerAvailableBitratesChangeEvent = function _priv_triggerAvailableBitratesChangeEvent(event, newVal) {
-    var prevVal = this._priv_contentEventsMemory[event];
-
-    if (prevVal === undefined || !(0,are_arrays_of_numbers_equal/* default */.Z)(newVal, prevVal)) {
-      this._priv_contentEventsMemory[event] = newVal;
-      this.trigger(event, newVal);
-    }
-  }
-  /**
-   * Trigger one of the "bitrateChange" event only if it changed from the
-   * previously stored value.
-   * @param {string} event
-   * @param {number} newVal
-   */
-  ;
-
-  _proto._priv_triggerCurrentBitrateChangeEvent = function _priv_triggerCurrentBitrateChangeEvent(event, newVal) {
-    if (newVal !== this._priv_contentEventsMemory[event]) {
-      this._priv_contentEventsMemory[event] = newVal;
-      this.trigger(event, newVal);
-    }
   };
 
   _proto._priv_getCurrentRepresentations = function _priv_getCurrentRepresentations() {
@@ -64074,15 +62581,39 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       return null;
     }
 
-    var _this$_priv_contentIn24 = this._priv_contentInfos,
-        currentPeriod = _this$_priv_contentIn24.currentPeriod,
-        activeRepresentations = _this$_priv_contentIn24.activeRepresentations;
+    var _this$_priv_contentIn10 = this._priv_contentInfos,
+        currentPeriod = _this$_priv_contentIn10.currentPeriod,
+        activeRepresentations = _this$_priv_contentIn10.activeRepresentations;
 
     if (currentPeriod === null || activeRepresentations === null || (0,is_null_or_undefined/* default */.Z)(activeRepresentations[currentPeriod.id])) {
       return null;
     }
 
     return activeRepresentations[currentPeriod.id];
+  };
+
+  _proto._priv_callTracksStoreGetterSetter = function _priv_callTracksStoreGetterSetter(periodId, defaultValue, cb) {
+    var _a, _b;
+
+    if (this._priv_tracksStore === null) {
+      log/* default.warn */.Z.warn("API: Trying to call track API too soon");
+      return defaultValue;
+    }
+
+    var currentPeriod = (_b = (_a = this._priv_contentInfos) === null || _a === void 0 ? void 0 : _a.currentPeriod) !== null && _b !== void 0 ? _b : undefined;
+    var wantedPeriodId = periodId !== null && periodId !== void 0 ? periodId : currentPeriod === null || currentPeriod === void 0 ? void 0 : currentPeriod.id;
+
+    if (wantedPeriodId === undefined) {
+      return defaultValue;
+    }
+
+    var periodRef = wantedPeriodId === (currentPeriod === null || currentPeriod === void 0 ? void 0 : currentPeriod.id) ? this._priv_tracksStore.getPeriodObjectFromPeriod(currentPeriod) : this._priv_tracksStore.getPeriodObjectFromId(wantedPeriodId);
+
+    if (periodRef === undefined) {
+      return defaultValue;
+    }
+
+    return cb(this._priv_tracksStore, periodRef);
   };
 
   (0,createClass/* default */.Z)(Player, null, [{
@@ -64180,23 +62711,18 @@ var features_object = __webpack_require__(7273);
 function initializeFeaturesObject() {
   if (true) {
     features_object/* default.ContentDecryptor */.Z.ContentDecryptor = (__webpack_require__(1266)/* ["default"] */ .ZP);
-  }
-
-  if (true) {
-    features_object/* default.imageBuffer */.Z.imageBuffer = (__webpack_require__(7127)/* ["default"] */ .Z);
-    features_object/* default.imageParser */.Z.imageParser = (__webpack_require__(3203)/* ["default"] */ .Z);
   } // Feature switching the Native TextTrack implementation
 
 
   var HAS_NATIVE_MODE = 1 || 0 || 0 || 0;
 
   if (true) {
-    features_object/* default.transports.smooth */.Z.transports.smooth = (__webpack_require__(2339)/* ["default"] */ .Z);
+    features_object/* default.transports.smooth */.Z.transports.smooth = (__webpack_require__(9774)/* ["default"] */ .Z);
   }
 
   if (true) {
-    features_object/* default.transports.dash */.Z.transports.dash = (__webpack_require__(5877)/* ["default"] */ .Z);
-    features_object/* default.dashParsers.js */.Z.dashParsers.js = (__webpack_require__(4846)/* ["default"] */ .Z);
+    features_object/* default.transports.dash */.Z.transports.dash = (__webpack_require__(6779)/* ["default"] */ .Z);
+    features_object/* default.dashParsers.js */.Z.dashParsers.js = (__webpack_require__(7144)/* ["default"] */ .Z);
   }
 
   if (false) {}
@@ -64249,11 +62775,11 @@ function initializeFeaturesObject() {
   if (true) {
     var initDirectFile = (__webpack_require__(8969)/* ["default"] */ .Z);
 
-    var mediaElementTrackChoiceManager = (__webpack_require__(7794)/* ["default"] */ .Z);
+    var mediaElementTracksStore = (__webpack_require__(2694)/* ["default"] */ .Z);
 
     features_object/* default.directfile */.Z.directfile = {
       initDirectFile: initDirectFile,
-      mediaElementTrackChoiceManager: mediaElementTrackChoiceManager
+      mediaElementTracksStore: mediaElementTracksStore
     };
   }
 }
