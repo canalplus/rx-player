@@ -103,16 +103,6 @@ at this time and this state acts like what you can expect from HTML5 playback:
 
 This state indicates that the player needs to "re-load" then content.
 
-This can happen for different reasons:
-
-- When you switch the video track for another one, when the previous one was
-  currently decoding.
-
-- When you update manually the audio and video bitrate through respectively
-  the `setAudioBitrate` and `setVideoBitrate` APIs
-  (Only if you set the `manualBitrateSwitchingMode` loadVideo option to
-  `"direct"`).
-
 In those cases, we need to stop and reload the content on the browser-side, due
 to browser limitation.
 
@@ -122,7 +112,7 @@ While this state is active, multiple player API are unavailable:
 - you cannot seek
 - you cannot obtain the position or duration
 - you cannot get or switch the available video, text or audio tracks.
-- you cannot get or switch the available video or audio bitrates.
+- you cannot get or switch the available video or audio qualities.
 
 This is why we sometime recommend to manage this state as if it was the
 `LOADING` state (where those APIs - and other - are also not available).
