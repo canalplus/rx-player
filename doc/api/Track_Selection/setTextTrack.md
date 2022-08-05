@@ -74,9 +74,9 @@ rxPlayer.setTextTrack({
 
 ### Setting the text track as soon as possible
 
-It is possible to set the text track before any other is chosen for that
-Period, by reacting to the `newAvailablePeriods` event:
-
+If you want to set an text track as soon as possible, for example to choose an
+initial text track before any other one had time to be loaded, you can
+perform the `setTextTrack` call on the `newAvailablePeriods` event:
 ```js
 rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
   for (const period of periods) {
@@ -92,9 +92,13 @@ rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
 });
 ```
 
-If the current content was already playing, you can also call the
-`getAvailablePeriods` method to obtain their `id` property and update their
-text trackss right away:
+This will set the text track for any future
+[Period](../../Getting_Started/Glossary.md#period) being loaded, including in
+future and not-yet-loaded contents.
+
+If you want to also update the text track of already-loaded Periods, you can
+also call the `getAvailablePeriods` method to obtain their `id` property and
+update their text tracks right away:
 
 ```js
 const periods = rxPlayer.getAvailablePeriods();
