@@ -166,9 +166,6 @@ properties, methods, events and so on.
   - [`textTrackElement`](../api/Loading_a_Content.md#texttrackelement):
     `HTMLElement` in which text tracks should be displayed.
 
-  - [`audioTrackSwitchingMode`](../api/Loading_a_Content.md#audiotrackswitchingmode):
-    Behavior when switching the audio track.
-
   - [`manualBitrateSwitchingMode`](../api/Loading_a_Content.md#manualbitrateswitchingmode):
     Behavior when switching manually the video or audio quality.
 
@@ -249,6 +246,12 @@ properties, methods, events and so on.
   - [`reload`](../api/Basic_Methods/reload.md): Reload the last loade content as
     fast as possible.
 
+  - [`getAvailablePeriods`](../api/Basic_Methods/getAvailablePeriod.md): Returns
+    the list of available Periods for the current content.
+
+  - [`getCurrentPeriod`](../api/Basic_Methods/getCurrentPeriod.md): Returns
+    information on the Period being currently played.
+
   - [`getAudioTrack`](../api/Track_Selection/getAudioTrack.md): Get information on
     the current audio track.
 
@@ -281,6 +284,28 @@ properties, methods, events and so on.
 
   - [`disableVideoTrack`](../api/Track_Selection/disableVideoTrack.md):
     Disable the current video track.
+
+  - [`lockVideoRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+    Select video Representations (a.k.a. qualities) that should the only one
+    being played.
+
+  - [`lockAudioRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+    Select audio Representations (a.k.a. qualities) that should the only one
+    being played.
+
+  - [`getLockedVideoRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+    Get the list of currently "locked" video Representations (a.k.a. qualities).
+
+  - [`getLockedAudioRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+    Get the list of currently "locked" audio Representations (a.k.a. qualities).
+
+  - [`unlockVideoRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+    Deactivate potential pending video Representations (a.k.a. qualities) lock,
+    thus re-allowing any Representation to being played.
+
+  - [`unlockAudioRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+    Deactivate potential pending audio Representations (a.k.a. qualities) lock,
+    thus re-allowing any Representation to being played.
 
   - [`isTrickModeEnabled`](../api/Track_Selection/isTrickModeEnabled.md):
     Returns `true` if trick mode tracks are currently enabled by default.
@@ -433,23 +458,22 @@ properties, methods, events and so on.
   - [`textTrackChange`](../api/Player_Events.md#texttrackchange):
     The current text track changed.
 
-  - [`availableAudioBitratesChange`](../api/Player_Events.md#availableaudiobitrateschange):
-    The list of available audio bitrates changed.
+  - [`periodChange`](../api/Player_Events.md#periodchange):
+    A new Period begins.
 
-  - [`availableVideoBitratesChange`](../api/Player_Events.md#availablevideobitrateschange):
-    The list of available video bitrates changed.
-
-  - [`audioBitrateChange`](../api/Player_Events.md#audiobitratechange):
-    The current audio bitrate changed.
-
-  - [`videoBitrateChange`](../api/Player_Events.md#videobitratechange):
-    The current video track changed.
+  - [`newAvailablePeriods`](../api/Player_Events.md#newavailableperiods):
+    New Periods associated to the current content are known. It is also now
+    possible to change their respective tracks and qualities.
 
   - [`bitrateEstimationChange`](../api/Player_Events.md#bitrateestimationchange):
     A new bitrate estimate is available.
 
-  - [`periodChange`](../api/Player_Events.md#periodchange):
-    A new Period begins.
+  - [`brokenRepresentationsLock`](../api/Player_Events.md#brokenrepresentationslock):
+    Representations previously being locked was automatically unlocked by the
+    RxPlayer.
+
+  - [`autoTrackSwitch`](../api/Player_Events.md#autotrackswitch):
+    A track previously set was automatically changed by the RxPlayer.
 
   - [`decipherabilityUpdate`](../api/Player_Events.md#decipherabilityupdate):
     A Representation's decipherability status has been updated.

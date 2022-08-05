@@ -79,8 +79,8 @@ import {
   IConstructorOptions,
   IDecipherabilityUpdateContent,
   ILoadVideoOptions,
-  ILockedAudioRepresentationsProperties,
-  ILockedVideoRepresentationsProperties,
+  ILockedAudioRepresentationsSettings,
+  ILockedVideoRepresentationsSettings,
   IAutoTrackSwitchEventPayload,
   IPeriod,
   IPeriodChangeEvent,
@@ -1929,7 +1929,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   lockVideoRepresentations(
-    arg : string[] | ILockedVideoRepresentationsProperties
+    arg : string[] | ILockedVideoRepresentationsSettings
   ) : void {
     if (this._priv_contentInfos === null) {
       throw new Error("No content loaded");
@@ -1959,7 +1959,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   lockAudioRepresentations(
-    arg : string[] | ILockedAudioRepresentationsProperties
+    arg : string[] | ILockedAudioRepresentationsSettings
   ) : void {
     if (this._priv_contentInfos === null) {
       throw new Error("No content loaded");

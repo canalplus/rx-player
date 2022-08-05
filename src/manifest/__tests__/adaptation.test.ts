@@ -21,7 +21,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
-import { IRepresentationInfos } from "../../public_types";
+import { IRepresentationContext } from "../../public_types";
 import Representation from "../representation";
 
 const minimalRepresentationIndex = {
@@ -194,7 +194,7 @@ describe("Manifest - Adaptation", () => {
 
     const representationFilter = jest.fn((
       representation : Representation,
-      adaptationInfos : IRepresentationInfos
+      adaptationInfos : IRepresentationContext
     ) => {
       if (adaptationInfos.language === "fr" && representation.bitrate < 40) {
         return false;
