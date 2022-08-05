@@ -92,8 +92,6 @@ reflect exactly what's going on at a particular point in time.
     - **miv**: _Min video Bitrate_. If set, the configured `minVideoBitrate` (minimum video bitrate reachable through adaptive streaming).
     - **maa**: _Max Audio Bitrate_. If set, the configured `maxAudioBitrate` (maximum audio bitrate reachable through adaptive streaming).
     - **mav**: _Max video Bitrate_. If set, the configured `maxVideoBitrate` (maximum video bitrate reachable through adaptive streaming).
-    - **fab**: _Forced Audio bitrate_. If set, the forced audio bitrate, set by example through `setAudioBitrate`
-    - **fvb**: _Forced Video bitrate_. If set, the forced video bitrate, set by example through `setVideoBitrate`
     - **mbs**: _Max video Buffer Size_. If set, the configured `maxVideoBufferSize` (maximum amount of video data kept in the video buffer, in kilobytes)
     - **mip**: _Minimum Position_. The minimum position, obtainable through the `getMinimumPosition` API, at which the content is reachable
     - **dmi**: _Distance to Minimum Position_. The difference between the current position and the minimum position, in seconds
