@@ -70,7 +70,6 @@ export interface ILoadVideoOptions {
   startAt? : IStartAtOption;
   textTrackMode? : "native"|"html";
   textTrackElement? : HTMLElement;
-  manualBitrateSwitchingMode? : "seamless"|"direct";
   enableFastSwitching? : boolean;
   onCodecSwitch? : "continue"|"reload";
 }
