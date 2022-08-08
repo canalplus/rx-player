@@ -47,7 +47,6 @@ function Settings({
   const {
     autoPlay,
     enableFastSwitching,
-    manualBitrateSwitchingMode,
     networkConfig,
     onCodecSwitch,
   } = loadVideoOptions;
@@ -65,17 +64,6 @@ function Settings({
         return prevOptions;
       }
       return Object.assign({}, prevOptions, { autoPlay });
-    });
-  }, [updateLoadVideoOptions]);
-
-  const onManualBitrateSwitchingModeChange = useCallback((value: string) => {
-    updateLoadVideoOptions((prevOptions) => {
-      if (value === prevOptions.manualBitrateSwitchingMode) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, {
-        manualBitrateSwitchingMode: value,
-      });
     });
   }, [updateLoadVideoOptions]);
 
@@ -316,11 +304,7 @@ function Settings({
         <Option title="Playback">
           <Playback
             autoPlay={autoPlay}
-            manualBitrateSwitchingMode={manualBitrateSwitchingMode}
             onAutoPlayChange={onAutoPlayChange}
-            onManualBitrateSwitchingModeChange={
-              onManualBitrateSwitchingModeChange
-            }
           />
         </Option>
         <Option title="Video adaptive settings">
