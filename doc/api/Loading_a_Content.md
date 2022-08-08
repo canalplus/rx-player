@@ -612,48 +612,6 @@ subtitles position without polling where the video is in your UI).
 You can however re-size or update the style of it as you wish, to better suit
 your UI needs.
 
-XXX TODO
-### manualBitrateSwitchingMode
-
-_type_: `string`
-
-_defaults_: `"seamless"`
-
-<div class="warning">
-This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
-transport option</a>)
-</div>
-
-Strategy you want to adopt when updating "manually" the video and audio quality
-through respectively the `lockVideoRepresentations` and
-`lockAudioRepresentations` API while the content is playing.
-
-There is two possible values:
-
-- `"seamless"`: Manual quality updates will be only visible after a little
-  time. This gives the advantage of a very smooth "seamless" transition.
-
-  In this mode, you will have the following behavior:
-
-  - there will be no visual "cut" between the previous and new quality
-  - parts of the content with a better (or the same) quality won't be
-    replaced.
-  - parts of the content with a lower quality will be only replaced when the
-    better quality is downloaded.
-
-- `"direct"`: Manual quality updates will be visible more directly, but with
-  a complete reload of the current content. You might encounter a black screen
-  while the player go through the `"RELOADING"` state [1].
-
-  In this mode, you will have the following behavior:
-
-  - there will be a black screen between the previous and new quality
-  - the previous content will be entirely removed
-  - you will only have content with the new quality
-
-  [1] More information about the `"RELOADING"` state can be found in [the
-  player states documentation](./Player_States.md).
-
 ### onCodecSwitch
 
 _type_: `string`

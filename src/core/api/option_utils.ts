@@ -89,7 +89,6 @@ interface IParsedLoadVideoOptionsBase {
   networkConfig: INetworkConfigOption;
   transportOptions : IParsedTransportOptions;
   startAt : IParsedStartAtOption|undefined;
-  manualBitrateSwitchingMode : "seamless"|"direct";
   enableFastSwitching : boolean;
   onCodecSwitch : "continue"|"reload";
 }
@@ -346,7 +345,6 @@ function parseLoadVideoOptions(
   const { DEFAULT_AUTO_PLAY,
           DEFAULT_CODEC_SWITCHING_BEHAVIOR,
           DEFAULT_ENABLE_FAST_SWITCHING,
-          DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
           DEFAULT_TEXT_TRACK_MODE } = config.getCurrent();
 
   if (isNullOrUndefined(options)) {
@@ -442,9 +440,6 @@ function parseLoadVideoOptions(
     textTrackMode = options.textTrackMode;
   }
 
-  const manualBitrateSwitchingMode = options.manualBitrateSwitchingMode ??
-                                     DEFAULT_MANUAL_BITRATE_SWITCHING_MODE;
-
   const enableFastSwitching = isNullOrUndefined(options.enableFastSwitching) ?
     DEFAULT_ENABLE_FAST_SWITCHING :
     options.enableFastSwitching;
@@ -488,7 +483,6 @@ function parseLoadVideoOptions(
            keySystems,
            initialManifest,
            lowLatencyMode,
-           manualBitrateSwitchingMode,
            minimumManifestUpdateInterval,
            networkConfig,
            onCodecSwitch,
