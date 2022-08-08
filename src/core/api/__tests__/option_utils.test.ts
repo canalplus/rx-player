@@ -391,7 +391,6 @@ describe("API - parseLoadVideoOptions", () => {
     initialManifest: undefined,
     keySystems: [],
     lowLatencyMode: false,
-    manualBitrateSwitchingMode: "seamless",
     minimumManifestUpdateInterval: 0,
     onCodecSwitch: "continue",
     networkConfig: {},
@@ -709,30 +708,6 @@ describe("API - parseLoadVideoOptions", () => {
       transportOptions: {
         lowLatencyMode: false,
       },
-    });
-  });
-
-  it("should authorize setting a valid manualBitrateSwitchingMode option", () => {
-    expect(parseLoadVideoOptions({
-      manualBitrateSwitchingMode: "direct",
-      url: "foo",
-      transport: "bar",
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      manualBitrateSwitchingMode: "direct",
-    });
-
-    expect(parseLoadVideoOptions({
-      manualBitrateSwitchingMode: "seamless",
-      url: "foo",
-      transport: "bar",
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      manualBitrateSwitchingMode: "seamless",
     });
   });
 
