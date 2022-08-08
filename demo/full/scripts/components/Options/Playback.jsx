@@ -1,33 +1,15 @@
 import React, { Fragment } from "react";
 import getCheckBoxValue from "../../lib/getCheckboxValue";
 import Checkbox from "../CheckBox";
-import Select from "../Select";
 
 /**
  * @param {Object} props
  * @returns {Object}
  */
-function TrackSwitch({
+function PlaybackConfig({
   autoPlay,
-  manualBitrateSwitchingMode,
   onAutoPlayChange,
-  onManualBitrateSwitchingModeChange,
 }) {
-  let manualBitrateSwitchingModeDesc;
-  switch (manualBitrateSwitchingMode) {
-    case "direct":
-      manualBitrateSwitchingModeDesc =
-        "Directly visible transition when a Representation is manually changed";
-      break;
-    case "seamless":
-      manualBitrateSwitchingModeDesc =
-        "Smooth transition when a Representation is manually changed";
-      break;
-    default:
-      manualBitrateSwitchingModeDesc =
-        "Unknown value";
-      break;
-  }
   return (
     <Fragment>
       <li>
@@ -48,22 +30,8 @@ function TrackSwitch({
             "Staying in pause when the content is loaded."}
         </span>
       </li>
-      <li className="featureWrapperWithSelectMode">
-        <Select
-          className="playerOptionInput"
-          name="manualBitrateSwitchingMode"
-          onChange={({ value }) => onManualBitrateSwitchingModeChange(value)}
-          selected={{ value: manualBitrateSwitchingMode }}
-          options={["seamless", "direct"]}
-        >
-          Manual bitrate switching mode
-        </Select>
-        <span className="option-desc">
-          {manualBitrateSwitchingModeDesc}
-        </span>
-      </li>
     </Fragment>
   );
 }
 
-export default React.memo(TrackSwitch);
+export default React.memo(PlaybackConfig);

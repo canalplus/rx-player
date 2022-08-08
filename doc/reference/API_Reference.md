@@ -166,9 +166,6 @@ properties, methods, events and so on.
   - [`textTrackElement`](../api/Loading_a_Content.md#texttrackelement):
     `HTMLElement` in which text tracks should be displayed.
 
-  - [`manualBitrateSwitchingMode`](../api/Loading_a_Content.md#manualbitrateswitchingmode):
-    Behavior when switching manually the video or audio quality.
-
   - [`onCodecSwitch`](../api/Loading_a_Content.md#oncodecswitch):
     Behavior when the codec changes between incompatible ones.
 
