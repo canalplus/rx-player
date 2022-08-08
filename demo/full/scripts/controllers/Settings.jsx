@@ -34,7 +34,6 @@ class Settings extends React.Component {
       limitVideoWidth,
       throttleVideoBitrateWhenHidden,
       autoPlay,
-      manualBrSwitchingMode,
       onCodecSwitch,
       enableFastSwitching,
       segmentRetry,
@@ -60,7 +59,6 @@ class Settings extends React.Component {
       },
       loadVideoOpts: {
         autoPlay,
-        manualBitrateSwitchingMode: manualBrSwitchingMode,
         onCodecSwitch,
         enableFastSwitching,
         networkConfig: {
@@ -76,10 +74,6 @@ class Settings extends React.Component {
 
   onAutoPlayClick(evt) {
     this.setState({ autoPlay: getCheckBoxValue(evt.target) });
-  }
-
-  onManualBrSwitchingModeChange(value) {
-    this.setState({ manualBrSwitchingMode: value });
   }
 
   onInitialVideoBrInput(value) {
@@ -163,7 +157,6 @@ class Settings extends React.Component {
   render() {
     const {
       autoPlay,
-      manualBrSwitchingMode,
       initialVideoBr,
       initialAudioBr,
       minVideoBr,
@@ -242,11 +235,7 @@ class Settings extends React.Component {
           <Option title="Playback">
             <Playback
               autoPlay={autoPlay}
-              manualBrSwitchingMode={manualBrSwitchingMode}
               onAutoPlayClick={this.onAutoPlayClick.bind(this)}
-              onManualBrSwitchingModeChange={
-                this.onManualBrSwitchingModeChange.bind(this)
-              }
             />
           </Option>
           <Option title="Video adaptive settings">
