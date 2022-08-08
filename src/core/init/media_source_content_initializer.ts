@@ -744,8 +744,6 @@ export interface IInitializeArguments {
     maxBufferAhead : IReadOnlySharedReference<number>;
     /** Max buffer size before the current position, in seconds (we GC further down). */
     maxBufferBehind : IReadOnlySharedReference<number>;
-    /** Strategy when switching the current bitrate manually (smooth vs reload). */
-    manualBitrateSwitchingMode : "seamless" | "direct";
     /**
      * Enable/Disable fastSwitching: allow to replace lower-quality segments by
      * higher-quality ones to have a faster transition.
