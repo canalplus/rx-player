@@ -463,15 +463,6 @@ export interface IAdaptationStreamOptions {
    */
   drmSystemId : string | undefined;
   /**
-   * Strategy taken when the user switch manually the current Representation:
-   *   - "seamless": the switch will happen smoothly, with the Representation
-   *     with the new bitrate progressively being pushed alongside the old
-   *     Representation.
-   *   - "direct": hard switch. The Representation switch will be directly
-   *     visible but may necessitate the current MediaSource to be reloaded.
-   */
-  manualBitrateSwitchingMode : "seamless" | "direct";
-  /**
    * If `true`, the AdaptationStream might replace segments of a lower-quality
    * (with a lower bitrate) with segments of a higher quality (with a higher
    * bitrate). This allows to have a fast transition when network conditions

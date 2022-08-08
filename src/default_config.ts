@@ -33,18 +33,6 @@ const DEFAULT_CONFIG = {
   DEFAULT_TEXT_TRACK_MODE: "native" as "native" |
                                          "html",
 
-    /**
-     * Strategy to adopt when manually setting the current bitrate.
-     * Can be either:
-     *   - "seamless": transitions are very smooth but not immediate.
-     *   - "direct": the quality switch happens immediately but to achieve that,
-     *     the player will need to set a new MediaSource on the media element in
-     *     some cases. This often leads to a black screen + unavailable APIs
-     *     during a short moment.
-     * @type {string}
-     */
-  DEFAULT_MANUAL_BITRATE_SWITCHING_MODE: "seamless" as "seamless" |
-                                                         "direct",
 
     /**
      * Default behavior for the `enableFastSwitching` loadVideo options.

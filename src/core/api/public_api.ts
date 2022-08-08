@@ -624,7 +624,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             initialManifest,
             keySystems,
             lowLatencyMode,
-            manualBitrateSwitchingMode,
             minimumManifestUpdateInterval,
             networkConfig,
             onCodecSwitch,
@@ -792,7 +791,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           textTrackElement: options.textTrackElement };
 
       const bufferOptions = objectAssign({ enableFastSwitching,
-                                           manualBitrateSwitchingMode,
                                            onCodecSwitch },
                                          this._priv_bufferOptions);
 
