@@ -8,8 +8,10 @@ import Select from "../Select";
  */
 function TrackSwitchConfig({
   enableFastSwitching,
+  defaultAudioTrackSwitchingMode,
   onCodecSwitch,
   onEnableFastSwitchingClick,
+  onDefaultAudioTrackSwitchingModeChange,
   onCodecSwitchChange,
 }) {
   let onCodecSwitchDescMsg;
@@ -45,6 +47,18 @@ function TrackSwitchConfig({
             "Fast quality switch by replacing lower qualities in the buffer by higher ones when possible." :
             "Not replacing lower qualities in the buffer by an higher one when possible."}
         </span>
+      </li>
+      <li className="featureWrapperWithSelectMode">
+        <Select
+          className="playerOptionInput"
+          name="defaultAudioTrackSwitchingMode"
+          onChange={({ value }) =>
+            onDefaultAudioTrackSwitchingModeChange(value)}
+          selected={{ value: defaultAudioTrackSwitchingMode }}
+          options={["seamless", "direct", "reload"]}
+        >
+            Audio track switching mode
+        </Select>
       </li>
       <li className="featureWrapperWithSelectMode">
         <Select
