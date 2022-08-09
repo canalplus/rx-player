@@ -41,15 +41,6 @@ properties, methods, events and so on.
   - [`wantedBufferAhead`](../api/Creating_a_Player.md#wantedbufferahead):
     Set the default buffering goal.
 
-  - [`preferredAudioTracks`](../api/Creating_a_Player.md#preferredaudiotracks):
-    Set default audio tracks preferences based on tracks characteristics.
-
-  - [`preferredTextTracks`](../api/Creating_a_Player.md#preferredtexttracks):
-    Set default text tracks preferences based on tracks characteristics.
-
-  - [`preferredVideoTracks`](../api/Creating_a_Player.md#preferredvideotracks):
-    Set default video tracks preferences based on tracks characteristics.
-
   - [`maxBufferAhead`](../api/Creating_a_Player.md#maxbufferahead):
     Set the default maximum kept buffer ahead of the current position, in seconds.
 
@@ -165,9 +156,6 @@ properties, methods, events and so on.
     - [`transportOptions.serverSyncInfos`](../api/Loading_a_Content.md#transportoptions):
       Provide time synchronization mechanism between the client and server.
 
-    - [`transportOptions.aggressiveMode`](../api/Loading_a_Content.md#transportoptions):
-      Allows to ask to download the segments early.
-
     - [`transportOptions.referenceDateTime`](../api/Loading_a_Content.md#transportoptions):
       Default offset to add to the segment's time to obtain a live time. This is
       in most cases not needed.
@@ -177,12 +165,6 @@ properties, methods, events and so on.
 
   - [`textTrackElement`](../api/Loading_a_Content.md#texttrackelement):
     `HTMLElement` in which text tracks should be displayed.
-
-  - [`audioTrackSwitchingMode`](../api/Loading_a_Content.md#audiotrackswitchingmode):
-    Behavior when switching the audio track.
-
-  - [`manualBitrateSwitchingMode`](../api/Loading_a_Content.md#manualbitrateswitchingmode):
-    Behavior when switching manually the video or audio quality.
 
   - [`onCodecSwitch`](../api/Loading_a_Content.md#oncodecswitch):
     Behavior when the codec changes between incompatible ones.
@@ -261,6 +243,12 @@ properties, methods, events and so on.
   - [`reload`](../api/Basic_Methods/reload.md): Reload the last loade content as
     fast as possible.
 
+  - [`getAvailablePeriods`](../api/Basic_Methods/getAvailablePeriod.md): Returns
+    the list of available Periods for the current content.
+
+  - [`getCurrentPeriod`](../api/Basic_Methods/getCurrentPeriod.md): Returns
+    information on the Period being currently played.
+
   - [`getAudioTrack`](../api/Track_Selection/getAudioTrack.md): Get information on
     the current audio track.
 
@@ -294,73 +282,59 @@ properties, methods, events and so on.
   - [`disableVideoTrack`](../api/Track_Selection/disableVideoTrack.md):
     Disable the current video track.
 
-  - [`setPreferredAudioTracks`](../api/Track_Selection/setPreferredAudioTracks.md):
-    Update the current audio tracks preferences.
+  - [`lockVideoRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+    Select video Representations (a.k.a. qualities) that should the only one
+    being played.
 
-  - [`setPreferredTextTracks`](../api/Track_Selection/setPreferredTextTracks.md):
-    Update the current text tracks preferences.
+  - [`lockAudioRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+    Select audio Representations (a.k.a. qualities) that should the only one
+    being played.
 
-  - [`setPreferredVideoTracks`](../api/Track_Selection/setPreferredVideoTracks.md):
-    Update the current video tracks preferences.
+  - [`getLockedVideoRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+    Get the list of currently "locked" video Representations (a.k.a. qualities).
 
-  - [`getPreferredAudioTracks`](../api/Track_Selection/getPreferredAudioTracks.md):
-    Return the current audio tracks preferences.
+  - [`getLockedAudioRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+    Get the list of currently "locked" audio Representations (a.k.a. qualities).
 
-  - [`getPreferredTextTracks`](../api/Track_Selection/getPreferredTextTracks.md):
-    Return the current text tracks preferences.
+  - [`unlockVideoRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+    Deactivate potential pending video Representations (a.k.a. qualities) lock,
+    thus re-allowing any Representation to being played.
 
-  - [`getPreferredVideoTracks`](../api/Track_Selection/getPreferredVideoTracks.md):
-    Return the current video tracks preferences.
+  - [`unlockAudioRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+    Deactivate potential pending audio Representations (a.k.a. qualities) lock,
+    thus re-allowing any Representation to being played.
 
   - [`isTrickModeEnabled`](../api/Track_Selection/isTrickModeEnabled.md):
     Returns `true` if trick mode tracks are currently enabled by default.
 
-  - [`getVideoBitrate`](../api/Bitrate_Selection/getVideoBitrate.md):
+  - [`getVideoBitrate`](../api/Bitrate_Control/getVideoBitrate.md):
     Returns the bitrate of the current video quality.
 
-  - [`getAudioBitrate`](../api/Bitrate_Selection/getAudioBitrate.md):
+  - [`getAudioBitrate`](../api/Bitrate_Control/getAudioBitrate.md):
     Returns the bitrate of the current audio quality.
 
-  - [`getAvailableVideoBitrates`](../api/Bitrate_Selection/getAvailableVideoBitrates.md):
-    Returns all available bitrates for the current video track.
-
-  - [`getAvailableAudioBitrates`](../api/Bitrate_Selection/getAvailableAudioBitrates.md):
-    Returns all available bitrates for the current audio track.
-
-  - [`setVideoBitrate`](../api/Bitrate_Selection/setVideoBitrate.md):
-    Set the bitrate for the current video track.
-
-  - [`setAudioBitrate`](../api/Bitrate_Selection/setAudioBitrate.md):
-    Set the bitrate for the current audio track.
-
-  - [`getManualVideoBitrate`](../api/Bitrate_Selection/getManualVideoBitrate.md):
-    Returns the last video bitrate manually set.
-
-  - [`getManualAudioBitrate`](../api/Bitrate_Selection/getManualAudioBitrate.md):
-    Returns the last audio bitrate manually set.
-
-  - [`setMinVideoBitrate`](../api/Bitrate_Selection/setMinVideoBitrate.md):
+  - [`setMinVideoBitrate`](../api/Bitrate_Control/setMinVideoBitrate.md):
     Set the minimum video bitrate reachable through adaptive streaming.
 
-  - [`setMinAudioBitrate`](../api/Bitrate_Selection/setMinAudioBitrate.md):
+  - [`setMinAudioBitrate`](../api/Bitrate_Control/setMinAudioBitrate.md):
     Set the minimum audio bitrate reachable through adaptive streaming.
 
-  - [`setMaxVideoBitrate`](../api/Bitrate_Selection/setMaxVideoBitrate.md):
+  - [`setMaxVideoBitrate`](../api/Bitrate_Control/setMaxVideoBitrate.md):
     Set the maximum video bitrate reachable through adaptive streaming.
 
-  - [`setMaxAudioBitrate`](../api/Bitrate_Selection/setMaxAudioBitrate.md):
+  - [`setMaxAudioBitrate`](../api/Bitrate_Control/setMaxAudioBitrate.md):
     Set the maximum audio bitrate reachable through adaptive streaming.
 
-  - [`getMinVideoBitrate`](../api/Bitrate_Selection/getMinVideoBitrate.md):
+  - [`getMinVideoBitrate`](../api/Bitrate_Control/getMinVideoBitrate.md):
     Returns the minimum video bitrate reachable through adaptive streaming.
 
-  - [`getMinAudioBitrate`](../api/Bitrate_Selection/getMinAudioBitrate.md):
+  - [`getMinAudioBitrate`](../api/Bitrate_Control/getMinAudioBitrate.md):
     Returns the minimum audio bitrate reachable through adaptive streaming.
 
-  - [`getMaxVideoBitrate`](../api/Bitrate_Selection/getMaxVideoBitrate.md):
+  - [`getMaxVideoBitrate`](../api/Bitrate_Control/getMaxVideoBitrate.md):
     Returns the maximum video bitrate reachable through adaptive streaming.
 
-  - [`getMaxAudioBitrate`](../api/Bitrate_Selection/getMaxAudioBitrate.md):
+  - [`getMaxAudioBitrate`](../api/Bitrate_Control/getMaxAudioBitrate.md):
     Returns the maximum audio bitrate reachable through adaptive streaming.
 
   - [`setPlaybackRate`](../api/Speed_Control/setPlaybackRate.md):
@@ -481,23 +455,22 @@ properties, methods, events and so on.
   - [`textTrackChange`](../api/Player_Events.md#texttrackchange):
     The current text track changed.
 
-  - [`availableAudioBitratesChange`](../api/Player_Events.md#availableaudiobitrateschange):
-    The list of available audio bitrates changed.
+  - [`periodChange`](../api/Player_Events.md#periodchange):
+    A new Period begins.
 
-  - [`availableVideoBitratesChange`](../api/Player_Events.md#availablevideobitrateschange):
-    The list of available video bitrates changed.
-
-  - [`audioBitrateChange`](../api/Player_Events.md#audiobitratechange):
-    The current audio bitrate changed.
-
-  - [`videoBitrateChange`](../api/Player_Events.md#videobitratechange):
-    The current video track changed.
+  - [`newAvailablePeriods`](../api/Player_Events.md#newavailableperiods):
+    New Periods associated to the current content are known. It is also now
+    possible to change their respective tracks and qualities.
 
   - [`bitrateEstimationChange`](../api/Player_Events.md#bitrateestimationchange):
     A new bitrate estimate is available.
 
-  - [`periodChange`](../api/Player_Events.md#periodchange):
-    A new Period begins.
+  - [`brokenRepresentationsLock`](../api/Player_Events.md#brokenrepresentationslock):
+    Representations previously being locked was automatically unlocked by the
+    RxPlayer.
+
+  - [`autoTrackSwitch`](../api/Player_Events.md#autotrackswitch):
+    A track previously set was automatically changed by the RxPlayer.
 
   - [`decipherabilityUpdate`](../api/Player_Events.md#decipherabilityupdate):
     A Representation's decipherability status has been updated.

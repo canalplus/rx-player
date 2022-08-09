@@ -16,9 +16,7 @@ class Settings extends React.Component {
   constructor(...args) {
     super(...args);
 
-    this.state = {
-      ...defaultOptionsValues,
-    };
+    this.state = Object.assign({}, defaultOptionsValues);
   }
 
   getOptions() {
@@ -36,8 +34,6 @@ class Settings extends React.Component {
       limitVideoWidth,
       throttleVideoBitrateWhenHidden,
       autoPlay,
-      audioTrackSwitchingMode,
-      manualBrSwitchingMode,
       onCodecSwitch,
       enableFastSwitching,
       segmentRetry,
@@ -61,8 +57,6 @@ class Settings extends React.Component {
       },
       loadVideoOpts: {
         autoPlay,
-        audioTrackSwitchingMode,
-        manualBitrateSwitchingMode: manualBrSwitchingMode,
         onCodecSwitch,
         enableFastSwitching,
         networkConfig: {
@@ -74,72 +68,83 @@ class Settings extends React.Component {
     };
   }
 
-  onAutoPlayClick = (evt) =>
+  onAutoPlayClick(evt) {
     this.setState({ autoPlay: getCheckBoxValue(evt.target) });
+  }
 
-  onManualBrSwitchingModeChange = (value) =>
-    this.setState({ manualBrSwitchingMode: value });
-
-  onInitialVideoBrInput = (value) =>
+  onInitialVideoBrInput(value) {
     this.setState({ initialVideoBr: value });
+  }
 
-  onInitialAudioBrInput = (value) =>
+  onInitialAudioBrInput(value) {
     this.setState({ initialAudioBr: value });
+  }
 
-  onMinVideoBrInput = (value) =>
+  onMinVideoBrInput(value) {
     this.setState({ minVideoBr: value });
+  }
 
-  onMinAudioBrInput = (value) =>
+  onMinAudioBrInput(value) {
     this.setState({ minAudioBr: value });
+  }
 
-  onMaxVideoBrInput = (value) =>
+  onMaxVideoBrInput(value) {
     this.setState({ maxVideoBr: value });
+  }
 
-  onMaxAudioBrInput = (value) =>
+  onMaxAudioBrInput(value) {
     this.setState({ maxAudioBr: value });
+  }
 
-  onLimitVideoWidthClick = (evt) =>
+  onLimitVideoWidthClick(evt) {
     this.setState({ limitVideoWidth: getCheckBoxValue(evt.target) });
+  }
 
-  onThrottleVideoBitrateWhenHiddenClick = (evt) =>
+  onThrottleVideoBitrateWhenHiddenClick(evt) {
     this.setState({
       throttleVideoBitrateWhenHidden: getCheckBoxValue(evt.target),
     });
+  }
 
-  onSegmentRetryInput = (value) =>
+  onSegmentRetryInput(value) {
     this.setState({ segmentRetry: value });
+  }
 
-  onManifestRetryInput = (value) =>
+  onManifestRetryInput(value) {
     this.setState({ manifestRetry: value });
+  }
 
-  onOfflineRetryInput = (value) =>
+  onOfflineRetryInput(value) {
     this.setState({ offlineRetry: value });
+  }
 
-  onEnableFastSwitchingClick = (evt) =>
+  onEnableFastSwitchingClick(evt) {
     this.setState({ enableFastSwitching: getCheckBoxValue(evt.target) });
+  }
 
-  onAudioTrackSwitchingModeChange = (value) =>
-    this.setState({ audioTrackSwitchingMode: value });
-
-  onCodecSwitchChange = (value) =>
+  onCodecSwitchChange(value) {
     this.setState({ onCodecSwitch: value });
+  }
 
-  onWantedBufferAheadInput = (value) =>
+  onWantedBufferAheadInput(value) {
     this.setState({ wantedBufferAhead: value });
-  
-  onMaxVideoBufferSizeInput = (value) => 
+  }
+
+  onMaxVideoBufferSizeInput(value) {
     this.setState({ maxVideoBufferSize: value});
+  }
 
-  onMaxBufferBehindInput = (value) =>
+  onMaxBufferBehindInput(value) {
     this.setState({ maxBufferBehind: value });
+  }
 
-  onMaxBufferAheadInput = (value) =>
+  onMaxBufferAheadInput(value) {
     this.setState({ maxBufferAhead: value });
+  }
 
   render() {
     const {
       autoPlay,
-      manualBrSwitchingMode,
       initialVideoBr,
       initialAudioBr,
       minVideoBr,
@@ -152,7 +157,6 @@ class Settings extends React.Component {
       manifestRetry,
       offlineRetry,
       enableFastSwitching,
-      audioTrackSwitchingMode,
       onCodecSwitch,
       wantedBufferAhead,
       maxVideoBufferSize,
@@ -191,10 +195,8 @@ class Settings extends React.Component {
 
     const trackSwitchModeConfig = {
       enableFastSwitching,
-      audioTrackSwitchingMode,
       onCodecSwitch,
       onEnableFastSwitchingClick: this.onEnableFastSwitchingClick,
-      onAudioTrackSwitchingModeChange: this.onAudioTrackSwitchingModeChange,
       onCodecSwitchChange: this.onCodecSwitchChange,
     };
 
@@ -208,9 +210,7 @@ class Settings extends React.Component {
           <Option title="Playback">
             <Playback
               autoPlay={autoPlay}
-              manualBrSwitchingMode={manualBrSwitchingMode}
               onAutoPlayClick={this.onAutoPlayClick}
-              onManualBrSwitchingModeChange={this.onManualBrSwitchingModeChange}
             />
           </Option>
           <Option title="Video adaptive settings">

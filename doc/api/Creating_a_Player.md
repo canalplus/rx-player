@@ -117,9 +117,9 @@ _defaults_: `0`
 
 Minimum video bitrate reachable through adaptive streaming.
 
-When the bitrate is chosen through adaptive streaming (i.e., not enforced
-manually through APIs such as `setVideoBitrate`), the player will never switch
-to a video quality with a bitrate lower than that value.
+When the quality is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as `lockVideoRepresentations`), the player will
+never switch to a video quality with a bitrate lower than that value.
 
 The exception being when no quality has a higher bitrate, in which case the
 maximum quality will always be chosen instead.
@@ -143,8 +143,8 @@ player.setMinVideoBitrate(0);
 You can update this limit at any moment with the `setMinVideoBitrate` API
 call.
 
-Note that this only affects adaptive strategies. Forcing the bitrate manually
-(for example by calling `setVideoBitrate`) bypass this limit completely.
+Note that this only affects adaptive strategies. Forcing the quality manually
+(by calling `lockVideoRepresentations`) bypasses this limit completely.
 
 <div class="warning">
 This option will have no effect for contents loaded in <i>Directfile</i>
@@ -159,9 +159,9 @@ _defaults_: `0`
 
 Minimum audio bitrate reachable through adaptive streaming.
 
-When the bitrate is chosen through adaptive streaming (i.e., not enforced
-manually through APIs such as `setAudioBitrate`), the player will never switch
-to an audio quality with a bitrate higher than that value.
+When the quality is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as `lockAudioRepresentations`), the player will never
+switch to an audio quality with a bitrate higher than that value.
 
 The exception being when no quality has a higher bitrate, in which case the
 minimum quality will always be chosen instead.
@@ -185,8 +185,8 @@ player.setMinAudioBitrate(0);
 You can update this limit at any moment with the `setMinAudioBitrate` API
 call.
 
-Note that this only affects adaptive strategies. Forcing the bitrate manually
-(for example by calling `setAudioBitrate`) bypass this limit completely.
+Note that this only affects adaptive strategies. Forcing the quality manually
+(by calling `lockAudioRepresentations`) bypasses this limit completely.
 
 <div class="warning">
 This option will have no effect for contents loaded in <i>Directfile</i>
@@ -201,9 +201,9 @@ _defaults_: `Infinity`
 
 Maximum video bitrate reachable through adaptive streaming.
 
-When the bitrate is chosen through adaptive streaming (i.e., not enforced
-manually through APIs such as `setVideoBitrate`), the player will never switch
-to an video quality with a bitrate higher than that value.
+When the quality is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as `lockVideoRepresentations`), the player will never
+switch to an video quality with a bitrate higher than that value.
 
 The exception being when no quality has a lower bitrate, in which case the
 minimum quality will always be chosen instead.
@@ -227,8 +227,8 @@ player.setMaxVideoBitrate(Infinity);
 You can update this limit at any moment with the `setMaxVideoBitrate` API
 call.
 
-Note that this only affects adaptive strategies. Forcing the bitrate manually
-(for example by calling `setVideoBitrate`) bypass this limit completely.
+Note that this only affects adaptive strategies. Forcing the quality manually
+(by calling `lockVideoRepresentations`) bypasses this limit completely.
 
 <div class="warning">
 This option will have no effect for contents loaded in <i>Directfile</i>
@@ -243,9 +243,9 @@ _defaults_: `Infinity`
 
 Maximum audio bitrate reachable through adaptive streaming.
 
-When the bitrate is chosen through adaptive streaming (i.e., not enforced
-manually through APIs such as `setAudioBitrate`), the player will never switch
-to an audio quality with a bitrate higher than that value.
+When the quality is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as `lockAudioRepresentations`), the player will
+never switch to an audio quality with a bitrate higher than that value.
 
 The exception being when no quality has a lower bitrate, in which case the
 minimum quality will always be chosen instead.
@@ -269,8 +269,8 @@ player.setMaxAudioBitrate(Infinity);
 You can update this limit at any moment with the `setMaxAudioBitrate` API
 call.
 
-Note that this only affects adaptive strategies. Forcing the bitrate manually
-(for example by calling `setAudioBitrate`) bypass this limit completely.
+Note that this only affects adaptive strategies. Forcing the quality manually
+(by calling `lockAudioRepresentations`) bypasses this limit completely.
 
 <div class="warning">
 This option will have no effect for contents loaded in <i>Directfile</i>
@@ -323,291 +323,6 @@ This option will have no effects if we didn't buffer at least <b>MIN_BUFFER_LENG
 <div class="warning">
 This option will have no effect for contents loaded in <i>Directfile</i>
 mode (see <a href="./Loading_a_Content.md#transport">loadVideo options</a>).
-</div>
-
-### preferredAudioTracks
-
-_type_: `Array.<Object|null>`
-
-_defaults_: `[]`
-
-This option allows to help the RxPlayer choose an initial audio track based on
-either language preferences, codec preferences or both.
-
-It is defined as an array of objects, each object describing constraints a
-track should respect.
-
-If the first object - defining the first set of constraints - cannot be
-respected under the currently available audio tracks, the RxPlayer will skip
-it and check with the second object and so on.
-As such, this array should be sorted by order of preference: from the most
-wanted constraints to the least.
-
-Here is all the possible constraints you can set in any one of those objects
-(note that all properties are optional here, only those set will have an effect
-on which tracks will be filtered):
-
-```js
-{
-  language: "fra", // {string|undefined} The language the track should be in
-                   // (in preference as an ISO 639-1, ISO 639-2 or ISO 639-3
-                   // language code).
-                   // If not set or set to `undefined`, the RxPlayer won't
-                   // filter based on the language of the track.
-
-  audioDescription: false // {Boolean|undefined} Whether the audio track should
-                          // be an audio description for the visually impaired
-                          // or not.
-                          // If not set or set to `undefined`, the RxPlayer
-                          // won't filter based on that status.
-
-  codec: { // {Object|undefined} Constraints about the codec wanted.
-           // if not set or set to `undefined` we won't filter based on codecs.
-
-    test: /ec-3/, // {RegExp} RegExp validating the type of codec you want.
-
-    all: true, // {Boolean} Whether all the profiles (i.e. Representation) in a
-               // track should be checked against the RegExp given in `test`.
-               // If `true`, we will only choose a track if EVERY profiles for
-               // it have a codec information that is validated by that RegExp.
-               // If `false`, we will choose a track if we know that at least
-               // A SINGLE profile from it has codec information validated by
-               // that RegExp.
-  }
-}
-```
-
-This array of preferrences can be updated at any time through the
-`setPreferredAudioTracks` method, documented [here](./Track_Selection/getPreferredAudioTracks.md).
-
-#### Examples
-
-Let's imagine that you prefer to have french or italian over all other audio
-languages. If not found, you want to fallback to english:
-
-```js
-const player = new RxPlayer({
-  preferredAudioTracks: [
-    { language: "fra", audioDescription: false },
-    { language: "ita", audioDescription: false },
-    { language: "eng", audioDescription: false },
-  ],
-});
-```
-
-Now let's imagine that you want to have in priority a track that contain at
-least one profile in Dolby Digital Plus (ec-3 codec) without caring about the
-language:
-
-```js
-const player = new RxPlayer({
-  preferredAudioTracks: [ { codec: { all: false, test: /ec-3/ } ]
-});
-```
-
-At last, let's combine both examples by preferring french over itialian, italian
-over english while preferring it to be in Dolby Digital Plus:
-
-```js
-const player = new RxPlayer({
-  preferredAudioTracks: [
-    {
-      language: "fra",
-      audioDescription: false,
-      codec: { all: false, test: /ec-3/ }
-    },
-
-    // We still prefer non-DD+ french over DD+ italian
-    { language: "fra", audioDescription: false },
-
-    {
-      language: "ita",
-      audioDescription: false,
-      codec: { all: false, test: /ec-3/ }
-    },
-    { language: "ita", audioDescription: false },
-
-    {
-      language: "eng",
-      audioDescription: false,
-      codec: { all: false, test: /ec-3/ }
-    },
-    { language: "eng", audioDescription: false }
-  ]
-```
-
-<div class="warning">
-This option will have no effect in <i>Directfile</i> mode
-(see <a href="./Loading_a_Content.md#transport">loadVideo options</a>) when either :
-
-- No audio track API is supported on the current browser
-- The media file tracks are not supported on the browser
-
-</div>
-
-### preferredTextTracks
-
-_type_: `Array.<Object|null>`
-
-_defaults_: `[]`
-
-Set the initial text track languages preferences.
-
-This option takes an array of objects describing the languages wanted for
-subtitles:
-
-```js
-{
-  language: "fra", // {string} The wanted language
-                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
-  closedCaption: false // {Boolean} Whether the text track should be a closed
-                       // caption for the hard of hearing
-}
-```
-
-All elements in that Array should be set in preference order: from the most
-preferred to the least preferred. You can set `null` in that array for no
-subtitles.
-
-When loading a content, the RxPlayer will then try to choose its text track by
-comparing what is available with your current preferences (i.e. if the most
-preferred is not available, it will look if the second one etc.).
-
-This array of preferrences can be updated at any time through the
-`setPreferredTextTracks` method, documented
-[here](./Track_Selection/getPreferredTextTracks.md).
-
-#### Example
-
-Let's imagine that you prefer to have french or italian subtitles.If not found,
-you want no subtitles at all.
-
-```js
-const player = new RxPlayer({
-  preferredTextTracks: [
-    { language: "fra", closedCaption: false },
-    { language: "ita", closedCaption: false },
-    null,
-  ],
-});
-```
-
-<div class="warning">
-This option will have no effect in <i>Directfile</i> mode
-(see <a href="./Loading_a_Content.md#transport">loadVideo options</a>) when either :
-
-- No text track API is supported on the current browser
-- The media file tracks are not supported on the browser
-
-</div>
-
-### preferredVideoTracks
-
-_type_: `Array.<Object|null>`
-
-_defaults_: `[]`
-
-This option allows to help the RxPlayer choose an initial video track.
-
-It is defined as an array of objects, each object describing constraints a
-track should respect.
-
-If the first object - defining the first set of constraints - cannot be
-respected under the currently available video tracks, the RxPlayer will skip
-it and check with the second object and so on.
-As such, this array should be sorted by order of preference: from the most
-wanted constraints to the least.
-
-When the next encountered constraint is set to `null`, the player will simply
-disable the video track. If you want to disable the video track by default,
-you can just set `null` as the first element of this array (e.g. `[null]`).
-
-Here is all the possible constraints you can set in any one of those objects
-(note that all properties are optional here, only those set will have an effect
-on which tracks will be filtered):
-
-```js
-{
-  codec: { // {Object|undefined} Constraints about the codec wanted.
-           // if not set or set to `undefined` we won't filter based on codecs.
-
-    test: /hvc/, // {RegExp} RegExp validating the type of codec you want.
-
-    all: true, // {Boolean} Whether all the profiles (i.e. Representation) in a
-               // track should be checked against the RegExp given in `test`.
-               // If `true`, we will only choose a track if EVERY profiles for
-               // it have a codec information that is validated by that RegExp.
-               // If `false`, we will choose a track if we know that at least
-               // A SINGLE profile from it has codec information validated by
-               // that RegExp.
-  }
-  signInterpreted: true, // {Boolean|undefined} If set to `true`, only tracks
-                         // which are known to contains a sign language
-                         // interpretation will be considered.
-                         // If set to `false`, only tracks which are known
-                         // to not contain it will be considered.
-                         // if not set or set to `undefined` we won't filter
-                         // based on that status.
-}
-```
-
-This array of preferrences can be updated at any time through the
-`setPreferredVideoTracks` method, documented
-[here](./Track_Selection/getPreferredVideoTracks.md).
-
-#### Examples
-
-Let's imagine that you prefer to have a track which contains at least one H265
-profile. You can do:
-
-```js
-const player = new RxPlayer({
-  preferredVideoTracks: [{ codec: { all: false, test: /^hvc/ } }],
-});
-```
-
-With that same constraint, let's no consider that the current user is deaf and
-would thus prefer the video to contain a sign language interpretation.
-We could set both the previous and that new constraint that way:
-
-```js
-const player = new RxPlayer({
-  preferredVideoTracks: [
-    // first let's consider the best case: H265 + sign language interpretation
-    {
-      codec: { all: false, test: /^hvc/ }
-      signInterpreted: true,
-    },
-
-    // If not available, we still prefer a sign interpreted track without H265
-    { signInterpreted: true },
-
-    // If not available either, we would prefer an H265 content
-    { codec: { all: false, test: /^hvc/ } },
-
-    // Note: If this is also unavailable, we will here still have a video track
-    // but which do not respect any of the constraints set here.
-  ]
-});
-```
-
-For a totally different example, let's imagine you want to start without any
-video track enabled (e.g. to start in an audio-only mode). To do that, you can
-simply do:
-
-```js
-const player = new RxPlayer({
-  preferredVideoTracks: [null],
-});
-```
-
-<div class="warning">
-This option will have no effect in <i>Directfile</i> mode
-(see <a href="./Loading_a_Content.md#transport">loadVideo options</a>) when either :
-
-- No video track API is supported on the current browser
-- The media file tracks are not supported on the browser
-
 </div>
 
 ### maxBufferAhead

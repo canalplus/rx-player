@@ -21,7 +21,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
-import { IRepresentationInfos } from "../../public_types";
+import { IRepresentationContext } from "../../public_types";
 import Representation from "../representation";
 
 const minimalRepresentationIndex = {
@@ -43,6 +43,7 @@ const mockDefaultRepresentationImpl = jest.fn(arg => {
   return { bitrate: arg.bitrate,
            id: arg.id,
            isSupported: true,
+           isPlayable() { return true; },
            index: arg.index };
 });
 
@@ -69,7 +70,6 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation.language).toBe(undefined);
     expect(adaptation.normalizedLanguage).toBe(undefined);
     expect(adaptation.manuallyAdded).toBe(false);
-    expect(adaptation.getAvailableBitrates()).toEqual([]);
     expect(adaptation.getRepresentation("")).toBe(undefined);
 
     expect(mockDefaultRepresentationImpl).not.toHaveBeenCalled();
@@ -156,7 +156,6 @@ describe("Manifest - Adaptation", () => {
     expect(parsedRepresentations[1].id).toEqual("rep3");
     expect(parsedRepresentations[2].id).toEqual("rep2");
 
-    expect(adaptation.getAvailableBitrates()).toEqual([10, 20, 30]);
     expect(adaptation.getRepresentation("rep2").bitrate).toEqual(30);
   });
 
@@ -165,6 +164,7 @@ describe("Manifest - Adaptation", () => {
       return { bitrate: arg.bitrate,
                id: arg.id,
                isSupported: arg.id !== "rep4",
+               isPlayable() { return true; },
                index: arg.index };
     });
 
@@ -194,7 +194,7 @@ describe("Manifest - Adaptation", () => {
 
     const representationFilter = jest.fn((
       representation : Representation,
-      adaptationInfos : IRepresentationInfos
+      adaptationInfos : IRepresentationContext
     ) => {
       if (adaptationInfos.language === "fr" && representation.bitrate < 40) {
         return false;
@@ -215,7 +215,6 @@ describe("Manifest - Adaptation", () => {
     expect(parsedRepresentations[1].id).toEqual("rep5");
     expect(parsedRepresentations[2].id).toEqual("rep6");
 
-    expect(adaptation.getAvailableBitrates()).toEqual([40, 50, 60]);
     expect(adaptation.getRepresentation("rep2")).toBe(undefined);
     expect(adaptation.getRepresentation("rep4").id).toEqual("rep4");
   });
@@ -340,40 +339,6 @@ describe("Manifest - Adaptation", () => {
   });
 
   /* eslint-disable max-len */
-  it("should filter Representation with duplicate bitrates in getAvailableBitrates", () => {
-  /* eslint-enable max-len */
-
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: mockDefaultRepresentationImpl }));
-    const mockUniq = jest.fn(() => [45, 92]);
-    jest.mock("../../utils/uniq", () => ({ __esModule: true as const,
-                                           default: mockUniq }));
-
-    const Adaptation = jest.requireActual("../adaptation").default;
-    const rep1 = { bitrate: 10,
-                   id: "rep1",
-                   index: minimalRepresentationIndex };
-    const rep2 = { bitrate: 20,
-                   id: "rep2",
-                   index: minimalRepresentationIndex };
-    const rep3 = { bitrate: 20,
-                   id: "rep3",
-                   index: minimalRepresentationIndex };
-    const representations = [rep1, rep2, rep3];
-    const args = { id: "12",
-                   representations,
-                   type: "text" as const };
-    const adaptation = new Adaptation(args);
-
-    const parsedRepresentations = adaptation.representations;
-    expect(parsedRepresentations.length).toBe(3);
-
-    expect(adaptation.getAvailableBitrates()).toEqual([45, 92]);
-    expect(mockUniq).toHaveBeenCalledTimes(1);
-    expect(mockUniq).toHaveBeenCalledWith(representations.map(r => r.bitrate));
-  });
-
-  /* eslint-disable max-len */
   it("should return the first Representation with the given Id with `getRepresentation`", () => {
   /* eslint-enable max-len */
 
@@ -423,16 +388,12 @@ describe("Manifest - Adaptation", () => {
   });
 
   /* eslint-disable max-len */
-  it("should return only supported and decipherable representation when calling `getPlayableRepresentations`", () => {
+  it("should return only playable representations when calling `getPlayableRepresentations`", () => {
   /* eslint-enable max-len */
     const mockRepresentation = jest.fn(arg => {
       return { bitrate: arg.bitrate,
                id: arg.id,
-               isSupported: arg.id !== "rep3" && arg.id !== "rep8",
-               decipherable: arg.id === "rep6" ? false :
-                             arg.id === "rep8" ? false :
-                             arg.id === "rep4" ? true :
-                                                 undefined,
+               isPlayable() { return arg.id !== "rep3"; },
                index: arg.index };
     });
     jest.mock("../representation", () => ({ __esModule: true as const,
@@ -475,11 +436,13 @@ describe("Manifest - Adaptation", () => {
     const adaptation = new Adaptation(args);
 
     const playableRepresentations = adaptation.getPlayableRepresentations();
-    expect(playableRepresentations.length).toEqual(5);
+    expect(playableRepresentations.length).toEqual(7);
     expect(playableRepresentations[0].id).toEqual("rep1");
     expect(playableRepresentations[1].id).toEqual("rep2");
     expect(playableRepresentations[2].id).toEqual("rep4");
     expect(playableRepresentations[3].id).toEqual("rep5");
-    expect(playableRepresentations[4].id).toEqual("rep7");
+    expect(playableRepresentations[4].id).toEqual("rep6");
+    expect(playableRepresentations[5].id).toEqual("rep7");
+    expect(playableRepresentations[6].id).toEqual("rep8");
   });
 });

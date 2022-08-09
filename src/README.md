@@ -31,11 +31,12 @@ To better understand the player's architecture, you can find below a
      |               (./core/api)                |                      +----------------+
      +-------------------------------------------+                      |                |
  +--------------------+    |      |                    +--------------> |   transports   |
- | TrackChoiceManager | <--+      |                    |                | (./transports) |
- |    (./core/api)    |           |                    |                |                |
- +--------------------+           |                    |                +----------------+
-  Facilitate track                V                    |       Abstract the streaming ^
-  switching for           +---------------+            |       protocol               |
+ |     TracksStore    | <--+      |                    |                | (./transports) |
+ |(./core/api/track_m |           |                    |                |                |
+ |-anagement)         |           |                    |                +----------------+
+ +--------------------+           |                    |       Abstract the streaming ^
+  Facilitate track                V                    |       protocol               |
+  switching for           +---------------+            |                              |
   the API                 |               |            |                              |
  +----------------+       |               |         +--------------------------+      |
  |    Content     |       |     Init      | ------> |                          |      |

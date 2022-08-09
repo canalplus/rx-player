@@ -9,30 +9,6 @@
       "displayName": "getAudioBitrate"
     },
     {
-      "path": "./getAvailableVideoBitrates.md",
-      "displayName": "getAvailableVideoBitrates"
-    },
-    {
-      "path": "./getAvailableAudioBitrates.md",
-      "displayName": "getAvailableAudioBitrates"
-    },
-    {
-      "path": "./setVideoBitrate.md",
-      "displayName": "setVideoBitrate"
-    },
-    {
-      "path": "./setAudioBitrate.md",
-      "displayName": "setAudioBitrate"
-    },
-    {
-      "path": "./getManualVideoBitrate.md",
-      "displayName": "getManualVideoBitrate"
-    },
-    {
-      "path": "./getManualAudioBitrate.md",
-      "displayName": "getManualAudioBitrate"
-    },
-    {
       "path": "./setMinVideoBitrate.md",
       "displayName": "setMinVideoBitrate"
     },

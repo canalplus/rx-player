@@ -19,7 +19,6 @@ import {
   Adaptation,
   Period,
 } from "../../../manifest";
-import { IAudioTrackSwitchingMode } from "../../../public_types";
 import areCodecsCompatible from "../../../utils/are_codecs_compatible";
 import {
   convertToRanges,
@@ -30,9 +29,12 @@ import {
   keepRangeIntersection,
 } from "../../../utils/ranges";
 import {
+  getFirstSegmentAfterPeriod,
+  getLastSegmentBeforePeriod,
   IBufferedChunk,
   SegmentBuffer,
 } from "../../segment_buffers";
+import { ITrackSwitchingMode } from "../types";
 
 
 export type IAdaptationSwitchStrategy =
@@ -42,8 +44,6 @@ export type IAdaptationSwitchStrategy =
   { type: "needs-reload"; value: undefined };
 
 export interface IAdaptationSwitchOptions {
-  /** RxPlayer's behavior when switching the audio track. */
-  audioTrackSwitchingMode : IAudioTrackSwitchingMode;
   /** Behavior when a new video and/or audio codec is encountered. */
   onCodecSwitch : "continue" | "reload";
 }
@@ -61,6 +61,7 @@ export default function getAdaptationSwitchStrategy(
   segmentBuffer : SegmentBuffer,
   period : Period,
   adaptation : Adaptation,
+  switchingMode : ITrackSwitchingMode,
   playbackInfo : { currentTime : number; readyState : number },
   options : IAdaptationSwitchOptions
 ) : IAdaptationSwitchStrategy {
@@ -110,11 +111,7 @@ export default function getAdaptationSwitchStrategy(
   }
 
   const { currentTime } = playbackInfo;
-  const { audioTrackSwitchingMode } = options;
-
-  const hasReloadSwitchingMode = adaptation.type === "video" ||
-    (adaptation.type === "audio" && audioTrackSwitchingMode === "reload");
-  if (hasReloadSwitchingMode &&
+  if (switchingMode === "reload" &&
       // We're playing the current Period
       isTimeInRange({ start, end }, currentTime) &&
       // There is data for the current position or the codecs are differents
@@ -129,8 +126,7 @@ export default function getAdaptationSwitchStrategy(
 
   // From here, clean-up data from the previous Adaptation, if one
 
-  const shouldFlush = adaptation.type === "audio" &&
-                      audioTrackSwitchingMode === "direct";
+  const shouldCleanAll = switchingMode === "direct";
 
   const rangesToExclude = [];
 
@@ -151,19 +147,19 @@ export default function getAdaptationSwitchStrategy(
 
   // Next, exclude data around current position to avoid decoding issues
   const bufferType = adaptation.type;
-  const { ADAPTATION_SWITCH_BUFFER_PADDINGS } = config.getCurrent();
+  const { ADAP_REP_SWITCH_BUFFER_PADDINGS } = config.getCurrent();
 
   /** Ranges that won't be cleaned from the current buffer. */
-  let paddingBefore = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].before;
+  let paddingBefore = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].before;
   if (paddingBefore == null) {
     paddingBefore = 0;
   }
-  let paddingAfter = ADAPTATION_SWITCH_BUFFER_PADDINGS[bufferType].after;
+  let paddingAfter = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].after;
   if (paddingAfter == null) {
     paddingAfter = 0;
   }
 
-  if (!shouldFlush) {
+  if (!shouldCleanAll) {
     rangesToExclude.push({ start: currentTime - paddingBefore,
                            end: currentTime + paddingAfter });
   }
@@ -188,8 +184,9 @@ export default function getAdaptationSwitchStrategy(
     return { type: "continue", value: undefined };
   }
 
-  return shouldFlush ? { type: "flush-buffer", value: toRemove } :
-                       { type: "clean-buffer", value: toRemove };
+  return shouldCleanAll && adaptation.type !== "text" ?
+    { type: "flush-buffer", value: toRemove } :
+    { type: "clean-buffer", value: toRemove };
 }
 
 /**
@@ -233,46 +230,4 @@ function getBufferedRangesFromAdaptation(
     acc.push({ start: bufferedStart, end: bufferedEnd });
     return acc;
   }, []);
-}
-
-/**
- * Returns the last segment in the `inventory` which is linked to a Period
- * before `period`.
- * @param {Array.<Object>} inventory
- * @param {Object} period
- * @returns {Object|null}
- */
-function getLastSegmentBeforePeriod(
-  inventory : IBufferedChunk[],
-  period : Period
-) : IBufferedChunk | null {
-  for (let i = 0; i < inventory.length; i++) {
-    if (inventory[i].infos.period.start >= period.start) {
-      if (i > 0) {
-        return inventory[i - 1];
-      }
-      return null;
-    }
-  }
-  return inventory.length > 0 ? inventory[inventory.length - 1] :
-                                null;
-}
-
-/**
- * Returns the first segment in the `inventory` which is linked to a Period
- * after `period`.
- * @param {Array.<Object>} inventory
- * @param {Object} period
- * @returns {Object|null}
- */
-function getFirstSegmentAfterPeriod(
-  inventory : IBufferedChunk[],
-  period : Period
-) : IBufferedChunk | null {
-  for (let i = 0; i < inventory.length; i++) {
-    if (inventory[i].infos.period.start > period.start) {
-      return inventory[i];
-    }
-  }
-  return null;
 }

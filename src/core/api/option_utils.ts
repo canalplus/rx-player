@@ -22,8 +22,6 @@
 import config from "../../config";
 import log from "../../log";
 import {
-  IAudioTrackPreference,
-  IAudioTrackSwitchingMode,
   IConstructorOptions,
   IKeySystemOption,
   ILoadedManifestFormat,
@@ -33,13 +31,10 @@ import {
   IRepresentationFilter,
   ISegmentLoader,
   IServerSyncInfos,
-  ITextTrackPreference,
-  IVideoTrackPreference,
 } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import objectAssign from "../../utils/object_assign";
-import warnOnce from "../../utils/warn_once";
 
 /** Value once parsed for the `startAt` option of the `loadVideo` method. */
 export type IParsedStartAtOption = { position : number } |
@@ -49,7 +44,6 @@ export type IParsedStartAtOption = { position : number } |
                                    { fromFirstPosition : number };
 
 export interface IParsedTransportOptions {
-  aggressiveMode? : boolean | undefined;
   checkMediaSegmentIntegrity? : boolean | undefined;
   lowLatencyMode : boolean;
   manifestLoader?: IManifestLoader | undefined;
@@ -69,10 +63,6 @@ export interface IParsedConstructorOptions {
   maxVideoBufferSize : number;
   limitVideoWidth : boolean;
   throttleVideoBitrateWhenHidden : boolean;
-
-  preferredAudioTracks : IAudioTrackPreference[];
-  preferredTextTracks : ITextTrackPreference[];
-  preferredVideoTracks : IVideoTrackPreference[];
 
   videoElement : HTMLMediaElement;
   initialVideoBitrate : number;
@@ -98,9 +88,7 @@ interface IParsedLoadVideoOptionsBase {
   networkConfig: INetworkConfigOption;
   transportOptions : IParsedTransportOptions;
   startAt : IParsedStartAtOption|undefined;
-  manualBitrateSwitchingMode : "seamless"|"direct";
   enableFastSwitching : boolean;
-  audioTrackSwitchingMode : IAudioTrackSwitchingMode;
   onCodecSwitch : "continue"|"reload";
 }
 
@@ -145,10 +133,6 @@ function parseConstructorOptions(
   let maxBufferBehind : number;
   let wantedBufferAhead : number;
   let maxVideoBufferSize : number;
-
-  let preferredAudioTracks : IAudioTrackPreference[];
-  let preferredTextTracks : ITextTrackPreference[];
-  let preferredVideoTracks : IVideoTrackPreference[];
 
   let videoElement : HTMLMediaElement;
   let initialVideoBitrate : number;
@@ -217,39 +201,6 @@ function parseConstructorOptions(
     isNullOrUndefined(options.throttleVideoBitrateWhenHidden) ?
       DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN :
       !!options.throttleVideoBitrateWhenHidden;
-
-  if (options.preferredTextTracks !== undefined) {
-    if (!Array.isArray(options.preferredTextTracks)) {
-      warnOnce("Invalid `preferredTextTracks` option, it should be an Array");
-      preferredTextTracks = [];
-    } else {
-      preferredTextTracks = options.preferredTextTracks;
-    }
-  } else {
-    preferredTextTracks = [];
-  }
-
-  if (options.preferredAudioTracks !== undefined) {
-    if (!Array.isArray(options.preferredAudioTracks)) {
-      warnOnce("Invalid `preferredAudioTracks` option, it should be an Array");
-      preferredAudioTracks = [];
-    } else {
-      preferredAudioTracks = options.preferredAudioTracks;
-    }
-  } else {
-    preferredAudioTracks = [];
-  }
-
-  if (options.preferredVideoTracks !== undefined) {
-    if (!Array.isArray(options.preferredVideoTracks)) {
-      warnOnce("Invalid `preferredVideoTracks` option, it should be an Array");
-      preferredVideoTracks = [];
-    } else {
-      preferredVideoTracks = options.preferredVideoTracks;
-    }
-  } else {
-    preferredVideoTracks = [];
-  }
 
   if (isNullOrUndefined(options.videoElement)) {
     videoElement = document.createElement("video");
@@ -334,9 +285,6 @@ function parseConstructorOptions(
            wantedBufferAhead,
            maxVideoBufferSize,
            throttleVideoBitrateWhenHidden,
-           preferredAudioTracks,
-           preferredTextTracks,
-           preferredVideoTracks,
            initialAudioBitrate,
            initialVideoBitrate,
            minAudioBitrate,
@@ -393,11 +341,9 @@ function parseLoadVideoOptions(
   let textTrackElement : HTMLElement|undefined;
   let startAt : IParsedStartAtOption|undefined;
 
-  const { DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
-          DEFAULT_AUTO_PLAY,
+  const { DEFAULT_AUTO_PLAY,
           DEFAULT_CODEC_SWITCHING_BEHAVIOR,
           DEFAULT_ENABLE_FAST_SWITCHING,
-          DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
           DEFAULT_TEXT_TRACK_MODE } = config.getCurrent();
 
   if (isNullOrUndefined(options)) {
@@ -453,20 +399,6 @@ function parseLoadVideoOptions(
   const minimumManifestUpdateInterval =
     options.transportOptions?.minimumManifestUpdateInterval ?? 0;
 
-  let audioTrackSwitchingMode = isNullOrUndefined(options.audioTrackSwitchingMode)
-                                  ? DEFAULT_AUDIO_TRACK_SWITCHING_MODE
-                                  : options.audioTrackSwitchingMode;
-  if (!arrayIncludes(["seamless", "direct", "reload"], audioTrackSwitchingMode)) {
-    log.warn("The `audioTrackSwitchingMode` loadVideo option must match one of " +
-             "the following strategy name:\n" +
-             "- `seamless`\n" +
-             "- `direct`\n" +
-             "- `reload`\n" +
-             "If badly set, " + DEFAULT_AUDIO_TRACK_SWITCHING_MODE +
-             " strategy will be used as default");
-    audioTrackSwitchingMode = DEFAULT_AUDIO_TRACK_SWITCHING_MODE;
-  }
-
   let onCodecSwitch = isNullOrUndefined(options.onCodecSwitch)
                         ? DEFAULT_CODEC_SWITCHING_BEHAVIOR
                         : options.onCodecSwitch;
@@ -496,9 +428,6 @@ function parseLoadVideoOptions(
     }
     textTrackMode = options.textTrackMode;
   }
-
-  const manualBitrateSwitchingMode = options.manualBitrateSwitchingMode ??
-                                     DEFAULT_MANUAL_BITRATE_SWITCHING_MODE;
 
   const enableFastSwitching = isNullOrUndefined(options.enableFastSwitching) ?
     DEFAULT_ENABLE_FAST_SWITCHING :
@@ -543,8 +472,6 @@ function parseLoadVideoOptions(
            keySystems,
            initialManifest,
            lowLatencyMode,
-           manualBitrateSwitchingMode,
-           audioTrackSwitchingMode,
            minimumManifestUpdateInterval,
            networkConfig,
            onCodecSwitch,
