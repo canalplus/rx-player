@@ -79,6 +79,7 @@ export interface ILoadVideoOptions {
   textTrackMode? : "native"|"html";
   textTrackElement? : HTMLElement;
   enableFastSwitching? : boolean;
+  defaultAudioTrackSwitchingMode? : IAudioTrackSwitchingMode;
   onCodecSwitch? : "continue"|"reload";
 }
 
