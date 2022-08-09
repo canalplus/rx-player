@@ -30,6 +30,7 @@ function Settings({
   } = playerOptions;
   const {
     autoPlay,
+    defaultAudioTrackSwitchingMode,
     enableFastSwitching,
     networkConfig,
     onCodecSwitch,
@@ -208,6 +209,17 @@ function Settings({
     });
   }, [updateLoadVideoOptions]);
 
+  const onDefaultAudioTrackSwitchingModeChange = useCallback((value) => {
+    updateLoadVideoOptions((prevOptions) => {
+      if (value === prevOptions.defaultAudioTrackSwitchingMode) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, {
+        defaultAudioTrackSwitchingMode: value,
+       });
+    });
+  }, [updateLoadVideoOptions]);
+
   const onCodecSwitchChange = useCallback((value) => {
     updateLoadVideoOptions((prevOptions) => {
       if (value === prevOptions.onCodecSwitch) {
@@ -319,8 +331,12 @@ function Settings({
         </Option>
         <Option title="Track Switch Mode">
           <TrackSwitch
+            defaultAudioTrackSwitchingMode={defaultAudioTrackSwitchingMode}
             enableFastSwitching={enableFastSwitching}
             onCodecSwitch={onCodecSwitch}
+            onDefaultAudioTrackSwitchingModeChange={
+              onDefaultAudioTrackSwitchingModeChange
+            }
             onEnableFastSwitchingChange={onEnableFastSwitchingChange}
             onCodecSwitchChange={onCodecSwitchChange}
           />

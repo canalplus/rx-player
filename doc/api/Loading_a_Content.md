@@ -558,7 +558,7 @@ considered stable:
 
 ### textTrackMode
 
-_type_: `string`
+_type_: `string|undefined`
 
 _defaults_: `"native"`
 
@@ -595,7 +595,7 @@ documentation](./Miscellaneous/Text_Tracks.md).
 
 ### textTrackElement
 
-_type_: `HTMLElement`
+_type_: `HTMLElement|undefined`
 
 <div class="warning">
 This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
@@ -614,7 +614,7 @@ your UI needs.
 
 ### onCodecSwitch
 
-_type_: `string`
+_type_: `string|undefined`
 
 _defaults_: `"continue"`
 
@@ -652,9 +652,58 @@ Can be set to one of those two values:
   _More information about the `"RELOADING"` state can be found in [the
   player states documentation](./Player_States.md)._
 
+### defaultAudioTrackSwitchingMode
+
+_type_: `string|undefined`
+
+_defaults_: `"seamless"`
+
+<div class="warning">
+This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
+transport option</a>)
+</div>
+
+Behavior taken by the player by default when switching to a different audio
+track, for example through the `setAudioTrack` method.
+
+Note that this is only a default value which can be changed at any
+`setAudioTrack` call, through its `switchingMode` optional property.
+
+Those are the possible values for that option:
+
+- `"seamless"`: The transition between the old audio track and the new one
+  happens seamlessly, without interruption.
+  This is the default behavior.
+
+  As an inconvenient, you might have at worst a few seconds in the previous
+  audio track before the new one can be heard.
+
+- `"direct"`: The player will try to switch to the new audio track as soon
+  as possible, which might lead to a brief interruption and rebuffering period
+  (where the RxPlayer is in the `BUFFERING` state) while it is doing so.
+
+- `"reload"` The player will directly switch to the new audio track (like
+  direct) but may reload the media to do so.
+  During this reloading step, there might be a black screen instead of the
+  video and the RxPlayer might go into the `RELOADING` state temporarily.
+
+  Although it provides a more aggressive transition than the `"direct"` mode
+  (because it goes through a reloading step with a black screen), the
+  `"reload"` mode might be preferable in specific situations where `"direct"`
+  is seen to have compatibility issues.
+
+  We observed such issues with some contents and devices combinations, if you
+  observe issues such as losing the audio or video glitches just after changing
+  the audio track while the `"direct"` mode is used, you may want to use the
+  `"reload"` mode instead.
+
+  More information about the `"RELOADING"` state can be found in [the
+  player states documentation](./Player_States.md).
+
+
 ### lowLatencyMode
 
-_type_: `Boolean`
+_type_: `Boolean|undefined`
 
 _defaults_: `false`
 
@@ -739,7 +788,7 @@ This object can take the following properties (all are optional):
 
 ### enableFastSwitching
 
-_type_: `boolean`
+_type_: `boolean|undefined`
 
 _defaults_: `true`
 
