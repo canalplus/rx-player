@@ -22,6 +22,7 @@
 import config from "../../config";
 import log from "../../log";
 import {
+  IAudioTrackSwitchingMode,
   IConstructorOptions,
   IKeySystemOption,
   ILoadedManifestFormat,
@@ -89,6 +90,7 @@ interface IParsedLoadVideoOptionsBase {
   transportOptions : IParsedTransportOptions;
   startAt : IParsedStartAtOption|undefined;
   enableFastSwitching : boolean;
+  defaultAudioTrackSwitchingMode : IAudioTrackSwitchingMode | undefined;
   onCodecSwitch : "continue"|"reload";
 }
 
@@ -328,7 +330,6 @@ function checkReloadOptions(options?: {
  *
  * Throws if any mandatory option is not set.
  * @param {Object|undefined} options
- * @param {Object} ctx - The player context, needed for some default values.
  * @returns {Object}
  */
 function parseLoadVideoOptions(
@@ -398,6 +399,20 @@ function parseLoadVideoOptions(
   const initialManifest = options.transportOptions?.initialManifest;
   const minimumManifestUpdateInterval =
     options.transportOptions?.minimumManifestUpdateInterval ?? 0;
+
+  let defaultAudioTrackSwitchingMode = options.defaultAudioTrackSwitchingMode ??
+                                       undefined;
+  if (defaultAudioTrackSwitchingMode !== undefined &&
+      !arrayIncludes(["seamless", "direct", "reload"], defaultAudioTrackSwitchingMode))
+  {
+    log.warn("The `defaultAudioTrackSwitchingMode` loadVideo option must match one of " +
+             "the following strategy name:\n" +
+             "- `seamless`\n" +
+             "- `direct`\n" +
+             "- `reload`");
+    defaultAudioTrackSwitchingMode = undefined;
+  }
+
 
   let onCodecSwitch = isNullOrUndefined(options.onCodecSwitch)
                         ? DEFAULT_CODEC_SWITCHING_BEHAVIOR
@@ -472,6 +487,7 @@ function parseLoadVideoOptions(
            keySystems,
            initialManifest,
            lowLatencyMode,
+           defaultAudioTrackSwitchingMode,
            minimumManifestUpdateInterval,
            networkConfig,
            onCodecSwitch,

@@ -34,6 +34,7 @@ class Settings extends React.Component {
       limitVideoWidth,
       throttleVideoBitrateWhenHidden,
       autoPlay,
+      defaultAudioTrackSwitchingMode,
       onCodecSwitch,
       enableFastSwitching,
       segmentRetry,
@@ -59,6 +60,7 @@ class Settings extends React.Component {
       },
       loadVideoOpts: {
         autoPlay,
+        defaultAudioTrackSwitchingMode,
         onCodecSwitch,
         enableFastSwitching,
         networkConfig: {
@@ -134,6 +136,10 @@ class Settings extends React.Component {
     this.setState({ enableFastSwitching: getCheckBoxValue(evt.target) });
   }
 
+  onDefaultAudioTrackSwitchingModeChange(value) {
+    this.setState({ defaultAudioTrackSwitchingMode: value });
+  }
+
   onCodecSwitchChange(value) {
     this.setState({ onCodecSwitch: value });
   }
@@ -171,6 +177,7 @@ class Settings extends React.Component {
       offlineRetry,
       manifestTimeout,
       enableFastSwitching,
+      defaultAudioTrackSwitchingMode,
       onCodecSwitch,
       wantedBufferAhead,
       maxVideoBufferSize,
@@ -213,8 +220,11 @@ class Settings extends React.Component {
 
     const trackSwitchModeConfig = {
       enableFastSwitching,
+      defaultAudioTrackSwitchingMode,
       onCodecSwitch,
       onEnableFastSwitchingClick: this.onEnableFastSwitchingClick.bind(this),
+      onDefaultAudioTrackSwitchingModeChange:
+        this.defaultAudioTrackSwitchingMode.bind(this),
       onCodecSwitchChange: this.onCodecSwitchChange.bind(this),
     };
 
