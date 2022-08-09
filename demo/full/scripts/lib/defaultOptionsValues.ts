@@ -14,10 +14,9 @@ const defaultOptionsValues = {
     wantedBufferAhead: 30,
   },
   loadVideo: {
-    audioTrackSwitchingMode: "reload",
     autoPlay: true,
+    defaultAudioTrackSwitchingMode: "reload",
     enableFastSwitching: true,
-    manualBitrateSwitchingMode: "direct",
     networkConfig: {
       manifestRetry: 4,
       manifestRequestTimeout: 30000,
