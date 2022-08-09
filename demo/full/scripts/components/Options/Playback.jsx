@@ -1,6 +1,5 @@
 import React, { Fragment } from "react";
 import Checkbox from "../CheckBox";
-import Select from "../Select";
 
 /**
  * @param {Object} props
@@ -9,8 +8,6 @@ import Select from "../Select";
 function TrackSwitch({
   onAutoPlayClick,
   autoPlay,
-  onManualBrSwitchingModeChange,
-  manualBrSwitchingMode,
 }) {
   return (
     <Fragment>
@@ -24,17 +21,6 @@ function TrackSwitch({
         >
           Auto Play
         </Checkbox>
-      </li>
-      <li className="featureWrapperWithSelectMode">
-        <Select
-          className="playerOptionInput"
-          name="manualBitrateSwitchingMode"
-          onChange={({ value }) => onManualBrSwitchingModeChange(value)}
-          selected={{ value: manualBrSwitchingMode }}
-          options={["seamless", "direct"]}
-        >
-          Manual bitrate switching mode
-        </Select>
       </li>
     </Fragment>
   );

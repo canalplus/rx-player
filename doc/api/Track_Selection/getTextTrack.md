@@ -3,7 +3,7 @@
 ## Description
 
 Get information about the text track currently set.
-`null` if no audio track is enabled right now.
+`null` if no text track is enabled right now.
 
 If a text track is set and information about it is known, this method will
 return an object with the following properties:
@@ -34,13 +34,16 @@ return an object with the following properties:
 `undefined` if no text content has been loaded yet or if its information is
 unknown.
 
-<div class="note">
-Note for multi-Period contents:
-<br>
-This method will only return the chosen video track for the
-<a href="../../Getting_Started/Glossary.md#period">Period</a> that is currently
-playing.
-</div>
+You can also get the information on the chosen text track for another Period by
+calling `getTextTrack` with the corresponding Period's id in argument. Such id
+can be obtained through the `getAvailablePeriods` method, the
+`newAvailablePeriods` event or the `periodChange` event.
+
+```js
+// example: getting track information for the first Period
+const periods = rxPlayer.getAvailablePeriods();
+console.log(rxPlayer.getTextTrack(periods[0].id);
+```
 
 <div class="warning">
 In <i>DirectFile</i> mode (see <a
@@ -51,7 +54,18 @@ text tracks API in the browser, this method returns "undefined".
 ## Syntax
 
 ```js
+// Get information about the currently-playing text track
 const textTrack = player.getTextTrack();
+
+// Get information about the text track for a specific Period
+const textTrack = player.getTextTrack(periodId);
 ```
+
+ - **arguments**:
+
+   1. _periodId_ `string|undefined`: The `id` of the Period for which you want
+      to get information about its current text track.
+      If not defined, the information associated to the currently-playing Period
+      will be returned.
 
  - **return value** `Object|null|undefined`

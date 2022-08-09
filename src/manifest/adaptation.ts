@@ -16,19 +16,16 @@
 
 import { IParsedAdaptation } from "../parsers/manifest";
 import {
-  IAdaptationType,
+  ITrackType,
   IRepresentationFilter,
 } from "../public_types";
 import arrayFind from "../utils/array_find";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import normalizeLanguage from "../utils/languages";
-import uniq from "../utils/uniq";
 import Representation from "./representation";
 
 /** List in an array every possible value for the Adaptation's `type` property. */
-export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] = [ "audio",
-                                                               "video",
-                                                               "text" ];
+export const SUPPORTED_ADAPTATIONS_TYPE: ITrackType[] = ["audio", "video", "text"];
 
 /**
  * Normalized Adaptation structure.
@@ -49,7 +46,7 @@ export default class Adaptation {
   public readonly representations : Representation[];
 
   /** Type of this Adaptation. */
-  public readonly type : IAdaptationType;
+  public readonly type : ITrackType;
 
   /** Whether this track contains an audio description for the visually impaired. */
   public isAudioDescription? : boolean;
@@ -141,7 +138,13 @@ export default class Adaptation {
                                                 { type: this.type });
       const shouldAdd =
         isNullOrUndefined(representationFilter) ||
-        representationFilter(representation,
+        representationFilter({ id: representation.id,
+                               bitrate: representation.bitrate,
+                               codec: representation.codec,
+                               height: representation.height,
+                               width: representation.width,
+                               frameRate: representation.frameRate,
+                               hdrInfo: representation.hdrInfo },
                              { bufferType: this.type,
                                language: this.language,
                                normalizedLanguage: this.normalizedLanguage,
@@ -166,29 +169,12 @@ export default class Adaptation {
   }
 
   /**
-   * Returns unique bitrate for every Representation in this Adaptation.
-   * @returns {Array.<Number>}
-   */
-  getAvailableBitrates() : number[] {
-    const bitrates : number[] = [];
-    for (let i = 0; i < this.representations.length; i ++) {
-      const representation = this.representations[i];
-      if (representation.decipherable !== false) {
-        bitrates.push(representation.bitrate);
-      }
-    }
-    return uniq(bitrates);
-  }
-
-  /**
    * Returns all Representation in this Adaptation that can be played (that is:
    * not undecipherable and with a supported codec).
    * @returns {Array.<Representation>}
    */
   getPlayableRepresentations() : Representation[] {
-    return this.representations.filter(rep => {
-      return rep.isSupported && rep.decipherable !== false;
-    });
+    return this.representations.filter(rep => rep.isPlayable());
   }
 
   /**
