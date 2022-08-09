@@ -263,6 +263,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     /** TaskCanceller triggered when it's time to stop the current content. */
     currentContentCanceller : TaskCanceller;
 
+    /** The default behavior to adopt when switching the audio track. */
+    defaultAudioTrackSwitchingMode : IAudioTrackSwitchingMode | undefined;
+
     /**
      * `true` if the current content is in DirectFile mode.
      * `false` is the current content has a transport protocol (Smooth/DASH...).
@@ -588,6 +591,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_initializeContentPlayback(options : IParsedLoadVideoOptions) : void {
     const { autoPlay,
+            defaultAudioTrackSwitchingMode,
             enableFastSwitching,
             initialManifest,
             keySystems,
@@ -622,6 +626,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     /** Future `this._priv_contentInfos` related to this content. */
     const contentInfos = { url,
+                           defaultAudioTrackSwitchingMode,
                            currentContentCanceller,
                            isDirectFile,
                            segmentBuffersStore: null,
@@ -2247,6 +2252,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_tracksStore = new TracksStore({
       preferTrickModeTracks: this._priv_preferTrickModeTracks,
+      defaultAudioTrackSwitchingMode: contentInfos.defaultAudioTrackSwitchingMode,
     });
     this._priv_tracksStore.addEventListener("newAvailablePeriods", (p) => {
       this.trigger("newAvailablePeriods", p);
