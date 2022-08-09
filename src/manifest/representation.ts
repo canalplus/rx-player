@@ -21,7 +21,7 @@ import {
   IParsedRepresentation,
 } from "../parsers/manifest";
 import {
-  IAdaptationType,
+  ITrackType,
   IHDRInformation,
 } from "../public_types";
 import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
@@ -100,7 +100,7 @@ class Representation {
   /**
    * @param {Object} args
    */
-  constructor(args : IParsedRepresentation, opts : { type : IAdaptationType }) {
+  constructor(args : IParsedRepresentation, opts : { type : ITrackType }) {
     this.id = args.id;
     this.bitrate = args.bitrate;
     this.codec = args.codecs;
@@ -312,6 +312,15 @@ class Representation {
     this.contentProtections.initData.push({ type: initDataType,
                                             values: data });
     return true;
+  }
+
+  /**
+   * Returns `true` if this Representation can be played (that is: not
+   * undecipherable and with a supported codec).
+   * @returns {Array.<Representation>}
+   */
+  public isPlayable() : boolean {
+    return this.isSupported && this.decipherable !== false;
   }
 }
 

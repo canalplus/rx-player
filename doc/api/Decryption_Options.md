@@ -157,9 +157,9 @@ relative to that failure:
     `NO_PLAYABLE_REPRESENTATION` code, as documented [in the errors
     documentation](./Player_Errors.md#types-media_error).
 
-    You will receive a `decipherabilityUpdate` event when we fallback from
-    a given Representation. You can find documentation on this event [in
-    the corresponding chapter of the events
+    You will receive a `decipherabilityUpdate` event when the RxPlayer
+    fallbacks from any Representation. You can find documentation on this
+    event [in the corresponding chapter of the events
     documentation](../api/Player_Events.md#decipherabilityupdate).
 
     This option is thus only useful for contents depending on multiple
@@ -278,9 +278,9 @@ This object can have the following properties:
 For most cases where you want to fallback in case of a refused key, we
 recommend setting both properties to `true`.
 
-You will receive a `decipherabilityUpdate` event when we fallback from
-a given Representation. You can find documentation on this event
-[in the corresponding chapter of the events
+You will receive a `decipherabilityUpdate` event when the RxPlayer
+fallbacks from any Representation. You can find documentation on this
+event [in the corresponding chapter of the events
 documentation](../api/Player_Events.md#decipherabilityupdate).
 
 When fallbacking, we might need to reload the current MediaSource, leading

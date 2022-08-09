@@ -19,7 +19,7 @@ import {
   Period,
   SUPPORTED_ADAPTATIONS_TYPE,
 } from "../../../../manifest";
-import { IAdaptationType } from "../../../../public_types";
+import { ITrackType } from "../../../../public_types";
 import arrayFind from "../../../../utils/array_find";
 import arrayFindIndex from "../../../../utils/array_find_index";
 import arrayIncludes from "../../../../utils/array_includes";
@@ -240,7 +240,7 @@ export default function parseAdaptationSets(
   context : IAdaptationSetContext
 ): IParsedAdaptations {
   const parsedAdaptations : Record<
-    IAdaptationType,
+    ITrackType,
     Array<[ IParsedAdaptation,
             IAdaptationSetOrderingData ]>
   > = { video: [],
@@ -308,7 +308,6 @@ export default function parseAdaptationSets(
     }
 
     const reprCtxt : IRepresentationContext = {
-      aggressiveMode: context.aggressiveMode,
       availabilityTimeComplete,
       availabilityTimeOffset,
       baseURLs: resolveBaseURLs(context.baseURLs, adaptationChildren.baseURLs),
@@ -489,7 +488,7 @@ export default function parseAdaptationSets(
   }
 
   const adaptationsPerType = SUPPORTED_ADAPTATIONS_TYPE
-    .reduce((acc : IParsedAdaptations, adaptationType : IAdaptationType) => {
+    .reduce((acc : IParsedAdaptations, adaptationType : ITrackType) => {
       const adaptationsParsedForType = parsedAdaptations[adaptationType];
       if (adaptationsParsedForType.length > 0) {
         adaptationsParsedForType.sort(compareAdaptations);

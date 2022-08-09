@@ -111,18 +111,6 @@ describe("initial idle state", () => {
       });
     });
 
-    describe("getAvailableVideoBitrates", () => {
-      it("should return [] in getAvailableVideoBitrates by default", () => {
-        expect(player.getAvailableVideoBitrates()).to.eql([]);
-      });
-    });
-
-    describe("getAvailableAudioBitrates", () => {
-      it("should return [] in getAvailableAudioBitrates by default", () => {
-        expect(player.getAvailableAudioBitrates()).to.eql([]);
-      });
-    });
-
     describe("getVideoBitrate", () => {
       it("should return undefined in getVideoBitrate by default", () => {
         expect(player.getVideoBitrate()).to.equal(undefined);
@@ -539,48 +527,6 @@ describe("initial idle state", () => {
       });
     });
 
-    describe("setAudioBitrate/getManualAudioBitrate", () => {
-      it("should have a -1 manual audio bitrate by default", () => {
-        expect(player.getManualAudioBitrate()).to.equal(-1);
-      });
-
-      it("should update manual audio bitrate when calling setAudioBitrate", () => {
-        const oldManual = player.getManualAudioBitrate();
-
-        player.setAudioBitrate(84);
-        expect(player.getManualAudioBitrate()).to.equal(84);
-        player.setAudioBitrate(-1);
-        expect(player.getManualAudioBitrate()).to.equal(-1);
-        player.setAudioBitrate(0);
-        expect(player.getManualAudioBitrate()).to.equal(0);
-
-        player.setAudioBitrate(oldManual);
-        expect(player.getManualAudioBitrate()).to.equal(oldManual);
-      });
-    });
-
-    describe("setVideoBitrate/getManualVideoBitrate", () => {
-      it("should have a -1 manual video bitrate by default", () => {
-        expect(player.getManualVideoBitrate()).to.equal(-1);
-      });
-
-      it("should update manual video bitrate when calling setVideoBitrate", () => {
-        const oldManual = player.getManualVideoBitrate();
-
-        player.setVideoBitrate(84);
-        expect(player.getManualVideoBitrate()).to.equal(84);
-
-        player.setVideoBitrate(-1);
-        expect(player.getManualVideoBitrate()).to.equal(-1);
-
-        player.setVideoBitrate(0);
-        expect(player.getManualVideoBitrate()).to.equal(0);
-
-        player.setVideoBitrate(oldManual);
-        expect(player.getManualVideoBitrate()).to.equal(oldManual);
-      });
-    });
-
     describe("getMaxBufferBehind/setMaxBufferBehind", () => {
       it("should update the max buffer behind through setMaxBufferBehind by default", () => {
         expect(player.setMaxBufferBehind(50)).to.equal(undefined);
@@ -672,54 +618,6 @@ describe("initial idle state", () => {
       it("should disable text tracks in disableTextTrack by default", () => {
         expect(player.disableTextTrack()).to.equal(undefined);
         expect(player.getTextTrack()).to.equal(undefined);
-      });
-    });
-
-    describe("getPreferredAudioTracks", () => {
-      it("should return an empty array through getPreferredAudioTracks by default", () => {
-        expect(player.getPreferredAudioTracks()).to.eql([]);
-      });
-    });
-
-    describe("getPreferredTextTracks", () => {
-      it("should return an empty array through getPreferredTextTracks by default", () => {
-        expect(player.getPreferredTextTracks()).to.eql([]);
-      });
-    });
-
-    describe("setPreferredAudioTracks", () => {
-      it("should allow setting preferred audio tracks by default", () => {
-        expect(player.getPreferredAudioTracks()).to.eql([]);
-        player.setPreferredAudioTracks(["fr", "en"]);
-        expect(player.getPreferredAudioTracks()).to.eql(["fr", "en"]);
-        player.setPreferredAudioTracks([
-          { language: "it", audioDescription: true },
-          { language: "pt", audioDescription: false },
-          { language: "pt", audioDescription: true },
-        ]);
-        expect(player.getPreferredAudioTracks()).to.eql([
-          { language: "it", audioDescription: true },
-          { language: "pt", audioDescription: false },
-          { language: "pt", audioDescription: true },
-        ]);
-      });
-    });
-
-    describe("setPreferredTextTracks", () => {
-      it("should return an empty array through getPreferredTextTracks by default", () => {
-        expect(player.getPreferredTextTracks()).to.eql([]);
-        player.setPreferredTextTracks(["fr", "en"]);
-        expect(player.getPreferredTextTracks()).to.eql(["fr", "en"]);
-        player.setPreferredTextTracks([
-          { language: "it", closedCaption: true },
-          { language: "pt", closedCaption: false },
-          { language: "pt", closedCaption: true },
-        ]);
-        expect(player.getPreferredTextTracks()).to.eql([
-          { language: "it", closedCaption: true },
-          { language: "pt", closedCaption: false },
-          { language: "pt", closedCaption: true },
-        ]);
       });
     });
 

@@ -48,10 +48,6 @@ export interface IConstructorOptions {
   limitVideoWidth? : boolean;
   throttleVideoBitrateWhenHidden? : boolean;
 
-  preferredAudioTracks? : IAudioTrackPreference[];
-  preferredTextTracks? : ITextTrackPreference[];
-  preferredVideoTracks? : IVideoTrackPreference[];
-
   videoElement? : HTMLMediaElement;
   initialVideoBitrate? : number;
   initialAudioBitrate? : number;
@@ -74,32 +70,12 @@ export interface ILoadVideoOptions {
   startAt? : IStartAtOption;
   textTrackMode? : "native"|"html";
   textTrackElement? : HTMLElement;
-  manualBitrateSwitchingMode? : "seamless"|"direct";
   enableFastSwitching? : boolean;
-  audioTrackSwitchingMode? : IAudioTrackSwitchingMode;
   onCodecSwitch? : "continue"|"reload";
 }
 
-/**
- * Strategy to adopt when manually switching of audio adaptation.
- * Can be either:
- *    - "seamless": transitions are smooth but could be not immediate.
- *    - "direct": strategy will be "smart", if the mimetype and the codec,
- *    change, we will perform a hard reload of the media source, however, if it
- *    doesn't change, we will just perform a small flush by removing buffered range
- *    and performing, a small seek on the media element.
- *    Transitions are faster, but, we could see appear a BUFFERING state.
- *    - "reload": completely reload the content. This allows a direct switch
- *    compatible with most device but may necessitate a RELOADING phase.
- */
-export type IAudioTrackSwitchingMode = "seamless" |
-                                       "direct" |
-                                       "reload";
-
 /** Value of the `transportOptions` option of the `loadVideo` method. */
 export interface ITransportOptions {
-  /** Whether we can perform request for segments in advance. */
-  aggressiveMode? : boolean;
   /**
    * Whether we should check that an obtain segment is truncated and retry the
    * request if that's the case.
@@ -143,42 +119,16 @@ export type IInitialManifest = Document |
                                Manifest;
 
 /** Type for the `representationFilter` API. */
-export type IRepresentationFilter = (representation: IRepresentation,
-                                     adaptationInfos: IRepresentationInfos) => boolean;
+export type IRepresentationFilter = (representation: IRepresentationFilterRepresentation,
+                                     context: IRepresentationContext) => boolean;
 
-interface IRepresentationIndex {
-  getSegments(up : number, duration : number) : IExposedSegment[];
-}
-
-/** Segment, as documented in the API documentation. */
-export interface IExposedSegment {
-  id : string;
-  timescale : number;
-  duration? : number | undefined;
-  time : number;
-  isInit? : boolean | undefined;
-  range? : number[] | null | undefined;
-  indexRange? : number[] | null | undefined;
-  number? : number | undefined;
-}
-
-/** Representation (represents a quality), as documented in the API documentation. */
-export interface IRepresentation {
+/** Representation object given to the `representationFilter` API. */
+export interface IRepresentationFilterRepresentation {
   /** String identifying the Representation, unique per Adaptation. */
   id : string;
   bitrate? : number | undefined;
-  /** Codec used by the segment in that Representation. */
+  /** Codec used by the media segments of that Representation. */
   codec? : string | undefined;
-  /**
-   * Whether we are able to decrypt this Representation / unable to decrypt it or
-   * if we don't know yet:
-   *   - if `true`, it means that we know we were able to decrypt this
-   *     Representation in the current content.
-   *   - if `false`, it means that we know we were unable to decrypt this
-   *     Representation
-   *   - if `undefined` there is no certainty on this matter
-   */
-  decipherable? : boolean | undefined;
   /**
    * This property makes the most sense for video Representations.
    * It defines the height of the video, in pixels.
@@ -192,8 +142,7 @@ export interface IRepresentation {
   /** The frame rate for this Representation, in frame per seconds. */
   frameRate? : number | undefined;
   /** If the track is HDR, gives the HDR characteristics of the content */
-  hdrInfo? : IHDRInformation;
-  index : IRepresentationIndex;
+  hdrInfo? : IHDRInformation | undefined;
 }
 
 export interface IHDRInformation {
@@ -351,11 +300,11 @@ export interface ISegmentLoaderContext {
    */
   range? : [number, number] | undefined;
   /** Type of the corresponding track. */
-  type : IAdaptationType;
+  type : ITrackType;
 }
 
 /** Every possible value for the Adaptation's `type` property. */
-export type IAdaptationType = "video" | "audio" | "text";
+export type ITrackType = "video" | "audio" | "text";
 
 export type ILoadedManifestFormat = IInitialManifest;
 
@@ -516,29 +465,6 @@ export interface IPersistentSessionStorage {
   disableRetroCompatibility? : boolean;
 }
 
-/** Single preference for an audio track Adaptation. */
-export type IAudioTrackPreference = null |
-                                    { language? : string;
-                                      audioDescription? : boolean;
-                                      codec? : { all: boolean;
-                                                 test: RegExp; }; };
-
-/** Single preference for a text track Adaptation. */
-export type ITextTrackPreference = null |
-                                   { language : string;
-                                     closedCaption : boolean; };
-
-/** Single preference for a video track Adaptation. */
-export type IVideoTrackPreference = null |
-                                    IVideoTrackPreferenceObject;
-
-/** Preference for a video track Adaptation for when it is not set to `null`. */
-interface IVideoTrackPreferenceObject {
-  codec? : { all: boolean;
-             test: RegExp; };
-  signInterpreted? : boolean;
-}
-
 /** Payload emitted with a `bitrateEstimationChange` event. */
 export interface IBitrateEstimate {
   /** The type of buffer this estimate was done for (e.g. "audio). */
@@ -547,14 +473,17 @@ export interface IBitrateEstimate {
   bitrate : number | undefined;
 }
 
+// XXX TODO wouldn't it be more pertinent to directly give more Representation
+// and track information here?
 export interface IDecipherabilityUpdateContent {
-  periodStart : number;
-  periodEnd? : number | undefined;
   trackType : IBufferType;
   trackId : string;
   representationId : string;
   isDecipherable? : boolean | undefined;
+  periodInfo : IDecipherabilityUpdatePeriodInfo;
 }
+
+export type IDecipherabilityUpdatePeriodInfo = IPeriod;
 
 /** Payload emitted with a `positionUpdate` event. */
 export interface IPositionUpdate {
@@ -588,6 +517,7 @@ export type IPlayerState = "STOPPED" |
 
 export interface IPeriodChangeEvent {
   start : number;
+  id : string;
   end? : number | undefined;
 }
 
@@ -614,57 +544,90 @@ export type IPlayerError = EncryptedMediaError |
  * Information describing a single Representation from an Adaptation, to be used
  * in the `representationFilter` API.
  */
-export interface IRepresentationInfos { bufferType: string;
-                                        language?: string | undefined;
-                                        isAudioDescription? : boolean | undefined;
-                                        isClosedCaption? : boolean | undefined;
-                                        isDub? : boolean | undefined;
-                                        isSignInterpreted?: boolean | undefined;
-                                        normalizedLanguage? : string | undefined; }
+export interface IRepresentationContext { bufferType: string;
+                                          language?: string | undefined;
+                                          isAudioDescription? : boolean | undefined;
+                                          isClosedCaption? : boolean | undefined;
+                                          isDub? : boolean | undefined;
+                                          isSignInterpreted?: boolean | undefined;
+                                          normalizedLanguage? : string | undefined; }
 
 /**
  * Definition of a single audio Representation as represented by the
  * RxPlayer.
  */
-export interface IAudioRepresentation { id : string|number;
-                                        bitrate? : number | undefined;
-                                        codec? : string | undefined; }
+export interface IAudioRepresentation {
+  id : string|number;
+  bitrate? : number | undefined;
+  codec? : string | undefined;
+}
 
 /** Audio track returned by the RxPlayer. */
-export interface IAudioTrack { language : string;
-                               normalized : string;
-                               audioDescription : boolean;
-                               dub? : boolean;
-                               id : number|string;
-                               label? : string | undefined;
-                               representations: IAudioRepresentation[]; }
+export interface IAudioTrack {
+  /** The language the audio track is in, as it is named in the Manifest. */
+  language : string;
+  /**
+   * An attempt to translate `language` into a valid ISO639-3 language code.
+   * Kept equal to `language` if the attempt failed.
+   */
+  normalized : string;
+  audioDescription : boolean;
+  dub? : boolean | undefined;
+  id : string;
+  label? : string | undefined;
+  representations: IAudioRepresentation[];
+}
 
 /** Text track returned by the RxPlayer. */
-export interface ITextTrack { language : string;
-                              normalized : string;
-                              closedCaption : boolean;
-                              label? : string | undefined;
-                              id : number|string; }
+export interface ITextTrack {
+  /** The language the text track is in, as it is named in the Manifest. */
+  language : string;
+  /**
+   * An attempt to translate `language` into a valid ISO639-3 language code.
+   * Kept equal to `language` if the attempt failed.
+   */
+  normalized : string;
+  closedCaption : boolean;
+  label? : string | undefined;
+  id : number|string;
+}
 
 /**
  * Definition of a single video Representation as represented by the
  * RxPlayer.
  */
-export interface IVideoRepresentation { id : string|number;
-                                        bitrate? : number | undefined;
-                                        width? : number | undefined;
-                                        height? : number | undefined;
-                                        codec? : string | undefined;
-                                        frameRate? : number | undefined;
-                                        hdrInfo?: IHDRInformation | undefined; }
+export interface IVideoRepresentation {
+  id : string;
+  bitrate? : number | undefined;
+  width? : number | undefined;
+  height? : number | undefined;
+  codec? : string | undefined;
+  frameRate? : number | undefined;
+  hdrInfo?: IHDRInformation | undefined;
+}
 
 /** Video track returned by the RxPlayer. */
-export interface IVideoTrack { id : number|string;
-                               signInterpreted?: boolean;
-                               isTrickModeTrack?: boolean;
-                               trickModeTracks?: IVideoTrack[];
-                               label? : string | undefined;
-                               representations: IVideoRepresentation[]; }
+export interface IVideoTrack {
+  id : string;
+  signInterpreted?: boolean | undefined;
+  isTrickModeTrack?: boolean | undefined;
+  trickModeTracks?: IVideoTrack[] | undefined;
+  label? : string | undefined;
+  representations: IVideoRepresentation[];
+}
+
+/** Period from a list of Periods as returned by the RxPlayer. */
+export interface IPeriod {
+  /** Start time in seconds at which the Period starts. */
+  start : number;
+  /**
+   * End time in seconds at which the Period ends.
+   * `undefined` if that end is unknown for now.
+   */
+  end : number | undefined;
+  /** Identifier for this Period allowing to perform track modification for it. */
+  id : string;
+}
 
 /** Audio track from a list of audio tracks returned by the RxPlayer. */
 export interface IAvailableAudioTrack
@@ -677,3 +640,155 @@ export interface IAvailableTextTrack
 /** Video track from a list of video tracks returned by the RxPlayer. */
 export interface IAvailableVideoTrack
   extends IVideoTrack { active : boolean }
+
+/**
+ * Behavior wanted when replacing an audio track / Adaptation by another:
+ *
+ *   - direct: Switch audio track immediately by removing all the previous
+ *     track's data.
+ *
+ *     This might interrupt playback while data for any of the new
+ *     track wanted is loaded.
+ *
+ *   - seamless: Switch audio track without interrupting playback by still
+ *     keeping data from the previous track around the current
+ *     position.
+ *
+ *     This could have the disadvantage of still playing the previous
+ *     track during a short time (not more than a few seconds in
+ *     most cases).
+ *
+ *   - reload: Reload content to provide an immediate interruption of the
+ *     previous audio track before switching to the new one.
+ *
+ *     Some targets might not handle "direct" mode properly. The "reload"
+ *     mode is kind of a more compatible attempt of immediately switching the
+ *     audio track.
+ */
+export type IAudioTrackSwitchingMode = "direct" |
+                                       "seamless" |
+                                       "reload";
+
+/**
+ * Behavior wanted when replacing a video track / Adaptation by another:
+ *
+ *   - direct: Switch video track immediately by removing all the previous
+ *     track's data.
+ *
+ *     This might interrupt playback while data for any of the new
+ *     track wanted is loaded.
+ *     Moreover, the previous video frame at the time of the switch will
+ *     probably still be on display while this is happening. If this is
+ *     not something you want, you might prefer the "reload" mode.
+ *
+ *   - seamless: Switch video track without interrupting playback by still
+ *     keeping data from the previous track around the current
+ *     position.
+ *     This could have the disadvantage of still playing the previous
+ *     track during a short time (not more than a few seconds in
+ *     most cases).
+ *
+ *   - reload: Reload content to provide an immediate interruption of the
+ *     previous video track before switching to the new one.
+ *
+ *     This can be seen like the "direct" mode with two differences:
+ *
+ *       - The "direct" mode might rebuffer for a time with the previous
+ *       frame displaying. With "reload" a black screen will probably be shown
+ *       instead.
+ *
+ *       - some targets might not handle "direct" mode properly. The "reload"
+ *       mode is kind of a more compatible attempt of immediately switching the
+ *       Adaptation.
+ */
+export type IVideoTrackSwitchingMode = "direct" |
+                                       "seamless" |
+                                       "reload";
+
+export type IVideoRepresentationsSwitchingMode = IRepresentationsSwitchingMode;
+export type IAudioRepresentationsSwitchingMode = IRepresentationsSwitchingMode;
+
+/**
+ * Behavior wanted when replacing active Representations by others:
+ *
+ *   - direct: Switch Representation immediately by removing all the previous
+ *     Representations's data.
+ *     This might interrupt playback while data for any of the new
+ *     Representations wanted is loaded.
+ *
+ *     If talking about video Representations, the previous video frame at the
+ *     time of the switch will probably still be on display while this is
+ *     happening.
+ *     If this is not something you want, you might prefer the "reload" mode.
+ *
+ *   - seamless: Switch Representation without interrupting playback by still
+ *     keeping data from the previous Representations around the current
+ *     position.
+ *     This could have the disadvantage of still playing the previous
+ *     Representations during a short time (not more than a few seconds in
+ *     most cases).
+ *
+ *   - reload: Reload `MediaSource` to provide an immediate interruption of the
+ *     previous interruption before switching to the new Representation.
+ *
+ *     This can be seen like the "direct" mode with two differences:
+ *
+ *       - in case of video contents, the "direct" mode might rebuffer for a
+ *       time with the previous frame displaying. With "reload" a black screen
+ *       will probably be shown instead.
+ *
+ *       - some targets might not handle "direct" mode properly. The "reload"
+ *       mode is kind of a more compatible attempt of immediately switching the
+ *       Representation.
+ *
+ *   - lazy: Keep data from the previous Representation in the buffer.
+ *     It still might eventually be replaced by Representation of a better
+ *     quality when depending on future playback condition.
+ */
+type IRepresentationsSwitchingMode = "direct" |
+                                     "seamless" |
+                                     "reload" |
+                                     "lazy";
+
+export interface IBrokenRepresentationsLockContext {
+  period : IPeriod;
+  trackType : ITrackType;
+}
+
+export interface IAutoTrackSwitchEventPayload {
+  period : IPeriod;
+  trackType : ITrackType;
+  reason : "missing" |
+           string;
+}
+
+export interface ILockedVideoRepresentationsSettings {
+  representations : string[];
+  periodId? : string | undefined;
+  switchingMode? : IVideoRepresentationsSwitchingMode | undefined;
+}
+
+export interface ILockedAudioRepresentationsSettings {
+  representations : string[];
+  periodId? : string | undefined;
+  switchingMode? : IAudioRepresentationsSwitchingMode | undefined;
+}
+
+export interface IAudioTrackSetting {
+  trackId : string;
+  periodId? : string | undefined;
+  switchingMode? : IAudioTrackSwitchingMode | undefined;
+  lockedRepresentations? : string[] | undefined;
+}
+
+export interface IVideoTrackSetting {
+  trackId : string;
+  periodId? : string | undefined;
+  switchingMode? : IVideoTrackSwitchingMode | undefined;
+  lockedRepresentations? : string[] | undefined;
+}
+
+export interface ITextTrackSetting {
+  trackId : string;
+  periodId? : string | undefined;
+}

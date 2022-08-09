@@ -56,7 +56,6 @@ import {
   SegmentFetcherCreator,
 } from "../fetchers";
 import { ITextTrackSegmentBufferOptions } from "../segment_buffers";
-import { IAudioTrackSwitchingMode } from "../stream";
 import openMediaSource from "./create_media_source";
 import EVENTS from "./events_generators";
 import getInitialTime, {
@@ -98,15 +97,11 @@ export interface IInitializeArguments {
     maxBufferAhead : IReadOnlySharedReference<number>;
     /** Max buffer size before the current position, in seconds (we GC further down). */
     maxBufferBehind : IReadOnlySharedReference<number>;
-    /** Strategy when switching the current bitrate manually (smooth vs reload). */
-    manualBitrateSwitchingMode : "seamless" | "direct";
     /**
      * Enable/Disable fastSwitching: allow to replace lower-quality segments by
      * higher-quality ones to have a faster transition.
      */
     enableFastSwitching : boolean;
-    /** Strategy when switching of audio track. */
-    audioTrackSwitchingMode : IAudioTrackSwitchingMode;
     /** Behavior when a new video and/or audio codec is encountered. */
     onCodecSwitch : "continue" | "reload";
   };
