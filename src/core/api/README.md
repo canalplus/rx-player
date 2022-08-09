@@ -53,14 +53,14 @@ To facilitate those actions, the API relies on multiple building blocks:
     Many RxPlayer modules rely on this PlaybackObserver.
 
 
-  - __the `TrackChoiceManager` (./track_choice_manager.ts)__
+  - __the `TracksStore` (./track_management/tracks_store.ts)__
 
     Ease up text/audio/video track switching to provide a simple-to-use API.
 
-    It as another sister block the `MediaElementTrackChoiceManager`
-    (./media_element_track_choice_manager.ts), has the same role but for
-    "directfile" contents - which are contents directly played by the browser
-    (by setting the media file as the `src` of a media element).
+    It as another sister block the `MediaElementTracksStore`
+    (./track_management/media_element_tracks_store.ts), has the same role but
+    for "directfile" contents - which are contents directly played by the
+    browser (by setting the media file as the `src` of a media element).
 
 
   - __the `option utils` (./option_utils.ts)__

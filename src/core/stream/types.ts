@@ -15,14 +15,21 @@
  */
 
 import { Subject } from "rxjs";
-import {
+import Manifest, {
   Adaptation,
   ISegment,
   Period,
   Representation,
 } from "../../manifest";
 import { IEMSG } from "../../parsers/containers/isobmff";
-import { IPlayerError } from "../../public_types";
+import {
+  IAudioTrackSwitchingMode,
+  IVideoTrackSwitchingMode,
+  IPlayerError,
+  IVideoRepresentationsSwitchingMode,
+  IAudioRepresentationsSwitchingMode,
+} from "../../public_types";
+import { IReadOnlySharedReference } from "../../utils/reference";
 import { IContentProtection } from "../decrypt";
 import { IBufferType } from "../segment_buffers";
 
@@ -89,7 +96,7 @@ export interface IStreamStatusEvent {
      * The presence or absence of a discontinuity can evolve during playback
      * (because new tracks or qualities might not have the same ones).
      * As such, it is advised to only consider the last discontinuity sent
-     * through a `"stream-status"` event.
+     * through a `IStreamStatusEvent` event.
      */
     imminentDiscontinuity : IBufferDiscontinuity | null;
     /**
@@ -167,8 +174,14 @@ export interface IInbandEvent {
   value: IEMSG;
 }
 
-export interface IInbandEventsEvent { type : "inband-events";
-                                      value : IInbandEvent[]; }
+/**
+ * "Inband" (inside the media or initialization segment) event(s) have been
+ * encountered.
+ */
+export interface IInbandEventsEvent {
+  type : "inband-events";
+  value : IInbandEvent[];
+}
 
 /**
  * Event sent when a `RepresentationStream` is terminating:
@@ -259,6 +272,8 @@ export interface IPeriodStreamReadyEvent {
   value : {
     /** The type of buffer linked to the `PeriodStream` we want to create. */
     type : IBufferType;
+    /** The `Manifest` linked to the `PeriodStream` we have created. */
+    manifest : Manifest;
     /** The `Period` linked to the `PeriodStream` we have created. */
     period : Period;
     /**
@@ -268,11 +283,41 @@ export interface IPeriodStreamReadyEvent {
      * The `PeriodStream` will not do anything until this subject has emitted
      * at least one to give its initial choice.
      * You can send `null` through it to tell this `PeriodStream` that you don't
-     * want any `Adaptation`.
+     * want any `Adaptation` for now.
      */
-    adaptation$ : Subject<Adaptation|null>;
+    adaptation$ : Subject<IAdaptationChoice | null>;
   };
 }
+
+/** Object indicating a choice of Adaptation made by the user. */
+export interface IAdaptationChoice {
+  /** The Adaptation choosen. */
+  adaptation : Adaptation;
+
+  /** "Switching mode" in which the track switch should happen. */
+  switchingMode : ITrackSwitchingMode;
+
+  /**
+   * Shared reference allowing to indicate which Representations from
+   * that Adaptation are allowed.
+   */
+  representations : IReadOnlySharedReference<IRepresentationsChoice>;
+}
+
+/** Object indicating a choice of allowed Representations made by the user. */
+export interface IRepresentationsChoice {
+  /** `Representation`s wanted by the user. */
+  representations : Representation[];
+  /**
+   * How the Streams should react if another, not currently authorized,
+   * Representation was previously playing.
+   */
+  switchingMode : IVideoRepresentationsSwitchingMode |
+                  IAudioRepresentationsSwitchingMode;
+}
+
+export type ITrackSwitchingMode = IAudioTrackSwitchingMode |
+                                  IVideoTrackSwitchingMode;
 
 /**
  * A `PeriodStream` has been removed.
@@ -290,6 +335,7 @@ export interface IPeriodStreamClearedEvent {
      * about which `PeriodStream` has been removed.
      */
     type : IBufferType;
+    manifest : Manifest;
     /**
      * The `Period` linked to the `PeriodStream` we just removed.
      *
@@ -465,7 +511,6 @@ export type IAdaptationStreamEvent = IBitrateEstimationChangeEvent |
                                      // From a RepresentationStream
 
                                      IStreamStatusEvent |
-                                     IStreamEventAddedSegment<unknown> |
                                      IEncryptionDataEncounteredEvent |
                                      IStreamManifestMightBeOutOfSync |
                                      IStreamNeedsManifestRefresh |
@@ -488,7 +533,6 @@ export type IPeriodStreamEvent = IPeriodStreamReadyEvent |
                                  // From a RepresentationStream
 
                                  IStreamStatusEvent |
-                                 IStreamEventAddedSegment<unknown> |
                                  IEncryptionDataEncounteredEvent |
                                  IStreamManifestMightBeOutOfSync |
                                  IStreamNeedsManifestRefresh |
@@ -516,7 +560,6 @@ export type IMultiplePeriodStreamsEvent = IPeriodStreamClearedEvent |
                                           // From a RepresentationStream
 
                                           IStreamStatusEvent |
-                                          IStreamEventAddedSegment<unknown> |
                                           IEncryptionDataEncounteredEvent |
                                           IStreamManifestMightBeOutOfSync |
                                           IStreamNeedsManifestRefresh |
@@ -548,7 +591,6 @@ export type IStreamOrchestratorEvent = IActivePeriodChangedEvent |
                                        // From a RepresentationStream
 
                                        IStreamStatusEvent |
-                                       IStreamEventAddedSegment<unknown> |
                                        IEncryptionDataEncounteredEvent |
                                        IStreamManifestMightBeOutOfSync |
                                        IStreamNeedsManifestRefresh |

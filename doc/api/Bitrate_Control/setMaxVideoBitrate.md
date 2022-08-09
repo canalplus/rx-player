@@ -1,35 +1,35 @@
-# setMaxAudioBitrate
+# setMaxVideoBitrate
 
 ## Description
 
-Set a maximum audio bitrate reachable through adaptive streaming.
+Set a maximum video bitrate reachable through adaptive streaming.
 
-When the bitrate is chosen through adaptive streaming (i.e., not enforced
-manually through APIs such as `setAudioBitrate`), the player will never switch
-to an audio quality with a bitrate higher than that value.
+When the quality is chosen through adaptive streaming (i.e., not enforced
+manually through APIs such as `lockVideoRepresentations`), the player will never
+switch to a video quality with a bitrate higher than that value.
 
 The exception being when no quality has a lower bitrate, in which case the
 minimum quality will always be chosen instead.
 
-For example, if you want that audio qualities chosen automatically never have
+For example, if you want that video qualities chosen automatically never have
 a bitrate higher than 1 Megabits per second you can call:
 
 ```js
-player.setMaxAudioBitrate(1e6);
+player.setMaxVideoBitrate(1e6);
 ```
 
 Any limit can be removed just by setting that value to `Infinity`:
 
 ```js
-// remove audio bitrate higher limit
-player.setMaxAudioBitrate(Infinity);
+// remove video bitrate higher limit
+player.setMaxVideoBitrate(Infinity);
 ```
 
 The effect of this method is persisted from content to content. As such, it can
 even be called when no content is currently loaded.
 
 Note that this only affects adaptive strategies. Forcing the bitrate manually
-(for example by calling `setAudioBitrate`) bypass this limit completely.
+(by calling `lockVideoRepresentations`) bypasses this limit completely.
 
 <div class="warning">
 In <i>DirectFile</i> mode (see <a
@@ -40,10 +40,10 @@ this method has no effect.
 ## Syntax
 
 ```js
-player.setMaxAudioBitrate(maxBitrate);
+player.setMaxVideoBitrate(maxBitrate);
 ```
 
   - **arguments**:
 
-    1. _maxBitrate_ `number`: Upper audio bitrate limit when adaptive streaming
+    1. _maxBitrate_ `number`: Upper video bitrate limit when adaptive streaming
        is enabled.

@@ -132,22 +132,6 @@ describe("API - Public API", () => {
       });
     });
 
-    describe("getAvailableVideoBitrates", () => {
-      it("should return [] in getAvailableVideoBitrates by default", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getAvailableVideoBitrates()).toEqual([]);
-      });
-    });
-
-    describe("getAvailableAudioBitrates", () => {
-      it("should return [] in getAvailableAudioBitrates by default", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getAvailableAudioBitrates()).toEqual([]);
-      });
-    });
-
     describe("getVideoBitrate", () => {
       it("should return undefined in getVideoBitrate by default", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
@@ -352,56 +336,6 @@ describe("API - Public API", () => {
         expect(player.isMute()).toBe(false);
 
         player.setVolume(oldVolume);
-      });
-    });
-
-    describe("setAudioBitrate/getManualAudioBitrate", () => {
-      it("should have a -1 manual audio bitrate by default", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getManualAudioBitrate()).toBe(-1);
-      });
-
-      it("should update manual audio bitrate when calling setAudioBitrate", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        const oldManual = player.getManualAudioBitrate();
-
-        player.setAudioBitrate(84);
-        expect(player.getManualAudioBitrate()).toBe(84);
-        player.setAudioBitrate(-1);
-        expect(player.getManualAudioBitrate()).toBe(-1);
-        player.setAudioBitrate(0);
-        expect(player.getManualAudioBitrate()).toBe(0);
-
-        player.setAudioBitrate(oldManual);
-        expect(player.getManualAudioBitrate()).toBe(oldManual);
-      });
-    });
-
-    describe("setVideoBitrate/getManualVideoBitrate", () => {
-      it("should have a -1 manual video bitrate by default", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getManualVideoBitrate()).toBe(-1);
-      });
-
-      it("should update manual video bitrate when calling setVideoBitrate", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        const oldManual = player.getManualVideoBitrate();
-
-        player.setVideoBitrate(84);
-        expect(player.getManualVideoBitrate()).toBe(84);
-
-        player.setVideoBitrate(-1);
-        expect(player.getManualVideoBitrate()).toBe(-1);
-
-        player.setVideoBitrate(0);
-        expect(player.getManualVideoBitrate()).toBe(0);
-
-        player.setVideoBitrate(oldManual);
-        expect(player.getManualVideoBitrate()).toBe(oldManual);
       });
     });
 

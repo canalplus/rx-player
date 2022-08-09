@@ -16,7 +16,7 @@
 
 import { Observable } from "rxjs";
 // eslint-disable-next-line max-len
-import MediaElementTrackChoiceManager from "../core/api/media_element_track_choice_manager";
+import MediaElementTracksStore from "../core/api/track_management/media_element_tracks_store";
 import type ContentDecryptor from "../core/decrypt";
 import {
   IDirectfileEvent,
@@ -46,7 +46,7 @@ export type IHTMLTextTracksBuffer =
 export type INativeTextTracksBuffer =
   new(mediaElement : HTMLMediaElement) => SegmentBuffer;
 
-export type IMediaElementTrackChoiceManager = typeof MediaElementTrackChoiceManager;
+export type IMediaElementTracksStore = typeof MediaElementTracksStore;
 
 export type IDashJsParser = (
   document: Document,
@@ -57,7 +57,7 @@ export type IDashJsParser = (
 // accessed.
 export interface IFeaturesObject {
   directfile : { initDirectFile: IDirectFileInit;
-                 mediaElementTrackChoiceManager : IMediaElementTrackChoiceManager; } |
+                 mediaElementTracksStore : IMediaElementTracksStore; } |
                null;
   ContentDecryptor : IContentDecryptorClass|null;
   htmlTextTracksBuffer : IHTMLTextTracksBuffer|null;

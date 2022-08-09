@@ -531,32 +531,6 @@ considered stable:
   a complete explanation, you can look at the [corresponding chapter of the
   low-latency documentation](./Miscellaneous/Low_Latency.md#note-time-sync).
 
-- **aggressiveMode** (`boolean|undefined`):
-
-  If set to true, we will try to download segments very early, even if we are
-  not sure they had time to be completely generated.
-
-  For the moment, this mode has only an effect for all Smooth contents and
-  some DASH contents relying on a number-based SegmentTemplate segment
-  indexing scheme.
-
-  The upside is that you might have the last segments sooner.
-  The downside is that requests for segments which did not had time to
-  generate might trigger a `NetworkError`. Depending on your other settings
-  (especially the `networkConfig` loadVideo options), those errors might just
-  be sent as warnings and the corresponding requests be retried.
-
-  Example:
-
-  ```js
-  rxPlayer.loadVideo({
-    // ...
-    transportOptions: {
-      aggressiveMode: true,
-    },
-  });
-  ```
-
 - **referenceDateTime** (`number|undefined`):
 
   Only useful for live contents. This is the default amount of time, in
@@ -637,92 +611,6 @@ than the media element it applies to (this allows us to properly place the
 subtitles position without polling where the video is in your UI).
 You can however re-size or update the style of it as you wish, to better suit
 your UI needs.
-
-### audioTrackSwitchingMode
-
-_type_: `string`
-
-_defaults_: `"seamless"`
-
-<div class="warning">
-This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
-transport option</a>)
-</div>
-
-Behavior taken by the player when switching to a different audio track, through
-the `setAudioTrack` method.
-
-Those are the possible values for that option:
-
-- `"seamless"`: The transition between the old audio track and the new one
-  happens seamlessly, without interruption.
-  This is the default behavior.
-
-  As an inconvenient, you might have at worst a few seconds in the previous
-  audio track before the new one can be heard.
-
-- `"direct"`: The player will try to switch to the new audio track as soon
-  as possible, which might lead to a brief interruption and rebuffering period
-  (where the RxPlayer is in the `BUFFERING` state) while it is doing so.
-
-- `"reload"` The player will directly switch to the new audio track (like
-  direct) but may reload the media to do so.
-  During this reloading step, there might be a black screen instead of the
-  video and the RxPlayer might go into the `RELOADING` state temporarily.
-
-  Although it provides a more aggressive transition than the `"direct"` mode
-  (because it goes through a reloading step with a black screen), the
-  `"reload"` mode might be preferable in specific situations where `"direct"`
-  is seen to have compatibility issues.
-
-  We observed such issues with some contents and devices combinations, if you
-  observe issues such as losing the audio or video glitches just after changing
-  the audio track while the `"direct"` mode is used, you may want to use the
-  `"reload"` mode instead.
-
-  More information about the `"RELOADING"` state can be found in [the
-  player states documentation](./Player_States.md).
-
-### manualBitrateSwitchingMode
-
-_type_: `string`
-
-_defaults_: `"seamless"`
-
-<div class="warning">
-This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
-transport option</a>)
-</div>
-
-Strategy you want to adopt when updating "manually" the video and audio quality
-through respectively the `setVideoBitrate` and `setAudioBitrate` API while
-the content is playing.
-
-There is two possible values:
-
-- `"seamless"`: Manual quality updates will be only visible after a little
-  time. This gives the advantage of a very smooth "seamless" transition.
-
-  In this mode, you will have the following behavior:
-
-  - there will be no visual "cut" between the previous and new quality
-  - parts of the content with a better (or the same) quality won't be
-    replaced.
-  - parts of the content with a lower quality will be only replaced when the
-    better quality is downloaded.
-
-- `"direct"`: Manual quality updates will be visible more directly, but with
-  a complete reload of the current content. You might encounter a black screen
-  while the player go through the `"RELOADING"` state [1].
-
-  In this mode, you will have the following behavior:
-
-  - there will be a black screen between the previous and new quality
-  - the previous content will be entirely removed
-  - you will only have content with the new quality
-
-  [1] More information about the `"RELOADING"` state can be found in [the
-  player states documentation](./Player_States.md).
 
 ### onCodecSwitch
 

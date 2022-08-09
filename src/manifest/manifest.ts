@@ -16,7 +16,7 @@
 
 import { IParsedManifest } from "../parsers/manifest";
 import {
-  IAdaptationType,
+  ITrackType,
   IPlayerError,
   IRepresentationFilter,
 } from "../public_types";
@@ -484,7 +484,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * and mark them as being impossible to decrypt.
    * Then trigger a "decipherabilityUpdate" event to notify everyone of the
    * changes performed.
-   * @param {Object} keyUpdates
+   * @param {Function} isDecipherableCb
    */
   public updateRepresentationsDeciperability(
     isDecipherableCb : (rep : Representation) => boolean | undefined
@@ -511,7 +511,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     for (const adaptationType in adaptationsByType) {
       if (adaptationsByType.hasOwnProperty(adaptationType)) {
         const adaptations =
-          adaptationsByType[adaptationType as IAdaptationType] as Adaptation[];
+          adaptationsByType[adaptationType as ITrackType] as Adaptation[];
         adaptationsList.push(...adaptations);
       }
     }
@@ -522,7 +522,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @deprecated only returns adaptations for the first period
    * @returns {Array.<Object>}
    */
-  public getAdaptationsForType(adaptationType : IAdaptationType) : Adaptation[] {
+  public getAdaptationsForType(adaptationType : ITrackType) : Adaptation[] {
     warnOnce("manifest.getAdaptationsForType(type) is deprecated." +
              " Please use manifest.period[].getAdaptationsForType(type) instead");
     const firstPeriod = this.periods[0];
@@ -548,7 +548,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
 
   /**
    * @param {Object} newManifest
-   * @param {number} type
+   * @param {number} updateType
    */
   private _performUpdate(
     newManifest : Manifest,

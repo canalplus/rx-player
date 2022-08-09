@@ -112,8 +112,8 @@ describe("Features - initializeFeaturesObject", () => {
       ContentDecryptor: jest.requireActual("../../core/decrypt/index").default,
       directfile: {
         initDirectFile: jest.requireActual("../../core/init/initialize_directfile").default,
-        mediaElementTrackChoiceManager:
-          jest.requireActual("../../core/api/media_element_track_choice_manager").default,
+        mediaElementTracksStore:
+          jest.requireActual("../../core/api/track_management/media_element_tracks_store").default,
       },
       nativeTextTracksBuffer: jest.requireActual("../../core/segment_buffers/implementations/text/native/index")
         .default,
