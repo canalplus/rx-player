@@ -166,6 +166,10 @@ properties, methods, events and so on.
   - [`textTrackElement`](../api/Loading_a_Content.md#texttrackelement):
     `HTMLElement` in which text tracks should be displayed.
 
+  - [`defaultAudioTrackSwitchingMode`](../api/Loading_a_Content.md#defaultaudiotrackswitchingmode):
+    Default behavior when switching the audio track.
+
+
   - [`onCodecSwitch`](../api/Loading_a_Content.md#oncodecswitch):
     Behavior when the codec changes between incompatible ones.
 
