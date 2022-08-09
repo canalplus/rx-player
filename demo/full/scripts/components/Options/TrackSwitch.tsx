@@ -8,10 +8,14 @@ import Select from "../Select";
  */
 function TrackSwitchConfig({
   enableFastSwitching,
+  defaultAudioTrackSwitchingMode,
   onCodecSwitch,
+  onDefaultAudioTrackSwitchingModeChange,
   onCodecSwitchChange,
   onEnableFastSwitchingChange,
 }: {
+  defaultAudioTrackSwitchingMode: string;
+  onDefaultAudioTrackSwitchingModeChange: (newVal: string) => void;
   enableFastSwitching: boolean;
   onCodecSwitch: string;
   onCodecSwitchChange: (val: string) => void;
@@ -38,6 +42,12 @@ function TrackSwitchConfig({
     [onCodecSwitchChange]
   );
 
+  const onDefaultAudioTrackSwitchingModeSelection = React.useCallback(
+    ({ value }: { value: string }) =>
+      onDefaultAudioTrackSwitchingModeChange(value),
+    [onDefaultAudioTrackSwitchingModeChange]
+  );
+
   return (
     <>
       <li>
@@ -55,6 +65,19 @@ function TrackSwitchConfig({
             "Fast quality switch by replacing lower qualities in the buffer by higher ones when possible." :
             "Not replacing lower qualities in the buffer by an higher one when possible."}
         </span>
+      </li>
+      <li className="featureWrapperWithSelectMode">
+        <Select
+          ariaLabel="Selecting the defaultAudioTrackSwitchingMode attribute"
+          disabled={false}
+          className="playerOptionInput"
+          name="defaultAudioTrackSwitchingMode"
+          onChange={onDefaultAudioTrackSwitchingModeSelection}
+          selected={{ value: defaultAudioTrackSwitchingMode, index: undefined }}
+          options={["seamless", "direct", "reload"]}
+        >
+            Audio track switching mode
+        </Select>
       </li>
       <li className="featureWrapperWithSelectMode">
         <Select
