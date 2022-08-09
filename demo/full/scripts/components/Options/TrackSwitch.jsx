@@ -8,8 +8,10 @@ import Select from "../Select";
  */
 function NetworkConfig({
   enableFastSwitching,
+  defaultAudioTrackSwitchingMode,
   onCodecSwitch,
   onEnableFastSwitchingClick,
+  onDefaultAudioTrackSwitchingModeChange,
   onCodecSwitchChange,
 }) {
   return (
@@ -25,6 +27,18 @@ function NetworkConfig({
         >
           Fast Switching
         </Checkbox>
+      </li>
+      <li className="featureWrapperWithSelectMode">
+        <Select
+          className="playerOptionInput"
+          name="defaultAudioTrackSwitchingMode"
+          onChange={({ value }) =>
+            onDefaultAudioTrackSwitchingModeChange(value)}
+          selected={{ value: defaultAudioTrackSwitchingMode }}
+          options={["seamless", "direct", "reload"]}
+        >
+            Audio track switching mode
+        </Select>
       </li>
       <li className="featureWrapperWithSelectMode">
         <Select

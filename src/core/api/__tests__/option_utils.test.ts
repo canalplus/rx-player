@@ -386,6 +386,7 @@ describe("API - parseLoadVideoOptions", () => {
   });
 
   const defaultLoadVideoOptions = {
+    defaultAudioTrackSwitchingMode: undefined,
     autoPlay: false,
     enableFastSwitching: true,
     initialManifest: undefined,
@@ -709,6 +710,77 @@ describe("API - parseLoadVideoOptions", () => {
         lowLatencyMode: false,
       },
     });
+  });
+
+  it("should authorize setting a valid defaultAudioTrackSwitchingMode option", () => {
+    expect(parseLoadVideoOptions({
+      defaultAudioTrackSwitchingMode: "direct",
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      defaultAudioTrackSwitchingMode: "direct",
+    });
+
+    expect(parseLoadVideoOptions({
+      defaultAudioTrackSwitchingMode: "reload",
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      defaultAudioTrackSwitchingMode: "reload",
+    });
+
+    expect(parseLoadVideoOptions({
+      defaultAudioTrackSwitchingMode: "seamless",
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      defaultAudioTrackSwitchingMode: "seamless",
+    });
+  });
+
+  // eslint-disable-next-line max-len
+  it("should set an 'undefined' defaultAudioTrackSwitchingMode mode when the parameter is invalid or not specified", () => {
+    logWarnMock.mockReturnValue(undefined);
+    expect(parseLoadVideoOptions({
+      defaultAudioTrackSwitchingMode: "foo-bar" as any,
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      defaultAudioTrackSwitchingMode: undefined,
+    });
+    expect(logWarnMock).toHaveBeenCalledTimes(1);
+    expect(logWarnMock)
+      .toHaveBeenCalledWith(
+        "The `defaultAudioTrackSwitchingMode` loadVideo option must match one of " +
+        `the following strategy name:
+- \`seamless\`
+- \`direct\`
+- \`reload\``);
+    logWarnMock.mockReset();
+    logWarnMock.mockReturnValue(undefined);
+
+    expect(parseLoadVideoOptions({
+      url: "foo",
+      transport: "bar",
+    })).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      defaultAudioTrackSwitchingMode: undefined,
+    });
+    expect(logWarnMock).not.toHaveBeenCalled();
   });
 
   it("should authorize setting a valid onCodecSwitch option", () => {

@@ -143,6 +143,10 @@ exported:
   - `IStartAtOption`: type for the `startAt` property optionally given to
     `loadVideo`.
 
+  - `IAudioTrackSwitchingMode`: The various values accepted on the
+    `defaultAudioTrackSwitchingMode` property optionally given to `loadVideo`.
+
+
 
 ### getPlayerState method / playerStateChange event
 
