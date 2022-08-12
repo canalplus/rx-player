@@ -54,8 +54,6 @@ describe("API - parseConstructorOptions", () => {
     DEFAULT_BASE_BANDWIDTH,
     DEFAULT_LIMIT_VIDEO_WIDTH,
     // DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
-    DEFAULT_MIN_BITRATES,
-    DEFAULT_MAX_BITRATES,
     DEFAULT_MAX_BUFFER_AHEAD,
     DEFAULT_MAX_BUFFER_BEHIND,
     DEFAULT_MAX_VIDEO_BUFFER_SIZE,
@@ -72,10 +70,6 @@ describe("API - parseConstructorOptions", () => {
     throttleVideoBitrateWhenHidden: DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
     videoElement,
     baseBandwidth: DEFAULT_BASE_BANDWIDTH,
-    minAudioBitrate: DEFAULT_MIN_BITRATES.audio,
-    minVideoBitrate: DEFAULT_MIN_BITRATES.video,
-    maxAudioBitrate: DEFAULT_MAX_BITRATES.audio,
-    maxVideoBitrate: DEFAULT_MAX_BITRATES.video,
   };
 
   it("should create default values if no option is given", () => {
@@ -188,108 +182,6 @@ describe("API - parseConstructorOptions", () => {
     });
   });
 
-  it("should authorize setting a minVideoBitrate", () => {
-    expect(parseConstructorOptions({ minVideoBitrate: -1 })).toEqual({
-      ...defaultConstructorOptions,
-      minVideoBitrate: -1,
-    });
-    expect(parseConstructorOptions({ minVideoBitrate: 0 })).toEqual({
-      ...defaultConstructorOptions,
-      minVideoBitrate: 0,
-    });
-    expect(parseConstructorOptions({ minVideoBitrate: 10 })).toEqual({
-      ...defaultConstructorOptions,
-      minVideoBitrate: 10,
-    });
-    expect(parseConstructorOptions({ minVideoBitrate: Infinity })).toEqual({
-      ...defaultConstructorOptions,
-      minVideoBitrate: Infinity,
-    });
-  });
-
-  it("should authorize setting a minAudioBitrate", () => {
-    expect(parseConstructorOptions({ minAudioBitrate: -1 })).toEqual({
-      ...defaultConstructorOptions,
-      minAudioBitrate: -1,
-    });
-    expect(parseConstructorOptions({ minAudioBitrate: 0 })).toEqual({
-      ...defaultConstructorOptions,
-      minAudioBitrate: 0,
-    });
-    expect(parseConstructorOptions({ minAudioBitrate: 10 })).toEqual({
-      ...defaultConstructorOptions,
-      minAudioBitrate: 10,
-    });
-    expect(parseConstructorOptions({ minAudioBitrate: Infinity })).toEqual({
-      ...defaultConstructorOptions,
-      minAudioBitrate: Infinity,
-    });
-  });
-
-  it("should authorize setting a maxVideoBitrate", () => {
-    expect(parseConstructorOptions({ maxVideoBitrate: 0 })).toEqual({
-      ...defaultConstructorOptions,
-      maxVideoBitrate: 0,
-    });
-    expect(parseConstructorOptions({ maxVideoBitrate: 10 })).toEqual({
-      ...defaultConstructorOptions,
-      maxVideoBitrate: 10,
-    });
-    expect(parseConstructorOptions({ maxVideoBitrate: Infinity })).toEqual({
-      ...defaultConstructorOptions,
-      maxVideoBitrate: Infinity,
-    });
-  });
-
-  it("should throw when setting a maxVideoBitrate inferior to minVideoBitrate", () => {
-    expect(() => parseConstructorOptions({ maxVideoBitrate: -1 }))
-      .toThrow(new Error("Invalid maxVideoBitrate parameter. " +
-                         "Its value, \"-1\", is inferior to the set " +
-                         "minVideoBitrate, \"0\""));
-    expect(() => parseConstructorOptions({ minVideoBitrate: 100,
-                                           maxVideoBitrate: 0 }))
-      .toThrow(new Error("Invalid maxVideoBitrate parameter. " +
-                         "Its value, \"0\", is inferior to the set " +
-                         "minVideoBitrate, \"100\""));
-    expect(() => parseConstructorOptions({ minVideoBitrate: 10000,
-                                           maxVideoBitrate: 9999 }))
-      .toThrow(new Error("Invalid maxVideoBitrate parameter. " +
-                         "Its value, \"9999\", is inferior to the set " +
-                         "minVideoBitrate, \"10000\""));
-  });
-
-  it("should authorize setting a maxAudioBitrate", () => {
-    expect(parseConstructorOptions({ maxAudioBitrate: 0 })).toEqual({
-      ...defaultConstructorOptions,
-      maxAudioBitrate: 0,
-    });
-    expect(parseConstructorOptions({ maxAudioBitrate: 10 })).toEqual({
-      ...defaultConstructorOptions,
-      maxAudioBitrate: 10,
-    });
-    expect(parseConstructorOptions({ maxAudioBitrate: Infinity })).toEqual({
-      ...defaultConstructorOptions,
-      maxAudioBitrate: Infinity,
-    });
-  });
-
-  it("should throw when setting a maxAudioBitrate inferior to minAudioBitrate", () => {
-    expect(() => parseConstructorOptions({ maxAudioBitrate: -1 }))
-      .toThrow(new Error("Invalid maxAudioBitrate parameter. " +
-                         "Its value, \"-1\", is inferior to the set " +
-                         "minAudioBitrate, \"0\""));
-    expect(() => parseConstructorOptions({ minAudioBitrate: 100,
-                                           maxAudioBitrate: 0 }))
-      .toThrow(new Error("Invalid maxAudioBitrate parameter. " +
-                         "Its value, \"0\", is inferior to the set " +
-                         "minAudioBitrate, \"100\""));
-    expect(() => parseConstructorOptions({ minAudioBitrate: 10000,
-                                           maxAudioBitrate: 9999 }))
-      .toThrow(new Error("Invalid maxAudioBitrate parameter. " +
-                         "Its value, \"9999\", is inferior to the set " +
-                         "minAudioBitrate, \"10000\""));
-  });
-
   it("should throw if the maxBufferAhead given is not a number", () => {
     expect(() => parseConstructorOptions({ maxBufferAhead: "a" as any })).toThrow();
     expect(() => parseConstructorOptions({ maxBufferAhead: /a/ as any })).toThrow();
@@ -323,30 +215,6 @@ describe("API - parseConstructorOptions", () => {
     expect(() => parseConstructorOptions({ baseBandwidth: "a" as any })).toThrow();
     expect(() => parseConstructorOptions({ baseBandwidth: /a/ as any })).toThrow();
     expect(() => parseConstructorOptions({ baseBandwidth: {} as any })).toThrow();
-  });
-
-  it("should throw if the minVideoBitrate given is not a number", () => {
-    expect(() => parseConstructorOptions({ minVideoBitrate: "a" as any })).toThrow();
-    expect(() => parseConstructorOptions({ minVideoBitrate: /a/ as any })).toThrow();
-    expect(() => parseConstructorOptions({ minVideoBitrate: {} as any })).toThrow();
-  });
-
-  it("should throw if the minAudioBitrate given is not a number", () => {
-    expect(() => parseConstructorOptions({ minAudioBitrate: "a" as any })).toThrow();
-    expect(() => parseConstructorOptions({ minAudioBitrate: /a/ as any })).toThrow();
-    expect(() => parseConstructorOptions({ minAudioBitrate: {} as any })).toThrow();
-  });
-
-  it("should throw if the maxVideoBitrate given is not a number", () => {
-    expect(() => parseConstructorOptions({ maxVideoBitrate: "a" as any })).toThrow();
-    expect(() => parseConstructorOptions({ maxVideoBitrate: /a/ as any })).toThrow();
-    expect(() => parseConstructorOptions({ maxVideoBitrate: {} as any })).toThrow();
-  });
-
-  it("should throw if the maxAudioBitrate given is not a number", () => {
-    expect(() => parseConstructorOptions({ maxAudioBitrate: "a" as any })).toThrow();
-    expect(() => parseConstructorOptions({ maxAudioBitrate: /a/ as any })).toThrow();
-    expect(() => parseConstructorOptions({ maxAudioBitrate: {} as any })).toThrow();
   });
 });
 
