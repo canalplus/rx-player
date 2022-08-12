@@ -68,22 +68,6 @@ export default function constructDebugGeneralInfo(
       if (mba !== Infinity) {
         valuesLine2.push(["mba", String(mba)]);
       }
-      const mia = instance.getMinAudioBitrate();
-      if (mia !== 0) {
-        valuesLine2.push(["mia", String(mia)]);
-      }
-      const miv = instance.getMinVideoBitrate();
-      if (miv !== 0) {
-        valuesLine2.push(["miv", String(miv)]);
-      }
-      const maa = instance.getMaxAudioBitrate();
-      if (maa !== Infinity) {
-        valuesLine2.push(["maa", String(maa)]);
-      }
-      const mav = instance.getMaxVideoBitrate();
-      if (mav !== Infinity) {
-        valuesLine2.push(["mav", String(mav)]);
-      }
       const mbs = instance.getMaxVideoBufferSize();
       if (mbs !== Infinity) {
         valuesLine2.push(["mbs", String(mbs)]);
