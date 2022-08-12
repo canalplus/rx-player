@@ -111,15 +111,15 @@ describe("initial idle state", () => {
       });
     });
 
-    describe("getVideoBitrate", () => {
-      it("should return undefined in getVideoBitrate by default", () => {
-        expect(player.getVideoBitrate()).to.equal(undefined);
+    describe("getVideoRepresentation", () => {
+      it("should return undefined in getVideoRepresentation by default", () => {
+        expect(player.getVideoRepresentation()).to.equal(undefined);
       });
     });
 
-    describe("getAudioBitrate", () => {
-      it("should return undefined in getAudioBitrate by default", () => {
-        expect(player.getVideoBitrate()).to.equal(undefined);
+    describe("getAudioRepresentation", () => {
+      it("should return undefined in getAudioRepresentation by default", () => {
+        expect(player.getAudioRepresentation()).to.equal(undefined);
       });
     });
 
