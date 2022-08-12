@@ -1,160 +1,21 @@
-import React, { Fragment, useCallback, useEffect, useState } from "react";
-import getCheckBoxValue from "../../lib/getCheckboxValue";
+import React, { Fragment } from "react";
 import Checkbox from "../../components/CheckBox";
-import DEFAULT_VALUES from "../../lib/defaultOptionsValues";
-import PlayerOptionNumberInput from "./PlayerOptionNumberInput";
-
-const defaultMinVideoBitrate = DEFAULT_VALUES.player.minVideoBitrate;
-const defaultMaxVideoBitrate = DEFAULT_VALUES.player.maxVideoBitrate;
+import getCheckBoxValue from "../../lib/getCheckboxValue";
 
 /**
  * @param {Object} props
  * @returns {Object}
  */
 function VideoAdaptiveSettings({
-  minVideoBitrate,
-  maxVideoBitrate,
-  onMinVideoBitrateChange,
-  onMaxVideoBitrateChange,
   limitVideoWidth,
   throttleVideoBitrateWhenHidden,
   onLimitVideoWidthChange,
   onThrottleVideoBitrateWhenHiddenChange,
 }) {
-  /* Value of the `minVideoBitrate` input */
-  const [minVideoBitrateStr, setMinVideoBitrateStr] = useState(
-    minVideoBitrate
-  );
-  /* Value of the `maxVideoBitrate` input */
-  const [maxVideoBitrateStr, setMaxVideoBitrateStr] = useState(
-    maxVideoBitrate
-  );
-  /*
-   * Keep track of the "limit minVideoBitrate" toggle:
-   * `false` == checkbox enabled
-   */
-  const [isMinVideoBitrateLimited, setMinVideoBitrateLimit] = useState(
-    minVideoBitrate !== 0
-  );
-  /*
-   * Keep track of the "limit maxVideoBitrate" toggle:
-   * `false` == checkbox enabled
-   */
-  const [isMaxVideoBitrateLimited, setMaxVideoBitrateLimit] = useState(
-    maxVideoBitrate !== Infinity
-  );
-
-  // Update minVideoBitrate when its linked text change
-  useEffect(() => {
-    let newBitrate = parseFloat(minVideoBitrateStr);
-    newBitrate = isNaN(newBitrate) ?
-      defaultMinVideoBitrate :
-      newBitrate;
-    onMinVideoBitrateChange(newBitrate);
-  }, [minVideoBitrateStr]);
-
-  // Update maxVideoBitrate when its linked text change
-  useEffect(() => {
-    let newBitrate = parseFloat(maxVideoBitrateStr);
-    newBitrate = isNaN(newBitrate) ?
-      defaultMaxVideoBitrate :
-      newBitrate;
-    onMaxVideoBitrateChange(newBitrate);
-  }, [maxVideoBitrateStr]);
-
-  const onChangeLimitMinVideoBitrate = useCallback((evt) => {
-    const isNotLimited = getCheckBoxValue(evt.target);
-    if (isNotLimited) {
-      setMinVideoBitrateLimit(false);
-      setMinVideoBitrateStr(String(0));
-    } else {
-      setMinVideoBitrateLimit(true);
-      setMinVideoBitrateStr(String(defaultMinVideoBitrate));
-    }
-  }, []);
-
-  const onChangeLimitMaxVideoBitrate = useCallback((evt) => {
-    const isNotLimited = getCheckBoxValue(evt.target);
-    if (isNotLimited) {
-      setMaxVideoBitrateLimit(false);
-      setMaxVideoBitrateStr(String(Infinity));
-    } else {
-      setMaxVideoBitrateLimit(true);
-      setMaxVideoBitrateStr(String(defaultMaxVideoBitrate));
-    }
-  }, []);
-
   return (
     <Fragment>
       <li>
-        <PlayerOptionNumberInput
-          ariaLabel="Min video bitrate option"
-          label="minVideoBitrate"
-          title="Min Video Bitrate"
-          valueAsString={minVideoBitrateStr}
-          defaultValueAsNumber={defaultMinVideoBitrate}
-          isDisabled={isMinVideoBitrateLimited === false}
-          onUpdateValue={setMinVideoBitrateStr}
-          onResetClick={() => {
-            setMinVideoBitrateStr(String(defaultMinVideoBitrate));
-            setMinVideoBitrateLimit(defaultMinVideoBitrate !== 0);
-          }}
-        />
-        <Checkbox
-          className="playerOptionsCheckBox"
-          ariaLabel="Min video bitrate limit"
-          name="minVideoBitrateLimit"
-          checked={isMinVideoBitrateLimited === false}
-          onChange={onChangeLimitMinVideoBitrate}
-        >
-          Do not limit
-        </Checkbox>
-        <span className="option-desc">
-          {
-            !isMinVideoBitrateLimited || minVideoBitrate <= 0 ?
-              "Not limiting the lowest video bitrate reachable through the adaptive logic" :
-              "Limiting the lowest video bitrate reachable through the adaptive " +
-              `logic to ${minVideoBitrate} bits per seconds`
-          }
-        </span>
-      </li>
-      <li>
-        <PlayerOptionNumberInput
-          ariaLabel="Max video bitrate option"
-          label="maxVideoBitrate"
-          title="Max Video Bitrate"
-          valueAsString={maxVideoBitrateStr}
-          defaultValueAsNumber={defaultMaxVideoBitrate}
-          isDisabled={isMaxVideoBitrateLimited === false}
-          onUpdateValue={setMaxVideoBitrateStr}
-          onResetClick={() => {
-            setMaxVideoBitrateStr(String(defaultMaxVideoBitrate));
-            setMaxVideoBitrateLimit(defaultMaxVideoBitrate !== Infinity);
-          }}
-        />
-        <div>
-          <Checkbox
-            className="playerOptionsCheckBox"
-            aria-label="Max video bitrate limit"
-            name="maxVideoBitrateLimit"
-            checked={isMaxVideoBitrateLimited === false}
-            onChange={onChangeLimitMaxVideoBitrate}
-          >
-            Do not limit
-          </Checkbox>
-        </div>
-        <span className="option-desc">
-          {
-            !isMaxVideoBitrateLimited ||
-            parseFloat(maxVideoBitrate) === Infinity ?
-              "Not limiting the highest video bitrate reachable through the adaptive logic" :
-              "Limiting the highest video bitrate reachable through the adaptive " +
-              `logic to ${maxVideoBitrate} bits per seconds`
-          }
-        </span>
-      </li>
-      <li>
-        <div>
+        <div className="playerOptionInput">
           <Checkbox
             className="playerOptionsCheckBox playerOptionsCheckBoxTitle"
             name="limitVideoWidth"
@@ -167,12 +28,12 @@ function VideoAdaptiveSettings({
           >
             Limit Video Width
           </Checkbox>
-          <span className="option-desc">
-            {limitVideoWidth ?
-              "Limiting video width to the current <video> element's width" :
-              "Not limiting video width to the current <video> element's width"}
-          </span>
         </div>
+        <span className="option-desc">
+          {limitVideoWidth ?
+            "Limiting video width to the current <video> element's width" :
+            "Not limiting video width to the current <video> element's width"}
+        </span>
       </li>
       <li>
         <div className="playerOptionInput">

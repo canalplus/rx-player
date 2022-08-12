@@ -49,10 +49,6 @@ export interface IConstructorOptions {
 
   videoElement? : HTMLMediaElement;
   baseBandwidth? : number;
-  minAudioBitrate? : number;
-  minVideoBitrate? : number;
-  maxAudioBitrate? : number;
-  maxVideoBitrate? : number;
 }
 
 /** Every options that can be given to the RxPlayer's `loadVideo` method. */

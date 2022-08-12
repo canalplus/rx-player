@@ -4,6 +4,10 @@ import RxPlayer from "../../../src";
 import XHRMock from "../../utils/request_mock";
 import sleep from "../../utils/sleep.js";
 import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
+import {
+  lockHighestBitrates,
+  lockLowestBitrates,
+} from "../../utils/bitrates";
 
 let player;
 let xhrMock;
@@ -23,7 +27,7 @@ describe("Fast-switching", function () {
 
   it("should enable fast-switching by default", async function () {
     this.timeout(3000);
-    player.setMaxVideoBitrate(0);
+    lockLowestBitrates(player);
     player.setWantedBufferAhead(10);
     player.loadVideo({ url,
                        transport,
@@ -32,8 +36,7 @@ describe("Fast-switching", function () {
     await sleep(1000);
 
     player.setWantedBufferAhead(30);
-    player.setMaxVideoBitrate(Infinity);
-    player.setMinVideoBitrate(Infinity);
+    lockHighestBitrates(player, "lazy");
     await sleep(1000);
     const videoSegmentBuffered = player.__priv_getSegmentBufferContent("video")
       .map(({ infos }) => {
@@ -48,7 +51,7 @@ describe("Fast-switching", function () {
 
   it("should enable fast-switching if explicitely enabled", async function () {
     this.timeout(3000);
-    player.setMaxVideoBitrate(0);
+    lockLowestBitrates(player);
     player.setWantedBufferAhead(10);
     player.loadVideo({ url,
                        transport,
@@ -57,8 +60,7 @@ describe("Fast-switching", function () {
     await waitForLoadedStateAfterLoadVideo(player);
     await sleep(1000);
     player.setWantedBufferAhead(30);
-    player.setMaxVideoBitrate(Infinity);
-    player.setMinVideoBitrate(Infinity);
+    lockHighestBitrates(player, "lazy");
     await sleep(1000);
     const videoSegmentBuffered = player.__priv_getSegmentBufferContent("video")
       .map(({ infos }) => {
@@ -73,7 +75,7 @@ describe("Fast-switching", function () {
 
   it("should disable fast-switching if explicitely disabled", async function () {
     this.timeout(3000);
-    player.setMaxVideoBitrate(0);
+    lockLowestBitrates(player);
     player.setWantedBufferAhead(10);
     player.loadVideo({ url,
                        transport,
@@ -82,8 +84,7 @@ describe("Fast-switching", function () {
     await waitForLoadedStateAfterLoadVideo(player);
     await sleep(1000);
     player.setWantedBufferAhead(30);
-    player.setMaxVideoBitrate(Infinity);
-    player.setMinVideoBitrate(Infinity);
+    lockHighestBitrates(player, "lazy");
     await sleep(1000);
     const videoSegmentBuffered = player.__priv_getSegmentBufferContent("video")
       .map(({ infos }) => {

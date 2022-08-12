@@ -1,13 +1,9 @@
 const defaultOptionsValues = {
   player: {
     limitVideoWidth: false,
-    maxAudioBitrate: Infinity,
     maxBufferAhead: Infinity,
     maxBufferBehind: Infinity,
-    maxVideoBitrate: Infinity,
     maxVideoBufferSize: Infinity,
-    minAudioBitrate: 0,
-    minVideoBitrate: 0,
     throttleVideoBitrateWhenHidden: false,
     wantedBufferAhead: 30,
   },

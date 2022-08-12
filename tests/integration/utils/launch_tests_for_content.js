@@ -4,6 +4,7 @@ import sleep from "../../utils/sleep.js";
 import waitForState, { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 import tryTestMultipleTimes from "../../utils/try_test_multiple_times";
 import XHRMock from "../../utils/request_mock";
+import { lockLowestBitrates } from "../../utils/bitrates";
 
 /**
  * Performs a serie of basic tests on a content.
@@ -73,9 +74,8 @@ export default function launchTestsForContent(manifestInfos) {
       it("should fetch the manifest then the init segments", async function () {
         xhrMock.lock();
 
-        // set the lowest bitrate to facilitate the test
-        player.setMaxVideoBitrate(0);
-        player.setMaxVideoBitrate(0);
+        // Lock the lowest bitrate to facilitate the test
+        lockLowestBitrates(player);
 
         player.loadVideo({ url: manifestInfos.url, transport });
 
@@ -187,7 +187,7 @@ export default function launchTestsForContent(manifestInfos) {
 
     describe("reload", () => {
       it("should reload at given absolute position", async function () {
-        player.setMaxVideoBitrate(0);
+        lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -208,7 +208,7 @@ export default function launchTestsForContent(manifestInfos) {
           .to.be.closeTo(manifestInfos.minimumPosition + 5, 0.1);
       });
       it("should reload at given relative position", async function () {
-        player.setMaxVideoBitrate(0);
+        lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -223,7 +223,7 @@ export default function launchTestsForContent(manifestInfos) {
           .to.be.closeTo(manifestInfos.minimumPosition + 7, 0.1);
       });
       it("should reload after stop, at given relative position", async function () {
-        player.setMaxVideoBitrate(0);
+        lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -239,7 +239,7 @@ export default function launchTestsForContent(manifestInfos) {
           .to.be.closeTo(manifestInfos.minimumPosition + 7, 1.5);
       });
       it("should reload when seeking at last playback position", async function () {
-        player.setMaxVideoBitrate(0);
+        lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -256,7 +256,7 @@ export default function launchTestsForContent(manifestInfos) {
           .to.be.closeTo(manifestInfos.minimumPosition + 5, 0.1);
       });
       it("should reload even when the current content is not yet loaded", async function () {
-        player.setMaxVideoBitrate(0);
+        lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -268,7 +268,7 @@ export default function launchTestsForContent(manifestInfos) {
           .closeTo(manifestInfos.minimumPosition, 2);
       });
       it("should reload even when the last content was not yet loaded", async function () {
-        player.setMaxVideoBitrate(0);
+        lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -282,12 +282,12 @@ export default function launchTestsForContent(manifestInfos) {
           .closeTo(manifestInfos.minimumPosition, 2);
       });
       it("should not reload when no content was yet loaded", async function () {
-        player.setMaxVideoBitrate(0);
+        lockLowestBitrates(player);
         expect(() => player.reload())
           .to.throw("API: Can't reload without having previously loaded a content.");
       });
       it("should reload with autoplay when the current content was is yet loaded with autoPlay on", async function () {
-        player.setMaxVideoBitrate(0);
+        lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -299,7 +299,7 @@ export default function launchTestsForContent(manifestInfos) {
                            ["LOADING", "LOADED", "BUFFERING", "SEEKING", "RELOADING"]);
       });
       it("should reload without autoplay when the current content is not yet loaded with autoPlay off", async function () {
-        player.setMaxVideoBitrate(0);
+        lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -311,7 +311,7 @@ export default function launchTestsForContent(manifestInfos) {
                            ["LOADING", "BUFFERING", "SEEKING", "RELOADING"]);
       });
       it("should reload with autoplay when the current content is loaded and playing", async function () {
-        player.setMaxVideoBitrate(0);
+        lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -327,7 +327,7 @@ export default function launchTestsForContent(manifestInfos) {
                            ["LOADING", "LOADED", "BUFFERING", "SEEKING", "RELOADING"]);
       });
       it("should reload without autoplay when the current content is loaded and paused", async function () {
-        player.setMaxVideoBitrate(0);
+        lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -348,7 +348,7 @@ export default function launchTestsForContent(manifestInfos) {
                            ["LOADING", "BUFFERING", "SEEKING", "RELOADING"]);
       });
       it("should reload with autoplay when the last content was not yet loaded with autoPlay on", async function () {
-        player.setMaxVideoBitrate(0);
+        lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -362,7 +362,7 @@ export default function launchTestsForContent(manifestInfos) {
                            ["LOADING", "LOADED", "BUFFERING", "SEEKING", "RELOADING"]);
       });
       it("should reload without autoplay when the last content was not yet loaded with autoPlay off", async function () {
-        player.setMaxVideoBitrate(0);
+        lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -376,7 +376,7 @@ export default function launchTestsForContent(manifestInfos) {
                            ["LOADING", "BUFFERING", "SEEKING", "RELOADING"]);
       });
       it("should reload with autoplay when the last content was loaded and playing", async function () {
-        player.setMaxVideoBitrate(0);
+        lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -394,7 +394,7 @@ export default function launchTestsForContent(manifestInfos) {
                            ["LOADING", "LOADED", "BUFFERING", "SEEKING", "RELOADING"]);
       });
       it("should reload without autoplay when the last content was loaded and paused", async function () {
-        player.setMaxVideoBitrate(0);
+        lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -417,7 +417,7 @@ export default function launchTestsForContent(manifestInfos) {
                            ["LOADING", "BUFFERING", "SEEKING", "RELOADING"]);
       });
       it("should respect `autoPlay` reload setting even if the non-yet loaded content had a different autoPlay setting", async () => {
-        player.setMaxVideoBitrate(0);
+        lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -439,7 +439,7 @@ export default function launchTestsForContent(manifestInfos) {
                            ["LOADING", "BUFFERING", "SEEKING", "RELOADING"]);
       });
       it("should respect `autoPlay` reload setting even if the current content is loaded and playing", async function () {
-        player.setMaxVideoBitrate(0);
+        lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -455,7 +455,7 @@ export default function launchTestsForContent(manifestInfos) {
                            ["LOADING", "BUFFERING", "SEEKING", "RELOADING"]);
       });
       it("should respect `autoPlay` reload setting even if the current content is loaded and paused", async function () {
-        player.setMaxVideoBitrate(0);
+        lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -602,7 +602,7 @@ export default function launchTestsForContent(manifestInfos) {
       it("should return the buffer gap of the current range", async function() {
         this.timeout(20000);
 
-        player.setMinVideoBitrate(Infinity);
+        lockLowestBitrates(player);
         player.setWantedBufferAhead(10);
         expect(player.getWantedBufferAhead()).to.equal(10);
         player.loadVideo({
@@ -808,66 +808,6 @@ export default function launchTestsForContent(manifestInfos) {
         expect(player.getAudioRepresentation()).to.equal(undefined);
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.getAudioRepresentation()).to.not.equal(undefined);
-      });
-    });
-
-    describe("getMaxVideoBitrate", () => {
-      it("should stay at Infinity by default", async () => {
-        expect(player.getMaxVideoBitrate()).to.equal(Infinity);
-
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-        });
-
-        await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getMaxVideoBitrate()).to.equal(Infinity);
-      });
-
-      it("should be able to update", async () => {
-        player.setMaxVideoBitrate(10000);
-        expect(player.getMaxVideoBitrate()).to.equal(10000);
-
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-        });
-
-        expect(player.getMaxVideoBitrate()).to.equal(10000);
-        await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getMaxVideoBitrate()).to.equal(10000);
-        player.setMaxVideoBitrate(5);
-        expect(player.getMaxVideoBitrate()).to.equal(5);
-      });
-    });
-
-    describe("getMaxAudioBitrate", () => {
-      it("should stay at Infinity by default", async () => {
-        expect(player.getMaxAudioBitrate()).to.equal(Infinity);
-
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-        });
-
-        await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getMaxAudioBitrate()).to.equal(Infinity);
-      });
-
-      it("should be able to update", async () => {
-        player.setMaxVideoBitrate(10000);
-        expect(player.getMaxVideoBitrate()).to.equal(10000);
-
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-        });
-
-        expect(player.getMaxVideoBitrate()).to.equal(10000);
-        await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getMaxVideoBitrate()).to.equal(10000);
-        player.setMaxVideoBitrate(5);
-        expect(player.getMaxVideoBitrate()).to.equal(5);
       });
     });
 
@@ -1361,7 +1301,7 @@ export default function launchTestsForContent(manifestInfos) {
       // TODO handle live contents
       it("should download until a set wanted buffer ahead", async function() {
         this.timeout(20000);
-        player.setMaxVideoBitrate(0);
+        lockLowestBitrates(player);
         player.setWantedBufferAhead(10);
         expect(player.getWantedBufferAhead()).to.equal(10);
 
