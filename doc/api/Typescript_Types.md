@@ -482,25 +482,6 @@ rxPlayer.addEventListener("streamEvent", (evt : IStreamEvent) {
 });
 ```
 
-### bitrateEstimationChange event
-
-The type `IBitrateEstimate` corresponds to the payload of a
-`bitrateEstimationChange` event.
-
-Example:
-
-```ts
-// the type(s) wanted
-import { IBitrateEstimate } from "rx-player/types";
-
-// hypothetical file exporting an RxPlayer instance
-import rxPlayer from "./player";
-
-rxPlayer.addEventListener("bitrateEstimationChange", (evt : IBitrateEstimate) {
-  console.log(evt);
-});
-```
-
 ### decipherabilityUpdate event
 
 The type `IDecipherabilityUpdateContent` corresponds to the payload of a
