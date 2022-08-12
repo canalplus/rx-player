@@ -26,6 +26,9 @@
   "sideEffects": false,
   "scripts": {
     "build": "webpack --progress --config webpack.config.js --env production",
+    "build:multi": "npm run build:multi:main && npm run build:multi:worker",
+    "build:multi:main": "esbuild ./src/main/index.ts --bundle --outfile=dist/multithread/main.js --define:__ENVIRONMENT__=\"{ \\\"PRODUCTION\\\": 0, \\\"DEV\\\": 1, \\\"CURRENT_ENV\\\": 1 }\"",
+    "build:multi:worker": "esbuild ./src/worker/index.ts --bundle --outfile=dist/multithread/worker.js --define:__ENVIRONMENT__=\"{ \\\"PRODUCTION\\\": 0, \\\"DEV\\\": 1, \\\"CURRENT_ENV\\\": 1 }\"",
     "build:all": "npm run build && npm run build:min && npm run build:wasm:release && npm run build:modular",
     "build:min": "webpack --progress --config webpack.config.js --env minify --env production",
     "build:min:report": "webpack --progress --config webpack.config.js --env minify --env production --env reportSize",

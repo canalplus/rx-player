@@ -40,9 +40,9 @@ import {
   ICompatHTMLMediaElement,
   ICompatPictureInPictureWindow,
 } from "./browser_compatibility_types";
+import isNode from "./is_node";
 import shouldFavourCustomSafariEME from "./should_favour_custom_safari_EME";
 
-const isNode = false;
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
 const pixelRatio = isNode ||
@@ -127,7 +127,7 @@ function compatibleListener<T extends Event>(
       }
 
       if (isNonEmptyString(mem)) {
-        return observableFromEvent(element, mem) ;
+        return observableFromEvent(element, mem) as Observable<T>;
       } else {
         if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
           log.warn(`compat: element ${element.tagName}` +

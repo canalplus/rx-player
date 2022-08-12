@@ -44,6 +44,7 @@ export default class NetworkError extends Error {
    * @param {string} code
    * @param {Error} baseError
    */
+  // XXX TODO baseError
   constructor(code : INetworkErrorCode, baseError : RequestError) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class

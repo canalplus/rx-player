@@ -121,7 +121,7 @@ function compatibleListener<T extends Event>(
   return (element : IEventTargetLike) => {
     // if the element is a HTMLElement we can detect
     // the supported event, and memoize it in `mem`
-    if (element instanceof HTMLElement) {
+    if (typeof HTMLElement === "object" && element instanceof HTMLElement) {
       if (typeof mem === "undefined") {
         mem = findSupportedEvent(element, prefixedEvents);
       }

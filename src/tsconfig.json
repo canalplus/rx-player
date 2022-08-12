@@ -16,7 +16,7 @@
         "noUnusedLocals": true,
         "types": ["rxjs", "node", "jest"],
         "moduleResolution": "node",
-        "lib": ["esnext", "webworker"],
+        "lib": ["esnext", "webworker", "dom"],
         "typeRoots": [
             "./src/typings/next-tick.d.ts",
             "./src/typings/object-assign.d.ts",

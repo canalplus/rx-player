@@ -16,40 +16,39 @@
 
 import { IPlayerError } from "../../../common/public_types";
 import {
-  IStreamEventEvent,
-  IStreamEventSkipEvent,
-} from "../../../worker/core/init/stream_events_emitter";
-import SegmentBuffersStore from "../../../worker/core/segment_buffers";
-import {
-  IActivePeriodChangedEvent,
-  IAdaptationChangeEvent,
-  IBitrateEstimationChangeEvent,
-  ICompletedStreamEvent,
-  IEncryptionDataEncounteredEvent,
-  IInbandEventsEvent,
-  INeedsBufferFlushEvent,
-  INeedsDecipherabilityFlush,
-  INeedsMediaSourceReload,
-  IPeriodStreamClearedEvent,
-  IPeriodStreamReadyEvent,
-  IRepresentationChangeEvent,
-  IStreamEventAddedSegment,
-  IStreamManifestMightBeOutOfSync,
-  IStreamNeedsManifestRefresh,
-} from "../../../worker/core/stream";
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
-} from "../../../worker/manifest";
+  IBufferType,
+  ISentAdaptation,
+  ISentManifest,
+  ISentPeriod,
+  ISentRepresentation,
+} from "../../../worker";
 
 /** Event sent after the Manifest has been loaded and parsed for the first time. */
 export interface IManifestReadyEvent {
   type : "manifestReady";
   value : {
     /** The Manifest we just parsed. */
-    manifest : Manifest;
+    manifest : ISentManifest;
   };
+}
+
+/**
+ * Emitted when a new `RepresentationStream` is created to load segments from a
+ * `Representation`.
+ */
+export interface IRepresentationChangeEvent {
+  type : "representationChange";
+  value : {
+    /** The type of buffer linked to that `RepresentationStream`. */
+    type : IBufferType;
+    /** The `Period` linked to the `RepresentationStream` we're creating. */
+    period : ISentPeriod;
+    /**
+     * The `Representation` linked to the `RepresentationStream` we're creating.
+     * `null` when we're choosing no Representation at all.
+     */
+    representation : ISentRepresentation |
+                     null; };
 }
 
 /** Event sent after the Manifest has been updated. */
@@ -64,10 +63,10 @@ export interface IManifestUpdateEvent { type: "manifestUpdate";
  */
 export interface IDecipherabilityUpdateEvent {
   type: "decipherabilityUpdate";
-  value: Array<{ manifest : Manifest;
-                 period : Period;
-                 adaptation : Adaptation;
-                 representation : Representation; }>; }
+  value: Array<{ manifest : ISentManifest;
+                 period : ISentPeriod;
+                 adaptation : ISentAdaptation;
+                 representation : ISentRepresentation; }>; }
 
 /** Event sent when a minor happened. */
 export interface IWarningEvent { type : "warning";
@@ -104,37 +103,33 @@ export interface IUnstalledEvent { type : "unstalled";
  * From this point on, the user can reliably play/pause/resume the stream.
  */
 export interface ILoadedEvent { type : "loaded";
-                                value : {
-                                  segmentBuffersStore: SegmentBuffersStore | null;
-                                }; }
-
-export { IRepresentationChangeEvent };
+                                value : null; }
 
 /** Events emitted by a `MediaSourceLoader`. */
 export type IMediaSourceLoaderEvent = IStalledEvent |
                                       IUnstalledEvent |
                                       ILoadedEvent |
                                       IWarningEvent |
-                                      IStreamEventEvent |
-                                      IStreamEventSkipEvent |
+                                      // IStreamEventEvent |
+                                      // IStreamEventSkipEvent |
 
                                       // Coming from the StreamOrchestrator
 
-                                      IActivePeriodChangedEvent |
-                                      IPeriodStreamClearedEvent |
-                                      ICompletedStreamEvent |
-                                      IPeriodStreamReadyEvent |
-                                      INeedsMediaSourceReload |
-                                      INeedsBufferFlushEvent |
-                                      IAdaptationChangeEvent |
-                                      IBitrateEstimationChangeEvent |
-                                      INeedsDecipherabilityFlush |
-                                      IRepresentationChangeEvent |
-                                      IStreamEventAddedSegment<unknown> |
-                                      IEncryptionDataEncounteredEvent |
-                                      IStreamManifestMightBeOutOfSync |
-                                      IStreamNeedsManifestRefresh |
-                                      IInbandEventsEvent;
+                                      // IActivePeriodChangedEvent |
+                                      // IPeriodStreamClearedEvent |
+                                      // ICompletedStreamEvent |
+                                      // IPeriodStreamReadyEvent |
+                                      // INeedsMediaSourceReload |
+                                      // INeedsBufferFlushEvent |
+                                      // IAdaptationChangeEvent |
+                                      // IBitrateEstimationChangeEvent |
+                                      // INeedsDecipherabilityFlush |
+                                      IRepresentationChangeEvent;
+                                      // IStreamEventAddedSegment<unknown> |
+                                      // IEncryptionDataEncounteredEvent |
+                                      // IStreamManifestMightBeOutOfSync |
+                                      // IStreamNeedsManifestRefresh |
+                                      // IInbandEventsEvent;
 
 /** Every events emitted by the `Init` module. */
 export type IInitEvent = IManifestReadyEvent |
@@ -147,21 +142,21 @@ export type IInitEvent = IManifestReadyEvent |
 
                          IStalledEvent |
                          IUnstalledEvent |
-                         ILoadedEvent |
-                         IStreamEventEvent |
-                         IStreamEventSkipEvent |
+                         ILoadedEvent;
+                         // IStreamEventEvent |
+                         // IStreamEventSkipEvent |
 
                          // Coming from the `StreamOrchestrator`
 
-                         IActivePeriodChangedEvent |
-                         IPeriodStreamClearedEvent |
-                         ICompletedStreamEvent |
-                         IPeriodStreamReadyEvent |
-                         IAdaptationChangeEvent |
-                         IBitrateEstimationChangeEvent |
-                         IRepresentationChangeEvent |
-                         IStreamEventAddedSegment<unknown> |
-                         IInbandEventsEvent;
+                         // IActivePeriodChangedEvent |
+                         // IPeriodStreamClearedEvent |
+                         // ICompletedStreamEvent |
+                         // IPeriodStreamReadyEvent |
+                         // IAdaptationChangeEvent |
+                         // IBitrateEstimationChangeEvent |
+                         // IRepresentationChangeEvent |
+                         // IStreamEventAddedSegment<unknown> |
+                         // IInbandEventsEvent;
 
 /** Events emitted by the `Init` module for directfile contents. */
 export type IDirectfileEvent = IStalledEvent |

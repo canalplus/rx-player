@@ -15,20 +15,19 @@
  */
 
 import { IPlayerError } from "../../../common/public_types";
-import SegmentBuffersStore, {
+import {
   IBufferType,
-} from "../../../worker/core/segment_buffers";
-import { IRepresentationChangeEvent } from "../../../worker/core/stream";
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
-} from "../../../worker/manifest";
+  ISentManifest,
+  ISentAdaptation,
+  ISentPeriod,
+  ISentRepresentation,
+} from "../../../worker";
 import {
   IDecipherabilityUpdateEvent,
   ILoadedEvent,
   IManifestReadyEvent,
   IManifestUpdateEvent,
+  IRepresentationChangeEvent,
   IReloadingMediaSourceEvent,
   IStalledEvent,
   IStallingSituation,
@@ -40,8 +39,8 @@ import {
  * Construct a "loaded" event.
  * @returns {Object}
  */
-function loaded(segmentBuffersStore : SegmentBuffersStore | null) : ILoadedEvent {
-  return { type: "loaded", value: { segmentBuffersStore } };
+function loaded() : ILoadedEvent {
+  return { type: "loaded", value: null };
 }
 
 /**
@@ -67,10 +66,10 @@ function unstalled() : IUnstalledEvent {
  * @returns {Object}
  */
 function decipherabilityUpdate(
-  arg : Array<{ manifest : Manifest;
-                period : Period;
-                adaptation : Adaptation;
-                representation : Representation; }>
+  arg : Array<{ manifest : ISentManifest;
+                period : ISentPeriod;
+                adaptation : ISentAdaptation;
+                representation : ISentRepresentation; }>
 ) : IDecipherabilityUpdateEvent {
   return { type: "decipherabilityUpdate", value: arg };
 }
@@ -81,7 +80,7 @@ function decipherabilityUpdate(
  * @returns {Object}
  */
 function manifestReady(
-  manifest : Manifest
+  manifest : ISentManifest
 ) : IManifestReadyEvent {
   return { type: "manifestReady", value: { manifest } };
 }
@@ -102,7 +101,7 @@ function manifestUpdate() : IManifestUpdateEvent {
  */
 function nullRepresentation(
   type : IBufferType,
-  period : Period
+  period : ISentPeriod
 ) : IRepresentationChangeEvent {
   return { type: "representationChange",
            value: { type,

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { isSamsungBrowser } from "./browser_detection";
 
 /**
  * Returns true if the metadata received after a "loadedmetadata" event has
@@ -22,6 +23,5 @@
  * @returns {boolean}
  */
 export default function shouldValidateMetadata() : boolean {
-  // TODO Worker
-  return false;
+  return isSamsungBrowser;
 }

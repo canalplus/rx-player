@@ -15,8 +15,7 @@
  */
 
 import isNullOrUndefined from "../../common/utils/is_null_or_undefined";
-
-const isNode = false;
+import isNode from "./is_node";
 
 /** Regular MediaKeys type + optional functions present in IE11. */
 interface ICompatMediaKeysConstructor {

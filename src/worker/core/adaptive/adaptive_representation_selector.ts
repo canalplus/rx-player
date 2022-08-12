@@ -25,13 +25,13 @@ import takeFirstSet from "../../../common/utils/take_first_set";
 import TaskCanceller, {
   CancellationSignal,
 } from "../../../common/utils/task_canceller";
+import { IReadOnlyPlaybackObserver } from "../../../main/core/api";
 import Manifest, {
   Adaptation,
   ISegment,
   Period,
   Representation,
 } from "../../manifest";
-import { IReadOnlyPlaybackObserver } from "../api";
 import { IBufferType } from "../segment_buffers";
 import BufferBasedChooser from "./buffer_based_chooser";
 import GuessBasedChooser from "./guess_based_chooser";
@@ -854,7 +854,7 @@ export interface IRepresentationEstimatorResponse {
 /** Arguments received by `createAdaptiveRepresentationSelector`. */
 export interface IAdaptiveRepresentationSelectorArguments {
   /** Initial bitrate chosen, per type (minimum if not set) */
-  initialBitrates: Partial<Record<IBufferType, number>>;
+  initialBitrates: Partial<Record<IBufferType, number | undefined>>;
 
   /**
    * Some settings can depend on wether you're playing a low-latency content.

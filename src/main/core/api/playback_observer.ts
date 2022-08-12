@@ -843,7 +843,7 @@ function prettyPrintBuffered(
  * @param {Function} transform
  * @returns {Object}
  */
-function generateReadOnlyObserver<TSource, TDest>(
+export function generateReadOnlyObserver<TSource, TDest>(
   src : IReadOnlyPlaybackObserver<TSource>,
   transform : (
     observationRef : IReadOnlySharedReference<TSource>,

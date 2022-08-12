@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import { MediaSource_ } from "./browser_compatibility_types";
-
 /**
  * Returns true if the given codec is supported by the browser's MediaSource
  * implementation.
@@ -25,6 +23,12 @@ import { MediaSource_ } from "./browser_compatibility_types";
  * codecs used within the file.
  * @returns {Boolean}
  */
-export default function isCodecSupported(_mimeType : string) : boolean {
-  return true;
+export default function isCodecSupported(mimeType : string) : boolean {
+  return MediaSource.isTypeSupported(mimeType);
+  // /* eslint-disable @typescript-eslint/unbound-method */
+  // if (typeof MediaSource.isTypeSupported === "function") {
+  // /* eslint-enable @typescript-eslint/unbound-method */
+  //   return MediaSource.isTypeSupported(mimeType);
+  // }
+  // return true;
 }

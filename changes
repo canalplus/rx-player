@@ -1,0 +1,77 @@
+# Mkd -> directory creation
+# Mov -> file moved (order is important)
+# Add -> file added
+# Upd -> file updated further than just imports being changed (post-move)
+
+Mkd src/common
+Mkd src/main
+Mkd src/worker
+Mkd dist/multithread
+
+Mov src/errors src/common/errors
+Mov src/config.ts src/common/config.ts
+Mov src/default_config.ts src/common/default_config.ts
+Mov src/log.ts src/common/log.ts
+Mov src/public_types.ts src/common/public_types.ts
+Mov src/utils src/common/utils
+Mov src/core/init src/main/init
+Mov src/core/adaptive src/worker/core/adaptive
+Mov src/core/fetchers src/worker/core/fetchers
+Mov src/core/segment_buffers src/worker/core/segment_buffers
+Mov src/core/stream src/worker/core/stream
+Mov src/manifest src/worker/manifest
+Mov src/transports src/worker/transports
+Mov src/typings → src/worker/typings
+
+Mov src/compat src/common/compat
+Mov src/compat/add_class_name.ts src/common/compat/add_class_name.ts
+Mov src/compat/add_text_track.ts src/common/compat/add_text_track.ts
+Mov src/compat/clear_element_src.ts src/common/compat/clear_element_src.ts
+Mov src/compat/__tests__/add_text_track.test.t src/main/compat/__tests__/add_text_track.test.ts
+Mov src/main/compat/__tests__/clear_element_src.test.ts
+Mov src/compat/eme src/main/compat/eme
+Mov src/core/api src/main/core/api
+Mov src/core/decrypt src/main/common/core/decrypt
+Mov src/core/init/content_time_boundaries_observer.ts src/worker/content_time_boundaries_observer.ts
+Mov src/main/core/init/end_of_stream.ts src/worker/end_of_stream.ts
+Mov src/parsers src/worker/parsers # XXX TODO move to common?
+
+Add dist/multithread/index.html # (Demo page)
+Add dist/multithread/main.js # (Main thread bundle)
+Add dist/multithread/mpd-parser.wasm # (Same wasm than in dist)
+Add dist/multithread/worker.js # (worker bundle)
+Add src/main/core/init/worker_init.ts # initialize for the worker
+Add src/main/features/types.ts
+Add src/main/index.ts
+Add src/main/send_message.ts
+Add src/worker/create_stream_playback_observer.ts
+Add src/worker/globals.ts
+Add src/worker/index.ts
+Add src/worker/send_message.ts
+Add src/worker/worker_content_store.ts
+Add src/worker/worker_playback_observer.ts
+Add src/worker/worker_utils.ts
+Add src/worker/compat/is_codec_supported.ts
+
+Upd package.json # scripts to build worker and main
+Upd src/main/core/api/option_utils.ts # Removing supplementaryTextTracks and supplementaryImageTracks
+Upd src/main/core/api/tests/option_utils.test.ts # Removing supplementaryTextTracks and supplementaryImageTracks
+Upd src/main/core/api/media_element_track_choice_manager.ts # Representation -> ISentRepresentation
+Upd src/main/core/api/playback_observer.ts # export `generateReadOnlyObserver`
+Upd src/main/core/api/public_api.ts # add __priv_worker private state + set it in constructor, update Manifest, Period, Adaptation, Representation types to ISent variants, add `workerUrl` argument to constructor, remove `initialManifest` loadVideoOptions etc.
+Upd src/main/core/api/track_choice_manager.ts # update Manifest, Period, Adaptation, Representation to worker-safe `ISent` variants
+Upd src/main/core/decrypt/content_decryptor.ts # update Manifest, Period, Adaptation, Representation to worker-safe `ISent` variants
+Upd src/main/core/decrypt/types.ts # update Manifest, Period, Adaptation, Representation to worker-safe `ISent` variants
+Upd src/main/core/init/emit_loaded_event.ts # Remove SegmentBuffersStore from event for now
+Upd src/main/core/init/events_generators.ts # Remove SegmentBuffersStore from event for now & ISent variants for Manifest
+Upd src/main/core/init/get_initial_time.ts # ISent variants for Manifest
+Upd src/main/core/init/initialize_directfile.ts # One less argument for emitLoadedEvent
+Upd src/main/core/init/stall_avoider.ts # ISent variants for Manifest
+Upd src/main/core/init/types.ts # ISent variants, events removed, loaded does not have SegmentBuffersStore anymore
+Upd src/worker/content_time_boundaries_observer.ts # warning events imported from elsewhere
+Upd src/worker/core/adaptive/adaptive_representation_selector.ts # Authorize undefined initialBitrates
+Upd src/worker/core/segment_buffers/segment_buffers_store.ts # Removed HTMLMediaElement & text track handling
+Upd src/worker/manifest/manifest.ts # _timeBounds becomes timeBounds and is now public
+Upd src/worker/transports/dash/manifest_parser.ts # use always DASH_WASM parser
+Upd src/worker/typings/globals.d.ts # Add globals
+

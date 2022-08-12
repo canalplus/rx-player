@@ -16,6 +16,7 @@
 
 import { Subject } from "rxjs";
 import { IPlayerError } from "../../../common/public_types";
+import { IContentProtection } from "../../../main";
 import {
   Adaptation,
   ISegment,
@@ -23,7 +24,6 @@ import {
   Representation,
 } from "../../manifest";
 import { IEMSG } from "../../parsers/containers/isobmff";
-import { IContentProtection } from "../decrypt";
 import { IBufferType } from "../segment_buffers";
 
 /** Information about a Segment waiting to be loaded by the Stream. */

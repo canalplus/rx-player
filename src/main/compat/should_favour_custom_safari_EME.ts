@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+import {
+  isSafariDesktop,
+  isSafariMobile,
+} from "./browser_detection";
+import {
+  WebKitMediaKeysConstructor,
+} from "./eme/custom_media_keys/webkit_media_keys_constructor";
 
 /**
  * On Safari 12.1, it seems that since fairplay CDM implementation
@@ -23,6 +30,5 @@
  * @returns {boolean}
  */
 export default function shouldFavourCustomSafariEME() : boolean {
-  // TODO : Worker
-  return false;
+  return (isSafariDesktop || isSafariMobile) && WebKitMediaKeysConstructor !== undefined;
 }
