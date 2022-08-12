@@ -65,10 +65,7 @@ export default function createAdaptiveRepresentationSelector(
    * One per active media type.
    */
   const bandwidthEstimators : Partial<Record<IBufferType, BandwidthEstimator>> = {};
-  const { manualBitrates,
-          minAutoBitrates,
-          maxAutoBitrates,
-          initialBitrates,
+  const { initialBitrates,
           throttlers,
           lowLatencyMode } = options;
 
@@ -97,15 +94,6 @@ export default function createAdaptiveRepresentationSelector(
   ) : IRepresentationEstimatorResponse {
     const { type } = context.adaptation;
     const bandwidthEstimator = _getBandwidthEstimator(type);
-    const manualBitrate = takeFirstSet<IReadOnlySharedReference<number>>(
-      manualBitrates[type],
-      createSharedReference(-1));
-    const minAutoBitrate = takeFirstSet<IReadOnlySharedReference<number>>(
-      minAutoBitrates[type],
-      createSharedReference(0));
-    const maxAutoBitrate = takeFirstSet<IReadOnlySharedReference<number>>(
-      maxAutoBitrates[type],
-      createSharedReference(Infinity));
     const initialBitrate = takeFirstSet<number>(initialBitrates[type], 0);
     const filters = {
       limitWidth: takeFirstSet<IReadOnlySharedReference<number | undefined>>(
@@ -120,9 +108,6 @@ export default function createAdaptiveRepresentationSelector(
                                   currentRepresentation,
                                   filters,
                                   initialBitrate,
-                                  manualBitrate,
-                                  minAutoBitrate,
-                                  maxAutoBitrate,
                                   playbackObserver,
                                   representations,
                                   lowLatencyMode },
@@ -172,9 +157,6 @@ function getEstimateReference(
     filters,
     initialBitrate,
     lowLatencyMode,
-    manualBitrate,
-    maxAutoBitrate,
-    minAutoBitrate,
     playbackObserver,
     representations : representationsRef } : IRepresentationEstimatorArguments,
   stopAllEstimates : CancellationSignal
@@ -200,42 +182,22 @@ function getEstimateReference(
   let currentEstimatesCanceller = new TaskCanceller({ cancelOn: stopAllEstimates });
 
   // Create `ISharedReference` on which estimates will be emitted.
-  const estimateRef = createEstimateReference(manualBitrate.getValue(),
-                                              representationsRef.getValue(),
+  const estimateRef = createEstimateReference(representationsRef.getValue(),
                                               currentEstimatesCanceller.signal);
 
-  manualBitrate.onUpdate(restartEstimatesProductionFromCurrentConditions,
-                         { clearSignal: stopAllEstimates });
   representationsRef.onUpdate(restartEstimatesProductionFromCurrentConditions,
                               { clearSignal: stopAllEstimates });
 
   return { estimates: estimateRef, callbacks };
 
   function createEstimateReference(
-    manualBitrateVal : number,
     representations : Representation[],
     innerCancellationSignal : CancellationSignal
   ) : ISharedReference<IABREstimate> {
-    if (manualBitrateVal >= 0) {
-      // A manual bitrate has been set. Just choose Representation according to it.
-      const manualRepresentation = selectOptimalRepresentation(representations,
-                                                               manualBitrateVal,
-                                                               0,
-                                                               Infinity);
-      return createSharedReference({
-        representation: manualRepresentation,
-        bitrate: undefined, // Bitrate estimation is deactivated here
-        knownStableBitrate: undefined,
-        manual: true,
-        urgent: true, // a manual bitrate switch should happen immediately
-      });
-    }
-
     if (representations.length === 1) {
       // There's only a single Representation. Just choose it.
       return createSharedReference({ bitrate: undefined,
                                      representation: representations[0],
-                                     manual: false,
                                      urgent: true,
                                      knownStableBitrate: undefined });
     }
@@ -298,8 +260,6 @@ function getEstimateReference(
       onAddedSegment = noop;
     });
 
-    minAutoBitrate.onUpdate(updateEstimate, { clearSignal: innerCancellationSignal });
-    maxAutoBitrate.onUpdate(updateEstimate, { clearSignal: innerCancellationSignal });
     filters.limitWidth.onUpdate(updateEstimate, { clearSignal: innerCancellationSignal });
     filters.limitWidth.onUpdate(updateEstimate, { clearSignal: innerCancellationSignal });
 
@@ -315,8 +275,6 @@ function getEstimateReference(
       const widthLimit = filters.limitWidth.getValue();
       const bitrateThrottle = filters.throttleBitrate.getValue();
       const currentRepresentationVal = currentRepresentation.getValue();
-      const minAutoBitrateVal = minAutoBitrate.getValue();
-      const maxAutoBitrateVal = maxAutoBitrate.getValue();
 
       const filteredReps = getFilteredRepresentations(representations,
                                                       widthLimit,
@@ -352,9 +310,7 @@ function getEstimateReference(
        * could actually profit from.
        */
       const chosenRepFromBandwidth = selectOptimalRepresentation(filteredReps,
-                                                                 bitrateChosen,
-                                                                 minAutoBitrateVal,
-                                                                 maxAutoBitrateVal);
+                                                                 bitrateChosen);
 
       let currentBestBitrate = chosenRepFromBandwidth.bitrate;
 
@@ -375,9 +331,7 @@ function getEstimateReference(
       {
 
         chosenRepFromBufferSize = selectOptimalRepresentation(filteredReps,
-                                                              currentBufferBasedEstimate,
-                                                              minAutoBitrateVal,
-                                                              maxAutoBitrateVal);
+                                                              currentBufferBasedEstimate);
         currentBestBitrate = chosenRepFromBufferSize.bitrate;
       }
 
@@ -422,7 +376,6 @@ function getEstimateReference(
                  representation: chosenRepFromGuessMode,
                  urgent: currentRepresentationVal === null ||
                    chosenRepFromGuessMode.bitrate < currentRepresentationVal.bitrate,
-                 manual: false,
                  knownStableBitrate };
       } else if (chosenRepFromBufferSize !== null) {
         log.debug("ABR: Choosing representation with buffer-based estimation.",
@@ -437,7 +390,6 @@ function getEstimateReference(
                                                   currentRepresentationVal,
                                                   requests,
                                                   lastPlaybackObservation),
-                 manual: false,
                  knownStableBitrate };
       } else {
         log.debug("ABR: Choosing representation with bandwidth estimation.",
@@ -452,7 +404,6 @@ function getEstimateReference(
                                                   currentRepresentationVal,
                                                   requests,
                                                   lastPlaybackObservation),
-                 manual: false,
                  knownStableBitrate };
       }
     }
@@ -460,18 +411,14 @@ function getEstimateReference(
 
   /**
    * Stop previous estimate production (if one) and restart it considering new
-   * conditions (such as a manual bitrate and/or a new list of Representations).
+   * conditions (such as a new list of Representations).
    */
   function restartEstimatesProductionFromCurrentConditions() : void {
-    const manualBitrateVal = manualBitrate.getValue();
     const representations = representationsRef.getValue();
     currentEstimatesCanceller.cancel();
     currentEstimatesCanceller = new TaskCanceller({ cancelOn: stopAllEstimates });
-    const newRef = createEstimateReference(
-      manualBitrateVal,
-      representations,
-      currentEstimatesCanceller.signal
-    );
+    const newRef = createEstimateReference(representations,
+                                           currentEstimatesCanceller.signal);
 
     newRef.onUpdate(function onNewEstimate(newEstimate : IABREstimate) : void {
       estimateRef.setValue(newEstimate);
@@ -558,13 +505,6 @@ export interface IABREstimate {
    * If `undefined`, we do not currently know the bitrate for the current type.
    */
   bitrate: undefined | number;
-  /**
-   * If `true`, the `representation` chosen in the current estimate object is
-   * linked to a choice chosen manually by the user.
-   *
-   * If `false`, this estimate is just due to the adaptative logic.
-   */
-  manual: boolean;
   /**
    * The Representation considered as the most adapted to the current network
    * and playback conditions.
@@ -758,50 +698,6 @@ export interface IRepresentationEstimatorArguments {
    * Such contents have specific settings.
    */
   lowLatencyMode: boolean;
-  /**
-   * Reference allowing to set manually choose a Representation:
-   *
-   * The highest-quality Representation with a bitrate lower-or-equal to that
-   * value will be chosen.
-   * If no Representation has bitrate lower or equal to that value, the
-   * Representation with the lowest bitrate will be chosen instead.
-   *
-   * If no Representation has a bitrate lower or equal to that value, the
-   * Representation with the lowest bitrate will be chosen instead.
-   *
-   * Set it to a negative value to enable "adaptative mode" instead:
-   * `getEstimateReference` will choose the best Representation based on the
-   * current network and playback conditions.
-   */
-  manualBitrate : IReadOnlySharedReference<number>;
-  /**
-   * Set a bitrate floor (the minimum reachable bitrate) for adaptative
-   * streaming.
-   *
-   * When `getEstimateReference` is choosing a `Representation` in
-   * adaptive mode (e.g. no Representation has been manually chosen through
-   * the `manualBitrate` reference), it will never choose a Representation
-   * having a bitrate inferior to that value, with a notable exception:
-   * If no Representation has a bitrate superior or equal to that value, the
-   * Representation with the lowest bitrate will be chosen instead.
-   *
-   * You can set it to `0` to disable any effect of that option.
-   */
-  minAutoBitrate : IReadOnlySharedReference<number>;
-  /**
-   * Set a bitrate ceil (the maximum reachable bitrate) for adaptative
-   * streaming.
-   *
-   * When `getEstimateReference` is choosing a `Representation` in
-   * adaptive mode (e.g. no Representation has been manually chosen through
-   * the `manualBitrate` reference), it will never choose a Representation
-   * having a bitrate superior to that value, with a notable exception:
-   * If no Representation has a bitrate lower or equal to that value, the
-   * Representation with the lowest bitrate will be chosen instead.
-   *
-   * You can set it to `Infinity` to disable any effect of that option.
-   */
-  maxAutoBitrate : IReadOnlySharedReference<number>;
   /** The list of Representations `getEstimateReference` can choose from. */
   representations : IReadOnlySharedReference<Representation[]>;
   /** Context for the list of Representations to choose. */
@@ -863,15 +759,6 @@ export interface IAdaptiveRepresentationSelectorArguments {
    * Set it to `true` if you're playing such content.
    */
   lowLatencyMode: boolean;
-
-  /** Minimum bitrate chosen when in adaptive mode, per type (0 by default) */
-  minAutoBitrates: Partial<Record<IBufferType, IReadOnlySharedReference<number>>>;
-
-  /** Maximum bitrate chosen when in adaptive mode, per type (0 by default) */
-  maxAutoBitrates: Partial<Record<IBufferType, IReadOnlySharedReference<number>>>;
-
-  /** Manually forced bitrate set for a given type (`-1` for adaptive mode) */
-  manualBitrates: Partial<Record<IBufferType, IReadOnlySharedReference<number>>>;
 
   /** Allows to filter which Representations can be choosen. */
   throttlers: IRepresentationEstimatorThrottlers;

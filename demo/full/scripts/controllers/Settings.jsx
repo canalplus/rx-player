@@ -21,10 +21,6 @@ class Settings extends React.Component {
 
   getOptions() {
     const {
-      minVideoBr,
-      minAudioBr,
-      maxVideoBr,
-      maxAudioBr,
       wantedBufferAhead,
       maxVideoBufferSize,
       maxBufferAhead,
@@ -41,10 +37,6 @@ class Settings extends React.Component {
     } = this.state;
     return {
       initOpts: {
-        minVideoBitrate: parseFloat(minVideoBr),
-        minAudioBitrate: parseFloat(minAudioBr),
-        maxVideoBitrate: parseFloat(maxVideoBr),
-        maxAudioBitrate: parseFloat(maxAudioBr),
         wantedBufferAhead: parseFloat(wantedBufferAhead),
         maxVideoBufferSize: parseFloat(maxVideoBufferSize),
         maxBufferAhead: parseFloat(maxBufferAhead),
@@ -68,22 +60,6 @@ class Settings extends React.Component {
 
   onAutoPlayClick(evt) {
     this.setState({ autoPlay: getCheckBoxValue(evt.target) });
-  }
-
-  onMinVideoBrInput(value) {
-    this.setState({ minVideoBr: value });
-  }
-
-  onMinAudioBrInput(value) {
-    this.setState({ minAudioBr: value });
-  }
-
-  onMaxVideoBrInput(value) {
-    this.setState({ maxVideoBr: value });
-  }
-
-  onMaxAudioBrInput(value) {
-    this.setState({ maxAudioBr: value });
   }
 
   onLimitVideoWidthClick(evt) {
@@ -139,10 +115,6 @@ class Settings extends React.Component {
   render() {
     const {
       autoPlay,
-      minVideoBr,
-      minAudioBr,
-      maxVideoBr,
-      maxAudioBr,
       limitVideoWidth,
       throttleVideoBitrateWhenHidden,
       segmentRetry,
@@ -158,16 +130,8 @@ class Settings extends React.Component {
     } = this.state;
 
     const initialSettings = {
-      minAudioBr,
-      minVideoBr,
-      maxVideoBr,
-      maxAudioBr,
       limitVideoWidth,
       throttleVideoBitrateWhenHidden,
-      onMinAudioBrInput: this.onMinAudioBrInput,
-      onMinVideoBrInput: this.onMinVideoBrInput,
-      onMaxAudioBrInput: this.onMaxAudioBrInput,
-      onMaxVideoBrInput: this.onMaxVideoBrInput,
       onLimitVideoWidthClick: this.onLimitVideoWidthClick,
       onThrottleVideoBitrateWhenHiddenClick:
         this.onThrottleVideoBitrateWhenHiddenClick,

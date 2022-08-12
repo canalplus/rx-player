@@ -55,10 +55,6 @@ export interface IParsedConstructorOptions {
 
   videoElement : HTMLMediaElement;
   baseBandwidth : number;
-  minAudioBitrate : number;
-  minVideoBitrate : number;
-  maxAudioBitrate : number;
-  maxVideoBitrate : number;
 }
 
 /**
@@ -132,15 +128,9 @@ function parseConstructorOptions(
 
   let videoElement : HTMLMediaElement;
   let baseBandwidth : number;
-  let minAudioBitrate : number;
-  let minVideoBitrate : number;
-  let maxAudioBitrate : number;
-  let maxVideoBitrate : number;
 
   const { DEFAULT_BASE_BANDWIDTH,
           DEFAULT_LIMIT_VIDEO_WIDTH,
-          DEFAULT_MIN_BITRATES,
-          DEFAULT_MAX_BITRATES,
           DEFAULT_MAX_BUFFER_AHEAD,
           DEFAULT_MAX_BUFFER_BEHIND,
           DEFAULT_MAX_VIDEO_BUFFER_SIZE,
@@ -218,50 +208,6 @@ function parseConstructorOptions(
     }
   }
 
-  if (isNullOrUndefined(options.minVideoBitrate)) {
-    minVideoBitrate = DEFAULT_MIN_BITRATES.video;
-  } else {
-    minVideoBitrate = Number(options.minVideoBitrate);
-    if (isNaN(minVideoBitrate)) {
-      throw new Error("Invalid maxVideoBitrate parameter. Should be a number.");
-    }
-  }
-
-  if (isNullOrUndefined(options.minAudioBitrate)) {
-    minAudioBitrate = DEFAULT_MIN_BITRATES.audio;
-  } else {
-    minAudioBitrate = Number(options.minAudioBitrate);
-    if (isNaN(minAudioBitrate)) {
-      throw new Error("Invalid minAudioBitrate parameter. Should be a number.");
-    }
-  }
-
-  if (isNullOrUndefined(options.maxVideoBitrate)) {
-    maxVideoBitrate = DEFAULT_MAX_BITRATES.video;
-  } else {
-    maxVideoBitrate = Number(options.maxVideoBitrate);
-    if (isNaN(maxVideoBitrate)) {
-      throw new Error("Invalid maxVideoBitrate parameter. Should be a number.");
-    } else if (minVideoBitrate > maxVideoBitrate) {
-      throw new Error("Invalid maxVideoBitrate parameter. Its value, \"" +
-                      `${maxVideoBitrate}", is inferior to the set minVideoBitrate, "` +
-                      `${minVideoBitrate}"`);
-    }
-  }
-
-  if (isNullOrUndefined(options.maxAudioBitrate)) {
-    maxAudioBitrate = DEFAULT_MAX_BITRATES.audio;
-  } else {
-    maxAudioBitrate = Number(options.maxAudioBitrate);
-    if (isNaN(maxAudioBitrate)) {
-      throw new Error("Invalid maxAudioBitrate parameter. Should be a number.");
-    } else if (minAudioBitrate > maxAudioBitrate) {
-      throw new Error("Invalid maxAudioBitrate parameter. Its value, \"" +
-                      `${maxAudioBitrate}", is inferior to the set minAudioBitrate, "` +
-                      `${minAudioBitrate}"`);
-    }
-  }
-
   return { maxBufferAhead,
            maxBufferBehind,
            limitVideoWidth,
@@ -269,11 +215,7 @@ function parseConstructorOptions(
            wantedBufferAhead,
            maxVideoBufferSize,
            throttleVideoBitrateWhenHidden,
-           baseBandwidth,
-           minAudioBitrate,
-           minVideoBitrate,
-           maxAudioBitrate,
-           maxVideoBitrate };
+           baseBandwidth };
 }
 
 /**
