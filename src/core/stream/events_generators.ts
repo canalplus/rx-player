@@ -29,7 +29,7 @@ import {
   IActivePeriodChangedEvent,
   IAdaptationChangeEvent,
   IAdaptationChoice,
-  IBitrateEstimationChangeEvent,
+  IBitrateEstimateChangeEvent,
   ICompletedStreamEvent,
   IEncryptionDataEncounteredEvent,
   IEndOfStreamEvent,
@@ -81,11 +81,11 @@ const EVENTS = {
                        buffered } };
   },
 
-  bitrateEstimationChange(
+  bitrateEstimateChange(
     type : IBufferType,
     bitrate : number|undefined
-  ) : IBitrateEstimationChangeEvent {
-    return { type: "bitrateEstimationChange",
+  ) : IBitrateEstimateChangeEvent {
+    return { type: "bitrateEstimateChange",
              value: { type, bitrate } };
   },
 

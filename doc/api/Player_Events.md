@@ -793,29 +793,3 @@ was not entered, and will thus not be exited.
 This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
-
-
-### bitrateEstimationChange
-
-_payload type_: `Object`
-
-Information about the last bitrate estimation performed, by type of buffer
-(`audio`, `video` etc.).
-
-Note that this event is sent only if the corresponding buffer type has multiple
-[Representations](../Getting_Started/Glossary.md#representation) for the given content (as bitrate
-estimations are only useful in that case).
-
-The payload is an object with the following properties:
-
-- `type` (`string`): The buffer type
-
-- `bitrate` (`Number`): The last estimated bandwidth for this buffer type,
-  in bits per seconds.
-  This bitrate is smoothed by doing a (complex) mean on an extended period of
-  time, so it often does not link directly to the current calculated bitrate.
-
-<div class="warning">
-This event is not sent in <i>DirectFile</i> mode (see
-<a href="./Loading_a_Content.md#transport">transport option</a>)
-</div>

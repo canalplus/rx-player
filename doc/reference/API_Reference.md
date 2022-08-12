@@ -466,9 +466,6 @@ properties, methods, events and so on.
     New Periods associated to the current content are known. It is also now
     possible to change their respective tracks and qualities.
 
-  - [`bitrateEstimationChange`](../api/Player_Events.md#bitrateestimationchange):
-    A new bitrate estimate is available.
-
   - [`brokenRepresentationsLock`](../api/Player_Events.md#brokenrepresentationslock):
     Representations previously being locked was automatically unlocked by the
     RxPlayer.
