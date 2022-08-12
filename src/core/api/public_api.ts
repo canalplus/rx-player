@@ -1289,27 +1289,37 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Returns currently considered bitrate for video segments.
-   * @returns {Number|undefined}
+   * Returns video Representation currently considered for the current Period.
+   *
+   * Returns `null` if no video track is playing for the current Period.
+   *
+   * Returns `undefined` either when are not currently playing any Period or
+   * when we don't know which Representation is playing.
+   * @returns {Object|null|undefined}
    */
-  getVideoBitrate() : number|undefined {
+  getVideoRepresentation() : IVideoRepresentation | null | undefined {
     const representations = this._priv_getCurrentRepresentations();
-    if (representations === null || isNullOrUndefined(representations.video)) {
+    if (representations === null) {
       return undefined;
     }
-    return representations.video.bitrate;
+    return representations.video;
   }
 
   /**
-   * Returns currently considered bitrate for audio segments.
-   * @returns {Number|undefined}
+   * Returns audio Representation currently considered for the current Period.
+   *
+   * Returns `null` if no audio track is playing for the current Period.
+   *
+   * Returns `undefined` either when are not currently playing any Period or
+   * when we don't know which Representation is playing.
+   * @returns {Object|null|undefined}
    */
-  getAudioBitrate() : number|undefined {
+  getAudioRepresentation() : IAudioRepresentation | null | undefined {
     const representations = this._priv_getCurrentRepresentations();
-    if (representations === null || isNullOrUndefined(representations.audio)) {
+    if (representations === null) {
       return undefined;
     }
-    return representations.audio.bitrate;
+    return representations.audio;
   }
 
   /**
