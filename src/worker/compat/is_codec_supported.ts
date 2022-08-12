@@ -25,16 +25,6 @@ import { MediaSource_ } from "./browser_compatibility_types";
  * codecs used within the file.
  * @returns {Boolean}
  */
-export default function isCodecSupported(mimeType : string) : boolean {
-  if (MediaSource_ == null) {
-    return false;
-  }
-
-  /* eslint-disable @typescript-eslint/unbound-method */
-  if (typeof MediaSource_.isTypeSupported === "function") {
-  /* eslint-enable @typescript-eslint/unbound-method */
-    return MediaSource_.isTypeSupported(mimeType);
-  }
-
+export default function isCodecSupported(_mimeType : string) : boolean {
   return true;
 }

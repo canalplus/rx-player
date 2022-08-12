@@ -1,0 +1,28 @@
+{
+    "compilerOptions": {
+        "outDir": "./dist",
+        "allowJs": true,
+        "target": "esnext",
+        "module": "ESNext",
+        "checkJs": false,
+        "exactOptionalPropertyTypes": true,
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": false,
+        "noImplicitAny": true,
+        "strict": true,
+        "strictNullChecks": true,
+        "strictPropertyInitialization": true,
+        "noUnusedParameters": true,
+        "noUnusedLocals": true,
+        "types": ["rxjs", "node", "jest"],
+        "moduleResolution": "node",
+        "lib": ["esnext", "webworker"],
+        "typeRoots": [
+            "./src/typings/next-tick.d.ts",
+            "./src/typings/object-assign.d.ts",
+            "./src/typings/globals.d.ts",
+            "./node_modules/@types"
+        ]
+    },
+    "exclude": ["**/*.spec.ts", "**/*.test.ts"]
+}

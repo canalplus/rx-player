@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -78,3 +79,12 @@ declare const __LOGGER_LEVEL__ : {
 };
 
 declare const __RX_PLAYER_DEBUG_MODE__ : boolean | undefined;
+
+declare const MediaSource: any;
+declare const expect: any;
+declare const it: any;
+declare const describe: any;
+declare const jest: any;
+declare const beforeEach: any;
+declare const afterEach: any;
+declare const window: typeof globalThis;

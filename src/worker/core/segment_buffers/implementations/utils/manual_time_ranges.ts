@@ -25,7 +25,7 @@ import {
  * Add an "insert" and "remove" methods to manually update it.
  * @class ManualTimeRanges
  */
-export default class ManualTimeRanges implements TimeRanges {
+export default class ManualTimeRanges {
   public length : number;
 
   private _ranges : Array<{
