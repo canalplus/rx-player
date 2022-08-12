@@ -50,7 +50,6 @@ import {
   IAvailableAudioTrack,
   IAvailableTextTrack,
   IAvailableVideoTrack,
-  IBitrateEstimate,
   IBrokenRepresentationsLockContext,
   IConstructorOptions,
   IDecipherabilityUpdateContent,
@@ -751,8 +750,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_onRepresentationChange(contentInfos, representationInfo));
     initializer.addEventListener("adaptationChange", (adaptationInfo) =>
       this._priv_onAdaptationChange(contentInfos, adaptationInfo));
-    initializer.addEventListener("bitrateEstimationChange", (bitrateEstimationInfo) =>
-      this._priv_onBitrateEstimationChange(bitrateEstimationInfo));
+    initializer.addEventListener("bitrateEstimateChange", (bitrateEstimateInfo) =>
+      this._priv_onBitrateEstimateChange(bitrateEstimateInfo));
     initializer.addEventListener("manifestReady", (manifest) =>
       this._priv_onManifestReady(contentInfos, manifest));
     initializer.addEventListener("loaded", (evt) => {
@@ -2413,7 +2412,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    *
    * @param {Object} value
    */
-  private _priv_onBitrateEstimationChange({
+  private _priv_onBitrateEstimateChange({
     type,
     bitrate,
   } : { type : IBufferType;
@@ -2422,7 +2421,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (bitrate !== undefined) {
       this._priv_bitrateInfos.lastBitrates[type] = bitrate;
     }
-    this.trigger("bitrateEstimationChange", { type, bitrate });
+    // !!! undocumented API :O !!!
+    /* eslint-disable-next-line */
+    this.trigger("__priv_bitrateEstimateChange" as any, { type, bitrate } as any);
   }
 
   /**
@@ -2627,7 +2628,6 @@ interface IPublicAPIEvent {
   videoTrackChange : IVideoTrack | null;
   audioRepresentationChange : IVideoRepresentation | null;
   videoRepresentationChange : IAudioRepresentation | null;
-  bitrateEstimationChange : IBitrateEstimate;
   volumeChange : number;
   error : IPlayerError | Error;
   warning : IPlayerError | Error;

@@ -204,7 +204,7 @@ export default function AdaptationStream<T>(
       }
       previouslyEmittedBitrate = bitrate;
       log.debug(`Stream: new ${adaptation.type} bitrate estimate`, bitrate);
-      callbacks.bitrateEstimationChange({ type: adaptation.type, bitrate });
+      callbacks.bitrateEstimateChange({ type: adaptation.type, bitrate });
     }, { emitCurrentValue: true, clearSignal: fnCancelSignal });
 
     recursivelyCreateRepresentationStreams(estimateRef, abrCallbacks, fnCancelSignal);
