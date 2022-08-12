@@ -199,7 +199,7 @@ export interface IContentInitializerEvents {
   /** Emitted when a new `Adaptation` is being considered. */
   adaptationChange: IAdaptationChangeEventPayload;
   /** Emitted as new bitrate estimates are done. */
-  bitrateEstimationChange: {
+  bitrateEstimateChange: {
     /** The type of buffer for which the estimation is done. */
     type : IBufferType;
     /**
