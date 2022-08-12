@@ -12,6 +12,7 @@ import waitForPlayerState, {
   waitForLoadedStateAfterLoadVideo,
 } from "../../utils/waitForPlayerState.js";
 import sleep from "../../utils/sleep.js";
+import {lockHighestBitrates} from "../../utils/bitrates";
 
 describe("DASH non-linear multi-periods content (SegmentTemplate)", function () {
   launchTestsForContent(manifestInfos);
@@ -76,8 +77,7 @@ describe("DASH multi-Period with different choices", function () {
       periodChangeEvents.push(payload);
     });
 
-    player.setMinAudioBitrate(Infinity);
-    player.setMinVideoBitrate(Infinity);
+    lockHighestBitrates(player);
 
 
     await loadContent();
@@ -155,8 +155,7 @@ describe("DASH multi-Period with different choices", function () {
     });
 
     player.setPlaybackRate(3);
-    player.setMinAudioBitrate(Infinity);
-    player.setMinVideoBitrate(Infinity);
+    lockHighestBitrates(player);
 
 
     await loadContent();
@@ -269,9 +268,7 @@ describe("DASH multi-Period with same choices", function () {
       periodChangeEvents.push(payload);
     });
 
-    player.setMinAudioBitrate(Infinity);
-    player.setMinVideoBitrate(Infinity);
-
+    lockHighestBitrates(player);
 
     await loadContent();
 
@@ -349,9 +346,7 @@ describe("DASH multi-Period with same choices", function () {
     });
 
     player.setPlaybackRate(3);
-    player.setMinAudioBitrate(Infinity);
-    player.setMinVideoBitrate(Infinity);
-
+    lockHighestBitrates(player);
 
     await loadContent();
 
