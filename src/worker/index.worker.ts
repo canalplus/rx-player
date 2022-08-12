@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable max-len */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -5,11 +6,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { Subject } from "rxjs";
 import ABRManager from "./core/abr";
-import { PlaybackObserver } from "./core/api";
+import { IPlaybackObservation, PlaybackObserver } from "./core/api";
 import { ManifestFetcher, SegmentFetcherCreator } from "./core/fetchers";
 import createStreamPlaybackObserver from "./core/init/create_stream_playback_observer";
 import SegmentBuffersStore from "./core/segment_buffers";
+import ManualTimeRanges from "./core/segment_buffers/implementations/utils/manual_time_ranges";
 import StreamOrchestrator from "./core/stream";
 import DashWasmParser from "./parsers/manifest/dash/wasm-parser";
 import createDashPipeline from "./transports/dash";
@@ -18,9 +21,23 @@ import createSharedReference from "./utils/reference";
 (globalThis as any).window = globalThis;
 const createAndLinkMediaSource = () => {
   const mediaSource = new MediaSource();
-  const objectUrl = URL.createObjectURL(mediaSource);
-  postMessage({ topic: "objectUrl", arg: objectUrl });
+  const handle = mediaSource.handle;
+  postMessage({ topic: "objectHandle", arg: handle }, [handle]);
   return mediaSource;
+};
+const playbackObserver = new PlaybackObserver({
+  lowLatencyMode: false,
+  withMediaSource: true,
+});
+const playbackSubject = new Subject<IPlaybackObservation>();
+playbackObserver._observation$ = playbackSubject;
+
+const deserializeTimeRanges = (tr: number[][]) => {
+  const buffered = new ManualTimeRanges();
+  tr.forEach(([start, end]) => {
+    buffered.insert(start, end);
+  });
+  return buffered;
 };
 
 const initManagers = (mediaSource: any, mpdUrl: string) => {
@@ -56,10 +73,6 @@ const initManagers = (mediaSource: any, mpdUrl: string) => {
       }).subscribe((parseEvent) => {
         if (parseEvent.type === "parsed") {
           const manifest = parseEvent.manifest;
-          const playbackObserver = new PlaybackObserver({
-            lowLatencyMode: false,
-            withMediaSource: true,
-          });
           const streamPlaybackObserver = createStreamPlaybackObserver(manifest, playbackObserver,
                                                                       {
                                                                         autoPlay: false,
@@ -68,6 +81,8 @@ const initManagers = (mediaSource: any, mpdUrl: string) => {
                                                                         speed: createSharedReference(1),
                                                                         startTime: 0,
                                                                       });
+
+          streamPlaybackObserver.observe(true).subscribe((streamEvent) => console.warn("[StreamPlaybackObserver] :", streamEvent.position));
 
 
           const stream = StreamOrchestrator({ initialPeriod: manifest.periods[0], manifest },
@@ -84,12 +99,12 @@ const initManagers = (mediaSource: any, mpdUrl: string) => {
                                                enableFastSwitching: true,
                                                manualBitrateSwitchingMode: "direct",
                                                onCodecSwitch: "continue" });
-        stream.subscribe((ev) => {
-          console.log(ev);
-          if(ev.type == "periodStreamReady"){
-              ev.value.adaptation$.next(ev.value.period.adaptations[ev.value.type][0]);
-          }	
-        });
+
+          stream.subscribe((event) => {
+            if (event.type === "periodStreamReady") {
+              event.value.adaptation$.next(event.value.period.adaptations[event.value.type][0]);
+            }
+          });
         }
       });
     }
@@ -99,15 +114,33 @@ const initManagers = (mediaSource: any, mpdUrl: string) => {
 };
 
 
-onmessage = async (e: MessageEvent<{mpd: string}>) => {
-  const parser = new DashWasmParser();
-  await parser.initialize({ wasmUrl: "TODO_CHANGE" });
-  (globalThis as any).parser = parser;
-  const mediaSource = createAndLinkMediaSource();
+onmessage = async (
+  e: MessageEvent<{mpd: string; topic: "mpd"}
+                | {observation: IPlaybackObservation; topic: "playback"}>
+) => {
+  console.log(e);
+  if (e.data.topic === "mpd") {
+    const parser = new DashWasmParser();
+    await parser.initialize({ wasmUrl: "http://localhost:8080/src/test/mpd-parser.wasm" });
+    (globalThis as any).parser = parser;
+    const mediaSource = createAndLinkMediaSource();
+    const mpd = e.data.mpd;
+    const init = () => {
+      initManagers(mediaSource, mpd);
+    };
+    mediaSource.addEventListener("sourceopen", init);
+  }
+  else if (e.data.topic === "playback") {
+    console.log("From worker test playback");
+    const observation = e.data.observation;
+    observation.buffered = deserializeTimeRanges(observation.buffered);
+    playbackObserver.setCurrentTime(observation.position);
+    playbackObserver.setReadyState(observation.readyState);
+    playbackSubject.next(observation);
+    // playbackObserver._lastObservation = observation;
 
-  mediaSource.addEventListener("sourceopen", () => {
-    initManagers(mediaSource, e.data.mpd);
-  });
+    // playbackObserver.observe(true).subscribe((ev) => console.warn("[DEBUG WORKER] :", ev));
+  }
 
 
 };

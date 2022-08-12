@@ -1,11 +1,13 @@
 (() => {
-  globalThis.window = globalThis;
   var __create = Object.create;
   var __defProp = Object.defineProperty;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
   var __getOwnPropNames = Object.getOwnPropertyNames;
   var __getProtoOf = Object.getPrototypeOf;
   var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __esm = (fn, res) => function __init() {
+    return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+  };
   var __commonJS = (cb, mod) => function __require() {
     return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
   };
@@ -19,9 +21,21 @@
   };
   var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
+  // <define:__ENVIRONMENT__>
+  var PRODUCTION, DEV, CURRENT_ENV, define_ENVIRONMENT_default;
+  var init_define_ENVIRONMENT = __esm({
+    "<define:__ENVIRONMENT__>"() {
+      PRODUCTION = 0;
+      DEV = 1;
+      CURRENT_ENV = 1;
+      define_ENVIRONMENT_default = { PRODUCTION, DEV, CURRENT_ENV };
+    }
+  });
+
   // node_modules/tslib/tslib.js
   var require_tslib = __commonJS({
     "node_modules/tslib/tslib.js"(exports, module) {
+      init_define_ENVIRONMENT();
       var __extends2;
       var __assign2;
       var __rest2;
@@ -443,6 +457,7 @@
   var require_next_tick = __commonJS({
     "node_modules/next-tick/index.js"(exports, module) {
       "use strict";
+      init_define_ENVIRONMENT();
       var ensureCallable = function(fn) {
         if (typeof fn !== "function")
           throw new TypeError(fn + " is not a function");
@@ -518,7 +533,20 @@
     }
   });
 
+  // src/worker/index.worker.ts
+  init_define_ENVIRONMENT();
+
+  // node_modules/rxjs/dist/esm5/index.js
+  init_define_ENVIRONMENT();
+
+  // node_modules/rxjs/dist/esm5/internal/Observable.js
+  init_define_ENVIRONMENT();
+
+  // node_modules/rxjs/dist/esm5/internal/Subscriber.js
+  init_define_ENVIRONMENT();
+
   // node_modules/tslib/modules/index.js
+  init_define_ENVIRONMENT();
   var import_tslib = __toESM(require_tslib(), 1);
   var {
     __extends,
@@ -548,11 +576,19 @@
   } = import_tslib.default;
 
   // node_modules/rxjs/dist/esm5/internal/util/isFunction.js
+  init_define_ENVIRONMENT();
   function isFunction(value) {
     return typeof value === "function";
   }
 
+  // node_modules/rxjs/dist/esm5/internal/Subscription.js
+  init_define_ENVIRONMENT();
+
+  // node_modules/rxjs/dist/esm5/internal/util/UnsubscriptionError.js
+  init_define_ENVIRONMENT();
+
   // node_modules/rxjs/dist/esm5/internal/util/createErrorClass.js
+  init_define_ENVIRONMENT();
   function createErrorClass(createImpl) {
     var _super = function(instance) {
       Error.call(instance);
@@ -577,6 +613,7 @@
   });
 
   // node_modules/rxjs/dist/esm5/internal/util/arrRemove.js
+  init_define_ENVIRONMENT();
   function arrRemove(arr, item) {
     if (arr) {
       var index = arr.indexOf(item);
@@ -722,6 +759,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/config.js
+  init_define_ENVIRONMENT();
   var config = {
     onUnhandledError: null,
     onStoppedNotification: null,
@@ -730,7 +768,11 @@
     useDeprecatedNextContext: false
   };
 
+  // node_modules/rxjs/dist/esm5/internal/util/reportUnhandledError.js
+  init_define_ENVIRONMENT();
+
   // node_modules/rxjs/dist/esm5/internal/scheduler/timeoutProvider.js
+  init_define_ENVIRONMENT();
   var timeoutProvider = {
     setTimeout: function() {
       var args = [];
@@ -760,10 +802,12 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/util/noop.js
+  init_define_ENVIRONMENT();
   function noop() {
   }
 
   // node_modules/rxjs/dist/esm5/internal/NotificationFactories.js
+  init_define_ENVIRONMENT();
   var COMPLETE_NOTIFICATION = function() {
     return createNotification("C", void 0, void 0);
   }();
@@ -782,6 +826,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/util/errorContext.js
+  init_define_ENVIRONMENT();
   var context = null;
   function errorContext(cb) {
     if (config.useDeprecatedSynchronousErrorHandling) {
@@ -941,11 +986,16 @@
   };
 
   // node_modules/rxjs/dist/esm5/internal/symbol/observable.js
+  init_define_ENVIRONMENT();
   var observable = function() {
     return typeof Symbol === "function" && Symbol.observable || "@@observable";
   }();
 
+  // node_modules/rxjs/dist/esm5/internal/util/pipe.js
+  init_define_ENVIRONMENT();
+
   // node_modules/rxjs/dist/esm5/internal/util/identity.js
+  init_define_ENVIRONMENT();
   function identity(x) {
     return x;
   }
@@ -1054,6 +1104,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/util/lift.js
+  init_define_ENVIRONMENT();
   function hasLift(source) {
     return isFunction(source === null || source === void 0 ? void 0 : source.lift);
   }
@@ -1073,6 +1124,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/operators/OperatorSubscriber.js
+  init_define_ENVIRONMENT();
   var OperatorSubscriber = function(_super) {
     __extends(OperatorSubscriber2, _super);
     function OperatorSubscriber2(destination, onNext, onComplete, onError, onFinalize) {
@@ -1114,7 +1166,11 @@
     return OperatorSubscriber2;
   }(Subscriber);
 
+  // node_modules/rxjs/dist/esm5/internal/Subject.js
+  init_define_ENVIRONMENT();
+
   // node_modules/rxjs/dist/esm5/internal/util/ObjectUnsubscribedError.js
+  init_define_ENVIRONMENT();
   var ObjectUnsubscribedError = createErrorClass(function(_super) {
     return function ObjectUnsubscribedErrorImpl() {
       _super(this);
@@ -1270,7 +1326,11 @@
     return AnonymousSubject2;
   }(Subject);
 
+  // node_modules/rxjs/dist/esm5/internal/ReplaySubject.js
+  init_define_ENVIRONMENT();
+
   // node_modules/rxjs/dist/esm5/internal/scheduler/dateTimestampProvider.js
+  init_define_ENVIRONMENT();
   var dateTimestampProvider = {
     now: function() {
       return (dateTimestampProvider.delegate || Date).now();
@@ -1339,7 +1399,17 @@
     return ReplaySubject2;
   }(Subject);
 
+  // node_modules/rxjs/dist/esm5/internal/scheduler/asap.js
+  init_define_ENVIRONMENT();
+
+  // node_modules/rxjs/dist/esm5/internal/scheduler/AsapAction.js
+  init_define_ENVIRONMENT();
+
+  // node_modules/rxjs/dist/esm5/internal/scheduler/AsyncAction.js
+  init_define_ENVIRONMENT();
+
   // node_modules/rxjs/dist/esm5/internal/scheduler/Action.js
+  init_define_ENVIRONMENT();
   var Action = function(_super) {
     __extends(Action2, _super);
     function Action2(scheduler, work) {
@@ -1355,6 +1425,7 @@
   }(Subscription);
 
   // node_modules/rxjs/dist/esm5/internal/scheduler/intervalProvider.js
+  init_define_ENVIRONMENT();
   var intervalProvider = {
     setInterval: function() {
       var args = [];
@@ -1458,7 +1529,11 @@
     return AsyncAction2;
   }(Action);
 
+  // node_modules/rxjs/dist/esm5/internal/scheduler/immediateProvider.js
+  init_define_ENVIRONMENT();
+
   // node_modules/rxjs/dist/esm5/internal/util/Immediate.js
+  init_define_ENVIRONMENT();
   var nextHandle = 1;
   var resolved;
   var activeHandles = {};
@@ -1540,7 +1615,14 @@
     return AsapAction2;
   }(AsyncAction);
 
+  // node_modules/rxjs/dist/esm5/internal/scheduler/AsapScheduler.js
+  init_define_ENVIRONMENT();
+
+  // node_modules/rxjs/dist/esm5/internal/scheduler/AsyncScheduler.js
+  init_define_ENVIRONMENT();
+
   // node_modules/rxjs/dist/esm5/internal/Scheduler.js
+  init_define_ENVIRONMENT();
   var Scheduler = function() {
     function Scheduler2(schedulerActionCtor, now) {
       if (now === void 0) {
@@ -1630,15 +1712,24 @@
   var asapScheduler = new AsapScheduler(AsapAction);
 
   // node_modules/rxjs/dist/esm5/internal/scheduler/async.js
+  init_define_ENVIRONMENT();
   var asyncScheduler = new AsyncScheduler(AsyncAction);
   var async = asyncScheduler;
 
   // node_modules/rxjs/dist/esm5/internal/observable/empty.js
+  init_define_ENVIRONMENT();
   var EMPTY = new Observable(function(subscriber) {
     return subscriber.complete();
   });
 
+  // node_modules/rxjs/dist/esm5/internal/observable/of.js
+  init_define_ENVIRONMENT();
+
+  // node_modules/rxjs/dist/esm5/internal/util/args.js
+  init_define_ENVIRONMENT();
+
   // node_modules/rxjs/dist/esm5/internal/util/isScheduler.js
+  init_define_ENVIRONMENT();
   function isScheduler(value) {
     return value && isFunction(value.schedule);
   }
@@ -1657,32 +1748,53 @@
     return typeof last(args) === "number" ? args.pop() : defaultValue;
   }
 
+  // node_modules/rxjs/dist/esm5/internal/observable/from.js
+  init_define_ENVIRONMENT();
+
+  // node_modules/rxjs/dist/esm5/internal/scheduled/scheduled.js
+  init_define_ENVIRONMENT();
+
+  // node_modules/rxjs/dist/esm5/internal/scheduled/scheduleObservable.js
+  init_define_ENVIRONMENT();
+
+  // node_modules/rxjs/dist/esm5/internal/observable/innerFrom.js
+  init_define_ENVIRONMENT();
+
   // node_modules/rxjs/dist/esm5/internal/util/isArrayLike.js
+  init_define_ENVIRONMENT();
   var isArrayLike = function(x) {
     return x && typeof x.length === "number" && typeof x !== "function";
   };
 
   // node_modules/rxjs/dist/esm5/internal/util/isPromise.js
+  init_define_ENVIRONMENT();
   function isPromise(value) {
     return isFunction(value === null || value === void 0 ? void 0 : value.then);
   }
 
   // node_modules/rxjs/dist/esm5/internal/util/isInteropObservable.js
+  init_define_ENVIRONMENT();
   function isInteropObservable(input) {
     return isFunction(input[observable]);
   }
 
   // node_modules/rxjs/dist/esm5/internal/util/isAsyncIterable.js
+  init_define_ENVIRONMENT();
   function isAsyncIterable(obj) {
     return Symbol.asyncIterator && isFunction(obj === null || obj === void 0 ? void 0 : obj[Symbol.asyncIterator]);
   }
 
   // node_modules/rxjs/dist/esm5/internal/util/throwUnobservableError.js
+  init_define_ENVIRONMENT();
   function createInvalidObservableTypeError(input) {
     return new TypeError("You provided " + (input !== null && typeof input === "object" ? "an invalid object" : "'" + input + "'") + " where a stream was expected. You can provide an Observable, Promise, ReadableStream, Array, AsyncIterable, or Iterable.");
   }
 
+  // node_modules/rxjs/dist/esm5/internal/util/isIterable.js
+  init_define_ENVIRONMENT();
+
   // node_modules/rxjs/dist/esm5/internal/symbol/iterator.js
+  init_define_ENVIRONMENT();
   function getSymbolIterator() {
     if (typeof Symbol !== "function" || !Symbol.iterator) {
       return "@@iterator";
@@ -1697,6 +1809,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/util/isReadableStreamLike.js
+  init_define_ENVIRONMENT();
   function readableStreamLikeToAsyncGenerator(readableStream) {
     return __asyncGenerator(this, arguments, function readableStreamLikeToAsyncGenerator_1() {
       var reader, _a, value, done;
@@ -1886,7 +1999,11 @@
     });
   }
 
+  // node_modules/rxjs/dist/esm5/internal/operators/observeOn.js
+  init_define_ENVIRONMENT();
+
   // node_modules/rxjs/dist/esm5/internal/util/executeSchedule.js
+  init_define_ENVIRONMENT();
   function executeSchedule(parentSubscription, scheduler, work, delay, repeat) {
     if (delay === void 0) {
       delay = 0;
@@ -1931,6 +2048,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/operators/subscribeOn.js
+  init_define_ENVIRONMENT();
   function subscribeOn(scheduler, delay) {
     if (delay === void 0) {
       delay = 0;
@@ -1948,11 +2066,13 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/scheduled/schedulePromise.js
+  init_define_ENVIRONMENT();
   function schedulePromise(input, scheduler) {
     return innerFrom(input).pipe(subscribeOn(scheduler), observeOn(scheduler));
   }
 
   // node_modules/rxjs/dist/esm5/internal/scheduled/scheduleArray.js
+  init_define_ENVIRONMENT();
   function scheduleArray(input, scheduler) {
     return new Observable(function(subscriber) {
       var i = 0;
@@ -1970,6 +2090,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/scheduled/scheduleIterable.js
+  init_define_ENVIRONMENT();
   function scheduleIterable(input, scheduler) {
     return new Observable(function(subscriber) {
       var iterator2;
@@ -1999,6 +2120,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/scheduled/scheduleAsyncIterable.js
+  init_define_ENVIRONMENT();
   function scheduleAsyncIterable(input, scheduler) {
     if (!input) {
       throw new Error("Iterable cannot be null");
@@ -2020,6 +2142,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/scheduled/scheduleReadableStreamLike.js
+  init_define_ENVIRONMENT();
   function scheduleReadableStreamLike(input, scheduler) {
     return scheduleAsyncIterable(readableStreamLikeToAsyncGenerator(input), scheduler);
   }
@@ -2065,11 +2188,16 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/util/isDate.js
+  init_define_ENVIRONMENT();
   function isValidDate(value) {
     return value instanceof Date && !isNaN(value);
   }
 
+  // node_modules/rxjs/dist/esm5/internal/util/mapOneOrManyArgs.js
+  init_define_ENVIRONMENT();
+
   // node_modules/rxjs/dist/esm5/internal/operators/map.js
+  init_define_ENVIRONMENT();
   function map(project, thisArg) {
     return operate(function(source, subscriber) {
       var index = 0;
@@ -2090,7 +2218,11 @@
     });
   }
 
+  // node_modules/rxjs/dist/esm5/internal/observable/combineLatest.js
+  init_define_ENVIRONMENT();
+
   // node_modules/rxjs/dist/esm5/internal/util/argsArgArrayOrObject.js
+  init_define_ENVIRONMENT();
   var isArray2 = Array.isArray;
   var getPrototypeOf = Object.getPrototypeOf;
   var objectProto = Object.prototype;
@@ -2118,6 +2250,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/util/createObject.js
+  init_define_ENVIRONMENT();
   function createObject(keys, values) {
     return keys.reduce(function(result, key, i) {
       return result[key] = values[i], result;
@@ -2185,7 +2318,20 @@
     }
   }
 
+  // node_modules/rxjs/dist/esm5/internal/observable/concat.js
+  init_define_ENVIRONMENT();
+
+  // node_modules/rxjs/dist/esm5/internal/operators/concatAll.js
+  init_define_ENVIRONMENT();
+
+  // node_modules/rxjs/dist/esm5/internal/operators/mergeAll.js
+  init_define_ENVIRONMENT();
+
+  // node_modules/rxjs/dist/esm5/internal/operators/mergeMap.js
+  init_define_ENVIRONMENT();
+
   // node_modules/rxjs/dist/esm5/internal/operators/mergeInternals.js
+  init_define_ENVIRONMENT();
   function mergeInternals(source, subscriber, project, concurrent, onBeforeNext, expand, innerSubScheduler, additionalTeardown) {
     var buffer = [];
     var active = 0;
@@ -2287,6 +2433,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/observable/defer.js
+  init_define_ENVIRONMENT();
   function defer(observableFactory) {
     return new Observable(function(subscriber) {
       innerFrom(observableFactory()).subscribe(subscriber);
@@ -2294,6 +2441,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/observable/fromEvent.js
+  init_define_ENVIRONMENT();
   var nodeEventEmitterMethods = ["addListener", "removeListener"];
   var eventTargetMethods = ["addEventListener", "removeEventListener"];
   var jqueryMethods = ["on", "off"];
@@ -2351,7 +2499,11 @@
     return isFunction(target.addEventListener) && isFunction(target.removeEventListener);
   }
 
+  // node_modules/rxjs/dist/esm5/internal/observable/interval.js
+  init_define_ENVIRONMENT();
+
   // node_modules/rxjs/dist/esm5/internal/observable/timer.js
+  init_define_ENVIRONMENT();
   function timer(dueTime, intervalOrScheduler, scheduler) {
     if (dueTime === void 0) {
       dueTime = 0;
@@ -2401,6 +2553,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/observable/merge.js
+  init_define_ENVIRONMENT();
   function merge() {
     var args = [];
     for (var _i = 0; _i < arguments.length; _i++) {
@@ -2413,6 +2566,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/operators/filter.js
+  init_define_ENVIRONMENT();
   function filter(predicate, thisArg) {
     return operate(function(source, subscriber) {
       var index = 0;
@@ -2423,6 +2577,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/operators/catchError.js
+  init_define_ENVIRONMENT();
   function catchError(selector) {
     return operate(function(source, subscriber) {
       var innerSub = null;
@@ -2447,6 +2602,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/operators/scanInternals.js
+  init_define_ENVIRONMENT();
   function scanInternals(accumulator, seed, hasSeed, emitOnNext, emitBeforeComplete) {
     return function(source, subscriber) {
       var hasState = hasSeed;
@@ -2464,6 +2620,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/operators/take.js
+  init_define_ENVIRONMENT();
   function take(count) {
     return count <= 0 ? function() {
       return EMPTY;
@@ -2481,6 +2638,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/operators/ignoreElements.js
+  init_define_ENVIRONMENT();
   function ignoreElements() {
     return operate(function(source, subscriber) {
       source.subscribe(new OperatorSubscriber(subscriber, noop));
@@ -2488,6 +2646,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/operators/distinctUntilChanged.js
+  init_define_ENVIRONMENT();
   function distinctUntilChanged(comparator, keySelector) {
     if (keySelector === void 0) {
       keySelector = identity;
@@ -2511,6 +2670,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/operators/exhaustMap.js
+  init_define_ENVIRONMENT();
   function exhaustMap(project, resultSelector) {
     if (resultSelector) {
       return function(source) {
@@ -2541,6 +2701,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/operators/finalize.js
+  init_define_ENVIRONMENT();
   function finalize(callback) {
     return operate(function(source, subscriber) {
       try {
@@ -2552,11 +2713,13 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/operators/scan.js
+  init_define_ENVIRONMENT();
   function scan(accumulator, seed) {
     return operate(scanInternals(accumulator, seed, arguments.length >= 2, true));
   }
 
   // node_modules/rxjs/dist/esm5/internal/operators/share.js
+  init_define_ENVIRONMENT();
   function share(options) {
     if (options === void 0) {
       options = {};
@@ -2639,6 +2802,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/operators/shareReplay.js
+  init_define_ENVIRONMENT();
   function shareReplay(configOrBufferSize, windowTime, scheduler) {
     var _a, _b;
     var bufferSize;
@@ -2662,6 +2826,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/operators/skip.js
+  init_define_ENVIRONMENT();
   function skip(count) {
     return filter(function(_, index) {
       return count <= index;
@@ -2669,6 +2834,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/operators/startWith.js
+  init_define_ENVIRONMENT();
   function startWith() {
     var values = [];
     for (var _i = 0; _i < arguments.length; _i++) {
@@ -2681,6 +2847,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/operators/switchMap.js
+  init_define_ENVIRONMENT();
   function switchMap(project, resultSelector) {
     return operate(function(source, subscriber) {
       var innerSubscriber = null;
@@ -2707,6 +2874,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/operators/takeUntil.js
+  init_define_ENVIRONMENT();
   function takeUntil(notifier) {
     return operate(function(source, subscriber) {
       innerFrom(notifier).subscribe(new OperatorSubscriber(subscriber, function() {
@@ -2717,6 +2885,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/operators/takeWhile.js
+  init_define_ENVIRONMENT();
   function takeWhile(predicate, inclusive) {
     if (inclusive === void 0) {
       inclusive = false;
@@ -2732,6 +2901,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/operators/tap.js
+  init_define_ENVIRONMENT();
   function tap(observerOrNext, error, complete) {
     var tapObserver = isFunction(observerOrNext) || error || complete ? { next: observerOrNext, error, complete } : observerOrNext;
     return tapObserver ? operate(function(source, subscriber) {
@@ -2763,6 +2933,7 @@
   }
 
   // node_modules/rxjs/dist/esm5/internal/operators/withLatestFrom.js
+  init_define_ENVIRONMENT();
   function withLatestFrom() {
     var inputs = [];
     for (var _i = 0; _i < arguments.length; _i++) {
@@ -2797,11 +2968,25 @@
     });
   }
 
+  // src/worker/core/abr/index.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/core/abr/abr_manager.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/log.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/utils/logger.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/utils/noop.ts
+  init_define_ENVIRONMENT();
   function noop_default() {
   }
 
   // src/worker/utils/logger.ts
+  globalThis.window = globalThis;
   var DEFAULT_LOG_LEVEL = "NONE";
   var Logger = class {
     error;
@@ -2852,6 +3037,7 @@
   var log_default = logger;
 
   // src/worker/utils/object_assign.ts
+  init_define_ENVIRONMENT();
   function objectAssign(target, ...sources) {
     if (target === null || target === void 0) {
       throw new TypeError("Cannot convert undefined or null to object");
@@ -2869,7 +3055,11 @@
   }
   var object_assign_default = typeof Object.assign === "function" ? Object.assign : objectAssign;
 
+  // src/worker/utils/take_first_set.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/utils/is_null_or_undefined.ts
+  init_define_ENVIRONMENT();
   function isNullOrUndefined(x) {
     return x === null || x === void 0;
   }
@@ -2888,7 +3078,14 @@
     return void 0;
   }
 
+  // src/worker/core/abr/bandwidth_estimator.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/config.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/default_config.ts
+  init_define_ENVIRONMENT();
   var DEFAULT_CONFIG = {
     DEFAULT_UNMUTED_VOLUME: 0.1,
     DEFAULT_REQUEST_TIMEOUT: 30 * 1e3,
@@ -3080,6 +3277,7 @@
   var default_config_default = DEFAULT_CONFIG;
 
   // src/worker/utils/deep_merge.ts
+  init_define_ENVIRONMENT();
   function isObject(item) {
     return item !== null && item !== void 0 && !Array.isArray(item) && typeof item === "object";
   }
@@ -3119,6 +3317,7 @@
   var config_default = configHandler;
 
   // src/worker/core/abr/utils/ewma.ts
+  init_define_ENVIRONMENT();
   var EWMA = class {
     _alpha;
     _lastEstimate;
@@ -3179,7 +3378,11 @@
     }
   };
 
+  // src/worker/core/abr/representation_estimator.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/utils/ranges.ts
+  init_define_ENVIRONMENT();
   var EPSILON = 1 / 60;
   function nearlyEqual(a, b) {
     return Math.abs(a - b) < EPSILON;
@@ -3365,7 +3568,11 @@
     return result;
   }
 
+  // src/worker/core/abr/buffer_based_chooser.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/utils/array_find_index.ts
+  init_define_ENVIRONMENT();
   function arrayFindIndex(arr, predicate, thisArg) {
     if (typeof Array.prototype.findIndex === "function") {
       return arr.findIndex(predicate, thisArg);
@@ -3380,6 +3587,7 @@
   }
 
   // src/worker/core/abr/get_buffer_levels.ts
+  init_define_ENVIRONMENT();
   function getBufferLevels(bitrates) {
     const logs = bitrates.map((b) => Math.log(b / bitrates[0]));
     const utilities = logs.map((l) => l - logs[0] + 1);
@@ -3454,7 +3662,11 @@
     }
   };
 
+  // src/worker/core/abr/guess_based_chooser.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/core/abr/last_estimate_storage.ts
+  init_define_ENVIRONMENT();
   var LastEstimateStorage = class {
     bandwidth;
     representation;
@@ -3478,7 +3690,11 @@
     return ABRAlgorithmType2;
   })(ABRAlgorithmType || {});
 
+  // src/worker/core/abr/network_analyzer.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/utils/array_find.ts
+  init_define_ENVIRONMENT();
   function arrayFind(arr, predicate, thisArg) {
     if (typeof Array.prototype.find === "function") {
       return arr.find(predicate, thisArg);
@@ -3694,6 +3910,7 @@
   };
 
   // src/worker/core/abr/representation_score_calculator.ts
+  init_define_ENVIRONMENT();
   var RepresentationScoreCalculator = class {
     _currentRepresentationData;
     _lastRepresentationWithGoodScore;
@@ -3875,7 +4092,11 @@
     return null;
   }
 
+  // src/worker/core/abr/pending_requests_store.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/utils/object_values.ts
+  init_define_ENVIRONMENT();
   function objectValues(o) {
     return Object.keys(o).map((k) => o[k]);
   }
@@ -3898,7 +4119,7 @@
     addProgress(progress) {
       const request2 = this._currentRequests[progress.id];
       if (request2 == null) {
-        if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV) {
+        if (define_ENVIRONMENT_default.CURRENT_ENV === define_ENVIRONMENT_default.DEV) {
           throw new Error("ABR: progress for a request not added");
         }
         log_default.warn("ABR: progress for a request not added");
@@ -3908,7 +4129,7 @@
     }
     remove(id) {
       if (this._currentRequests[id] == null) {
-        if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV) {
+        if (define_ENVIRONMENT_default.CURRENT_ENV === define_ENVIRONMENT_default.DEV) {
           throw new Error("ABR: can't remove unknown request");
         }
         log_default.warn("ABR: can't remove unknown request");
@@ -3921,6 +4142,7 @@
   };
 
   // src/worker/core/abr/utils/filter_by_bitrate.ts
+  init_define_ENVIRONMENT();
   function filterByBitrate(representations, bitrate) {
     if (representations.length === 0) {
       return [];
@@ -3936,6 +4158,7 @@
   }
 
   // src/worker/core/abr/utils/filter_by_width.ts
+  init_define_ENVIRONMENT();
   function filterByWidth(representations, width) {
     const sortedRepsByWidth = representations.slice().sort((a, b) => takeFirstSet(a.width, 0) - takeFirstSet(b.width, 0));
     const repWithMaxWidth = arrayFind(sortedRepsByWidth, (representation) => typeof representation.width === "number" && representation.width >= width);
@@ -3947,6 +4170,7 @@
   }
 
   // src/worker/core/abr/utils/select_optimal_representation.ts
+  init_define_ENVIRONMENT();
   function selectOptimalRepresentation(representations, optimalBitrate, minBitrate, maxBitrate) {
     const wantedBitrate = optimalBitrate <= minBitrate ? minBitrate : optimalBitrate >= maxBitrate ? maxBitrate : optimalBitrate;
     const firstIndexTooHigh = arrayFindIndex(representations, (representation) => representation.bitrate > wantedBitrate);
@@ -4194,7 +4418,17 @@
   // src/worker/core/abr/index.ts
   var abr_default = ABRManager;
 
+  // src/worker/core/api/index.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/core/api/playback_observer.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/compat/browser_compatibility_types.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/compat/is_node.ts
+  init_define_ENVIRONMENT();
   var isNode = typeof window === "undefined";
   var is_node_default = isNode;
 
@@ -4209,7 +4443,17 @@
     HAVE_ENOUGH_DATA: 4
   };
 
+  // src/worker/core/segment_buffers/implementations/utils/manual_time_ranges.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/utils/assert.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/errors/index.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/errors/assertion_error.ts
+  init_define_ENVIRONMENT();
   var AssertionError = class extends Error {
     name;
     message;
@@ -4222,6 +4466,7 @@
   };
 
   // src/worker/errors/custom_loader_error.ts
+  init_define_ENVIRONMENT();
   var CustomLoaderError = class extends Error {
     name;
     message;
@@ -4239,7 +4484,11 @@
     }
   };
 
+  // src/worker/errors/encrypted_media_error.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/errors/error_codes.ts
+  init_define_ENVIRONMENT();
   var ErrorTypes = {
     NETWORK_ERROR: "NETWORK_ERROR",
     MEDIA_ERROR: "MEDIA_ERROR",
@@ -4254,6 +4503,7 @@
   };
 
   // src/worker/errors/error_message.ts
+  init_define_ENVIRONMENT();
   function errorMessage(name, code, reason) {
     return `${name} (${code}) ${reason}`;
   }
@@ -4276,7 +4526,14 @@
     }
   };
 
+  // src/worker/errors/format_error.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/errors/is_known_error.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/errors/media_error.ts
+  init_define_ENVIRONMENT();
   var MediaError = class extends Error {
     name;
     type;
@@ -4295,6 +4552,7 @@
   };
 
   // src/worker/errors/network_error.ts
+  init_define_ENVIRONMENT();
   var NetworkError = class extends Error {
     name;
     type;
@@ -4324,6 +4582,7 @@
   };
 
   // src/worker/errors/other_error.ts
+  init_define_ENVIRONMENT();
   var OtherError = class extends Error {
     name;
     type;
@@ -4356,6 +4615,7 @@
   }
 
   // src/worker/errors/request_error.ts
+  init_define_ENVIRONMENT();
   var RequestError = class extends Error {
     name;
     type;
@@ -4379,7 +4639,7 @@
 
   // src/worker/utils/assert.ts
   function assert(assertion, message) {
-    if (__ENVIRONMENT__.DEV === __ENVIRONMENT__.CURRENT_ENV && !assertion) {
+    if (define_ENVIRONMENT_default.DEV === define_ENVIRONMENT_default.CURRENT_ENV && !assertion) {
       throw new AssertionError(message === void 0 ? "invalid assertion" : message);
     }
   }
@@ -4393,7 +4653,7 @@
       this.length = 0;
     }
     insert(start, end) {
-      if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV) {
+      if (define_ENVIRONMENT_default.CURRENT_ENV === define_ENVIRONMENT_default.DEV) {
         assert(start >= 0, "invalid start time");
         assert(end - start > 0, "invalid end time");
       }
@@ -4401,7 +4661,7 @@
       this.length = this._ranges.length;
     }
     remove(start, end) {
-      if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV) {
+      if (define_ENVIRONMENT_default.CURRENT_ENV === define_ENVIRONMENT_default.DEV) {
         assert(start >= 0, "invalid start time");
         assert(end - start > 0, "invalid end time");
       }
@@ -4436,6 +4696,8 @@
     _internalSeekingEventsIncomingCounter;
     _lastObservation;
     _observation$;
+    _currentTime = 0;
+    _readyState = READY_STATES.HAVE_NOTHING;
     constructor(options) {
       this._internalSeekingEventsIncomingCounter = 0;
       this._withMediaSource = options.withMediaSource;
@@ -4444,13 +4706,17 @@
       this._observation$ = null;
     }
     getCurrentTime() {
-      return 0;
+      return this._currentTime;
     }
     setCurrentTime(_time) {
       this._internalSeekingEventsIncomingCounter += 1;
+      this._currentTime = _time;
     }
     getReadyState() {
-      return READY_STATES.HAVE_NOTHING;
+      return this._readyState;
+    }
+    setReadyState(_readyState) {
+      this._readyState = _readyState;
     }
     observe(includeLastObservation) {
       return defer(() => {
@@ -4700,7 +4966,11 @@ ${event}`);
     };
   }
 
+  // src/worker/compat/index.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/compat/change_source_buffer_type.ts
+  init_define_ENVIRONMENT();
   function tryToChangeSourceBufferType(sourceBuffer, codec) {
     if (typeof sourceBuffer.changeType === "function") {
       try {
@@ -4715,6 +4985,7 @@ ${event}`);
   }
 
   // src/worker/utils/cancellable_sleep.ts
+  init_define_ENVIRONMENT();
   function cancellableSleep(delay, cancellationSignal) {
     return new Promise((res, rej) => {
       const timeout = setTimeout(() => {
@@ -4729,6 +5000,7 @@ ${event}`);
   }
 
   // src/worker/utils/task_canceller.ts
+  init_define_ENVIRONMENT();
   var TaskCanceller = class {
     signal;
     isUsed;
@@ -4817,6 +5089,7 @@ ${event}`);
   }
 
   // src/worker/utils/event_emitter.ts
+  init_define_ENVIRONMENT();
   var EventEmitter = class {
     _listeners;
     constructor() {
@@ -4878,11 +5151,13 @@ ${event}`);
   }
 
   // src/worker/utils/is_non_empty_string.ts
+  init_define_ENVIRONMENT();
   function isNonEmptyString(x) {
     return typeof x === "string" && x.length > 0;
   }
 
   // src/worker/utils/base64.ts
+  init_define_ENVIRONMENT();
   var base64codes = [
     255,
     255,
@@ -5043,6 +5318,7 @@ ${event}`);
   }
 
   // src/worker/utils/string_parsing.ts
+  init_define_ENVIRONMENT();
   var hasTextDecoder = typeof window === "object" && typeof window.TextDecoder === "function";
   var hasTextEncoder = typeof window === "object" && typeof window.TextEncoder === "function";
   function strToUtf8(str) {
@@ -5170,6 +5446,7 @@ ${event}`);
   }
 
   // src/worker/utils/byte_parsing.ts
+  init_define_ENVIRONMENT();
   function concat2(...args) {
     const l = args.length;
     let i = -1;
@@ -5209,7 +5486,14 @@ ${event}`);
     return input instanceof Uint8Array ? input : input instanceof ArrayBuffer ? new Uint8Array(input) : new Uint8Array(input.buffer);
   }
 
+  // src/worker/parsers/containers/isobmff/index.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/parsers/containers/isobmff/take_pssh_out.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/utils/slice_uint8array.ts
+  init_define_ENVIRONMENT();
   function arraySlice(arr, start, end) {
     return new Uint8Array(Array.prototype.slice.call(arr, start, end));
   }
@@ -5219,6 +5503,7 @@ ${event}`);
   var slice_uint8array_default = typeof Uint8Array.prototype.slice === "function" ? uint8ArraySlice : arraySlice;
 
   // src/worker/parsers/containers/isobmff/get_box.ts
+  init_define_ENVIRONMENT();
   function getChildBox(buf, childNames) {
     let currBox = buf;
     for (const childName of childNames) {
@@ -5330,6 +5615,7 @@ ${event}`);
   }
 
   // src/worker/parsers/containers/isobmff/read.ts
+  init_define_ENVIRONMENT();
   function getTRAF(buffer) {
     const moof = getBoxContent(buffer, 1836019558);
     if (moof === null) {
@@ -5366,6 +5652,7 @@ ${event}`);
   }
 
   // src/worker/parsers/containers/isobmff/utils.ts
+  init_define_ENVIRONMENT();
   function getSegmentsFromSidx(buf, sidxOffsetInWholeSegment) {
     const sidxOffsets = getBoxOffsets(buf, 1936286840);
     if (sidxOffsets === null) {
@@ -5612,6 +5899,7 @@ ${event}`);
   }
 
   // src/worker/utils/are_arrays_of_numbers_equal.ts
+  init_define_ENVIRONMENT();
   function areArraysOfNumbersEqual(arr1, arr2) {
     if (arr1.length !== arr2.length) {
       return false;
@@ -5625,6 +5913,7 @@ ${event}`);
   }
 
   // src/worker/compat/is_codec_supported.ts
+  init_define_ENVIRONMENT();
   function isCodecSupported(mimeType) {
     if (MediaSource_ == null) {
       return false;
@@ -5636,11 +5925,13 @@ ${event}`);
   }
 
   // src/worker/compat/is_offline.ts
+  init_define_ENVIRONMENT();
   function isOffline() {
     return navigator.onLine === false;
   }
 
   // src/worker/compat/patch_webkit_source_buffer.ts
+  init_define_ENVIRONMENT();
   var import_next_tick = __toESM(require_next_tick());
   function patchWebkitSourceBuffer() {
     if (!is_node_default && window.WebKitSourceBuffer != null && window.WebKitSourceBuffer.prototype.addEventListener === void 0) {
@@ -5679,7 +5970,11 @@ ${event}`);
   // src/worker/compat/index.ts
   patchWebkitSourceBuffer();
 
+  // src/worker/features/index.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/features/features_object.ts
+  init_define_ENVIRONMENT();
   var features = {
     dashParsers: {
       wasm: null,
@@ -5700,7 +5995,20 @@ ${event}`);
   // src/worker/features/index.ts
   var features_default = features_object_default;
 
+  // src/worker/manifest/index.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/manifest/adaptation.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/utils/languages/index.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/utils/languages/normalize.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/utils/languages/ISO_639-1_to_ISO_639-3.ts
+  init_define_ENVIRONMENT();
   var ISO_MAP_1_TO_3 = {
     aa: "aar",
     ab: "abk",
@@ -5889,6 +6197,7 @@ ${event}`);
   var ISO_639_1_to_ISO_639_3_default = ISO_MAP_1_TO_3;
 
   // src/worker/utils/languages/ISO_639-2_to_ISO_639-3.ts
+  init_define_ENVIRONMENT();
   var ISO_MAP_2_TO_3 = {
     alb: "sqi",
     arm: "hye",
@@ -5944,6 +6253,7 @@ ${event}`);
   var languages_default = normalize_default;
 
   // src/worker/utils/uniq.ts
+  init_define_ENVIRONMENT();
   function uniqFromFilter(arr) {
     return arr.filter((val, i, self2) => self2.indexOf(val) === i);
   }
@@ -5953,6 +6263,7 @@ ${event}`);
   var uniq_default = typeof window !== "undefined" && typeof window.Set === "function" && typeof Array.from === "function" ? uniqFromSet : uniqFromFilter;
 
   // src/worker/manifest/representation.ts
+  init_define_ENVIRONMENT();
   var Representation = class {
     id;
     index;
@@ -6187,7 +6498,11 @@ ${event}`);
     }
   };
 
+  // src/worker/manifest/manifest.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/utils/id_generator.ts
+  init_define_ENVIRONMENT();
   function idGenerator() {
     let prefix = "";
     let currId = -1;
@@ -6201,7 +6516,11 @@ ${event}`);
     };
   }
 
+  // src/worker/utils/warn_once.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/utils/array_includes.ts
+  init_define_ENVIRONMENT();
   function arrayIncludes(arr, searchElement, fromIndex) {
     if (typeof Array.prototype.includes === "function") {
       return arr.includes(searchElement, fromIndex);
@@ -6232,6 +6551,7 @@ ${event}`);
   }
 
   // src/worker/manifest/period.ts
+  init_define_ENVIRONMENT();
   var Period = class {
     id;
     adaptations;
@@ -6304,7 +6624,11 @@ ${event}`);
     }
   };
 
+  // src/worker/manifest/representation_index/index.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/manifest/representation_index/static.ts
+  init_define_ENVIRONMENT();
   var StaticRepresentationIndex = class {
     _mediaURLs;
     constructor(infos) {
@@ -6361,7 +6685,11 @@ ${event}`);
     }
   };
 
+  // src/worker/manifest/update_periods.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/manifest/update_period_in_place.ts
+  init_define_ENVIRONMENT();
   function updatePeriodInPlace(oldPeriod, newPeriod, updateType) {
     oldPeriod.start = newPeriod.start;
     oldPeriod.end = newPeriod.end;
@@ -6751,6 +7079,7 @@ ${event}`);
   }
 
   // src/worker/manifest/utils.ts
+  init_define_ENVIRONMENT();
   function areSameContent(content1, content2) {
     return content1.segment.id === content2.segment.id && content1.representation.id === content2.representation.id && content1.adaptation.id === content2.adaptation.id && content1.period.id === content2.period.id;
   }
@@ -6766,6 +7095,7 @@ ${event}`);
   var manifest_default = Manifest;
 
   // src/worker/utils/reference.ts
+  init_define_ENVIRONMENT();
   function createSharedReference(initialValue) {
     let value = initialValue;
     const cbs = [];
@@ -6776,7 +7106,7 @@ ${event}`);
       },
       setValue(newVal) {
         if (isFinished) {
-          if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV) {
+          if (define_ENVIRONMENT_default.CURRENT_ENV === define_ENVIRONMENT_default.DEV) {
             throw new Error("Finished shared references cannot be updated");
           } else {
             return;
@@ -6867,6 +7197,7 @@ ${event}`);
   var reference_default = createSharedReference;
 
   // src/worker/utils/flat_map.ts
+  init_define_ENVIRONMENT();
   function flatMap(originalArray, fn) {
     if (typeof Array.prototype.flatMap === "function") {
       return originalArray.flatMap(fn);
@@ -6883,6 +7214,7 @@ ${event}`);
   }
 
   // src/worker/utils/hash_buffer.ts
+  init_define_ENVIRONMENT();
   function hashBuffer(buffer) {
     let hash = 0;
     let char;
@@ -6895,6 +7227,7 @@ ${event}`);
   }
 
   // src/worker/utils/get_fuzzed_delay.ts
+  init_define_ENVIRONMENT();
   var FUZZ_FACTOR = 0.3;
   function getFuzzedDelay(retryDelay) {
     const fuzzingFactor = (Math.random() * 2 - 1) * FUZZ_FACTOR;
@@ -6902,6 +7235,7 @@ ${event}`);
   }
 
   // src/worker/utils/starts_with.ts
+  init_define_ENVIRONMENT();
   function startsWith(completeString, searchString, position) {
     if (typeof String.prototype.startsWith === "function") {
       return completeString.startsWith(searchString, position);
@@ -6910,7 +7244,17 @@ ${event}`);
     return completeString.substring(initialPosition, initialPosition + searchString.length) === searchString;
   }
 
+  // src/worker/core/fetchers/index.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/core/fetchers/manifest/index.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/core/fetchers/manifest/manifest_fetcher.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/core/fetchers/utils/error_selector.ts
+  init_define_ENVIRONMENT();
   function errorSelector(error) {
     if (error instanceof RequestError) {
       return new NetworkError("PIPELINE_LOAD_ERROR", error);
@@ -6922,6 +7266,7 @@ ${event}`);
   }
 
   // src/worker/core/fetchers/utils/try_urls_with_backoff.ts
+  init_define_ENVIRONMENT();
   function shouldRetry(error) {
     if (error instanceof RequestError) {
       if (error.type === NetworkErrorTypes.ERROR_HTTP_CODE) {
@@ -7196,7 +7541,11 @@ ${event}`);
   // src/worker/core/fetchers/manifest/index.ts
   var manifest_default2 = ManifestFetcher;
 
+  // src/worker/core/fetchers/segment/index.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/core/fetchers/segment/prioritized_segment_fetcher.ts
+  init_define_ENVIRONMENT();
   function applyPrioritizerToSegmentFetcher(prioritizer, fetcher) {
     const taskHandlers = /* @__PURE__ */ new WeakMap();
     return {
@@ -7219,7 +7568,11 @@ ${event}`);
     };
   }
 
+  // src/worker/core/fetchers/segment/segment_fetcher.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/utils/initialization_segment_cache.ts
+  init_define_ENVIRONMENT();
   var InitializationSegmentCache = class {
     _cache;
     constructor() {
@@ -7408,7 +7761,11 @@ ${event}`);
     };
   }
 
+  // src/worker/core/fetchers/segment/segment_fetcher_creator.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/core/fetchers/segment/prioritizer.ts
+  init_define_ENVIRONMENT();
   var ObservablePrioritizer = class {
     _minPendingPriority;
     _waitingQueue;
@@ -7647,6 +8004,7 @@ ${event}`);
   var segment_default = SegmentFetcherCreator;
 
   // src/worker/utils/defer_subscriptions.ts
+  init_define_ENVIRONMENT();
   function deferSubscriptions() {
     return (source) => {
       return source.pipe(subscribeOn(asapScheduler));
@@ -7654,13 +8012,18 @@ ${event}`);
   }
 
   // src/worker/utils/filter_map.ts
+  init_define_ENVIRONMENT();
   function filterMap(callback, filteringToken) {
     return (source) => defer(() => {
       return source.pipe(map(callback), filter((x) => x !== filteringToken));
     });
   }
 
+  // src/worker/core/segment_buffers/index.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/core/segment_buffers/garbage_collector.ts
+  init_define_ENVIRONMENT();
   function BufferGarbageCollector({
     segmentBuffer,
     currentTime$,
@@ -7737,12 +8100,32 @@ ${event}`);
     return clean$;
   }
 
+  // src/worker/core/segment_buffers/implementations/index.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/core/segment_buffers/implementations/audio_video/index.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/core/segment_buffers/implementations/audio_video/audio_video_segment_buffer.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/utils/assert_unreachable.ts
+  init_define_ENVIRONMENT();
   function assertUnreachable(_) {
     throw new AssertionError("Unreachable path taken");
   }
 
+  // src/worker/core/segment_buffers/implementations/types.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/core/segment_buffers/inventory/index.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/core/segment_buffers/inventory/segment_inventory.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/core/segment_buffers/inventory/buffered_history.ts
+  init_define_ENVIRONMENT();
   var BufferedHistory = class {
     _history;
     _lifetime;
@@ -8523,7 +8906,7 @@ ${event}`);
     }
   };
   function assertPushedDataIsBufferSource(pushedData) {
-    if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.PRODUCTION) {
+    if (define_ENVIRONMENT_default.CURRENT_ENV === define_ENVIRONMENT_default.PRODUCTION) {
       return;
     }
     const { chunk, initSegment } = pushedData.data;
@@ -8536,6 +8919,7 @@ ${event}`);
   var audio_video_default = AudioVideoSegmentBuffer;
 
   // src/worker/core/segment_buffers/segment_buffers_store.ts
+  init_define_ENVIRONMENT();
   var POSSIBLE_BUFFER_TYPES = [
     "audio",
     "video",
@@ -8672,7 +9056,17 @@ ${event}`);
   // src/worker/core/segment_buffers/index.ts
   var segment_buffers_default = SegmentBuffersStore;
 
+  // src/worker/core/stream/index.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/core/stream/orchestrator/index.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/core/stream/orchestrator/stream_orchestrator.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/utils/sorted_list.ts
+  init_define_ENVIRONMENT();
   var SortedList = class {
     _sortingFn;
     _array;
@@ -8737,6 +9131,7 @@ ${event}`);
   };
 
   // src/worker/utils/weak_map_memory.ts
+  init_define_ENVIRONMENT();
   var WeakMapMemory = class {
     _fn;
     _weakMap;
@@ -8760,6 +9155,7 @@ ${event}`);
   };
 
   // src/worker/core/stream/events_generators.ts
+  init_define_ENVIRONMENT();
   var EVENTS = {
     activePeriodChanged(period) {
       return {
@@ -8890,20 +9286,38 @@ ${event}`);
   };
   var events_generators_default = EVENTS;
 
+  // src/worker/core/stream/period/index.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/core/stream/period/period_stream.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/core/stream/adaptation/index.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/core/stream/adaptation/adaptation_stream.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/core/stream/reload_after_switch.ts
-  function reloadAfterSwitch(period, bufferType, playbackObserver, deltaPos) {
-    return playbackObserver.observe(true).pipe(map((observation) => {
-      const currentTime = playbackObserver.getCurrentTime();
+  init_define_ENVIRONMENT();
+  function reloadAfterSwitch(period, bufferType, playbackObserver2, deltaPos) {
+    return playbackObserver2.observe(true).pipe(map((observation) => {
+      const currentTime = playbackObserver2.getCurrentTime();
       const pos = currentTime + deltaPos;
       const reloadAt = Math.min(Math.max(period.start, pos), period.end ?? Infinity);
       return events_generators_default.waitingMediaSourceReload(bufferType, period, reloadAt, !observation.isPaused);
     }));
   }
 
+  // src/worker/core/stream/representation/index.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/core/stream/representation/representation_stream.ts
+  init_define_ENVIRONMENT();
   var import_next_tick2 = __toESM(require_next_tick());
 
   // src/worker/core/stream/representation/downloading_queue.ts
+  init_define_ENVIRONMENT();
   var DownloadingQueue = class {
     _content;
     _currentObs$;
@@ -9092,7 +9506,11 @@ ${event}`);
     }
   };
 
+  // src/worker/core/stream/representation/get_buffer_status.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/core/stream/representation/check_for_discontinuity.ts
+  init_define_ENVIRONMENT();
   function checkForDiscontinuity(content, checkedRange, nextSegmentStart, hasFinishedLoading, bufferedSegments) {
     const { period, adaptation, representation } = content;
     const nextBufferedInRangeIdx = getIndexOfFirstChunkInRange(bufferedSegments, checkedRange);
@@ -9209,6 +9627,7 @@ ${event}`);
   }
 
   // src/worker/core/stream/representation/get_needed_segments.ts
+  init_define_ENVIRONMENT();
   function getNeededSegments({
     bufferedSegments,
     content,
@@ -9427,6 +9846,7 @@ ${event}`);
   }
 
   // src/worker/core/stream/representation/get_segment_priority.ts
+  init_define_ENVIRONMENT();
   function getSegmentPriority(segmentTime, wantedStartTimestamp) {
     const distance = segmentTime - wantedStartTimestamp;
     const { SEGMENT_PRIORITIES_STEPS } = config_default.getCurrent();
@@ -9439,7 +9859,7 @@ ${event}`);
   }
 
   // src/worker/core/stream/representation/get_buffer_status.ts
-  function getBufferStatus(content, initialWantedTime, playbackObserver, fastSwitchThreshold, bufferGoal, maxBufferSize, segmentBuffer) {
+  function getBufferStatus(content, initialWantedTime, playbackObserver2, fastSwitchThreshold, bufferGoal, maxBufferSize, segmentBuffer) {
     segmentBuffer.synchronizeInventory();
     const { representation } = content;
     const neededRange = getRangeOfNeededSegments(content, initialWantedTime, bufferGoal);
@@ -9449,7 +9869,7 @@ ${event}`);
       start: Math.max(neededRange.start - 0.5, 0),
       end: neededRange.end + 0.5
     }, segmentBuffer.getInventory());
-    const currentPlaybackTime = playbackObserver.getCurrentTime();
+    const currentPlaybackTime = playbackObserver2.getCurrentTime();
     const getBufferedHistory = segmentBuffer.getSegmentHistory.bind(segmentBuffer);
     const {
       segmentsToLoad,
@@ -9545,7 +9965,14 @@ ${event}`);
     return overlappingChunks;
   }
 
+  // src/worker/core/stream/representation/push_init_segment.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/core/stream/representation/append_segment_to_buffer.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/core/stream/representation/force_garbage_collection.ts
+  init_define_ENVIRONMENT();
   function forceGarbageCollection(currentPosition, bufferingQueue) {
     return defer(() => {
       const GC_GAP_CALM = config_default.getCurrent().BUFFER_GC_GAPS.CALM;
@@ -9594,14 +10021,14 @@ ${event}`);
   }
 
   // src/worker/core/stream/representation/append_segment_to_buffer.ts
-  function appendSegmentToBuffer(playbackObserver, segmentBuffer, dataInfos) {
+  function appendSegmentToBuffer(playbackObserver2, segmentBuffer, dataInfos) {
     const append$ = segmentBuffer.pushChunk(dataInfos);
     return append$.pipe(catchError((appendError) => {
       if (!(appendError instanceof Error) || appendError.name !== "QuotaExceededError") {
         const reason = appendError instanceof Error ? appendError.toString() : "An unknown error happened when pushing content";
         throw new MediaError("BUFFER_APPEND_ERROR", reason);
       }
-      return playbackObserver.observe(true).pipe(take(1), mergeMap((observation) => {
+      return playbackObserver2.observe(true).pipe(take(1), mergeMap((observation) => {
         const currentPos = observation.position + observation.wantedTimeOffset;
         return concat(forceGarbageCollection(currentPos, segmentBuffer).pipe(ignoreElements()), append$).pipe(catchError((forcedGCError) => {
           const reason = forcedGCError instanceof Error ? forcedGCError.toString() : "Could not clean the buffer";
@@ -9613,7 +10040,7 @@ ${event}`);
 
   // src/worker/core/stream/representation/push_init_segment.ts
   function pushInitSegment({
-    playbackObserver,
+    playbackObserver: playbackObserver2,
     content,
     segment,
     segmentData,
@@ -9631,7 +10058,7 @@ ${event}`);
         appendWindow: [void 0, void 0],
         codec
       };
-      return appendSegmentToBuffer(playbackObserver, segmentBuffer, { data, inventoryInfos: null }).pipe(map(() => {
+      return appendSegmentToBuffer(playbackObserver2, segmentBuffer, { data, inventoryInfos: null }).pipe(map(() => {
         const buffered = segmentBuffer.getBufferedRanges();
         return events_generators_default.addedSegment(content, segment, buffered, segmentData);
       }));
@@ -9639,8 +10066,9 @@ ${event}`);
   }
 
   // src/worker/core/stream/representation/push_media_segment.ts
+  init_define_ENVIRONMENT();
   function pushMediaSegment({
-    playbackObserver,
+    playbackObserver: playbackObserver2,
     content,
     initSegmentData,
     parsedSegment,
@@ -9686,7 +10114,7 @@ ${event}`);
         start: estimatedStart,
         end: estimatedEnd
       }, content);
-      return appendSegmentToBuffer(playbackObserver, segmentBuffer, { data, inventoryInfos }).pipe(map(() => {
+      return appendSegmentToBuffer(playbackObserver2, segmentBuffer, { data, inventoryInfos }).pipe(map(() => {
         const buffered = segmentBuffer.getBufferedRanges();
         return events_generators_default.addedSegment(content, segment, buffered, chunkData);
       }));
@@ -9697,7 +10125,7 @@ ${event}`);
   function RepresentationStream({
     content,
     options,
-    playbackObserver,
+    playbackObserver: playbackObserver2,
     segmentBuffer,
     segmentFetcher,
     terminate$
@@ -9741,7 +10169,7 @@ ${event}`);
     }
     const queue$ = downloadingQueue.start().pipe(mergeMap(onQueueEvent));
     const status$ = combineLatest([
-      playbackObserver.observe(true),
+      playbackObserver2.observe(true),
       bufferGoal$,
       maxBufferSize$,
       terminate$.pipe(take(1), startWith(null)),
@@ -9751,7 +10179,7 @@ ${event}`);
       fastSwitchThreshold
     ]) {
       const initialWantedTime = observation.position + observation.wantedTimeOffset;
-      const status = getBufferStatus(content, initialWantedTime, playbackObserver, fastSwitchThreshold, bufferGoal, maxBufferSize, segmentBuffer);
+      const status = getBufferStatus(content, initialWantedTime, playbackObserver2, fastSwitchThreshold, bufferGoal, maxBufferSize, segmentBuffer);
       const { neededSegments } = status;
       let neededInitSegment = null;
       if (!representation.index.isInitialized()) {
@@ -9858,7 +10286,7 @@ ${event}`);
         const allEncryptionData = representation.getAllEncryptionData();
         const initEncEvt$ = !hasSentEncryptionData && allEncryptionData.length > 0 ? of(...allEncryptionData.map((p) => events_generators_default.encryptionDataEncountered(p, content))) : EMPTY;
         const pushEvent$ = pushInitSegment({
-          playbackObserver,
+          playbackObserver: playbackObserver2,
           content,
           segment: evt.segment,
           segmentData: evt.initializationData,
@@ -9879,7 +10307,7 @@ ${event}`);
         }) : EMPTY;
         const initSegmentData = initSegmentState.segmentData;
         const pushMediaSegment$ = pushMediaSegment({
-          playbackObserver,
+          playbackObserver: playbackObserver2,
           content,
           initSegmentData,
           parsedSegment: evt,
@@ -9895,6 +10323,7 @@ ${event}`);
   var representation_default2 = RepresentationStream;
 
   // src/worker/core/stream/adaptation/create_representation_estimator.ts
+  init_define_ENVIRONMENT();
   function createRepresentationEstimator(content, abrManager, observation$) {
     const { manifest, adaptation } = content;
     const abrFeedbacks$ = new Subject();
@@ -9922,7 +10351,7 @@ ${event}`);
   // src/worker/core/stream/adaptation/adaptation_stream.ts
   function AdaptationStream({
     abrManager,
-    playbackObserver,
+    playbackObserver: playbackObserver2,
     content,
     options,
     segmentBuffer,
@@ -9933,7 +10362,7 @@ ${event}`);
     const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
     const { manifest, period, adaptation } = content;
     const bufferGoalRatioMap = {};
-    const { estimator$, abrFeedbacks$ } = createRepresentationEstimator(content, abrManager, playbackObserver.observe(true));
+    const { estimator$, abrFeedbacks$ } = createRepresentationEstimator(content, abrManager, playbackObserver2.observe(true));
     const segmentFetcher = segmentFetcherCreator.createSegmentFetcher(adaptation.type, {
       onRequestBegin(value) {
         abrFeedbacks$.next({ type: "requestBegin", value });
@@ -9964,7 +10393,7 @@ ${event}`);
       const { representation } = fromEstimate;
       if (directManualBitrateSwitching && fromEstimate.manual && !isFirstEstimate) {
         const { DELTA_POSITION_AFTER_RELOAD } = config_default.getCurrent();
-        return reloadAfterSwitch(period, adaptation.type, playbackObserver, DELTA_POSITION_AFTER_RELOAD.bitrateSwitch);
+        return reloadAfterSwitch(period, adaptation.type, playbackObserver2, DELTA_POSITION_AFTER_RELOAD.bitrateSwitch);
       }
       const terminateCurrentStream$ = lastEstimate.asObservable().pipe(filter((newEstimate) => newEstimate === null || newEstimate.representation.id !== representation.id || newEstimate.manual && !fromEstimate.manual), take(1), map((newEstimate) => {
         if (newEstimate === null) {
@@ -10005,7 +10434,7 @@ ${event}`);
         const maxBufferSize$ = adaptation.type === "video" ? maxVideoBufferSize.asObservable() : of(Infinity);
         log_default.info("Stream: changing representation", adaptation.type, representation.id, representation.bitrate);
         return representation_default2({
-          playbackObserver,
+          playbackObserver: playbackObserver2,
           content: {
             representation,
             adaptation,
@@ -10045,11 +10474,12 @@ ${event}`);
   var adaptation_default = AdaptationStream;
 
   // src/worker/core/stream/period/create_empty_adaptation_stream.ts
-  function createEmptyAdaptationStream(playbackObserver, wantedBufferAhead, bufferType, content) {
+  init_define_ENVIRONMENT();
+  function createEmptyAdaptationStream(playbackObserver2, wantedBufferAhead, bufferType, content) {
     const { period } = content;
     let hasFinishedLoading = false;
     const wantedBufferAhead$ = wantedBufferAhead.asObservable();
-    const observation$ = playbackObserver.observe(true);
+    const observation$ = playbackObserver2.observe(true);
     return combineLatest([
       observation$,
       wantedBufferAhead$
@@ -10074,7 +10504,11 @@ ${event}`);
     }));
   }
 
+  // src/worker/core/stream/period/get_adaptation_switch_strategy.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/utils/are_codecs_compatible.ts
+  init_define_ENVIRONMENT();
   function areCodecsCompatible(a, b) {
     const [mimeTypeA, ...propsA] = a.split(";");
     const [mimeTypeB, ...propsB] = b.split(";");
@@ -10209,7 +10643,7 @@ ${event}`);
     bufferType,
     content,
     garbageCollectors,
-    playbackObserver,
+    playbackObserver: playbackObserver2,
     segmentFetcherCreator,
     segmentBuffersStore,
     options,
@@ -10228,7 +10662,7 @@ ${event}`);
         if (segmentBufferStatus.type === "initialized") {
           log_default.info(`Stream: Clearing previous ${bufferType} SegmentBuffer`);
           if (segment_buffers_default.isNative(bufferType)) {
-            return reloadAfterSwitch(period, bufferType, playbackObserver, 0);
+            return reloadAfterSwitch(period, bufferType, playbackObserver2, 0);
           }
           if (period.end === void 0) {
             cleanBuffer$ = segmentBufferStatus.value.removeBuffer(period.start, Infinity);
@@ -10243,22 +10677,22 @@ ${event}`);
           }
           cleanBuffer$ = of(null);
         }
-        return concat(cleanBuffer$.pipe(map(() => events_generators_default.adaptationChange(bufferType, null, period))), createEmptyAdaptationStream(playbackObserver, wantedBufferAhead, bufferType, { period }));
+        return concat(cleanBuffer$.pipe(map(() => events_generators_default.adaptationChange(bufferType, null, period))), createEmptyAdaptationStream(playbackObserver2, wantedBufferAhead, bufferType, { period }));
       }
       if (segment_buffers_default.isNative(bufferType) && segmentBuffersStore.getStatus(bufferType).type === "disabled") {
-        return reloadAfterSwitch(period, bufferType, playbackObserver, relativePosAfterSwitch);
+        return reloadAfterSwitch(period, bufferType, playbackObserver2, relativePosAfterSwitch);
       }
       log_default.info(`Stream: Updating ${bufferType} adaptation`, `A: ${adaptation.id}`, `P: ${period.start}`);
       const newStream$ = defer(() => {
-        const readyState = playbackObserver.getReadyState();
+        const readyState = playbackObserver2.getReadyState();
         const segmentBuffer = createOrReuseSegmentBuffer(segmentBuffersStore, bufferType, adaptation, options);
         const playbackInfos = {
-          currentTime: playbackObserver.getCurrentTime(),
+          currentTime: playbackObserver2.getCurrentTime(),
           readyState
         };
         const strategy = getAdaptationSwitchStrategy(segmentBuffer, period, adaptation, playbackInfos, options);
         if (strategy.type === "needs-reload") {
-          return reloadAfterSwitch(period, bufferType, playbackObserver, relativePosAfterSwitch);
+          return reloadAfterSwitch(period, bufferType, playbackObserver2, relativePosAfterSwitch);
         }
         const needsBufferFlush$ = strategy.type === "flush-buffer" ? of(events_generators_default.needsBufferFlush()) : EMPTY;
         const cleanBuffer$ = strategy.type === "clean-buffer" || strategy.type === "flush-buffer" ? concat(...strategy.value.map(({ start, end }) => segmentBuffer.removeBuffer(start, end))).pipe(ignoreElements()) : EMPTY;
@@ -10272,7 +10706,8 @@ ${event}`);
     }), startWith(events_generators_default.periodStreamReady(bufferType, period, adaptation$)));
     function createAdaptationStream(adaptation, segmentBuffer) {
       const { manifest } = content;
-      const adaptationPlaybackObserver = createAdaptationStreamPlaybackObserver(playbackObserver, segmentBuffer);
+      const adaptationPlaybackObserver = createAdaptationStreamPlaybackObserver(playbackObserver2, segmentBuffer);
+      adaptationPlaybackObserver.observe(true).subscribe((ev) => console.warn("[AdaptationPlaybackObs] :", ev));
       return adaptation_default({
         abrManager,
         content: { manifest, period, adaptation },
@@ -10290,7 +10725,7 @@ ${event}`);
             defaultCode: "NONE",
             defaultReason: "Unknown `AdaptationStream` error"
           });
-          return concat(of(events_generators_default.warning(formattedError)), createEmptyAdaptationStream(playbackObserver, wantedBufferAhead, bufferType, { period }));
+          return concat(of(events_generators_default.warning(formattedError)), createEmptyAdaptationStream(playbackObserver2, wantedBufferAhead, bufferType, { period }));
         }
         log_default.error(`Stream: ${bufferType} Stream crashed. Stopping playback.`, error instanceof Error ? error : "");
         throw error;
@@ -10327,6 +10762,7 @@ ${event}`);
   var period_default = PeriodStream;
 
   // src/worker/core/stream/orchestrator/active_period_emitter.ts
+  init_define_ENVIRONMENT();
   function ActivePeriodEmitter(buffers$) {
     const numberOfStreams = buffers$.length;
     return merge(...buffers$).pipe(filter(({ type }) => type === "periodStreamCleared" || type === "adaptationChange" || type === "representationChange"), scan((acc, evt) => {
@@ -10384,6 +10820,7 @@ ${event}`);
   }
 
   // src/worker/core/stream/orchestrator/are_streams_complete.ts
+  init_define_ENVIRONMENT();
   function areStreamsComplete(...streams) {
     const isCompleteArray = streams.map((stream) => {
       return stream.pipe(filter((evt) => {
@@ -10394,6 +10831,7 @@ ${event}`);
   }
 
   // src/worker/core/stream/orchestrator/get_blacklisted_ranges.ts
+  init_define_ENVIRONMENT();
   function getBlacklistedRanges(segmentBuffer, contents) {
     if (contents.length === 0) {
       return [];
@@ -10429,7 +10867,7 @@ ${event}`);
   }
 
   // src/worker/core/stream/orchestrator/stream_orchestrator.ts
-  function StreamOrchestrator(content, playbackObserver, abrManager, segmentBuffersStore, segmentFetcherCreator, options) {
+  function StreamOrchestrator(content, playbackObserver2, abrManager, segmentBuffersStore, segmentFetcherCreator, options) {
     const { manifest, initialPeriod } = content;
     const {
       maxBufferAhead,
@@ -10447,7 +10885,7 @@ ${event}`);
       const defaultMaxAhead = MAXIMUM_MAX_BUFFER_AHEAD[bufferType] != null ? MAXIMUM_MAX_BUFFER_AHEAD[bufferType] : Infinity;
       return BufferGarbageCollector({
         segmentBuffer,
-        currentTime$: playbackObserver.observe(true).pipe(map((o) => o.position + o.wantedTimeOffset)),
+        currentTime$: playbackObserver2.observe(true).pipe(map((o) => o.position + o.wantedTimeOffset)),
         maxBufferBehind$: maxBufferBehind.asObservable().pipe(map((val) => Math.min(val, defaultMaxBehind))),
         maxBufferAhead$: maxBufferAhead.asObservable().pipe(map((val) => Math.min(val, defaultMaxAhead)))
       });
@@ -10499,7 +10937,7 @@ ${event}`);
         }
         return head.start > time || (last2.end == null ? Infinity : last2.end) < time;
       }
-      const restartStreamsWhenOutOfBounds$ = playbackObserver.observe(true).pipe(filterMap(({ position, wantedTimeOffset }) => {
+      const restartStreamsWhenOutOfBounds$ = playbackObserver2.observe(true).pipe(filterMap(({ position, wantedTimeOffset }) => {
         const time = wantedTimeOffset + position;
         if (!enableOutOfBoundsCheck || !isOutOfPeriodList(time)) {
           return null;
@@ -10532,7 +10970,7 @@ ${event}`);
         }
         enableOutOfBoundsCheck = false;
         destroyStreams$.next();
-        return concat(...rangesToClean.map(({ start, end }) => start >= end ? EMPTY : segmentBuffer.removeBuffer(start, end).pipe(ignoreElements())), playbackObserver.observe(true).pipe(take(1), mergeMap((observation) => {
+        return concat(...rangesToClean.map(({ start, end }) => start >= end ? EMPTY : segmentBuffer.removeBuffer(start, end).pipe(ignoreElements())), playbackObserver2.observe(true).pipe(take(1), mergeMap((observation) => {
           return concat(of(events_generators_default.needsDecipherabilityFlush(observation.position, !observation.isPaused, observation.duration)), defer(() => {
             const lastPosition = observation.position + observation.wantedTimeOffset;
             const newInitialPeriod = manifest.getPeriodForTime(lastPosition);
@@ -10549,7 +10987,7 @@ ${event}`);
       log_default.info("SO: Creating new Stream for", bufferType, basePeriod.start);
       const createNextPeriodStream$ = new Subject();
       const destroyNextStreams$ = new Subject();
-      const endOfCurrentStream$ = playbackObserver.observe(true).pipe(filter(({ position, wantedTimeOffset }) => basePeriod.end != null && position + wantedTimeOffset >= basePeriod.end));
+      const endOfCurrentStream$ = playbackObserver2.observe(true).pipe(filter(({ position, wantedTimeOffset }) => basePeriod.end != null && position + wantedTimeOffset >= basePeriod.end));
       const nextPeriodStream$ = createNextPeriodStream$.pipe(exhaustMap((nextPeriod) => manageConsecutivePeriodStreams(bufferType, nextPeriod, destroyNextStreams$)));
       const destroyAll$ = destroy$.pipe(take(1), tap(() => {
         createNextPeriodStream$.complete();
@@ -10565,7 +11003,7 @@ ${event}`);
         segmentFetcherCreator,
         segmentBuffersStore,
         options,
-        playbackObserver,
+        playbackObserver: playbackObserver2,
         wantedBufferAhead,
         maxVideoBufferSize
       }).pipe(mergeMap((evt) => {
@@ -10596,14 +11034,16 @@ ${event}`);
   var stream_default = orchestrator_default;
 
   // src/worker/core/init/create_stream_playback_observer.ts
-  function createStreamPlaybackObserver(manifest, playbackObserver, {
+  init_define_ENVIRONMENT();
+  function createStreamPlaybackObserver(manifest, playbackObserver2, {
     autoPlay,
     initialPlayPerformed,
     initialSeekPerformed,
     speed,
     startTime
   }) {
-    return playbackObserver.deriveReadOnlyObserver(function mapObservable(observation$) {
+    playbackObserver2.observe(true).subscribe((ev) => console.warn("[playbackObserverBeforeDerive] :", ev));
+    return playbackObserver2.deriveReadOnlyObserver(function mapObservable(observation$) {
       return combineLatest([observation$, speed.asObservable()]).pipe(map(([observation, lastSpeed]) => {
         let wantedTimeOffset = 0;
         if (!initialSeekPerformed.getValue()) {
@@ -10627,7 +11067,23 @@ ${event}`);
     });
   }
 
+  // src/worker/parsers/manifest/dash/wasm-parser/index.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/parsers/manifest/dash/wasm-parser/ts/dash-wasm-parser.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/parsers/manifest/dash/common/index.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/parsers/manifest/dash/common/indexes/index.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/parsers/manifest/dash/common/indexes/base.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/parsers/manifest/utils/index_helpers.ts
+  init_define_ENVIRONMENT();
   function calculateRepeat(element, nextElement, maxPosition) {
     const { repeatCount } = element;
     if (repeatCount >= 0) {
@@ -10700,6 +11156,7 @@ ${event}`);
   }
 
   // src/worker/parsers/manifest/dash/common/indexes/get_init_segment.ts
+  init_define_ENVIRONMENT();
   function getInitSegment(index, isEMSGWhitelisted) {
     const { initialization } = index;
     let privateInfos;
@@ -10722,7 +11179,14 @@ ${event}`);
     };
   }
 
+  // src/worker/parsers/manifest/dash/common/indexes/get_segments_from_timeline.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/parsers/manifest/dash/common/indexes/tokens.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/utils/resolve_url.ts
+  init_define_ENVIRONMENT();
   var schemeRe = /^(?:[a-z]+:)?\/\//i;
   var selfDirRe = /\/\.{1,2}\//;
   function _normalizeUrl(url) {
@@ -11005,6 +11469,7 @@ ${event}`);
   };
 
   // src/worker/parsers/manifest/dash/common/indexes/list.ts
+  init_define_ENVIRONMENT();
   var ListRepresentationIndex = class {
     _index;
     _periodStart;
@@ -11121,7 +11586,11 @@ ${event}`);
     }
   };
 
+  // src/worker/parsers/manifest/dash/common/indexes/template.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/parsers/manifest/dash/common/indexes/is_period_fulfilled.ts
+  init_define_ENVIRONMENT();
   function isPeriodFulfilled(timescale, lastSegmentEnd, periodEnd) {
     const scaledRoundingError = config_default.getCurrent().DEFAULT_MAXIMUM_TIME_ROUNDING_ERROR * timescale;
     return lastSegmentEnd + scaledRoundingError >= periodEnd;
@@ -11356,7 +11825,14 @@ ${event}`);
     }
   };
 
+  // src/worker/parsers/manifest/dash/common/indexes/timeline/index.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/parsers/manifest/dash/common/indexes/timeline/timeline_representation_index.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/parsers/manifest/utils/clear_timeline_from_position.ts
+  init_define_ENVIRONMENT();
   function clearTimelineFromPosition(timeline, firstAvailablePosition) {
     let nbEltsRemoved = 0;
     while (timeline.length > 0) {
@@ -11401,6 +11877,7 @@ ${event}`);
   }
 
   // src/worker/parsers/manifest/utils/is_segment_still_available.ts
+  init_define_ENVIRONMENT();
   function isSegmentStillAvailable(segment, timeline, timescale, indexTimeOffset) {
     for (let i = 0; i < timeline.length; i++) {
       const tSegment = timeline[i];
@@ -11424,6 +11901,7 @@ ${event}`);
   }
 
   // src/worker/parsers/manifest/utils/update_segment_timeline.ts
+  init_define_ENVIRONMENT();
   function updateSegmentTimeline(oldTimeline, newTimeline) {
     if (oldTimeline.length === 0) {
       oldTimeline.push(...newTimeline);
@@ -11499,7 +11977,11 @@ ${event}`);
     return true;
   }
 
+  // src/worker/parsers/manifest/dash/common/indexes/timeline/construct_timeline_from_elements.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/parsers/manifest/dash/common/indexes/timeline/convert_element_to_index_segment.ts
+  init_define_ENVIRONMENT();
   function convertElementsToIndexSegment(item, previousItem, nextItem) {
     let start = item.start;
     let duration = item.duration;
@@ -11526,6 +12008,7 @@ ${event}`);
   }
 
   // src/worker/parsers/manifest/dash/common/indexes/timeline/parse_s_element.ts
+  init_define_ENVIRONMENT();
   function parseSElement(root) {
     const parsedS = {};
     for (let j = 0; j < root.attributes.length; j++) {
@@ -11579,7 +12062,11 @@ ${event}`);
     return timeline;
   }
 
+  // src/worker/parsers/manifest/dash/common/indexes/timeline/construct_timeline_from_previous_timeline.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/parsers/manifest/dash/common/indexes/timeline/find_first_common_start_time.ts
+  init_define_ENVIRONMENT();
   function findFirstCommonStartTime(prevTimeline, newElements) {
     if (prevTimeline.length === 0 || newElements.length === 0) {
       return null;
@@ -11979,7 +12466,11 @@ ${event}`);
   // src/worker/parsers/manifest/dash/common/indexes/timeline/index.ts
   var timeline_default = TimelineRepresentationIndex;
 
+  // src/worker/parsers/manifest/dash/common/parse_mpd.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/parsers/manifest/dash/common/get_clock_offset.ts
+  init_define_ENVIRONMENT();
   function getClockOffset(serverClock) {
     const httpOffset = Date.parse(serverClock) - performance.now();
     if (isNaN(httpOffset)) {
@@ -11990,12 +12481,20 @@ ${event}`);
   }
 
   // src/worker/parsers/manifest/dash/common/get_http_utc-timing_url.ts
+  init_define_ENVIRONMENT();
   function getHTTPUTCTimingURL(mpdIR) {
     const UTCTimingHTTP = mpdIR.children.utcTimings.filter((utcTiming) => (utcTiming.schemeIdUri === "urn:mpeg:dash:utc:http-iso:2014" || utcTiming.schemeIdUri === "urn:mpeg:dash:utc:http-xsdate:2014") && utcTiming.value !== void 0);
     return UTCTimingHTTP.length > 0 ? UTCTimingHTTP[0].value : void 0;
   }
 
+  // src/worker/parsers/manifest/dash/common/get_minimum_and_maximum_positions.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/parsers/manifest/utils/get_maximum_positions.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/parsers/manifest/utils/get_last_time_from_adaptation.ts
+  init_define_ENVIRONMENT();
   function getLastPositionFromAdaptation(adaptation) {
     const { representations } = adaptation;
     let min = null;
@@ -12064,7 +12563,11 @@ ${event}`);
     return { safe: void 0, unsafe: void 0 };
   }
 
+  // src/worker/parsers/manifest/utils/get_minimum_position.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/parsers/manifest/utils/get_first_time_from_adaptation.ts
+  init_define_ENVIRONMENT();
   function getFirstPositionFromAdaptation(adaptation) {
     const { representations } = adaptation;
     let max = null;
@@ -12138,6 +12641,7 @@ ${event}`);
   }
 
   // src/worker/parsers/manifest/dash/common/parse_availability_start_time.ts
+  init_define_ENVIRONMENT();
   function parseAvailabilityStartTime(rootAttributes, referenceDateTime) {
     if (rootAttributes.type !== "dynamic") {
       return 0;
@@ -12148,7 +12652,11 @@ ${event}`);
     return rootAttributes.availabilityStartTime;
   }
 
+  // src/worker/parsers/manifest/dash/common/parse_periods.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/parsers/manifest/dash/common/flatten_overlapping_periods.ts
+  init_define_ENVIRONMENT();
   function flattenOverlappingPeriods(parsedPeriods) {
     if (parsedPeriods.length === 0) {
       return [];
@@ -12174,6 +12682,7 @@ ${event}`);
   }
 
   // src/worker/parsers/manifest/dash/common/get_periods_time_infos.ts
+  init_define_ENVIRONMENT();
   function getPeriodsTimeInformation(periodsIR, manifestInfos) {
     const periodsTimeInformation = [];
     periodsIR.forEach((currentPeriod, i) => {
@@ -12212,6 +12721,7 @@ ${event}`);
   }
 
   // src/worker/parsers/manifest/dash/common/manifest_bounds_calculator.ts
+  init_define_ENVIRONMENT();
   var ManifestBoundsCalculator = class {
     _timeShiftBufferDepth;
     _positionTime;
@@ -12250,7 +12760,11 @@ ${event}`);
     }
   };
 
+  // src/worker/parsers/manifest/dash/common/parse_adaptation_sets.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/parsers/manifest/dash/common/attach_trickmode_track.ts
+  init_define_ENVIRONMENT();
   function attachTrickModeTrack(adaptations, trickModeTracks) {
     for (const track of trickModeTracks) {
       const { adaptation, trickModeAttachedAdaptationIds } = track;
@@ -12274,6 +12788,7 @@ ${event}`);
   var attach_trickmode_track_default = attachTrickModeTrack;
 
   // src/worker/parsers/manifest/dash/common/infer_adaptation_type.ts
+  init_define_ENVIRONMENT();
   var SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
   function inferAdaptationType(representations, adaptationMimeType, adaptationCodecs, adaptationRoles) {
     function fromMimeType(mimeType, roles) {
@@ -12349,7 +12864,11 @@ ${event}`);
     return void 0;
   }
 
+  // src/worker/parsers/manifest/dash/common/parse_representations.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/parsers/manifest/dash/common/get_hdr_information.ts
+  init_define_ENVIRONMENT();
   function getWEBMHDRInformation(codecString) {
     const [cccc, _PP, _LL, DD, _CC, cp, tc, mc] = codecString.split(".");
     if (cccc !== "vp08" && cccc !== "vp09" && cccc !== "vp10") {
@@ -12377,7 +12896,11 @@ ${event}`);
     return { colorDepth, eotf, colorSpace };
   }
 
+  // src/worker/parsers/manifest/dash/common/parse_representation_index.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/parsers/manifest/dash/common/resolve_base_urls.ts
+  init_define_ENVIRONMENT();
   function resolveBaseURLs(currentBaseURLs, newBaseUrlsIR) {
     if (newBaseUrlsIR.length === 0) {
       return currentBaseURLs;
@@ -13288,7 +13811,17 @@ ${event}`);
   // src/worker/parsers/manifest/dash/common/index.ts
   var common_default = parseMpdIr;
 
+  // src/worker/parsers/manifest/dash/wasm-parser/ts/generators/index.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/parsers/manifest/dash/wasm-parser/ts/generators/root.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/parsers/manifest/dash/wasm-parser/ts/generators/MPD.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/parsers/manifest/dash/wasm-parser/ts/utils.ts
+  init_define_ENVIRONMENT();
   function parseString(textDecoder, buffer, ptr, len) {
     const arr = new Uint8Array(buffer, ptr, len);
     return textDecoder.decode(arr);
@@ -13298,6 +13831,7 @@ ${event}`);
   }
 
   // src/worker/parsers/manifest/dash/wasm-parser/ts/generators/BaseURL.ts
+  init_define_ENVIRONMENT();
   function generateBaseUrlAttrParser(baseUrlAttrs, linearMemory) {
     const textDecoder = new TextDecoder();
     let dataView;
@@ -13319,7 +13853,14 @@ ${event}`);
     };
   }
 
+  // src/worker/parsers/manifest/dash/wasm-parser/ts/generators/Period.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/parsers/manifest/dash/wasm-parser/ts/generators/AdaptationSet.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/parsers/manifest/dash/wasm-parser/ts/generators/ContentComponent.ts
+  init_define_ENVIRONMENT();
   function generateContentComponentAttrParser(ccAttrs, linearMemory) {
     const textDecoder = new TextDecoder();
     return function onMPDAttribute(attr, ptr, len) {
@@ -13341,6 +13882,7 @@ ${event}`);
   }
 
   // src/worker/parsers/manifest/dash/wasm-parser/ts/generators/ContentProtection.ts
+  init_define_ENVIRONMENT();
   function generateContentProtectionAttrParser(cp, linearMemory) {
     const cpAttrs = cp.attributes;
     const cpChildren = cp.children;
@@ -13368,7 +13910,11 @@ ${event}`);
     };
   }
 
+  // src/worker/parsers/manifest/dash/wasm-parser/ts/generators/Representation.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/parsers/manifest/dash/wasm-parser/ts/generators/Scheme.ts
+  init_define_ENVIRONMENT();
   function generateSchemeAttrParser(schemeAttrs, linearMemory) {
     const textDecoder = new TextDecoder();
     return function onMPDAttribute(attr, ptr, len) {
@@ -13384,6 +13930,7 @@ ${event}`);
   }
 
   // src/worker/parsers/manifest/dash/wasm-parser/ts/generators/SegmentBase.ts
+  init_define_ENVIRONMENT();
   function generateSegmentBaseAttrParser(segmentBaseAttrs, linearMemory) {
     const textDecoder = new TextDecoder();
     return function onSegmentBaseAttribute(attr, ptr, len) {
@@ -13450,7 +13997,11 @@ ${event}`);
     };
   }
 
+  // src/worker/parsers/manifest/dash/wasm-parser/ts/generators/SegmentList.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/parsers/manifest/dash/wasm-parser/ts/generators/SegmentUrl.ts
+  init_define_ENVIRONMENT();
   function generateSegmentUrlAttrParser(segmentUrlAttrs, linearMemory) {
     const textDecoder = new TextDecoder();
     return function onSegmentUrlAttribute(attr, ptr, len) {
@@ -13503,6 +14054,7 @@ ${event}`);
   }
 
   // src/worker/parsers/manifest/dash/wasm-parser/ts/generators/SegmentTemplate.ts
+  init_define_ENVIRONMENT();
   function generateSegmentTemplateAttrParser(segmentTemplateAttrs, linearMemory) {
     const textDecoder = new TextDecoder();
     return function onSegmentTemplateAttribute(attr, ptr, len) {
@@ -13915,6 +14467,7 @@ ${event}`);
   }
 
   // src/worker/parsers/manifest/dash/wasm-parser/ts/generators/EventStream.ts
+  init_define_ENVIRONMENT();
   function generateEventStreamChildrenParser(childrenObj, linearMemory, parsersStack, fullMpd) {
     return function onRootChildren(nodeId) {
       switch (nodeId) {
@@ -14228,6 +14781,7 @@ ${event}`);
   }
 
   // src/worker/parsers/manifest/dash/wasm-parser/ts/generators/XLink.ts
+  init_define_ENVIRONMENT();
   function generateXLinkChildrenParser(xlinkObj, linearMemory, parsersStack, fullMpd) {
     return function onRootChildren(nodeId) {
       switch (nodeId) {
@@ -14254,6 +14808,7 @@ ${event}`);
   }
 
   // src/worker/parsers/manifest/dash/wasm-parser/ts/parsers_stack.ts
+  init_define_ENVIRONMENT();
   var ParsersStack = class {
     _currentNodeId;
     childrenParser;
@@ -14527,7 +15082,20 @@ ${event}`);
   // src/worker/parsers/manifest/dash/wasm-parser/index.ts
   var wasm_parser_default = DashWasmParser;
 
+  // src/worker/transports/dash/index.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/transports/dash/pipelines.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/transports/utils/generate_manifest_loader.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/utils/request/index.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/utils/request/fetch.ts
+  init_define_ENVIRONMENT();
   var _Headers = typeof Headers === "function" ? Headers : null;
   var _AbortController = typeof AbortController === "function" ? AbortController : null;
   function fetchRequest(options) {
@@ -14638,6 +15206,7 @@ ${event}`);
   }
 
   // src/worker/utils/request/xhr.ts
+  init_define_ENVIRONMENT();
   var DEFAULT_RESPONSE_TYPE = "json";
   function request(options) {
     const { DEFAULT_REQUEST_TIMEOUT } = config_default.getCurrent();
@@ -14761,6 +15330,7 @@ ${event}`);
   var request_default = request;
 
   // src/worker/transports/utils/call_custom_manifest_loader.ts
+  init_define_ENVIRONMENT();
   function callCustomManifestLoader(customManifestLoader, fallbackManifestLoader) {
     return (url, cancelSignal) => {
       return new Promise((res, rej) => {
@@ -14846,6 +15416,7 @@ ${event}`);
   }
 
   // src/worker/transports/dash/image_pipelines.ts
+  init_define_ENVIRONMENT();
   async function imageLoader(url, content, cancelSignal, callbacks) {
     const { segment } = content;
     if (segment.isInit || url === null) {
@@ -14918,6 +15489,7 @@ ${event}`);
   }
 
   // src/worker/transports/dash/manifest_parser.ts
+  init_define_ENVIRONMENT();
   function generateManifestParser(options) {
     const {
       aggressiveMode,
@@ -15043,7 +15615,7 @@ ${event}`);
     };
   }
   function assertLoadedResourcesFormatString(loadedResources) {
-    if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.PRODUCTION) {
+    if (define_ENVIRONMENT_default.CURRENT_ENV === define_ENVIRONMENT_default.PRODUCTION) {
       return;
     }
     loadedResources.forEach((loadedResource) => {
@@ -15057,7 +15629,7 @@ ${event}`);
     });
   }
   function assertLoadedResourcesFormatArrayBuffer(loadedResources) {
-    if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.PRODUCTION) {
+    if (define_ENVIRONMENT_default.CURRENT_ENV === define_ENVIRONMENT_default.PRODUCTION) {
       return;
     }
     loadedResources.forEach((loadedResource) => {
@@ -15089,12 +15661,17 @@ ${event}`);
     return true;
   }
 
+  // src/worker/transports/dash/segment_loader.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/transports/utils/byte_range.ts
+  init_define_ENVIRONMENT();
   function byteRange([start, end]) {
     return end === Infinity ? `bytes=${start}-` : `bytes=${start}-${end}`;
   }
 
   // src/worker/transports/utils/infer_segment_container.ts
+  init_define_ENVIRONMENT();
   function inferSegmentContainer(adaptationType, representation) {
     if (adaptationType === "audio" || adaptationType === "video") {
       if (representation.mimeType === "video/mp4" || representation.mimeType === "audio/mp4") {
@@ -15110,7 +15687,14 @@ ${event}`);
     return void 0;
   }
 
+  // src/worker/transports/dash/add_segment_integrity_checks_to_loader.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/transports/utils/check_isobmff_integrity.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/transports/utils/find_complete_box.ts
+  init_define_ENVIRONMENT();
   function findCompleteBox(buf, wantedName) {
     const len = buf.length;
     let i = 0;
@@ -15209,6 +15793,7 @@ ${event}`);
   }
 
   // src/worker/transports/dash/init_segment_loader.ts
+  init_define_ENVIRONMENT();
   function initSegmentLoader(url, segment, cancelSignal, callbacks) {
     if (segment.range === void 0) {
       return request_default({
@@ -15280,7 +15865,11 @@ ${event}`);
     });
   }
 
+  // src/worker/transports/dash/low_latency_segment_loader.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/transports/dash/extract_complete_chunks.ts
+  init_define_ENVIRONMENT();
   function extractCompleteChunks(buffer) {
     let _position = 0;
     const chunks = [];
@@ -15462,7 +16051,14 @@ ${event}`);
     }
   }
 
+  // src/worker/transports/dash/segment_parser.ts
+  init_define_ENVIRONMENT();
+
+  // src/worker/parsers/containers/matroska/index.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/parsers/containers/matroska/utils.ts
+  init_define_ENVIRONMENT();
   var SEGMENT_ID = 408125543;
   var INFO_ID = 357149030;
   var TIMECODESCALE_ID = 2807729;
@@ -15636,7 +16232,11 @@ ${event}`);
     return value;
   }
 
+  // src/worker/parsers/manifest/dash/index.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/transports/utils/get_isobmff_timing_infos.ts
+  init_define_ENVIRONMENT();
   function getISOBMFFTimingInfos(buffer, isChunked, segment, initTimescale) {
     const baseDecodeTime = getTrackFragmentDecodeTime(buffer);
     if (baseDecodeTime === void 0 || initTimescale === void 0) {
@@ -15672,6 +16272,7 @@ ${event}`);
   }
 
   // src/worker/transports/dash/get_events_out_of_emsgs.ts
+  init_define_ENVIRONMENT();
   function manifestNeedsToBeRefreshed(emsgs, manifestPublishTime) {
     if (emsgs.length <= 0) {
       return false;
@@ -15829,6 +16430,7 @@ ${event}`);
   }
 
   // src/worker/transports/dash/text_loader.ts
+  init_define_ENVIRONMENT();
   function generateTextTrackLoader({
     lowLatencyMode,
     checkMediaSegmentIntegrity
@@ -15880,7 +16482,11 @@ ${event}`);
     }
   }
 
+  // src/worker/transports/dash/text_parser.ts
+  init_define_ENVIRONMENT();
+
   // src/worker/transports/utils/parse_text_track.ts
+  init_define_ENVIRONMENT();
   function extractTextTrackFromISOBMFF(chunkBytes) {
     const mdat = getMDAT(chunkBytes);
     return mdat === null ? "" : utf8ToStr(mdat);
@@ -16124,9 +16730,22 @@ ${event}`);
   globalThis.window = globalThis;
   var createAndLinkMediaSource = () => {
     const mediaSource = new MediaSource();
-    const objectUrl = URL.createObjectURL(mediaSource);
-    postMessage({ topic: "objectUrl", arg: objectUrl });
+    const handle = mediaSource.handle;
+    postMessage({ topic: "objectHandle", arg: handle }, [handle]);
     return mediaSource;
+  };
+  var playbackObserver = new PlaybackObserver({
+    lowLatencyMode: false,
+    withMediaSource: true
+  });
+  var playbackSubject = new Subject();
+  playbackObserver._observation$ = playbackSubject;
+  var deserializeTimeRanges = (tr) => {
+    const buffered = new ManualTimeRanges();
+    tr.forEach(([start, end]) => {
+      buffered.insert(start, end);
+    });
+    return buffered;
   };
   var initManagers = (mediaSource, mpdUrl) => {
     const abrManager = new abr_default({
@@ -16161,10 +16780,6 @@ ${event}`);
         }).subscribe((parseEvent) => {
           if (parseEvent.type === "parsed") {
             const manifest = parseEvent.manifest;
-            const playbackObserver = new PlaybackObserver({
-              lowLatencyMode: false,
-              withMediaSource: true
-            });
             const streamPlaybackObserver = createStreamPlaybackObserver(manifest, playbackObserver, {
               autoPlay: false,
               initialPlayPerformed: reference_default(false),
@@ -16172,6 +16787,7 @@ ${event}`);
               speed: reference_default(1),
               startTime: 0
             });
+            streamPlaybackObserver.observe(true).subscribe((streamEvent) => console.warn("[StreamPlaybackObserver] :", streamEvent.position));
             const stream = stream_default({ initialPeriod: manifest.periods[0], manifest }, streamPlaybackObserver, abrManager, segmentBufferStore, segmentFetcherCreator, {
               wantedBufferAhead: reference_default(30),
               maxVideoBufferSize: reference_default(Infinity),
@@ -16183,25 +16799,36 @@ ${event}`);
               manualBitrateSwitchingMode: "direct",
               onCodecSwitch: "continue"
             });
-           stream.subscribe((ev) => {
-		console.log(ev);
-		if(ev.type == "periodStreamReady"){
-			ev.value.adaptation$.next(ev.value.period.adaptations[ev.value.type][0]);
-		}	
-		});
+            stream.subscribe((event) => {
+              if (event.type === "periodStreamReady") {
+                event.value.adaptation$.next(event.value.period.adaptations[event.value.type][0]);
+              }
+            });
           }
         });
       }
     });
   };
   onmessage = async (e) => {
-    const parser = new wasm_parser_default();
-    await parser.initialize({ wasmUrl: "http://localhost:8080/src/main/mpd-parser.wasm" });
-    globalThis.parser = parser;
-    const mediaSource = createAndLinkMediaSource();
-    mediaSource.addEventListener("sourceopen", () => {
-      initManagers(mediaSource, e.data.mpd);
-    });
+    console.log(e);
+    if (e.data.topic === "mpd") {
+      const parser = new wasm_parser_default();
+      await parser.initialize({ wasmUrl: "http://localhost:8080/src/test/mpd-parser.wasm" });
+      globalThis.parser = parser;
+      const mediaSource = createAndLinkMediaSource();
+      const mpd = e.data.mpd;
+      const init = () => {
+        initManagers(mediaSource, mpd);
+      };
+      mediaSource.addEventListener("sourceopen", init);
+    } else if (e.data.topic === "playback") {
+      console.log("From worker test playback");
+      const observation = e.data.observation;
+      observation.buffered = deserializeTimeRanges(observation.buffered);
+      playbackObserver.setCurrentTime(observation.position);
+      playbackObserver.setReadyState(observation.readyState);
+      playbackSubject.next(observation);
+    }
   };
 })();
 /*! *****************************************************************************

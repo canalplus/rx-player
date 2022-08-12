@@ -1,4 +1,3 @@
-globalThis.window = globalThis;
 /**
  * Copyright 2015 CANAL+ Group
  *

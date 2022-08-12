@@ -10,7 +10,7 @@ module.exports = {
     ],
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
-        "project": "./src/worker/tsconfig.json",
+        "project": "./src/tsconfig.json",
         "sourceType": "module"
     },
     "plugins": [
@@ -395,5 +395,11 @@ module.exports = {
                 }
             }
         ]
-    }
+    },
+    "overrides": [{
+        "files": ["*.js", "*.jsx"],
+        "rules": {
+            "@typescript-eslint/no-unsafe-assignment": "off",
+        }
+    }]
 };

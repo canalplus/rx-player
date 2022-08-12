@@ -271,6 +271,7 @@ export default function PeriodStream({
     const { manifest } = content;
     const adaptationPlaybackObserver =
       createAdaptationStreamPlaybackObserver(playbackObserver, segmentBuffer);
+    adaptationPlaybackObserver.observe(true).subscribe((ev) => console.warn("[AdaptationPlaybackObs] :", ev));
     return AdaptationStream({ abrManager,
                               content: { manifest, period, adaptation },
                               options,

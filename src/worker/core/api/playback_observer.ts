@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -31,7 +32,6 @@ import log from "../../log";
 import objectAssign from "../../utils/object_assign";
 import { getRange } from "../../utils/ranges";
 import ManualTimeRanges from "../segment_buffers/implementations/utils/manual_time_ranges";
-
 
 /**
  * HTMLMediaElement Events for which playback observations are calculated and
@@ -88,14 +88,16 @@ export default class PlaybackObserver {
    *
    * `null` if no observation has been made yet.
    */
-  private _lastObservation : IPlaybackObservation | null;
+  public _lastObservation : IPlaybackObservation | null;
 
   /**
    * Lazily-created shared Observable that will emit playback observations.
    * Set to `null` until the first time it is generated.
    */
-  private _observation$ : Observable<IPlaybackObservation> | null;
+  public _observation$ : Observable<IPlaybackObservation> | null;
 
+  private _currentTime: number = 0;
+  private _readyState: number = READY_STATES.HAVE_NOTHING;
   /**
    * @param {HTMLMediaElement} mediaElement
    * @param {Object} options
@@ -114,7 +116,7 @@ export default class PlaybackObserver {
    * @returns {number}
    */
   public getCurrentTime() : number {
-    return 0;
+    return this._currentTime;
   }
 
   /**
@@ -129,6 +131,7 @@ export default class PlaybackObserver {
    */
   public setCurrentTime(_time: number) : void {
     this._internalSeekingEventsIncomingCounter += 1;
+    this._currentTime = _time;
   }
 
   /**
@@ -136,7 +139,11 @@ export default class PlaybackObserver {
    * @returns {number}
    */
   public getReadyState() : number {
-    return READY_STATES.HAVE_NOTHING;
+    return this._readyState;
+  }
+
+  public setReadyState(_readyState: number): void {
+    this._readyState = _readyState;
   }
 
   /**

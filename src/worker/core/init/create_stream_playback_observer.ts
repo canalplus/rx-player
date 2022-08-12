@@ -57,6 +57,7 @@ export default function createStreamPlaybackObserver(
     speed,
     startTime } : IStreamPlaybackObserverArguments
 ) : IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation> {
+  playbackObserver.observe(true).subscribe((ev) => console.warn("[playbackObserverBeforeDerive] :", ev));
   return playbackObserver.deriveReadOnlyObserver(function mapObservable(
     observation$ : Observable<IPlaybackObservation>
   ) : Observable<IStreamOrchestratorPlaybackObservation> {
