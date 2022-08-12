@@ -26,7 +26,7 @@ export interface IAdaptationStreamCallbacks<T>
   extends Omit<IRepresentationStreamCallbacks<T>, "terminating">
 {
   /** Called as new bitrate estimates are done. */
-  bitrateEstimationChange(payload : IBitrateEstimationChangePayload) : void;
+  bitrateEstimateChange(payload : IBitrateEstimateChangePayload) : void;
   /**
    * Called when a new `RepresentationStream` is created to load segments from a
    * `Representation`.
@@ -47,8 +47,8 @@ export interface IAdaptationStreamCallbacks<T>
   needsBufferFlush() : void;
 }
 
-/** Payload for the `bitrateEstimationChange` callback. */
-export interface IBitrateEstimationChangePayload {
+/** Payload for the `bitrateEstimateChange` callback. */
+export interface IBitrateEstimateChangePayload {
   /** The type of buffer for which the estimation is done. */
   type : IBufferType;
   /**
