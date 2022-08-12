@@ -247,8 +247,7 @@ export default function AdaptationStream({
       const terminateCurrentStream$ = lastRepEstimate.asObservable().pipe(
         filter((newEstimate) =>
           newEstimate === null ||
-          newEstimate.representation.id !== representation.id ||
-          (newEstimate.manual && !currEstimate.manual)),
+          newEstimate.representation.id !== representation.id),
         take(1),
         map((newEstimate) => {
           if (newEstimate === null) {
