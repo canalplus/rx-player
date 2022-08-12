@@ -1,9 +1,9 @@
 import RxPlayer from "rx-player";
 import { manifestInfos } from "../../contents/DASH_static_SegmentTimeline";
-import sleep from "../../utils/sleep";
+import sleep from "../../common/utils/sleep";
 import waitForPlayerState, {
   waitForLoadedStateAfterLoadVideo,
-} from "../../utils/waitForPlayerState";
+} from "../../common/utils/waitForPlayerState";
 
 let player;
 

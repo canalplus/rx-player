@@ -21,9 +21,9 @@
  * This is the class used from a regular build.
  */
 
-import Player from "./core/api";
-import initializeFeatures from "./features/initialize_features";
-import logger from "./log";
+import logger from "./common/log";
+import Player from "./worker/core/api";
+import initializeFeatures from "./worker/features/initialize_features";
 
 // set initial features according to environment variables
 initializeFeatures();

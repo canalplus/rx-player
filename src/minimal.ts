@@ -21,12 +21,12 @@
  * import only features that is needed.
  */
 
-import Player from "./core/api";
+import logger from "./common/log";
+import Player from "./worker/core/api";
 import {
   addFeatures,
   IFeature,
-} from "./features";
-import logger from "./log";
+} from "./worker/features";
 
 if (typeof __RX_PLAYER_DEBUG_MODE__ === "boolean" && __RX_PLAYER_DEBUG_MODE__) {
   logger.setLevel("DEBUG");
