@@ -24,7 +24,7 @@ import SegmentBuffersStore from "../segment_buffers";
 import {
   IActivePeriodChangedEvent,
   IAdaptationChangeEvent,
-  IBitrateEstimationChangeEvent,
+  IBitrateEstimateChangeEvent,
   ICompletedStreamEvent,
   IEncryptionDataEncounteredEvent,
   IInbandEventsEvent,
@@ -127,7 +127,7 @@ export type IMediaSourceLoaderEvent = IStalledEvent |
                                       INeedsMediaSourceReload |
                                       INeedsBufferFlushEvent |
                                       IAdaptationChangeEvent |
-                                      IBitrateEstimationChangeEvent |
+                                      IBitrateEstimateChangeEvent |
                                       INeedsDecipherabilityFlush |
                                       IRepresentationChangeEvent |
                                       IStreamEventAddedSegment<unknown> |
@@ -158,7 +158,7 @@ export type IInitEvent = IManifestReadyEvent |
                          ICompletedStreamEvent |
                          IPeriodStreamReadyEvent |
                          IAdaptationChangeEvent |
-                         IBitrateEstimationChangeEvent |
+                         IBitrateEstimateChangeEvent |
                          IRepresentationChangeEvent |
                          IStreamEventAddedSegment<unknown> |
                          IInbandEventsEvent;

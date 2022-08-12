@@ -171,7 +171,7 @@ export default function AdaptationStream({
         prev.bitrate === next.bitrate),
       map(({ bitrate }) => {
         log.debug(`Stream: new ${adaptation.type} bitrate estimate`, bitrate);
-        return EVENTS.bitrateEstimationChange(adaptation.type, bitrate);
+        return EVENTS.bitrateEstimateChange(adaptation.type, bitrate);
       })
     );
 
