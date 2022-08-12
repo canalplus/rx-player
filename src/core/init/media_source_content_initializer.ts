@@ -589,8 +589,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           self.trigger("periodStreamCleared", value);
         },
 
-        bitrateEstimationChange: (value) =>
-          self.trigger("bitrateEstimationChange", value),
+        bitrateEstimateChange: (value) =>
+          self.trigger("bitrateEstimateChange", value),
 
         addedSegment: (value) => self.trigger("addedSegment", value),
 
