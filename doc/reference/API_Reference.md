@@ -493,9 +493,6 @@ properties, methods, events and so on.
     New Periods associated to the current content are known. It is also now
     possible to change their respective tracks and qualities.
 
-  - [`bitrateEstimationChange`](../api/Player_Events.md#bitrateestimationchange):
-    A new bitrate estimate is available.
-
   - [`volumeChange`](../api/Player_Events.md#volumechange):
     Characteristics of the currently set volume changed.
 
