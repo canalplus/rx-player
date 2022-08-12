@@ -210,18 +210,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     lastBitrates : { audio? : number;
                      video? : number;
                      text? : number; };
-
-    /** Store last wanted minAutoBitrates for the adaptive logic. */
-    minAutoBitrates : { audio : SharedReference<number>;
-                        video : SharedReference<number>; };
-
-    /** Store last wanted maxAutoBitrates for the adaptive logic. */
-    maxAutoBitrates : { audio : SharedReference<number>;
-                        video : SharedReference<number>; };
-
-    /** Store last wanted manual bitrates for the adaptive logic. */
-    manualBitrates : { audio : SharedReference<number>;
-                       video : SharedReference<number>; };
   };
 
   /**
@@ -343,12 +331,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     super();
     const { baseBandwidth,
             limitVideoWidth,
-            minAudioBitrate,
-            minVideoBitrate,
-            maxAudioBitrate,
             maxBufferAhead,
             maxBufferBehind,
-            maxVideoBitrate,
             throttleVideoBitrateWhenHidden,
             videoElement,
             wantedBufferAhead,
@@ -389,16 +373,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_bitrateInfos = {
       lastBitrates: { audio: baseBandwidth,
                       video: baseBandwidth },
-      minAutoBitrates: { audio: new SharedReference(minAudioBitrate,
-                                                    this._destroyCanceller.signal),
-                         video: new SharedReference(minVideoBitrate,
-                                                    this._destroyCanceller.signal) },
-      maxAutoBitrates: { audio: new SharedReference(maxAudioBitrate,
-                                                    this._destroyCanceller.signal),
-                         video: new SharedReference(maxVideoBitrate,
-                                                    this._destroyCanceller.signal) },
-      manualBitrates: { audio: new SharedReference(-1, this._destroyCanceller.signal),
-                        video: new SharedReference(-1, this._destroyCanceller.signal) },
     };
 
     this._priv_throttleVideoBitrateWhenHidden = throttleVideoBitrateWhenHidden;
@@ -666,9 +640,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       const adaptiveOptions = {
         initialBitrates: this._priv_bitrateInfos.lastBitrates,
         lowLatencyMode,
-        manualBitrates: this._priv_bitrateInfos.manualBitrates,
-        minAutoBitrates: this._priv_bitrateInfos.minAutoBitrates,
-        maxAutoBitrates: this._priv_bitrateInfos.maxAutoBitrates,
         throttlers,
       };
 
@@ -1316,38 +1287,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Returns minimum wanted video bitrate currently set.
-   * @returns {Number}
-   */
-  getMinVideoBitrate() : number {
-    return this._priv_bitrateInfos.minAutoBitrates.video.getValue();
-  }
-
-  /**
-   * Returns minimum wanted audio bitrate currently set.
-   * @returns {Number}
-   */
-  getMinAudioBitrate() : number {
-    return this._priv_bitrateInfos.minAutoBitrates.audio.getValue();
-  }
-
-  /**
-   * Returns maximum wanted video bitrate currently set.
-   * @returns {Number}
-   */
-  getMaxVideoBitrate() : number {
-    return this._priv_bitrateInfos.maxAutoBitrates.video.getValue();
-  }
-
-  /**
-   * Returns maximum wanted audio bitrate currently set.
-   * @returns {Number}
-   */
-  getMaxAudioBitrate() : number {
-    return this._priv_bitrateInfos.maxAutoBitrates.audio.getValue();
-  }
-
-  /**
    * Play/Resume the current video.
    * @returns {Promise}
    */
@@ -1501,62 +1440,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this.setVolume(this._priv_mutedMemory === 0 ? DEFAULT_UNMUTED_VOLUME :
                                                     this._priv_mutedMemory);
     }
-  }
-
-  /**
-   * Update the minimum video bitrate the user can switch to.
-   * @param {Number} btr
-   */
-  setMinVideoBitrate(btr : number) : void {
-    const maxVideoBitrate = this._priv_bitrateInfos.maxAutoBitrates.video.getValue();
-    if (btr > maxVideoBitrate) {
-      throw new Error("Invalid minimum video bitrate given. " +
-                      `Its value, "${btr}" is superior the current maximum ` +
-                      `video birate, "${maxVideoBitrate}".`);
-    }
-    this._priv_bitrateInfos.minAutoBitrates.video.setValue(btr);
-  }
-
-  /**
-   * Update the minimum audio bitrate the user can switch to.
-   * @param {Number} btr
-   */
-  setMinAudioBitrate(btr : number) : void {
-    const maxAudioBitrate = this._priv_bitrateInfos.maxAutoBitrates.audio.getValue();
-    if (btr > maxAudioBitrate) {
-      throw new Error("Invalid minimum audio bitrate given. " +
-                      `Its value, "${btr}" is superior the current maximum ` +
-                      `audio birate, "${maxAudioBitrate}".`);
-    }
-    this._priv_bitrateInfos.minAutoBitrates.audio.setValue(btr);
-  }
-
-  /**
-   * Update the maximum video bitrate the user can switch to.
-   * @param {Number} btr
-   */
-  setMaxVideoBitrate(btr : number) : void {
-    const minVideoBitrate = this._priv_bitrateInfos.minAutoBitrates.video.getValue();
-    if (btr < minVideoBitrate) {
-      throw new Error("Invalid maximum video bitrate given. " +
-                      `Its value, "${btr}" is inferior the current minimum ` +
-                      `video birate, "${minVideoBitrate}".`);
-    }
-    this._priv_bitrateInfos.maxAutoBitrates.video.setValue(btr);
-  }
-
-  /**
-   * Update the maximum audio bitrate the user can switch to.
-   * @param {Number} btr
-   */
-  setMaxAudioBitrate(btr : number) : void {
-    const minAudioBitrate = this._priv_bitrateInfos.minAutoBitrates.audio.getValue();
-    if (btr < minAudioBitrate) {
-      throw new Error("Invalid maximum audio bitrate given. " +
-                      `Its value, "${btr}" is inferior the current minimum ` +
-                      `audio birate, "${minAudioBitrate}".`);
-    }
-    this._priv_bitrateInfos.maxAutoBitrates.audio.setValue(btr);
   }
 
   /**

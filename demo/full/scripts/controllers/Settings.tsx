@@ -32,13 +32,9 @@ function Settings({
 }): JSX.Element | null {
   const {
     limitVideoWidth,
-    maxAudioBitrate,
     maxBufferAhead,
     maxBufferBehind,
-    maxVideoBitrate,
     maxVideoBufferSize,
-    minAudioBitrate,
-    minVideoBitrate,
     throttleVideoBitrateWhenHidden,
     wantedBufferAhead,
   } = playerOptions;
@@ -65,46 +61,6 @@ function Settings({
       return Object.assign({}, prevOptions, { autoPlay });
     });
   }, [updateLoadVideoOptions]);
-
-  const onMinVideoBitrateChange = useCallback((
-    minVideoBitrate: number
-  ) => {
-    updatePlayerOptions((prevOptions) => {
-      if (minVideoBitrate === prevOptions.minVideoBitrate) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, { minVideoBitrate });
-    });
-  }, [updatePlayerOptions]);
-
-  const onMinAudioBitrateChange = useCallback((
-    minAudioBitrate: number
-  ) => {
-    updatePlayerOptions((prevOptions) => {
-      if (minAudioBitrate === prevOptions.minAudioBitrate) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, { minAudioBitrate });
-    });
-  }, [updatePlayerOptions]);
-
-  const onMaxVideoBitrateChange = useCallback((maxVideoBitrate: number) => {
-    updatePlayerOptions((prevOptions) => {
-      if (maxVideoBitrate === prevOptions.maxVideoBitrate) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, { maxVideoBitrate });
-    });
-  }, [updatePlayerOptions]);
-
-  const onMaxAudioBitrateChange = useCallback((maxAudioBitrate: number) => {
-    updatePlayerOptions((prevOptions) => {
-      if (maxAudioBitrate === prevOptions.maxAudioBitrate) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, { maxAudioBitrate });
-    });
-  }, [updatePlayerOptions]);
 
   const onLimitVideoWidthChange = useCallback((limitVideoWidth: boolean) => {
     updatePlayerOptions((prevOptions) => {
@@ -300,10 +256,6 @@ function Settings({
         </Option>
         <Option title="Video adaptive settings">
           <VideoAdaptiveSettings
-            minVideoBitrate={minVideoBitrate}
-            maxVideoBitrate={maxVideoBitrate}
-            onMinVideoBitrateChange={onMinVideoBitrateChange}
-            onMaxVideoBitrateChange={onMaxVideoBitrateChange}
             limitVideoWidth={limitVideoWidth}
             throttleVideoBitrateWhenHidden={throttleVideoBitrateWhenHidden}
             onLimitVideoWidthChange={onLimitVideoWidthChange}
@@ -313,12 +265,7 @@ function Settings({
           />
         </Option>
         <Option title="Audio adaptive settings">
-          <AudioAdaptiveSettings
-            minAudioBitrate={minAudioBitrate}
-            maxAudioBitrate={maxAudioBitrate}
-            onMinAudioBitrateChange={onMinAudioBitrateChange}
-            onMaxAudioBitrateChange={onMaxAudioBitrateChange}
-          />
+          <AudioAdaptiveSettings />
         </Option>
       </div>
       <div style={{ display: "flex" }}>
