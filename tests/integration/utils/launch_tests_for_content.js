@@ -781,33 +781,33 @@ export default function launchTestsForContent(manifestInfos) {
       });
     });
 
-    describe("getVideoBitrate", () => {
+    describe("getVideoRepresentation", () => {
       it("should give a value once loaded", async () => {
-        expect(player.getVideoBitrate()).to.equal(undefined);
+        expect(player.getVideoRepresentation()).to.equal(undefined);
 
         player.loadVideo({
           url: manifestInfos.url,
           transport,
         });
 
-        expect(player.getVideoBitrate()).to.equal(undefined);
+        expect(player.getVideoRepresentation()).to.equal(undefined);
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getVideoBitrate()).to.not.equal(undefined);
+        expect(player.getVideoRepresentation()).to.not.equal(undefined);
       });
     });
 
-    describe("getAudioBitrate", () => {
+    describe("getAudioRepresentation", () => {
       it("should give a value once loaded", async () => {
-        expect(player.getAudioBitrate()).to.equal(undefined);
+        expect(player.getAudioRepresentation()).to.equal(undefined);
 
         player.loadVideo({
           url: manifestInfos.url,
           transport,
         });
 
-        expect(player.getAudioBitrate()).to.equal(undefined);
+        expect(player.getAudioRepresentation()).to.equal(undefined);
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getAudioBitrate()).to.not.equal(undefined);
+        expect(player.getAudioRepresentation()).to.not.equal(undefined);
       });
     });
 
