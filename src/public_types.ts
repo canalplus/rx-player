@@ -466,14 +466,6 @@ export interface IPersistentSessionStorage {
   disableRetroCompatibility? : boolean;
 }
 
-/** Payload emitted with a `bitrateEstimationChange` event. */
-export interface IBitrateEstimate {
-  /** The type of buffer this estimate was done for (e.g. "audio). */
-  type : IBufferType;
-  /** The calculated bitrate, in bits per seconds. */
-  bitrate : number | undefined;
-}
-
 // XXX TODO wouldn't it be more pertinent to directly give more Representation
 // and track information here?
 export interface IDecipherabilityUpdateContent {

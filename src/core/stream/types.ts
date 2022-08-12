@@ -201,18 +201,22 @@ export interface IStreamTerminatingEvent {
   value : undefined;
 }
 
+/** Payload emitted with a `bitrateEstimateChange` event. */
+export interface IBitrateEstimatePayload {
+  /** The type of buffer this estimate was done for (e.g. "audio). */
+  type : IBufferType;
+  /**
+   * The bitrate estimate, in bits per seconds. `undefined` when no bitrate
+   * estimate is currently available.
+   */
+  bitrate : number | undefined;
+}
+
+
 /** Emitted as new bitrate estimates are done. */
-export interface IBitrateEstimationChangeEvent {
-  type : "bitrateEstimationChange";
-  value : {
-    /** The type of buffer for which the estimation is done. */
-    type : IBufferType;
-    /**
-     * The bitrate estimate, in bits per seconds. `undefined` when no bitrate
-     * estimate is currently available.
-     */
-    bitrate : number|undefined;
-  };
+export interface IBitrateEstimateChangeEvent {
+  type : "bitrateEstimateChange";
+  value : IBitrateEstimatePayload;
 }
 
 /**
@@ -502,7 +506,7 @@ export type IRepresentationStreamEvent = IStreamStatusEvent |
                                          IInbandEventsEvent;
 
 /** Event sent by an `AdaptationStream`. */
-export type IAdaptationStreamEvent = IBitrateEstimationChangeEvent |
+export type IAdaptationStreamEvent = IBitrateEstimateChangeEvent |
                                      INeedsDecipherabilityFlush |
                                      IRepresentationChangeEvent |
                                      INeedsBufferFlushEvent |
@@ -524,7 +528,7 @@ export type IPeriodStreamEvent = IPeriodStreamReadyEvent |
 
                                  // From an AdaptationStream
 
-                                 IBitrateEstimationChangeEvent |
+                                 IBitrateEstimateChangeEvent |
                                  INeedsMediaSourceReload |
                                  INeedsBufferFlushEvent |
                                  INeedsDecipherabilityFlush |
@@ -552,7 +556,7 @@ export type IMultiplePeriodStreamsEvent = IPeriodStreamClearedEvent |
 
                                           // From an AdaptationStream
 
-                                          IBitrateEstimationChangeEvent |
+                                          IBitrateEstimateChangeEvent |
                                           INeedsMediaSourceReload |
                                           INeedsDecipherabilityFlush |
                                           IRepresentationChangeEvent |
@@ -582,7 +586,7 @@ export type IStreamOrchestratorEvent = IActivePeriodChangedEvent |
 
                                        // From an AdaptationStream
 
-                                       IBitrateEstimationChangeEvent |
+                                       IBitrateEstimateChangeEvent |
                                        INeedsMediaSourceReload |
                                        INeedsBufferFlushEvent |
                                        INeedsDecipherabilityFlush |
