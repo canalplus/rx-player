@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *j    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,9 +21,7 @@
 import features from "./features_object";
 
 /**
- * Selects the features to include based on environment variables.
- *
- * @param {Object} features
+ * Selects the features to include.
  */
 export default function initializeFeaturesObject() : void {
   if (__FEATURES__.EME === __FEATURES__.IS_ENABLED as number) {
