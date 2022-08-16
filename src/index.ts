@@ -15,9 +15,7 @@
  */
 
 /**
- * This file exports a Player class with a default feature set (depends on the
- * environment variables set at build).
- *
+ * This file exports a Player class with a default feature set.
  * This is the class used from a regular build.
  */
 
@@ -25,7 +23,6 @@ import Player from "./core/api";
 import initializeFeatures from "./features/initialize_features";
 import logger from "./log";
 
-// set initial features according to environment variables
 initializeFeatures();
 
 if (typeof __RX_PLAYER_DEBUG_MODE__ === "boolean" && __RX_PLAYER_DEBUG_MODE__) {
