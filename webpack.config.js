@@ -30,7 +30,6 @@ module.exports = (env) => {
   const shouldMinify = !!env.minify;
   const shouldReportSize = !!env.reportSize;
 
-  const isBarebone = process.env.RXP_BAREBONE === "true";
   const plugins = [
     new webpack.DefinePlugin({
       "__FEATURES__": {
@@ -39,58 +38,20 @@ module.exports = (env) => {
 
         // Each following feature is compared to IS_ENABLED or IS_DISABLED in
         // code to check whether the feature is enabled or not.
-
-        SMOOTH: +(isBarebone ?
-          process.env.RXP_SMOOTH === "true" :
-          process.env.RXP_SMOOTH !== "false"),
-
-        DASH: +(isBarebone ?
-          process.env.RXP_DASH === "true" :
-          process.env.RXP_DASH !== "false"),
-
-        LOCAL_MANIFEST: +(process.env.RXP_LOCAL_MANIFEST === "true"),
-
-        METAPLAYLIST: +(process.env.RXP_METAPLAYLIST === "true"),
-
-        DIRECTFILE: +(isBarebone ?
-          process.env.RXP_DIRECTFILE === "true" :
-          process.env.RXP_DIRECTFILE !== "false"),
-
-        NATIVE_TTML: +(isBarebone ?
-          process.env.RXP_NATIVE_TTML === "true" :
-          process.env.RXP_NATIVE_TTML !== "false"),
-
-        NATIVE_SAMI: +(isBarebone ?
-          process.env.RXP_NATIVE_SAMI === "true" :
-          process.env.RXP_NATIVE_SAMI !== "false"),
-
-        NATIVE_VTT: +(isBarebone ?
-          process.env.RXP_NATIVE_VTT === "true" :
-          process.env.RXP_NATIVE_VTT !== "false"),
-
-        NATIVE_SRT: +(isBarebone ?
-          process.env.RXP_NATIVE_SRT === "true" :
-          process.env.RXP_NATIVE_SRT !== "false"),
-
-        HTML_TTML: +(isBarebone ?
-          process.env.RXP_HTML_TTML === "true" :
-          process.env.RXP_HTML_TTML !== "false"),
-
-        HTML_SAMI: +(isBarebone ?
-          process.env.RXP_HTML_SAMI === "true" :
-          process.env.RXP_HTML_SAMI !== "false"),
-
-        HTML_VTT: +(isBarebone ?
-          process.env.RXP_HTML_VTT === "true" :
-          process.env.RXP_HTML_VTT !== "false"),
-
-        HTML_SRT: +(isBarebone ?
-          process.env.RXP_HTML_SRT === "true" :
-          process.env.RXP_HTML_SRT !== "false"),
-
-        EME: +(isBarebone ?
-          process.env.RXP_EME === "true" :
-          process.env.RXP_EME !== "false"),
+        SMOOTH: +(true),
+        DASH: +(true),
+        LOCAL_MANIFEST: +(false),
+        METAPLAYLIST: +(false),
+        DIRECTFILE: +(true),
+        NATIVE_TTML: +(true),
+        NATIVE_SAMI: +(true),
+        NATIVE_VTT: +(true),
+        NATIVE_SRT: +(true),
+        HTML_TTML: +(true),
+        HTML_SAMI: +(true),
+        HTML_VTT: +(true),
+        HTML_SRT: +(true),
+        EME: +(true),
       },
       __ENVIRONMENT__: {
         PRODUCTION: 0,

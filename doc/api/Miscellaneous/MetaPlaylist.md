@@ -225,17 +225,10 @@ should be the same value than the `startTime` of the following one).
 
 The `"METAPLAYLIST"` feature is not included in the default RxPlayer build.
 
-There's two way you can import it, depending on if you're relying on the minimal
-version or if you prefer to make use of environment variables and build the
-player manually.
-
-#### Through the minimal version of the RxPlayer
-
-If you're using the "minimal" version of the RxPlayer (through the
-`"rx-player/minimal"` import), you will need to import:
-
-- the `METAPLAYLIST` experimental feature
-- every transport protocol you might want to use.
+To import it, you first need to rely on the "minimal" version of the RxPlayer
+(through the `"rx-player/minimal"` import), you will need to import the
+`METAPLAYLIST` experimental feature and every transport protocol you might want
+to use.
 
 For example if you need to use MetaPlaylist with both Smooth and DASH contents,
 you have to import at least all three as such:
@@ -248,21 +241,8 @@ import { DASH, SMOOTH } from "rx-player/features";
 RxPlayer.addFeatures([METAPLAYLIST, DASH, SMOOTH]);
 ```
 
-#### Through environment variables
-
-If you don't want to go the minimal version's route and you have no problem with
-building yourself a new version of the RxPlayer, you can make use of environment
-variables to activate it.
-
-This can be done through the `RXP_METAPLAYLIST` environment variable, which you
-have to set to `true`:
-
-```sh
-RXP_METAPLAYLIST=true npm run build:min
-```
-
-More information about any of that can be found in the [minimal player
-documentation](../../Getting_Started/Minimal_Player.md).
+More information about the minimal version of the RxPlayer can be found in the
+[minimal player documentation](../../Getting_Started/Minimal_Player.md).
 
 ### Loading a MetaPlaylist content
 
