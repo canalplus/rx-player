@@ -28,7 +28,7 @@ import errorMessage from "./error_message";
  */
 export default class MediaError extends Error {
   public readonly name : "MediaError";
-  public readonly type : string;
+  public readonly type : "MEDIA_ERROR";
   public readonly message : string;
   public readonly code : IMediaErrorCode;
   public fatal : boolean;
@@ -36,7 +36,6 @@ export default class MediaError extends Error {
   /**
    * @param {string} code
    * @param {string} reason
-   * @param {Boolean} fatal
    */
   constructor(code : IMediaErrorCode, reason : string) {
     super();

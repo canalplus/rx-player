@@ -26,7 +26,7 @@ import errorMessage from "./error_message";
  */
 export default class OtherError extends Error {
   public readonly name : "OtherError";
-  public readonly type : string;
+  public readonly type : "OTHER_ERROR";
   public readonly message : string;
   public readonly code : IOtherErrorCode;
   public fatal : boolean;
@@ -34,7 +34,6 @@ export default class OtherError extends Error {
   /**
    * @param {string} code
    * @param {string} reason
-   * @param {Boolean} fatal
    */
   constructor(code : IOtherErrorCode, reason : string) {
     super();

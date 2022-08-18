@@ -28,7 +28,7 @@ import errorMessage from "./error_message";
  */
 export default class EncryptedMediaError extends Error {
   public readonly name : "EncryptedMediaError";
-  public readonly type : string;
+  public readonly type : "ENCRYPTED_MEDIA_ERROR";
   public readonly code : IEncryptedMediaErrorCode;
   public message : string;
   public fatal : boolean;
@@ -36,7 +36,6 @@ export default class EncryptedMediaError extends Error {
   /**
    * @param {string} code
    * @param {string} reason
-   * @Param {Boolean} fatal
    */
   constructor(code : IEncryptedMediaErrorCode, reason : string) {
     super();

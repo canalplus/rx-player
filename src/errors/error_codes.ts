@@ -74,12 +74,12 @@ export type INetworkErrorType = "TIMEOUT" |
                                 "PARSE_ERROR" |
                                 "ERROR_HTTP_CODE";
 
-const ErrorTypes : Record<IErrorType, IErrorType> = {
+const ErrorTypes = {
   NETWORK_ERROR: "NETWORK_ERROR",
   MEDIA_ERROR: "MEDIA_ERROR",
   ENCRYPTED_MEDIA_ERROR: "ENCRYPTED_MEDIA_ERROR",
   OTHER_ERROR: "OTHER_ERROR",
-};
+} as const;
 
 const NetworkErrorTypes : Record<INetworkErrorType, INetworkErrorType> = {
   TIMEOUT: "TIMEOUT",

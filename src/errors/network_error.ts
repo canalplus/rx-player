@@ -31,7 +31,7 @@ import RequestError from "./request_error";
  */
 export default class NetworkError extends Error {
   public readonly name : "NetworkError";
-  public readonly type : string;
+  public readonly type : "NETWORK_ERROR";
   public readonly message : string;
   public readonly code : INetworkErrorCode;
   public readonly xhr : XMLHttpRequest | null;
@@ -43,7 +43,6 @@ export default class NetworkError extends Error {
   /**
    * @param {string} code
    * @param {Error} baseError
-   * @param {Boolean} fatal
    */
   constructor(code : INetworkErrorCode, baseError : RequestError) {
     super();
