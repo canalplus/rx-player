@@ -438,36 +438,41 @@ You can try that property if your encrypted contents seems to be loading
 indefinitely on some peculiar targets.
 
 
-### distinctiveIdentifierRequired
+### distinctiveIdentifier
 
-_type_: `Boolean | undefined`
+_type_: `String | undefined`
 
-When set to `true`, the use of
+Whether the use of
 [Distinctive Indentifier(s)](https://www.w3.org/TR/encrypted-media/#distinctive-identifier)
 or
 [Distinctive Permanent Identifier(s)](https://www.w3.org/TR/encrypted-media/#uses-distinctive-permanent-identifiers)
-will be required.
+will be required, optional or not-allowed.
 
+It can be set to any value of the `MediaKeysRequirement` enumeration, as
+declared [here in the EME specification](#https://www.w3.org/TR/encrypted-media/#dom-mediakeysrequirement).
 This is not needed for most use cases.
 
 
-### persistentStateRequired
+### persistentState
 
-_type_: `Boolean | undefined`
+_type_: `String | undefined`
 
-Set it to `true` if the chosen CDM should have the ability to persist state.
+Whether the decryption module's ability to persist state will be required,
+optional or not-allowed.
 
 This includes session data and any other type of state, but does not include
 [distinctive
 identifiers](https://www.w3.org/TR/2017/REC-encrypted-media-20170918/#distinctive-identifier),
-for which there's another `keySystems` option, `distinctiveIdentifierRequired`.
+for which there's another `keySystems` option, `distinctiveIdentifier`.
 
 If the `persistentLicense` `keySystems` option has been set to `true`,
-setting this value to `true` is redundant and therefore unnecessary (as
+setting this value to `"required"` is redundant and therefore unnecessary (as
 exploiting persistent licenses already necessitate the ability to persist
 session state).
 
-This is very rarely needed.
+It can be set to any value of the `MediaKeysRequirement` enumeration, as
+declared [here in the EME specification](#https://www.w3.org/TR/encrypted-media/#dom-mediakeysrequirement).
+This is not needed for most use cases.
 
 
 ### throwOnLicenseExpiration
