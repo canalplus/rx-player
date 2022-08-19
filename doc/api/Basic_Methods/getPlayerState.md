@@ -25,6 +25,13 @@ Can be either one of those strings:
 - `"BUFFERING"`: the player has reached the end of the buffer and is waiting
   for data to be appended.
 
+- `"FREEZING"`: The player cannot play the content despite having enough data,
+  due to an unknown reason.
+  In most of those cases, the RxPlayer will be able to continue playback by
+  itself, after some time.
+  As such, most `FREEZING` cases can be treated exactly like a `BUFFERING`
+  state.
+
 - `"SEEKING"`: The player has reached the end of the buffer because a seek
   has been performed, new segments are being loaded.
 
@@ -58,25 +65,28 @@ switch (player.getPlayerState()) {
     console.log("The new content is loaded and ready to be played");
     break;
   case "PLAYING":
-    console.log("The content is currently playing");
+    console.log("The player is currently playing");
     break;
   case "PAUSED":
-    console.log("The content is currently paused");
+    console.log("The player is currently paused");
     break;
   case "BUFFERING":
-    console.log("The content is buffering new data");
+    console.log("The player is paused while buffering new data");
+    break;
+  case "FREEZING":
+    console.log("The player is frozen");
     break;
   case "SEEKING":
-    console.log("The content is still seeking, waiting for new data");
+    console.log("The player is still seeking, waiting for new data");
     break;
   case "ENDED":
-    console.log("The content has reached the end.");
+    console.log("The player has reached the end of the content.");
     break;
   case "RELOADING":
-    console.log("The content is currently reloading");
+    console.log("The player is currently reloading the content");
     break;
   default:
-    console.log("This is impossible (issue material!).");
+    console.log("This is impossible!");
     break;
 }
 ```
