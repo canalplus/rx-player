@@ -196,8 +196,8 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
          * MediaKeySessions persisted in older RxPlayer's versions.
          */
         let systemId : string | undefined;
-        if (isNullOrUndefined(options.licenseStorage) ||
-            options.licenseStorage.disableRetroCompatibility === true)
+        if (isNullOrUndefined(options.persistentLicenseConfig) ||
+            options.persistentLicenseConfig.disableRetroCompatibility === true)
         {
           systemId = getDrmSystemId(mediaKeySystemAccess.keySystem);
         }
@@ -437,7 +437,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     this._lockInitDataQueue();
 
     let wantedSessionType : MediaKeySessionType;
-    if (options.persistentLicense !== true) {
+    if (isNullOrUndefined(options.persistentLicenseConfig)) {
       wantedSessionType = "temporary";
     } else if (!canCreatePersistentSession(mediaKeySystemAccess)) {
       log.warn("DRM: Cannot create \"persistent-license\" session: not supported");

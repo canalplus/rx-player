@@ -522,13 +522,9 @@ the user is offline.
 After loading a persistent license, it is automatically stored on the browser's
 side, but the RxPlayer still has to store an ID to be able to retrieve the right
 session when reloading the same content later.
-Because of that, persistent-license management comes in two part in the RxPlayer
-API (as usual here, those should be set in `keySystems`):
 
-1. You'll have to set the `persistentLicense` boolean to `true`
-
-2. You'll have to provide a license storage mechanism and set it as the
-   `licenseStorage` property.
+Because of that, you'll have to provide a storage mechanism and set it as a
+`persistentLicenseConfig` property of `loadVideo`'s `keySystems` option:
 
 ```js
 rxPlayer.loadVideo({
@@ -538,17 +534,16 @@ rxPlayer.loadVideo({
     {
       type: "widevine",
       getLicense,
-      persistentLicense: true,
-      licenseStorage,
+      persistentLicenseConfig,
     },
   ],
 });
 ```
 
-### licenseStorage property
+### persistentLicenseConfig property
 
-The `licenseStorage` property is an object allowing the RxPlayer to load and
-saved stored IDs.
+The `persistentLicenseConfig` property is an object allowing the RxPlayer to
+load and saved stored session identifiers, to be able to retrieve them later.
 
 It needs to contain two functions:
 
@@ -557,6 +552,10 @@ It needs to contain two functions:
 - `load`: Called without any argument, it has to return what was given to the
   last `save` call. Any return value which is not an Array will be ignored
   (example: when `save` has never been called).
+
+If the ability to retrieve persistent-licenses from older RxPlayer version is
+not important to you, you can also add a `disableRetroCompatibility` property
+set to `true`, this will unlock supplementary optimizations on contents.
 
 This API can very simply be implemented with the
 [localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage)
@@ -570,13 +569,12 @@ rxPlayer.loadVideo({
     {
       type: "widevine",
       getLicense,
-      persistentLicense: true,
-      licenseStorage: {
+      persistentLicenseConfig: {
         save(data) {
-          localStorage.setItem("RxPlayer-licenseStorage", JSON.stringify(data));
+          localStorage.setItem("RxPlayer-persistent-storage", JSON.stringify(data));
         },
         load() {
-          const item = localStorage.getItem("RxPlayer-licenseStorage");
+          const item = localStorage.getItem("RxPlayer-persistent-storage");
           return item === null ? [] : JSON.parse(item);
         },
       },
