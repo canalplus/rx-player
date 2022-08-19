@@ -144,13 +144,13 @@ describe("core - decrypt - global tests - media key system access", () => {
   });
 
   /* eslint-disable max-len */
-  it("should change persistentState value if persistentStateRequired is set to true", async () => {
+  it("should set persistentState value if persistentState is set to \"required\"", async () => {
   /* eslint-enable max-len */
     const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
     mockCompat({ requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess });
     await checkIncompatibleKeySystemsErrorMessage([{ type: "foo",
                                                      getLicense: neverCalledFn,
-                                                     persistentStateRequired: true }]);
+                                                     persistentState: "required" }]);
     expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(1);
 
     const expectedConfig = defaultKSConfig.map(conf => {
@@ -160,26 +160,46 @@ describe("core - decrypt - global tests - media key system access", () => {
   });
 
   /* eslint-disable max-len */
-  it("should not change persistentState value if persistentStateRequired is set to false", async () => {
+  it("should set persistentState value if persistentState is set to \"not-allowed\"", async () => {
   /* eslint-enable max-len */
     const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
     mockCompat({ requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess });
     await checkIncompatibleKeySystemsErrorMessage([{ type: "foo",
                                                      getLicense: neverCalledFn,
-                                                     persistentStateRequired: false }]);
+                                                     persistentState: "not-allowed" }]);
     expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(1);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledWith("foo", defaultKSConfig);
+
+    const expectedConfig = defaultKSConfig.map(conf => {
+      return { ...conf, persistentState: "not-allowed" };
+    });
+    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledWith("foo", expectedConfig);
   });
 
   /* eslint-disable max-len */
-  it("should change distinctiveIdentifier value if distinctiveIdentifierRequired is set to true", async () => {
+  it("should set persistentState value if persistentState is set to \"optional\"", async () => {
+  /* eslint-enable max-len */
+    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    mockCompat({ requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess });
+    await checkIncompatibleKeySystemsErrorMessage([{ type: "foo",
+                                                     getLicense: neverCalledFn,
+                                                     persistentState: "optional" }]);
+    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(1);
+
+    const expectedConfig = defaultKSConfig.map(conf => {
+      return { ...conf, persistentState: "optional" };
+    });
+    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledWith("foo", expectedConfig);
+  });
+
+  /* eslint-disable max-len */
+  it("should set distinctiveIdentifier value if distinctiveIdentifier is set to \"required\"", async () => {
   /* eslint-enable max-len */
     const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
     mockCompat({ requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess });
     await checkIncompatibleKeySystemsErrorMessage([{
       type: "foo",
       getLicense: neverCalledFn,
-      distinctiveIdentifierRequired: true,
+      distinctiveIdentifier: "required",
     }]);
     expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(1);
 
@@ -190,17 +210,39 @@ describe("core - decrypt - global tests - media key system access", () => {
   });
 
   /* eslint-disable max-len */
-  it("should not change distinctiveIdentifier value if distinctiveIdentifierRequired is set to false", async () => {
+  it("should set distinctiveIdentifier value if distinctiveIdentifier is set to \"not-allowed\"", async () => {
   /* eslint-enable max-len */
     const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
     mockCompat({ requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess });
     await checkIncompatibleKeySystemsErrorMessage([{
       type: "foo",
       getLicense: neverCalledFn,
-      distinctiveIdentifierRequired: false,
+      distinctiveIdentifier: "not-allowed",
     }]);
     expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(1);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledWith("foo", defaultKSConfig);
+
+    const expectedConfig = defaultKSConfig.map(conf => {
+      return { ...conf, distinctiveIdentifier: "not-allowed" };
+    });
+    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledWith("foo", expectedConfig);
+  });
+
+  /* eslint-disable max-len */
+  it("should set distinctiveIdentifier value if distinctiveIdentifier is set to \"optional\"", async () => {
+  /* eslint-enable max-len */
+    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    mockCompat({ requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess });
+    await checkIncompatibleKeySystemsErrorMessage([{
+      type: "foo",
+      getLicense: neverCalledFn,
+      distinctiveIdentifier: "optional",
+    }]);
+    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(1);
+
+    const expectedConfig = defaultKSConfig.map(conf => {
+      return { ...conf, distinctiveIdentifier: "optional" };
+    });
+    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledWith("foo", expectedConfig);
   });
 
   it("should do nothing if just licenseStorage is set", async () => {
@@ -348,7 +390,7 @@ describe("core - decrypt - global tests - media key system access", () => {
                                                      persistentLicense: true,
                                                      getLicense: neverCalledFn },
                                                    { type: "clearkey",
-                                                     distinctiveIdentifierRequired: true,
+                                                     distinctiveIdentifier: "required",
                                                      getLicense: neverCalledFn }]);
     const expectedPRRecommendationPersistentConfig =
       defaultPRRecommendationKSConfig.map(conf => {

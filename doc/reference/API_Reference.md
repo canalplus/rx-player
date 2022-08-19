@@ -105,12 +105,12 @@ properties, methods, events and so on.
       Disable a lock that may cause the RxPlayer to deadlock on encrypted
       contents on some peculiar devices.
 
-    - [`keySystems[].distinctiveIdentifierRequired`](../api/Decryption_Options.md#distinctiveidentifierrequired):
+    - [`keySystems[].distinctiveIdentifier`](../api/Decryption_Options.md#distinctiveidentifier):
       Allows the configuration of the [Distinctive
       Indentifier(s)](https://www.w3.org/TR/encrypted-media/#distinctive-identifier)
       property.
 
-    - [`keySystems[].persistentStateRequired`](../api/Decryption_Options.md#persistentstaterequired):
+    - [`keySystems[].persistentState`](../api/Decryption_Options.md#persistentstate):
       Allows the configuration of the [persistentState](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-persistentstate)
       property.
 
