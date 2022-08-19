@@ -17,7 +17,6 @@
 import ManifestFetcher, {
   IManifestFetcherParsedResult,
   IManifestFetcherParserOptions,
-  IManifestFetcherWarningEvent,
 } from "./manifest";
 import SegmentFetcherCreator, {
   IPrioritizedSegmentFetcher,
@@ -30,7 +29,6 @@ export {
 
   IManifestFetcherParserOptions,
   IManifestFetcherParsedResult,
-  IManifestFetcherWarningEvent,
 
   IPrioritizedSegmentFetcher,
 

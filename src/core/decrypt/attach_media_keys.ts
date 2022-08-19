@@ -39,9 +39,10 @@ export function disableMediaKeys(mediaElement : HTMLMediaElement): void {
  * Attach MediaKeys and its associated state to an HTMLMediaElement.
  *
  * /!\ Mutates heavily MediaKeysInfosStore
- * @param {Object} mediaKeysInfos
  * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
+ * @param {Object} mediaKeysInfos
+ * @param {Object} cancelSignal
+ * @returns {Promise}
  */
 export default async function attachMediaKeys(
   mediaElement : HTMLMediaElement,

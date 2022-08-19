@@ -17,12 +17,10 @@
 import ManifestFetcher, {
   IManifestFetcherParsedResult,
   IManifestFetcherParserOptions,
-  IManifestFetcherWarningEvent,
 } from "./manifest_fetcher";
 
 export default ManifestFetcher;
 export {
   IManifestFetcherParsedResult,
   IManifestFetcherParserOptions,
-  IManifestFetcherWarningEvent,
 };

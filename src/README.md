@@ -37,8 +37,8 @@ To better understand the player's architecture, you can find below a
   Facilitate track                V                    |       Abstract the streaming ^
   switching for           +---------------+            |       protocol               |
   the API                 |               |            |                              |
- +----------------+       |               |         +--------------------------+      |
- |    Content     |       |     Init      | ------> |                          |      |
+ +----------------+       |    Content    |         +--------------------------+      |
+ |    Content     |       |  Initializer  | ------> |                          |      |
  |   Decryptor    | <---- | (./core/init) |         |     Manifest Fetcher     |      |
  |(./core/decrypt)|       |               |         |(./core/fetchers/manifest)|      |
  |                |       |               |         |                          |      |

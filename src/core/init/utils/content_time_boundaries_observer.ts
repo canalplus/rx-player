@@ -14,143 +14,109 @@
  * limitations under the License.
  */
 
-import {
-  distinctUntilChanged,
-  ignoreElements,
-  map,
-  merge as observableMerge,
-  Observable,
-  skipWhile,
-  startWith,
-  tap,
-} from "rxjs";
-import { MediaError } from "../../errors";
+import { MediaError } from "../../../errors";
 import Manifest, {
   Adaptation,
   IRepresentationIndex,
-} from "../../manifest";
-import { fromEvent } from "../../utils/event_emitter";
-import filterMap from "../../utils/filter_map";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
+} from "../../../manifest";
+import { IPlayerError } from "../../../public_types";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import createSharedReference, {
   IReadOnlySharedReference,
-} from "../../utils/reference";
-import { IReadOnlyPlaybackObserver } from "../api";
+} from "../../../utils/reference";
+import { CancellationSignal } from "../../../utils/task_canceller";
+import { IReadOnlyPlaybackObserver } from "../../api";
 import {
   IAdaptationChangeEvent,
   IStreamOrchestratorPlaybackObservation,
-} from "../stream";
-import EVENTS from "./events_generators";
-import { IWarningEvent } from "./types";
-
-// NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
-// first type parameter as `any` instead of the perfectly fine `unknown`,
-// leading to linter issues, as it forbids the usage of `any`.
-// This is why we're disabling the eslint rule.
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
+} from "../../stream";
 
 /**
- * Observes the position and Adaptations being played and deduce various events
- * related to the available time boundaries:
- *  - Emit when the theoretical duration of the content becomes known or when it
- *    changes.
- *  - Emit warnings when the duration goes out of what is currently
- *    theoretically playable.
+ * Observes the position and Adaptations being played and:
+ *   - emit warnings through the `onWarning` callback when what is being played
+ *     is outside of the Manifest range.
+ *   - Returns a shared reference indicating the theoretical duration of the
+ *     content, and `undefined` if unknown.
  *
  * @param {Object} manifest
  * @param {Object} lastAdaptationChange
  * @param {Object} playbackObserver
- * @returns {Observable}
+ * @param {Function} onWarning
+ * @param {Object} cancelSignal
+ * @returns {Object}
  */
 export default function ContentTimeBoundariesObserver(
   manifest : Manifest,
   lastAdaptationChange : IReadOnlySharedReference<IAdaptationChangeEvent | null>,
-  playbackObserver : IReadOnlyPlaybackObserver<IContentTimeObserverPlaybackObservation>
-
-) : Observable<IContentDurationUpdateEvent | IWarningEvent> {
+  playbackObserver : IReadOnlyPlaybackObserver<IContentTimeObserverPlaybackObservation>,
+  onWarning : (err : IPlayerError) => void,
+  cancelSignal : CancellationSignal
+) : IReadOnlySharedReference<number | undefined> {
   /**
    * Allows to calculate the minimum and maximum playable position on the
    * whole content.
    */
   const maximumPositionCalculator = new MaximumPositionCalculator(manifest);
 
-  // trigger warnings when the wanted time is before or after the manifest's
-  // segments
-  const outOfManifest$ = playbackObserver.getReference().asObservable().pipe(
-    filterMap<IContentTimeObserverPlaybackObservation, IWarningEvent, null>((
-      { position }
-    ) => {
-      const wantedPosition = position.pending ?? position.last;
-      if (
-        wantedPosition < manifest.getMinimumSafePosition()
-      ) {
-        const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST",
-                                       "The current position is behind the " +
-                                       "earliest time announced in the Manifest.");
-        return EVENTS.warning(warning);
-      } else if (
-        wantedPosition > maximumPositionCalculator.getMaximumAvailablePosition()
-      ) {
-        const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST",
-                                       "The current position is after the latest " +
-                                       "time announced in the Manifest.");
-        return EVENTS.warning(warning);
-      }
-      return null;
-    }, null));
+  playbackObserver.listen(({ position } : IContentTimeObserverPlaybackObservation) => {
+    const wantedPosition = position.pending ?? position.last;
+    if (wantedPosition < manifest.getMinimumSafePosition()) {
+      const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST",
+                                     "The current position is behind the " +
+                                     "earliest time announced in the Manifest.");
+      onWarning(warning);
+    } else if (
+      wantedPosition > maximumPositionCalculator.getMaximumAvailablePosition()
+    ) {
+      const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST",
+                                     "The current position is after the latest " +
+                                     "time announced in the Manifest.");
+      onWarning(warning);
+    }
+  }, { includeLastObservation: true, clearSignal: cancelSignal });
 
   /**
    * Contains the content duration according to the last audio and video
    * Adaptation chosen for the last Period.
    * `undefined` if unknown yet.
    */
-  const contentDuration = createSharedReference<number | undefined>(undefined);
-
-  const updateDurationOnManifestUpdate$ = fromEvent(manifest, "manifestUpdate").pipe(
-    startWith(null),
-    tap(() => {
-      const duration = manifest.isDynamic ?
-        maximumPositionCalculator.getEndingPosition() :
-        maximumPositionCalculator.getMaximumAvailablePosition();
-      contentDuration.setValue(duration);
-    }),
-    ignoreElements()
+  const contentDuration = createSharedReference<number | undefined>(
+    getManifestDuration()
   );
 
-  const updateDurationAndTimeBoundsOnTrackChange$ = lastAdaptationChange
-    .asObservable().pipe(
-      tap((message) => {
-        if (message === null || !manifest.isLastPeriodKnown) {
-          return;
-        }
-        const lastPeriod = manifest.periods[manifest.periods.length - 1];
-        if (message.value.period.id === lastPeriod?.id) {
-          if (message.value.type === "audio" || message.value.type === "video") {
-            if (message.value.type === "audio") {
-              maximumPositionCalculator
-                .updateLastAudioAdaptation(message.value.adaptation);
-            } else {
-              maximumPositionCalculator
-                .updateLastVideoAdaptation(message.value.adaptation);
-            }
-            const newDuration = manifest.isDynamic ?
-              maximumPositionCalculator.getMaximumAvailablePosition() :
-              maximumPositionCalculator.getEndingPosition();
-            contentDuration.setValue(newDuration);
-          }
-        }
-      }),
-      ignoreElements());
+  manifest.addEventListener("manifestUpdate", () => {
+    contentDuration.setValue(getManifestDuration());
+  }, cancelSignal);
 
-  return observableMerge(
-    updateDurationOnManifestUpdate$,
-    updateDurationAndTimeBoundsOnTrackChange$,
-    outOfManifest$,
-    contentDuration.asObservable().pipe(
-      skipWhile((val) => val === undefined),
-      distinctUntilChanged(),
-      map(value => ({ type: "contentDurationUpdate" as const, value }))
-    ));
+  lastAdaptationChange.onUpdate((message) => {
+    if (message === null || !manifest.isLastPeriodKnown) {
+      return;
+    }
+    const lastPeriod = manifest.periods[manifest.periods.length - 1];
+    if (message.value.period.id === lastPeriod?.id) {
+      if (message.value.type === "audio" || message.value.type === "video") {
+        if (message.value.type === "audio") {
+          maximumPositionCalculator
+            .updateLastAudioAdaptation(message.value.adaptation);
+        } else {
+          maximumPositionCalculator
+            .updateLastVideoAdaptation(message.value.adaptation);
+        }
+        const newDuration = manifest.isDynamic ?
+          maximumPositionCalculator.getMaximumAvailablePosition() :
+          maximumPositionCalculator.getEndingPosition();
+        contentDuration.setValue(newDuration);
+      }
+    }
+  }, { emitCurrentValue: true, clearSignal: cancelSignal });
+
+  return contentDuration;
+
+  function getManifestDuration() : number | undefined {
+    return manifest.isDynamic ?
+      maximumPositionCalculator.getEndingPosition() :
+      maximumPositionCalculator.getMaximumAvailablePosition();
+  }
 }
 
 /**
@@ -366,16 +332,6 @@ function getEndingPositionFromAdaptation(
     }
   }
   return min;
-}
-
-/**
- * Emitted when the duration of the full content (== the last playable position)
- * has changed.
- */
-export interface IContentDurationUpdateEvent {
-  type: "contentDurationUpdate";
-  /** The new theoretical duration, `undefined` if unknown, */
-  value : number | undefined;
 }
 
 export type IContentTimeObserverPlaybackObservation =
