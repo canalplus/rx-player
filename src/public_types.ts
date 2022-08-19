@@ -422,13 +422,8 @@ export interface IKeySystemOption {
    * set.
    */
   serverCertificate? : BufferSource | null;
-  /**
-   * If `true`, we will try to persist the licenses obtained as well as try to
-   * load already-persisted licenses.
-   */
-  persistentLicense? : boolean;
   /** Storage mechanism used to store and retrieve information on stored licenses. */
-  licenseStorage? : IPersistentSessionStorage;
+  persistentLicenseConfig? : IPersistentLicenseConfig;
   /**
    * Wanted value for the `persistentState` property of this
    * `MediaKeySystemConfiguration` according to the EME API.
@@ -552,7 +547,7 @@ export type IPersistentSessionInfo = IPersistentSessionInfoV4 |
                                      IPersistentSessionInfoV0;
 
 /** Persistent MediaKeySession storage interface. */
-export interface IPersistentSessionStorage {
+export interface IPersistentLicenseConfig {
   /** Load persistent MediaKeySessions previously saved through the `save` callback. */
   load() : IPersistentSessionInfo[] | undefined | null;
   /**

@@ -86,7 +86,8 @@ function checkCachedMediaKeySystemAccess(
       return false;
     }
 
-    if ((ks.persistentLicense === true || ks.persistentState === "required") &&
+    if ((!isNullOrUndefined(ks.persistentLicenseConfig) ||
+         ks.persistentState === "required") &&
         mksConfiguration.persistentState !== "required")
     {
       return false;
@@ -138,7 +139,7 @@ function buildKeySystemConfigurations(
   let persistentState: MediaKeysRequirement = "optional";
   let distinctiveIdentifier: MediaKeysRequirement = "optional";
 
-  if (keySystem.persistentLicense === true) {
+  if (!isNullOrUndefined(keySystem.persistentLicenseConfig)) {
     persistentState = "required";
     sessionTypes.push("persistent-license");
   }
