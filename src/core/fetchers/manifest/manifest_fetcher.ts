@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-import {
-  Observable,
-} from "rxjs";
 import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
@@ -29,7 +26,9 @@ import {
 } from "../../../transports";
 import assert from "../../../utils/assert";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import TaskCanceller from "../../../utils/task_canceller";
+import TaskCanceller, {
+  CancellationSignal,
+} from "../../../utils/task_canceller";
 import errorSelector from "../utils/error_selector";
 import {
   IBackoffSettings,
@@ -39,9 +38,6 @@ import {
 
 /** What will be sent once parsed. */
 export interface IManifestFetcherParsedResult {
-  /** To differentiate it from a "warning" event. */
-  type : "parsed";
-
   /** The resulting Manifest */
   manifest : Manifest;
   /**
@@ -55,24 +51,11 @@ export interface IManifestFetcherParsedResult {
   parsingTime? : number | undefined;
 }
 
-/** Emitted when a fetching or parsing minor error happened. */
-export interface IManifestFetcherWarningEvent {
-  /** To differentiate it from other events. */
-  type : "warning";
-
-  /** The error in question. */
-  value : IPlayerError;
-}
-
 /** Response emitted by a Manifest fetcher. */
 export interface IManifestFetcherResponse {
-  /** To differentiate it from a "warning" event. */
-  type : "response";
-
   /** Allows to parse a fetched Manifest into a `Manifest` structure. */
   parse(parserOptions : IManifestFetcherParserOptions) :
-    Observable<IManifestFetcherWarningEvent |
-               IManifestFetcherParsedResult>;
+    Promise<IManifestFetcherParsedResult>;
 }
 
 export interface IManifestFetcherParserOptions {
@@ -116,20 +99,6 @@ export interface IManifestFetcherSettings {
 /**
  * Class allowing to facilitate the task of loading and parsing a Manifest.
  * @class ManifestFetcher
- * @example
- * ```js
- * const manifestFetcher = new ManifestFetcher(manifestUrl, pipelines, options);
- * manifestFetcher.fetch().pipe(
- *   // Filter only responses (might also receive warning events)
- *   filter((evt) => evt.type === "response");
- *   // Parse the Manifest
- *   mergeMap(res => res.parse({ externalClockOffset }))
- *   // (again)
- *   filter((evt) => evt.type === "parsed");
- * ).subscribe(({ value }) => {
- *   console.log("Manifest:", value.manifest);
- * });
- * ```
  */
 export default class ManifestFetcher {
   private _settings : IManifestFetcherSettings;
@@ -165,94 +134,81 @@ export default class ManifestFetcher {
    * If not set, the regular Manifest url - defined on the `ManifestFetcher`
    * instanciation - will be used instead.
    *
-   * @param {string} [url]
-   * @returns {Observable}
+   * @param {string} url
+   * @param {Function} onWarning
+   * @param {Object} cancelSignal
+   * @returns {Promise}
    */
-  public fetch(url? : string) : Observable<IManifestFetcherResponse |
-                                           IManifestFetcherWarningEvent>
-  {
-    return new Observable((obs) => {
-      const settings = this._settings;
-      const pipelines = this._pipelines;
-      const requestUrl = url ?? this._manifestUrl;
+  public async fetch(
+    url : string | undefined,
+    onWarning : (err : IPlayerError) => void,
+    cancelSignal : CancellationSignal
+  ) : Promise<IManifestFetcherResponse> {
+    const settings = this._settings;
+    const pipelines = this._pipelines;
+    const requestUrl = url ?? this._manifestUrl;
 
-      /** `true` if the loading pipeline is already completely executed. */
-      let hasFinishedLoading = false;
-
-      /** Allows to cancel the loading operation. */
-      const canceller = new TaskCanceller();
-
-      const backoffSettings = this._getBackoffSetting((err) => {
-        obs.next({ type: "warning", value: errorSelector(err) });
-      });
-
-      const loadingPromise = pipelines.resolveManifestUrl === undefined ?
-        callLoaderWithRetries(requestUrl) :
-        callResolverWithRetries(requestUrl).then(callLoaderWithRetries);
-
-      loadingPromise
-        .then(response => {
-          hasFinishedLoading = true;
-          obs.next({
-            type: "response",
-            parse: (parserOptions : IManifestFetcherParserOptions) => {
-              return this._parseLoadedManifest(response, parserOptions);
-            },
-          });
-          obs.complete();
-        })
-        .catch((err : unknown) => {
-          if (canceller.isUsed) {
-            // Cancellation has already been handled by RxJS
-            return;
-          }
-          hasFinishedLoading = true;
-          obs.error(errorSelector(err));
-        });
-
-      return () => {
-        if (!hasFinishedLoading) {
-          canceller.cancel();
-        }
-      };
-
-      /**
-       * Call the resolver part of the pipeline, retrying if it fails according
-       * to the current settings.
-       * Returns the Promise of the last attempt.
-       * /!\ This pipeline should have a `resolveManifestUrl` function defined.
-       * @param {string | undefined}  resolverUrl
-       * @returns {Promise}
-       */
-      function callResolverWithRetries(resolverUrl : string | undefined) {
-        const { resolveManifestUrl } = pipelines;
-        assert(resolveManifestUrl !== undefined);
-        const callResolver = () => resolveManifestUrl(resolverUrl, canceller.signal);
-        return scheduleRequestPromise(callResolver, backoffSettings, canceller.signal);
-      }
-
-      /**
-       * Call the loader part of the pipeline, retrying if it fails according
-       * to the current settings.
-       * Returns the Promise of the last attempt.
-       * @param {string | undefined} manifestUrl
-       * @returns {Promise}
-       */
-      function callLoaderWithRetries(manifestUrl : string | undefined) {
-        const { loadManifest } = pipelines;
-        let requestTimeout : number | undefined =
-          isNullOrUndefined(settings.requestTimeout) ?
-            config.getCurrent().DEFAULT_REQUEST_TIMEOUT :
-            settings.requestTimeout;
-        if (requestTimeout < 0) {
-          requestTimeout = undefined;
-        }
-        const callLoader = () => loadManifest(manifestUrl,
-                                              { timeout: requestTimeout },
-                                              canceller.signal);
-        return scheduleRequestPromise(callLoader, backoffSettings, canceller.signal);
-      }
+    const backoffSettings = this._getBackoffSetting((err) => {
+      onWarning(errorSelector(err));
     });
+
+    const loadingPromise = pipelines.resolveManifestUrl === undefined ?
+      callLoaderWithRetries(requestUrl) :
+      callResolverWithRetries(requestUrl).then(callLoaderWithRetries);
+
+    try {
+      const response = await loadingPromise;
+      return {
+        parse: (parserOptions : IManifestFetcherParserOptions) => {
+          return this._parseLoadedManifest(response,
+                                           parserOptions,
+                                           onWarning,
+                                           cancelSignal);
+        },
+      };
+    } catch (err) {
+      if (err instanceof CancellationSignal) {
+        throw err;
+      }
+      throw errorSelector(err);
+    }
+
+    /**
+     * Call the resolver part of the pipeline, retrying if it fails according
+     * to the current settings.
+     * Returns the Promise of the last attempt.
+     * /!\ This pipeline should have a `resolveManifestUrl` function defined.
+     * @param {string | undefined}  resolverUrl
+     * @returns {Promise}
+     */
+    function callResolverWithRetries(resolverUrl : string | undefined) {
+      const { resolveManifestUrl } = pipelines;
+      assert(resolveManifestUrl !== undefined);
+      const callResolver = () => resolveManifestUrl(resolverUrl, cancelSignal);
+      return scheduleRequestPromise(callResolver, backoffSettings, cancelSignal);
+    }
+
+    /**
+     * Call the loader part of the pipeline, retrying if it fails according
+     * to the current settings.
+     * Returns the Promise of the last attempt.
+     * @param {string | undefined} manifestUrl
+     * @returns {Promise}
+     */
+    function callLoaderWithRetries(manifestUrl : string | undefined) {
+      const { loadManifest } = pipelines;
+      let requestTimeout : number | undefined =
+        isNullOrUndefined(settings.requestTimeout) ?
+          config.getCurrent().DEFAULT_REQUEST_TIMEOUT :
+          settings.requestTimeout;
+      if (requestTimeout < 0) {
+        requestTimeout = undefined;
+      }
+      const callLoader = () => loadManifest(manifestUrl,
+                                            { timeout: requestTimeout },
+                                            cancelSignal);
+      return scheduleRequestPromise(callLoader, backoffSettings, cancelSignal);
+    }
   }
 
   /**
@@ -264,17 +220,22 @@ export default class ManifestFetcher {
    * information on the request can be used by the parsing process.
    * @param {*} manifest
    * @param {Object} parserOptions
-   * @returns {Observable}
+   * @param {Function} onWarning
+   * @param {Object} cancelSignal
+   * @returns {Promise}
    */
   public parse(
     manifest : unknown,
-    parserOptions : IManifestFetcherParserOptions
-  ) : Observable<IManifestFetcherWarningEvent |
-                 IManifestFetcherParsedResult> {
+    parserOptions : IManifestFetcherParserOptions,
+    onWarning : (err : IPlayerError) => void,
+    cancelSignal : CancellationSignal
+  ) : Promise<IManifestFetcherParsedResult> {
     return this._parseLoadedManifest({ responseData: manifest,
                                        size: undefined,
                                        requestDuration: undefined },
-                                     parserOptions);
+                                     parserOptions,
+                                     onWarning,
+                                     cancelSignal);
 
   }
 
@@ -284,127 +245,98 @@ export default class ManifestFetcher {
    * @param {Object} loaded - Information about the loaded Manifest as well as
    * about the corresponding request.
    * @param {Object} parserOptions - Options used when parsing the Manifest.
-   * @returns {Observable}
+   * @param {Function} onWarning
+   * @param {Object} cancelSignal
+   * @returns {Promise}
    */
-  private _parseLoadedManifest(
+  private async _parseLoadedManifest(
     loaded : IRequestedData<unknown>,
-    parserOptions : IManifestFetcherParserOptions
-  ) : Observable<IManifestFetcherWarningEvent |
-                 IManifestFetcherParsedResult>
-  {
-    return new Observable(obs => {
-      const parsingTimeStart = performance.now();
-      const canceller = new TaskCanceller();
-      const { sendingTime, receivedTime } = loaded;
-      const backoffSettings = this._getBackoffSetting((err) => {
-        obs.next({ type: "warning", value: errorSelector(err) });
+    parserOptions : IManifestFetcherParserOptions,
+    onWarning : (err : IPlayerError) => void,
+    cancelSignal : CancellationSignal
+  ) : Promise<IManifestFetcherParsedResult> {
+    const parsingTimeStart = performance.now();
+    const canceller = new TaskCanceller();
+    const { sendingTime, receivedTime } = loaded;
+    const backoffSettings = this._getBackoffSetting((err) => {
+      onWarning(errorSelector(err));
+    });
+
+    const opts = { externalClockOffset: parserOptions.externalClockOffset,
+                   unsafeMode: parserOptions.unsafeMode,
+                   previousManifest: parserOptions.previousManifest,
+                   originalUrl: this._manifestUrl };
+    try {
+      const res = this._pipelines.parseManifest(loaded,
+                                                opts,
+                                                onWarnings,
+                                                cancelSignal,
+                                                scheduleRequest);
+      if (!isPromise(res)) {
+        return finish(res.manifest);
+      } else {
+        const { manifest } = await res;
+        return finish(manifest);
+      }
+    } catch (err) {
+      const formattedError = formatError(err, {
+        defaultCode: "PIPELINE_PARSE_ERROR",
+        defaultReason: "Unknown error when parsing the Manifest",
       });
+      throw formattedError;
+    }
 
-      const opts = { externalClockOffset: parserOptions.externalClockOffset,
-                     unsafeMode: parserOptions.unsafeMode,
-                     previousManifest: parserOptions.previousManifest,
-                     originalUrl: this._manifestUrl };
+    /**
+     * Perform a request with the same retry mechanisms and error handling
+     * than for a Manifest loader.
+     * @param {Function} performRequest
+     * @returns {Function}
+     */
+    async function scheduleRequest<T>(
+      performRequest : () => Promise<T>
+    ) : Promise<T> {
       try {
-        const res = this._pipelines.parseManifest(loaded,
-                                                  opts,
-                                                  onWarnings,
-                                                  canceller.signal,
-                                                  scheduleRequest);
-        if (!isPromise(res)) {
-          emitManifestAndComplete(res.manifest);
-        } else {
-          res
-            .then(({ manifest }) => emitManifestAndComplete(manifest))
-            .catch((err) => {
-              if (canceller.isUsed) {
-                // Cancellation is already handled by RxJS
-                return;
-              }
-              emitError(err, true);
-            });
-        }
+        const data = await scheduleRequestPromise(performRequest,
+                                                  backoffSettings,
+                                                  cancelSignal);
+        return data;
       } catch (err) {
+        throw errorSelector(err);
+      }
+    }
+
+    /**
+     * Handle minor errors encountered by a Manifest parser.
+     * @param {Array.<Error>} warnings
+     */
+    function onWarnings(warnings : Error[]) : void {
+      for (const warning of warnings) {
         if (canceller.isUsed) {
-          // Cancellation is already handled by RxJS
-          return undefined;
+          return;
         }
-        emitError(err, true);
-      }
-
-      return () => {
-        canceller.cancel();
-      };
-
-      /**
-       * Perform a request with the same retry mechanisms and error handling
-       * than for a Manifest loader.
-       * @param {Function} performRequest
-       * @returns {Function}
-       */
-      async function scheduleRequest<T>(
-        performRequest : () => Promise<T>
-      ) : Promise<T> {
-        try {
-          const data = await scheduleRequestPromise(performRequest,
-                                                    backoffSettings,
-                                                    canceller.signal);
-          return data;
-        } catch (err) {
-          throw errorSelector(err);
-        }
-      }
-
-      /**
-       * Handle minor errors encountered by a Manifest parser.
-       * @param {Array.<Error>} warnings
-       */
-      function onWarnings(warnings : Error[]) : void {
-        for (const warning of warnings) {
-          if (canceller.isUsed) {
-            return;
-          }
-          emitError(warning, false);
-        }
-      }
-
-      /**
-       * Emit a formatted "parsed" event through `obs`.
-       * To call once the Manifest has been parsed.
-       * @param {Object} manifest
-       */
-      function emitManifestAndComplete(manifest : Manifest) : void {
-        onWarnings(manifest.contentWarnings);
-        const parsingTime = performance.now() - parsingTimeStart;
-        log.info(`MF: Manifest parsed in ${parsingTime}ms`);
-
-        obs.next({ type: "parsed" as const,
-                   manifest,
-                   sendingTime,
-                   receivedTime,
-                   parsingTime });
-        obs.complete();
-      }
-
-      /**
-       * Format the given Error and emit it through `obs`.
-       * Either through a `"warning"` event, if `isFatal` is `false`, or through
-       * a fatal Observable error, if `isFatal` is set to `true`.
-       * @param {*} err
-       * @param {boolean} isFatal
-       */
-      function emitError(err : unknown, isFatal : boolean) : void {
-        const formattedError = formatError(err, {
+        const formattedError = formatError(warning, {
           defaultCode: "PIPELINE_PARSE_ERROR",
           defaultReason: "Unknown error when parsing the Manifest",
         });
-        if (isFatal) {
-          obs.error(formattedError);
-        } else {
-          obs.next({ type: "warning" as const,
-                     value: formattedError });
-        }
+        onWarning(formattedError);
       }
-    });
+    }
+
+    /**
+     * Emit a formatted "parsed" event through `obs`.
+     * To call once the Manifest has been parsed.
+     * @param {Object} manifest
+     */
+    function finish(manifest : Manifest) : IManifestFetcherParsedResult {
+      onWarnings(manifest.contentWarnings);
+      const parsingTime = performance.now() - parsingTimeStart;
+      log.info(`MF: Manifest parsed in ${parsingTime}ms`);
+
+      return { manifest,
+               sendingTime,
+               receivedTime,
+               parsingTime };
+    }
   }
 
   /**
