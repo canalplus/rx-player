@@ -211,7 +211,10 @@ export default class PlaybackObserver {
    *     CancellationSignal emits.
    */
   public listen(
-    cb : (observation : IPlaybackObservation) => void,
+    cb : (
+      observation : IPlaybackObservation,
+      stopListening : () => void
+    ) => void,
     options? : { includeLastObservation? : boolean | undefined;
                  clearSignal? : CancellationSignal | undefined; }
   ) {
@@ -546,7 +549,10 @@ export interface IReadOnlyPlaybackObserver<TObservationType> {
    * @returns {Function} - Allows to easily unregister the callback
    */
   listen(
-    cb : (observation : TObservationType) => void,
+    cb : (
+      observation : TObservationType,
+      stopListening : () => void
+    ) => void,
     options? : { includeLastObservation? : boolean | undefined;
                  clearSignal? : CancellationSignal | undefined; }
   ) : void;
@@ -958,7 +964,10 @@ function generateReadOnlyObserver<TSource, TDest>(
       return mappedRef;
     },
     listen(
-      cb : (observation : TDest) => void,
+      cb : (
+        observation : TDest,
+        stopListening : () => void
+      ) => void,
       options? : { includeLastObservation? : boolean | undefined;
                    clearSignal? : CancellationSignal | undefined; }
     ) : void {
