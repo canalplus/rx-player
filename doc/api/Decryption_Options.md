@@ -212,25 +212,13 @@ still continue to try deciphering the content (albeit a
 `"LICENSE_SERVER_CERTIFICATE_ERROR"`).
 
 
-### persistentLicense
-
-_type_: `Boolean | undefined`
-
-Set it to `true` if you want the ability to persist the license for later
-retrieval.
-
-In that case, you will also need to set the `licenseStorage` attribute to
-be able to persist the license through your preferred method.
-
-Note that not all licenses can be persisted, this is dependent both on the
-loaded licenses and on the Content Decryption Module used in the browser.
-
-
-### licenseStorage
+### persistentLicenseConfig
 
 _type_: `Object | undefined`
 
-Required only if `persistentLicense` has been set to `true`.
+Set it only if you want to load persistent-license(s) for later retrieval.
+Note that not all licenses can be persisted, this is dependent both on the
+loaded licenses and on the Content Decryption Module used in the browser.
 
 This is an object containing the following properties:
 
@@ -465,7 +453,7 @@ This includes session data and any other type of state, but does not include
 identifiers](https://www.w3.org/TR/2017/REC-encrypted-media-20170918/#distinctive-identifier),
 for which there's another `keySystems` option, `distinctiveIdentifier`.
 
-If the `persistentLicense` `keySystems` option has been set to `true`,
+If the `persistentLicenseConfig` `keySystems` option has been set to `true`,
 setting this value to `"required"` is redundant and therefore unnecessary (as
 exploiting persistent licenses already necessitate the ability to persist
 session state).
