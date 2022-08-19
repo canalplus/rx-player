@@ -52,9 +52,6 @@ export interface ICreateMediaKeySystemAccessEvent {
 export type IFoundMediaKeySystemAccessEvent = IReuseMediaKeySystemAccessEvent |
                                               ICreateMediaKeySystemAccessEvent;
 
-interface IMediaCapability { contentType?: string;
-                             robustness?: string; }
-
 interface IKeySystemType { keyName : string | undefined;
                            keyType : string;
                            keySystemOptions : IKeySystemOption; }
@@ -160,41 +157,6 @@ function buildKeySystemConfigurations(
           EME_DEFAULT_WIDEVINE_ROBUSTNESSES,
           EME_DEFAULT_PLAYREADY_ROBUSTNESSES } = config.getCurrent();
 
-  // Set robustness, in order of consideration:
-  //   1. the user specified its own robustnesses
-  //   2. a "widevine" key system is used, in that case set the default widevine
-  //      robustnesses as defined in the config
-  //   3. set an undefined robustness
-  let videoRobustnesses : Array<string | undefined>;
-  if (!isNullOrUndefined(keySystem.videoRobustnesses)) {
-    videoRobustnesses = keySystem.videoRobustnesses;
-  } else if (ksName === "widevine") {
-    videoRobustnesses = EME_DEFAULT_WIDEVINE_ROBUSTNESSES;
-  } else if (ksType === "com.microsoft.playready.recommendation") {
-    videoRobustnesses = EME_DEFAULT_PLAYREADY_ROBUSTNESSES;
-  } else {
-    videoRobustnesses = [];
-  }
-
-  let audioRobustnesses : Array<string | undefined>;
-  if (!isNullOrUndefined(keySystem.audioRobustnesses)) {
-    audioRobustnesses = keySystem.audioRobustnesses;
-  } else if (ksName === "widevine") {
-    audioRobustnesses = EME_DEFAULT_WIDEVINE_ROBUSTNESSES;
-  } else if (ksType === "com.microsoft.playready.recommendation") {
-    audioRobustnesses = EME_DEFAULT_PLAYREADY_ROBUSTNESSES;
-  } else {
-    audioRobustnesses = [];
-  }
-
-  if (videoRobustnesses.length === 0) {
-    videoRobustnesses.push(undefined);
-  }
-
-  if (audioRobustnesses.length === 0) {
-    audioRobustnesses.push(undefined);
-  }
-
   // From the W3 EME spec, we have to provide videoCapabilities and
   // audioCapabilities.
   // These capabilities must specify a codec (even though you can use a
@@ -207,21 +169,66 @@ function buildKeySystemConfigurations(
   // https://storage.googleapis.com/wvdocs/Chrome_EME_Changes_and_Best_Practices.pdf
   // https://www.w3.org/TR/encrypted-media/#get-supported-configuration-and-consent
 
-  const videoCapabilities: IMediaCapability[] =
-    flatMap(videoRobustnesses, (robustness) => {
-      return EME_DEFAULT_VIDEO_CODECS.map(contentType => {
-        return robustness === undefined ? { contentType } :
-                                          { contentType, robustness };
-      });
-    });
+  let audioCapabilities : MediaKeySystemMediaCapability[];
+  let videoCapabilities : MediaKeySystemMediaCapability[];
 
-  const audioCapabilities: IMediaCapability[] =
-    flatMap(audioRobustnesses, (robustness) => {
-      return EME_DEFAULT_AUDIO_CODECS.map(contentType => {
-        return robustness === undefined ? { contentType } :
-                                          { contentType, robustness };
-      });
-    });
+  const { audioCapabilitiesConfig, videoCapabilitiesConfig } = keySystem;
+  if (audioCapabilitiesConfig?.type === "full") {
+    audioCapabilities = audioCapabilitiesConfig.value;
+  } else {
+    let audioRobustnesses : Array<string | undefined>;
+    if (audioCapabilitiesConfig?.type === "robustness") {
+      audioRobustnesses = audioCapabilitiesConfig.value;
+    } else if (ksName === "widevine") {
+      audioRobustnesses = EME_DEFAULT_WIDEVINE_ROBUSTNESSES;
+    } else if (ksType === "com.microsoft.playready.recommendation") {
+      audioRobustnesses = EME_DEFAULT_PLAYREADY_ROBUSTNESSES;
+    } else {
+      audioRobustnesses = [];
+    }
+
+    if (audioRobustnesses.length === 0) {
+      audioRobustnesses.push(undefined);
+    }
+
+    const audioCodecs = audioCapabilitiesConfig?.type === "contentType" ?
+      audioCapabilitiesConfig.value :
+      EME_DEFAULT_AUDIO_CODECS;
+
+    audioCapabilities = flatMap(audioRobustnesses, (robustness) =>
+      audioCodecs.map(contentType => {
+        return robustness !== undefined ? { contentType, robustness } :
+                                          { contentType };
+      }));
+  }
+  if (videoCapabilitiesConfig?.type === "full") {
+    videoCapabilities = videoCapabilitiesConfig.value;
+  } else {
+    let videoRobustnesses : Array<string | undefined>;
+    if (videoCapabilitiesConfig?.type === "robustness") {
+      videoRobustnesses = videoCapabilitiesConfig.value;
+    } else if (ksName === "widevine") {
+      videoRobustnesses = EME_DEFAULT_WIDEVINE_ROBUSTNESSES;
+    } else if (ksType === "com.microsoft.playready.recommendation") {
+      videoRobustnesses = EME_DEFAULT_PLAYREADY_ROBUSTNESSES;
+    } else {
+      videoRobustnesses = [];
+    }
+
+    if (videoRobustnesses.length === 0) {
+      videoRobustnesses.push(undefined);
+    }
+
+    const videoCodecs = videoCapabilitiesConfig?.type === "contentType" ?
+      videoCapabilitiesConfig.value :
+      EME_DEFAULT_VIDEO_CODECS;
+
+    videoCapabilities = flatMap(videoRobustnesses, (robustness) =>
+      videoCodecs.map(contentType => {
+        return robustness !== undefined ? { contentType, robustness } :
+                                          { contentType };
+      }));
+  }
 
   const wantedMediaKeySystemConfiguration : MediaKeySystemConfiguration = {
     initDataTypes: ["cenc"],
@@ -257,7 +264,7 @@ function buildKeySystemConfigurations(
  *   - reject if no compatible key system has been found.
  *
  * @param {HTMLMediaElement} mediaElement
- * @param {Array.<Object>} keySystems - The keySystems you want to test.
+ * @param {Array.<Object>} keySystemsConfigs - The keySystems you want to test.
  * @param {Object} cancelSignal
  * @returns {Promise.<Object>}
  */
