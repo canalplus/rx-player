@@ -431,15 +431,15 @@ export interface IKeySystemOption {
   /** Storage mechanism used to store and retrieve information on stored licenses. */
   licenseStorage? : IPersistentSessionStorage;
   /**
-   * If true, we will require that the CDM is able to persist state.
-   * See EME specification related to the `persistentState` configuration.
+   * Wanted value for the `persistentState` property of this
+   * `MediaKeySystemConfiguration` according to the EME API.
    */
-  persistentStateRequired? : boolean;
+  persistentState? : MediaKeysRequirement | undefined;
   /**
-   * If true, we will require that the CDM should use distinctive identyfiers.
-   * See EME specification related to the `distinctiveIdentifier` configuration.
+   * Wanted value for the `distinctiveIdentifier` property of this
+   * `MediaKeySystemConfiguration` according to the EME API.
    */
-  distinctiveIdentifierRequired? : boolean;
+  distinctiveIdentifier? : MediaKeysRequirement | undefined;
   /**
    * If true, all open MediaKeySession (used to decrypt the content) will be
    * closed when the current playback stops.
