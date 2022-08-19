@@ -17,8 +17,8 @@
 import { ICustomMediaKeySession } from "../../../compat";
 import log from "../../../log";
 import {
+  IPersistentLicenseConfig,
   IPersistentSessionInfo,
-  IPersistentSessionStorage,
 } from "../../../public_types";
 import areArraysOfNumbersEqual from "../../../utils/are_arrays_of_numbers_equal";
 import { assertInterface } from "../../../utils/assert";
@@ -36,15 +36,15 @@ import SerializableBytes from "./serializable_bytes";
  * Throw if the given storage does not respect the right interface.
  * @param {Object} storage
  */
-function checkStorage(storage : IPersistentSessionStorage) : void {
+function checkStorage(storage : IPersistentLicenseConfig) : void {
   assertInterface(storage,
                   { save: "function", load: "function" },
-                  "licenseStorage");
+                  "persistentLicenseConfig");
 }
 
 /**
- * Set representing persisted licenses. Depends on a simple local-
- * storage implementation with a `save`/`load` synchronous interface
+ * Set representing persisted licenses. Depends on a simple
+ * implementation with a `save`/`load` synchronous interface
  * to persist information on persisted sessions.
  *
  * This set is used only for a cdm/keysystem with license persistency
@@ -52,14 +52,14 @@ function checkStorage(storage : IPersistentSessionStorage) : void {
  * @class PersistentSessionsStore
  */
 export default class PersistentSessionsStore {
-  private readonly _storage : IPersistentSessionStorage;
+  private readonly _storage : IPersistentLicenseConfig;
   private _entries : IPersistentSessionInfo[];
 
   /**
    * Create a new PersistentSessionsStore.
    * @param {Object} storage
    */
-  constructor(storage : IPersistentSessionStorage) {
+  constructor(storage : IPersistentLicenseConfig) {
     checkStorage(storage);
     this._entries = [];
     this._storage = storage;
@@ -337,7 +337,9 @@ export default class PersistentSessionsStore {
     try {
       this._storage.save(this._entries);
     } catch (e) {
-      log.warn("DRM-PSS: Could not save licenses in localStorage");
+      const err = e instanceof Error ? e :
+                                       undefined;
+      log.warn("DRM-PSS: Could not save MediaKeySession information", err);
     }
   }
 }
