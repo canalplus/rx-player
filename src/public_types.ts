@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { ICustomMediaKeySession } from "./compat";
 import {
   IPersistentSessionInfoV0,
   IPersistentSessionInfoV1,
@@ -389,12 +388,6 @@ export interface IKeySystemOption {
    * MediaKeys.
    */
   maxSessionCacheSize? : number;
-  /** Callback called when one of the key's status change. */
-  onKeyStatusesChange? : (evt : Event, session : MediaKeySession |
-                                                 ICustomMediaKeySession)
-                           => Promise<BufferSource | null> |
-                              BufferSource |
-                              null;
   /** Allows to define custom robustnesses value for the video data. */
   videoRobustnesses?: Array<string|undefined>;
   /** Allows to define custom robustnesses value for the audio data. */
