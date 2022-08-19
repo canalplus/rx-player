@@ -77,8 +77,10 @@ export default function SessionEventsListener(
     callbacks.onError(new EncryptedMediaError("KEY_ERROR", (evt as Event).type));
   }, manualCanceller.signal);
 
-  onKeyStatusesChange(session, (keyStatusesEvent) => {
-    handleKeyStatusesChangeEvent(keyStatusesEvent as Event).catch(error => {
+  onKeyStatusesChange(session, () => {
+    try {
+      handleKeyStatusesChangeEvent();
+    } catch (error) {
       if (cancelSignal.isCancelled ||
           (manualCanceller.isUsed && error instanceof CancellationSignal))
       {
@@ -86,7 +88,7 @@ export default function SessionEventsListener(
       }
       manualCanceller.cancel();
       callbacks.onError(error);
-    });
+    }
   }, manualCanceller.signal);
 
   onKeyMessage(session, (evt) => {
@@ -134,71 +136,26 @@ export default function SessionEventsListener(
   }, manualCanceller.signal);
 
   /**
-   * @param {Event} keyStatusesEvent
-   * @returns {Promise}
+   * Check current MediaKeyStatus for each key in the given MediaKeySession and:
+   *   - throw if at least one status is a non-recoverable error
+   *   - call warning callback for recoverable errors
+   *   - call onKeyUpdate callback when the MediaKeyStatus of any key is updated
    */
-  async function handleKeyStatusesChangeEvent(
-    keyStatusesEvent : Event
-  ) : Promise<void> {
+  function handleKeyStatusesChangeEvent() : void {
     log.info("DRM: keystatuseschange event received", session.sessionId);
 
-    await Promise.all([
-      runOnKeyStatusesChangeCallback(),
-      Promise.resolve(handleKeyStatusEvent()),
-    ]);
-
-    async function runOnKeyStatusesChangeCallback() {
+    if (manualCanceller.isUsed || session.keyStatuses.size === 0) {
+      return ;
+    }
+    const { warning, blacklistedKeyIds, whitelistedKeyIds } =
+      checkKeyStatuses(session, keySystemOptions, keySystem);
+    if (warning !== undefined) {
+      callbacks.onWarning(warning);
       if (manualCanceller.isUsed) {
         return;
       }
-      if (typeof keySystemOptions.onKeyStatusesChange === "function") {
-        let ret;
-        try {
-          ret = await keySystemOptions.onKeyStatusesChange(keyStatusesEvent, session);
-          if (manualCanceller.isUsed) {
-            return;
-          }
-        } catch (error) {
-          if (cancelSignal.isCancelled) {
-            return;
-          }
-          const err = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
-                                              "Unknown `onKeyStatusesChange` error");
-          if  (!isNullOrUndefined(error) &&
-               isNonEmptyString((error as { message? : unknown }).message))
-          {
-            err.message = (error as { message : string }).message;
-          }
-          throw err;
-        }
-        if (isNullOrUndefined(ret)) {
-          log.info("DRM: No license given, skipping session.update");
-        } else {
-          await updateSessionWithMessage(session, ret);
-        }
-      }
     }
-
-    /**
-     * Check current MediaKeyStatus for each key in the given MediaKeySession and:
-     *   - throw if at least one status is a non-recoverable error
-     *   - call warning callback for recoverable errors
-     *   - call onKeyUpdate callback when the MediaKeyStatus of any key is updated
-     */
-    function handleKeyStatusEvent() : void {
-      if (manualCanceller.isUsed || session.keyStatuses.size === 0) {
-        return ;
-      }
-      const { warning, blacklistedKeyIds, whitelistedKeyIds } =
-        checkKeyStatuses(session, keySystemOptions, keySystem);
-      if (warning !== undefined) {
-        callbacks.onWarning(warning);
-        if (manualCanceller.isUsed) {
-          return;
-        }
-      }
-      callbacks.onKeyUpdate({ whitelistedKeyIds, blacklistedKeyIds });
-    }
+    callbacks.onKeyUpdate({ whitelistedKeyIds, blacklistedKeyIds });
   }
 
   function runGetLicense(
