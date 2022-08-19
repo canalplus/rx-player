@@ -117,10 +117,6 @@ properties, methods, events and so on.
     - [`keySystems[].throwOnLicenseExpiration`](../api/Decryption_Options.md#throwonlicenseexpiration):
       Allows to stop or not when the current license has expired.
 
-    - [`keySystems[].onKeyStatusesChange`](../api/Decryption_Options.md#onkeystatuseschange):
-      Callback triggered when on of the key's [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
-      is updated.
-
   - [`autoPlay`](../api/Loading_a_Content.md#autoplay):
     Allows to automatically play after a content is loaded.
 
