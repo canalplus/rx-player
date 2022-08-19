@@ -16,7 +16,7 @@ rx-player, which is exactly the point of this page.
 
 ## List of possible states
 
-Today the player can have one of these 9 possible states:
+Today the player can have one of these 10 possible states:
 
 - `STOPPED`
 - `LOADING`
@@ -24,6 +24,7 @@ Today the player can have one of these 9 possible states:
 - `PLAYING`
 - `PAUSED`
 - `BUFFERING`
+- `FREEZING`
 - `SEEKING`
 - `ENDED`
 - `RELOADING`
@@ -77,9 +78,28 @@ Indicates that the player is currently paused in the content.
 
 ### The BUFFERING state
 
-The content is paused because it needs to build buffer.
+The player is paused because it needs to build buffer.
+
+TThe player cannot play the content despite having enough data, due to an
+unknown reason.
 
 The player will not play until it gets out of this state.
+
+### The FREEZING state
+
+TThe player cannot play the content despite having enough data, due to an
+unknown reason.
+
+This state might be due to either:
+  - poor performance
+  - an issue with the current device
+  - the key of an encrypted content not being loaded soon enough
+
+The player will not play until it gets out of this state.
+
+In most of those cases, the RxPlayer will be able to continue playback by itself,
+after some time.
+As such, most `FREEZING` cases can be treated exactly like a `BUFFERING` state.
 
 ### The SEEKING state
 
