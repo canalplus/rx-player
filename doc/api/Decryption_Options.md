@@ -420,7 +420,7 @@ This includes session data and any other type of state, but does not include
 identifiers](https://www.w3.org/TR/2017/REC-encrypted-media-20170918/#distinctive-identifier),
 for which there's another `keySystems` option, `distinctiveIdentifier`.
 
-If the `persistentLicense` `keySystems` option has been set to `true`,
+If the `persistentLicenseConfig` `keySystems` option has been set to `true`,
 setting this value to `"required"` is redundant and therefore unnecessary (as
 exploiting persistent licenses already necessitate the ability to persist
 session state).
