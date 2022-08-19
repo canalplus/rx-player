@@ -93,7 +93,7 @@ const linkPlayerEventsToState = (player, state, abortSignal) => {
       hasEnded: playerState === "ENDED",
       hasCurrentContent: !["STOPPED", "LOADING"].includes(playerState),
       isContentLoaded: !["STOPPED", "LOADING", "RELOADING"].includes(playerState),
-      isBuffering: playerState === "BUFFERING",
+      isBuffering: playerState === "BUFFERING" || playerState === "FREEZING",
       isLoading: playerState === "LOADING",
       isReloading: playerState === "RELOADING",
       isSeeking: playerState === "SEEKING",

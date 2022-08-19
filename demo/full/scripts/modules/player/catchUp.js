@@ -50,6 +50,7 @@ export default class CatchUpModeController {
         playerState === "PLAYING" ||
         playerState === "PAUSED" ||
         playerState === "BUFFERING" ||
+        playerState === "FREEZING" ||
         playerState === "SEEKING";
       if (!this._rxPlayer.isLive()) {
         // Catch-up is only authorized for live contents
