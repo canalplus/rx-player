@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import InitializeOnMediaSource, {
+import MediaSourceContentInitializer, {
   IInitializeArguments,
-} from "./initialize_media_source";
+} from "./media_source_content_initializer";
 export * from "./types";
 
-export default InitializeOnMediaSource;
+export default MediaSourceContentInitializer;
 export { IInitializeArguments };

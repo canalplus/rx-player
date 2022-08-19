@@ -11,7 +11,7 @@ Those modules are:
     implementing it.
 
 
-  - __the `Init` (_./init)__
+  - __the `ContentInitializer` (_./init)__
 
     Initialize playback and connects different modules between one another.
 

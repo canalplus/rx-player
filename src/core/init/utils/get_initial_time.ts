@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import config from "../../config";
-import log from "../../log";
-import Manifest from "../../manifest";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import config from "../../../config";
+import log from "../../../log";
+import Manifest from "../../../manifest";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 
 /**
  * All possible initial time options that can be set.

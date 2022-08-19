@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import Manifest from "../../../manifest";
+import Manifest from "../../../../manifest";
 import areSameStreamEvents from "./are_same_stream_events";
 import {
   INonFiniteStreamEventPayload,
