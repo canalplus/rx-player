@@ -92,8 +92,8 @@ exported:
     To clarify, the `keySystems` property in a `loadVideo` call is an
     optional array of one or multiple `IKeySystemOption`.
 
-  - `IPersistentSessionStorage`: type of the `licenseStorage` property of the
-    `keySystems` option given to `loadVideo`.
+  - `IPersistentLicenseConfig`: type of the `persistentLicenseConfig` property
+    of the `keySystems` option given to `loadVideo`.
 
   - `IPersistentSessionInfo`: type used by an `IPersistentSessionStorage`'s
     storage.
