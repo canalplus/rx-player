@@ -15,22 +15,16 @@
  */
 
 import {
-  map,
-  mergeMap,
-  Observable,
-  Observer,
-  take,
-} from "rxjs";
-import {
   clearElementSrc,
   events,
   MediaSource_,
-} from "../../compat";
-import { MediaError } from "../../errors";
-import log from "../../log";
-import isNonEmptyString from "../../utils/is_non_empty_string";
-
-const { onSourceOpen$ } = events;
+} from "../../../compat";
+import { MediaError } from "../../../errors";
+import log from "../../../log";
+import isNonEmptyString from "../../../utils/is_non_empty_string";
+import TaskCanceller, {
+  CancellationSignal,
+} from "../../../utils/task_canceller";
 
 /**
  * Dispose of ressources taken by the MediaSource:
@@ -84,60 +78,71 @@ export function resetMediaSource(
  * Create, on subscription, a MediaSource instance and attach it to the given
  * mediaElement element's src attribute.
  *
- * Returns an Observable which emits the MediaSource when created and attached
- * to the mediaElement element.
- * This Observable never completes. It can throw if MediaSource is not
- * available in the current environment.
+ * Returns a Promise which resolves with the MediaSource when created and attached
+ * to the `mediaElement` element.
  *
- * On unsubscription, the mediaElement.src is cleaned, MediaSource SourceBuffers
- * are aborted and some minor cleaning is done.
- *
+ * When the given `unlinkSignal` emits, mediaElement.src is cleaned, MediaSource
+ * SourceBuffers are aborted and some minor cleaning is done.
  * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
+ * @param {Object} unlinkSignal
+ * @returns {MediaSource}
  */
 function createMediaSource(
-  mediaElement : HTMLMediaElement
-) : Observable<MediaSource> {
-  return new Observable((observer : Observer<MediaSource>) => {
-    if (MediaSource_ == null) {
-      throw new MediaError("MEDIA_SOURCE_NOT_SUPPORTED",
-                           "No MediaSource Object was found in the current browser.");
-    }
+  mediaElement : HTMLMediaElement,
+  unlinkSignal : CancellationSignal
+) : MediaSource {
+  if (MediaSource_ == null) {
+    throw new MediaError("MEDIA_SOURCE_NOT_SUPPORTED",
+                         "No MediaSource Object was found in the current browser.");
+  }
 
-    // make sure the media has been correctly reset
-    const oldSrc = isNonEmptyString(mediaElement.src) ? mediaElement.src :
-                                                        null;
-    resetMediaSource(mediaElement, null, oldSrc);
+  // make sure the media has been correctly reset
+  const oldSrc = isNonEmptyString(mediaElement.src) ? mediaElement.src :
+                                                      null;
+  resetMediaSource(mediaElement, null, oldSrc);
 
-    log.info("Init: Creating MediaSource");
-    const mediaSource = new MediaSource_();
-    const objectURL = URL.createObjectURL(mediaSource);
+  log.info("Init: Creating MediaSource");
+  const mediaSource = new MediaSource_();
+  const objectURL = URL.createObjectURL(mediaSource);
 
-    log.info("Init: Attaching MediaSource URL to the media element", objectURL);
-    mediaElement.src = objectURL;
+  log.info("Init: Attaching MediaSource URL to the media element", objectURL);
+  mediaElement.src = objectURL;
 
-    observer.next(mediaSource);
-    return () => {
-      resetMediaSource(mediaElement, mediaSource, objectURL);
-    };
+  unlinkSignal.register(() => {
+    resetMediaSource(mediaElement, mediaSource, objectURL);
   });
+  return mediaSource;
 }
 
 /**
  * Create and open a new MediaSource object on the given media element.
- * Emit the MediaSource when done.
+ * Resolves with the MediaSource when done.
+ *
+ * When the given `unlinkSignal` emits, mediaElement.src is cleaned, MediaSource
+ * SourceBuffers are aborted and some minor cleaning is done.
  * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
+ * @param {Object} unlinkSignal
+ * @returns {Promise}
  */
 export default function openMediaSource(
-  mediaElement : HTMLMediaElement
-) : Observable<MediaSource> {
-  return createMediaSource(mediaElement).pipe(
-    mergeMap(mediaSource => {
-      return onSourceOpen$(mediaSource).pipe(
-        take(1),
-        map(() => mediaSource)
-      );
-    })
-  );
+  mediaElement : HTMLMediaElement,
+  unlinkSignal : CancellationSignal
+) : Promise<MediaSource> {
+  return new Promise((resolve, reject) => {
+    let hasResolved = false;
+    const mediaSource = createMediaSource(mediaElement, unlinkSignal);
+    const eventListenerCanceller = new TaskCanceller({ cancelOn: unlinkSignal });
+
+    events.onSourceOpen(mediaSource, () => {
+      eventListenerCanceller.cancel();
+      hasResolved = true;
+      resolve(mediaSource);
+    }, eventListenerCanceller.signal);
+
+    unlinkSignal.register((error) => {
+      if (!hasResolved) {
+        reject(error);
+      }
+    });
+  });
 }
