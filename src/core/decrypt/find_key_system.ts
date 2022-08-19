@@ -86,13 +86,13 @@ function checkCachedMediaKeySystemAccess(
       return false;
     }
 
-    if ((ks.persistentLicense === true || ks.persistentStateRequired === true) &&
+    if ((ks.persistentLicense === true || ks.persistentState === "required") &&
         mksConfiguration.persistentState !== "required")
     {
       return false;
     }
 
-    if (ks.distinctiveIdentifierRequired === true &&
+    if (ks.distinctiveIdentifier === "required" &&
         mksConfiguration.distinctiveIdentifier !== "required")
     {
       return false;
@@ -149,12 +149,12 @@ function buildKeySystemConfigurations(
     sessionTypes.push("persistent-license");
   }
 
-  if (keySystem.persistentStateRequired === true) {
-    persistentState = "required";
+  if (!isNullOrUndefined(keySystem.persistentState)) {
+    persistentState = keySystem.persistentState;
   }
 
-  if (keySystem.distinctiveIdentifierRequired === true) {
-    distinctiveIdentifier = "required";
+  if (!isNullOrUndefined(keySystem.distinctiveIdentifier)) {
+    distinctiveIdentifier = keySystem.distinctiveIdentifier;
   }
   const { EME_DEFAULT_AUDIO_CODECS,
           EME_DEFAULT_VIDEO_CODECS,
