@@ -25,6 +25,7 @@ import log from "../../log";
 import { IKeySystemOption } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
 import flatMap from "../../utils/flat_map";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import { CancellationSignal } from "../../utils/task_canceller";
 import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 
@@ -84,13 +85,13 @@ function checkCachedMediaKeySystemAccess(
       return false;
     }
 
-    if ((ks.persistentLicense === true || ks.persistentStateRequired === true) &&
+    if ((ks.persistentLicense === true || ks.persistentState === "required") &&
         mksConfiguration.persistentState !== "required")
     {
       return false;
     }
 
-    if (ks.distinctiveIdentifierRequired === true &&
+    if (ks.distinctiveIdentifier === "required" &&
         mksConfiguration.distinctiveIdentifier !== "required")
     {
       return false;
@@ -143,12 +144,12 @@ function buildKeySystemConfigurations(
     sessionTypes.push("persistent-license");
   }
 
-  if (keySystem.persistentStateRequired === true) {
-    persistentState = "required";
+  if (!isNullOrUndefined(keySystem.persistentState)) {
+    persistentState = keySystem.persistentState;
   }
 
-  if (keySystem.distinctiveIdentifierRequired === true) {
-    distinctiveIdentifier = "required";
+  if (!isNullOrUndefined(keySystem.distinctiveIdentifier)) {
+    distinctiveIdentifier = keySystem.distinctiveIdentifier;
   }
   const { EME_DEFAULT_WIDEVINE_ROBUSTNESSES } = config.getCurrent();
 
