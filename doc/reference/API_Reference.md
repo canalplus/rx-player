@@ -82,10 +82,7 @@ properties, methods, events and so on.
       Eventual certificate encrypting exchanges between the CDM and license
       server.
 
-    - [`keySystems[].persistentLicense`](../api/Decryption_Options.md#persistentlicense):
-      Allows to ask for the DRM session to persist the license.
-
-    - [`keySystems[].licenseStorage`](../api/Decryption_Options.md#licensestorage):
+    - [`keySystems[].persistentLicenseConfig`](../api/Decryption_Options.md#persistentLicenseConfig):
       Allows to ask for the DRM session to persist the license.
 
     - [`keySystems[].fallbackOn`](../api/Decryption_Options.md#fallbackon):
