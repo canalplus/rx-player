@@ -81,7 +81,7 @@ describe("API - getLoadedContentState", () => {
     expect(getLoadedContentState(mediaElement, "buffering")).toBe("BUFFERING");
   });
 
-  it("should be BUFFERING if not ended and stalled because of freezing", () => {
+  it("should be FREEZING if not ended and stalled because of freezing", () => {
     const fakeProps = {
       ended: false,
       duration: 10,
@@ -89,9 +89,9 @@ describe("API - getLoadedContentState", () => {
       paused: false,
     };
     const mediaElement = fakeProps as HTMLMediaElement;
-    expect(getLoadedContentState(mediaElement, "freezing")).toBe("BUFFERING");
+    expect(getLoadedContentState(mediaElement, "freezing")).toBe("FREEZING");
     fakeProps.paused = true;
-    expect(getLoadedContentState(mediaElement, "freezing")).toBe("BUFFERING");
+    expect(getLoadedContentState(mediaElement, "freezing")).toBe("FREEZING");
   });
 
   it("should be BUFFERING if not ended and stalled because of `not-ready`", () => {
