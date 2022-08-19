@@ -14,58 +14,60 @@
  * limitations under the License.
  */
 
-import {
-  defer as observableDefer,
-  EMPTY,
-  filter,
-  map,
-  merge as observableMerge,
-  Observable,
-  startWith,
-  switchMap,
-  take,
-} from "rxjs";
 import config from "../../config";
 import { IPlayerState } from "../../public_types";
-import { IStallingSituation } from "../init";
-import { IPlaybackObservation } from "./playback_observer";
+import arrayIncludes from "../../utils/array_includes";
+import createSharedReference, {
+  IReadOnlySharedReference,
+} from "../../utils/reference";
+import { CancellationSignal } from "../../utils/task_canceller";
+import {
+  ContentInitializer,
+  IStallingSituation,
+} from "../init";
+import {
+  IPlaybackObservation,
+  IReadOnlyPlaybackObserver,
+} from "./playback_observer";
 
 /**
- * Returns Observable which will emit:
- *   - `"seeking"` when we are seeking in the given mediaElement
- *   - `"seeked"` when a seek is considered as finished by the given observation$
- *     Observable.
  * @param {HTMLMediaElement} mediaElement
- * @param {Observable} observation$
- * @returns {Observable}
+ * @param {Object} playbackObserver - Observes playback conditions on
+ * `mediaElement`.
+ * @param {function} onSeeking - Callback called when a seeking operation starts
+ * on `mediaElement`.
+ * @param {function} onSeeked - Callback called when a seeking operation ends
+ * on `mediaElement`.
+ * @param {Object} cancelSignal - When triggered, stop calling callbacks and
+ * remove all listeners this function has registered.
  */
 export function emitSeekEvents(
   mediaElement : HTMLMediaElement | null,
-  observation$ : Observable<IPlaybackObservation>
-) : Observable<"seeking" | "seeked"> {
-  return observableDefer(() => {
-    if (mediaElement === null) {
-      return EMPTY;
+  playbackObserver : IReadOnlyPlaybackObserver<IPlaybackObservation>,
+  onSeeking: () => void,
+  onSeeked: () => void,
+  cancelSignal : CancellationSignal
+) : void {
+  if (cancelSignal.isCancelled || mediaElement === null) {
+    return ;
+  }
+
+  let wasSeeking = playbackObserver.getReference().getValue().seeking;
+  if (wasSeeking) {
+    onSeeking();
+    if (cancelSignal.isCancelled) {
+      return;
     }
-
-    let isSeeking$ = observation$.pipe(
-      filter((observation : IPlaybackObservation) => observation.event === "seeking"),
-      map(() => "seeking" as const)
-    );
-
-    if (mediaElement.seeking) {
-      isSeeking$ = isSeeking$.pipe(startWith("seeking" as const));
+  }
+  playbackObserver.listen((obs) => {
+    if (obs.event === "seeking") {
+      wasSeeking = true;
+      onSeeking();
+    } else if (wasSeeking && obs.event === "seeked") {
+      wasSeeking = false;
+      onSeeked();
     }
-
-    const hasSeeked$ = isSeeking$.pipe(
-      switchMap(() =>
-        observation$.pipe(
-          filter((observation : IPlaybackObservation) => observation.event === "seeked"),
-          map(() => "seeked" as const),
-          take(1)))
-    );
-    return observableMerge(isSeeking$, hasSeeked$);
-  });
+  }, { includeLastObservation: true, clearSignal: cancelSignal });
 }
 
 /** Player state dictionnary. */
@@ -79,6 +81,67 @@ export const enum PLAYER_STATES {
   BUFFERING = "BUFFERING",
   SEEKING = "SEEKING",
   RELOADING = "RELOADING",
+}
+
+export function constructPlayerStateReference(
+  initializer : ContentInitializer,
+  mediaElement : HTMLMediaElement,
+  playbackObserver : IReadOnlyPlaybackObserver<IPlaybackObservation>,
+  cancelSignal : CancellationSignal
+) : IReadOnlySharedReference<IPlayerState> {
+  const playerStateRef = createSharedReference<IPlayerState>(PLAYER_STATES.LOADING);
+  initializer.addEventListener("loaded", () => {
+    if (playerStateRef.getValue() === PLAYER_STATES.LOADING) {
+      playerStateRef.setValue(PLAYER_STATES.LOADED);
+      if (!cancelSignal.isCancelled) {
+        const newState = getLoadedContentState(mediaElement, null);
+        if (newState !== PLAYER_STATES.PAUSED) {
+          playerStateRef.setValue(newState);
+        }
+      }
+    } else {
+      playerStateRef.setValueIfChanged(getLoadedContentState(mediaElement, null));
+    }
+  }, cancelSignal);
+
+  initializer.addEventListener("reloadingMediaSource", () => {
+    if (isLoadedState(playerStateRef.getValue())) {
+      playerStateRef.setValueIfChanged(PLAYER_STATES.RELOADING);
+    }
+  }, cancelSignal);
+
+  /**
+   * Keep track of the last known stalling situation.
+   * `null` if playback is not stalled.
+   */
+  let prevStallReason : IStallingSituation | null = null;
+  initializer.addEventListener("stalled", (s) => {
+    if (s !== prevStallReason) {
+      if (isLoadedState(playerStateRef.getValue())) {
+        playerStateRef.setValueIfChanged(getLoadedContentState(mediaElement, s));
+      }
+      prevStallReason = s;
+    }
+  }, cancelSignal);
+  initializer.addEventListener("unstalled", () => {
+    if (prevStallReason !== null) {
+      if (isLoadedState(playerStateRef.getValue())) {
+        playerStateRef.setValueIfChanged(getLoadedContentState(mediaElement, null));
+      }
+      prevStallReason = null;
+    }
+  }, cancelSignal);
+
+  playbackObserver.listen((observation) => {
+    if (isLoadedState(playerStateRef.getValue()) &&
+        arrayIncludes(["seeking", "ended", "play", "pause"], observation.event))
+    {
+      playerStateRef.setValueIfChanged(
+        getLoadedContentState(mediaElement, prevStallReason)
+      );
+    }
+  }, { clearSignal: cancelSignal });
+  return playerStateRef;
 }
 
 /**
@@ -117,4 +180,10 @@ export function getLoadedContentState(
   }
   return mediaElement.paused ? PLAYER_STATES.PAUSED :
                                PLAYER_STATES.PLAYING;
+}
+
+export function isLoadedState(state : IPlayerState) : boolean {
+  return state !== PLAYER_STATES.LOADING &&
+         state !== PLAYER_STATES.RELOADING &&
+         state !== PLAYER_STATES.STOPPED;
 }
