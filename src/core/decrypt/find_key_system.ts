@@ -52,9 +52,6 @@ export interface ICreateMediaKeySystemAccessEvent {
 export type IFoundMediaKeySystemAccessEvent = IReuseMediaKeySystemAccessEvent |
                                               ICreateMediaKeySystemAccessEvent;
 
-interface IMediaCapability { contentType?: string;
-                             robustness?: string; }
-
 interface IKeySystemType { keyName : string | undefined;
                            keyType : string;
                            keySystemOptions : IKeySystemOption; }
@@ -153,28 +150,6 @@ function buildKeySystemConfigurations(
   }
   const { EME_DEFAULT_WIDEVINE_ROBUSTNESSES } = config.getCurrent();
 
-  // Set robustness, in order of consideration:
-  //   1. the user specified its own robustnesses
-  //   2. a "widevine" key system is used, in that case set the default widevine
-  //      robustnesses as defined in the config
-  //   3. set an undefined robustness
-  const videoRobustnesses = keySystem.videoRobustnesses != null ?
-    keySystem.videoRobustnesses :
-    (ksName === "widevine" ? EME_DEFAULT_WIDEVINE_ROBUSTNESSES :
-                             []);
-  const audioRobustnesses = keySystem.audioRobustnesses != null ?
-    keySystem.audioRobustnesses :
-    (ksName === "widevine" ? EME_DEFAULT_WIDEVINE_ROBUSTNESSES :
-                             []);
-
-  if (videoRobustnesses.length === 0) {
-    videoRobustnesses.push(undefined);
-  }
-
-  if (audioRobustnesses.length === 0) {
-    audioRobustnesses.push(undefined);
-  }
-
   // From the W3 EME spec, we have to provide videoCapabilities and
   // audioCapabilities.
   // These capabilities must specify a codec (even though you can use a
@@ -187,36 +162,60 @@ function buildKeySystemConfigurations(
   // https://storage.googleapis.com/wvdocs/Chrome_EME_Changes_and_Best_Practices.pdf
   // https://www.w3.org/TR/encrypted-media/#get-supported-configuration-and-consent
 
-  const videoCapabilities: IMediaCapability[] =
-    flatMap(audioRobustnesses, (robustness) =>
+  let audioCapabilities : MediaKeySystemMediaCapability[];
+  let videoCapabilities : MediaKeySystemMediaCapability[];
+
+  const { audioCapabilitiesConfig, videoCapabilitiesConfig } = keySystem;
+  if (audioCapabilitiesConfig?.type === "full") {
+    audioCapabilities = audioCapabilitiesConfig.value;
+  } else {
+    // XXX TODO playready recommendation?
+    const audioRobustnesses : Array<string | undefined> =
+      audioCapabilitiesConfig?.type === "robustness" ?
+        audioCapabilitiesConfig.value :
+        (ksName === "widevine" ? EME_DEFAULT_WIDEVINE_ROBUSTNESSES :
+                                 []);
+
+    if (audioRobustnesses.length === 0) {
+      audioRobustnesses.push(undefined);
+    }
+
+    const audioCodecs = audioCapabilitiesConfig?.type === "contentType" ?
+      audioCapabilitiesConfig.value :
+      ["audio/mp4;codecs=\"mp4a.40.2\"", "audio/webm;codecs=opus"];
+
+    audioCapabilities = flatMap(audioRobustnesses, (robustness) =>
+      audioCodecs.map(contentType => {
+        return robustness !== undefined ? { contentType, robustness } :
+                                          { contentType };
+      }));
+  }
+  if (videoCapabilitiesConfig?.type === "full") {
+    videoCapabilities = videoCapabilitiesConfig.value;
+  } else {
+    // XXX TODO playready recommendation?
+    const videoRobustnesses : Array<string | undefined> =
+      videoCapabilitiesConfig?.type === "robustness" ?
+        videoCapabilitiesConfig.value :
+        (ksName === "widevine" ? EME_DEFAULT_WIDEVINE_ROBUSTNESSES :
+                                 []);
+
+    if (videoRobustnesses.length === 0) {
+      videoRobustnesses.push(undefined);
+    }
+
+    const videoCodecs = videoCapabilitiesConfig?.type === "contentType" ?
+      videoCapabilitiesConfig.value :
       ["video/mp4;codecs=\"avc1.4d401e\"",
        "video/mp4;codecs=\"avc1.42e01e\"",
-       "video/webm;codecs=\"vp8\""].map(contentType => {
+       "video/webm;codecs=\"vp8\""];
+
+    videoCapabilities = flatMap(videoRobustnesses, (robustness) =>
+      videoCodecs.map(contentType => {
         return robustness !== undefined ? { contentType, robustness } :
                                           { contentType };
       }));
-
-  const audioCapabilities: IMediaCapability[] =
-    flatMap(audioRobustnesses, (robustness) =>
-      ["audio/mp4;codecs=\"mp4a.40.2\"",
-       "audio/webm;codecs=opus"].map(contentType => {
-        return robustness !== undefined ? { contentType, robustness } :
-                                          { contentType };
-      }));
-
-  // TODO Re-test with a set contentType but an undefined robustness on the
-  // STBs on which this problem was found.
-  //
-  // add another with no {audio,video}Capabilities for some legacy browsers.
-  // As of today's spec, this should return NotSupported but the first
-  // candidate configuration should be good, so we should have no downside
-  // doing that.
-  // initDataTypes: ["cenc"],
-  // videoCapabilities: undefined,
-  // audioCapabilities: undefined,
-  // distinctiveIdentifier,
-  // persistentState,
-  // sessionTypes,
+  }
 
   return [{ initDataTypes: ["cenc"],
             videoCapabilities,
@@ -238,7 +237,7 @@ function buildKeySystemConfigurations(
  *   - reject if no compatible key system has been found.
  *
  * @param {HTMLMediaElement} mediaElement
- * @param {Array.<Object>} keySystems - The keySystems you want to test.
+ * @param {Array.<Object>} keySystemsConfigs - The keySystems you want to test.
  * @param {Object} cancelSignal
  * @returns {Promise.<Object>}
  */
