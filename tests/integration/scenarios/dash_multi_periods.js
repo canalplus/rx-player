@@ -30,7 +30,7 @@ describe("DASH multi-Period with different choices", function () {
     player.seekTo(5);
     await sleep(500);
     if (player.getPlayerState() !== "PAUSED") {
-      await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
+      await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING", "FREEZING"]);
     }
     expect(player.getPosition()).to.be.within(0, 10);
   }
@@ -39,7 +39,7 @@ describe("DASH multi-Period with different choices", function () {
     player.seekTo(120);
     await sleep(500);
     if (player.getPlayerState() !== "PAUSED") {
-      await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
+      await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING", "FREEZING"]);
     }
     expect(player.getPosition()).to.be.within(118, 122);
   }

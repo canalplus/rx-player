@@ -547,6 +547,7 @@ export type IPlayerState = "STOPPED" |
                            "PAUSED" |
                            "ENDED" |
                            "BUFFERING" |
+                           "FREEZING" |
                            "SEEKING" |
                            "RELOADING";
 
