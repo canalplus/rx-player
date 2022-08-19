@@ -381,11 +381,6 @@ function parseLoadVideoOptions(
         throw new Error("Invalid key system given: Missing type string or " +
                         "getLicense callback");
       }
-      if (!isNullOrUndefined(keySystem.onKeyStatusesChange)) {
-        warnOnce("`keySystems[].onKeyStatusesChange` is deprecated and won't " +
-                 "be present in the next major version. " +
-                 "Please open an issue if you still need this.");
-      }
       if (!isNullOrUndefined(keySystem.throwOnLicenseExpiration)) {
         warnOnce("`keySystems[].throwOnLicenseExpiration` is deprecated and won't " +
                  "be present in the next major version. " +

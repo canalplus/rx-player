@@ -117,7 +117,7 @@ export default function constructDebugGeneralInfo(
         }
       }
       if (isExtendedMode(parentElt)) {
-        const url = instance.getUrl();
+        const url = instance.getContentUrls()?.[0];
         if (url !== undefined) {
           const reducedUrl = url.length > 100 ?
             url.substring(0, 99) + "…" :
