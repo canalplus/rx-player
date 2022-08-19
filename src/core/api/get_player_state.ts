@@ -28,6 +28,7 @@ export const PLAYER_STATES =
     ENDED: "ENDED",
     BUFFERING: "BUFFERING",
     SEEKING: "SEEKING",
+    FREEZING : "FREEZING",
     RELOADING: "RELOADING" } as Record<IPlayerState, IPlayerState>;
 
 /**
@@ -61,8 +62,9 @@ export default function getLoadedContentState(
       return PLAYER_STATES.ENDED;
     }
 
-    return stalledStatus === "seeking" ? PLAYER_STATES.SEEKING :
-                                         PLAYER_STATES.BUFFERING;
+    return stalledStatus === "seeking"  ? PLAYER_STATES.SEEKING :
+           stalledStatus === "freezing" ? PLAYER_STATES.FREEZING :
+                                          PLAYER_STATES.BUFFERING;
   }
   return mediaElement.paused ? PLAYER_STATES.PAUSED :
                                PLAYER_STATES.PLAYING;
