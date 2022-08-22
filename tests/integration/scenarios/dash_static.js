@@ -179,9 +179,7 @@ describe("DASH non-linear content with a \"broken\" sidx", function() {
 
     player.loadVideo({ url: brokenSidxManifestInfos.url,
                        transport: brokenSidxManifestInfos.transport,
-                       transportOptions: {
-                         checkMediaSegmentIntegrity: true,
-                       },
+                       checkMediaSegmentIntegrity: true,
                        autoPlay: false });
     await waitForPlayerState(player, "LOADED");
 
@@ -206,10 +204,8 @@ describe("DASH non-linear content with a \"broken\" sidx", function() {
     // Play a second time with the option
     player.loadVideo({ url: brokenSidxManifestInfos.url,
                        transport: brokenSidxManifestInfos.transport,
-                       transportOptions: {
-                         checkMediaSegmentIntegrity: true,
-                         __priv_patchLastSegmentInSidx: true,
-                       },
+                       checkMediaSegmentIntegrity: true,
+                       __priv_patchLastSegmentInSidx: true,
                        autoPlay: false });
     await waitForPlayerState(player, "LOADED");
 

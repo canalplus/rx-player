@@ -150,7 +150,7 @@ export default function launchTestsForContent(manifestInfos) {
           xhrMock.lock();
           player.loadVideo({ url: manifestInfos.url,
                              transport,
-                             transportOptions: { initialManifest } });
+                             initialManifest });
 
           await sleep(100);
           expect(xhrMock.getLockedXHR().length).to.be.at.least(1);
@@ -164,7 +164,7 @@ export default function launchTestsForContent(manifestInfos) {
           xhrMock.lock();
           player.loadVideo({ url: manifestInfos.url,
                              transport,
-                             transportOptions: { initialManifest } });
+                             initialManifest });
 
           await sleep(100);
           expect(xhrMock.getLockedXHR().length).to.be.at.least(1);
