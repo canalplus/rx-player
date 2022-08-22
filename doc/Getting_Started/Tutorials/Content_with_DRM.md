@@ -470,9 +470,9 @@ used by the RxPlayer.
 The application could then infer that other contents from the same right holders
 will have the same issues.
 In that case, an optimization is possible by using the `representationFilter`
-API which is part of the `transportOptions` `loadVideo` option, [documented
-here](../../api/Loading_a_Content.md#transportoptions). By using this API, we
-can filter out un-decipherable quality to avoid downloading them in the first
+API which is a `loadVideo` option, [documented
+here](../../api/Loading_a_Content.md#representationfilter). By using this API,
+we can filter out un-decipherable quality to avoid downloading them in the first
 place.
 
 ## Server certificate
