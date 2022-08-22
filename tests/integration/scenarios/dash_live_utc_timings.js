@@ -48,11 +48,9 @@ describe("DASH live - UTCTimings", () => {
       const serverTimestamp = +new Date("2019-03-25T13:54:08.000Z");
       player.loadVideo({ url: manifestInfos.url,
                          transport:manifestInfos.transport,
-                         transportOptions: {
-                           serverSyncInfos: {
-                             serverTimestamp,
-                             clientTime: performance.now(),
-                           },
+                         serverSyncInfos: {
+                           serverTimestamp,
+                           clientTime: performance.now(),
                          } });
 
       await sleep(100);
@@ -111,11 +109,9 @@ describe("DASH live - UTCTimings", () => {
       player.loadVideo({
         url: manifestInfos.url,
         transport:manifestInfos.transport,
-        transportOptions: {
-          serverSyncInfos: {
-            serverTimestamp,
-            clientTime: performance.now(),
-          },
+        serverSyncInfos: {
+          serverTimestamp,
+          clientTime: performance.now(),
         },
       });
 
@@ -174,11 +170,9 @@ describe("DASH live - UTCTimings", () => {
       player.loadVideo({
         url: manifestInfos.url,
         transport:manifestInfos.transport,
-        transportOptions: {
-          serverSyncInfos: {
-            serverTimestamp,
-            clientTime: performance.now(),
-          },
+        serverSyncInfos: {
+          serverTimestamp,
+          clientTime: performance.now(),
         },
       });
 
@@ -233,11 +227,9 @@ describe("DASH live - UTCTimings", () => {
       player.loadVideo({
         url: manifestInfos.url,
         transport:manifestInfos.transport,
-        transportOptions: {
-          serverSyncInfos: {
-            serverTimestamp,
-            clientTime: performance.now(),
-          },
+        serverSyncInfos: {
+          serverTimestamp,
+          clientTime: performance.now(),
         },
       });
 
