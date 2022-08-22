@@ -9,8 +9,8 @@ Those plugins are often under the form of functions passed as an argument to the
 
 ## segmentLoader
 
-The `segmentLoader` is a function that can be included in the `transportOptions`
-of the `loadVideo` API call.
+The `segmentLoader` is a function that can be included as an option of the
+`loadVideo` API call.
 
 A `segmentLoader` allows to define a custom audio/video segment loader (it might
 on the future work for other types of segments, so always check the type if you
@@ -208,8 +208,8 @@ the request is aborted. You can define one to clean-up or dispose all resources.
 
 ## manifestLoader
 
-The `manifestLoader` is a function that can be included in the
-`transportOptions` of the `loadVideo` API call.
+The `manifestLoader` is a function that can be included as an option of the
+`loadVideo` API call.
 
 A manifestLoader allows to define a custom [Manifest](../../Getting_Started/Glossary.md#manifest)
 loader.
@@ -375,8 +375,8 @@ the request is aborted. You can define one to clean-up or dispose all resources.
 
 ## representationFilter
 
-The representationFilter is a function that can be included in the
-`transportOptions` of the `loadVideo` API call.
+The representationFilter is a function that can be included as an option of the
+`loadVideo` API call.
 
 A representationFilter allows you to filter out
 [Representations](../../Getting_Started/Glossary.md#representation) (i.e. media qualities) based on
