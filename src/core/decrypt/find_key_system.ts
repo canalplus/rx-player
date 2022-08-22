@@ -52,10 +52,19 @@ export interface ICreateMediaKeySystemAccessEvent {
 export type IFoundMediaKeySystemAccessEvent = IReuseMediaKeySystemAccessEvent |
                                               ICreateMediaKeySystemAccessEvent;
 
-interface IKeySystemType { keyName : string | undefined;
-                           keyType : string;
-                           keySystemOptions : IKeySystemOption; }
-
+interface IKeySystemType {
+  /**
+   * Generic name for the key system. e.g. "clearkey", "widevine", "playready".
+   * Can be used to make exceptions depending on it.
+   * `undefined` if unknown or if this concept does not exist for this key
+   * system.
+   */
+  keyName : string | undefined;
+  /** keyType: keySystem type (e.g. "com.widevine.alpha") */
+  keyType : string;
+  /** keySystem {Object}: the original keySystem object */
+  keySystemOptions : IKeySystemOption;
+}
 
 /**
  * @param {Array.<Object>} keySystems
@@ -122,20 +131,14 @@ function findKeySystemCanonicalName(ksType: string) : string | undefined {
 /**
  * Build configuration for the requestMediaKeySystemAccess EME API, based
  * on the current keySystem object.
- * @param {string|undefined} ksName - Generic name for the key system. e.g.
- * "clearkey", "widevine", "playready". Can be used to make exceptions depending
- * on it.
- * @param {string|undefined} ksType - KeySystem complete type (e.g.
- * "com.widevine.alpha").
- * @param {Object} keySystem
+ * @param {Object} keySystemTypeInfo
  * @returns {Array.<Object>} - Configuration to give to the
  * requestMediaKeySystemAccess API.
  */
 function buildKeySystemConfigurations(
-  ksName : string | undefined,
-  ksType : string | undefined,
-  keySystem : IKeySystemOption
+  keySystemTypeInfo : IKeySystemType
 ) : MediaKeySystemConfiguration[] {
+  const { keyName, keyType, keySystemOptions: keySystem } = keySystemTypeInfo;
   const sessionTypes = ["temporary"];
   let persistentState: MediaKeysRequirement = "optional";
   let distinctiveIdentifier: MediaKeysRequirement = "optional";
@@ -153,7 +156,7 @@ function buildKeySystemConfigurations(
     distinctiveIdentifier = keySystem.distinctiveIdentifier;
   }
   const { EME_DEFAULT_WIDEVINE_ROBUSTNESSES,
-          EME_DEFAULT_PLAYREADY_ROBUSTNESSES } = config.getCurrent();
+          EME_DEFAULT_PLAYREADY_RECOMMENDATION_ROBUSTNESSES } = config.getCurrent();
 
   // From the W3 EME spec, we have to provide videoCapabilities and
   // audioCapabilities.
@@ -177,10 +180,10 @@ function buildKeySystemConfigurations(
     let audioRobustnesses : Array<string | undefined>;
     if (audioCapabilitiesConfig?.type === "robustness") {
       audioRobustnesses = audioCapabilitiesConfig.value;
-    } else if (ksName === "widevine") {
+    } else if (keyName === "widevine") {
       audioRobustnesses = EME_DEFAULT_WIDEVINE_ROBUSTNESSES;
-    } else if (ksType === "com.microsoft.playready.recommendation") {
-      audioRobustnesses = EME_DEFAULT_PLAYREADY_ROBUSTNESSES;
+    } else if (keyType === "com.microsoft.playready.recommendation") {
+      audioRobustnesses = EME_DEFAULT_PLAYREADY_RECOMMENDATION_ROBUSTNESSES;
     } else {
       audioRobustnesses = [];
     }
@@ -205,10 +208,10 @@ function buildKeySystemConfigurations(
     let videoRobustnesses : Array<string | undefined>;
     if (videoCapabilitiesConfig?.type === "robustness") {
       videoRobustnesses = videoCapabilitiesConfig.value;
-    } else if (ksName === "widevine") {
+    } else if (keyName === "widevine") {
       videoRobustnesses = EME_DEFAULT_WIDEVINE_ROBUSTNESSES;
-    } else if (ksType === "com.microsoft.playready.recommendation") {
-      videoRobustnesses = EME_DEFAULT_PLAYREADY_ROBUSTNESSES;
+    } else if (keyType === "com.microsoft.playready.recommendation") {
+      videoRobustnesses = EME_DEFAULT_PLAYREADY_RECOMMENDATION_ROBUSTNESSES;
     } else {
       videoRobustnesses = [];
     }
@@ -337,11 +340,10 @@ export default function getMediaKeySystemAccess(
       throw new Error("requestMediaKeySystemAccess is not implemented in your browser.");
     }
 
-    const { keyName, keyType, keySystemOptions } = keySystemsType[index];
+    const chosenType = keySystemsType[index];
+    const { keyType, keySystemOptions } = chosenType;
 
-    const keySystemConfigurations = buildKeySystemConfigurations(keyName,
-                                                                 keyType,
-                                                                 keySystemOptions);
+    const keySystemConfigurations = buildKeySystemConfigurations(chosenType);
 
     log.debug(`DRM: Request keysystem access ${keyType},` +
               `${index + 1} of ${keySystemsType.length}`);
