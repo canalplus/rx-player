@@ -59,43 +59,108 @@ export interface IConstructorOptions {
 
 /** Every options that can be given to the RxPlayer's `loadVideo` method. */
 export interface ILoadVideoOptions {
+  /**
+   * Streaming protocol used (e.g. "dash" or "smooth").
+   *
+   * It is a mandatory property.
+   */
   transport : string;
 
+  /** Main URL to the content (Manifest or video file for directfile contents. */
   url? : string;
+  /** If `true` the Content will automatically play once loaded. */
   autoPlay? : boolean;
-  keySystems? : IKeySystemOption[];
-  transportOptions? : ITransportOptions|undefined;
-  lowLatencyMode? : boolean;
-  networkConfig? : INetworkConfigOption;
-  startAt? : IStartAtOption;
-  textTrackMode? : "native"|"html";
-  textTrackElement? : HTMLElement;
-  enableFastSwitching? : boolean;
-  defaultAudioTrackSwitchingMode? : IAudioTrackSwitchingMode;
-  onCodecSwitch? : "continue"|"reload";
-}
 
-/** Value of the `transportOptions` option of the `loadVideo` method. */
-export interface ITransportOptions {
+  /**
+   * Decryption-related options.
+   * Can be left to undefined if no decryption is wanted.
+   */
+  keySystems? : IKeySystemOption[];
+
+  /**
+   * If set to `true`, and if the content is compatible, it will be played in a
+   * special mode where the latency is greatly reduced.
+   *
+   * Should only be set for known to be compatible contents.
+   */
+  lowLatencyMode? : boolean;
+
+  // XXX TODO should it also be flattened or just renamed?
+  networkConfig? : INetworkConfigOption;
+
+  /** Indicate the position the RxPlayer should start at on the loaded content. */
+  startAt? : IStartAtOption;
+
+  /**
+   * The "mode" in which the text tracks will be displayed.
+   *
+   * The default `"native"` mode will use HTMLMediaElement's `track`elements and
+   * poor stylization capabilities.
+   *
+   * The `"html"` mode use the `textTrackElement` option to display subtitles
+   * with rich stylization capabilities inside that `HTMLElement`.
+   */
+  textTrackMode? : "native"|"html";
+
+  /**
+   * The HTMLElement in which text track will be pushed in a `"html"`
+   * `textTrackMode`.
+   *
+   * Mandatory if `textTrackMode` is set to `"html"`.
+   *
+   * Has no effect when `textTrackMode` is not set or set to `"native"`.
+   */
+  textTrackElement? : HTMLElement;
+
+  /**
+   * `true` by default.
+   *
+   * If set to `false`, the RxPlayer won't use the "fast-switching" optimization
+   * that allows to see raise in qualities quicker.
+   *
+   * You might want to set to `false` when the current device does not support
+   * segment replacement well.
+   */
+  enableFastSwitching? : boolean;
+
+  /** Default behavior when switching to a different audio track. */
+  defaultAudioTrackSwitchingMode? : IAudioTrackSwitchingMode;
+
+  /**
+   * Behavior when a audio or video codec just switched to another
+   * non-compatible one.
+   *
+   * This value might depend on the device's capabilities.
+   */
+  onCodecSwitch? : "continue"|"reload";
+
   /**
    * Whether we should check that an obtain segment is truncated and retry the
    * request if that's the case.
    */
   checkMediaSegmentIntegrity? : boolean;
+
   /** Manifest object that will be used initially. */
   initialManifest? : IInitialManifest;
+
   /** Custom implementation for performing Manifest requests. */
   manifestLoader? : IManifestLoader;
+
   /** Possible custom URL pointing to a shorter form of the Manifest. */
   manifestUpdateUrl? : string;
+
   /** Minimum bound for Manifest updates, in milliseconds. */
   minimumManifestUpdateInterval? : number;
+
   /** Custom implementation for performing segment requests. */
   segmentLoader? : ISegmentLoader;
+
   /** Custom logic to filter out unwanted qualities. */
   representationFilter? : IRepresentationFilter;
+
   /** Base time for the segments in case it is not found in the Manifest. */
   referenceDateTime? : number;
+
   /** Allows to synchronize the server's time with the client's. */
   serverSyncInfos? : IServerSyncInfos;
 }
