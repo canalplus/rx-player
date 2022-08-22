@@ -306,7 +306,7 @@ An OtherError can have the following codes (`code` property):
 
 - `"INTEGRITY_ERROR"`: An integrity-checking mechanism in the RxPlayer
   detected that there was an error with some loaded data. Such mechanism can
-  be triggered for example when the `checkMediaSegmentIntegrity`
-  `transportOptions` is set to `loadVideo`.
+  be triggered for example when the `checkMediaSegmentIntegrity` option
+  is set on the `loadVideo` call.
 
 - `"NONE"`: The error cannot be characterized.

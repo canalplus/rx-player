@@ -262,13 +262,12 @@ it, you can serve directly the file through the use of a Manifest Loader:
 ```js
 player.loadVideo({
   transport: "metaplaylist",
-  transportOptions: {
-    // Note: `_url` here will be `undefined`
-    manifestLoader(_url, callbacks) {
-      // where `myMetaPlaylistObject` is the MetaPlaylist in either Object or
-      // String form
-      callbacks.resolve({ data: myMetaPlaylistObject });
-    },
+
+  // Note: `_url` here will be `undefined`
+  manifestLoader(_url, callbacks) {
+    // where `myMetaPlaylistObject` is the MetaPlaylist in either Object or
+    // String form
+    callbacks.resolve({ data: myMetaPlaylistObject });
   },
 });
 ```
@@ -290,8 +289,8 @@ In those cases, you can make usage of the `serverSyncInfos` transport options
 when calling `loadVideo` to indicate the current time and construct the
 MetaPlaylist by using unix time for each content's `startTime` and `endTime`.
 
-The `serverSyncInfos` option is explained [in the `transportOptions`
-documentation](../Loading_a_Content.md#transportoptions).
+The `serverSyncInfos` option is explained [in the `loadVideo` options
+documentation](../Loading_a_Content.md#serversyncinfos).
 
 For example, if you trust the user's system clock to indicate the current live
 time (in most cases this is risky however), you can use the `Date.now()` api:
@@ -305,6 +304,6 @@ const serverSyncInfos = {
 player.loadVideo({
   transport: "metaplaylist",
   url: "https://www.example.com/metaplaylist",
-  transportOptions: { serverSyncInfos },
+  serverSyncInfos,
 });
 ```

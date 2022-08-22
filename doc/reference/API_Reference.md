@@ -127,38 +127,35 @@ properties, methods, events and so on.
   - [`startAt`](../api/Loading_a_Content.md#startat):
     Define the position at which the RxPlayer should start.
 
-  - [`transportOptions`](../api/Loading_a_Content.md#transportoptions):
-    Options relative to the current "transport".
+  - [`minimumManifestUpdateInterval`](../api/Loading_a_Content.md#minimummanifestupdateinterval):
+    Allows to limit the frequency of Manifest updates.
 
-    - [`transportOptions.minimumManifestUpdateInterval`](../api/Loading_a_Content.md#transportoptions):
-      Allows to limit the frequency of Manifest updates.
+  - [`initialManifest`](../api/Loading_a_Content.md#initialmanifest):
+    Allows to provide an initial Manifest to speed-up the content loading
 
-    - [`transportOptions.initialManifest`](../api/Loading_a_Content.md#transportoptions):
-      Allows to provide an initial Manifest to speed-up the content loading
+  - [`manifestUpdateUrl`](../api/Loading_a_Content.md#manifestupdateurl):
+    Provide another URL, potentially to a shorter Manifest, used only for
+    Manifest updates
 
-    - [`transportOptions.manifestUpdateUrl`](../api/Loading_a_Content.md#transportoptions):
-      Provide another URL, potentially to a shorter Manifest, used only for
-      Manifest updates
+  - [`representationFilter`](../api/Loading_a_Content.md#representationfilter):
+    Filter out qualities from the Manifest based on its characteristics.
 
-    - [`transportOptions.representationFilter`](../api/Loading_a_Content.md#transportoptions):
-      Filter out qualities from the Manifest based on its characteristics.
+  - [`segmentLoader`](../api/Loading_a_Content.md#segmentloader):
+    Provide a custom logic to fetch segments.
 
-    - [`transportOptions.segmentLoader`](../api/Loading_a_Content.md#transportoptions):
-      Provide a custom logic to fetch segments.
+  - [`manifestLoader`](../api/Loading_a_Content.md#manifestloader):
+    Provide a custom logic to fetch the Manifest.
 
-    - [`transportOptions.manifestLoader`](../api/Loading_a_Content.md#transportoptions):
-      Provide a custom logic to fetch the Manifest.
+  - [`checkMediaSegmentIntegrity`](../api/Loading_a_Content.md#checkmediasegmentintegrity):
+    Enable supplementary checks to retry a request if a segment appears
+    corrupted.
 
-    - [`transportOptions.checkMediaSegmentIntegrity`](../api/Loading_a_Content.md#transportoptions):
-      Enable supplementary checks to retry a request if a segment appears
-      corrupted.
+  - [`serverSyncInfos`](../api/Loading_a_Content.md#serversyncinfos):
+    Provide time synchronization mechanism between the client and server.
 
-    - [`transportOptions.serverSyncInfos`](../api/Loading_a_Content.md#transportoptions):
-      Provide time synchronization mechanism between the client and server.
-
-    - [`transportOptions.referenceDateTime`](../api/Loading_a_Content.md#transportoptions):
-      Default offset to add to the segment's time to obtain a live time. This is
-      in most cases not needed.
+  - [`referenceDateTime`](../api/Loading_a_Content.md#referencedatetime):
+    Default offset to add to the segment's time to obtain a live time. This is
+    in most cases not needed.
 
   - [`textTrackMode`](../api/Loading_a_Content.md#texttrackmode):
     The way in which the text tracks should be displayed.
