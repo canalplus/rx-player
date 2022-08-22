@@ -44,18 +44,6 @@ export type IParsedStartAtOption = { position : number } |
                                    { fromLastPosition : number } |
                                    { fromFirstPosition : number };
 
-export interface IParsedTransportOptions {
-  checkMediaSegmentIntegrity? : boolean | undefined;
-  lowLatencyMode : boolean;
-  manifestLoader?: IManifestLoader | undefined;
-  manifestUpdateUrl? : string | undefined;
-  referenceDateTime? : number | undefined;
-  representationFilter? : IRepresentationFilter | undefined;
-  segmentLoader? : ISegmentLoader | undefined;
-  serverSyncInfos? : IServerSyncInfos | undefined;
-  __priv_patchLastSegmentInSidx? : boolean | undefined;
-}
-
 /** Options of the RxPlayer's constructor once parsed. */
 export interface IParsedConstructorOptions {
   maxBufferAhead : number;
@@ -87,11 +75,18 @@ interface IParsedLoadVideoOptionsBase {
   lowLatencyMode : boolean;
   minimumManifestUpdateInterval : number;
   networkConfig: INetworkConfigOption;
-  transportOptions : IParsedTransportOptions;
   startAt : IParsedStartAtOption|undefined;
   enableFastSwitching : boolean;
   defaultAudioTrackSwitchingMode : IAudioTrackSwitchingMode | undefined;
   onCodecSwitch : "continue"|"reload";
+  checkMediaSegmentIntegrity? : boolean | undefined;
+  manifestLoader?: IManifestLoader | undefined;
+  manifestUpdateUrl? : string | undefined;
+  referenceDateTime? : number | undefined;
+  representationFilter? : IRepresentationFilter | undefined;
+  segmentLoader? : ISegmentLoader | undefined;
+  serverSyncInfos? : IServerSyncInfos | undefined;
+  __priv_patchLastSegmentInSidx? : boolean | undefined;
 }
 
 /**
@@ -354,13 +349,13 @@ function parseLoadVideoOptions(
   if (!isNullOrUndefined(options.url)) {
     url = String(options.url);
   } else if (
-    isNullOrUndefined(options.transportOptions?.initialManifest) &&
-    isNullOrUndefined(options.transportOptions?.manifestLoader)
+    isNullOrUndefined(options.initialManifest) &&
+    isNullOrUndefined(options.manifestLoader)
   ) {
     throw new Error("Unable to load a content: no url set on loadVideo.\n" +
                     "Please provide at least either an `url` argument, a " +
-                    "`transportOptions.initialManifest` option or a " +
-                    "`transportOptions.manifestLoader` option so the RxPlayer " +
+                    "`initialManifest` option or a " +
+                    "`manifestLoader` option so the RxPlayer " +
                     "can load the content.");
   }
 
@@ -391,14 +386,9 @@ function parseLoadVideoOptions(
   const lowLatencyMode = options.lowLatencyMode === undefined ?
     false :
     !!options.lowLatencyMode;
-  const transportOptsArg = typeof options.transportOptions === "object" &&
-                                  options.transportOptions !== null ?
-    options.transportOptions :
-    {};
 
-  const initialManifest = options.transportOptions?.initialManifest;
-  const minimumManifestUpdateInterval =
-    options.transportOptions?.minimumManifestUpdateInterval ?? 0;
+  const initialManifest = options.initialManifest;
+  const minimumManifestUpdateInterval = options.minimumManifestUpdateInterval ?? 0;
 
   let defaultAudioTrackSwitchingMode = options.defaultAudioTrackSwitchingMode ??
                                        undefined;
@@ -426,14 +416,6 @@ function parseLoadVideoOptions(
              " will be used as default");
     onCodecSwitch = DEFAULT_CODEC_SWITCHING_BEHAVIOR;
   }
-
-  const transportOptions = objectAssign({}, transportOptsArg, {
-    lowLatencyMode,
-  });
-
-  // remove already parsed data to simplify the `transportOptions` object
-  delete transportOptions.initialManifest;
-  delete transportOptions.minimumManifestUpdateInterval;
 
   if (isNullOrUndefined(options.textTrackMode)) {
     textTrackMode = DEFAULT_TEXT_TRACK_MODE;
@@ -480,24 +462,37 @@ function parseLoadVideoOptions(
 
   const networkConfig = options.networkConfig ?? {};
 
-  // TODO without cast
-  /* eslint-disable @typescript-eslint/consistent-type-assertions */
-  return { autoPlay,
-           enableFastSwitching,
-           keySystems,
-           initialManifest,
-           lowLatencyMode,
+
+  // All those eslint disable are needed because the option is voluntarily
+  // hidden from the base type to limit discovery of this hidden API.
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+  return { __priv_patchLastSegmentInSidx: (options as any).__priv_patchLastSegmentInSidx,
+  /* eslint-enable @typescript-eslint/no-explicit-any */
+  /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+           checkMediaSegmentIntegrity: options.checkMediaSegmentIntegrity,
+           autoPlay,
            defaultAudioTrackSwitchingMode,
+           enableFastSwitching,
+           initialManifest,
+           keySystems,
+           lowLatencyMode,
+           manifestLoader: options.manifestLoader,
+           manifestUpdateUrl: options.manifestUpdateUrl,
            minimumManifestUpdateInterval,
            networkConfig,
            onCodecSwitch,
+           referenceDateTime: options.referenceDateTime,
+           representationFilter: options.representationFilter,
+           segmentLoader: options.segmentLoader,
+           serverSyncInfos: options.serverSyncInfos,
            startAt,
            textTrackElement,
            textTrackMode,
            transport,
-           transportOptions,
            url } as IParsedLoadVideoOptions;
-  /* eslint-enable @typescript-eslint/consistent-type-assertions */
 }
 
 export {

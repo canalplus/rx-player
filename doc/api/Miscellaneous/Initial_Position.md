@@ -84,7 +84,7 @@ should be broadcasted at which time by either of those means:
   contents).
 - One was provided to `loadVideo` thanks to the `serverSyncInfos` transport
   option [see loadVideo
-  documentation](../Loading_a_Content.md#transportoptions).
+  documentation](../Loading_a_Content.md#serversyncinfos).
 
 [2] I wrote "close to" in every cases as we might substract some seconds from
 that value. How much we might do, depends on:

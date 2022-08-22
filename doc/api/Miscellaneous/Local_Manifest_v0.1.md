@@ -41,20 +41,18 @@ You will just need to:
    in `loadVideo` to `"local"`
 2. As the generated Manifest object most likely won't be available through an
    URL but directly as a JavaScript object, you will need to communicate it
-   through the `manifestLoader` property in the `transportOptions` `loadVideo`
-   option.
+   through the `manifestLoader` option in the `loadVideo` call.
 
 Here is an example:
 
 ```js
 rxPlayer.loadVideo({
   transport: "local",
-  transportOptions: {
-    // Note: `_url` here will be `undefined`
-    manifestLoader(_url, callbacks) {
-      // where `localManifest` is the local Manifest in object form
-      callbacks.resolve({ data: localManifest });
-    },
+
+  // Note: `_url` here will be `undefined`
+  manifestLoader(_url, callbacks) {
+    // where `localManifest` is the local Manifest in object form
+    callbacks.resolve({ data: localManifest });
   },
   // ...
 });
