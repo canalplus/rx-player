@@ -88,10 +88,10 @@ could lose latency or worse: obtain playback issues.
 
 To work around that problem, the RxPlayer allows you to provide a
 synchronization mechanism to loadVideo. This is done through the
-`serverSyncInfos` `transportOptions`. Which itself is a `loadVideo` option.
+`serverSyncInfos` option of `loadVideo`.
 
 TL;DR You can look at the [API
-documentation](../Loading_a_Content.md#transportoptions) for a quick
+documentation](../Loading_a_Content.md#serversyncinfos) for a quick
 explanation of what to put in it.
 
 ---
@@ -150,7 +150,7 @@ const clientTime = performance.now();
 const serverSyncInfos = { serverTimestamp, clientTime };
 rxPlayer.loadVideo({
   // ...
-  transportOptions: { serverSyncInfos },
+  serverSyncInfos,
 });
 ```
 
