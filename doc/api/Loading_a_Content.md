@@ -105,12 +105,10 @@ depends on the current browser).
 
 This property is mandatory unless either:
 
-- a `manifestLoader` is defined in the
-  [transportOptions](#transportoptions), in which case that callback will
-  be called instead any time we want to load the Manifest.
+- a [`manifestLoader` option](#manifestloader) is defined, in which case that
+  callback will be called instead any time we want to load the Manifest.
 
-- an `initialManifest` is defined in the
-  [transportOptions](#transportoptions), in which case this will be used
+- an [`initialManifest` option](#initialmanifest) is defined, in which case it
   as the first version of the Manifest.
   Note however that if the Manifest needs to be refreshed and no `url` nor
   `manifestLoader` has been set, the RxPlayer will most likely fail and stop
@@ -279,282 +277,312 @@ player.loadVideo({
 });
 ```
 
-### transportOptions
+### minimumManifestUpdateInterval
 
-_type_: `Object|undefined`
+_type_: `number|undefined`
 
 <div class="warning">
 This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
 transport option</a>)
 </div>
 
-Options concerning the "transport".
+Set the minimum time, in milliseconds, we have to wait between Manifest
+updates.
 
-That is, the part of the code:
+A Manifest may need to be updated in regular intervals (e.g. many DASH
+dynamic contents depend on that behavior).
 
-- performing [Manifest](../Getting_Started/Glossary.md#manifest) and segment requests
-- parsing the Manifest
-- parsing/updating/creating segments
+The frequency at which we normally update a Manifest depends on multiple
+factors: the information taken from the Manifest, the transport chosen or
+the current playback conditions. You might want to use
+`minimumManifestUpdateInterval` to limit that frequency to a minimum.
 
-This Object can contain multiple properties. Only those documented here are
-considered stable:
+This option is principally useful on some embedded devices where resources
+are scarce. The request and data decompression done at each Manifest update
+might be too heavy for some and reducing the interval at which they are done
+might help.
 
-- **minimumManifestUpdateInterval** (`number|undefined`):
+Please note however than reducing that frequency can raise the chance of
+rebuffering, as we might be aware of newly generated segments later than we
+would be without that option.
 
-  Set the minimum time, in milliseconds, we have to wait between Manifest
-  updates.
+Example:
 
-  A Manifest may need to be updated in regular intervals (e.g. many DASH
-  dynamic contents depend on that behavior).
+```js
+rxPlayer.loadVideo({
+  // ...
+  minimumManifestUpdateInterval: 5000, // Perform Manifest updates at most
+                                       // every 5 seconds
+  },
+});
+```
 
-  The frequency at which we normally update a Manifest depends on multiple
-  factors: the information taken from the Manifest, the transport chosen or
-  the current playback conditions. You might want to use
-  `minimumManifestUpdateInterval` to limit that frequency to a minimum.
+### initialManifest
 
-  This option is principally useful on some embedded devices where resources
-  are scarce. The request and data decompression done at each Manifest update
-  might be too heavy for some and reducing the interval at which they are done
-  might help.
+_type_: `number|undefined`
 
-  Please note however than reducing that frequency can raise the chance of
-  rebuffering, as we might be aware of newly generated segments later than we
-  would be without that option.
+<div class="warning">
+This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
+transport option</a>)
+</div>
 
-  Example:
+Manifest that will be initially used (before any potential Manifest
+refresh).
 
-  ```js
-  rxPlayer.loadVideo({
-    // ...
-    transportOptions: {
-      minimumManifestUpdateInterval: 5000, // Perform Manifest updates at most
-      // every 5 seconds
-    },
-  });
-  ```
+Some applications pre-load the Manifest to parse some information from it
+before calling `loadVideo`.
+As in that case the Manifest has already been loaded, an application can
+optimize content loading time by giving to the RxPlayer that already-loaded
+Manifest so the latter can avoid doing another request for it.
 
-- **initialManifest** (`string|Document|Object|ArrayBuffer`):
+The format accepted for that option depends on the current chosen
+[`transport`](#transport):
 
-  Manifest that will be initially used (before any potential Manifest
-  refresh).
+- for `"dash"` and `"smooth"` contents either a `string` (of the whole
+  Manifest's xml data) or a corresponding `Document` format is accepted.
 
-  Some applications pre-load the Manifest to parse some information from it
-  before calling `loadVideo`.
-  As in that case the Manifest has already been loaded, an application can
-  optimize content loading time by giving to the RxPlayer that already-loaded
-  Manifest so the latter can avoid doing another request for it.
+- for `"metaplaylist"`, either a `string` (for the whole JSON) or the
+  corresponding JS Object is accepted.
 
-  The format accepted for that option depends on the current chosen
-  [`transport`](#transport):
+- for `"local"`, only the corresponding local Manifest as a JS object is
+  accepted.
 
-  - for `"dash"` and `"smooth"` contents either a `string` (of the whole
-    Manifest's xml data) or a corresponding `Document` format is accepted.
+Note that using this option could have implications for live contents.
+Depending on the content, the initial playing position and maximum position
+could be calculated based on that option's value.
 
-  - for `"metaplaylist"`, either a `string` (for the whole JSON) or the
-    corresponding JS Object is accepted.
+In a case where the corresponding Manifest request was performed long before
+the `loadVideo` call, the RxPlayer could be for example initially playing
+far from the real live edge.
+Because of that, it is recommended to only set that options for live/dynamic
+contents if its request was done immediately before the `loadVideo`
+call.
 
-  - for `"local"`, only the corresponding local Manifest as a JS object is
-    accepted.
 
-  Note that using this option could have implications for live contents.
-  Depending on the content, the initial playing position and maximum position
-  could be calculated based on that option's value.
+### manifestUpdateUrl
 
-  In a case where the corresponding Manifest request was performed long before
-  the `loadVideo` call, the RxPlayer could be for example initially playing
-  far from the real live edge.
-  Because of that, it is recommended to only set that options for live/dynamic
-  contents if its request was done immediately before the `loadVideo`
-  call.
+_type_: `string|undefined`
 
-- **manifestUpdateUrl** (`string|undefined`):
+<div class="warning">
+This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
+transport option</a>)
+</div>
 
-  Set a custom Manifest URL for Manifest updates.
-  This URL can point to another version of the Manifest with a shorter
-  timeshift window, to lighten the CPU, memory and bandwidth impact of
-  Manifest updates.
+Set a custom Manifest URL for Manifest updates.
+This URL can point to another version of the Manifest with a shorter
+timeshift window, to lighten the CPU, memory and bandwidth impact of
+Manifest updates.
 
-  Example:
+Example:
 
-  ```js
-  rxPlayer.loadVideo({
-    transport: "dash",
-    url: "https://example.com/full-content.mpd",
-    transportOptions: {
-      manifestUpdateUrl: "https://example.com/content-with-shorter-window.mpd",
-    },
-  });
-  ```
+```js
+rxPlayer.loadVideo({
+  transport: "dash",
+  url: "https://example.com/full-content.mpd",
+  manifestUpdateUrl: "https://example.com/content-with-shorter-window.mpd",
+});
+```
 
-  When the RxPlayer plays a live content, it may have to refresh frequently
-  the Manifest to be aware of where to find new media segments.
-  It generally uses the regular Manifest URL when doing so, meaning that the
-  information about the whole content is downloaded again.
+When the RxPlayer plays a live content, it may have to refresh frequently
+the Manifest to be aware of where to find new media segments.
+It generally uses the regular Manifest URL when doing so, meaning that the
+information about the whole content is downloaded again.
 
-  This is generally not a problem though: The Manifest is generally short
-  enough meaning that this process won't waste much bandwidth memory or
-  parsing time.
-  However, we found that for huge Manifests (multiple MB uncompressed), this
-  behavior could be a problem on some low-end devices (some set-top-boxes,
-  chromecasts) where slowdowns can be observed when Manifest refresh are
-  taking place.
+This is generally not a problem though: The Manifest is generally short
+enough meaning that this process won't waste much bandwidth memory or
+parsing time.
+However, we found that for huge Manifests (multiple MB uncompressed), this
+behavior could be a problem on some low-end devices (some set-top-boxes,
+chromecasts) where slowdowns can be observed when Manifest refresh are
+taking place.
 
-  The `manifestUpdateUrl` will thus allow an application to provide a second
-  URL, specifically used for Manifest updates, which can represent the same
-  content with a shorter timeshift window (e.g. using only 5 minutes of
-  timeshift window instead of 10 hours for the full Manifest). The content
-  will keep its original timeshift window and the RxPlayer will be able to get
-  information about new segments at a lower cost.
+The `manifestUpdateUrl` will thus allow an application to provide a second
+URL, specifically used for Manifest updates, which can represent the same
+content with a shorter timeshift window (e.g. using only 5 minutes of
+timeshift window instead of 10 hours for the full Manifest). The content
+will keep its original timeshift window and the RxPlayer will be able to get
+information about new segments at a lower cost.
 
-- **representationFilter** (`Function|undefined`):
+### representationFilter
 
-  Allows to filter out `Representation`s (i.e. media qualities) from the
-  Manifest to avoid playing them.
+_type_: `Function|undefined`
 
-  ```js
-  rxPlayer.loadVideo({
-    // ...
-    transportOptions: {
-      representationFilter(representation, infos) {
-        // ...
-      },
-    },
-  });
-  ```
+<div class="warning">
+This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
+transport option</a>)
+</div>
 
-  More infos on it can be found [here](../api/Miscellaneous/plugins.md#representationfilter).
+Allows to filter out `Representation`s (i.e. media qualities) from the
+Manifest to avoid playing them.
 
-- **segmentLoader** (`Function|undefined`):
+```js
+rxPlayer.loadVideo({
+  // ...
+  representationFilter(representation, infos) {
+    // Filter function
+  },
+});
+```
 
-  Defines a custom segment loader for when you want to perform the requests
-  yourself.
+### segmentLoader
 
-  ```js
-  rxPlayer.loadVideo({
-    // ...
-    transportOptions: {
-      segmentLoader(infos, callbacks) {
-        // logic to download a segment
-      },
-    },
-  });
-  ```
+_type_: `Function|undefined`
 
-  More info on it can be found [here](../api/Miscellaneous/plugins.md#segmentloader).
+<div class="warning">
+This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
+transport option</a>)
+</div>
 
-- **manifestLoader** (`function|undefined`):
+Defines a custom segment loader for when you want to perform the requests
+yourself.
 
-  Defines a custom Manifest loader (allows to set a custom logic for the
-  Manifest request).
+```js
+rxPlayer.loadVideo({
+  // ...
+  segmentLoader(infos, callbacks) {
+    // logic to download a segment
+  },
+});
+```
 
-  ```js
-  rxPlayer.loadVideo({
-    // ...
-    transportOptions: {
-      manifestLoader(url, callbacks) {
-        // logic to fetch the Manifest
-      },
-    },
-  });
-  ```
+More info on it can be found [here](../api/Miscellaneous/plugins.md#segmentloader).
 
-  More info on it can be found [here](../api/Miscellaneous/plugins.md#manifestloader).
+### manifestLoader
 
-- **checkMediaSegmentIntegrity** (`boolean|undefined`):
+_type_: `Function|undefined`
 
-  If set to true, the RxPlayer will retry a media segment request if that
-  segment seems corrupted.
+<div class="warning">
+This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
+transport option</a>)
+</div>
 
-  If not set or set to false, the RxPlayer might interrupt playback in the
-  same situation.
+Defines a custom Manifest loader (allows to set a custom logic for the
+Manifest request).
 
-  You can set this option if you suspect the CDN providing your contents to
-  sometimes send you incomplete/corrupted segments.
+```js
+rxPlayer.loadVideo({
+  // ...
+  manifestLoader(url, callbacks) {
+    // logic to fetch the Manifest
+  },
+});
+```
 
-  Example:
+More info on it can be found [here](../api/Miscellaneous/plugins.md#manifestloader).
 
-  ```js
-  rxPlayer.loadVideo({
-    // ...
-    transportOptions: {
-      checkMediaSegmentIntegrity: true,
-    },
-  });
-  ```
+### checkMediaSegmentIntegrity
 
-- **serverSyncInfos** (`Object|undefined`):
+_type_: `Function|undefined`
 
-  Allows to provide a time synchronization mechanism between the client and
-  the server.
+<div class="warning">
+This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
+transport option</a>)
+</div>
 
-  This value is mainly useful for live DASH contents based on a
-  SegmentTemplate scheme without SegmentTimeline elements as those rely on
-  having a synchronized clock on the client side.
+If set to true, the RxPlayer will retry a media segment request if that
+segment seems corrupted.
 
-  The `serverSyncInfos` object contains two keys:
+If not set or set to false, the RxPlayer might interrupt playback in the
+same situation.
 
-  - `serverTimestamp` (`number`): Unix timestamp of the server at a given
-    point in time, in milliseconds.
+You can set this option if you suspect the CDN providing your contents to
+sometimes send you incomplete/corrupted segments.
 
-  - `clientTime` (`number`): Value of the `performance.now()` API at the time
-    the `serverTimestamp` value was true. Please note that if your page contains
-    multiple worker, the `performance.now()` call should be done on the same
-    worker than the one in which loadVideo is called.
+Example:
 
-    <div class="note">
-    The `performance.now()` API is used here because it is the main API to
-    obtain a monotically increasing clock on the client-side.
-    </div</div>
+```js
+rxPlayer.loadVideo({
+  // ...
+  checkMediaSegmentIntegrity: true,
+});
+```
 
-  Example:
+### serverSyncInfos
 
-  ```js
-  const timeResponse = await fetch(timeServerURL);
-  const clientTime = performance.now();
-  const serverTimestamp = await timeResponse.text();
-  const serverSyncInfos = { serverTimestamp, clientTime };
-  rxPlayer.loadVideo({
-    // ...
-    transportOptions: { serverSyncInfos },
-  });
-  ```
+_type_: `Function|undefined`
 
-  If indicated, we will ignore any time indication on the MPD and only consider
-  `serverSyncInfos` to calculate the time on the server side.
+<div class="warning">
+This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
+transport option</a>)
+</div>
 
-  This value is also very useful for low-latency contents, as some of them do not
-  indicate any server's time, relying on the client one instead.
+Allows to provide a time synchronization mechanism between the client and
+the server.
 
-  Note that there is a risk of us losing synchronization when leap seconds are
-  added/substracted to unix time. However we consider those situations rare enough
-  (and the effect should be relatively weak) to let this as is for the moment. For
-  a complete explanation, you can look at the [corresponding chapter of the
-  low-latency documentation](./Miscellaneous/Low_Latency.md#note-time-sync).
+This value is mainly useful for live DASH contents based on a
+SegmentTemplate scheme without SegmentTimeline elements as those rely on
+having a synchronized clock on the client side.
 
-- **referenceDateTime** (`number|undefined`):
+The `serverSyncInfos` object contains two keys:
 
-  Only useful for live contents. This is the default amount of time, in
-  seconds, to add as an offset to a given media content's time, to obtain the
-  real live time.
+- `serverTimestamp` (`number`): Unix timestamp of the server at a given
+  point in time, in milliseconds.
 
-  For example, if the media has it's `0` time corresponding to the 30th of
-  January 2010 at midnight, you can set the `referenceDateTime` to `new Date(2010-01-30) / 1000`. This value is useful to communicate back to you
-  the "live time", for example through the `getWallClockTime` method.
+- `clientTime` (`number`): Value of the `performance.now()` API at the time
+  the `serverTimestamp` value was true. Please note that if your page contains
+  multiple worker, the `performance.now()` call should be done on the same
+  worker than the one in which loadVideo is called.
 
-  This will only be taken into account for live contents, and if the Manifest
-  / MPD does not already contain an offset (example: an
-  "availabilityStartTime" attribute in a DASH MPD).
+  <div class="note">
+  The `performance.now()` API is used here because it is the main API to
+  obtain a monotically increasing clock on the client-side.
+  </div</div>
 
-  Example:
+Example:
 
-  ```js
-  rxPlayer.loadVideo({
-    // ...
-    transportOptions: {
-      referenceDateTime: new Date(2015 - 05 - 29) / 1000,
-    },
-  });
-  ```
+```js
+const timeResponse = await fetch(timeServerURL);
+const clientTime = performance.now();
+const serverTimestamp = await timeResponse.text();
+const serverSyncInfos = { serverTimestamp, clientTime };
+rxPlayer.loadVideo({
+  // ...
+  serverSyncInfos,
+});
+```
+
+If indicated, we will ignore any time indication on the MPD and only consider
+`serverSyncInfos` to calculate the time on the server side.
+
+This value is also very useful for low-latency contents, as some of them do not
+indicate any server's time, relying on the client one instead.
+
+Note that there is a risk of us losing synchronization when leap seconds are
+added/substracted to unix time. However we consider those situations rare enough
+(and the effect should be relatively weak) to let this as is for the moment. For
+a complete explanation, you can look at the [corresponding chapter of the
+low-latency documentation](./Miscellaneous/Low_Latency.md#note-time-sync).
+
+### referenceDateTime
+
+_type_: `Function|undefined`
+
+<div class="warning">
+This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
+transport option</a>)
+</div>
+
+Only useful for live contents. This is the default amount of time, in
+seconds, to add as an offset to a given media content's time, to obtain the
+real live time.
+
+For example, if the media has it's `0` time corresponding to the 30th of
+January 2010 at midnight, you can set the `referenceDateTime` to
+`new Date(2010-01-30) / 1000`. This value is useful to communicate back to you
+the "live time", for example through the `getWallClockTime` method.
+
+This will only be taken into account for live contents, and if the Manifest
+/ MPD does not already contain an offset (example: an
+"availabilityStartTime" attribute in a DASH MPD).
+
+Example:
+
+```js
+rxPlayer.loadVideo({
+  // ...
+  referenceDateTime: new Date(2015 - 05 - 29) / 1000,
+});
+```
 
 ### textTrackMode
 

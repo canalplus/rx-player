@@ -98,11 +98,7 @@ exported:
   - `IPersistentSessionInfo`: type used by an `IPersistentSessionStorage`'s
     storage.
 
-  - `ITransportOptions`: type for the `transportOptions` property
-    optionally given to `loadVideo`.
-
-  - `IManifestLoader`: type for the `manifestLoader` function optionally set
-    on the `transportOptions` option of `loadVideo`.
+  - `IManifestLoader`: type for the `manifestLoader` option of `loadVideo`.
 
   - `IManifestLoaderInfo`: type for the first argument of the `manifestLoader`
     function (defined by `IManifestLoader`.)
@@ -110,8 +106,8 @@ exported:
   - `ILoadedManifestFormat`: type for the accepted Manifest formats as returned
      by a `IManifestLoader`.
 
-  - `IRepresentationFilter`: type for the `representationFilter` function
-    optionally set on the `transportOptions` option of `loadVideo`.
+  - `IRepresentationFilter`: type for the `representationFilter` option of
+  - `loadVideo`.
 
   - `IRepresentationFilterRepresentation`: type for the first argument of the
     `representationFilter` function (defined by `IRepresentationFilter`.)
@@ -122,14 +118,11 @@ exported:
   - `IRepresentationContext`: type for the second argument of the
     `representationFilter` function (defined by `IRepresentationFilter`.)
 
-  - `IServerSyncInfos`: type for the `serverSyncInfos` property
-    optionally set on the `transportOptions` option of `loadVideo`.
+  - `IServerSyncInfos`: type for the `serverSyncInfos` option of `loadVideo`.
 
-  - `IInitialManifest`: type for the `initialManifest` property
-    optionally set on the `transportOptions` option of `loadVideo`.
+  - `IInitialManifest`: type for the `initialManifest` option of `loadVideo`.
 
-  - `ISegmentLoader`: type for the `segmentLoader` function optionally set on
-    the `transportOptions` option of `loadVideo`.
+  - `ISegmentLoader`: type for the `segmentLoader` option of `loadVideo`.
 
   - `ISegmentLoaderContext`: type for the first argument of the `segmentLoader`
     function (defined by `ISegmentLoader`.)
