@@ -274,7 +274,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * Returns first position in index.
    * @returns {Number|null}
    */
-  getFirstPosition() : number|null {
+  getFirstAvailablePosition() : number|null {
     const index = this._index;
     if (index.timeline.length === 0) {
       return null;
@@ -288,7 +288,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * Returns last position in index.
    * @returns {Number|null}
    */
-  getLastPosition() : number|null {
+  getLastAvailablePosition() : number|null {
     const { timeline } = this._index;
     if (timeline.length === 0) {
       return null;
@@ -299,6 +299,15 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
                                                  this._scaledPeriodEnd),
                               this._scaledPeriodEnd ?? Infinity);
     return fromIndexTime(lastTime, this._index);
+  }
+
+  /**
+   * Returns the absolute end in seconds this RepresentationIndex can reach once
+   * all segments are available.
+   * @returns {number|null|undefined}
+   */
+  getEnd(): number | null {
+    return this.getLastAvailablePosition();
   }
 
   /**

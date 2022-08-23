@@ -211,7 +211,7 @@ function getRangeOfNeededSegments(
 ) : { start : number; end : number; hasReachedPeriodEnd : boolean } {
   let wantedStartPosition : number;
   const { manifest, period, representation } = content;
-  const lastIndexPosition = representation.index.getLastPosition();
+  const lastIndexPosition = representation.index.getLastAvailablePosition();
   const representationIndex = representation.index;
 
   // There is an exception for when the current initially wanted time is already

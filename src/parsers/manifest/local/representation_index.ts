@@ -27,11 +27,9 @@ import {
 export default class LocalRepresentationIndex implements IRepresentationIndex {
   private _index : ILocalIndex;
   private _representationId : string;
-  private _isFinished : boolean;
-  constructor(index : ILocalIndex, representationId : string, isFinished : boolean) {
+  constructor(index : ILocalIndex, representationId : string) {
     this._index = index;
     this._representationId = representationId;
-    this._isFinished = isFinished;
   }
 
   /**
@@ -96,7 +94,7 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
   /**
    * @returns {Number|undefined}
    */
-  getFirstPosition() : number|undefined {
+  getFirstAvailablePosition() : number|undefined {
     if (this._index.segments.length === 0) {
       return undefined;
     }
@@ -107,12 +105,36 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
   /**
    * @returns {Number|undefined}
    */
-  getLastPosition() : number|undefined {
+  getLastAvailablePosition() : number|undefined {
     if (this._index.segments.length === 0) {
       return undefined;
     }
     const lastSegment = this._index.segments[this._index.segments.length - 1];
-    return lastSegment.time;
+    return lastSegment.time + lastSegment.duration;
+  }
+
+  /**
+   * Returns the expected ending position of this RepresentationIndex.
+   * `undefined` if unknown.
+   * @returns {number|undefined}
+   */
+  getEnd() : number | undefined {
+    if (this._index.isFinished) {
+      return this.getLastAvailablePosition();
+    }
+
+    const { futureSegments, segments } = this._index;
+    if (futureSegments === undefined || futureSegments.length === 0) {
+      // If futureSegments is empty but not finished... It's ambiguous.
+      return undefined;
+    }
+    const lastFutureSegment = futureSegments[futureSegments.length - 1];
+    const futureSegmentEnd = lastFutureSegment.time + lastFutureSegment.duration;
+    if (segments.length === 0) {
+      return futureSegmentEnd;
+    }
+    const lastSegment = this._index.segments[this._index.segments.length - 1];
+    return Math.max(lastSegment.time + lastSegment.duration, futureSegmentEnd);
   }
 
   /**
@@ -130,7 +152,7 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
   }
 
   isFinished() : boolean {
-    return this._isFinished;
+    return this._index.isFinished;
   }
 
   /**
@@ -162,14 +184,12 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
   }
 
   _replace(newIndex : LocalRepresentationIndex) : void {
-    this._isFinished = newIndex._isFinished;
     this._index.segments = newIndex._index.segments;
     this._index.loadSegment = newIndex._index.loadSegment;
     this._index.loadInitSegment = newIndex._index.loadInitSegment;
   }
 
   _update(newIndex : LocalRepresentationIndex) : void {
-    this._isFinished = newIndex._isFinished;
     const newSegments = newIndex._index.segments;
     if (newSegments.length <= 0) {
       return;

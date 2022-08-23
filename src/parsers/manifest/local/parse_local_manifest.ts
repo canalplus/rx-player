@@ -51,8 +51,7 @@ export default function parseLocalManifest(
           maximumPosition,
           isFinished } = localManifest;
   const parsedPeriods = localManifest.periods
-    .map(period => parsePeriod(period, { periodIdGenerator,
-                                         isFinished }));
+    .map(period => parsePeriod(period, { periodIdGenerator }));
 
   return { availabilityStartTime: 0,
            expired: localManifest.expired,
@@ -77,11 +76,8 @@ export default function parseLocalManifest(
  */
 function parsePeriod(
   period : ILocalPeriod,
-  ctxt : { periodIdGenerator : () => string; /* Generate next Period's id */
-           /** If true, the local Manifest has been fully downloaded. */
-           isFinished : boolean; }
+  ctxt : { periodIdGenerator : () => string /* Generate next Period's id */ }
 ) : IParsedPeriod {
-  const { isFinished } = ctxt;
   const adaptationIdGenerator = idGenerator();
   return {
     id: "period-" + ctxt.periodIdGenerator(),
@@ -97,8 +93,7 @@ function parsePeriod(
           adaps = [];
           acc[type] = adaps;
         }
-        adaps.push(parseAdaptation(ada, { adaptationIdGenerator,
-                                          isFinished }));
+        adaps.push(parseAdaptation(ada, { adaptationIdGenerator }));
         return acc;
       }, {}),
   };
@@ -111,11 +106,8 @@ function parsePeriod(
  */
 function parseAdaptation(
   adaptation : ILocalAdaptation,
-  ctxt : { adaptationIdGenerator : () => string; /* Generate next Adaptation's id */
-           /** If true, the local Manifest has been fully downloaded. */
-           isFinished : boolean; }
+  ctxt : { adaptationIdGenerator : () => string /* Generate next Adaptation's id */ }
 ) : IParsedAdaptation {
-  const { isFinished } = ctxt;
   const representationIdGenerator = idGenerator();
   return {
     id: "adaptation-" + ctxt.adaptationIdGenerator(),
@@ -124,8 +116,7 @@ function parseAdaptation(
     closedCaption: adaptation.closedCaption,
     language: adaptation.language,
     representations: adaptation.representations.map((representation) =>
-      parseRepresentation(representation, { representationIdGenerator,
-                                            isFinished })),
+      parseRepresentation(representation, { representationIdGenerator })),
   };
 }
 
@@ -135,11 +126,8 @@ function parseAdaptation(
  */
 function parseRepresentation(
   representation : ILocalRepresentation,
-  ctxt : { representationIdGenerator : () => string;
-           /** If true, the local Manifest has been fully downloaded. */
-           isFinished : boolean; }
+  ctxt : { representationIdGenerator : () => string }
 ) : IParsedRepresentation {
-  const { isFinished } = ctxt;
   const id = "representation-" + ctxt.representationIdGenerator();
   const contentProtections = representation.contentProtections === undefined ?
     undefined :
@@ -150,7 +138,7 @@ function parseRepresentation(
            width: representation.width,
            codecs: representation.codecs,
            mimeType: representation.mimeType,
-           index: new LocalRepresentationIndex(representation.index, id, isFinished),
+           index: new LocalRepresentationIndex(representation.index, id),
            contentProtections };
 }
 

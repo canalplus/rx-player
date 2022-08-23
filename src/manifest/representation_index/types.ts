@@ -296,7 +296,7 @@ export interface IRepresentationIndex {
    * Returns `undefined` if we cannot know this value.
    * @returns {Number|null}
    */
-  getFirstPosition() : number | null | undefined;
+  getFirstAvailablePosition() : number | null | undefined;
 
   /**
    * Returns the ending time, in seconds, of the last playable position
@@ -310,7 +310,19 @@ export interface IRepresentationIndex {
    * instead.
    * @returns {Number|null|undefined}
    */
-  getLastPosition() : number | null | undefined;
+  getLastAvailablePosition() : number | null | undefined;
+
+  /**
+   * Returns the ending time, in seconds, of the Representation once it is
+   * "finished" (@see isFinished).
+   * Should thus be equivalent to `getLastAvailablePosition` once finished.
+   *
+   * Returns `null` if nothing is in the index
+   * Returns `undefined` if we cannot know this value.
+   *
+   * @returns {number|undefined}
+   */
+  getEnd() : number | null | undefined;
 
   /**
    * Returns `true` if a Segment returned by this index is still considered
@@ -356,8 +368,8 @@ export interface IRepresentationIndex {
   /**
    * Most RepresentationIndex are linked to segments which are generated in
    * chronological order: from an initial position (obtainable with
-   * `getFirstPosition`) to the last position of the corresponding Period
-   * (obtainable with `getLastPosition`).
+   * `getFirstAvailablePosition`) to the last position of the corresponding
+   * Period (obtainable with `getLastAvailablePosition`).
    *
    * However, some RepresentationIndex could announce segments in a more random
    * order.

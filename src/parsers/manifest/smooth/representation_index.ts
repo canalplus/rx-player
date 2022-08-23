@@ -427,11 +427,9 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
 
   /**
    * Returns first position available in the index.
-   *
-   * @param {Object} index
    * @returns {Number|null}
    */
-  getFirstPosition() : number|null {
+  getFirstAvailablePosition() : number|null {
     this._refreshTimeline();
     const index = this._index;
     if (index.timeline.length === 0) {
@@ -442,10 +440,9 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
 
   /**
    * Returns last position available in the index.
-   * @param {Object} index
    * @returns {Number}
    */
-  getLastPosition() : number|undefined {
+  getLastAvailablePosition() : number|undefined {
     this._refreshTimeline();
     const index = this._index;
 
@@ -466,6 +463,18 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
           return end / index.timescale;
         }
       }
+    }
+    return undefined;
+  }
+
+  /**
+   * Returns the absolute end in seconds this RepresentationIndex can reach once
+   * all segments are available.
+   * @returns {number|null|undefined}
+   */
+  getEnd() : number | null | undefined {
+    if (!this._isLive) {
+      return this.getFirstAvailablePosition();
     }
     return undefined;
   }

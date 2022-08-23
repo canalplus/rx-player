@@ -31,6 +31,7 @@ import Manifest, {
 } from "../../manifest";
 import { fromEvent } from "../../utils/event_emitter";
 import filterMap from "../../utils/filter_map";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import createSharedReference from "../../utils/reference";
 import { IReadOnlyPlaybackObserver } from "../api";
 import {
@@ -86,7 +87,7 @@ export default function ContentTimeBoundariesObserver(
                                        "earliest time announced in the Manifest.");
         return EVENTS.warning(warning);
       } else if (
-        wantedPosition > maximumPositionCalculator.getCurrentMaximumPosition()
+        wantedPosition > maximumPositionCalculator.getMaximumAvailablePosition()
       ) {
         const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST",
                                        "The current position is after the latest " +
@@ -106,13 +107,10 @@ export default function ContentTimeBoundariesObserver(
   const updateDurationOnManifestUpdate$ = fromEvent(manifest, "manifestUpdate").pipe(
     startWith(null),
     tap(() => {
-      if (!manifest.isDynamic) {
-        const maxPos = maximumPositionCalculator.getCurrentMaximumPosition();
-        contentDuration.setValue(maxPos);
-      } else {
-        // TODO handle finished dynamic contents?
-        contentDuration.setValue(undefined);
-      }
+      const duration = manifest.isDynamic ?
+        maximumPositionCalculator.getEndingPosition() :
+        maximumPositionCalculator.getMaximumAvailablePosition();
+      contentDuration.setValue(duration);
     }),
     ignoreElements()
   );
@@ -122,22 +120,18 @@ export default function ContentTimeBoundariesObserver(
       if (message.type === "adaptationChange") {
         const lastPeriod = manifest.periods[manifest.periods.length - 1];
         if (message.value.period.id === lastPeriod?.id) {
-          if (message.value.type === "audio") {
-            maximumPositionCalculator
-              .updateLastAudioAdaptation(message.value.adaptation);
-            if (!manifest.isDynamic) {
-              contentDuration.setValue(
-                maximumPositionCalculator.getCurrentMaximumPosition()
-              );
+          if (message.value.type === "audio" || message.value.type === "video") {
+            if (message.value.type === "audio") {
+              maximumPositionCalculator
+                .updateLastAudioAdaptation(message.value.adaptation);
+            } else {
+              maximumPositionCalculator
+                .updateLastVideoAdaptation(message.value.adaptation);
             }
-          } else if (message.value.type === "video") {
-            maximumPositionCalculator
-              .updateLastVideoAdaptation(message.value.adaptation);
-            if (!manifest.isDynamic) {
-              contentDuration.setValue(
-                maximumPositionCalculator.getCurrentMaximumPosition()
-              );
-            }
+            const newDuration = manifest.isDynamic ?
+              maximumPositionCalculator.getMaximumAvailablePosition() :
+              maximumPositionCalculator.getEndingPosition();
+            contentDuration.setValue(newDuration);
           }
         }
       }
@@ -182,7 +176,7 @@ class MaximumPositionCalculator {
    * If no Adaptation has been set, it should be set to `null`.
    *
    * Allows to calculate the maximum position more precizely in
-   * `getCurrentMaximumPosition`.
+   * `getMaximumAvailablePosition` and `getEndingPosition`.
    * @param {Object|null} adaptation
    */
   public updateLastAudioAdaptation(adaptation : Adaptation | null) : void {
@@ -194,7 +188,7 @@ class MaximumPositionCalculator {
    * If no Adaptation has been set, it should be set to `null`.
    *
    * Allows to calculate the maximum position more precizely in
-   * `getCurrentMaximumPosition`.
+   * `getMaximumAvailablePosition` and `getEndingPosition`.
    * @param {Object|null} adaptation
    */
   public updateLastVideoAdaptation(adaptation : Adaptation | null) : void {
@@ -202,11 +196,11 @@ class MaximumPositionCalculator {
   }
 
 /**
- * Returns an estimate of the maximum position reachable under the current
- * circumstances.
+ * Returns an estimate of the maximum position currently reachable (i.e.
+ * segments are available) under the current circumstances.
  * @returns {number}
  */
-  public getCurrentMaximumPosition() : number {
+  public getMaximumAvailablePosition() : number {
     if (this._manifest.isDynamic) {
       return this._manifest.getLivePosition() ??
              this._manifest.getMaximumSafePosition();
@@ -220,7 +214,7 @@ class MaximumPositionCalculator {
         return this._manifest.getMaximumSafePosition();
       } else {
         const lastVideoPosition =
-          getLastPositionFromAdaptation(this._lastVideoAdaptation);
+          getLastAvailablePositionFromAdaptation(this._lastVideoAdaptation);
         if (typeof lastVideoPosition !== "number") {
           return this._manifest.getMaximumSafePosition();
         }
@@ -228,16 +222,16 @@ class MaximumPositionCalculator {
       }
     } else if (this._lastVideoAdaptation === null) {
       const lastAudioPosition =
-        getLastPositionFromAdaptation(this._lastAudioAdaptation);
+        getLastAvailablePositionFromAdaptation(this._lastAudioAdaptation);
       if (typeof lastAudioPosition !== "number") {
         return this._manifest.getMaximumSafePosition();
       }
       return lastAudioPosition;
     } else {
-      const lastAudioPosition = getLastPositionFromAdaptation(
+      const lastAudioPosition = getLastAvailablePositionFromAdaptation(
         this._lastAudioAdaptation
       );
-      const lastVideoPosition = getLastPositionFromAdaptation(
+      const lastVideoPosition = getLastAvailablePositionFromAdaptation(
         this._lastVideoAdaptation
       );
       if (typeof lastAudioPosition !== "number" ||
@@ -249,20 +243,59 @@ class MaximumPositionCalculator {
       }
     }
   }
+
+/**
+ * Returns an estimate of the actual ending position once
+ * the full content is available.
+ * Returns `undefined` if that could not be determined, for various reasons.
+ * @returns {number|undefined}
+ */
+  public getEndingPosition() : number | undefined {
+    if (!this._manifest.isDynamic) {
+      return this.getMaximumAvailablePosition();
+    }
+    if (this._lastVideoAdaptation === undefined ||
+        this._lastAudioAdaptation === undefined)
+    {
+      return undefined;
+    } else if (this._lastAudioAdaptation === null) {
+      if (this._lastVideoAdaptation === null) {
+        return undefined;
+      } else {
+        return getEndingPositionFromAdaptation(this._lastVideoAdaptation) ??
+               undefined;
+      }
+    } else if (this._lastVideoAdaptation === null) {
+      return getEndingPositionFromAdaptation(this._lastAudioAdaptation) ??
+             undefined;
+    } else {
+      const lastAudioPosition =
+        getEndingPositionFromAdaptation(this._lastAudioAdaptation);
+      const lastVideoPosition =
+        getEndingPositionFromAdaptation(this._lastVideoAdaptation);
+      if (typeof lastAudioPosition !== "number" ||
+          typeof lastVideoPosition !== "number")
+      {
+        return undefined;
+      } else {
+        return Math.min(lastAudioPosition, lastVideoPosition);
+      }
+    }
+  }
 }
 
 /**
- * Returns "last time of reference" from the adaptation given.
+ * Returns last currently available position from the Adaptation given.
  * `undefined` if a time could not be found.
- * Null if the Adaptation has no segments (it could be that it didn't started or
+ * `null` if the Adaptation has no segments (it could be that it didn't started or
  * that it already finished for example).
  *
- * We consider the earliest last time from every representations in the given
- * adaptation.
+ * We consider the earliest last available position from every Representation
+ * in the given Adaptation.
  * @param {Object} adaptation
  * @returns {Number|undefined|null}
  */
-function getLastPositionFromAdaptation(
+function getLastAvailablePositionFromAdaptation(
   adaptation: Adaptation
 ) : number | undefined | null {
   const { representations } = adaptation;
@@ -278,18 +311,56 @@ function getLastPositionFromAdaptation(
   for (let i = 0; i < representations.length; i++) {
     if (representations[i].index !== lastIndex) {
       lastIndex = representations[i].index;
-      const lastPosition = representations[i].index.getLastPosition();
+      const lastPosition = representations[i].index.getLastAvailablePosition();
       if (lastPosition === undefined) { // we cannot tell
         return undefined;
       }
       if (lastPosition !== null) {
-        min = min == null ? lastPosition :
-                            Math.min(min, lastPosition);
+        min = isNullOrUndefined(min) ? lastPosition :
+                                       Math.min(min, lastPosition);
       }
     }
   }
-  if (min === null) { // It means that all positions were null === no segments (yet?)
-    return null;
+  return min;
+}
+
+/**
+ * Returns ending time from the Adaptation given, once all its segments are
+ * available.
+ * `undefined` if a time could not be found.
+ * `null` if the Adaptation has no segments (it could be that it already
+ * finished for example).
+ *
+ * We consider the earliest ending time from every Representation in the given
+ * Adaptation.
+ * @param {Object} adaptation
+ * @returns {Number|undefined|null}
+ */
+function getEndingPositionFromAdaptation(
+  adaptation: Adaptation
+) : number | undefined | null {
+  const { representations } = adaptation;
+  let min : null | number = null;
+
+  /**
+   * Some Manifest parsers use the exact same `IRepresentationIndex` reference
+   * for each Representation of a given Adaptation, because in the actual source
+   * Manifest file, indexing data is often defined at Adaptation-level.
+   * This variable allows to optimize the logic here when this is the case.
+   */
+  let lastIndex : IRepresentationIndex | undefined;
+  for (let i = 0; i < representations.length; i++) {
+    if (representations[i].index !== lastIndex) {
+      lastIndex = representations[i].index;
+      const lastPosition = representations[i].index.getEnd();
+      if (lastPosition === undefined) { // we cannot tell
+        return undefined;
+      }
+      if (lastPosition !== null) {
+        min = isNullOrUndefined(min) ? lastPosition :
+                                       Math.min(min, lastPosition);
+      }
+    }
   }
   return min;
 }

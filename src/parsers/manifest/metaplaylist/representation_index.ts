@@ -112,8 +112,8 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    * `undefined` if we do not know this value.
    * @return {Number|undefined}
    */
-  public getFirstPosition(): number|undefined {
-    const wrappedFirstPosition = this._wrappedIndex.getFirstPosition();
+  public getFirstAvailablePosition(): number|undefined {
+    const wrappedFirstPosition = this._wrappedIndex.getFirstAvailablePosition();
     return wrappedFirstPosition != null ? wrappedFirstPosition + this._timeOffset :
                                           undefined;
   }
@@ -123,10 +123,21 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    * `undefined` if we do not know this value.
    * @return {Number|undefined}
    */
-  public getLastPosition(): number|undefined {
-    const wrappedLastPosition = this._wrappedIndex.getLastPosition();
+  public getLastAvailablePosition(): number|undefined {
+    const wrappedLastPosition = this._wrappedIndex.getLastAvailablePosition();
     return wrappedLastPosition != null ? wrappedLastPosition + this._timeOffset :
                                          undefined;
+  }
+
+  /**
+   * Returns the absolute end in seconds this RepresentationIndex can reach once
+   * all segments are available.
+   * @returns {number|null|undefined}
+   */
+  public getEnd(): number|undefined|null {
+    const wrappedEnd = this._wrappedIndex.getEnd();
+    return wrappedEnd != null ? wrappedEnd + this._timeOffset :
+                                undefined;
   }
 
   /**

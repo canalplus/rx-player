@@ -316,7 +316,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * Returns first possible position in the index, in seconds.
    * @returns {number|null|undefined}
    */
-  getFirstPosition() : number | null | undefined {
+  getFirstAvailablePosition() : number | null | undefined {
     const firstSegmentStart = this._getFirstSegmentStart();
     if (firstSegmentStart == null) {
       return firstSegmentStart; // return undefined or null
@@ -328,10 +328,10 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * Returns last possible position in the index, in seconds.
    * @returns {number|null}
    */
-  getLastPosition() : number|null|undefined {
+  getLastAvailablePosition() : number|null|undefined {
     const lastSegmentStart = this._getLastSegmentStart();
     if (lastSegmentStart == null) {
-      // In that case (null or undefined), getLastPosition should reflect
+      // In that case (null or undefined), getLastAvailablePosition should reflect
       // the result of getLastSegmentStart, as the meaning is the same for
       // the two functions. So, we return the result of the latter.
       return lastSegmentStart;
@@ -342,6 +342,21 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       this._scaledPeriodEnd ?? Infinity
     );
     return (lastSegmentEnd / this._index.timescale) + this._periodStart;
+  }
+
+  /**
+   * Returns the absolute end in seconds this RepresentationIndex can reach once
+   * all segments are available.
+   * @returns {number|null|undefined}
+   */
+  getEnd(): number | null | undefined {
+    if (!this._isDynamic) {
+      return this.getLastAvailablePosition();
+    }
+    if (this._scaledPeriodEnd === undefined) {
+      return undefined;
+    }
+    return this._scaledPeriodEnd / this._index.timescale;
   }
 
   /**

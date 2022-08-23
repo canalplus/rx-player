@@ -250,7 +250,7 @@ function getMaximumLastPosition(
   for (const adaptation of allAdaptations) {
     const representations = adaptation.representations;
     for (const representation of representations) {
-      const position = representation.index.getLastPosition();
+      const position = representation.index.getLastAvailablePosition();
       if (position !== null) {
         allIndexAreEmpty = false;
         if (typeof position === "number") {

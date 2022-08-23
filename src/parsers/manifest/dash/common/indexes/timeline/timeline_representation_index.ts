@@ -363,7 +363,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * Returns null if nothing is in the index
    * @returns {Number|null}
    */
-  getFirstPosition() : number|null {
+  getFirstAvailablePosition(): number | null {
     this._refreshTimeline();
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
@@ -381,7 +381,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * Returns null if nothing is in the index
    * @returns {Number|null}
    */
-  getLastPosition() : number|null {
+  getLastAvailablePosition(): number | null {
     this._refreshTimeline();
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
@@ -390,6 +390,18 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
                                                              this._scaledPeriodEnd);
     return lastTime === null ? null :
                                fromIndexTime(lastTime, this._index);
+  }
+
+  /**
+   * Returns the absolute end in seconds this RepresentationIndex can reach once
+   * all segments are available.
+   * @returns {number|null|undefined}
+   */
+  getEnd(): number | undefined | null {
+    if (!this._isDynamic || !this._isLastPeriod) { // @see isFinished
+      return this.getLastAvailablePosition();
+    }
+    return undefined;
   }
 
   /**

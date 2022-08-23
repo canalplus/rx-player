@@ -67,7 +67,7 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
    * Returns first position in index.
    * @returns {undefined}
    */
-  getFirstPosition() : undefined {
+  getFirstAvailablePosition() : undefined {
     return ;
   }
 
@@ -75,9 +75,19 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
    * Returns last position in index.
    * @returns {undefined}
    */
-  getLastPosition() : undefined {
+  getLastAvailablePosition() : undefined {
     return ;
   }
+
+  /**
+   * Returns the absolute end in seconds this RepresentationIndex can reach once
+   * all segments are available.
+   * @returns {number|null|undefined}
+   */
+  getEnd() : undefined {
+    return;
+  }
+
 
   /**
    * Returns false as a static file never need to be refreshed.

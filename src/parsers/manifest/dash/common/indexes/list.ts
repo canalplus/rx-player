@@ -246,7 +246,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    * Returns first position in this index, in seconds.
    * @returns {Number}
    */
-  getFirstPosition() : number {
+  getFirstAvailablePosition() : number {
     return this._periodStart;
   }
 
@@ -254,11 +254,20 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    * Returns last position in this index, in seconds.
    * @returns {Number}
    */
-  getLastPosition() : number {
+  getLastAvailablePosition() : number {
     const index = this._index;
     const { duration, list } = index;
     return Math.min(((list.length * duration) / index.timescale) + this._periodStart,
                     this._periodEnd ?? Infinity);
+  }
+
+  /**
+   * Returns the absolute end in seconds this RepresentationIndex can reach once
+   * all segments are available.
+   * @returns {number|null|undefined}
+   */
+  getEnd(): number | null {
+    return this.getLastAvailablePosition();
   }
 
   /**
