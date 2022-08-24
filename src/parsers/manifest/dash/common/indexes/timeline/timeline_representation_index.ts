@@ -23,6 +23,7 @@ import {
   Representation,
 } from "../../../../../../manifest";
 import { IPlayerError } from "../../../../../../public_types";
+import assert from "../../../../../../utils/assert";
 import { IEMSG } from "../../../../../containers/isobmff";
 import clearTimelineFromPosition from "../../../../utils/clear_timeline_from_position";
 import {
@@ -39,8 +40,8 @@ import ManifestBoundsCalculator from "../../manifest_bounds_calculator";
 import { IResolvedBaseUrl } from "../../resolve_base_urls";
 import getInitSegment from "../get_init_segment";
 import getSegmentsFromTimeline from "../get_segments_from_timeline";
-import isPeriodFulfilled from "../is_period_fulfilled";
 import { createIndexURLs } from "../tokens";
+import { getSegmentTimeRoundingError } from "../utils";
 import constructTimelineFromElements from "./construct_timeline_from_elements";
 // eslint-disable-next-line max-len
 import constructTimelineFromPreviousTimeline from "./construct_timeline_from_previous_timeline";
@@ -405,6 +406,48 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   }
 
   /**
+   * Returns:
+   *   - `true` if in the given time interval, at least one new segment is
+   *     expected to be available in the future.
+   *   - `false` either if all segments in that time interval are already
+   *     available for download or if none will ever be available for it.
+   *   - `undefined` when it is not possible to tell.
+   * @param {number} start
+   * @param {number} end
+   * @returns {boolean|undefined}
+   */
+  awaitSegmentBetween(start: number, end: number): boolean | undefined {
+    assert(start <= end);
+    if (!this._isDynamic || !this._isLastPeriod) {
+      return false;
+    }
+    this._refreshTimeline();
+    if (this._index.timeline === null) {
+      this._index.timeline = this._getTimeline();
+    }
+    const { timeline, timescale } = this._index;
+    const segmentTimeRounding = getSegmentTimeRoundingError(timescale);
+    const scaledEnd = toIndexTime(end, this._index);
+    if (timeline.length > 0) {
+      const lastTimelineElement = timeline[timeline.length - 1];
+      const lastSegmentEnd = getIndexSegmentEnd(lastTimelineElement,
+                                                null,
+                                                this._scaledPeriodEnd);
+      const roundedEnd = lastSegmentEnd + segmentTimeRounding;
+      if (roundedEnd >= Math.min(scaledEnd, this._scaledPeriodEnd ?? Infinity)) {
+        return false; // already loaded
+      }
+    }
+    if (this._scaledPeriodEnd === undefined) {
+      return (scaledEnd + segmentTimeRounding) > this._scaledPeriodStart ? undefined :
+                                                                           false;
+    }
+    const scaledStart = toIndexTime(start, this._index);
+    return (scaledStart - segmentTimeRounding) < this._scaledPeriodEnd &&
+           (scaledEnd + segmentTimeRounding) > this._scaledPeriodStart;
+  }
+
+  /**
    * Returns true if a Segment returned by this index is still considered
    * available.
    * Returns false if it is not available anymore.
@@ -530,7 +573,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     const lastTime = getIndexSegmentEnd(lastTimelineElement,
                                         null,
                                         this._scaledPeriodEnd);
-    return isPeriodFulfilled(this._index.timescale, lastTime, this._scaledPeriodEnd);
+    const segmentTimeRounding = getSegmentTimeRoundingError(this._index.timescale);
+    return (lastTime + segmentTimeRounding) >= this._scaledPeriodEnd;
   }
 
   /**

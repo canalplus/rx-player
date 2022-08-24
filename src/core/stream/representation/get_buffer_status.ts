@@ -148,43 +148,71 @@ export default function getBufferStatus(
    * `true` if the current `RepresentationStream` has loaded all the
    * needed segments for this Representation until the end of the Period.
    */
-  const hasFinishedLoading = neededRange.hasReachedPeriodEnd &&
+  const hasFinishedLoading = representation.index.isInitialized() &&
+                             representation.index.isFinished() &&
+                             neededRange.hasReachedPeriodEnd &&
                              prioritizedNeededSegments.length === 0 &&
                              segmentsOnHold.length === 0;
 
-  let imminentDiscontinuity;
-  if (!representation.index.isInitialized() ||
-      // TODO better handle contents not chronologically generated
-      (!representation.index.areSegmentsChronologicallyGenerated() &&
-       !hasFinishedLoading))
-  {
-    // We might be missing information about future segments
-    imminentDiscontinuity = null;
-  } else {
-    /**
-     * Start time in seconds of the next available not-yet pushed segment.
-     * `null` if no segment is wanted for the current wanted range.
-     */
-    let nextSegmentStart : number | null = null;
-    if (segmentsBeingPushed.length > 0) {
-      nextSegmentStart = Math.min(...segmentsBeingPushed.map(info => info.segment.time));
-    }
-    if (segmentsOnHold.length > 0) {
-      nextSegmentStart = nextSegmentStart !== null ?
-        Math.min(nextSegmentStart, segmentsOnHold[0].time) :
-        segmentsOnHold[0].time;
-    }
-    if (prioritizedNeededSegments.length > 0) {
-      nextSegmentStart = nextSegmentStart !== null ?
-        Math.min(nextSegmentStart, prioritizedNeededSegments[0].segment.time) :
-        prioritizedNeededSegments[0].segment.time;
-    }
-    imminentDiscontinuity = checkForDiscontinuity(content,
-                                                  neededRange,
-                                                  nextSegmentStart,
-                                                  hasFinishedLoading,
-                                                  bufferedSegments);
+  // let earliestSegmentToPush = segmentsBeingPushed
+  //   .reduce((acc : ISegment | null, info) => {
+  //     if (!areSameRepresentation(info, content)) {
+  //       return acc;
+  //     } else if (acc === null || acc.time > info.segment.time) {
+  //       return info.segment;
+  //     }
+  //     return acc;
+  //   }, null);
+  // if (segmentsOnHold.length > 0) {
+  //   if (earliestSegmentToPush === null) {
+  //     earliestSegmentToPush = segmentsOnHold[0];
+  //   } else {
+  //     earliestSegmentToPush = earliestSegmentToPush.time < segmentsOnHold[0].time ?
+  //       earliestSegmentToPush :
+  //       segmentsOnHold[0];
+  //   }
+  // }
+  // if (prioritizedNeededSegments.length > 0) {
+  //   if (earliestSegmentToPush === null) {
+  //     earliestSegmentToPush = prioritizedNeededSegments[0].segment;
+  //   } else {
+  //     earliestSegmentToPush =
+  //       earliestSegmentToPush.time < prioritizedNeededSegments[0].segment.time ?
+  //       earliestSegmentToPush :
+  //       prioritizedNeededSegments[0].segment;
+  //   }
+  // }
+
+  // /**
+  //  * Start time in seconds of the next available not-yet pushed segment.
+  //  * `null` if no segment is wanted for the current wanted range.
+  //  */
+  // const nextSegmentStart = earliestSegmentToPush === null ? null :
+  //                                                           earliestSegmentToPush.time;
+  /**
+   * Start time in seconds of the next available not-yet pushed segment.
+   * `null` if no segment is wanted for the current wanted range.
+   */
+  let nextSegmentStart : number | null = null;
+  if (segmentsBeingPushed.length > 0) {
+    nextSegmentStart = Math.min(...segmentsBeingPushed.map(info => info.segment.time));
   }
+  if (segmentsOnHold.length > 0) {
+    nextSegmentStart = nextSegmentStart !== null ?
+      Math.min(nextSegmentStart, segmentsOnHold[0].time) :
+      segmentsOnHold[0].time;
+  }
+  if (prioritizedNeededSegments.length > 0) {
+    nextSegmentStart = nextSegmentStart !== null ?
+      Math.min(nextSegmentStart, prioritizedNeededSegments[0].segment.time) :
+      prioritizedNeededSegments[0].segment.time;
+  }
+
+  const imminentDiscontinuity = checkForDiscontinuity(content,
+                                                      neededRange,
+                                                      nextSegmentStart,
+                                                      hasFinishedLoading,
+                                                      bufferedSegments);
   return { imminentDiscontinuity,
            hasFinishedLoading,
            neededSegments: prioritizedNeededSegments,

@@ -425,6 +425,8 @@ export interface IRepresentationIndex {
    */
   isInitialized() : boolean;
 
+  awaitSegmentBetween(start : number, end : number) : boolean | undefined;
+
   /**
    * Replace the index with another one, such as after a Manifest update.
    * @param {Object} newIndex

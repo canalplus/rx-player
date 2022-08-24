@@ -88,6 +88,21 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
     return;
   }
 
+  /**
+   * Returns:
+   *   - `true` if in the given time interval, at least one new segment is
+   *     expected to be available in the future.
+   *   - `false` either if all segments in that time interval are already
+   *     available for download or if none will ever be available for it.
+   *   - `undefined` when it is not possible to tell.
+   *
+   * Always `false` in a `StaticRepresentationIndex` because all segments should
+   * be directly available.
+   * @returns {boolean}
+   */
+  awaitSegmentBetween(): false {
+    return false;
+  }
 
   /**
    * Returns false as a static file never need to be refreshed.

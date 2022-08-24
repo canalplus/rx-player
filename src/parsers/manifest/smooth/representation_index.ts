@@ -21,6 +21,7 @@ import {
   ISegment,
 } from "../../../manifest";
 import { IPlayerError } from "../../../public_types";
+import assert from "../../../utils/assert";
 import clearTimelineFromPosition from "../utils/clear_timeline_from_position";
 import {
   checkDiscontinuity,
@@ -477,6 +478,30 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
       return this.getFirstAvailablePosition();
     }
     return undefined;
+  }
+
+  /**
+   * Returns:
+   *   - `true` if in the given time interval, at least one new segment is
+   *     expected to be available in the future.
+   *   - `false` either if all segments in that time interval are already
+   *     available for download or if none will ever be available for it.
+   *   - `undefined` when it is not possible to tell.
+   * @param {number} start
+   * @param {number} end
+   * @returns {boolean|undefined}
+   */
+  awaitSegmentBetween(start: number, end: number): boolean | undefined {
+    assert(start <= end);
+    if (this.isFinished()) {
+      return false;
+    }
+    const lastAvailablePosition = this.getLastAvailablePosition();
+    if (lastAvailablePosition !== undefined && end < lastAvailablePosition) {
+      return false;
+    }
+    return end > (this.getFirstAvailablePosition() ?? 0) ? undefined :
+                                                           false;
   }
 
   /**

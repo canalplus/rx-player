@@ -27,6 +27,7 @@ function generateRepresentationIndex(
     getFirstAvailablePosition() : number|undefined|null { return firstPosition; },
     getLastAvailablePosition() : undefined { return ; },
     getEnd() : undefined { return ; },
+    awaitSegmentBetween() : undefined { return ; },
     checkDiscontinuity() : number | null { return null; },
     areSegmentsChronologicallyGenerated() { return true; },
     isSegmentStillAvailable() : undefined { return ; },

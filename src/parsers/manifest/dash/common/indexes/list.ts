@@ -271,6 +271,22 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * Returns:
+   *   - `true` if in the given time interval, at least one new segment is
+   *     expected to be available in the future.
+   *   - `false` either if all segments in that time interval are already
+   *     available for download or if none will ever be available for it.
+   *   - `undefined` when it is not possible to tell.
+   *
+   * Always `false` in a `ListRepresentationIndex` because all segments should
+   * be directly available.
+   * @returns {boolean}
+   */
+  awaitSegmentBetween(): false {
+    return false;
+  }
+
+  /**
    * Returns true if a Segment returned by this index is still considered
    * available.
    * @returns {Boolean}

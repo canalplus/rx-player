@@ -141,6 +141,22 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * Returns:
+   *   - `true` if in the given time interval, at least one new segment is
+   *     expected to be available in the future.
+   *   - `false` either if all segments in that time interval are already
+   *     available for download or if none will ever be available for it.
+   *   - `undefined` when it is not possible to tell.
+   * @param {number} start
+   * @param {number} end
+   * @returns {boolean|undefined}
+   */
+  public awaitSegmentBetween(start: number, end: number): boolean | undefined {
+    return this._wrappedIndex.awaitSegmentBetween(start - this._timeOffset,
+                                                  end - this._timeOffset);
+  }
+
+  /**
    * Returns `false` if that segment is not currently available in the Manifest
    * (e.g. it corresponds to a segment which is before the current buffer
    * depth).

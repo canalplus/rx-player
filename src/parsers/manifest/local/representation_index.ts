@@ -138,6 +138,28 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * Returns:
+   *   - `true` if in the given time interval, at least one new segment is
+   *     expected to be available in the future.
+   *   - `false` either if all segments in that time interval are already
+   *     available for download or if none will ever be available for it.
+   *   - `undefined` when it is not possible to tell.
+   * @param {number} start
+   * @param {number} end
+   * @returns {boolean|undefined}
+   */
+  awaitSegmentBetween(start: number, end: number): boolean | undefined {
+    if (this.isFinished()) {
+      return false;
+    }
+    if (this._index.futureSegments === undefined) {
+      return undefined;
+    }
+    return this._index.futureSegments.some((seg) =>
+      seg.time < end && (seg.time + seg.duration) > start);
+  }
+
+  /**
    * @returns {Boolean}
    */
   shouldRefresh() : false {
