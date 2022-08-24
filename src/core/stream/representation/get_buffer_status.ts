@@ -154,41 +154,6 @@ export default function getBufferStatus(
                              prioritizedNeededSegments.length === 0 &&
                              segmentsOnHold.length === 0;
 
-  // let earliestSegmentToPush = segmentsBeingPushed
-  //   .reduce((acc : ISegment | null, info) => {
-  //     if (!areSameRepresentation(info, content)) {
-  //       return acc;
-  //     } else if (acc === null || acc.time > info.segment.time) {
-  //       return info.segment;
-  //     }
-  //     return acc;
-  //   }, null);
-  // if (segmentsOnHold.length > 0) {
-  //   if (earliestSegmentToPush === null) {
-  //     earliestSegmentToPush = segmentsOnHold[0];
-  //   } else {
-  //     earliestSegmentToPush = earliestSegmentToPush.time < segmentsOnHold[0].time ?
-  //       earliestSegmentToPush :
-  //       segmentsOnHold[0];
-  //   }
-  // }
-  // if (prioritizedNeededSegments.length > 0) {
-  //   if (earliestSegmentToPush === null) {
-  //     earliestSegmentToPush = prioritizedNeededSegments[0].segment;
-  //   } else {
-  //     earliestSegmentToPush =
-  //       earliestSegmentToPush.time < prioritizedNeededSegments[0].segment.time ?
-  //       earliestSegmentToPush :
-  //       prioritizedNeededSegments[0].segment;
-  //   }
-  // }
-
-  // /**
-  //  * Start time in seconds of the next available not-yet pushed segment.
-  //  * `null` if no segment is wanted for the current wanted range.
-  //  */
-  // const nextSegmentStart = earliestSegmentToPush === null ? null :
-  //                                                           earliestSegmentToPush.time;
   /**
    * Start time in seconds of the next available not-yet pushed segment.
    * `null` if no segment is wanted for the current wanted range.
