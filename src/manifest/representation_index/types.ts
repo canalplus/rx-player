@@ -366,35 +366,6 @@ export interface IRepresentationIndex {
   checkDiscontinuity(time : number) : number | null;
 
   /**
-   * Most RepresentationIndex are linked to segments which are generated in
-   * chronological order: from an initial position (obtainable with
-   * `getFirstAvailablePosition`) to the last position of the corresponding
-   * Period (obtainable with `getLastAvailablePosition`).
-   *
-   * However, some RepresentationIndex could announce segments in a more random
-   * order.
-   * Examples of such RepresentationIndex are ones for contents which are being
-   * downloaded locally. Here a seek close to the end could schedule the
-   * download of the last segments immediately, which might thus be announced
-   * in this index before segments in the middle are.
-   *
-   * Knowing this value serves for example to check if a discontinuity
-   * encountered in the content can be skipped over, or if it's possible that
-   * this discontinuity is due to a segment not yet being generated.
-   *
-   * You should return `true` only if there is a chance that segments are not
-   * chronologically generated (even if they all have since been generated, this
-   * function is only to know if it's possible, not if it's the case now).
-   *
-   * In other most likely cases, you should return `false`.
-   *
-   * TODO find a better way with the "local" RepresentationIndex, like
-   * explicitely declaring which segments have not been downloaded yet.
-   * @returns {boolean}
-   */
-  areSegmentsChronologicallyGenerated() : boolean;
-
-  /**
    * Returns `true` if the last segments in this index have already been
    * generated so that we can freely go to the next period.
    * Returns `false` if the index is still waiting on future segments to be

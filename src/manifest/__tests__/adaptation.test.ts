@@ -35,7 +35,7 @@ const minimalRepresentationIndex = {
   isSegmentStillAvailable() : undefined { return ; },
   canBeOutOfSyncError() : true { return true; },
   isFinished() : true { return true; },
-  areSegmentsChronologicallyGenerated() { return true; },
+  awaitSegmentBetween() : undefined { return ; },
   _replace() { /* noop */ },
   _update() { /* noop */ },
 };

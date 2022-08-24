@@ -305,13 +305,6 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * @returns {boolean}
-   */
-  areSegmentsChronologicallyGenerated() : boolean {
-    return true;
-  }
-
-  /**
    * SegmentList should not be updated.
    * @returns {Boolean}
    */

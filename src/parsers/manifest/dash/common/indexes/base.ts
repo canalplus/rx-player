@@ -343,15 +343,6 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * `BaseRepresentationIndex` should just already all be generated.
-   * Return `true` as a default value here.
-   * @returns {boolean}
-   */
-  areSegmentsChronologicallyGenerated() : true {
-    return true;
-  }
-
-  /**
    * No segment in a `BaseRepresentationIndex` are known initially.
    * It is only defined generally in an "index segment" that will thus need to
    * be first loaded and parsed.

@@ -519,15 +519,6 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * Returns `true` as Smooth segments should always be generated in
-   * chronological order.
-   * @returns {boolean}
-   */
-  areSegmentsChronologicallyGenerated() : true {
-    return true;
-  }
-
-  /**
    * Returns `true` if a Segment returned by this index is still considered
    * available.
    * Returns `false` if it is not available anymore.

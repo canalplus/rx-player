@@ -196,13 +196,6 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
   /**
    * @returns {Boolean}
    */
-  public areSegmentsChronologicallyGenerated(): boolean {
-    return this._wrappedIndex.areSegmentsChronologicallyGenerated();
-  }
-
-  /**
-   * @returns {Boolean}
-   */
   public isFinished() : boolean {
     return this._wrappedIndex.isFinished();
   }

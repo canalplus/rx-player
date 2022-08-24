@@ -120,13 +120,6 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * @returns {boolean}
-   */
-  areSegmentsChronologicallyGenerated() : boolean {
-    return true;
-  }
-
-  /**
    * Returns true as a static file should never need lose availability.
    * @returns {Boolean}
    */

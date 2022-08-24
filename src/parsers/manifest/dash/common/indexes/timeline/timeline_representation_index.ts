@@ -501,10 +501,6 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
            error.isHttpError(404);
   }
 
-  areSegmentsChronologicallyGenerated() : boolean {
-    return true;
-  }
-
   /**
    * Replace this RepresentationIndex with one from a new version of the
    * Manifest.

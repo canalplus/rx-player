@@ -411,13 +411,6 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   }
 
   /**
-   * @returns {Boolean}
-   */
-  areSegmentsChronologicallyGenerated() : true {
-    return true;
-  }
-
-  /**
    * Returns `true` if the given segment should still be available as of now
    * (not removed since and still request-able).
    * Returns `false` if that's not the case.

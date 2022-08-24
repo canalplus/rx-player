@@ -57,9 +57,9 @@ describe("manifest - StaticRepresentationIndex", () => {
     expect(staticRI.checkDiscontinuity()).toBe(null);
   });
 
-  it("should always be chronologically generated", () => {
+  it("should never be awaiting segments", () => {
     const staticRI = new StaticRepresentationIndex({ media: "foo" });
-    expect(staticRI.areSegmentsChronologicallyGenerated()).toBe(true);
+    expect(staticRI.awaitSegmentBetween()).toBe(false);
   });
 
   it("should never replace and warn when trying to do so", () => {
