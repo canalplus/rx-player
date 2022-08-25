@@ -27,6 +27,7 @@
 import { ICustomMediaKeySystemAccess } from "../../../../compat";
 import {
   defaultKSConfig,
+  defaulPlayReadyRecommendationConfig,
   defaultWidevineConfig,
   mockCompat,
   testContentDecryptorError,
@@ -333,13 +334,19 @@ describe("core - decrypt - global tests - media key system access", () => {
     mockCompat({ requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess });
     await checkIncompatibleKeySystemsErrorMessage([{ type: "playready",
                                                      getLicense: neverCalledFn }]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(3);
+    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(4);
     expect(mockRequestMediaKeySystemAccess)
-      .toHaveBeenNthCalledWith(1, "com.microsoft.playready", defaultKSConfig);
+      .toHaveBeenNthCalledWith(1,
+                               "com.microsoft.playready.recommendation",
+                               defaulPlayReadyRecommendationConfig);
     expect(mockRequestMediaKeySystemAccess)
-      .toHaveBeenNthCalledWith(2, "com.chromecast.playready", defaultKSConfig);
+      .toHaveBeenNthCalledWith(2,
+                               "com.microsoft.playready",
+                               defaultKSConfig);
     expect(mockRequestMediaKeySystemAccess)
-      .toHaveBeenNthCalledWith(3, "com.youtube.playready", defaultKSConfig);
+      .toHaveBeenNthCalledWith(3, "com.chromecast.playready", defaultKSConfig);
+    expect(mockRequestMediaKeySystemAccess)
+      .toHaveBeenNthCalledWith(4, "com.youtube.playready", defaultKSConfig);
   });
 
   it("should translate a `fairplay` keySystem", async () => {
@@ -359,17 +366,21 @@ describe("core - decrypt - global tests - media key system access", () => {
                                                      getLicense: neverCalledFn },
                                                    { type: "clearkey",
                                                      getLicense: neverCalledFn }]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(5);
+    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(6);
     expect(mockRequestMediaKeySystemAccess)
-      .toHaveBeenNthCalledWith(1, "com.microsoft.playready", defaultKSConfig);
+      .toHaveBeenNthCalledWith(1,
+                               "com.microsoft.playready.recommendation",
+                               defaulPlayReadyRecommendationConfig);
     expect(mockRequestMediaKeySystemAccess)
-      .toHaveBeenNthCalledWith(2, "com.chromecast.playready", defaultKSConfig);
+      .toHaveBeenNthCalledWith(2, "com.microsoft.playready", defaultKSConfig);
     expect(mockRequestMediaKeySystemAccess)
-      .toHaveBeenNthCalledWith(3, "com.youtube.playready", defaultKSConfig);
+      .toHaveBeenNthCalledWith(3, "com.chromecast.playready", defaultKSConfig);
     expect(mockRequestMediaKeySystemAccess)
-      .toHaveBeenNthCalledWith(4, "webkit-org.w3.clearkey", defaultKSConfig);
+      .toHaveBeenNthCalledWith(4, "com.youtube.playready", defaultKSConfig);
     expect(mockRequestMediaKeySystemAccess)
-      .toHaveBeenNthCalledWith(5, "org.w3.clearkey", defaultKSConfig);
+      .toHaveBeenNthCalledWith(5, "webkit-org.w3.clearkey", defaultKSConfig);
+    expect(mockRequestMediaKeySystemAccess)
+      .toHaveBeenNthCalledWith(6, "org.w3.clearkey", defaultKSConfig);
   });
 
   /* eslint-disable max-len */
@@ -389,20 +400,30 @@ describe("core - decrypt - global tests - media key system access", () => {
                sessionTypes: ["temporary",
                               "persistent-license"] };
     });
+    const expectedRecoPersistentConfig = defaulPlayReadyRecommendationConfig.map(conf => {
+      return { ...conf,
+               persistentState: "required",
+               sessionTypes: ["temporary",
+                              "persistent-license"] };
+    });
     const expectedIdentifierConfig = defaultKSConfig.map(conf => {
       return { ...conf, distinctiveIdentifier: "required" };
     });
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(5);
+    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(6);
     expect(mockRequestMediaKeySystemAccess)
-      .toHaveBeenNthCalledWith(1, "com.microsoft.playready", expectedPersistentConfig);
+      .toHaveBeenNthCalledWith(1,
+                               "com.microsoft.playready.recommendation",
+                               expectedRecoPersistentConfig);
     expect(mockRequestMediaKeySystemAccess)
-      .toHaveBeenNthCalledWith(2, "com.chromecast.playready", expectedPersistentConfig);
+      .toHaveBeenNthCalledWith(2, "com.microsoft.playready", expectedPersistentConfig);
     expect(mockRequestMediaKeySystemAccess)
-      .toHaveBeenNthCalledWith(3, "com.youtube.playready", expectedPersistentConfig);
+      .toHaveBeenNthCalledWith(3, "com.chromecast.playready", expectedPersistentConfig);
     expect(mockRequestMediaKeySystemAccess)
-      .toHaveBeenNthCalledWith(4, "webkit-org.w3.clearkey", expectedIdentifierConfig);
+      .toHaveBeenNthCalledWith(4, "com.youtube.playready", expectedPersistentConfig);
     expect(mockRequestMediaKeySystemAccess)
-      .toHaveBeenNthCalledWith(5, "org.w3.clearkey", expectedIdentifierConfig);
+      .toHaveBeenNthCalledWith(5, "webkit-org.w3.clearkey", expectedIdentifierConfig);
+    expect(mockRequestMediaKeySystemAccess)
+      .toHaveBeenNthCalledWith(6, "org.w3.clearkey", expectedIdentifierConfig);
   });
 
   /* eslint-disable max-len */
@@ -421,20 +442,29 @@ describe("core - decrypt - global tests - media key system access", () => {
                persistentState: "required",
                sessionTypes: ["temporary", "persistent-license"] };
     });
+    const expectedRecoPersistentConfig = defaulPlayReadyRecommendationConfig.map(conf => {
+      return { ...conf,
+               persistentState: "required",
+               sessionTypes: ["temporary", "persistent-license"] };
+    });
     const expectedIdentifierConfig = defaultKSConfig.map(conf => {
       return { ...conf,  distinctiveIdentifier: "required" };
     });
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(5);
+    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(6);
     expect(mockRequestMediaKeySystemAccess)
-      .toHaveBeenNthCalledWith(1, "com.microsoft.playready", expectedPersistentConfig);
+      .toHaveBeenNthCalledWith(1,
+                               "com.microsoft.playready.recommendation",
+                               expectedRecoPersistentConfig);
     expect(mockRequestMediaKeySystemAccess)
-      .toHaveBeenNthCalledWith(2, "com.chromecast.playready", expectedPersistentConfig);
+      .toHaveBeenNthCalledWith(2, "com.microsoft.playready", expectedPersistentConfig);
     expect(mockRequestMediaKeySystemAccess)
-      .toHaveBeenNthCalledWith(3, "com.youtube.playready", expectedPersistentConfig);
+      .toHaveBeenNthCalledWith(3, "com.chromecast.playready", expectedPersistentConfig);
     expect(mockRequestMediaKeySystemAccess)
-      .toHaveBeenNthCalledWith(4, "webkit-org.w3.clearkey", expectedIdentifierConfig);
+      .toHaveBeenNthCalledWith(4, "com.youtube.playready", expectedPersistentConfig);
     expect(mockRequestMediaKeySystemAccess)
-      .toHaveBeenNthCalledWith(5, "org.w3.clearkey", expectedIdentifierConfig);
+      .toHaveBeenNthCalledWith(5, "webkit-org.w3.clearkey", expectedIdentifierConfig);
+    expect(mockRequestMediaKeySystemAccess)
+      .toHaveBeenNthCalledWith(6, "org.w3.clearkey", expectedIdentifierConfig);
   });
 
   /* eslint-disable max-len */
