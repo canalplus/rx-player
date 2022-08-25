@@ -165,10 +165,10 @@ export interface ILocalIndex {
    */
   segments : ILocalIndexSegment[];
   /**
-   * List of not yet available media segments, that should become available once
+   * List of not yet available time ranges, that should become available once
    * the content is fully loaded.
    */
-  futureSegments?: ILocalIndexSegment[];
+  incomingRanges?: Array<{ start : number; end : number }>;
 }
 
 /** A quality for a given "local" Manifest track (`ILocalAdaptation`). */

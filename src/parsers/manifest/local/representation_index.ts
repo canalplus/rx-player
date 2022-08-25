@@ -123,18 +123,18 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
       return this.getLastAvailablePosition();
     }
 
-    const { futureSegments, segments } = this._index;
-    if (futureSegments === undefined || futureSegments.length === 0) {
-      // If futureSegments is empty but not finished... It's ambiguous.
+    const { incomingRanges, segments } = this._index;
+    if (incomingRanges === undefined || incomingRanges.length === 0) {
+      // If incomingRanges is empty but not finished... It's ambiguous.
       return undefined;
     }
-    const lastFutureSegment = futureSegments[futureSegments.length - 1];
-    const futureSegmentEnd = lastFutureSegment.time + lastFutureSegment.duration;
+    const lastIncomingRange = incomingRanges[incomingRanges.length - 1];
+    const futureEnd = lastIncomingRange.end;
     if (segments.length === 0) {
-      return futureSegmentEnd;
+      return futureEnd;
     }
     const lastSegment = this._index.segments[this._index.segments.length - 1];
-    return Math.max(lastSegment.time + lastSegment.duration, futureSegmentEnd);
+    return Math.max(lastSegment.time + lastSegment.duration, futureEnd);
   }
 
   /**
@@ -152,11 +152,11 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
     if (this.isFinished()) {
       return false;
     }
-    if (this._index.futureSegments === undefined) {
+    if (this._index.incomingRanges === undefined) {
       return undefined;
     }
-    return this._index.futureSegments.some((seg) =>
-      seg.time < end && (seg.time + seg.duration) > start);
+    return this._index.incomingRanges.some((range) =>
+      range.start < end && range.end > start);
   }
 
   /**
