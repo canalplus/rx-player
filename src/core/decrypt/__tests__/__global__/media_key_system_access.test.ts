@@ -426,6 +426,89 @@ describe("core - decrypt - global tests - media key system access", () => {
   });
 
   /* eslint-disable max-len */
+  it("should set widevine robustnesses for a `com.widevine.alpha` keySystem", async () => {
+  /* eslint-enable max-len */
+    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    mockCompat({ requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess });
+    await checkIncompatibleKeySystemsErrorMessage([{ type: "com.widevine.alpha",
+                                                     persistentLicense: true,
+                                                     getLicense: neverCalledFn } ]);
+    const expectedPersistentConfig = defaultWidevineConfig.map(conf => {
+      return { ...conf,
+               persistentState: "required",
+               sessionTypes: ["temporary", "persistent-license"] };
+    });
+    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(1);
+    expect(mockRequestMediaKeySystemAccess)
+      .toHaveBeenNthCalledWith(1,
+                               "com.widevine.alpha",
+                               expectedPersistentConfig);
+  });
+
+  /* eslint-disable max-len */
+  it("should set playready robustnesses for a `playready` keySystem", async () => {
+  /* eslint-enable max-len */
+    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    mockCompat({ requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess });
+    await checkIncompatibleKeySystemsErrorMessage([{ type: "playready",
+                                                     persistentLicense: true,
+                                                     getLicense: neverCalledFn },
+                                                   { type: "clearkey",
+                                                     distinctiveIdentifier: "required",
+                                                     getLicense: neverCalledFn }]);
+    const expectedPersistentConfig = defaultKSConfig.map(conf => {
+      return { ...conf,
+               persistentState: "required",
+               sessionTypes: ["temporary", "persistent-license"] };
+    });
+    const expectedRecoPersistentConfig = defaultPRRecommendationKSConfig.map(conf => {
+      return { ...conf,
+               persistentState: "required",
+               sessionTypes: ["temporary", "persistent-license"] };
+    });
+    const expectedIdentifierConfig = defaultKSConfig.map(conf => {
+      return { ...conf,  distinctiveIdentifier: "required" };
+    });
+    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(6);
+    expect(mockRequestMediaKeySystemAccess)
+      .toHaveBeenNthCalledWith(1,
+                               "com.microsoft.playready.recommendation",
+                               expectedRecoPersistentConfig);
+    expect(mockRequestMediaKeySystemAccess)
+      .toHaveBeenNthCalledWith(2, "com.microsoft.playready", expectedPersistentConfig);
+    expect(mockRequestMediaKeySystemAccess)
+      .toHaveBeenNthCalledWith(3, "com.chromecast.playready", expectedPersistentConfig);
+    expect(mockRequestMediaKeySystemAccess)
+      .toHaveBeenNthCalledWith(4, "com.youtube.playready", expectedPersistentConfig);
+    expect(mockRequestMediaKeySystemAccess)
+      .toHaveBeenNthCalledWith(5, "webkit-org.w3.clearkey", expectedIdentifierConfig);
+    expect(mockRequestMediaKeySystemAccess)
+      .toHaveBeenNthCalledWith(6, "org.w3.clearkey", expectedIdentifierConfig);
+  });
+
+  /* eslint-disable max-len */
+  it("should set playready robustnesses for a `com.microsoft.playready.recommendation` keySystem", async () => {
+  /* eslint-enable max-len */
+    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    mockCompat({ requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess });
+    await checkIncompatibleKeySystemsErrorMessage([{
+      type: "com.microsoft.playready.recommendation",
+      persistentLicense: true,
+      getLicense: neverCalledFn,
+    }]);
+    const expectedRecoPersistentConfig = defaultPRRecommendationKSConfig.map(conf => {
+      return { ...conf,
+               persistentState: "required",
+               sessionTypes: ["temporary", "persistent-license"] };
+    });
+    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(1);
+    expect(mockRequestMediaKeySystemAccess)
+      .toHaveBeenNthCalledWith(1,
+                               "com.microsoft.playready.recommendation",
+                               expectedRecoPersistentConfig);
+  });
+
+  /* eslint-disable max-len */
   it("should successfully create a MediaKeySystemAccess if given the right configuration", async () => {
   /* eslint-enable max-len */
     return new Promise<void>((res, rej) => {
