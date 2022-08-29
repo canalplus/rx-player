@@ -6,6 +6,11 @@ module.exports = {
   roots: ["<rootDir>/src"],
   preset: "ts-jest",
   testEnvironment: "jsdom",
+    // Without this, Jest just fails when importing rxjs, for some arcane
+    // ESM-vs-CommonJS reasons linked to how it works internally.
+    moduleNameMapper: {
+      '^rxjs$': require.resolve('rxjs'),
+  },
   testMatch: ["**/?(*.)+(spec|test).[jt]s?(x)"],
   collectCoverageFrom: [
     "src/**/*.ts",
