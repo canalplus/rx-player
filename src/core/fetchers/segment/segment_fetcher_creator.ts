@@ -23,7 +23,6 @@ import {
 import { CancellationSignal } from "../../../utils/task_canceller";
 import { IBufferType } from "../../segment_buffers";
 import CdnPrioritizer from "../cdn_prioritizer";
-import SteeringManifestFetcher from "../steering_manifest";
 import applyPrioritizerToSegmentFetcher, {
   IPrioritizedSegmentFetcher,
 } from "./prioritized_segment_fetcher";
@@ -96,14 +95,7 @@ export default class SegmentFetcherCreator {
     options : ISegmentFetcherCreatorBackoffOptions,
     cancelSignal : CancellationSignal
   ) {
-    const steeringManifestFetcher = transport.steeringManifest === null ?
-      null :
-      new SteeringManifestFetcher(transport.steeringManifest,
-                                  { maxRetryOffline: undefined,
-                                    maxRetryRegular: undefined });
-    const cdnPrioritizer = new CdnPrioritizer(manifest,
-                                              steeringManifestFetcher,
-                                              cancelSignal);
+    const cdnPrioritizer = new CdnPrioritizer(manifest, transport, cancelSignal);
 
     const { MIN_CANCELABLE_PRIORITY,
             MAX_HIGH_PRIORITY_LEVEL } = config.getCurrent();

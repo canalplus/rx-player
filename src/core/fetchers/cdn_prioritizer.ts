@@ -24,6 +24,7 @@ import {
 } from "../../parsers/manifest";
 import { ISteeringManifest } from "../../parsers/SteeringManifest";
 import { IPlayerError } from "../../public_types";
+import { ITransportPipelines } from "../../transports";
 import arrayFindIndex from "../../utils/array_find_index";
 import arrayIncludes from "../../utils/array_includes";
 import EventEmitter from "../../utils/event_emitter";
@@ -96,12 +97,12 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
 
   /**
    * @param {Object} manifest
-   * @param {Object|null} steeringManifestFetcher
+   * @param {Object} transport
    * @param {Object} destroySignal
    */
   constructor(
     manifest : Manifest,
-    steeringManifestFetcher : SteeringManifestFetcher | null,
+    transport : ITransportPipelines,
     destroySignal : CancellationSignal
   ) {
     super();
@@ -110,27 +111,33 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
     this._steeringManifestUpdateCanceller = null;
     this._defaultCdnId = manifest.contentSteering?.defaultId;
 
-    let lastContentSteering = manifest.contentSteering;
+    const steeringManifestFetcher = transport.steeringManifest === null ?
+      null :
+      new SteeringManifestFetcher(transport.steeringManifest,
+                                  { maxRetryOffline: undefined,
+                                    maxRetryRegular: undefined });
+
+    let currentContentSteering = manifest.contentSteering;
 
     manifest.addEventListener("manifestUpdate", () => {
-      const prevContentSteering = lastContentSteering;
-      lastContentSteering = manifest.contentSteering;
+      const prevContentSteering = currentContentSteering;
+      currentContentSteering = manifest.contentSteering;
       if (prevContentSteering === null) {
-        if (lastContentSteering !== null) {
+        if (currentContentSteering !== null) {
           if (steeringManifestFetcher === null) {
             log.warn("CP: Steering manifest declared but no way to fetch it");
           } else {
             log.info("CP: A Steering Manifest is declared in a new Manifest");
             this._autoRefreshSteeringManifest(steeringManifestFetcher,
-                                              lastContentSteering);
+                                              currentContentSteering);
           }
         }
-      } else if (lastContentSteering === null) {
+      } else if (currentContentSteering === null) {
         log.info("CP: A Steering Manifest is removed in a new Manifest");
         this._steeringManifestUpdateCanceller?.cancel();
         this._steeringManifestUpdateCanceller = null;
-      } else if (prevContentSteering.url !== lastContentSteering.url ||
-                 prevContentSteering.proxyUrl !== lastContentSteering.proxyUrl)
+      } else if (prevContentSteering.url !== currentContentSteering.url ||
+                 prevContentSteering.proxyUrl !== currentContentSteering.proxyUrl)
       {
         log.info("CP: A Steering Manifest's information changed in a new Manifest");
         this._steeringManifestUpdateCanceller?.cancel();
@@ -139,7 +146,7 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
           log.warn("CP: Steering manifest changed but no way to fetch it");
         } else {
           this._autoRefreshSteeringManifest(steeringManifestFetcher,
-                                            lastContentSteering);
+                                            currentContentSteering);
         }
       }
     }, destroySignal);
@@ -391,20 +398,6 @@ function indexOfMetadata(
   if (arr.length === 0) {
     return -1;
   }
-  if (elt.id !== undefined) {
-    for (let i = 0; i < arr.length; i++) {
-      const m = arr[i];
-      if (m.id === elt.id) {
-        return i;
-      }
-    }
-  } else {
-    for (let i = 0; i < arr.length; i++) {
-      const m = arr[i];
-      if (m.baseUrl === elt.baseUrl) {
-        return i;
-      }
-    }
-  }
-  return -1;
+  return elt.id !== undefined ? arrayFindIndex(arr, m => m.id === elt.id) :
+                                arrayFindIndex(arr, m => m.baseUrl === elt.baseUrl);
 }
