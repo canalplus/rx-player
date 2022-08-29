@@ -475,7 +475,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    */
   getEnd() : number | null | undefined {
     if (!this._isLive) {
-      return this.getFirstAvailablePosition();
+      return this.getLastAvailablePosition();
     }
     return undefined;
   }
