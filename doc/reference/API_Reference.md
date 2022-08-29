@@ -117,6 +117,15 @@ properties, methods, events and so on.
     - [`keySystems[].throwOnLicenseExpiration`](../api/Decryption_Options.md#throwonlicenseexpiration):
       Allows to stop or not when the current license has expired.
 
+    - [`keySystems[].audioCapabilitiesConfig`](../api/Decryption_Options.md#videocapabilitiesconfigaudiocapabilitiesconfig):
+      Allows the configuration of the [`audioCapabilities`](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-audiocapabilities)
+      property.
+
+    - [`keySystems[].videoCapabilitiesConfig`](../api/Decryption_Options.md#videocapabilitiesconfigaudiocapabilitiesconfig):
+      Allows the configuration of the [`videoCapabilities`](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-videocapabilities)
+      property.
+
+
   - [`autoPlay`](../api/Loading_a_Content.md#autoplay):
     Allows to automatically play after a content is loaded.
 
