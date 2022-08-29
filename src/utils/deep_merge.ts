@@ -24,7 +24,9 @@ type ISourcesArgument<T> = Array<IDeepPartial<T>|unknown>;
  * @param sources
  * @returns output : merged object
  */
-export default function deepMerge<T>(target: T, ...sources: ISourcesArgument<T>): T {
+export default function deepMerge<
+  T extends Record<string | number | symbol, unknown>
+>(target: T, ...sources: ISourcesArgument<T>): T {
   if (sources.length === 0) {
     return target;
   }
@@ -32,10 +34,11 @@ export default function deepMerge<T>(target: T, ...sources: ISourcesArgument<T>)
   if (isObject(target) && isObject(source)) {
     for (const key in source) {
       if (isObject(source[key])) {
-        if (target[key] === undefined) {
-          objectAssign(target, { [key]: {} });
+        let newTarget = target[key] as Record<string | number | symbol, unknown>;
+        if (newTarget === undefined) {
+          newTarget = {};
+          (target[key] as Record<string | number | symbol, unknown>) = newTarget;
         }
-        const newTarget = target[key];
         deepMerge(newTarget, source[key] as IDeepPartial<typeof newTarget>);
       } else {
         objectAssign(target, { [key]: source[key] });
