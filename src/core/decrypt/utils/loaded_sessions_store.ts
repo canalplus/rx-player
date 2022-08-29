@@ -22,6 +22,7 @@ import {
   loadSession,
 } from "../../../compat";
 import log from "../../../log";
+import assert from "../../../utils/assert";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import { IProcessedProtectionData } from "../types";
 import KeySessionRecord from "./key_session_record";
@@ -308,6 +309,34 @@ export default class LoadedSessionsStore {
     const closingProms = allEntries
       .map((entry) => this._closeEntry(entry));
     await Promise.all(closingProms);
+  }
+
+  /**
+   * Find the given `MediaKeySession` in the `LoadedSessionsStore` and removes
+   * any reference to it without actually closing it.
+   *
+   * Returns `true` if the given `mediaKeySession` has been found and removed,
+   * `false` otherwise.
+   *
+   * Note that this may create a `MediaKeySession` leakage in the wrong
+   * conditions, cases where this method should be called should be very
+   * carefully evaluated.
+   * @param {MediaKeySession} mediaKeySession
+   * @returns {boolean}
+   */
+  public removeSessionWithoutClosingIt(
+    mediaKeySession : MediaKeySession | ICustomMediaKeySession
+  ) : boolean {
+    assert(mediaKeySession.sessionId === "",
+           "Initialized `MediaKeySession`s should always be properly closed");
+    for (let i = this._storage.length - 1; i >= 0; i--) {
+      const stored = this._storage[i];
+      if (stored.mediaKeySession === mediaKeySession) {
+        this._storage.splice(i, 1);
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
