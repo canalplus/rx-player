@@ -118,6 +118,9 @@ export default function ContentTimeBoundariesObserver(
   const updateDurationAndTimeBoundsOnTrackChange$ = streams.pipe(
     tap((message) => { // Update Manifest's bounds and duration if necessary
       if (message.type === "adaptationChange") {
+        if (!manifest.isLastPeriodKnown) {
+          return;
+        }
         const lastPeriod = manifest.periods[manifest.periods.length - 1];
         if (message.value.period.id === lastPeriod?.id) {
           if (message.value.type === "audio" || message.value.type === "video") {

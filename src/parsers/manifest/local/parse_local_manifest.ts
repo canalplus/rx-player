@@ -57,7 +57,7 @@ export default function parseLocalManifest(
            expired: localManifest.expired,
            transportType: "local",
            isDynamic: !isFinished,
-           isLastPeriodKnown: isFinished,
+           isLastPeriodKnown: true,
            isLive: false,
            uris: [],
            timeBounds: { minimumSafePosition: minimumPosition ?? 0,
