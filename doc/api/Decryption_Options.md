@@ -549,3 +549,68 @@ You may want to set this value to `false` if a session expiration leads to
 a license renewal.
 In that case, content may continue to play once the license has been
 updated.
+
+### videoCapabilitiesConfig / audioCapabilitiesConfig
+
+_type_: `Object | undefined`
+
+`videoCapabilitiesConfig` and `audioCapabilitiesConfig` allow to configure
+respectively the [`videoCapabilities`](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-videocapabilities)
+and [`audioCapabilities`](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-audiocapabilities)
+of the wanted key system.
+
+Setting one of these options (or both) allows for example to signal that some
+robustness level (SL3000, Widevine L1...) are explicitely wanted when decrypting
+respectively video and audio and/or that the key system should also be compatible
+to specific video/audio codecs and containers.
+
+Those options are relatively advanced, thus it is preferable to let them to
+`undefined` unless you understand what you're doing.
+
+The values `videoCapabilitiesConfig` and `audioCapabilitiesConfig` can be set to
+have a similar format
+
+They can both be set to an object with two properties: `type` and `value`. The
+content of the `value` property totally depends on the set `type` property.
+
+The `type` property can be set to one of the three following values:
+
+  - `"robustness"`: When `type` is set to `"robustness"`, `value` should be set
+    to an array of strings, each defining a wanted key system robustness by
+    order of preference.
+
+    For example:
+    ```js
+    { type: "robustness", value: ["3000", "2000"] }
+    ```
+    Mean that you want first a `"3000"` robustness and - if not available - a
+    `"2000"` one.
+
+    Note that when `type` is set to `"robustness"`, default mime-types - defined
+    by the RxPlayer - will be considered in the resulting sequence of
+    [MediaKeySystemMediaCapability](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemmediacapability)
+    objects. Those should be compatible with most usages.
+
+  - `"contentType"`: When `type` is set to `"contentType"`, `value` should be set
+    to an array of strings, each defining by order of preference mimeTypes of
+    the video content to decrypt (if you're setting `videoCapabilitiesConfig`)
+    or of the audio contents to decrypt (if you're setting
+    `audioCapabilitiesConfig`.).
+
+    Note that when `type` is set to `"contentType"`, chosen robustnesses in the
+    corresponding sequence of
+    [MediaKeySystemMediaCapability](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemmediacapability)
+    objects will have a default value chosen by the RxPlayer. Those should be
+    compatible with most usages.
+
+  - `"full"`: When `type` is set to `"full"`, `value` should be set to an array
+    of object, each being, a
+    [MediaKeySystemMediaCapability](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemmediacapability)
+    object.
+
+    This value will then be taken as is, either as the wanted
+    `videoCapabilities` (if you're setting the `videoCapabilitiesConfig`
+    property) or as the wanted `audioCapabilities` (if you're setting the
+    `audioCapabilitiesConfig` property) of the resulting
+    [MediaKeySystemConfiguration](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration)
+    wanted by the RxPlayer.
