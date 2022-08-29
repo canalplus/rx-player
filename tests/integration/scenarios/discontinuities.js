@@ -173,7 +173,7 @@ describe("discontinuities handling", () => {
   describe("discontinuities in Period announced in Manifest", () => {
     const { url, transport } = discontinuityInfos;
     it("should seek over discontinuities in a Period", async function () {
-      this.timeout(7000);
+      this.timeout(8000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
         if (err.type === "MEDIA_ERROR" &&
@@ -189,7 +189,7 @@ describe("discontinuities handling", () => {
                          startAt: { position: 22 } });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
-      await sleep(2000);
+      await sleep(4000);
       expect(player.getPosition()).to.be.above(28);
       expect(player.getPlayerState()).to.equal("PLAYING");
       expect(discontinuitiesWarningReceived).to.equal(1);
