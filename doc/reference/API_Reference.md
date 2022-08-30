@@ -20,11 +20,8 @@ properties, methods, events and so on.
   - [`videoElement`](../api/Creating_a_Player.md#videoElement): specifies the
     media element on which the content will play.
 
-  - [`initialVideoBitrate`](../api/Creating_a_Player.md#initialvideobitrate):
-    Ceil value for the initial video bitrate wanted.
-
-  - [`initialAudioBitrate`](../api/Creating_a_Player.md#initialaudiobitrate):
-    Ceil value for the initial audio bitrate wanted.
+  - [`baseBandwidth`](../api/Creating_a_Player.md#basebandwidth):
+    Base value for the bandwidth calculated by the RxPlayer.
 
   - [`minVideoBitrate`](../api/Creating_a_Player.md#minvideobitrate):
     Minimum video bitrate reachable through adaptive streaming.
