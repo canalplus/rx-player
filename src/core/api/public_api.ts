@@ -1029,19 +1029,20 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   /**
    * Returns the url of the content's manifest
-   * @returns {string|undefined} - Current URL. `undefined` if not known or no
+   * @returns {Array.<string>|undefined} - Current URL. `undefined` if not known or no
    * URL yet.
    */
-  getUrl() : string|undefined {
+  getContentUrls() : string[]|undefined {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
     const { isDirectFile, manifest, url } = this._priv_contentInfos;
     if (isDirectFile) {
-      return url;
+      return url === undefined ? undefined :
+                                 [url];
     }
     if (manifest !== null) {
-      return manifest.getUrl();
+      return manifest.getUrls();
     }
     return undefined;
   }

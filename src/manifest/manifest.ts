@@ -395,10 +395,10 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   /**
    * Returns the most important URL from which the Manifest can be refreshed.
    * `undefined` if no URL is found.
-   * @returns {string|undefined}
+   * @returns {Array.<string>}
    */
-  public getUrl() : string|undefined {
-    return this.uris[0];
+  public getUrls() : string[] {
+    return this.uris;
   }
 
   /**
