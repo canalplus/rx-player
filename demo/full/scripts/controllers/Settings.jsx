@@ -15,8 +15,6 @@ function Settings({
   showOptions,
 }) {
   const {
-    initialAudioBitrate,
-    initialVideoBitrate,
     limitVideoWidth,
     maxAudioBitrate,
     maxBufferAhead,
@@ -51,24 +49,6 @@ function Settings({
       return Object.assign({}, prevOptions, { autoPlay });
     });
   }, [updateLoadVideoOptions]);
-
-  const onInitialVideoBitrateChange = useCallback((initialVideoBitrate)  => {
-    updatePlayerOptions((prevOptions) => {
-      if (initialVideoBitrate === prevOptions.initialVideoBitrate) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, { initialVideoBitrate });
-    });
-  }, [updatePlayerOptions]);
-
-  const onInitialAudioBitrateChange = useCallback((initialAudioBitrate) => {
-    updatePlayerOptions((prevOptions) => {
-      if (initialAudioBitrate === prevOptions.initialAudioBitrate) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, { initialAudioBitrate });
-    });
-  }, [updatePlayerOptions]);
 
   const onMinVideoBitrateChange = useCallback((minVideoBitrate) => {
     updatePlayerOptions((prevOptions) => {
@@ -216,7 +196,7 @@ function Settings({
       }
       return Object.assign({}, prevOptions, {
         defaultAudioTrackSwitchingMode: value,
-       });
+      });
     });
   }, [updateLoadVideoOptions]);
 
@@ -289,10 +269,8 @@ function Settings({
         </Option>
         <Option title="Video adaptive settings">
           <VideoAdaptiveSettings
-            initialVideoBitrate={initialVideoBitrate}
             minVideoBitrate={minVideoBitrate}
             maxVideoBitrate={maxVideoBitrate}
-            onInitialVideoBitrateChange={onInitialVideoBitrateChange}
             onMinVideoBitrateChange={onMinVideoBitrateChange}
             onMaxVideoBitrateChange={onMaxVideoBitrateChange}
             limitVideoWidth={limitVideoWidth}
@@ -305,10 +283,8 @@ function Settings({
         </Option>
         <Option title="Audio adaptive settings">
           <AudioAdaptiveSettings
-            initialAudioBitrate={initialAudioBitrate}
             minAudioBitrate={minAudioBitrate}
             maxAudioBitrate={maxAudioBitrate}
-            onInitialAudioBitrateChange={onInitialAudioBitrateChange}
             onMinAudioBitrateChange={onMinAudioBitrateChange}
             onMaxAudioBitrateChange={onMaxAudioBitrateChange}
           />

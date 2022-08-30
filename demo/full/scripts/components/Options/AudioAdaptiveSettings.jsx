@@ -4,7 +4,6 @@ import Checkbox from "../../components/CheckBox";
 import DEFAULT_VALUES from "../../lib/defaultOptionsValues";
 import PlayerOptionNumberInput from "./PlayerOptionNumberInput";
 
-const defaultInitialAudioBitrate = DEFAULT_VALUES.player.initialAudioBitrate;
 const defaultMinAudioBitrate = DEFAULT_VALUES.player.minAudioBitrate;
 const defaultMaxAudioBitrate = DEFAULT_VALUES.player.maxAudioBitrate;
 
@@ -13,17 +12,11 @@ const defaultMaxAudioBitrate = DEFAULT_VALUES.player.maxAudioBitrate;
  * @returns {Object}
  */
 function AudioAdaptiveSettings({
-  initialAudioBitrate,
   minAudioBitrate,
   maxAudioBitrate,
-  onInitialAudioBitrateChange,
   onMinAudioBitrateChange,
   onMaxAudioBitrateChange,
 }) {
-  /* Value of the `initialVideoBitrate` input */
-  const [initialAudioBitrateStr, setInitialAudioBitrateStr] = useState(
-    String(initialAudioBitrate)
-  );
   /* Value of the `minAudioBitrate` input */
   const [minAudioBitrateStr, setMinAudioBitrateStr] = useState(
     String(minAudioBitrate)
@@ -46,18 +39,6 @@ function AudioAdaptiveSettings({
   const [isMaxAudioBitrateLimited, setMaxAudioBitrateLimit] = useState(
     maxAudioBitrate !== Infinity
   );
-
-  // Update initialAudioBitrate when its linked text change
-  useEffect(() => {
-    // Note that this unnecessarily also run on first render - there seem to be
-    // no quick and easy way to disable this in react.
-    // This is not too problematic so I put up with it.
-    let newBitrate = parseFloat(initialAudioBitrateStr);
-    newBitrate = isNaN(newBitrate) ?
-      defaultInitialAudioBitrate :
-      newBitrate;
-    onInitialAudioBitrateChange(newBitrate);
-  }, [initialAudioBitrateStr]);
 
   // Update minAudioBitrate when its linked text change
   useEffect(() => {
@@ -101,30 +82,6 @@ function AudioAdaptiveSettings({
 
   return (
     <Fragment>
-      <li>
-        <PlayerOptionNumberInput
-          ariaLabel="Initial audio bitrate option"
-          label="initialAudioBitrate"
-          title="Initial Audio Bitrate"
-          valueAsString={initialAudioBitrateStr}
-          defaultValueAsNumber={defaultInitialAudioBitrate}
-          isDisabled={false}
-          onUpdateValue={setInitialAudioBitrateStr}
-          onResetClick={() => {
-            setInitialAudioBitrateStr(String(
-              defaultInitialAudioBitrate
-            ));
-          }}
-        />
-        <span className="option-desc">
-          {
-            initialAudioBitrate === 0 ?
-              "Starts loading the lowest audio bitrate" :
-              `Starts with an audio bandwidth estimate of ${initialAudioBitrate}` +
-              " bits per seconds."
-          }
-        </span>
-      </li>
       <li>
         <PlayerOptionNumberInput
           ariaLabel="Min audio bitrate option"

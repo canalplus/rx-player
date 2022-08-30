@@ -1,7 +1,5 @@
 const defaultOptionsValues = {
   player: {
-    initialAudioBitrate: 0,
-    initialVideoBitrate: 0,
     limitVideoWidth: false,
     maxAudioBitrate: Infinity,
     maxBufferAhead: Infinity,

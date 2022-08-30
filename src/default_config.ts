@@ -182,13 +182,7 @@ const DEFAULT_CONFIG = {
      * play will always take the last set one.
      * @type {Object}
      */
-  DEFAULT_INITIAL_BITRATES: {
-    audio: 0, // only "audio" segments
-    video: 0, // only "video" segments
-    other: 0, // tracks which are not audio/video (like text).
-                // Though those are generally at a single bitrate, so no adaptive
-                // mechanism is triggered for them.
-  },
+  DEFAULT_BASE_BANDWIDTH: 0,
 
     /* eslint-disable @typescript-eslint/consistent-type-assertions */
     /**
