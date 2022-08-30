@@ -274,7 +274,7 @@ export default function manifestUpdateScheduler({
   ) : Observable<IManifestFetcherParsedResult | IWarningEvent> {
     const manifestUpdateUrl = manifest.updateUrl;
     const fullRefresh = completeRefresh || manifestUpdateUrl === undefined;
-    const refreshURL = fullRefresh ? manifest.getUrl() :
+    const refreshURL = fullRefresh ? manifest.getUrls()[0] :
                                      manifestUpdateUrl;
     const externalClockOffset = manifest.clockOffset;
 
