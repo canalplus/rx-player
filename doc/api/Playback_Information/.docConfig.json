@@ -1,8 +1,8 @@
 {
   "pages": [
     {
-      "path": "./getUrl.md",
-      "displayName": "getUrl"
+      "path": "./getContentUrls.md",
+      "displayName": "getContentUrls"
     },
     {
       "path": "./updateContentUrls.md",
