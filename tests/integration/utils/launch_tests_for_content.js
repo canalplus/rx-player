@@ -561,7 +561,7 @@ export default function launchTestsForContent(manifestInfos) {
       }
     });
 
-    describe("getUrl", () => {
+    describe("getContentUrls", () => {
       it("should return the URL of the manifest", async () => {
         player.loadVideo({
           url: manifestInfos.url,
@@ -569,7 +569,7 @@ export default function launchTestsForContent(manifestInfos) {
           autoPlay: false,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getUrl()).to.eql(manifestInfos.url);
+        expect(player.getContentUrls()).to.eql([manifestInfos.url]);
       });
     });
 

@@ -398,8 +398,8 @@ properties, methods, events and so on.
     Returns in seconds the difference between the current position and the end
     of the current media time range.
 
-  - [`getUrl`](../api/Content_Information/getUrl.md):
-    Get URL of the currently-played content.
+  - [`getContentUrls`](../api/Content_Information/getContentUrls.md):
+    Get URLs of the currently-played content.
 
   - [`updateContentUrls`](../api/Content_Information/updateContentUrls.md):
     Update URL(s) of the content currently being played.
