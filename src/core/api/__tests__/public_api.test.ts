@@ -66,11 +66,11 @@ describe("API - Public API", () => {
       });
     });
 
-    describe("getUrl", () => {
-      it("should return undefined in getUrl by default", () => {
+    describe("getContentUrls", () => {
+      it("should return undefined in getContentUrls by default", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
-        expect(player.getUrl()).toBe(undefined);
+        expect(player.getContentUrls()).toBe(undefined);
       });
     });
 
