@@ -51,7 +51,7 @@ describe("API - parseConstructorOptions", () => {
   const videoElement = document.createElement("video");
   const {
     // DEFAULT_AUTO_PLAY,
-    DEFAULT_INITIAL_BITRATES,
+    DEFAULT_BASE_BANDWIDTH,
     DEFAULT_LIMIT_VIDEO_WIDTH,
     // DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
     DEFAULT_MIN_BITRATES,
@@ -71,8 +71,7 @@ describe("API - parseConstructorOptions", () => {
     limitVideoWidth: DEFAULT_LIMIT_VIDEO_WIDTH,
     throttleVideoBitrateWhenHidden: DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
     videoElement,
-    initialVideoBitrate: DEFAULT_INITIAL_BITRATES.video,
-    initialAudioBitrate: DEFAULT_INITIAL_BITRATES.audio,
+    baseBandwidth: DEFAULT_BASE_BANDWIDTH,
     minAudioBitrate: DEFAULT_MIN_BITRATES.audio,
     minVideoBitrate: DEFAULT_MIN_BITRATES.video,
     maxAudioBitrate: DEFAULT_MAX_BITRATES.audio,
@@ -170,41 +169,22 @@ describe("API - parseConstructorOptions", () => {
     expect(parsed2.videoElement).toBe(audioElement);
   });
 
-  it("should authorize setting an initialVideoBitrate", () => {
-    expect(parseConstructorOptions({ initialVideoBitrate: -1 })).toEqual({
+  it("should authorize setting an baseBandwidth", () => {
+    expect(parseConstructorOptions({ baseBandwidth: -1 })).toEqual({
       ...defaultConstructorOptions,
-      initialVideoBitrate: -1,
+      baseBandwidth: -1,
     });
-    expect(parseConstructorOptions({ initialVideoBitrate: 0 })).toEqual({
+    expect(parseConstructorOptions({ baseBandwidth: 0 })).toEqual({
       ...defaultConstructorOptions,
-      initialVideoBitrate: 0,
+      baseBandwidth: 0,
     });
-    expect(parseConstructorOptions({ initialVideoBitrate: 10 })).toEqual({
+    expect(parseConstructorOptions({ baseBandwidth: 10 })).toEqual({
       ...defaultConstructorOptions,
-      initialVideoBitrate: 10,
+      baseBandwidth: 10,
     });
-    expect(parseConstructorOptions({ initialVideoBitrate: Infinity })).toEqual({
+    expect(parseConstructorOptions({ baseBandwidth: Infinity })).toEqual({
       ...defaultConstructorOptions,
-      initialVideoBitrate: Infinity,
-    });
-  });
-
-  it("should authorize setting an initialAudioBitrate", () => {
-    expect(parseConstructorOptions({ initialAudioBitrate: -1 })).toEqual({
-      ...defaultConstructorOptions,
-      initialAudioBitrate: -1,
-    });
-    expect(parseConstructorOptions({ initialAudioBitrate: 0 })).toEqual({
-      ...defaultConstructorOptions,
-      initialAudioBitrate: 0,
-    });
-    expect(parseConstructorOptions({ initialAudioBitrate: 10 })).toEqual({
-      ...defaultConstructorOptions,
-      initialAudioBitrate: 10,
-    });
-    expect(parseConstructorOptions({ initialAudioBitrate: Infinity })).toEqual({
-      ...defaultConstructorOptions,
-      initialAudioBitrate: Infinity,
+      baseBandwidth: Infinity,
     });
   });
 
@@ -339,16 +319,10 @@ describe("API - parseConstructorOptions", () => {
     })).toThrow();
   });
 
-  it("should throw if the initialVideoBitrate given is not a number", () => {
-    expect(() => parseConstructorOptions({ initialVideoBitrate: "a" as any })).toThrow();
-    expect(() => parseConstructorOptions({ initialVideoBitrate: /a/ as any })).toThrow();
-    expect(() => parseConstructorOptions({ initialVideoBitrate: {} as any })).toThrow();
-  });
-
-  it("should throw if the initialAudioBitrate given is not a number", () => {
-    expect(() => parseConstructorOptions({ initialAudioBitrate: "a" as any })).toThrow();
-    expect(() => parseConstructorOptions({ initialAudioBitrate: /a/ as any })).toThrow();
-    expect(() => parseConstructorOptions({ initialAudioBitrate: {} as any })).toThrow();
+  it("should throw if the baseBandwidth given is not a number", () => {
+    expect(() => parseConstructorOptions({ baseBandwidth: "a" as any })).toThrow();
+    expect(() => parseConstructorOptions({ baseBandwidth: /a/ as any })).toThrow();
+    expect(() => parseConstructorOptions({ baseBandwidth: {} as any })).toThrow();
   });
 
   it("should throw if the minVideoBitrate given is not a number", () => {

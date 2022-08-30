@@ -54,8 +54,7 @@ export interface IParsedConstructorOptions {
   throttleVideoBitrateWhenHidden : boolean;
 
   videoElement : HTMLMediaElement;
-  initialVideoBitrate : number;
-  initialAudioBitrate : number;
+  baseBandwidth : number;
   minAudioBitrate : number;
   minVideoBitrate : number;
   maxAudioBitrate : number;
@@ -132,14 +131,13 @@ function parseConstructorOptions(
   let maxVideoBufferSize : number;
 
   let videoElement : HTMLMediaElement;
-  let initialVideoBitrate : number;
-  let initialAudioBitrate : number;
+  let baseBandwidth : number;
   let minAudioBitrate : number;
   let minVideoBitrate : number;
   let maxAudioBitrate : number;
   let maxVideoBitrate : number;
 
-  const { DEFAULT_INITIAL_BITRATES,
+  const { DEFAULT_BASE_BANDWIDTH,
           DEFAULT_LIMIT_VIDEO_WIDTH,
           DEFAULT_MIN_BITRATES,
           DEFAULT_MAX_BITRATES,
@@ -209,24 +207,13 @@ function parseConstructorOptions(
     /* eslint-enable max-len */
   }
 
-  if (isNullOrUndefined(options.initialVideoBitrate)) {
-    initialVideoBitrate = DEFAULT_INITIAL_BITRATES.video;
+  if (isNullOrUndefined(options.baseBandwidth)) {
+    baseBandwidth = DEFAULT_BASE_BANDWIDTH;
   } else {
-    initialVideoBitrate = Number(options.initialVideoBitrate);
-    if (isNaN(initialVideoBitrate)) {
+    baseBandwidth = Number(options.baseBandwidth);
+    if (isNaN(baseBandwidth)) {
       /* eslint-disable max-len */
-      throw new Error("Invalid initialVideoBitrate parameter. Should be a number.");
-      /* eslint-enable max-len */
-    }
-  }
-
-  if (isNullOrUndefined(options.initialAudioBitrate)) {
-    initialAudioBitrate = DEFAULT_INITIAL_BITRATES.audio;
-  } else {
-    initialAudioBitrate = Number(options.initialAudioBitrate);
-    if (isNaN(initialAudioBitrate)) {
-      /* eslint-disable max-len */
-      throw new Error("Invalid initialAudioBitrate parameter. Should be a number.");
+      throw new Error("Invalid baseBandwidth parameter. Should be a number.");
       /* eslint-enable max-len */
     }
   }
@@ -282,8 +269,7 @@ function parseConstructorOptions(
            wantedBufferAhead,
            maxVideoBufferSize,
            throttleVideoBitrateWhenHidden,
-           initialAudioBitrate,
-           initialVideoBitrate,
+           baseBandwidth,
            minAudioBitrate,
            minVideoBitrate,
            maxAudioBitrate,
