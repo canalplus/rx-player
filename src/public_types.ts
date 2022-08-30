@@ -290,16 +290,17 @@ export interface ISegmentLoaderContext {
    */
   isInit : boolean | undefined;
   /**
-   * If set, the corresponding byte-range in the downloaded segment will
-   * contain an index describing other segments.
-   * XXX TODO include in range here?
+   * If set, only the corresponding byte-ranges, which are subsets in bytes of
+   * the loaded data, should be loaded.
+   * If multiple non-contiguous byte-ranges are given, the result should be
+   * the concatenation of those byte-ranges, in the same order.
+   *
+   * For example `[[0, 100], [150, 180]]` means that the bytes of both 0 to 100
+   * (included) and from 150 to 180 (included) should be requested.
+   * The communicated result should then be a concatenation of both in the same
+   * order.
    */
-  indexRange? : [number, number] | undefined;
-  /**
-   * If set, the corresponding byte-range is the subset in bytes of the loaded
-   * data where the segment actually is.
-   */
-  range? : [number, number] | undefined;
+  byteRanges? : Array<[number, number]> | undefined;
   /** Type of the corresponding track. */
   type : ITrackType;
 }
