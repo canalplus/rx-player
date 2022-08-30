@@ -122,25 +122,17 @@ As you can see, this function takes two arguments:
          initialization segment.
          This case is not currently possible but may be in future versions.
 
-       - `range` (`Array.<number>|undefined`): If defined, it means that the
-         segment data is actually defined in a specific byte-range of the given
-         URL.
+       - `byteRanges` (`Array.<[number, number]>|undefined`): If defined, only
+         the corresponding byte-ranges, which are subsets in bytes of the full
+         data concerned, should be loaded.
 
-         Segment loaders are expected to only communicate that range of data
-         to the RxPlayer (if both a `range` and `indexRange` property
-         exists, it should communicate both).
+         If multiple non-contiguous byte-ranges are given, the result should be
+         the concatenation of those byte-ranges, in the same order.
 
-       - `indexRange` (`Array.<number>|undefined`): If defined, it means that a
-         segment index can be retrieved at the associated URL by the byte range
-         expressed by this value.
-
-         When this values is set - which is only done for specific contents
-         it is expected that the loader load both the segment's data and
-         this index.
-
-         How to perform that last operation can be format-specific.
-         For ISOBMFF segments, both the data and the segment index can just
-         be concatenated.
+         For example `[[0, 100], [150, 180]]` means that the bytes of both 0 to 100
+         (included) and from 150 to 180 (included) should be requested.
+         The communicated result should then be a concatenation of both in the same
+         order.
 
   2. **callbacks**: An object containing multiple callbacks to allow this
      `segmentLoader` to communicate various events to the RxPlayer.
