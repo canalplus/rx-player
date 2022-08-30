@@ -5,7 +5,6 @@ import PlayerOptionNumberInput from "./PlayerOptionNumberInput";
 
 const { Fragment, useCallback, useEffect, useState } = React;
 
-const DEFAULT_INITIAL_VIDEO_BITRATE = DEFAULT_VALUES.player.initialVideoBitrate;
 const DEFAULT_MIN_VIDEO_BITRATE = DEFAULT_VALUES.player.minVideoBitrate;
 const DEFAULT_MAX_VIDEO_BITRATE = DEFAULT_VALUES.player.maxVideoBitrate;
 
@@ -14,10 +13,8 @@ const DEFAULT_MAX_VIDEO_BITRATE = DEFAULT_VALUES.player.maxVideoBitrate;
  * @returns {Object}
  */
 function VideoAdaptiveSettings({
-  initialVideoBitrate,
   minVideoBitrate,
   maxVideoBitrate,
-  onInitialVideoBitrateChange,
   onMinVideoBitrateChange,
   onMaxVideoBitrateChange,
   limitVideoWidth,
@@ -25,10 +22,8 @@ function VideoAdaptiveSettings({
   onLimitVideoWidthChange,
   onThrottleVideoBitrateWhenHiddenChange,
 }: {
-  initialVideoBitrate: number;
   minVideoBitrate: number;
   maxVideoBitrate: number;
-  onInitialVideoBitrateChange: (newBitrate: number) => void;
   onMinVideoBitrateChange: (newBitrate: number) => void;
   onMaxVideoBitrateChange: (newBitrate: number) => void;
   limitVideoWidth: boolean;
@@ -36,10 +31,6 @@ function VideoAdaptiveSettings({
   onLimitVideoWidthChange: (newVal: boolean) => void;
   onThrottleVideoBitrateWhenHiddenChange: (newVal: boolean) => void;
 }): JSX.Element {
-  /* Value of the `initialVideoBitrate` input */
-  const [initialVideoBitrateStr, setInitialVideoBitrateStr] = useState(
-    String(initialVideoBitrate)
-  );
   /* Value of the `minVideoBitrate` input */
   const [minVideoBitrateStr, setMinVideoBitrateStr] = useState(
     String(minVideoBitrate)
@@ -62,18 +53,6 @@ function VideoAdaptiveSettings({
   const [isMaxVideoBitrateLimited, setMaxVideoBitrateLimit] = useState(
     maxVideoBitrate !== Infinity
   );
-
-  // Update initialVideoBitrate when its linked text change
-  useEffect(() => {
-    // Note that this unnecessarily also run on first render - there seem to be
-    // no quick and easy way to disable this in react.
-    // This is not too problematic so I put up with it.
-    let newBitrate = parseFloat(initialVideoBitrateStr);
-    newBitrate = isNaN(newBitrate) ?
-      DEFAULT_INITIAL_VIDEO_BITRATE :
-      newBitrate;
-    onInitialVideoBitrateChange(newBitrate);
-  }, [initialVideoBitrateStr]);
 
   // Update minVideoBitrate when its linked text change
   useEffect(() => {
@@ -115,10 +94,6 @@ function VideoAdaptiveSettings({
       }
     }, []);
 
-  const onInitialVideoBitrateResetClick = useCallback(() => {
-    setInitialVideoBitrateStr(String(DEFAULT_INITIAL_VIDEO_BITRATE));
-  }, []);
-
   const onMinVideoBitrateResetClick = useCallback(() => {
     setMinVideoBitrateStr(String(DEFAULT_MIN_VIDEO_BITRATE));
     setMinVideoBitrateLimit(DEFAULT_MIN_VIDEO_BITRATE !== 0);
@@ -131,26 +106,6 @@ function VideoAdaptiveSettings({
 
   return (
     <Fragment>
-      <li>
-        <PlayerOptionNumberInput
-          ariaLabel="Initial video bitrate option"
-          label="initialVideoBitrate"
-          title="Initial Video Bitrate"
-          valueAsString={initialVideoBitrateStr}
-          defaultValueAsNumber={DEFAULT_INITIAL_VIDEO_BITRATE}
-          isDisabled={false}
-          onUpdateValue={setInitialVideoBitrateStr}
-          onResetClick={onInitialVideoBitrateResetClick}
-        />
-        <span className="option-desc">
-          {
-            initialVideoBitrate === 0 ?
-              "Starts loading the lowest video bitrate" :
-              `Starts with a video bandwidth estimate of ${initialVideoBitrate}` +
-              " bits per seconds."
-          }
-        </span>
-      </li>
       <li>
         <PlayerOptionNumberInput
           ariaLabel="Min video bitrate option"
