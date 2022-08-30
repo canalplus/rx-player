@@ -399,9 +399,6 @@ properties, methods, events and so on.
     Get the maximum memory the video buffer can take up in the memory, in
     kilobytes.
 
-  - [`getUrl`](../api/Playback_Information/getUrl.md):
-    Get URL of the currently-played content.
-
   - [`updateContentUrls`](../api/Playback_Information/updateContentUrls.md):
     Update URL(s) of the content currently being played.
 
@@ -416,8 +413,8 @@ properties, methods, events and so on.
     Returns in seconds the difference between the current position and the end
     of the current media time range.
 
-  - [`isContentLoaded`](../api/Playback_Information/isContentLoaded.md):
-    Returns `true` if a content is loaded.
+  - [`getContentUrls`](../api/Content_Information/getContentUrls.md):
+    Get URLs of the currently-played content.
 
   - [`isBuffering`](../api/Playback_Information/isBuffering.md):
     Returns `true` if the player is buffering.
