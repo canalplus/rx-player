@@ -44,63 +44,25 @@ const videoElement = player.getVideoElement();
 document.body.appendChild(videoElement);
 ```
 
-### initialVideoBitrate
+### baseBandwidth
 
 _type_: `Number|undefined`
 
 _defaults_: `0`
 
-This is a ceil value for the initial video bitrate chosen.
+The initial value used for bandwidth calculations, in bits per seconds.
 
-That is, the first video
-[Representation](../Getting_Started/Glossary.md#representation) chosen will be
-both:
+The RxPlayer will base itself on this value initially before estimating it
+itself.
+You can set this value either if you have a rough-enough idea of the user's
+current bandwidth and/or if you prefer to start loading specific media qualities
+initially.
 
-- inferior or equal to this value.
-- the closest possible to this value (after filtering out the ones with a
-  superior bitrate).
-
-If no Representation is found to respect those rules, the Representation with
-the lowest bitrate will be chosen instead. Thus, the default value - `0` -
-will lead to the lowest bitrate being chosen at first.
-
+For example, to set an initial bandwidth of 700 kilobits per seconds, you can
+set:
 ```js
-// Begin either by the video bitrate just below or equal to 700000 bps if found
-// or the lowest bitrate available if not.
 const player = new Player({
-  initialVideoBitrate: 700000,
-});
-```
-
-<div class="warning">
-This option will have no effect for contents loaded in <i>Directfile</i>
-mode (see <a href="./Loading_a_Content.md#transport">loadVideo options</a>).
-</div>
-
-### initialAudioBitrate
-
-_type_: `Number|undefined`
-
-_defaults_: `0`
-
-This is a ceil value for the initial audio bitrate chosen.
-
-That is, the first audio
-[Representation](../Getting_Started/Glossary.md#representation) chosen will be:
-
-- inferior or equal to this value.
-- the closest possible to this value (after filtering out the ones with a
-  superior bitrate).
-
-If no Representation is found to respect those rules, the Representation with
-the lowest bitrate will be chosen instead. Thus, the default value - `0` -
-will lead to the lowest bitrate being chosen at first.
-
-```js
-// Begin either by the audio bitrate just below or equal to 5000 bps if found
-// or the lowest bitrate available if not.
-const player = new Player({
-  initialAudioBitrate: 5000,
+  baseBandwidth: 700000,
 });
 ```
 

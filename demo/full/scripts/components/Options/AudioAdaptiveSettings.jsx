@@ -10,10 +10,8 @@ import DEFAULT_VALUES from "../../lib/defaultOptionsValues";
  * @returns {Object}
  */
 function AudioAdaptiveSettings({
-  initialAudioBr,
   minAudioBr,
   maxAudioBr,
-  onInitialAudioBrInput,
   onMinAudioBrInput,
   onMaxAudioBrInput,
 }) {
@@ -46,44 +44,6 @@ function AudioAdaptiveSettings({
 
   return (
     <Fragment>
-      <li>
-        <div className="playerOptionInput">
-          <label htmlFor="initialAudioBitrate">Initial Audio Bitrate</label>
-          <span className="wrapperInputWithResetBtn">
-            <input
-              type="number"
-              name="initialAudioBitrate"
-              id="initialAudioBitrate"
-              aria-label="Initial audio bitrate option"
-              placeholder="Number"
-              onChange={(evt) => onInitialAudioBrInput(evt.target.value)}
-              value={initialAudioBr}
-              className="optionInput"
-            />
-            <Button
-              className={
-                parseFloat(initialAudioBr) === DEFAULT_VALUES.initialAudioBr
-                  ? "resetBtn disabledResetBtn"
-                  : "resetBtn"
-              }
-              ariaLabel="Reset option to default value"
-              title="Reset option to default value"
-              onClick={() => {
-                onInitialAudioBrInput(DEFAULT_VALUES.initialAudioBr);
-              }}
-              value={String.fromCharCode(0xf021)}
-            />
-          </span>
-        </div>
-        <span className="option-desc">
-          {
-            parseFloat(initialAudioBr) === 0 ?
-              "Starts loading the lowest audio bitrate" :
-              `Starts with an audio bandwidth estimate of ${initialAudioBr}` +
-              " bits per seconds."
-          }
-        </span>
-      </li>
       <li>
         <div className="playerOptionInput">
           <label htmlFor="minAudioBitrate">Min Audio Bitrate</label>

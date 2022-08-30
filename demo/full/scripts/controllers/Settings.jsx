@@ -21,8 +21,6 @@ class Settings extends React.Component {
 
   getOptions() {
     const {
-      initialVideoBr,
-      initialAudioBr,
       minVideoBr,
       minAudioBr,
       maxVideoBr,
@@ -45,8 +43,6 @@ class Settings extends React.Component {
     } = this.state;
     return {
       initOpts: {
-        initialVideoBitrate: parseFloat(initialVideoBr),
-        initialAudioBitrate: parseFloat(initialAudioBr),
         minVideoBitrate: parseFloat(minVideoBr),
         minAudioBitrate: parseFloat(minAudioBr),
         maxVideoBitrate: parseFloat(maxVideoBr),
@@ -76,14 +72,6 @@ class Settings extends React.Component {
 
   onAutoPlayClick(evt) {
     this.setState({ autoPlay: getCheckBoxValue(evt.target) });
-  }
-
-  onInitialVideoBrInput(value) {
-    this.setState({ initialVideoBr: value });
-  }
-
-  onInitialAudioBrInput(value) {
-    this.setState({ initialAudioBr: value });
   }
 
   onMinVideoBrInput(value) {
@@ -163,8 +151,6 @@ class Settings extends React.Component {
   render() {
     const {
       autoPlay,
-      initialVideoBr,
-      initialAudioBr,
       minVideoBr,
       minAudioBr,
       maxVideoBr,
@@ -186,21 +172,18 @@ class Settings extends React.Component {
     } = this.state;
 
     const initialSettings = {
-      initialVideoBr,
-      initialAudioBr,
       minAudioBr,
       minVideoBr,
       maxVideoBr,
       maxAudioBr,
       limitVideoWidth,
       throttleVideoBitrateWhenHidden,
-      onInitialVideoBrInput: this.onInitialVideoBrInput.bind(this),
-      onInitialAudioBrInput: this.onInitialAudioBrInput.bind(this),
       onMinAudioBrInput: this.onMinAudioBrInput.bind(this),
       onMinVideoBrInput: this.onMinVideoBrInput.bind(this),
       onMaxAudioBrInput: this.onMaxAudioBrInput.bind(this),
       onMaxVideoBrInput: this.onMaxVideoBrInput.bind(this),
-      onLimitVideoWidthClick: this.onLimitVideoWidthClick.bind(this),
+      onLimitVideoWidthClick:
+        this.onLimitVideoWidthClick.bind(this),
       onThrottleVideoBitrateWhenHiddenClick:
         this.onThrottleVideoBitrateWhenHiddenClick.bind(this),
     };
