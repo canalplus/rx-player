@@ -291,7 +291,7 @@ describe("Manifest - Manifest", () => {
     expect(fakeLogger.warn).not.toHaveBeenCalled();
   });
 
-  it("should return the first URL given with `getUrl`", () => {
+  it("should return all URLs given with `getContentUrls`", () => {
     const fakePeriod = jest.fn((period) => {
       return {
         ...period,
@@ -325,7 +325,7 @@ describe("Manifest - Manifest", () => {
                                uris: ["url1", "url2"] };
 
     const manifest1 = new Manifest(oldManifestArgs1, {});
-    expect(manifest1.getUrl()).toEqual("url1");
+    expect(manifest1.getUrls()).toEqual(["url1", "url2"]);
 
     const oldManifestArgs2 = { availabilityStartTime: 5,
                                duration: 12,
@@ -346,7 +346,7 @@ describe("Manifest - Manifest", () => {
                                              } },
                                uris: [] };
     const manifest2 = new Manifest(oldManifestArgs2, {});
-    expect(manifest2.getUrl()).toEqual(undefined);
+    expect(manifest2.getUrls()).toEqual([]);
   });
 
   it("should replace with a new Manifest when calling `replace`", () => {
