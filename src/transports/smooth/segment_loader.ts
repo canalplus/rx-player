@@ -255,10 +255,17 @@ const generateSegmentLoader = ({
       };
 
       const customCallbacks = { reject, resolve, fallback, progress };
+
+      let byteRanges : Array<[number, number]> | undefined;
+      if (context.segment.range !== undefined) {
+        byteRanges = [context.segment.range];
+        if (context.segment.indexRange !== undefined) {
+          byteRanges.push(context.segment.indexRange);
+        }
+      }
       const args = { isInit: context.segment.isInit,
                      timeout: loaderOptions.timeout,
-                     range: context.segment.range,
-                     indexRange: context.segment.indexRange,
+                     byteRanges,
                      type: context.type,
                      url };
       const abort = customSegmentLoader(args, customCallbacks);
