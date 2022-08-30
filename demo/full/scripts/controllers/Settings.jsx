@@ -21,8 +21,6 @@ class Settings extends React.Component {
 
   getOptions() {
     const {
-      initialVideoBr,
-      initialAudioBr,
       minVideoBr,
       minAudioBr,
       maxVideoBr,
@@ -43,8 +41,6 @@ class Settings extends React.Component {
     } = this.state;
     return {
       initOpts: {
-        initialVideoBitrate: parseFloat(initialVideoBr),
-        initialAudioBitrate: parseFloat(initialAudioBr),
         minVideoBitrate: parseFloat(minVideoBr),
         minAudioBitrate: parseFloat(minAudioBr),
         maxVideoBitrate: parseFloat(maxVideoBr),
@@ -72,14 +68,6 @@ class Settings extends React.Component {
 
   onAutoPlayClick(evt) {
     this.setState({ autoPlay: getCheckBoxValue(evt.target) });
-  }
-
-  onInitialVideoBrInput(value) {
-    this.setState({ initialVideoBr: value });
-  }
-
-  onInitialAudioBrInput(value) {
-    this.setState({ initialAudioBr: value });
   }
 
   onMinVideoBrInput(value) {
@@ -151,8 +139,6 @@ class Settings extends React.Component {
   render() {
     const {
       autoPlay,
-      initialVideoBr,
-      initialAudioBr,
       minVideoBr,
       minAudioBr,
       maxVideoBr,
@@ -172,16 +158,12 @@ class Settings extends React.Component {
     } = this.state;
 
     const initialSettings = {
-      initialVideoBr,
-      initialAudioBr,
       minAudioBr,
       minVideoBr,
       maxVideoBr,
       maxAudioBr,
       limitVideoWidth,
       throttleVideoBitrateWhenHidden,
-      onInitialVideoBrInput: this.onInitialVideoBrInput,
-      onInitialAudioBrInput: this.onInitialAudioBrInput,
       onMinAudioBrInput: this.onMinAudioBrInput,
       onMinVideoBrInput: this.onMinVideoBrInput,
       onMaxAudioBrInput: this.onMaxAudioBrInput,
