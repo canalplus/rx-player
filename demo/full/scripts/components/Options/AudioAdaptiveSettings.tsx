@@ -4,7 +4,6 @@ import DEFAULT_VALUES from "../../lib/defaultOptionsValues";
 import PlayerOptionNumberInput from "./PlayerOptionNumberInput";
 
 const { Fragment, useCallback, useEffect, useState } = React;
-const DEFAULT_INITIAL_AUDIO_BITRATE = DEFAULT_VALUES.player.initialAudioBitrate;
 const DEFAULT_MIN_AUDIO_BITRATE = DEFAULT_VALUES.player.minAudioBitrate;
 const DEFAULT_MAX_AUDIO_BITRATE = DEFAULT_VALUES.player.maxAudioBitrate;
 
@@ -13,24 +12,16 @@ const DEFAULT_MAX_AUDIO_BITRATE = DEFAULT_VALUES.player.maxAudioBitrate;
  * @returns {Object}
  */
 function AudioAdaptiveSettings({
-  initialAudioBitrate,
   minAudioBitrate,
   maxAudioBitrate,
-  onInitialAudioBitrateChange,
   onMinAudioBitrateChange,
   onMaxAudioBitrateChange,
 }: {
-  initialAudioBitrate: number;
   minAudioBitrate: number;
   maxAudioBitrate: number;
-  onInitialAudioBitrateChange: (newBitrate: number) => void;
   onMinAudioBitrateChange: (newBitrate: number) => void;
   onMaxAudioBitrateChange: (newBitrate: number) => void;
 }): JSX.Element {
-  /* Value of the `initialAudioBitrate` input */
-  const [initialAudioBitrateStr, setInitialAudioBitrateStr] = useState(
-    String(initialAudioBitrate)
-  );
   /* Value of the `minAudioBitrate` input */
   const [minAudioBitrateStr, setMinAudioBitrateStr] = useState(
     String(minAudioBitrate)
@@ -53,18 +44,6 @@ function AudioAdaptiveSettings({
   const [isMaxAudioBitrateLimited, setMaxAudioBitrateLimit] = useState(
     maxAudioBitrate !== Infinity
   );
-
-  // Update initialAudioBitrate when its linked text change
-  useEffect(() => {
-    // Note that this unnecessarily also run on first render - there seem to be
-    // no quick and easy way to disable this in react.
-    // This is not too problematic so I put up with it.
-    let newBitrate = parseFloat(initialAudioBitrateStr);
-    newBitrate = isNaN(newBitrate) ?
-      DEFAULT_INITIAL_AUDIO_BITRATE :
-      newBitrate;
-    onInitialAudioBitrateChange(newBitrate);
-  }, [initialAudioBitrateStr]);
 
   // Update minAudioBitrate when its linked text change
   useEffect(() => {
@@ -106,10 +85,6 @@ function AudioAdaptiveSettings({
       }
     }, []);
 
-  const onInitialAudioBitrateResetClick = useCallback(() => {
-    setInitialAudioBitrateStr(String(DEFAULT_INITIAL_AUDIO_BITRATE));
-  }, []);
-
   const onMinAudioBitrateResetClick = useCallback(() => {
     setMinAudioBitrateStr(String(DEFAULT_MIN_AUDIO_BITRATE));
     setMinAudioBitrateLimit(DEFAULT_MIN_AUDIO_BITRATE !== 0);
@@ -122,26 +97,6 @@ function AudioAdaptiveSettings({
 
   return (
     <Fragment>
-      <li>
-        <PlayerOptionNumberInput
-          ariaLabel="Initial audio bitrate option"
-          label="initialAudioBitrate"
-          title="Initial Audio Bitrate"
-          valueAsString={initialAudioBitrateStr}
-          defaultValueAsNumber={DEFAULT_INITIAL_AUDIO_BITRATE}
-          isDisabled={false}
-          onUpdateValue={setInitialAudioBitrateStr}
-          onResetClick={onInitialAudioBitrateResetClick}
-        />
-        <span className="option-desc">
-          {
-            initialAudioBitrate === 0 ?
-              "Starts loading the lowest audio bitrate" :
-              `Starts with an audio bandwidth estimate of ${initialAudioBitrate}` +
-              " bits per seconds."
-          }
-        </span>
-      </li>
       <li>
         <PlayerOptionNumberInput
           ariaLabel="Min audio bitrate option"
