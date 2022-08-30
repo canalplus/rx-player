@@ -192,9 +192,9 @@ export default function launchTestsForContent(manifestInfos) {
         xhrMock.lock();
         player.loadVideo({ url: manifestInfos.url, transport });
 
-        await sleep(10);
+        await sleep(100);
         await xhrMock.flush(); // only wait for the manifest request
-        await sleep(10);
+        await sleep(100);
 
         const manifest = player.getManifest();
         expect(manifest).not.to.equal(null);
