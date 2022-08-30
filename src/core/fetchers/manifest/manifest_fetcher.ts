@@ -570,7 +570,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       this._prioritizedContentUrl = null;
     } else {
       fullRefresh = !enablePartialRefresh || manifestUpdateUrl === undefined;
-      refreshURL = fullRefresh ? manifest.getUrl() :
+      refreshURL = fullRefresh ? manifest.getUrls()[0] :
                                  manifestUpdateUrl;
     }
     const externalClockOffset = manifest.clockOffset;
