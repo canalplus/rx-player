@@ -37,7 +37,7 @@ describe("DASH live content (SegmentTemplate)", function() {
     expect(player.getPlayerState()).to.equal("LOADING");
 
     expect(player.isLive()).to.equal(true);
-    expect(player.getUrl()).to.equal(manifestInfos.url);
+    expect(player.getContentUrls()).to.eql([manifestInfos.url]);
 
     expect(xhrMock.getLockedXHR().length).to.be.at.least(2);
   });
@@ -260,7 +260,8 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
     expect(player.getPlayerState()).to.equal("LOADING");
 
     expect(player.isLive()).to.equal(true);
-    expect(player.getUrl()).to.equal(noTimeShiftBufferDepthManifestInfos.url);
+    expect(player.getContentUrls())
+      .to.equal([noTimeShiftBufferDepthManifestInfos.url]);
 
     expect(xhrMock.getLockedXHR().length).to.be.at.least(2);
   });

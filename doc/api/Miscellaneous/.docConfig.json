@@ -37,10 +37,6 @@
       "displayName": "MetaPlaylist"
     },
     {
-      "path": "./Manifest_Object.md",
-      "displayName": "Manifest Object"
-    },
-    {
       "path": "./Deprecated_APIs.md",
       "displayName": "Deprecated APIs"
     },
