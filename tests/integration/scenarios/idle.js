@@ -65,9 +65,9 @@ describe("initial idle state", () => {
       });
     });
 
-    describe("getUrl", () => {
-      it("should return undefined in getUrl by default", () => {
-        expect(player.getUrl()).to.equal(undefined);
+    describe("getContentUrls", () => {
+      it("should return undefined in getContentUrls by default", () => {
+        expect(player.getContentUrls()).to.equal(undefined);
       });
     });
 
