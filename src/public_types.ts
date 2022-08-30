@@ -48,8 +48,7 @@ export interface IConstructorOptions {
   throttleVideoBitrateWhenHidden? : boolean;
 
   videoElement? : HTMLMediaElement;
-  initialVideoBitrate? : number;
-  initialAudioBitrate? : number;
+  baseBandwidth? : number;
   minAudioBitrate? : number;
   minVideoBitrate? : number;
   maxAudioBitrate? : number;

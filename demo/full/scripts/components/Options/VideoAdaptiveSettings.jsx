@@ -10,10 +10,8 @@ import DEFAULT_VALUES from "../../lib/defaultOptionsValues";
  * @returns {Object}
  */
 function VideoAdaptiveSettings({
-  initialVideoBr,
   minVideoBr,
   maxVideoBr,
-  onInitialVideoBrInput,
   onMinVideoBrInput,
   onMaxVideoBrInput,
   limitVideoWidth,
@@ -50,44 +48,6 @@ function VideoAdaptiveSettings({
 
   return (
     <Fragment>
-      <li>
-        <div className="playerOptionInput">
-          <label htmlFor="initialVideoBitrate">Initial Video Bitrate</label>
-          <span className="wrapperInputWithResetBtn">
-            <input
-              type="number"
-              name="initialVideoBitrate"
-              id="initialVideoBitrate"
-              aria-label="Initial video bitrate option"
-              placeholder="Number"
-              onChange={(evt) => onInitialVideoBrInput(evt.target.value)}
-              value={initialVideoBr}
-              className="optionInput"
-            />
-            <Button
-              className={
-                parseFloat(initialVideoBr) === DEFAULT_VALUES.initialVideoBr
-                  ? "resetBtn disabledResetBtn"
-                  : "resetBtn"
-              }
-              ariaLabel="Reset option to default value"
-              title="Reset option to default value"
-              onClick={() => {
-                onInitialVideoBrInput(DEFAULT_VALUES.initialVideoBr);
-              }}
-              value={String.fromCharCode(0xf021)}
-            />
-          </span>
-        </div>
-        <span className="option-desc">
-          {
-            parseFloat(initialVideoBr) === 0 ?
-              "Starts loading the lowest video bitrate" :
-              `Starts with a video bandwidth estimate of ${initialVideoBr}` +
-              " bits per seconds."
-          }
-        </span>
-      </li>
       <li>
         <div className="playerOptionInput">
           <label htmlFor="minVideoBitrate">Min Video Bitrate</label>
