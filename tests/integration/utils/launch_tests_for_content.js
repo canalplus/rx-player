@@ -905,10 +905,10 @@ export default function launchTestsForContent(manifestInfos) {
 
         expect(player.getAvailableAudioBitrates()).to.eql([]);
 
-        await sleep(5);
+        await sleep(100);
         expect(player.getAvailableAudioBitrates()).to.eql([]);
         await xhrMock.flush();
-        await sleep(10);
+        await sleep(100);
 
         expect(player.getAvailableAudioBitrates()).to.eql(audioBitrates);
       });
