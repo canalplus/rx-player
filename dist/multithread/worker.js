@@ -1,3 +1,4 @@
+"use strict";
 (() => {
   var __create = Object.create;
   var __defProp = Object.defineProperty;
@@ -23,16 +24,16 @@
     }
     return to;
   };
-  var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
+  var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+    isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+    mod
+  ));
 
   // <define:__ENVIRONMENT__>
-  var PRODUCTION, DEV, CURRENT_ENV, define_ENVIRONMENT_default;
+  var define_ENVIRONMENT_default;
   var init_define_ENVIRONMENT = __esm({
     "<define:__ENVIRONMENT__>"() {
-      PRODUCTION = 0;
-      DEV = 1;
-      CURRENT_ENV = 1;
-      define_ENVIRONMENT_default = { PRODUCTION, DEV, CURRENT_ENV };
+      define_ENVIRONMENT_default = { PRODUCTION: 0, DEV: 1, CURRENT_ENV: 1 };
     }
   });
 
@@ -3561,52 +3562,83 @@
   init_define_ENVIRONMENT();
   function filterMap(callback, filteringToken) {
     return (source) => defer(() => {
-      return source.pipe(map(callback), filter((x) => x !== filteringToken));
+      return source.pipe(
+        map(callback),
+        filter((x) => x !== filteringToken)
+      );
     });
   }
 
   // src/worker/content_time_boundaries_observer.ts
   function ContentTimeBoundariesObserver(manifest, streams, playbackObserver2) {
     const maximumPositionCalculator = new MaximumPositionCalculator(manifest);
-    const outOfManifest$ = playbackObserver2.getReference().asObservable().pipe(filterMap(({ position }) => {
-      const wantedPosition = position.pending ?? position.last;
-      if (wantedPosition < manifest.getMinimumSafePosition()) {
-        const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST", "The current position is behind the earliest time announced in the Manifest.");
-        return { type: "warning", value: warning };
-      } else if (wantedPosition > maximumPositionCalculator.getCurrentMaximumPosition()) {
-        const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST", "The current position is after the latest time announced in the Manifest.");
-        return { type: "warning", value: warning };
-      }
-      return null;
-    }, null));
+    const outOfManifest$ = playbackObserver2.getReference().asObservable().pipe(
+      filterMap(({ position }) => {
+        const wantedPosition = position.pending ?? position.last;
+        if (wantedPosition < manifest.getMinimumSafePosition()) {
+          const warning = new MediaError(
+            "MEDIA_TIME_BEFORE_MANIFEST",
+            "The current position is behind the earliest time announced in the Manifest."
+          );
+          return { type: "warning", value: warning };
+        } else if (wantedPosition > maximumPositionCalculator.getCurrentMaximumPosition()) {
+          const warning = new MediaError(
+            "MEDIA_TIME_AFTER_MANIFEST",
+            "The current position is after the latest time announced in the Manifest."
+          );
+          return { type: "warning", value: warning };
+        }
+        return null;
+      }, null)
+    );
     const contentDuration = reference_default(void 0);
-    const updateDurationOnManifestUpdate$ = fromEvent2(manifest, "manifestUpdate").pipe(startWith(null), tap(() => {
-      if (!manifest.isDynamic) {
-        const maxPos = maximumPositionCalculator.getCurrentMaximumPosition();
-        contentDuration.setValue(maxPos);
-      } else {
-        contentDuration.setValue(void 0);
-      }
-    }), ignoreElements());
-    const updateDurationAndTimeBoundsOnTrackChange$ = streams.pipe(tap((message) => {
-      if (message.type === "adaptationChange") {
-        const lastPeriod = manifest.periods[manifest.periods.length - 1];
-        if (message.value.period.id === lastPeriod?.id) {
-          if (message.value.type === "audio") {
-            maximumPositionCalculator.updateLastAudioAdaptation(message.value.adaptation);
-            if (!manifest.isDynamic) {
-              contentDuration.setValue(maximumPositionCalculator.getCurrentMaximumPosition());
-            }
-          } else if (message.value.type === "video") {
-            maximumPositionCalculator.updateLastVideoAdaptation(message.value.adaptation);
-            if (!manifest.isDynamic) {
-              contentDuration.setValue(maximumPositionCalculator.getCurrentMaximumPosition());
+    const updateDurationOnManifestUpdate$ = fromEvent2(manifest, "manifestUpdate").pipe(
+      startWith(null),
+      tap(() => {
+        if (!manifest.isDynamic) {
+          const maxPos = maximumPositionCalculator.getCurrentMaximumPosition();
+          contentDuration.setValue(maxPos);
+        } else {
+          contentDuration.setValue(void 0);
+        }
+      }),
+      ignoreElements()
+    );
+    const updateDurationAndTimeBoundsOnTrackChange$ = streams.pipe(
+      tap((message) => {
+        if (message.type === "adaptationChange") {
+          const lastPeriod = manifest.periods[manifest.periods.length - 1];
+          if (message.value.period.id === lastPeriod?.id) {
+            if (message.value.type === "audio") {
+              maximumPositionCalculator.updateLastAudioAdaptation(message.value.adaptation);
+              if (!manifest.isDynamic) {
+                contentDuration.setValue(
+                  maximumPositionCalculator.getCurrentMaximumPosition()
+                );
+              }
+            } else if (message.value.type === "video") {
+              maximumPositionCalculator.updateLastVideoAdaptation(message.value.adaptation);
+              if (!manifest.isDynamic) {
+                contentDuration.setValue(
+                  maximumPositionCalculator.getCurrentMaximumPosition()
+                );
+              }
             }
           }
         }
-      }
-    }), ignoreElements());
-    return merge(updateDurationOnManifestUpdate$, updateDurationAndTimeBoundsOnTrackChange$, outOfManifest$, contentDuration.asObservable().pipe(skipWhile((val) => val === void 0), distinctUntilChanged(), map((value) => ({ type: "contentDurationUpdate", value }))));
+      }),
+      ignoreElements()
+    );
+    return merge(
+      updateDurationOnManifestUpdate$,
+      updateDurationAndTimeBoundsOnTrackChange$,
+      outOfManifest$,
+      contentDuration.asObservable().pipe(
+        skipWhile((val) => val === void 0),
+        distinctUntilChanged(),
+        map((value) => ({ type: "contentDurationUpdate", value }))
+      )
+    );
   }
   var MaximumPositionCalculator = class {
     _manifest;
@@ -3646,8 +3678,12 @@
         }
         return lastAudioPosition;
       } else {
-        const lastAudioPosition = getLastPositionFromAdaptation(this._lastAudioAdaptation);
-        const lastVideoPosition = getLastPositionFromAdaptation(this._lastVideoAdaptation);
+        const lastAudioPosition = getLastPositionFromAdaptation(
+          this._lastAudioAdaptation
+        );
+        const lastVideoPosition = getLastPositionFromAdaptation(
+          this._lastVideoAdaptation
+        );
         if (typeof lastAudioPosition !== "number" || typeof lastVideoPosition !== "number") {
           return this._manifest.getMaximumSafePosition();
         } else {
@@ -3996,7 +4032,10 @@
       try {
         sourceBuffer.changeType(codec);
       } catch (e) {
-        log_default.warn("Could not call 'changeType' on the given SourceBuffer:", e instanceof Error ? e : "");
+        log_default.warn(
+          "Could not call 'changeType' on the given SourceBuffer:",
+          e instanceof Error ? e : ""
+        );
         return false;
       }
       return true;
@@ -4181,8 +4220,14 @@
       currentTimeout = void 0;
       ref.finish();
     });
-    isDocVisibleRef.onUpdate(checkCurrentVisibility, { clearSignal: stopListening });
-    pipStatus.onUpdate(checkCurrentVisibility, { clearSignal: stopListening });
+    isDocVisibleRef.onUpdate(
+      checkCurrentVisibility,
+      { clearSignal: stopListening }
+    );
+    pipStatus.onUpdate(
+      checkCurrentVisibility,
+      { clearSignal: stopListening }
+    );
     checkCurrentVisibility();
     return ref;
     function checkCurrentVisibility() {
@@ -4220,7 +4265,9 @@
         const { pipWindow } = pipStatus;
         const firstWidth = getVideoWidthFromPIPWindow(mediaElement, pipWindow);
         const onPipResize = () => {
-          ref.setValueIfChanged(getVideoWidthFromPIPWindow(mediaElement, pipWindow) * pixelRatio);
+          ref.setValueIfChanged(
+            getVideoWidthFromPIPWindow(mediaElement, pipWindow) * pixelRatio
+          );
         };
         pipWindow.addEventListener("resize", onPipResize);
         clearPreviousEventListener = () => {
@@ -4238,14 +4285,22 @@
   var onSeeked$ = compatibleListener(["seeked"]);
   var onEnded$ = compatibleListener(["ended"]);
   var onTimeUpdate$ = compatibleListener(["timeupdate"]);
-  var onFullscreenChange$ = compatibleListener(["fullscreenchange", "FullscreenChange"], BROWSER_PREFIXES.concat("MS"));
-  var onTextTrackChanges$ = (textTrackList) => merge(compatibleListener(["addtrack"])(textTrackList), compatibleListener(["removetrack"])(textTrackList));
+  var onFullscreenChange$ = compatibleListener(
+    ["fullscreenchange", "FullscreenChange"],
+    BROWSER_PREFIXES.concat("MS")
+  );
+  var onTextTrackChanges$ = (textTrackList) => merge(
+    compatibleListener(["addtrack"])(textTrackList),
+    compatibleListener(["removetrack"])(textTrackList)
+  );
   var onSourceOpen$ = compatibleListener(["sourceopen", "webkitsourceopen"]);
   var onSourceClose$ = compatibleListener(["sourceclose", "webkitsourceclose"]);
   var onSourceEnded$ = compatibleListener(["sourceended", "webkitsourceended"]);
   var onUpdate$ = compatibleListener(["update"]);
   var onRemoveSourceBuffers$ = compatibleListener(["onremovesourcebuffer"]);
-  var onEncrypted$ = compatibleListener(shouldFavourCustomSafariEME() ? ["needkey"] : ["encrypted", "needkey"]);
+  var onEncrypted$ = compatibleListener(
+    shouldFavourCustomSafariEME() ? ["needkey"] : ["encrypted", "needkey"]
+  );
   var onKeyMessage$ = compatibleListener(["keymessage", "message"]);
   var onKeyAdded$ = compatibleListener(["keyadded", "ready"]);
   var onKeyError$ = compatibleListener(["keyerror", "error"]);
@@ -4395,7 +4450,10 @@
         if (retryCount > maxRetry) {
           throw error;
         }
-        const delay = Math.min(baseDelay * Math.pow(2, retryCount - 1), maxDelay);
+        const delay = Math.min(
+          baseDelay * Math.pow(2, retryCount - 1),
+          maxDelay
+        );
         const fuzzedDelay = getFuzzedDelay(delay);
         const nextURL = urlsToTry[0];
         onRetry(error);
@@ -4456,21 +4514,32 @@
           const { resolveManifestUrl } = pipelines;
           assert(resolveManifestUrl !== void 0);
           const callResolver = () => resolveManifestUrl(resolverUrl, canceller2.signal);
-          return tryRequestPromiseWithBackoff(callResolver, backoffSettings, canceller2.signal);
+          return tryRequestPromiseWithBackoff(
+            callResolver,
+            backoffSettings,
+            canceller2.signal
+          );
         }
         function callLoaderWithRetries(manifestUrl) {
           const { loadManifest } = pipelines;
           const callLoader = () => loadManifest(manifestUrl, canceller2.signal);
-          return tryRequestPromiseWithBackoff(callLoader, backoffSettings, canceller2.signal);
+          return tryRequestPromiseWithBackoff(
+            callLoader,
+            backoffSettings,
+            canceller2.signal
+          );
         }
       });
     }
     parse(manifest, parserOptions) {
-      return this._parseLoadedManifest({
-        responseData: manifest,
-        size: void 0,
-        requestDuration: void 0
-      }, parserOptions);
+      return this._parseLoadedManifest(
+        {
+          responseData: manifest,
+          size: void 0,
+          requestDuration: void 0
+        },
+        parserOptions
+      );
     }
     _parseLoadedManifest(loaded, parserOptions) {
       return new Observable((obs) => {
@@ -4487,7 +4556,13 @@
           originalUrl: this._manifestUrl
         };
         try {
-          const res = this._pipelines.parseManifest(loaded, opts, onWarnings, canceller2.signal, scheduleRequest);
+          const res = this._pipelines.parseManifest(
+            loaded,
+            opts,
+            onWarnings,
+            canceller2.signal,
+            scheduleRequest
+          );
           if (!isPromise2(res)) {
             emitManifestAndComplete(res.manifest);
           } else {
@@ -4509,7 +4584,11 @@
         };
         async function scheduleRequest(performRequest) {
           try {
-            const data = await tryRequestPromiseWithBackoff(performRequest, backoffSettings, canceller2.signal);
+            const data = await tryRequestPromiseWithBackoff(
+              performRequest,
+              backoffSettings,
+              canceller2.signal
+            );
             return data;
           } catch (err) {
             throw errorSelector(err);
@@ -4594,9 +4673,11 @@
     return {
       createRequest(content, priority = 0) {
         const task = prioritizer.create(fetcher(content), priority);
-        const flattenTask = task.pipe(map((evt) => {
-          return evt.type === "data" ? evt.value : evt;
-        }));
+        const flattenTask = task.pipe(
+          map((evt) => {
+            return evt.type === "data" ? evt.value : evt;
+          })
+        );
         taskHandlers.set(flattenTask, task);
         return flattenTask;
       },
@@ -5178,16 +5259,22 @@
       const representations = [];
       let isSupported = false;
       for (let i = 0; i < argsRepresentations.length; i++) {
-        const representation = new representation_default(argsRepresentations[i], { type: this.type });
-        const shouldAdd = isNullOrUndefined(representationFilter) || representationFilter(representation, {
-          bufferType: this.type,
-          language: this.language,
-          normalizedLanguage: this.normalizedLanguage,
-          isClosedCaption: this.isClosedCaption,
-          isDub: this.isDub,
-          isAudioDescription: this.isAudioDescription,
-          isSignInterpreted: this.isSignInterpreted
-        });
+        const representation = new representation_default(
+          argsRepresentations[i],
+          { type: this.type }
+        );
+        const shouldAdd = isNullOrUndefined(representationFilter) || representationFilter(
+          representation,
+          {
+            bufferType: this.type,
+            language: this.language,
+            normalizedLanguage: this.normalizedLanguage,
+            isClosedCaption: this.isClosedCaption,
+            isDub: this.isDub,
+            isAudioDescription: this.isAudioDescription,
+            isSignInterpreted: this.isSignInterpreted
+          }
+        );
         if (shouldAdd) {
           representations.push(representation);
           if (!isSupported && representation.isSupported) {
@@ -5263,13 +5350,21 @@
         const filteredAdaptations = adaptationsForType.map((adaptation) => {
           const newAdaptation = new Adaptation(adaptation, { representationFilter });
           if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
-            const error = new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR", "An Adaptation contains only incompatible codecs.");
+            const error = new MediaError(
+              "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
+              "An Adaptation contains only incompatible codecs."
+            );
             this.contentWarnings.push(error);
           }
           return newAdaptation;
-        }).filter((adaptation) => adaptation.representations.length > 0);
+        }).filter(
+          (adaptation) => adaptation.representations.length > 0
+        );
         if (filteredAdaptations.every((adaptation) => !adaptation.isSupported) && adaptationsForType.length > 0 && (type === "video" || type === "audio")) {
-          throw new MediaError("MANIFEST_PARSE_ERROR", "No supported " + type + " adaptations");
+          throw new MediaError(
+            "MANIFEST_PARSE_ERROR",
+            "No supported " + type + " adaptations"
+          );
         }
         if (filteredAdaptations.length > 0) {
           acc[type] = filteredAdaptations;
@@ -5277,7 +5372,10 @@
         return acc;
       }, {});
       if (!Array.isArray(this.adaptations.video) && !Array.isArray(this.adaptations.audio)) {
-        throw new MediaError("MANIFEST_PARSE_ERROR", "No supported audio and video tracks.");
+        throw new MediaError(
+          "MANIFEST_PARSE_ERROR",
+          "No supported audio and video tracks."
+        );
       }
       this.duration = args.duration;
       this.start = args.start;
@@ -5288,7 +5386,10 @@
     }
     getAdaptations() {
       const adaptationsByType = this.adaptations;
-      return object_values_default(adaptationsByType).reduce((acc, adaptations) => adaptations != null ? acc.concat(adaptations) : acc, []);
+      return object_values_default(adaptationsByType).reduce(
+        (acc, adaptations) => adaptations != null ? acc.concat(adaptations) : acc,
+        []
+      );
     }
     getAdaptationsForType(adaptationType) {
       const adaptationsForType = this.adaptations[adaptationType];
@@ -5407,7 +5508,10 @@
     const newAdaptations = newPeriod.getAdaptations();
     for (let j = 0; j < oldAdaptations.length; j++) {
       const oldAdaptation = oldAdaptations[j];
-      const newAdaptation = arrayFind(newAdaptations, (a) => a.id === oldAdaptation.id);
+      const newAdaptation = arrayFind(
+        newAdaptations,
+        (a) => a.id === oldAdaptation.id
+      );
       if (newAdaptation === void 0) {
         log_default.warn('Manifest: Adaptation "' + oldAdaptations[j].id + '" not found when merging.');
       } else {
@@ -5415,7 +5519,10 @@
         const newRepresentations = newAdaptation.representations;
         for (let k = 0; k < oldRepresentations.length; k++) {
           const oldRepresentation = oldRepresentations[k];
-          const newRepresentation = arrayFind(newRepresentations, (representation) => representation.id === oldRepresentation.id);
+          const newRepresentation = arrayFind(
+            newRepresentations,
+            (representation) => representation.id === oldRepresentation.id
+          );
           if (newRepresentation === void 0) {
             log_default.warn(`Manifest: Representation "${oldRepresentations[k].id}" not found when merging.`);
           } else {
@@ -5445,7 +5552,11 @@
         updatePeriodInPlace(oldPeriod, newPeriod, 0 /* Full */);
         const periodsToInclude = newPeriods.slice(firstUnhandledPeriodIdx, i);
         const nbrOfPeriodsToRemove = j - firstUnhandledPeriodIdx;
-        oldPeriods.splice(firstUnhandledPeriodIdx, nbrOfPeriodsToRemove, ...periodsToInclude);
+        oldPeriods.splice(
+          firstUnhandledPeriodIdx,
+          nbrOfPeriodsToRemove,
+          ...periodsToInclude
+        );
         firstUnhandledPeriodIdx = i + 1;
       }
     }
@@ -5454,9 +5565,15 @@
       return;
     }
     if (firstUnhandledPeriodIdx < oldPeriods.length) {
-      oldPeriods.splice(firstUnhandledPeriodIdx, oldPeriods.length - firstUnhandledPeriodIdx);
+      oldPeriods.splice(
+        firstUnhandledPeriodIdx,
+        oldPeriods.length - firstUnhandledPeriodIdx
+      );
     }
-    const remainingNewPeriods = newPeriods.slice(firstUnhandledPeriodIdx, newPeriods.length);
+    const remainingNewPeriods = newPeriods.slice(
+      firstUnhandledPeriodIdx,
+      newPeriods.length
+    );
     if (remainingNewPeriods.length > 0) {
       oldPeriods.push(...remainingNewPeriods);
     }
@@ -5472,16 +5589,29 @@
     const oldLastPeriod = oldPeriods[oldPeriods.length - 1];
     if (oldLastPeriod.start < newPeriods[0].start) {
       if (oldLastPeriod.end !== newPeriods[0].start) {
-        throw new MediaError("MANIFEST_UPDATE_ERROR", "Cannot perform partial update: not enough data");
+        throw new MediaError(
+          "MANIFEST_UPDATE_ERROR",
+          "Cannot perform partial update: not enough data"
+        );
       }
       oldPeriods.push(...newPeriods);
       return;
     }
-    const indexOfNewFirstPeriod = arrayFindIndex(oldPeriods, ({ id }) => id === newPeriods[0].id);
+    const indexOfNewFirstPeriod = arrayFindIndex(
+      oldPeriods,
+      ({ id }) => id === newPeriods[0].id
+    );
     if (indexOfNewFirstPeriod < 0) {
-      throw new MediaError("MANIFEST_UPDATE_ERROR", "Cannot perform partial update: incoherent data");
+      throw new MediaError(
+        "MANIFEST_UPDATE_ERROR",
+        "Cannot perform partial update: incoherent data"
+      );
     }
-    updatePeriodInPlace(oldPeriods[indexOfNewFirstPeriod], newPeriods[0], 1 /* Partial */);
+    updatePeriodInPlace(
+      oldPeriods[indexOfNewFirstPeriod],
+      newPeriods[0],
+      1 /* Partial */
+    );
     let prevIndexOfNewPeriod = indexOfNewFirstPeriod + 1;
     for (let i = 1; i < newPeriods.length; i++) {
       const newPeriod = newPeriods[i];
@@ -5493,18 +5623,32 @@
         }
       }
       if (indexOfNewPeriod < 0) {
-        oldPeriods.splice(prevIndexOfNewPeriod, oldPeriods.length - prevIndexOfNewPeriod, ...newPeriods.slice(i, newPeriods.length));
+        oldPeriods.splice(
+          prevIndexOfNewPeriod,
+          oldPeriods.length - prevIndexOfNewPeriod,
+          ...newPeriods.slice(i, newPeriods.length)
+        );
         return;
       }
       if (indexOfNewPeriod > prevIndexOfNewPeriod) {
-        oldPeriods.splice(prevIndexOfNewPeriod, indexOfNewPeriod - prevIndexOfNewPeriod);
+        oldPeriods.splice(
+          prevIndexOfNewPeriod,
+          indexOfNewPeriod - prevIndexOfNewPeriod
+        );
         indexOfNewPeriod = prevIndexOfNewPeriod;
       }
-      updatePeriodInPlace(oldPeriods[indexOfNewPeriod], newPeriod, 0 /* Full */);
+      updatePeriodInPlace(
+        oldPeriods[indexOfNewPeriod],
+        newPeriod,
+        0 /* Full */
+      );
       prevIndexOfNewPeriod++;
     }
     if (prevIndexOfNewPeriod < oldPeriods.length) {
-      oldPeriods.splice(prevIndexOfNewPeriod, oldPeriods.length - prevIndexOfNewPeriod);
+      oldPeriods.splice(
+        prevIndexOfNewPeriod,
+        oldPeriods.length - prevIndexOfNewPeriod
+      );
     }
   }
 
@@ -5674,20 +5818,26 @@
       const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
         const adaptationID = "gen-image-ada-" + generateSupplementaryTrackID();
         const representationID = "gen-image-rep-" + generateSupplementaryTrackID();
-        const newAdaptation = new Adaptation({
-          id: adaptationID,
-          type: "image",
-          representations: [{
-            bitrate: 0,
-            id: representationID,
-            mimeType,
-            index: new StaticRepresentationIndex({
-              media: url
-            })
-          }]
-        }, { isManuallyAdded: true });
+        const newAdaptation = new Adaptation(
+          {
+            id: adaptationID,
+            type: "image",
+            representations: [{
+              bitrate: 0,
+              id: representationID,
+              mimeType,
+              index: new StaticRepresentationIndex({
+                media: url
+              })
+            }]
+          },
+          { isManuallyAdded: true }
+        );
         if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
-          const error = new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR", "An Adaptation contains only incompatible codecs.");
+          const error = new MediaError(
+            "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
+            "An Adaptation contains only incompatible codecs."
+          );
           this.contentWarnings.push(error);
         }
         return newAdaptation;
@@ -5711,23 +5861,29 @@
         return allSubs.concat(langsToMapOn.map((_language) => {
           const adaptationID = "gen-text-ada-" + generateSupplementaryTrackID();
           const representationID = "gen-text-rep-" + generateSupplementaryTrackID();
-          const newAdaptation = new Adaptation({
-            id: adaptationID,
-            type: "text",
-            language: _language,
-            closedCaption,
-            representations: [{
-              bitrate: 0,
-              id: representationID,
-              mimeType,
-              codecs,
-              index: new StaticRepresentationIndex({
-                media: url
-              })
-            }]
-          }, { isManuallyAdded: true });
+          const newAdaptation = new Adaptation(
+            {
+              id: adaptationID,
+              type: "text",
+              language: _language,
+              closedCaption,
+              representations: [{
+                bitrate: 0,
+                id: representationID,
+                mimeType,
+                codecs,
+                index: new StaticRepresentationIndex({
+                  media: url
+                })
+              }]
+            },
+            { isManuallyAdded: true }
+          );
           if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
-            const error = new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR", "An Adaptation contains only incompatible codecs.");
+            const error = new MediaError(
+              "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
+              "An Adaptation contains only incompatible codecs."
+            );
             this.contentWarnings.push(error);
           }
           return newAdaptation;
@@ -5856,7 +6012,12 @@
           id: requestId,
           content
         });
-        tryURLsWithBackoff(segment.mediaURLs ?? [null], callLoaderWithUrl, object_assign_default({ onRetry }, options), canceller2.signal).then((res) => {
+        tryURLsWithBackoff(
+          segment.mediaURLs ?? [null],
+          callLoaderWithUrl,
+          object_assign_default({ onRetry }, options),
+          canceller2.signal
+        ).then((res) => {
           log_default.debug("SF: Segment request ended with success", segmentIdString);
           if (res.resultType === "segment-loaded") {
             const loadedData = res.resultData.responseData;
@@ -6044,11 +6205,17 @@
           if (newTask.finished) {
             return;
           }
-          const waitingQueueIndex = arrayFindIndex(this._waitingQueue, (elt) => elt.observable === pObs$);
+          const waitingQueueIndex = arrayFindIndex(
+            this._waitingQueue,
+            (elt) => elt.observable === pObs$
+          );
           if (waitingQueueIndex >= 0) {
             this._waitingQueue.splice(waitingQueueIndex, 1);
           } else {
-            const pendingTasksIndex = arrayFindIndex(this._pendingTasks, (elt) => elt.observable === pObs$);
+            const pendingTasksIndex = arrayFindIndex(
+              this._pendingTasks,
+              (elt) => elt.observable === pObs$
+            );
             if (pendingTasksIndex < 0) {
               log_default.warn("FP: unsubscribing non-existent task");
               return;
@@ -6067,7 +6234,10 @@
       return pObs$;
     }
     updatePriority(obs, priority) {
-      const waitingQueueIndex = arrayFindIndex(this._waitingQueue, (elt) => elt.observable === obs);
+      const waitingQueueIndex = arrayFindIndex(
+        this._waitingQueue,
+        (elt) => elt.observable === obs
+      );
       if (waitingQueueIndex >= 0) {
         const waitingQueueElt = this._waitingQueue[waitingQueueIndex];
         if (waitingQueueElt.priority === priority) {
@@ -6083,7 +6253,10 @@
         }
         return;
       }
-      const pendingTasksIndex = arrayFindIndex(this._pendingTasks, (elt) => elt.observable === obs);
+      const pendingTasksIndex = arrayFindIndex(
+        this._pendingTasks,
+        (elt) => elt.observable === obs
+      );
       if (pendingTasksIndex < 0) {
         log_default.warn("FP: request to update the priority of a non-existent task");
         return;
@@ -6140,7 +6313,10 @@
       task.trigger(true);
     }
     _interruptPendingTask(task) {
-      const pendingTasksIndex = arrayFindIndex(this._pendingTasks, (elt) => elt.observable === task.observable);
+      const pendingTasksIndex = arrayFindIndex(
+        this._pendingTasks,
+        (elt) => elt.observable === task.observable
+      );
       if (pendingTasksIndex < 0) {
         log_default.warn("FP: Interrupting a non-existent pending task. Aborting...");
         return;
@@ -6155,7 +6331,10 @@
       task.trigger(false);
     }
     _onTaskEnd(task) {
-      const pendingTasksIndex = arrayFindIndex(this._pendingTasks, (elt) => elt.observable === task.observable);
+      const pendingTasksIndex = arrayFindIndex(
+        this._pendingTasks,
+        (elt) => elt.observable === task.observable
+      );
       if (pendingTasksIndex < 0) {
         return;
       }
@@ -6199,7 +6378,12 @@
     createSegmentFetcher(bufferType, callbacks) {
       const backoffOptions = getSegmentFetcherOptions(bufferType, this._backoffOptions);
       const pipelines = this._transport[bufferType];
-      const segmentFetcher = createSegmentFetcher(bufferType, pipelines, callbacks, backoffOptions);
+      const segmentFetcher = createSegmentFetcher(
+        bufferType,
+        pipelines,
+        callbacks,
+        backoffOptions
+      );
       return applyPrioritizerToSegmentFetcher(this._prioritizer, segmentFetcher);
     }
   };
@@ -6469,16 +6653,26 @@
     maxBufferBehind$,
     maxBufferAhead$
   }) {
-    return combineLatest([currentTime$, maxBufferBehind$, maxBufferAhead$]).pipe(mergeMap(([currentTime, maxBufferBehind2, maxBufferAhead2]) => {
-      return clearBuffer(segmentBuffer, currentTime, maxBufferBehind2, maxBufferAhead2);
-    }));
+    return combineLatest([currentTime$, maxBufferBehind$, maxBufferAhead$]).pipe(
+      mergeMap(([currentTime, maxBufferBehind2, maxBufferAhead2]) => {
+        return clearBuffer(
+          segmentBuffer,
+          currentTime,
+          maxBufferBehind2,
+          maxBufferAhead2
+        );
+      })
+    );
   }
   function clearBuffer(segmentBuffer, position, maxBufferBehind2, maxBufferAhead2) {
     if (!isFinite(maxBufferBehind2) && !isFinite(maxBufferAhead2)) {
       return EMPTY;
     }
     const cleanedupRanges = [];
-    const { innerRange, outerRanges } = getInnerAndOuterTimeRanges(segmentBuffer.getBufferedRanges(), position);
+    const { innerRange, outerRanges } = getInnerAndOuterTimeRanges(
+      segmentBuffer.getBufferedRanges(),
+      position
+    );
     const collectBufferBehind = () => {
       if (!isFinite(maxBufferBehind2)) {
         return;
@@ -6529,13 +6723,18 @@
     };
     collectBufferBehind();
     collectBufferAhead();
-    const clean$ = from(cleanedupRanges.map((range) => {
-      log_default.debug("GC: cleaning range from SegmentBuffer", range.start, range.end);
-      if (range.start >= range.end) {
-        return of(null);
-      }
-      return segmentBuffer.removeBuffer(range.start, range.end);
-    })).pipe(concatAll(), ignoreElements());
+    const clean$ = from(
+      cleanedupRanges.map((range) => {
+        log_default.debug("GC: cleaning range from SegmentBuffer", range.start, range.end);
+        if (range.start >= range.end) {
+          return of(null);
+        }
+        return segmentBuffer.removeBuffer(range.start, range.end);
+      })
+    ).pipe(
+      concatAll(),
+      ignoreElements()
+    );
     return clean$;
   }
 
@@ -6685,7 +6884,10 @@
         BUFFERED_HISTORY_MAXIMUM_ENTRIES
       } = config_default.getCurrent();
       this._inventory = [];
-      this._bufferedHistory = new BufferedHistory(BUFFERED_HISTORY_RETENTION_TIME, BUFFERED_HISTORY_MAXIMUM_ENTRIES);
+      this._bufferedHistory = new BufferedHistory(
+        BUFFERED_HISTORY_RETENTION_TIME,
+        BUFFERED_HISTORY_MAXIMUM_ENTRIES
+      );
     }
     reset() {
       this._inventory.length = 0;
@@ -6704,7 +6906,12 @@
         const rangeStart = buffered.start(i);
         const rangeEnd = buffered.end(i);
         if (rangeEnd - rangeStart < MINIMUM_SEGMENT_SIZE) {
-          log_default.warn("SI: skipped TimeRange when synchronizing because it was too small", bufferType, rangeStart, rangeEnd);
+          log_default.warn(
+            "SI: skipped TimeRange when synchronizing because it was too small",
+            bufferType,
+            rangeStart,
+            rangeEnd
+          );
           continue;
         }
         const indexBefore = inventoryIndex;
@@ -6716,7 +6923,10 @@
         if (numberOfSegmentToDelete > 0) {
           const lastDeletedSegment = inventory[indexBefore + numberOfSegmentToDelete - 1];
           lastDeletedSegmentInfos = {
-            end: takeFirstSet(lastDeletedSegment.bufferedEnd, lastDeletedSegment.end),
+            end: takeFirstSet(
+              lastDeletedSegment.bufferedEnd,
+              lastDeletedSegment.end
+            ),
             precizeEnd: lastDeletedSegment.precizeEnd
           };
           log_default.debug(`SI: ${numberOfSegmentToDelete} segments GCed.`, bufferType);
@@ -6732,26 +6942,48 @@
           return;
         }
         if (rangeEnd - takeFirstSet(thisSegment.bufferedStart, thisSegment.start) >= MINIMUM_SEGMENT_SIZE) {
-          guessBufferedStartFromRangeStart(thisSegment, rangeStart, lastDeletedSegmentInfos, bufferType);
+          guessBufferedStartFromRangeStart(
+            thisSegment,
+            rangeStart,
+            lastDeletedSegmentInfos,
+            bufferType
+          );
           if (inventoryIndex === inventory.length - 1) {
             guessBufferedEndFromRangeEnd(thisSegment, rangeEnd, bufferType);
             return;
           }
           thisSegment = inventory[++inventoryIndex];
-          let thisSegmentStart = takeFirstSet(thisSegment.bufferedStart, thisSegment.start);
-          let thisSegmentEnd = takeFirstSet(thisSegment.bufferedEnd, thisSegment.end);
+          let thisSegmentStart = takeFirstSet(
+            thisSegment.bufferedStart,
+            thisSegment.start
+          );
+          let thisSegmentEnd = takeFirstSet(
+            thisSegment.bufferedEnd,
+            thisSegment.end
+          );
           const nextRangeStart = i < rangesLength - 1 ? buffered.start(i + 1) : void 0;
           while (thisSegment !== void 0 && rangeEnd - thisSegmentStart >= MINIMUM_SEGMENT_SIZE && (nextRangeStart === void 0 || rangeEnd - thisSegmentStart >= thisSegmentEnd - nextRangeStart)) {
             const prevSegment = inventory[inventoryIndex - 1];
             if (prevSegment.bufferedEnd === void 0) {
               prevSegment.bufferedEnd = thisSegment.precizeStart ? thisSegment.start : prevSegment.end;
-              log_default.debug("SI: calculating buffered end of contiguous segment", bufferType, prevSegment.bufferedEnd, prevSegment.end);
+              log_default.debug(
+                "SI: calculating buffered end of contiguous segment",
+                bufferType,
+                prevSegment.bufferedEnd,
+                prevSegment.end
+              );
             }
             thisSegment.bufferedStart = prevSegment.bufferedEnd;
             thisSegment = inventory[++inventoryIndex];
             if (thisSegment !== void 0) {
-              thisSegmentStart = takeFirstSet(thisSegment.bufferedStart, thisSegment.start);
-              thisSegmentEnd = takeFirstSet(thisSegment.bufferedEnd, thisSegment.end);
+              thisSegmentStart = takeFirstSet(
+                thisSegment.bufferedStart,
+                thisSegment.start
+              );
+              thisSegmentEnd = takeFirstSet(
+                thisSegment.bufferedEnd,
+                thisSegment.end
+              );
             }
           }
         }
@@ -6761,7 +6993,12 @@
         }
       }
       if (thisSegment != null) {
-        log_default.debug("SI: last segments have been GCed", bufferType, inventoryIndex, inventory.length);
+        log_default.debug(
+          "SI: last segments have been GCed",
+          bufferType,
+          inventoryIndex,
+          inventory.length
+        );
         const removed = inventory.splice(inventoryIndex, inventory.length - inventoryIndex);
         for (const seg of removed) {
           if (seg.bufferedStart === void 0 && seg.bufferedEnd === void 0) {
@@ -6788,7 +7025,12 @@
       }
       const bufferType = adaptation.type;
       if (start >= end) {
-        log_default.warn("SI: Invalid chunked inserted: starts before it ends", bufferType, start, end);
+        log_default.warn(
+          "SI: Invalid chunked inserted: starts before it ends",
+          bufferType,
+          start,
+          end
+        );
         return;
       }
       const inventory = this._inventory;
@@ -6808,41 +7050,82 @@
         const segmentI = inventory[i];
         if (segmentI.start <= start) {
           if (segmentI.end <= start) {
-            log_default.debug("SI: Pushing segment strictly after previous one.", bufferType, start, segmentI.end);
+            log_default.debug(
+              "SI: Pushing segment strictly after previous one.",
+              bufferType,
+              start,
+              segmentI.end
+            );
             this._inventory.splice(i + 1, 0, newSegment);
             i += 2;
             while (i < inventory.length && inventory[i].start < newSegment.end) {
               if (inventory[i].end > newSegment.end) {
-                log_default.debug("SI: Segment pushed updates the start of the next one", bufferType, newSegment.end, inventory[i].start);
+                log_default.debug(
+                  "SI: Segment pushed updates the start of the next one",
+                  bufferType,
+                  newSegment.end,
+                  inventory[i].start
+                );
                 inventory[i].start = newSegment.end;
                 inventory[i].bufferedStart = void 0;
                 inventory[i].precizeStart = inventory[i].precizeStart && newSegment.precizeEnd;
                 return;
               }
-              log_default.debug("SI: Segment pushed removes the next one", bufferType, start, end, inventory[i].start, inventory[i].end);
+              log_default.debug(
+                "SI: Segment pushed removes the next one",
+                bufferType,
+                start,
+                end,
+                inventory[i].start,
+                inventory[i].end
+              );
               inventory.splice(i, 1);
             }
             return;
           } else {
             if (segmentI.start === start) {
               if (segmentI.end <= end) {
-                log_default.debug("SI: Segment pushed replace another one", bufferType, start, end, segmentI.end);
+                log_default.debug(
+                  "SI: Segment pushed replace another one",
+                  bufferType,
+                  start,
+                  end,
+                  segmentI.end
+                );
                 this._inventory.splice(i, 1, newSegment);
                 i += 1;
                 while (i < inventory.length && inventory[i].start < newSegment.end) {
                   if (inventory[i].end > newSegment.end) {
-                    log_default.debug("SI: Segment pushed updates the start of the next one", bufferType, newSegment.end, inventory[i].start);
+                    log_default.debug(
+                      "SI: Segment pushed updates the start of the next one",
+                      bufferType,
+                      newSegment.end,
+                      inventory[i].start
+                    );
                     inventory[i].start = newSegment.end;
                     inventory[i].bufferedStart = void 0;
                     inventory[i].precizeStart = inventory[i].precizeStart && newSegment.precizeEnd;
                     return;
                   }
-                  log_default.debug("SI: Segment pushed removes the next one", bufferType, start, end, inventory[i].start, inventory[i].end);
+                  log_default.debug(
+                    "SI: Segment pushed removes the next one",
+                    bufferType,
+                    start,
+                    end,
+                    inventory[i].start,
+                    inventory[i].end
+                  );
                   inventory.splice(i, 1);
                 }
                 return;
               } else {
-                log_default.debug("SI: Segment pushed ends before another with the same start", bufferType, start, end, segmentI.end);
+                log_default.debug(
+                  "SI: Segment pushed ends before another with the same start",
+                  bufferType,
+                  start,
+                  end,
+                  segmentI.end
+                );
                 inventory.splice(i, 0, newSegment);
                 segmentI.start = newSegment.end;
                 segmentI.bufferedStart = void 0;
@@ -6851,7 +7134,14 @@
               }
             } else {
               if (segmentI.end <= newSegment.end) {
-                log_default.debug("SI: Segment pushed updates end of previous one", bufferType, start, end, segmentI.start, segmentI.end);
+                log_default.debug(
+                  "SI: Segment pushed updates end of previous one",
+                  bufferType,
+                  start,
+                  end,
+                  segmentI.start,
+                  segmentI.end
+                );
                 this._inventory.splice(i + 1, 0, newSegment);
                 segmentI.end = newSegment.start;
                 segmentI.bufferedEnd = void 0;
@@ -6859,18 +7149,37 @@
                 i += 2;
                 while (i < inventory.length && inventory[i].start < newSegment.end) {
                   if (inventory[i].end > newSegment.end) {
-                    log_default.debug("SI: Segment pushed updates the start of the next one", bufferType, newSegment.end, inventory[i].start);
+                    log_default.debug(
+                      "SI: Segment pushed updates the start of the next one",
+                      bufferType,
+                      newSegment.end,
+                      inventory[i].start
+                    );
                     inventory[i].start = newSegment.end;
                     inventory[i].bufferedStart = void 0;
                     inventory[i].precizeStart = inventory[i].precizeStart && newSegment.precizeEnd;
                     return;
                   }
-                  log_default.debug("SI: Segment pushed removes the next one", bufferType, start, end, inventory[i].start, inventory[i].end);
+                  log_default.debug(
+                    "SI: Segment pushed removes the next one",
+                    bufferType,
+                    start,
+                    end,
+                    inventory[i].start,
+                    inventory[i].end
+                  );
                   inventory.splice(i, 1);
                 }
                 return;
               } else {
-                log_default.warn("SI: Segment pushed is contained in a previous one", bufferType, start, end, segmentI.start, segmentI.end);
+                log_default.warn(
+                  "SI: Segment pushed is contained in a previous one",
+                  bufferType,
+                  start,
+                  end,
+                  segmentI.start,
+                  segmentI.end
+                );
                 const nextSegment = {
                   partiallyPushed: segmentI.partiallyPushed,
                   chunkSize: segmentI.chunkSize,
@@ -6902,25 +7211,57 @@
         return;
       }
       if (firstSegment.start >= end) {
-        log_default.debug("SI: Segment pushed comes before all previous ones", bufferType, start, end, firstSegment.start);
+        log_default.debug(
+          "SI: Segment pushed comes before all previous ones",
+          bufferType,
+          start,
+          end,
+          firstSegment.start
+        );
         this._inventory.splice(0, 0, newSegment);
       } else if (firstSegment.end <= end) {
-        log_default.debug("SI: Segment pushed starts before and completely recovers the previous first one", bufferType, start, end, firstSegment.start, firstSegment.end);
+        log_default.debug(
+          "SI: Segment pushed starts before and completely recovers the previous first one",
+          bufferType,
+          start,
+          end,
+          firstSegment.start,
+          firstSegment.end
+        );
         this._inventory.splice(0, 1, newSegment);
         while (inventory.length > 1 && inventory[1].start < newSegment.end) {
           if (inventory[1].end > newSegment.end) {
-            log_default.debug("SI: Segment pushed updates the start of the next one", bufferType, newSegment.end, inventory[1].start);
+            log_default.debug(
+              "SI: Segment pushed updates the start of the next one",
+              bufferType,
+              newSegment.end,
+              inventory[1].start
+            );
             inventory[1].start = newSegment.end;
             inventory[1].bufferedStart = void 0;
             inventory[1].precizeStart = newSegment.precizeEnd;
             return;
           }
-          log_default.debug("SI: Segment pushed removes the next one", bufferType, start, end, inventory[1].start, inventory[1].end);
+          log_default.debug(
+            "SI: Segment pushed removes the next one",
+            bufferType,
+            start,
+            end,
+            inventory[1].start,
+            inventory[1].end
+          );
           inventory.splice(1, 1);
         }
         return;
       } else {
-        log_default.debug("SI: Segment pushed start of the next one", bufferType, start, end, firstSegment.start, firstSegment.end);
+        log_default.debug(
+          "SI: Segment pushed start of the next one",
+          bufferType,
+          start,
+          end,
+          firstSegment.start,
+          firstSegment.end
+        );
         firstSegment.start = end;
         firstSegment.bufferedStart = void 0;
         firstSegment.precizeStart = newSegment.precizeEnd;
@@ -6940,7 +7281,12 @@
           if (resSegments.length > 0) {
             splitted = true;
             if (resSegments.length === 1) {
-              log_default.warn("SI: Completed Segment is splitted.", content.segment.id, content.segment.time, content.segment.end);
+              log_default.warn(
+                "SI: Completed Segment is splitted.",
+                content.segment.id,
+                content.segment.time,
+                content.segment.end
+              );
               resSegments[0].splitted = true;
             }
           }
@@ -6971,7 +7317,11 @@
         }
       }
       if (resSegments.length === 0) {
-        log_default.warn("SI: Completed Segment not found", content.segment.id, content.segment.time);
+        log_default.warn(
+          "SI: Completed Segment not found",
+          content.segment.id,
+          content.segment.time
+        );
       } else {
         this.synchronizeBuffered(newBuffered);
         for (const seg of resSegments) {
@@ -6981,7 +7331,11 @@
               end: seg.bufferedEnd
             });
           } else {
-            log_default.debug("SI: buffered range not known after sync. Skipping history.", seg.start, seg.end);
+            log_default.debug(
+              "SI: buffered range not known after sync. Skipping history.",
+              seg.start,
+              seg.end
+            );
           }
         }
       }
@@ -7003,7 +7357,10 @@
       MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
       MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE
     } = config_default.getCurrent();
-    return Math.abs(start - thisSegment.bufferedStart) <= MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE && (thisSegment.bufferedEnd === void 0 || thisSegment.bufferedEnd > thisSegment.bufferedStart && Math.abs(thisSegment.bufferedEnd - thisSegment.bufferedStart - duration) <= Math.min(MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE, duration / 3));
+    return Math.abs(start - thisSegment.bufferedStart) <= MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE && (thisSegment.bufferedEnd === void 0 || thisSegment.bufferedEnd > thisSegment.bufferedStart && Math.abs(thisSegment.bufferedEnd - thisSegment.bufferedStart - duration) <= Math.min(
+      MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE,
+      duration / 3
+    ));
   }
   function bufferedEndLooksCoherent(thisSegment) {
     if (thisSegment.bufferedEnd === void 0 || thisSegment.partiallyPushed) {
@@ -7015,13 +7372,21 @@
       MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
       MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE
     } = config_default.getCurrent();
-    return Math.abs(end - thisSegment.bufferedEnd) <= MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE && thisSegment.bufferedStart != null && thisSegment.bufferedEnd > thisSegment.bufferedStart && Math.abs(thisSegment.bufferedEnd - thisSegment.bufferedStart - duration) <= Math.min(MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE, duration / 3);
+    return Math.abs(end - thisSegment.bufferedEnd) <= MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE && thisSegment.bufferedStart != null && thisSegment.bufferedEnd > thisSegment.bufferedStart && Math.abs(thisSegment.bufferedEnd - thisSegment.bufferedStart - duration) <= Math.min(
+      MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE,
+      duration / 3
+    );
   }
   function guessBufferedStartFromRangeStart(firstSegmentInRange, rangeStart, lastDeletedSegmentInfos, bufferType) {
     const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE } = config_default.getCurrent();
     if (firstSegmentInRange.bufferedStart !== void 0) {
       if (firstSegmentInRange.bufferedStart < rangeStart) {
-        log_default.debug("SI: Segment partially GCed at the start", bufferType, firstSegmentInRange.bufferedStart, rangeStart);
+        log_default.debug(
+          "SI: Segment partially GCed at the start",
+          bufferType,
+          firstSegmentInRange.bufferedStart,
+          rangeStart
+        );
         firstSegmentInRange.bufferedStart = rangeStart;
       }
       if (!firstSegmentInRange.precizeStart && bufferedStartLooksCoherent(firstSegmentInRange)) {
@@ -7029,26 +7394,51 @@
         firstSegmentInRange.precizeStart = true;
       }
     } else if (firstSegmentInRange.precizeStart) {
-      log_default.debug("SI: buffered start is precize start", bufferType, firstSegmentInRange.start);
+      log_default.debug(
+        "SI: buffered start is precize start",
+        bufferType,
+        firstSegmentInRange.start
+      );
       firstSegmentInRange.bufferedStart = firstSegmentInRange.start;
     } else if (lastDeletedSegmentInfos !== null && lastDeletedSegmentInfos.end > rangeStart && (lastDeletedSegmentInfos.precizeEnd || firstSegmentInRange.start - lastDeletedSegmentInfos.end <= MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE)) {
-      log_default.debug("SI: buffered start is end of previous segment", bufferType, rangeStart, firstSegmentInRange.start, lastDeletedSegmentInfos.end);
+      log_default.debug(
+        "SI: buffered start is end of previous segment",
+        bufferType,
+        rangeStart,
+        firstSegmentInRange.start,
+        lastDeletedSegmentInfos.end
+      );
       firstSegmentInRange.bufferedStart = lastDeletedSegmentInfos.end;
       if (bufferedStartLooksCoherent(firstSegmentInRange)) {
         firstSegmentInRange.start = lastDeletedSegmentInfos.end;
         firstSegmentInRange.precizeStart = true;
       }
     } else if (firstSegmentInRange.start - rangeStart <= MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE) {
-      log_default.debug("SI: found true buffered start", bufferType, rangeStart, firstSegmentInRange.start);
+      log_default.debug(
+        "SI: found true buffered start",
+        bufferType,
+        rangeStart,
+        firstSegmentInRange.start
+      );
       firstSegmentInRange.bufferedStart = rangeStart;
       if (bufferedStartLooksCoherent(firstSegmentInRange)) {
         firstSegmentInRange.start = rangeStart;
         firstSegmentInRange.precizeStart = true;
       }
     } else if (rangeStart < firstSegmentInRange.start) {
-      log_default.debug("SI: range start too far from expected start", bufferType, rangeStart, firstSegmentInRange.start);
+      log_default.debug(
+        "SI: range start too far from expected start",
+        bufferType,
+        rangeStart,
+        firstSegmentInRange.start
+      );
     } else {
-      log_default.debug("SI: Segment appears immediately garbage collected at the start", bufferType, firstSegmentInRange.bufferedStart, rangeStart);
+      log_default.debug(
+        "SI: Segment appears immediately garbage collected at the start",
+        bufferType,
+        firstSegmentInRange.bufferedStart,
+        rangeStart
+      );
       firstSegmentInRange.bufferedStart = rangeStart;
     }
   }
@@ -7056,7 +7446,12 @@
     const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE } = config_default.getCurrent();
     if (lastSegmentInRange.bufferedEnd !== void 0) {
       if (lastSegmentInRange.bufferedEnd > rangeEnd) {
-        log_default.debug("SI: Segment partially GCed at the end", bufferType, lastSegmentInRange.bufferedEnd, rangeEnd);
+        log_default.debug(
+          "SI: Segment partially GCed at the end",
+          bufferType,
+          lastSegmentInRange.bufferedEnd,
+          rangeEnd
+        );
         lastSegmentInRange.bufferedEnd = rangeEnd;
       }
       if (!lastSegmentInRange.precizeEnd && rangeEnd - lastSegmentInRange.end <= MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE && bufferedEndLooksCoherent(lastSegmentInRange)) {
@@ -7064,20 +7459,39 @@
         lastSegmentInRange.end = rangeEnd;
       }
     } else if (lastSegmentInRange.precizeEnd) {
-      log_default.debug("SI: buffered end is precize end", bufferType, lastSegmentInRange.end);
+      log_default.debug(
+        "SI: buffered end is precize end",
+        bufferType,
+        lastSegmentInRange.end
+      );
       lastSegmentInRange.bufferedEnd = lastSegmentInRange.end;
     } else if (rangeEnd - lastSegmentInRange.end <= MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE) {
-      log_default.debug("SI: found true buffered end", bufferType, rangeEnd, lastSegmentInRange.end);
+      log_default.debug(
+        "SI: found true buffered end",
+        bufferType,
+        rangeEnd,
+        lastSegmentInRange.end
+      );
       lastSegmentInRange.bufferedEnd = rangeEnd;
       if (bufferedEndLooksCoherent(lastSegmentInRange)) {
         lastSegmentInRange.end = rangeEnd;
         lastSegmentInRange.precizeEnd = true;
       }
     } else if (rangeEnd > lastSegmentInRange.end) {
-      log_default.debug("SI: range end too far from expected end", bufferType, rangeEnd, lastSegmentInRange.end);
+      log_default.debug(
+        "SI: range end too far from expected end",
+        bufferType,
+        rangeEnd,
+        lastSegmentInRange.end
+      );
       lastSegmentInRange.bufferedEnd = lastSegmentInRange.end;
     } else {
-      log_default.debug("SI: Segment appears immediately garbage collected at the end", bufferType, lastSegmentInRange.bufferedEnd, rangeEnd);
+      log_default.debug(
+        "SI: Segment appears immediately garbage collected at the end",
+        bufferType,
+        lastSegmentInRange.bufferedEnd,
+        rangeEnd
+      );
       lastSegmentInRange.bufferedEnd = rangeEnd;
     }
   }
@@ -7182,27 +7596,49 @@
       this._lastInitSegment = null;
       this.codec = codec;
       const { SOURCE_BUFFER_FLUSHING_INTERVAL } = config_default.getCurrent();
-      interval(SOURCE_BUFFER_FLUSHING_INTERVAL).pipe(tap(() => this._flush()), takeUntil(this._destroy$)).subscribe();
-      fromEvent(this._sourceBuffer, "error").pipe(tap((err) => this._onPendingTaskError(err)), takeUntil(this._destroy$)).subscribe();
-      fromEvent(this._sourceBuffer, "updateend").pipe(tap(() => this._flush()), takeUntil(this._destroy$)).subscribe();
+      interval(SOURCE_BUFFER_FLUSHING_INTERVAL).pipe(
+        tap(() => this._flush()),
+        takeUntil(this._destroy$)
+      ).subscribe();
+      fromEvent(this._sourceBuffer, "error").pipe(
+        tap((err) => this._onPendingTaskError(err)),
+        takeUntil(this._destroy$)
+      ).subscribe();
+      fromEvent(this._sourceBuffer, "updateend").pipe(
+        tap(() => this._flush()),
+        takeUntil(this._destroy$)
+      ).subscribe();
     }
     pushChunk(infos) {
       assertPushedDataIsBufferSource(infos);
-      log_default.debug("AVSB: receiving order to push data to the SourceBuffer", this.bufferType, getLoggableSegmentId(infos.inventoryInfos));
+      log_default.debug(
+        "AVSB: receiving order to push data to the SourceBuffer",
+        this.bufferType,
+        getLoggableSegmentId(infos.inventoryInfos)
+      );
       return this._addToQueue({
         type: 0 /* Push */,
         value: infos
       });
     }
     removeBuffer(start, end) {
-      log_default.debug("AVSB: receiving order to remove data from the SourceBuffer", this.bufferType, start, end);
+      log_default.debug(
+        "AVSB: receiving order to remove data from the SourceBuffer",
+        this.bufferType,
+        start,
+        end
+      );
       return this._addToQueue({
         type: 1 /* Remove */,
         value: { start, end }
       });
     }
     endOfSegment(infos) {
-      log_default.debug("AVSB: receiving order for validating end of segment", this.bufferType, getLoggableSegmentId(infos));
+      log_default.debug(
+        "AVSB: receiving order for validating end of segment",
+        this.bufferType,
+        getLoggableSegmentId(infos)
+      );
       return this._addToQueue({
         type: 2 /* EndOfSegment */,
         value: infos
@@ -7242,7 +7678,10 @@
         try {
           this._sourceBuffer.abort();
         } catch (e) {
-          log_default.warn(`AVSB: Failed to abort a ${this.bufferType} SourceBuffer:`, e instanceof Error ? e : "");
+          log_default.warn(
+            `AVSB: Failed to abort a ${this.bufferType} SourceBuffer:`,
+            e instanceof Error ? e : ""
+          );
         }
       }
     }
@@ -7313,25 +7752,34 @@
           try {
             dataToPush = this._preparePushOperation(itemValue.data);
           } catch (e) {
-            this._pendingTask = object_assign_default({
-              data: [],
-              inventoryData: itemValue.inventoryInfos
-            }, nextItem);
+            this._pendingTask = object_assign_default(
+              {
+                data: [],
+                inventoryData: itemValue.inventoryInfos
+              },
+              nextItem
+            );
             const error = e instanceof Error ? e : new Error("An unknown error occured when preparing a push operation");
             this._lastInitSegment = null;
             nextItem.subject.error(error);
             return;
           }
-          this._pendingTask = object_assign_default({
-            data: dataToPush,
-            inventoryData: itemValue.inventoryInfos
-          }, nextItem);
+          this._pendingTask = object_assign_default(
+            {
+              data: dataToPush,
+              inventoryData: itemValue.inventoryInfos
+            },
+            nextItem
+          );
         }
       }
       try {
         switch (this._pendingTask.type) {
           case 2 /* EndOfSegment */:
-            log_default.debug("AVSB: Acknowledging complete segment", getLoggableSegmentId(this._pendingTask.value));
+            log_default.debug(
+              "AVSB: Acknowledging complete segment",
+              getLoggableSegmentId(this._pendingTask.value)
+            );
             this._flush();
             return;
           case 0 /* Push */:
@@ -7340,12 +7788,21 @@
               this._flush();
               return;
             }
-            log_default.debug("AVSB: pushing segment", this.bufferType, getLoggableSegmentId(this._pendingTask.inventoryData));
+            log_default.debug(
+              "AVSB: pushing segment",
+              this.bufferType,
+              getLoggableSegmentId(this._pendingTask.inventoryData)
+            );
             this._sourceBuffer.appendBuffer(segmentData);
             break;
           case 1 /* Remove */:
             const { start, end } = this._pendingTask.value;
-            log_default.debug("AVSB: removing data from SourceBuffer", this.bufferType, start, end);
+            log_default.debug(
+              "AVSB: removing data from SourceBuffer",
+              this.bufferType,
+              start,
+              end
+            );
             this._sourceBuffer.remove(start, end);
             break;
           default:
@@ -7365,7 +7822,10 @@
       let hasUpdatedSourceBufferType = false;
       if (codec !== this.codec) {
         log_default.debug("AVSB: updating codec", codec);
-        hasUpdatedSourceBufferType = tryToChangeSourceBufferType(this._sourceBuffer, codec);
+        hasUpdatedSourceBufferType = tryToChangeSourceBufferType(
+          this._sourceBuffer,
+          codec
+        );
         if (hasUpdatedSourceBufferType) {
           this.codec = codec;
         } else {
@@ -7374,7 +7834,12 @@
       }
       if (this._sourceBuffer.timestampOffset !== timestampOffset) {
         const newTimestampOffset = timestampOffset;
-        log_default.debug("AVSB: updating timestampOffset", this.bufferType, this._sourceBuffer.timestampOffset, newTimestampOffset);
+        log_default.debug(
+          "AVSB: updating timestampOffset",
+          this.bufferType,
+          this._sourceBuffer.timestampOffset,
+          newTimestampOffset
+        );
         this._sourceBuffer.timestampOffset = newTimestampOffset;
       }
       if (appendWindow[0] === void 0) {
@@ -7537,14 +8002,23 @@
       if (shouldHaveNativeBuffer(bufferType)) {
         if (memorizedSegmentBuffer != null) {
           if (memorizedSegmentBuffer instanceof audio_video_default && memorizedSegmentBuffer.codec !== codec) {
-            log_default.warn("SB: Reusing native SegmentBuffer with codec", memorizedSegmentBuffer.codec, "for codec", codec);
+            log_default.warn(
+              "SB: Reusing native SegmentBuffer with codec",
+              memorizedSegmentBuffer.codec,
+              "for codec",
+              codec
+            );
           } else {
             log_default.info("SB: Reusing native SegmentBuffer with codec", codec);
           }
           return memorizedSegmentBuffer;
         }
         log_default.info("SB: Adding native SegmentBuffer with codec", codec);
-        const nativeSegmentBuffer = new audio_video_default(bufferType, codec, this._mediaSource);
+        const nativeSegmentBuffer = new audio_video_default(
+          bufferType,
+          codec,
+          this._mediaSource
+        );
         this._initializedSegmentBuffers[bufferType] = nativeSegmentBuffer;
         this._onNativeBufferAddedOrDisabled.forEach((cb) => cb());
         return nativeSegmentBuffer;
@@ -7564,7 +8038,10 @@
         return segmentBuffer;
       }
       log_default.error("SB: Unknown buffer type:", bufferType);
-      throw new MediaError("BUFFER_TYPE_UNKNOWN", "The player wants to create a SegmentBuffer of an unknown type.");
+      throw new MediaError(
+        "BUFFER_TYPE_UNKNOWN",
+        "The player wants to create a SegmentBuffer of an unknown type."
+      );
     }
     disposeSegmentBuffer(bufferType) {
       const memorizedSegmentBuffer = this._initializedSegmentBuffers[bufferType];
@@ -7750,13 +8227,19 @@
   // src/worker/core/stream/reload_after_switch.ts
   init_define_ENVIRONMENT();
   function reloadAfterSwitch(period, bufferType, playbackObserver2, deltaPos) {
-    return nextTickObs().pipe(mergeMap(() => playbackObserver2.getReference().asObservable()), map((observation) => {
-      const currentTime = playbackObserver2.getCurrentTime();
-      const pos = currentTime + deltaPos;
-      const reloadAt = Math.min(Math.max(period.start, pos), period.end ?? Infinity);
-      const autoPlay = !(observation.paused.pending ?? playbackObserver2.getIsPaused());
-      return events_generators_default.waitingMediaSourceReload(bufferType, period, reloadAt, autoPlay);
-    }));
+    return nextTickObs().pipe(
+      mergeMap(() => playbackObserver2.getReference().asObservable()),
+      map((observation) => {
+        const currentTime = playbackObserver2.getCurrentTime();
+        const pos = currentTime + deltaPos;
+        const reloadAt = Math.min(
+          Math.max(period.start, pos),
+          period.end ?? Infinity
+        );
+        const autoPlay = !(observation.paused.pending ?? playbackObserver2.getIsPaused());
+        return events_generators_default.waitingMediaSourceReload(bufferType, period, reloadAt, autoPlay);
+      })
+    );
   }
 
   // src/worker/core/stream/representation/index.ts
@@ -7801,45 +8284,57 @@
         return this._currentObs$;
       }
       const obs = defer(() => {
-        const mediaQueue$ = this._downloadQueue.asObservable().pipe(filter(({ segmentQueue }) => {
-          let nextSegmentToLoadIdx = 0;
-          for (; nextSegmentToLoadIdx < segmentQueue.length; nextSegmentToLoadIdx++) {
-            const nextSegment = segmentQueue[nextSegmentToLoadIdx].segment;
-            if (!this._mediaSegmentsAwaitingInitMetadata.has(nextSegment.id)) {
-              break;
+        const mediaQueue$ = this._downloadQueue.asObservable().pipe(
+          filter(({ segmentQueue }) => {
+            let nextSegmentToLoadIdx = 0;
+            for (; nextSegmentToLoadIdx < segmentQueue.length; nextSegmentToLoadIdx++) {
+              const nextSegment = segmentQueue[nextSegmentToLoadIdx].segment;
+              if (!this._mediaSegmentsAwaitingInitMetadata.has(nextSegment.id)) {
+                break;
+              }
             }
-          }
-          const currentSegmentRequest = this._mediaSegmentRequest;
-          if (nextSegmentToLoadIdx >= segmentQueue.length) {
-            return currentSegmentRequest !== null;
-          } else if (currentSegmentRequest === null) {
-            return true;
-          }
-          const nextItem = segmentQueue[nextSegmentToLoadIdx];
-          if (currentSegmentRequest.segment.id !== nextItem.segment.id) {
-            return true;
-          }
-          if (currentSegmentRequest.priority !== nextItem.priority) {
-            this._segmentFetcher.updatePriority(currentSegmentRequest.request$, nextItem.priority);
-          }
-          return false;
-        }), switchMap(({ segmentQueue }) => segmentQueue.length > 0 ? this._requestMediaSegments() : EMPTY));
-        const initSegmentPush$ = this._downloadQueue.asObservable().pipe(filter((next) => {
-          const initSegmentRequest = this._initSegmentRequest;
-          if (next.initSegment !== null && initSegmentRequest !== null) {
-            if (next.initSegment.priority !== initSegmentRequest.priority) {
-              this._segmentFetcher.updatePriority(initSegmentRequest.request$, next.initSegment.priority);
+            const currentSegmentRequest = this._mediaSegmentRequest;
+            if (nextSegmentToLoadIdx >= segmentQueue.length) {
+              return currentSegmentRequest !== null;
+            } else if (currentSegmentRequest === null) {
+              return true;
+            }
+            const nextItem = segmentQueue[nextSegmentToLoadIdx];
+            if (currentSegmentRequest.segment.id !== nextItem.segment.id) {
+              return true;
+            }
+            if (currentSegmentRequest.priority !== nextItem.priority) {
+              this._segmentFetcher.updatePriority(
+                currentSegmentRequest.request$,
+                nextItem.priority
+              );
             }
             return false;
-          } else {
-            return next.initSegment === null || initSegmentRequest === null;
-          }
-        }), switchMap((nextQueue) => {
-          if (nextQueue.initSegment === null) {
-            return EMPTY;
-          }
-          return this._requestInitSegment(nextQueue.initSegment);
-        }));
+          }),
+          switchMap(({ segmentQueue }) => segmentQueue.length > 0 ? this._requestMediaSegments() : EMPTY)
+        );
+        const initSegmentPush$ = this._downloadQueue.asObservable().pipe(
+          filter((next) => {
+            const initSegmentRequest = this._initSegmentRequest;
+            if (next.initSegment !== null && initSegmentRequest !== null) {
+              if (next.initSegment.priority !== initSegmentRequest.priority) {
+                this._segmentFetcher.updatePriority(
+                  initSegmentRequest.request$,
+                  next.initSegment.priority
+                );
+              }
+              return false;
+            } else {
+              return next.initSegment === null || initSegmentRequest === null;
+            }
+          }),
+          switchMap((nextQueue) => {
+            if (nextQueue.initSegment === null) {
+              return EMPTY;
+            }
+            return this._requestInitSegment(nextQueue.initSegment);
+          })
+        );
         return merge(initSegmentPush$, mediaQueue$);
       }).pipe(share());
       this._currentObs$ = obs;
@@ -7867,7 +8362,11 @@
                 value: { segment, error: evt.value }
               });
             case "interrupted":
-              log_default.info("Stream: segment request interrupted temporarly.", segment.id, segment.time);
+              log_default.info(
+                "Stream: segment request interrupted temporarly.",
+                segment.id,
+                segment.time
+              );
               return EMPTY;
             case "ended":
               this._mediaSegmentRequest = null;
@@ -7884,28 +8383,41 @@
             case "chunk":
             case "chunk-complete":
               this._mediaSegmentsAwaitingInitMetadata.add(segment.id);
-              return this._initSegmentMetadata$.pipe(take(1), map((initTimescale) => {
-                if (evt.type === "chunk-complete") {
-                  return {
-                    type: "end-of-segment",
-                    value: { segment }
-                  };
-                }
-                const parsed = evt.parse(initTimescale);
-                assert(parsed.segmentType === "media", "Should have loaded a media segment.");
-                return object_assign_default({}, parsed, {
-                  type: "parsed-media",
-                  segment
-                });
-              }), finalize(() => {
-                this._mediaSegmentsAwaitingInitMetadata.delete(segment.id);
-              }));
+              return this._initSegmentMetadata$.pipe(
+                take(1),
+                map((initTimescale) => {
+                  if (evt.type === "chunk-complete") {
+                    return {
+                      type: "end-of-segment",
+                      value: { segment }
+                    };
+                  }
+                  const parsed = evt.parse(initTimescale);
+                  assert(
+                    parsed.segmentType === "media",
+                    "Should have loaded a media segment."
+                  );
+                  return object_assign_default(
+                    {},
+                    parsed,
+                    {
+                      type: "parsed-media",
+                      segment
+                    }
+                  );
+                }),
+                finalize(() => {
+                  this._mediaSegmentsAwaitingInitMetadata.delete(segment.id);
+                })
+              );
             default:
               assertUnreachable(evt);
           }
         }));
       };
-      return defer(() => recursivelyRequestSegments(currentNeededSegment)).pipe(finalize(() => {
+      return defer(
+        () => recursivelyRequestSegments(currentNeededSegment)
+      ).pipe(finalize(() => {
         this._mediaSegmentRequest = null;
       }));
     }
@@ -7926,20 +8438,33 @@
               value: { segment, error: evt.value }
             });
           case "interrupted":
-            log_default.info("Stream: init segment request interrupted temporarly.", segment.id);
+            log_default.info(
+              "Stream: init segment request interrupted temporarly.",
+              segment.id
+            );
             return EMPTY;
           case "chunk":
             const parsed = evt.parse(void 0);
-            assert(parsed.segmentType === "init", "Should have loaded an init segment.");
-            return concat(of(object_assign_default({}, parsed, {
-              type: "parsed-init",
-              segment
-            })), defer(() => {
-              if (parsed.segmentType === "init") {
-                this._initSegmentMetadata$.next(parsed.initTimescale);
-              }
-              return EMPTY;
-            }));
+            assert(
+              parsed.segmentType === "init",
+              "Should have loaded an init segment."
+            );
+            return concat(
+              of(object_assign_default(
+                {},
+                parsed,
+                {
+                  type: "parsed-init",
+                  segment
+                }
+              )),
+              defer(() => {
+                if (parsed.segmentType === "init") {
+                  this._initSegmentMetadata$.next(parsed.initTimescale);
+                }
+                return EMPTY;
+              })
+            );
           case "chunk-complete":
             return of({
               type: "end-of-segment",
@@ -7963,7 +8488,10 @@
   init_define_ENVIRONMENT();
   function checkForDiscontinuity(content, checkedRange, nextSegmentStart, hasFinishedLoading, bufferedSegments) {
     const { period, adaptation, representation } = content;
-    const nextBufferedInRangeIdx = getIndexOfFirstChunkInRange(bufferedSegments, checkedRange);
+    const nextBufferedInRangeIdx = getIndexOfFirstChunkInRange(
+      bufferedSegments,
+      checkedRange
+    );
     if (nextBufferedInRangeIdx === null) {
       if (nextSegmentStart === null) {
         if (hasFinishedLoading && period.end !== void 0 && checkedRange.end >= period.end) {
@@ -7981,13 +8509,21 @@
     }
     const nextBufferedSegment = bufferedSegments[nextBufferedInRangeIdx];
     if (nextBufferedSegment.bufferedStart !== void 0 && nextBufferedSegment.bufferedStart > checkedRange.start && (nextSegmentStart === null || nextBufferedSegment.infos.segment.end <= nextSegmentStart)) {
-      log_default.debug("RS: current discontinuity encountered", adaptation.type, nextBufferedSegment.bufferedStart);
+      log_default.debug(
+        "RS: current discontinuity encountered",
+        adaptation.type,
+        nextBufferedSegment.bufferedStart
+      );
       return {
         start: void 0,
         end: nextBufferedSegment.bufferedStart
       };
     }
-    const nextHoleIdx = getIndexOfFirstDiscontinuityBetweenChunks(bufferedSegments, checkedRange, nextBufferedInRangeIdx + 1);
+    const nextHoleIdx = getIndexOfFirstDiscontinuityBetweenChunks(
+      bufferedSegments,
+      checkedRange,
+      nextBufferedInRangeIdx + 1
+    );
     if (nextHoleIdx !== null && (nextSegmentStart === null || bufferedSegments[nextHoleIdx].infos.segment.end <= nextSegmentStart)) {
       const start = bufferedSegments[nextHoleIdx - 1].bufferedEnd;
       const end = bufferedSegments[nextHoleIdx].bufferedStart;
@@ -7998,11 +8534,19 @@
         if (checkedRange.end < period.end) {
           return null;
         }
-        const lastBufferedInPeriodIdx = getIndexOfLastChunkInPeriod(bufferedSegments, period.end);
+        const lastBufferedInPeriodIdx = getIndexOfLastChunkInPeriod(
+          bufferedSegments,
+          period.end
+        );
         if (lastBufferedInPeriodIdx !== null) {
           const lastSegment = bufferedSegments[lastBufferedInPeriodIdx];
           if (lastSegment.bufferedEnd !== void 0 && lastSegment.bufferedEnd < period.end) {
-            log_default.debug("RS: discontinuity encountered at the end of the current period", adaptation.type, lastSegment.bufferedEnd, period.end);
+            log_default.debug(
+              "RS: discontinuity encountered at the end of the current period",
+              adaptation.type,
+              lastSegment.bufferedEnd,
+              period.end
+            );
             return {
               start: lastSegment.bufferedEnd,
               end: null
@@ -8089,25 +8633,48 @@
     maxBufferSize
   }) {
     const { adaptation, representation } = content;
-    let availableBufferSize = getAvailableBufferSize(bufferedSegments, segmentsBeingPushed, maxBufferSize);
+    let availableBufferSize = getAvailableBufferSize(
+      bufferedSegments,
+      segmentsBeingPushed,
+      maxBufferSize
+    );
     const availableSegmentsForRange = representation.index.getSegments(neededRange.start, neededRange.end - neededRange.start);
-    const segmentsToKeep = bufferedSegments.filter((bufferedSegment) => !shouldContentBeReplaced(bufferedSegment.infos, content, currentPlaybackTime, fastSwitchThreshold)).filter((currentSeg, i, consideredSegments) => {
+    const segmentsToKeep = bufferedSegments.filter((bufferedSegment) => !shouldContentBeReplaced(
+      bufferedSegment.infos,
+      content,
+      currentPlaybackTime,
+      fastSwitchThreshold
+    )).filter((currentSeg, i, consideredSegments) => {
       const prevSeg = i === 0 ? null : consideredSegments[i - 1];
       const nextSeg = i >= consideredSegments.length - 1 ? null : consideredSegments[i + 1];
       let lazySegmentHistory = null;
       if (doesStartSeemGarbageCollected(currentSeg, prevSeg, neededRange.start)) {
         lazySegmentHistory = getBufferedHistory(currentSeg.infos);
-        if (shouldReloadSegmentGCedAtTheStart(lazySegmentHistory, currentSeg.bufferedStart)) {
+        if (shouldReloadSegmentGCedAtTheStart(
+          lazySegmentHistory,
+          currentSeg.bufferedStart
+        )) {
           return false;
         }
-        log_default.debug("Stream: skipping segment gc-ed at the start", currentSeg.start, currentSeg.bufferedStart);
+        log_default.debug(
+          "Stream: skipping segment gc-ed at the start",
+          currentSeg.start,
+          currentSeg.bufferedStart
+        );
       }
       if (doesEndSeemGarbageCollected(currentSeg, nextSeg, neededRange.end)) {
         lazySegmentHistory = lazySegmentHistory ?? getBufferedHistory(currentSeg.infos);
-        if (shouldReloadSegmentGCedAtTheEnd(lazySegmentHistory, currentSeg.bufferedEnd)) {
+        if (shouldReloadSegmentGCedAtTheEnd(
+          lazySegmentHistory,
+          currentSeg.bufferedEnd
+        )) {
           return false;
         }
-        log_default.debug("Stream: skipping segment gc-ed at the end", currentSeg.end, currentSeg.bufferedEnd);
+        log_default.debug(
+          "Stream: skipping segment gc-ed at the end",
+          currentSeg.end,
+          currentSeg.bufferedEnd
+        );
       }
       return true;
     });
@@ -8150,7 +8717,12 @@
           if (oldSegment.end + ROUNDING_ERROR < end) {
             return false;
           }
-          return !shouldContentBeReplaced(pendingSegment, contentObject, currentPlaybackTime, fastSwitchThreshold);
+          return !shouldContentBeReplaced(
+            pendingSegment,
+            contentObject,
+            currentPlaybackTime,
+            fastSwitchThreshold
+          );
         });
         if (waitForPushedSegment) {
           return false;
@@ -8180,7 +8752,12 @@
         const lastTimeItWasPushed = segmentHistory[segmentHistory.length - 1];
         const beforeLastTimeItWasPushed = segmentHistory[segmentHistory.length - 2];
         if (lastTimeItWasPushed.buffered === null && beforeLastTimeItWasPushed.buffered === null) {
-          log_default.warn("Stream: Segment GCed multiple times in a row, ignoring it.", "If this happens a lot and lead to unpleasant experience, please  check your device's available memory. If it's low when this message is emitted, you might want to update the RxPlayer's settings (`maxBufferAhead`, `maxVideoBufferSize` etc.) so less memory is used by regular media data buffering." + adaptation.type, representation.id, segment.time);
+          log_default.warn(
+            "Stream: Segment GCed multiple times in a row, ignoring it.",
+            "If this happens a lot and lead to unpleasant experience, please  check your device's available memory. If it's low when this message is emitted, you might want to update the RxPlayer's settings (`maxBufferAhead`, `maxVideoBufferSize` etc.) so less memory is used by regular media data buffering." + adaptation.type,
+            representation.id,
+            segment.time
+          );
           return false;
         }
       }
@@ -8236,7 +8813,11 @@
     if (oldContent.adaptation.id !== currentContent.adaptation.id) {
       return true;
     }
-    return canFastSwitch(oldContent.representation, currentContent.representation, fastSwitchThreshold);
+    return canFastSwitch(
+      oldContent.representation,
+      currentContent.representation,
+      fastSwitchThreshold
+    );
   }
   function canFastSwitch(oldSegmentRepresentation, newSegmentRepresentation, fastSwitchThreshold) {
     const oldContentBitrate = oldSegmentRepresentation.bitrate;
@@ -8250,14 +8831,21 @@
   function doesStartSeemGarbageCollected(currentSeg, prevSeg, maximumStartTime) {
     const { MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT } = config_default.getCurrent();
     if (currentSeg.bufferedStart === void 0) {
-      log_default.warn("Stream: Start of a segment unknown. Assuming it is garbage collected by default.", currentSeg.start);
+      log_default.warn(
+        "Stream: Start of a segment unknown. Assuming it is garbage collected by default.",
+        currentSeg.start
+      );
       return true;
     }
     if (prevSeg !== null && prevSeg.bufferedEnd !== void 0 && currentSeg.bufferedStart - prevSeg.bufferedEnd < 0.1) {
       return false;
     }
     if (maximumStartTime < currentSeg.bufferedStart && currentSeg.bufferedStart - currentSeg.start > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
-      log_default.info("Stream: The start of the wanted segment has been garbage collected", currentSeg.start, currentSeg.bufferedStart);
+      log_default.info(
+        "Stream: The start of the wanted segment has been garbage collected",
+        currentSeg.start,
+        currentSeg.bufferedStart
+      );
       return true;
     }
     return false;
@@ -8265,14 +8853,21 @@
   function doesEndSeemGarbageCollected(currentSeg, nextSeg, minimumEndTime) {
     const { MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT } = config_default.getCurrent();
     if (currentSeg.bufferedEnd === void 0) {
-      log_default.warn("Stream: End of a segment unknown. Assuming it is garbage collected by default.", currentSeg.end);
+      log_default.warn(
+        "Stream: End of a segment unknown. Assuming it is garbage collected by default.",
+        currentSeg.end
+      );
       return true;
     }
     if (nextSeg !== null && nextSeg.bufferedStart !== void 0 && nextSeg.bufferedStart - currentSeg.bufferedEnd < 0.1) {
       return false;
     }
     if (minimumEndTime > currentSeg.bufferedEnd && currentSeg.end - currentSeg.bufferedEnd > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
-      log_default.info("Stream: The end of the wanted segment has been garbage collected", currentSeg.start, currentSeg.bufferedStart);
+      log_default.info(
+        "Stream: The end of the wanted segment has been garbage collected",
+        currentSeg.start,
+        currentSeg.bufferedStart
+      );
       return true;
     }
     return false;
@@ -8327,13 +8922,25 @@
   function getBufferStatus(content, initialWantedTime, playbackObserver2, fastSwitchThreshold, bufferGoal, maxBufferSize, segmentBuffer) {
     segmentBuffer.synchronizeInventory();
     const { representation } = content;
-    const neededRange = getRangeOfNeededSegments(content, initialWantedTime, bufferGoal);
-    const shouldRefreshManifest = representation.index.shouldRefresh(neededRange.start, neededRange.end);
-    const segmentsBeingPushed = segmentBuffer.getPendingOperations().filter((operation) => operation.type === 2 /* EndOfSegment */).map((operation) => operation.value);
-    const bufferedSegments = getPlayableBufferedSegments({
-      start: Math.max(neededRange.start - 0.5, 0),
-      end: neededRange.end + 0.5
-    }, segmentBuffer.getInventory());
+    const neededRange = getRangeOfNeededSegments(
+      content,
+      initialWantedTime,
+      bufferGoal
+    );
+    const shouldRefreshManifest = representation.index.shouldRefresh(
+      neededRange.start,
+      neededRange.end
+    );
+    const segmentsBeingPushed = segmentBuffer.getPendingOperations().filter(
+      (operation) => operation.type === 2 /* EndOfSegment */
+    ).map((operation) => operation.value);
+    const bufferedSegments = getPlayableBufferedSegments(
+      {
+        start: Math.max(neededRange.start - 0.5, 0),
+        end: neededRange.end + 0.5
+      },
+      segmentBuffer.getInventory()
+    );
     const currentPlaybackTime = playbackObserver2.getCurrentTime();
     const getBufferedHistory = segmentBuffer.getSegmentHistory.bind(segmentBuffer);
     const {
@@ -8369,7 +8976,13 @@
       if (prioritizedNeededSegments.length > 0) {
         nextSegmentStart = nextSegmentStart !== null ? Math.min(nextSegmentStart, prioritizedNeededSegments[0].segment.time) : prioritizedNeededSegments[0].segment.time;
       }
-      imminentDiscontinuity = checkForDiscontinuity(content, neededRange, nextSegmentStart, hasFinishedLoading, bufferedSegments);
+      imminentDiscontinuity = checkForDiscontinuity(
+        content,
+        neededRange,
+        nextSegmentStart,
+        hasFinishedLoading,
+        bufferedSegments
+      );
     }
     return {
       imminentDiscontinuity,
@@ -8401,7 +9014,10 @@
       hasReachedPeriodEnd = wantedEndPosition >= lastIndexPosition;
     }
     return {
-      start: Math.max(wantedStartPosition, period.start),
+      start: Math.max(
+        wantedStartPosition,
+        period.start
+      ),
       end: Math.min(wantedEndPosition, period.end ?? Infinity),
       hasReachedPeriodEnd
     };
@@ -8449,13 +9065,21 @@
         cleanedupRanges = selectGCedRanges(currentPosition, buffered, GC_GAP_BEEFY);
       }
       if (log_default.hasLevel("DEBUG")) {
-        log_default.debug("Stream: GC cleaning", cleanedupRanges.map(({ start, end }) => `start: ${start} - end ${end}`).join(", "));
+        log_default.debug(
+          "Stream: GC cleaning",
+          cleanedupRanges.map(({ start, end }) => `start: ${start} - end ${end}`).join(", ")
+        );
       }
-      return from(cleanedupRanges.map(({ start, end }) => start >= end ? of(null) : bufferingQueue.removeBuffer(start, end))).pipe(concatAll());
+      return from(
+        cleanedupRanges.map(({ start, end }) => start >= end ? of(null) : bufferingQueue.removeBuffer(start, end))
+      ).pipe(concatAll());
     });
   }
   function selectGCedRanges(position, buffered, gcGap) {
-    const { innerRange, outerRanges } = getInnerAndOuterTimeRanges(buffered, position);
+    const { innerRange, outerRanges } = getInnerAndOuterTimeRanges(
+      buffered,
+      position
+    );
     const cleanedupRanges = [];
     for (let i = 0; i < outerRanges.length; i++) {
       const outerRange = outerRanges[i];
@@ -8467,7 +9091,10 @@
     }
     if (innerRange !== null) {
       if (log_default.hasLevel("DEBUG")) {
-        log_default.debug("Stream: GC removing part of inner range", cleanedupRanges.map(({ start, end }) => `start: ${start} - end ${end}`).join(", "));
+        log_default.debug(
+          "Stream: GC removing part of inner range",
+          cleanedupRanges.map(({ start, end }) => `start: ${start} - end ${end}`).join(", ")
+        );
       }
       if (position - gcGap > innerRange.start) {
         cleanedupRanges.push({
@@ -8488,19 +9115,29 @@
   // src/worker/core/stream/representation/append_segment_to_buffer.ts
   function appendSegmentToBuffer(playbackObserver2, segmentBuffer, dataInfos) {
     const append$ = segmentBuffer.pushChunk(dataInfos);
-    return append$.pipe(catchError((appendError) => {
-      if (!(appendError instanceof Error) || appendError.name !== "QuotaExceededError") {
-        const reason = appendError instanceof Error ? appendError.toString() : "An unknown error happened when pushing content";
-        throw new MediaError("BUFFER_APPEND_ERROR", reason);
-      }
-      return playbackObserver2.getReference().asObservable().pipe(take(1), mergeMap((observation) => {
-        const currentPos = observation.position.pending ?? observation.position.last;
-        return concat(forceGarbageCollection(currentPos, segmentBuffer).pipe(ignoreElements()), append$).pipe(catchError((forcedGCError) => {
-          const reason = forcedGCError instanceof Error ? forcedGCError.toString() : "Could not clean the buffer";
-          throw new MediaError("BUFFER_FULL_ERROR", reason);
-        }));
-      }));
-    }));
+    return append$.pipe(
+      catchError((appendError) => {
+        if (!(appendError instanceof Error) || appendError.name !== "QuotaExceededError") {
+          const reason = appendError instanceof Error ? appendError.toString() : "An unknown error happened when pushing content";
+          throw new MediaError("BUFFER_APPEND_ERROR", reason);
+        }
+        return playbackObserver2.getReference().asObservable().pipe(
+          take(1),
+          mergeMap((observation) => {
+            const currentPos = observation.position.pending ?? observation.position.last;
+            return concat(
+              forceGarbageCollection(currentPos, segmentBuffer).pipe(ignoreElements()),
+              append$
+            ).pipe(
+              catchError((forcedGCError) => {
+                const reason = forcedGCError instanceof Error ? forcedGCError.toString() : "Could not clean the buffer";
+                throw new MediaError("BUFFER_FULL_ERROR", reason);
+              })
+            );
+          })
+        );
+      })
+    );
   }
 
   // src/worker/core/stream/representation/push_init_segment.ts
@@ -8523,7 +9160,11 @@
         appendWindow: [void 0, void 0],
         codec
       };
-      return appendSegmentToBuffer(playbackObserver2, segmentBuffer, { data, inventoryInfos: null }).pipe(map(() => {
+      return appendSegmentToBuffer(
+        playbackObserver2,
+        segmentBuffer,
+        { data, inventoryInfos: null }
+      ).pipe(map(() => {
         const buffered = segmentBuffer.getBufferedRanges();
         return events_generators_default.addedSegment(content, segment, buffered, segmentData);
       }));
@@ -8573,13 +9214,20 @@
       if (safeAppendWindow[1] !== void 0) {
         estimatedEnd = Math.min(estimatedEnd, safeAppendWindow[1]);
       }
-      const inventoryInfos = object_assign_default({
-        segment,
-        chunkSize,
-        start: estimatedStart,
-        end: estimatedEnd
-      }, content);
-      return appendSegmentToBuffer(playbackObserver2, segmentBuffer, { data, inventoryInfos }).pipe(map(() => {
+      const inventoryInfos = object_assign_default(
+        {
+          segment,
+          chunkSize,
+          start: estimatedStart,
+          end: estimatedEnd
+        },
+        content
+      );
+      return appendSegmentToBuffer(
+        playbackObserver2,
+        segmentBuffer,
+        { data, inventoryInfos }
+      ).pipe(map(() => {
         const buffered = segmentBuffer.getBufferedRanges();
         return events_generators_default.addedSegment(content, segment, buffered, chunkData);
       }));
@@ -8618,7 +9266,12 @@
       segmentQueue: []
     });
     const hasInitSegment = initSegmentState.segment !== null;
-    const downloadingQueue = new DownloadingQueue(content, lastSegmentQueue, segmentFetcher, hasInitSegment);
+    const downloadingQueue = new DownloadingQueue(
+      content,
+      lastSegmentQueue,
+      segmentFetcher,
+      hasInitSegment
+    );
     if (!hasInitSegment) {
       initSegmentState.segmentData = null;
       initSegmentState.isLoaded = true;
@@ -8637,96 +9290,124 @@
       playbackObserver2.getReference().asObservable(),
       bufferGoal$,
       maxBufferSize$,
-      terminate$.pipe(take(1), startWith(null)),
+      terminate$.pipe(
+        take(1),
+        startWith(null)
+      ),
       reCheckNeededSegments$.pipe(startWith(void 0))
-    ]).pipe(withLatestFrom(fastSwitchThreshold$), mergeMap(function([
-      [observation, bufferGoal, maxBufferSize, terminate],
-      fastSwitchThreshold
-    ]) {
-      const initialWantedTime = observation.position.pending ?? observation.position.last;
-      const status = getBufferStatus(content, initialWantedTime, playbackObserver2, fastSwitchThreshold, bufferGoal, maxBufferSize, segmentBuffer);
-      const { neededSegments } = status;
-      let neededInitSegment = null;
-      if (!representation.index.isInitialized()) {
-        if (initSegmentState.segment === null) {
-          log_default.warn("Stream: Uninitialized index without an initialization segment");
-        } else if (initSegmentState.isLoaded) {
-          log_default.warn("Stream: Uninitialized index with an already loaded initialization segment");
-        } else {
-          const wantedStart = observation.position.pending ?? observation.position.last;
+    ]).pipe(
+      withLatestFrom(fastSwitchThreshold$),
+      mergeMap(function([
+        [observation, bufferGoal, maxBufferSize, terminate],
+        fastSwitchThreshold
+      ]) {
+        const initialWantedTime = observation.position.pending ?? observation.position.last;
+        const status = getBufferStatus(
+          content,
+          initialWantedTime,
+          playbackObserver2,
+          fastSwitchThreshold,
+          bufferGoal,
+          maxBufferSize,
+          segmentBuffer
+        );
+        const { neededSegments } = status;
+        let neededInitSegment = null;
+        if (!representation.index.isInitialized()) {
+          if (initSegmentState.segment === null) {
+            log_default.warn("Stream: Uninitialized index without an initialization segment");
+          } else if (initSegmentState.isLoaded) {
+            log_default.warn("Stream: Uninitialized index with an already loaded initialization segment");
+          } else {
+            const wantedStart = observation.position.pending ?? observation.position.last;
+            neededInitSegment = {
+              segment: initSegmentState.segment,
+              priority: getSegmentPriority(
+                period.start,
+                wantedStart
+              )
+            };
+          }
+        } else if (neededSegments.length > 0 && !initSegmentState.isLoaded && initSegmentState.segment !== null) {
+          const initSegmentPriority = neededSegments[0].priority;
           neededInitSegment = {
             segment: initSegmentState.segment,
-            priority: getSegmentPriority(period.start, wantedStart)
+            priority: initSegmentPriority
           };
         }
-      } else if (neededSegments.length > 0 && !initSegmentState.isLoaded && initSegmentState.segment !== null) {
-        const initSegmentPriority = neededSegments[0].priority;
-        neededInitSegment = {
-          segment: initSegmentState.segment,
-          priority: initSegmentPriority
-        };
-      }
-      if (terminate === null) {
-        lastSegmentQueue.setValue({
-          initSegment: neededInitSegment,
-          segmentQueue: neededSegments
-        });
-      } else if (terminate.urgent) {
-        log_default.debug("Stream: Urgent switch, terminate now.", bufferType);
-        lastSegmentQueue.setValue({ initSegment: null, segmentQueue: [] });
-        lastSegmentQueue.finish();
-        return of(events_generators_default.streamTerminating());
-      } else {
-        const mostNeededSegment = neededSegments[0];
-        const initSegmentRequest = downloadingQueue.getRequestedInitSegment();
-        const currentSegmentRequest = downloadingQueue.getRequestedMediaSegment();
-        const nextQueue = currentSegmentRequest === null || mostNeededSegment === void 0 || currentSegmentRequest.id !== mostNeededSegment.segment.id ? [] : [mostNeededSegment];
-        const nextInit = initSegmentRequest === null ? null : neededInitSegment;
-        lastSegmentQueue.setValue({
-          initSegment: nextInit,
-          segmentQueue: nextQueue
-        });
-        if (nextQueue.length === 0 && nextInit === null) {
-          log_default.debug("Stream: No request left, terminate", bufferType);
+        if (terminate === null) {
+          lastSegmentQueue.setValue({
+            initSegment: neededInitSegment,
+            segmentQueue: neededSegments
+          });
+        } else if (terminate.urgent) {
+          log_default.debug("Stream: Urgent switch, terminate now.", bufferType);
+          lastSegmentQueue.setValue({ initSegment: null, segmentQueue: [] });
           lastSegmentQueue.finish();
           return of(events_generators_default.streamTerminating());
+        } else {
+          const mostNeededSegment = neededSegments[0];
+          const initSegmentRequest = downloadingQueue.getRequestedInitSegment();
+          const currentSegmentRequest = downloadingQueue.getRequestedMediaSegment();
+          const nextQueue = currentSegmentRequest === null || mostNeededSegment === void 0 || currentSegmentRequest.id !== mostNeededSegment.segment.id ? [] : [mostNeededSegment];
+          const nextInit = initSegmentRequest === null ? null : neededInitSegment;
+          lastSegmentQueue.setValue({
+            initSegment: nextInit,
+            segmentQueue: nextQueue
+          });
+          if (nextQueue.length === 0 && nextInit === null) {
+            log_default.debug("Stream: No request left, terminate", bufferType);
+            lastSegmentQueue.finish();
+            return of(events_generators_default.streamTerminating());
+          }
         }
-      }
-      const bufferStatusEvt = of({
-        type: "stream-status",
-        value: {
-          period,
-          position: observation.position.last,
-          bufferType,
-          imminentDiscontinuity: status.imminentDiscontinuity,
-          hasFinishedLoading: status.hasFinishedLoading,
-          neededSegments: status.neededSegments
+        const bufferStatusEvt = of({
+          type: "stream-status",
+          value: {
+            period,
+            position: observation.position.last,
+            bufferType,
+            imminentDiscontinuity: status.imminentDiscontinuity,
+            hasFinishedLoading: status.hasFinishedLoading,
+            neededSegments: status.neededSegments
+          }
+        });
+        let bufferRemoval = EMPTY;
+        const { UPTO_CURRENT_POSITION_CLEANUP } = config_default.getCurrent();
+        if (status.isBufferFull) {
+          const gcedPosition = Math.max(
+            0,
+            initialWantedTime - UPTO_CURRENT_POSITION_CLEANUP
+          );
+          if (gcedPosition > 0) {
+            bufferRemoval = segmentBuffer.removeBuffer(0, gcedPosition).pipe(ignoreElements());
+          }
         }
-      });
-      let bufferRemoval = EMPTY;
-      const { UPTO_CURRENT_POSITION_CLEANUP } = config_default.getCurrent();
-      if (status.isBufferFull) {
-        const gcedPosition = Math.max(0, initialWantedTime - UPTO_CURRENT_POSITION_CLEANUP);
-        if (gcedPosition > 0) {
-          bufferRemoval = segmentBuffer.removeBuffer(0, gcedPosition).pipe(ignoreElements());
-        }
-      }
-      return status.shouldRefreshManifest ? concat(of(events_generators_default.needsManifestRefresh()), bufferStatusEvt, bufferRemoval) : concat(bufferStatusEvt, bufferRemoval);
-    }), takeWhile((e) => e.type !== "stream-terminating", true));
+        return status.shouldRefreshManifest ? concat(
+          of(events_generators_default.needsManifestRefresh()),
+          bufferStatusEvt,
+          bufferRemoval
+        ) : concat(bufferStatusEvt, bufferRemoval);
+      }),
+      takeWhile((e) => e.type !== "stream-terminating", true)
+    );
     return merge(status$, queue$, encryptionEvent$).pipe(share());
     function onQueueEvent(evt) {
       switch (evt.type) {
         case "retry":
-          return concat(of({ type: "warning", value: evt.value.error }), defer(() => {
-            const retriedSegment = evt.value.segment;
-            const { index } = representation;
-            if (index.isSegmentStillAvailable(retriedSegment) === false) {
-              reCheckNeededSegments$.next();
-            } else if (index.canBeOutOfSyncError(evt.value.error, retriedSegment)) {
-              return of(events_generators_default.manifestMightBeOufOfSync());
-            }
-            return EMPTY;
-          }));
+          return concat(
+            of({ type: "warning", value: evt.value.error }),
+            defer(() => {
+              const retriedSegment = evt.value.segment;
+              const { index } = representation;
+              if (index.isSegmentStillAvailable(retriedSegment) === false) {
+                reCheckNeededSegments$.next();
+              } else if (index.canBeOutOfSyncError(evt.value.error, retriedSegment)) {
+                return of(events_generators_default.manifestMightBeOufOfSync());
+              }
+              return EMPTY;
+            })
+          );
         case "parsed-init":
         case "parsed-media":
           return onParsedChunk(evt);
@@ -8779,7 +9460,12 @@
           segment: evt.segment,
           segmentBuffer
         });
-        return concat(segmentEncryptionEvent$, manifestRefresh$, inbandEvents$, pushMediaSegment$);
+        return concat(
+          segmentEncryptionEvent$,
+          manifestRefresh$,
+          inbandEvents$,
+          pushMediaSegment$
+        );
       }
     }
   }
@@ -8798,12 +9484,21 @@
     const {
       estimates: estimateRef,
       callbacks: abrCallbacks
-    } = representationEstimator(content, currentRepresentation, representations, playbackObserver2, cancellationSignal);
+    } = representationEstimator(
+      content,
+      currentRepresentation,
+      representations,
+      playbackObserver2,
+      cancellationSignal
+    );
     return { abrCallbacks, estimateRef };
     function updateRepresentationsReference() {
       const newRepr = adaptation.getPlayableRepresentations();
       if (newRepr.length === 0) {
-        const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION", "No Representation in the chosen " + adaptation.type + " Adaptation can be played");
+        const noRepErr = new MediaError(
+          "NO_PLAYABLE_REPRESENTATION",
+          "No Representation in the chosen " + adaptation.type + " Adaptation can be played"
+        );
         cleanUp();
         onFatalError(noRepErr);
         return;
@@ -8842,74 +9537,130 @@
     const currentRepresentation = createSharedReference(null);
     const abrErrorSubject = new Subject();
     const adaptiveCanceller = new TaskCanceller();
-    const { estimateRef, abrCallbacks } = getRepresentationEstimate(content, representationEstimator, currentRepresentation, playbackObserver2, (err) => {
-      abrErrorSubject.error(err);
-    }, adaptiveCanceller.signal);
-    const segmentFetcher = segmentFetcherCreator.createSegmentFetcher(adaptation.type, {
-      onRequestBegin: abrCallbacks.requestBegin,
-      onRequestEnd: abrCallbacks.requestEnd,
-      onProgress: abrCallbacks.requestProgress,
-      onMetrics: abrCallbacks.metrics
-    });
+    const { estimateRef, abrCallbacks } = getRepresentationEstimate(
+      content,
+      representationEstimator,
+      currentRepresentation,
+      playbackObserver2,
+      (err) => {
+        abrErrorSubject.error(err);
+      },
+      adaptiveCanceller.signal
+    );
+    const segmentFetcher = segmentFetcherCreator.createSegmentFetcher(
+      adaptation.type,
+      {
+        onRequestBegin: abrCallbacks.requestBegin,
+        onRequestEnd: abrCallbacks.requestEnd,
+        onProgress: abrCallbacks.requestProgress,
+        onMetrics: abrCallbacks.metrics
+      }
+    );
     const lastEstimate = createSharedReference(null);
-    const abrEstimate$ = estimateRef.asObservable().pipe(tap((estimate) => {
-      lastEstimate.setValue(estimate);
-    }), deferSubscriptions(), share());
-    const bitrateEstimate$ = abrEstimate$.pipe(filter(({ bitrate }) => bitrate != null), distinctUntilChanged((old, current) => old.bitrate === current.bitrate), map(({ bitrate }) => {
-      log_default.debug(`Stream: new ${adaptation.type} bitrate estimate`, bitrate);
-      return events_generators_default.bitrateEstimationChange(adaptation.type, bitrate);
-    }));
+    const abrEstimate$ = estimateRef.asObservable().pipe(
+      tap((estimate) => {
+        lastEstimate.setValue(estimate);
+      }),
+      deferSubscriptions(),
+      share()
+    );
+    const bitrateEstimate$ = abrEstimate$.pipe(
+      filter(({ bitrate }) => bitrate != null),
+      distinctUntilChanged((old, current) => old.bitrate === current.bitrate),
+      map(({ bitrate }) => {
+        log_default.debug(`Stream: new ${adaptation.type} bitrate estimate`, bitrate);
+        return events_generators_default.bitrateEstimationChange(adaptation.type, bitrate);
+      })
+    );
     const representationStreams$ = abrEstimate$.pipe(exhaustMap((estimate, i) => {
       return recursivelyCreateRepresentationStreams(estimate, i === 0);
     }));
-    return merge(abrErrorSubject, representationStreams$, bitrateEstimate$, new Observable(() => () => adaptiveCanceller.cancel()));
+    return merge(
+      abrErrorSubject,
+      representationStreams$,
+      bitrateEstimate$,
+      new Observable(() => () => adaptiveCanceller.cancel())
+    );
     function recursivelyCreateRepresentationStreams(fromEstimate, isFirstEstimate) {
       const { representation } = fromEstimate;
       if (directManualBitrateSwitching && fromEstimate.manual && !isFirstEstimate) {
         const { DELTA_POSITION_AFTER_RELOAD } = config_default.getCurrent();
-        return reloadAfterSwitch(period, adaptation.type, playbackObserver2, DELTA_POSITION_AFTER_RELOAD.bitrateSwitch);
+        return reloadAfterSwitch(
+          period,
+          adaptation.type,
+          playbackObserver2,
+          DELTA_POSITION_AFTER_RELOAD.bitrateSwitch
+        );
       }
-      const terminateCurrentStream$ = lastEstimate.asObservable().pipe(filter((newEstimate) => newEstimate === null || newEstimate.representation.id !== representation.id || newEstimate.manual && !fromEstimate.manual), take(1), map((newEstimate) => {
-        if (newEstimate === null) {
-          log_default.info("Stream: urgent Representation termination", adaptation.type);
-          return { urgent: true };
-        }
-        if (newEstimate.urgent) {
-          log_default.info("Stream: urgent Representation switch", adaptation.type);
-          return { urgent: true };
-        } else {
-          log_default.info("Stream: slow Representation switch", adaptation.type);
-          return { urgent: false };
-        }
-      }));
-      const fastSwitchThreshold$ = !options.enableFastSwitching ? of(0) : lastEstimate.asObservable().pipe(map((estimate) => estimate === null ? void 0 : estimate.knownStableBitrate), distinctUntilChanged());
-      const representationChange$ = of(events_generators_default.representationChange(adaptation.type, period, representation));
-      return concat(representationChange$, createRepresentationStream(representation, terminateCurrentStream$, fastSwitchThreshold$)).pipe(tap((evt) => {
-        if (evt.type === "added-segment") {
-          abrCallbacks.addedSegment(evt.value);
-        }
-        if (evt.type === "representationChange") {
-          currentRepresentation.setValue(evt.value.representation);
-        }
-      }), mergeMap((evt) => {
-        if (evt.type === "stream-terminating") {
-          const estimate = lastEstimate.getValue();
-          if (estimate === null) {
-            return EMPTY;
+      const terminateCurrentStream$ = lastEstimate.asObservable().pipe(
+        filter((newEstimate) => newEstimate === null || newEstimate.representation.id !== representation.id || newEstimate.manual && !fromEstimate.manual),
+        take(1),
+        map((newEstimate) => {
+          if (newEstimate === null) {
+            log_default.info("Stream: urgent Representation termination", adaptation.type);
+            return { urgent: true };
           }
-          return recursivelyCreateRepresentationStreams(estimate, false);
-        }
-        return of(evt);
-      }));
+          if (newEstimate.urgent) {
+            log_default.info("Stream: urgent Representation switch", adaptation.type);
+            return { urgent: true };
+          } else {
+            log_default.info("Stream: slow Representation switch", adaptation.type);
+            return { urgent: false };
+          }
+        })
+      );
+      const fastSwitchThreshold$ = !options.enableFastSwitching ? of(0) : lastEstimate.asObservable().pipe(
+        map((estimate) => estimate === null ? void 0 : estimate.knownStableBitrate),
+        distinctUntilChanged()
+      );
+      const representationChange$ = of(events_generators_default.representationChange(
+        adaptation.type,
+        period,
+        representation
+      ));
+      return concat(
+        representationChange$,
+        createRepresentationStream(
+          representation,
+          terminateCurrentStream$,
+          fastSwitchThreshold$
+        )
+      ).pipe(
+        tap((evt) => {
+          if (evt.type === "added-segment") {
+            abrCallbacks.addedSegment(evt.value);
+          }
+          if (evt.type === "representationChange") {
+            currentRepresentation.setValue(evt.value.representation);
+          }
+        }),
+        mergeMap((evt) => {
+          if (evt.type === "stream-terminating") {
+            const estimate = lastEstimate.getValue();
+            if (estimate === null) {
+              return EMPTY;
+            }
+            return recursivelyCreateRepresentationStreams(estimate, false);
+          }
+          return of(evt);
+        })
+      );
     }
     function createRepresentationStream(representation, terminateCurrentStream$, fastSwitchThreshold$) {
       return defer(() => {
         const oldBufferGoalRatio = bufferGoalRatioMap[representation.id];
         const bufferGoalRatio = oldBufferGoalRatio != null ? oldBufferGoalRatio : 1;
         bufferGoalRatioMap[representation.id] = bufferGoalRatio;
-        const bufferGoal$ = wantedBufferAhead2.asObservable().pipe(map((wba) => wba * bufferGoalRatio));
+        const bufferGoal$ = wantedBufferAhead2.asObservable().pipe(
+          map((wba) => wba * bufferGoalRatio)
+        );
         const maxBufferSize$ = adaptation.type === "video" ? maxVideoBufferSize2.asObservable() : of(Infinity);
-        log_default.info("Stream: changing representation", adaptation.type, representation.id, representation.bitrate);
+        log_default.info(
+          "Stream: changing representation",
+          adaptation.type,
+          representation.id,
+          representation.bitrate
+        );
         return representation_default2({
           playbackObserver: playbackObserver2,
           content: {
@@ -8939,7 +9690,11 @@
               throw formattedError;
             }
             bufferGoalRatioMap[representation.id] = lastBufferGoalRatio - 0.25;
-            return createRepresentationStream(representation, terminateCurrentStream$, fastSwitchThreshold$);
+            return createRepresentationStream(
+              representation,
+              terminateCurrentStream$,
+              fastSwitchThreshold$
+            );
           }
           throw formattedError;
         }));
@@ -8960,25 +9715,27 @@
     return combineLatest([
       observation$,
       wantedBufferAhead$
-    ]).pipe(mergeMap(([observation, wba]) => {
-      const position = observation.position.last;
-      if (period.end !== void 0 && position + wba >= period.end) {
-        log_default.debug('Stream: full "empty" AdaptationStream', bufferType);
-        hasFinishedLoading = true;
-      }
-      return of({
-        type: "stream-status",
-        value: {
-          period,
-          bufferType,
-          position,
-          imminentDiscontinuity: null,
-          hasFinishedLoading,
-          neededSegments: [],
-          shouldRefreshManifest: false
+    ]).pipe(
+      mergeMap(([observation, wba]) => {
+        const position = observation.position.last;
+        if (period.end !== void 0 && position + wba >= period.end) {
+          log_default.debug('Stream: full "empty" AdaptationStream', bufferType);
+          hasFinishedLoading = true;
         }
-      });
-    }));
+        return of({
+          type: "stream-status",
+          value: {
+            period,
+            bufferType,
+            position,
+            imminentDiscontinuity: null,
+            hasFinishedLoading,
+            neededSegments: [],
+            shouldRefreshManifest: false
+          }
+        });
+      })
+    );
   }
 
   // src/worker/core/stream/period/get_adaptation_switch_strategy.ts
@@ -8994,7 +9751,10 @@
       return completeString.startsWith(searchString, position);
     }
     const initialPosition = typeof position === "number" ? Math.max(position, 0) : 0;
-    return completeString.substring(initialPosition, initialPosition + searchString.length) === searchString;
+    return completeString.substring(
+      initialPosition,
+      initialPosition + searchString.length
+    ) === searchString;
   }
 
   // src/common/utils/are_codecs_compatible.ts
@@ -9141,58 +9901,107 @@
   }) {
     const { period } = content;
     const adaptation$ = new ReplaySubject(1);
-    return adaptation$.pipe(switchMap((adaptation, switchNb) => {
-      const { DELTA_POSITION_AFTER_RELOAD } = config_default.getCurrent();
-      const relativePosAfterSwitch = switchNb === 0 ? 0 : bufferType === "audio" ? DELTA_POSITION_AFTER_RELOAD.trackSwitch.audio : bufferType === "video" ? DELTA_POSITION_AFTER_RELOAD.trackSwitch.video : DELTA_POSITION_AFTER_RELOAD.trackSwitch.other;
-      if (adaptation === null) {
-        log_default.info(`Stream: Set no ${bufferType} Adaptation. P:`, period.start);
-        const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
-        let cleanBuffer$;
-        if (segmentBufferStatus.type === "initialized") {
-          log_default.info(`Stream: Clearing previous ${bufferType} SegmentBuffer`);
-          if (segment_buffers_default.isNative(bufferType)) {
-            return reloadAfterSwitch(period, bufferType, playbackObserver2, 0);
-          }
-          if (period.end === void 0) {
-            cleanBuffer$ = segmentBufferStatus.value.removeBuffer(period.start, Infinity);
-          } else if (period.end <= period.start) {
-            cleanBuffer$ = of(null);
+    return adaptation$.pipe(
+      switchMap((adaptation, switchNb) => {
+        const { DELTA_POSITION_AFTER_RELOAD } = config_default.getCurrent();
+        const relativePosAfterSwitch = switchNb === 0 ? 0 : bufferType === "audio" ? DELTA_POSITION_AFTER_RELOAD.trackSwitch.audio : bufferType === "video" ? DELTA_POSITION_AFTER_RELOAD.trackSwitch.video : DELTA_POSITION_AFTER_RELOAD.trackSwitch.other;
+        if (adaptation === null) {
+          log_default.info(`Stream: Set no ${bufferType} Adaptation. P:`, period.start);
+          const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
+          let cleanBuffer$;
+          if (segmentBufferStatus.type === "initialized") {
+            log_default.info(`Stream: Clearing previous ${bufferType} SegmentBuffer`);
+            if (segment_buffers_default.isNative(bufferType)) {
+              return reloadAfterSwitch(period, bufferType, playbackObserver2, 0);
+            }
+            if (period.end === void 0) {
+              cleanBuffer$ = segmentBufferStatus.value.removeBuffer(
+                period.start,
+                Infinity
+              );
+            } else if (period.end <= period.start) {
+              cleanBuffer$ = of(null);
+            } else {
+              cleanBuffer$ = segmentBufferStatus.value.removeBuffer(
+                period.start,
+                period.end
+              );
+            }
           } else {
-            cleanBuffer$ = segmentBufferStatus.value.removeBuffer(period.start, period.end);
+            if (segmentBufferStatus.type === "uninitialized") {
+              segmentBuffersStore.disableSegmentBuffer(bufferType);
+            }
+            cleanBuffer$ = of(null);
           }
-        } else {
-          if (segmentBufferStatus.type === "uninitialized") {
-            segmentBuffersStore.disableSegmentBuffer(bufferType);
+          return concat(
+            cleanBuffer$.pipe(map(() => events_generators_default.adaptationChange(bufferType, null, period))),
+            createEmptyAdaptationStream(playbackObserver2, wantedBufferAhead2, bufferType, { period })
+          );
+        }
+        if (segment_buffers_default.isNative(bufferType) && segmentBuffersStore.getStatus(bufferType).type === "disabled") {
+          return reloadAfterSwitch(
+            period,
+            bufferType,
+            playbackObserver2,
+            relativePosAfterSwitch
+          );
+        }
+        log_default.info(
+          `Stream: Updating ${bufferType} adaptation`,
+          `A: ${adaptation.id}`,
+          `P: ${period.start}`
+        );
+        const newStream$ = defer(() => {
+          const readyState = playbackObserver2.getReadyState();
+          const segmentBuffer = createOrReuseSegmentBuffer(
+            segmentBuffersStore,
+            bufferType,
+            adaptation,
+            options
+          );
+          const playbackInfos = {
+            currentTime: playbackObserver2.getCurrentTime(),
+            readyState
+          };
+          const strategy = getAdaptationSwitchStrategy(
+            segmentBuffer,
+            period,
+            adaptation,
+            playbackInfos,
+            options
+          );
+          if (strategy.type === "needs-reload") {
+            return reloadAfterSwitch(
+              period,
+              bufferType,
+              playbackObserver2,
+              relativePosAfterSwitch
+            );
           }
-          cleanBuffer$ = of(null);
-        }
-        return concat(cleanBuffer$.pipe(map(() => events_generators_default.adaptationChange(bufferType, null, period))), createEmptyAdaptationStream(playbackObserver2, wantedBufferAhead2, bufferType, { period }));
-      }
-      if (segment_buffers_default.isNative(bufferType) && segmentBuffersStore.getStatus(bufferType).type === "disabled") {
-        return reloadAfterSwitch(period, bufferType, playbackObserver2, relativePosAfterSwitch);
-      }
-      log_default.info(`Stream: Updating ${bufferType} adaptation`, `A: ${adaptation.id}`, `P: ${period.start}`);
-      const newStream$ = defer(() => {
-        const readyState = playbackObserver2.getReadyState();
-        const segmentBuffer = createOrReuseSegmentBuffer(segmentBuffersStore, bufferType, adaptation, options);
-        const playbackInfos = {
-          currentTime: playbackObserver2.getCurrentTime(),
-          readyState
-        };
-        const strategy = getAdaptationSwitchStrategy(segmentBuffer, period, adaptation, playbackInfos, options);
-        if (strategy.type === "needs-reload") {
-          return reloadAfterSwitch(period, bufferType, playbackObserver2, relativePosAfterSwitch);
-        }
-        const needsBufferFlush$ = strategy.type === "flush-buffer" ? of(events_generators_default.needsBufferFlush()) : EMPTY;
-        const cleanBuffer$ = strategy.type === "clean-buffer" || strategy.type === "flush-buffer" ? concat(...strategy.value.map(({ start, end }) => segmentBuffer.removeBuffer(start, end))).pipe(ignoreElements()) : EMPTY;
-        const bufferGarbageCollector$ = garbageCollectors.get(segmentBuffer);
-        const adaptationStream$ = createAdaptationStream(adaptation, segmentBuffer);
-        return segmentBuffersStore.waitForUsableBuffers().pipe(mergeMap(() => {
-          return concat(cleanBuffer$, needsBufferFlush$, merge(adaptationStream$, bufferGarbageCollector$));
-        }));
-      });
-      return concat(of(events_generators_default.adaptationChange(bufferType, adaptation, period)), newStream$);
-    }), startWith(events_generators_default.periodStreamReady(bufferType, period, adaptation$)));
+          const needsBufferFlush$ = strategy.type === "flush-buffer" ? of(events_generators_default.needsBufferFlush()) : EMPTY;
+          const cleanBuffer$ = strategy.type === "clean-buffer" || strategy.type === "flush-buffer" ? concat(
+            ...strategy.value.map(({ start, end }) => segmentBuffer.removeBuffer(start, end))
+          ).pipe(ignoreElements()) : EMPTY;
+          const bufferGarbageCollector$ = garbageCollectors.get(segmentBuffer);
+          const adaptationStream$ = createAdaptationStream(adaptation, segmentBuffer);
+          return segmentBuffersStore.waitForUsableBuffers().pipe(mergeMap(() => {
+            return concat(
+              cleanBuffer$,
+              needsBufferFlush$,
+              merge(
+                adaptationStream$,
+                bufferGarbageCollector$
+              )
+            );
+          }));
+        });
+        return concat(
+          of(events_generators_default.adaptationChange(bufferType, adaptation, period)),
+          newStream$
+        );
+      }),
+      startWith(events_generators_default.periodStreamReady(bufferType, period, adaptation$))
+    );
     function createAdaptationStream(adaptation, segmentBuffer) {
       const { manifest } = content;
       const adaptationPlaybackObserver = createAdaptationStreamPlaybackObserver(playbackObserver2, segmentBuffer);
@@ -9205,19 +10014,30 @@
         segmentFetcherCreator,
         wantedBufferAhead: wantedBufferAhead2,
         maxVideoBufferSize: maxVideoBufferSize2
-      }).pipe(catchError((error) => {
-        if (!segment_buffers_default.isNative(bufferType)) {
-          log_default.error(`Stream: ${bufferType} Stream crashed. Aborting it.`, error instanceof Error ? error : "");
-          segmentBuffersStore.disposeSegmentBuffer(bufferType);
-          const formattedError = formatError(error, {
-            defaultCode: "NONE",
-            defaultReason: "Unknown `AdaptationStream` error"
-          });
-          return concat(of(events_generators_default.warning(formattedError)), createEmptyAdaptationStream(playbackObserver2, wantedBufferAhead2, bufferType, { period }));
-        }
-        log_default.error(`Stream: ${bufferType} Stream crashed. Stopping playback.`, error instanceof Error ? error : "");
-        throw error;
-      }));
+      }).pipe(
+        catchError((error) => {
+          if (!segment_buffers_default.isNative(bufferType)) {
+            log_default.error(
+              `Stream: ${bufferType} Stream crashed. Aborting it.`,
+              error instanceof Error ? error : ""
+            );
+            segmentBuffersStore.disposeSegmentBuffer(bufferType);
+            const formattedError = formatError(error, {
+              defaultCode: "NONE",
+              defaultReason: "Unknown `AdaptationStream` error"
+            });
+            return concat(
+              of(events_generators_default.warning(formattedError)),
+              createEmptyAdaptationStream(playbackObserver2, wantedBufferAhead2, bufferType, { period })
+            );
+          }
+          log_default.error(
+            `Stream: ${bufferType} Stream crashed. Stopping playback.`,
+            error instanceof Error ? error : ""
+          );
+          throw error;
+        })
+      );
     }
   }
   function createOrReuseSegmentBuffer(segmentBuffersStore, bufferType, adaptation, options) {
@@ -9233,7 +10053,10 @@
   function getFirstDeclaredMimeType(adaptation) {
     const representations = adaptation.getPlayableRepresentations();
     if (representations.length === 0) {
-      const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION", "No Representation in the chosen " + adaptation.type + " Adaptation can be played");
+      const noRepErr = new MediaError(
+        "NO_PLAYABLE_REPRESENTATION",
+        "No Representation in the chosen " + adaptation.type + " Adaptation can be played"
+      );
       throw noRepErr;
     }
     return representations[0].getMimeTypeString();
@@ -9268,69 +10091,82 @@
   init_define_ENVIRONMENT();
   function ActivePeriodEmitter(buffers$) {
     const numberOfStreams = buffers$.length;
-    return merge(...buffers$).pipe(filter(({ type }) => type === "periodStreamCleared" || type === "adaptationChange" || type === "representationChange"), scan((acc, evt) => {
-      switch (evt.type) {
-        case "periodStreamCleared":
-          {
-            const { period, type } = evt.value;
-            const currentInfos = acc[period.id];
-            if (currentInfos !== void 0 && currentInfos.buffers.has(type)) {
-              currentInfos.buffers.delete(type);
-              if (currentInfos.buffers.size === 0) {
-                delete acc[period.id];
+    return merge(...buffers$).pipe(
+      filter(({ type }) => type === "periodStreamCleared" || type === "adaptationChange" || type === "representationChange"),
+      scan((acc, evt) => {
+        switch (evt.type) {
+          case "periodStreamCleared":
+            {
+              const { period, type } = evt.value;
+              const currentInfos = acc[period.id];
+              if (currentInfos !== void 0 && currentInfos.buffers.has(type)) {
+                currentInfos.buffers.delete(type);
+                if (currentInfos.buffers.size === 0) {
+                  delete acc[period.id];
+                }
               }
             }
-          }
-          break;
-        case "adaptationChange": {
-          if (evt.value.adaptation !== null) {
-            return acc;
-          }
-        }
-        case "representationChange":
-          {
-            const { period, type } = evt.value;
-            const currentInfos = acc[period.id];
-            if (currentInfos === void 0) {
-              const bufferSet = /* @__PURE__ */ new Set();
-              bufferSet.add(type);
-              acc[period.id] = { period, buffers: bufferSet };
-            } else if (!currentInfos.buffers.has(type)) {
-              currentInfos.buffers.add(type);
+            break;
+          case "adaptationChange": {
+            if (evt.value.adaptation !== null) {
+              return acc;
             }
           }
-          break;
-      }
-      return acc;
-    }, {}), map((list) => {
-      const activePeriodIDs = Object.keys(list);
-      const completePeriods = [];
-      for (let i = 0; i < activePeriodIDs.length; i++) {
-        const periodInfos = list[activePeriodIDs[i]];
-        if (periodInfos !== void 0 && periodInfos.buffers.size === numberOfStreams) {
-          completePeriods.push(periodInfos.period);
+          case "representationChange":
+            {
+              const { period, type } = evt.value;
+              const currentInfos = acc[period.id];
+              if (currentInfos === void 0) {
+                const bufferSet = /* @__PURE__ */ new Set();
+                bufferSet.add(type);
+                acc[period.id] = { period, buffers: bufferSet };
+              } else if (!currentInfos.buffers.has(type)) {
+                currentInfos.buffers.add(type);
+              }
+            }
+            break;
         }
-      }
-      return completePeriods.reduce((acc, period) => {
-        if (acc === null) {
-          return period;
+        return acc;
+      }, {}),
+      map((list) => {
+        const activePeriodIDs = Object.keys(list);
+        const completePeriods = [];
+        for (let i = 0; i < activePeriodIDs.length; i++) {
+          const periodInfos = list[activePeriodIDs[i]];
+          if (periodInfos !== void 0 && periodInfos.buffers.size === numberOfStreams) {
+            completePeriods.push(periodInfos.period);
+          }
         }
-        return period.start < acc.start ? period : acc;
-      }, null);
-    }), distinctUntilChanged((a, b) => {
-      return a === null && b === null || a !== null && b !== null && a.id === b.id;
-    }));
+        return completePeriods.reduce((acc, period) => {
+          if (acc === null) {
+            return period;
+          }
+          return period.start < acc.start ? period : acc;
+        }, null);
+      }),
+      distinctUntilChanged((a, b) => {
+        return a === null && b === null || a !== null && b !== null && a.id === b.id;
+      })
+    );
   }
 
   // src/worker/core/stream/orchestrator/are_streams_complete.ts
   init_define_ENVIRONMENT();
   function areStreamsComplete(...streams) {
     const isCompleteArray = streams.map((stream) => {
-      return stream.pipe(filter((evt) => {
-        return evt.type === "complete-stream" || evt.type === "stream-status" && !evt.value.hasFinishedLoading;
-      }), map((evt) => evt.type === "complete-stream"), startWith(false), distinctUntilChanged());
+      return stream.pipe(
+        filter((evt) => {
+          return evt.type === "complete-stream" || evt.type === "stream-status" && !evt.value.hasFinishedLoading;
+        }),
+        map((evt) => evt.type === "complete-stream"),
+        startWith(false),
+        distinctUntilChanged()
+      );
     });
-    return combineLatest(isCompleteArray).pipe(map((areComplete) => areComplete.every((isComplete) => isComplete)), distinctUntilChanged());
+    return combineLatest(isCompleteArray).pipe(
+      map((areComplete) => areComplete.every((isComplete) => isComplete)),
+      distinctUntilChanged()
+    );
   }
 
   // src/worker/core/stream/orchestrator/get_blacklisted_ranges.ts
@@ -9389,48 +10225,69 @@
       return BufferGarbageCollector({
         segmentBuffer,
         currentTime$: playbackObserver2.getReference().asObservable().pipe(map((o) => o.position.pending ?? o.position.last)),
-        maxBufferBehind$: maxBufferBehind2.asObservable().pipe(map((val) => Math.min(val, defaultMaxBehind))),
-        maxBufferAhead$: maxBufferAhead2.asObservable().pipe(map((val) => Math.min(val, defaultMaxAhead)))
+        maxBufferBehind$: maxBufferBehind2.asObservable().pipe(
+          map((val) => Math.min(val, defaultMaxBehind))
+        ),
+        maxBufferAhead$: maxBufferAhead2.asObservable().pipe(
+          map((val) => Math.min(val, defaultMaxAhead))
+        )
       });
     });
     const streamsArray = segmentBuffersStore.getBufferTypes().map((bufferType) => {
       return manageEveryStreams(bufferType, initialPeriod).pipe(deferSubscriptions(), share());
     });
-    const activePeriodChanged$ = ActivePeriodEmitter(streamsArray).pipe(filter((period) => period !== null), map((period) => {
-      log_default.info("Stream: New active period", period.start);
-      return events_generators_default.activePeriodChanged(period);
-    }));
-    const isLastPeriodKnown$ = fromEvent2(manifest, "manifestUpdate").pipe(map(() => manifest.isLastPeriodKnown), startWith(manifest.isLastPeriodKnown), distinctUntilChanged());
+    const activePeriodChanged$ = ActivePeriodEmitter(streamsArray).pipe(
+      filter((period) => period !== null),
+      map((period) => {
+        log_default.info("Stream: New active period", period.start);
+        return events_generators_default.activePeriodChanged(period);
+      })
+    );
+    const isLastPeriodKnown$ = fromEvent2(manifest, "manifestUpdate").pipe(
+      map(() => manifest.isLastPeriodKnown),
+      startWith(manifest.isLastPeriodKnown),
+      distinctUntilChanged()
+    );
     const endOfStream$ = combineLatest([
       areStreamsComplete(...streamsArray),
       isLastPeriodKnown$
-    ]).pipe(map(([areComplete, isLastPeriodKnown]) => areComplete && isLastPeriodKnown), distinctUntilChanged(), map((emitEndOfStream) => emitEndOfStream ? events_generators_default.endOfStream() : events_generators_default.resumeStream()));
+    ]).pipe(
+      map(([areComplete, isLastPeriodKnown]) => areComplete && isLastPeriodKnown),
+      distinctUntilChanged(),
+      map((emitEndOfStream) => emitEndOfStream ? events_generators_default.endOfStream() : events_generators_default.resumeStream())
+    );
     return merge(...streamsArray, activePeriodChanged$, endOfStream$);
     function manageEveryStreams(bufferType, basePeriod) {
       const periodList = new SortedList((a, b) => a.start - b.start);
       const destroyStreams$ = new Subject();
       let enableOutOfBoundsCheck = false;
       function launchConsecutiveStreamsForPeriod(period) {
-        return manageConsecutivePeriodStreams(bufferType, period, destroyStreams$).pipe(map((message) => {
-          switch (message.type) {
-            case "waiting-media-source-reload":
-              const firstPeriod = periodList.head();
-              if (firstPeriod === void 0 || firstPeriod.id !== message.value.period.id) {
-                return events_generators_default.lockedStream(message.value.bufferType, message.value.period);
-              } else {
-                const { position, autoPlay } = message.value;
-                return events_generators_default.needsMediaSourceReload(position, autoPlay);
-              }
-            case "periodStreamReady":
-              enableOutOfBoundsCheck = true;
-              periodList.add(message.value.period);
-              break;
-            case "periodStreamCleared":
-              periodList.removeElement(message.value.period);
-              break;
-          }
-          return message;
-        }), share());
+        return manageConsecutivePeriodStreams(bufferType, period, destroyStreams$).pipe(
+          map((message) => {
+            switch (message.type) {
+              case "waiting-media-source-reload":
+                const firstPeriod = periodList.head();
+                if (firstPeriod === void 0 || firstPeriod.id !== message.value.period.id) {
+                  return events_generators_default.lockedStream(
+                    message.value.bufferType,
+                    message.value.period
+                  );
+                } else {
+                  const { position, autoPlay } = message.value;
+                  return events_generators_default.needsMediaSourceReload(position, autoPlay);
+                }
+              case "periodStreamReady":
+                enableOutOfBoundsCheck = true;
+                periodList.add(message.value.period);
+                break;
+              case "periodStreamCleared":
+                periodList.removeElement(message.value.period);
+                break;
+            }
+            return message;
+          }),
+          share()
+        );
       }
       function isOutOfPeriodList(time) {
         const head = periodList.head();
@@ -9441,25 +10298,35 @@
         return head.start > time || (last2.end == null ? Infinity : last2.end) < time;
       }
       const observation$ = playbackObserver2.getReference().asObservable();
-      const restartStreamsWhenOutOfBounds$ = observation$.pipe(filterMap(({ position }) => {
-        const time = position.pending ?? position.last;
-        if (!enableOutOfBoundsCheck || !isOutOfPeriodList(time)) {
-          return null;
-        }
-        const nextPeriod = manifest.getPeriodForTime(time) ?? manifest.getNextPeriod(time);
-        if (nextPeriod === void 0) {
-          return null;
-        }
-        log_default.info("SO: Current position out of the bounds of the active periods,re-creating Streams.", bufferType, time);
-        enableOutOfBoundsCheck = false;
-        destroyStreams$.next();
-        return nextPeriod;
-      }, null), mergeMap((newInitialPeriod) => {
-        if (newInitialPeriod == null) {
-          throw new MediaError("MEDIA_TIME_NOT_FOUND", "The wanted position is not found in the Manifest.");
-        }
-        return launchConsecutiveStreamsForPeriod(newInitialPeriod);
-      }));
+      const restartStreamsWhenOutOfBounds$ = observation$.pipe(
+        filterMap(({ position }) => {
+          const time = position.pending ?? position.last;
+          if (!enableOutOfBoundsCheck || !isOutOfPeriodList(time)) {
+            return null;
+          }
+          const nextPeriod = manifest.getPeriodForTime(time) ?? manifest.getNextPeriod(time);
+          if (nextPeriod === void 0) {
+            return null;
+          }
+          log_default.info(
+            "SO: Current position out of the bounds of the active periods,re-creating Streams.",
+            bufferType,
+            time
+          );
+          enableOutOfBoundsCheck = false;
+          destroyStreams$.next();
+          return nextPeriod;
+        }, null),
+        mergeMap((newInitialPeriod) => {
+          if (newInitialPeriod == null) {
+            throw new MediaError(
+              "MEDIA_TIME_NOT_FOUND",
+              "The wanted position is not found in the Manifest."
+            );
+          }
+          return launchConsecutiveStreamsForPeriod(newInitialPeriod);
+        })
+      );
       const handleDecipherabilityUpdate$ = fromEvent2(manifest, "decipherabilityUpdate").pipe(mergeMap((updates) => {
         const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
         const ofCurrentType = updates.filter((update) => update.adaptation.type === bufferType);
@@ -9474,61 +10341,103 @@
         }
         enableOutOfBoundsCheck = false;
         destroyStreams$.next();
-        return concat(...rangesToClean.map(({ start, end }) => start >= end ? EMPTY : segmentBuffer.removeBuffer(start, end).pipe(ignoreElements())), nextTickObs().pipe(ignoreElements()), playbackObserver2.getReference().asObservable().pipe(take(1), mergeMap((observation) => {
-          const shouldAutoPlay = !(observation.paused.pending ?? playbackObserver2.getIsPaused());
-          return concat(of(events_generators_default.needsDecipherabilityFlush(observation.position.last, shouldAutoPlay, observation.duration)), defer(() => {
-            const lastPosition = observation.position.pending ?? observation.position.last;
-            const newInitialPeriod = manifest.getPeriodForTime(lastPosition);
-            if (newInitialPeriod == null) {
-              throw new MediaError("MEDIA_TIME_NOT_FOUND", "The wanted position is not found in the Manifest.");
-            }
-            return launchConsecutiveStreamsForPeriod(newInitialPeriod);
-          }));
-        })));
+        return concat(
+          ...rangesToClean.map(({ start, end }) => start >= end ? EMPTY : segmentBuffer.removeBuffer(start, end).pipe(ignoreElements())),
+          nextTickObs().pipe(ignoreElements()),
+          playbackObserver2.getReference().asObservable().pipe(
+            take(1),
+            mergeMap((observation) => {
+              const shouldAutoPlay = !(observation.paused.pending ?? playbackObserver2.getIsPaused());
+              return concat(
+                of(events_generators_default.needsDecipherabilityFlush(
+                  observation.position.last,
+                  shouldAutoPlay,
+                  observation.duration
+                )),
+                defer(() => {
+                  const lastPosition = observation.position.pending ?? observation.position.last;
+                  const newInitialPeriod = manifest.getPeriodForTime(lastPosition);
+                  if (newInitialPeriod == null) {
+                    throw new MediaError(
+                      "MEDIA_TIME_NOT_FOUND",
+                      "The wanted position is not found in the Manifest."
+                    );
+                  }
+                  return launchConsecutiveStreamsForPeriod(newInitialPeriod);
+                })
+              );
+            })
+          )
+        );
       }));
-      return merge(restartStreamsWhenOutOfBounds$, handleDecipherabilityUpdate$, launchConsecutiveStreamsForPeriod(basePeriod));
+      return merge(
+        restartStreamsWhenOutOfBounds$,
+        handleDecipherabilityUpdate$,
+        launchConsecutiveStreamsForPeriod(basePeriod)
+      );
     }
     function manageConsecutivePeriodStreams(bufferType, basePeriod, destroy$) {
       log_default.info("SO: Creating new Stream for", bufferType, basePeriod.start);
       const createNextPeriodStream$ = new Subject();
       const destroyNextStreams$ = new Subject();
       const endOfCurrentStream$ = playbackObserver2.getReference().asObservable().pipe(filter(({ position }) => basePeriod.end != null && (position.pending ?? position.last) >= basePeriod.end));
-      const nextPeriodStream$ = createNextPeriodStream$.pipe(exhaustMap((nextPeriod) => manageConsecutivePeriodStreams(bufferType, nextPeriod, destroyNextStreams$)));
-      const destroyAll$ = destroy$.pipe(take(1), tap(() => {
-        createNextPeriodStream$.complete();
-        destroyNextStreams$.next();
-        destroyNextStreams$.complete();
-      }), share());
+      const nextPeriodStream$ = createNextPeriodStream$.pipe(exhaustMap(
+        (nextPeriod) => manageConsecutivePeriodStreams(bufferType, nextPeriod, destroyNextStreams$)
+      ));
+      const destroyAll$ = destroy$.pipe(
+        take(1),
+        tap(() => {
+          createNextPeriodStream$.complete();
+          destroyNextStreams$.next();
+          destroyNextStreams$.complete();
+        }),
+        share()
+      );
       const killCurrentStream$ = merge(endOfCurrentStream$, destroyAll$);
-      const periodStream$ = period_default({
-        bufferType,
-        content: { manifest, period: basePeriod },
-        garbageCollectors,
-        maxVideoBufferSize: maxVideoBufferSize2,
-        segmentFetcherCreator,
-        segmentBuffersStore,
-        options,
-        playbackObserver: playbackObserver2,
-        representationEstimator,
-        wantedBufferAhead: wantedBufferAhead2
-      }).pipe(mergeMap((evt) => {
-        if (evt.type === "stream-status") {
-          if (evt.value.hasFinishedLoading) {
-            const nextPeriod = manifest.getPeriodAfter(basePeriod);
-            if (nextPeriod === null) {
-              return concat(of(evt), of(events_generators_default.streamComplete(bufferType)));
-            }
-            createNextPeriodStream$.next(nextPeriod);
-          } else {
-            destroyNextStreams$.next();
-          }
+      const periodStream$ = period_default(
+        {
+          bufferType,
+          content: { manifest, period: basePeriod },
+          garbageCollectors,
+          maxVideoBufferSize: maxVideoBufferSize2,
+          segmentFetcherCreator,
+          segmentBuffersStore,
+          options,
+          playbackObserver: playbackObserver2,
+          representationEstimator,
+          wantedBufferAhead: wantedBufferAhead2
         }
-        return of(evt);
-      }), share());
-      const currentStream$ = concat(periodStream$.pipe(takeUntil(killCurrentStream$)), of(events_generators_default.periodStreamCleared(bufferType, basePeriod)).pipe(tap(() => {
-        log_default.info("SO: Destroying Stream for", bufferType, basePeriod.start);
-      })));
-      return merge(currentStream$, nextPeriodStream$, destroyAll$.pipe(ignoreElements()));
+      ).pipe(
+        mergeMap((evt) => {
+          if (evt.type === "stream-status") {
+            if (evt.value.hasFinishedLoading) {
+              const nextPeriod = manifest.getPeriodAfter(basePeriod);
+              if (nextPeriod === null) {
+                return concat(
+                  of(evt),
+                  of(events_generators_default.streamComplete(bufferType))
+                );
+              }
+              createNextPeriodStream$.next(nextPeriod);
+            } else {
+              destroyNextStreams$.next();
+            }
+          }
+          return of(evt);
+        }),
+        share()
+      );
+      const currentStream$ = concat(
+        periodStream$.pipe(takeUntil(killCurrentStream$)),
+        of(events_generators_default.periodStreamCleared(bufferType, basePeriod)).pipe(tap(() => {
+          log_default.info("SO: Destroying Stream for", bufferType, basePeriod.start);
+        }))
+      );
+      return merge(
+        currentStream$,
+        nextPeriodStream$,
+        destroyAll$.pipe(ignoreElements())
+      );
     }
   }
 
@@ -9612,13 +10521,19 @@
       }
       log_default.debug("Init: Waiting SourceBuffers to be updated before calling endOfStream.");
       const updatedSourceBuffers$ = updatingSourceBuffers.map((sourceBuffer) => onUpdate$2(sourceBuffer).pipe(take(1)));
-      return race(merge(...updatedSourceBuffers$).pipe(takeLast(1)), onRemoveSourceBuffers$2(sourceBuffers).pipe(take(1))).pipe(mergeMap(() => {
+      return race(
+        merge(...updatedSourceBuffers$).pipe(takeLast(1)),
+        onRemoveSourceBuffers$2(sourceBuffers).pipe(take(1))
+      ).pipe(mergeMap(() => {
         return triggerEndOfStream(mediaSource);
       }));
     });
   }
   function maintainEndOfStream(mediaSource) {
-    return onSourceOpen$2(mediaSource).pipe(startWith(null), switchMap(() => triggerEndOfStream(mediaSource)));
+    return onSourceOpen$2(mediaSource).pipe(
+      startWith(null),
+      switchMap(() => triggerEndOfStream(mediaSource))
+    );
   }
 
   // src/worker/globals.ts
@@ -9722,7 +10637,11 @@
       return null;
     }
     const nextStart = nextTimelineItem.start;
-    const segmentEnd = getIndexSegmentEnd(timelineItem, nextTimelineItem, maxPosition);
+    const segmentEnd = getIndexSegmentEnd(
+      timelineItem,
+      nextTimelineItem,
+      maxPosition
+    );
     return scaledTime >= segmentEnd && scaledTime < nextStart ? fromIndexTime(nextStart, index) : null;
   }
 
@@ -9840,14 +10759,21 @@
       return media !== void 0 ? [replaceRepresentationDASHTokens(media, id, bitrate)] : null;
     }
     return baseURLs.map((baseURL) => {
-      return replaceRepresentationDASHTokens(resolveURL(baseURL, media), id, bitrate);
+      return replaceRepresentationDASHTokens(
+        resolveURL(baseURL, media),
+        id,
+        bitrate
+      );
     });
   }
   function replaceRepresentationDASHTokens(path, id, bitrate) {
     if (path.indexOf("$") === -1) {
       return path;
     } else {
-      return path.replace(/\$\$/g, "$").replace(/\$RepresentationID\$/g, String(id)).replace(/\$Bandwidth(\%0(\d+)d)?\$/g, processFormatedToken(bitrate === void 0 ? 0 : bitrate));
+      return path.replace(/\$\$/g, "$").replace(/\$RepresentationID\$/g, String(id)).replace(
+        /\$Bandwidth(\%0(\d+)d)?\$/g,
+        processFormatedToken(bitrate === void 0 ? 0 : bitrate)
+      );
     }
   }
   function createDashUrlDetokenizer(time, nb) {
@@ -9963,13 +10889,23 @@
       const presentationTimeOffset = index.presentationTimeOffset != null ? index.presentationTimeOffset : 0;
       const indexTimeOffset = presentationTimeOffset - periodStart * timescale;
       const urlSources = representationBaseURLs.map((b) => b.url);
-      const mediaURLs = createIndexURLs(urlSources, index.initialization !== void 0 ? index.initialization.media : void 0, representationId, representationBitrate);
+      const mediaURLs = createIndexURLs(
+        urlSources,
+        index.initialization !== void 0 ? index.initialization.media : void 0,
+        representationId,
+        representationBitrate
+      );
       const range = index.initialization !== void 0 ? index.initialization.range : index.indexRange !== void 0 ? [0, index.indexRange[0] - 1] : void 0;
       this._index = {
         indexRange: index.indexRange,
         indexTimeOffset,
         initialization: { mediaURLs, range },
-        mediaURLs: createIndexURLs(urlSources, index.media, representationId, representationBitrate),
+        mediaURLs: createIndexURLs(
+          urlSources,
+          index.media,
+          representationId,
+          representationBitrate
+        ),
         startNumber: index.startNumber,
         timeline: index.timeline ?? [],
         timescale
@@ -9983,7 +10919,13 @@
       return getInitSegment(this._index, this._isEMSGWhitelisted);
     }
     getSegments(from2, dur) {
-      return getSegmentsFromTimeline(this._index, from2, dur, this._isEMSGWhitelisted, this._scaledPeriodEnd);
+      return getSegmentsFromTimeline(
+        this._index,
+        from2,
+        dur,
+        this._isEMSGWhitelisted,
+        this._scaledPeriodEnd
+      );
     }
     shouldRefresh() {
       return false;
@@ -9993,7 +10935,13 @@
       if (index.timeline.length === 0) {
         return null;
       }
-      return fromIndexTime(Math.max(this._scaledPeriodStart, index.timeline[0].start), index);
+      return fromIndexTime(
+        Math.max(
+          this._scaledPeriodStart,
+          index.timeline[0].start
+        ),
+        index
+      );
     }
     getLastPosition() {
       const { timeline } = this._index;
@@ -10001,7 +10949,14 @@
         return null;
       }
       const lastTimelineElement = timeline[timeline.length - 1];
-      const lastTime = Math.min(getIndexSegmentEnd(lastTimelineElement, null, this._scaledPeriodEnd), this._scaledPeriodEnd ?? Infinity);
+      const lastTime = Math.min(
+        getIndexSegmentEnd(
+          lastTimelineElement,
+          null,
+          this._scaledPeriodEnd
+        ),
+        this._scaledPeriodEnd ?? Infinity
+      );
       return fromIndexTime(lastTime, this._index);
     }
     isSegmentStillAvailable() {
@@ -10066,7 +11021,12 @@
       const indexTimeOffset = presentationTimeOffset - periodStart * timescale;
       const urlSources = representationBaseURLs.map((b) => b.url);
       const list = index.list.map((lItem) => ({
-        mediaURLs: createIndexURLs(urlSources, lItem.media, representationId, representationBitrate),
+        mediaURLs: createIndexURLs(
+          urlSources,
+          lItem.media,
+          representationId,
+          representationBitrate
+        ),
         mediaRange: lItem.mediaRange
       }));
       this._index = {
@@ -10076,7 +11036,12 @@
         indexTimeOffset,
         indexRange: index.indexRange,
         initialization: index.initialization == null ? void 0 : {
-          mediaURLs: createIndexURLs(urlSources, index.initialization.media, representationId, representationBitrate),
+          mediaURLs: createIndexURLs(
+            urlSources,
+            index.initialization.media,
+            representationId,
+            representationBitrate
+          ),
           range: index.initialization.range
         }
       };
@@ -10129,7 +11094,10 @@
     getLastPosition() {
       const index = this._index;
       const { duration, list } = index;
-      return Math.min(list.length * duration / index.timescale + this._periodStart, this._periodEnd ?? Infinity);
+      return Math.min(
+        list.length * duration / index.timescale + this._periodStart,
+        this._periodEnd ?? Infinity
+      );
     }
     isSegmentStillAvailable() {
       return true;
@@ -10210,10 +11178,20 @@
         indexRange: index.indexRange,
         indexTimeOffset,
         initialization: index.initialization == null ? void 0 : {
-          mediaURLs: createIndexURLs(urlSources, index.initialization.media, representationId, representationBitrate),
+          mediaURLs: createIndexURLs(
+            urlSources,
+            index.initialization.media,
+            representationId,
+            representationBitrate
+          ),
           range: index.initialization.range
         },
-        mediaURLs: createIndexURLs(urlSources, index.media, representationId, representationBitrate),
+        mediaURLs: createIndexURLs(
+          urlSources,
+          index.media,
+          representationId,
+          representationBitrate
+        ),
         presentationTimeOffset,
         startNumber: index.startNumber
       };
@@ -10289,7 +11267,10 @@
       if (lastSegmentStart == null) {
         return lastSegmentStart;
       }
-      const lastSegmentEnd = Math.min(lastSegmentStart + this._index.duration, this._scaledPeriodEnd ?? Infinity);
+      const lastSegmentEnd = Math.min(
+        lastSegmentStart + this._index.duration,
+        this._scaledPeriodEnd ?? Infinity
+      );
       return lastSegmentEnd / this._index.timescale + this._periodStart;
     }
     shouldRefresh() {
@@ -10485,7 +11466,10 @@
     const oldLastElt = oldTimeline[prevTimelineLength - 1];
     const oldIndexEnd = getIndexSegmentEnd(oldLastElt, newTimeline[0]);
     if (oldIndexEnd < newIndexStart) {
-      throw new MediaError("MANIFEST_UPDATE_ERROR", "Cannot perform partial update: not enough data");
+      throw new MediaError(
+        "MANIFEST_UPDATE_ERROR",
+        "Cannot perform partial update: not enough data"
+      );
     }
     for (let i = prevTimelineLength - 1; i >= 0; i--) {
       const currStart = oldTimeline[i].start;
@@ -10851,10 +11835,20 @@
         indexRange: index.indexRange,
         indexTimeOffset,
         initialization: index.initialization == null ? void 0 : {
-          mediaURLs: createIndexURLs(urlSources, index.initialization.media, representationId, representationBitrate),
+          mediaURLs: createIndexURLs(
+            urlSources,
+            index.initialization.media,
+            representationId,
+            representationBitrate
+          ),
           range: index.initialization.range
         },
-        mediaURLs: createIndexURLs(urlSources, index.media, representationId, representationBitrate),
+        mediaURLs: createIndexURLs(
+          urlSources,
+          index.media,
+          representationId,
+          representationBitrate
+        ),
         startNumber: index.startNumber,
         timeline: index.timeline ?? null,
         timescale
@@ -10877,13 +11871,19 @@
         timescale,
         indexTimeOffset
       } = this._index;
-      return getSegmentsFromTimeline({
-        mediaURLs,
-        startNumber,
-        timeline,
-        timescale,
-        indexTimeOffset
-      }, from2, duration, this._isEMSGWhitelisted, this._scaledPeriodEnd);
+      return getSegmentsFromTimeline(
+        {
+          mediaURLs,
+          startNumber,
+          timeline,
+          timescale,
+          indexTimeOffset
+        },
+        from2,
+        duration,
+        this._isEMSGWhitelisted,
+        this._scaledPeriodEnd
+      );
     }
     shouldRefresh() {
       return false;
@@ -10894,14 +11894,23 @@
         this._index.timeline = this._getTimeline();
       }
       const timeline = this._index.timeline;
-      return timeline.length === 0 ? null : fromIndexTime(Math.max(this._scaledPeriodStart, timeline[0].start), this._index);
+      return timeline.length === 0 ? null : fromIndexTime(
+        Math.max(
+          this._scaledPeriodStart,
+          timeline[0].start
+        ),
+        this._index
+      );
     }
     getLastPosition() {
       this._refreshTimeline();
       if (this._index.timeline === null) {
         this._index.timeline = this._getTimeline();
       }
-      const lastTime = TimelineRepresentationIndex.getIndexEnd(this._index.timeline, this._scaledPeriodEnd);
+      const lastTime = TimelineRepresentationIndex.getIndexEnd(
+        this._index.timeline,
+        this._scaledPeriodEnd
+      );
       return lastTime === null ? null : fromIndexTime(lastTime, this._index);
     }
     isSegmentStillAvailable(segment) {
@@ -10922,11 +11931,15 @@
         timeline = this._getTimeline();
         this._index.timeline = timeline;
       }
-      return checkDiscontinuity({
-        timeline,
-        timescale: this._index.timescale,
-        indexTimeOffset: this._index.indexTimeOffset
-      }, time, this._scaledPeriodEnd);
+      return checkDiscontinuity(
+        {
+          timeline,
+          timescale: this._index.timescale,
+          indexTimeOffset: this._index.indexTimeOffset
+        },
+        time,
+        this._scaledPeriodEnd
+      );
     }
     canBeOutOfSyncError(error) {
       if (!this._isDynamic) {
@@ -10954,7 +11967,10 @@
       if (newIndex._index.timeline === null) {
         newIndex._index.timeline = newIndex._getTimeline();
       }
-      const hasReplaced = updateSegmentTimeline(this._index.timeline, newIndex._index.timeline);
+      const hasReplaced = updateSegmentTimeline(
+        this._index.timeline,
+        newIndex._index.timeline
+      );
       if (hasReplaced) {
         this._index.startNumber = newIndex._index.startNumber;
       }
@@ -10976,7 +11992,11 @@
         return false;
       }
       const lastTimelineElement = timeline[timeline.length - 1];
-      const lastTime = getIndexSegmentEnd(lastTimelineElement, null, this._scaledPeriodEnd);
+      const lastTime = getIndexSegmentEnd(
+        lastTimelineElement,
+        null,
+        this._scaledPeriodEnd
+      );
       return isPeriodFulfilled(this._index.timescale, lastTime, this._scaledPeriodEnd);
     }
     isInitialized() {
@@ -10997,7 +12017,10 @@
         return;
       }
       const scaledFirstPosition = toIndexTime(firstPosition, this._index);
-      const nbEltsRemoved = clearTimelineFromPosition(this._index.timeline, scaledFirstPosition);
+      const nbEltsRemoved = clearTimelineFromPosition(
+        this._index.timeline,
+        scaledFirstPosition
+      );
       if (this._index.startNumber !== void 0) {
         this._index.startNumber += nbEltsRemoved;
       }
@@ -11006,7 +12029,14 @@
       if (timeline.length <= 0) {
         return null;
       }
-      return Math.min(getIndexSegmentEnd(timeline[timeline.length - 1], null, scaledPeriodEnd), scaledPeriodEnd ?? Infinity);
+      return Math.min(
+        getIndexSegmentEnd(
+          timeline[timeline.length - 1],
+          null,
+          scaledPeriodEnd
+        ),
+        scaledPeriodEnd ?? Infinity
+      );
     }
     _getTimeline() {
       if (this._parseTimeline === null) {
@@ -11054,7 +12084,9 @@
   // src/worker/parsers/manifest/dash/common/get_http_utc-timing_url.ts
   init_define_ENVIRONMENT();
   function getHTTPUTCTimingURL(mpdIR) {
-    const UTCTimingHTTP = mpdIR.children.utcTimings.filter((utcTiming) => (utcTiming.schemeIdUri === "urn:mpeg:dash:utc:http-iso:2014" || utcTiming.schemeIdUri === "urn:mpeg:dash:utc:http-xsdate:2014") && utcTiming.value !== void 0);
+    const UTCTimingHTTP = mpdIR.children.utcTimings.filter(
+      (utcTiming) => (utcTiming.schemeIdUri === "urn:mpeg:dash:utc:http-iso:2014" || utcTiming.schemeIdUri === "urn:mpeg:dash:utc:http-xsdate:2014") && utcTiming.value !== void 0
+    );
     return UTCTimingHTTP.length > 0 ? UTCTimingHTTP[0].value : void 0;
   }
 
@@ -11108,7 +12140,10 @@
           maximumVideoPosition = lastPosition;
         }
         if (firstAudioAdaptationFromPeriod !== void 0 && maximumAudioPosition === null || firstVideoAdaptationFromPeriod !== void 0 && maximumVideoPosition === null) {
-          log_default.info("Parser utils: found Period with no segment. ", "Going to previous one to calculate last position");
+          log_default.info(
+            "Parser utils: found Period with no segment. ",
+            "Going to previous one to calculate last position"
+          );
           return { safe: void 0, unsafe: void 0 };
         }
         if (maximumVideoPosition !== null) {
@@ -11181,7 +12216,10 @@
           minimumVideoPosition = firstPosition;
         }
         if (firstAudioAdaptationFromPeriod !== void 0 && minimumAudioPosition === null || firstVideoAdaptationFromPeriod !== void 0 && minimumVideoPosition === null) {
-          log_default.info("Parser utils: found Period with no segment. ", "Going to next one to calculate first position");
+          log_default.info(
+            "Parser utils: found Period with no segment. ",
+            "Going to next one to calculate first position"
+          );
           return void 0;
         }
         if (minimumVideoPosition !== null) {
@@ -11382,7 +12420,11 @@
       const parsedPeriod = parsedPeriods[i];
       let lastFlattenedPeriod = flattenedPeriods[flattenedPeriods.length - 1];
       while (lastFlattenedPeriod.duration === void 0 || lastFlattenedPeriod.start + lastFlattenedPeriod.duration > parsedPeriod.start) {
-        log_default.warn("DASH: Updating overlapping Periods.", lastFlattenedPeriod?.start, parsedPeriod.start);
+        log_default.warn(
+          "DASH: Updating overlapping Periods.",
+          lastFlattenedPeriod?.start,
+          parsedPeriod.start
+        );
         lastFlattenedPeriod.duration = parsedPeriod.start - lastFlattenedPeriod.start;
         lastFlattenedPeriod.end = parsedPeriod.start;
         if (lastFlattenedPeriod.duration > 0) {
@@ -11470,7 +12512,10 @@
     }
     estimateMaximumBound() {
       if (this._isDynamic && this._positionTime != null && this._lastPosition != null) {
-        return Math.max(this._lastPosition - this._positionTime + performance.now() / 1e3, 0);
+        return Math.max(
+          this._lastPosition - this._positionTime + performance.now() / 1e3,
+          0
+        );
       }
       return this._lastPosition;
     }
@@ -11509,7 +12554,10 @@
   function inferAdaptationType(representations, adaptationMimeType, adaptationCodecs, adaptationRoles) {
     function fromMimeType(mimeType, roles) {
       const topLevel = mimeType.split("/")[0];
-      if (arrayIncludes(SUPPORTED_ADAPTATIONS_TYPE, topLevel)) {
+      if (arrayIncludes(
+        SUPPORTED_ADAPTATIONS_TYPE,
+        topLevel
+      )) {
         return topLevel;
       }
       if (mimeType === "application/bif") {
@@ -11520,7 +12568,10 @@
       }
       if (mimeType === "application/mp4") {
         if (roles != null) {
-          if (arrayFind(roles, (role) => role.schemeIdUri === "urn:mpeg:dash:role:2011" && arrayIncludes(SUPPORTED_TEXT_TYPES, role.value)) != null) {
+          if (arrayFind(
+            roles,
+            (role) => role.schemeIdUri === "urn:mpeg:dash:role:2011" && arrayIncludes(SUPPORTED_TEXT_TYPES, role.value)
+          ) != null) {
             return "text";
           }
         }
@@ -11650,7 +12701,10 @@
 
   // src/worker/parsers/manifest/dash/common/parse_representation_index.ts
   function parseRepresentationIndex(representation, context2) {
-    const representationBaseURLs = resolveBaseURLs(context2.baseURLs, representation.children.baseURLs);
+    const representationBaseURLs = resolveBaseURLs(
+      context2.baseURLs,
+      representation.children.baseURLs
+    );
     const {
       aggressiveMode,
       availabilityTimeOffset,
@@ -11700,7 +12754,10 @@
       if (childSegmentTemplate !== void 0) {
         segmentTemplates.push(childSegmentTemplate);
       }
-      const segmentTemplate = object_assign_default({}, ...segmentTemplates);
+      const segmentTemplate = object_assign_default(
+        {},
+        ...segmentTemplates
+      );
       reprIndexCtxt.availabilityTimeComplete = segmentTemplate.availabilityTimeComplete ?? context2.availabilityTimeComplete;
       reprIndexCtxt.availabilityTimeOffset = (segmentTemplate.availabilityTimeOffset ?? 0) + context2.availabilityTimeOffset;
       representationIndex = timeline_default.isTimelineIndexArgument(segmentTemplate) ? new timeline_default(segmentTemplate, reprIndexCtxt) : new TemplateRepresentationIndex(segmentTemplate, reprIndexCtxt);
@@ -11747,7 +12804,9 @@
     if (codecs === void 0) {
       return void 0;
     }
-    if (profiles.indexOf("http://dashif.org/guidelines/dash-if-uhd#hevc-hdr-pq10") !== -1) {
+    if (profiles.indexOf(
+      "http://dashif.org/guidelines/dash-if-uhd#hevc-hdr-pq10"
+    ) !== -1) {
       if (codecs === "hvc1.2.4.L153.B0" || codecs === "hev1.2.4.L153.B0") {
         return {
           colorDepth: 10,
@@ -11771,14 +12830,21 @@
       const inbandEventStreams = combineInbandEventStreams(representation, adaptation);
       const availabilityTimeComplete = representation.attributes.availabilityTimeComplete ?? context2.availabilityTimeComplete;
       const availabilityTimeOffset = (representation.attributes.availabilityTimeOffset ?? 0) + context2.availabilityTimeOffset;
-      const reprIndexCtxt = object_assign_default({}, context2, {
-        availabilityTimeOffset,
-        availabilityTimeComplete,
-        unsafelyBaseOnPreviousRepresentation,
-        adaptation,
-        inbandEventStreams
-      });
-      const representationIndex = parseRepresentationIndex(representation, reprIndexCtxt);
+      const reprIndexCtxt = object_assign_default(
+        {},
+        context2,
+        {
+          availabilityTimeOffset,
+          availabilityTimeComplete,
+          unsafelyBaseOnPreviousRepresentation,
+          adaptation,
+          inbandEventStreams
+        }
+      );
+      const representationIndex = parseRepresentationIndex(
+        representation,
+        reprIndexCtxt
+      );
       let representationBitrate;
       if (representation.attributes.bitrate == null) {
         log_default.warn("DASH: No usable bitrate found in the Representation.");
@@ -11968,7 +13034,12 @@
       const availabilityTimeOffset = (adaptation.attributes.availabilityTimeOffset ?? 0) + context2.availabilityTimeOffset;
       const adaptationMimeType = adaptation.attributes.mimeType;
       const adaptationCodecs = adaptation.attributes.codecs;
-      const type = inferAdaptationType(representationsIR, isNonEmptyString(adaptationMimeType) ? adaptationMimeType : null, isNonEmptyString(adaptationCodecs) ? adaptationCodecs : null, adaptationChildren.roles != null ? adaptationChildren.roles : null);
+      const type = inferAdaptationType(
+        representationsIR,
+        isNonEmptyString(adaptationMimeType) ? adaptationMimeType : null,
+        isNonEmptyString(adaptationCodecs) ? adaptationCodecs : null,
+        adaptationChildren.roles != null ? adaptationChildren.roles : null
+      );
       if (type === void 0) {
         continue;
       }
@@ -11999,15 +13070,22 @@
         timeShiftBufferDepth: context2.timeShiftBufferDepth,
         unsafelyBaseOnPreviousAdaptation: null
       };
-      const trickModeProperty = Array.isArray(essentialProperties) ? arrayFind(essentialProperties, (scheme) => {
-        return scheme.schemeIdUri === "http://dashif.org/guidelines/trickmode";
-      }) : void 0;
+      const trickModeProperty = Array.isArray(essentialProperties) ? arrayFind(
+        essentialProperties,
+        (scheme) => {
+          return scheme.schemeIdUri === "http://dashif.org/guidelines/trickmode";
+        }
+      ) : void 0;
       const trickModeAttachedAdaptationIds = trickModeProperty?.value?.split(" ");
       const isTrickModeTrack = trickModeAttachedAdaptationIds !== void 0;
       if (type === "video" && isMainAdaptation && lastMainVideoAdapIdx >= 0 && parsedAdaptations.video.length > lastMainVideoAdapIdx && !isTrickModeTrack) {
         const videoMainAdaptation = parsedAdaptations.video[lastMainVideoAdapIdx][0];
         reprCtxt.unsafelyBaseOnPreviousAdaptation = context2.unsafelyBaseOnPreviousPeriod?.getAdaptation(videoMainAdaptation.id) ?? null;
-        const representations = parseRepresentations(representationsIR, adaptation, reprCtxt);
+        const representations = parseRepresentations(
+          representationsIR,
+          adaptation,
+          reprCtxt
+        );
         videoMainAdaptation.representations.push(...representations);
         newID = videoMainAdaptation.id;
       } else {
@@ -12034,20 +13112,27 @@
         } else if (accessibilities !== void 0) {
           isSignInterpreted = accessibilities.some(hasSignLanguageInterpretation);
         }
-        let adaptationID = getAdaptationID(adaptation, {
-          isAudioDescription,
-          isClosedCaption,
-          isSignInterpreted,
-          isTrickModeTrack,
-          type
-        });
+        let adaptationID = getAdaptationID(
+          adaptation,
+          {
+            isAudioDescription,
+            isClosedCaption,
+            isSignInterpreted,
+            isTrickModeTrack,
+            type
+          }
+        );
         while (arrayIncludes(parsedAdaptationsIDs, adaptationID)) {
           adaptationID += "-dup";
         }
         newID = adaptationID;
         parsedAdaptationsIDs.push(adaptationID);
         reprCtxt.unsafelyBaseOnPreviousAdaptation = context2.unsafelyBaseOnPreviousPeriod?.getAdaptation(adaptationID) ?? null;
-        const representations = parseRepresentations(representationsIR, adaptation, reprCtxt);
+        const representations = parseRepresentations(
+          representationsIR,
+          adaptation,
+          reprCtxt
+        );
         const parsedAdaptationSet = {
           id: adaptationID,
           representations,
@@ -12082,10 +13167,17 @@
           for (const id of adaptationSetSwitchingIDs) {
             const switchingInfos = adaptationSwitchingInfos[id];
             if (switchingInfos !== void 0 && switchingInfos.newID !== newID && arrayIncludes(switchingInfos.adaptationSetSwitchingIDs, originalID)) {
-              mergedIntoIdx = arrayFindIndex(parsedAdaptations[type], (a) => a[0].id === id);
+              mergedIntoIdx = arrayFindIndex(
+                parsedAdaptations[type],
+                (a) => a[0].id === id
+              );
               const mergedInto = parsedAdaptations[type][mergedIntoIdx];
               if (mergedInto !== void 0 && mergedInto[0].audioDescription === parsedAdaptationSet.audioDescription && mergedInto[0].closedCaption === parsedAdaptationSet.closedCaption && mergedInto[0].language === parsedAdaptationSet.language) {
-                log_default.info('DASH Parser: merging "switchable" AdaptationSets', originalID, id);
+                log_default.info(
+                  'DASH Parser: merging "switchable" AdaptationSets',
+                  originalID,
+                  id
+                );
                 mergedInto[0].representations.push(...parsedAdaptationSet.representations);
                 if (type === "video" && isMainAdaptation && !mergedInto[1].isMainAdaptation) {
                   lastMainVideoAdapIdx = Math.max(lastMainVideoAdapIdx, mergedIntoIdx);
@@ -12166,7 +13258,10 @@
       const isLastPeriod = i === periodsIR.length - 1;
       const periodIR = periodsIR[i];
       const xlinkInfos = context2.xlinkInfos.get(periodIR);
-      const periodBaseURLs = resolveBaseURLs(context2.baseURLs, periodIR.children.baseURLs);
+      const periodBaseURLs = resolveBaseURLs(
+        context2.baseURLs,
+        periodIR.children.baseURLs
+      );
       const {
         periodStart,
         periodDuration,
@@ -12206,7 +13301,11 @@
       };
       const adaptations = parseAdaptationSets(periodIR.children.adaptations, adapCtxt);
       const namespaces = (context2.xmlNamespaces ?? []).concat(periodIR.attributes.namespaces ?? []);
-      const streamEvents = generateStreamEvents(periodIR.children.eventStreams, periodStart, namespaces);
+      const streamEvents = generateStreamEvents(
+        periodIR.children.eventStreams,
+        periodStart,
+        namespaces
+      );
       const parsedPeriod = {
         id: periodID,
         start: periodStart,
@@ -12230,7 +13329,10 @@
             const guessedLastPositionFromClock = guessLastPositionFromClock(context2, periodStart);
             if (guessedLastPositionFromClock !== void 0) {
               const [guessedLastPosition, guessedPositionTime] = guessedLastPositionFromClock;
-              manifestBoundsCalculator.setLastPosition(guessedLastPosition, guessedPositionTime);
+              manifestBoundsCalculator.setLastPosition(
+                guessedLastPosition,
+                guessedPositionTime
+              );
             }
           }
         }
@@ -12268,7 +13370,10 @@
     let maxEncounteredPosition = null;
     let allIndexAreEmpty = true;
     const adaptationsVal = object_values_default(adaptationsPerType).filter((ada) => ada != null);
-    const allAdaptations = flatMap(adaptationsVal, (adaptationsForType) => adaptationsForType);
+    const allAdaptations = flatMap(
+      adaptationsVal,
+      (adaptationsForType) => adaptationsForType
+    );
     for (const adaptation of allAdaptations) {
       const representations = adaptation.representations;
       for (const representation of representations) {
@@ -12276,7 +13381,10 @@
         if (position !== null) {
           allIndexAreEmpty = false;
           if (typeof position === "number") {
-            maxEncounteredPosition = maxEncounteredPosition == null ? position : Math.max(maxEncounteredPosition, position);
+            maxEncounteredPosition = maxEncounteredPosition == null ? position : Math.max(
+              maxEncounteredPosition,
+              position
+            );
           }
         }
       }
@@ -12309,7 +13417,10 @@
             }, "<toremove ");
             parentNode += ">";
             const elementToString = utf8ToStr(new Uint8Array(eventIr.eventStreamData));
-            element = new DOMParser().parseFromString(parentNode + elementToString + "</toremove>", "application/xml").documentElement.childNodes[0];
+            element = new DOMParser().parseFromString(
+              parentNode + elementToString + "</toremove>",
+              "application/xml"
+            ).documentElement.childNodes[0];
           }
           res.push({
             start,
@@ -12355,7 +13466,10 @@
               continue: function continueParsingMPD(responseDataClock) {
                 if (!responseDataClock.success) {
                   warnings.push(responseDataClock.error);
-                  log_default.warn("DASH Parser: Error on fetching the clock ressource", responseDataClock.error);
+                  log_default.warn(
+                    "DASH Parser: Error on fetching the clock ressource",
+                    responseDataClock.error
+                  );
                   return parseMpdIr(mpdIR, args, warnings, true);
                 }
                 args.externalClockOffset = getClockOffset(responseDataClock.data);
@@ -12418,7 +13532,10 @@
       availabilityTimeComplete: true
     }] : [];
     const mpdBaseUrls = resolveBaseURLs(initialBaseUrl, rootChildren.baseURLs);
-    const availabilityStartTime = parseAvailabilityStartTime(rootAttributes, args.referenceDateTime);
+    const availabilityStartTime = parseAvailabilityStartTime(
+      rootAttributes,
+      args.referenceDateTime
+    );
     const timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
     const {
       externalClockOffset: clockOffset,
@@ -13021,7 +14138,11 @@
         case 15 /* BaseURL */: {
           const baseUrl = { value: "", attributes: {} };
           childrenObj.baseURLs.push(baseUrl);
-          parsersStack.pushParsers(nodeId, noop_default, generateBaseUrlAttrParser(baseUrl, linearMemory));
+          parsersStack.pushParsers(
+            nodeId,
+            noop_default,
+            generateBaseUrlAttrParser(baseUrl, linearMemory)
+          );
           break;
         }
         case 10 /* ContentProtection */: {
@@ -13043,28 +14164,45 @@
             childrenObj.inbandEventStreams = [];
           }
           childrenObj.inbandEventStreams.push(inbandEvent);
-          parsersStack.pushParsers(nodeId, noop_default, generateSchemeAttrParser(inbandEvent, linearMemory));
+          parsersStack.pushParsers(nodeId, noop_default, generateSchemeAttrParser(
+            inbandEvent,
+            linearMemory
+          ));
           break;
         }
         case 17 /* SegmentBase */: {
           const segmentBaseObj = {};
           childrenObj.segmentBase = segmentBaseObj;
-          const attributeParser = generateSegmentBaseAttrParser(segmentBaseObj, linearMemory);
+          const attributeParser = generateSegmentBaseAttrParser(
+            segmentBaseObj,
+            linearMemory
+          );
           parsersStack.pushParsers(nodeId, noop_default, attributeParser);
           break;
         }
         case 18 /* SegmentList */: {
           const segmentListObj = { list: [] };
           childrenObj.segmentList = segmentListObj;
-          const childrenParser = generateSegmentListChildrenParser(segmentListObj, linearMemory, parsersStack);
-          const attributeParser = generateSegmentBaseAttrParser(segmentListObj, linearMemory);
+          const childrenParser = generateSegmentListChildrenParser(
+            segmentListObj,
+            linearMemory,
+            parsersStack
+          );
+          const attributeParser = generateSegmentBaseAttrParser(
+            segmentListObj,
+            linearMemory
+          );
           parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
           break;
         }
         case 16 /* SegmentTemplate */: {
           const stObj = {};
           childrenObj.segmentTemplate = stObj;
-          parsersStack.pushParsers(nodeId, noop_default, generateSegmentTemplateAttrParser(stObj, linearMemory));
+          parsersStack.pushParsers(
+            nodeId,
+            noop_default,
+            generateSegmentTemplateAttrParser(stObj, linearMemory)
+          );
           break;
         }
         default:
@@ -13140,7 +14278,10 @@
             adaptationSetChildren.accessibilities = [];
           }
           adaptationSetChildren.accessibilities.push(accessibility);
-          const schemeAttrParser = generateSchemeAttrParser(accessibility, linearMemory);
+          const schemeAttrParser = generateSchemeAttrParser(
+            accessibility,
+            linearMemory
+          );
           parsersStack.pushParsers(nodeId, noop_default, schemeAttrParser);
           break;
         }
@@ -13154,7 +14295,14 @@
         case 9 /* ContentComponent */: {
           const contentComponent = {};
           adaptationSetChildren.contentComponent = contentComponent;
-          parsersStack.pushParsers(nodeId, noop_default, generateContentComponentAttrParser(contentComponent, linearMemory));
+          parsersStack.pushParsers(
+            nodeId,
+            noop_default,
+            generateContentComponentAttrParser(
+              contentComponent,
+              linearMemory
+            )
+          );
           break;
         }
         case 10 /* ContentProtection */: {
@@ -13177,7 +14325,10 @@
           }
           adaptationSetChildren.essentialProperties.push(essentialProperty);
           const childrenParser = noop_default;
-          const attributeParser = generateSchemeAttrParser(essentialProperty, linearMemory);
+          const attributeParser = generateSchemeAttrParser(
+            essentialProperty,
+            linearMemory
+          );
           parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
           break;
         }
@@ -13188,7 +14339,10 @@
           }
           adaptationSetChildren.inbandEventStreams.push(inbandEvent);
           const childrenParser = noop_default;
-          const attributeParser = generateSchemeAttrParser(inbandEvent, linearMemory);
+          const attributeParser = generateSchemeAttrParser(
+            inbandEvent,
+            linearMemory
+          );
           parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
           break;
         }
@@ -13198,7 +14352,11 @@
             attributes: {}
           };
           adaptationSetChildren.representations.push(representationObj);
-          const childrenParser = generateRepresentationChildrenParser(representationObj.children, linearMemory, parsersStack);
+          const childrenParser = generateRepresentationChildrenParser(
+            representationObj.children,
+            linearMemory,
+            parsersStack
+          );
           const attributeParser = generateRepresentationAttrParser(representationObj.attributes, linearMemory);
           parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
           break;
@@ -13209,7 +14367,10 @@
             adaptationSetChildren.roles = [];
           }
           adaptationSetChildren.roles.push(role);
-          const attributeParser = generateSchemeAttrParser(role, linearMemory);
+          const attributeParser = generateSchemeAttrParser(
+            role,
+            linearMemory
+          );
           parsersStack.pushParsers(nodeId, noop_default, attributeParser);
           break;
         }
@@ -13219,29 +14380,46 @@
             adaptationSetChildren.supplementalProperties = [];
           }
           adaptationSetChildren.supplementalProperties.push(supplementalProperty);
-          const attributeParser = generateSchemeAttrParser(supplementalProperty, linearMemory);
+          const attributeParser = generateSchemeAttrParser(
+            supplementalProperty,
+            linearMemory
+          );
           parsersStack.pushParsers(nodeId, noop_default, attributeParser);
           break;
         }
         case 17 /* SegmentBase */: {
           const segmentBaseObj = {};
           adaptationSetChildren.segmentBase = segmentBaseObj;
-          const attributeParser = generateSegmentBaseAttrParser(segmentBaseObj, linearMemory);
+          const attributeParser = generateSegmentBaseAttrParser(
+            segmentBaseObj,
+            linearMemory
+          );
           parsersStack.pushParsers(nodeId, noop_default, attributeParser);
           break;
         }
         case 18 /* SegmentList */: {
           const segmentListObj = { list: [] };
           adaptationSetChildren.segmentList = segmentListObj;
-          const childrenParser = generateSegmentListChildrenParser(segmentListObj, linearMemory, parsersStack);
-          const attributeParser = generateSegmentBaseAttrParser(segmentListObj, linearMemory);
+          const childrenParser = generateSegmentListChildrenParser(
+            segmentListObj,
+            linearMemory,
+            parsersStack
+          );
+          const attributeParser = generateSegmentBaseAttrParser(
+            segmentListObj,
+            linearMemory
+          );
           parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
           break;
         }
         case 16 /* SegmentTemplate */: {
           const stObj = {};
           adaptationSetChildren.segmentTemplate = stObj;
-          parsersStack.pushParsers(nodeId, noop_default, generateSegmentTemplateAttrParser(stObj, linearMemory));
+          parsersStack.pushParsers(
+            nodeId,
+            noop_default,
+            generateSegmentTemplateAttrParser(stObj, linearMemory)
+          );
           break;
         }
         default:
@@ -13440,8 +14618,15 @@
             attributes: {}
           };
           periodChildren.adaptations.push(adaptationObj);
-          const childrenParser = generateAdaptationSetChildrenParser(adaptationObj.children, linearMemory, parsersStack);
-          const attributeParser = generateAdaptationSetAttrParser(adaptationObj.attributes, linearMemory);
+          const childrenParser = generateAdaptationSetChildrenParser(
+            adaptationObj.children,
+            linearMemory,
+            parsersStack
+          );
+          const attributeParser = generateAdaptationSetAttrParser(
+            adaptationObj.attributes,
+            linearMemory
+          );
           parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
           break;
         }
@@ -13456,15 +14641,27 @@
         case 5 /* EventStream */: {
           const eventStream = { children: { events: [] }, attributes: {} };
           periodChildren.eventStreams.push(eventStream);
-          const childrenParser = generateEventStreamChildrenParser(eventStream.children, linearMemory, parsersStack, fullMpd);
-          const attrParser = generateEventStreamAttrParser(eventStream.attributes, linearMemory);
+          const childrenParser = generateEventStreamChildrenParser(
+            eventStream.children,
+            linearMemory,
+            parsersStack,
+            fullMpd
+          );
+          const attrParser = generateEventStreamAttrParser(
+            eventStream.attributes,
+            linearMemory
+          );
           parsersStack.pushParsers(nodeId, childrenParser, attrParser);
           break;
         }
         case 16 /* SegmentTemplate */: {
           const stObj = {};
           periodChildren.segmentTemplate = stObj;
-          parsersStack.pushParsers(nodeId, noop_default, generateSegmentTemplateAttrParser(stObj, linearMemory));
+          parsersStack.pushParsers(
+            nodeId,
+            noop_default,
+            generateSegmentTemplateAttrParser(stObj, linearMemory)
+          );
           break;
         }
         default:
@@ -13493,7 +14690,12 @@
           periodAttrs.xlinkHref = parseString(textDecoder, linearMemory.buffer, ptr, len);
           break;
         case 47 /* XLinkActuate */:
-          periodAttrs.xlinkActuate = parseString(textDecoder, linearMemory.buffer, ptr, len);
+          periodAttrs.xlinkActuate = parseString(
+            textDecoder,
+            linearMemory.buffer,
+            ptr,
+            len
+          );
           break;
         case 43 /* AvailabilityTimeOffset */:
           periodAttrs.availabilityTimeOffset = new DataView(linearMemory.buffer).getFloat64(ptr, true);
@@ -13544,7 +14746,12 @@
             attributes: {}
           };
           mpdChildren.periods.push(period);
-          const childrenParser = generatePeriodChildrenParser(period.children, linearMemory, parsersStack, fullMpd);
+          const childrenParser = generatePeriodChildrenParser(
+            period.children,
+            linearMemory,
+            parsersStack,
+            fullMpd
+          );
           const attributeParser = generatePeriodAttrParser(period.attributes, linearMemory);
           parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
           break;
@@ -13656,8 +14863,17 @@
             },
             attributes: {}
           };
-          const childrenParser = generateMPDChildrenParser(rootObj.mpd.children, linearMemory, parsersStack, fullMpd);
-          const attributeParser = generateMPDAttrParser(rootObj.mpd.children, rootObj.mpd.attributes, linearMemory);
+          const childrenParser = generateMPDChildrenParser(
+            rootObj.mpd.children,
+            linearMemory,
+            parsersStack,
+            fullMpd
+          );
+          const attributeParser = generateMPDAttrParser(
+            rootObj.mpd.children,
+            rootObj.mpd.attributes,
+            linearMemory
+          );
           parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
           break;
         default:
@@ -13682,7 +14898,12 @@
             attributes: {}
           };
           xlinkObj.periods.push(period);
-          const childrenParser = generatePeriodChildrenParser(period.children, linearMemory, parsersStack, fullMpd);
+          const childrenParser = generatePeriodChildrenParser(
+            period.children,
+            linearMemory,
+            parsersStack,
+            fullMpd
+          );
           const attributeParser = generatePeriodAttrParser(period.attributes, linearMemory);
           parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
           break;
@@ -13785,7 +15006,10 @@
       const fetchedWasm = fetch(opts.wasmUrl);
       const streamingProm = typeof WebAssembly.instantiateStreaming === "function" ? WebAssembly.instantiateStreaming(fetchedWasm, imports) : Promise.reject("`WebAssembly.instantiateStreaming` API not available");
       this._initProm = streamingProm.catch(async (e) => {
-        log_default.warn("Unable to call `instantiateStreaming` on WASM", e instanceof Error ? e : "");
+        log_default.warn(
+          "Unable to call `instantiateStreaming` on WASM",
+          e instanceof Error ? e : ""
+        );
         const res = await fetchedWasm;
         if (res.status < 200 || res.status >= 300) {
           throw new Error("WebAssembly request failed. status: " + String(res.status));
@@ -13829,7 +15053,11 @@
         }
         const linearMemory = self2._linearMemory;
         const { mpd, cursor } = self2._mpdData;
-        const sizeToRead = Math.min(wantedSize, MAX_READ_SIZE, mpd.byteLength - cursor);
+        const sizeToRead = Math.min(
+          wantedSize,
+          MAX_READ_SIZE,
+          mpd.byteLength - cursor
+        );
         const arr = new Uint8Array(linearMemory.buffer, ptr, sizeToRead);
         arr.set(new Uint8Array(mpd, cursor, sizeToRead));
         self2._mpdData.cursor += sizeToRead;
@@ -13858,7 +15086,12 @@
       this._mpdData = { mpd, cursor: 0 };
       const rootObj = {};
       const linearMemory = this._linearMemory;
-      const rootChildrenParser = generateRootChildrenParser(rootObj, linearMemory, this._parsersStack, mpd);
+      const rootChildrenParser = generateRootChildrenParser(
+        rootObj,
+        linearMemory,
+        this._parsersStack,
+        mpd
+      );
       this._parsersStack.pushParsers(null, rootChildrenParser, noop_default);
       this._warnings = [];
       try {
@@ -13887,7 +15120,12 @@
       this._mpdData = { mpd: xlinkData, cursor: 0 };
       const rootObj = { periods: [] };
       const linearMemory = this._linearMemory;
-      const xlinkParser = generateXLinkChildrenParser(rootObj, linearMemory, this._parsersStack, xlinkData);
+      const xlinkParser = generateXLinkChildrenParser(
+        rootObj,
+        linearMemory,
+        this._parsersStack,
+        xlinkData
+      );
       this._parsersStack.pushParsers(null, xlinkParser, noop_default);
       this._warnings = [];
       try {
@@ -14035,16 +15273,27 @@
       fetchOpts.headers = headers;
     }
     fetchOpts.signal = !isNullOrUndefined(abortController) ? abortController.signal : null;
-    return fetch(options.url, fetchOpts).then((response) => {
+    return fetch(
+      options.url,
+      fetchOpts
+    ).then((response) => {
       if (!isNullOrUndefined(timeout)) {
         clearTimeout(timeout);
       }
       if (response.status >= 300) {
         log_default.warn("Fetch: Request HTTP Error", response.status, response.url);
-        throw new RequestError(response.url, response.status, NetworkErrorTypes.ERROR_HTTP_CODE);
+        throw new RequestError(
+          response.url,
+          response.status,
+          NetworkErrorTypes.ERROR_HTTP_CODE
+        );
       }
       if (isNullOrUndefined(response.body)) {
-        throw new RequestError(response.url, response.status, NetworkErrorTypes.PARSE_ERROR);
+        throw new RequestError(
+          response.url,
+          response.status,
+          NetworkErrorTypes.PARSE_ERROR
+        );
       }
       const contentLengthHeader = response.headers.get("Content-Length");
       const contentLength = !isNullOrUndefined(contentLengthHeader) && !isNaN(+contentLengthHeader) ? +contentLengthHeader : void 0;
@@ -14258,7 +15507,12 @@
           cancelSignal.deregister(abortCustomLoader);
           const castedErr = err;
           const message = castedErr?.message ?? "Unknown error when fetching the Manifest through a custom manifestLoader.";
-          const emittedErr = new CustomLoaderError(message, castedErr?.canRetry ?? false, castedErr?.isOfflineError ?? false, castedErr?.xhr);
+          const emittedErr = new CustomLoaderError(
+            message,
+            castedErr?.canRetry ?? false,
+            castedErr?.isOfflineError ?? false,
+            castedErr?.xhr
+          );
           rej(emittedErr);
         };
         const fallback = () => {
@@ -14309,7 +15563,10 @@
     if (typeof customManifestLoader !== "function") {
       return regularManifestLoader;
     }
-    return callCustomManifestLoader(customManifestLoader, regularManifestLoader);
+    return callCustomManifestLoader(
+      customManifestLoader,
+      regularManifestLoader
+    );
   }
 
   // src/worker/transports/dash/image_pipelines.ts
@@ -14681,7 +15938,10 @@
         });
       });
       function trowOnIntegrityError(data) {
-        if (!(data instanceof ArrayBuffer) && !(data instanceof Uint8Array) || inferSegmentContainer(content.adaptation.type, content.representation) !== "mp4") {
+        if (!(data instanceof ArrayBuffer) && !(data instanceof Uint8Array) || inferSegmentContainer(
+          content.adaptation.type,
+          content.representation
+        ) !== "mp4") {
           return;
         }
         checkISOBMFFIntegrity(new Uint8Array(data), content.segment.isInit);
@@ -14745,9 +16005,18 @@
       onProgress: callbacks.onProgress
     });
     return Promise.all([rangeRequest$, indexRequest$]).then(([initData, indexData]) => {
-      const data = concat2(new Uint8Array(initData.responseData), new Uint8Array(indexData.responseData));
-      const sendingTime = Math.min(initData.sendingTime, indexData.sendingTime);
-      const receivedTime = Math.max(initData.receivedTime, indexData.receivedTime);
+      const data = concat2(
+        new Uint8Array(initData.responseData),
+        new Uint8Array(indexData.responseData)
+      );
+      const sendingTime = Math.min(
+        initData.sendingTime,
+        indexData.sendingTime
+      );
+      const receivedTime = Math.max(
+        initData.receivedTime,
+        indexData.receivedTime
+      );
       return {
         resultType: "segment-loaded",
         resultData: {
@@ -14840,7 +16109,10 @@
     if (content.segment.isInit) {
       return initSegmentLoader(url, content.segment, cancelSignal, callbacks);
     }
-    const containerType = inferSegmentContainer(content.adaptation.type, content.representation);
+    const containerType = inferSegmentContainer(
+      content.adaptation.type,
+      content.representation
+    );
     if (lowLatencyMode && (containerType === "mp4" || containerType === void 0)) {
       if (fetchIsSupported()) {
         return lowLatencySegmentLoader(url, content, callbacks, cancelSignal);
@@ -14910,7 +16182,12 @@
           cancelSignal.deregister(abortCustomLoader);
           const castedErr = err;
           const message = castedErr?.message ?? "Unknown error when fetching a DASH segment through a custom segmentLoader.";
-          const emittedErr = new CustomLoaderError(message, castedErr?.canRetry ?? false, castedErr?.isOfflineError ?? false, castedErr?.xhr);
+          const emittedErr = new CustomLoaderError(
+            message,
+            castedErr?.canRetry ?? false,
+            castedErr?.isOfflineError ?? false,
+            castedErr?.xhr
+          );
           rej(emittedErr);
         };
         const progress = (_args) => {
@@ -15352,11 +16629,14 @@
     if (encBox === null) {
       return null;
     }
-    const tenc = getChildBox(encBox.subarray(encContentOffset), [
-      1936289382,
-      1935894633,
-      1952804451
-    ]);
+    const tenc = getChildBox(
+      encBox.subarray(encContentOffset),
+      [
+        1936289382,
+        1935894633,
+        1952804451
+      ]
+    );
     if (tenc === null || tenc.byteLength < 24) {
       return null;
     }
@@ -15399,7 +16679,12 @@
         for (let i = 0; i < parents.length; i++) {
           if (ebmlTagID === parents[i]) {
             const newParents = parents.slice(i + 1, parents.length);
-            return findNextElement(elementID, newParents, buffer, [valueOffset, valueEndOffset]);
+            return findNextElement(
+              elementID,
+              newParents,
+              buffer,
+              [valueOffset, valueEndOffset]
+            );
           }
         }
       }
@@ -15408,7 +16693,12 @@
     return null;
   }
   function getTimeCodeScale(buffer, initialOffset) {
-    const timeCodeScaleOffsets = findNextElement(TIMECODESCALE_ID, [SEGMENT_ID, INFO_ID], buffer, [initialOffset, buffer.length]);
+    const timeCodeScaleOffsets = findNextElement(
+      TIMECODESCALE_ID,
+      [SEGMENT_ID, INFO_ID],
+      buffer,
+      [initialOffset, buffer.length]
+    );
     if (timeCodeScaleOffsets == null) {
       return null;
     }
@@ -15416,7 +16706,12 @@
     return 1e9 / bytesToNumber(buffer, timeCodeScaleOffsets[0], length);
   }
   function getDuration(buffer, initialOffset) {
-    const timeCodeScaleOffsets = findNextElement(DURATION_ID, [SEGMENT_ID, INFO_ID], buffer, [initialOffset, buffer.length]);
+    const timeCodeScaleOffsets = findNextElement(
+      DURATION_ID,
+      [SEGMENT_ID, INFO_ID],
+      buffer,
+      [initialOffset, buffer.length]
+    );
     if (timeCodeScaleOffsets == null) {
       return null;
     }
@@ -15429,7 +16724,12 @@
     return null;
   }
   function getSegmentsFromCues(buffer, initialOffset) {
-    const segmentRange = findNextElement(SEGMENT_ID, [], buffer, [initialOffset, buffer.length]);
+    const segmentRange = findNextElement(
+      SEGMENT_ID,
+      [],
+      buffer,
+      [initialOffset, buffer.length]
+    );
     if (segmentRange == null) {
       return null;
     }
@@ -15442,27 +16742,55 @@
     if (duration == null) {
       return null;
     }
-    const cuesRange = findNextElement(CUES_ID, [], buffer, [segmentRangeStart, segmentRangeEnd]);
+    const cuesRange = findNextElement(
+      CUES_ID,
+      [],
+      buffer,
+      [segmentRangeStart, segmentRangeEnd]
+    );
     if (cuesRange == null) {
       return null;
     }
     const rawInfos = [];
     let currentOffset = cuesRange[0];
     while (currentOffset < cuesRange[1]) {
-      const cuePointRange = findNextElement(CUE_POINT_ID, [], buffer, [currentOffset, cuesRange[1]]);
+      const cuePointRange = findNextElement(
+        CUE_POINT_ID,
+        [],
+        buffer,
+        [currentOffset, cuesRange[1]]
+      );
       if (cuePointRange == null) {
         break;
       }
-      const cueTimeRange = findNextElement(CUE_TIME_ID, [], buffer, [cuePointRange[0], cuePointRange[1]]);
+      const cueTimeRange = findNextElement(
+        CUE_TIME_ID,
+        [],
+        buffer,
+        [cuePointRange[0], cuePointRange[1]]
+      );
       if (cueTimeRange == null) {
         return null;
       }
-      const time = bytesToNumber(buffer, cueTimeRange[0], cueTimeRange[1] - cueTimeRange[0]);
-      const cueOffsetRange = findNextElement(CUE_CLUSTER_POSITIONS_ID, [CUE_TRACK_POSITIONS_ID], buffer, [cuePointRange[0], cuePointRange[1]]);
+      const time = bytesToNumber(
+        buffer,
+        cueTimeRange[0],
+        cueTimeRange[1] - cueTimeRange[0]
+      );
+      const cueOffsetRange = findNextElement(
+        CUE_CLUSTER_POSITIONS_ID,
+        [CUE_TRACK_POSITIONS_ID],
+        buffer,
+        [cuePointRange[0], cuePointRange[1]]
+      );
       if (cueOffsetRange == null) {
         return null;
       }
-      const rangeStart = bytesToNumber(buffer, cueOffsetRange[0], cueOffsetRange[1] - cueOffsetRange[0]) + segmentRangeStart;
+      const rangeStart = bytesToNumber(
+        buffer,
+        cueOffsetRange[0],
+        cueOffsetRange[1] - cueOffsetRange[0]
+      ) + segmentRangeStart;
       rawInfos.push({ time, rangeStart });
       currentOffset = cuePointRange[1];
     }
@@ -15570,7 +16898,10 @@
     }
     let duration;
     const segmentDuration = segment.duration * initTimescale;
-    const maxDecodeTimeDelta = Math.min(initTimescale * 0.9, segmentDuration / 4);
+    const maxDecodeTimeDelta = Math.min(
+      initTimescale * 0.9,
+      segmentDuration / 4
+    );
     if (trunDuration !== void 0 && Math.abs(trunDuration - segmentDuration) <= maxDecodeTimeDelta) {
       duration = trunDuration;
     }
@@ -15627,7 +16958,10 @@
       type: "emsg",
       value: evt
     }));
-    const needsManifestRefresh = manifestPublishTime === void 0 || manifestRefreshEventsFromEMSGs === void 0 ? false : manifestNeedsToBeRefreshed(manifestRefreshEventsFromEMSGs, manifestPublishTime);
+    const needsManifestRefresh = manifestPublishTime === void 0 || manifestRefreshEventsFromEMSGs === void 0 ? false : manifestNeedsToBeRefreshed(
+      manifestRefreshEventsFromEMSGs,
+      manifestPublishTime
+    );
     return { inbandEvents, needsManifestRefresh };
   }
 
@@ -15672,7 +17006,12 @@
         }
       }
       if (!segment.isInit) {
-        const chunkInfos = seemsToBeMP4 ? getISOBMFFTimingInfos(chunkData, isChunked, segment, initTimescale) : null;
+        const chunkInfos = seemsToBeMP4 ? getISOBMFFTimingInfos(
+          chunkData,
+          isChunked,
+          segment,
+          initTimescale
+        ) : null;
         const chunkOffset = takeFirstSet(segment.timestampOffset, 0);
         if (seemsToBeMP4) {
           const parsedEMSGs = parseEmsgBoxes(chunkData);
@@ -15683,7 +17022,10 @@
               }
               return segment.privateInfos.isEMSGWhitelisted(evt);
             });
-            const events = getEventsOutOfEMSGs(whitelistedEMSGs, manifest.publishTime);
+            const events = getEventsOutOfEMSGs(
+              whitelistedEMSGs,
+              manifest.publishTime
+            );
             if (events !== void 0) {
               const { needsManifestRefresh, inbandEvents } = events;
               return {
@@ -15920,8 +17262,18 @@
         initTimescale: mdhdTimescale
       };
     }
-    const chunkInfos = getISOBMFFTimingInfos(chunkBytes, isChunked, segment, initTimescale);
-    const chunkData = getISOBMFFEmbeddedTextTrackData(content, chunkBytes, chunkInfos, isChunked);
+    const chunkInfos = getISOBMFFTimingInfos(
+      chunkBytes,
+      isChunked,
+      segment,
+      initTimescale
+    );
+    const chunkData = getISOBMFFEmbeddedTextTrackData(
+      content,
+      chunkBytes,
+      chunkInfos,
+      isChunked
+    );
     const chunkOffset = takeFirstSet(segment.timestampOffset, 0);
     return {
       segmentType: "media",
@@ -15990,7 +17342,13 @@
       if (containerType === "webm") {
         throw new Error("Text tracks with a WEBM container are not yet handled.");
       } else if (containerType === "mp4") {
-        return parseISOBMFFEmbeddedTextTrack(data, isChunked, content, initTimescale, __priv_patchLastSegmentInSidx);
+        return parseISOBMFFEmbeddedTextTrack(
+          data,
+          isChunked,
+          content,
+          initTimescale,
+          __priv_patchLastSegmentInSidx
+        );
       } else {
         return parsePlainTextTrack(data, isChunked, content);
       }
@@ -15999,7 +17357,10 @@
 
   // src/worker/transports/dash/pipelines.ts
   function pipelines_default(options) {
-    const manifestLoader = generateManifestLoader({ customManifestLoader: options.manifestLoader }, mightUseDashWasmFeature() ? "text" : "arraybuffer");
+    const manifestLoader = generateManifestLoader(
+      { customManifestLoader: options.manifestLoader },
+      mightUseDashWasmFeature() ? "text" : "arraybuffer"
+    );
     const manifestParser = generateManifestParser(options);
     const segmentLoader = generateSegmentLoader(options);
     const audioVideoSegmentParser = generateAudioVideoSegmentParser(options);
@@ -16071,7 +17432,10 @@
     constructor(bitrates) {
       this._levelsMap = getBufferLevels(bitrates);
       this._bitrates = bitrates;
-      log_default.debug("ABR: Steps for buffer based chooser.", this._levelsMap.map((l, i) => `bufferLevel: ${l}, bitrate: ${bitrates[i]}`).join(" ,"));
+      log_default.debug(
+        "ABR: Steps for buffer based chooser.",
+        this._levelsMap.map((l, i) => `bufferLevel: ${l}, bitrate: ${bitrates[i]}`).join(" ,")
+      );
     }
     getEstimate(playbackObservation) {
       const bufferLevels = this._levelsMap;
@@ -16220,7 +17584,10 @@
     const lastProgressEvent = concernedRequest.progress.length > 0 ? concernedRequest.progress[concernedRequest.progress.length - 1] : void 0;
     const bandwidthEstimate = estimateRequestBandwidth(concernedRequest);
     if (lastProgressEvent !== void 0 && bandwidthEstimate !== void 0) {
-      const remainingTime = estimateRemainingTime(lastProgressEvent, bandwidthEstimate);
+      const remainingTime = estimateRemainingTime(
+        lastProgressEvent,
+        bandwidthEstimate
+      );
       if ((now - lastProgressEvent.timestamp) / 1e3 <= remainingTime) {
         const expectedRebufferingTime = remainingTime - realBufferGap / speed2;
         if (expectedRebufferingTime > 2e3) {
@@ -16317,7 +17684,13 @@
         this._inStarvationMode = false;
       }
       if (this._inStarvationMode) {
-        bandwidthEstimate = estimateStarvationModeBitrate(currentRequests, playbackInfo, currentRepresentation, this._lowLatencyMode, lastEstimatedBitrate);
+        bandwidthEstimate = estimateStarvationModeBitrate(
+          currentRequests,
+          playbackInfo,
+          currentRepresentation,
+          this._lowLatencyMode,
+          lastEstimatedBitrate
+        );
         if (bandwidthEstimate != null) {
           log_default.info("ABR: starvation mode emergency estimate:", bandwidthEstimate);
           bandwidthEstimator.reset();
@@ -16347,7 +17720,11 @@
       } else if (bitrate > currentRepresentation.bitrate) {
         return !this._inStarvationMode;
       }
-      return shouldDirectlySwitchToLowBitrate(playbackInfo, currentRequests, this._lowLatencyMode);
+      return shouldDirectlySwitchToLowBitrate(
+        playbackInfo,
+        currentRequests,
+        this._lowLatencyMode
+      );
     }
   };
 
@@ -16463,7 +17840,10 @@
           return null;
         }
         if (this._canGuessHigher(bufferGap, speed2, scoreData)) {
-          const nextRepresentation = getNextRepresentation(representations, currentRepresentation);
+          const nextRepresentation = getNextRepresentation(
+            representations,
+            currentRepresentation
+          );
           if (nextRepresentation !== null) {
             return nextRepresentation;
           }
@@ -16478,7 +17858,12 @@
       if (currentRepresentation.id !== lastChosenRep.id) {
         return lastChosenRep;
       }
-      const shouldStopGuess = this._shouldStopGuess(currentRepresentation, scoreData, bufferGap, requests);
+      const shouldStopGuess = this._shouldStopGuess(
+        currentRepresentation,
+        scoreData,
+        bufferGap,
+        requests
+      );
       if (shouldStopGuess) {
         this._consecutiveWrongGuesses++;
         this._blockGuessesUntil = performance.now() + Math.min(this._consecutiveWrongGuesses * 15e3, 12e4);
@@ -16487,7 +17872,10 @@
         return currentRepresentation;
       }
       if (this._canGuessHigher(bufferGap, speed2, scoreData)) {
-        const nextRepresentation = getNextRepresentation(representations, currentRepresentation);
+        const nextRepresentation = getNextRepresentation(
+          representations,
+          currentRepresentation
+        );
         if (nextRepresentation !== null) {
           return nextRepresentation;
         }
@@ -16533,7 +17921,10 @@
   };
   function getNextRepresentation(representations, currentRepresentation) {
     const len = representations.length;
-    let index = arrayFindIndex(representations, ({ id }) => id === currentRepresentation.id);
+    let index = arrayFindIndex(
+      representations,
+      ({ id }) => id === currentRepresentation.id
+    );
     if (index < 0) {
       log_default.error("ABR: Current Representation not found.");
       return null;
@@ -16546,7 +17937,10 @@
     return null;
   }
   function getPreviousRepresentation(representations, currentRepresentation) {
-    let index = arrayFindIndex(representations, ({ id }) => id === currentRepresentation.id);
+    let index = arrayFindIndex(
+      representations,
+      ({ id }) => id === currentRepresentation.id
+    );
     if (index < 0) {
       log_default.error("ABR: Current Representation not found.");
       return null;
@@ -16587,7 +17981,10 @@
       if (this._bytesSampled < ABR_MINIMUM_TOTAL_BYTES) {
         return void 0;
       }
-      return Math.min(this._fastEWMA.getEstimate(), this._slowEWMA.getEstimate());
+      return Math.min(
+        this._fastEWMA.getEstimate(),
+        this._slowEWMA.getEstimate()
+      );
     }
     reset() {
       const { ABR_FAST_EMA, ABR_SLOW_EMA } = config_default.getCurrent();
@@ -16606,7 +18003,10 @@
     representations.sort((ra, rb) => ra.bitrate - rb.bitrate);
     const minimumBitrate = representations[0].bitrate;
     const bitrateCeil = Math.max(bitrate, minimumBitrate);
-    const firstSuperiorBitrateIndex = arrayFindIndex(representations, (representation) => representation.bitrate > bitrateCeil);
+    const firstSuperiorBitrateIndex = arrayFindIndex(
+      representations,
+      (representation) => representation.bitrate > bitrateCeil
+    );
     if (firstSuperiorBitrateIndex === -1) {
       return representations;
     }
@@ -16669,7 +18069,10 @@
   init_define_ENVIRONMENT();
   function selectOptimalRepresentation(representations, optimalBitrate, minBitrate, maxBitrate) {
     const wantedBitrate = optimalBitrate <= minBitrate ? minBitrate : optimalBitrate >= maxBitrate ? maxBitrate : optimalBitrate;
-    const firstIndexTooHigh = arrayFindIndex(representations, (representation) => representation.bitrate > wantedBitrate);
+    const firstIndexTooHigh = arrayFindIndex(
+      representations,
+      (representation) => representation.bitrate > wantedBitrate
+    );
     if (firstIndexTooHigh === -1) {
       return representations[representations.length - 1];
     } else if (firstIndexTooHigh === 0) {
@@ -16692,27 +18095,46 @@
     return function getEstimates(context2, currentRepresentation, representations, playbackObserver2, stopAllEstimates) {
       const { type } = context2.adaptation;
       const bandwidthEstimator = _getBandwidthEstimator(type);
-      const manualBitrate = takeFirstSet(manualBitrates[type], reference_default(-1));
-      const minAutoBitrate = takeFirstSet(minAutoBitrates[type], reference_default(0));
-      const maxAutoBitrate = takeFirstSet(maxAutoBitrates[type], reference_default(Infinity));
+      const manualBitrate = takeFirstSet(
+        manualBitrates[type],
+        reference_default(-1)
+      );
+      const minAutoBitrate = takeFirstSet(
+        minAutoBitrates[type],
+        reference_default(0)
+      );
+      const maxAutoBitrate = takeFirstSet(
+        maxAutoBitrates[type],
+        reference_default(Infinity)
+      );
       const initialBitrate = takeFirstSet(initialBitrates[type], 0);
       const filters = {
-        limitWidth: takeFirstSet(throttlers.limitWidth[type], reference_default(void 0)),
-        throttleBitrate: takeFirstSet(throttlers.throttleBitrate[type], throttlers.throttle[type], reference_default(Infinity))
+        limitWidth: takeFirstSet(
+          throttlers.limitWidth[type],
+          reference_default(void 0)
+        ),
+        throttleBitrate: takeFirstSet(
+          throttlers.throttleBitrate[type],
+          throttlers.throttle[type],
+          reference_default(Infinity)
+        )
       };
-      return getEstimateReference({
-        bandwidthEstimator,
-        context: context2,
-        currentRepresentation,
-        filters,
-        initialBitrate,
-        manualBitrate,
-        minAutoBitrate,
-        maxAutoBitrate,
-        playbackObserver: playbackObserver2,
-        representations,
-        lowLatencyMode
-      }, stopAllEstimates);
+      return getEstimateReference(
+        {
+          bandwidthEstimator,
+          context: context2,
+          currentRepresentation,
+          filters,
+          initialBitrate,
+          manualBitrate,
+          minAutoBitrate,
+          maxAutoBitrate,
+          playbackObserver: playbackObserver2,
+          representations,
+          lowLatencyMode
+        },
+        stopAllEstimates
+      );
     };
     function _getBandwidthEstimator(bufferType) {
       const originalBandwidthEstimator = bandwidthEstimators[bufferType];
@@ -16752,13 +18174,28 @@
       }
     };
     let currentEstimatesCanceller = new TaskCanceller({ cancelOn: stopAllEstimates });
-    const estimateRef = createEstimateReference(manualBitrate.getValue(), representationsRef.getValue(), currentEstimatesCanceller.signal);
-    manualBitrate.onUpdate(restartEstimatesProductionFromCurrentConditions, { clearSignal: stopAllEstimates });
-    representationsRef.onUpdate(restartEstimatesProductionFromCurrentConditions, { clearSignal: stopAllEstimates });
+    const estimateRef = createEstimateReference(
+      manualBitrate.getValue(),
+      representationsRef.getValue(),
+      currentEstimatesCanceller.signal
+    );
+    manualBitrate.onUpdate(
+      restartEstimatesProductionFromCurrentConditions,
+      { clearSignal: stopAllEstimates }
+    );
+    representationsRef.onUpdate(
+      restartEstimatesProductionFromCurrentConditions,
+      { clearSignal: stopAllEstimates }
+    );
     return { estimates: estimateRef, callbacks };
     function createEstimateReference(manualBitrateVal, representations, innerCancellationSignal) {
       if (manualBitrateVal >= 0) {
-        const manualRepresentation = selectOptimalRepresentation(representations, manualBitrateVal, 0, Infinity);
+        const manualRepresentation = selectOptimalRepresentation(
+          representations,
+          manualBitrateVal,
+          0,
+          Infinity
+        );
         return reference_default({
           representation: manualRepresentation,
           bitrate: void 0,
@@ -16818,9 +18255,19 @@
         const currentRepresentationVal = currentRepresentation.getValue();
         const minAutoBitrateVal = minAutoBitrate.getValue();
         const maxAutoBitrateVal = maxAutoBitrate.getValue();
-        const filteredReps = getFilteredRepresentations(representations, widthLimit, bitrateThrottle);
+        const filteredReps = getFilteredRepresentations(
+          representations,
+          widthLimit,
+          bitrateThrottle
+        );
         const requests = requestsStore.getRequests();
-        const { bandwidthEstimate, bitrateChosen } = networkAnalyzer.getBandwidthEstimate(lastPlaybackObservation, bandwidthEstimator, currentRepresentationVal, requests, prevEstimate.bandwidth);
+        const { bandwidthEstimate, bitrateChosen } = networkAnalyzer.getBandwidthEstimate(
+          lastPlaybackObservation,
+          bandwidthEstimator,
+          currentRepresentationVal,
+          requests,
+          prevEstimate.bandwidth
+        );
         const stableRepresentation = scoreCalculator.getLastStableRepresentation();
         const knownStableBitrate = stableRepresentation === null ? void 0 : stableRepresentation.bitrate / (lastPlaybackObservation.speed > 0 ? lastPlaybackObservation.speed : 1);
         if (allowBufferBasedEstimates && bufferGap <= 5) {
@@ -16828,20 +18275,44 @@
         } else if (!allowBufferBasedEstimates && isFinite(bufferGap) && bufferGap > 10) {
           allowBufferBasedEstimates = true;
         }
-        const chosenRepFromBandwidth = selectOptimalRepresentation(filteredReps, bitrateChosen, minAutoBitrateVal, maxAutoBitrateVal);
+        const chosenRepFromBandwidth = selectOptimalRepresentation(
+          filteredReps,
+          bitrateChosen,
+          minAutoBitrateVal,
+          maxAutoBitrateVal
+        );
         let currentBestBitrate = chosenRepFromBandwidth.bitrate;
         let chosenRepFromBufferSize = null;
         if (allowBufferBasedEstimates && currentBufferBasedEstimate !== void 0 && currentBufferBasedEstimate > currentBestBitrate) {
-          chosenRepFromBufferSize = selectOptimalRepresentation(filteredReps, currentBufferBasedEstimate, minAutoBitrateVal, maxAutoBitrateVal);
+          chosenRepFromBufferSize = selectOptimalRepresentation(
+            filteredReps,
+            currentBufferBasedEstimate,
+            minAutoBitrateVal,
+            maxAutoBitrateVal
+          );
           currentBestBitrate = chosenRepFromBufferSize.bitrate;
         }
         let chosenRepFromGuessMode = null;
         if (lowLatencyMode && currentRepresentationVal !== null && context2.manifest.isDynamic && maximumPosition - position.last < 40) {
-          chosenRepFromGuessMode = guessBasedChooser.getGuess(representations, lastPlaybackObservation, currentRepresentationVal, currentBestBitrate, requests);
+          chosenRepFromGuessMode = guessBasedChooser.getGuess(
+            representations,
+            lastPlaybackObservation,
+            currentRepresentationVal,
+            currentBestBitrate,
+            requests
+          );
         }
         if (chosenRepFromGuessMode !== null && chosenRepFromGuessMode.bitrate > currentBestBitrate) {
-          log_default.debug("ABR: Choosing representation with guess-based estimation.", chosenRepFromGuessMode.bitrate, chosenRepFromGuessMode.id);
-          prevEstimate.update(chosenRepFromGuessMode, bandwidthEstimate, 2 /* GuessBased */);
+          log_default.debug(
+            "ABR: Choosing representation with guess-based estimation.",
+            chosenRepFromGuessMode.bitrate,
+            chosenRepFromGuessMode.id
+          );
+          prevEstimate.update(
+            chosenRepFromGuessMode,
+            bandwidthEstimate,
+            2 /* GuessBased */
+          );
           return {
             bitrate: bandwidthEstimate,
             representation: chosenRepFromGuessMode,
@@ -16850,22 +18321,48 @@
             knownStableBitrate
           };
         } else if (chosenRepFromBufferSize !== null) {
-          log_default.debug("ABR: Choosing representation with buffer-based estimation.", chosenRepFromBufferSize.bitrate, chosenRepFromBufferSize.id);
-          prevEstimate.update(chosenRepFromBufferSize, bandwidthEstimate, 0 /* BufferBased */);
+          log_default.debug(
+            "ABR: Choosing representation with buffer-based estimation.",
+            chosenRepFromBufferSize.bitrate,
+            chosenRepFromBufferSize.id
+          );
+          prevEstimate.update(
+            chosenRepFromBufferSize,
+            bandwidthEstimate,
+            0 /* BufferBased */
+          );
           return {
             bitrate: bandwidthEstimate,
             representation: chosenRepFromBufferSize,
-            urgent: networkAnalyzer.isUrgent(chosenRepFromBufferSize.bitrate, currentRepresentationVal, requests, lastPlaybackObservation),
+            urgent: networkAnalyzer.isUrgent(
+              chosenRepFromBufferSize.bitrate,
+              currentRepresentationVal,
+              requests,
+              lastPlaybackObservation
+            ),
             manual: false,
             knownStableBitrate
           };
         } else {
-          log_default.debug("ABR: Choosing representation with bandwidth estimation.", chosenRepFromBandwidth.bitrate, chosenRepFromBandwidth.id);
-          prevEstimate.update(chosenRepFromBandwidth, bandwidthEstimate, 1 /* BandwidthBased */);
+          log_default.debug(
+            "ABR: Choosing representation with bandwidth estimation.",
+            chosenRepFromBandwidth.bitrate,
+            chosenRepFromBandwidth.id
+          );
+          prevEstimate.update(
+            chosenRepFromBandwidth,
+            bandwidthEstimate,
+            1 /* BandwidthBased */
+          );
           return {
             bitrate: bandwidthEstimate,
             representation: chosenRepFromBandwidth,
-            urgent: networkAnalyzer.isUrgent(chosenRepFromBandwidth.bitrate, currentRepresentationVal, requests, lastPlaybackObservation),
+            urgent: networkAnalyzer.isUrgent(
+              chosenRepFromBandwidth.bitrate,
+              currentRepresentationVal,
+              requests,
+              lastPlaybackObservation
+            ),
             manual: false,
             knownStableBitrate
           };
@@ -16877,7 +18374,11 @@
       const representations = representationsRef.getValue();
       currentEstimatesCanceller.cancel();
       currentEstimatesCanceller = new TaskCanceller({ cancelOn: stopAllEstimates });
-      const newRef = createEstimateReference(manualBitrateVal, representations, currentEstimatesCanceller.signal);
+      const newRef = createEstimateReference(
+        manualBitrateVal,
+        representations,
+        currentEstimatesCanceller.signal
+      );
       newRef.onUpdate(function onNewEstimate(newEstimate) {
         estimateRef.setValue(newEstimate);
       }, {
@@ -16926,19 +18427,30 @@
     _lastKnownDuration;
     constructor(manifest, mediaSource) {
       this._lastKnownDuration = reference_default(void 0);
-      this._subscription = isMediaSourceOpened$(mediaSource).pipe(switchMap((canUpdate) => canUpdate ? combineLatest([
-        this._lastKnownDuration.asObservable(),
-        fromEvent2(manifest, "manifestUpdate").pipe(startWith(null))
-      ]) : EMPTY), switchMap(([lastKnownDuration]) => areSourceBuffersUpdating$(mediaSource.sourceBuffers).pipe(switchMap((areSBUpdating) => {
-        return areSBUpdating ? EMPTY : recursivelyTryUpdatingDuration();
-        function recursivelyTryUpdatingDuration() {
-          const res = setMediaSourceDuration(mediaSource, manifest, lastKnownDuration);
-          if (res === MediaSourceDurationUpdateStatus.Success) {
-            return EMPTY;
-          }
-          return timer(2e3).pipe(mergeMap(() => recursivelyTryUpdatingDuration()));
-        }
-      })))).subscribe();
+      this._subscription = isMediaSourceOpened$(mediaSource).pipe(
+        switchMap(
+          (canUpdate) => canUpdate ? combineLatest([
+            this._lastKnownDuration.asObservable(),
+            fromEvent2(manifest, "manifestUpdate").pipe(startWith(null))
+          ]) : EMPTY
+        ),
+        switchMap(([lastKnownDuration]) => areSourceBuffersUpdating$(mediaSource.sourceBuffers).pipe(
+          switchMap((areSBUpdating) => {
+            return areSBUpdating ? EMPTY : recursivelyTryUpdatingDuration();
+            function recursivelyTryUpdatingDuration() {
+              const res = setMediaSourceDuration(
+                mediaSource,
+                manifest,
+                lastKnownDuration
+              );
+              if (res === MediaSourceDurationUpdateStatus.Success) {
+                return EMPTY;
+              }
+              return timer(2e3).pipe(mergeMap(() => recursivelyTryUpdatingDuration()));
+            }
+          })
+        ))
+      ).subscribe();
     }
     updateKnownDuration(newDuration) {
       this._lastKnownDuration.setValue(newDuration);
@@ -16973,7 +18485,10 @@
           log_default.info("Init: Updating duration to what is currently buffered", maxBufferedEnd);
           mediaSource.duration = newDuration;
         } catch (err) {
-          log_default.warn("Duration Updater: Can't update duration on the MediaSource.", err instanceof Error ? err : "");
+          log_default.warn(
+            "Duration Updater: Can't update duration on the MediaSource.",
+            err instanceof Error ? err : ""
+          );
           return MediaSourceDurationUpdateStatus.Failed;
         }
       }
@@ -16984,7 +18499,10 @@
         log_default.info("Init: Updating duration", newDuration);
         mediaSource.duration = newDuration;
       } catch (err) {
-        log_default.warn("Duration Updater: Can't update duration on the MediaSource.", err instanceof Error ? err : "");
+        log_default.warn(
+          "Duration Updater: Can't update duration on the MediaSource.",
+          err instanceof Error ? err : ""
+        );
         return MediaSourceDurationUpdateStatus.Failed;
       }
       const deltaToExpected = Math.abs(mediaSource.duration - newDuration);
@@ -17008,14 +18526,33 @@
     const sourceBufferUpdatingStatuses = [];
     for (let i = 0; i < sourceBuffers.length; i++) {
       const sourceBuffer = sourceBuffers[i];
-      sourceBufferUpdatingStatuses.push(merge(fromEvent(sourceBuffer, "updatestart").pipe(map(() => true)), fromEvent(sourceBuffer, "update").pipe(map(() => false)), interval(500).pipe(map(() => sourceBuffer.updating))).pipe(startWith(sourceBuffer.updating), distinctUntilChanged()));
+      sourceBufferUpdatingStatuses.push(
+        merge(
+          fromEvent(sourceBuffer, "updatestart").pipe(map(() => true)),
+          fromEvent(sourceBuffer, "update").pipe(map(() => false)),
+          interval(500).pipe(map(() => sourceBuffer.updating))
+        ).pipe(
+          startWith(sourceBuffer.updating),
+          distinctUntilChanged()
+        )
+      );
     }
-    return combineLatest(sourceBufferUpdatingStatuses).pipe(map((areUpdating) => {
-      return areUpdating.some((isUpdating) => isUpdating);
-    }), distinctUntilChanged());
+    return combineLatest(sourceBufferUpdatingStatuses).pipe(
+      map((areUpdating) => {
+        return areUpdating.some((isUpdating) => isUpdating);
+      }),
+      distinctUntilChanged()
+    );
   }
   function isMediaSourceOpened$(mediaSource) {
-    return merge(onSourceOpen$(mediaSource).pipe(map(() => true)), onSourceEnded$(mediaSource).pipe(map(() => false)), onSourceClose$(mediaSource).pipe(map(() => false))).pipe(startWith(mediaSource.readyState === "open"), distinctUntilChanged());
+    return merge(
+      onSourceOpen$(mediaSource).pipe(map(() => true)),
+      onSourceEnded$(mediaSource).pipe(map(() => false)),
+      onSourceClose$(mediaSource).pipe(map(() => false))
+    ).pipe(
+      startWith(mediaSource.readyState === "open"),
+      distinctUntilChanged()
+    );
   }
 
   // src/worker/worker_content_store.ts
@@ -17055,11 +18592,14 @@
           throttleBitrate: { video: throttleVideoBitrate }
         }
       });
-      const segmentFetcherCreator = new segment_default(pipelines, {
-        lowLatencyMode,
-        maxRetryOffline: segmentRetryOptions.offline,
-        maxRetryRegular: segmentRetryOptions.regular
-      });
+      const segmentFetcherCreator = new segment_default(
+        pipelines,
+        {
+          lowLatencyMode,
+          maxRetryOffline: segmentRetryOptions.offline,
+          maxRetryRegular: segmentRetryOptions.regular
+        }
+      );
       const segmentBuffersStore = new segment_buffers_default(mediaSource);
       const mediaDurationUpdater = new MediaDurationUpdater(manifest, mediaSource);
       this._currentContent = {
@@ -17172,9 +18712,14 @@
   parser.initialize({ wasmUrl: WASM_URL }).catch((err) => {
     console.error(err);
   });
-  var playbackObservationRef = reference_default(INITIAL_OBSERVATION);
+  var playbackObservationRef = reference_default(
+    INITIAL_OBSERVATION
+  );
   var canceller = new TaskCanceller();
-  var playbackObserver = new WorkerPlaybackObserver(playbackObservationRef, canceller.signal);
+  var playbackObserver = new WorkerPlaybackObserver(
+    playbackObservationRef,
+    canceller.signal
+  );
   onmessage = function(e) {
     log_default.debug("Worker: received message", e.type);
     const msg = e.data;
@@ -17212,11 +18757,15 @@
       checkIfReadyAndValidate();
     });
     const dashPipeline = dash_default({ lowLatencyMode });
-    const manifestFetcher = new manifest_default(url, dashPipeline, {
-      lowLatencyMode,
-      maxRetryOffline: manifestRetryOptions.offline,
-      maxRetryRegular: manifestRetryOptions.regular
-    });
+    const manifestFetcher = new manifest_default(
+      url,
+      dashPipeline,
+      {
+        lowLatencyMode,
+        maxRetryOffline: manifestRetryOptions.offline,
+        maxRetryRegular: manifestRetryOptions.regular
+      }
+    );
     manifestFetcher.fetch().pipe(mergeMap((evt) => {
       if (evt.type === "warning") {
         sendMessage({
@@ -17258,7 +18807,10 @@
   function startCurrentContent(val) {
     const preparedContent = currentContentStore.getCurrentContent();
     if (preparedContent === null) {
-      const error = new OtherError("NONE", "Starting content when none is prepared");
+      const error = new OtherError(
+        "NONE",
+        "Starting content when none is prepared"
+      );
       sendMessage({
         type: "error",
         contentId: void 0,
@@ -17286,7 +18838,10 @@
     const streamPlaybackObserver = createStreamPlaybackObserver(manifest, playbackObserver, { speed });
     const initialPeriod = manifest.getPeriodForTime(initialTime) ?? manifest.getNextPeriod(initialTime);
     if (initialPeriod === void 0) {
-      const error = new MediaError("MEDIA_STARTING_TIME_NOT_FOUND", "Wanted starting time not found in the Manifest.");
+      const error = new MediaError(
+        "MEDIA_STARTING_TIME_NOT_FOUND",
+        "Wanted starting time not found in the Manifest."
+      );
       sendMessage({
         type: "error",
         contentId,
@@ -17295,30 +18850,43 @@
       return;
     }
     const cancelEndOfStream$ = new Subject();
-    const stream = stream_default({
-      initialPeriod: manifest.periods[0],
-      manifest
-    }, streamPlaybackObserver, representationEstimator, segmentBuffersStore, segmentFetcherCreator, {
-      wantedBufferAhead,
-      maxVideoBufferSize,
-      maxBufferAhead,
-      maxBufferBehind,
-      audioTrackSwitchingMode,
-      drmSystemId,
-      enableFastSwitching,
-      manualBitrateSwitchingMode,
-      onCodecSwitch
-    });
-    const contentTimeObserver = ContentTimeBoundariesObserver(manifest, stream, streamPlaybackObserver).pipe(mergeMap((evt) => {
-      switch (evt.type) {
-        case "contentDurationUpdate":
-          log_default.debug("Init: Duration has to be updated.", evt.value);
-          mediaDurationUpdater.updateKnownDuration(evt.value);
-          return EMPTY;
-        default:
-          return EMPTY;
+    const stream = stream_default(
+      {
+        initialPeriod: manifest.periods[0],
+        manifest
+      },
+      streamPlaybackObserver,
+      representationEstimator,
+      segmentBuffersStore,
+      segmentFetcherCreator,
+      {
+        wantedBufferAhead,
+        maxVideoBufferSize,
+        maxBufferAhead,
+        maxBufferBehind,
+        audioTrackSwitchingMode,
+        drmSystemId,
+        enableFastSwitching,
+        manualBitrateSwitchingMode,
+        onCodecSwitch
       }
-    }));
+    );
+    const contentTimeObserver = ContentTimeBoundariesObserver(
+      manifest,
+      stream,
+      streamPlaybackObserver
+    ).pipe(
+      mergeMap((evt) => {
+        switch (evt.type) {
+          case "contentDurationUpdate":
+            log_default.debug("Init: Duration has to be updated.", evt.value);
+            mediaDurationUpdater.updateKnownDuration(evt.value);
+            return EMPTY;
+          default:
+            return EMPTY;
+        }
+      })
+    );
     stream.subscribe((event) => {
       switch (event.type) {
         case "periodStreamReady":
@@ -17338,7 +18906,10 @@
         case "periodStreamCleared":
           break;
         case "end-of-stream":
-          return maintainEndOfStream(mediaSource).pipe(ignoreElements(), takeUntil(cancelEndOfStream$));
+          return maintainEndOfStream(mediaSource).pipe(
+            ignoreElements(),
+            takeUntil(cancelEndOfStream$)
+          );
         case "resume-stream":
           log_default.debug("Init: resume-stream order received.");
           cancelEndOfStream$.next(null);

@@ -1,3 +1,4 @@
+"use strict";
 (() => {
   var __create = Object.create;
   var __defProp = Object.defineProperty;
@@ -24,20 +25,20 @@
     }
     return to;
   };
-  var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
+  var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+    isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+    mod
+  ));
   var __publicField = (obj, key, value) => {
     __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
     return value;
   };
 
   // <define:__ENVIRONMENT__>
-  var PRODUCTION, DEV, CURRENT_ENV, define_ENVIRONMENT_default;
+  var define_ENVIRONMENT_default;
   var init_define_ENVIRONMENT = __esm({
     "<define:__ENVIRONMENT__>"() {
-      PRODUCTION = 0;
-      DEV = 1;
-      CURRENT_ENV = 1;
-      define_ENVIRONMENT_default = { PRODUCTION, DEV, CURRENT_ENV };
+      define_ENVIRONMENT_default = { PRODUCTION: 0, DEV: 1, CURRENT_ENV: 1 };
     }
   });
 
@@ -3707,18 +3708,48 @@
         const _lastObservation = lastObservation ?? this._generateInitialObservation();
         const mediaTimings = getMediaInfos(this._mediaElement, tmpEvt);
         const internalSeeking = mediaTimings.seeking && (tmpEvt === "internal-seeking" || _lastObservation.internalSeeking && tmpEvt !== "seeking");
-        const rebufferingStatus = getRebufferingStatus(_lastObservation, mediaTimings, {
-          lowLatencyMode: this._lowLatencyMode,
-          withMediaSource: this._withMediaSource
-        });
+        const rebufferingStatus = getRebufferingStatus(
+          _lastObservation,
+          mediaTimings,
+          {
+            lowLatencyMode: this._lowLatencyMode,
+            withMediaSource: this._withMediaSource
+          }
+        );
         const freezingStatus = getFreezingStatus(_lastObservation, mediaTimings);
-        const timings = object_assign_default({}, {
-          rebuffering: rebufferingStatus,
-          freezing: freezingStatus,
-          internalSeeking
-        }, mediaTimings);
+        const timings = object_assign_default(
+          {},
+          {
+            rebuffering: rebufferingStatus,
+            freezing: freezingStatus,
+            internalSeeking
+          },
+          mediaTimings
+        );
         if (log_default.hasLevel("DEBUG")) {
-          log_default.debug("API: current media element state tick", "event", timings.event, "position", timings.position, "seeking", timings.seeking, "internalSeeking", timings.internalSeeking, "rebuffering", timings.rebuffering !== null, "freezing", timings.freezing !== null, "ended", timings.ended, "paused", timings.paused, "playbackRate", timings.playbackRate, "readyState", timings.readyState);
+          log_default.debug(
+            "API: current media element state tick",
+            "event",
+            timings.event,
+            "position",
+            timings.position,
+            "seeking",
+            timings.seeking,
+            "internalSeeking",
+            timings.internalSeeking,
+            "rebuffering",
+            timings.rebuffering !== null,
+            "freezing",
+            timings.freezing !== null,
+            "ended",
+            timings.ended,
+            "paused",
+            timings.paused,
+            "playbackRate",
+            timings.playbackRate,
+            "readyState",
+            timings.readyState
+          );
         }
         return timings;
       };
@@ -3726,8 +3757,14 @@
       const generateObservationForEvent = (event) => {
         const newObservation = getCurrentObservation(event);
         if (log_default.hasLevel("DEBUG")) {
-          log_default.debug("API: current playback timeline:\n" + prettyPrintBuffered(newObservation.buffered, newObservation.position), `
-${event}`);
+          log_default.debug(
+            "API: current playback timeline:\n" + prettyPrintBuffered(
+              newObservation.buffered,
+              newObservation.position
+            ),
+            `
+${event}`
+          );
         }
         lastObservation = newObservation;
         returnedSharedReference.setValue(newObservation);
@@ -3759,11 +3796,14 @@ ${event}`);
       }
     }
     _generateInitialObservation() {
-      return object_assign_default(getMediaInfos(this._mediaElement, "init"), {
-        rebuffering: null,
-        freezing: null,
-        internalSeeking: false
-      });
+      return object_assign_default(
+        getMediaInfos(this._mediaElement, "init"),
+        {
+          rebuffering: null,
+          freezing: null,
+          internalSeeking: false
+        }
+      );
     }
   };
   function getRebufferingEndGap(rebufferingStatus, lowLatencyMode) {
@@ -4425,8 +4465,14 @@ ${event}`);
       currentTimeout = void 0;
       ref.finish();
     });
-    isDocVisibleRef.onUpdate(checkCurrentVisibility, { clearSignal: stopListening });
-    pipStatus.onUpdate(checkCurrentVisibility, { clearSignal: stopListening });
+    isDocVisibleRef.onUpdate(
+      checkCurrentVisibility,
+      { clearSignal: stopListening }
+    );
+    pipStatus.onUpdate(
+      checkCurrentVisibility,
+      { clearSignal: stopListening }
+    );
     checkCurrentVisibility();
     return ref;
     function checkCurrentVisibility() {
@@ -4464,7 +4510,9 @@ ${event}`);
         const { pipWindow } = pipStatus;
         const firstWidth = getVideoWidthFromPIPWindow(mediaElement, pipWindow);
         const onPipResize = () => {
-          ref.setValueIfChanged(getVideoWidthFromPIPWindow(mediaElement, pipWindow) * pixelRatio);
+          ref.setValueIfChanged(
+            getVideoWidthFromPIPWindow(mediaElement, pipWindow) * pixelRatio
+          );
         };
         pipWindow.addEventListener("resize", onPipResize);
         clearPreviousEventListener = () => {
@@ -4482,14 +4530,22 @@ ${event}`);
   var onSeeked$ = compatibleListener(["seeked"]);
   var onEnded$ = compatibleListener(["ended"]);
   var onTimeUpdate$ = compatibleListener(["timeupdate"]);
-  var onFullscreenChange$ = compatibleListener(["fullscreenchange", "FullscreenChange"], BROWSER_PREFIXES.concat("MS"));
-  var onTextTrackChanges$ = (textTrackList) => merge(compatibleListener(["addtrack"])(textTrackList), compatibleListener(["removetrack"])(textTrackList));
+  var onFullscreenChange$ = compatibleListener(
+    ["fullscreenchange", "FullscreenChange"],
+    BROWSER_PREFIXES.concat("MS")
+  );
+  var onTextTrackChanges$ = (textTrackList) => merge(
+    compatibleListener(["addtrack"])(textTrackList),
+    compatibleListener(["removetrack"])(textTrackList)
+  );
   var onSourceOpen$ = compatibleListener(["sourceopen", "webkitsourceopen"]);
   var onSourceClose$ = compatibleListener(["sourceclose", "webkitsourceclose"]);
   var onSourceEnded$ = compatibleListener(["sourceended", "webkitsourceended"]);
   var onUpdate$ = compatibleListener(["update"]);
   var onRemoveSourceBuffers$ = compatibleListener(["onremovesourcebuffer"]);
-  var onEncrypted$ = compatibleListener(shouldFavourCustomSafariEME() ? ["needkey"] : ["encrypted", "needkey"]);
+  var onEncrypted$ = compatibleListener(
+    shouldFavourCustomSafariEME() ? ["needkey"] : ["encrypted", "needkey"]
+  );
   var onKeyMessage$ = compatibleListener(["keymessage", "message"]);
   var onKeyAdded$ = compatibleListener(["keyadded", "ready"]);
   var onKeyError$ = compatibleListener(["keyerror", "error"]);
@@ -4535,7 +4591,9 @@ ${event}`);
             return reject("MediaKeySession not set.");
           }
           try {
-            resolve(this._ss.update(license, ""));
+            resolve(
+              this._ss.update(license, "")
+            );
           } catch (err) {
             reject(err);
           }
@@ -4546,7 +4604,11 @@ ${event}`);
       return new Promise((resolve) => {
         const initDataU8 = initData instanceof Uint8Array ? initData : initData instanceof ArrayBuffer ? new Uint8Array(initData) : new Uint8Array(initData.buffer);
         this._ss = this._mk.createSession("video/mp4", initDataU8);
-        merge(onKeyMessage$(this._ss), onKeyAdded$(this._ss), onKeyError$(this._ss)).pipe(takeUntil(this._closeSession$)).subscribe((evt) => this.trigger(evt.type, evt));
+        merge(
+          onKeyMessage$(this._ss),
+          onKeyAdded$(this._ss),
+          onKeyError$(this._ss)
+        ).pipe(takeUntil(this._closeSession$)).subscribe((evt) => this.trigger(evt.type, evt));
         resolve();
       });
     }
@@ -5330,7 +5392,9 @@ ${event}`);
         let formattedInitData;
         if (isFairplayKeyType(this._keyType)) {
           if (this._serverCertificate === void 0) {
-            throw new Error("A server certificate is needed for creating fairplay session.");
+            throw new Error(
+              "A server certificate is needed for creating fairplay session."
+            );
           }
           formattedInitData = getWebKitFairPlayInitData(initData, this._serverCertificate);
         } else {
@@ -5406,7 +5470,11 @@ ${event}`);
       if (this._videoElement === void 0 || this._mediaKeys === void 0) {
         throw new Error("Video not attached to the MediaKeys");
       }
-      return new WebkitMediaKeySession(this._videoElement, this._keyType, this._serverCertificate);
+      return new WebkitMediaKeySession(
+        this._videoElement,
+        this._keyType,
+        this._serverCertificate
+      );
     }
     setServerCertificate(serverCertificate) {
       this._serverCertificate = serverCertificate;
@@ -5481,7 +5549,10 @@ ${event}`);
       const MK = window.MediaKeys;
       const checkForStandardMediaKeys = () => {
         if (MK === void 0) {
-          throw new MediaError("MEDIA_KEYS_NOT_SUPPORTED", "No `MediaKeys` implementation found in the current browser.");
+          throw new MediaError(
+            "MEDIA_KEYS_NOT_SUPPORTED",
+            "No `MediaKeys` implementation found in the current browser."
+          );
         }
         if (typeof MK.isTypeSupported === "undefined") {
           const message = "This browser seems to be unable to play encrypted contents currently. Note: Some browsers do not allow decryption in some situations, like when not using HTTPS.";
@@ -5527,7 +5598,13 @@ ${event}`);
             keySystemConfigurationResponse.audioCapabilities = audioCapabilities;
           }
           const customMediaKeys = createCustomMediaKeys(keyType);
-          return Promise.resolve(new CustomMediaKeySystemAccess(keyType, customMediaKeys, keySystemConfigurationResponse));
+          return Promise.resolve(
+            new CustomMediaKeySystemAccess(
+              keyType,
+              customMediaKeys,
+              keySystemConfigurationResponse
+            )
+          );
         }
       }
       return Promise.reject(new Error("Unsupported configuration"));
@@ -5634,7 +5711,10 @@ ${event}`);
           concatenatedCencs = currentPSSH;
           foundCencV1 = true;
         } else {
-          log_default.warn("Compat: filtering out cenc pssh box with wrong version", version);
+          log_default.warn(
+            "Compat: filtering out cenc pssh box with wrong version",
+            version
+          );
         }
       } else {
         resInitData = concat2(resInitData, currentPSSH);
@@ -5660,7 +5740,10 @@ ${event}`);
       if (initDataType !== "" || !(error instanceof TypeError)) {
         throw error;
       }
-      log_default.warn('Compat: error while calling `generateRequest` with an empty initialization data type. Retrying with a default "cenc" value.', error);
+      log_default.warn(
+        'Compat: error while calling `generateRequest` with an empty initialization data type. Retrying with a default "cenc" value.',
+        error
+      );
       return session.generateRequest("cenc", patchedInit);
     });
   }
@@ -5737,15 +5820,24 @@ ${event}`);
       return isLoaded;
     }
     return new Promise((resolve) => {
-      session.addEventListener("keystatuseschange", resolveWithLoadedStatus);
-      const timeout2 = setTimeout(resolveWithLoadedStatus, EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES);
+      session.addEventListener(
+        "keystatuseschange",
+        resolveWithLoadedStatus
+      );
+      const timeout2 = setTimeout(
+        resolveWithLoadedStatus,
+        EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES
+      );
       function resolveWithLoadedStatus() {
         cleanUp();
         resolve(isLoaded);
       }
       function cleanUp() {
         clearTimeout(timeout2);
-        session.removeEventListener("keystatuseschange", resolveWithLoadedStatus);
+        session.removeEventListener(
+          "keystatuseschange",
+          resolveWithLoadedStatus
+        );
       }
     });
   }
@@ -5872,7 +5964,9 @@ ${event}`);
 
   // src/main/compat/play.ts
   function play(mediaElement) {
-    return defer(() => tryCatch(() => cast_to_observable_default(mediaElement.play()), void 0));
+    return defer(
+      () => tryCatch(() => cast_to_observable_default(mediaElement.play()), void 0)
+    );
   }
 
   // src/main/compat/should_renew_media_keys.ts
@@ -5990,7 +6084,10 @@ ${event}`);
       log_default.info("DRM: closing all current sessions.");
       return currentState.loadedSessionsStore.closeAllSessions();
     }
-    log_default.info("DRM: Nothing to clear. Returning right away. No state =", currentState === null);
+    log_default.info(
+      "DRM: Nothing to clear. Returning right away. No state =",
+      currentState === null
+    );
     return Promise.resolve();
   }
 
@@ -6063,15 +6160,24 @@ ${event}`);
       keyStatuses.push(keyStatus);
     });
     if (keyStatuses.length <= 0) {
-      log_default.debug("DRM: isSessionUsable: MediaKeySession given has an empty keyStatuses", loadedSession.sessionId);
+      log_default.debug(
+        "DRM: isSessionUsable: MediaKeySession given has an empty keyStatuses",
+        loadedSession.sessionId
+      );
       return false;
     }
     if (arrayIncludes(keyStatuses, "expired")) {
-      log_default.debug("DRM: isSessionUsable: MediaKeySession given has an expired key", loadedSession.sessionId);
+      log_default.debug(
+        "DRM: isSessionUsable: MediaKeySession given has an expired key",
+        loadedSession.sessionId
+      );
       return false;
     }
     if (arrayIncludes(keyStatuses, "internal-error")) {
-      log_default.debug("DRM: isSessionUsable: MediaKeySession given has a key with an internal-error", loadedSession.sessionId);
+      log_default.debug(
+        "DRM: isSessionUsable: MediaKeySession given has a key with an internal-error",
+        loadedSession.sessionId
+      );
       return false;
     }
     log_default.debug("DRM: isSessionUsable: MediaKeySession is usable", loadedSession.sessionId);
@@ -6090,7 +6196,12 @@ ${event}`);
       log_default.warn("DRM: Cannot create persistent MediaKeySession, PersistentSessionsStore not created.");
       return createTemporarySession(loadedSessionsStore, initData);
     }
-    return createAndTryToRetrievePersistentSession(loadedSessionsStore, persistentSessionsStore, initData, cancelSignal);
+    return createAndTryToRetrievePersistentSession(
+      loadedSessionsStore,
+      persistentSessionsStore,
+      initData,
+      cancelSignal
+    );
   }
   function createTemporarySession(loadedSessionsStore, initData) {
     log_default.info("DRM: Creating a new temporary session");
@@ -6114,7 +6225,10 @@ ${event}`);
       };
     }
     try {
-      const hasLoadedSession = await loadedSessionsStore.loadPersistentSession(entry.mediaKeySession, storedEntry.sessionId);
+      const hasLoadedSession = await loadedSessionsStore.loadPersistentSession(
+        entry.mediaKeySession,
+        storedEntry.sessionId
+      );
       if (!hasLoadedSession) {
         log_default.warn("DRM: No data stored for the loaded session");
         persistentSessionsStore.delete(storedEntry.sessionId);
@@ -6150,7 +6264,10 @@ ${event}`);
       if (cancelSignal.cancellationError !== null) {
         throw cancelSignal.cancellationError;
       }
-      const newEntry = loadedSessionsStore.createSession(initData, "persistent-license");
+      const newEntry = loadedSessionsStore.createSession(
+        initData,
+        "persistent-license"
+      );
       return {
         type: "created-session" /* Created */,
         value: newEntry
@@ -6207,7 +6324,12 @@ ${event}`);
     if (cancelSignal.cancellationError !== null) {
       throw cancelSignal.cancellationError;
     }
-    const evt = await createSession(stores, initializationData, wantedSessionType, cancelSignal);
+    const evt = await createSession(
+      stores,
+      initializationData,
+      wantedSessionType,
+      cancelSignal
+    );
     return {
       type: evt.type,
       value: {
@@ -6328,7 +6450,11 @@ ${event}`);
     log_default.info("DRM: Searching for compatible MediaKeySystemAccess");
     const currentState = media_keys_infos_store_default.getState(mediaElement);
     if (currentState != null) {
-      const cachedKeySystemAccess = checkCachedMediaKeySystemAccess(keySystemsConfigs, currentState.mediaKeySystemAccess, currentState.keySystemOptions);
+      const cachedKeySystemAccess = checkCachedMediaKeySystemAccess(
+        keySystemsConfigs,
+        currentState.mediaKeySystemAccess,
+        currentState.keySystemOptions
+      );
       if (cachedKeySystemAccess !== null) {
         log_default.info("DRM: Found cached compatible keySystem");
         return Promise.resolve({
@@ -6340,35 +6466,47 @@ ${event}`);
         });
       }
     }
-    const keySystemsType = keySystemsConfigs.reduce((arr, keySystemOptions) => {
-      const { EME_KEY_SYSTEMS } = config_default.getCurrent();
-      const managedRDNs = EME_KEY_SYSTEMS[keySystemOptions.type];
-      let ksType;
-      if (managedRDNs != null) {
-        ksType = managedRDNs.map((keyType) => {
-          const keyName = keySystemOptions.type;
-          return { keyName, keyType, keySystemOptions };
-        });
-      } else {
-        const keyName = findKeySystemCanonicalName(keySystemOptions.type);
-        const keyType = keySystemOptions.type;
-        ksType = [{ keyName, keyType, keySystemOptions }];
-      }
-      return arr.concat(ksType);
-    }, []);
+    const keySystemsType = keySystemsConfigs.reduce(
+      (arr, keySystemOptions) => {
+        const { EME_KEY_SYSTEMS } = config_default.getCurrent();
+        const managedRDNs = EME_KEY_SYSTEMS[keySystemOptions.type];
+        let ksType;
+        if (managedRDNs != null) {
+          ksType = managedRDNs.map((keyType) => {
+            const keyName = keySystemOptions.type;
+            return { keyName, keyType, keySystemOptions };
+          });
+        } else {
+          const keyName = findKeySystemCanonicalName(keySystemOptions.type);
+          const keyType = keySystemOptions.type;
+          ksType = [{ keyName, keyType, keySystemOptions }];
+        }
+        return arr.concat(ksType);
+      },
+      []
+    );
     return recursivelyTestKeySystems(0);
     async function recursivelyTestKeySystems(index) {
       if (index >= keySystemsType.length) {
-        throw new EncryptedMediaError("INCOMPATIBLE_KEYSYSTEMS", "No key system compatible with your wanted configuration has been found in the current browser.");
+        throw new EncryptedMediaError(
+          "INCOMPATIBLE_KEYSYSTEMS",
+          "No key system compatible with your wanted configuration has been found in the current browser."
+        );
       }
       if (requestMediaKeySystemAccess == null) {
         throw new Error("requestMediaKeySystemAccess is not implemented in your browser.");
       }
       const { keyName, keyType, keySystemOptions } = keySystemsType[index];
-      const keySystemConfigurations = buildKeySystemConfigurations(keyName, keySystemOptions);
+      const keySystemConfigurations = buildKeySystemConfigurations(
+        keyName,
+        keySystemOptions
+      );
       log_default.debug(`DRM: Request keysystem access ${keyType},${index + 1} of ${keySystemsType.length}`);
       try {
-        const keySystemAccess = await requestMediaKeySystemAccess(keyType, keySystemConfigurations);
+        const keySystemAccess = await requestMediaKeySystemAccess(
+          keyType,
+          keySystemConfigurations
+        );
         log_default.info("DRM: Found compatible keysystem", keyType, index + 1);
         return {
           type: "create-media-key-system-access",
@@ -6470,7 +6608,10 @@ ${event}`);
     }
     _checkInitializationDataCompatibility(initializationData) {
       if (initializationData.keyIds !== void 0 && initializationData.keyIds.length > 0 && this._initializationData.keyIds !== void 0) {
-        return areAllKeyIdsContainedIn(initializationData.keyIds, this._initializationData.keyIds);
+        return areAllKeyIdsContainedIn(
+          initializationData.keyIds,
+          this._initializationData.keyIds
+        );
       }
       if (this._initializationData.type !== initializationData.type) {
         return false;
@@ -6542,14 +6683,22 @@ ${event}`);
       }
       if (entry === void 0) {
         log_default.error("DRM-LSS: generateRequest error. No MediaKeySession found with the given initData and initDataType");
-        return generateKeyRequest(mediaKeySession, initializationDataType, initializationData);
+        return generateKeyRequest(
+          mediaKeySession,
+          initializationDataType,
+          initializationData
+        );
       }
       entry.isGeneratingRequest = true;
       if (entry.closingStatus.type !== "none") {
         throw new Error("The `MediaKeySession` is being closed.");
       }
       try {
-        await generateKeyRequest(mediaKeySession, initializationDataType, initializationData);
+        await generateKeyRequest(
+          mediaKeySession,
+          initializationDataType,
+          initializationData
+        );
       } catch (err) {
         if (entry === void 0) {
           throw err;
@@ -6776,7 +6925,11 @@ ${event}`);
 
   // src/main/core/decrypt/utils/persistent_sessions_store.ts
   function checkStorage(storage) {
-    assertInterface(storage, { save: "function", load: "function" }, "licenseStorage");
+    assertInterface(
+      storage,
+      { save: "function", load: "function" },
+      "licenseStorage"
+    );
   }
   var PersistentSessionsStore = class {
     _storage;
@@ -6792,7 +6945,10 @@ ${event}`);
         }
         this._entries = entries;
       } catch (e) {
-        log_default.warn("DRM-PSS: Could not get entries from license storage", e instanceof Error ? e : "");
+        log_default.warn(
+          "DRM-PSS: Could not get entries from license storage",
+          e instanceof Error ? e : ""
+        );
         this.dispose();
       }
     }
@@ -6879,7 +7035,11 @@ ${event}`);
       if (sessionsToDelete <= this._entries.length) {
         this._entries.splice(0, sessionsToDelete);
       } else {
-        log_default.warn("DRM-PSS: Asked to remove more information that it contains", sessionsToDelete, this._entries.length);
+        log_default.warn(
+          "DRM-PSS: Asked to remove more information that it contains",
+          sessionsToDelete,
+          this._entries.length
+        );
         this._entries = [];
       }
       this._save();
@@ -6913,7 +7073,10 @@ ${event}`);
                       if (keyIdB64 === entryKid) {
                         return true;
                       }
-                    } else if (areKeyIdsEqual(entryKid.initData, keyId)) {
+                    } else if (areKeyIdsEqual(
+                      entryKid.initData,
+                      keyId
+                    )) {
                       return true;
                     }
                   }
@@ -6947,7 +7110,10 @@ ${event}`);
                     return i;
                   }
                 } catch (e) {
-                  log_default.warn("DRM-PSS: Could not decode initialization data.", e instanceof Error ? e : "");
+                  log_default.warn(
+                    "DRM-PSS: Could not decode initialization data.",
+                    e instanceof Error ? e : ""
+                  );
                 }
               }
               break;
@@ -7001,9 +7167,14 @@ ${event}`);
       serverCertificateHashesMap.set(mediaKeys, null);
     },
     set(mediaKeys, serverCertificate) {
-      const formattedServerCertificate = serverCertificate instanceof Uint8Array ? serverCertificate : new Uint8Array(serverCertificate instanceof ArrayBuffer ? serverCertificate : serverCertificate.buffer);
+      const formattedServerCertificate = serverCertificate instanceof Uint8Array ? serverCertificate : new Uint8Array(
+        serverCertificate instanceof ArrayBuffer ? serverCertificate : serverCertificate.buffer
+      );
       const hash = hashBuffer(formattedServerCertificate);
-      serverCertificateHashesMap.set(mediaKeys, { hash, serverCertificate: formattedServerCertificate });
+      serverCertificateHashesMap.set(
+        mediaKeys,
+        { hash, serverCertificate: formattedServerCertificate }
+      );
     },
     hasOne(mediaKeys) {
       const currentServerCertificate = serverCertificateHashesMap.get(mediaKeys);
@@ -7015,7 +7186,9 @@ ${event}`);
         return false;
       }
       const { hash: oldHash, serverCertificate: oldServerCertificate } = serverCertificateHash;
-      const newServerCertificate = serverCertificate instanceof Uint8Array ? serverCertificate : new Uint8Array(serverCertificate instanceof ArrayBuffer ? serverCertificate : serverCertificate.buffer);
+      const newServerCertificate = serverCertificate instanceof Uint8Array ? serverCertificate : new Uint8Array(
+        serverCertificate instanceof ArrayBuffer ? serverCertificate : serverCertificate.buffer
+      );
       const newHash = hashBuffer(newServerCertificate);
       if (newHash !== oldHash || oldServerCertificate.length !== newServerCertificate.length) {
         return false;
@@ -7036,13 +7209,20 @@ ${event}`);
     }
     const { licenseStorage } = keySystemOptions;
     if (licenseStorage == null) {
-      throw new EncryptedMediaError("INVALID_KEY_SYSTEM", "No license storage found for persistent license.");
+      throw new EncryptedMediaError(
+        "INVALID_KEY_SYSTEM",
+        "No license storage found for persistent license."
+      );
     }
     log_default.debug("DRM: Set the given license storage");
     return new PersistentSessionsStore(licenseStorage);
   }
   async function getMediaKeysInfos(mediaElement, keySystemsConfigs, cancelSignal) {
-    const evt = await getMediaKeySystemAccess(mediaElement, keySystemsConfigs, cancelSignal);
+    const evt = await getMediaKeySystemAccess(
+      mediaElement,
+      keySystemsConfigs,
+      cancelSignal
+    );
     if (cancelSignal.cancellationError !== null) {
       throw cancelSignal.cancellationError;
     }
@@ -7124,7 +7304,10 @@ ${event}`);
       if (typeof onRetry === "function") {
         onRetry(error, retryCount);
       }
-      const delay = Math.min(baseDelay * Math.pow(2, retryCount - 1), maxDelay);
+      const delay = Math.min(
+        baseDelay * Math.pow(2, retryCount - 1),
+        maxDelay
+      );
       const fuzzedDelay = getFuzzedDelay(delay);
       return timer(fuzzedDelay).pipe(mergeMap(() => source));
     }));
@@ -7157,10 +7340,16 @@ ${event}`);
       const [keyStatus, keyStatusKeyId] = (() => {
         return typeof _arg1 === "string" ? [_arg1, _arg2] : [_arg2, _arg1];
       })();
-      const keyId = getUUIDKIDFromKeyStatusKID(keySystem, new Uint8Array(keyStatusKeyId));
+      const keyId = getUUIDKIDFromKeyStatusKID(
+        keySystem,
+        new Uint8Array(keyStatusKeyId)
+      );
       switch (keyStatus) {
         case KEY_STATUSES.EXPIRED: {
-          const error = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", `A decryption key expired (${bytesToHex(keyId)})`);
+          const error = new EncryptedMediaError(
+            "KEY_STATUS_CHANGE_ERROR",
+            `A decryption key expired (${bytesToHex(keyId)})`
+          );
           if (throwOnLicenseExpiration !== false) {
             throw error;
           }
@@ -7169,7 +7358,10 @@ ${event}`);
           break;
         }
         case KEY_STATUSES.INTERNAL_ERROR: {
-          const error = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`);
+          const error = new EncryptedMediaError(
+            "KEY_STATUS_CHANGE_ERROR",
+            `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`
+          );
           if (fallbackOn.keyInternalError !== true) {
             throw error;
           }
@@ -7178,7 +7370,10 @@ ${event}`);
           break;
         }
         case KEY_STATUSES.OUTPUT_RESTRICTED: {
-          const error = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`);
+          const error = new EncryptedMediaError(
+            "KEY_STATUS_CHANGE_ERROR",
+            `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`
+          );
           if (fallbackOn.keyOutputRestricted !== true) {
             throw error;
           }
@@ -7215,31 +7410,45 @@ ${event}`);
     const keyErrors = onKeyError$2(session).pipe(map((error) => {
       throw new EncryptedMediaError("KEY_ERROR", error.type);
     }));
-    const keyStatusesChange$ = onKeyStatusesChange$2(session).pipe(mergeMap((keyStatusesEvent) => handleKeyStatusesChangeEvent(session, keySystemOptions, keySystem, keyStatusesEvent)));
+    const keyStatusesChange$ = onKeyStatusesChange$2(session).pipe(mergeMap((keyStatusesEvent) => handleKeyStatusesChangeEvent(
+      session,
+      keySystemOptions,
+      keySystem,
+      keyStatusesEvent
+    )));
     const keyMessages$ = onKeyMessage$2(session).pipe(mergeMap((messageEvent) => {
       const message = new Uint8Array(messageEvent.message);
       const messageType = isNonEmptyString(messageEvent.messageType) ? messageEvent.messageType : "license-request";
-      log_default.info(`DRM: Received message event, type ${messageType}`, session.sessionId);
+      log_default.info(
+        `DRM: Received message event, type ${messageType}`,
+        session.sessionId
+      );
       const getLicense$ = defer(() => {
         const getLicense = keySystemOptions.getLicense(message, messageType);
         const getLicenseTimeout = isNullOrUndefined(getLicenseConfig.timeout) ? 10 * 1e3 : getLicenseConfig.timeout;
         return cast_to_observable_default(getLicense).pipe(getLicenseTimeout >= 0 ? timeout(getLicenseTimeout) : identity);
       });
-      const backoffOptions = getLicenseBackoffOptions(sessionWarningSubject$, getLicenseConfig.retry);
-      return retryObsWithBackoff(getLicense$, backoffOptions).pipe(map((licenseObject) => ({
-        type: "key-message-handled",
-        value: { session, license: licenseObject }
-      })), catchError((err) => {
-        const formattedError = formatGetLicenseError(err);
-        if (!isNullOrUndefined(err)) {
-          const { fallbackOnLastTry } = err;
-          if (fallbackOnLastTry === true) {
-            log_default.warn("DRM: Last `getLicense` attempt failed. Blacklisting the current session.");
-            throw new BlacklistedSessionError(formattedError);
+      const backoffOptions = getLicenseBackoffOptions(
+        sessionWarningSubject$,
+        getLicenseConfig.retry
+      );
+      return retryObsWithBackoff(getLicense$, backoffOptions).pipe(
+        map((licenseObject) => ({
+          type: "key-message-handled",
+          value: { session, license: licenseObject }
+        })),
+        catchError((err) => {
+          const formattedError = formatGetLicenseError(err);
+          if (!isNullOrUndefined(err)) {
+            const { fallbackOnLastTry } = err;
+            if (fallbackOnLastTry === true) {
+              log_default.warn("DRM: Last `getLicense` attempt failed. Blacklisting the current session.");
+              throw new BlacklistedSessionError(formattedError);
+            }
           }
-        }
-        throw formattedError;
-      }));
+          throw formattedError;
+        })
+      );
     }));
     const sessionUpdates = merge(keyMessages$, keyStatusesChange$).pipe(concatMap((evt) => {
       switch (evt.type) {
@@ -7254,7 +7463,12 @@ ${event}`);
           return of(evt);
       }
     }));
-    const sessionEvents = merge(getKeyStatusesEvents(session, keySystemOptions, keySystem), sessionUpdates, keyErrors, sessionWarningSubject$);
+    const sessionEvents = merge(
+      getKeyStatusesEvents(session, keySystemOptions, keySystem),
+      sessionUpdates,
+      keyErrors,
+      sessionWarningSubject$
+    );
     return !isNullOrUndefined(session.closed) ? sessionEvents.pipe(takeUntil(cast_to_observable_default(session.closed))) : sessionEvents;
   }
   function getKeyStatusesEvents(session, options, keySystem) {
@@ -7276,9 +7490,15 @@ ${event}`);
   }
   function formatGetLicenseError(error) {
     if (error instanceof TimeoutError) {
-      return new EncryptedMediaError("KEY_LOAD_TIMEOUT", "The license server took too much time to respond.");
+      return new EncryptedMediaError(
+        "KEY_LOAD_TIMEOUT",
+        "The license server took too much time to respond."
+      );
     }
-    const err = new EncryptedMediaError("KEY_LOAD_ERROR", "An error occured when calling `getLicense`.");
+    const err = new EncryptedMediaError(
+      "KEY_LOAD_ERROR",
+      "An error occured when calling `getLicense`."
+    );
     if (!isNullOrUndefined(error) && isNonEmptyString(error.message)) {
       err.message = error.message;
     }
@@ -7286,12 +7506,16 @@ ${event}`);
   }
   function updateSessionWithMessage(session, message) {
     log_default.info("DRM: Updating MediaKeySession with message");
-    return cast_to_observable_default(session.update(message)).pipe(catchError((error) => {
-      const reason = error instanceof Error ? error.toString() : "`session.update` failed";
-      throw new EncryptedMediaError("KEY_UPDATE_ERROR", reason);
-    }), tap(() => {
-      log_default.info("DRM: MediaKeySession update succeeded.");
-    }), ignoreElements());
+    return cast_to_observable_default(session.update(message)).pipe(
+      catchError((error) => {
+        const reason = error instanceof Error ? error.toString() : "`session.update` failed";
+        throw new EncryptedMediaError("KEY_UPDATE_ERROR", reason);
+      }),
+      tap(() => {
+        log_default.info("DRM: MediaKeySession update succeeded.");
+      }),
+      ignoreElements()
+    );
   }
   function handleKeyStatusesChangeEvent(session, keySystemOptions, keySystem, keyStatusesEvent) {
     log_default.info("DRM: keystatuseschange event received", session.sessionId);
@@ -7300,19 +7524,31 @@ ${event}`);
         if (typeof keySystemOptions.onKeyStatusesChange !== "function") {
           return EMPTY;
         }
-        return cast_to_observable_default(keySystemOptions.onKeyStatusesChange(keyStatusesEvent, session));
+        return cast_to_observable_default(keySystemOptions.onKeyStatusesChange(
+          keyStatusesEvent,
+          session
+        ));
       }, void 0);
-    }).pipe(map((licenseObject) => ({
-      type: "key-status-change-handled",
-      value: { session, license: licenseObject }
-    })), catchError((error) => {
-      const err = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR", "Unknown `onKeyStatusesChange` error");
-      if (!isNullOrUndefined(error) && isNonEmptyString(error.message)) {
-        err.message = error.message;
-      }
-      throw err;
-    }));
-    return merge(getKeyStatusesEvents(session, keySystemOptions, keySystem), callback$);
+    }).pipe(
+      map((licenseObject) => ({
+        type: "key-status-change-handled",
+        value: { session, license: licenseObject }
+      })),
+      catchError((error) => {
+        const err = new EncryptedMediaError(
+          "KEY_STATUS_CHANGE_ERROR",
+          "Unknown `onKeyStatusesChange` error"
+        );
+        if (!isNullOrUndefined(error) && isNonEmptyString(error.message)) {
+          err.message = error.message;
+        }
+        throw err;
+      })
+    );
+    return merge(
+      getKeyStatusesEvents(session, keySystemOptions, keySystem),
+      callback$
+    );
   }
   function getLicenseBackoffOptions(sessionWarningSubject$, numberOfRetry) {
     return {
@@ -7334,7 +7570,10 @@ ${event}`);
       const res = await mediaKeys.setServerCertificate(serverCertificate);
       return res;
     } catch (error) {
-      log_default.warn("DRM: mediaKeys.setServerCertificate returned an error", error instanceof Error ? error : "");
+      log_default.warn(
+        "DRM: mediaKeys.setServerCertificate returned an error",
+        error instanceof Error ? error : ""
+      );
       const reason = error instanceof Error ? error.toString() : "`setServerCertificate` error";
       throw new EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", reason);
     }
@@ -7355,7 +7594,10 @@ ${event}`);
       server_certificate_store_default.set(mediaKeys, serverCertificate);
       return { type: "success", value: result };
     } catch (error) {
-      const formattedErr = isKnownError(error) ? error : new EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", "Unknown error when setting the server certificate.");
+      const formattedErr = isKnownError(error) ? error : new EncryptedMediaError(
+        "LICENSE_SERVER_CERTIFICATE_ERROR",
+        "Unknown error when setting the server certificate."
+      );
       return { type: "error", value: formattedErr };
     }
   }
@@ -7368,7 +7610,11 @@ ${event}`);
     }
     const numberOfPersistentSessions = persistentSessionsStore.getLength();
     const toDelete = numberOfPersistentSessions - limit;
-    log_default.info("DRM: Too many stored persistent sessions, removing some.", numberOfPersistentSessions, toDelete);
+    log_default.info(
+      "DRM: Too many stored persistent sessions, removing some.",
+      numberOfPersistentSessions,
+      toDelete
+    );
     persistentSessionsStore.deleteOldSessions(toDelete);
   }
 
@@ -7382,7 +7628,10 @@ ${event}`);
       return completeString.startsWith(searchString, position);
     }
     const initialPosition = typeof position === "number" ? Math.max(position, 0) : 0;
-    return completeString.substring(initialPosition, initialPosition + searchString.length) === searchString;
+    return completeString.substring(
+      initialPosition,
+      initialPosition + searchString.length
+    ) === searchString;
   }
 
   // src/main/core/decrypt/utils/get_drm_system_id.ts
@@ -7593,7 +7842,10 @@ ${event}`);
             if (initializationData.content === void 0) {
               log_default.warn("DRM: Unable to fallback from a non-decipherable quality.");
             } else {
-              blackListProtectionData(initializationData.content.manifest, initializationData);
+              blackListProtectionData(
+                initializationData.content.manifest,
+                initializationData
+              );
             }
             return;
           }
@@ -7622,7 +7874,11 @@ ${event}`);
                   createdSess.keyStatuses.blacklisted.push(innerKid);
                 }
               }
-              updateDecipherability(initializationData.content.manifest, createdSess.keyStatuses.whitelisted, createdSess.keyStatuses.blacklisted);
+              updateDecipherability(
+                initializationData.content.manifest,
+                createdSess.keyStatuses.whitelisted,
+                createdSess.keyStatuses.blacklisted
+              );
               return;
             }
           }
@@ -7643,7 +7899,13 @@ ${event}`);
         EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION
       } = config_default.getCurrent();
       const maxSessionCacheSize = typeof options.maxSessionCacheSize === "number" ? options.maxSessionCacheSize : EME_DEFAULT_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS;
-      const sessionRes = await createOrLoadSession(initializationData, stores, wantedSessionType, maxSessionCacheSize, this._canceller.signal);
+      const sessionRes = await createOrLoadSession(
+        initializationData,
+        stores,
+        wantedSessionType,
+        maxSessionCacheSize,
+        this._canceller.signal
+      );
       if (this._isStopped()) {
         return;
       }
@@ -7656,14 +7918,25 @@ ${event}`);
       this._currentSessions.push(sessionInfo);
       const { mediaKeySession, sessionType } = sessionRes.value;
       let isSessionPersisted = false;
-      const sub = SessionEventsListener(mediaKeySession, options, mediaKeySystemAccess.keySystem).subscribe({
+      const sub = SessionEventsListener(
+        mediaKeySession,
+        options,
+        mediaKeySystemAccess.keySystem
+      ).subscribe({
         next: (evt) => {
           switch (evt.type) {
             case "warning":
               this.trigger("warning", evt.value);
               return;
           }
-          const linkedKeys = getKeyIdsLinkedToSession(initializationData, sessionInfo.record, options.singleLicensePer, sessionInfo.source === "created-session" /* Created */, evt.value.whitelistedKeyIds, evt.value.blacklistedKeyIDs);
+          const linkedKeys = getKeyIdsLinkedToSession(
+            initializationData,
+            sessionInfo.record,
+            options.singleLicensePer,
+            sessionInfo.source === "created-session" /* Created */,
+            evt.value.whitelistedKeyIds,
+            evt.value.blacklistedKeyIDs
+          );
           sessionInfo.record.associateKeyIds(linkedKeys.whitelisted);
           sessionInfo.record.associateKeyIds(linkedKeys.blacklisted);
           sessionInfo.keyStatuses = {
@@ -7672,12 +7945,23 @@ ${event}`);
           };
           if (sessionInfo.record.getAssociatedKeyIds().length !== 0 && sessionType === "persistent-license" && stores.persistentSessionsStore !== null && !isSessionPersisted) {
             const { persistentSessionsStore } = stores;
-            cleanOldStoredPersistentInfo(persistentSessionsStore, EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION - 1);
-            persistentSessionsStore.add(initializationData, sessionInfo.record.getAssociatedKeyIds(), mediaKeySession);
+            cleanOldStoredPersistentInfo(
+              persistentSessionsStore,
+              EME_MAX_STORED_PERSISTENT_SESSION_INFORMATION - 1
+            );
+            persistentSessionsStore.add(
+              initializationData,
+              sessionInfo.record.getAssociatedKeyIds(),
+              mediaKeySession
+            );
             isSessionPersisted = true;
           }
           if (initializationData.content !== void 0) {
-            updateDecipherability(initializationData.content.manifest, linkedKeys.whitelisted, linkedKeys.blacklisted);
+            updateDecipherability(
+              initializationData.content.manifest,
+              linkedKeys.whitelisted,
+              linkedKeys.blacklisted
+            );
           }
           this._unlockInitDataQueue();
         },
@@ -7704,7 +7988,11 @@ ${event}`);
       if (sessionRes.type === "created-session" /* Created */) {
         const requestData = initializationData.values.constructRequestData();
         try {
-          await stores.loadedSessionsStore.generateLicenseRequest(mediaKeySession, initializationData.type, requestData);
+          await stores.loadedSessionsStore.generateLicenseRequest(
+            mediaKeySession,
+            initializationData.type,
+            requestData
+          );
         } catch (error) {
           const entry = stores.loadedSessionsStore.getEntryForSession(mediaKeySession);
           if (entry === null || entry.closingStatus.type !== "none") {
@@ -7714,14 +8002,20 @@ ${event}`);
             }
             return Promise.resolve();
           }
-          throw new EncryptedMediaError("KEY_GENERATE_REQUEST_ERROR", error instanceof Error ? error.toString() : "Unknown error");
+          throw new EncryptedMediaError(
+            "KEY_GENERATE_REQUEST_ERROR",
+            error instanceof Error ? error.toString() : "Unknown error"
+          );
         }
       }
       return Promise.resolve();
     }
     _tryToUseAlreadyCreatedSession(initializationData, mediaKeysData) {
       const { stores, options } = mediaKeysData;
-      const compatibleSessionInfo = arrayFind(this._currentSessions, (x) => x.record.isCompatibleWith(initializationData));
+      const compatibleSessionInfo = arrayFind(
+        this._currentSessions,
+        (x) => x.record.isCompatibleWith(initializationData)
+      );
       if (compatibleSessionInfo === void 0) {
         return false;
       }
@@ -7741,10 +8035,16 @@ ${event}`);
         let isUndecipherable;
         if (options.singleLicensePer === void 0 || options.singleLicensePer === "init-data") {
           const { blacklisted } = compatibleSessionInfo.keyStatuses;
-          isUndecipherable = areSomeKeyIdsContainedIn(initializationData.keyIds, blacklisted);
+          isUndecipherable = areSomeKeyIdsContainedIn(
+            initializationData.keyIds,
+            blacklisted
+          );
         } else {
           const { whitelisted } = compatibleSessionInfo.keyStatuses;
-          isUndecipherable = !areAllKeyIdsContainedIn(initializationData.keyIds, whitelisted);
+          isUndecipherable = !areAllKeyIdsContainedIn(
+            initializationData.keyIds,
+            whitelisted
+          );
         }
         if (isUndecipherable) {
           if (initializationData.content === void 0) {
@@ -7752,7 +8052,11 @@ ${event}`);
             return true;
           }
           log_default.info("DRM: Current initialization data is linked to blacklisted keys. Marking Representations as not decipherable");
-          updateDecipherability(initializationData.content.manifest, [], initializationData.keyIds);
+          updateDecipherability(
+            initializationData.content.manifest,
+            [],
+            initializationData.keyIds
+          );
           return true;
         }
       }
@@ -7853,7 +8157,10 @@ ${event}`);
         if (initData.type === void 0 || segmentProtections[i].type === initData.type) {
           const containedInitData = initData.values.getFormattedValues().every((undecipherableVal) => {
             return segmentProtections[i].values.some((currVal) => {
-              return (undecipherableVal.systemId === void 0 || currVal.systemId === undecipherableVal.systemId) && areArraysOfNumbersEqual(currVal.data, undecipherableVal.data);
+              return (undecipherableVal.systemId === void 0 || currVal.systemId === undecipherableVal.systemId) && areArraysOfNumbersEqual(
+                currVal.data,
+                undecipherableVal.data
+              );
             });
           });
           if (containedInitData) {
@@ -7881,7 +8188,10 @@ ${event}`);
     for (const kid of allKnownKeyIds) {
       if (!associatedKeyIds.some((ak) => areKeyIdsEqual(ak, kid))) {
         if (log_default.hasLevel("DEBUG")) {
-          log_default.debug("DRM: KeySessionRecord's key missing in the license, blacklisting it", bytesToHex(kid));
+          log_default.debug(
+            "DRM: KeySessionRecord's key missing in the license, blacklisting it",
+            bytesToHex(kid)
+          );
         }
         associatedKeyIds.push(kid);
       }
@@ -7897,7 +8207,10 @@ ${event}`);
         });
         if (missingKeyIds.length > 0) {
           if (log_default.hasLevel("DEBUG")) {
-            log_default.debug("DRM: init data keys missing in the license, blacklisting them", missingKeyIds.map((m) => bytesToHex(m)).join(", "));
+            log_default.debug(
+              "DRM: init data keys missing in the license, blacklisting them",
+              missingKeyIds.map((m) => bytesToHex(m)).join(", ")
+            );
           }
           associatedKeyIds.push(...missingKeyIds);
         }
@@ -7987,7 +8300,10 @@ ${event}`);
   init_define_ENVIRONMENT();
   function filterMap(callback, filteringToken) {
     return (source) => defer(() => {
-      return source.pipe(map(callback), filter((x) => x !== filteringToken));
+      return source.pipe(
+        map(callback),
+        filter((x) => x !== filteringToken)
+      );
     });
   }
 
@@ -8042,21 +8358,27 @@ ${event}`);
 
   // src/main/core/init/emit_loaded_event.ts
   function emitLoadedEvent(observation$, mediaElement, isDirectfile) {
-    return observation$.pipe(filterMap((observation) => {
-      if (observation.rebuffering !== null || observation.freezing !== null || observation.readyState === 0) {
-        return null;
-      }
-      if (!shouldWaitForDataBeforeLoaded(isDirectfile, mediaElement.hasAttribute("playsinline"))) {
-        return mediaElement.duration > 0 ? events_generators_default.loaded() : null;
-      }
-      if (observation.readyState >= 3 && observation.currentRange !== null) {
-        if (!shouldValidateMetadata() || mediaElement.duration > 0) {
-          return events_generators_default.loaded();
+    return observation$.pipe(
+      filterMap((observation) => {
+        if (observation.rebuffering !== null || observation.freezing !== null || observation.readyState === 0) {
+          return null;
+        }
+        if (!shouldWaitForDataBeforeLoaded(
+          isDirectfile,
+          mediaElement.hasAttribute("playsinline")
+        )) {
+          return mediaElement.duration > 0 ? events_generators_default.loaded() : null;
+        }
+        if (observation.readyState >= 3 && observation.currentRange !== null) {
+          if (!shouldValidateMetadata() || mediaElement.duration > 0) {
+            return events_generators_default.loaded();
+          }
+          return null;
         }
         return null;
-      }
-      return null;
-    }, null), take(1));
+      }, null),
+      take(1)
+    );
   }
 
   // src/main/core/init/get_initial_time.ts
@@ -8116,7 +8438,10 @@ ${event}`);
         log_default.info("Init: clock offset found for a live content, checking if we can start close to it");
         const ast = manifest.availabilityStartTime === void 0 ? 0 : manifest.availabilityStartTime;
         const clockRelativeLiveTime = (performance.now() + clockOffset) / 1e3 - ast;
-        liveTime = Math.min(maximumPosition, clockRelativeLiveTime);
+        liveTime = Math.min(
+          maximumPosition,
+          clockRelativeLiveTime
+        );
       }
       const diffFromLiveTime = suggestedPresentationDelay !== void 0 ? suggestedPresentationDelay : lowLatencyMode ? DEFAULT_LIVE_GAP.LOW_LATENCY : DEFAULT_LIVE_GAP.DEFAULT;
       log_default.debug(`Init: ${liveTime} defined as the live time, applying a live gap of ${diffFromLiveTime}`);
@@ -8164,17 +8489,24 @@ ${event}`);
   // src/main/core/init/initial_seek_and_play.ts
   init_define_ENVIRONMENT();
   function waitUntilPlayable(observation$) {
-    return observation$.pipe(filter(({ seeking, rebuffering, readyState }) => !seeking && rebuffering === null && readyState >= 1), take(1), map(() => void 0));
+    return observation$.pipe(
+      filter(({ seeking, rebuffering, readyState }) => !seeking && rebuffering === null && readyState >= 1),
+      take(1),
+      map(() => void 0)
+    );
   }
   function autoPlay(mediaElement) {
-    return play(mediaElement).pipe(map(() => "autoplay"), catchError((error) => {
-      if (error instanceof Error && error.name === "NotAllowedError") {
-        log_default.warn("Init: Media element can't play. It may be due to browser auto-play policies.");
-        return of("autoplay-blocked");
-      } else {
-        throw error;
-      }
-    }));
+    return play(mediaElement).pipe(
+      map(() => "autoplay"),
+      catchError((error) => {
+        if (error instanceof Error && error.name === "NotAllowedError") {
+          log_default.warn("Init: Media element can't play. It may be due to browser auto-play policies.");
+          return of("autoplay-blocked");
+        } else {
+          throw error;
+        }
+      })
+    );
   }
   function initialSeekAndPlay({
     mediaElement,
@@ -8184,44 +8516,61 @@ ${event}`);
   }) {
     const initialSeekPerformed = createSharedReference(false);
     const initialPlayPerformed = createSharedReference(false);
-    const seek$ = whenLoadedMetadata$(mediaElement).pipe(take(1), tap(() => {
-      const initialTime = typeof startTime === "function" ? startTime() : startTime;
-      log_default.info("Init: Set initial time", initialTime);
-      playbackObserver.setCurrentTime(initialTime);
-      initialSeekPerformed.setValue(true);
-      initialSeekPerformed.finish();
-    }), shareReplay({ refCount: true }));
-    const seekAndPlay$ = seek$.pipe(mergeMap(() => {
-      if (!shouldValidateMetadata() || mediaElement.duration > 0) {
-        return waitUntilPlayable(playbackObserver.getReference().asObservable());
-      } else {
-        const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA", "Cannot load automatically: your browser falsely announced having loaded the content.");
-        return waitUntilPlayable(playbackObserver.getReference().asObservable()).pipe(startWith(events_generators_default.warning(error)));
-      }
-    }), mergeMap((evt) => {
-      if (evt !== void 0) {
-        return of(evt);
-      }
-      log_default.info("Init: Can begin to play content");
-      if (!mustAutoPlay) {
-        if (mediaElement.autoplay) {
-          log_default.warn("Init: autoplay is enabled on HTML media element. Media will play as soon as possible.");
-        }
-        initialPlayPerformed.setValue(true);
-        initialPlayPerformed.finish();
-        return of({ type: "skipped" });
-      }
-      return autoPlay(mediaElement).pipe(mergeMap((autoplayEvt) => {
-        initialPlayPerformed.setValue(true);
-        initialPlayPerformed.finish();
-        if (autoplayEvt === "autoplay") {
-          return of({ type: "autoplay" });
+    const seek$ = whenLoadedMetadata$(mediaElement).pipe(
+      take(1),
+      tap(() => {
+        const initialTime = typeof startTime === "function" ? startTime() : startTime;
+        log_default.info("Init: Set initial time", initialTime);
+        playbackObserver.setCurrentTime(initialTime);
+        initialSeekPerformed.setValue(true);
+        initialSeekPerformed.finish();
+      }),
+      shareReplay({ refCount: true })
+    );
+    const seekAndPlay$ = seek$.pipe(
+      mergeMap(() => {
+        if (!shouldValidateMetadata() || mediaElement.duration > 0) {
+          return waitUntilPlayable(playbackObserver.getReference().asObservable());
         } else {
-          const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY", "Cannot trigger auto-play automatically: your browser does not allow it.");
-          return concat(of(events_generators_default.warning(error)), of({ type: "autoplay-blocked" }));
+          const error = new MediaError(
+            "MEDIA_ERR_NOT_LOADED_METADATA",
+            "Cannot load automatically: your browser falsely announced having loaded the content."
+          );
+          return waitUntilPlayable(playbackObserver.getReference().asObservable()).pipe(startWith(events_generators_default.warning(error)));
         }
-      }));
-    }), shareReplay({ refCount: true }));
+      }),
+      mergeMap((evt) => {
+        if (evt !== void 0) {
+          return of(evt);
+        }
+        log_default.info("Init: Can begin to play content");
+        if (!mustAutoPlay) {
+          if (mediaElement.autoplay) {
+            log_default.warn("Init: autoplay is enabled on HTML media element. Media will play as soon as possible.");
+          }
+          initialPlayPerformed.setValue(true);
+          initialPlayPerformed.finish();
+          return of({ type: "skipped" });
+        }
+        return autoPlay(mediaElement).pipe(mergeMap((autoplayEvt) => {
+          initialPlayPerformed.setValue(true);
+          initialPlayPerformed.finish();
+          if (autoplayEvt === "autoplay") {
+            return of({ type: "autoplay" });
+          } else {
+            const error = new MediaError(
+              "MEDIA_ERR_BLOCKED_AUTOPLAY",
+              "Cannot trigger auto-play automatically: your browser does not allow it."
+            );
+            return concat(
+              of(events_generators_default.warning(error)),
+              of({ type: "autoplay-blocked" })
+            );
+          }
+        }));
+      }),
+      shareReplay({ refCount: true })
+    );
     return { seekAndPlay$, initialPlayPerformed, initialSeekPerformed };
   }
 
@@ -8308,9 +8657,16 @@ ${event}`);
     bindReferenceUpdates(worker, manualVideoBitrate, "manualVideoBitrate", cancelSignal);
     bindReferenceUpdates(worker, limitVideoWidth, "limitVideoWidth", cancelSignal);
     bindReferenceUpdates(worker, throttleVideo, "throttleVideo", cancelSignal);
-    bindReferenceUpdates(worker, throttleVideoBitrate, "throttleVideoBitrate", cancelSignal);
+    bindReferenceUpdates(
+      worker,
+      throttleVideoBitrate,
+      "throttleVideoBitrate",
+      cancelSignal
+    );
     const lastContentProtection = reference_default(null);
-    const mediaSourceStatus = reference_default(0 /* Nothing */);
+    const mediaSourceStatus = reference_default(
+      0 /* Nothing */
+    );
     const drmCallbacks = {
       onWarning(err) {
         initSubject.next({ type: "warning", value: err });
@@ -8320,7 +8676,14 @@ ${event}`);
         initCanceller.cancel();
       }
     };
-    const drmInitialization = initializeContentDecryption(mediaElement, keySystems, lastContentProtection, mediaSourceStatus, drmCallbacks, initCanceller.signal);
+    const drmInitialization = initializeContentDecryption(
+      mediaElement,
+      keySystems,
+      lastContentProtection,
+      mediaSourceStatus,
+      drmCallbacks,
+      initCanceller.signal
+    );
     const mediaError$ = throwOnMediaError(mediaElement);
     if (url === void 0) {
       return throwError(() => new Error("URL should not be null"));
@@ -8361,20 +8724,27 @@ ${event}`);
         }
       }
     };
-    sendMessage(worker, {
-      type: "prepare",
-      value: {
-        contentId: lastContentId++,
-        url,
-        minimumManifestUpdateInterval,
-        lowLatencyMode,
-        initialVideoBitrate,
-        initialAudioBitrate,
-        manifestRetryOptions: {},
-        segmentRetryOptions: {}
+    sendMessage(
+      worker,
+      {
+        type: "prepare",
+        value: {
+          contentId: lastContentId++,
+          url,
+          minimumManifestUpdateInterval,
+          lowLatencyMode,
+          initialVideoBitrate,
+          initialAudioBitrate,
+          manifestRetryOptions: {},
+          segmentRetryOptions: {}
+        }
       }
-    });
-    return merge(mediaError$, initSubject, new Observable(() => () => initCanceller.cancel()));
+    );
+    return merge(
+      mediaError$,
+      initSubject,
+      new Observable(() => () => initCanceller.cancel())
+    );
     function startPlayback(drmSystemId) {
       assert(manifest !== null);
       log_default.debug("Init: Calculating initial time");
@@ -8391,7 +8761,11 @@ ${event}`);
         startTime: initialTime
       });
       playbackObserver.listen(sendNewPlaybackObservation);
-      const loadedEvent$ = emitLoadedEvent(playbackObserver.getReference().asObservable(), mediaElement, false);
+      const loadedEvent$ = emitLoadedEvent(
+        playbackObserver.getReference().asObservable(),
+        mediaElement,
+        false
+      );
       loadedEvent$.pipe(takeUntil(finish$)).subscribe(initSubject);
       function sendNewPlaybackObservation() {
         assert(manifest !== null);
@@ -8406,35 +8780,41 @@ ${event}`);
             pendingPosition = lastPeriod.end - 1;
           }
         }
-        sendMessage(worker, {
-          type: "observation",
-          value: {
-            position: {
-              last: observation.position,
-              pending: pendingPosition
-            },
-            duration: observation.duration,
-            paused: {
-              last: observation.paused,
-              pending: initialPlayPerformed.getValue() ? void 0 : !autoPlay2 === observation.paused ? void 0 : !autoPlay2
-            },
-            speed: speedVal,
-            readyState: observation.readyState
+        sendMessage(
+          worker,
+          {
+            type: "observation",
+            value: {
+              position: {
+                last: observation.position,
+                pending: pendingPosition
+              },
+              duration: observation.duration,
+              paused: {
+                last: observation.paused,
+                pending: initialPlayPerformed.getValue() ? void 0 : !autoPlay2 === observation.paused ? void 0 : !autoPlay2
+              },
+              speed: speedVal,
+              readyState: observation.readyState
+            }
           }
-        });
+        );
       }
       seekAndPlay$.pipe(takeUntil(finish$)).subscribe();
-      sendMessage(worker, {
-        type: "start",
-        value: {
-          initialTime,
-          drmSystemId,
-          manualBitrateSwitchingMode,
-          enableFastSwitching,
-          audioTrackSwitchingMode,
-          onCodecSwitch
+      sendMessage(
+        worker,
+        {
+          type: "start",
+          value: {
+            initialTime,
+            drmSystemId,
+            manualBitrateSwitchingMode,
+            enableFastSwitching,
+            audioTrackSwitchingMode,
+            onCodecSwitch
+          }
         }
-      });
+      );
       initSubject.next(events_generators_default.manifestReady(manifest));
     }
   }
@@ -8447,7 +8827,10 @@ ${event}`);
         }
         listenCanceller.cancel();
         log_default.error("Init: Encrypted event but EME feature not activated");
-        const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", "EME feature not activated.");
+        const err = new EncryptedMediaError(
+          "MEDIA_IS_ENCRYPTED_ERROR",
+          "EME feature not activated."
+        );
         callbacks.onError(err);
       }, { clearSignal: listenCanceller.signal });
       mediaSourceStatus.setValue(1 /* Ready */);
@@ -8462,7 +8845,10 @@ ${event}`);
         }
         listenCanceller.cancel();
         log_default.error("Init: Encrypted event but no EME API available");
-        const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", "Encryption APIs not found.");
+        const err = new EncryptedMediaError(
+          "MEDIA_IS_ENCRYPTED_ERROR",
+          "Encryption APIs not found."
+        );
         callbacks.onError(err);
       }, { clearSignal: listenCanceller.signal });
       mediaSourceStatus.setValue(1 /* Ready */);
@@ -8479,16 +8865,22 @@ ${event}`);
     const contentDecryptor = new decrypt_default(mediaElement, keySystems);
     contentDecryptor.addEventListener("stateChange", (state) => {
       if (state === 1 /* WaitingForAttachment */) {
+        const mediaSourceStatusListenerCanceller = new TaskCanceller({
+          cancelOn: listenCanceller.signal
+        });
         mediaSourceStatus.onUpdate((currStatus) => {
           if (currStatus === 0 /* Nothing */) {
             mediaSourceStatus.setValue(1 /* Ready */);
           } else if (currStatus === 2 /* Attached */) {
-            listenCanceller.cancel();
+            mediaSourceStatusListenerCanceller.cancel();
             if (state === 1 /* WaitingForAttachment */) {
               contentDecryptor.attach();
             }
           }
-        }, { clearSignal: listenCanceller.signal, emitCurrentValue: true });
+        }, {
+          clearSignal: mediaSourceStatusListenerCanceller.signal,
+          emitCurrentValue: true
+        });
       } else if (state === 2 /* ReadyForContent */) {
         drmStatusRef.setValue({
           isInitialized: true,
@@ -8502,7 +8894,6 @@ ${event}`);
       callbacks.onError(error);
     });
     contentDecryptor.addEventListener("warning", (error) => {
-      listenCanceller.cancel();
       callbacks.onWarning(error);
     });
     lastContentProtection.onUpdate((data) => {
@@ -8544,7 +8935,10 @@ ${event}`);
   function formatError2(sentError) {
     switch (sentError.type) {
       case "NETWORK_ERROR":
-        return new NetworkError(sentError.code, new RequestError("XXX TODO", 500, "TIMEOUT", void 0));
+        return new NetworkError(
+          sentError.code,
+          new RequestError("XXX TODO", 500, "TIMEOUT", void 0)
+        );
       case "MEDIA_ERROR":
         return new MediaError(sentError.code, "XXX TODO");
       case "ENCRYPTED_MEDIA_ERROR":
@@ -8561,11 +8955,20 @@ ${event}`);
       if (mediaElement === null) {
         return EMPTY;
       }
-      let isSeeking$ = observation$.pipe(filter((observation) => observation.event === "seeking"), map(() => "seeking"));
+      let isSeeking$ = observation$.pipe(
+        filter((observation) => observation.event === "seeking"),
+        map(() => "seeking")
+      );
       if (mediaElement.seeking) {
         isSeeking$ = isSeeking$.pipe(startWith("seeking"));
       }
-      const hasSeeked$ = isSeeking$.pipe(switchMap(() => observation$.pipe(filter((observation) => observation.event === "seeked"), map(() => "seeked"), take(1))));
+      const hasSeeked$ = isSeeking$.pipe(
+        switchMap(() => observation$.pipe(
+          filter((observation) => observation.event === "seeked"),
+          map(() => "seeked"),
+          take(1)
+        ))
+      );
       return merge(isSeeking$, hasSeeked$);
     });
   }
@@ -9189,7 +9592,11 @@ ${event}`);
     if (!isNullOrUndefined(options.startAt)) {
       if (options.startAt.wallClockTime instanceof Date) {
         const wallClockTime = options.startAt.wallClockTime.getTime() / 1e3;
-        startAt = object_assign_default({}, options.startAt, { wallClockTime });
+        startAt = object_assign_default(
+          {},
+          options.startAt,
+          { wallClockTime }
+        );
       } else {
         startAt = options.startAt;
       }
@@ -9367,7 +9774,10 @@ ${event}`);
       const adaptations = getSupportedAdaptations(period, bufferType);
       if (periodItem !== void 0) {
         if (periodItem[bufferType] !== void 0) {
-          log_default.warn(`TrackChoiceManager: ${bufferType} already added for period`, period.start);
+          log_default.warn(
+            `TrackChoiceManager: ${bufferType} already added for period`,
+            period.start
+          );
           return;
         } else {
           periodItem[bufferType] = { adaptations, adaptation$ };
@@ -9382,12 +9792,18 @@ ${event}`);
     removePeriod(bufferType, period) {
       const periodIndex = findPeriodIndex(this._periods, period);
       if (periodIndex === void 0) {
-        log_default.warn(`TrackChoiceManager: ${bufferType} not found for period`, period.start);
+        log_default.warn(
+          `TrackChoiceManager: ${bufferType} not found for period`,
+          period.start
+        );
         return;
       }
       const periodItem = this._periods.get(periodIndex);
       if (periodItem[bufferType] === void 0) {
-        log_default.warn(`TrackChoiceManager: ${bufferType} already removed for period`, period.start);
+        log_default.warn(
+          `TrackChoiceManager: ${bufferType} already removed for period`,
+          period.start
+        );
         return;
       }
       delete periodItem[bufferType];
@@ -9418,7 +9834,10 @@ ${event}`);
       } else if (chosenAudioAdaptation === void 0 || !arrayIncludes(audioAdaptations, chosenAudioAdaptation)) {
         const preferredAudioTracks = this._preferredAudioTracks;
         const normalizedPref = normalizeAudioTracks(preferredAudioTracks);
-        const optimalAdaptation = findFirstOptimalAudioAdaptation(audioAdaptations, normalizedPref);
+        const optimalAdaptation = findFirstOptimalAudioAdaptation(
+          audioAdaptations,
+          normalizedPref
+        );
         this._audioChoiceMemory.set(period, optimalAdaptation);
         audioInfos.adaptation$.next(optimalAdaptation);
       } else {
@@ -9438,7 +9857,10 @@ ${event}`);
       } else if (chosenTextAdaptation === void 0 || !arrayIncludes(textAdaptations, chosenTextAdaptation)) {
         const preferredTextTracks = this._preferredTextTracks;
         const normalizedPref = normalizeTextTracks(preferredTextTracks);
-        const optimalAdaptation = findFirstOptimalTextAdaptation(textAdaptations, normalizedPref);
+        const optimalAdaptation = findFirstOptimalTextAdaptation(
+          textAdaptations,
+          normalizedPref
+        );
         this._textChoiceMemory.set(period, optimalAdaptation);
         textInfos.adaptation$.next(optimalAdaptation);
       } else {
@@ -9460,14 +9882,20 @@ ${event}`);
         newBaseAdaptation = prevVideoAdaptation.baseAdaptation;
       } else {
         const preferredVideoTracks = this._preferredVideoTracks;
-        newBaseAdaptation = findFirstOptimalVideoAdaptation(videoAdaptations, preferredVideoTracks);
+        newBaseAdaptation = findFirstOptimalVideoAdaptation(
+          videoAdaptations,
+          preferredVideoTracks
+        );
       }
       if (newBaseAdaptation === null) {
         this._videoChoiceMemory.set(period, null);
         videoInfos.adaptation$.next(null);
         return;
       }
-      const newVideoAdaptation = getRightVideoTrack(newBaseAdaptation, this.trickModeTrackEnabled);
+      const newVideoAdaptation = getRightVideoTrack(
+        newBaseAdaptation,
+        this.trickModeTrackEnabled
+      );
       this._videoChoiceMemory.set(period, {
         baseAdaptation: newBaseAdaptation,
         adaptation: newVideoAdaptation
@@ -9480,7 +9908,10 @@ ${event}`);
       if (isNullOrUndefined(audioInfos)) {
         throw new Error("TrackChoiceManager: Given Period not found.");
       }
-      const wantedAdaptation = arrayFind(audioInfos.adaptations, ({ id }) => id === wantedId);
+      const wantedAdaptation = arrayFind(
+        audioInfos.adaptations,
+        ({ id }) => id === wantedId
+      );
       if (wantedAdaptation === void 0) {
         throw new Error("Audio Track not found.");
       }
@@ -9497,7 +9928,10 @@ ${event}`);
       if (isNullOrUndefined(textInfos)) {
         throw new Error("TrackChoiceManager: Given Period not found.");
       }
-      const wantedAdaptation = arrayFind(textInfos.adaptations, ({ id }) => id === wantedId);
+      const wantedAdaptation = arrayFind(
+        textInfos.adaptations,
+        ({ id }) => id === wantedId
+      );
       if (wantedAdaptation === void 0) {
         throw new Error("Text Track not found.");
       }
@@ -9514,11 +9948,17 @@ ${event}`);
       if (isNullOrUndefined(videoInfos)) {
         throw new Error("LanguageManager: Given Period not found.");
       }
-      const wantedBaseAdaptation = arrayFind(videoInfos.adaptations, ({ id }) => id === wantedId);
+      const wantedBaseAdaptation = arrayFind(
+        videoInfos.adaptations,
+        ({ id }) => id === wantedId
+      );
       if (wantedBaseAdaptation === void 0) {
         throw new Error("Video Track not found.");
       }
-      const newVideoAdaptation = getRightVideoTrack(wantedBaseAdaptation, this.trickModeTrackEnabled);
+      const newVideoAdaptation = getRightVideoTrack(
+        wantedBaseAdaptation,
+        this.trickModeTrackEnabled
+      );
       this._videoChoiceMemory.set(period, {
         baseAdaptation: wantedBaseAdaptation,
         adaptation: newVideoAdaptation
@@ -9755,7 +10195,10 @@ ${event}`);
           recursiveUpdateAudioTrack(index + 1);
           return;
         }
-        const optimalAdaptation = findFirstOptimalAudioAdaptation(audioAdaptations, normalizedPref);
+        const optimalAdaptation = findFirstOptimalAudioAdaptation(
+          audioAdaptations,
+          normalizedPref
+        );
         this._audioChoiceMemory.set(period, optimalAdaptation);
         audioItem.adaptation$.next(optimalAdaptation);
         recursiveUpdateAudioTrack(0);
@@ -9784,7 +10227,10 @@ ${event}`);
           recursiveUpdateTextTrack(index + 1);
           return;
         }
-        const optimalAdaptation = findFirstOptimalTextAdaptation(textAdaptations, normalizedPref);
+        const optimalAdaptation = findFirstOptimalTextAdaptation(
+          textAdaptations,
+          normalizedPref
+        );
         this._textChoiceMemory.set(period, optimalAdaptation);
         textItem.adaptation$.next(optimalAdaptation);
         recursiveUpdateTextTrack(0);
@@ -9808,8 +10254,14 @@ ${event}`);
         if (chosenVideoAdaptation === null) {
           recursiveUpdateVideoTrack(index + 1);
           return;
-        } else if (chosenVideoAdaptation !== void 0 && arrayIncludes(videoAdaptations, chosenVideoAdaptation.baseAdaptation)) {
-          const wantedVideoAdaptation = getRightVideoTrack(chosenVideoAdaptation.baseAdaptation, this.trickModeTrackEnabled);
+        } else if (chosenVideoAdaptation !== void 0 && arrayIncludes(
+          videoAdaptations,
+          chosenVideoAdaptation.baseAdaptation
+        )) {
+          const wantedVideoAdaptation = getRightVideoTrack(
+            chosenVideoAdaptation.baseAdaptation,
+            this.trickModeTrackEnabled
+          );
           if (wantedVideoAdaptation.id === chosenVideoAdaptation.adaptation.id) {
             recursiveUpdateVideoTrack(index + 1);
             return;
@@ -9822,13 +10274,19 @@ ${event}`);
             return recursiveUpdateVideoTrack(0);
           }
         }
-        const optimalAdaptation = findFirstOptimalVideoAdaptation(videoAdaptations, preferredVideoTracks);
+        const optimalAdaptation = findFirstOptimalVideoAdaptation(
+          videoAdaptations,
+          preferredVideoTracks
+        );
         if (optimalAdaptation === null) {
           this._videoChoiceMemory.set(period, null);
           videoItem.adaptation$.next(null);
           return recursiveUpdateVideoTrack(0);
         }
-        const newVideoAdaptation = getRightVideoTrack(optimalAdaptation, this.trickModeTrackEnabled);
+        const newVideoAdaptation = getRightVideoTrack(
+          optimalAdaptation,
+          this.trickModeTrackEnabled
+        );
         this._videoChoiceMemory.set(period, {
           baseAdaptation: optimalAdaptation,
           adaptation: newVideoAdaptation
@@ -9886,7 +10344,10 @@ ${event}`);
   }
   function createTextPreferenceMatcher(preferredTextTrack) {
     return function matchTextPreference(textAdaptation) {
-      return takeFirstSet(textAdaptation.normalizedLanguage, "") === preferredTextTrack.normalized && (preferredTextTrack.closedCaption ? textAdaptation.isClosedCaption === true : textAdaptation.isClosedCaption !== true);
+      return takeFirstSet(
+        textAdaptation.normalizedLanguage,
+        ""
+      ) === preferredTextTrack.normalized && (preferredTextTrack.closedCaption ? textAdaptation.isClosedCaption === true : textAdaptation.isClosedCaption !== true);
     };
   }
   function findFirstOptimalTextAdaptation(textAdaptations, preferredTextTracks) {
@@ -9983,7 +10444,10 @@ ${event}`);
   }
   function getAdaptations(period) {
     const adaptationsByType = period.adaptations;
-    return objectValues(adaptationsByType).reduce((acc, adaptations) => adaptations != null ? acc.concat(adaptations) : acc, []);
+    return objectValues(adaptationsByType).reduce(
+      (acc, adaptations) => adaptations != null ? acc.concat(adaptations) : acc,
+      []
+    );
   }
 
   // src/main/core/api/public_api.ts
@@ -10067,27 +10531,34 @@ ${event}`);
       this._priv_destroy$.pipe(take(1)).subscribe(() => {
         destroyCanceller.cancel();
       });
-      this._priv_pictureInPictureRef = getPictureOnPictureStateRef2(videoElement, destroyCanceller.signal);
+      this._priv_pictureInPictureRef = getPictureOnPictureStateRef2(
+        videoElement,
+        destroyCanceller.signal
+      );
       onFullscreenChange$2(videoElement).pipe(takeUntil(this._priv_destroy$)).subscribe(() => this.trigger("fullscreenChange", this.isFullscreen()));
-      onTextTrackChanges$2(videoElement.textTracks).pipe(takeUntil(this._priv_destroy$), map((evt) => {
-        const target = evt.target;
-        const arr = [];
-        for (let i = 0; i < target.length; i++) {
-          const textTrack = target[i];
-          arr.push(textTrack);
-        }
-        return arr;
-      }), distinctUntilChanged((textTracksA, textTracksB) => {
-        if (textTracksA.length !== textTracksB.length) {
-          return false;
-        }
-        for (let i = 0; i < textTracksA.length; i++) {
-          if (textTracksA[i] !== textTracksB[i]) {
+      onTextTrackChanges$2(videoElement.textTracks).pipe(
+        takeUntil(this._priv_destroy$),
+        map((evt) => {
+          const target = evt.target;
+          const arr = [];
+          for (let i = 0; i < target.length; i++) {
+            const textTrack = target[i];
+            arr.push(textTrack);
+          }
+          return arr;
+        }),
+        distinctUntilChanged((textTracksA, textTracksB) => {
+          if (textTracksA.length !== textTracksB.length) {
             return false;
           }
-        }
-        return true;
-      })).subscribe((x) => this._priv_onNativeTextTracksNext(x));
+          for (let i = 0; i < textTracksA.length; i++) {
+            if (textTracksA[i] !== textTracksB[i]) {
+              return false;
+            }
+          }
+          return true;
+        })
+      ).subscribe((x) => this._priv_onNativeTextTracksNext(x));
       this._priv_speed = reference_default(videoElement.playbackRate);
       this._priv_preferTrickModeTracks = false;
       this._priv_contentLock = reference_default(false);
@@ -10272,7 +10743,11 @@ ${event}`);
             log_default.warn("API: Can't apply throttleWhenHidden because browser can't be trusted for visibility.");
           } else {
             throttlers.throttle = {
-              video: createMappedReference(getPageActivityRef2(currentContentCanceller.signal), (isActive) => isActive ? Infinity : 0, currentContentCanceller.signal)
+              video: createMappedReference(
+                getPageActivityRef2(currentContentCanceller.signal),
+                (isActive) => isActive ? Infinity : 0,
+                currentContentCanceller.signal
+              )
             };
           }
         }
@@ -10281,7 +10756,14 @@ ${event}`);
             log_default.warn("API: Can't apply throttleVideoBitrateWhenHidden because browser can't be trusted for visibility.");
           } else {
             throttlers.throttleBitrate = {
-              video: createMappedReference(getVideoVisibilityRef2(this._priv_pictureInPictureRef, currentContentCanceller.signal), (isActive) => isActive ? Infinity : 0, currentContentCanceller.signal)
+              video: createMappedReference(
+                getVideoVisibilityRef2(
+                  this._priv_pictureInPictureRef,
+                  currentContentCanceller.signal
+                ),
+                (isActive) => isActive ? Infinity : 0,
+                currentContentCanceller.signal
+              )
             };
           }
         }
@@ -10290,7 +10772,11 @@ ${event}`);
             log_default.warn("API: Can't apply limitVideoWidth because browser can't be trusted for video size.");
           } else {
             throttlers.limitWidth = {
-              video: getVideoWidthRef2(videoElement, this._priv_pictureInPictureRef, currentContentCanceller.signal)
+              video: getVideoWidthRef2(
+                videoElement,
+                this._priv_pictureInPictureRef,
+                currentContentCanceller.signal
+              )
             };
           }
         }
@@ -10302,25 +10788,31 @@ ${event}`);
           maxAutoBitrates: this._priv_bitrateInfos.maxAutoBitrates,
           throttlers
         };
-        const bufferOptions = object_assign_default({
-          audioTrackSwitchingMode,
-          enableFastSwitching,
-          manualBitrateSwitchingMode,
-          onCodecSwitch
-        }, this._priv_bufferOptions);
-        const init$ = InitializeOnMediaSource(this._priv_worker, {
-          adaptiveOptions,
-          autoPlay: autoPlay2,
-          bufferOptions,
-          playbackObserver,
-          keySystems,
-          lowLatencyMode,
-          url,
-          mediaElement: videoElement,
-          minimumManifestUpdateInterval,
-          speed: this._priv_speed,
-          startAt
-        }).pipe(takeUntil(stoppedContent$));
+        const bufferOptions = object_assign_default(
+          {
+            audioTrackSwitchingMode,
+            enableFastSwitching,
+            manualBitrateSwitchingMode,
+            onCodecSwitch
+          },
+          this._priv_bufferOptions
+        );
+        const init$ = InitializeOnMediaSource(
+          this._priv_worker,
+          {
+            adaptiveOptions,
+            autoPlay: autoPlay2,
+            bufferOptions,
+            playbackObserver,
+            keySystems,
+            lowLatencyMode,
+            url,
+            mediaElement: videoElement,
+            minimumManifestUpdateInterval,
+            speed: this._priv_speed,
+            startAt
+          }
+        ).pipe(takeUntil(stoppedContent$));
         playback$ = connectable(init$, {
           connector: () => new Subject(),
           resetOnDisconnect: false
@@ -10338,12 +10830,30 @@ ${event}`);
         const preferredTextTracks = defaultTextTrack === void 0 ? this._priv_preferredTextTracks : [defaultTextTrack];
         this._priv_mediaElementTrackChoiceManager.setPreferredTextTracks(preferredTextTracks, true);
         this._priv_mediaElementTrackChoiceManager.setPreferredVideoTracks(this._priv_preferredVideoTracks, true);
-        this.trigger("availableAudioTracksChange", this._priv_mediaElementTrackChoiceManager.getAvailableAudioTracks());
-        this.trigger("availableVideoTracksChange", this._priv_mediaElementTrackChoiceManager.getAvailableVideoTracks());
-        this.trigger("availableTextTracksChange", this._priv_mediaElementTrackChoiceManager.getAvailableTextTracks());
-        this.trigger("audioTrackChange", this._priv_mediaElementTrackChoiceManager.getChosenAudioTrack() ?? null);
-        this.trigger("textTrackChange", this._priv_mediaElementTrackChoiceManager.getChosenTextTrack() ?? null);
-        this.trigger("videoTrackChange", this._priv_mediaElementTrackChoiceManager.getChosenVideoTrack() ?? null);
+        this.trigger(
+          "availableAudioTracksChange",
+          this._priv_mediaElementTrackChoiceManager.getAvailableAudioTracks()
+        );
+        this.trigger(
+          "availableVideoTracksChange",
+          this._priv_mediaElementTrackChoiceManager.getAvailableVideoTracks()
+        );
+        this.trigger(
+          "availableTextTracksChange",
+          this._priv_mediaElementTrackChoiceManager.getAvailableTextTracks()
+        );
+        this.trigger(
+          "audioTrackChange",
+          this._priv_mediaElementTrackChoiceManager.getChosenAudioTrack() ?? null
+        );
+        this.trigger(
+          "textTrackChange",
+          this._priv_mediaElementTrackChoiceManager.getChosenTextTrack() ?? null
+        );
+        this.trigger(
+          "videoTrackChange",
+          this._priv_mediaElementTrackChoiceManager.getChosenVideoTrack() ?? null
+        );
         this._priv_mediaElementTrackChoiceManager.addEventListener("availableVideoTracksChange", (val) => this.trigger("availableVideoTracksChange", val));
         this._priv_mediaElementTrackChoiceManager.addEventListener("availableAudioTracksChange", (val) => this.trigger("availableAudioTracksChange", val));
         this._priv_mediaElementTrackChoiceManager.addEventListener("availableTextTracksChange", (val) => this.trigger("availableTextTracksChange", val));
@@ -10364,11 +10874,23 @@ ${event}`);
           resetOnDisconnect: false
         });
       }
-      const stalled$ = playback$.pipe(filter((evt) => evt.type === "stalled" || evt.type === "unstalled"), map((x) => x.value), distinctUntilChanged((prevStallReason, currStallReason) => {
-        return prevStallReason === null && currStallReason === null || prevStallReason !== null && currStallReason !== null && prevStallReason === currStallReason;
-      }));
-      const loaded$ = playback$.pipe(filter((evt) => evt.type === "loaded"), share());
-      const reloading$ = playback$.pipe(filter((evt) => evt.type === "reloading-media-source"), share());
+      const stalled$ = playback$.pipe(
+        filter((evt) => evt.type === "stalled" || evt.type === "unstalled"),
+        map((x) => x.value),
+        distinctUntilChanged((prevStallReason, currStallReason) => {
+          return prevStallReason === null && currStallReason === null || prevStallReason !== null && currStallReason !== null && prevStallReason === currStallReason;
+        })
+      );
+      const loaded$ = playback$.pipe(
+        filter((evt) => evt.type === "loaded"),
+        share()
+      );
+      const reloading$ = playback$.pipe(
+        filter(
+          (evt) => evt.type === "reloading-media-source"
+        ),
+        share()
+      );
       const observation$ = playbackObserver.getReference().asObservable();
       const stateChangingEvent$ = observation$.pipe(filter((o) => {
         return o.event === "seeking" || o.event === "ended" || o.event === "play" || o.event === "pause";
@@ -10376,11 +10898,26 @@ ${event}`);
       const loadedStateUpdates$ = combineLatest([
         stalled$.pipe(startWith(null)),
         stateChangingEvent$.pipe(startWith(null))
-      ]).pipe(takeUntil(stoppedContent$), map(([stalledStatus]) => getLoadedContentState(videoElement, stalledStatus)));
-      const playerState$ = concat(of(PLAYER_STATES.LOADING), loaded$.pipe(switchMap((_, i) => {
-        const isFirstLoad = i === 0;
-        return merge(reloading$.pipe(map(() => PLAYER_STATES.RELOADING)), isFirstLoad ? of(PLAYER_STATES.LOADED) : EMPTY, loadedStateUpdates$.pipe(takeUntil(reloading$), skipWhile((state) => isFirstLoad && state === PLAYER_STATES.PAUSED)));
-      }))).pipe(distinctUntilChanged());
+      ]).pipe(
+        takeUntil(stoppedContent$),
+        map(
+          ([stalledStatus]) => getLoadedContentState(videoElement, stalledStatus)
+        )
+      );
+      const playerState$ = concat(
+        of(PLAYER_STATES.LOADING),
+        loaded$.pipe(switchMap((_, i) => {
+          const isFirstLoad = i === 0;
+          return merge(
+            reloading$.pipe(map(() => PLAYER_STATES.RELOADING)),
+            isFirstLoad ? of(PLAYER_STATES.LOADED) : EMPTY,
+            loadedStateUpdates$.pipe(
+              takeUntil(reloading$),
+              skipWhile((state) => isFirstLoad && state === PLAYER_STATES.PAUSED)
+            )
+          );
+        }))
+      ).pipe(distinctUntilChanged());
       let playbackSubscription;
       stoppedContent$.subscribe(() => {
         if (playbackSubscription !== void 0) {
@@ -10388,7 +10925,10 @@ ${event}`);
         }
       });
       observation$.pipe(takeUntil(stoppedContent$)).subscribe((o) => this._priv_triggerPositionUpdate(o));
-      loaded$.pipe(switchMap(() => emitSeekEvents(this.videoElement, observation$)), takeUntil(stoppedContent$)).subscribe((evt) => {
+      loaded$.pipe(
+        switchMap(() => emitSeekEvents(this.videoElement, observation$)),
+        takeUntil(stoppedContent$)
+      ).subscribe((evt) => {
         log_default.info(`API: Triggering "${evt}" event`);
         this.trigger(evt, null);
       });
@@ -10411,7 +10951,11 @@ ${event}`);
           }
         }
       });
-      this._priv_contentLock.asObservable().pipe(filter((isLocked) => !isLocked), take(1), takeUntil(stoppedContent$)).subscribe(() => {
+      this._priv_contentLock.asObservable().pipe(
+        filter((isLocked) => !isLocked),
+        take(1),
+        takeUntil(stoppedContent$)
+      ).subscribe(() => {
         playbackSubscription = playback$.connect();
       });
     }
@@ -10627,7 +11171,10 @@ ${event}`);
       }
       return playPromise.catch((error) => {
         if (error.name === "NotAllowedError") {
-          const warning2 = new MediaError("MEDIA_ERR_PLAY_NOT_ALLOWED", error.toString());
+          const warning2 = new MediaError(
+            "MEDIA_ERR_PLAY_NOT_ALLOWED",
+            error.toString()
+          );
           this.trigger("warning", warning2);
         }
         throw error;
@@ -10992,7 +11539,10 @@ ${event}`);
       if (this._priv_trackChoiceManager !== null) {
         this._priv_trackChoiceManager.setPreferredAudioTracks(tracks, shouldApply);
       } else if (this._priv_mediaElementTrackChoiceManager !== null) {
-        this._priv_mediaElementTrackChoiceManager.setPreferredAudioTracks(tracks, shouldApply);
+        this._priv_mediaElementTrackChoiceManager.setPreferredAudioTracks(
+          tracks,
+          shouldApply
+        );
       }
     }
     setPreferredTextTracks(tracks, shouldApply = false) {
@@ -11003,7 +11553,10 @@ ${event}`);
       if (this._priv_trackChoiceManager !== null) {
         this._priv_trackChoiceManager.setPreferredTextTracks(tracks, shouldApply);
       } else if (this._priv_mediaElementTrackChoiceManager !== null) {
-        this._priv_mediaElementTrackChoiceManager.setPreferredTextTracks(tracks, shouldApply);
+        this._priv_mediaElementTrackChoiceManager.setPreferredTextTracks(
+          tracks,
+          shouldApply
+        );
       }
     }
     setPreferredVideoTracks(tracks, shouldApply = false) {
@@ -11014,7 +11567,10 @@ ${event}`);
       if (this._priv_trackChoiceManager !== null) {
         this._priv_trackChoiceManager.setPreferredVideoTracks(tracks, shouldApply);
       } else if (this._priv_mediaElementTrackChoiceManager !== null) {
-        this._priv_mediaElementTrackChoiceManager.setPreferredVideoTracks(tracks, shouldApply);
+        this._priv_mediaElementTrackChoiceManager.setPreferredVideoTracks(
+          tracks,
+          shouldApply
+        );
       }
     }
     getImageTrackData() {
@@ -11074,13 +11630,16 @@ ${event}`);
         }
       };
       if (!isNullOrUndefined(this.videoElement)) {
-        clearOnStop(this.videoElement).then(() => {
-          log_default.debug("API: DRM session cleaned-up with success!");
-          freeUpContentLock();
-        }, (err) => {
-          log_default.error("API: An error arised when trying to clean-up the DRM session:" + (err instanceof Error ? err.toString() : "Unknown Error"));
-          freeUpContentLock();
-        });
+        clearOnStop(this.videoElement).then(
+          () => {
+            log_default.debug("API: DRM session cleaned-up with success!");
+            freeUpContentLock();
+          },
+          (err) => {
+            log_default.error("API: An error arised when trying to clean-up the DRM session:" + (err instanceof Error ? err.toString() : "Unknown Error"));
+            freeUpContentLock();
+          }
+        );
       } else {
         freeUpContentLock();
       }
@@ -11135,7 +11694,10 @@ ${event}`);
             if (!isNullOrUndefined(segmentData) && segmentData.type === "bif") {
               const imageData = segmentData.data;
               this._priv_contentInfos.thumbnails = imageData;
-              this.trigger("imageTrackUpdate", { data: this._priv_contentInfos.thumbnails });
+              this.trigger(
+                "imageTrackUpdate",
+                { data: this._priv_contentInfos.thumbnails }
+              );
             }
           }
       }
@@ -11151,7 +11713,10 @@ ${event}`);
       }
       this._priv_cleanUpCurrentContentState();
       this._priv_currentError = formattedError;
-      log_default.error("API: The player stopped because of an error", error instanceof Error ? error : "");
+      log_default.error(
+        "API: The player stopped because of an error",
+        error instanceof Error ? error : ""
+      );
       this._priv_setPlayerState(PLAYER_STATES.STOPPED);
       if (this._priv_currentError === formattedError) {
         this.trigger("error", formattedError);
@@ -11181,7 +11746,10 @@ ${event}`);
       this._priv_trackChoiceManager.setPreferredAudioTracks(preferredAudioTracks, true);
       const preferredTextTracks = initialTextTrack === void 0 ? this._priv_preferredTextTracks : [initialTextTrack];
       this._priv_trackChoiceManager.setPreferredTextTracks(preferredTextTracks, true);
-      this._priv_trackChoiceManager.setPreferredVideoTracks(this._priv_preferredVideoTracks, true);
+      this._priv_trackChoiceManager.setPreferredVideoTracks(
+        this._priv_preferredVideoTracks,
+        true
+      );
     }
     _priv_onActivePeriodChanged({ period }) {
       if (this._priv_contentInfos === null) {
@@ -11208,8 +11776,14 @@ ${event}`);
         this.trigger("textTrackChange", null);
         this.trigger("videoTrackChange", null);
       }
-      this._priv_triggerAvailableBitratesChangeEvent("availableAudioBitratesChange", this.getAvailableAudioBitrates());
-      this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange", this.getAvailableVideoBitrates());
+      this._priv_triggerAvailableBitratesChangeEvent(
+        "availableAudioBitratesChange",
+        this.getAvailableAudioBitrates()
+      );
+      this._priv_triggerAvailableBitratesChangeEvent(
+        "availableVideoBitratesChange",
+        this.getAvailableVideoBitrates()
+      );
       const audioBitrate = this._priv_getCurrentRepresentations()?.audio?.bitrate ?? -1;
       this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange", audioBitrate);
       const videoBitrate = this._priv_getCurrentRepresentations()?.video?.bitrate ?? -1;
@@ -11315,7 +11889,10 @@ ${event}`);
             const audioTrack = this._priv_trackChoiceManager.getChosenAudioTrack(currentPeriod);
             this.trigger("audioTrackChange", audioTrack);
             const availableAudioBitrates = this.getAvailableAudioBitrates();
-            this._priv_triggerAvailableBitratesChangeEvent("availableAudioBitratesChange", availableAudioBitrates);
+            this._priv_triggerAvailableBitratesChangeEvent(
+              "availableAudioBitratesChange",
+              availableAudioBitrates
+            );
             break;
           case "text":
             const textTrack = this._priv_trackChoiceManager.getChosenTextTrack(currentPeriod);
@@ -11325,7 +11902,10 @@ ${event}`);
             const videoTrack = this._priv_trackChoiceManager.getChosenVideoTrack(currentPeriod);
             this.trigger("videoTrackChange", videoTrack);
             const availableVideoBitrates = this.getAvailableVideoBitrates();
-            this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange", availableVideoBitrates);
+            this._priv_triggerAvailableBitratesChangeEvent(
+              "availableVideoBitratesChange",
+              availableVideoBitrates
+            );
             break;
         }
       }

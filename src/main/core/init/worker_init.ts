@@ -421,16 +421,20 @@ function initializeContentDecryption(
 
   contentDecryptor.addEventListener("stateChange", (state) => {
     if (state === ContentDecryptorState.WaitingForAttachment) {
+      const mediaSourceStatusListenerCanceller = new TaskCanceller({
+        cancelOn: listenCanceller.signal,
+      });
       mediaSourceStatus.onUpdate((currStatus) => {
         if (currStatus === MediaSourceInitializationStatus.Nothing) {
           mediaSourceStatus.setValue(MediaSourceInitializationStatus.Ready);
         } else if (currStatus === MediaSourceInitializationStatus.Attached) {
-          listenCanceller.cancel();
+          mediaSourceStatusListenerCanceller.cancel();
           if (state === ContentDecryptorState.WaitingForAttachment) {
             contentDecryptor.attach();
           }
         }
-      }, { clearSignal: listenCanceller.signal, emitCurrentValue: true });
+      }, { clearSignal: mediaSourceStatusListenerCanceller.signal,
+           emitCurrentValue: true });
     } else if (state === ContentDecryptorState.ReadyForContent) {
       drmStatusRef.setValue({ isInitialized: true,
                               drmSystemId: contentDecryptor.systemId });
@@ -444,7 +448,6 @@ function initializeContentDecryption(
   });
 
   contentDecryptor.addEventListener("warning", (error) => {
-    listenCanceller.cancel();
     callbacks.onWarning(error);
   });
 
