@@ -210,6 +210,12 @@ properties, methods, events and so on.
       Maximum number of retries when a Manifest or segment request fails due to
       the user being offline.
 
+    - [`networkConfig.manifestRequestTimeout`](../api/Loading_a_Content.md#networkconfig):
+      Timeout after which manifest requests are aborted.
+
+    - [`networkConfig.segmentRequestTimeout`](../api/Loading_a_Content.md#networkconfig):
+      Timeout after which segment requests are aborted.
+
   - [`enableFastSwitching`](../api/Loading_a_Content.md#enablefastswitching):
     Enable or disable an optimization replacing segments of poor quality with
     segments of a better quality.

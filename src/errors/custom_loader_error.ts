@@ -31,9 +31,10 @@ export default class CustomLoaderError extends Error {
   public readonly xhr : XMLHttpRequest | undefined;
 
   /**
+   * @param {string} message
+   * @param {boolean} canRetry
+   * @param {boolean} isOfflineError
    * @param {XMLHttpRequest} xhr
-   * @param {string} url
-   * @param {string} type
    */
   constructor(
     message : string,

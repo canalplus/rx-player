@@ -27,6 +27,7 @@ import {
 import {
   ISegmentContext,
   ISegmentLoaderCallbacks,
+  ISegmentLoaderOptions,
   ISegmentLoaderResultSegmentLoaded,
 } from "../types";
 
@@ -45,7 +46,7 @@ function loadInitSegment(
 
     /**
      * Callback triggered when the custom segment loader has a response.
-     * @param {Object} args
+     * @param {Object} _args
      */
     const resolve = (_args : {
       data : ArrayBuffer | null;
@@ -113,7 +114,7 @@ function loadSegment(
 
     /**
      * Callback triggered when the custom segment loader has a response.
-     * @param {Object} args
+     * @param {Object} _args
      */
     const resolve = (_args : {
       data : ArrayBuffer | null;
@@ -188,6 +189,7 @@ function loadSegment(
 export default function segmentLoader(
   _url : string | null,
   content : ISegmentContext,
+  _loaderOptions : ISegmentLoaderOptions, // TODO use timeout?
   cancelSignal : CancellationSignal,
   _callbacks : ISegmentLoaderCallbacks<ArrayBuffer | null>
 ) : Promise<ISegmentLoaderResultSegmentLoaded<ArrayBuffer | null>> {

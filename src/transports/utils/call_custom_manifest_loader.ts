@@ -24,6 +24,7 @@ import {
   CancellationSignal,
 } from "../../utils/task_canceller";
 import {
+  IManifestLoaderOptions,
   IRequestedData,
 } from "../types";
 
@@ -31,15 +32,18 @@ export default function callCustomManifestLoader(
   customManifestLoader : IManifestLoader,
   fallbackManifestLoader : (
     url : string | undefined,
+    loaderOptions : IManifestLoaderOptions,
     cancelSignal : CancellationSignal
   ) => Promise< IRequestedData<ILoadedManifestFormat> >
 ) : (
     url : string | undefined,
+    loaderOptions : IManifestLoaderOptions,
     cancelSignal : CancellationSignal
   ) => Promise< IRequestedData<ILoadedManifestFormat> >
 {
   return (
     url : string | undefined,
+    loaderOptions : IManifestLoaderOptions,
     cancelSignal : CancellationSignal
   ) : Promise< IRequestedData<ILoadedManifestFormat> > => {
     return new Promise((res, rej) => {
@@ -114,11 +118,13 @@ export default function callCustomManifestLoader(
         }
         hasFinished = true;
         cancelSignal.deregister(abortCustomLoader);
-        fallbackManifestLoader(url, cancelSignal).then(res, rej);
+        fallbackManifestLoader(url, loaderOptions, cancelSignal).then(res, rej);
       };
 
       const callbacks = { reject, resolve, fallback };
-      const abort = customManifestLoader(url, callbacks);
+      const abort = customManifestLoader(url,
+                                         callbacks,
+                                         { timeout: loaderOptions.timeout });
 
       cancelSignal.register(abortCustomLoader);
 

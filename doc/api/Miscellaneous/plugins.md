@@ -98,6 +98,13 @@ As you can see, this function takes two arguments:
        - *url* (`string`): The URL the segment request should normally be
          performed at.
 
+       - *timeout* (`number|undefined`: Timeout in milliseconds after which a
+         request should preferably be aborted, according to current
+         configuration.
+
+         This property is mainly indicative, you may or may not want to exploit
+         this information depending on your use cases.
+
        - *manifest* (`Object`) - the Manifest object containing the segment.
          More information on its structure can be found on the documentation
          linked below [1].
@@ -290,7 +297,7 @@ const customManifestLoader = (url, callbacks) => {
 };
 ```
 
-As you can see, this function takes two arguments:
+As you can see, this function takes three arguments:
 
   1. **url**: The URL the Manifest request should normally be performed at.
 
@@ -366,6 +373,17 @@ As you can see, this function takes two arguments:
 
        - **fallback**: Callback to call if you want to call our default
          implementation instead for this Manifest. No argument is needed.
+
+  3. **options**: Various other options. For the moment, it's an object with
+     only the following property:
+
+       - *timeout* (`number|undefined`): Timeout in milliseconds after which a
+         request should preferably be aborted, according to current
+         configuration.
+
+         This property is mainly indicative, you may or may not want to exploit
+         this information depending on your use cases.
+
 
 The `manifestLoader` can also return a function, which will be called if/when
 the request is aborted. You can define one to clean-up or dispose all resources.

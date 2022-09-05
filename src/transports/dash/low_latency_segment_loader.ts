@@ -22,6 +22,7 @@ import { CancellationSignal } from "../../utils/task_canceller";
 import {
   ISegmentContext,
   ISegmentLoaderCallbacks,
+  ISegmentLoaderOptions,
   ISegmentLoaderResultChunkedComplete,
 } from "../types";
 import byteRange from "../utils/byte_range";
@@ -34,6 +35,7 @@ import extractCompleteChunks from "./extract_complete_chunks";
  *
  * @param {string} url - URL of the segment to download.
  * @param {Object} content - Context of the segment needed.
+ * @param {Object} options
  * @param {Object} callbacks
  * @param {CancellationSignal} cancelSignal
  * @returns {Promise}
@@ -41,6 +43,7 @@ import extractCompleteChunks from "./extract_complete_chunks";
 export default function lowLatencySegmentLoader(
   url : string,
   content : ISegmentContext,
+  options : ISegmentLoaderOptions,
   callbacks : ISegmentLoaderCallbacks<Uint8Array>,
   cancelSignal : CancellationSignal
 ) : Promise<ISegmentLoaderResultChunkedComplete> {
@@ -77,6 +80,7 @@ export default function lowLatencySegmentLoader(
   return fetchRequest({ url,
                         headers,
                         onData,
+                        timeout: options.timeout,
                         cancelSignal })
     .then((res) => ({ resultType: "chunk-complete" as const,
                       resultData: res }));

@@ -824,6 +824,20 @@ This object can take the following properties (all are optional):
 
   Defaults to `Infinity`.
 
+- `manifestRequestTimeout` (`Number|undefined`): Timeout, in milliseconds, after
+  which manifest requests are aborted and, depending on other options, retried.
+
+  To set to `-1` for no timeout.
+
+  `undefined` (the default) will lead to a default, large, timeout being used.
+
+- `segmentRequestTimeout` (`Number|undefined`): Timeout, in milliseconds, after
+  which segment requests are aborted and, depending on other options, retried.
+
+  To set to `-1` for no timeout.
+
+  `undefined` (the default) will lead to a default, large, timeout being used.
+
 [1] To retry a request, one of the following condition should be met:
 
 - The request failed because of a `404` HTTP code

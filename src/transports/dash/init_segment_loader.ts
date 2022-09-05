@@ -20,6 +20,7 @@ import request from "../../utils/request";
 import { CancellationSignal } from "../../utils/task_canceller";
 import {
   ISegmentLoaderCallbacks,
+  ISegmentLoaderOptions,
   ISegmentLoaderResultChunkedComplete,
   ISegmentLoaderResultSegmentCreated,
   ISegmentLoaderResultSegmentLoaded,
@@ -30,6 +31,7 @@ import byteRange from "../utils/byte_range";
  * Perform a request for an initialization segment, agnostic to the container.
  * @param {string} url
  * @param {Object} segment
+ * @param {Object} options
  * @param {CancellationSignal} cancelSignal
  * @param {Object} callbacks
  * @returns {Promise}
@@ -37,6 +39,7 @@ import byteRange from "../utils/byte_range";
 export default function initSegmentLoader(
   url : string,
   segment : ISegment,
+  options : ISegmentLoaderOptions,
   cancelSignal : CancellationSignal,
   callbacks : ISegmentLoaderCallbacks<ArrayBuffer | Uint8Array>
 ) : Promise<ISegmentLoaderResultSegmentLoaded<ArrayBuffer | Uint8Array> |
@@ -46,6 +49,7 @@ export default function initSegmentLoader(
   if (segment.range === undefined) {
     return request({ url,
                      responseType: "arraybuffer",
+                     timeout: options.timeout,
                      cancelSignal,
                      onProgress: callbacks.onProgress })
       .then(data => ({ resultType: "segment-loaded",
@@ -56,6 +60,7 @@ export default function initSegmentLoader(
     return request({ url,
                      headers: { Range: byteRange(segment.range) },
                      responseType: "arraybuffer",
+                     timeout: options.timeout,
                      cancelSignal,
                      onProgress: callbacks.onProgress })
       .then(data => ({ resultType: "segment-loaded",
@@ -68,6 +73,7 @@ export default function initSegmentLoader(
                      headers: { Range: byteRange([segment.range[0],
                                                   segment.indexRange[1] ]) },
                      responseType: "arraybuffer",
+                     timeout: options.timeout,
                      cancelSignal,
                      onProgress: callbacks.onProgress })
       .then(data => ({ resultType: "segment-loaded",
@@ -77,11 +83,13 @@ export default function initSegmentLoader(
   const rangeRequest$ = request({ url,
                                   headers: { Range: byteRange(segment.range) },
                                   responseType: "arraybuffer",
+                                  timeout: options.timeout,
                                   cancelSignal,
                                   onProgress: callbacks.onProgress });
   const indexRequest$ = request({ url,
                                   headers: { Range: byteRange(segment.indexRange) },
                                   responseType: "arraybuffer",
+                                  timeout: options.timeout,
                                   cancelSignal,
                                   onProgress: callbacks.onProgress });
 

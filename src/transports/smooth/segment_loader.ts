@@ -25,6 +25,7 @@ import {
 import {
   ISegmentContext,
   ISegmentLoaderCallbacks,
+  ISegmentLoaderOptions,
   ISegmentLoaderResultSegmentCreated,
   ISegmentLoaderResultSegmentLoaded,
 } from "../types";
@@ -40,6 +41,7 @@ import { isMP4EmbeddedTrack } from "./utils";
  * Segment loader triggered if there was no custom-defined one in the API.
  * @param {string} url
  * @param {Object} content
+ * @param {Object} loaderOptions
  * @param {Object} callbacks
  * @param {Object} cancelSignal
  * @param {boolean} checkMediaSegmentIntegrity
@@ -49,6 +51,7 @@ function regularSegmentLoader(
   url : string,
   content : ISegmentContext,
   callbacks : ISegmentLoaderCallbacks<Uint8Array | ArrayBuffer | null>,
+  loaderOptions : ISegmentLoaderOptions,
   cancelSignal : CancellationSignal,
   checkMediaSegmentIntegrity? : boolean | undefined
 ) : Promise<ISegmentLoaderResultSegmentLoaded<Uint8Array | ArrayBuffer | null>> {
@@ -61,6 +64,7 @@ function regularSegmentLoader(
   return request({ url,
                    responseType: "arraybuffer",
                    headers,
+                   timeout: loaderOptions.timeout,
                    cancelSignal,
                    onProgress: callbacks.onProgress })
     .then((data) => {
@@ -89,6 +93,7 @@ const generateSegmentLoader = ({
 }) => (
   url : string | null,
   content : ISegmentContext,
+  loaderOptions : ISegmentLoaderOptions,
   cancelSignal : CancellationSignal,
   callbacks : ISegmentLoaderCallbacks<Uint8Array | ArrayBuffer | null>
 ) : Promise<ISegmentLoaderResultSegmentLoaded<Uint8Array | ArrayBuffer | null> |
@@ -154,12 +159,14 @@ const generateSegmentLoader = ({
                    representation,
                    segment,
                    transport: "smooth",
+                   timeout: loaderOptions.timeout,
                    url };
 
     if (typeof customSegmentLoader !== "function") {
       return regularSegmentLoader(url,
                                   content,
                                   callbacks,
+                                  loaderOptions,
                                   cancelSignal,
                                   checkMediaSegmentIntegrity);
     }
@@ -249,6 +256,7 @@ const generateSegmentLoader = ({
         regularSegmentLoader(url,
                              content,
                              callbacks,
+                             loaderOptions,
                              cancelSignal,
                              checkMediaSegmentIntegrity)
           .then(res, rej);

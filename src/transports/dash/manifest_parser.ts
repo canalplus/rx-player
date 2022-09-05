@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../../config";
 import { formatError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
@@ -149,12 +150,15 @@ export default function generateManifestParser(
 
       const externalResources = value.urls.map(resourceUrl => {
         return scheduleRequest(() => {
+          const defaultTimeout = config.getCurrent().DEFAULT_REQUEST_TIMEOUT;
           return value.format === "string" ? request({ url: resourceUrl,
                                                        responseType: "text",
+                                                       timeout: defaultTimeout,
                                                        cancelSignal }) :
 
                                              request({ url: resourceUrl,
                                                        responseType: "arraybuffer",
+                                                       timeout: defaultTimeout,
                                                        cancelSignal });
         }).then((res) => {
           if (value.format === "string") {

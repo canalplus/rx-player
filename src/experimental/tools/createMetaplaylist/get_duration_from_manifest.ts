@@ -19,6 +19,7 @@ import {
   Observable,
   throwError,
 } from "rxjs";
+import config from "../../../config";
 import { IMetaPlaylist } from "../../../parsers/manifest/metaplaylist";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import request from "../../../utils/request/xhr";
@@ -37,9 +38,7 @@ const iso8601Duration =
  *   2. the second value is a possible error encountered while parsing this
  *      value - set to `null` if no error was encountered.
  * @param {string} val - The value to parse
- * @param {string} displayName - The name of the property. Used for error
- * formatting.
- * @returns {Array.<number | Error | null>}
+ * @returns {number | null}
  */
 function parseDuration(val : string) : number | null {
 
@@ -90,6 +89,7 @@ function getDurationFromManifest(url: string,
       canceller,
       () => request({ url,
                       responseType: "document",
+                      timeout: config.getCurrent().DEFAULT_REQUEST_TIMEOUT,
                       cancelSignal: canceller.signal })
     ).pipe(map((response) => {
       const { responseData } = response;
@@ -129,6 +129,7 @@ function getDurationFromManifest(url: string,
     canceller,
     () => request({ url,
                     responseType: "text",
+                    timeout: config.getCurrent().DEFAULT_REQUEST_TIMEOUT,
                     cancelSignal: canceller.signal })
   ).pipe(map((response) => {
     const { responseData } = response;

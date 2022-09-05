@@ -22,24 +22,27 @@ import assertUnreachable from "../../utils/assert_unreachable";
 import request from "../../utils/request";
 import { CancellationSignal } from "../../utils/task_canceller";
 import {
+  IManifestLoaderOptions,
   IRequestedData,
 } from "../types";
 import callCustomManifestLoader from "./call_custom_manifest_loader";
 
 /**
  * Manifest loader triggered if there was no custom-defined one in the API.
- * @param {string} url
- * @returns {Observable}
+ * @param {string} preferredType
+ * @returns {Function}
  */
 function generateRegularManifestLoader(
   preferredType: "arraybuffer" | "text" | "document"
 ) : (
     url : string | undefined,
+    loaderOptions : IManifestLoaderOptions,
     cancelSignal : CancellationSignal
   ) => Promise < IRequestedData<ILoadedManifestFormat> >
 {
   return function regularManifestLoader(
     url : string | undefined,
+    loaderOptions : IManifestLoaderOptions,
     cancelSignal : CancellationSignal
   ) : Promise< IRequestedData<ILoadedManifestFormat> > {
     if (url === undefined) {
@@ -51,11 +54,20 @@ function generateRegularManifestLoader(
     // So I wrote that instead, temporarily of course ;)
     switch (preferredType) {
       case "arraybuffer":
-        return request({ url, responseType: "arraybuffer", cancelSignal });
+        return request({ url,
+                         responseType: "arraybuffer",
+                         timeout: loaderOptions.timeout,
+                         cancelSignal });
       case "text":
-        return request({ url, responseType: "text", cancelSignal });
+        return request({ url,
+                         responseType: "text",
+                         timeout: loaderOptions.timeout,
+                         cancelSignal });
       case "document":
-        return request({ url, responseType: "document", cancelSignal });
+        return request({ url,
+                         responseType: "document",
+                         timeout: loaderOptions.timeout,
+                         cancelSignal });
       default:
         assertUnreachable(preferredType);
     }
@@ -72,6 +84,7 @@ export default function generateManifestLoader(
   preferredType: "arraybuffer" | "text" | "document"
 ) : (
     url : string | undefined,
+    loaderOptions : IManifestLoaderOptions,
     cancelSignal : CancellationSignal
   ) => Promise<IRequestedData<ILoadedManifestFormat>>
 {

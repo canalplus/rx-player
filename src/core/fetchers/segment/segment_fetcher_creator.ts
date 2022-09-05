@@ -135,4 +135,11 @@ export interface ISegmentFetcherCreatorBackoffOptions {
   maxRetryRegular : number | undefined;
   /** Maximum number of time a request be retried when the user is offline. */
   maxRetryOffline : number | undefined;
+  /**
+   * Timeout after which request are aborted and, depending on other options,
+   * retried.
+   * To set to `-1` for no timeout.
+   * `undefined` will lead to a default, large, timeout being used.
+   */
+  requestTimeout : number | undefined;
 }

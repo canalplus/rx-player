@@ -364,24 +364,44 @@ export interface INetworkConfigOption {
    * request before failing on Error.
    * Set to `Infinity` for an infinite number of requests.
    */
-  manifestRetry? : number;
+  manifestRetry? : number | undefined;
+
+  /**
+   * Amount of time, in milliseconds, after which a manifest request should be
+   * aborted and optionally retried, depending on the current configuration.
+   *
+   * Setting it to `-1` allows to disable any timeout.
+   * `undefined` means that a default, large, timeout will be used instead.
+   */
+  manifestRequestTimeout? : number | undefined;
+
   /**
    * The amount of time maximum we should retry a request in general when the
    * user is offline.
    * Set to `Infinity` for an infinite number of requests.
    */
-  offlineRetry? : number;
+  offlineRetry? : number | undefined;
   /**
    * The amount of time maximum we should retry a segment or segment-related
    * request before failing on Error.
    * Set to `Infinity` for an infinite number of requests.
    */
-  segmentRetry? : number;
+  segmentRetry? : number | undefined;
+
+  /**
+   * Amount of time, in milliseconds, after which a segment request should be
+   * aborted and optionally retried, depending on the current configuration.
+   *
+   * Setting it to `-1` allows to disable any timeout.
+   * `undefined` means that a default, large, timeout will be used instead.
+   */
+  segmentRequestTimeout? : number | undefined;
 }
 
 export type ISegmentLoader = (
   // first argument: infos on the segment
   infos : { url : string;
+            timeout : number | undefined;
             manifest : IManifest;
             period : IPeriod;
             adaptation : IAdaptation;
@@ -423,7 +443,11 @@ export type IManifestLoader = (
                           => void;
 
                  reject : (err? : Error) => void;
-                 fallback : () => void; }
+                 fallback : () => void; },
+
+  options : {
+    timeout : number | undefined;
+  }
 ) =>
   // returns either the aborting callback or nothing
   (() => void)|void;

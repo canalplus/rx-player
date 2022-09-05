@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import config from "../../config";
 import {
   NetworkErrorTypes,
   RequestError,
@@ -145,13 +144,13 @@ export default function fetchRequest(
     abortController.abort();
   }
 
-  const requestTimeout = isNullOrUndefined(options.timeout) ?
-    config.getCurrent().DEFAULT_REQUEST_TIMEOUT :
-    options.timeout;
-  const timeout = window.setTimeout(() => {
-    timeouted = true;
-    abortFetch();
-  }, requestTimeout);
+  let timeout : number | undefined;
+  if (options.timeout !== undefined) {
+    timeout = window.setTimeout(() => {
+      timeouted = true;
+      abortFetch();
+    }, options.timeout);
+  }
 
   const deregisterCancelLstnr = options.cancelSignal
     .register(function abortRequest(err : CancellationError) {

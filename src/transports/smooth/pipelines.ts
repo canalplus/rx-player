@@ -42,6 +42,7 @@ import {
   IRequestedData,
   ISegmentContext,
   ISegmentLoaderCallbacks,
+  ISegmentLoaderOptions,
   ISegmentLoaderResultSegmentCreated,
   ISegmentLoaderResultSegmentLoaded,
   ISegmentParserParsedInitChunk,
@@ -92,11 +93,11 @@ function addNextSegments(
   }
 }
 
-export default function(options : ITransportOptions) : ITransportPipelines {
-  const smoothManifestParser = createSmoothManifestParser(options);
-  const segmentLoader = generateSegmentLoader(options);
+export default function(transportOptions : ITransportOptions) : ITransportPipelines {
+  const smoothManifestParser = createSmoothManifestParser(transportOptions);
+  const segmentLoader = generateSegmentLoader(transportOptions);
 
-  const manifestLoaderOptions = { customManifestLoader: options.manifestLoader };
+  const manifestLoaderOptions = { customManifestLoader: transportOptions.manifestLoader };
   const manifestLoader = generateManifestLoader(manifestLoaderOptions,
                                                 "text");
 
@@ -151,9 +152,9 @@ export default function(options : ITransportOptions) : ITransportPipelines {
                                                 manifestReceivedTime);
 
       const manifest = new Manifest(parserResult, {
-        representationFilter: options.representationFilter,
-        supplementaryImageTracks: options.supplementaryImageTracks,
-        supplementaryTextTracks: options.supplementaryTextTracks,
+        representationFilter: transportOptions.representationFilter,
+        supplementaryImageTracks: transportOptions.supplementaryImageTracks,
+        supplementaryTextTracks: transportOptions.supplementaryTextTracks,
       });
       return { manifest, url };
     },
@@ -168,6 +169,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
      * Load a Smooth audio/video segment.
      * @param {string|null} url
      * @param {Object} content
+     * @param {Object} loaderOptions
      * @param {Object} cancelSignal
      * @param {Object} callbacks
      * @returns {Promise}
@@ -175,12 +177,13 @@ export default function(options : ITransportOptions) : ITransportPipelines {
     loadSegment(
       url : string | null,
       content : ISegmentContext,
+      loaderOptions : ISegmentLoaderOptions,
       cancelSignal : CancellationSignal,
       callbacks : ISegmentLoaderCallbacks<ILoadedAudioVideoSegmentFormat>
     ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedAudioVideoSegmentFormat> |
                 ISegmentLoaderResultSegmentCreated<ILoadedAudioVideoSegmentFormat>>
     {
-      return segmentLoader(url, content, cancelSignal, callbacks);
+      return segmentLoader(url, content, loaderOptions, cancelSignal, callbacks);
     },
 
     parseSegment(
@@ -256,6 +259,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
     loadSegment(
       url : string | null,
       content : ISegmentContext,
+      loaderOptions : ISegmentLoaderOptions,
       cancelSignal : CancellationSignal,
       callbacks : ISegmentLoaderCallbacks<ILoadedTextSegmentFormat>
     ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedTextSegmentFormat> |
@@ -270,6 +274,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       if (!isMP4) {
         return request({ url,
                          responseType: "text",
+                         timeout: loaderOptions.timeout,
                          cancelSignal,
                          onProgress: callbacks.onProgress })
           .then((data) => ({ resultType: "segment-loaded" as const,
@@ -277,10 +282,11 @@ export default function(options : ITransportOptions) : ITransportPipelines {
       } else {
         return request({ url,
                          responseType: "arraybuffer",
+                         timeout: loaderOptions.timeout,
                          cancelSignal,
                          onProgress: callbacks.onProgress })
           .then((data) => {
-            if (options.checkMediaSegmentIntegrity !== true) {
+            if (transportOptions.checkMediaSegmentIntegrity !== true) {
               return { resultType: "segment-loaded" as const,
                        resultData: data };
             }
@@ -443,6 +449,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
     async loadSegment(
       url : string | null,
       content : ISegmentContext,
+      loaderOptions : ISegmentLoaderOptions,
       cancelSignal : CancellationSignal,
       callbacks : ISegmentLoaderCallbacks<ILoadedImageSegmentFormat>
     ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedImageSegmentFormat> |
@@ -455,6 +462,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
 
       const data = await request({ url,
                                    responseType: "arraybuffer",
+                                   timeout: loaderOptions.timeout,
                                    onProgress: callbacks.onProgress,
                                    cancelSignal });
       return { resultType: "segment-loaded" as const,

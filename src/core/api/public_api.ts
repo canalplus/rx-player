@@ -741,21 +741,28 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
       const transportPipelines = transportFn(transportOptions);
 
-      const { offlineRetry, segmentRetry, manifestRetry } = networkConfig;
+      const { offlineRetry,
+              segmentRetry,
+              manifestRetry,
+              manifestRequestTimeout,
+              segmentRequestTimeout } = networkConfig;
 
       /** Interface used to load and refresh the Manifest. */
-      const manifestFetcher = new ManifestFetcher(url,
-                                                  transportPipelines,
-                                                  { lowLatencyMode,
-                                                    maxRetryRegular: manifestRetry,
-                                                    maxRetryOffline: offlineRetry });
+      const manifestFetcher = new ManifestFetcher(
+        url,
+        transportPipelines,
+        { lowLatencyMode,
+          maxRetryRegular: manifestRetry,
+          maxRetryOffline: offlineRetry,
+          requestTimeout:  manifestRequestTimeout });
 
       /** Interface used to download segments. */
       const segmentFetcherCreator = new SegmentFetcherCreator(
         transportPipelines,
         { lowLatencyMode,
           maxRetryOffline: offlineRetry,
-          maxRetryRegular: segmentRetry });
+          maxRetryRegular: segmentRetry,
+          requestTimeout: segmentRequestTimeout });
 
       /** Observable emitting the initial Manifest */
       let manifest$ : Observable<IManifestFetcherParsedResult |

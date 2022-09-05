@@ -20,21 +20,27 @@ import {
 } from "../../public_types";
 import request from "../../utils/request";
 import { CancellationSignal } from "../../utils/task_canceller";
-import { IRequestedData } from "../types";
+import { IManifestLoaderOptions, IRequestedData } from "../types";
 import callCustomManifestLoader from "../utils/call_custom_manifest_loader";
 
 /**
  * Manifest loader triggered if there was no custom-defined one in the API.
  * @param {string} url
+ * @param {Object} loaderOptions
+ * @param {Object} cancelSignal
  */
 function regularManifestLoader(
   url : string | undefined,
+  loaderOptions : IManifestLoaderOptions,
   cancelSignal : CancellationSignal
 ) : Promise< IRequestedData<ILoadedManifestFormat> > {
   if (url === undefined) {
     throw new Error("Cannot perform HTTP(s) request. URL not known");
   }
-  return request({ url, responseType: "text", cancelSignal });
+  return request({ url,
+                   responseType: "text",
+                   timeout: loaderOptions.timeout,
+                   cancelSignal });
 }
 
 /**
@@ -46,6 +52,7 @@ export default function generateManifestLoader(
   { customManifestLoader } : { customManifestLoader?: IManifestLoader | undefined }
 ) : (
     url : string | undefined,
+    loaderOptions : IManifestLoaderOptions,
     cancelSignal : CancellationSignal
   ) => Promise<IRequestedData<ILoadedManifestFormat>>
 {

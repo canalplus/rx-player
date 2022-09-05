@@ -92,6 +92,7 @@ export interface ITransportManifestPipeline {
    */
   loadManifest : (
     url : string | undefined,
+    options : IManifestLoaderOptions,
     cancelSignal : CancellationSignal,
   ) => Promise<IRequestedData<ILoadedManifestFormat>>;
 
@@ -195,6 +196,20 @@ export interface ITransportManifestPipeline {
   ) => Promise<string | undefined>;
 }
 
+/**
+ * Options given to the `loadManifest` method of an
+ * `ITransportManifestPipeline` to configure its behavior.
+ */
+export interface IManifestLoaderOptions {
+  /**
+   * Timeout, in milliseconds, after which a manifest request should be aborted
+   * with the corresponding error.
+   *
+   * `undefined` means that no timeout will be enforced.
+   */
+  timeout? : number | undefined;
+}
+
 /** Functions allowing to load and parse segments of any type. */
 export interface ISegmentPipeline<
   TLoadedFormat,
@@ -224,11 +239,23 @@ export interface ISegmentPipeline<
 export type ISegmentLoader<TLoadedFormat> = (
   url : string | null,
   content : ISegmentContext,
+  options : ISegmentLoaderOptions,
   cancelSignal : CancellationSignal,
   callbacks : ISegmentLoaderCallbacks<TLoadedFormat>
 ) => Promise<ISegmentLoaderResultSegmentCreated<TLoadedFormat> |
              ISegmentLoaderResultSegmentLoaded<TLoadedFormat> |
              ISegmentLoaderResultChunkedComplete>;
+
+/** Options given to an `ISegmentLoader` to configure its behavior. */
+export interface ISegmentLoaderOptions {
+  /**
+   * Timeout, in milliseconds, after which a segment request should be aborted
+   * with the corresponding error.
+   *
+   * `undefined` means that no timeout will be enforced.
+   */
+  timeout? : number | undefined;
+}
 
 /**
  * Segment parser function, allowing to parse a chunk (which may be a sub-part
