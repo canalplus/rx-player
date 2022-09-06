@@ -29,6 +29,7 @@ import {
   concat as observableConcat,
   defer as observableDefer,
   EMPTY,
+  filter,
   ignoreElements,
   merge as observableMerge,
   mergeMap,
@@ -49,7 +50,9 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
+import { areSameRepresentation } from "../../../manifest/utils";
 import assertUnreachable from "../../../utils/assert_unreachable";
+import { fromEvent } from "../../../utils/event_emitter";
 import objectAssign from "../../../utils/object_assign";
 import { createSharedReference } from "../../../utils/reference";
 import fromCancellablePromise from "../../../utils/rx-from_cancellable_promise";
@@ -161,6 +164,31 @@ export default function RepresentationStream<TSegmentDataType>({
       hasSentEncryptionData = true;
     }
   }
+
+  /**
+   * The decipherability status of a Representation can be reset during playback.
+   * The following Observable make sure that encryption metadata are sent back
+   * when it happens.
+   */
+  const reSendEncryptionData$ : Observable<IEncryptionDataEncounteredEvent> =
+    fromEvent(content.manifest, "decipherabilityUpdate").pipe(
+      filter((e) =>
+        // If encryption data was not sent yet, no need to re-send it
+        hasSentEncryptionData &&
+
+        // Only if we're talking about the current Representation and only if
+        // its decipherability status has changed for `undefined`.
+        e.some(c => c.representation.decipherable === undefined &&
+                    areSameRepresentation(c, content))),
+      mergeMap(() => {
+        const encryptionData = drmSystemId === undefined ?
+          representation.getAllEncryptionData() :
+          representation.getEncryptionData(drmSystemId);
+
+        return observableOf(...encryptionData.map(d =>
+          EVENTS.encryptionDataEncountered(d, content)));
+      }));
+
 
   /** Observable loading and pushing segments scheduled through `lastSegmentQueue`. */
   const queue$ = downloadingQueue.start()
@@ -284,7 +312,10 @@ export default function RepresentationStream<TSegmentDataType>({
     takeWhile((e) => e.type !== "stream-terminating", true)
   );
 
-  return observableMerge(status$, queue$, encryptionEvent$).pipe(share());
+  return observableMerge(status$,
+                         queue$,
+                         encryptionEvent$,
+                         reSendEncryptionData$).pipe(share());
 
   /**
    * React to event from the `DownloadingQueue`.

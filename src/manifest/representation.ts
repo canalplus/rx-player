@@ -98,6 +98,12 @@ class Representation {
 
   /**
    * Whether we are able to decrypt this Representation / unable to decrypt it or
+   * if we don't know yet.
+   */
+  public decipherabilityStatus : DecipherabilityStatus;
+
+  /**
+   * Whether we are able to decrypt this Representation / unable to decrypt it or
    * if we don't know yet:
    *   - if `true`, it means that we know we were able to decrypt this
    *     Representation in the current content.
@@ -117,6 +123,7 @@ class Representation {
     this.id = args.id;
     this.bitrate = args.bitrate;
     this.codec = args.codecs;
+    this.decipherabilityStatus = DecipherabilityStatus.Unhandled;
 
     if (args.height !== undefined) {
       this.height = args.height;
@@ -365,3 +372,34 @@ export interface IRepresentationProtectionData {
 }
 
 export default Representation;
+
+export const enum DecipherabilityStatus {
+  /**
+   * Default value, when no step has been taken for now (or are still pending)
+   * to decipher the corresponding content.
+   *
+   * This status is also the one applied to unencrypted contents.
+   *
+   * Note that a DecipherabilityStatus previously set to another value than
+   * `Unhandled` can be reset to `Unhandled`, for example when the corresponding
+   * steps taken to decipher the content have been disposed.
+   */
+  Unhandled = "unhandled",
+  /**
+   * Value when steps have been taken to decipher the content, though it is not
+   * known whether this led to a Decipherable or Undecipherable status.
+   *
+   * Under this value, you can only assume what the decryption status is,
+   * depending on what you want to do.
+   */
+  Unknown = "unknown",
+  /**
+   * Value when the corresponding content is known to be currently decipherable.
+   */
+  Decipherable = "decipherable",
+  /**
+   * Value when the corresponding content is known to be currently
+   * undecipherable.
+   */
+  Undecipherable = "undecipherable",
+}
