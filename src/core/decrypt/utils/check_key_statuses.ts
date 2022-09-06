@@ -100,7 +100,8 @@ export default function checkKeyStatuses(
       case KEY_STATUSES.EXPIRED: {
         const error = new EncryptedMediaError(
           "KEY_STATUS_CHANGE_ERROR",
-          `A decryption key expired (${bytesToHex(keyId)})`);
+          `A decryption key expired (${bytesToHex(keyId)})`,
+          { keyStatus });
 
         if (throwOnLicenseExpiration !== false) {
           throw error;
@@ -113,7 +114,8 @@ export default function checkKeyStatuses(
       case KEY_STATUSES.INTERNAL_ERROR: {
         const error = new EncryptedMediaError(
           "KEY_STATUS_CHANGE_ERROR",
-          `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`);
+          `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`,
+          { keyStatus });
         if (fallbackOn.keyInternalError !== true) {
           throw error;
         }
@@ -125,7 +127,8 @@ export default function checkKeyStatuses(
       case KEY_STATUSES.OUTPUT_RESTRICTED: {
         const error = new EncryptedMediaError(
           "KEY_STATUS_CHANGE_ERROR",
-          `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`);
+          `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`,
+          { keyStatus });
         if (fallbackOn.keyOutputRestricted !== true) {
           throw error;
         }
