@@ -177,8 +177,7 @@ export default class PersistentSessionsStore {
 
   /**
    * Delete stored MediaKeySession information based on its session id.
-   * @param {Uint8Array}  initData
-   * @param {string|undefined} initDataType
+   * @param {string} sessionId
    */
   public delete(sessionId : string) : void {
     let index = -1;
