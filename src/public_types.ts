@@ -553,8 +553,7 @@ export interface IKeySystemOption {
   onKeyExpiration? : "throw" |
                      "continue" |
                      "fallback" |
-                     "close-session" |
-                     "new-session";
+                     "close-session";
 
   /**
    * If set to `true`, the RxPlayer will close and re-create a DRM session (and

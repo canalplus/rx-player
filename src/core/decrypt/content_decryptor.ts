@@ -525,7 +525,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
             updateDecipherability(initializationData.content.manifest,
                                   linkedKeys.whitelisted,
                                   linkedKeys.blacklisted,
-                                  evt.value.unlistedKeyIds);
+                                  []);
           }
 
           this._unlockInitDataQueue();

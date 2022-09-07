@@ -82,8 +82,7 @@ export default function checkKeyStatuses(
   keySystem: string
 ) : { warnings : IEMEWarningEvent[];
       blacklistedKeyIds : Uint8Array[];
-      whitelistedKeyIds : Uint8Array[];
-      unlistedKeyIds : Uint8Array[]; }
+      whitelistedKeyIds : Uint8Array[]; }
 {
   const { fallbackOn = {},
           throwOnLicenseExpiration,
@@ -91,7 +90,6 @@ export default function checkKeyStatuses(
   const warnings : IEMEWarningEvent[] = [];
   const blacklistedKeyIds : Uint8Array[] = [];
   const whitelistedKeyIds : Uint8Array[] = [];
-  const unlistedKeyIds : Uint8Array[] = [];
 
   (session.keyStatuses.forEach as IKeyStatusesForEach)((
     _arg1 : unknown,
@@ -124,9 +122,6 @@ export default function checkKeyStatuses(
             throw new ClosingConditionSessionError([error]);
           case "fallback":
             blacklistedKeyIds.push(keyId);
-            break;
-          case "new-session":
-            unlistedKeyIds.push(keyId);
             break;
           default:
             // I weirdly stopped relying on switch-cases here due to some TypeScript
@@ -176,16 +171,7 @@ export default function checkKeyStatuses(
     }
   });
 
-  // If all remaining key ids are now unlisted, we do not need this session
-  // anymore
-  if (whitelistedKeyIds.length === 0 &&
-      blacklistedKeyIds.length === 0 &&
-      unlistedKeyIds.length > 0)
-  {
-    throw new ClosingConditionSessionError(warnings.map((w => w.value)));
-  }
   return { warnings,
            blacklistedKeyIds,
-           whitelistedKeyIds,
-           unlistedKeyIds };
+           whitelistedKeyIds };
 }
