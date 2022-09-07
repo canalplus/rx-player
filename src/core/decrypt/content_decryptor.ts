@@ -497,7 +497,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
             options.singleLicensePer,
             sessionInfo.source === MediaKeySessionLoadingType.Created,
             evt.value.whitelistedKeyIds,
-            evt.value.blacklistedKeyIDs);
+            evt.value.blacklistedKeyIds);
 
           sessionInfo.record.associateKeyIds(linkedKeys.whitelisted);
           sessionInfo.record.associateKeyIds(linkedKeys.blacklisted);
@@ -693,13 +693,23 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     return false;
   }
 
-  private _onFatalError(err : unknown) {
+  /**
+   * Callback that should be called if an error that made the current
+   * `ContentDecryptor` instance unusable arised.
+   * This callbacks takes care of resetting state and sending the right events.
+   *
+   * Once called, no further actions should be taken.
+   *
+   * @param {*} err - The error object which describes the issue. Will be
+   * formatted and sent in an "error" event.
+   */
+  private _onFatalError(err : unknown) : void {
     if (this._canceller.isUsed) {
       return;
     }
     const formattedErr = err instanceof Error ?
       err :
-      new OtherError("NONE", "Unknown encryption error");
+      new OtherError("NONE", "Unknown decryption error");
     this.error = formattedErr;
     this._initDataQueue.length = 0;
     this._stateData = { state: ContentDecryptorState.Error,
@@ -725,7 +735,11 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
            this._stateData.state === ContentDecryptorState.Error;
   }
 
-  private _processCurrentInitDataQueue() {
+  /**
+   * Start processing the next initialization data of the `_initDataQueue` if it
+   * isn't lock.
+   */
+  private _processCurrentInitDataQueue() : void {
     while (this._stateData.isInitDataQueueLocked === false) {
       const initData = this._initDataQueue.shift();
       if (initData === undefined) {
@@ -735,13 +749,25 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     }
   }
 
-  private _lockInitDataQueue() {
+  /**
+   * Lock new initialization data (from the `_initDataQueue`) from being
+   * processed until `_unlockInitDataQueue` is called.
+   *
+   * You may want to call this method when performing operations which may have
+   * an impact on the handling of other initialization data.
+   */
+  private _lockInitDataQueue() : void {
     if (this._stateData.isInitDataQueueLocked === false) {
       this._stateData.isInitDataQueueLocked = true;
     }
   }
 
-  private _unlockInitDataQueue() {
+  /**
+   * Unlock `_initDataQueue` and start processing the first element.
+   *
+   * Should have no effect if the `_initDataQueue` was not locked.
+   */
+  private _unlockInitDataQueue() : void {
     if (this._stateData.isMediaKeysAttached !== true) {
       log.error("DRM: Trying to unlock in the wrong state");
       return;
@@ -765,10 +791,24 @@ function canCreatePersistentSession(
          arrayIncludes(sessionTypes, "persistent-license");
 }
 
+/**
+ * Change the decipherability of Representations which have their key id in one
+ * of the given Arrays:
+ *
+ *   - Those who have a key id listed in `whitelistedKeyIds` will have their
+ *     decipherability updated to `true`
+ *
+ *   - Those who have a key id listed in `blacklistedKeyIds` will have their
+ *     decipherability updated to `false`
+ *
+ * @param {Object} manifest
+ * @param {Array.<Uint8Array>} whitelistedKeyIds
+ * @param {Array.<Uint8Array>} blacklistedKeyIds
+ */
 function updateDecipherability(
   manifest : Manifest,
   whitelistedKeyIds : Uint8Array[],
-  blacklistedKeyIDs : Uint8Array[]
+  blacklistedKeyIds : Uint8Array[]
 ) : void {
   manifest.updateRepresentationsDeciperability((representation) => {
     if (representation.contentProtections === undefined) {
@@ -778,8 +818,8 @@ function updateDecipherability(
     if (contentKIDs !== undefined) {
       for (let i = 0; i < contentKIDs.length; i++) {
         const elt = contentKIDs[i];
-        for (let j = 0; j < blacklistedKeyIDs.length; j++) {
-          if (areKeyIdsEqual(blacklistedKeyIDs[j], elt.keyId)) {
+        for (let j = 0; j < blacklistedKeyIds.length; j++) {
+          if (areKeyIdsEqual(blacklistedKeyIds[j], elt.keyId)) {
             return false;
           }
         }
@@ -794,6 +834,12 @@ function updateDecipherability(
   });
 }
 
+/**
+ * Update decipherability to `false` to any Representation which is linked to
+ * the given initialization data.
+ * @param {Object} manifest
+ * @param {Object} initData
+ */
 function blackListProtectionData(
   manifest : Manifest,
   initData : IProcessedProtectionData
@@ -1175,6 +1221,12 @@ function getKeyIdsLinkedToSession(
            blacklisted: associatedKeyIds.slice(usableKeyIds.length) };
 }
 
+/**
+ * Push all kei ids in the given `set` and add it to the `arr` Array only if it
+ * isn't already present in it.
+ * @param {Set.<Uint8Array>} set
+ * @param {Array.<Uint8Array>} arr
+ */
 function mergeKeyIdSetIntoArray(
   set : Set<Uint8Array>,
   arr : Uint8Array[]
@@ -1188,6 +1240,11 @@ function mergeKeyIdSetIntoArray(
   }
 }
 
+/**
+ * Add to the given `set` all key ids found in the given `Period`.
+ * @param {Set.<Uint8Array>} set
+ * @param {Object} period
+ */
 function addKeyIdsFromPeriod(
   set : Set<Uint8Array>,
   period : Period

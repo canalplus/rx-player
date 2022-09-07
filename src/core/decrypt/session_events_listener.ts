@@ -207,14 +207,14 @@ function getKeyStatusesEvents(
     if (session.keyStatuses.size === 0) {
       return EMPTY;
     }
-    const { warnings, blacklistedKeyIDs, whitelistedKeyIds } =
+    const { warnings, blacklistedKeyIds, whitelistedKeyIds } =
       checkKeyStatuses(session, options, keySystem);
 
     const warnings$ = warnings.length > 0 ? observableOf(...warnings) :
                                             EMPTY;
     const keysUpdate$ = observableOf({ type : "keys-update" as const,
                                        value : { whitelistedKeyIds,
-                                                 blacklistedKeyIDs } });
+                                                 blacklistedKeyIds } });
     return observableConcat(warnings$, keysUpdate$);
   });
 }
@@ -338,7 +338,7 @@ function getLicenseBackoffOptions(
  *
  * We put them in two different list:
  *
- *   - `blacklistedKeyIDs`: Those key ids won't be used for decryption and the
+ *   - `blacklistedKeyIds`: Those key ids won't be used for decryption and the
  *     corresponding media it decrypts should not be pushed to the buffer
  *     Note that a blacklisted key id can become whitelisted in the future.
  *
@@ -369,10 +369,10 @@ export interface IKeyUpdateValue {
    * Reasons for blacklisting a keys depend on options, but mainly involve unmet
    * output restrictions and CDM internal errors linked to that key id.
    */
-  blacklistedKeyIDs : Uint8Array[];
+  blacklistedKeyIds : Uint8Array[];
   /*
    * The list of key id linked to that session which are not blacklisted.
-   * Together with `blacklistedKeyIDs` it regroups all key ids linked to the
+   * Together with `blacklistedKeyIds` it regroups all key ids linked to the
    * session.
    */
   whitelistedKeyIds : Uint8Array[];

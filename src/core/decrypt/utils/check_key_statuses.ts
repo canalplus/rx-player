@@ -75,11 +75,11 @@ export default function checkKeyStatuses(
   options: IKeyStatusesCheckingOptions,
   keySystem: string
 ) : { warnings : IEMEWarningEvent[];
-      blacklistedKeyIDs : Uint8Array[];
+      blacklistedKeyIds : Uint8Array[];
       whitelistedKeyIds : Uint8Array[]; }
 {
   const warnings : IEMEWarningEvent[] = [];
-  const blacklistedKeyIDs : Uint8Array[] = [];
+  const blacklistedKeyIds : Uint8Array[] = [];
   const whitelistedKeyIds : Uint8Array[] = [];
   const { fallbackOn = {}, throwOnLicenseExpiration } = options;
 
@@ -118,7 +118,7 @@ export default function checkKeyStatuses(
           throw error;
         }
         warnings.push({ type: "warning", value: error });
-        blacklistedKeyIDs.push(keyId);
+        blacklistedKeyIds.push(keyId);
         break;
       }
 
@@ -130,7 +130,7 @@ export default function checkKeyStatuses(
           throw error;
         }
         warnings.push({ type: "warning", value: error });
-        blacklistedKeyIDs.push(keyId);
+        blacklistedKeyIds.push(keyId);
         break;
       }
 
@@ -139,5 +139,5 @@ export default function checkKeyStatuses(
         break;
     }
   });
-  return { warnings, blacklistedKeyIDs, whitelistedKeyIds };
+  return { warnings, blacklistedKeyIds, whitelistedKeyIds };
 }
