@@ -840,6 +840,9 @@ function canCreatePersistentSession(
  *   - Those who have a key id listed in `blacklistedKeyIds` will have their
  *     decipherability updated to `false`
  *
+ *   - Those who have a key id listed in `delistedKeyIds` will have their
+ *     decipherability updated to `undefined`.
+ *
  * @param {Object} manifest
  * @param {Array.<Uint8Array>} whitelistedKeyIds
  * @param {Array.<Uint8Array>} blacklistedKeyIds
