@@ -23,7 +23,6 @@ import {
 import config from "../../config";
 import {
   EncryptedMediaError,
-  ErrorCodes,
   OtherError,
 } from "../../errors";
 import log from "../../log";
@@ -55,6 +54,7 @@ import {
   MediaKeySessionLoadingType,
   IProcessedProtectionData,
 } from "./types";
+import { ClosingConditionSessionError } from "./utils/check_key_statuses";
 import cleanOldStoredPersistentInfo from "./utils/clean_old_stored_persistent_info";
 import getDrmSystemId from "./utils/get_drm_system_id";
 import InitDataValuesContainer from "./utils/init_data_values_container";
@@ -525,18 +525,15 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
             updateDecipherability(initializationData.content.manifest,
                                   linkedKeys.whitelisted,
                                   linkedKeys.blacklisted,
-                                  []);
+                                  evt.value.unlistedKeyIds);
           }
 
           this._unlockInitDataQueue();
         },
 
         error: (err) => {
-          if (err instanceof EncryptedMediaError &&
-              err.code === ErrorCodes.KEY_STATUS_CHANGE_ERROR &&
-              err.keyStatus === "expired")
-          {
-            log.warn("DRM: A session expired, trying to re-create if from scratch");
+          if (err instanceof ClosingConditionSessionError) {
+            log.warn("DRM: A session's closing condition has been triggered");
             this._lockInitDataQueue();
             const indexOf = this._currentSessions.indexOf(sessionInfo);
             if (indexOf >= 0) {
@@ -562,7 +559,12 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
               .catch((retryError) => {
                 this._onFatalError(retryError);
               });
-            this.trigger("warning", err);
+
+            err.reasons.forEach(reason => {
+              if (!this._isStopped()) {
+                this.trigger("warning", reason);
+              }
+            });
             return;
           }
           if (!(err instanceof BlacklistedSessionError)) {

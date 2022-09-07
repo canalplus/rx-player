@@ -549,6 +549,37 @@ export interface IKeySystemOption {
      */
     keyOutputRestricted? : boolean;
   };
+
+  onKeyExpiration? : "throw" |
+                     "continue" |
+                     "fallback" |
+                     "close-session" |
+                     "new-session";
+
+  /**
+   * If set to `true`, the RxPlayer will close and re-create a DRM session (and
+   * thus re-download the corresponding license) if any of the key associated to
+   * this session expired. It should do so in an efficient manner, only
+   * reloading the license when the corresponding content plays.
+   *
+   * This effectively means reloading licenses when any of its key expires,
+   * even if the content is currently playing.
+   *
+   * You can thus set this option to `true` if the license you load may expire
+   * without being renewed (some license have a renewal concepts, in which case
+   * this option may not be necessary), and if you want to just reload the
+   * license without interrupting the content (beside a potential brief
+   * rebuffering Period as the license is reloaded).
+   *
+   * However note multiple reasons NOT TO set this option to `true`:
+   *
+   *   - A license will be re-downloaded even if only one of its key expired.
+   *
+   *     As such, you should only set this option
+   *
+   * Note that on peculiar devices, this behavior may lead to issues.
+   */
+  recreateSessionOnKeyExpiration? : boolean;
 }
 
 /**

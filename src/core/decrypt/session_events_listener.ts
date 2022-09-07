@@ -207,14 +207,17 @@ function getKeyStatusesEvents(
     if (session.keyStatuses.size === 0) {
       return EMPTY;
     }
-    const { warnings, blacklistedKeyIds, whitelistedKeyIds } =
-      checkKeyStatuses(session, options, keySystem);
+    const { warnings,
+            blacklistedKeyIds,
+            whitelistedKeyIds,
+            unlistedKeyIds } = checkKeyStatuses(session, options, keySystem);
 
     const warnings$ = warnings.length > 0 ? observableOf(...warnings) :
                                             EMPTY;
     const keysUpdate$ = observableOf({ type : "keys-update" as const,
                                        value : { whitelistedKeyIds,
-                                                 blacklistedKeyIds } });
+                                                 blacklistedKeyIds,
+                                                 unlistedKeyIds } });
     return observableConcat(warnings$, keysUpdate$);
   });
 }
@@ -270,8 +273,9 @@ function updateSessionWithMessage(
 }
 
 /**
- * @param {MediaKeySession}
- * @param {Object} keySystem
+ * @param {MediaKeySession} session
+ * @param {Object} keySystemOptions
+ * @param {string} keySystem
  * @param {Event} keyStatusesEvent
  * @returns {Observable}
  */
@@ -334,17 +338,8 @@ function getLicenseBackoffOptions(
 }
 
 /**
- * Some key ids have updated their status.
- *
- * We put them in two different list:
- *
- *   - `blacklistedKeyIds`: Those key ids won't be used for decryption and the
- *     corresponding media it decrypts should not be pushed to the buffer
- *     Note that a blacklisted key id can become whitelisted in the future.
- *
- *   - `whitelistedKeyIds`: Those key ids were found and their corresponding
- *     keys are now being considered for decryption.
- *     Note that a whitelisted key id can become blacklisted in the future.
+ * Some key ids related to the current MediaKeySession have updated their
+ * statuses.
  *
  * Note that each `IKeysUpdateEvent` is independent of any other.
  *
@@ -352,7 +347,7 @@ function getLicenseBackoffOptions(
  * one, as it can for example be linked to a whole other decryption session.
  *
  * However, if a key id is encountered in both an older and a newer
- * `IKeysUpdateEvent`, only the older status should be considered.
+ * `IKeysUpdateEvent`, only the newer, updated, status should be considered.
  */
 export interface IKeysUpdateEvent {
   type: "keys-update";
@@ -362,20 +357,47 @@ export interface IKeysUpdateEvent {
 /** Information on key ids linked to a MediaKeySession. */
 export interface IKeyUpdateValue {
   /**
-   * The list of key ids that are blacklisted.
-   * As such, their corresponding keys won't be used by that session, despite
-   * the fact that they were part of the pushed license.
+   * The list of key ids linked to the corresponding MediaKeySession that are
+   * now "blacklisted", i.e. the decryption keys they are linked to are blocked
+   * from ever being used anymore.
    *
-   * Reasons for blacklisting a keys depend on options, but mainly involve unmet
-   * output restrictions and CDM internal errors linked to that key id.
+   * Blacklisted key ids correspond to keys linked to a MediaKeySession that
+   * cannot and should not be used, due to various reasons, which mainly involve
+   * unmet output restrictions and CDM internal errors linked to that key.
+   *
+   * Content linked to key ids in `blacklistedKeyIds` should be refrained from
+   * being used.
+   *
+   * Note that a key id may only be blacklisted temporarily.
    */
   blacklistedKeyIds : Uint8Array[];
   /*
-   * The list of key id linked to that session which are not blacklisted.
-   * Together with `blacklistedKeyIds` it regroups all key ids linked to the
-   * session.
+   * The list of key ids linked to the corresponding MediaKeySession that are
+   * now "whitelisted", i.e. the decryption keys they are linked to can be used
+   * to decrypt content.
+   *
+   * Content linked to key ids in `whitelistedKeyIds` should be safe to play.
+   *
+   * Note that a key id may only be whitelisted temporarily.
    */
   whitelistedKeyIds : Uint8Array[];
+  /**
+   * The list of key ids linked to the corresponding MediaKeySession that are
+   * "unlisted", i.e. the decryption keys they are linked to cannot be used to
+   * decrypt content through the corresponding MediaKeySession, and through it
+   * only.
+   *
+   * Keys from the corresponding MediaKeySession linked to key ids in
+   * `unlistedKeyIds` are in effect not able to decrypt linked content, but in
+   * opposition to `blacklistedKeyIds`, this status only concerns the current
+   * MediaKeySession (whereas `blacklistedKeyIds` assumes the impossibility
+   * to use the corresponding key in general, even through another
+   * MediaKeySession).
+   *
+   * In consequence, another MediaKeySession may be created if wanted to reload
+   * a key whose key id is present in `unlistedKeyIds`.
+   */
+  unlistedKeyIds : Uint8Array[];
 }
 
 /** Emitted after the `onKeyStatusesChange` callback has been called. */
