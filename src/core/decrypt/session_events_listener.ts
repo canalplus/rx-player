@@ -209,15 +209,13 @@ function getKeyStatusesEvents(
     }
     const { warnings,
             blacklistedKeyIds,
-            whitelistedKeyIds,
-            unlistedKeyIds } = checkKeyStatuses(session, options, keySystem);
+            whitelistedKeyIds } = checkKeyStatuses(session, options, keySystem);
 
     const warnings$ = warnings.length > 0 ? observableOf(...warnings) :
                                             EMPTY;
     const keysUpdate$ = observableOf({ type : "keys-update" as const,
                                        value : { whitelistedKeyIds,
-                                                 blacklistedKeyIds,
-                                                 unlistedKeyIds } });
+                                                 blacklistedKeyIds } });
     return observableConcat(warnings$, keysUpdate$);
   });
 }
@@ -381,23 +379,6 @@ export interface IKeyUpdateValue {
    * Note that a key id may only be whitelisted temporarily.
    */
   whitelistedKeyIds : Uint8Array[];
-  /**
-   * The list of key ids linked to the corresponding MediaKeySession that are
-   * "unlisted", i.e. the decryption keys they are linked to cannot be used to
-   * decrypt content through the corresponding MediaKeySession, and through it
-   * only.
-   *
-   * Keys from the corresponding MediaKeySession linked to key ids in
-   * `unlistedKeyIds` are in effect not able to decrypt linked content, but in
-   * opposition to `blacklistedKeyIds`, this status only concerns the current
-   * MediaKeySession (whereas `blacklistedKeyIds` assumes the impossibility
-   * to use the corresponding key in general, even through another
-   * MediaKeySession).
-   *
-   * In consequence, another MediaKeySession may be created if wanted to reload
-   * a key whose key id is present in `unlistedKeyIds`.
-   */
-  unlistedKeyIds : Uint8Array[];
 }
 
 /** Emitted after the `onKeyStatusesChange` callback has been called. */
