@@ -31,6 +31,7 @@ import {
   tap,
   takeUntil,
   timeout,
+  timer,
   TimeoutError,
 } from "rxjs";
 import {
@@ -99,13 +100,24 @@ export default function SessionEventsListener(
   const keyErrors = onKeyError$(session).pipe(map((error) : never => {
     throw new EncryptedMediaError("KEY_ERROR", error.type);
   }));
+  let lastEvent : Event | undefined;
+  const timer$ = timer(10000)
+    .pipe(mergeMap(function () {
+      if (lastEvent !== undefined) {
+        return handleKeyStatusesChangeEvent(
+          session, keySystemOptions, keySystem, lastEvent, true);
+      }
+      return EMPTY;
+    }));
 
   const keyStatusesChange$ = onKeyStatusesChange$(session)
-    .pipe(mergeMap((keyStatusesEvent: Event) =>
-      handleKeyStatusesChangeEvent(session,
-                                   keySystemOptions,
-                                   keySystem,
-                                   keyStatusesEvent)));
+    .pipe(mergeMap((keyStatusesEvent: Event) => {
+      lastEvent  = keyStatusesEvent;
+      return handleKeyStatusesChangeEvent(session,
+                                          keySystemOptions,
+                                          keySystem,
+                                          keyStatusesEvent);
+    }));
 
   const keyMessages$ : Observable<IEMEWarningEvent |
                                   IKeyMessageHandledEvent > =
@@ -150,7 +162,7 @@ export default function SessionEventsListener(
         }));
     }));
 
-  const sessionUpdates = observableMerge(keyMessages$, keyStatusesChange$)
+  const sessionUpdates = observableMerge(keyMessages$, keyStatusesChange$, timer$)
     .pipe(concatMap((
       evt : IEMEWarningEvent |
             IKeyMessageHandledEvent |
@@ -201,7 +213,8 @@ export default function SessionEventsListener(
 function getKeyStatusesEvents(
   session : MediaKeySession | ICustomMediaKeySession,
   options : IKeyStatusesCheckingOptions,
-  keySystem : string
+  keySystem : string,
+  toto? : true | undefined
 ) : Observable<IEMEWarningEvent | IKeysUpdateEvent> {
   return observableDefer(() => {
     if (session.keyStatuses.size === 0) {
@@ -209,7 +222,7 @@ function getKeyStatusesEvents(
     }
     const { warnings,
             blacklistedKeyIds,
-            whitelistedKeyIds } = checkKeyStatuses(session, options, keySystem);
+            whitelistedKeyIds } = checkKeyStatuses(session, options, keySystem, toto);
 
     const warnings$ = warnings.length > 0 ? observableOf(...warnings) :
                                             EMPTY;
@@ -281,7 +294,8 @@ function handleKeyStatusesChangeEvent(
   session : MediaKeySession | ICustomMediaKeySession,
   keySystemOptions : IKeySystemOption,
   keySystem : string,
-  keyStatusesEvent : Event
+  keyStatusesEvent : Event,
+  toto? : true | undefined
 ) : Observable<IKeyStatusChangeHandledEvent | IKeysUpdateEvent | IEMEWarningEvent> {
   log.info("DRM: keystatuseschange event received", session.sessionId);
   const callback$ = observableDefer(() => {
@@ -306,7 +320,7 @@ function handleKeyStatusesChangeEvent(
       throw err;
     })
   );
-  return observableMerge(getKeyStatusesEvents(session, keySystemOptions, keySystem),
+  return observableMerge(getKeyStatusesEvents(session, keySystemOptions, keySystem, toto),
                          callback$);
 }
 
