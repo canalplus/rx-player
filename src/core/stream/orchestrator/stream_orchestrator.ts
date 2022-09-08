@@ -39,6 +39,7 @@ import config from "../../../config";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
 import Manifest, {
+  IDecipherabilityUpdateElement,
   Period,
 } from "../../../manifest";
 import deferSubscriptions from "../../../utils/defer_subscriptions";
@@ -73,7 +74,7 @@ import {
 } from "../types";
 import ActivePeriodEmitter from "./active_period_emitter";
 import areStreamsComplete from "./are_streams_complete";
-import getBlacklistedRanges from "./get_blacklisted_ranges";
+import getTimeRangesForContent from "./get_time_ranges_for_content";
 
 // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
 // first type parameter as `any` instead of the perfectly fine `unknown`,
@@ -310,71 +311,105 @@ export default function StreamOrchestrator(
       })
     );
 
-    // Free the buffer of undecipherable data
     const handleDecipherabilityUpdate$ = fromEvent(manifest, "decipherabilityUpdate")
-      .pipe(mergeMap((updates) => {
-        const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
-        const ofCurrentType = updates
-          .filter(update => update.adaptation.type === bufferType);
-        if (ofCurrentType.length === 0 || segmentBufferStatus.type !== "initialized") {
-          return EMPTY; // no need to stop the current Streams.
-        }
-        const undecipherableUpdates = ofCurrentType.filter(update =>
-          update.representation.decipherable === false);
-        const segmentBuffer = segmentBufferStatus.value;
-        const rangesToClean = getBlacklistedRanges(segmentBuffer, undecipherableUpdates);
-        if (rangesToClean.length === 0) {
-          // Nothing to clean => no buffer to flush.
-          return EMPTY;
-        }
+      .pipe(mergeMap(onDecipherabilityUpdates));
 
-        // We have to remove the undecipherable media data and then ask the
-        // current media element to be "flushed"
+    return observableMerge(restartStreamsWhenOutOfBounds$,
+                           handleDecipherabilityUpdate$,
+                           launchConsecutiveStreamsForPeriod(basePeriod));
 
-        enableOutOfBoundsCheck = false;
-        destroyStreams$.next();
+    function onDecipherabilityUpdates(
+      updates : IDecipherabilityUpdateElement[]
+    ) : Observable<IStreamOrchestratorEvent> {
+      const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
+      const ofCurrentType = updates
+        .filter(update => update.adaptation.type === bufferType);
+      if (ofCurrentType.length === 0 || segmentBufferStatus.type !== "initialized") {
+        return EMPTY; // no need to stop the current Streams.
+      }
 
-        return observableConcat(
-          ...rangesToClean.map(({ start, end }) => {
-            if (start >= end) {
-              return EMPTY;
-            }
-            const canceller = new TaskCanceller();
-            return fromCancellablePromise(canceller, () => {
-              return segmentBuffer.removeBuffer(start, end, canceller.signal);
-            }).pipe(ignoreElements());
-          }),
+      const segmentBuffer = segmentBufferStatus.value;
+      const resettedContent = ofCurrentType.filter(update =>
+        update.representation.decipherable === undefined);
+      const undecipherableContent = ofCurrentType.filter(update =>
+        update.representation.decipherable === false);
 
-          // Schedule micro task before checking the last playback observation
-          // to reduce the risk of race conditions where the next observation
-          // was going to be emitted synchronously.
-          nextTickObs().pipe(ignoreElements()),
-          playbackObserver.getReference().asObservable().pipe(
-            take(1),
-            mergeMap((observation) => {
+      /**
+       * Time ranges now containing undecipherable content.
+       * Those should first be removed and, depending on the platform, may
+       * need Supplementary actions as playback issues may remain even after
+       * removal.
+       */
+      const undecipherableRanges = getTimeRangesForContent(segmentBuffer,
+                                                           undecipherableContent);
+
+      /**
+       * Time ranges now containing content whose decipherability status came
+       * back to being unknown.
+       * To simplify its handling, those are just removed from the buffer.
+       * Less considerations have to be taken than for the `undecipherableRanges`.
+       */
+      const rangesToRemove = getTimeRangesForContent(segmentBuffer,
+                                                     resettedContent);
+      if (undecipherableRanges.length === 0 && rangesToRemove.length === 0) {
+        return EMPTY; // Nothing to do
+      }
+
+      // First close all Stream currently active so they don't continue to
+      // load and push segments.
+      enableOutOfBoundsCheck = false;
+      destroyStreams$.next();
+
+      /** Remove from the `SegmentBuffer` all the concerned time ranges. */
+      const cleanOperations = [...undecipherableRanges, ...rangesToRemove]
+        .map(({ start, end }) => {
+          if (start >= end) {
+            return EMPTY;
+          }
+          const canceller = new TaskCanceller();
+          return fromCancellablePromise(canceller, () => {
+            return segmentBuffer.removeBuffer(start, end, canceller.signal);
+          }).pipe(ignoreElements());
+        });
+
+      return observableConcat(
+        ...cleanOperations,
+
+        // Schedule micro task before checking the last playback observation
+        // to reduce the risk of race conditions where the next observation
+        // was going to be emitted synchronously.
+        nextTickObs().pipe(ignoreElements()),
+        playbackObserver.getReference().asObservable().pipe(
+          take(1),
+          mergeMap((observation) => {
+            const restartStream$ = observableDefer(() => {
+              const lastPosition = observation.position.pending ??
+                observation.position.last;
+              const newInitialPeriod = manifest.getPeriodForTime(lastPosition);
+              if (newInitialPeriod == null) {
+                throw new MediaError(
+                  "MEDIA_TIME_NOT_FOUND",
+                  "The wanted position is not found in the Manifest.");
+              }
+              return launchConsecutiveStreamsForPeriod(newInitialPeriod);
+            });
+
+
+            if (needsFlushingAfterClean(observation, undecipherableRanges)) {
               const shouldAutoPlay = !(observation.paused.pending ??
                                        playbackObserver.getIsPaused());
               return observableConcat(
                 observableOf(EVENTS.needsDecipherabilityFlush(observation.position.last,
                                                               shouldAutoPlay,
                                                               observation.duration)),
-                observableDefer(() => {
-                  const lastPosition = observation.position.pending ??
-                                       observation.position.last;
-                  const newInitialPeriod = manifest.getPeriodForTime(lastPosition);
-                  if (newInitialPeriod == null) {
-                    throw new MediaError(
-                      "MEDIA_TIME_NOT_FOUND",
-                      "The wanted position is not found in the Manifest.");
-                  }
-                  return launchConsecutiveStreamsForPeriod(newInitialPeriod);
-                }));
-            })));
-      }));
-
-    return observableMerge(restartStreamsWhenOutOfBounds$,
-                           handleDecipherabilityUpdate$,
-                           launchConsecutiveStreamsForPeriod(basePeriod));
+                restartStream$);
+            } else if (needsFlushingAfterClean(observation, rangesToRemove)) {
+              return observableConcat(observableOf(EVENTS.needsBufferFlush()),
+                                      restartStream$);
+            }
+            return restartStream$;
+          })));
+    }
   }
 
   /**
@@ -495,4 +530,30 @@ export default function StreamOrchestrator(
                            nextPeriodStream$,
                            destroyAll$.pipe(ignoreElements()));
   }
+}
+
+/**
+ * Returns `true` if low-level buffers have to be "flushed" after the given
+ * `cleanedRanges` time ranges have been removed from an audio or video
+ * SourceBuffer, to prevent playback issues.
+ * @param {Object} observation
+ * @param {Array.<Object>} cleanedRanges
+ * @returns {boolean}
+ */
+function needsFlushingAfterClean(
+  observation : IStreamOrchestratorPlaybackObservation,
+  cleanedRanges : Array<{ start: number; end: number }>
+) : boolean {
+  if (cleanedRanges.length === 0) {
+    return false;
+  }
+  const curPos = observation.position.last;
+
+  // Based on the playback direction, we just check whether we may encounter
+  // the corresponding ranges, without seeking or re-switching playback
+  // direction which is expected to lead to a low-level flush anyway.
+  // There's a 5 seconds security, just to be sure.
+  return observation.speed >= 0 ?
+    cleanedRanges[cleanedRanges.length - 1] .end >= curPos - 5 :
+    cleanedRanges[0].start <= curPos + 5;
 }

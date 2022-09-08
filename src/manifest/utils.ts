@@ -16,7 +16,6 @@
 
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import Adaptation from "./adaptation";
-import Manifest from "./manifest";
 import Period from "./period";
 import Representation from "./representation";
 import { ISegment } from "./representation_index";
@@ -26,30 +25,6 @@ export interface IBufferedChunkInfos { adaptation : Adaptation;
                                        period : Period;
                                        representation : Representation;
                                        segment : ISegment; }
-
-/** All information allowing to compare if two Representation are the same. */
-export interface IRepresentationContext {
-  manifest : Manifest;
-  period : Period;
-  adaptation : Adaptation;
-  representation : Representation;
-}
-
-/**
- * Check if two Representation are the same.
- * @param {Object} content1
- * @param {Object} content2
- * @returns {boolean}
- */
-export function areSameRepresentation(
-  content1: IRepresentationContext,
-  content2: IRepresentationContext
-): boolean {
-  return (content1.representation.id === content2.representation.id &&
-          content1.adaptation.id === content2.adaptation.id &&
-          content1.period.id === content2.period.id &&
-          content1.manifest.id === content2.manifest.id);
-}
 
 /**
  * Check if two contents are the same
