@@ -79,15 +79,14 @@ type IKeyStatusesForEach = (
 export default function checkKeyStatuses(
   session : MediaKeySession | ICustomMediaKeySession,
   options: IKeyStatusesCheckingOptions,
-  keySystem: string,
-  toto? : true | undefined
+  keySystem: string
 ) : { warnings : IEMEWarningEvent[];
       blacklistedKeyIds : Uint8Array[];
       whitelistedKeyIds : Uint8Array[]; }
 {
   const { fallbackOn = {},
-          throwOnLicenseExpiration } = options;
-  let { onKeyExpiration } = options;
+          throwOnLicenseExpiration,
+          onKeyExpiration } = options;
   const warnings : IEMEWarningEvent[] = [];
   const blacklistedKeyIds : Uint8Array[] = [];
   const whitelistedKeyIds : Uint8Array[] = [];
@@ -97,17 +96,11 @@ export default function checkKeyStatuses(
     _arg2 : unknown) => {
     // Hack present because the order of the arguments has changed in spec
     // and is not the same between some versions of Edge and Chrome.
-    let [keyStatus, keyStatusKeyId] = (() => {
+    const [keyStatus, keyStatusKeyId] = (() => {
       return (typeof _arg1  === "string" ? [_arg1, _arg2] :
                                            [_arg2, _arg1]) as [ MediaKeyStatus,
                                                                 ArrayBuffer ];
     })();
-
-    if (toto === true) {
-      keyStatusKeyId = keyStatusKeyId;
-      keyStatus = "expired";
-      onKeyExpiration = "close-session";
-    }
 
     const keyId = getUUIDKidFromKeyStatusKID(keySystem,
                                              new Uint8Array(keyStatusKeyId));
