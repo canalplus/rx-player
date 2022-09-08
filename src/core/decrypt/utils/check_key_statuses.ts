@@ -28,21 +28,21 @@ import { IEMEWarningEvent } from "../types";
  * specified by user configuration.
  * Such MediaKeySession should be closed immediately and may be re-created if
  * needed again.
- * @class ClosingConditionSessionError
+ * @class DecommissionedSessionError
  * @extends Error
  */
-export class ClosingConditionSessionError extends Error {
+export class DecommissionedSessionError extends Error {
   public reasons : IPlayerError[];
 
   /**
-   * Creates a new `ClosingConditionSessionError`.
+   * Creates a new `DecommissionedSessionError`.
    * @param {Error} reasons - All errors that led to the decision to close the
    * current MediaKeySession. Should be used for reporting purposes.
    */
   constructor(reasons : IPlayerError[]) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
-    Object.setPrototypeOf(this, ClosingConditionSessionError.prototype);
+    Object.setPrototypeOf(this, DecommissionedSessionError.prototype);
     this.reasons = reasons;
   }
 }
@@ -119,7 +119,7 @@ export default function checkKeyStatuses(
 
         switch (onKeyExpiration) {
           case "close-session":
-            throw new ClosingConditionSessionError([error]);
+            throw new DecommissionedSessionError([error]);
           case "fallback":
             blacklistedKeyIds.push(keyId);
             break;

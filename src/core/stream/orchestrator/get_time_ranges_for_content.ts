@@ -30,7 +30,7 @@ import { SegmentBuffer } from "../../segment_buffers";
  * @param {Array.<Object>} contents
  * @returns {Array.<Object>}
  */
-export default function getBlacklistedRanges(
+export default function getTimeRangesForContent(
   segmentBuffer : SegmentBuffer,
   contents : Array<{ adaptation : Adaptation;
                      period : Period;
