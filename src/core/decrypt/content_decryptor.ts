@@ -18,7 +18,6 @@ import {
   events,
   getInitData,
   ICustomMediaKeys,
-  ICustomMediaKeySession,
   ICustomMediaKeySystemAccess,
 } from "../../compat/";
 import config from "../../config";
@@ -54,7 +53,6 @@ import {
   IMediaKeySessionStores,
   MediaKeySessionLoadingType,
   IProcessedProtectionData,
-  IContent,
 } from "./types";
 import { DecommissionedSessionError } from "./utils/check_key_statuses";
 import cleanOldStoredPersistentInfo from "./utils/clean_old_stored_persistent_info";
@@ -535,10 +533,27 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
 
         error: (err) => {
           if (err instanceof DecommissionedSessionError) {
-            this._decommissionActiveSession(mediaKeySession,
-                                            initializationData.content,
-                                            stores,
-                                            sessionInfo);
+            log.warn("DRM: A session's closing condition has been triggered");
+            this._lockInitDataQueue();
+            const indexOf = this._currentSessions.indexOf(sessionInfo);
+            if (indexOf >= 0) {
+              this._currentSessions.splice(indexOf);
+            }
+            if (initializationData.content !== undefined) {
+              updateDecipherability(initializationData.content.manifest,
+                                    [],
+                                    [],
+                                    sessionInfo.record.getAssociatedKeyIds());
+            }
+            stores.persistentSessionsStore?.delete(mediaKeySession.sessionId);
+            stores.loadedSessionsStore.closeSession(mediaKeySession)
+              .catch(e => {
+                const closeError = e instanceof Error ? e :
+                                                        "unknown error";
+                log.warn("DRM: failed to close expired session", closeError);
+              })
+              .then(() => this._unlockInitDataQueue())
+              .catch((retryError) => this._onFatalError(retryError));
             err.reasons.forEach(reason => {
               if (!this._isStopped()) {
                 this.trigger("warning", reason);
@@ -792,51 +807,6 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     }
     this._stateData.isInitDataQueueLocked = false;
     this._processCurrentInitDataQueue();
-  }
-
-  /**
-   * Close a `MediaKeySession` that was "active" under this instance of the
-   * `ContentDecryptor` and signal decipherability updates to the linked
-   * content.
-   *
-   * You may call this method for example when you want to re-load the license
-   * previously linked to that `MediaKeySession`, by decommissioning it, and
-   * re-creating a new one.
-   * @param {MediaKeySession} mediaKeySession - The `MediaKeySession` to
-   * decommision.
-   * @param {Object|null} content - The corresponding linked content.
-   * @param {Object} stores - Current stores instance, used to close the
-   * `MediaKeySession`.
-   * @param {Object} sessionInfo - Contains metadata on the corresponding
-   * `MediaKeySession`, such as its associated key ids.
-   */
-  private _decommissionActiveSession(
-    mediaKeySession : MediaKeySession | ICustomMediaKeySession,
-    content : IContent | undefined,
-    stores : IMediaKeySessionStores,
-    sessionInfo : IActiveSessionInfo
-  ): void {
-    log.warn("DRM: A session's closing condition has been triggered");
-    this._lockInitDataQueue();
-    const indexOf = this._currentSessions.indexOf(sessionInfo);
-    if (indexOf >= 0) {
-      this._currentSessions.splice(indexOf);
-    }
-    if (content !== undefined) {
-      updateDecipherability(content.manifest,
-                            [],
-                            [],
-                            sessionInfo.record.getAssociatedKeyIds());
-    }
-    stores.persistentSessionsStore?.delete(mediaKeySession.sessionId);
-    stores.loadedSessionsStore.closeSession(mediaKeySession)
-      .catch(e => {
-        const closeError = e instanceof Error ? e :
-                                                "unknown error";
-        log.warn("DRM: failed to close expired session", closeError);
-      })
-      .then(() => this._unlockInitDataQueue())
-      .catch((retryError) => this._onFatalError(retryError));
   }
 }
 
