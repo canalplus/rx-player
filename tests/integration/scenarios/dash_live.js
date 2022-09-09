@@ -256,7 +256,7 @@ describe("DASH live content with no timeShiftBufferDepth (SegmentTimeline)", fun
 
     expect(player.isLive()).to.equal(true);
     expect(player.getContentUrls())
-      .to.equal([noTimeShiftBufferDepthManifestInfos.url]);
+      .to.eql([noTimeShiftBufferDepthManifestInfos.url]);
     expect(xhrMock.getLockedXHR().length).to.be.at.least(2);
   });
 
