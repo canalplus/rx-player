@@ -64,6 +64,7 @@ export default function $handleCatchUpMode(
                playerState === "PLAYING" ||
                playerState === "PAUSED" ||
                playerState === "BUFFERING" ||
+               playerState === "FREEZING" ||
                playerState === "SEEKING";
       }),
       switchMap(canCatchUp => {
