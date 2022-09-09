@@ -105,21 +105,26 @@ properties, methods, events and so on.
       Disable a lock that may cause the RxPlayer to deadlock on encrypted
       contents on some peculiar devices.
 
-    - [`keySystems[].distinctiveIdentifierRequired`](../api/Decryption_Options.md#distinctiveidentifierrequired):
+    - [`keySystems[].distinctiveIdentifier`](../api/Decryption_Options.md#distinctiveidentifier):
       Allows the configuration of the [Distinctive
       Indentifier(s)](https://www.w3.org/TR/encrypted-media/#distinctive-identifier)
       property.
 
-    - [`keySystems[].persistentStateRequired`](../api/Decryption_Options.md#persistentstaterequired):
+    - [`keySystems[].persistentState`](../api/Decryption_Options.md#persistentstate):
       Allows the configuration of the [persistentState](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-persistentstate)
       property.
 
     - [`keySystems[].throwOnLicenseExpiration`](../api/Decryption_Options.md#throwonlicenseexpiration):
       Allows to stop or not when the current license has expired.
 
-    - [`keySystems[].onKeyStatusesChange`](../api/Decryption_Options.md#onkeystatuseschange):
-      Callback triggered when on of the key's [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
-      is updated.
+    - [`keySystems[].audioCapabilitiesConfig`](../api/Decryption_Options.md#videocapabilitiesconfigaudiocapabilitiesconfig):
+      Allows the configuration of the [`audioCapabilities`](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-audiocapabilities)
+      property.
+
+    - [`keySystems[].videoCapabilitiesConfig`](../api/Decryption_Options.md#videocapabilitiesconfigaudiocapabilitiesconfig):
+      Allows the configuration of the [`videoCapabilities`](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-videocapabilities)
+      property.
+
 
   - [`autoPlay`](../api/Loading_a_Content.md#autoplay):
     Allows to automatically play after a content is loaded.
