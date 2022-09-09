@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { IEncryptedMediaErrorKeyStatusObject } from "../public_types";
 import {
   ErrorTypes,
   IEncryptedMediaErrorCode,
@@ -30,7 +31,7 @@ export default class EncryptedMediaError extends Error {
   public readonly name : "EncryptedMediaError";
   public readonly type : "ENCRYPTED_MEDIA_ERROR";
   public readonly code : IEncryptedMediaErrorCode;
-  public readonly keyStatus? : MediaKeyStatus;
+  public readonly keyStatuses? : IEncryptedMediaErrorKeyStatusObject[];
   public message : string;
   public fatal : boolean;
 
@@ -41,7 +42,7 @@ export default class EncryptedMediaError extends Error {
   constructor(
     code : "KEY_STATUS_CHANGE_ERROR",
     reason : string,
-    supplementaryInfos : { keyStatus : MediaKeyStatus }
+    supplementaryInfos : { keyStatuses : IEncryptedMediaErrorKeyStatusObject[] }
   );
   constructor(
     code : Omit<IEncryptedMediaErrorCode, "KEY_STATUS_CHANGE_ERROR">,
@@ -50,7 +51,7 @@ export default class EncryptedMediaError extends Error {
   constructor(
     code : IEncryptedMediaErrorCode,
     reason : string,
-    supplementaryInfos? : { keyStatus? : MediaKeyStatus }
+    supplementaryInfos? : { keyStatuses? : IEncryptedMediaErrorKeyStatusObject[] }
   ) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
@@ -63,8 +64,8 @@ export default class EncryptedMediaError extends Error {
     this.message = errorMessage(this.name, this.code, reason);
     this.fatal = false;
 
-    if (typeof supplementaryInfos?.keyStatus === "string") {
-      this.keyStatus = supplementaryInfos.keyStatus;
+    if (typeof supplementaryInfos?.keyStatuses === "string") {
+      this.keyStatuses = supplementaryInfos.keyStatuses;
     }
   }
 }
