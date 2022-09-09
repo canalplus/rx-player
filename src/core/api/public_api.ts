@@ -132,11 +132,6 @@ import SegmentBuffersStore, {
   IBufferType,
 } from "../segment_buffers";
 import { IInbandEvent } from "../stream";
-import emitSeekEvents from "./emit_seek_events";
-import getPlayerState, {
-  PLAYER_STATES,
-} from "./get_player_state";
-import MediaElementTrackChoiceManager from "./media_element_track_choice_manager";
 import {
   checkReloadOptions,
   IParsedLoadVideoOptions,
@@ -146,7 +141,14 @@ import {
 import PlaybackObserver, {
   IPlaybackObservation,
 } from "./playback_observer";
-import TrackChoiceManager from "./track_choice_manager";
+/* eslint-disable-next-line max-len */
+import MediaElementTrackChoiceManager from "./tracks_management/media_element_track_choice_manager";
+import TrackChoiceManager from "./tracks_management/track_choice_manager";
+import {
+  emitSeekEvents,
+  getLoadedContentState,
+  PLAYER_STATES,
+} from "./utils";
 
 /* eslint-disable @typescript-eslint/naming-convention */
 
@@ -181,7 +183,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   /**
    * Current state of the RxPlayer.
-   * Please use `getPlayerState()` instead.
+   * Please use `getLoadedContentState()` instead.
    */
   public state : IPlayerState;
 
@@ -999,7 +1001,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     ]).pipe(
       takeUntil(stoppedContent$),
       map(([stalledStatus]) =>
-        getPlayerState(videoElement, stalledStatus)
+        getLoadedContentState(videoElement, stalledStatus)
       )
     );
 
@@ -1403,9 +1405,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    *
    * Note that switching to or getting out of a trickmode video track may
    * lead to the player being a brief instant in a `"RELOADING"` state (notified
-   * through `playerStateChange` events and the `getPlayerState` method). When in
-   * that state, a black screen may be displayed and multiple RxPlayer APIs will
-   * not be usable.
+   * through `playerStateChange` events and the `getLoadedContentState` method).
+   * When in that state, a black screen may be displayed and multiple RxPlayer
+   * APIs will not be usable.
    *
    * @param {Number} rate
    * @param {Object} opts

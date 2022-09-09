@@ -53,7 +53,7 @@ To facilitate those actions, the API relies on multiple building blocks:
     Many RxPlayer modules rely on this PlaybackObserver.
 
 
-  - __the `TrackChoiceManager` (./track_choice_manager.ts)__
+  - __the `TrackChoiceManager` (./tracks_management/track_choice_manager.ts)__
 
     Ease up text/audio/video track switching to provide a simple-to-use API.
 

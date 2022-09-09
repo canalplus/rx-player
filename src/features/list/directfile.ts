@@ -15,7 +15,7 @@
  */
 
 // eslint-disable-next-line max-len
-import mediaElementTrackChoiceManager from "../../core/api/media_element_track_choice_manager";
+import mediaElementTrackChoiceManager from "../../core/api/tracks_management/media_element_track_choice_manager";
 import directfile from "../../core/init/initialize_directfile";
 import { IFeaturesObject } from "../types";
 

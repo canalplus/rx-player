@@ -15,7 +15,7 @@
  */
 
 import config from "../../../config";
-import getLoadedContentState from "../get_player_state";
+import { getLoadedContentState } from "../utils";
 
 describe("API - getLoadedContentState", () => {
   it("should always return ENDED if mediaElement.ended is true", () => {

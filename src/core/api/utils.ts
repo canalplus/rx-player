@@ -14,21 +14,72 @@
  * limitations under the License.
  */
 
+import {
+  defer as observableDefer,
+  EMPTY,
+  filter,
+  map,
+  merge as observableMerge,
+  Observable,
+  startWith,
+  switchMap,
+  take,
+} from "rxjs";
 import config from "../../config";
 import { IPlayerState } from "../../public_types";
 import { IStallingSituation } from "../init";
+import { IPlaybackObservation } from "./playback_observer";
+
+/**
+ * Returns Observable which will emit:
+ *   - `"seeking"` when we are seeking in the given mediaElement
+ *   - `"seeked"` when a seek is considered as finished by the given observation$
+ *     Observable.
+ * @param {HTMLMediaElement} mediaElement
+ * @param {Observable} observation$
+ * @returns {Observable}
+ */
+export function emitSeekEvents(
+  mediaElement : HTMLMediaElement | null,
+  observation$ : Observable<IPlaybackObservation>
+) : Observable<"seeking" | "seeked"> {
+  return observableDefer(() => {
+    if (mediaElement === null) {
+      return EMPTY;
+    }
+
+    let isSeeking$ = observation$.pipe(
+      filter((observation : IPlaybackObservation) => observation.event === "seeking"),
+      map(() => "seeking" as const)
+    );
+
+    if (mediaElement.seeking) {
+      isSeeking$ = isSeeking$.pipe(startWith("seeking" as const));
+    }
+
+    const hasSeeked$ = isSeeking$.pipe(
+      switchMap(() =>
+        observation$.pipe(
+          filter((observation : IPlaybackObservation) => observation.event === "seeked"),
+          map(() => "seeked" as const),
+          take(1)))
+    );
+    return observableMerge(isSeeking$, hasSeeked$);
+  });
+}
 
 /** Player state dictionnary. */
-export const PLAYER_STATES =
-  { STOPPED: "STOPPED",
-    LOADED: "LOADED",
-    LOADING: "LOADING",
-    PLAYING: "PLAYING",
-    PAUSED: "PAUSED",
-    ENDED: "ENDED",
-    BUFFERING: "BUFFERING",
-    SEEKING: "SEEKING",
-    RELOADING: "RELOADING" } as Record<IPlayerState, IPlayerState>;
+export const enum PLAYER_STATES {
+  STOPPED = "STOPPED",
+  LOADED = "LOADED",
+  LOADING = "LOADING",
+  PLAYING = "PLAYING",
+  PAUSED = "PAUSED",
+  ENDED = "ENDED",
+  BUFFERING = "BUFFERING",
+  SEEKING = "SEEKING",
+  RELOADING = "RELOADING",
+}
 
 /**
  * Get state string for a _loaded_ content.
@@ -38,7 +89,7 @@ export const PLAYER_STATES =
  *   - a description of the situation if stalled.
  * @returns {string}
  */
-export default function getLoadedContentState(
+export function getLoadedContentState(
   mediaElement : HTMLMediaElement,
   stalledStatus : IStallingSituation |
                   null

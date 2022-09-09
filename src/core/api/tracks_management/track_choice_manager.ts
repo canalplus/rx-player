@@ -20,12 +20,12 @@
  */
 
 import { Subject } from "rxjs";
-import log from "../../log";
+import log from "../../../log";
 import {
   Adaptation,
   Period,
   Representation,
-} from "../../manifest";
+} from "../../../manifest";
 import {
   IAudioRepresentation,
   IAudioTrack,
@@ -38,13 +38,13 @@ import {
   IVideoRepresentation,
   IVideoTrack,
   IVideoTrackPreference,
-} from "../../public_types";
-import arrayFind from "../../utils/array_find";
-import arrayIncludes from "../../utils/array_includes";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import normalizeLanguage from "../../utils/languages";
-import SortedList from "../../utils/sorted_list";
-import takeFirstSet from "../../utils/take_first_set";
+} from "../../../public_types";
+import arrayFind from "../../../utils/array_find";
+import arrayIncludes from "../../../utils/array_includes";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
+import normalizeLanguage from "../../../utils/languages";
+import SortedList from "../../../utils/sorted_list";
+import takeFirstSet from "../../../utils/take_first_set";
 
 /** Audio information stored for a single Period. */
 interface ITMPeriodAudioInfos { adaptations : Adaptation[];
