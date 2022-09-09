@@ -398,9 +398,6 @@ describe("API - parseLoadVideoOptions", () => {
     startAt: undefined,
     textTrackElement: undefined,
     textTrackMode: "native",
-    transportOptions: {
-      lowLatencyMode: false,
-    },
     url: undefined,
   };
 
@@ -447,8 +444,8 @@ describe("API - parseLoadVideoOptions", () => {
     expect(err1.message).toEqual(
       "Unable to load a content: no url set on loadVideo.\n" +
       "Please provide at least either an `url` argument, a " +
-      "`transportOptions.initialManifest` option or a " +
-      "`transportOptions.manifestLoader` option so the RxPlayer can load the content."
+      "`initialManifest` option or a " +
+      "`manifestLoader` option so the RxPlayer can load the content."
     );
     expect(opt2).not.toBeDefined();
     expect(err2).toBeInstanceOf(Error);
@@ -460,8 +457,8 @@ describe("API - parseLoadVideoOptions", () => {
     expect(err2.message).toEqual(
       "Unable to load a content: no url set on loadVideo.\n" +
       "Please provide at least either an `url` argument, a " +
-      "`transportOptions.initialManifest` option or a " +
-      "`transportOptions.manifestLoader` option so the RxPlayer can load the content."
+      "`initialManifest` option or a " +
+      "`manifestLoader` option so the RxPlayer can load the content."
     );
   });
 
@@ -502,12 +499,12 @@ describe("API - parseLoadVideoOptions", () => {
     };
     expect(parseLoadVideoOptions({
       transport: "bar",
-      transportOptions: { manifestLoader },
+      manifestLoader,
     })).toEqual({
       ...defaultLoadVideoOptions,
       transport: "bar",
-      transportOptions: { lowLatencyMode: false,
-                          manifestLoader },
+      lowLatencyMode: false,
+      manifestLoader,
     });
   });
 
@@ -516,7 +513,7 @@ describe("API - parseLoadVideoOptions", () => {
   /* eslint-enable max-len */
     expect(parseLoadVideoOptions({
       transport: "bar",
-      transportOptions: { initialManifest: "test" },
+      initialManifest: "test",
     })).toEqual({
       ...defaultLoadVideoOptions,
       transport: "bar",
@@ -526,7 +523,7 @@ describe("API - parseLoadVideoOptions", () => {
 
   it("should authorize setting an initialManifest option", () => {
     expect(parseLoadVideoOptions({
-      transportOptions: { initialManifest: "baz" },
+      initialManifest: "baz",
       url: "foo",
       transport: "bar",
     })).toEqual({
@@ -538,7 +535,7 @@ describe("API - parseLoadVideoOptions", () => {
     expect(parseLoadVideoOptions({
       url: "foo",
       transport: "bar",
-      transportOptions: { initialManifest: "" },
+      initialManifest: "",
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
@@ -690,7 +687,6 @@ describe("API - parseLoadVideoOptions", () => {
       lowLatencyMode: true,
       transport: "bar",
       url: "foo",
-      transportOptions: { lowLatencyMode: true },
     });
   });
 
@@ -698,17 +694,13 @@ describe("API - parseLoadVideoOptions", () => {
     expect(parseLoadVideoOptions({
       url: "foo",
       transport: "bar",
-      transportOptions: {
-        minimumManifestUpdateInterval: 5400,
-      },
+      minimumManifestUpdateInterval: 5400,
     })).toEqual({
       ...defaultLoadVideoOptions,
       minimumManifestUpdateInterval: 5400,
       url: "foo",
       transport: "bar",
-      transportOptions: {
-        lowLatencyMode: false,
-      },
+      lowLatencyMode: false,
     });
   });
 
@@ -971,18 +963,18 @@ If badly set, continue will be used as default`);
     });
   });
 
-  it("should authorize setting a transportOptions option", () => {
+  it("should authorize setting a `segmentLoader` option", () => {
     const func = jest.fn();
     expect(parseLoadVideoOptions({
-      transportOptions: { segmentLoader: func },
+      segmentLoader: func,
       url: "foo",
       transport: "bar",
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      transportOptions: { lowLatencyMode: false,
-                          segmentLoader: func },
+      lowLatencyMode: false,
+      segmentLoader: func,
     });
   });
 
@@ -1109,22 +1101,6 @@ If badly set, continue will be used as default`);
     expect(logWarnMock).toHaveBeenCalledTimes(1);
     expect(logWarnMock).toHaveBeenCalledWith("API: You have set a textTrackElement " +
       "without being in an \"html\" textTrackMode. It will be ignored.");
-  });
-
-  /* eslint-disable max-len */
-  it("should set non-documented variables in `transportOptions`", () => {
-  /* eslint-enable max-len */
-    expect(parseLoadVideoOptions({
-      url: "foo",
-      transport: "bar",
-      transportOptions: { __priv_toto: 4 } as any,
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      transportOptions: { lowLatencyMode: false,
-                          __priv_toto: 4 },
-    });
   });
 });
 
