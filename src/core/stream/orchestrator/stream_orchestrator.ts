@@ -44,9 +44,14 @@ import Manifest, {
 import deferSubscriptions from "../../../utils/defer_subscriptions";
 import { fromEvent } from "../../../utils/event_emitter";
 import filterMap from "../../../utils/filter_map";
-import { IReadOnlySharedReference } from "../../../utils/reference";
+import {
+  createMappedReference,
+  IReadOnlySharedReference,
+} from "../../../utils/reference";
+import fromCancellablePromise from "../../../utils/rx-from_cancellable_promise";
 import nextTickObs from "../../../utils/rx-next-tick";
 import SortedList from "../../../utils/sorted_list";
+import TaskCanceller from "../../../utils/task_canceller";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import { IRepresentationEstimator } from "../../adaptive";
 import type { IReadOnlyPlaybackObserver } from "../../api";
@@ -140,14 +145,22 @@ export default function StreamOrchestrator(
       const defaultMaxAhead = MAXIMUM_MAX_BUFFER_AHEAD[bufferType] != null ?
                                 MAXIMUM_MAX_BUFFER_AHEAD[bufferType] as number :
                                 Infinity;
-      return BufferGarbageCollector({
-        segmentBuffer,
-        currentTime$: playbackObserver.getReference().asObservable()
-          .pipe(map(o => o.position.pending ?? o.position.last)),
-        maxBufferBehind$: maxBufferBehind.asObservable().pipe(
-          map(val => Math.min(val, defaultMaxBehind))),
-        maxBufferAhead$: maxBufferAhead.asObservable().pipe(
-          map(val => Math.min(val, defaultMaxAhead))),
+      return new Observable<never>(() => {
+        const canceller = new TaskCanceller();
+        BufferGarbageCollector(
+          { segmentBuffer,
+            playbackObserver,
+            maxBufferBehind: createMappedReference(maxBufferBehind,
+                                                   (val) =>
+                                                     Math.min(val, defaultMaxBehind),
+                                                   canceller.signal),
+            maxBufferAhead: createMappedReference(maxBufferAhead,
+                                                  (val) =>
+                                                    Math.min(val, defaultMaxAhead),
+                                                  canceller.signal) },
+          canceller.signal
+        );
+        return () => { canceller.cancel(); };
       });
     });
 
@@ -322,9 +335,15 @@ export default function StreamOrchestrator(
         destroyStreams$.next();
 
         return observableConcat(
-          ...rangesToClean.map(({ start, end }) =>
-            start >= end ? EMPTY :
-                           segmentBuffer.removeBuffer(start, end).pipe(ignoreElements())),
+          ...rangesToClean.map(({ start, end }) => {
+            if (start >= end) {
+              return EMPTY;
+            }
+            const canceller = new TaskCanceller();
+            return fromCancellablePromise(canceller, () => {
+              return segmentBuffer.removeBuffer(start, end, canceller.signal);
+            }).pipe(ignoreElements());
+          }),
 
           // Schedule micro task before checking the last playback observation
           // to reduce the risk of race conditions where the next observation

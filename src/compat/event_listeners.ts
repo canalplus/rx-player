@@ -108,6 +108,69 @@ export type IEventTargetLike = HTMLElement |
                                IEventEmitter<unknown>;
 
 /**
+ * Returns a function allowing to add event listeners for particular event(s)
+ * optionally automatically adding browser prefixes if needed.
+ * @param {Array.<string>} eventNames - The event(s) to listen to. If multiple
+ * events are set, the event listener will be triggered when any of them emits.
+ * @returns {Function} - Returns function allowing to easily add a callback to
+ * be triggered when that event is emitted on a given event target.
+ */
+function createCompatibleEventListener(
+  eventNames : string[]
+) :
+  (
+    element : IEventTargetLike,
+    listener : (event? : unknown) => void,
+    cancelSignal: CancellationSignal
+  ) => void
+{
+  let mem : string|undefined;
+  const prefixedEvents = eventPrefixed(eventNames);
+
+  return (
+    element : IEventTargetLike,
+    listener: (event? : unknown) => void,
+    cancelSignal: CancellationSignal
+  ) => {
+    if (cancelSignal.isCancelled) {
+      return;
+    }
+
+    // if the element is a HTMLElement we can detect
+    // the supported event, and memoize it in `mem`
+    if (element instanceof HTMLElement) {
+      if (typeof mem === "undefined") {
+        mem = findSupportedEvent(element, prefixedEvents);
+      }
+
+      if (isNonEmptyString(mem)) {
+        element.addEventListener(mem, listener);
+        cancelSignal.register(() => {
+          if (mem !== undefined) {
+            element.removeEventListener(mem, listener);
+          }
+        });
+      } else {
+        if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
+          log.warn(`compat: element ${element.tagName}` +
+                   " does not support any of these events: " +
+                   prefixedEvents.join(", "));
+        }
+        return ;
+      }
+    }
+
+    prefixedEvents.forEach(eventName => {
+      (element as IEventEmitterLike).addEventListener(eventName, listener);
+      cancelSignal.register(() => {
+        (element as IEventEmitterLike).removeEventListener(eventName, listener);
+      });
+    });
+  };
+
+}
+
+/**
  * @param {Array.<string>} eventNames
  * @param {Array.<string>|undefined} prefixes
  * @returns {Observable}
@@ -247,7 +310,8 @@ export interface IPictureInPictureEvent {
 
 /**
  * Emit when video enters and leaves Picture-In-Picture mode.
- * @param {HTMLMediaElement} mediaElement
+ * @param {HTMLMediaElement} elt
+ * @param {Object} stopListening
  * @returns {Observable}
  */
 function getPictureOnPictureStateRef(
@@ -506,6 +570,24 @@ const onKeyError$ = compatibleListener(["keyerror", "error"]);
 const onKeyStatusesChange$ = compatibleListener(["keystatuseschange"]);
 
 /**
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
+const onSeeking = createCompatibleEventListener(["seeking"]);
+
+/**
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
+const onSeeked = createCompatibleEventListener(["seeked"]);
+
+/**
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Observable}
+ */
+const onEnded = createCompatibleEventListener(["ended"]);
+
+/**
  * Utilitary function allowing to add an event listener and remove it
  * automatically once the given `CancellationSignal` emits.
  * @param {EventTarget} elt - The element on which should be attached the event
@@ -534,6 +616,7 @@ export {
   getVideoVisibilityRef,
   getVideoWidthRef,
   onEncrypted$,
+  onEnded,
   onEnded$,
   onFullscreenChange$,
   onKeyAdded$,
@@ -542,7 +625,9 @@ export {
   onKeyStatusesChange$,
   onLoadedMetadata$,
   onRemoveSourceBuffers$,
+  onSeeked,
   onSeeked$,
+  onSeeking,
   onSeeking$,
   onSourceClose$,
   onSourceEnded$,

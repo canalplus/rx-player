@@ -14,16 +14,10 @@
  * limitations under the License.
  */
 
-import {
-  concatAll,
-  defer as observableDefer,
-  from as observableFrom,
-  Observable,
-  of as observableOf,
-} from "rxjs";
 import config from "../../../config";
 import log from "../../../log";
 import { getInnerAndOuterTimeRanges } from "../../../utils/ranges";
+import { CancellationSignal } from "../../../utils/task_canceller";
 import { SegmentBuffer } from "../../segment_buffers";
 
 
@@ -33,37 +27,39 @@ import { SegmentBuffer } from "../../segment_buffers";
  * Try to clean up buffered ranges from a low gcGap at first.
  * If it does not succeed to clean up space, use a higher gcCap.
  *
- * @param {Observable} timings$
+ * @param {number} currentPosition
  * @param {Object} bufferingQueue
- * @returns {Observable}
+ * @param {Object} cancellationSignal
+ * @returns {Promise}
  */
-export default function forceGarbageCollection(
+export default async function forceGarbageCollection(
   currentPosition : number,
-  bufferingQueue : SegmentBuffer
-) : Observable<unknown> {
-  return observableDefer(() => {
-    const GC_GAP_CALM = config.getCurrent().BUFFER_GC_GAPS.CALM;
-    const GC_GAP_BEEFY = config.getCurrent().BUFFER_GC_GAPS.BEEFY;
-    log.warn("Stream: Running garbage collector");
-    const buffered = bufferingQueue.getBufferedRanges();
-    let cleanedupRanges = selectGCedRanges(currentPosition, buffered, GC_GAP_CALM);
+  bufferingQueue : SegmentBuffer,
+  cancellationSignal : CancellationSignal
+) : Promise<void> {
+  const GC_GAP_CALM = config.getCurrent().BUFFER_GC_GAPS.CALM;
+  const GC_GAP_BEEFY = config.getCurrent().BUFFER_GC_GAPS.BEEFY;
+  log.warn("Stream: Running garbage collector");
+  const buffered = bufferingQueue.getBufferedRanges();
+  let cleanedupRanges = selectGCedRanges(currentPosition, buffered, GC_GAP_CALM);
 
-    // more aggressive GC if we could not find any range to clean
-    if (cleanedupRanges.length === 0) {
-      cleanedupRanges = selectGCedRanges(currentPosition, buffered, GC_GAP_BEEFY);
-    }
+  // more aggressive GC if we could not find any range to clean
+  if (cleanedupRanges.length === 0) {
+    cleanedupRanges = selectGCedRanges(currentPosition, buffered, GC_GAP_BEEFY);
+  }
 
-    if (log.hasLevel("DEBUG")) {
-      log.debug("Stream: GC cleaning",
-                cleanedupRanges.map(({ start, end }) => `start: ${start} - end ${end}`)
-                  .join(", "));
+  if (log.hasLevel("DEBUG")) {
+    log.debug("Stream: GC cleaning",
+              cleanedupRanges.map(({ start, end }) => `start: ${start} - end ${end}`)
+                .join(", "));
+  }
+  for (const range of cleanedupRanges) {
+    const { start, end } = range;
+    if (start < end) {
+      await bufferingQueue.removeBuffer(start, end, cancellationSignal);
     }
-    return observableFrom(
-      cleanedupRanges.map(({ start, end }) =>
-        start >= end ? observableOf(null) :
-                       bufferingQueue.removeBuffer(start, end))
-    ).pipe(concatAll());
-  });
+  }
+  return;
 }
 
 /**

@@ -45,7 +45,10 @@ import { getLeftSizeOfRange } from "../../../utils/ranges";
 import createSharedReference, {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
-import { CancellationSignal } from "../../../utils/task_canceller";
+import fromCancellablePromise from "../../../utils/rx-from_cancellable_promise";
+import TaskCanceller, {
+  CancellationSignal,
+} from "../../../utils/task_canceller";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import { IRepresentationEstimator } from "../../adaptive";
 import { IReadOnlyPlaybackObserver } from "../../api";
@@ -176,15 +179,20 @@ export default function PeriodStream({
           if (SegmentBuffersStore.isNative(bufferType)) {
             return reloadAfterSwitch(period, bufferType, playbackObserver, 0);
           }
-          if (period.end === undefined) {
-            cleanBuffer$ = segmentBufferStatus.value.removeBuffer(period.start,
-                                                                  Infinity);
-          } else if (period.end <= period.start) {
-            cleanBuffer$ = observableOf(null);
-          } else {
-            cleanBuffer$ = segmentBufferStatus.value.removeBuffer(period.start,
-                                                                  period.end);
-          }
+          const canceller = new TaskCanceller();
+          cleanBuffer$ = fromCancellablePromise(canceller, () => {
+            if (period.end === undefined) {
+              return segmentBufferStatus.value.removeBuffer(period.start,
+                                                            Infinity,
+                                                            canceller.signal);
+            } else if (period.end <= period.start) {
+              return Promise.resolve();
+            } else {
+              return segmentBufferStatus.value.removeBuffer(period.start,
+                                                            period.end,
+                                                            canceller.signal);
+            }
+          });
         } else {
           if (segmentBufferStatus.type === "uninitialized") {
             segmentBuffersStore.disableSegmentBuffer(bufferType);
@@ -237,8 +245,11 @@ export default function PeriodStream({
 
         const cleanBuffer$ =
           strategy.type === "clean-buffer" || strategy.type === "flush-buffer" ?
-            observableConcat(...strategy.value.map(({ start, end }) =>
-              segmentBuffer.removeBuffer(start, end))
+            observableConcat(...strategy.value.map(({ start, end }) => {
+              const canceller = new TaskCanceller();
+              return fromCancellablePromise(canceller, () =>
+                segmentBuffer.removeBuffer(start, end, canceller.signal));
+            })
             // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
             // first type parameter as `any` instead of the perfectly fine `unknown`,
             // leading to linter issues, as it forbids the usage of `any`.
@@ -249,12 +260,14 @@ export default function PeriodStream({
         const bufferGarbageCollector$ = garbageCollectors.get(segmentBuffer);
         const adaptationStream$ = createAdaptationStream(adaptation, segmentBuffer);
 
-        return segmentBuffersStore.waitForUsableBuffers().pipe(mergeMap(() => {
-          return observableConcat(cleanBuffer$,
-                                  needsBufferFlush$,
-                                  observableMerge(adaptationStream$,
-                                                  bufferGarbageCollector$));
-        }));
+        const cancelWait = new TaskCanceller();
+        return fromCancellablePromise(cancelWait, () =>
+          segmentBuffersStore.waitForUsableBuffers(cancelWait.signal)
+        ).pipe(mergeMap(() =>
+          observableConcat(cleanBuffer$,
+                           needsBufferFlush$,
+                           observableMerge(adaptationStream$,
+                                           bufferGarbageCollector$))));
       });
 
       return observableConcat(

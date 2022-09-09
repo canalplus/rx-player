@@ -26,6 +26,8 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
+import fromCancellablePromise from "../../../utils/rx-from_cancellable_promise";
+import TaskCanceller from "../../../utils/task_canceller";
 import { IReadOnlyPlaybackObserver } from "../../api";
 import {
   IPushedChunkData,
@@ -71,11 +73,15 @@ export default function pushInitSegment<T>(
                                          timestampOffset: 0,
                                          appendWindow: [ undefined, undefined ],
                                          codec };
-    return appendSegmentToBuffer(playbackObserver,
-                                 segmentBuffer,
-                                 { data, inventoryInfos: null }).pipe(map(() => {
-      const buffered = segmentBuffer.getBufferedRanges();
-      return EVENTS.addedSegment(content, segment, buffered, segmentData);
-    }));
+    const canceller = new TaskCanceller();
+    return fromCancellablePromise(canceller, () =>
+      appendSegmentToBuffer(playbackObserver,
+                            segmentBuffer,
+                            { data, inventoryInfos: null },
+                            canceller.signal))
+      .pipe(map(() => {
+        const buffered = segmentBuffer.getBufferedRanges();
+        return EVENTS.addedSegment(content, segment, buffered, segmentData);
+      }));
   });
 }
