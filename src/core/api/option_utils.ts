@@ -638,11 +638,7 @@ function parseLoadVideoOptions(
     }
   }
 
-  const networkConfig = isNullOrUndefined(options.networkConfig) ?
-    {} :
-    { manifestRetry: options.networkConfig.manifestRetry,
-      offlineRetry: options.networkConfig.offlineRetry,
-      segmentRetry: options.networkConfig.segmentRetry };
+  const networkConfig = options.networkConfig ?? {};
 
   // TODO without cast
   /* eslint-disable @typescript-eslint/consistent-type-assertions */
