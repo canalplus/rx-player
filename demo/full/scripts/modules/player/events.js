@@ -105,7 +105,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
       hasEnded: arg === "ENDED",
       hasCurrentContent: !["STOPPED", "LOADING"].includes(arg),
       isContentLoaded: !["STOPPED", "LOADING", "RELOADING"].includes(arg),
-      isBuffering: arg === "BUFFERING",
+      isBuffering: arg === "BUFFERING" || arg === "FREEZING",
       isLoading: arg === "LOADING",
       isReloading: arg === "RELOADING",
       isSeeking: arg === "SEEKING",
