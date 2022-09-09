@@ -243,8 +243,20 @@ An EncryptedMediaError can have the following codes (`code` property):
   of more than 10 seconds.
 
 - `"KEY_STATUS_CHANGE_ERROR"`: An error was detected when the
-  `MediaKeySession` emitted a keyStatuseschange event (e.g. the key
+  `MediaKeySession` emitted a keyStatuseschange event (e.g. a key
   became `"expired"`).
+
+  `EncryptedMediaError` having the `KEY_STATUS_CHANGE_ERROR` code will also have
+  a `keyStatuses` property, which is an array of objects - each describing a
+  problematic key status with the following properties:
+    - `keyId` (`BufferSource`): The key id concerned by the status change
+      indicated by `keyStatus`
+    - `keyStatus` ([`MediaKeyStatus`](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)):
+      The problematic key status encountered linked to the `keyId` of the same
+      object.
+
+  If multiple objects are found in the `keyStatuses` property, it means that
+  multiple keys changed to a problematic status roughly around the same time.
 
 - `"KEY_UPDATE_ERROR"`: An error was detected after a message (like a
   license was given to the CDM).

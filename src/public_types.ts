@@ -520,6 +520,7 @@ export interface IKeySystemOption {
   /**
    * If explicitely set to `false`, we won't throw on error when a used license
    * is expired.
+   * @deprecated
    */
   throwOnLicenseExpiration? : boolean;
   /**
@@ -550,35 +551,45 @@ export interface IKeySystemOption {
     keyOutputRestricted? : boolean;
   };
 
-  onKeyExpiration? : "throw" |
+  /**
+   * Behavior the RxPlayer should have when one of the key is known to be
+   * expired.
+   *
+   * `onKeyExpiration` can be set to a string, each describing a different
+   * behavior, the default one if not is defined being `"error"`:
+   *
+   *   - `"error"`: The RxPlayer will stop on an error when any key is expired.
+   *     This is the default behavior.
+   *
+   *   - `"continue"`: The RxPlayer will not do anything when a key expires.
+   *     This may lead in many cases to infinite rebuffering.
+   *
+   *   - `"fallback"`: The Representation(s) linked to the expired key(s) will
+   *     be fallbacked from, meaning the RxPlayer will switch to other
+   *     representation without expired keys.
+   *
+   *     If no Representation remain, a NO_PLAYABLE_REPRESENTATION error will
+   *     be thrown.
+   *
+   *     Note that when the "fallbacking" action is taken, the RxPlayer might
+   *     temporarily switch to the `"RELOADING"` state - which should thus be
+   *     properly handled.
+   *
+   *   - `"close-session"`: The RxPlayer will close and re-create a DRM session
+   *     (and thus re-download the corresponding license) if any of the key
+   *     associated to this session expired.
+   *
+   *     It will try to do so in an efficient manner, only reloading the license
+   *     when the corresponding content plays.
+   *
+   *     The RxPlayer might go through the `"RELOADING"` state after an expired
+   *     key and/or light decoding glitches can arise, depending on the
+   *     platform, for some seconds, under that mode.
+   */
+  onKeyExpiration? : "error" |
                      "continue" |
                      "fallback" |
                      "close-session";
-
-  /**
-   * If set to `true`, the RxPlayer will close and re-create a DRM session (and
-   * thus re-download the corresponding license) if any of the key associated to
-   * this session expired. It should do so in an efficient manner, only
-   * reloading the license when the corresponding content plays.
-   *
-   * This effectively means reloading licenses when any of its key expires,
-   * even if the content is currently playing.
-   *
-   * You can thus set this option to `true` if the license you load may expire
-   * without being renewed (some license have a renewal concepts, in which case
-   * this option may not be necessary), and if you want to just reload the
-   * license without interrupting the content (beside a potential brief
-   * rebuffering Period as the license is reloaded).
-   *
-   * However note multiple reasons NOT TO set this option to `true`:
-   *
-   *   - A license will be re-downloaded even if only one of its key expired.
-   *
-   *     As such, you should only set this option
-   *
-   * Note that on peculiar devices, this behavior may lead to issues.
-   */
-  recreateSessionOnKeyExpiration? : boolean;
 }
 
 /**
@@ -786,3 +797,15 @@ export interface IAvailableTextTrack
 /** Video track from a list of video tracks returned by the RxPlayer. */
 export interface IAvailableVideoTrack
   extends IVideoTrack { active : boolean }
+
+/**
+ * Type of a single object from the optional `EncryptedMediaError`'s
+ * `keyStatuses` property.
+ */
+export interface IEncryptedMediaErrorKeyStatusObject {
+  /** Corresponding keyId which encountered the problematic MediaKeyStatus. */
+  keyId: ArrayBuffer;
+
+  /** Problematic MediaKeyStatus encountered. */
+  keyStatus: MediaKeyStatus;
+}

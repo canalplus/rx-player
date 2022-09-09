@@ -207,16 +207,17 @@ function getKeyStatusesEvents(
     if (session.keyStatuses.size === 0) {
       return EMPTY;
     }
-    const { warnings,
+    const { warning,
             blacklistedKeyIds,
             whitelistedKeyIds } = checkKeyStatuses(session, options, keySystem);
-
-    const warnings$ = warnings.length > 0 ? observableOf(...warnings) :
-                                            EMPTY;
     const keysUpdate$ = observableOf({ type : "keys-update" as const,
                                        value : { whitelistedKeyIds,
                                                  blacklistedKeyIds } });
-    return observableConcat(warnings$, keysUpdate$);
+    if (warning !== undefined) {
+      return observableConcat(observableOf({ type: "warning" as const, value: warning }),
+                              keysUpdate$);
+    }
+    return keysUpdate$;
   });
 }
 

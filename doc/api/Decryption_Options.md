@@ -470,7 +470,59 @@ session state).
 This is very rarely needed.
 
 
+### onKeyExpiration
+
+_type_: `string | undefined`
+
+`true` by default.
+
+Behavior the RxPlayer should have when one of the key is known to be expired.
+
+`onKeyExpiration` can be set to a string, each describing a different behavior,
+the default one if not is defined being `"error"`:
+
+  - `"error"`: The RxPlayer will stop on an error when any key is expired.
+    This is the default behavior.
+
+    The error emiited in that case should be an
+    [EncryptedMediaError](./Player_Errors.md#encryptedmediaerror) with a
+    `KEY_STATUS_CHANGE_ERROR` `code` property with a set `keyStatuses`
+    property containing at least one string set to `"expired"`.
+
+  - `"continue"`: The RxPlayer will not do anything when a key expires.
+    This may lead in many cases to infinite rebuffering.
+
+  - `"fallback"`: The Representation(s) linked to the expired key(s) will
+    be fallbacked from, meaning the RxPlayer will switch to other
+    representation without expired keys.
+
+    If no Representation remain, a NO_PLAYABLE_REPRESENTATION error will
+    be thrown.
+
+    Note that when the "fallbacking" action is taken, the RxPlayer might
+    temporarily switch to the `"RELOADING"` state - which should thus be
+    properly handled.
+
+  - `"close-session"`: The RxPlayer will close and re-create a DRM session
+    (and thus re-download the corresponding license) if any of the key
+    associated to this session expired.
+
+    It will try to do so in an efficient manner, only reloading the license
+    when the corresponding content plays.
+
+    The RxPlayer might go through the `"RELOADING"` state after an expired
+    key and/or light decoding glitches can arise, depending on the
+    platform, for some seconds, under that mode.
+
+
+
 ### throwOnLicenseExpiration
+
+<div class="warning">
+This option is deprecated, it will disappear in the next major release
+`v4.0.0` (see <a href="./Miscellaneous/Deprecated_APIs.md">Deprecated
+APIs</a>).
+</div>
 
 _type_: `Boolean | undefined`
 

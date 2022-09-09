@@ -449,3 +449,28 @@ rxPlayer.addEventListener("warning", (err : Error | IPlayerError) => {
 });
 
 ```
+
+### EncryptedMediaError's `keyStatuses` property
+
+Some `EncryptedMediaError` error thrown by the RxPlayer, may have a
+`keyStatuses` property set.
+In that case, the type is described by the
+`IEncryptedMediaErrorKeyStatusObject` type:
+```ts
+// the type wanted
+import { IEncryptedMediaErrorKeyStatusObject } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+rxPlayer.addEventListener("error", (err : Error | IPlayerError) => {
+  if (err.type === "ENCRYPTED_MEDIA_ERROR" && err.keyStatuses !== undefined) {
+    logKeyStatuses(err.keyStatuses);
+  }
+});
+
+function logKeyStatuses(keyStatuses: IEncryptedMediaErrorKeyStatusObject): void {
+console.log(keyStatuses);
+}
+
+```

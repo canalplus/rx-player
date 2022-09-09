@@ -18,10 +18,13 @@ import { ICustomMediaKeySession } from "../../../compat";
 /* eslint-disable-next-line max-len */
 import getUUIDKidFromKeyStatusKID from "../../../compat/eme/get_uuid_kid_from_keystatus_kid";
 import { EncryptedMediaError } from "../../../errors";
-import { IKeySystemOption, IPlayerError } from "../../../public_types";
+import {
+  IEncryptedMediaErrorKeyStatusObject,
+  IKeySystemOption,
+  IPlayerError,
+} from "../../../public_types";
 import assertUnreachable from "../../../utils/assert_unreachable";
 import { bytesToHex } from "../../../utils/string_parsing";
-import { IEMEWarningEvent } from "../types";
 
 /**
  * Error thrown when the MediaKeySession has to be closed due to a trigger
@@ -80,16 +83,16 @@ export default function checkKeyStatuses(
   session : MediaKeySession | ICustomMediaKeySession,
   options: IKeyStatusesCheckingOptions,
   keySystem: string
-) : { warnings : IEMEWarningEvent[];
+) : { warning : EncryptedMediaError | undefined;
       blacklistedKeyIds : Uint8Array[];
       whitelistedKeyIds : Uint8Array[]; }
 {
   const { fallbackOn = {},
           throwOnLicenseExpiration,
           onKeyExpiration } = options;
-  const warnings : IEMEWarningEvent[] = [];
   const blacklistedKeyIds : Uint8Array[] = [];
   const whitelistedKeyIds : Uint8Array[] = [];
+  const badKeyStatuses: IEncryptedMediaErrorKeyStatusObject[] = [];
 
   (session.keyStatuses.forEach as IKeyStatusesForEach)((
     _arg1 : unknown,
@@ -104,14 +107,16 @@ export default function checkKeyStatuses(
 
     const keyId = getUUIDKidFromKeyStatusKID(keySystem,
                                              new Uint8Array(keyStatusKeyId));
+
+    const keyStatusObj = { keyId: keyId.buffer, keyStatus };
     switch (keyStatus) {
       case KEY_STATUSES.EXPIRED: {
         const error = new EncryptedMediaError(
           "KEY_STATUS_CHANGE_ERROR",
           `A decryption key expired (${bytesToHex(keyId)})`,
-          { keyStatus });
+          { keyStatuses: [keyStatusObj, ...badKeyStatuses] });
 
-        if (onKeyExpiration === "throw" ||
+        if (onKeyExpiration === "error" ||
             (onKeyExpiration === undefined && throwOnLicenseExpiration === false))
         {
           throw error;
@@ -135,32 +140,30 @@ export default function checkKeyStatuses(
             break;
         }
 
-        warnings.push({ type: "warning", value: error });
+        badKeyStatuses.push(keyStatusObj);
         break;
       }
 
       case KEY_STATUSES.INTERNAL_ERROR: {
-        const error = new EncryptedMediaError(
-          "KEY_STATUS_CHANGE_ERROR",
-          `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`,
-          { keyStatus });
         if (fallbackOn.keyInternalError !== true) {
-          throw error;
+          throw new EncryptedMediaError(
+            "KEY_STATUS_CHANGE_ERROR",
+            `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`,
+            { keyStatuses: [keyStatusObj, ...badKeyStatuses] });
         }
-        warnings.push({ type: "warning", value: error });
+        badKeyStatuses.push(keyStatusObj);
         blacklistedKeyIds.push(keyId);
         break;
       }
 
       case KEY_STATUSES.OUTPUT_RESTRICTED: {
-        const error = new EncryptedMediaError(
-          "KEY_STATUS_CHANGE_ERROR",
-          `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`,
-          { keyStatus });
         if (fallbackOn.keyOutputRestricted !== true) {
-          throw error;
+          throw new EncryptedMediaError(
+            "KEY_STATUS_CHANGE_ERROR",
+            `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`,
+            { keyStatuses: [keyStatusObj, ...badKeyStatuses] });
         }
-        warnings.push({ type: "warning", value: error });
+        badKeyStatuses.push(keyStatusObj);
         blacklistedKeyIds.push(keyId);
         break;
       }
@@ -171,7 +174,14 @@ export default function checkKeyStatuses(
     }
   });
 
-  return { warnings,
+  let warning;
+  if (badKeyStatuses.length > 0) {
+    warning = new EncryptedMediaError(
+      "KEY_STATUS_CHANGE_ERROR",
+      "One or several problematic key statuses have been encountered",
+      { keyStatuses: badKeyStatuses });
+  }
+  return { warning,
            blacklistedKeyIds,
            whitelistedKeyIds };
 }
