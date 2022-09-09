@@ -1046,16 +1046,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // Handle state updates
     playerState$
       .pipe(takeUntil(stoppedContent$))
-      .subscribe(x => this._priv_setPlayerState(x));
+      .subscribe(newState => {
+        this._priv_setPlayerState(newState);
 
-    const endedEvent$ = observation$.pipe(filter(o => {
-      return o.event === "ended";
-    }));
-    (this._priv_stopAtEnd ? endedEvent$ :
-                            EMPTY)
-      .pipe(takeUntil(stoppedContent$))
-      .subscribe(() => {
-        currentContentCanceller.cancel();
+        // Previous call could have performed all kind of side-effects, thus,
+        // we re-check the current state associated to the RxPlayer
+        if (this.state === "ENDED" && this._priv_stopAtEnd) {
+          currentContentCanceller.cancel();
+        }
       });
 
     // Link playback events to the corresponding callbacks
