@@ -631,7 +631,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             onCodecSwitch,
             startAt,
             transport,
-            transportOptions,
+            checkMediaSegmentIntegrity,
+            manifestLoader,
+            manifestUpdateUrl,
+            referenceDateTime,
+            representationFilter,
+            segmentLoader,
+            serverSyncInfos,
+            __priv_patchLastSegmentInSidx,
             url } = options;
 
     // Perform multiple checks on the given options
@@ -690,7 +697,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         throw new Error(`transport "${transport}" not supported`);
       }
 
-      const transportPipelines = transportFn(transportOptions);
+      const transportPipelines = transportFn({ lowLatencyMode,
+                                               checkMediaSegmentIntegrity,
+                                               manifestLoader,
+                                               manifestUpdateUrl,
+                                               referenceDateTime,
+                                               representationFilter,
+                                               segmentLoader,
+                                               serverSyncInfos,
+                                               __priv_patchLastSegmentInSidx });
 
       const { offlineRetry,
               segmentRetry,
