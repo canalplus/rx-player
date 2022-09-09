@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { ICustomMediaKeySession } from "./compat";
 import {
   IPersistentSessionInfoV0,
   IPersistentSessionInfoV1,
@@ -431,15 +430,15 @@ export interface IKeySystemOption {
   /** Storage mechanism used to store and retrieve information on stored licenses. */
   licenseStorage? : IPersistentSessionStorage;
   /**
-   * If true, we will require that the CDM is able to persist state.
-   * See EME specification related to the `persistentState` configuration.
+   * Wanted value for the `persistentState` property of this
+   * `MediaKeySystemConfiguration` according to the EME API.
    */
-  persistentStateRequired? : boolean;
+  persistentState? : MediaKeysRequirement | undefined;
   /**
-   * If true, we will require that the CDM should use distinctive identyfiers.
-   * See EME specification related to the `distinctiveIdentifier` configuration.
+   * Wanted value for the `distinctiveIdentifier` property of this
+   * `MediaKeySystemConfiguration` according to the EME API.
    */
-  distinctiveIdentifierRequired? : boolean;
+  distinctiveIdentifier? : MediaKeysRequirement | undefined;
   /**
    * If true, all open MediaKeySession (used to decrypt the content) will be
    * closed when the current playback stops.
@@ -454,16 +453,8 @@ export interface IKeySystemOption {
    * MediaKeys.
    */
   maxSessionCacheSize? : number;
-  /** Callback called when one of the key's status change. */
-  onKeyStatusesChange? : (evt : Event, session : MediaKeySession |
-                                                 ICustomMediaKeySession)
-                           => Promise<BufferSource | null> |
-                              BufferSource |
-                              null;
-  /** Allows to define custom robustnesses value for the video data. */
-  videoRobustnesses?: Array<string|undefined>;
-  /** Allows to define custom robustnesses value for the audio data. */
-  audioRobustnesses?: Array<string|undefined>;
+  videoCapabilitiesConfig?: IVideoCapabilitiesConfiguration;
+  audioCapabilitiesConfig?: IAudioCapabilitiesConfiguration;
   /**
    * If explicitely set to `false`, we won't throw on error when a used license
    * is expired.
@@ -496,6 +487,57 @@ export interface IKeySystemOption {
      */
     keyOutputRestricted? : boolean;
   };
+}
+
+/** Values that can be given to the `videoCapabilitiesConfig` `keySystems`'s property. */
+export type IVideoCapabilitiesConfiguration = IRobustnessMediaKeySystemCapabilities |
+                                              IContentTypeMediaKeySystemCapabilities |
+                                              IFullMediaKeySystemCapabilities;
+
+/** Values that can be given to the `audioCapabilitiesConfig` `keySystems`'s property. */
+export type IAudioCapabilitiesConfiguration = IRobustnessMediaKeySystemCapabilities |
+                                              IContentTypeMediaKeySystemCapabilities |
+                                              IFullMediaKeySystemCapabilities;
+
+/**
+ * Value that can be given to either the `audioCapabilitiesConfig` or to the
+ * `videoCapabilitiesConfig` `keySystems`'s property when the application only
+ * wants to specify the "robustness" part of the `MediaKeySystemMediaCapability`
+ * sent through the corresponding `MediaKeySystemConfiguration` used to decrypt
+ * the content.
+ *
+ * In this case, the RxPlayer will define potentially default values for
+ * other capability-related properties (such as the "contentType").
+ */
+export interface IRobustnessMediaKeySystemCapabilities {
+  type: "robustness";
+  value : string[];
+}
+
+/**
+ * Value that can be given to either the `audioCapabilitiesConfig` or to the
+ * `videoCapabilitiesConfig` `keySystems`'s property when the application only
+ * wants to specify the "contentType" part of the
+ * `MediaKeySystemMediaCapability` sent through the corresponding
+ * `MediaKeySystemConfiguration` used to decrypt the content.
+ *
+ * In this case, the RxPlayer will define potentially default values for
+ * other capability-related properties (such as the "robustness").
+ */
+export interface IContentTypeMediaKeySystemCapabilities {
+  type: "contentType";
+  value : string[];
+}
+
+/**
+ * Value that can be given to either the `audioCapabilitiesConfig` or to the
+ * `videoCapabilitiesConfig` `keySystems`'s property when the application wants
+ * to specify the full `MediaKeySystemMediaCapability` object sent through the
+ * corresponding `MediaKeySystemConfiguration` used to decrypt the content.
+ */
+export interface IFullMediaKeySystemCapabilities {
+  type: "full";
+  value : MediaKeySystemMediaCapability[];
 }
 
 /**
