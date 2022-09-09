@@ -49,7 +49,6 @@ import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import retryObsWithBackoff, {
   IBackoffOptions,
 } from "../../utils/rx-retry_with_backoff";
-import tryCatch from "../../utils/rx-try_catch";
 import {
   IEMEWarningEvent,
   ILicense,
@@ -101,11 +100,10 @@ export default function SessionEventsListener(
   }));
 
   const keyStatusesChange$ = onKeyStatusesChange$(session)
-    .pipe(mergeMap((keyStatusesEvent: Event) =>
+    .pipe(mergeMap(() =>
       handleKeyStatusesChangeEvent(session,
                                    keySystemOptions,
-                                   keySystem,
-                                   keyStatusesEvent)));
+                                   keySystem)));
 
   const keyMessages$ : Observable<IEMEWarningEvent |
                                   IKeyMessageHandledEvent > =
@@ -154,13 +152,11 @@ export default function SessionEventsListener(
     .pipe(concatMap((
       evt : IEMEWarningEvent |
             IKeyMessageHandledEvent |
-            IKeysUpdateEvent |
-            IKeyStatusChangeHandledEvent
+            IKeysUpdateEvent
     ) : Observable< IEMEWarningEvent |
                     IKeysUpdateEvent > => {
       switch (evt.type) {
         case "key-message-handled":
-        case "key-status-change-handled":
           if (isNullOrUndefined(evt.value.license)) {
             log.info("DRM: No message given, skipping session.update");
             return EMPTY;
@@ -272,40 +268,15 @@ function updateSessionWithMessage(
 /**
  * @param {MediaKeySession}
  * @param {Object} keySystem
- * @param {Event} keyStatusesEvent
  * @returns {Observable}
  */
 function handleKeyStatusesChangeEvent(
   session : MediaKeySession | ICustomMediaKeySession,
   keySystemOptions : IKeySystemOption,
-  keySystem : string,
-  keyStatusesEvent : Event
-) : Observable<IKeyStatusChangeHandledEvent | IKeysUpdateEvent | IEMEWarningEvent> {
+  keySystem : string
+) : Observable<IKeysUpdateEvent | IEMEWarningEvent> {
   log.info("DRM: keystatuseschange event received", session.sessionId);
-  const callback$ = observableDefer(() => {
-    return tryCatch(() => {
-      if (typeof keySystemOptions.onKeyStatusesChange !== "function") {
-        return EMPTY;
-      }
-      return castToObservable(keySystemOptions.onKeyStatusesChange(keyStatusesEvent,
-                                                                   session));
-    }, undefined);
-  }).pipe(
-    map(licenseObject => ({ type: "key-status-change-handled" as const,
-                            value : { session, license: licenseObject } })),
-    catchError((error: unknown) => {
-      const err = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
-                                          "Unknown `onKeyStatusesChange` error");
-      if  (!isNullOrUndefined(error) &&
-           isNonEmptyString((error as { message? : unknown }).message))
-      {
-        err.message = (error as { message : string }).message;
-      }
-      throw err;
-    })
-  );
-  return observableMerge(getKeyStatusesEvents(session, keySystemOptions, keySystem),
-                         callback$);
+  return getKeyStatusesEvents(session, keySystemOptions, keySystem);
 }
 
 /**
@@ -376,14 +347,6 @@ export interface IKeyUpdateValue {
    * session.
    */
   whitelistedKeyIds : Uint8Array[];
-}
-
-/** Emitted after the `onKeyStatusesChange` callback has been called. */
-interface IKeyStatusChangeHandledEvent {
-  type: "key-status-change-handled";
-  value: { session: MediaKeySession |
-                    ICustomMediaKeySession;
-           license: ILicense|null; };
 }
 
 /** Emitted after the `getLicense` callback has been called */

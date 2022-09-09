@@ -25,6 +25,7 @@ import log from "../../log";
 import { IKeySystemOption } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
 import flatMap from "../../utils/flat_map";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import { CancellationSignal } from "../../utils/task_canceller";
 import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 
@@ -51,13 +52,14 @@ export interface ICreateMediaKeySystemAccessEvent {
 export type IFoundMediaKeySystemAccessEvent = IReuseMediaKeySystemAccessEvent |
                                               ICreateMediaKeySystemAccessEvent;
 
-interface IMediaCapability { contentType?: string;
-                             robustness?: string; }
-
-interface IKeySystemType { keyName : string | undefined;
-                           keyType : string;
-                           keySystemOptions : IKeySystemOption; }
-
+interface IKeySystemType {
+   /** keySystem canonical name (e.g. "widevine") */
+  keyName : string | undefined;
+   /** keyType {string}: keySystem type (e.g. "com.widevine.alpha") */
+   keyType : string;
+   /** keySystem {Object}: the original keySystem object */
+  keySystemOptions : IKeySystemOption;
+}
 
 /**
  * @param {Array.<Object>} keySystems
@@ -84,13 +86,13 @@ function checkCachedMediaKeySystemAccess(
       return false;
     }
 
-    if ((ks.persistentLicense === true || ks.persistentStateRequired === true) &&
+    if ((ks.persistentLicense === true || ks.persistentState === "required") &&
         mksConfiguration.persistentState !== "required")
     {
       return false;
     }
 
-    if (ks.distinctiveIdentifierRequired === true &&
+    if (ks.distinctiveIdentifier === "required" &&
         mksConfiguration.distinctiveIdentifier !== "required")
     {
       return false;
@@ -124,16 +126,14 @@ function findKeySystemCanonicalName(ksType: string) : string | undefined {
 /**
  * Build configuration for the requestMediaKeySystemAccess EME API, based
  * on the current keySystem object.
- * @param {string} [ksName] - Generic name for the key system. e.g. "clearkey",
- * "widevine", "playready". Can be used to make exceptions depending on it.
- * @param {Object} keySystem
+ * @param {Object} keySystemTypeInfo
  * @returns {Array.<Object>} - Configuration to give to the
  * requestMediaKeySystemAccess API.
  */
 function buildKeySystemConfigurations(
-  ksName : string | undefined,
-  keySystem : IKeySystemOption
+  keySystemTypeInfo : IKeySystemType
 ) : MediaKeySystemConfiguration[] {
+  const { keyName, keyType, keySystemOptions: keySystem } = keySystemTypeInfo;
   const sessionTypes = ["temporary"];
   let persistentState: MediaKeysRequirement = "optional";
   let distinctiveIdentifier: MediaKeysRequirement = "optional";
@@ -143,36 +143,15 @@ function buildKeySystemConfigurations(
     sessionTypes.push("persistent-license");
   }
 
-  if (keySystem.persistentStateRequired === true) {
-    persistentState = "required";
+  if (!isNullOrUndefined(keySystem.persistentState)) {
+    persistentState = keySystem.persistentState;
   }
 
-  if (keySystem.distinctiveIdentifierRequired === true) {
-    distinctiveIdentifier = "required";
+  if (!isNullOrUndefined(keySystem.distinctiveIdentifier)) {
+    distinctiveIdentifier = keySystem.distinctiveIdentifier;
   }
-  const { EME_DEFAULT_WIDEVINE_ROBUSTNESSES } = config.getCurrent();
-
-  // Set robustness, in order of consideration:
-  //   1. the user specified its own robustnesses
-  //   2. a "widevine" key system is used, in that case set the default widevine
-  //      robustnesses as defined in the config
-  //   3. set an undefined robustness
-  const videoRobustnesses = keySystem.videoRobustnesses != null ?
-    keySystem.videoRobustnesses :
-    (ksName === "widevine" ? EME_DEFAULT_WIDEVINE_ROBUSTNESSES :
-                             []);
-  const audioRobustnesses = keySystem.audioRobustnesses != null ?
-    keySystem.audioRobustnesses :
-    (ksName === "widevine" ? EME_DEFAULT_WIDEVINE_ROBUSTNESSES :
-                             []);
-
-  if (videoRobustnesses.length === 0) {
-    videoRobustnesses.push(undefined);
-  }
-
-  if (audioRobustnesses.length === 0) {
-    audioRobustnesses.push(undefined);
-  }
+  const { EME_DEFAULT_WIDEVINE_ROBUSTNESSES,
+          EME_DEFAULT_PLAYREADY_RECOMMENDATION_ROBUSTNESSES } = config.getCurrent();
 
   // From the W3 EME spec, we have to provide videoCapabilities and
   // audioCapabilities.
@@ -186,36 +165,68 @@ function buildKeySystemConfigurations(
   // https://storage.googleapis.com/wvdocs/Chrome_EME_Changes_and_Best_Practices.pdf
   // https://www.w3.org/TR/encrypted-media/#get-supported-configuration-and-consent
 
-  const videoCapabilities: IMediaCapability[] =
-    flatMap(audioRobustnesses, (robustness) =>
+  let audioCapabilities : MediaKeySystemMediaCapability[];
+  let videoCapabilities : MediaKeySystemMediaCapability[];
+
+  const { audioCapabilitiesConfig, videoCapabilitiesConfig } = keySystem;
+  if (audioCapabilitiesConfig?.type === "full") {
+    audioCapabilities = audioCapabilitiesConfig.value;
+  } else {
+    let audioRobustnesses : Array<string | undefined>;
+    if (audioCapabilitiesConfig?.type === "robustness") {
+      audioRobustnesses = audioCapabilitiesConfig.value;
+    } else if (keyName === "widevine") {
+      audioRobustnesses = EME_DEFAULT_WIDEVINE_ROBUSTNESSES;
+    } else if (keyType === "com.microsoft.playready.recommendation") {
+      audioRobustnesses = EME_DEFAULT_PLAYREADY_RECOMMENDATION_ROBUSTNESSES;
+    } else {
+      audioRobustnesses = [];
+    }
+
+    if (audioRobustnesses.length === 0) {
+      audioRobustnesses.push(undefined);
+    }
+
+    const audioCodecs = audioCapabilitiesConfig?.type === "contentType" ?
+      audioCapabilitiesConfig.value :
+      ["audio/mp4;codecs=\"mp4a.40.2\"", "audio/webm;codecs=opus"];
+
+    audioCapabilities = flatMap(audioRobustnesses, (robustness) =>
+      audioCodecs.map(contentType => {
+        return robustness !== undefined ? { contentType, robustness } :
+                                          { contentType };
+      }));
+  }
+  if (videoCapabilitiesConfig?.type === "full") {
+    videoCapabilities = videoCapabilitiesConfig.value;
+  } else {
+    let videoRobustnesses : Array<string | undefined>;
+    if (videoCapabilitiesConfig?.type === "robustness") {
+      videoRobustnesses = videoCapabilitiesConfig.value;
+    } else if (keyName === "widevine") {
+      videoRobustnesses = EME_DEFAULT_WIDEVINE_ROBUSTNESSES;
+    } else if (keyType === "com.microsoft.playready.recommendation") {
+      videoRobustnesses = EME_DEFAULT_PLAYREADY_RECOMMENDATION_ROBUSTNESSES;
+    } else {
+      videoRobustnesses = [];
+    }
+
+    if (videoRobustnesses.length === 0) {
+      videoRobustnesses.push(undefined);
+    }
+
+    const videoCodecs = videoCapabilitiesConfig?.type === "contentType" ?
+      videoCapabilitiesConfig.value :
       ["video/mp4;codecs=\"avc1.4d401e\"",
        "video/mp4;codecs=\"avc1.42e01e\"",
-       "video/webm;codecs=\"vp8\""].map(contentType => {
+       "video/webm;codecs=\"vp8\""];
+
+    videoCapabilities = flatMap(videoRobustnesses, (robustness) =>
+      videoCodecs.map(contentType => {
         return robustness !== undefined ? { contentType, robustness } :
                                           { contentType };
       }));
-
-  const audioCapabilities: IMediaCapability[] =
-    flatMap(audioRobustnesses, (robustness) =>
-      ["audio/mp4;codecs=\"mp4a.40.2\"",
-       "audio/webm;codecs=opus"].map(contentType => {
-        return robustness !== undefined ? { contentType, robustness } :
-                                          { contentType };
-      }));
-
-  // TODO Re-test with a set contentType but an undefined robustness on the
-  // STBs on which this problem was found.
-  //
-  // add another with no {audio,video}Capabilities for some legacy browsers.
-  // As of today's spec, this should return NotSupported but the first
-  // candidate configuration should be good, so we should have no downside
-  // doing that.
-  // initDataTypes: ["cenc"],
-  // videoCapabilities: undefined,
-  // audioCapabilities: undefined,
-  // distinctiveIdentifier,
-  // persistentState,
-  // sessionTypes,
+  }
 
   return [{ initDataTypes: ["cenc"],
             videoCapabilities,
@@ -237,7 +248,7 @@ function buildKeySystemConfigurations(
  *   - reject if no compatible key system has been found.
  *
  * @param {HTMLMediaElement} mediaElement
- * @param {Array.<Object>} keySystems - The keySystems you want to test.
+ * @param {Array.<Object>} keySystemsConfigs - The keySystems you want to test.
  * @param {Object} cancelSignal
  * @returns {Promise.<Object>}
  */
@@ -324,10 +335,10 @@ export default function getMediaKeySystemAccess(
       throw new Error("requestMediaKeySystemAccess is not implemented in your browser.");
     }
 
-    const { keyName, keyType, keySystemOptions } = keySystemsType[index];
+    const chosenType = keySystemsType[index];
+    const { keyType, keySystemOptions } = chosenType;
 
-    const keySystemConfigurations = buildKeySystemConfigurations(keyName,
-                                                                 keySystemOptions);
+    const keySystemConfigurations = buildKeySystemConfigurations(chosenType);
 
     log.debug(`DRM: Request keysystem access ${keyType},` +
               `${index + 1} of ${keySystemsType.length}`);

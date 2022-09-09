@@ -876,6 +876,18 @@ const DEFAULT_CONFIG = {
                                        "SW_SECURE_CRYPTO" ],
 
     /**
+     * Robustnesses used in the {audio,video}Capabilities of the
+     * MediaKeySystemConfiguration (DRM).
+     *
+     * Only used for "com.microsoft.playready.recommendation" keysystems.
+     *
+     * Defined in order of importance (first will be tested first etc.)
+     * @type {Array.<string>}
+     */
+  EME_DEFAULT_PLAYREADY_RECOMMENDATION_ROBUSTNESSES: [ "3000",
+                                                       "2000" ],
+
+    /**
      * Link canonical key systems names to their respective reverse domain name,
      * used in the EME APIs.
      * This allows to have a simpler API, where users just need to set "widevine"
@@ -887,7 +899,8 @@ const DEFAULT_CONFIG = {
     clearkey:  [ "webkit-org.w3.clearkey",
                  "org.w3.clearkey" ],
     widevine:  [ "com.widevine.alpha" ],
-    playready: [ "com.microsoft.playready",
+    playready: [ "com.microsoft.playready.recommendation",
+                 "com.microsoft.playready",
                  "com.chromecast.playready",
                  "com.youtube.playready" ],
     fairplay: [ "com.apple.fps.1_0" ],
