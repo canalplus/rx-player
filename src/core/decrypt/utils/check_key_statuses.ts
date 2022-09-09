@@ -35,18 +35,18 @@ import { bytesToHex } from "../../../utils/string_parsing";
  * @extends Error
  */
 export class DecommissionedSessionError extends Error {
-  public reasons : IPlayerError[];
+  public reason : IPlayerError;
 
   /**
    * Creates a new `DecommissionedSessionError`.
-   * @param {Error} reasons - All errors that led to the decision to close the
+   * @param {Error} reason - Error that led to the decision to close the
    * current MediaKeySession. Should be used for reporting purposes.
    */
-  constructor(reasons : IPlayerError[]) {
+  constructor(reason : IPlayerError) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, DecommissionedSessionError.prototype);
-    this.reasons = reasons;
+    this.reason = reason;
   }
 }
 
@@ -124,7 +124,7 @@ export default function checkKeyStatuses(
 
         switch (onKeyExpiration) {
           case "close-session":
-            throw new DecommissionedSessionError([error]);
+            throw new DecommissionedSessionError(error);
           case "fallback":
             blacklistedKeyIds.push(keyId);
             break;
