@@ -554,11 +554,10 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
               })
               .then(() => this._unlockInitDataQueue())
               .catch((retryError) => this._onFatalError(retryError));
-            err.reasons.forEach(reason => {
-              if (!this._isStopped()) {
-                this.trigger("warning", reason);
-              }
-            });
+
+            if (!this._isStopped()) {
+              this.trigger("warning", err.reason);
+            }
             return;
           }
           if (!(err instanceof BlacklistedSessionError)) {
