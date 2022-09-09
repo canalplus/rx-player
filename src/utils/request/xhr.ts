@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import config from "../../config";
 import { RequestError } from "../../errors";
 import isNonEmptyString from "../is_non_empty_string";
 import isNullOrUndefined from "../is_null_or_undefined";
@@ -129,14 +128,12 @@ export default function request<T>(
   options : IRequestOptions< XMLHttpRequestResponseType | null | undefined >
 ) : Promise<IRequestResponse< T, XMLHttpRequestResponseType >> {
 
-  const { DEFAULT_REQUEST_TIMEOUT } = config.getCurrent();
   const requestOptions = {
     url: options.url,
     headers: options.headers,
     responseType: isNullOrUndefined(options.responseType) ? DEFAULT_RESPONSE_TYPE :
                                                             options.responseType,
-    timeout: isNullOrUndefined(options.timeout) ? DEFAULT_REQUEST_TIMEOUT :
-                                                  options.timeout,
+    timeout: options.timeout,
   };
 
   return new Promise((resolve, reject) => {
@@ -148,7 +145,7 @@ export default function request<T>(
     const xhr = new XMLHttpRequest();
     xhr.open("GET", url, true);
 
-    if (timeout >= 0) {
+    if (timeout !== undefined) {
       xhr.timeout = timeout;
     }
 
@@ -286,7 +283,7 @@ export interface IRequestOptions<ResponseType> {
   responseType? : ResponseType | undefined;
   /**
    * Optional timeout, in milliseconds, after which we will cancel a request.
-   * Set to DEFAULT_REQUEST_TIMEOUT by default.
+   * To not set or to set to `undefined` for disable.
    */
   timeout? : number | undefined;
   /**

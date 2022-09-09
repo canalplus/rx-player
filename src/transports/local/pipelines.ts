@@ -27,6 +27,7 @@ import { ILoadedManifestFormat } from "../../public_types";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import { CancellationSignal } from "../../utils/task_canceller";
 import {
+  IManifestLoaderOptions,
   IManifestParserResult,
   IRequestedData,
   ITransportOptions,
@@ -39,17 +40,18 @@ import textTrackParser from "./text_parser";
 
 /**
  * Returns pipelines used for local Manifest streaming.
- * @param {Object} options
+ * @param {Object} transportOptions
  * @returns {Object}
  */
 export default function getLocalManifestPipelines(
-  options : ITransportOptions
+  transportOptions : ITransportOptions
 ) : ITransportPipelines {
 
-  const customManifestLoader = options.manifestLoader;
+  const customManifestLoader = transportOptions.manifestLoader;
   const manifestPipeline = {
     loadManifest(
       url : string | undefined,
+      loaderOptions : IManifestLoaderOptions,
       cancelSignal : CancellationSignal
     ) : Promise<IRequestedData<ILoadedManifestFormat>> {
       if (isNullOrUndefined(customManifestLoader)) {
@@ -62,7 +64,7 @@ export default function getLocalManifestPipelines(
         () : never => {
           throw new Error("Cannot fallback from the `manifestLoader` of a " +
                           "`local` transport");
-        })(url, cancelSignal);
+        })(url, loaderOptions, cancelSignal);
     },
 
     parseManifest(manifestData : IRequestedData<unknown>) : IManifestParserResult {
@@ -71,7 +73,7 @@ export default function getLocalManifestPipelines(
         throw new Error("Wrong format for the manifest data");
       }
       const parsed = parseLocalManifest(loadedManifest as ILocalManifest);
-      const manifest = new Manifest(parsed, options);
+      const manifest = new Manifest(parsed, transportOptions);
       return { manifest, url: undefined };
     },
   };

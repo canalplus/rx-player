@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../../config";
 import features from "../../features";
 import Manifest, {
   Adaptation,
@@ -41,6 +42,7 @@ import {
   IRequestedData,
   ISegmentContext,
   ISegmentLoaderCallbacks,
+  ISegmentLoaderOptions,
   ISegmentLoaderResultChunkedComplete,
   ISegmentLoaderResultSegmentCreated,
   ISegmentLoaderResultSegmentLoaded,
@@ -171,7 +173,12 @@ export default function(options : ITransportOptions): ITransportPipelines {
                                                cancelSignal,
                                                scheduleRequest));
           function loadSubManifest() {
-            return transport.manifest.loadManifest(resource.url, cancelSignal);
+            /*
+             * Whether a ManifestLoader's timeout should be relied on here
+             * is ambiguous.
+             */
+            const manOpts = { timeout: config.getCurrent().DEFAULT_REQUEST_TIMEOUT };
+            return transport.manifest.loadManifest(resource.url, manOpts, cancelSignal);
           }
         });
 
@@ -185,7 +192,6 @@ export default function(options : ITransportOptions): ITransportPipelines {
 
   /**
    * @param {Object} segment
-   * @param {Object} transports
    * @returns {Object}
    */
   function getTransportPipelinesFromSegment(
@@ -244,6 +250,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
     loadSegment(
       url : string | null,
       content : ISegmentContext,
+      loaderOptions : ISegmentLoaderOptions,
       cancelToken : CancellationSignal,
       callbacks : ISegmentLoaderCallbacks<ILoadedAudioVideoSegmentFormat>
     ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedAudioVideoSegmentFormat> |
@@ -253,7 +260,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const { segment } = content;
       const { audio } = getTransportPipelinesFromSegment(segment);
       const ogContent = getOriginalContent(segment);
-      return audio.loadSegment(url, ogContent, cancelToken, callbacks);
+      return audio.loadSegment(url, ogContent, loaderOptions, cancelToken, callbacks);
     },
 
     parseSegment(
@@ -281,6 +288,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
     loadSegment(
       url : string | null,
       content : ISegmentContext,
+      loaderOptions : ISegmentLoaderOptions,
       cancelToken : CancellationSignal,
       callbacks : ISegmentLoaderCallbacks<ILoadedAudioVideoSegmentFormat>
     ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedAudioVideoSegmentFormat> |
@@ -290,7 +298,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const { segment } = content;
       const { video } = getTransportPipelinesFromSegment(segment);
       const ogContent = getOriginalContent(segment);
-      return video.loadSegment(url, ogContent, cancelToken, callbacks);
+      return video.loadSegment(url, ogContent, loaderOptions, cancelToken, callbacks);
     },
 
     parseSegment(
@@ -318,6 +326,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
     loadSegment(
       url : string | null,
       content : ISegmentContext,
+      loaderOptions : ISegmentLoaderOptions,
       cancelToken : CancellationSignal,
       callbacks : ISegmentLoaderCallbacks<ILoadedTextSegmentFormat>
     ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedTextSegmentFormat> |
@@ -327,7 +336,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const { segment } = content;
       const { text } = getTransportPipelinesFromSegment(segment);
       const ogContent = getOriginalContent(segment);
-      return text.loadSegment(url, ogContent, cancelToken, callbacks);
+      return text.loadSegment(url, ogContent, loaderOptions, cancelToken, callbacks);
     },
 
     parseSegment(
@@ -355,6 +364,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
     loadSegment(
       url : string | null,
       content : ISegmentContext,
+      loaderOptions : ISegmentLoaderOptions,
       cancelToken : CancellationSignal,
       callbacks : ISegmentLoaderCallbacks<ILoadedImageSegmentFormat>
     ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedImageSegmentFormat> |
@@ -364,7 +374,7 @@ export default function(options : ITransportOptions): ITransportPipelines {
       const { segment } = content;
       const { image } = getTransportPipelinesFromSegment(segment);
       const ogContent = getOriginalContent(segment);
-      return image.loadSegment(url, ogContent, cancelToken, callbacks);
+      return image.loadSegment(url, ogContent, loaderOptions, cancelToken, callbacks);
     },
 
     parseSegment(

@@ -72,6 +72,11 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
   callbacks : ISegmentFetcherCreatorCallbacks,
   options : ISegmentFetcherOptions
 ) : ISegmentFetcher<TSegmentDataType> {
+  const requestOptions = {
+    timeout: options.requestTimeout < 0 ? undefined :
+                                          options.requestTimeout,
+  };
+
   /**
    * Cache audio and video initialization segments.
    * This allows to avoid doing too many requests for what are usually very
@@ -257,7 +262,11 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
         url : string | null,
         cancellationSignal: CancellationSignal
       ) {
-        return loadSegment(url, content, cancellationSignal, loaderCallbacks);
+        return loadSegment(url,
+                           content,
+                           requestOptions,
+                           cancellationSignal,
+                           loaderCallbacks);
       }
 
       /**
@@ -428,6 +437,12 @@ export interface ISegmentFetcherOptions {
    * currently offline.
    */
   maxRetryOffline : number;
+  /**
+   * Timeout after which request are aborted and, depending on other options,
+   * retried.
+   * To set to `-1` for no timeout.
+   */
+  requestTimeout : number;
 }
 
 /**
@@ -439,11 +454,14 @@ export function getSegmentFetcherOptions(
   bufferType : string,
   { maxRetryRegular,
     maxRetryOffline,
-    lowLatencyMode } : { maxRetryRegular? : number | undefined;
+    lowLatencyMode,
+    requestTimeout } : { maxRetryRegular? : number | undefined;
                          maxRetryOffline? : number | undefined;
+                         requestTimeout? : number | undefined;
                          lowLatencyMode : boolean; }
 ) : ISegmentFetcherOptions {
   const { DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
+          DEFAULT_REQUEST_TIMEOUT,
           DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
           INITIAL_BACKOFF_DELAY_BASE,
           MAX_BACKOFF_DELAY_BASE } = config.getCurrent();
@@ -453,5 +471,7 @@ export function getSegmentFetcherOptions(
            baseDelay: lowLatencyMode ? INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY :
                                        INITIAL_BACKOFF_DELAY_BASE.REGULAR,
            maxDelay: lowLatencyMode ? MAX_BACKOFF_DELAY_BASE.LOW_LATENCY :
-                                      MAX_BACKOFF_DELAY_BASE.REGULAR };
+                                      MAX_BACKOFF_DELAY_BASE.REGULAR,
+           requestTimeout: isNullOrUndefined(requestTimeout) ? DEFAULT_REQUEST_TIMEOUT :
+                                                               requestTimeout };
 }

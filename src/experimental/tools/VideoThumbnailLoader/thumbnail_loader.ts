@@ -28,6 +28,7 @@ import {
   take,
   tap,
 } from "rxjs";
+import config from "../../../config";
 import Player from "../../../core/api";
 import createSegmentFetcher, {
   ISegmentFetcher,
@@ -214,7 +215,8 @@ export default class VideoThumbnailLoader {
       { baseDelay: 0,
         maxDelay: 0,
         maxRetryOffline: 0,
-        maxRetryRegular: 0 }
+        maxRetryRegular: 0,
+        requestTimeout: config.getCurrent().DEFAULT_REQUEST_TIMEOUT }
     ) as ISegmentFetcher<ArrayBuffer | Uint8Array>;
 
     const taskPromise: Promise<number> = lastValueFrom(observableRace(

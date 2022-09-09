@@ -24,6 +24,7 @@ import {
   ISegmentContext,
   ISegmentLoader,
   ISegmentLoaderCallbacks,
+  ISegmentLoaderOptions,
   ISegmentLoaderResultChunkedComplete,
   ISegmentLoaderResultSegmentCreated,
   ISegmentLoaderResultSegmentLoaded,
@@ -50,6 +51,7 @@ export default function generateTextTrackLoader(
   /**
    * @param {string|null} url
    * @param {Object} content
+   * @param {Object} options
    * @param {Object} cancelSignal
    * @param {Object} callbacks
    * @returns {Promise}
@@ -57,6 +59,7 @@ export default function generateTextTrackLoader(
   function textTrackLoader(
     url : string | null,
     content : ISegmentContext,
+    options : ISegmentLoaderOptions,
     cancelSignal : CancellationSignal,
     callbacks : ISegmentLoaderCallbacks<ILoadedTextSegmentFormat>
   ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedTextSegmentFormat> |
@@ -72,14 +75,14 @@ export default function generateTextTrackLoader(
     }
 
     if (segment.isInit) {
-      return initSegmentLoader(url, segment, cancelSignal, callbacks);
+      return initSegmentLoader(url, segment, options, cancelSignal, callbacks);
     }
 
     const containerType = inferSegmentContainer(adaptation.type, representation);
     const seemsToBeMP4 = containerType === "mp4" || containerType === undefined;
     if (lowLatencyMode && seemsToBeMP4) {
       if (fetchIsSupported()) {
-        return lowLatencySegmentLoader(url, content, callbacks, cancelSignal);
+        return lowLatencySegmentLoader(url, content, options, callbacks, cancelSignal);
       } else {
         warnOnce("DASH: Your browser does not have the fetch API. You will have " +
                  "a higher chance of rebuffering when playing close to the live edge");
@@ -92,6 +95,7 @@ export default function generateTextTrackLoader(
                        headers: Array.isArray(range) ?
                          { Range: byteRange(range) } :
                          null,
+                       timeout: options.timeout,
                        onProgress: callbacks.onProgress,
                        cancelSignal })
         .then((data) => ({ resultType: "segment-loaded",
@@ -103,6 +107,7 @@ export default function generateTextTrackLoader(
                      headers: Array.isArray(range) ?
                        { Range: byteRange(range) } :
                        null,
+                     timeout: options.timeout,
                      onProgress: callbacks.onProgress,
                      cancelSignal })
       .then((data) => ({ resultType: "segment-loaded",

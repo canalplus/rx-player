@@ -23,6 +23,7 @@ import {
   ILoadedImageSegmentFormat,
   ISegmentContext,
   ISegmentLoaderCallbacks,
+  ISegmentLoaderOptions,
   ISegmentLoaderResultSegmentCreated,
   ISegmentLoaderResultSegmentLoaded,
   ISegmentParserParsedInitChunk,
@@ -33,6 +34,7 @@ import {
  * Loads an image segment.
  * @param {string|null} url
  * @param {Object} content
+ * @param {Object} options
  * @param {Object} cancelSignal
  * @param {Object} callbacks
  * @returns {Promise}
@@ -40,6 +42,7 @@ import {
 export async function imageLoader(
   url : string | null,
   content : ISegmentContext,
+  options : ISegmentLoaderOptions,
   cancelSignal : CancellationSignal,
   callbacks : ISegmentLoaderCallbacks<ILoadedImageSegmentFormat>
 ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedImageSegmentFormat> |
@@ -52,6 +55,7 @@ export async function imageLoader(
   }
   const data = await request({ url,
                                responseType: "arraybuffer",
+                               timeout: options.timeout,
                                onProgress: callbacks.onProgress,
                                cancelSignal });
   return { resultType: "segment-loaded",

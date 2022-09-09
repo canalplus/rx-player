@@ -29,6 +29,7 @@ import {
   ISegmentContext,
   ISegmentLoader,
   ISegmentLoaderCallbacks,
+  ISegmentLoaderOptions,
   ISegmentLoaderResultChunkedComplete,
   ISegmentLoaderResultSegmentCreated,
   ISegmentLoaderResultSegmentLoaded,
@@ -44,6 +45,7 @@ import lowLatencySegmentLoader from "./low_latency_segment_loader";
  * @param {string} url
  * @param {Object} content
  * @param {boolean} lowLatencyMode
+ * @param {Object} options
  * @param {Object} callbacks
  * @param {Object} cancelSignal
  * @returns {Promise}
@@ -52,6 +54,7 @@ export function regularSegmentLoader(
   url : string,
   content : ISegmentContext,
   lowLatencyMode : boolean,
+  options : ISegmentLoaderOptions,
   callbacks : ISegmentLoaderCallbacks<ILoadedAudioVideoSegmentFormat>,
   cancelSignal : CancellationSignal
 ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedAudioVideoSegmentFormat> |
@@ -59,14 +62,14 @@ export function regularSegmentLoader(
             ISegmentLoaderResultChunkedComplete>
 {
   if (content.segment.isInit) {
-    return initSegmentLoader(url, content.segment, cancelSignal, callbacks);
+    return initSegmentLoader(url, content.segment, options, cancelSignal, callbacks);
   }
 
   const containerType = inferSegmentContainer(content.adaptation.type,
                                               content.representation);
   if (lowLatencyMode && (containerType === "mp4" || containerType === undefined)) {
     if (fetchIsSupported()) {
-      return lowLatencySegmentLoader(url, content, callbacks, cancelSignal);
+      return lowLatencySegmentLoader(url, content, options, callbacks, cancelSignal);
     } else {
       warnOnce("DASH: Your browser does not have the fetch API. You will have " +
                "a higher chance of rebuffering when playing close to the live edge");
@@ -79,6 +82,7 @@ export function regularSegmentLoader(
                    headers: segment.range !== undefined ?
                      { Range: byteRange(segment.range) } :
                      undefined,
+                   timeout: options.timeout,
                    cancelSignal,
                    onProgress: callbacks.onProgress })
     .then((data) => ({ resultType: "segment-loaded",
@@ -106,6 +110,7 @@ export default function generateSegmentLoader(
   function segmentLoader(
     url : string | null,
     content : ISegmentContext,
+    options : ISegmentLoaderOptions,
     cancelSignal : CancellationSignal,
     callbacks : ISegmentLoaderCallbacks<Uint8Array | ArrayBuffer | null>
   ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedAudioVideoSegmentFormat> |
@@ -118,7 +123,12 @@ export default function generateSegmentLoader(
     }
 
     if (lowLatencyMode || customSegmentLoader === undefined) {
-      return regularSegmentLoader(url, content, lowLatencyMode, callbacks, cancelSignal);
+      return regularSegmentLoader(url,
+                                  content,
+                                  lowLatencyMode,
+                                  options,
+                                  callbacks,
+                                  cancelSignal);
     }
 
     const args = { adaptation: content.adaptation,
@@ -127,6 +137,7 @@ export default function generateSegmentLoader(
                    representation: content.representation,
                    segment: content.segment,
                    transport: "dash",
+                   timeout: options.timeout,
                    url };
 
     return new Promise((res, rej) => {
@@ -135,7 +146,7 @@ export default function generateSegmentLoader(
 
       /**
        * Callback triggered when the custom segment loader has a response.
-       * @param {Object} args
+       * @param {Object} _args
        */
       const resolve = (
         _args : { data : ArrayBuffer|Uint8Array;
@@ -202,7 +213,12 @@ export default function generateSegmentLoader(
         }
         hasFinished = true;
         cancelSignal.deregister(abortCustomLoader);
-        regularSegmentLoader(url, content, lowLatencyMode, callbacks, cancelSignal)
+        regularSegmentLoader(url,
+                             content,
+                             lowLatencyMode,
+                             options,
+                             callbacks,
+                             cancelSignal)
           .then(res, rej);
       };
 

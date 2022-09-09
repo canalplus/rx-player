@@ -29,7 +29,7 @@ import inferSegmentContainer from "../utils/infer_segment_container";
 export default function addSegmentIntegrityChecks<T>(
   segmentLoader : ISegmentLoader<T>
 ) : ISegmentLoader<T> {
-  return (url, content, initialCancelSignal, callbacks) => {
+  return (url, content, loaderOptions, initialCancelSignal, callbacks) => {
     return new Promise((resolve, reject) => {
       const requestCanceller = new TaskCanceller({ cancelOn: initialCancelSignal });
 
@@ -37,7 +37,7 @@ export default function addSegmentIntegrityChecks<T>(
       // `stopRejectingOnCancel` here is a function allowing to stop this mechanism
       const stopRejectingOnCancel = requestCanceller.signal.register(reject);
 
-      segmentLoader(url, content, requestCanceller.signal, {
+      segmentLoader(url, content, loaderOptions, requestCanceller.signal, {
         ...callbacks,
         onNewChunk(data) {
           try {

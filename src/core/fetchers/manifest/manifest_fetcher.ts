@@ -28,6 +28,7 @@ import {
   ITransportPipelines,
 } from "../../../transports";
 import assert from "../../../utils/assert";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import TaskCanceller from "../../../utils/task_canceller";
 import errorSelector from "../utils/error_selector";
 import {
@@ -103,6 +104,13 @@ export interface IManifestFetcherSettings {
   maxRetryRegular : number | undefined;
   /** Maximum number of time a request be retried when the user is offline. */
   maxRetryOffline : number | undefined;
+  /**
+   * Timeout after which request are aborted and, depending on other options,
+   * retried.
+   * To set to `-1` for no timeout.
+   * `undefined` will lead to a default, large, timeout being used.
+   */
+  requestTimeout : number | undefined;
 }
 
 /**
@@ -164,6 +172,7 @@ export default class ManifestFetcher {
                                            IManifestFetcherWarningEvent>
   {
     return new Observable((obs) => {
+      const settings = this._settings;
       const pipelines = this._pipelines;
       const requestUrl = url ?? this._manifestUrl;
 
@@ -228,12 +237,21 @@ export default class ManifestFetcher {
        * Call the loader part of the pipeline, retrying if it fails according
        * to the current settings.
        * Returns the Promise of the last attempt.
-       * @param {string | undefined}  resolverUrl
+       * @param {string | undefined} manifestUrl
        * @returns {Promise}
        */
       function callLoaderWithRetries(manifestUrl : string | undefined) {
         const { loadManifest } = pipelines;
-        const callLoader = () => loadManifest(manifestUrl, canceller.signal);
+        let requestTimeout : number | undefined =
+          isNullOrUndefined(settings.requestTimeout) ?
+            config.getCurrent().DEFAULT_REQUEST_TIMEOUT :
+            settings.requestTimeout;
+        if (requestTimeout < 0) {
+          requestTimeout = undefined;
+        }
+        const callLoader = () => loadManifest(manifestUrl,
+                                              { timeout: requestTimeout },
+                                              canceller.signal);
         return tryRequestPromiseWithBackoff(callLoader,
                                             backoffSettings,
                                             canceller.signal);
