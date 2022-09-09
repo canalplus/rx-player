@@ -351,9 +351,6 @@ export default function StreamOrchestrator(
        */
       const rangesToRemove = getTimeRangesForContent(segmentBuffer,
                                                      resettedContent);
-      if (undecipherableRanges.length === 0 && rangesToRemove.length === 0) {
-        return EMPTY; // Nothing to do
-      }
 
       // First close all Stream currently active so they don't continue to
       // load and push segments.
