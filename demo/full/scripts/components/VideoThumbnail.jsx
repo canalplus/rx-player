@@ -161,6 +161,14 @@ class VideoThumbnail extends React.Component {
       this._loadThumbnailTimeout = setTimeout(() => {
         this._loadThumbnailTimeout = null;
         thumbnailsData.videoThumbnailLoader.setTime(roundedTime)
+          .catch((err) => {
+            if (typeof err === "object" && err !== null && err.code === "ABORTED") {
+              return;
+            } else {
+              /* eslint-disable-next-line no-console */
+              console.error("Error while loading thumbnails:", err);
+            }
+          })
           .finally(() => {
             if (time !== this.props.time || !this._isMounted) {
               return;
