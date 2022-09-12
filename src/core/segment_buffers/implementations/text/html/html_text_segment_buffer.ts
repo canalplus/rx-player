@@ -398,6 +398,7 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
     onSeeked(this._videoElement, startAutoRefresh, cancellationSignal);
     onEnded(this._videoElement, startAutoRefresh, cancellationSignal);
 
+    startAutoRefresh();
     function stopAutoRefresh() {
       if (autoRefreshCanceller !== null) {
         autoRefreshCanceller.cancel();
