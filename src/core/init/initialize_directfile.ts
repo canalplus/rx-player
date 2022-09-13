@@ -170,7 +170,7 @@ export default function initializeDirectfileContent({
    * Observable trying to avoid various stalling situations, emitting "stalled"
    * events when it cannot, as well as "unstalled" events when it get out of one.
    */
-  const stallAvoider$ = StallAvoider(playbackObserver, null, EMPTY, EMPTY);
+  const stallAvoider$ = StallAvoider(playbackObserver, null, speed, EMPTY, EMPTY);
 
   /**
    * Emit a "loaded" events once the initial play has been performed and the

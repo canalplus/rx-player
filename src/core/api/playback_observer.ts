@@ -138,6 +138,14 @@ export default class PlaybackObserver {
   }
 
   /**
+   * Returns the current playback rate advertised by the `HTMLMediaElement`.
+   * @returns {number}
+   */
+  public getPlaybackRate() : number {
+    return this._mediaElement.playbackRate;
+  }
+
+  /**
    * Returns the current `paused` status advertised by the `HTMLMediaElement`.
    *
    * Use this instead of the same status emitted on an observation when you want
@@ -479,6 +487,11 @@ export interface IPlaybackObservation extends IMediaInfos {
 export interface IReadOnlyPlaybackObserver<TObservationType> {
   /** Get the current playing position, in seconds. */
   getCurrentTime() : number;
+  /**
+   * Returns the current playback rate advertised by the `HTMLMediaElement`.
+   * @returns {number}
+   */
+  getPlaybackRate() : number;
   /** Get the HTMLMediaElement's current `readyState`. */
   getReadyState() : number;
   /**
@@ -862,6 +875,9 @@ function generateReadOnlyObserver<TSource, TDest>(
     },
     getReadyState() {
       return src.getReadyState();
+    },
+    getPlaybackRate() : number {
+      return src.getPlaybackRate();
     },
     getIsPaused() {
       return src.getIsPaused();
