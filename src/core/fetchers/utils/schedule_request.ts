@@ -207,45 +207,43 @@ export async function scheduleRequestWithCdns<T>(
   }
 
   const missedAttempts : Map<ICdnMetadata | null, ICdnAttemptMetadata> = new Map();
-  const cdnsResponse = getSortedCdnsToRequest();
-  const initialCdnsToRequest = cdnsResponse.syncValue ??
-                               await cdnsResponse.getValueAsAsync();
-  if (initialCdnsToRequest.length === 0) {
+  const cdnsResponse = getCdnToRequest();
+  const initialCdnToRequest = cdnsResponse.syncValue ??
+                              await cdnsResponse.getValueAsAsync();
+  if (initialCdnToRequest === undefined) {
     throw new Error("No CDN to request");
   }
-  return requestCdn(initialCdnsToRequest[0]);
+  return requestCdn(initialCdnToRequest);
 
   /**
-   * Returns a sorted and filtered array representing the resource's left
-   * request-able CDN, by order of preference.
-   * This array might be empty, in which case there's no CDN left to request
-   * that resource.
+   * Returns what is now the most prioritary CDN to request the wanted resource.
    *
-   * This array might contain a `null` value, which indicates that the resource
-   * can be requested through another mean than by doing an HTTP request.
+   * A return value of `null` indicates that the resource can be requested
+   * through another mean than by doing an HTTP request.
    *
-   * @returns {Object}
+   * A return value of `undefined` indicates that there's no CDN left to request
+   * the resource.
+   * @returns {Object|null|undefined}
    */
-  function getSortedCdnsToRequest() : ISyncOrAsyncValue<Array<ICdnMetadata | null>> {
+  function getCdnToRequest() : ISyncOrAsyncValue<ICdnMetadata | null | undefined> {
     if (cdns === null) {
       const nullAttemptObject = missedAttempts.get(null);
       if (nullAttemptObject !== undefined && nullAttemptObject.isBlacklisted) {
-        return SyncOrAsync.createSync([]);
+        return SyncOrAsync.createSync(undefined);
       }
-      return SyncOrAsync.createSync([null]);
+      return SyncOrAsync.createSync(null);
     } else if (cdnPrioritizer === null) {
-      return SyncOrAsync.createSync(
-        cdns.filter(c =>  missedAttempts.get(c)?.isBlacklisted !== true)
-      );
+      return SyncOrAsync.createSync(getPrioritaryRequestableCdnFromSortedList(cdns));
     } else {
       const prioritized = cdnPrioritizer.getCdnPreferenceForResource(cdns);
+      // TODO order by `blockedUntil` DESC if `missedAttempts` is not empty
       if (prioritized.syncValue !== null) {
-        return SyncOrAsync.createSync(prioritized.syncValue
-          .filter(u =>  missedAttempts.get(u)?.isBlacklisted !== true));
+        return SyncOrAsync.createSync(
+          getPrioritaryRequestableCdnFromSortedList(prioritized.syncValue)
+        );
       }
-      return SyncOrAsync.createAsync(prioritized.getValueAsAsync().then(v =>
-        v.filter(u =>  missedAttempts.get(u)?.isBlacklisted !== true)
-      ));
+      return SyncOrAsync.createAsync(prioritized.getValueAsAsync()
+        .then(v => getPrioritaryRequestableCdnFromSortedList(v)));
     }
   }
 
@@ -327,15 +325,15 @@ export async function scheduleRequestWithCdns<T>(
    * @returns {Promise}
    */
   async function retryWithNextCdn(prevRequestError : unknown) : Promise<T> {
-    const currCdnsResponse = getSortedCdnsToRequest();
-    const sortedCdns = currCdnsResponse.syncValue ??
-                       await currCdnsResponse.getValueAsAsync();
+    const currCdnResponse = getCdnToRequest();
+    const nextCdn = currCdnResponse.syncValue ??
+                    await currCdnResponse.getValueAsAsync();
 
     if (cancellationSignal.isCancelled) {
       throw cancellationSignal.cancellationError;
     }
 
-    if (sortedCdns.length === 0) {
+    if (nextCdn === undefined) {
       throw prevRequestError;
     }
 
@@ -344,8 +342,7 @@ export async function scheduleRequestWithCdns<T>(
       throw cancellationSignal.cancellationError;
     }
 
-    const nextWantedCdn = sortedCdns[0];
-    return waitPotentialBackoffAndRequest(nextWantedCdn, prevRequestError);
+    return waitPotentialBackoffAndRequest(nextCdn, prevRequestError);
   }
 
   /**
@@ -379,18 +376,18 @@ export async function scheduleRequestWithCdns<T>(
     return new Promise<T>((res, rej) => {
       /* eslint-disable-next-line @typescript-eslint/no-misused-promises */
       cdnPrioritizer?.addEventListener("priorityChange", async () => {
-        const newCdnsResponse = getSortedCdnsToRequest();
-        const newSortedCdns = newCdnsResponse.syncValue ??
-                              await newCdnsResponse.getValueAsAsync();
+        const newCdnsResponse = getCdnToRequest();
+        const updatedPrioritaryCdn = newCdnsResponse.syncValue ??
+                                     await newCdnsResponse.getValueAsAsync();
         if (cancellationSignal.isCancelled) {
           throw cancellationSignal.cancellationError;
         }
-        if (newSortedCdns.length === 0) {
+        if (updatedPrioritaryCdn === undefined) {
           return rej(prevRequestError);
         }
-        if (newSortedCdns[0] !== nextWantedCdn) {
+        if (updatedPrioritaryCdn !== nextWantedCdn) {
           canceller.cancel();
-          waitPotentialBackoffAndRequest(newSortedCdns[0], prevRequestError)
+          waitPotentialBackoffAndRequest(updatedPrioritaryCdn, prevRequestError)
             .then(res, rej);
         }
       }, canceller.signal);
@@ -398,6 +395,50 @@ export async function scheduleRequestWithCdns<T>(
       cancellableSleep(blockedFor, canceller.signal)
         .then(() => requestCdn(nextWantedCdn).then(res, rej), noop);
     });
+  }
+
+  /**
+   * Takes in input the list of CDN that can be used to request the resource, in
+   * a general preference order.
+   *
+   * Returns the actual most prioritary Cdn to request, based on the current
+   * attempts already done for that resource.
+   *
+   * Returns `undefined` if there's no Cdn left to request the resource.
+   * @param {Array.<Object>}
+   * @returns {Object|undefined}
+   */
+  function getPrioritaryRequestableCdnFromSortedList(
+    sortedCdns : ICdnMetadata[]
+  ) : ICdnMetadata | undefined {
+    if (missedAttempts.size === 0) {
+      return sortedCdns[0];
+    }
+    const now = performance.now();
+    return sortedCdns
+      .filter(c =>  missedAttempts.get(c)?.isBlacklisted !== true)
+      .reduce((
+        acc : [ICdnMetadata, number | undefined] | undefined,
+        x : ICdnMetadata
+      ) : [ICdnMetadata, number | undefined] => {
+        let blockedUntil = missedAttempts.get(x)?.blockedUntil;
+        if (blockedUntil !== undefined && blockedUntil <= now) {
+          blockedUntil = undefined;
+        }
+        if (acc === undefined) {
+          return [x, blockedUntil];
+        }
+        if (blockedUntil === undefined) {
+          if (acc[1] === undefined) {
+            return acc;
+          }
+          return [x, undefined];
+        }
+
+        return acc[1] === undefined  ? acc :
+          blockedUntil < acc[1] ? [x, blockedUntil] :
+          acc;
+      }, undefined)?.[0];
   }
 }
 

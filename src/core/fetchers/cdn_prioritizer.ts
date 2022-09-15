@@ -72,7 +72,10 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
    * CDN for a specific amount of time.
    */
   private _downgradedCdnList : {
-    /** Metadata of downgraded CDN, in no important order. */
+    /**
+     * Metadata of downgraded CDN, sorted by the time at which they have
+     * been downgraded.
+     */
     metadata : ICdnMetadata[];
     /**
      * Timeout ID (to give to `clearTimeout`) of elements in the `metadata`
