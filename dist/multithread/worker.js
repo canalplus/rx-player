@@ -37,9 +37,9 @@
     }
   });
 
-  // node_modules/rxjs/node_modules/tslib/tslib.js
+  // node_modules/tslib/tslib.js
   var require_tslib = __commonJS({
-    "node_modules/rxjs/node_modules/tslib/tslib.js"(exports, module) {
+    "node_modules/tslib/tslib.js"(exports, module) {
       init_define_ENVIRONMENT();
       var __extends2;
       var __assign2;
@@ -550,7 +550,7 @@
   // node_modules/rxjs/dist/esm5/internal/Subscriber.js
   init_define_ENVIRONMENT();
 
-  // node_modules/rxjs/node_modules/tslib/modules/index.js
+  // node_modules/tslib/modules/index.js
   init_define_ENVIRONMENT();
   var import_tslib = __toESM(require_tslib(), 1);
   var {
@@ -18915,7 +18915,14 @@
           cancelEndOfStream$.next(null);
           return EMPTY;
         case "encryption-data-encountered":
-          sendMessage(event);
+          sendMessage({
+            type: event.type,
+            value: {
+              keyIds: event.value.keyIds,
+              values: event.value.values,
+              type: event.value.type
+            }
+          });
           break;
         case "activePeriodChanged":
           const sentPeriod = formatPeriodBeforeSend(event.value.period);
