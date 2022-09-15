@@ -85,7 +85,7 @@ export type ILicense = BufferSource |
 /** Segment protection sent by the RxPlayer to the `ContentDecryptor`. */
 export interface IContentProtection {
   /** The content linked to that segment protection data. */
-  content : IContent;
+  content? : IContent | undefined;
   /**
    * Initialization data type.
    * String describing the format of the initialization data sent through this

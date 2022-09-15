@@ -291,7 +291,10 @@ function startCurrentContent(val : IStartContentMessageValue) {
         cancelEndOfStream$.next(null);
         return EMPTY;
       case "encryption-data-encountered":
-        sendMessage(event);
+        sendMessage({ type: event.type,
+                      value: { keyIds: event.value.keyIds,
+                               values: event.value.values,
+                               type: event.value.type } });
         break;
       case "activePeriodChanged":
         const sentPeriod = formatPeriodBeforeSend(event.value.period);
