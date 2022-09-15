@@ -112,8 +112,8 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    * `undefined` if we do not know this value.
    * @return {Number|undefined}
    */
-  public getFirstPosition(): number|undefined {
-    const wrappedFirstPosition = this._wrappedIndex.getFirstPosition();
+  public getFirstAvailablePosition(): number|undefined {
+    const wrappedFirstPosition = this._wrappedIndex.getFirstAvailablePosition();
     return wrappedFirstPosition != null ? wrappedFirstPosition + this._timeOffset :
                                           undefined;
   }
@@ -123,10 +123,37 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    * `undefined` if we do not know this value.
    * @return {Number|undefined}
    */
-  public getLastPosition(): number|undefined {
-    const wrappedLastPosition = this._wrappedIndex.getLastPosition();
+  public getLastAvailablePosition(): number|undefined {
+    const wrappedLastPosition = this._wrappedIndex.getLastAvailablePosition();
     return wrappedLastPosition != null ? wrappedLastPosition + this._timeOffset :
                                          undefined;
+  }
+
+  /**
+   * Returns the absolute end in seconds this RepresentationIndex can reach once
+   * all segments are available.
+   * @returns {number|null|undefined}
+   */
+  public getEnd(): number|undefined|null {
+    const wrappedEnd = this._wrappedIndex.getEnd();
+    return wrappedEnd != null ? wrappedEnd + this._timeOffset :
+                                undefined;
+  }
+
+  /**
+   * Returns:
+   *   - `true` if in the given time interval, at least one new segment is
+   *     expected to be available in the future.
+   *   - `false` either if all segments in that time interval are already
+   *     available for download or if none will ever be available for it.
+   *   - `undefined` when it is not possible to tell.
+   * @param {number} start
+   * @param {number} end
+   * @returns {boolean|undefined}
+   */
+  public awaitSegmentBetween(start: number, end: number): boolean | undefined {
+    return this._wrappedIndex.awaitSegmentBetween(start - this._timeOffset,
+                                                  end - this._timeOffset);
   }
 
   /**
@@ -164,13 +191,6 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    */
   public checkDiscontinuity(time: number): number | null {
     return this._wrappedIndex.checkDiscontinuity(time - this._timeOffset);
-  }
-
-  /**
-   * @returns {Boolean}
-   */
-  public areSegmentsChronologicallyGenerated(): boolean {
-    return this._wrappedIndex.areSegmentsChronologicallyGenerated();
   }
 
   /**

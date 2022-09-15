@@ -296,7 +296,7 @@ export interface IRepresentationIndex {
    * Returns `undefined` if we cannot know this value.
    * @returns {Number|null}
    */
-  getFirstPosition() : number | null | undefined;
+  getFirstAvailablePosition() : number | null | undefined;
 
   /**
    * Returns the ending time, in seconds, of the last playable position
@@ -310,7 +310,19 @@ export interface IRepresentationIndex {
    * instead.
    * @returns {Number|null|undefined}
    */
-  getLastPosition() : number | null | undefined;
+  getLastAvailablePosition() : number | null | undefined;
+
+  /**
+   * Returns the ending time, in seconds, of the Representation once it is
+   * "finished" (@see isFinished).
+   * Should thus be equivalent to `getLastAvailablePosition` once finished.
+   *
+   * Returns `null` if nothing is in the index
+   * Returns `undefined` if we cannot know this value.
+   *
+   * @returns {number|undefined}
+   */
+  getEnd() : number | null | undefined;
 
   /**
    * Returns `true` if a Segment returned by this index is still considered
@@ -354,35 +366,6 @@ export interface IRepresentationIndex {
   checkDiscontinuity(time : number) : number | null;
 
   /**
-   * Most RepresentationIndex are linked to segments which are generated in
-   * chronological order: from an initial position (obtainable with
-   * `getFirstPosition`) to the last position of the corresponding Period
-   * (obtainable with `getLastPosition`).
-   *
-   * However, some RepresentationIndex could announce segments in a more random
-   * order.
-   * Examples of such RepresentationIndex are ones for contents which are being
-   * downloaded locally. Here a seek close to the end could schedule the
-   * download of the last segments immediately, which might thus be announced
-   * in this index before segments in the middle are.
-   *
-   * Knowing this value serves for example to check if a discontinuity
-   * encountered in the content can be skipped over, or if it's possible that
-   * this discontinuity is due to a segment not yet being generated.
-   *
-   * You should return `true` only if there is a chance that segments are not
-   * chronologically generated (even if they all have since been generated, this
-   * function is only to know if it's possible, not if it's the case now).
-   *
-   * In other most likely cases, you should return `false`.
-   *
-   * TODO find a better way with the "local" RepresentationIndex, like
-   * explicitely declaring which segments have not been downloaded yet.
-   * @returns {boolean}
-   */
-  areSegmentsChronologicallyGenerated() : boolean;
-
-  /**
    * Returns `true` if the last segments in this index have already been
    * generated so that we can freely go to the next period.
    * Returns `false` if the index is still waiting on future segments to be
@@ -412,6 +395,8 @@ export interface IRepresentationIndex {
    * @returns {boolean}
    */
   isInitialized() : boolean;
+
+  awaitSegmentBetween(start : number, end : number) : boolean | undefined;
 
   /**
    * Replace the index with another one, such as after a Manifest update.

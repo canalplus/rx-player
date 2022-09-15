@@ -406,7 +406,8 @@ As usual, let's look into an example.
            // retrieve them
     loadInitSegment(callbacks) { /* ... */  },
     loadSegment(segment, callbacks) { /* ... */,
-    segments: [ /* ... */ ]
+    segments: [ /* ... */ ],
+    incomingRanges: [ /* ... */ ]
   }
 }
 ```
@@ -421,7 +422,8 @@ For audio tracks, it can looks like:
   index: {
     loadInitSegment(callbacks) { /* ... */  },
     loadSegment(segment, callbacks) { /* ... */,
-    segments: [ /* ... */ ]
+    segments: [ /* ... */ ],
+    incomingRanges: [ /* ... */ ]
   }
 }
 ```
@@ -436,7 +438,8 @@ At last, an example for text tracks (here ttml in an mp4 container):
   index: {
     loadInitSegment(callbacks) { /* ... */  },
     loadSegment(segment, callbacks) { /* ... */,
-    segments: [ /* ... */ ]
+    segments: [ /* ... */ ],
+    incomingRanges: [ /* ... */ ]
   }
 }
 ```
@@ -476,7 +479,7 @@ We'll now explain what each property is for, before going deeper into the
 
 As just seen, the `index` object is a property of a given representation.
 
-it contains itself three properties:
+it contains itself the following properties:
 
 - segments (`Array.<Object>`): the list of every available media segments for
   that representation. Does not include the initialization segment.
@@ -487,6 +490,43 @@ it contains itself three properties:
   if this notion is not relevant, like for subtitles.
 
 - loadSegment (`function`): Returns a specific media segment.
+
+- incomingRanges (`Array.<Object>|undefined`): The "time ranges" of future
+  segments that are not yet available.
+
+  Each object in that array takes two number properties `start` and `end` which
+  are respectively the start time and end time in seconds of contiguous ranges
+  where future segments will be expected.
+
+  For example, if in the future a segment will be available from the second `10`
+  to the second `12`, another from `12` to `14`, and a third from `18` to `20`,
+  you can set `incomingRanges` to:
+  ```js
+  incomingRanges: [
+    { start: 10, end: 14 }, // the first two segments
+    { start: 18, end: 20 } // the third one, with its own entry because not
+                           // contiguous with the previous two
+  ]
+  ```
+  Note that you are not forced to collapse this way contiguous ranges, you may
+  also just set it to:
+  ```js
+  incomingRanges: [
+    { start: 10, end: 12 }, // the first segment
+    { start: 12, end: 14 }, // the second one
+    { start: 18, end: 20 } // the third one
+  ]
+  ```
+  Both are equivalent.
+
+  If set, it is important to communicate about EVERY time ranges where
+  segments are to be expected in the future - without including time ranges
+  where the segments are already available.
+  If you cannot tell at least some of the time ranges of data that will be
+  loaded, you can let that property to `undefined`.
+
+  An empty array will mean that no data is left to be loaded.
+
 
 ### the segments array
 

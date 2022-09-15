@@ -153,6 +153,8 @@ export interface ILocalIndexSegment {
 
 /** "Index" of a `ILocalRepresentation`. Allow to declare available segments. */
 export interface ILocalIndex {
+  /** Every segments in that `ILocalIndex` has been downloaded. */
+  isFinished : boolean;
   /** Callback used to retrieve the initialization segment of a `ILocalRepresentation`. */
   loadInitSegment : ILocalManifestInitSegmentLoader;
   /** Callback used to retrieve a media segment of a `ILocalRepresentation`. */
@@ -162,6 +164,11 @@ export interface ILocalIndex {
    * Doesn't include the initialization segment.
    */
   segments : ILocalIndexSegment[];
+  /**
+   * List of not yet available time ranges, that should become available once
+   * the content is fully loaded.
+   */
+  incomingRanges?: Array<{ start : number; end : number }>;
 }
 
 /** A quality for a given "local" Manifest track (`ILocalAdaptation`). */
@@ -244,6 +251,12 @@ export interface ILocalManifest {
    *            `start` and `duration` from a ILocalPeriod and `time` and
    *            `duration` from a `ILocalIndexSegment` are now in seconds
    *            instead of milliseconds.
+   *
+   *   - "0.3": optional `futureSegments` has been added to `ILocalIndex`
+   *            `duration` has been removed.
+   *
+   *            A mandatory `isFinished` boolean should now be set on a
+   *            `ILocalIndex`.
    */
   version : string;
   /**

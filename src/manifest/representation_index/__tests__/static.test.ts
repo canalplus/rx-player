@@ -39,12 +39,12 @@ describe("manifest - StaticRepresentationIndex", () => {
 
   it("should return no first position", () => {
     const staticRI = new StaticRepresentationIndex({ media: "foo" });
-    expect(staticRI.getFirstPosition()).toBe(undefined);
+    expect(staticRI.getFirstAvailablePosition()).toBe(undefined);
   });
 
   it("should return no last position", () => {
     const staticRI = new StaticRepresentationIndex({ media: "foo" });
-    expect(staticRI.getLastPosition()).toBe(undefined);
+    expect(staticRI.getLastAvailablePosition()).toBe(undefined);
   });
 
   it("should never be refreshed", () => {
@@ -57,9 +57,9 @@ describe("manifest - StaticRepresentationIndex", () => {
     expect(staticRI.checkDiscontinuity()).toBe(null);
   });
 
-  it("should always be chronologically generated", () => {
+  it("should never be awaiting segments", () => {
     const staticRI = new StaticRepresentationIndex({ media: "foo" });
-    expect(staticRI.areSegmentsChronologicallyGenerated()).toBe(true);
+    expect(staticRI.awaitSegmentBetween()).toBe(false);
   });
 
   it("should never replace and warn when trying to do so", () => {

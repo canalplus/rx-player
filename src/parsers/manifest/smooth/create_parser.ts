@@ -562,9 +562,9 @@ function createSmoothStreamingParser(
         const firstVideoRepresentation = firstVideoAdaptation.representations[0];
         if (firstVideoRepresentation !== undefined) {
           const firstVideoTimeReference =
-            firstVideoRepresentation.index.getFirstPosition();
+            firstVideoRepresentation.index.getFirstAvailablePosition();
           const lastVideoTimeReference =
-            firstVideoRepresentation.index.getLastPosition();
+            firstVideoRepresentation.index.getLastAvailablePosition();
 
           if (firstVideoTimeReference != null) {
             firstTimeReferences.push(firstVideoTimeReference);
@@ -580,9 +580,9 @@ function createSmoothStreamingParser(
         const firstAudioRepresentation = firstAudioAdaptation.representations[0];
         if (firstAudioRepresentation !== undefined) {
           const firstAudioTimeReference =
-            firstAudioRepresentation.index.getFirstPosition();
+            firstAudioRepresentation.index.getFirstAvailablePosition();
           const lastAudioTimeReference =
-            firstAudioRepresentation.index.getLastPosition();
+            firstAudioRepresentation.index.getLastAvailablePosition();
 
           if (firstAudioTimeReference != null) {
             firstTimeReferences.push(firstAudioTimeReference);

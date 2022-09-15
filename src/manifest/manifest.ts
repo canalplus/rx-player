@@ -537,7 +537,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * and mark them as being impossible to decrypt.
    * Then trigger a "decipherabilityUpdate" event to notify everyone of the
    * changes performed.
-   * @param {Object} keyUpdates
+   * @param {Function} isDecipherableCb
    */
   public updateRepresentationsDeciperability(
     isDecipherableCb : (rep : Representation) => boolean | undefined

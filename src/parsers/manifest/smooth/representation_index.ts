@@ -21,6 +21,7 @@ import {
   ISegment,
 } from "../../../manifest";
 import { IPlayerError } from "../../../public_types";
+import assert from "../../../utils/assert";
 import clearTimelineFromPosition from "../utils/clear_timeline_from_position";
 import {
   checkDiscontinuity,
@@ -427,11 +428,9 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
 
   /**
    * Returns first position available in the index.
-   *
-   * @param {Object} index
    * @returns {Number|null}
    */
-  getFirstPosition() : number|null {
+  getFirstAvailablePosition() : number|null {
     this._refreshTimeline();
     const index = this._index;
     if (index.timeline.length === 0) {
@@ -442,10 +441,9 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
 
   /**
    * Returns last position available in the index.
-   * @param {Object} index
    * @returns {Number}
    */
-  getLastPosition() : number|undefined {
+  getLastAvailablePosition() : number|undefined {
     this._refreshTimeline();
     const index = this._index;
 
@@ -471,6 +469,42 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * Returns the absolute end in seconds this RepresentationIndex can reach once
+   * all segments are available.
+   * @returns {number|null|undefined}
+   */
+  getEnd() : number | null | undefined {
+    if (!this._isLive) {
+      return this.getLastAvailablePosition();
+    }
+    return undefined;
+  }
+
+  /**
+   * Returns:
+   *   - `true` if in the given time interval, at least one new segment is
+   *     expected to be available in the future.
+   *   - `false` either if all segments in that time interval are already
+   *     available for download or if none will ever be available for it.
+   *   - `undefined` when it is not possible to tell.
+   * @param {number} start
+   * @param {number} end
+   * @returns {boolean|undefined}
+   */
+  awaitSegmentBetween(start: number, end: number): boolean | undefined {
+    assert(start <= end);
+    if (this.isFinished()) {
+      return false;
+    }
+    const lastAvailablePosition = this.getLastAvailablePosition();
+    if (lastAvailablePosition !== undefined && end < lastAvailablePosition) {
+      return false;
+    }
+    return end > (this.getFirstAvailablePosition() ?? 0) ? undefined :
+                                                           false;
+  }
+
+  /**
    * Checks if `timeSec` is in a discontinuity.
    * That is, if there's no segment available for the `timeSec` position.
    * @param {number} timeSec - The time to check if it's in a discontinuity, in
@@ -482,15 +516,6 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
   checkDiscontinuity(timeSec : number) : number | null {
     this._refreshTimeline();
     return checkDiscontinuity(this._index, timeSec, undefined);
-  }
-
-  /**
-   * Returns `true` as Smooth segments should always be generated in
-   * chronological order.
-   * @returns {boolean}
-   */
-  areSegmentsChronologicallyGenerated() : true {
-    return true;
   }
 
   /**

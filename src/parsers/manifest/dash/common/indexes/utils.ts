@@ -21,21 +21,12 @@ import config from "../../../../../config";
  * In Javascript, numbers are encoded in a way that a floating number may be
  * represented internally with a rounding error.
  *
- * As the period end is the result of a multiplication between a floating or integer
- * number (period end * timescale), this function takes into account the potential
- * rounding error to tell if the period is fulfilled with content.
+ * This function returns a small number allowing to accound for rounding many
+ * rounding errors.
  * @param {number} timescale
- * @param {number} lastSegmentEnd
- * @param {number} periodEnd
  * @returns {boolean}
  */
-export default function isPeriodFulfilled(
-  timescale: number,
-  lastSegmentEnd: number,
-  periodEnd: number
-): boolean {
-  const scaledRoundingError =
-    config.getCurrent().DEFAULT_MAXIMUM_TIME_ROUNDING_ERROR * timescale;
-  return (lastSegmentEnd + scaledRoundingError) >= periodEnd;
+export function getSegmentTimeRoundingError(timescale: number): number {
+  return config.getCurrent().DEFAULT_MAXIMUM_TIME_ROUNDING_ERROR * timescale;
 }
 

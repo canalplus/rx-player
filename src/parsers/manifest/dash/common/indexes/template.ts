@@ -19,15 +19,16 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../../manifest";
+import assert from "../../../../../utils/assert";
 import { IEMSG } from "../../../../containers/isobmff";
 import ManifestBoundsCalculator from "../manifest_bounds_calculator";
 import { IResolvedBaseUrl } from "../resolve_base_urls";
 import getInitSegment from "./get_init_segment";
-import isPeriodFulfilled from "./is_period_fulfilled";
 import {
   createDashUrlDetokenizer,
   createIndexURLs,
 } from "./tokens";
+import { getSegmentTimeRoundingError } from "./utils";
 
 
 /**
@@ -151,7 +152,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   /** Absolute start of the Period, in seconds. */
   private _periodStart : number;
   /** Difference between the end time of the Period and its start time, in timescale. */
-  private _scaledPeriodEnd : number | undefined;
+  private _scaledRelativePeriodEnd : number | undefined;
   /** Minimum availabilityTimeOffset concerning the segments of this Representation. */
   private _availabilityTimeOffset : number | undefined;
   /** Whether the corresponding Manifest can be updated and changed. */
@@ -219,7 +220,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                     startNumber: index.startNumber };
     this._isDynamic = isDynamic;
     this._periodStart = periodStart;
-    this._scaledPeriodEnd = periodEnd === undefined ?
+    this._scaledRelativePeriodEnd = periodEnd === undefined ?
       undefined :
       (periodEnd - periodStart) * timescale;
     this._isEMSGWhitelisted = isEMSGWhitelisted;
@@ -246,7 +247,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
             mediaURLs } = index;
 
     const scaledStart = this._periodStart * timescale;
-    const scaledEnd = this._scaledPeriodEnd;
+    const scaledEnd = this._scaledRelativePeriodEnd;
 
     // Convert the asked position to the right timescales, and consider them
     // relatively to the Period's start.
@@ -316,7 +317,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * Returns first possible position in the index, in seconds.
    * @returns {number|null|undefined}
    */
-  getFirstPosition() : number | null | undefined {
+  getFirstAvailablePosition() : number | null | undefined {
     const firstSegmentStart = this._getFirstSegmentStart();
     if (firstSegmentStart == null) {
       return firstSegmentStart; // return undefined or null
@@ -328,20 +329,68 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    * Returns last possible position in the index, in seconds.
    * @returns {number|null}
    */
-  getLastPosition() : number|null|undefined {
+  getLastAvailablePosition() : number|null|undefined {
     const lastSegmentStart = this._getLastSegmentStart();
     if (lastSegmentStart == null) {
-      // In that case (null or undefined), getLastPosition should reflect
+      // In that case (null or undefined), getLastAvailablePosition should reflect
       // the result of getLastSegmentStart, as the meaning is the same for
       // the two functions. So, we return the result of the latter.
       return lastSegmentStart;
     }
 
-    const lastSegmentEnd = Math.min(
-      lastSegmentStart + this._index.duration,
-      this._scaledPeriodEnd ?? Infinity
-    );
+    const lastSegmentEnd = Math.min(lastSegmentStart + this._index.duration,
+                                    this._scaledRelativePeriodEnd ?? Infinity);
     return (lastSegmentEnd / this._index.timescale) + this._periodStart;
+  }
+
+  /**
+   * Returns the absolute end in seconds this RepresentationIndex can reach once
+   * all segments are available.
+   * @returns {number|null|undefined}
+   */
+  getEnd(): number | null | undefined {
+    if (!this._isDynamic) {
+      return this.getLastAvailablePosition();
+    }
+    if (this._scaledRelativePeriodEnd === undefined) {
+      return undefined;
+    }
+    const { timescale } = this._index;
+    const absoluteScaledPeriodEnd = (this._scaledRelativePeriodEnd +
+                                     this._periodStart * timescale);
+    return  absoluteScaledPeriodEnd / this._index.timescale;
+  }
+
+  /**
+   * Returns:
+   *   - `true` if in the given time interval, at least one new segment is
+   *     expected to be available in the future.
+   *   - `false` either if all segments in that time interval are already
+   *     available for download or if none will ever be available for it.
+   *   - `undefined` when it is not possible to tell.
+   *
+   * Always `false` in a `BaseRepresentationIndex` because all segments should
+   * be directly available.
+   * @returns {boolean}
+   */
+  awaitSegmentBetween(start: number, end: number): boolean | undefined {
+    assert(start <= end);
+    if (!this._isDynamic) {
+      return false;
+    }
+
+    const { timescale } = this._index;
+    const segmentTimeRounding = getSegmentTimeRoundingError(timescale);
+    const scaledPeriodStart = this._periodStart * timescale;
+    const scaledRelativeEnd = end * timescale - scaledPeriodStart;
+    if (this._scaledRelativePeriodEnd === undefined) {
+      return (scaledRelativeEnd + segmentTimeRounding) >= 0;
+    }
+
+    const scaledRelativePeriodEnd = this._scaledRelativePeriodEnd;
+    const scaledRelativeStart = start * timescale - scaledPeriodStart;
+    return (scaledRelativeStart - segmentTimeRounding) < scaledRelativePeriodEnd &&
+           (scaledRelativeEnd + segmentTimeRounding) >= 0;
   }
 
   /**
@@ -359,13 +408,6 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    */
   checkDiscontinuity() : null {
     return null;
-  }
-
-  /**
-   * @returns {Boolean}
-   */
-  areSegmentsChronologicallyGenerated() : true {
-    return true;
   }
 
   /**
@@ -404,7 +446,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     if (!this._isDynamic) {
       return true;
     }
-    if (this._scaledPeriodEnd === undefined) {
+    if (this._scaledRelativePeriodEnd === undefined) {
       return false;
     }
 
@@ -417,7 +459,8 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       return false;
     }
     const lastSegmentEnd = lastSegmentStart + this._index.duration;
-    return isPeriodFulfilled(timescale, lastSegmentEnd, this._scaledPeriodEnd);
+    const segmentTimeRounding = getSegmentTimeRoundingError(timescale);
+    return (lastSegmentEnd + segmentTimeRounding) >= this._scaledRelativePeriodEnd;
   }
 
   /**
@@ -435,7 +478,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     this._aggressiveMode = newIndex._aggressiveMode;
     this._isDynamic = newIndex._isDynamic;
     this._periodStart = newIndex._periodStart;
-    this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
+    this._scaledRelativePeriodEnd = newIndex._scaledRelativePeriodEnd;
     this._manifestBoundsCalculator = newIndex._manifestBoundsCalculator;
   }
 
@@ -459,7 +502,9 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     }
 
     // 1 - check that this index is already available
-    if (this._scaledPeriodEnd === 0 || this._scaledPeriodEnd === undefined) {
+    if (this._scaledRelativePeriodEnd === 0 ||
+        this._scaledRelativePeriodEnd === undefined)
+    {
       // /!\ The scaled max position augments continuously and might not
       // reflect exactly the real server-side value. As segments are
       // generated discretely.
@@ -500,13 +545,13 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       }
       const agressiveModeOffset = this._aggressiveMode ? (duration / timescale) :
                                                          0;
-      if (this._scaledPeriodEnd != null &&
-          this._scaledPeriodEnd <
+      if (this._scaledRelativePeriodEnd != null &&
+          this._scaledRelativePeriodEnd <
             (lastPos + agressiveModeOffset - this._periodStart) * this._index.timescale) {
-        if (this._scaledPeriodEnd < duration) {
+        if (this._scaledRelativePeriodEnd < duration) {
           return null;
         }
-        return (Math.floor(this._scaledPeriodEnd / duration) - 1)  * duration;
+        return (Math.floor(this._scaledRelativePeriodEnd / duration) - 1)  * duration;
       }
       // /!\ The scaled last position augments continuously and might not
       // reflect exactly the real server-side value. As segments are
@@ -530,7 +575,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                null :
                (numberOfSegmentsAvailable - 1) * duration;
     } else {
-      const maximumTime = this._scaledPeriodEnd ?? 0;
+      const maximumTime = this._scaledRelativePeriodEnd ?? 0;
       const numberIndexedToZero = Math.ceil(maximumTime / duration) - 1;
       const regularLastSegmentStart = numberIndexedToZero * duration;
 

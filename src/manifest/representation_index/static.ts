@@ -67,7 +67,7 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
    * Returns first position in index.
    * @returns {undefined}
    */
-  getFirstPosition() : undefined {
+  getFirstAvailablePosition() : undefined {
     return ;
   }
 
@@ -75,8 +75,33 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
    * Returns last position in index.
    * @returns {undefined}
    */
-  getLastPosition() : undefined {
+  getLastAvailablePosition() : undefined {
     return ;
+  }
+
+  /**
+   * Returns the absolute end in seconds this RepresentationIndex can reach once
+   * all segments are available.
+   * @returns {number|null|undefined}
+   */
+  getEnd() : undefined {
+    return;
+  }
+
+  /**
+   * Returns:
+   *   - `true` if in the given time interval, at least one new segment is
+   *     expected to be available in the future.
+   *   - `false` either if all segments in that time interval are already
+   *     available for download or if none will ever be available for it.
+   *   - `undefined` when it is not possible to tell.
+   *
+   * Always `false` in a `StaticRepresentationIndex` because all segments should
+   * be directly available.
+   * @returns {boolean}
+   */
+  awaitSegmentBetween(): false {
+    return false;
   }
 
   /**
@@ -92,13 +117,6 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
    */
   checkDiscontinuity() : null {
     return null;
-  }
-
-  /**
-   * @returns {boolean}
-   */
-  areSegmentsChronologicallyGenerated() : boolean {
-    return true;
   }
 
   /**

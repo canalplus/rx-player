@@ -32,7 +32,7 @@ export default function getFirstPositionFromAdaptation(
   const { representations } = adaptation;
   let max : null | number = null;
   for (let i = 0; i < representations.length; i++) {
-    const firstPosition = representations[i].index.getFirstPosition();
+    const firstPosition = representations[i].index.getFirstAvailablePosition();
     if (firstPosition === undefined) { // we cannot tell
       return undefined;
     }

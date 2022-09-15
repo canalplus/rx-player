@@ -274,7 +274,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * Returns first position in index.
    * @returns {Number|null}
    */
-  getFirstPosition() : number|null {
+  getFirstAvailablePosition() : number|null {
     const index = this._index;
     if (index.timeline.length === 0) {
       return null;
@@ -288,7 +288,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * Returns last position in index.
    * @returns {Number|null}
    */
-  getLastPosition() : number|null {
+  getLastAvailablePosition() : number|null {
     const { timeline } = this._index;
     if (timeline.length === 0) {
       return null;
@@ -299,6 +299,31 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
                                                  this._scaledPeriodEnd),
                               this._scaledPeriodEnd ?? Infinity);
     return fromIndexTime(lastTime, this._index);
+  }
+
+  /**
+   * Returns the absolute end in seconds this RepresentationIndex can reach once
+   * all segments are available.
+   * @returns {number|null|undefined}
+   */
+  getEnd(): number | null {
+    return this.getLastAvailablePosition();
+  }
+
+  /**
+   * Returns:
+   *   - `true` if in the given time interval, at least one new segment is
+   *     expected to be available in the future.
+   *   - `false` either if all segments in that time interval are already
+   *     available for download or if none will ever be available for it.
+   *   - `undefined` when it is not possible to tell.
+   *
+   * Always `false` in a `BaseRepresentationIndex` because all segments should
+   * be directly available.
+   * @returns {boolean}
+   */
+  awaitSegmentBetween(): false {
+    return false;
   }
 
   /**
@@ -315,15 +340,6 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    */
   checkDiscontinuity() : null {
     return null;
-  }
-
-  /**
-   * `BaseRepresentationIndex` should just already all be generated.
-   * Return `true` as a default value here.
-   * @returns {boolean}
-   */
-  areSegmentsChronologicallyGenerated() : true {
-    return true;
   }
 
   /**

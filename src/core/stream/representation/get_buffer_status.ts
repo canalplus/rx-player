@@ -152,43 +152,36 @@ export default function getBufferStatus(
    * `true` if the current `RepresentationStream` has loaded all the
    * needed segments for this Representation until the end of the Period.
    */
-  const hasFinishedLoading = neededRange.hasReachedPeriodEnd &&
+  const hasFinishedLoading = representation.index.isInitialized() &&
+                             representation.index.isFinished() &&
+                             neededRange.hasReachedPeriodEnd &&
                              prioritizedNeededSegments.length === 0 &&
                              segmentsOnHold.length === 0;
 
-  let imminentDiscontinuity;
-  if (!representation.index.isInitialized() ||
-      // TODO better handle contents not chronologically generated
-      (!representation.index.areSegmentsChronologicallyGenerated() &&
-       !hasFinishedLoading))
-  {
-    // We might be missing information about future segments
-    imminentDiscontinuity = null;
-  } else {
-    /**
-     * Start time in seconds of the next available not-yet pushed segment.
-     * `null` if no segment is wanted for the current wanted range.
-     */
-    let nextSegmentStart : number | null = null;
-    if (segmentsBeingPushed.length > 0) {
-      nextSegmentStart = Math.min(...segmentsBeingPushed.map(info => info.segment.time));
-    }
-    if (segmentsOnHold.length > 0) {
-      nextSegmentStart = nextSegmentStart !== null ?
-        Math.min(nextSegmentStart, segmentsOnHold[0].time) :
-        segmentsOnHold[0].time;
-    }
-    if (prioritizedNeededSegments.length > 0) {
-      nextSegmentStart = nextSegmentStart !== null ?
-        Math.min(nextSegmentStart, prioritizedNeededSegments[0].segment.time) :
-        prioritizedNeededSegments[0].segment.time;
-    }
-    imminentDiscontinuity = checkForDiscontinuity(content,
-                                                  neededRange,
-                                                  nextSegmentStart,
-                                                  hasFinishedLoading,
-                                                  bufferedSegments);
+  /**
+   * Start time in seconds of the next available not-yet pushed segment.
+   * `null` if no segment is wanted for the current wanted range.
+   */
+  let nextSegmentStart : number | null = null;
+  if (segmentsBeingPushed.length > 0) {
+    nextSegmentStart = Math.min(...segmentsBeingPushed.map(info => info.segment.time));
   }
+  if (segmentsOnHold.length > 0) {
+    nextSegmentStart = nextSegmentStart !== null ?
+      Math.min(nextSegmentStart, segmentsOnHold[0].time) :
+      segmentsOnHold[0].time;
+  }
+  if (prioritizedNeededSegments.length > 0) {
+    nextSegmentStart = nextSegmentStart !== null ?
+      Math.min(nextSegmentStart, prioritizedNeededSegments[0].segment.time) :
+      prioritizedNeededSegments[0].segment.time;
+  }
+
+  const imminentDiscontinuity = checkForDiscontinuity(content,
+                                                      neededRange,
+                                                      nextSegmentStart,
+                                                      hasFinishedLoading,
+                                                      bufferedSegments);
   return { imminentDiscontinuity,
            hasFinishedLoading,
            neededSegments: prioritizedNeededSegments,
@@ -215,7 +208,7 @@ function getRangeOfNeededSegments(
 ) : { start : number; end : number; hasReachedPeriodEnd : boolean } {
   let wantedStartPosition : number;
   const { manifest, period, representation } = content;
-  const lastIndexPosition = representation.index.getLastPosition();
+  const lastIndexPosition = representation.index.getLastAvailablePosition();
   const representationIndex = representation.index;
 
   // There is an exception for when the current initially wanted time is already

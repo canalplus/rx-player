@@ -102,10 +102,17 @@ export default function checkForDiscontinuity(
     (nextSegmentStart === null ||
      nextBufferedSegment.infos.segment.end <= nextSegmentStart)
   ) {
+    const discontinuityEnd = nextBufferedSegment.bufferedStart;
+    if (!hasFinishedLoading &&
+        representation.index.awaitSegmentBetween(checkedRange.start,
+                                                 discontinuityEnd) !== false)
+    {
+      return null;
+    }
     log.debug("RS: current discontinuity encountered",
               adaptation.type, nextBufferedSegment.bufferedStart);
     return { start: undefined,
-             end: nextBufferedSegment.bufferedStart };
+             end: discontinuityEnd };
   }
 
   // Check if there's a discontinuity BETWEEN segments of the current range
@@ -116,16 +123,27 @@ export default function checkForDiscontinuity(
 
   // If there was a hole between two consecutives segments, and if this hole
   // comes before the next segment to load, there is a discontinuity (that hole!)
-  if (nextHoleIdx !== null &&
-      (nextSegmentStart === null ||
-       bufferedSegments[nextHoleIdx].infos.segment.end <= nextSegmentStart))
-  {
-    const start = bufferedSegments[nextHoleIdx - 1].bufferedEnd as number;
-    const end = bufferedSegments[nextHoleIdx].bufferedStart as number;
-    log.debug("RS: future discontinuity encountered", adaptation.type, start, end);
-    return { start, end };
+  if (nextHoleIdx !== null) {
+    const segmentInfoBeforeHole = bufferedSegments[nextHoleIdx - 1];
+    const segmentInfoAfterHole = bufferedSegments[nextHoleIdx];
 
-  } else if (nextSegmentStart === null) {
+    if (nextSegmentStart === null ||
+        segmentInfoAfterHole.infos.segment.end <= nextSegmentStart)
+    {
+      if (!hasFinishedLoading && representation.index
+        .awaitSegmentBetween(segmentInfoBeforeHole.infos.segment.end,
+                             segmentInfoAfterHole.infos.segment.time) !== false)
+      {
+        return null;
+      }
+      const start = segmentInfoBeforeHole.bufferedEnd as number;
+      const end = segmentInfoAfterHole.bufferedStart as number;
+      log.debug("RS: future discontinuity encountered", adaptation.type, start, end);
+      return { start, end };
+    }
+  }
+
+  if (nextSegmentStart === null) {
     // If no hole between segments and no segment to load, check for a
     // discontinuity at the end of the Period
 
