@@ -102,7 +102,10 @@ function createAudioTracks(
     const track = { language: audioTrack.language,
                     id,
                     normalized: normalizeLanguage(audioTrack.language),
-                    audioDescription: audioTrack.kind === "descriptions",
+                    audioDescription: audioTrack.kind === "descriptions" ||
+                      // Safari seem to prefer the non-standard singular
+                      // version, funnily enough
+                      audioTrack.kind === "description",
                     representations: [] as Representation[] };
     newAudioTracks.push({ track,
                           nativeTrack: audioTrack });
