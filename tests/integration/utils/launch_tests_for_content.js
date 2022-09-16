@@ -2,6 +2,7 @@ import { expect } from "chai";
 import RxPlayer from "../../../src";
 import sleep from "../../utils/sleep.js";
 import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
+import tryTestMultipleTimes from "../../utils/try_test_multiple_times";
 import XHRMock from "../../utils/request_mock";
 
 /**
@@ -1101,17 +1102,39 @@ export default function launchTestsForContent(manifestInfos) {
       });
     });
 
-    describe("pause", () => {
+    describe.only("pause", () => {
       it("should have no effect when LOADED", async () => {
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport,
-        });
-        await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPlayerState()).to.equal("LOADED");
-        player.pause();
-        await sleep(10);
-        expect(player.getPlayerState()).to.equal("LOADED");
+        await tryTestMultipleTimes(
+          async function runTest(cancelTest) {
+            // On some rare conditions, the player may switch to a
+            // `"BUFFERING"` or `"RELOADING"` state while loading a content.
+            // For that test specifically, we want to avoid that situation and
+            // just relaunch the test if that happens.
+            player.addEventListener("playerStateChange", (state) => {
+              if (
+                state === "BUFFERING" ||
+                state === "RELOADING" ||
+                state === "SEEKING"
+              ) {
+                cancelTest();
+              }
+            });
+            player.loadVideo({
+              url: manifestInfos.url,
+              transport,
+            });
+            await waitForLoadedStateAfterLoadVideo(player);
+            expect(player.getPlayerState()).to.equal("LOADED");
+            player.pause();
+            await sleep(10);
+
+            expect(player.getPlayerState()).to.equal("LOADED");
+          },
+          3,
+          function cleanUp() {
+            player.removeEventListener("playerStateChange");
+          }
+        );
       });
 
       it("should pause if playing", async () => {
