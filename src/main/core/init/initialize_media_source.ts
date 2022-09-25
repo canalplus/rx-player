@@ -32,7 +32,6 @@ import {
   take,
   takeUntil,
 } from "rxjs";
-import { shouldReloadMediaSourceOnDecipherabilityUpdate } from "../../compat";
 import config from "../../../common/config";
 import log from "../../../common/log";
 import { IKeySystemOption } from "../../../common/public_types";
@@ -41,6 +40,7 @@ import { fromEvent } from "../../../common/utils/event_emitter";
 import filterMap from "../../../common/utils/filter_map";
 import objectAssign from "../../../common/utils/object_assign";
 import { IReadOnlySharedReference } from "../../../common/utils/reference";
+import { shouldReloadMediaSourceOnDecipherabilityUpdate } from "../../compat";
 import AdaptiveRepresentationSelector, {
   IAdaptiveRepresentationSelectorArguments,
 } from "../adaptive";

@@ -25,13 +25,13 @@ export interface IActivePeriodChangedWorkerMessage {
 
 export interface IWarningWorkerMessage {
   type : "warning";
-  contentId : number | undefined;
+  contentId : string | undefined;
   value : ISentError;
 }
 
 export interface IMediaSourceWorkerMessage {
   type : "media-source";
-  contentId : number | undefined;
+  contentId : string | undefined;
 
   /** The MediaSource's handle. */
   value : MediaProvider;
@@ -39,13 +39,13 @@ export interface IMediaSourceWorkerMessage {
 
 export interface IManifestReadyWorkerMessage {
   type : "ready-to-start";
-  contentId : number | undefined;
+  contentId : string | undefined;
   value : { manifest : ISentManifest };
 }
 
 export interface IErrorWorkerMessage {
   type : "error";
-  contentId : number | undefined;
+  contentId : string | undefined;
   value : ISentError;
 }
 

@@ -19,7 +19,7 @@ export interface IReferenceUpdate<TRefName extends string, TRefType> {
 }
 
 export interface IContentInitializationData {
-  contentId : number;
+  contentId : string;
   url : string;
   /** Limit the frequency of Manifest updates. */
   minimumManifestUpdateInterval : number;

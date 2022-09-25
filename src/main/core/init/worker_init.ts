@@ -21,6 +21,7 @@ import {
   IPlayerError,
 } from "../../../common/public_types";
 import assert from "../../../common/utils/assert";
+import idGenerator from "../../../common/utils/id_generator";
 import createSharedReference, {
   IReadOnlySharedReference, ISharedReference,
 } from "../../../common/utils/reference";
@@ -47,8 +48,7 @@ import initialSeekAndPlay from "./initial_seek_and_play";
 import throwOnMediaError from "./throw_on_media_error";
 import { IInitEvent } from "./types";
 
-// XXX TODO generateNewId?
-let lastContentId = 0;
+const generateContentId = idGenerator();
 
 /** Arguments received by `createAdaptiveRepresentationSelector`. */
 export interface IAdaptiveOptions {
@@ -189,22 +189,21 @@ export function InitializeOnMediaSource(
 
   const initSubject = new Subject<IInitEvent>();
 
-  bindReferenceUpdates(worker, wantedBufferAhead, "wantedBufferAhead", cancelSignal);
-  bindReferenceUpdates(worker, maxVideoBufferSize, "maxVideoBufferSize", cancelSignal);
-  bindReferenceUpdates(worker, maxBufferAhead, "maxBufferAhead", cancelSignal);
-  bindReferenceUpdates(worker, maxBufferBehind, "maxBufferBehind", cancelSignal);
-  bindReferenceUpdates(worker, minAudioBitrate, "minAudioBitrate", cancelSignal);
-  bindReferenceUpdates(worker, minVideoBitrate, "minVideoBitrate", cancelSignal);
-  bindReferenceUpdates(worker, maxAudioBitrate, "maxAudioBitrate", cancelSignal);
-  bindReferenceUpdates(worker, maxVideoBitrate, "maxVideoBitrate", cancelSignal);
-  bindReferenceUpdates(worker, manualAudioBitrate, "manualAudioBitrate", cancelSignal);
-  bindReferenceUpdates(worker, manualVideoBitrate, "manualVideoBitrate", cancelSignal);
-  bindReferenceUpdates(worker, limitVideoWidth, "limitVideoWidth", cancelSignal);
-  bindReferenceUpdates(worker, throttleVideo, "throttleVideo", cancelSignal);
-  bindReferenceUpdates(worker,
-                       throttleVideoBitrate,
-                       "throttleVideoBitrate",
-                       cancelSignal);
+  bindNumberReferencesToWorker(worker,
+                               cancelSignal,
+                               [wantedBufferAhead, "wantedBufferAhead"],
+                               [maxVideoBufferSize, "maxVideoBufferSize"],
+                               [maxBufferAhead, "maxBufferAhead"],
+                               [maxBufferBehind, "maxBufferBehind"],
+                               [minAudioBitrate, "minAudioBitrate"],
+                               [minVideoBitrate, "minVideoBitrate"],
+                               [maxAudioBitrate, "maxAudioBitrate"],
+                               [maxVideoBitrate, "maxVideoBitrate"],
+                               [manualAudioBitrate, "manualAudioBitrate"],
+                               [manualVideoBitrate, "manualVideoBitrate"],
+                               [limitVideoWidth, "limitVideoWidth"],
+                               [throttleVideo, "throttleVideo"],
+                               [throttleVideoBitrate, "throttleVideoBitrate"]);
 
   /** Send content protection initialization data. */
   const lastContentProtection = createSharedReference<IContentProtection | null>(null);
@@ -282,7 +281,7 @@ export function InitializeOnMediaSource(
 
   sendMessage(worker,
               { type: "prepare",
-                value: { contentId: lastContentId++,
+                value: { contentId: generateContentId(),
                          url,
                          minimumManifestUpdateInterval,
                          lowLatencyMode,
@@ -482,40 +481,44 @@ function cancellationSignalToObservable(
   });
 }
 
-function bindReferenceUpdates(
+function bindNumberReferencesToWorker(
   worker : Worker,
-  ref : IReadOnlySharedReference<number>,
-  refName : "wantedBufferAhead" |
-            "maxVideoBufferSize" |
-            "maxBufferBehind" |
-            "maxBufferAhead" |
-            "minAudioBitrate" |
-            "maxAudioBitrate" |
-            "minVideoBitrate" |
-            "maxVideoBitrate" |
-            "manualAudioBitrate" |
-            "manualVideoBitrate" |
-            "speed" |
-            "limitVideoWidth" |
-            "throttleVideo" |
-            "throttleVideoBitrate",
-  cancellationSignal : CancellationSignal
+  cancellationSignal : CancellationSignal,
+  ...refs : Array<[
+    IReadOnlySharedReference<number>,
+    "wantedBufferAhead" |
+    "maxVideoBufferSize" |
+    "maxBufferBehind" |
+    "maxBufferAhead" |
+    "minAudioBitrate" |
+    "maxAudioBitrate" |
+    "minVideoBitrate" |
+    "maxVideoBitrate" |
+    "manualAudioBitrate" |
+    "manualVideoBitrate" |
+    "speed" |
+    "limitVideoWidth" |
+    "throttleVideo" |
+    "throttleVideoBitrate"
+  ]>
 ) : void {
-  ref.onUpdate(newVal => {
-    // NOTE: The TypeScript checks have already been made by this function's
-    // overload, but the body here is not aware of that.
-    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    /* eslint-disable @typescript-eslint/no-unsafe-call */
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    sendMessage(worker, { type: "reference-update",
-                          value: { name: refName as any,
-                                   newVal: newVal as any } });
-    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
-    /* eslint-enable @typescript-eslint/no-explicit-any */
-    /* eslint-enable @typescript-eslint/no-unsafe-call */
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-  }, { clearSignal: cancellationSignal, emitCurrentValue: true });
+  for (const ref of refs) {
+    ref[0].onUpdate(newVal => {
+      // NOTE: The TypeScript checks have already been made by this function's
+      // overload, but the body here is not aware of that.
+      /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+      /* eslint-disable @typescript-eslint/no-unsafe-call */
+      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+      sendMessage(worker, { type: "reference-update",
+                            value: { name: ref[1] as any,
+                                     newVal: newVal as any } });
+      /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+      /* eslint-enable @typescript-eslint/no-explicit-any */
+      /* eslint-enable @typescript-eslint/no-unsafe-call */
+      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+    }, { clearSignal: cancellationSignal, emitCurrentValue: true });
+  }
 }
 
 function formatError(sentError : ISentError) : IPlayerError {
