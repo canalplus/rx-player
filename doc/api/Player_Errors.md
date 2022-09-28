@@ -255,6 +255,19 @@ An EncryptedMediaError can have the following codes (`code` property):
 - `"MEDIA_IS_ENCRYPTED_ERROR"`: The media is encrypted and no key system
   was given to the RxPlayer's APIs.
 
+- `CREATE_MEDIA_KEYS_ERROR`: An unknown error happened when creating a CDM
+  instance (to decrypt the content).
+
+  More specifically, this error happen when the EME [`createMediaKeys`
+  API](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemaccess-createmediakeys)
+  throws or rejects.
+
+  This is a relatively rare situation generally linked to an issue in the CDM.
+
+  It has been encountered mainly on some faulty Android devices and Electron
+  applications. If this happens repeatedly, try reinstalling the CDM
+  module on your device.
+
 - `"MULTIPLE_SESSIONS_SAME_INIT_DATA"`: This error should never be emitted
   by the RxPlayer. Please open an issue if you encounter it.
 
