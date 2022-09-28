@@ -15,7 +15,6 @@
  */
 
 import config from "../../../config";
-import Manifest from "../../../manifest";
 import {
   ISegmentPipeline,
   ITransportPipelines,
@@ -91,11 +90,10 @@ export default class SegmentFetcherCreator {
    */
   constructor(
     transport : ITransportPipelines,
-    manifest : Manifest,
     options : ISegmentFetcherCreatorBackoffOptions,
     cancelSignal : CancellationSignal
   ) {
-    const cdnPrioritizer = new CdnPrioritizer(manifest, transport, cancelSignal);
+    const cdnPrioritizer = new CdnPrioritizer(cancelSignal);
 
     const { MIN_CANCELABLE_PRIORITY,
             MAX_HIGH_PRIORITY_LEVEL } = config.getCurrent();

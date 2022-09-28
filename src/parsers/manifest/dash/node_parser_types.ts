@@ -42,11 +42,6 @@ export interface IMPDChildren {
    */
   baseURLs : IBaseUrlIntermediateRepresentation[];
   /**
-   * Information on a potential Content Steering Manifest linked to this
-   * content.
-   */
-  contentSteering? : IContentSteeringIntermediateRepresentation | undefined;
-  /**
    * Location(s) at which the Manifest can be refreshed.
    *
    * This is the content of all `Location` elements encountered in this MPD
@@ -373,43 +368,6 @@ export interface IBaseUrlIntermediateRepresentation {
    * This is the inner content of a BaseURL node.
    */
   value: string;
-
-  /** Attributes assiociated to the BaseURL node. */
-  attributes: {
-    /**
-     * Potential value for a `serviceLocation` attribute, used in content
-     * steering mechanisms.
-     */
-    serviceLocation? : string;
-  };
-}
-
-/** Intermediate representation for a ContentSteering node. */
-export interface IContentSteeringIntermediateRepresentation {
-  /**
-   * The Content Steering Manifest's URL.
-   *
-   * This is the inner content of a ContentSteering node.
-   */
-  value: string;
-
-  /** Attributes assiociated to the ContentSteering node. */
-  attributes: {
-    /** Default ServiceLocation to be used. */
-    defaultServiceLocation? : string;
-    /**
-     * If `true`, the Content Steering Manifest should be loaded before the
-     * first resources depending on it are loaded.
-     */
-    queryBeforeStart? : boolean;
-    /**
-     * If set, a proxy URL has been configured.
-     * Requests for the Content Steering Manifest should actually go through
-     * this proxy, the node URL being added to an `url` query parameter
-     * alongside potential other query parameters.
-     */
-    proxyServerUrl? : string;
-  };
 }
 
 /** Intermediate representation for a Node following a "scheme" format. */

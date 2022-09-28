@@ -25,22 +25,11 @@ import { IBaseUrlIntermediateRepresentation } from "../../node_parser_types";
 export default function parseBaseURL(
   root: Element
 ) : [IBaseUrlIntermediateRepresentation | undefined, Error[]] {
-  const attributes : { serviceLocation? : string } = {};
   const value = root.textContent;
   const warnings : Error[] = [];
   if (value === null || value.length === 0) {
     return [undefined, warnings];
   }
-  for (let i = 0; i < root.attributes.length; i++) {
-    const attribute = root.attributes[i];
-
-    switch (attribute.name) {
-      case "serviceLocation":
-        attributes.serviceLocation = attribute.value;
-        break;
-    }
-  }
-
-  return [ { value, attributes },
+  return [ { value },
            warnings ];
 }

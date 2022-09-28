@@ -267,7 +267,6 @@ export default function InitializeOnMediaSource(
                                maxRetryRegular: segmentRequestOptions.regularError,
                                maxRetryOffline: segmentRequestOptions.offlineError };
       const segmentFetcherCreator = new SegmentFetcherCreator(transport,
-                                                              manifest,
                                                               requestOptions,
                                                               playbackCanceller.signal);
 
