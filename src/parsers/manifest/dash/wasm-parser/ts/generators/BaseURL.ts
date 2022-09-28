@@ -35,14 +35,6 @@ export function generateBaseUrlAttrParser(
       case AttributeName.Text:
         baseUrlAttrs.value = parseString(textDecoder, linearMemory.buffer, ptr, len);
         break;
-
-      case AttributeName.ServiceLocation: {
-        baseUrlAttrs.attributes.serviceLocation = parseString(textDecoder,
-                                                              linearMemory.buffer,
-                                                              ptr,
-                                                              len);
-        break;
-      }
     }
   };
 }
