@@ -90,8 +90,7 @@ export interface ICdnMetadata {
   baseUrl : string;
 
   /**
-   * Identifier that might be re-used in other documents, for example a
-   * Content Steering Manifest, to identify this CDN.
+   * Identifier that might be re-used in other documents.
    */
   id? : string | undefined;
 }
@@ -378,13 +377,4 @@ export interface IParsedManifest {
   suggestedPresentationDelay? : number | undefined;
   /** URIs where the manifest can be refreshed by order of importance. */
   uris? : string[] | undefined;
-
-  contentSteering : IContentSteeringMetadata | null;
-}
-
-export interface IContentSteeringMetadata {
-  url : string;
-  defaultId : string | undefined;
-  queryBeforeStart : boolean;
-  proxyUrl : string | undefined;
 }
