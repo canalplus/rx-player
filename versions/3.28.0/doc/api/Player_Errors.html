@@ -220,7 +220,7 @@ when the initial segment’s start is much later than expected.</p>
 </li>
 <li>
 <p><code>"NO_PLAYABLE_REPRESENTATION"</code>: The currently chosen Adaptation does not
-contain any playable Representation. This usually happen when every
+contain any playable Representation. This usually happens when every
 Representation has been blacklisted due to encryption limitations.</p>
 </li>
 <li>
@@ -289,6 +289,17 @@ license was given to the CDM).</p>
 <li>
 <p><code>"MEDIA_IS_ENCRYPTED_ERROR"</code>: The media is encrypted and no key system
 was given to the RxPlayer’s APIs.</p>
+</li>
+<li>
+<p><code>CREATE_MEDIA_KEYS_ERROR</code>: An unknown error happened when creating a CDM
+instance (to decrypt the content).</p>
+<p>More specifically, this error happens when the EME <a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemaccess-createmediakeys"><code>createMediaKeys</code>
+API</a>
+throws or rejects.</p>
+<p>This is a relatively rare situation generally linked to an issue in the CDM.</p>
+<p>It has been encountered mainly on some faulty Android devices and Electron
+applications. If this happens repeatedly, try reinstalling the CDM
+module on your device.</p>
 </li>
 <li>
 <p><code>"MULTIPLE_SESSIONS_SAME_INIT_DATA"</code>: This error should never be emitted
