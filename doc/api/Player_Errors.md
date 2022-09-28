@@ -194,7 +194,7 @@ A MediaError can have the following codes (`code` property):
   when the initial segment's start is much later than expected.
 
 - `"NO_PLAYABLE_REPRESENTATION"`: The currently chosen Adaptation does not
-  contain any playable Representation. This usually happen when every
+  contain any playable Representation. This usually happens when every
   Representation has been blacklisted due to encryption limitations.
 
 - `"MANIFEST_UPDATE_ERROR"`: This error should never be emitted as it is
@@ -258,7 +258,7 @@ An EncryptedMediaError can have the following codes (`code` property):
 - `CREATE_MEDIA_KEYS_ERROR`: An unknown error happened when creating a CDM
   instance (to decrypt the content).
 
-  More specifically, this error happen when the EME [`createMediaKeys`
+  More specifically, this error happens when the EME [`createMediaKeys`
   API](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemaccess-createmediakeys)
   throws or rejects.
 
