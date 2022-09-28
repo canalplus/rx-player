@@ -306,7 +306,6 @@ function createManifest(
                              manifests[manifests.length - 1].isLastPeriodKnown);
   const manifest = { availabilityStartTime: 0,
                      clockOffset,
-                     contentSteering: null,
                      suggestedPresentationDelay: 10,
                      periods,
                      transportType: "metaplaylist",

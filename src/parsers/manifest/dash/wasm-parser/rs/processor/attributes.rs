@@ -150,20 +150,6 @@ pub fn report_base_url_attrs(tag_bs : &quick_xml::events::BytesStart) {
     };
 }
 
-pub fn report_content_steering_attrs(tag_bs : &quick_xml::events::BytesStart) {
-    for res_attr in tag_bs.attributes() {
-        match res_attr {
-            Ok(attr) => match attr.key {
-                b"serviceLocation" => ServiceLocation.try_report_as_string(&attr),
-                b"proxyServerUrl" => ProxyServerUrl.try_report_as_string(&attr),
-                b"queryBeforeStart" => QueryBeforeStart.try_report_as_bool(&attr),
-                _ => {},
-            },
-            Err(err) => ParsingError::from(err).report_err(),
-        };
-    };
-}
-
 pub fn report_segment_template_attrs(tag_bs : &quick_xml::events::BytesStart) {
     for res_attr in tag_bs.attributes() {
         match res_attr {
