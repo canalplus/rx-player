@@ -22,11 +22,36 @@ The options argument is an object containing :
   - _position_ (`string`|`undefined`) : absolute position at which we should
     start playback
 
-If no reload position is defined, start playback at the last playback position.
+  If no reload position is defined, start playback at the last playback
+  position.
+
+- _autoPlay_ (`boolean | undefined`): If set to `true`, the reloaded content
+  will automatically play after being `"LOADED"`.
+
+  If set to `false`, it will stay in the `"LOADED"` state (and paused) once
+  loaded, without automatically played.
+
+  If unset or set to `undefined`, the content will automatically play if the
+  content was playing the last time it was played and stay in the `"LOADED"`
+  state (and paused) if it was paused last time it was played.
 
 Note that despite this method's name, the player will not go through the
 `RELOADING` state while reloading the content but through the regular `LOADING`
 state - as if `loadVideo` was called on that same content again.
+
+<div class="note">
+On some browsers, auto-playing a media without user interaction is blocked
+due to the browser's policy.
+<br>
+<br>
+In that case, the player won't be able to play (it will stay in a `LOADED`
+state) and you will receive a <a href="./Player_Errors.md">warning event</a>
+containing a `MEDIA_ERROR` with the code: `MEDIA_ERR_BLOCKED_AUTOPLAY`.
+<br>
+<br>
+A solution in that case would be to propose to your users an UI element to
+trigger the play with an interaction.
+</div>
 
 ## Syntax
 

@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import RxPlayer from "../../../src";
 import sleep from "../../utils/sleep.js";
-import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
+import waitForState, { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 import tryTestMultipleTimes from "../../utils/try_test_multiple_times";
 import XHRMock from "../../utils/request_mock";
 
@@ -393,25 +393,231 @@ export default function launchTestsForContent(manifestInfos) {
         expect(player.getPosition())
           .to.be.closeTo(manifestInfos.minimumPosition, 0.1);
         player.seekTo({ position: manifestInfos.minimumPosition + 5 });
+        await sleep(0);
         player.reload();
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.getPosition())
           .to.be.closeTo(manifestInfos.minimumPosition + 5, 0.1);
       });
-      it("should not reload when content is not loaded", async function () {
+      it("should reload even when the current content is not yet loaded", async function () {
         player.setVideoBitrate(0);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
           startAt: { position: manifestInfos.minimumPosition }
         });
-        expect(() => player.reload())
-          .to.throw("API: Can't reload without having previously loaded a content.");
+        player.reload();
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPosition()).to.be
+          .closeTo(manifestInfos.minimumPosition, 2);
       });
-      it("should not reload when no content", async function () {
+      it("should reload even when the last content was not yet loaded", async function () {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          startAt: { position: manifestInfos.minimumPosition }
+        });
+        player.stop();
+        await sleep(5);
+        player.reload();
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPosition()).to.be
+          .closeTo(manifestInfos.minimumPosition, 2);
+      });
+      it("should not reload when no content was yet loaded", async function () {
         player.setVideoBitrate(0);
         expect(() => player.reload())
           .to.throw("API: Can't reload without having previously loaded a content.");
+      });
+      it("should reload with autoplay when the current content was is yet loaded with autoPlay on", async function () {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          autoPlay: true,
+        });
+        player.reload();
+        await waitForState(player,
+                           "PLAYING",
+                           ["LOADING", "LOADED", "BUFFERING", "SEEKING", "RELOADING"]);
+      });
+      it("should reload without autoplay when the current content is not yet loaded with autoPlay off", async function () {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          autoPlay: false,
+        });
+        player.reload();
+        await waitForState(player,
+                           "LOADED",
+                           ["LOADING", "BUFFERING", "SEEKING", "RELOADING"]);
+      });
+      it("should reload with autoplay when the current content is loaded and playing", async function () {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        player.play();
+        await waitForState(player,
+                           "PLAYING",
+                           ["BUFFERING", "SEEKING", "RELOADING"]);
+        player.reload();
+        await waitForState(player,
+                           "PLAYING",
+                           ["LOADING", "LOADED", "BUFFERING", "SEEKING", "RELOADING"]);
+      });
+      it("should reload without autoplay when the current content is loaded and paused", async function () {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        player.play();
+        await waitForState(player,
+                           "PLAYING",
+                           ["BUFFERING", "SEEKING", "RELOADING"]);
+        await sleep(500);
+        player.pause();
+        await waitForState(player,
+                           "PAUSED",
+                           ["PLAYING", "BUFFERING", "SEEKING", "RELOADING"]);
+        player.reload();
+        await waitForState(player,
+                           "LOADED",
+                           ["LOADING", "BUFFERING", "SEEKING", "RELOADING"]);
+      });
+      it("should reload with autoplay when the last content was not yet loaded with autoPlay on", async function () {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          autoPlay: true,
+        });
+        player.stop();
+        await sleep(50);
+        player.reload();
+        await waitForState(player,
+                           "PLAYING",
+                           ["LOADING", "LOADED", "BUFFERING", "SEEKING", "RELOADING"]);
+      });
+      it("should reload without autoplay when the last content was not yet loaded with autoPlay off", async function () {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          autoPlay: false,
+        });
+        player.stop();
+        await sleep(50);
+        player.reload();
+        await waitForState(player,
+                           "LOADED",
+                           ["LOADING", "BUFFERING", "SEEKING", "RELOADING"]);
+      });
+      it("should reload with autoplay when the last content was loaded and playing", async function () {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        player.play();
+        await waitForState(player,
+                           "PLAYING",
+                           ["BUFFERING", "SEEKING", "RELOADING"]);
+        player.stop();
+        await sleep(50);
+        player.reload();
+        await waitForState(player,
+                           "PLAYING",
+                           ["LOADING", "LOADED", "BUFFERING", "SEEKING", "RELOADING"]);
+      });
+      it("should reload without autoplay when the last content was loaded and paused", async function () {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        player.play();
+        await waitForState(player,
+                           "PLAYING",
+                           ["BUFFERING", "SEEKING", "RELOADING"]);
+        await sleep(500);
+        player.pause();
+        await waitForState(player,
+                           "PAUSED",
+                           ["PLAYING", "BUFFERING", "SEEKING", "RELOADING"]);
+        player.stop();
+        await sleep(50);
+        player.reload();
+        await waitForState(player,
+                           "LOADED",
+                           ["LOADING", "BUFFERING", "SEEKING", "RELOADING"]);
+      });
+      it("should respect `autoPlay` reload setting even if the non-yet loaded content had a different autoPlay setting", async () => {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          autoPlay: false,
+        });
+        player.reload({ autoPlay: true });
+        await waitForState(player,
+                           "PLAYING",
+                           ["LOADING", "LOADED", "BUFFERING", "SEEKING", "RELOADING"]);
+
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          autoPlay: true,
+        });
+        player.reload({ autoPlay: false });
+        await waitForState(player,
+                           "LOADED",
+                           ["LOADING", "BUFFERING", "SEEKING", "RELOADING"]);
+      });
+      it("should respect `autoPlay` reload setting even if the current content is loaded and playing", async function () {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        player.play();
+        await waitForState(player,
+                           "PLAYING",
+                           ["BUFFERING", "SEEKING", "RELOADING"]);
+        player.reload({ autoPlay: false });
+        await waitForState(player,
+                           "LOADED",
+                           ["LOADING", "BUFFERING", "SEEKING", "RELOADING"]);
+      });
+      it("should respect `autoPlay` reload setting even if the current content is loaded and paused", async function () {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        player.play();
+        await waitForState(player,
+                           "PLAYING",
+                           ["BUFFERING", "SEEKING", "RELOADING"]);
+        await sleep(500);
+        player.pause();
+        await waitForState(player,
+                           "PAUSED",
+                           ["PLAYING", "BUFFERING", "SEEKING", "RELOADING"]);
+        player.reload({ autoPlay: true });
+        await waitForState(player,
+                           "PLAYING",
+                           ["LOADING", "LOADED", "BUFFERING", "SEEKING", "RELOADING"]);
       });
     });
 
@@ -1102,7 +1308,7 @@ export default function launchTestsForContent(manifestInfos) {
       });
     });
 
-    describe.only("pause", () => {
+    describe("pause", () => {
       it("should have no effect when LOADED", async () => {
         await tryTestMultipleTimes(
           async function runTest(cancelTest) {

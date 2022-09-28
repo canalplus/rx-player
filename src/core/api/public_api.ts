@@ -41,6 +41,7 @@ import {
   switchMap,
   take,
   takeUntil,
+  tap,
 } from "rxjs";
 import {
   events,
@@ -135,6 +136,7 @@ import { IInbandEvent } from "../stream";
 import {
   checkReloadOptions,
   IParsedLoadVideoOptions,
+  IParsedStartAtOption,
   parseConstructorOptions,
   parseLoadVideoOptions,
 } from "./option_utils";
@@ -372,10 +374,35 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /** Determines whether or not the player should stop at the end of video playback. */
   private readonly _priv_stopAtEnd : boolean;
 
-  /** Information about last content being played. */
-  private _priv_lastContentPlaybackInfos : { options?: IParsedLoadVideoOptions;
-                                             manifest?: Manifest;
-                                             lastPlaybackPosition?: number; };
+  /**
+   * Information that can be relied on once `reload` is called.
+   * It should refer to the last content being played.
+   */
+  private _priv_reloadingMetadata : {
+    /**
+     * `loadVideo` options communicated for the last content that will be re-used
+     * on reload.
+     */
+    options?: IParsedLoadVideoOptions;
+    /**
+     * Manifest loaded for the last content that should be used once `reload`
+     * is called.
+     */
+    manifest?: Manifest;
+    /**
+     * If `true`, the player should be paused after reloading.
+     * If `false`, the player should be playing after reloading.
+     * If `undefined`, `reload` should depend on other criteria (such as the
+     * `autoPlay` option, to know whether the content should play or not after
+     * reloading.
+     */
+    reloadInPause?: boolean;
+    /**
+     * If set this is the position that should be seeked to by default after
+     * reloading.
+     */
+    reloadPosition?: number;
+  };
 
   /** All possible Error types emitted by the RxPlayer. */
   static get ErrorTypes() : Record<IErrorType, IErrorType> {
@@ -529,7 +556,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_preferredTextTracks = preferredTextTracks;
     this._priv_preferredVideoTracks = preferredVideoTracks;
 
-    this._priv_lastContentPlaybackInfos = {};
+    this._priv_reloadingMetadata = {};
   }
 
   /**
@@ -600,7 +627,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_bitrateInfos.maxAutoBitrates.video.finish();
     this._priv_bitrateInfos.maxAutoBitrates.audio.finish();
 
-    this._priv_lastContentPlaybackInfos = {};
+    this._priv_reloadingMetadata = {};
 
     // un-attach video element
     this.videoElement = null;
@@ -613,51 +640,56 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   loadVideo(opts : ILoadVideoOptions) : void {
     const options = parseLoadVideoOptions(opts);
     log.info("API: Calling loadvideo", options.url, options.transport);
-    this._priv_lastContentPlaybackInfos = { options };
+    this._priv_reloadingMetadata = { options };
     this._priv_initializeContentPlayback(options);
   }
 
   /**
-   * Reload last content. Init media playback without fetching again
-   * the manifest.
+   * Reload the last loaded content.
    * @param {Object} reloadOpts
    */
-  reload(reloadOpts?: { reloadAt?: { position?: number; relative?: number } }): void {
+  reload(reloadOpts?: {
+    reloadAt?: { position?: number; relative?: number };
+    autoPlay?: boolean;
+  }): void {
     const { options,
             manifest,
-            lastPlaybackPosition } = this._priv_lastContentPlaybackInfos;
-    if (options === undefined ||
-        manifest === undefined ||
-        lastPlaybackPosition === undefined) {
+            reloadPosition,
+            reloadInPause } = this._priv_reloadingMetadata;
+    if (options === undefined) {
       throw new Error("API: Can't reload without having previously loaded a content.");
     }
     checkReloadOptions(reloadOpts);
-    let startAtPositon: number;
-    if (reloadOpts !== undefined &&
-        reloadOpts.reloadAt !== undefined &&
-        reloadOpts.reloadAt.position !== undefined) {
-      startAtPositon = reloadOpts.reloadAt.position;
-    } else {
-      let playbackPosition: number;
-      if (this.state === "STOPPED" || this.state === "ENDED") {
-        playbackPosition = lastPlaybackPosition;
+    let startAt : IParsedStartAtOption | undefined;
+    if (reloadOpts?.reloadAt?.position !== undefined) {
+      startAt = { position: reloadOpts.reloadAt.position };
+    } else if (reloadOpts?.reloadAt?.relative !== undefined) {
+      if (reloadPosition === undefined) {
+        throw new Error(
+          "Can't reload to a relative position when previous content was not loaded."
+        );
       } else {
-        if (this.videoElement === null) {
-          throw new Error("Can't reload when video element does not exist.");
-        }
-        playbackPosition = this.videoElement.currentTime;
+        startAt = { position: reloadOpts.reloadAt.relative + reloadPosition };
       }
-      if (reloadOpts !== undefined &&
-          reloadOpts.reloadAt !== undefined &&
-          reloadOpts.reloadAt.relative !== undefined) {
-        startAtPositon = reloadOpts.reloadAt.relative + playbackPosition;
-      } else {
-        startAtPositon = playbackPosition;
-      }
+    } else if (reloadPosition !== undefined) {
+      startAt = { position: reloadPosition };
     }
+
+    let autoPlay : boolean | undefined;
+    if (reloadOpts?.autoPlay !== undefined) {
+      autoPlay = reloadOpts.autoPlay;
+    } else if (reloadInPause !== undefined) {
+      autoPlay = !reloadInPause;
+    }
+
     const newOptions = { ...options,
                          initialManifest: manifest };
-    newOptions.startAt = { position: startAtPositon };
+    if (startAt !== undefined) {
+      newOptions.startAt = startAt;
+    }
+    if (autoPlay !== undefined) {
+      newOptions.autoPlay = autoPlay;
+    }
     this._priv_initializeContentPlayback(newOptions);
   }
 
@@ -1038,10 +1070,51 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       }
     });
 
-    // Link "positionUpdate" events to the PlaybackObserver
-    observation$
-      .pipe(takeUntil(stoppedContent$))
-      .subscribe(o => this._priv_triggerPositionUpdate(o));
+    /**
+     * Function updating `this._priv_reloadingMetadata` in function of the
+     * current state and playback conditions.
+     * To call when either might change.
+     * @param {string} state - The player state we're about to switch to.
+     */
+    const updateReloadingMetadata = (state : IPlayerState) => {
+      switch (state) {
+        case "STOPPED":
+        case "RELOADING":
+        case "LOADING":
+          break; // keep previous metadata
+        case "ENDED":
+          this._priv_reloadingMetadata.reloadInPause = true;
+          this._priv_reloadingMetadata.reloadPosition =
+            playbackObserver.getReference().getValue().position;
+          break;
+        default:
+          const o = playbackObserver.getReference().getValue();
+          this._priv_reloadingMetadata.reloadInPause = o.paused;
+          this._priv_reloadingMetadata.reloadPosition = o.position;
+          break;
+      }
+    };
+
+    playerState$.pipe(
+      tap(newState => {
+        updateReloadingMetadata(newState);
+        this._priv_setPlayerState(newState);
+
+        // Previous call could have performed all kind of side-effects, thus,
+        // we re-check the current state associated to the RxPlayer
+        if (this.state === "ENDED" && this._priv_stopAtEnd) {
+          currentContentCanceller.cancel();
+        }
+      }),
+      map(state => state !== "RELOADING" && state !== "STOPPED"),
+      distinctUntilChanged(),
+      switchMap(canSendObservation => canSendObservation ? observation$ :
+                                                           EMPTY),
+      takeUntil(stoppedContent$)
+    ).subscribe(o => {
+      updateReloadingMetadata(this.state);
+      this._priv_triggerPositionUpdate(o);
+    });
 
     // Link "seeking" and "seeked" events (once the content is loaded)
     loaded$.pipe(
@@ -1051,19 +1124,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       log.info(`API: Triggering "${evt}" event`);
       this.trigger(evt, null);
     });
-
-    // Handle state updates
-    playerState$
-      .pipe(takeUntil(stoppedContent$))
-      .subscribe(newState => {
-        this._priv_setPlayerState(newState);
-
-        // Previous call could have performed all kind of side-effects, thus,
-        // we re-check the current state associated to the RxPlayer
-        if (this.state === "ENDED" && this._priv_stopAtEnd) {
-          currentContentCanceller.cancel();
-        }
-      });
 
     // Link playback events to the corresponding callbacks
     playback$.subscribe({
@@ -2498,7 +2558,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return;
     }
     contentInfos.manifest = manifest;
-    this._priv_lastContentPlaybackInfos.manifest = manifest;
+    this._priv_reloadingMetadata.manifest = manifest;
 
     const { initialAudioTrack, initialTextTrack } = contentInfos;
     this._priv_trackChoiceManager = new TrackChoiceManager({
@@ -2859,16 +2919,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return;
     }
 
-    if (this.state === PLAYER_STATES.RELOADING) {
-      return;
-    }
-
     const { isDirectFile, manifest } = this._priv_contentInfos;
     if ((!isDirectFile && manifest === null) || isNullOrUndefined(observation)) {
       return;
     }
-
-    this._priv_lastContentPlaybackInfos.lastPlaybackPosition = observation.position;
 
     const maximumPosition = manifest !== null ? manifest.getMaximumSafePosition() :
                                                 undefined;
