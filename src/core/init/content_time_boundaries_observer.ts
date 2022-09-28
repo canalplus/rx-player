@@ -32,10 +32,12 @@ import Manifest, {
 import { fromEvent } from "../../utils/event_emitter";
 import filterMap from "../../utils/filter_map";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import createSharedReference from "../../utils/reference";
+import createSharedReference, {
+  IReadOnlySharedReference,
+} from "../../utils/reference";
 import { IReadOnlyPlaybackObserver } from "../api";
 import {
-  IStreamOrchestratorEvent,
+  IAdaptationChangeEvent,
   IStreamOrchestratorPlaybackObservation,
 } from "../stream";
 import EVENTS from "./events_generators";
@@ -56,13 +58,13 @@ import { IWarningEvent } from "./types";
  *    theoretically playable.
  *
  * @param {Object} manifest
- * @param {Observable} streams
+ * @param {Object} lastAdaptationChange
  * @param {Object} playbackObserver
  * @returns {Observable}
  */
 export default function ContentTimeBoundariesObserver(
   manifest : Manifest,
-  streams : Observable<IStreamOrchestratorEvent>,
+  lastAdaptationChange : IReadOnlySharedReference<IAdaptationChangeEvent | null>,
   playbackObserver : IReadOnlyPlaybackObserver<IContentTimeObserverPlaybackObservation>
 
 ) : Observable<IContentDurationUpdateEvent | IWarningEvent> {
@@ -115,10 +117,10 @@ export default function ContentTimeBoundariesObserver(
     ignoreElements()
   );
 
-  const updateDurationAndTimeBoundsOnTrackChange$ = streams.pipe(
-    tap((message) => { // Update Manifest's bounds and duration if necessary
-      if (message.type === "adaptationChange") {
-        if (!manifest.isLastPeriodKnown) {
+  const updateDurationAndTimeBoundsOnTrackChange$ = lastAdaptationChange
+    .asObservable().pipe(
+      tap((message) => {
+        if (message === null || !manifest.isLastPeriodKnown) {
           return;
         }
         const lastPeriod = manifest.periods[manifest.periods.length - 1];
@@ -137,10 +139,8 @@ export default function ContentTimeBoundariesObserver(
             contentDuration.setValue(newDuration);
           }
         }
-      }
-    }),
-    ignoreElements()
-  );
+      }),
+      ignoreElements());
 
   return observableMerge(
     updateDurationOnManifestUpdate$,

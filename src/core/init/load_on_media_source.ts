@@ -31,12 +31,13 @@ import {
 import { MediaError } from "../../errors";
 import log from "../../log";
 import Manifest from "../../manifest";
-import { IReadOnlySharedReference } from "../../utils/reference";
+import createSharedReference, { IReadOnlySharedReference } from "../../utils/reference";
 import { IRepresentationEstimator } from "../adaptive";
 import { PlaybackObserver } from "../api";
 import { SegmentFetcherCreator } from "../fetchers";
 import SegmentBuffersStore from "../segment_buffers";
 import StreamOrchestrator, {
+  IAdaptationChangeEvent,
   IStreamOrchestratorOptions,
 } from "../stream";
 import ContentTimeBoundariesObserver from "./content_time_boundaries_observer";
@@ -147,6 +148,11 @@ export default function createMediaSourceLoader(
     /** Emits event when streams are "locked", meaning they cannot load segments. */
     const lockedStream$ = new Subject<ILockedStreamEvent>();
 
+    /** Emit each time a new Adaptation is considered by the `StreamOrchestrator`. */
+    const lastAdaptationChange = createSharedReference<
+      IAdaptationChangeEvent | null
+    >(null);
+
     // Creates Observable which will manage every Stream for the given Content.
     const streams$ = StreamOrchestrator({ manifest, initialPeriod },
                                         streamObserver,
@@ -176,6 +182,9 @@ export default function createMediaSourceLoader(
           case "locked-stream":
             lockedStream$.next(evt.value);
             return EMPTY;
+          case "adaptationChange":
+            lastAdaptationChange.setValue(evt);
+            return observableOf(evt);
           default:
             return observableOf(evt);
         }
@@ -183,7 +192,7 @@ export default function createMediaSourceLoader(
     );
 
     const contentTimeObserver = ContentTimeBoundariesObserver(manifest,
-                                                              streams$,
+                                                              lastAdaptationChange,
                                                               streamObserver)
       .pipe(
         mergeMap((evt) => {
