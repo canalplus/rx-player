@@ -292,9 +292,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     manifest.addEventListener("manifestUpdate", () => {
       this.trigger("manifestUpdate", null);
     }, initCanceller.signal);
-    manifest.addEventListener("decipherabilityUpdate", (args) => {
-      this.trigger("decipherabilityUpdate", args);
-    }, initCanceller.signal);
 
     log.debug("Init: Calculating initial time");
     const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);

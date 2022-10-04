@@ -130,16 +130,6 @@ export interface IContentInitializerEvents {
    * From this point on, the user can reliably play/pause/resume the stream.
    */
   loaded : { segmentBuffersStore: SegmentBuffersStore | null };
-  /**
-   * Event sent after updating the decipherability status of at least one
-   * Manifest's Representation.
-   * This generally means that some Representation(s) were detected to be
-   * undecipherable on the current device.
-   */
-  decipherabilityUpdate: Array<{ manifest : Manifest;
-                                 period : Period;
-                                 adaptation : Adaptation;
-                                 representation : Representation; }>;
   /** Event emitted when a stream event is encountered. */
   streamEvent: IPublicStreamEvent |
                IPublicNonFiniteStreamEvent;
