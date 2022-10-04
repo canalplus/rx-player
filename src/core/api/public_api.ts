@@ -52,7 +52,6 @@ import {
   IAvailableVideoTrack,
   IBrokenRepresentationsLockContext,
   IConstructorOptions,
-  IDecipherabilityUpdateContent,
   IKeySystemConfigurationOutput,
   ILoadVideoOptions,
   ILockedAudioRepresentationsSettings,
@@ -734,16 +733,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this.trigger("streamEvent", streamEvent));
     initializer.addEventListener("streamEventSkip", (streamEventSkip) =>
       this.trigger("streamEventSkip", streamEventSkip));
-    initializer.addEventListener("decipherabilityUpdate", (decipherabilityUpdate) =>
-      this.trigger("decipherabilityUpdate", decipherabilityUpdate.map((i) => {
-        return { periodInfo: { start: i.period.start,
-                               end: i.period.end,
-                               id: i.period.id },
-                 trackType: i.adaptation.type,
-                 trackId: i.adaptation.id,
-                 representationId: i.representation.id,
-                 isDecipherable: i.representation.decipherable };
-      })));
     initializer.addEventListener("activePeriodChanged", (periodInfo) =>
       this._priv_onActivePeriodChanged(contentInfos, periodInfo));
     initializer.addEventListener("periodStreamReady", (periodReadyInfo) =>
@@ -2668,7 +2657,6 @@ interface IPublicAPIEvent {
   availableAudioTracksChange : IAvailableAudioTrack[];
   availableTextTracksChange : IAvailableTextTrack[];
   availableVideoTracksChange : IAvailableVideoTrack[];
-  decipherabilityUpdate : IDecipherabilityUpdateContent[];
   play: null;
   pause: null;
   newAvailablePeriods : IPeriod[];
