@@ -14,11 +14,7 @@
  * limitations under the License.
  */
 
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
-} from "../../manifest";
+import Manifest from "../../manifest";
 import { IPlayerError } from "../../public_types";
 import SegmentBuffersStore from "../segment_buffers";
 import {
@@ -55,19 +51,6 @@ export interface IManifestReadyEvent {
 /** Event sent after the Manifest has been updated. */
 export interface IManifestUpdateEvent { type: "manifestUpdate";
                                         value: null; }
-
-/**
- * Event sent after updating the decipherability status of at least one
- * Manifest's Representation.
- * This generally means that some Representation(s) were detected to be
- * undecipherable on the current device.
- */
-export interface IDecipherabilityUpdateEvent {
-  type: "decipherabilityUpdate";
-  value: Array<{ manifest : Manifest;
-                 period : Period;
-                 adaptation : Adaptation;
-                 representation : Representation; }>; }
 
 /** Event sent when a minor happened. */
 export interface IWarningEvent { type : "warning";
@@ -140,7 +123,6 @@ export type IMediaSourceLoaderEvent = IStalledEvent |
 export type IInitEvent = IManifestReadyEvent |
                          IManifestUpdateEvent |
                          IReloadingMediaSourceEvent |
-                         IDecipherabilityUpdateEvent |
                          IWarningEvent |
 
                          // Coming from the `MediaSourceLoader`

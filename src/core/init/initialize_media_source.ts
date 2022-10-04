@@ -286,11 +286,8 @@ export default function InitializeOnMediaSource(
                                                         minimumManifestUpdateInterval,
                                                         scheduleRefresh$ });
 
-      const manifestEvents$ = observableMerge(
-        fromEvent(manifest, "manifestUpdate")
-          .pipe(map(() => EVENTS.manifestUpdate())),
-        fromEvent(manifest, "decipherabilityUpdate")
-          .pipe(map(EVENTS.decipherabilityUpdate)));
+      const manifestEvents$ = fromEvent(manifest, "manifestUpdate")
+        .pipe(map(() => EVENTS.manifestUpdate()));
 
       return observableMerge(manifestEvents$,
                              manifestUpdate$,
