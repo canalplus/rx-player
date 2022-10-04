@@ -22,7 +22,6 @@ import {
   IPersistentSessionInfoV3,
   IPersistentSessionInfoV4,
 } from "./core/decrypt";
-import { IBufferType } from "./core/segment_buffers";
 import {
   IMediaErrorTrackContext,
   EncryptedMediaError,
@@ -604,18 +603,6 @@ export interface IPersistentLicenseConfig {
    */
   disableRetroCompatibility? : boolean;
 }
-
-// XXX TODO wouldn't it be more pertinent to directly give more Representation
-// and track information here?
-export interface IDecipherabilityUpdateContent {
-  trackType : IBufferType;
-  trackId : string;
-  representationId : string;
-  isDecipherable? : boolean | undefined;
-  periodInfo : IDecipherabilityUpdatePeriodInfo;
-}
-
-export type IDecipherabilityUpdatePeriodInfo = IPeriod;
 
 /** Payload emitted with a `positionUpdate` event. */
 export interface IPositionUpdate {
