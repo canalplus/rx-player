@@ -395,6 +395,18 @@ const DEFAULT_CONFIG = {
      */
   DEFAULT_MAX_MANIFEST_REQUEST_RETRY: 4,
 
+  /**
+   * Default delay, in seconds, during which a CDN will be "downgraded".
+   *
+   * For example in case of media content being available on multiple CDNs, the
+   * RxPlayer may decide that a CDN is less reliable (for example, it returned a
+   * server error) and should thus be avoided, at least for some time
+   *
+   * This value is the amount of time this CDN will be "less considered" than the
+   * alternatives.
+   */
+  DEFAULT_CDN_DOWNGRADE_TIME: 60,
+
     /**
      * The default number of times a segment request will be re-performed when
      * on error which justify a retry.

@@ -133,6 +133,7 @@ function parseRepresentation(
     undefined :
     formatContentProtections(representation.contentProtections);
   return { id,
+           cdnMetadata: null,
            bitrate: representation.bitrate,
            height: representation.height,
            width: representation.width,

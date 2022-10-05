@@ -50,7 +50,7 @@ export interface ISmoothInitSegmentPrivateInfos {
  * Supplementary information specific to Smooth media segments (that is, every
  * segments but the initialization segment).
  */
-export interface ISmoothSegmentPrivateInfos {
+export interface ISmoothMediaSegmentPrivateInfos {
   /**
    * Start time of the segment as announced in the Manifest, in the same
    * timescale than the one indicated through `ISmoothInitSegmentPrivateInfos`.
@@ -113,28 +113,28 @@ export interface ILocalManifestSegmentPrivateInfos {
  */
 export interface IPrivateInfos {
   /** Smooth-specific information allowing to generate an initialization segment. */
-  smoothInitSegment? : ISmoothInitSegmentPrivateInfos | undefined;
+  smoothInitSegment? : ISmoothInitSegmentPrivateInfos;
 
   /** Smooth-specific information linked to all Smooth media segments. */
-  smoothMediaSegment? : ISmoothSegmentPrivateInfos | undefined;
+  smoothMediaSegment? : ISmoothMediaSegmentPrivateInfos;
 
   /** Information that should be present on all MetaPlaylist segments. */
-  metaplaylistInfos? : IMetaPlaylistPrivateInfos | undefined;
+  metaplaylistInfos? : IMetaPlaylistPrivateInfos;
 
   /**
    * Local Manifest-specific information allowing to request the
    * initialization segment.
    */
-  localManifestInitSegment? : ILocalManifestInitSegmentPrivateInfos | undefined;
+  localManifestInitSegment? : ILocalManifestInitSegmentPrivateInfos;
 
   /** Local Manifest-specific information allowing to request any media segment. */
-  localManifestSegment? : ILocalManifestSegmentPrivateInfos | undefined;
+  localManifestSegment? : ILocalManifestSegmentPrivateInfos;
 
   /**
    * Function allowing to know if a given emsg's event name has been
    * explicitely authorized.
    */
-  isEMSGWhitelisted? : ((evt: IEMSG) => boolean) | undefined;
+  isEMSGWhitelisted? : ((evt: IEMSG) => boolean);
 }
 
 /** Represent a single Segment from a Representation. */
@@ -160,15 +160,10 @@ export interface ISegment {
    */
   isInit : boolean;
   /**
-   * URLs where this segment is available. From the most to least prioritary.
-   * `null` if no URL exists.
+   * Store supplementary information on a segment that can be later exploited by
+   * the transport logic.
    */
-  mediaURLs : string[]|null;
-  /**
-   * Allows to store supplementary information on a segment that can be later
-   * exploited by the transport logic.
-   */
-  privateInfos : IPrivateInfos | undefined;
+  privateInfos : IPrivateInfos;
   /**
    * Estimated time, in seconds, at which the concerned segment should be
    * offseted when decoded.
@@ -230,6 +225,29 @@ export interface ISegment {
    * generated.
    */
   complete : boolean;
+  /**
+   * Optional relative or absolute URL to load the resource.
+   *
+   * If the URL is absolute (it contains the scheme at the beginning), it is the
+   * complete URL on which the resource should be requested.
+   *
+   * If the URL is relative (it does not contain a scheme at the beginning), it
+   * should be relative to the chosen CDN that should be recuperated through
+   * another mean
+   *
+   * If `null`, it means either:
+   *
+   *   - that there is no way to reach the resource through a URL.
+   *
+   *   - that there may be an URL, but is already communicated through another
+   *     mean, like the currently chosen CDN.
+   *
+   * An empty string is equivalent to indicating that the chosen CDN's URL
+   * should be directly requested instead.
+   * In that way, it is equivalent to setting it to `null`.
+   */
+  url : string | null;
+
   /**
    * Optional byte range to retrieve the Segment from its URL(s).
    * TODO this should probably moved to `privateInfos` as this is

@@ -80,10 +80,36 @@ export interface IContentProtections {
   initData : IContentProtectionInitData[];
 }
 
+/** Represents metadata of a CDN which can serve resources. */
+export interface ICdnMetadata {
+  /**
+   * The base URL on which resources can be requested though this CDN.
+   * In most transports, you will want to add the wanted media resource's URL
+   * to that one to request it.
+   */
+  baseUrl : string;
+
+  /**
+   * Identifier that might be re-used in other documents.
+   */
+  id? : string | undefined;
+}
+
 /** Representation of a "quality" available in an Adaptation. */
 export interface IParsedRepresentation {
   /** Maximum bitrate the Representation is available in, in bits per seconds. */
   bitrate : number;
+  /**
+   * Information on the CDN(s) on which requests should be done to request this
+   * Representation's initialization and media segments.
+   *
+   * `null` if there's no CDN involved here (e.g. resources are not
+   * requested through the network).
+   *
+   * An empty array means that no CDN are left to request the resource. As such,
+   * no resource can be loaded in that situation.
+   */
+  cdnMetadata : ICdnMetadata[] | null;
   /**
    * Interface to get information about segments associated with this
    * Representation,
@@ -352,4 +378,3 @@ export interface IParsedManifest {
   /** URIs where the manifest can be refreshed by order of importance. */
   uris? : string[] | undefined;
 }
-

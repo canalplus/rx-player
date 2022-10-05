@@ -40,11 +40,11 @@ const representation2 = {
 const initSegment1 = {
   id: "init1",
   isInit: true,
+  url: "some.URLinit1",
   time: 0,
   end: 0,
   duration: 0,
   timescale: 1 as const,
-  mediaURLs: ["http://www.example.com/some.URLinit1"],
   complete: true,
   privateInfos: {},
 };
@@ -52,11 +52,11 @@ const initSegment1 = {
 const initSegment2 = {
   id: "init2",
   isInit: true,
+  url: "some.URLinit2",
   time: 0,
   end: 0,
   duration: 0,
   timescale: 1 as const,
-  mediaURLs: ["http://www.example.com/some.URLinit2"],
   complete: true,
   privateInfos: {},
 };
@@ -64,11 +64,11 @@ const initSegment2 = {
 const initSegment3 = {
   id: "init3",
   isInit: true,
+  url: "some.URLinit3",
   time: 0,
   end: 0,
   duration: 0,
   timescale: 1 as const,
-  mediaURLs: ["http://www.example.com/some.URLinit3"],
   complete: true,
   privateInfos: {},
 };
@@ -76,11 +76,11 @@ const initSegment3 = {
 const segment1 = {
   id: "seg1",
   isInit: false,
+  url: "some.URL1",
   time: 0,
   duration: 2,
   end: 2,
   timescale: 1 as const,
-  mediaURLs: ["http://www.example.com/some.URL2"],
   complete: true,
   privateInfos: {},
 };
@@ -88,11 +88,11 @@ const segment1 = {
 const segment2 = {
   id: "seg2",
   isInit: false,
+  url: "some.URL2",
   time: 2,
   duration: 2,
   end: 4,
   timescale: 1 as const,
-  mediaURLs: ["http://www.example.com/some.URL2"],
   complete: true,
   privateInfos: {},
 };
@@ -100,11 +100,11 @@ const segment2 = {
 const segment3 = {
   id: "seg3",
   isInit: false,
+  url: "some.URL3",
   time: 4,
   duration: 2,
   end: 6,
   timescale: 1 as const,
-  mediaURLs: ["http://www.example.com/some.URL3"],
   complete: true,
   privateInfos: {},
 };
@@ -112,11 +112,11 @@ const segment3 = {
 const segment4 = {
   id: "seg4",
   isInit: false,
+  url: "some.URL4",
   time: 6,
   duration: 2,
   end: 8,
   timescale: 1 as const,
-  mediaURLs: ["http://www.example.com/some.URL4"],
   complete: true,
   privateInfos: {},
 };
