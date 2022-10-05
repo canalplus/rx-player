@@ -14,22 +14,15 @@
  * limitations under the License.
  */
 
-import { IBaseUrlIntermediateRepresentation } from "../../node_parser_types";
+import { ISegment } from "../../manifest";
+import { ICdnMetadata } from "../../parsers/manifest";
+import resolveURL from "../../utils/resolve_url";
 
-/**
- * Parse an BaseURL element into an BaseURL intermediate
- * representation.
- * @param {Element} root - The BaseURL root element.
- * @returns {Array.<Object|undefined>}
- */
-export default function parseBaseURL(
-  root: Element
-) : [IBaseUrlIntermediateRepresentation | undefined, Error[]] {
-  const value = root.textContent;
-  const warnings : Error[] = [];
-  if (value === null || value.length === 0) {
-    return [undefined, warnings];
-  }
-  return [ { value },
-           warnings ];
+export default function constructSegmentUrl(
+  wantedCdn : ICdnMetadata | null,
+  segment : ISegment
+) : string | null {
+  return wantedCdn === null   ? null :
+         segment.url === null ? wantedCdn.baseUrl :
+                                resolveURL(wantedCdn.baseUrl, segment.url);
 }

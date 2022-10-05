@@ -15,7 +15,6 @@
  */
 
 import isNonEmptyString from "../../../../../utils/is_non_empty_string";
-import resolveURL from "../../../../../utils/resolve_url";
 
 /**
  * Pad with 0 in the left of the given n argument to reach l length
@@ -47,27 +46,17 @@ function processFormatedToken(
 }
 
 /**
- * @param {string} baseURLs
- * @param {string|undefined} media
- * @param {string|undefined} id
+ * @param {string} urlTemplate
+ * @param {string|undefined} representationId
  * @param {number|undefined} bitrate
  * @returns {string}
  */
-export function createIndexURLs(
-  baseURLs : string[],
-  media?: string,
-  id?: string,
+export function constructRepresentationUrl(
+  urlTemplate : string,
+  representationId?: string,
   bitrate?: number
-): string[] | null {
-  if (baseURLs.length === 0) {
-    return media !== undefined ? [replaceRepresentationDASHTokens(media, id, bitrate)] :
-                                 null;
-  }
-  return baseURLs.map(baseURL => {
-    return replaceRepresentationDASHTokens(resolveURL(baseURL, media),
-                                           id,
-                                           bitrate);
-  });
+): string {
+  return replaceRepresentationDASHTokens(urlTemplate, representationId, bitrate);
 }
 
 /**

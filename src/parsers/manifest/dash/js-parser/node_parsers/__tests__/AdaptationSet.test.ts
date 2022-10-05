@@ -359,14 +359,13 @@ describe("DASH Node Parsers - AdaptationSet", () => {
   it("should correctly parse a non-empty baseURLs", () => {
     const element1 = new DOMParser()
       // eslint-disable-next-line max-len
-      .parseFromString("<AdaptationSet><BaseURL availabilityTimeOffset=\"INF\">a</BaseURL></AdaptationSet>", "text/xml")
+      .parseFromString("<AdaptationSet><BaseURL serviceLocation=\"foo\">a</BaseURL></AdaptationSet>", "text/xml")
       .childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element1))
       .toEqual([
         {
           attributes: {},
-          children: { baseURLs: [{ attributes: { availabilityTimeOffset: Infinity },
-                                   value: "a" }],
+          children: { baseURLs: [{ value: "a" }],
                       representations: [] },
         },
         [],
@@ -375,15 +374,14 @@ describe("DASH Node Parsers - AdaptationSet", () => {
     const element2 = new DOMParser()
       .parseFromString(
       // eslint-disable-next-line max-len
-        "<AdaptationSet><BaseURL availabilityTimeOffset=\"4\">foo bar</BaseURL></AdaptationSet>",
+        "<AdaptationSet><BaseURL serviceLocation=\"4\">foo bar</BaseURL></AdaptationSet>",
         "text/xml"
       ).childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element2))
       .toEqual([
         {
           attributes: {},
-          children: { baseURLs: [{ attributes: { availabilityTimeOffset: 4 },
-                                   value: "foo bar" }],
+          children: { baseURLs: [{ value: "foo bar" }],
                       representations: [] },
         },
         [],
@@ -393,16 +391,14 @@ describe("DASH Node Parsers - AdaptationSet", () => {
   it("should correctly parse multiple non-empty baseURLs", () => {
     const element1 = new DOMParser()
       // eslint-disable-next-line max-len
-      .parseFromString("<AdaptationSet><BaseURL availabilityTimeOffset=\"INF\">a</BaseURL><BaseURL availabilityTimeOffset=\"12\">b</BaseURL></AdaptationSet>", "text/xml")
+      .parseFromString("<AdaptationSet><BaseURL serviceLocation=\"\">a</BaseURL><BaseURL serviceLocation=\"http://test.com\">b</BaseURL></AdaptationSet>", "text/xml")
       .childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element1))
       .toEqual([
         {
           attributes: {},
-          children: { baseURLs: [ { attributes: { availabilityTimeOffset: Infinity },
-                                    value: "a" },
-                                  { attributes: { availabilityTimeOffset: 12 },
-                                    value: "b" } ],
+          children: { baseURLs: [ { value: "a" },
+                                  { value: "b" } ],
                       representations: [] },
         },
         [],

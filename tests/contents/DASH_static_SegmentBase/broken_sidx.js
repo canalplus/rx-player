@@ -33,7 +33,7 @@ export default {
                 mimeType: "audio/mp4",
                 index: {
                   init: {
-                    mediaURLs: [BASE_URL + "a-eng-0128k-aac.mp4"],
+                    url: "a-eng-0128k-aac.mp4",
                     range: [0, 745],
                   },
                   segments: [],
@@ -54,7 +54,7 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURLs: [BASE_URL + "v-0144p-0100k-libx264_broken_sidx.mp4"],
+                    url: "v-0144p-0100k-libx264_broken_sidx.mp4",
                     range: [0, 806],
                   },
                   segments: [],

@@ -39,12 +39,12 @@ import XHRMock from "../../utils/request_mock";
  *                               .width? {number}
  *                               .index
  *                                     .init
- *                                          .mediaURLs {string}
+ *                                          .url {string}
  *                                     .segments[]
  *                                                .time {number}
  *                                                .timescale {number}
  *                                                .duration {number}
- *                                                .mediaURLs {string}
+ *                                                .url {string}
  * ```
  */
 export default function launchTestsForContent(manifestInfos) {
@@ -127,20 +127,33 @@ export default function launchTestsForContent(manifestInfos) {
             expect(xhrMock.getLockedXHR().length)
               .to.be.at.least(2, "should request two init segments");
             const requestsDone = xhrMock.getLockedXHR().map(({ url }) => url);
-            expect(requestsDone)
-              .to.include(videoRepresentationInfos.index.init.mediaURLs[0]);
-            expect(requestsDone)
-              .to.include(audioRepresentationInfos.index.init.mediaURLs[0]);
+
+            const hasRequestedVideoInitSegment = requestsDone.some(r => {
+              const relativeUrl =
+                videoRepresentationInfos.index.init.url === null ?
+                  "" :
+                  videoRepresentationInfos.index.init.url;
+              return r.endsWith(relativeUrl);
+            });
+            const hasRequestedAudioInitSegment = requestsDone.some(r => {
+              const relativeUrl =
+                audioRepresentationInfos.index.init.url === null ?
+                  "" :
+                  audioRepresentationInfos.index.init.url;
+              return r.endsWith(relativeUrl);
+            });
+            expect(hasRequestedVideoInitSegment).to.equal(true);
+            expect(hasRequestedAudioInitSegment).to.equal(true);
           } else if (!(
             audioRepresentationInfos && audioRepresentationInfos.index.init)
           ) {
             expect(xhrMock.getLockedXHR().length).to.equal(1);
             expect(xhrMock.getLockedXHR()[0].url).to
-              .equal(videoRepresentationInfos.index.init.mediaURLs[0]);
+              .equal(videoRepresentationInfos.index.init.url);
           } else {
             expect(xhrMock.getLockedXHR().length).to.equal(1);
             expect(xhrMock.getLockedXHR()[0].url).to
-              .equal(audioRepresentationInfos.index.init.mediaURLs[0]);
+              .equal(audioRepresentationInfos.index.init.url);
           }
         }
       });
@@ -291,8 +304,8 @@ export default function launchTestsForContent(manifestInfos) {
                 const initSegment = reprIndex.getInitSegment();
                 const initSegmentInfos = reprIndexInfos.init;
                 if (initSegmentInfos) {
-                  expect(initSegment.mediaURLs)
-                    .to.deep.equal(initSegmentInfos.mediaURLs);
+                  expect(initSegment.url)
+                    .to.equal(initSegmentInfos.url);
                   expect(typeof initSegment.id).to.equal("string");
                 }
 
@@ -319,8 +332,8 @@ export default function launchTestsForContent(manifestInfos) {
                   expect(firstSegment.timescale)
                     .to.equal(reprIndexInfos.segments[0].timescale);
 
-                  expect(firstSegment.mediaURLs)
-                    .to.deep.equal(reprIndexInfos.segments[0].mediaURLs);
+                  expect(firstSegment.url)
+                    .to.equal(reprIndexInfos.segments[0].url);
                 }
               }
             }
