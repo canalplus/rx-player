@@ -368,13 +368,6 @@ export interface IBaseUrlIntermediateRepresentation {
    * This is the inner content of a BaseURL node.
    */
   value: string;
-
-  /** Attributes assiociated to the BaseURL node. */
-  attributes: {
-    /** availabilityTimeOffset attribute assiociated to that BaseURL node. */
-    availabilityTimeOffset?: number;
-    availabilityTimeComplete?: boolean;
-  };
 }
 
 /** Intermediate representation for a Node following a "scheme" format. */

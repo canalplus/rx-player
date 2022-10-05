@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../manifest";
+import { ISegment, Representation } from "../../manifest";
+import { ICdnMetadata } from "../../parsers/manifest";
 import isNonEmptyString from "../../utils/is_non_empty_string";
+import resolveURL from "../../utils/resolve_url";
 import warnOnce from "../../utils/warn_once";
 
 const ISM_REG = /(\.isml?)(\?token=\S+)?$/;
@@ -85,7 +87,17 @@ function isMP4EmbeddedTrack(representation : Representation) : boolean {
          representation.mimeType.indexOf("mp4") >= 0;
 }
 
+function constructSegmentUrl(
+  wantedCdn : ICdnMetadata | null,
+  segment : ISegment
+) : string | null {
+  return wantedCdn === null   ? null :
+         segment.url === null ? wantedCdn.baseUrl :
+                                resolveURL(wantedCdn.baseUrl, segment.url);
+}
+
 export {
+  constructSegmentUrl,
   extractISML,
   extractToken,
   isMP4EmbeddedTrack,

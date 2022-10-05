@@ -23,6 +23,7 @@ import {
 import arrayFind from "../utils/array_find";
 import EventEmitter from "../utils/event_emitter";
 import idGenerator from "../utils/id_generator";
+import { getFilenameIndexInUrl } from "../utils/resolve_url";
 import warnOnce from "../utils/warn_once";
 import Adaptation from "./adaptation";
 import Period, {
@@ -612,14 +613,18 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
       const adaptationID = "gen-image-ada-" + generateSupplementaryTrackID();
       const representationID = "gen-image-rep-" + generateSupplementaryTrackID();
+      const indexOfFilename = getFilenameIndexInUrl(url);
+      const cdnUrl = url.substring(0, indexOfFilename);
+      const filename = url.substring(indexOfFilename);
       const newAdaptation = new Adaptation({ id: adaptationID,
                                              type: "image",
                                              representations: [{
                                                bitrate: 0,
+                                               cdnMetadata: [ { baseUrl: cdnUrl } ],
                                                id: representationID,
                                                mimeType,
                                                index: new StaticRepresentationIndex({
-                                                 media: url,
+                                                 media: filename,
                                                }) }] },
                                            { isManuallyAdded: true });
       if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
@@ -664,6 +669,9 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
                                       languages != null ? languages :
                                                           [];
 
+      const indexOfFilename = getFilenameIndexInUrl(url);
+      const cdnUrl = url.substring(0, indexOfFilename);
+      const filename = url.substring(indexOfFilename);
       return allSubs.concat(langsToMapOn.map((_language) => {
         const adaptationID = "gen-text-ada-" + generateSupplementaryTrackID();
         const representationID = "gen-text-rep-" + generateSupplementaryTrackID();
@@ -673,11 +681,12 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
                                                closedCaption,
                                                representations: [{
                                                  bitrate: 0,
+                                                 cdnMetadata: [{ baseUrl: cdnUrl }],
                                                  id: representationID,
                                                  mimeType,
                                                  codecs,
                                                  index: new StaticRepresentationIndex({
-                                                   media: url,
+                                                   media: filename,
                                                  }) }] },
                                              { isManuallyAdded: true });
         if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {

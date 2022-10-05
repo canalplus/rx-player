@@ -91,14 +91,17 @@ export default function resolveURL(...args : Array<string|undefined>) : string {
 }
 
 /**
- * Remove string after the last '/'.
+ * In a given URL, find the index at which the filename begins.
+ * That is, this function finds the index of the last `/` character and returns
+ * the index after it, returning the length of the whole URL if no `/` was found
+ * after the scheme (i.e. in `http://`, the slashes are not considered).
  * @param {string} url
- * @returns {string}
+ * @returns {number}
  */
-function normalizeBaseURL(url : string) : string {
+function getFilenameIndexInUrl(url : string) : number {
   const indexOfLastSlash = url.lastIndexOf("/");
   if (indexOfLastSlash < 0) {
-    return url;
+    return url.length;
   }
 
   if (schemeRe.test(url)) {
@@ -106,7 +109,7 @@ function normalizeBaseURL(url : string) : string {
     if (firstSlashIndex >= 0 && indexOfLastSlash === firstSlashIndex + 1) {
       // The "/" detected is actually the one from the protocol part of the URL
       // ("https://")
-      return url;
+      return url.length;
     }
   }
 
@@ -114,10 +117,10 @@ function normalizeBaseURL(url : string) : string {
   if (indexOfQuestionMark >= 0 && indexOfQuestionMark < indexOfLastSlash) {
     // There are query parameters. Let's ignore them and re-run the logic
     // without
-    return normalizeBaseURL(url.substring(0, indexOfQuestionMark));
+    return getFilenameIndexInUrl(url.substring(0, indexOfQuestionMark));
   }
 
-  return url.substring(0, indexOfLastSlash + 1);
+  return indexOfLastSlash + 1;
 }
 
-export { normalizeBaseURL };
+export { getFilenameIndexInUrl };

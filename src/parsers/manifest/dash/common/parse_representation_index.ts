@@ -33,9 +33,7 @@ import {
   TimelineRepresentationIndex,
 } from "./indexes";
 import ManifestBoundsCalculator from "./manifest_bounds_calculator";
-import resolveBaseURLs, {
-  IResolvedBaseUrl,
-} from "./resolve_base_urls";
+import { IResolvedBaseUrl } from "./resolve_base_urls";
 
 /**
  * Parse the specific segment indexing information found in a representation
@@ -48,8 +46,6 @@ export default function parseRepresentationIndex(
   representation : IRepresentationIntermediateRepresentation,
   context : IRepresentationIndexContext
 ) : IRepresentationIndex {
-  const representationBaseURLs = resolveBaseURLs(context.baseURLs,
-                                                 representation.children.baseURLs);
   const { aggressiveMode,
           availabilityTimeOffset,
           manifestBoundsCalculator,
@@ -80,7 +76,6 @@ export default function parseRepresentationIndex(
                           periodEnd,
                           periodStart,
                           receivedTime,
-                          representationBaseURLs,
                           representationBitrate: representation.attributes.bitrate,
                           representationId: representation.attributes.id,
                           timeShiftBufferDepth };
