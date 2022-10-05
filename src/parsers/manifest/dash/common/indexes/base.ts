@@ -26,10 +26,9 @@ import {
   IIndexSegment,
   toIndexTime,
 } from "../../../utils/index_helpers";
-import { IResolvedBaseUrl } from "../resolve_base_urls";
 import getInitSegment from "./get_init_segment";
 import getSegmentsFromTimeline from "./get_segments_from_timeline";
-import { createIndexURLs } from "./tokens";
+import { constructRepresentationUrl } from "./tokens";
 
 /**
  * Index property defined for a SegmentBase RepresentationIndex
@@ -53,17 +52,21 @@ export interface IBaseIndex {
    */
   indexTimeOffset : number;
   /** Information on the initialization segment. */
-  initialization? : {
-    /** URLs to access the initialization segment. */
-    mediaURLs: string[] | null;
+  initialization : {
+    /**
+     * URL path, to add to the wanted CDN, to access the initialization segment.
+     * `null` if no URL exists.
+     */
+    url: string | null;
     /** possible byte range to request it. */
     range?: [number, number] | undefined;
   } | undefined;
   /**
-   * Base URL(s) to access any segment. Can contain tokens to replace to convert
-   * it to real URLs.
+   * URL base to access any segment.
+   * Can contain token to replace to convert it to real URLs.
+   * `null` if no URL exists.
    */
-  mediaURLs : string[] | null;
+  segmentUrlTemplate : string | null;
   /** Number from which the first segments in this index starts with. */
   startNumber? : number | undefined;
   /** Every segments defined in this index. */
@@ -110,8 +113,6 @@ export interface IBaseIndexContextArgument {
   periodStart : number;
   /** End of the period concerned by this RepresentationIndex, in seconds. */
   periodEnd : number|undefined;
-  /** Base URL for the Representation concerned. */
-  representationBaseURLs : IResolvedBaseUrl[];
   /** ID of the Representation concerned. */
   representationId? : string | undefined;
   /** Bitrate of the Representation concerned. */
@@ -185,7 +186,6 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   constructor(index : IBaseIndexIndexArgument, context : IBaseIndexContextArgument) {
     const { periodStart,
             periodEnd,
-            representationBaseURLs,
             representationId,
             representationBitrate,
             isEMSGWhitelisted } = context;
@@ -196,13 +196,15 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
 
     const indexTimeOffset = presentationTimeOffset - periodStart * timescale;
 
-    const urlSources : string[] = representationBaseURLs.map(b => b.url);
-    const mediaURLs = createIndexURLs(urlSources,
-                                     index.initialization !== undefined ?
-                                       index.initialization.media :
-                                       undefined,
-                                      representationId,
-                                      representationBitrate);
+    const initializationUrl = index.initialization?.media === undefined ?
+      null :
+      constructRepresentationUrl(index.initialization.media,
+                                 representationId,
+                                 representationBitrate);
+
+    const segmentUrlTemplate = index.media === undefined ?
+      null :
+      constructRepresentationUrl(index.media, representationId, representationBitrate);
 
     // TODO If indexRange is either undefined or behind the initialization segment
     // the following logic will not work.
@@ -217,11 +219,8 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
 
     this._index = { indexRange: index.indexRange,
                     indexTimeOffset,
-                    initialization: { mediaURLs, range },
-                    mediaURLs: createIndexURLs(urlSources,
-                                               index.media,
-                                               representationId,
-                                               representationBitrate),
+                    initialization: { url: initializationUrl, range },
+                    segmentUrlTemplate,
                     startNumber: index.startNumber,
                     timeline: index.timeline ?? [],
                     timescale };

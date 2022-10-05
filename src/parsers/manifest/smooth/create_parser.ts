@@ -24,9 +24,7 @@ import {
 } from "../../../utils/byte_parsing";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import objectAssign from "../../../utils/object_assign";
-import resolveURL, {
-  normalizeBaseURL,
-} from "../../../utils/resolve_url";
+import { getFilenameIndexInUrl } from "../../../utils/resolve_url";
 import { hexToBytes } from "../../../utils/string_parsing";
 import takeFirstSet from "../../../utils/take_first_set";
 import { createBox } from "../../containers/isobmff";
@@ -60,7 +58,7 @@ import { replaceRepresentationSmoothTokens } from "./utils/tokens";
 const DEFAULT_AGGRESSIVE_MODE = false;
 
 interface IAdaptationParserArguments { root : Element;
-                                       rootURL : string;
+                                       baseUrl : string;
                                        timescale : number;
                                        protections : IContentProtectionSmooth[];
                                        isLive : boolean;
@@ -280,7 +278,7 @@ function createSmoothStreamingParser(
   function parseAdaptation(args: IAdaptationParserArguments) : IParsedAdaptation|null {
     const { root,
             timescale,
-            rootURL,
+            baseUrl,
             protections,
             timeShiftBufferDepth,
             manifestReceivedTime,
@@ -301,11 +299,11 @@ function createSmoothStreamingParser(
 
     const subType = root.getAttribute("Subtype");
     const language = root.getAttribute("Language");
-    const baseURLAttr = root.getAttribute("Url");
-    const baseURL = baseURLAttr === null ? "" :
-                                           baseURLAttr;
+    const UrlAttr = root.getAttribute("Url");
+    const UrlPathWithTokens = UrlAttr === null ? "" :
+                                                 UrlAttr;
     if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
-      assert(baseURL !== "");
+      assert(UrlPathWithTokens !== "");
     }
 
     const { qualityLevels, cNodes } =
@@ -347,11 +345,10 @@ function createSmoothStreamingParser(
                                                        "");
 
     const representations = qualityLevels.map((qualityLevel) => {
-      const path = resolveURL(rootURL, baseURL);
       const repIndex = {
         timeline: index.timeline,
         timescale: index.timescale,
-        media: replaceRepresentationSmoothTokens(path,
+        media: replaceRepresentationSmoothTokens(UrlPathWithTokens,
                                                  qualityLevel.bitrate,
                                                  qualityLevel.customAttributes),
       };
@@ -404,6 +401,9 @@ function createSmoothStreamingParser(
       const representation : IParsedRepresentation = objectAssign({},
                                                                   qualityLevel,
                                                                   { index: reprIndex,
+                                                                    cdnMetadata: [
+                                                                      { baseUrl },
+                                                                    ],
                                                                     mimeType,
                                                                     codecs,
                                                                     id });
@@ -452,7 +452,11 @@ function createSmoothStreamingParser(
     url? : string,
     manifestReceivedTime? : number
   ) : IParsedManifest {
-    const rootURL = normalizeBaseURL(url == null ? "" : url);
+    let baseUrl : string = "";
+    if (url !== undefined) {
+      const filenameIdx = getFilenameIndexInUrl(url);
+      baseUrl = url.substring(0, filenameIdx);
+    }
     const root = doc.documentElement;
     if (root == null || root.nodeName !== "SmoothStreamingMedia") {
       throw new Error("document root should be SmoothStreamingMedia");
@@ -510,7 +514,7 @@ function createSmoothStreamingParser(
     const adaptations: IParsedAdaptations = adaptationNodes
       .reduce((acc: IParsedAdaptations, node : Element) => {
         const adaptation = parseAdaptation({ root: node,
-                                             rootURL,
+                                             baseUrl,
                                              timescale,
                                              protections,
                                              isLive,

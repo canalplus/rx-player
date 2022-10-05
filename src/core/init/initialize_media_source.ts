@@ -36,11 +36,13 @@ import { shouldReloadMediaSourceOnDecipherabilityUpdate } from "../../compat";
 import config from "../../config";
 import log from "../../log";
 import { IKeySystemOption } from "../../public_types";
+import { ITransportPipelines } from "../../transports";
 import deferSubscriptions from "../../utils/defer_subscriptions";
 import { fromEvent } from "../../utils/event_emitter";
 import filterMap from "../../utils/filter_map";
 import objectAssign from "../../utils/object_assign";
 import { IReadOnlySharedReference } from "../../utils/reference";
+import TaskCanceller from "../../utils/task_canceller";
 import AdaptiveRepresentationSelector, {
   IAdaptiveRepresentationSelectorArguments,
 } from "../adaptive";
@@ -125,8 +127,21 @@ export interface IInitializeArguments {
   mediaElement : HTMLMediaElement;
   /** Limit the frequency of Manifest updates. */
   minimumManifestUpdateInterval : number;
-  /** Interface allowing to load segments */
-  segmentFetcherCreator : SegmentFetcherCreator;
+  /** Interface allowing to interact with the transport protocol */
+  transport : ITransportPipelines;
+  /** Configuration for the segment requesting logic. */
+  segmentRequestOptions : {
+    /** Maximum number of time a request on error will be retried. */
+    regularError : number | undefined;
+    /** Maximum number of time a request be retried when the user is offline. */
+    offlineError : number | undefined;
+    /**
+     * Amount of time after which a request should be aborted.
+     * `undefined` indicates that a default value is wanted.
+     * `-1` indicates no timeout.
+     */
+    requestTimeout : number | undefined;
+  };
   /** Emit the playback rate (speed) set by the user. */
   speed : IReadOnlySharedReference<number>;
   /** The configured starting position. */
@@ -177,13 +192,16 @@ export default function InitializeOnMediaSource(
     mediaElement,
     minimumManifestUpdateInterval,
     playbackObserver,
-    segmentFetcherCreator,
+    segmentRequestOptions,
     speed,
     startAt,
+    transport,
     textTrackOptions } : IInitializeArguments
 ) : Observable<IInitEvent> {
   /** Choose the right "Representation" for a given "Adaptation". */
   const representationEstimator = AdaptiveRepresentationSelector(adaptiveOptions);
+
+  const playbackCanceller = new TaskCanceller();
 
   /**
    * Create and open a new MediaSource object on the given media element on
@@ -243,6 +261,14 @@ export default function InitializeOnMediaSource(
       log.debug("Init: Calculating initial time");
       const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
       log.debug("Init: Initial time calculated:", initialTime);
+
+      const requestOptions = { lowLatencyMode,
+                               requestTimeout: segmentRequestOptions.requestTimeout,
+                               maxRetryRegular: segmentRequestOptions.regularError,
+                               maxRetryOffline: segmentRequestOptions.offlineError };
+      const segmentFetcherCreator = new SegmentFetcherCreator(transport,
+                                                              requestOptions,
+                                                              playbackCanceller.signal);
 
       const mediaSourceLoader = createMediaSourceLoader({
         bufferOptions: objectAssign({ textTrackOptions, drmSystemId },
@@ -358,5 +384,6 @@ export default function InitializeOnMediaSource(
       }
     }));
 
-  return observableMerge(loadContent$, mediaError$, drmEvents$.pipe(ignoreElements()));
+  return observableMerge(loadContent$, mediaError$, drmEvents$.pipe(ignoreElements()))
+    .pipe(finalize(() => { playbackCanceller.cancel(); }));
 }

@@ -49,12 +49,15 @@ describe("parsers utils - getLastPositionFromAdaptation", function() {
   it("should return the last position if a single representation is present", () => {
     const representation1 = { id: "1",
                               bitrate: 12,
+                              cdnMetadata: [],
                               index: generateRepresentationIndex(37) };
     const representation2 = { id: "1",
                               bitrate: 12,
+                              cdnMetadata: [],
                               index: generateRepresentationIndex(undefined) };
     const representation3 = { id: "1",
                               bitrate: 12,
+                              cdnMetadata: [],
                               index: generateRepresentationIndex(null) };
     expect(getLastPositionFromAdaptation({ id: "0",
                                            type: "audio",
@@ -75,12 +78,15 @@ describe("parsers utils - getLastPositionFromAdaptation", function() {
   /* eslint-enable max-len */
     const representation1 = { id: "1",
                               bitrate: 12,
+                              cdnMetadata: [],
                               index: generateRepresentationIndex(37) };
     const representation2 = { id: "1",
                               bitrate: 12,
+                              cdnMetadata: [],
                               index: generateRepresentationIndex(137) };
     const representation3 = { id: "1",
                               bitrate: 12,
+                              cdnMetadata: [],
                               index: generateRepresentationIndex(57) };
     expect(getLastPositionFromAdaptation({ id: "0",
                                            type: "audio",
@@ -93,12 +99,15 @@ describe("parsers utils - getLastPositionFromAdaptation", function() {
   it("should return undefined if one of the first position is", () => {
     const representation1 = { id: "1",
                               bitrate: 12,
+                              cdnMetadata: [],
                               index: generateRepresentationIndex(37) };
     const representation2 = { id: "1",
                               bitrate: 12,
+                              cdnMetadata: [],
                               index: generateRepresentationIndex(137) };
     const representation3 = { id: "1",
                               bitrate: 12,
+                              cdnMetadata: [],
                               index: generateRepresentationIndex(undefined) };
     expect(getLastPositionFromAdaptation({ id: "0",
                                            type: "audio",
@@ -111,12 +120,15 @@ describe("parsers utils - getLastPositionFromAdaptation", function() {
   it("should not consider null first positions if not all of them have one", () => {
     const representation1 = { id: "1",
                               bitrate: 12,
+                              cdnMetadata: [],
                               index: generateRepresentationIndex(37) };
     const representation2 = { id: "1",
                               bitrate: 12,
+                              cdnMetadata: [],
                               index: generateRepresentationIndex(137) };
     const representation3 = { id: "1",
                               bitrate: 12,
+                              cdnMetadata: [],
                               index: generateRepresentationIndex(null) };
     expect(getLastPositionFromAdaptation({ id: "0",
                                            type: "audio",
@@ -129,12 +141,15 @@ describe("parsers utils - getLastPositionFromAdaptation", function() {
   it("should return null if every first positions are", () => {
     const representation1 = { id: "1",
                               bitrate: 12,
+                              cdnMetadata: [],
                               index: generateRepresentationIndex(null) };
     const representation2 = { id: "1",
                               bitrate: 12,
+                              cdnMetadata: [],
                               index: generateRepresentationIndex(null) };
     const representation3 = { id: "1",
                               bitrate: 12,
+                              cdnMetadata: [],
                               index: generateRepresentationIndex(null) };
     expect(getLastPositionFromAdaptation({ id: "0",
                                            type: "audio",

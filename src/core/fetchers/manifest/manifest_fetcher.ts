@@ -33,8 +33,8 @@ import TaskCanceller from "../../../utils/task_canceller";
 import errorSelector from "../utils/error_selector";
 import {
   IBackoffSettings,
-  tryRequestPromiseWithBackoff,
-} from "../utils/try_urls_with_backoff";
+  scheduleRequestPromise,
+} from "../utils/schedule_request";
 
 
 /** What will be sent once parsed. */
@@ -228,9 +228,7 @@ export default class ManifestFetcher {
         const { resolveManifestUrl } = pipelines;
         assert(resolveManifestUrl !== undefined);
         const callResolver = () => resolveManifestUrl(resolverUrl, canceller.signal);
-        return tryRequestPromiseWithBackoff(callResolver,
-                                            backoffSettings,
-                                            canceller.signal);
+        return scheduleRequestPromise(callResolver, backoffSettings, canceller.signal);
       }
 
       /**
@@ -252,9 +250,7 @@ export default class ManifestFetcher {
         const callLoader = () => loadManifest(manifestUrl,
                                               { timeout: requestTimeout },
                                               canceller.signal);
-        return tryRequestPromiseWithBackoff(callLoader,
-                                            backoffSettings,
-                                            canceller.signal);
+        return scheduleRequestPromise(callLoader, backoffSettings, canceller.signal);
       }
     });
   }
@@ -349,9 +345,9 @@ export default class ManifestFetcher {
         performRequest : () => Promise<T>
       ) : Promise<T> {
         try {
-          const data = await tryRequestPromiseWithBackoff(performRequest,
-                                                          backoffSettings,
-                                                          canceller.signal);
+          const data = await scheduleRequestPromise(performRequest,
+                                                    backoffSettings,
+                                                    canceller.signal);
           return data;
         } catch (err) {
           throw errorSelector(err);
