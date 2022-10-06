@@ -147,14 +147,12 @@ function loadSegment(
       // Format error and send it
       const castedErr = err as (null | undefined | { message? : string;
                                                      canRetry? : boolean;
-                                                     isOfflineError? : boolean;
                                                      xhr? : XMLHttpRequest; });
       const message = castedErr?.message ??
                       "Unknown error when fetching a local segment through a " +
                       "custom segmentLoader.";
       const emittedErr = new CustomLoaderError(message,
                                                castedErr?.canRetry ?? false,
-                                               castedErr?.isOfflineError ?? false,
                                                castedErr?.xhr);
       rej(emittedErr);
     };

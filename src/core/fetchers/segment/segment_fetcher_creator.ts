@@ -116,9 +116,7 @@ export interface ISegmentFetcherCreatorBackoffOptions {
    */
   lowLatencyMode : boolean;
   /** Maximum number of time a request on error will be retried. */
-  maxRetryRegular : number | undefined;
-  /** Maximum number of time a request be retried when the user is offline. */
-  maxRetryOffline : number | undefined;
+  maxRetry : number | undefined;
   /**
    * Timeout after which request are aborted and, depending on other options,
    * retried.

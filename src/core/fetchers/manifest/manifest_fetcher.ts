@@ -376,23 +376,19 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
    */
   private _getBackoffSetting(onRetry : (err : unknown) => void) : IBackoffSettings {
     const { DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
-            DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
             INITIAL_BACKOFF_DELAY_BASE,
             MAX_BACKOFF_DELAY_BASE } = config.getCurrent();
     const { lowLatencyMode,
-            maxRetryRegular : ogRegular,
-            maxRetryOffline : ogOffline } = this._settings;
+            maxRetry : ogRegular } = this._settings;
     const baseDelay = lowLatencyMode ? INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY :
                                        INITIAL_BACKOFF_DELAY_BASE.REGULAR;
     const maxDelay = lowLatencyMode ? MAX_BACKOFF_DELAY_BASE.LOW_LATENCY :
                                       MAX_BACKOFF_DELAY_BASE.REGULAR;
-    const maxRetryRegular = ogRegular ?? DEFAULT_MAX_MANIFEST_REQUEST_RETRY;
-    const maxRetryOffline = ogOffline ?? DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE;
+    const maxRetry = ogRegular ?? DEFAULT_MAX_MANIFEST_REQUEST_RETRY;
     return { onRetry,
              baseDelay,
              maxDelay,
-             maxRetryRegular,
-             maxRetryOffline };
+             maxRetry };
   }
 
   /**
@@ -713,9 +709,7 @@ export interface IManifestFetcherSettings {
    */
   lowLatencyMode : boolean;
   /** Maximum number of time a request on error will be retried. */
-  maxRetryRegular : number | undefined;
-  /** Maximum number of time a request be retried when the user is offline. */
-  maxRetryOffline : number | undefined;
+  maxRetry : number | undefined;
   /**
    * Timeout after which request are aborted and, depending on other options,
    * retried.
