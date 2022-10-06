@@ -292,8 +292,6 @@ const DEFAULT_CONFIG = {
      *   - if the error is not due to the xhr, no retry will be peformed
      *   - if the error is an HTTP error code, but not a 500-smthg or a 404, no
      *     retry will be performed.
-     *   - if it has a high chance of being due to the user being offline, a
-     *     separate counter is used (see DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE).
      * @type Number
      */
   DEFAULT_MAX_MANIFEST_REQUEST_RETRY: 4,
@@ -318,24 +316,9 @@ const DEFAULT_CONFIG = {
      *   - if the error is not due to the xhr, no retry will be peformed
      *   - if the error is an HTTP error code, but not a 500-smthg or a 404, no
      *     retry will be performed.
-     *   - if it has a high chance of being due to the user being offline, a
-     *     separate counter is used (see DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE).
      * @type Number
      */
   DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR: 4,
-
-    /**
-     * Under some circonstances, we're able to tell that the user is offline (see
-     * the compat files).
-     * When this happens, and xhr requests fails due to an error event (you might
-     * still be able to perform xhr offline, e.g. on localhost), you might want to
-     * retry indefinitely or with a higher number of retry than if the error is
-     * due to a CDN problem.
-     *
-     * A capped exponential backoff will still be used (like for an error code).
-     * @type {Number}
-     */
-  DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE: Infinity,
 
     /**
      * Initial backoff delay when a segment / manifest download fails, in

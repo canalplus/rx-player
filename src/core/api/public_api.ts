@@ -678,8 +678,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                                serverSyncInfos,
                                                __priv_patchLastSegmentInSidx });
 
-      const { offlineRetry,
-              segmentRetry,
+      const { segmentRetry,
               manifestRetry,
               manifestRequestTimeout,
               segmentRequestTimeout } = networkConfig;
@@ -689,8 +688,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         url,
         transportPipelines,
         { lowLatencyMode,
-          maxRetryRegular: manifestRetry,
-          maxRetryOffline: offlineRetry,
+          maxRetry: manifestRetry,
           requestTimeout:  manifestRequestTimeout });
 
       /** Observable emitting the initial Manifest */
@@ -772,9 +770,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                            onCodecSwitch },
                                          this._priv_bufferOptions);
 
-      const segmentRequestOptions = { regularError: segmentRetry,
-                                      requestTimeout: segmentRequestTimeout,
-                                      offlineError: offlineRetry };
+      const segmentRequestOptions = { maxRetry: segmentRetry,
+                                      requestTimeout: segmentRequestTimeout };
 
       // We've every options set up. Start everything now
       const init$ = initializeMediaSourcePlayback({ adaptiveOptions,

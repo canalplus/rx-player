@@ -127,9 +127,7 @@ export interface IInitializeArguments {
   /** Configuration for the segment requesting logic. */
   segmentRequestOptions : {
     /** Maximum number of time a request on error will be retried. */
-    regularError : number | undefined;
-    /** Maximum number of time a request be retried when the user is offline. */
-    offlineError : number | undefined;
+    maxRetry : number | undefined;
     /**
      * Amount of time after which a request should be aborted.
      * `undefined` indicates that a default value is wanted.
@@ -259,8 +257,7 @@ export default function InitializeOnMediaSource(
 
       const requestOptions = { lowLatencyMode,
                                requestTimeout: segmentRequestOptions.requestTimeout,
-                               maxRetryRegular: segmentRequestOptions.regularError,
-                               maxRetryOffline: segmentRequestOptions.offlineError };
+                               maxRetry: segmentRequestOptions.maxRetry };
       const segmentFetcherCreator = new SegmentFetcherCreator(transport,
                                                               requestOptions,
                                                               playbackCanceller.signal);

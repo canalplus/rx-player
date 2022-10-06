@@ -42,8 +42,7 @@ import TaskPrioritizer from "./task_prioritizer";
  * ```js
  * const creator = new SegmentFetcherCreator(transport, {
  *   lowLatencyMode: false,
- *   maxRetryRegular: Infinity,
- *   maxRetryOffline: Infinity,
+ *   maxRetry: Infinity,
  * });
  *
  * // 2 - create a new fetcher with its backoff options
@@ -140,9 +139,7 @@ export interface ISegmentFetcherCreatorBackoffOptions {
    */
   lowLatencyMode : boolean;
   /** Maximum number of time a request on error will be retried. */
-  maxRetryRegular : number | undefined;
-  /** Maximum number of time a request be retried when the user is offline. */
-  maxRetryOffline : number | undefined;
+  maxRetry : number | undefined;
   /**
    * Timeout after which request are aborted and, depending on other options,
    * retried.

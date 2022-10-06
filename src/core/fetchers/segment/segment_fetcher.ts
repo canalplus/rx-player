@@ -427,12 +427,7 @@ export interface ISegmentFetcherOptions {
    * Maximum number of retries to perform on "regular" errors (e.g. due to HTTP
    * status, integrity errors, timeouts...).
    */
-  maxRetryRegular : number;
-  /**
-   * Maximum number of retries to perform when it appears that the user is
-   * currently offline.
-   */
-  maxRetryOffline : number;
+  maxRetry : number;
   /**
    * Timeout after which request are aborted and, depending on other options,
    * retried.
@@ -447,21 +442,17 @@ export interface ISegmentFetcherOptions {
  * @returns {Object}
  */
 export function getSegmentFetcherOptions(
-  { maxRetryRegular,
-    maxRetryOffline,
+  { maxRetry,
     lowLatencyMode,
-    requestTimeout } : { maxRetryRegular? : number | undefined;
-                         maxRetryOffline? : number | undefined;
+    requestTimeout } : { maxRetry? : number | undefined;
                          requestTimeout? : number | undefined;
                          lowLatencyMode : boolean; }
 ) : ISegmentFetcherOptions {
   const { DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
           DEFAULT_REQUEST_TIMEOUT,
-          DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
           INITIAL_BACKOFF_DELAY_BASE,
           MAX_BACKOFF_DELAY_BASE } = config.getCurrent();
-  return { maxRetryRegular: maxRetryRegular ?? DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
-           maxRetryOffline: maxRetryOffline ?? DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
+  return { maxRetry: maxRetry ?? DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
            baseDelay: lowLatencyMode ? INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY :
                                        INITIAL_BACKOFF_DELAY_BASE.REGULAR,
            maxDelay: lowLatencyMode ? MAX_BACKOFF_DELAY_BASE.LOW_LATENCY :

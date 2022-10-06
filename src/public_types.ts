@@ -275,13 +275,6 @@ export interface INetworkConfigOption {
    * `undefined` means that a default, large, timeout will be used instead.
    */
   manifestRequestTimeout? : number | undefined;
-
-  /**
-   * The amount of time maximum we should retry a request in general when the
-   * user is offline.
-   * Set to `Infinity` for an infinite number of requests.
-   */
-  offlineRetry? : number | undefined;
   /**
    * The amount of time maximum we should retry a segment or segment-related
    * request before failing on Error.
