@@ -236,7 +236,7 @@ describe("API - parseLoadVideoOptions", () => {
     lowLatencyMode: false,
     minimumManifestUpdateInterval: 0,
     onCodecSwitch: "continue",
-    networkConfig: {},
+    requestConfig: {},
     startAt: undefined,
     textTrackElement: undefined,
     textTrackMode: "native",
@@ -700,51 +700,51 @@ If badly set, continue will be used as default`);
     });
   });
 
-  it("should authorize setting a networkConfig", () => {
+  it("should authorize setting a requestConfig", () => {
     expect(parseLoadVideoOptions({
       url: "foo",
       transport: "bar",
-      networkConfig: {},
+      requestConfig: {},
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      networkConfig: {},
+      requestConfig: {},
     });
     expect(parseLoadVideoOptions({
       url: "foo",
       transport: "bar",
-      networkConfig: { manifestRetry: 4 },
+      requestConfig: { manifest: { maxRetry: 4 } },
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      networkConfig: { manifestRetry: 4 },
+      requestConfig: { manifest: { maxRetry: 4 } },
     });
     expect(parseLoadVideoOptions({
       url: "foo",
       transport: "bar",
-      networkConfig: { segmentRetry: 3 },
+      requestConfig: { segment: { maxRetry: 3 } },
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      networkConfig: { segmentRetry: 3 },
+      requestConfig: { segment: { maxRetry: 3 } },
     });
     expect(parseLoadVideoOptions({
       url: "foo",
       transport: "bar",
-      networkConfig: {
-        segmentRetry: 3,
-        manifestRetry: 5,
+      requestConfig: {
+        segment: { maxRetry: 3 },
+        manifest: { maxRetry: 5 },
       },
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      networkConfig: {
-        segmentRetry: 3,
-        manifestRetry: 5,
+      requestConfig: {
+        segment: { maxRetry: 3 },
+        manifest: { maxRetry: 5 },
       },
     });
   });

@@ -13,12 +13,10 @@ function RequestConfig({
   segmentRetry,
   segmentTimeout,
   manifestRetry,
-  offlineRetry,
   manifestTimeout,
   onSegmentRetryInput,
   onSegmentTimeoutInput,
   onManifestRetryInput,
-  onOfflineRetryInput,
   onManifestTimeoutInput,
 }) {
   const [isSegmentRetryLimited, setSegmentRetryLimit] = useState(
@@ -30,10 +28,6 @@ function RequestConfig({
   const [isManifestRetryLimited, setManifestRetryLimit] = useState(
     manifestRetry !== Infinity
   );
-  const [isOfflineRetryLimited, setOfflineRetryLimit] = useState(
-    offlineRetry !== Infinity
-  );
-
   const [isManifestTimeoutLimited, setManifestTimeoutLimit] = useState(
     manifestTimeout !== -1
   );
@@ -67,17 +61,6 @@ function RequestConfig({
     } else {
       setManifestRetryLimit(true);
       onManifestRetryInput(DEFAULT_VALUES.manifestRetry);
-    }
-  };
-
-  const onChangeLimitOfflineRetry = (evt) => {
-    const isNotLimited = getCheckBoxValue(evt.target);
-    if (isNotLimited) {
-      setOfflineRetryLimit(false);
-      onOfflineRetryInput(Infinity);
-    } else {
-      setOfflineRetryLimit(true);
-      onOfflineRetryInput(DEFAULT_VALUES.offlineRetry);
     }
   };
 
@@ -237,54 +220,6 @@ function RequestConfig({
             `Retry "retryable" manifest requests at most ${manifestRetry} time(s)`}
         </span>
       </li>
-      <li>
-        <div className="playerOptionInput">
-          <label htmlFor="offlineRetry">Offline Retry</label>
-          <span className="wrapperInputWithResetBtn">
-            <input
-              type="text"
-              aria-label="Offline retry option"
-              name="offlineRetry"
-              id="offlineRetry"
-              placeholder="Number"
-              className="optionInput"
-              onChange={(evt) => onOfflineRetryInput(evt.target.value)}
-              value={offlineRetry}
-              disabled={isOfflineRetryLimited === false}
-            />
-            <Button
-              className={
-                parseFloat(offlineRetry) === DEFAULT_VALUES.offlineRetry
-                  ? "resetBtn disabledResetBtn"
-                  : "resetBtn"
-              }
-              ariaLabel="Reset option to default value"
-              title="Reset option to default value"
-              onClick={() => {
-                setOfflineRetryLimit(DEFAULT_VALUES.offlineRetry !== Infinity);
-                onOfflineRetryInput(DEFAULT_VALUES.offlineRetry);
-              }}
-              value={String.fromCharCode(0xf021)}
-            />
-          </span>
-        </div>
-        <Checkbox
-          className="playerOptionsCheckBox"
-          ariaLabel="Offline retry limit option"
-          name="offlineRetryLimit"
-          id="offlineRetryLimit"
-          checked={isOfflineRetryLimited === false}
-          onChange={onChangeLimitOfflineRetry}
-        >
-          Do not limit
-        </Checkbox>
-        <span className="option-desc">
-          {parseFloat(offlineRetry) === Infinity || !isOfflineRetryLimited ?
-            "Retry \"retryable\" requests when offline with no limit" :
-            `Retry "retryable" requests when offline at most ${offlineRetry} time(s)`}
-        </span>
-      </li>
-
       <li>
         <div className="playerOptionInput">
           <label htmlFor="manifestTimeout">Manifest Timeout</label>
