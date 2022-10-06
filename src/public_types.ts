@@ -79,8 +79,7 @@ export interface ILoadVideoOptions {
    */
   lowLatencyMode? : boolean;
 
-  // XXX TODO should it also be flattened or just renamed?
-  networkConfig? : INetworkConfigOption;
+  requestConfig? : IRequestConfig;
 
   /** Indicate the position the RxPlayer should start at on the loaded content. */
   startAt? : IStartAtOption;
@@ -134,7 +133,7 @@ export interface ILoadVideoOptions {
    */
   checkMediaSegmentIntegrity? : boolean;
 
-  /** Manifest object that will be used initially. */
+  /** Manifest object that may be used initially. */
   initialManifest? : IInitialManifest;
 
   /** Custom implementation for performing Manifest requests. */
@@ -258,38 +257,40 @@ export type IStartAtOption =
     fromFirstPosition : number;
   };
 
-/** Value for the `networkConfig` option of the `loadVideo` method. */
-export interface INetworkConfigOption {
-  /**
-   * The amount of time maximum we should retry a Manifest or Manifest-related
-   * request before failing on Error.
-   * Set to `Infinity` for an infinite number of requests.
-   */
-  manifestRetry? : number | undefined;
-
-  /**
-   * Amount of time, in milliseconds, after which a manifest request should be
-   * aborted and optionally retried, depending on the current configuration.
-   *
-   * Setting it to `-1` allows to disable any timeout.
-   * `undefined` means that a default, large, timeout will be used instead.
-   */
-  manifestRequestTimeout? : number | undefined;
-  /**
-   * The amount of time maximum we should retry a segment or segment-related
-   * request before failing on Error.
-   * Set to `Infinity` for an infinite number of requests.
-   */
-  segmentRetry? : number | undefined;
-
-  /**
-   * Amount of time, in milliseconds, after which a segment request should be
-   * aborted and optionally retried, depending on the current configuration.
-   *
-   * Setting it to `-1` allows to disable any timeout.
-   * `undefined` means that a default, large, timeout will be used instead.
-   */
-  segmentRequestTimeout? : number | undefined;
+/** Value for the `requestConfig` option of the `loadVideo` method. */
+export interface IRequestConfig {
+  manifest? : {
+    /**
+     * The amount of time maximum we should retry a Manifest or Manifest-related
+     * request before failing on Error.
+     * Set to `Infinity` for an infinite number of requests.
+     */
+    maxRetry? : number | undefined;
+    /**
+     * Amount of time, in milliseconds, after which a manifest request should be
+     * aborted and optionally retried, depending on the current configuration.
+     *
+     * Setting it to `-1` allows to disable any timeout.
+     * `undefined` means that a default, large, timeout will be used instead.
+     */
+    timeout? : number | undefined;
+  } | undefined;
+  segment? : {
+    /**
+     * The amount of time maximum we should retry a segment or segment-related
+     * request before failing on Error.
+     * Set to `Infinity` for an infinite number of requests.
+     */
+    maxRetry? : number | undefined;
+    /**
+     * Amount of time, in milliseconds, after which a segment request should be
+     * aborted and optionally retried, depending on the current configuration.
+     *
+     * Setting it to `-1` allows to disable any timeout.
+     * `undefined` means that a default, large, timeout will be used instead.
+     */
+    timeout? : number | undefined;
+  } | undefined;
 }
 
 export type ISegmentLoader = (

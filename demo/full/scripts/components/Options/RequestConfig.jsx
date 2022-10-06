@@ -12,8 +12,6 @@ const defaultManifestRetry =
   DEFAULT_VALUES.loadVideo.networkConfig.manifestRetry;
 const defaultManifestRequestTimeout =
   DEFAULT_VALUES.loadVideo.networkConfig.manifestRequestTimeout;
-const defaultOfflineRetry =
-  DEFAULT_VALUES.loadVideo.networkConfig.offlineRetry;
 
 /**
  * @param {Object} props
@@ -22,10 +20,8 @@ const defaultOfflineRetry =
 function RequestConfig({
   manifestRequestTimeout,
   manifestRetry,
-  offlineRetry,
   onManifestRequestTimeoutChange,
   onManifestRetryChange,
-  onOfflineRetryChange,
   onSegmentRequestTimeoutChange,
   onSegmentRetryChange,
   segmentRequestTimeout,
@@ -42,10 +38,6 @@ function RequestConfig({
   /* Value of the `manifestRetry` input */
   const [manifestRetryStr, setManifestRetryStr] = useState(
     manifestRetry
-  );
-  /* Value of the `offlineRetry` input */
-  const [offlineRetryStr, setOfflineRetryStr] = useState(
-    offlineRetry
   );
   /* Value of the `manifestRequestTimeout` input */
   const [
@@ -77,13 +69,6 @@ function RequestConfig({
    */
   const [isManifestRetryLimited, setManifestRetryLimit] = useState(
     manifestRetry !== Infinity
-  );
-  /*
-   * Keep track of the "limit offlineRetry" toggle:
-   * `false` == checkbox enabled
-   */
-  const [isOfflineRetryLimited, setOfflineRetryLimit] = useState(
-    offlineRetry !== Infinity
   );
   /*
    * Keep track of the "limit manifestRequestTimeout" toggle:
@@ -135,15 +120,6 @@ function RequestConfig({
     onSegmentRetryChange(newVal);
   }, [segmentRetryStr]);
 
-  // Update offlineRetry when its linked text change
-  useEffect(() => {
-    let newVal = parseFloat(offlineRetryStr);
-    newVal = isNaN(newVal) ?
-      defaultOfflineRetry :
-      newVal;
-    onOfflineRetryChange(newVal);
-  }, [offlineRetryStr]);
-
   const onChangeLimitSegmentRetry = useCallback((evt) => {
     const isNotLimited = getCheckBoxValue(evt.target);
     if (isNotLimited) {
@@ -177,16 +153,6 @@ function RequestConfig({
     }
   }, []);
 
-  const onChangeLimitOfflineRetry = useCallback((evt) => {
-    const isNotLimited = getCheckBoxValue(evt.target);
-    if (isNotLimited) {
-      setOfflineRetryLimit(false);
-      setOfflineRetryStr(String(Infinity));
-    } else {
-      setOfflineRetryLimit(true);
-      setOfflineRetryStr(String(defaultOfflineRetry));
-    }
-  }, []);
 
   const onChangeLimitManifestRequestTimeout = useCallback((evt) => {
     const isNotLimited = getCheckBoxValue(evt.target);
@@ -292,37 +258,6 @@ function RequestConfig({
             `Retry "retryable" manifest requests at most ${manifestRetry} time(s)`}
         </span>
       </li>
-      <li>
-        <PlayerOptionNumberInput
-          ariaLabel="offlineRetry option"
-          label="offlineRetry"
-          title="Offline Retry"
-          valueAsString={offlineRetryStr}
-          defaultValueAsNumber={defaultOfflineRetry}
-          isDisabled={isOfflineRetryLimited === false}
-          onUpdateValue={setOfflineRetryStr}
-          onResetClick={() => {
-            setOfflineRetryStr(String(defaultOfflineRetry));
-            setOfflineRetryLimit(defaultOfflineRetry !== Infinity);
-          }}
-        />
-        <Checkbox
-          className="playerOptionsCheckBox"
-          ariaLabel="Offline retry limit option"
-          name="offlineRetryLimit"
-          id="offlineRetryLimit"
-          checked={isOfflineRetryLimited === false}
-          onChange={onChangeLimitOfflineRetry}
-        >
-          Do not limit
-        </Checkbox>
-        <span className="option-desc">
-          {offlineRetry === Infinity || !isOfflineRetryLimited ?
-            "Retry \"retryable\" requests when offline with no limit" :
-            `Retry "retryable" requests when offline at most ${offlineRetry} time(s)`}
-        </span>
-      </li>
-
       <li>
         <PlayerOptionNumberInput
           ariaLabel="manifestRequestTimeout option"

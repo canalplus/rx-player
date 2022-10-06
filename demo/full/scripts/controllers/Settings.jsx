@@ -3,7 +3,7 @@ import Option from "../components/Options/Option";
 import Playback from "../components/Options/Playback.jsx";
 import AudioAdaptiveSettings from "../components/Options/AudioAdaptiveSettings";
 import VideoAdaptiveSettings from "../components/Options/VideoAdaptiveSettings.jsx";
-import NetworkConfig from "../components/Options/NetworkConfig.jsx";
+import RequestConfig from "../components/Options/RequestConfig.jsx";
 import TrackSwitch from "../components/Options/TrackSwitch.jsx";
 import BufferOptions from "../components/Options/BufferOptions.jsx";
 
@@ -26,16 +26,21 @@ function Settings({
     autoPlay,
     defaultAudioTrackSwitchingMode,
     enableFastSwitching,
-    networkConfig,
+    requestConfig,
     onCodecSwitch,
   } = loadVideoOptions;
   const {
-    segmentRetry,
-    segmentRequestTimeout,
-    manifestRetry,
-    manifestRequestTimeout,
-    offlineRetry,
-  } = networkConfig;
+    manifest: manifestRequestConfig,
+    segment: segmentRequestConfig,
+  } = requestConfig;
+  const {
+    maxRetry: segmentRetry,
+    timeout: segmentRequestTimeout,
+  } = segmentRequestConfig;
+  const {
+    maxRetry: manifestRetry,
+    timeout: manifestRequestTimeout,
+  } = manifestRequestConfig;
 
   const onAutoPlayChange = useCallback((autoPlay) => {
     updateLoadVideoOptions((prevOptions) => {
@@ -68,12 +73,14 @@ function Settings({
 
   const onSegmentRetryChange = useCallback((segmentRetry) => {
     updateLoadVideoOptions((prevOptions) => {
-      if (segmentRetry === prevOptions.networkConfig.segmentRetry) {
+      if (segmentRetry === prevOptions.requestConfig.segment.maxRetry) {
         return prevOptions;
       }
       return Object.assign({}, prevOptions, {
-        networkConfig: Object.assign({}, prevOptions.networkConfig, {
-          segmentRetry,
+        requestConfig: Object.assign({}, prevOptions.requestConfig, {
+          segment: Object.assign({}, prevOptions.requestConfig.segment, {
+            maxRetry: segmentRetry,
+          }),
         }),
       });
     });
@@ -82,14 +89,15 @@ function Settings({
   const onSegmentRequestTimeoutChange = useCallback((segmentRequestTimeout) => {
     updateLoadVideoOptions((prevOptions) => {
       if (
-        segmentRequestTimeout ===
-          prevOptions.networkConfig.segmentRequestTimeout
+        segmentRequestTimeout === prevOptions.requestConfig.segment.timeout
       ) {
         return prevOptions;
       }
       return Object.assign({}, prevOptions, {
-        networkConfig: Object.assign({}, prevOptions.networkConfig, {
-          segmentRequestTimeout,
+        requestConfig: Object.assign({}, prevOptions.requestConfig, {
+          segment: Object.assign({}, prevOptions.requestConfig.segment, {
+            timeout: segmentRequestTimeout,
+          }),
         }),
       });
     });
@@ -97,25 +105,14 @@ function Settings({
 
   const onManifestRetryChange = useCallback((manifestRetry) => {
     updateLoadVideoOptions((prevOptions) => {
-      if (manifestRetry === prevOptions.networkConfig.manifestRetry) {
+      if (manifestRetry === prevOptions.requestConfig.manifest.maxRetry) {
         return prevOptions;
       }
       return Object.assign({}, prevOptions, {
-        networkConfig: Object.assign({}, prevOptions.networkConfig, {
-          manifestRetry,
-        }),
-      });
-    });
-  }, [updateLoadVideoOptions]);
-
-  const onOfflineRetryChange = useCallback((offlineRetry) => {
-    updateLoadVideoOptions((prevOptions) => {
-      if (offlineRetry === prevOptions.networkConfig.offlineRetry) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, {
-        networkConfig: Object.assign({}, prevOptions.networkConfig, {
-          offlineRetry,
+        requestConfig: Object.assign({}, prevOptions.requestConfig, {
+          manifest: Object.assign({}, prevOptions.requestConfig.manifest, {
+            maxRetry: manifestRetry,
+          }),
         }),
       });
     });
@@ -125,14 +122,15 @@ function Settings({
     (manifestRequestTimeout) => {
       updateLoadVideoOptions((prevOptions) => {
         if (
-          manifestRequestTimeout ===
-            prevOptions.networkConfig.manifestRequestTimeout
+          manifestRequestTimeout === prevOptions.requestConfig.manifest.timeout
         ) {
           return prevOptions;
         }
         return Object.assign({}, prevOptions, {
-          networkConfig: Object.assign({}, prevOptions.networkConfig, {
-            manifestRequestTimeout,
+          requestConfig: Object.assign({}, prevOptions.requestConfig, {
+            manifest: Object.assign({}, prevOptions.requestConfig.manifest, {
+              timeout: manifestRequestTimeout,
+            }),
           }),
         });
       });
@@ -243,17 +241,15 @@ function Settings({
       </div>
       <div style={{ display: "flex" }}>
         <Option title="Network Config">
-          <NetworkConfig
+          <RequestConfig
             manifestRequestTimeout={manifestRequestTimeout}
             segmentRetry={segmentRetry}
             segmentRequestTimeout={segmentRequestTimeout}
             manifestRetry={manifestRetry}
-            offlineRetry={offlineRetry}
             onSegmentRetryChange={onSegmentRetryChange}
             onSegmentRequestTimeoutChange={onSegmentRequestTimeoutChange}
             onManifestRetryChange={onManifestRetryChange}
             onManifestRequestTimeoutChange={onManifestRequestTimeoutChange}
-            onOfflineRetryChange={onOfflineRetryChange}
           />
         </Option>
         <Option title="Track Switch Mode">

@@ -11,12 +11,15 @@ const defaultOptionsValues = {
     autoPlay: true,
     defaultAudioTrackSwitchingMode: "reload",
     enableFastSwitching: true,
-    networkConfig: {
-      manifestRetry: 4,
-      manifestRequestTimeout: 30000,
-      offlineRetry: Infinity,
-      segmentRetry: 4,
-      segmentRequestTimeout: 30000,
+    requestConfig: {
+      segment: {
+        maxRetry: 4,
+        timeout: 30000,
+      },
+      manifest: {
+        maxRetry: 4,
+        timeout: 30000,
+      },
     },
     onCodecSwitch: "continue",
   },
