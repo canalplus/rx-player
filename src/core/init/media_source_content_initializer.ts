@@ -770,9 +770,7 @@ export interface IInitializeArguments {
      */
     requestTimeout : number | undefined;
     /** Maximum number of time a request on error will be retried. */
-    maxRetryRegular : number | undefined;
-    /** Maximum number of time a request be retried when the user is offline. */
-    maxRetryOffline : number | undefined;
+    maxRetry : number | undefined;
   };
   /** Emit the playback rate (speed) set by the user. */
   speed : IReadOnlySharedReference<number>;
