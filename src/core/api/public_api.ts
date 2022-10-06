@@ -569,16 +569,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                                serverSyncInfos,
                                                __priv_patchLastSegmentInSidx });
 
-      const { offlineRetry,
-              segmentRetry,
+      const { segmentRetry,
               manifestRetry,
               manifestRequestTimeout,
               segmentRequestTimeout } = networkConfig;
 
       /** Interface used to load and refresh the Manifest. */
       const manifestRequestSettings = { lowLatencyMode,
-                                        maxRetryRegular: manifestRetry,
-                                        maxRetryOffline: offlineRetry,
+                                        maxRetry : manifestRetry,
                                         requestTimeout:  manifestRequestTimeout,
                                         minimumManifestUpdateInterval,
                                         initialManifest };
@@ -632,9 +630,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                          this._priv_bufferOptions);
 
       const segmentRequestOptions = { lowLatencyMode,
-                                      maxRetryRegular: segmentRetry,
-                                      requestTimeout: segmentRequestTimeout,
-                                      maxRetryOffline: offlineRetry };
+                                      maxRetry: segmentRetry,
+                                      requestTimeout: segmentRequestTimeout };
 
       initializer = new MediaSourceContentInitializer({
         adaptiveOptions,
