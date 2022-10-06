@@ -172,24 +172,20 @@ properties, methods, events and so on.
   - [`lowLatencyMode`](../api/Loading_a_Content.md#lowlatencymode):
     Allows to play low-latency contents efficiently.
 
-  - [`networkConfig`](../api/Loading_a_Content.md#networkconfig):
+  - [`requestConfig`](../api/Loading_a_Content.md#requestconfig):
     Configuration linked to the Manifest and segment requests.
 
-    - [`networkConfig.segmentRetry`](../api/Loading_a_Content.md#networkconfig):
+    - [`requestConfig.segment.maxRetry`](../api/Loading_a_Content.md#requestconfig):
       Maximum number of retries when a segment request fails.
 
-    - [`networkConfig.manifestRetry`](../api/Loading_a_Content.md#networkconfig):
+    - [`requestConfig.segment.timeout`](../api/Loading_a_Content.md#requestconfig):
+      Timeout after which segment requests are aborted.
+
+    - [`requestConfig.manifest.maxRetry`](../api/Loading_a_Content.md#requestconfig):
       Maximum number of retries when a Manifest request fails.
 
-    - [`networkConfig.offlineRetry`](../api/Loading_a_Content.md#networkconfig):
-      Maximum number of retries when a Manifest or segment request fails due to
-      the user being offline.
-
-    - [`networkConfig.manifestRequestTimeout`](../api/Loading_a_Content.md#networkconfig):
+    - [`requestConfig.manifest.timeout`](../api/Loading_a_Content.md#requestconfig):
       Timeout after which manifest requests are aborted.
-
-    - [`networkConfig.segmentRequestTimeout`](../api/Loading_a_Content.md#networkconfig):
-      Timeout after which segment requests are aborted.
 
   - [`enableFastSwitching`](../api/Loading_a_Content.md#enablefastswitching):
     Enable or disable an optimization replacing segments of poor quality with
