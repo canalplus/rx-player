@@ -5,7 +5,6 @@ const defaultOptionsValues = {
   throttleVideoBitrateWhenHidden: false,
   segmentRetry: 4,
   manifestRetry: 4,
-  offlineRetry: Infinity,
   enableFastSwitching: true,
   defaultAudioTrackSwitchingMode: "reload",
   onCodecSwitch: "continue",

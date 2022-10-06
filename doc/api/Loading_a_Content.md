@@ -747,7 +747,7 @@ through the `startAt` option.
 More information on playing low-latency DASH contents can be found in the
 [corresponding documentation page](./Miscellaneous/Low_Latency.md).
 
-### networkConfig
+### requestConfig
 
 _type_: `Object`
 
@@ -758,50 +758,49 @@ This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
 transport option</a>)
 </div>
 
-Configuration linked to [Manifest](../Getting_Started/Glossary.md#manifest) and segment requests.
+Configuration linked to [Manifest](../Getting_Started/Glossary.md#manifest) and
+segment requests.
 This object can take the following properties (all are optional):
 
-- `segmentRetry` (`Number`): Maximum number of times a segment request
-  will be retried when an error happen - only on some condition [1].
+- `segment` (`object|undefined`): If set, segment-specific request
+  configuration. That object can contain any of the following properties:
 
-  Those retry will be done with a progressive delay, to avoid overloading a
-  CDN. When this count is reached, the player will stop and throw a fatal
-  error.
+    - `maxRetry` (`number|undefined`): Maximum number of times a segment
+      request will be retried when an error happen - only on some condition [1].
 
-  Defaults to `4`.
+      Those retry will be done with a progressive delay, to avoid overloading a
+      CDN. When this count is reached, the player will stop and throw a fatal
+      error.
 
-- `manifestRetry` (`Number`): Maximum number of times a Manifest request
-  will be retried when a request error happen - only on some condition [1].
-  Defaults to `4`.
+      Defaults to `4`.
 
-  Those retry will be done with a progressive delay, to avoid overloading a
-  CDN. When this count is reached, the player will stop and throw a fatal
-  error.
+    - `timeout` (`number|undefined`): Timeout, in milliseconds, after which
+      segment requests are aborted and, depending on other options, retried.
 
-  Defaults to `4`.
+      To set to `-1` for no timeout.
 
-- `offlineRetry` (`Number`): Maximum number of times a request will be
-  retried when the request fails because the user is offline.
+      `undefined` (the default) will lead to a default, large, timeout being
+      used.
 
-  Those retry will be done with a progressive delay, to avoid overloading the
-  user's ressources. When this count is reached, the player will stop and
-  throw a fatal error.
+- `manifest` (`object|undefined`): If set, manifest-specific request
+  configuration. That object can contain any of the following properties:
 
-  Defaults to `Infinity`.
+    - `maxRetry` (`number|undefined`): Maximum number of times a Manifest request
+      will be retried when a request error happen - only on some condition [1].
+      Defaults to `4`.
 
-- `manifestRequestTimeout` (`Number|undefined`): Timeout, in milliseconds, after
-  which manifest requests are aborted and, depending on other options, retried.
+      Those retry will be done with a progressive delay, to avoid overloading a
+      CDN. When this count is reached, the player will stop and throw a fatal
+      error.
 
-  To set to `-1` for no timeout.
+      Defaults to `4`.
 
-  `undefined` (the default) will lead to a default, large, timeout being used.
+    - `timeout` (`number|undefined`): Timeout, in milliseconds, after which
+      manifest requests are aborted and, depending on other options, retried.
 
-- `segmentRequestTimeout` (`Number|undefined`): Timeout, in milliseconds, after
-  which segment requests are aborted and, depending on other options, retried.
+      To set to `-1` for no timeout.
 
-  To set to `-1` for no timeout.
-
-  `undefined` (the default) will lead to a default, large, timeout being used.
+      `undefined` (the default) will lead to a default, large, timeout being used.
 
 [1] To retry a request, one of the following condition should be met:
 

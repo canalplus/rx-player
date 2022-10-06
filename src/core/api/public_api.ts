@@ -598,7 +598,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             keySystems,
             lowLatencyMode,
             minimumManifestUpdateInterval,
-            networkConfig,
+            requestConfig,
             onCodecSwitch,
             startAt,
             transport,
@@ -678,18 +678,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                                serverSyncInfos,
                                                __priv_patchLastSegmentInSidx });
 
-      const { segmentRetry,
-              manifestRetry,
-              manifestRequestTimeout,
-              segmentRequestTimeout } = networkConfig;
-
       /** Interface used to load and refresh the Manifest. */
       const manifestFetcher = new ManifestFetcher(
         url,
         transportPipelines,
         { lowLatencyMode,
-          maxRetry: manifestRetry,
-          requestTimeout:  manifestRequestTimeout });
+          maxRetry: requestConfig.manifest?.maxRetry,
+          requestTimeout:  requestConfig.manifest?.timeout });
 
       /** Observable emitting the initial Manifest */
       let manifest$ : Observable<IManifestFetcherParsedResult |
@@ -770,8 +765,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                            onCodecSwitch },
                                          this._priv_bufferOptions);
 
-      const segmentRequestOptions = { maxRetry: segmentRetry,
-                                      requestTimeout: segmentRequestTimeout };
+      const segmentRequestOptions = { maxRetry: requestConfig.segment?.maxRetry,
+                                      requestTimeout: requestConfig.segment?.timeout };
 
       // We've every options set up. Start everything now
       const init$ = initializeMediaSourcePlayback({ adaptiveOptions,

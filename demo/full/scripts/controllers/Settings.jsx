@@ -6,7 +6,7 @@ import Option from "../components/Options/Option";
 import Playback from "../components/Options/Playback.jsx";
 import AudioAdaptiveSettings from "../components/Options/AudioAdaptiveSettings";
 import VideoAdaptiveSettings from "../components/Options/VideoAdaptiveSettings.jsx";
-import NetworkConfig from "../components/Options/NetworkConfig.jsx";
+import RequestConfig from "../components/Options/RequestConfig.jsx";
 import TrackSwitch from "../components/Options/TrackSwitch.jsx";
 import BufferOptions from "../components/Options/BufferOptions.jsx";
 
@@ -33,7 +33,6 @@ class Settings extends React.Component {
       enableFastSwitching,
       segmentRetry,
       manifestRetry,
-      offlineRetry,
     } = this.state;
     return {
       initOpts: {
@@ -49,10 +48,9 @@ class Settings extends React.Component {
         defaultAudioTrackSwitchingMode,
         onCodecSwitch,
         enableFastSwitching,
-        networkConfig: {
-          segmentRetry: parseFloat(segmentRetry),
-          manifestRetry: parseFloat(manifestRetry),
-          offlineRetry: parseFloat(offlineRetry),
+        requestConfig: {
+          segment: { maxRetry: parseFloat(segmentRetry) },
+          manifest: { maxRetry: parseFloat(manifestRetry) },
         },
       },
     };
@@ -78,10 +76,6 @@ class Settings extends React.Component {
 
   onManifestRetryInput(value) {
     this.setState({ manifestRetry: value });
-  }
-
-  onOfflineRetryInput(value) {
-    this.setState({ offlineRetry: value });
   }
 
   onEnableFastSwitchingClick(evt) {
@@ -119,7 +113,6 @@ class Settings extends React.Component {
       throttleVideoBitrateWhenHidden,
       segmentRetry,
       manifestRetry,
-      offlineRetry,
       enableFastSwitching,
       defaultAudioTrackSwitchingMode,
       onCodecSwitch,
@@ -137,13 +130,11 @@ class Settings extends React.Component {
         this.onThrottleVideoBitrateWhenHiddenClick,
     };
 
-    const networkConfig = {
+    const requestConfig = {
       segmentRetry,
       manifestRetry,
-      offlineRetry,
       onSegmentRetryInput: this.onSegmentRetryInput,
       onManifestRetryInput: this.onManifestRetryInput,
-      onOfflineRetryInput: this.onOfflineRetryInput,
     };
 
     const trackSwitchModeConfig = {
@@ -178,7 +169,7 @@ class Settings extends React.Component {
         </div>
         <div style={{ display: "flex" }}>
           <Option title="Network Config">
-            <NetworkConfig {...networkConfig} />
+            <RequestConfig {...requestConfig} />
           </Option>
           <Option title="Track Switch Mode">
             <TrackSwitch {...trackSwitchModeConfig} />

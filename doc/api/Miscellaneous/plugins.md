@@ -187,19 +187,6 @@ As you can see, this function takes two arguments:
               If not set or set to `undefined`, the RxPlayer might retry or fail
               depending on other factors.
 
-            - *isOfflineError* (`boolean|undefined`): If set to `true`, this
-              indicates that this error is due to the user being offline
-              (disconnected from the needed network).
-
-              If set to `false`, this indicates that it wasn't.
-
-              If not known or not applicable, you can just set it to undefined
-              or not define it at all.
-
-              The RxPlayer might retry a segment request due to the user being
-              offline a different amount of time than when the error is due to
-              another issue, depending on its configuration.
-
        - **fallback**: Callback to call if you want to call our default
          implementation instead for loading this segment. No argument is needed.
 
@@ -342,19 +329,6 @@ As you can see, this function takes three arguments:
 
               If not set or set to `undefined`, the RxPlayer might retry or fail
               depending on other factors.
-
-            - *isOfflineError* (`boolean|undefined`): If set to `true`, this
-              indicates that this error is due to the user being offline
-              (disconnected from the needed network).
-
-              If set to `false`, this indicates that it wasn't.
-
-              If not known or not applicable, you can just set it to undefined
-              or not define it at all.
-
-              The RxPlayer might retry a Manifest request due to the user being
-              offline a different amount of time than when the error is due to
-              another issue, depending on its configuration.
 
        - **fallback**: Callback to call if you want to call our default
          implementation instead for this Manifest. No argument is needed.
