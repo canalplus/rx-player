@@ -724,16 +724,6 @@ If badly set, continue will be used as default`);
     expect(parseLoadVideoOptions({
       url: "foo",
       transport: "bar",
-      networkConfig: { offlineRetry: 7 },
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      networkConfig: { offlineRetry: 7 },
-    });
-    expect(parseLoadVideoOptions({
-      url: "foo",
-      transport: "bar",
       networkConfig: { segmentRetry: 3 },
     })).toEqual({
       ...defaultLoadVideoOptions,
@@ -745,7 +735,6 @@ If badly set, continue will be used as default`);
       url: "foo",
       transport: "bar",
       networkConfig: {
-        offlineRetry: 10,
         segmentRetry: 3,
         manifestRetry: 5,
       },
@@ -754,7 +743,6 @@ If badly set, continue will be used as default`);
       url: "foo",
       transport: "bar",
       networkConfig: {
-        offlineRetry: 10,
         segmentRetry: 3,
         manifestRetry: 5,
       },
