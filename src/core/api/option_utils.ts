@@ -28,7 +28,7 @@ import {
   ILoadedManifestFormat,
   ILoadVideoOptions,
   IManifestLoader,
-  INetworkConfigOption,
+  IRequestConfig,
   IRepresentationFilter,
   ISegmentLoader,
   IServerSyncInfos,
@@ -69,7 +69,7 @@ interface IParsedLoadVideoOptionsBase {
   keySystems : IKeySystemOption[];
   lowLatencyMode : boolean;
   minimumManifestUpdateInterval : number;
-  networkConfig: INetworkConfigOption;
+  requestConfig: IRequestConfig;
   startAt : IParsedStartAtOption|undefined;
   enableFastSwitching : boolean;
   defaultAudioTrackSwitchingMode : IAudioTrackSwitchingMode | undefined;
@@ -388,8 +388,7 @@ function parseLoadVideoOptions(
     }
   }
 
-  const networkConfig = options.networkConfig ?? {};
-
+  const requestConfig = options.requestConfig ?? {};
 
   // All those eslint disable are needed because the option is voluntarily
   // hidden from the base type to limit discovery of this hidden API.
@@ -410,7 +409,7 @@ function parseLoadVideoOptions(
            manifestLoader: options.manifestLoader,
            manifestUpdateUrl: options.manifestUpdateUrl,
            minimumManifestUpdateInterval,
-           networkConfig,
+           requestConfig,
            onCodecSwitch,
            referenceDateTime: options.referenceDateTime,
            representationFilter: options.representationFilter,
