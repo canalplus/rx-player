@@ -828,10 +828,13 @@ export interface IBrokenRepresentationsLockContext {
   trackType : ITrackType;
 }
 
-export interface IAutoTrackSwitchEventPayload {
+export interface ITrackUpdateEventPayload {
   period : IPeriod;
   trackType : ITrackType;
-  reason : "missing" |
+  reason : "missing" | // Missing from Manifest update
+           "manual" | // Manually and explicitely updated
+           "trickmode-enabled" | // Video trickmode tracks being enabled
+           "trickmode-disabled" | // Video trickmode tracks being disabled
            string;
 }
 
