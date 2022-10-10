@@ -545,6 +545,92 @@ This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
 
+### trackUpdate
+
+_payload type_: `Object`
+
+Event triggered if a video, audio or text track chosen for any
+[Period](../Getting_Started/Glossary.md#period) is changed by the RxPlayer.
+
+This event is triggered just after the track is updated but before any of the
+corresponding data is actually loaded, thus allowing you to edit track or
+Representations settings before the RxPlayer can continue.
+
+However keep in mind that this event is not triggered for the initial default
+track choice made by the RxPlayer. If you want to react to this event instead,
+you can rely on the `newAvailablePeriods` event.
+
+Cases where the track changes include:
+
+  - when the application updates a track manually (for example through a
+    `setAudioTrack` call)
+
+  - when it had to be done as a side-effect of another API (for example after
+    enabling trickmode video tracks through a `setPlaybackRate` call)
+
+  - or in the extremely rare situation where the RxPlayer had to do it by itself
+    automatically (one situation would be when a refreshed content's Manifest
+    removes the previously-chosen track. There, the RxPlayer will send the
+    `trackUpdate` event and - if no new track is chosen since - will
+    automatically switch to that track so playback can continue).
+
+The payload for this event is an object with the following properties:
+
+  - `trackType` (`string`): The type of track concerned. Can for example be
+    `audio` for an audio track, `video` for a video track or `text` for a text
+    track.
+
+  - `period` (`Object`): Information about the concerned
+    [Period](../Getting_Started/Glossary.md#period). This object contains as
+    properties:
+
+    - `start` (`number`): The starting position at which the Period starts, in
+      seconds.
+
+    - `end` (`number|undefined`): The position at which the Period ends, in
+      seconds.
+
+      `undefined` either if not known or if the Period has no end yet (e.g. for
+      live contents, the end might not be known for now).
+
+    - `id` (`string`): `id` of the Period, allowing to call track and
+      Representation selection APIs (such as `setAudioTrack` and
+      `lockVideoRepresentations` for example) even when the Period changes.
+
+  - `reason` (`string`): The reason for the track update.
+    For now, it can be set to:
+
+      - `"manual"`: the track was updated because the application called a
+        method to directly update it.
+
+        This event is the direct consequence of calling `setAudioTrack`,
+        `setTextTrack`, `setVideoTrack`, `disableTextTrack` or
+        `disableVideoTrack`, so it corresponds to track updates you should
+        already be aware of.
+
+      - `"trickmode-enabled"`: The track is being updated because the
+        application wanted to enable video trickmode tracks (usually by setting
+        the `preferTrickModeTracks` option of the `setPlaybackRate` method to
+        `true`).
+
+      - `"trickmode-disabled"`: The track is being updated because the
+        application wanted to disable video trickmode tracks (usually by setting
+        the `preferTrickModeTracks` option of the `setPlaybackRate` method to
+        `false`).
+
+      - `"missing"` the previously-chosen track was missing from the content's
+        refreshed Manifest.
+
+    Though other reasons may be added in the future (for future reasons not
+    covered by those values), so you should expect this possibility in your
+    application's logic.
+
+
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.md#transport">transport option</a>)
+</div>
+
 ### brokenRepresentationsLock
 
 _payload type_: `Object`
@@ -580,53 +666,6 @@ The payload for this event is an object with the following properties:
 
   - `trackType` (`string`): The type of track concerned. Can for example be
     `audio` for audio Representations or `video` for video Representations.
-
-
-<div class="warning">
-This event is not sent in <i>DirectFile</i> mode (see
-<a href="./Loading_a_Content.md#transport">transport option</a>)
-</div>
-
-
-### autoTrackSwitch
-
-_payload type_: `Object`
-
-Extremely rare event triggered if a video, audio or text track set for any
-[Period](../Getting_Started/Glossary.md#period) was automatically changed by the
-RxPlayer, due to an unexpected event.
-
-For now this only happens in the extremely rare situation (it was actually never
-seen, but it is possible) where a refreshed content's Manifest would remove the
-previously-chosen track. There, the RxPlayer will send the `autoTrackSwitch`
-event and - if no new track is chosen - will automatically switch to another
-track so playback can continue.
-
-The payload for this event is an object with the following properties:
-  - `trackType` (`string`): The type of track concerned. Can for example be
-    `audio` for an audio track, `video` for a video track or `text` for a text
-    track.
-
-  - `period` (`Object`): Information about the concerned
-    [Period](../Getting_Started/Glossary.md#period). This object contains as
-    properties:
-
-    - `start` (`number`): The starting position at which the Period starts, in
-      seconds.
-
-    - `end` (`number|undefined`): The position at which the Period ends, in
-      seconds.
-
-      `undefined` either if not known or if the Period has no end yet (e.g. for
-      live contents, the end might not be known for now).
-
-    - `id` (`string`): `id` of the Period, allowing to call track and
-      Representation selection APIs (such as `setAudioTrack` and
-      `lockVideoRepresentations` for example) even when the Period changes.
-
-  - `reason` (`string`): The reason for the automatic track switch. For now,
-    can only be `"missing"` indicating that the previously chosen track was
-    missing from the content's refreshed Manifest.
 
 
 <div class="warning">
