@@ -59,7 +59,7 @@ import {
   ILoadVideoOptions,
   ILockedAudioRepresentationsSettings,
   ILockedVideoRepresentationsSettings,
-  IAutoTrackSwitchEventPayload,
+  ITrackUpdateEventPayload,
   IPeriod,
   IPeriodChangeEvent,
   IPlayerError,
@@ -2140,8 +2140,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     contentInfos.tracksStore.addEventListener("brokenRepresentationsLock", (e) => {
       this.trigger("brokenRepresentationsLock", e);
     });
-    contentInfos.tracksStore.addEventListener("autoTrackSwitch", (e) => {
-      this.trigger("autoTrackSwitch", e);
+    contentInfos.tracksStore.addEventListener("trackUpdate", (e) => {
+      this.trigger("trackUpdate", e);
     });
 
     contentInfos.tracksStore.updatePeriodList(manifest);
@@ -2674,7 +2674,7 @@ interface IPublicAPIEvent {
   pause: null;
   newAvailablePeriods : IPeriod[];
   brokenRepresentationsLock : IBrokenRepresentationsLockContext;
-  autoTrackSwitch : IAutoTrackSwitchEventPayload;
+  trackUpdate : ITrackUpdateEventPayload;
   seeking : null;
   seeked : null;
   streamEvent : IStreamEvent;
