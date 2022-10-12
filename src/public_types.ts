@@ -201,6 +201,16 @@ export interface IRepresentationFilterRepresentation {
   frameRate? : number | undefined;
   /** If the track is HDR, gives the HDR characteristics of the content */
   hdrInfo? : IHDRInformation | undefined;
+  /**
+   * Encryption information linked to this content.
+   * If set to an Object, the Representation is known to be encrypted.
+   * If unset or set to `undefined` the Representation is either unencrypted or
+   * we don't know if it is.
+   */
+  contentProtections? : {
+    /** Known key ids linked to that Representation. */
+    keyIds? : Uint8Array[] | undefined;
+  } | undefined;
 }
 
 export interface IHDRInformation {
