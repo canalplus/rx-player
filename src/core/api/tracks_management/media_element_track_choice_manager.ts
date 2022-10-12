@@ -19,6 +19,7 @@
  * It always should be imported through the `features` object.
  */
 
+import { enableAudioTrack } from "../../../compat";
 import {
   ICompatAudioTrack,
   ICompatAudioTrackList,
@@ -39,7 +40,6 @@ import {
   IAvailableAudioTrack,
   IAvailableTextTrack,
 } from "../../../public_types";
-import assert from "../../../utils/assert";
 import EventEmitter from "../../../utils/event_emitter";
 import normalizeLanguage from "../../../utils/languages";
 
@@ -913,16 +913,8 @@ export default class MediaElementTrackChoiceManager
    * @param {number} index}
    */
   private _enableAudioTrackFromIndex(index : number) : void {
-    assert(index < this._audioTracks.length);
-
-    // Seen on Safari MacOS only (2022-02-14), not disabling ALL audio tracks
-    // first (even the wanted one), can lead to the media not playing.
-    for (const audioTrack of this._audioTracks) {
-      audioTrack.nativeTrack.enabled = false;
-    }
-
-    this._audioTracks[index].nativeTrack.enabled = true;
-    return;
+    enableAudioTrack(this._audioTracks.map(({ nativeTrack }) => nativeTrack),
+                     index);
   }
 }
 
