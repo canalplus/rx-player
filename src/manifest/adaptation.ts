@@ -18,6 +18,7 @@ import { IParsedAdaptation } from "../parsers/manifest";
 import {
   ITrackType,
   IRepresentationFilter,
+  IRepresentationFilterRepresentation,
 } from "../public_types";
 import arrayFind from "../utils/array_find";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
@@ -147,22 +148,34 @@ export default class Adaptation {
     for (let i = 0; i < argsRepresentations.length; i++) {
       const representation = new Representation(argsRepresentations[i],
                                                 { type: this.type });
-      const shouldAdd =
-        isNullOrUndefined(representationFilter) ||
-        representationFilter({ id: representation.id,
-                               bitrate: representation.bitrate,
-                               codec: representation.codec,
-                               height: representation.height,
-                               width: representation.width,
-                               frameRate: representation.frameRate,
-                               hdrInfo: representation.hdrInfo },
-                             { bufferType: this.type,
-                               language: this.language,
-                               normalizedLanguage: this.normalizedLanguage,
-                               isClosedCaption: this.isClosedCaption,
-                               isDub: this.isDub,
-                               isAudioDescription: this.isAudioDescription,
-                               isSignInterpreted: this.isSignInterpreted });
+      let shouldAdd = true;
+      if (!isNullOrUndefined(representationFilter)) {
+        const reprObject : IRepresentationFilterRepresentation = {
+          id: representation.id,
+          bitrate: representation.bitrate,
+          codec: representation.codec,
+          height: representation.height,
+          width: representation.width,
+          frameRate: representation.frameRate,
+          hdrInfo: representation.hdrInfo,
+        };
+        if (representation.contentProtections !== undefined) {
+          reprObject.contentProtections = {};
+          if (representation.contentProtections.keyIds !== undefined) {
+            const keyIds = representation.contentProtections.keyIds
+              .map(({ keyId }) => keyId);
+            reprObject.contentProtections.keyIds = keyIds;
+          }
+        }
+        shouldAdd = representationFilter(reprObject,
+                                         { bufferType: this.type,
+                                           language: this.language,
+                                           normalizedLanguage: this.normalizedLanguage,
+                                           isClosedCaption: this.isClosedCaption,
+                                           isDub: this.isDub,
+                                           isAudioDescription: this.isAudioDescription,
+                                           isSignInterpreted: this.isSignInterpreted });
+      }
       if (shouldAdd) {
         representations.push(representation);
         if (!isSupported && representation.isSupported) {

@@ -362,6 +362,7 @@ The representationFilter will be called each time we load a
 - representation `{Object}`: An object describing the `Representation`.
 
   This object contains the following properties:
+
    - `id` (`string`): The id used to identify this Representation.
 
    - `bitrate` (`Number|undefined`): The bitrate of this Representation, in
@@ -385,6 +386,17 @@ The representationFilter will be called each time we load a
      track and if it has HDR information associated to it, this is set to an
      object describing the hdr characteristics of the track.
      (see [HDR support documentation](../Miscellaneous/hdr.md#hdrinfo))
+
+   - `contentProtections` (`Object|undefined`): Encryption information linked
+     to this content.
+
+     If set to an Object, the Representation is known to be encrypted.
+     If unset or set to `undefined` the Representation is either unencrypted or
+     we don't know if it is.
+
+     When set to an object, it may contain the following properties:
+       - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
+         Representation.
 
 - context `{Object}`: Basic context about this `Representation`.
   Contains the following keys:
