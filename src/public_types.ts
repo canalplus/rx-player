@@ -536,7 +536,7 @@ export type IAudioCapabilitiesConfiguration = IRobustnessMediaKeySystemCapabilit
  */
 export interface IRobustnessMediaKeySystemCapabilities {
   type: "robustness";
-  value : string[];
+  value : Array<string | undefined>;
 }
 
 /**
