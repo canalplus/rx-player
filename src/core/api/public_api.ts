@@ -76,7 +76,6 @@ import {
   IAvailableVideoTrack,
   IBrokenRepresentationsLockContext,
   IConstructorOptions,
-  IDecipherabilityUpdateContent,
   ILoadVideoOptions,
   ILockedAudioRepresentationsSettings,
   ILockedVideoRepresentationsSettings,
@@ -2131,17 +2130,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         }
         this._priv_contentInfos.segmentBuffersStore = event.value.segmentBuffersStore;
         break;
-      case "decipherabilityUpdate":
-        this.trigger("decipherabilityUpdate", event.value.map((i) => {
-          return { periodInfo: { start: i.period.start,
-                                 end: i.period.end,
-                                 id: i.period.id },
-                   trackType: i.adaptation.type,
-                   trackId: i.adaptation.id,
-                   representationId: i.representation.id,
-                   isDecipherable: i.representation.decipherable };
-        }));
-        break;
     }
   }
 
@@ -2613,7 +2601,6 @@ interface IPublicAPIEvent {
   availableAudioTracksChange : IAvailableAudioTrack[];
   availableTextTracksChange : IAvailableTextTrack[];
   availableVideoTracksChange : IAvailableVideoTrack[];
-  decipherabilityUpdate : IDecipherabilityUpdateContent[];
   newAvailablePeriods : IPeriod[];
   brokenRepresentationsLock : IBrokenRepresentationsLockContext;
   autoTrackSwitch : IAutoTrackSwitchEventPayload;

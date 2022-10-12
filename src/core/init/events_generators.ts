@@ -15,9 +15,7 @@
  */
 
 import Manifest, {
-  Adaptation,
   Period,
-  Representation,
 } from "../../manifest";
 import { IPlayerError } from "../../public_types";
 import SegmentBuffersStore, {
@@ -25,7 +23,6 @@ import SegmentBuffersStore, {
 } from "../segment_buffers";
 import { IRepresentationChangeEvent } from "../stream";
 import {
-  IDecipherabilityUpdateEvent,
   ILoadedEvent,
   IManifestReadyEvent,
   IManifestUpdateEvent,
@@ -59,20 +56,6 @@ function stalled(rebuffering : IStallingSituation) : IStalledEvent {
  */
 function unstalled() : IUnstalledEvent {
   return { type: "unstalled", value: null };
-}
-
-/**
- * Construct a "decipherabilityUpdate" event.
- * @param {Array.<Object>} arg
- * @returns {Object}
- */
-function decipherabilityUpdate(
-  arg : Array<{ manifest : Manifest;
-                period : Period;
-                adaptation : Adaptation;
-                representation : Representation; }>
-) : IDecipherabilityUpdateEvent {
-  return { type: "decipherabilityUpdate", value: arg };
 }
 
 /**
@@ -128,7 +111,6 @@ function reloadingMediaSource() : IReloadingMediaSourceEvent {
 }
 
 const INIT_EVENTS = { loaded,
-                      decipherabilityUpdate,
                       manifestReady,
                       manifestUpdate,
                       nullRepresentation,
