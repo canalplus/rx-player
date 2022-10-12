@@ -187,7 +187,7 @@ function buildKeySystemConfigurations(
   // https://www.w3.org/TR/encrypted-media/#get-supported-configuration-and-consent
 
   const videoCapabilities: IMediaCapability[] =
-    flatMap(audioRobustnesses, (robustness) =>
+    flatMap(videoRobustnesses, (robustness) =>
       ["video/mp4;codecs=\"avc1.4d401e\"",
        "video/mp4;codecs=\"avc1.42e01e\"",
        "video/webm;codecs=\"vp8\""].map(contentType => {
