@@ -1170,7 +1170,7 @@ function toTextTrack(a : Adaptation) : ITextTrack {
 function toVideoTrack(a : Adaptation) : IVideoTrack {
   const trickModeTracks = a.trickModeTracks !== undefined ?
     a.trickModeTracks.map((trickModeAdaptation) => {
-      const representations = trickModeAdaptation.representations
+      const representations = trickModeAdaptation.getPlayableRepresentations()
         .map(parseVideoRepresentation);
       const trickMode : IVideoTrack = { id: trickModeAdaptation.id,
                                         representations,
@@ -1184,7 +1184,7 @@ function toVideoTrack(a : Adaptation) : IVideoTrack {
 
   const videoTrack: IVideoTrack = {
     id: a.id,
-    representations: a.representations.map(parseVideoRepresentation),
+    representations: a.getPlayableRepresentations().map(parseVideoRepresentation),
     label: a.label,
   };
   if (a.isSignInterpreted === true) {
