@@ -38,6 +38,7 @@ import {
   requestMediaKeySystemAccess,
   setMediaKeys,
 } from "./eme";
+import enableAudioTrack from "./enable_audio_track";
 import * as events from "./event_listeners";
 import {
   exitFullscreen,
@@ -75,6 +76,7 @@ export {
   clearElementSrc,
   closeSession,
   CustomMediaKeySystemAccess,
+  enableAudioTrack,
   events,
   exitFullscreen,
   generateKeyRequest,
