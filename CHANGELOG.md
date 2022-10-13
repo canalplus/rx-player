@@ -1,5 +1,97 @@
 # Changelog
 
+## v4.0.0-alpha.2022100600 (2022-10-06)
+
+### Changed
+
+  - Create `"FREEZING"` player state for cases where the playback position is currently not advancing due to an unknown reason, to separate it from regular `"BUFFERING"`. [#1146]
+  - The `RELOADING` player state (gettable  through the `getPlayerState` and `playerStateChange` API) can now happen at any time to unlock playback.
+  - Remove bitrate API: `getAvailableVideoBitrates`, `getAvailableAudioBitrates`, `setAudioBitrate`, `setVideoBitrate`, `getAudioBitrate`, `getVideoBitrate` in profit of the Representations lock APIs [#1144]
+  - Remove max bitrate API: `setMaxVideoBitrate`, `setMaxAudioBitrate`, `getMaxVideoBitrate` and `getMaxAudioBitrate` methods in profit of the Representations lock APIs
+  - Remove track preferences API (methods: `getPreferredAudioTracks`, `getPreferredVideoTracks`, `setPreferredAudioTracks` and `setPreferredVideoTracks`, types: `IAudioTrackPreference`, `ITextTrackPreference` and `IVideoTrackPreference`) in profit of the new tracks API
+  - Remove `getManualVideoBitrate` and `getManualAudioBitrate` in profit of the new Representations lock APIs
+  - Replace `initialAudioBitrate` and `initialVideoBitrate` constructor options with a single `baseBandwidth` option, which better translates what this option is actually doing and allows for future optimizations on our side. [#1155]
+  - Rename `audioTrackSwitchingMode` loadVideo option into `defaultAudioTrackSwitchingMode` [#1030]
+  - Remove `manualBitrateSwitchingMode` loadVideo option to instead rely on the `switchingMode` property of each `lockVideoRepresentations` and `lockAudioRepresentations` calls. [#1030]
+  - Remove `audioBitrateChange` and `videoBitrateChange` API in profit of the new `audioRepresentationChange` and `videoRepresentationChange` events
+  - Remove `availableAudioBitratesChange` and `availableVideoBitratesChange` events. Those are less needed with the new Representations lock API and can be mostly replicated through the `audioTrackChange` and `videoTrackChange` events
+  - "Flatten" the `transportOptions` loadVideo options by putting all its inner properties directly at the top level of loadVideo options, to simplify its documentation and discoverability [#1149]
+  - Rename `networkConfig` into `requestConfig` and re-organize its inner properties to pave the way for future request-related APIs.
+  - Remove `stopAtEnd` `loadVideo` option and don't automatically stop when reaching the end by default. This behavior can be counter-intuitive and can be very easily implemented by the application.
+  - Remove `decipherabilityUpdate` event as it appeared to be not easily exploitable and exposed internal logic too much [#1168]
+  - Remove `getUrl` method in profit of the more powerful `getContentUrls`
+  - Remove methods: `getManifest`, `getCurrentAdaptations` and `getCurrentRepresentations`, as they reveal the RxPlayer's internals too much
+  - The `"smooth"` transport now needs to be communicated the URL of the Manifest directly (previously, it was possible to redirect it to a XML or JSON file first due to Canal+ legacy reasons).
+  - Remove the `supplementaryTextTracks` loadVideo option. You can use the `TextTrackRenderer` tool if you wish to diplay external subtitles on top of your content.
+  - Rename `maximumBufferTime` in `positionUpdate` events to `maximumPosition`
+  - Remove `getVideoPlayedTime` and `getVideoLoadedTime` methods. Their names was very confusing and can be re-implemented relatively easily using the media element's buffered property.
+  - Rename `getVideoDuration` to `getMediaDuration`, to avoid confusion with the video track's duration.
+  - Rename `getVideoBufferGap` to `getCurrentBufferGap, to avoid confusion with the "buffer gap" specific to the video track.
+  - Remove image-related API: `supplementaryImageTracks` `loadVideo` option, `imageTrackUpdate` event, `getImageTrackData` method. Those are better handled by an application. The `parseBifThumbnails` tool is still available.
+  - Replace `keySystems[].licenseStorage` `keySystems` option (for a `loadVideo` call) by the better-named `persistentLicenseConfig`. The `persistentLicense` boolean (also a `keySystems` option) has also been removed because it was redundant with it) [#1147]
+  - Remove `persistentStateRequired` API, in profit of the more powerful `persistentState` API [#1148]
+  - Remove `distinctiveIdentifierRequired` API, in profit of the more powerful `distinctiveIdentifier` API [#1148]
+  - Remove `keySystems[].onKeyStatusesChange` API as it seems to never be used [#1148]
+  - Remove `aggressiveMode` from the `transportOptions` `loadVideo` option
+  - Remove deprecated `throttleWhenHidden` player option in profit of `throttleVideoBitrateWhenHidden`
+  - Change payload of `periodChange` events, so they emit only core properties related to a `Period`.
+  - Change arguments given to a `transportOptions.segmentLoader` function (the `loadVideo` option): it now doesn't give the full `Manifest`, `Period`, `Adaptation`, `Representation` and `ISegment` structures in arguments but only core properties from it [#995]
+  - Custom `manifestLoader` function added to what was previously the `loadVideo`'s `transportOptions` option now set an object as argument (with an `url`property), to let us bring improvements on it in the future [#995]
+  - A Representation's `frameRate` is now always a number - in terms of frame per seconds - instead of a string.
+  - `Representations` (in methods: `getAvailableVideoTracks`, `getVideoTrack`, `representationFilter`, `getAvailableAudioTracks`, `getAudioTrack` and events: `audioTrackChange` and `videoTrackChange`) can have an `undefined` bitrate
+  - Remove deprecated fullscreen related APIs (methods: `isFullscreen`, `setFullscreen`, `exitFullscreen`, event: `fullscreenChange`) as a a UI is much more adapted to that task and can also bring with it things like a progress bar or HTML text tracks
+  - Remove deprecated `getNativeTextTrack` method. If advanced features are wanted, it's better to just use the HTML text track API
+  - Remove deprecated `nativeTextTracksChange` event. Same reason than for `getNativeTextTrack`
+  - Remove deprecated `hideNativeSubtitles` from `loadVideo` options. Same reason than for `getNativeTextTrack`
+  - Remove `xhr` property from a `NetworkError`. Doing so stop us from using the fetch API
+  - Remove deprecated `defaultAudioTrack` and `defaultTextTrack`in profit of new track APIs
+  - Remove `bitrateEstimationChange` event as it is poorly understood (it's not always close to the expected bandwidth) and has a very complex relationship with the chosen quality.
+  - Remove the notion of environment variables linked to personalized builds (e.g. RXP_DASH) in profit of the minimal RxPlayer.
+  - Rename `IPersistentSessionStorage` type to `IPersistentLicenseConfig` [#1147]
+  - Remove undocumented `audioRobustnesses` and `videoRobustnesses` properties of the `keySystems` option of `loadVideo` calls, as more powerful solutions now exist: respectively `audioCapabilitiesConfig` and `videoCapabilitiesConfig` [#1148]
+  - Remove public types `ISupplementaryTextTrackOption` and `ISupplementaryImageTrackOption`. Those are the types respectively for `supplementaryTextTracks` and `supplementaryImageTracks` which have been removed
+  - Remove public types `IBitrateEstimate` as no API depend on it anymore.
+  - Remove public types `IManifest`, `IPeriod`, `IAdaptation`, `IRepresentation`, `IRepresentationInfos`, `IBifThumbnail`, `IBifObject` and `IExposedSegment` as no API depend on them anymore.
+  - Remove public types `IDefaultAudioTrackOption` and `IDefaultTextTrackOption`. Those are the types respectively for `defaultAudioTrack` and `defaultTextTrack` `loadVideo` options which have been removed
+
+### Features
+
+  - `setAudioTrack`, `setVideoTrack` and `setTextTrack` now may take an object in argument, with the track's id set as a `trackId` property, to allow new features
+  - Add `switchingMode` optional property to `setVideoTrack` and `setAudioTrack`, to configure the way in which the RxPlayer switches between the previous and new track
+  - Add optional `periodId` property to `setAudioTrack`, `setVideoTrack` and `setTextTrack`, to allow setting the track of another, future or past, Period.
+  - `getAvailableAudioTracks`, `getAvailableTextTracks`, `getAvailableVideoTracks`, `getAudioTrack`, `getTextTrack` and `getVideoTrack` can now optionally take a `periodId` argument to retrieve track information on a specific Period, different than the current one.
+  - `disableTextTrack`, and`disableVideoTrack` can now optionally take a `periodId` argument to disable a track for a specific Period
+  - Add optional `lockedRepresentations` property to  `setAudioTrack` and `setVideoTrack`, to only filter some allowed Representations (i.e. qualities) after switching to the wanted track.
+  - Add `getCurrentPeriod` method to retrieve information on the Period currently played
+  - Add `getAvailablePeriods` method to retrieve information on all Periods on which a track or Representation choice can be made
+  - Add `lockVideoRepresentations`, `lockAudioRepresentations`, `getLockedVideoRepresentations`, `getLockedAudioRepresentations`, `unlockVideoRepresentations` and `unlockAudioRepresentations` methods to allow a complex selection of Representations that are currently allowed to play.
+  - Add `getVideoRepresentation` and `getAudioRepresentation` method to retrieve information on the currently loaded representations [#1144]
+  - Add `audioRepresentationChange` and `videoRepresentationChange` events to be notified when the currently-loaded Representation for the current Period changes.
+  - Add `getContentUrls` allowing to retrieve the one or several known URLs through which the current Manifest or content is reachable.
+  - Add `newAvailablePeriods` event to signal new Period on which a track and/or Representation choice can be made
+  - Add `brokenRepresentationsLock` event for when a Representations lock could not be respected anymore
+  - Add `trackUpdate` event for when a track has been updated for any type and Period
+  - Add  `distinctiveIdentifier` property in the `keySystems` option (given to the `loadVideo` method) to have full control over the MediaKeySystemConfiguration of the same name in the chosen key system [#1148]
+  - Add  `persistentState`  property in the `keySystems` option (given to the `loadVideo` method) to have full control over the MediaKeySystemConfiguration of the same name in the chosen key system [#1148]
+  - Add `audioCapabilitiesConfig` and `videoCapabilitiesConfig` properties in the `keySystems` option (given to the `loadVideo` method)  to allow advanced configuration of respectively the "audioCapabilities" and "videoCapabilities" in the asked MediaKeySystemConfiguration [#1148]
+  - Add `ISegmentLoaderContext` public type for the first argument of the `segmentLoader` API
+  - Add `IRepresentationFilterRepresentation` public type for the first argument of the `representationFilter` API
+  - Add `IRepresentationContext` public type for the second argument of the `representationFilter` API
+  - Add `IManifestLoaderInfo` public type for the first argument of the `manifestLoader` API
+  - Add `IPeriodChangeEvent` public type to define the properties send through a `periodChange` event
+  - Add `IPeriod` public type to define a Period object returned by methods like `getAvailablePeriods` or `getCurrentPeriod`
+  - Add `IVideoTrackSwitchingMode` public type to define the type of the `switchingMode` property optionally given to `setAudioTrack`
+  - Add `IAudioRepresentationsSwitchingMode` public type to define the type of the `switchingMode` property optionally given to `lockAudioRepresentations`
+  - Add `IVideoRepresentationsSwitchingMode` public type to define the type of the `switchingMode` property optionally given to `lockAudioRepresentations`
+  - Add `IBrokenRepresentationsLockContext` public type to define the type sent as a payload of the `brokenRepresentationsLock` event
+  - Add `ITrackUpdateEventPayload` public type to define the type sent as a payload of the `trackUpdate` event
+  - Add `ILockedVideoRepresentationsSettings` public type to define the object that should be given to the new `lockVideoRepresentation` method
+  - Add `ILockedAudioRepresentationsSettings` public type to define the object that should be given to the new `lockAudioRepresentation` method
+  - Add `IAudioTrackSetting` public type to define the object that may be given to the `setAudioTrack` method
+  - Add `IVideoTrackSetting` public type to define the object that may be given to the `setVideoTrack` method
+  - Add `ITextTrackSetting` public type to define the object that may be given to the `setTextTrack` method
+
+
 ## v3.29.0 (2022-11-16)
 
 ### Features
