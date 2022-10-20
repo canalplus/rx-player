@@ -361,7 +361,6 @@ function createTextElement(
   shouldTrimWhiteSpace : boolean
 ) : HTMLElement {
   const textElement = document.createElement("span");
-
   let textContent = el.textContent === null ? "" :
                                               el.textContent;
 
@@ -373,7 +372,8 @@ function createTextElement(
     textContent = trimmed;
   }
 
-  textElement.innerHTML = textContent;
+  const textNode = document.createTextNode(textContent);
+  textElement.appendChild(textNode);
   textElement.className = "rxp-texttrack-span";
 
   applyTextStyle(textElement, style, shouldTrimWhiteSpace);
