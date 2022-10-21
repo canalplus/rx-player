@@ -652,6 +652,7 @@ function getRebufferingStatus(
 
   const { REBUFFERING_GAP } = config.getCurrent();
   const { event: currentEvt,
+          buffered,
           position: currentTime,
           bufferGap,
           currentRange,
@@ -705,17 +706,40 @@ function getRebufferingStatus(
   // between two consecutive timeupdates
   else {
     if (canSwitchToRebuffering &&
-        (!paused && currentEvt === "timeupdate" &&
-         prevEvt === "timeupdate" && currentTime === prevTime ||
-         currentEvt === "seeking" && bufferGap === Infinity)
+        (
+          (
+            !paused &&
+            currentEvt === "timeupdate" && prevEvt === "timeupdate" &&
+            currentTime === prevTime
+          ) ||
+          (
+            currentEvt === "seeking" && (
+              // Sometimes `buffered` stay empty for directfile contents but are
+              // able to play. In those case, we don't buffer if readyState is
+              // at 3 or 4.
+              bufferGap === Infinity && (buffered.length > 0 || readyState < 3)
+            )
+          )
+        )
     ) {
       shouldRebuffer = true;
-    } else if (prevRebuffering !== null &&
-               (currentEvt !== "seeking" && currentTime !== prevTime ||
-                currentEvt === "canplay" ||
-                bufferGap < Infinity &&
-                (bufferGap > getRebufferingEndGap(prevRebuffering, lowLatencyMode) ||
-                 fullyLoaded || ended))
+    } else if (
+      prevRebuffering !== null &&
+      (
+        (currentEvt !== "seeking" && currentTime !== prevTime) ||
+        currentEvt === "canplay" ||
+        // Sometimes `buffered` stay empty for directfile contents but are
+        // able to play. In those case, we don't buffer if readyState is
+        // at 3 or 4.
+        (buffered.length === 0 && readyState >= 3) ||
+        (
+          bufferGap < Infinity &&
+          (
+            bufferGap > getRebufferingEndGap(prevRebuffering, lowLatencyMode) ||
+            fullyLoaded || ended
+          )
+        )
+      )
     ) {
       shouldStopRebuffer = true;
     }

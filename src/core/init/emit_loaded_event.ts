@@ -59,7 +59,15 @@ export default function emitLoadedEvent(
                                            null;
       }
 
-      if (observation.readyState >= 3 && observation.currentRange !== null) {
+      // Seen with multiple versions of Chrome and WebKit: sometimes, for
+      // unknown reasons, directfile contents do not announced ranges of
+      // currently buffered data (`HTMLMediaElement.prototype.buffered`).
+      //
+      // That's why we add an exception to directfile contents.
+      // If the readyState is greater or equal than 3.
+      if (observation.readyState >= 3 &&
+          (observation.currentRange !== null || isDirectfile))
+      {
         if (!shouldValidateMetadata() || mediaElement.duration > 0) {
           return EVENTS.loaded(segmentBuffersStore);
         }
