@@ -2932,9 +2932,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       playbackRate: observation.playbackRate,
       maximumBufferTime: maximumPosition,
 
-      // TODO fix higher up?
-      bufferGap: isFinite(observation.bufferGap) ? observation.bufferGap :
-                                                   0,
+      // TODO bufferGap may be undefined
+      bufferGap: observation.bufferGap === undefined ||
+                 !isFinite(observation.bufferGap) ?
+        0 :
+        observation.bufferGap,
     };
 
     if (manifest !== null &&
