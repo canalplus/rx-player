@@ -15,6 +15,7 @@
  */
 
 import {
+  canReuseMediaKeys,
   ICustomMediaKeys,
   ICustomMediaKeySystemAccess,
 } from "../../compat";
@@ -95,7 +96,10 @@ export default async function getMediaKeysInfos(
   const currentState = MediaKeysInfosStore.getState(mediaElement);
   const persistentSessionsStore = createPersistentSessionsStorage(options);
 
-  if (currentState !== null && evt.type === "reuse-media-key-system-access") {
+  if (canReuseMediaKeys() &&
+      currentState !== null &&
+      evt.type === "reuse-media-key-system-access")
+  {
     const { mediaKeys, loadedSessionsStore } = currentState;
 
     // We might just rely on the currently attached MediaKeys instance.

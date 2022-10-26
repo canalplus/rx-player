@@ -286,6 +286,8 @@ export function mockCompat(exportedFunctions = {}) {
       setMediaKeys: mockSetMediaKeys,
       getInitData: mockGetInitData,
       generateKeyRequest: mockGenerateKeyRequest,
+      shouldRenewMediaKeySystemAccess: jest.fn(() => false),
+      canReuseMediaKeys: jest.fn(() => true),
       ...exportedFunctions }));
 
   return { mockEvents,
