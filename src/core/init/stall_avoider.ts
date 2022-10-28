@@ -314,7 +314,10 @@ export default function StallAvoider(
       /** Position at which data is awaited. */
       const { position: stalledPosition } = rebuffering;
 
-      if (stalledPosition !== null && speed.getValue() > 0) {
+      if (stalledPosition !== null &&
+          stalledPosition !== undefined &&
+          speed.getValue() > 0)
+      {
         const skippableDiscontinuity = findSeekableDiscontinuity(discontinuitiesStore,
                                                                  manifest,
                                                                  stalledPosition);
