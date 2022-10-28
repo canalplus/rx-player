@@ -9,7 +9,7 @@ module.exports = {
     // Without this, Jest just fails when importing rxjs, for some arcane
     // ESM-vs-CommonJS reasons linked to how it works internally.
     moduleNameMapper: {
-      '^rxjs$': require.resolve('rxjs'),
+      "^rxjs$": require.resolve("rxjs"),
   },
   testMatch: ["**/?(*.)+(spec|test).[jt]s?(x)"],
   collectCoverageFrom: [
@@ -17,29 +17,34 @@ module.exports = {
     "!src/**/index.ts",
     "!**/__tests__/**",
   ],
-  globals: {
-    "ts-jest": {
-      tsconfig: {
-        target: "es2017",
-        lib: ["es2017", "dom"],
-        forceConsistentCasingInFileNames: true,
-        skipLibCheck: false,
-        noImplicitAny: true,
-        strict: true,
-        strictNullChecks: true,
-        strictPropertyInitialization: true,
-        noUnusedParameters: true,
-        noUnusedLocals: true,
-        types: ["node", "jest"],
-        module: "es2015",
-        moduleResolution: "node",
-        esModuleInterop: true,
-        typeRoots: [
-          "./src/typings",
-          "./node_modules/@types",
-        ],
+  transform: {
+    "^.+\\.tsx?$": [
+      "ts-jest",
+      {
+        tsconfig: {
+          target: "es2017",
+          lib: ["es2017", "dom"],
+          forceConsistentCasingInFileNames: true,
+          skipLibCheck: false,
+          noImplicitAny: true,
+          strict: true,
+          strictNullChecks: true,
+          strictPropertyInitialization: true,
+          noUnusedParameters: true,
+          noUnusedLocals: true,
+          types: ["node", "jest"],
+          module: "es2015",
+          moduleResolution: "node",
+          esModuleInterop: true,
+          typeRoots: [
+            "./src/typings",
+            "./node_modules/@types",
+          ],
+        },
       },
-    },
+    ],
+  },
+  globals: {
     __FEATURES__: {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
