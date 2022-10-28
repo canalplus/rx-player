@@ -54,6 +54,7 @@ import {
   MediaKeySessionLoadingType,
   IProcessedProtectionData,
 } from "./types";
+import { DecommissionedSessionError } from "./utils/check_key_statuses";
 import cleanOldStoredPersistentInfo from "./utils/clean_old_stored_persistent_info";
 import getDrmSystemId from "./utils/get_drm_system_id";
 import InitDataValuesContainer from "./utils/init_data_values_container";
@@ -393,7 +394,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
               .reduce((acc, kid) => `${acc}, ${bytesToHex(kid)}`, "");
             log.debug("DRM: Blacklisting new key ids", hexKids);
           }
-          updateDecipherability(initializationData.content.manifest, [], keyIds);
+          updateDecipherability(initializationData.content.manifest, [], keyIds, []);
         }
         return ;
       }
@@ -423,7 +424,8 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
             }
             updateDecipherability(initializationData.content.manifest,
                                   createdSess.keyStatuses.whitelisted,
-                                  createdSess.keyStatuses.blacklisted);
+                                  createdSess.keyStatuses.blacklisted,
+                                  []);
             return;
           }
         }
@@ -522,13 +524,42 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
           if (initializationData.content !== undefined) {
             updateDecipherability(initializationData.content.manifest,
                                   linkedKeys.whitelisted,
-                                  linkedKeys.blacklisted);
+                                  linkedKeys.blacklisted,
+                                  []);
           }
 
           this._unlockInitDataQueue();
         },
 
         error: (err) => {
+          if (err instanceof DecommissionedSessionError) {
+            log.warn("DRM: A session's closing condition has been triggered");
+            this._lockInitDataQueue();
+            const indexOf = this._currentSessions.indexOf(sessionInfo);
+            if (indexOf >= 0) {
+              this._currentSessions.splice(indexOf);
+            }
+            if (initializationData.content !== undefined) {
+              updateDecipherability(initializationData.content.manifest,
+                                    [],
+                                    [],
+                                    sessionInfo.record.getAssociatedKeyIds());
+            }
+            stores.persistentSessionsStore?.delete(mediaKeySession.sessionId);
+            stores.loadedSessionsStore.closeSession(mediaKeySession)
+              .catch(e => {
+                const closeError = e instanceof Error ? e :
+                                                        "unknown error";
+                log.warn("DRM: failed to close expired session", closeError);
+              })
+              .then(() => this._unlockInitDataQueue())
+              .catch((retryError) => this._onFatalError(retryError));
+
+            if (!this._isStopped()) {
+              this.trigger("warning", err.reason);
+            }
+            return;
+          }
           if (!(err instanceof BlacklistedSessionError)) {
             this._onFatalError(err);
             return ;
@@ -664,7 +695,8 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
                  "Marking Representations as not decipherable");
         updateDecipherability(initializationData.content.manifest,
                               [],
-                              initializationData.keyIds);
+                              initializationData.keyIds,
+                              []);
         return true;
       }
     }
@@ -801,14 +833,19 @@ function canCreatePersistentSession(
  *   - Those who have a key id listed in `blacklistedKeyIds` will have their
  *     decipherability updated to `false`
  *
+ *   - Those who have a key id listed in `delistedKeyIds` will have their
+ *     decipherability updated to `undefined`.
+ *
  * @param {Object} manifest
  * @param {Array.<Uint8Array>} whitelistedKeyIds
  * @param {Array.<Uint8Array>} blacklistedKeyIds
+ * @param {Array.<Uint8Array>} delistedKeyIds
  */
 function updateDecipherability(
   manifest : Manifest,
   whitelistedKeyIds : Uint8Array[],
-  blacklistedKeyIds : Uint8Array[]
+  blacklistedKeyIds : Uint8Array[],
+  delistedKeyIds : Uint8Array[]
 ) : void {
   manifest.updateRepresentationsDeciperability((representation) => {
     if (representation.contentProtections === undefined) {
@@ -826,6 +863,11 @@ function updateDecipherability(
         for (let j = 0; j < whitelistedKeyIds.length; j++) {
           if (areKeyIdsEqual(whitelistedKeyIds[j], elt.keyId)) {
             return true;
+          }
+        }
+        for (let j = 0; j < delistedKeyIds.length; j++) {
+          if (areKeyIdsEqual(delistedKeyIds[j], elt.keyId)) {
+            return undefined;
           }
         }
       }

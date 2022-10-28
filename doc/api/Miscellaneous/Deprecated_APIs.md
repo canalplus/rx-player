@@ -423,6 +423,47 @@ the true "native" subtitles to display them themselves in a better way.
 However, this API seems to not be used anymore. Please open an issue if you need
 it.
 
+### keySystems[].throwOnLicenseExpiration
+
+The `throwOnLicenseExpiration` property of the `keySystems` option has been
+replaced by the more powerful `onKeyExpiration` property.
+
+#### How to replace that option
+
+If you set `throwOnLicenseExpiration` to `false` before, you can simply set
+`onKeyExpiration` to `"continue"` instead, which reproduce the exact same
+behavior:
+```ts
+// old way
+rxPlayer.loadVideo({
+  // ...
+  keySystems: [
+    {
+      throwOnLicenseExpiration: false,
+      // ...
+    }
+  ],
+});
+
+// new way
+rxPlayer.loadVideo({
+  // ...
+  keySystems: [
+    {
+      onKeyExpiration: "continue",
+      // ...
+    }
+  ],
+});
+```
+
+You can have more information on the `onKeyExpiration` option [in the
+correspnding API documentation](./Decryption_Options.md#onkeyexpiration).
+
+If you previously set `throwOnLicenseExpiration` to `true` or `undefined`, you
+can just remove this property as this still the default behavior.
+
+
 ## RxPlayer constructor options
 
 The following RxPlayer constructor options are deprecated.

@@ -520,6 +520,7 @@ export interface IKeySystemOption {
   /**
    * If explicitely set to `false`, we won't throw on error when a used license
    * is expired.
+   * @deprecated
    */
   throwOnLicenseExpiration? : boolean;
   /**
@@ -549,6 +550,46 @@ export interface IKeySystemOption {
      */
     keyOutputRestricted? : boolean;
   };
+
+  /**
+   * Behavior the RxPlayer should have when one of the key is known to be
+   * expired.
+   *
+   * `onKeyExpiration` can be set to a string, each describing a different
+   * behavior, the default one if not is defined being `"error"`:
+   *
+   *   - `"error"`: The RxPlayer will stop on an error when any key is expired.
+   *     This is the default behavior.
+   *
+   *   - `"continue"`: The RxPlayer will not do anything when a key expires.
+   *     This may lead in many cases to infinite rebuffering.
+   *
+   *   - `"fallback"`: The Representation(s) linked to the expired key(s) will
+   *     be fallbacked from, meaning the RxPlayer will switch to other
+   *     representation without expired keys.
+   *
+   *     If no Representation remain, a NO_PLAYABLE_REPRESENTATION error will
+   *     be thrown.
+   *
+   *     Note that when the "fallbacking" action is taken, the RxPlayer might
+   *     temporarily switch to the `"RELOADING"` state - which should thus be
+   *     properly handled.
+   *
+   *   - `"close-session"`: The RxPlayer will close and re-create a DRM session
+   *     (and thus re-download the corresponding license) if any of the key
+   *     associated to this session expired.
+   *
+   *     It will try to do so in an efficient manner, only reloading the license
+   *     when the corresponding content plays.
+   *
+   *     The RxPlayer might go through the `"RELOADING"` state after an expired
+   *     key and/or light decoding glitches can arise, depending on the
+   *     platform, for some seconds, under that mode.
+   */
+  onKeyExpiration? : "error" |
+                     "continue" |
+                     "fallback" |
+                     "close-session";
 }
 
 /**
@@ -756,3 +797,15 @@ export interface IAvailableTextTrack
 /** Video track from a list of video tracks returned by the RxPlayer. */
 export interface IAvailableVideoTrack
   extends IVideoTrack { active : boolean }
+
+/**
+ * Type of a single object from the optional `EncryptedMediaError`'s
+ * `keyStatuses` property.
+ */
+export interface IEncryptedMediaErrorKeyStatusObject {
+  /** Corresponding keyId which encountered the problematic MediaKeyStatus. */
+  keyId: ArrayBuffer;
+
+  /** Problematic MediaKeyStatus encountered. */
+  keyStatus: MediaKeyStatus;
+}

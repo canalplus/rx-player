@@ -410,7 +410,9 @@ export interface ILockedStreamEvent {
  * decipherability status of some `Representation`(s).
  *
  * When that event is emitted, the current HTMLMediaElement's buffer might need
- * to be "flushed" to continue (e.g. through a little seek operation).
+ * to be "flushed" to continue (e.g. through a little seek operation) or in
+ * worst cases completely removed and re-created through the "reload" mechanism,
+ * depending on the platform.
  */
 export interface INeedsDecipherabilityFlush {
   type: "needs-decipherability-flush";

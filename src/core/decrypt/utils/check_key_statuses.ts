@@ -18,35 +18,44 @@ import { ICustomMediaKeySession } from "../../../compat";
 /* eslint-disable-next-line max-len */
 import getUUIDKidFromKeyStatusKID from "../../../compat/eme/get_uuid_kid_from_keystatus_kid";
 import { EncryptedMediaError } from "../../../errors";
+import {
+  IEncryptedMediaErrorKeyStatusObject,
+  IKeySystemOption,
+  IPlayerError,
+} from "../../../public_types";
+import assertUnreachable from "../../../utils/assert_unreachable";
 import { bytesToHex } from "../../../utils/string_parsing";
-import { IEMEWarningEvent } from "../types";
+
+/**
+ * Error thrown when the MediaKeySession has to be closed due to a trigger
+ * specified by user configuration.
+ * Such MediaKeySession should be closed immediately and may be re-created if
+ * needed again.
+ * @class DecommissionedSessionError
+ * @extends Error
+ */
+export class DecommissionedSessionError extends Error {
+  public reason : IPlayerError;
+
+  /**
+   * Creates a new `DecommissionedSessionError`.
+   * @param {Error} reason - Error that led to the decision to close the
+   * current MediaKeySession. Should be used for reporting purposes.
+   */
+  constructor(reason : IPlayerError) {
+    super();
+    // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
+    Object.setPrototypeOf(this, DecommissionedSessionError.prototype);
+    this.reason = reason;
+  }
+}
 
 const KEY_STATUSES = { EXPIRED: "expired",
                        INTERNAL_ERROR: "internal-error",
                        OUTPUT_RESTRICTED: "output-restricted" };
 
-export interface IKeyStatusesCheckingOptions {
-  /**
-   * If explicitely set to `false`, we won't throw on error when a used license
-   * is expired.
-   */
-  throwOnLicenseExpiration? : boolean;
-  /** Avoid throwing when invalid key statuses are encountered. */
-  fallbackOn? : {
-    /**
-     * If set to `true`, we won't throw when an "internal-error" key status is
-     * encountered but just add a warning and the corresponding key id to the list
-     * of blacklisted key ids.
-     */
-    keyInternalError? : boolean;
-    /**
-     * If set to `true`, we won't throw when an "output-restricted" key status is
-     * encountered but just add a warning and the corresponding key id to the list
-     * of blacklisted key ids.
-     */
-    keyOutputRestricted? : boolean;
-  };
-}
+export type IKeyStatusesCheckingOptions =
+  Pick<IKeySystemOption, "throwOnLicenseExpiration" | "fallbackOn" | "onKeyExpiration">;
 
 /**
  * MediaKeyStatusMap's iterator seems to be quite peculiar and wrongly defined
@@ -74,14 +83,16 @@ export default function checkKeyStatuses(
   session : MediaKeySession | ICustomMediaKeySession,
   options: IKeyStatusesCheckingOptions,
   keySystem: string
-) : { warnings : IEMEWarningEvent[];
+) : { warning : EncryptedMediaError | undefined;
       blacklistedKeyIds : Uint8Array[];
       whitelistedKeyIds : Uint8Array[]; }
 {
-  const warnings : IEMEWarningEvent[] = [];
+  const { fallbackOn = {},
+          throwOnLicenseExpiration,
+          onKeyExpiration } = options;
   const blacklistedKeyIds : Uint8Array[] = [];
   const whitelistedKeyIds : Uint8Array[] = [];
-  const { fallbackOn = {}, throwOnLicenseExpiration } = options;
+  const badKeyStatuses: IEncryptedMediaErrorKeyStatusObject[] = [];
 
   (session.keyStatuses.forEach as IKeyStatusesForEach)((
     _arg1 : unknown,
@@ -96,40 +107,63 @@ export default function checkKeyStatuses(
 
     const keyId = getUUIDKidFromKeyStatusKID(keySystem,
                                              new Uint8Array(keyStatusKeyId));
+
+    const keyStatusObj = { keyId: keyId.buffer, keyStatus };
     switch (keyStatus) {
       case KEY_STATUSES.EXPIRED: {
         const error = new EncryptedMediaError(
           "KEY_STATUS_CHANGE_ERROR",
-          `A decryption key expired (${bytesToHex(keyId)})`);
+          `A decryption key expired (${bytesToHex(keyId)})`,
+          { keyStatuses: [keyStatusObj, ...badKeyStatuses] });
 
-        if (throwOnLicenseExpiration !== false) {
+        if (onKeyExpiration === "error" ||
+            (onKeyExpiration === undefined && throwOnLicenseExpiration === false))
+        {
           throw error;
         }
-        warnings.push({ type: "warning", value: error });
-        whitelistedKeyIds.push(keyId);
+
+        switch (onKeyExpiration) {
+          case "close-session":
+            throw new DecommissionedSessionError(error);
+          case "fallback":
+            blacklistedKeyIds.push(keyId);
+            break;
+          default:
+            // I weirdly stopped relying on switch-cases here due to some TypeScript
+            // issue, not checking properly `case undefined` (bug?)
+            if (onKeyExpiration === "continue" || onKeyExpiration === undefined) {
+              whitelistedKeyIds.push(keyId);
+            } else {
+              // Compile-time check throwing when not all possible cases are handled
+              assertUnreachable(onKeyExpiration);
+            }
+            break;
+        }
+
+        badKeyStatuses.push(keyStatusObj);
         break;
       }
 
       case KEY_STATUSES.INTERNAL_ERROR: {
-        const error = new EncryptedMediaError(
-          "KEY_STATUS_CHANGE_ERROR",
-          `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`);
         if (fallbackOn.keyInternalError !== true) {
-          throw error;
+          throw new EncryptedMediaError(
+            "KEY_STATUS_CHANGE_ERROR",
+            `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`,
+            { keyStatuses: [keyStatusObj, ...badKeyStatuses] });
         }
-        warnings.push({ type: "warning", value: error });
+        badKeyStatuses.push(keyStatusObj);
         blacklistedKeyIds.push(keyId);
         break;
       }
 
       case KEY_STATUSES.OUTPUT_RESTRICTED: {
-        const error = new EncryptedMediaError(
-          "KEY_STATUS_CHANGE_ERROR",
-          `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`);
         if (fallbackOn.keyOutputRestricted !== true) {
-          throw error;
+          throw new EncryptedMediaError(
+            "KEY_STATUS_CHANGE_ERROR",
+            `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`,
+            { keyStatuses: [keyStatusObj, ...badKeyStatuses] });
         }
-        warnings.push({ type: "warning", value: error });
+        badKeyStatuses.push(keyStatusObj);
         blacklistedKeyIds.push(keyId);
         break;
       }
@@ -139,5 +173,15 @@ export default function checkKeyStatuses(
         break;
     }
   });
-  return { warnings, blacklistedKeyIds, whitelistedKeyIds };
+
+  let warning;
+  if (badKeyStatuses.length > 0) {
+    warning = new EncryptedMediaError(
+      "KEY_STATUS_CHANGE_ERROR",
+      "One or several problematic key statuses have been encountered",
+      { keyStatuses: badKeyStatuses });
+  }
+  return { warning,
+           blacklistedKeyIds,
+           whitelistedKeyIds };
 }
