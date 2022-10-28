@@ -17,10 +17,10 @@
 import { isIE11 } from "./browser_detection";
 
 /**
- * Returns true if the current target require the media keys to be renewed on
- * each content.
+ * Returns true if the current target require the MediaKeySystemAccess to be
+ * renewed on each content.
  * @returns {Boolean}
  */
-export default function shouldRenewMediaKeys() : boolean {
+export default function shouldRenewMediaKeySystemAccess() : boolean {
   return isIE11;
 }

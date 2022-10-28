@@ -24,6 +24,7 @@
 
 import {
   MediaKeysImpl,
+  MediaKeySystemAccessImpl,
   mockCompat,
   testContentDecryptorError,
 } from "./utils";
@@ -104,6 +105,8 @@ describe("core - decrypt - global tests - media key system access", () => {
   /* eslint-enable max-len */
     return new Promise<void>((res, rej) => {
       mockCompat({});
+      const mockCreateMediaKeys = jest.spyOn(MediaKeySystemAccessImpl.prototype,
+                                             "createMediaKeys");
       const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
       const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
@@ -112,6 +115,7 @@ describe("core - decrypt - global tests - media key system access", () => {
         receivedStateChange++;
         try {
           expect(newState).toEqual(ContentDecryptorState.WaitingForAttachment);
+          expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
         } catch (err) { rej(err); }
         setTimeout(() => {
           try {
@@ -122,6 +126,184 @@ describe("core - decrypt - global tests - media key system access", () => {
           } catch (err) { rej(err); }
           res();
         });
+      });
+    });
+  });
+
+  /* eslint-disable max-len */
+  it("should not call createMediaKeys again if previous one is compatible", () => {
+  /* eslint-enable max-len */
+    return new Promise<void>((res, rej) => {
+      mockCompat({});
+      const mockCreateMediaKeys = jest.spyOn(MediaKeySystemAccessImpl.prototype,
+                                             "createMediaKeys");
+      const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+      const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
+
+      const contentDecryptor1 = new ContentDecryptor(videoElt, ksConfig);
+      let receivedStateChange1 = 0;
+      contentDecryptor1.addEventListener("error", rej);
+      contentDecryptor1.addEventListener("stateChange", (state1: any) => {
+        receivedStateChange1++;
+        try {
+          if (receivedStateChange1 === 2) {
+            expect(state1).toEqual(ContentDecryptorState.ReadyForContent);
+            return;
+          } else if (receivedStateChange1 !== 1) {
+            throw new Error("Unexpected stateChange event.");
+          }
+          expect(state1).toEqual(ContentDecryptorState.WaitingForAttachment);
+          expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
+          contentDecryptor1.attach();
+        } catch (err) { rej(err); }
+
+        setTimeout(() => {
+          contentDecryptor1.dispose();
+          const contentDecryptor2 = new ContentDecryptor(videoElt, ksConfig);
+          let receivedStateChange2 = 0;
+          contentDecryptor2.addEventListener("error", rej);
+          contentDecryptor2.addEventListener("stateChange", (state2: any) => {
+            receivedStateChange2++;
+            try {
+              if (receivedStateChange2 === 2) {
+                expect(state2).toEqual(ContentDecryptorState.ReadyForContent);
+                return;
+              } else if (receivedStateChange2 !== 1) {
+                throw new Error("Unexpected stateChange event.");
+              }
+              expect(state2).toEqual(ContentDecryptorState.WaitingForAttachment);
+              expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
+              contentDecryptor2.attach();
+              setTimeout(() => {
+                try {
+                  contentDecryptor2.dispose();
+                  expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
+                  res();
+                } catch (err) { rej(err); }
+              });
+            } catch (err) { rej(err); }
+          });
+        }, 10);
+      });
+    });
+  });
+
+  /* eslint-disable max-len */
+  it("should call createMediaKeys again if the platform needs re-creation of the MediaKeys", () => {
+  /* eslint-enable max-len */
+    return new Promise<void>((res, rej) => {
+      mockCompat({
+        canReuseMediaKeys: jest.fn(() => false),
+      });
+      const mockCreateMediaKeys = jest.spyOn(MediaKeySystemAccessImpl.prototype,
+                                             "createMediaKeys");
+      const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+      const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
+
+      const contentDecryptor1 = new ContentDecryptor(videoElt, ksConfig);
+      let receivedStateChange1 = 0;
+      contentDecryptor1.addEventListener("error", rej);
+      contentDecryptor1.addEventListener("stateChange", (state1: any) => {
+        receivedStateChange1++;
+        try {
+          if (receivedStateChange1 === 2) {
+            expect(state1).toEqual(ContentDecryptorState.ReadyForContent);
+            return;
+          } else if (receivedStateChange1 !== 1) {
+            throw new Error("Unexpected stateChange event.");
+          }
+          expect(state1).toEqual(ContentDecryptorState.WaitingForAttachment);
+          expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
+          contentDecryptor1.attach();
+        } catch (err) { rej(err); }
+
+        setTimeout(() => {
+          contentDecryptor1.dispose();
+          const contentDecryptor2 = new ContentDecryptor(videoElt, ksConfig);
+          let receivedStateChange2 = 0;
+          contentDecryptor2.addEventListener("error", rej);
+          contentDecryptor2.addEventListener("stateChange", (state2: any) => {
+            receivedStateChange2++;
+            try {
+              if (receivedStateChange2 === 2) {
+                expect(state2).toEqual(ContentDecryptorState.ReadyForContent);
+                return;
+              } else if (receivedStateChange2 !== 1) {
+                throw new Error("Unexpected stateChange event.");
+              }
+              expect(state2).toEqual(ContentDecryptorState.WaitingForAttachment);
+              expect(mockCreateMediaKeys).toHaveBeenCalledTimes(2);
+              contentDecryptor2.attach();
+              setTimeout(() => {
+                try {
+                  contentDecryptor2.dispose();
+                  expect(mockCreateMediaKeys).toHaveBeenCalledTimes(2);
+                  res();
+                } catch (err) { rej(err); }
+              });
+            } catch (err) { rej(err); }
+          });
+        }, 10);
+      });
+    });
+  });
+
+  /* eslint-disable max-len */
+  it("should not call createMediaKeys again if the platform needs MediaKeySystemAccess renewal", () => {
+  /* eslint-enable max-len */
+    return new Promise<void>((res, rej) => {
+      mockCompat({
+        shouldRenewMediaKeySystemAccess: jest.fn(() => true),
+      });
+      const mockCreateMediaKeys = jest.spyOn(MediaKeySystemAccessImpl.prototype,
+                                             "createMediaKeys");
+      const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+      const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
+
+      const contentDecryptor1 = new ContentDecryptor(videoElt, ksConfig);
+      let receivedStateChange1 = 0;
+      contentDecryptor1.addEventListener("error", rej);
+      contentDecryptor1.addEventListener("stateChange", (state1: any) => {
+        receivedStateChange1++;
+        try {
+          if (receivedStateChange1 === 2) {
+            expect(state1).toEqual(ContentDecryptorState.ReadyForContent);
+            return;
+          } else if (receivedStateChange1 !== 1) {
+            throw new Error("Unexpected stateChange event.");
+          }
+          expect(state1).toEqual(ContentDecryptorState.WaitingForAttachment);
+          expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
+          contentDecryptor1.attach();
+        } catch (err) { rej(err); }
+
+        setTimeout(() => {
+          contentDecryptor1.dispose();
+          const contentDecryptor2 = new ContentDecryptor(videoElt, ksConfig);
+          let receivedStateChange2 = 0;
+          contentDecryptor2.addEventListener("error", rej);
+          contentDecryptor2.addEventListener("stateChange", (state2: any) => {
+            receivedStateChange2++;
+            try {
+              if (receivedStateChange2 === 2) {
+                expect(state2).toEqual(ContentDecryptorState.ReadyForContent);
+                return;
+              } else if (receivedStateChange2 !== 1) {
+                throw new Error("Unexpected stateChange event.");
+              }
+              expect(state2).toEqual(ContentDecryptorState.WaitingForAttachment);
+              expect(mockCreateMediaKeys).toHaveBeenCalledTimes(2);
+              contentDecryptor2.attach();
+              setTimeout(() => {
+                try {
+                  contentDecryptor2.dispose();
+                  expect(mockCreateMediaKeys).toHaveBeenCalledTimes(2);
+                  res();
+                } catch (err) { rej(err); }
+              });
+            } catch (err) { rej(err); }
+          });
+        }, 10);
       });
     });
   });

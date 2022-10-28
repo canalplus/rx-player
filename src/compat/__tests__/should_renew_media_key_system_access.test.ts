@@ -21,7 +21,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
-describe("compat - shouldRenewMediaKeys", () => {
+describe("compat - shouldRenewMediaKeySystemAccess", () => {
   beforeEach(() => {
     jest.resetModules();
   });
@@ -33,8 +33,9 @@ describe("compat - shouldRenewMediaKeys", () => {
         isIE11: false,
       };
     });
-    const shouldRenewMediaKeys = jest.requireActual("../should_renew_media_keys");
-    expect(shouldRenewMediaKeys.default()).toBe(false);
+    const shouldRenewMediaKeySystemAccess =
+      jest.requireActual("../should_renew_media_key_system_access");
+    expect(shouldRenewMediaKeySystemAccess.default()).toBe(false);
   });
 
   it("should return true if we are on IE11", () => {
@@ -44,8 +45,9 @@ describe("compat - shouldRenewMediaKeys", () => {
         isIE11: true,
       };
     });
-    const shouldRenewMediaKeys = jest.requireActual("../should_renew_media_keys");
-    expect(shouldRenewMediaKeys.default()).toBe(true);
+    const shouldRenewMediaKeySystemAccess =
+      jest.requireActual("../should_renew_media_key_system_access");
+    expect(shouldRenewMediaKeySystemAccess.default()).toBe(true);
   });
   beforeEach(() => {
     jest.resetModules();

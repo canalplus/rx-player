@@ -22,6 +22,7 @@ import {
   MediaSource_,
 } from "./browser_compatibility_types";
 import canPatchISOBMFFSegment from "./can_patch_isobmff";
+import canReuseMediaKeys from "./can_reuse_media_keys";
 import tryToChangeSourceBufferType, {
   ICompatSourceBuffer,
 } from "./change_source_buffer_type";
@@ -58,7 +59,7 @@ import play from "./play";
 import setElementSrc$ from "./set_element_src";
 // eslint-disable-next-line max-len
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "./should_reload_media_source_on_decipherability_update";
-import shouldRenewMediaKeys from "./should_renew_media_keys";
+import shouldRenewMediaKeySystemAccess from "./should_renew_media_key_system_access";
 import shouldUnsetMediaKeys from "./should_unset_media_keys";
 import shouldValidateMetadata from "./should_validate_metadata";
 import shouldWaitForDataBeforeLoaded from "./should_wait_for_data_before_loaded";
@@ -73,6 +74,7 @@ export {
   addClassName,
   addTextTrack,
   canPatchISOBMFFSegment,
+  canReuseMediaKeys,
   clearElementSrc,
   closeSession,
   CustomMediaKeySystemAccess,
@@ -104,7 +106,7 @@ export {
   setElementSrc$,
   setMediaKeys,
   shouldReloadMediaSourceOnDecipherabilityUpdate,
-  shouldRenewMediaKeys,
+  shouldRenewMediaKeySystemAccess,
   shouldUnsetMediaKeys,
   shouldValidateMetadata,
   shouldWaitForDataBeforeLoaded,

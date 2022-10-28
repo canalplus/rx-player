@@ -17,7 +17,7 @@
 import {
   ICustomMediaKeySystemAccess,
   requestMediaKeySystemAccess,
-  shouldRenewMediaKeys,
+  shouldRenewMediaKeySystemAccess,
 } from "../../compat";
 import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
@@ -74,7 +74,7 @@ function checkCachedMediaKeySystemAccess(
   keySystemAccess: MediaKeySystemAccess|ICustomMediaKeySystemAccess;
 } {
   const mksConfiguration = currentKeySystemAccess.getConfiguration();
-  if (shouldRenewMediaKeys() || mksConfiguration == null) {
+  if (shouldRenewMediaKeySystemAccess() || mksConfiguration == null) {
     return null;
   }
 
