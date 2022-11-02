@@ -15,11 +15,16 @@
  */
 
 import {
+  defer as observableDefer,
+  distinctUntilChanged,
   ignoreElements,
   map,
   merge as observableMerge,
   Observable,
+  of as observableOf,
   scan,
+  startWith,
+  switchMap,
   tap,
   withLatestFrom,
 } from "rxjs";
@@ -117,7 +122,10 @@ interface IDiscontinuityStoredInfo {
 }
 
 /**
- * Monitor situations where playback is stalled and try to get out of those.
+ * Monitor playback, trying to avoid stalling situation.
+ * If stopping the player to build buffer is needed, temporarily set the
+ * playback rate (i.e. speed) at `0` until enough buffer is available again.
+ *
  * Emit "stalled" then "unstalled" respectively when an unavoidable stall is
  * encountered and exited.
  * @param {object} playbackObserver - emit the current playback conditions.
@@ -129,7 +137,7 @@ interface IDiscontinuityStoredInfo {
  * discontinuities for loaded Period and buffer types.
  * @returns {Observable}
  */
-export default function StallAvoider(
+export default function RebufferingController(
   playbackObserver : PlaybackObserver,
   manifest: Manifest | null,
   speed : IReadOnlySharedReference<number>,
@@ -214,6 +222,8 @@ export default function StallAvoider(
     ignoreElements()
   );
 
+  const playbackRateUpdates$ = updatePlaybackRate(playbackObserver, speed)
+    .pipe(ignoreElements());
   const stall$ = playbackObserver.getReference().asObservable().pipe(
     withLatestFrom(discontinuitiesStore$),
     map(([observation, discontinuitiesStore]) => {
@@ -380,7 +390,7 @@ export default function StallAvoider(
       return { type: "stalled" as const,
                value: stalledReason };
     }));
-  return observableMerge(unlock$, stall$);
+  return observableMerge(unlock$, stall$, playbackRateUpdates$);
 }
 
 /**
@@ -515,4 +525,41 @@ function generateDiscontinuityError(
                         "A discontinuity has been encountered at position " +
                         String(stalledPosition) + ", seeked at position " +
                         String(seekTo));
+}
+
+/**
+ * Manage playback speed.
+ * Set playback rate set by the user, pause playback when the player appear to
+ * rebuffering and restore the speed once it appears to exit rebuffering status.
+ *
+ * @param {Object} playbackObserver
+ * @param {Object} speed - last speed set by the user
+ * @returns {Observable}
+ */
+function updatePlaybackRate(
+  playbackObserver : PlaybackObserver,
+  speed : IReadOnlySharedReference<number>
+) : Observable<number> {
+  const forcePause$ = playbackObserver.getReference().asObservable()
+    .pipe(
+      map((observation) => observation.rebuffering !== null),
+      startWith(false),
+      distinctUntilChanged()
+    );
+
+  return forcePause$
+    .pipe(switchMap(shouldForcePause => {
+      if (shouldForcePause) {
+        return observableDefer(() => {
+          log.info("Init: Pause playback to build buffer");
+          playbackObserver.setPlaybackRate(0);
+          return observableOf(0);
+        });
+      }
+      return speed.asObservable()
+        .pipe(tap((lastSpeed) => {
+          log.info("Init: Resume playback speed", lastSpeed);
+          playbackObserver.setPlaybackRate(lastSpeed);
+        }));
+    }));
 }

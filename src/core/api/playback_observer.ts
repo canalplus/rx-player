@@ -172,6 +172,14 @@ export default class PlaybackObserver {
   }
 
   /**
+   * Update the playback rate of the `HTMLMediaElement`.
+   * @param {number} playbackRate
+   */
+  public setPlaybackRate(playbackRate: number) : void {
+    this._mediaElement.playbackRate = playbackRate;
+  }
+
+  /**
    * Returns the current `readyState` advertised by the `HTMLMediaElement`.
    * @returns {number}
    */
