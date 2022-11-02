@@ -342,7 +342,7 @@ const DEFAULT_CONFIG = {
      * small enough so this (arguably rare) situation won't lead to too much
      * waiting time.
      */
-  FORCE_DISCONTINUITY_SEEK_DELAY: 3000,
+  FORCE_DISCONTINUITY_SEEK_DELAY: 5000,
 
     /**
      * Ratio used to know if an already loaded segment should be re-buffered.
