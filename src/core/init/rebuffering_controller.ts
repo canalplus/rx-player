@@ -15,16 +15,12 @@
  */
 
 import {
-  defer as observableDefer,
-  distinctUntilChanged,
+  finalize,
   ignoreElements,
   map,
   merge as observableMerge,
   Observable,
-  of as observableOf,
   scan,
-  startWith,
-  switchMap,
   tap,
   withLatestFrom,
 } from "rxjs";
@@ -37,6 +33,7 @@ import Manifest, {
 } from "../../manifest";
 import { getNextRangeGap } from "../../utils/ranges";
 import { IReadOnlySharedReference } from "../../utils/reference";
+import TaskCanceller from "../../utils/task_canceller";
 import {
   IPlaybackObservation,
   PlaybackObserver,
@@ -222,8 +219,8 @@ export default function RebufferingController(
     ignoreElements()
   );
 
-  const playbackRateUpdates$ = updatePlaybackRate(playbackObserver, speed)
-    .pipe(ignoreElements());
+  const playbackRateUpdater = new PlaybackRateUpdater(playbackObserver, speed);
+
   const stall$ = playbackObserver.getReference().asObservable().pipe(
     withLatestFrom(discontinuitiesStore$),
     map(([observation, discontinuitiesStore]) => {
@@ -270,6 +267,11 @@ export default function RebufferingController(
         }
 
         if (now - freezing.timestamp > FREEZING_STALLED_DELAY) {
+          if (rebuffering === null || ignoredStallTimeStamp !== null) {
+            playbackRateUpdater.stopRebuffering();
+          } else {
+            playbackRateUpdater.startRebuffering();
+          }
           return { type: "stalled" as const,
                    value: "freezing" as const };
         }
@@ -278,6 +280,7 @@ export default function RebufferingController(
       }
 
       if (rebuffering === null) {
+        playbackRateUpdater.stopRebuffering();
         if (readyState === 1) {
           // With a readyState set to 1, we should still not be able to play:
           // Return that we're stalled
@@ -305,6 +308,7 @@ export default function RebufferingController(
       if (ignoredStallTimeStamp !== null) {
         const now = performance.now();
         if (now - ignoredStallTimeStamp < FORCE_DISCONTINUITY_SEEK_DELAY) {
+          playbackRateUpdater.stopRebuffering();
           log.debug("Init: letting the device get out of a stall by itself");
           return { type: "stalled" as const,
                    value: stalledReason };
@@ -315,6 +319,7 @@ export default function RebufferingController(
       }
 
       ignoredStallTimeStamp = null;
+      playbackRateUpdater.startRebuffering();
 
       if (manifest === null) {
         return { type: "stalled" as const,
@@ -390,7 +395,11 @@ export default function RebufferingController(
       return { type: "stalled" as const,
                value: stalledReason };
     }));
-  return observableMerge(unlock$, stall$, playbackRateUpdates$);
+
+  return observableMerge(unlock$, stall$)
+    .pipe(finalize(() =>  {
+      playbackRateUpdater.dispose();
+    }));
 }
 
 /**
@@ -528,38 +537,85 @@ function generateDiscontinuityError(
 }
 
 /**
- * Manage playback speed.
- * Set playback rate set by the user, pause playback when the player appear to
- * rebuffering and restore the speed once it appears to exit rebuffering status.
+ * Manage playback speed, allowing to force a playback rate of `0` when
+ * rebuffering is wanted.
  *
- * @param {Object} playbackObserver
- * @param {Object} speed - last speed set by the user
- * @returns {Observable}
+ * Only one `PlaybackRateUpdater` should be created per HTMLMediaElement.
+ * Note that the `PlaybackRateUpdater` reacts to playback event and wanted
+ * speed change. You should call its `dispose` method once you don't need it
+ * anymore.
+ * @class PlaybackRateUpdater
  */
-function updatePlaybackRate(
-  playbackObserver : PlaybackObserver,
-  speed : IReadOnlySharedReference<number>
-) : Observable<number> {
-  const forcePause$ = playbackObserver.getReference().asObservable()
-    .pipe(
-      map((observation) => observation.rebuffering !== null),
-      startWith(false),
-      distinctUntilChanged()
-    );
+class PlaybackRateUpdater {
+  private _playbackObserver : PlaybackObserver;
+  private _speed : IReadOnlySharedReference<number>;
+  private _speedUpdateCanceller : TaskCanceller;
+  private _isRebuffering : boolean;
+  private _isDisposed : boolean;
 
-  return forcePause$
-    .pipe(switchMap(shouldForcePause => {
-      if (shouldForcePause) {
-        return observableDefer(() => {
-          log.info("Init: Pause playback to build buffer");
-          playbackObserver.setPlaybackRate(0);
-          return observableOf(0);
-        });
-      }
-      return speed.asObservable()
-        .pipe(tap((lastSpeed) => {
-          log.info("Init: Resume playback speed", lastSpeed);
-          playbackObserver.setPlaybackRate(lastSpeed);
-        }));
-    }));
+  /**
+   * Create a new `PlaybackRateUpdater`.
+   * @param {Object} playbackObserver
+   * @param {Object} speed
+   */
+  constructor(
+    playbackObserver : PlaybackObserver,
+    speed : IReadOnlySharedReference<number>
+  ) {
+    this._speedUpdateCanceller = new TaskCanceller();
+    this._isRebuffering = false;
+    this._playbackObserver = playbackObserver;
+    this._isDisposed = false;
+    this._speed = speed;
+    this._updateSpeed();
+  }
+
+  /**
+   * Force the playback rate to `0`, to start a rebuffering phase.
+   *
+   * You can call `stopRebuffering` when you want the rebuffering phase to end.
+   */
+  public startRebuffering() : void {
+    if (this._isRebuffering || this._isDisposed) {
+      return;
+    }
+    this._isRebuffering = true;
+    this._speedUpdateCanceller.cancel();
+    log.info("Init: Pause playback to build buffer");
+    this._playbackObserver.setPlaybackRate(0);
+  }
+
+  /**
+   * If in a rebuffering phase (during which the playback rate is forced to
+   * `0`), exit that phase to apply the wanted playback rate instead.
+   *
+   * Do nothing if not in a rebuffering phase.
+   */
+  public stopRebuffering() {
+    if (!this._isRebuffering || this._isDisposed) {
+      return;
+    }
+    this._isRebuffering = false;
+    this._speedUpdateCanceller = new TaskCanceller();
+    this._updateSpeed();
+  }
+
+  /**
+   * The `PlaybackRateUpdater` allocate resources to for example listen to
+   * wanted speed changes and react to it.
+   *
+   * Consequently, you should call the `dispose` method, when you don't want the
+   * `PlaybackRateUpdater` to have an effect anymore.
+   */
+  public dispose() {
+    this._speedUpdateCanceller.cancel();
+    this._isDisposed = true;
+  }
+
+  private _updateSpeed() {
+    this._speed.onUpdate((lastSpeed) => {
+      log.info("Init: Resume playback speed", lastSpeed);
+      this._playbackObserver.setPlaybackRate(lastSpeed);
+    }, { clearSignal: this._speedUpdateCanceller.signal, emitCurrentValue: true });
+  }
 }
