@@ -15,6 +15,7 @@
  */
 
 import {
+  finalize,
   ignoreElements,
   map,
   merge as observableMerge,
@@ -32,6 +33,7 @@ import Manifest, {
 } from "../../manifest";
 import { getNextRangeGap } from "../../utils/ranges";
 import { IReadOnlySharedReference } from "../../utils/reference";
+import TaskCanceller from "../../utils/task_canceller";
 import {
   IPlaybackObservation,
   PlaybackObserver,
@@ -117,7 +119,10 @@ interface IDiscontinuityStoredInfo {
 }
 
 /**
- * Monitor situations where playback is stalled and try to get out of those.
+ * Monitor playback, trying to avoid stalling situation.
+ * If stopping the player to build buffer is needed, temporarily set the
+ * playback rate (i.e. speed) at `0` until enough buffer is available again.
+ *
  * Emit "stalled" then "unstalled" respectively when an unavoidable stall is
  * encountered and exited.
  * @param {object} playbackObserver - emit the current playback conditions.
@@ -129,7 +134,7 @@ interface IDiscontinuityStoredInfo {
  * discontinuities for loaded Period and buffer types.
  * @returns {Observable}
  */
-export default function StallAvoider(
+export default function RebufferingController(
   playbackObserver : PlaybackObserver,
   manifest: Manifest | null,
   speed : IReadOnlySharedReference<number>,
@@ -214,6 +219,8 @@ export default function StallAvoider(
     ignoreElements()
   );
 
+  const playbackRateUpdater = new PlaybackRateUpdater(playbackObserver, speed);
+
   const stall$ = playbackObserver.getReference().asObservable().pipe(
     withLatestFrom(discontinuitiesStore$),
     map(([observation, discontinuitiesStore]) => {
@@ -260,6 +267,11 @@ export default function StallAvoider(
         }
 
         if (now - freezing.timestamp > FREEZING_STALLED_DELAY) {
+          if (rebuffering === null || ignoredStallTimeStamp !== null) {
+            playbackRateUpdater.stopRebuffering();
+          } else {
+            playbackRateUpdater.startRebuffering();
+          }
           return { type: "stalled" as const,
                    value: "freezing" as const };
         }
@@ -268,6 +280,7 @@ export default function StallAvoider(
       }
 
       if (rebuffering === null) {
+        playbackRateUpdater.stopRebuffering();
         if (readyState === 1) {
           // With a readyState set to 1, we should still not be able to play:
           // Return that we're stalled
@@ -295,6 +308,7 @@ export default function StallAvoider(
       if (ignoredStallTimeStamp !== null) {
         const now = performance.now();
         if (now - ignoredStallTimeStamp < FORCE_DISCONTINUITY_SEEK_DELAY) {
+          playbackRateUpdater.stopRebuffering();
           log.debug("Init: letting the device get out of a stall by itself");
           return { type: "stalled" as const,
                    value: stalledReason };
@@ -305,6 +319,7 @@ export default function StallAvoider(
       }
 
       ignoredStallTimeStamp = null;
+      playbackRateUpdater.startRebuffering();
 
       if (manifest === null) {
         return { type: "stalled" as const,
@@ -380,7 +395,11 @@ export default function StallAvoider(
       return { type: "stalled" as const,
                value: stalledReason };
     }));
-  return observableMerge(unlock$, stall$);
+
+  return observableMerge(unlock$, stall$)
+    .pipe(finalize(() =>  {
+      playbackRateUpdater.dispose();
+    }));
 }
 
 /**
@@ -515,4 +534,88 @@ function generateDiscontinuityError(
                         "A discontinuity has been encountered at position " +
                         String(stalledPosition) + ", seeked at position " +
                         String(seekTo));
+}
+
+/**
+ * Manage playback speed, allowing to force a playback rate of `0` when
+ * rebuffering is wanted.
+ *
+ * Only one `PlaybackRateUpdater` should be created per HTMLMediaElement.
+ * Note that the `PlaybackRateUpdater` reacts to playback event and wanted
+ * speed change. You should call its `dispose` method once you don't need it
+ * anymore.
+ * @class PlaybackRateUpdater
+ */
+class PlaybackRateUpdater {
+  private _playbackObserver : PlaybackObserver;
+  private _speed : IReadOnlySharedReference<number>;
+  private _speedUpdateCanceller : TaskCanceller;
+  private _isRebuffering : boolean;
+  private _isDisposed : boolean;
+
+  /**
+   * Create a new `PlaybackRateUpdater`.
+   * @param {Object} playbackObserver
+   * @param {Object} speed
+   */
+  constructor(
+    playbackObserver : PlaybackObserver,
+    speed : IReadOnlySharedReference<number>
+  ) {
+    this._speedUpdateCanceller = new TaskCanceller();
+    this._isRebuffering = false;
+    this._playbackObserver = playbackObserver;
+    this._isDisposed = false;
+    this._speed = speed;
+    this._updateSpeed();
+  }
+
+  /**
+   * Force the playback rate to `0`, to start a rebuffering phase.
+   *
+   * You can call `stopRebuffering` when you want the rebuffering phase to end.
+   */
+  public startRebuffering() : void {
+    if (this._isRebuffering || this._isDisposed) {
+      return;
+    }
+    this._isRebuffering = true;
+    this._speedUpdateCanceller.cancel();
+    log.info("Init: Pause playback to build buffer");
+    this._playbackObserver.setPlaybackRate(0);
+  }
+
+  /**
+   * If in a rebuffering phase (during which the playback rate is forced to
+   * `0`), exit that phase to apply the wanted playback rate instead.
+   *
+   * Do nothing if not in a rebuffering phase.
+   */
+  public stopRebuffering() {
+    if (!this._isRebuffering || this._isDisposed) {
+      return;
+    }
+    this._isRebuffering = false;
+    this._speedUpdateCanceller = new TaskCanceller();
+    this._updateSpeed();
+  }
+
+  /**
+   * The `PlaybackRateUpdater` allocate resources to for example listen to
+   * wanted speed changes and react to it.
+   *
+   * Consequently, you should call the `dispose` method, when you don't want the
+   * `PlaybackRateUpdater` to have an effect anymore.
+   */
+  public dispose() {
+    this._speedUpdateCanceller.cancel();
+    this._isDisposed = true;
+  }
+
+  private _updateSpeed() {
+    this._speed.onUpdate((lastSpeed) => {
+      log.info("Init: Resume playback speed", lastSpeed);
+      this._playbackObserver.setPlaybackRate(lastSpeed);
+    }, { clearSignal: this._speedUpdateCanceller.signal, emitCurrentValue: true });
+  }
 }
