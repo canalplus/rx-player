@@ -22,7 +22,7 @@
   - Compat/DRM: Fix infinite loading on WebOS (LG TVs) 2021 and 2022 when loading more than once an encrypted content by resetting decryption capabilities each time [#1175]
   - Compat: To work around an issue on WebOS (LG TVs), also specify a request timeout manually through a `setTimeout` call when XMLHttpRequests are created for Manifest and segment requests [#1152]
   - Compat/Directfile: Fix an issue on Tizen (Samsung TVs) where playing directfile contents could randomly lead to not having audio [#1170]
-  - Compat: Fix issue with Tizen (Samsung TVs) where starting playback on a discontinuity could lead to infinite rebuffering [#1140]
+  - Compat: Fix issue with Tizen (Samsung TVs) where starting playback on a discontinuity could lead to infinite rebuffering [#1140, #1176]
   - Compat/Directfile: For `"directfile"` contents, also consider `AudioTrack` with a `description` (without an "s") as audio-description audio tracks to work-around what seems to be a Safari typo [#1160]
   - DRM: When using persistent licenses, create new MediaKeySession when `load` resolves with `false`, instead of relying the same, to fix issues with such persistent sessions if the browser cleaned it up [#1139]
   - Only call "MediaSource.endOfStream" once, the most visible side-effect should have been repeated logs [#1163]
