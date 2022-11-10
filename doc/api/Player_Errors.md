@@ -249,7 +249,7 @@ An EncryptedMediaError can have the following codes (`code` property):
   `EncryptedMediaError` having the `KEY_STATUS_CHANGE_ERROR` code will also have
   a `keyStatuses` property, which is an array of objects - each describing a
   problematic key status with the following properties:
-    - `keyId` (`BufferSource`): The key id concerned by the status change
+    - `keyId` (`ArrayBuffer`): The key id concerned by the status change
       indicated by `keyStatus`
     - `keyStatus` ([`MediaKeyStatus`](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)):
       The problematic key status encountered linked to the `keyId` of the same
