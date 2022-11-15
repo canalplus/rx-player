@@ -59,7 +59,6 @@ export default async function forceGarbageCollection(
       await bufferingQueue.removeBuffer(start, end, cancellationSignal);
     }
   }
-  return;
 }
 
 /**
@@ -89,9 +88,7 @@ function selectGCedRanges(
   // current time and respect the gcGap
   for (let i = 0; i < outerRanges.length; i++) {
     const outerRange = outerRanges[i];
-    if (position - gcGap > outerRange.end) {
-      cleanedupRanges.push(outerRange);
-    } else if (position + gcGap < outerRange.start) {
+    if ((position - gcGap > outerRange.end) || (position + gcGap < outerRange.start)) {
       cleanedupRanges.push(outerRange);
     }
   }

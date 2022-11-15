@@ -31,10 +31,8 @@ export function generateBaseUrlAttrParser(
 )  : IAttributeParser {
   const textDecoder = new TextDecoder();
   return function onMPDAttribute(attr : number, ptr : number, len : number) {
-    switch (attr) {
-      case AttributeName.Text:
-        baseUrlAttrs.value = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        break;
+    if (attr === AttributeName.Text) {
+      baseUrlAttrs.value = parseString(textDecoder, linearMemory.buffer, ptr, len);
     }
   };
 }

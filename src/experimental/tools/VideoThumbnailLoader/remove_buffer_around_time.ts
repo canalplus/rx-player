@@ -33,19 +33,20 @@ export default function removeBufferAroundTime(
   videoElement: HTMLMediaElement,
   sourceBuffer: AudioVideoSegmentBuffer,
   time: number,
-  margin: number = 10 * 60,
+  margin: number | undefined,
   cancelSignal: CancellationSignal
 ): Promise<unknown> {
+  const removalMargin = margin ?? 10 * 60;
   if (videoElement.buffered.length === 0) {
     return Promise.resolve();
   }
   const bufferRemovals = [];
-  if ((time - margin) > 0) {
+  if ((time - removalMargin) > 0) {
     bufferRemovals.push(
-      sourceBuffer.removeBuffer(0, time - margin, cancelSignal));
+      sourceBuffer.removeBuffer(0, time - removalMargin, cancelSignal));
   }
-  if ((time + margin) < videoElement.duration) {
-    bufferRemovals.push(sourceBuffer.removeBuffer(time + margin,
+  if ((time + removalMargin) < videoElement.duration) {
+    bufferRemovals.push(sourceBuffer.removeBuffer(time + removalMargin,
                                                   videoElement.duration,
                                                   cancelSignal));
   }

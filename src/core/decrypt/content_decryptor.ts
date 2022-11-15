@@ -487,10 +487,9 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       .subscribe({
 
         next: (evt) : void => {
-          switch (evt.type) {
-            case "warning":
-              this.trigger("warning", evt.value);
-              return;
+          if (evt.type === "warning") {
+            this.trigger("warning", evt.value);
+            return;
           }
 
           const linkedKeys = getKeyIdsLinkedToSession(
@@ -853,20 +852,19 @@ function updateDecipherability(
     }
     const contentKIDs = representation.contentProtections.keyIds;
     if (contentKIDs !== undefined) {
-      for (let i = 0; i < contentKIDs.length; i++) {
-        const elt = contentKIDs[i];
-        for (let j = 0; j < blacklistedKeyIds.length; j++) {
-          if (areKeyIdsEqual(blacklistedKeyIds[j], elt.keyId)) {
+      for (const elt of contentKIDs) {
+        for (const blacklistedKeyId of blacklistedKeyIds) {
+          if (areKeyIdsEqual(blacklistedKeyId, elt.keyId)) {
             return false;
           }
         }
-        for (let j = 0; j < whitelistedKeyIds.length; j++) {
-          if (areKeyIdsEqual(whitelistedKeyIds[j], elt.keyId)) {
+        for (const whitelistedKeyId of whitelistedKeyIds) {
+          if (areKeyIdsEqual(whitelistedKeyId, elt.keyId)) {
             return true;
           }
         }
-        for (let j = 0; j < delistedKeyIds.length; j++) {
-          if (areKeyIdsEqual(delistedKeyIds[j], elt.keyId)) {
+        for (const delistedKeyId of delistedKeyIds) {
+          if (areKeyIdsEqual(delistedKeyId, elt.keyId)) {
             return undefined;
           }
         }
@@ -891,13 +889,13 @@ function blackListProtectionData(
       return false;
     }
     const segmentProtections = representation.contentProtections?.initData ?? [];
-    for (let i = 0; i < segmentProtections.length; i++) {
+    for (const protection of segmentProtections) {
       if (initData.type === undefined ||
-          segmentProtections[i].type === initData.type)
+          protection.type === initData.type)
       {
         const containedInitData = initData.values.getFormattedValues()
           .every(undecipherableVal => {
-            return segmentProtections[i].values.some(currVal => {
+            return protection.values.some(currVal => {
               return (undecipherableVal.systemId === undefined ||
                       currVal.systemId === undecipherableVal.systemId) &&
                       areArraysOfNumbersEqual(currVal.data,

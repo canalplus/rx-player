@@ -53,11 +53,13 @@ export default function applyPrioritizerToSegmentFetcher<TSegmentDataType>(
      * @param {Object} content - content to request
      * @param {Number} priority - priority at which the content should be requested.
      * Lower number == higher priority.
+     * @param {Object} callbacks
+     * @param {Object} cancelSignal
      * @returns {Promise}
      */
     createRequest(
       content : ISegmentLoaderContent,
-      priority : number = 0,
+      priority : number,
       callbacks : IPrioritizedSegmentFetcherCallbacks<TSegmentDataType>,
       cancelSignal : CancellationSignal
     ) : Promise<void> {

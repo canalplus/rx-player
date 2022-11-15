@@ -195,14 +195,12 @@ export default function createMediaSourceLoader(
                                                               streamObserver)
       .pipe(
         mergeMap((evt) => {
-          switch (evt.type) {
-            case "contentDurationUpdate":
-              log.debug("Init: Duration has to be updated.", evt.value);
-              mediaDurationUpdater.updateKnownDuration(evt.value);
-              return EMPTY;
-            default:
-              return observableOf(evt);
+          if (evt.type === "contentDurationUpdate") {
+            log.debug("Init: Duration has to be updated.", evt.value);
+            mediaDurationUpdater.updateKnownDuration(evt.value);
+            return EMPTY;
           }
+          return observableOf(evt);
         }));
 
    /**

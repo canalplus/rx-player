@@ -58,13 +58,13 @@ const isWebOs : boolean = !isNode &&
 // wild
 const isWebOs2021 : boolean = isWebOs &&
                               (
-                                /(W|w)eb(O|0)S.TV-2021/.test(navigator.userAgent) ||
-                                /(C|c)hr(o|0)me\/79/.test(navigator.userAgent)
+                                /[Ww]eb[O0]S.TV-2021/.test(navigator.userAgent) ||
+                                /[Cc]hr[o0]me\/79/.test(navigator.userAgent)
                               );
 const isWebOs2022 : boolean = isWebOs &&
                               (
-                                /(W|w)eb(O|0)S.TV-2022/.test(navigator.userAgent) ||
-                                /(C|c)hr(o|0)me\/87/.test(navigator.userAgent)
+                                /[Ww]eb[O0]S.TV-2022/.test(navigator.userAgent) ||
+                                /[Cc]hr[o0]me\/87/.test(navigator.userAgent)
                               );
 
 interface ISafariWindowObject extends Window {
