@@ -101,8 +101,8 @@ var isWebOs = !_is_node__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z && navi
 // Inspired form: http://webostv.developer.lge.com/discover/specifications/web-engine/
 // Note: even that page doesn't correspond to what we've actually seen in the
 // wild
-var isWebOs2021 = isWebOs && (/(W|w)eb(O|0)S.TV-2021/.test(navigator.userAgent) || /(C|c)hr(o|0)me\/79/.test(navigator.userAgent));
-var isWebOs2022 = isWebOs && (/(W|w)eb(O|0)S.TV-2022/.test(navigator.userAgent) || /(C|c)hr(o|0)me\/87/.test(navigator.userAgent));
+var isWebOs2021 = isWebOs && (/[Ww]eb[O0]S.TV-2021/.test(navigator.userAgent) || /[Cc]hr[o0]me\/79/.test(navigator.userAgent));
+var isWebOs2022 = isWebOs && (/[Ww]eb[O0]S.TV-2022/.test(navigator.userAgent) || /[Cc]hr[o0]me\/87/.test(navigator.userAgent));
 /** `true` on Safari on a PC platform (i.e. not iPhone / iPad etc.) */
 var isSafariDesktop = !_is_node__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z && (Object.prototype.toString.call(window.HTMLElement).indexOf("Constructor") >= 0 || ((_b = (_a = window.safari) === null || _a === void 0 ? void 0 : _a.pushNotification) === null || _b === void 0 ? void 0 : _b.toString()) === "[object SafariRemoteNotification]");
 /** `true` on Safari on an iPhone, iPad & iPod platform */
@@ -8425,10 +8425,9 @@ var ContentDecryptor = /*#__PURE__*/function (_EventEmitter) {
               isSessionPersisted = false;
               sub = SessionEventsListener(mediaKeySession, options, mediaKeySystemAccess.keySystem).subscribe({
                 next: function next(evt) {
-                  switch (evt.type) {
-                    case "warning":
-                      _this4.trigger("warning", evt.value);
-                      return;
+                  if (evt.type === "warning") {
+                    _this4.trigger("warning", evt.value);
+                    return;
                   }
                   var linkedKeys = getKeyIdsLinkedToSession(initializationData, sessionInfo.record, options.singleLicensePer, sessionInfo.source === "created-session" /* MediaKeySessionLoadingType.Created */, evt.value.whitelistedKeyIds, evt.value.blacklistedKeyIds);
                   sessionInfo.record.associateKeyIds(linkedKeys.whitelisted);
@@ -8737,20 +8736,23 @@ function updateDecipherability(manifest, whitelistedKeyIds, blacklistedKeyIds, d
     }
     var contentKIDs = representation.contentProtections.keyIds;
     if (contentKIDs !== undefined) {
-      for (var i = 0; i < contentKIDs.length; i++) {
-        var elt = contentKIDs[i];
-        for (var j = 0; j < blacklistedKeyIds.length; j++) {
-          if (areKeyIdsEqual(blacklistedKeyIds[j], elt.keyId)) {
+      for (var _iterator3 = content_decryptor_createForOfIteratorHelperLoose(contentKIDs), _step3; !(_step3 = _iterator3()).done;) {
+        var elt = _step3.value;
+        for (var _iterator4 = content_decryptor_createForOfIteratorHelperLoose(blacklistedKeyIds), _step4; !(_step4 = _iterator4()).done;) {
+          var blacklistedKeyId = _step4.value;
+          if (areKeyIdsEqual(blacklistedKeyId, elt.keyId)) {
             return false;
           }
         }
-        for (var _j = 0; _j < whitelistedKeyIds.length; _j++) {
-          if (areKeyIdsEqual(whitelistedKeyIds[_j], elt.keyId)) {
+        for (var _iterator5 = content_decryptor_createForOfIteratorHelperLoose(whitelistedKeyIds), _step5; !(_step5 = _iterator5()).done;) {
+          var whitelistedKeyId = _step5.value;
+          if (areKeyIdsEqual(whitelistedKeyId, elt.keyId)) {
             return true;
           }
         }
-        for (var _j2 = 0; _j2 < delistedKeyIds.length; _j2++) {
-          if (areKeyIdsEqual(delistedKeyIds[_j2], elt.keyId)) {
+        for (var _iterator6 = content_decryptor_createForOfIteratorHelperLoose(delistedKeyIds), _step6; !(_step6 = _iterator6()).done;) {
+          var delistedKeyId = _step6.value;
+          if (areKeyIdsEqual(delistedKeyId, elt.keyId)) {
             return undefined;
           }
         }
@@ -8772,10 +8774,11 @@ function blackListProtectionData(manifest, initData) {
       return false;
     }
     var segmentProtections = (_b = (_a = representation.contentProtections) === null || _a === void 0 ? void 0 : _a.initData) !== null && _b !== void 0 ? _b : [];
-    var _loop = function _loop(i) {
-      if (initData.type === undefined || segmentProtections[i].type === initData.type) {
+    var _loop = function _loop() {
+      var protection = _step7.value;
+      if (initData.type === undefined || protection.type === initData.type) {
         var containedInitData = initData.values.getFormattedValues().every(function (undecipherableVal) {
-          return segmentProtections[i].values.some(function (currVal) {
+          return protection.values.some(function (currVal) {
             return (undecipherableVal.systemId === undefined || currVal.systemId === undecipherableVal.systemId) && (0,are_arrays_of_numbers_equal/* default */.Z)(currVal.data, undecipherableVal.data);
           });
         });
@@ -8786,8 +8789,8 @@ function blackListProtectionData(manifest, initData) {
         }
       }
     };
-    for (var i = 0; i < segmentProtections.length; i++) {
-      var _ret = _loop(i);
+    for (var _iterator7 = content_decryptor_createForOfIteratorHelperLoose(segmentProtections), _step7; !(_step7 = _iterator7()).done;) {
+      var _ret = _loop();
       if (typeof _ret === "object") return _ret.v;
     }
     return representation.decipherable;
@@ -8880,7 +8883,7 @@ function getKeyIdsLinkedToSession(initializationData, keySessionRecord, singleLi
   // `usableKeyIds` nor in `unusableKeyIds`
   var allKnownKeyIds = keySessionRecord.getAssociatedKeyIds();
   var _loop3 = function _loop3() {
-    var kid = _step3.value;
+    var kid = _step8.value;
     if (!associatedKeyIds.some(function (ak) {
       return areKeyIdsEqual(ak, kid);
     })) {
@@ -8890,7 +8893,7 @@ function getKeyIdsLinkedToSession(initializationData, keySessionRecord, singleLi
       associatedKeyIds.push(kid);
     }
   };
-  for (var _iterator3 = content_decryptor_createForOfIteratorHelperLoose(allKnownKeyIds), _step3; !(_step3 = _iterator3()).done;) {
+  for (var _iterator8 = content_decryptor_createForOfIteratorHelperLoose(allKnownKeyIds), _step8; !(_step8 = _iterator8()).done;) {
     _loop3();
   }
   if (singleLicensePer !== undefined && singleLicensePer !== "init-data") {
@@ -8929,15 +8932,15 @@ function getKeyIdsLinkedToSession(initializationData, keySessionRecord, singleLi
         // Put it in a Set to automatically filter out duplicates (by ref)
         var contentKeys = new Set();
         var manifest = content.manifest;
-        for (var _iterator4 = content_decryptor_createForOfIteratorHelperLoose(manifest.periods), _step4; !(_step4 = _iterator4()).done;) {
-          var period = _step4.value;
+        for (var _iterator9 = content_decryptor_createForOfIteratorHelperLoose(manifest.periods), _step9; !(_step9 = _iterator9()).done;) {
+          var period = _step9.value;
           addKeyIdsFromPeriod(contentKeys, period);
         }
         mergeKeyIdSetIntoArray(contentKeys, associatedKeyIds);
       } else if (singleLicensePer === "periods") {
         var _manifest = content.manifest;
-        for (var _iterator5 = content_decryptor_createForOfIteratorHelperLoose(_manifest.periods), _step5; !(_step5 = _iterator5()).done;) {
-          var _period = _step5.value;
+        for (var _iterator10 = content_decryptor_createForOfIteratorHelperLoose(_manifest.periods), _step10; !(_step10 = _iterator10()).done;) {
+          var _period = _step10.value;
           var periodKeys = new Set();
           addKeyIdsFromPeriod(periodKeys, _period);
           if (((_a = initializationData.content) === null || _a === void 0 ? void 0 : _a.period.id) === _period.id) {
@@ -8996,13 +8999,13 @@ function mergeKeyIdSetIntoArray(set, arr) {
  * @param {Object} period
  */
 function addKeyIdsFromPeriod(set, period) {
-  for (var _iterator6 = content_decryptor_createForOfIteratorHelperLoose(period.getAdaptations()), _step6; !(_step6 = _iterator6()).done;) {
-    var adaptation = _step6.value;
-    for (var _iterator7 = content_decryptor_createForOfIteratorHelperLoose(adaptation.representations), _step7; !(_step7 = _iterator7()).done;) {
-      var representation = _step7.value;
+  for (var _iterator11 = content_decryptor_createForOfIteratorHelperLoose(period.getAdaptations()), _step11; !(_step11 = _iterator11()).done;) {
+    var adaptation = _step11.value;
+    for (var _iterator12 = content_decryptor_createForOfIteratorHelperLoose(adaptation.representations), _step12; !(_step12 = _iterator12()).done;) {
+      var representation = _step12.value;
       if (representation.contentProtections !== undefined && representation.contentProtections.keyIds !== undefined) {
-        for (var _iterator8 = content_decryptor_createForOfIteratorHelperLoose(representation.contentProtections.keyIds), _step8; !(_step8 = _iterator8()).done;) {
-          var kidInf = _step8.value;
+        for (var _iterator13 = content_decryptor_createForOfIteratorHelperLoose(representation.contentProtections.keyIds), _step13; !(_step13 = _iterator13()).done;) {
+          var kidInf = _step13.value;
           set.add(kidInf.keyId);
         }
       }
@@ -45060,12 +45063,11 @@ function applyPrioritizerToSegmentFetcher(prioritizer, fetcher) {
      * @param {Object} content - content to request
      * @param {Number} priority - priority at which the content should be requested.
      * Lower number == higher priority.
+     * @param {Object} callbacks
+     * @param {Object} cancelSignal
      * @returns {Promise}
      */
     createRequest: function createRequest(content, priority, callbacks, cancelSignal) {
-      if (priority === void 0) {
-        priority = 0;
-      }
       var givenTask = function givenTask(innerCancelSignal) {
         return fetcher(content, callbacks, innerCancelSignal);
       };
@@ -49032,8 +49034,6 @@ function _forceGarbageCollection() {
             _context.next = 8;
             break;
           case 16:
-            return _context.abrupt("return");
-          case 17:
           case "end":
             return _context.stop();
         }
@@ -49051,9 +49051,7 @@ function selectGCedRanges(position, buffered, gcGap) {
   // current time and respect the gcGap
   for (var i = 0; i < outerRanges.length; i++) {
     var outerRange = outerRanges[i];
-    if (position - gcGap > outerRange.end) {
-      cleanedupRanges.push(outerRange);
-    } else if (position + gcGap < outerRange.start) {
+    if (position - gcGap > outerRange.end || position + gcGap < outerRange.start) {
       cleanedupRanges.push(outerRange);
     }
   }
@@ -52432,14 +52430,12 @@ function createMediaSourceLoader(_ref) {
       }
     }));
     var contentTimeObserver = ContentTimeBoundariesObserver(manifest, lastAdaptationChange, streamObserver).pipe((0,mergeMap/* mergeMap */.z)(function (evt) {
-      switch (evt.type) {
-        case "contentDurationUpdate":
-          log/* default.debug */.Z.debug("Init: Duration has to be updated.", evt.value);
-          mediaDurationUpdater.updateKnownDuration(evt.value);
-          return empty/* EMPTY */.E;
-        default:
-          return (0,of.of)(evt);
+      if (evt.type === "contentDurationUpdate") {
+        log/* default.debug */.Z.debug("Init: Duration has to be updated.", evt.value);
+        mediaDurationUpdater.updateKnownDuration(evt.value);
+        return empty/* EMPTY */.E;
       }
+      return (0,of.of)(evt);
     }));
     /**
      * Observable trying to avoid various stalling situations, emitting "stalled"
