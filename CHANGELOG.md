@@ -1,6 +1,6 @@
 # Changelog
 
-## v3.29.0 (XXXX-XX-XX)
+## v3.29.0 (2022-11-15)
 
 ### Features
 
@@ -12,7 +12,7 @@
 
 ### Deprecated
 
-  - DRM: Deprecate `keySystems[].throwOnLicenseExpiration` `loadVideo` option as this boolean can be replaced with more customability by the new `keySystems[].onKeyExpiration` `loadVideo` option [#1157]
+  - DRM: Deprecate `keySystems[].throwOnLicenseExpiration` `loadVideo` option as this boolean can be replaced with more customizability by the new `keySystems[].onKeyExpiration` `loadVideo` option [#1157]
 
 ### Bug fixes
 
