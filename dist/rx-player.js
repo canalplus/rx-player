@@ -46654,17 +46654,6 @@ var POSSIBLE_BUFFER_TYPES = ["audio", "video", "text", "image"];
  */
 var SegmentBuffersStore = /*#__PURE__*/function () {
   /**
-   * @param {HTMLMediaElement} mediaElement
-   * @param {MediaSource} mediaSource
-   * @constructor
-   */
-  function SegmentBuffersStore(mediaElement, mediaSource) {
-    this._mediaElement = mediaElement;
-    this._mediaSource = mediaSource;
-    this._initializedSegmentBuffers = {};
-    this._onNativeBufferAddedOrDisabled = [];
-  }
-  /**
    * Returns true if the type is linked to a "native" media buffer (i.e. relying
    * on a SourceBuffer object, native to the browser).
    * Native media buffers needed for the current content must all be created
@@ -46677,10 +46666,21 @@ var SegmentBuffersStore = /*#__PURE__*/function () {
     return shouldHaveNativeBuffer(bufferType);
   }
   /**
+   * @param {HTMLMediaElement} mediaElement
+   * @param {MediaSource} mediaSource
+   * @constructor
+   */;
+  function SegmentBuffersStore(mediaElement, mediaSource) {
+    this._mediaElement = mediaElement;
+    this._mediaSource = mediaSource;
+    this._initializedSegmentBuffers = {};
+    this._onNativeBufferAddedOrDisabled = [];
+  }
+  /**
    * Get all currently available buffer types.
    * /!\ This list can evolve at runtime depending on feature switching.
    * @returns {Array.<string>}
-   */;
+   */
   var _proto = SegmentBuffersStore.prototype;
   _proto.getBufferTypes = function getBufferTypes() {
     var bufferTypes = this.getNativeBufferTypes();
@@ -55355,8 +55355,6 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     _this._priv_reloadingMetadata = {};
     return _this;
   }
-  /** All possible Error types emitted by the RxPlayer. */
-  var _proto = Player.prototype;
   /**
    * Register a new callback for a player event event.
    *
@@ -55365,6 +55363,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
    * The callback will take as argument the eventual payload of the event
    * (single argument).
    */
+  var _proto = Player.prototype;
   _proto.addEventListener = function addEventListener(evt, fn) {
     // The EventEmitter's `addEventListener` method takes an optional third
     // argument that we do not want to expose in the public API.
@@ -57534,7 +57533,8 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
   };
   (0,createClass/* default */.Z)(Player, null, [{
     key: "ErrorTypes",
-    get: function get() {
+    get: /** All possible Error types emitted by the RxPlayer. */
+    function get() {
       return error_codes/* ErrorTypes */.ZB;
     }
     /** All possible Error codes emitted by the RxPlayer. */
