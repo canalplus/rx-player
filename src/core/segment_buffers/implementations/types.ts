@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
 import {
   Adaptation,
   ISegment,
   Period,
   Representation,
 } from "../../../manifest";
+import { CancellationSignal } from "../../../utils/task_canceller";
 import SegmentInventory, {
   IBufferedChunk,
   IBufferedHistoryEntry,
@@ -112,28 +112,41 @@ export abstract class SegmentBuffer {
    * `data.chunk` argument to null.
    *
    * @param {Object} infos
-   * @returns {Observable}
+   * @param {Object} cancellationSignal
+   * @returns {Promise}
    */
-  public abstract pushChunk(infos : IPushChunkInfos<unknown>) : Observable<void>;
+  public abstract pushChunk(
+    infos : IPushChunkInfos<unknown>,
+    cancellationSignal : CancellationSignal
+  ) : Promise<void>;
 
   /**
    * Remove buffered data (added to the same FIFO queue than `pushChunk`).
    * @param {number} start - start position, in seconds
    * @param {number} end - end position, in seconds
-   * @returns {Observable}
+   * @param {Object} cancellationSignal
+   * @returns {Promise}
    */
-  public abstract removeBuffer(start : number, end : number) : Observable<void>;
+  public abstract removeBuffer(
+    start : number,
+    end : number,
+    cancellationSignal : CancellationSignal
+  ) : Promise<void>;
 
   /**
    * Indicate that every chunks from a Segment has been given to pushChunk so
    * far.
    * This will update our internal Segment inventory accordingly.
-   * The returned Observable will emit and complete successively once the whole
-   * segment has been pushed and this indication is acknowledged.
+   * The returned Promise will resolve once the whole segment has been pushed
+   * and this indication is acknowledged.
    * @param {Object} infos
-   * @returns {Observable}
+   * @param {Object} cancellationSignal
+   * @returns {Promise}
    */
-  public abstract endOfSegment(infos : IEndOfSegmentInfos) : Observable<void>;
+  public abstract endOfSegment(
+    infos : IEndOfSegmentInfos,
+    cancellationSignal : CancellationSignal
+  ) : Promise<void>;
 
   /**
    * Returns the currently buffered data, in a TimeRanges object.
@@ -219,7 +232,8 @@ export interface IPushedChunkData<T> {
   /**
    * The whole initialization segment's data related to the chunk you want to
    * push.
-   * `null` if none.
+   * To set to `null` either if no initialization data is needed, or if you are
+   * confident that the last pushed one is compatible.
    */
   initSegment: T | null;
   /**
@@ -232,8 +246,11 @@ export interface IPushedChunkData<T> {
   /**
    * String corresponding to the mime-type + codec of the last segment pushed.
    * This might then be used by a SourceBuffer to infer the right codec to use.
+   *
+   * If set to `undefined`, the SegmentBuffer implementation will just rely on
+   * a default codec it is linked to, if one.
    */
-  codec : string;
+  codec : string | undefined;
   /**
    * Time offset in seconds to apply to this segment.
    * A `timestampOffset` set to `5` will mean that the segment will be decoded

@@ -52,6 +52,8 @@ import Manifest, {
 import assertUnreachable from "../../../utils/assert_unreachable";
 import objectAssign from "../../../utils/object_assign";
 import { createSharedReference } from "../../../utils/reference";
+import fromCancellablePromise from "../../../utils/rx-from_cancellable_promise";
+import TaskCanceller from "../../../utils/task_canceller";
 import { IReadOnlyPlaybackObserver } from "../../api";
 import { IPrioritizedSegmentFetcher } from "../../fetchers";
 import { SegmentBuffer } from "../../segment_buffers";
@@ -267,10 +269,11 @@ export default function RepresentationStream<TSegmentDataType>({
           0,
           initialWantedTime - UPTO_CURRENT_POSITION_CLEANUP);
         if (gcedPosition > 0) {
-          bufferRemoval = segmentBuffer
-            .removeBuffer(0, gcedPosition)
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-            .pipe(ignoreElements());
+          const removalCanceller = new TaskCanceller();
+          bufferRemoval = fromCancellablePromise(removalCanceller, () =>
+            segmentBuffer.removeBuffer(0, gcedPosition, removalCanceller.signal)
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          ).pipe(ignoreElements());
         }
       }
       return status.shouldRefreshManifest ?
@@ -318,7 +321,10 @@ export default function RepresentationStream<TSegmentDataType>({
 
       case "end-of-segment": {
         const { segment } = evt.value;
-        return segmentBuffer.endOfSegment(objectAssign({ segment }, content))
+        const endOfSegmentCanceller = new TaskCanceller();
+        return fromCancellablePromise(endOfSegmentCanceller, () =>
+          segmentBuffer.endOfSegment(objectAssign({ segment }, content),
+                                     endOfSegmentCanceller.signal))
           // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
           // first type parameter as `any` instead of the perfectly fine `unknown`,
           // leading to linter issues, as it forbids the usage of `any`.

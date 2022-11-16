@@ -282,4 +282,12 @@ export const enum AttributeName {
   Namespace = 70,
 
   Label = 71, // String
+
+  ServiceLocation = 72, // String
+
+  QueryBeforeStart = 73, // Boolean
+
+  ProxyServerUrl = 74, // String
+
+  DefaultServiceLocation = 75,
 }

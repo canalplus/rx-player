@@ -19,8 +19,7 @@ import { IBaseUrlIntermediateRepresentation } from "../node_parser_types";
 
 export interface IResolvedBaseUrl {
   url : string;
-  availabilityTimeOffset : number;
-  availabilityTimeComplete : boolean;
+  serviceLocation? : string | undefined;
 }
 
 /**
@@ -37,9 +36,7 @@ export default function resolveBaseURLs(
   }
 
   const newBaseUrls : IResolvedBaseUrl[] = newBaseUrlsIR.map(ir => {
-    return { url: ir.value,
-             availabilityTimeOffset: ir.attributes.availabilityTimeOffset ?? 0,
-             availabilityTimeComplete: ir.attributes.availabilityTimeComplete ?? true };
+    return { url: ir.value };
   });
   if (currentBaseURLs.length === 0) {
     return newBaseUrls;
@@ -51,11 +48,10 @@ export default function resolveBaseURLs(
     for (let j = 0; j < newBaseUrls.length; j++) {
       const newBaseUrl = newBaseUrls[j];
       const newUrl = resolveURL(curBaseUrl.url, newBaseUrl.url);
-      const newAvailabilityTimeOffset = curBaseUrl.availabilityTimeOffset +
-        newBaseUrl.availabilityTimeOffset;
       result.push({ url: newUrl,
-                    availabilityTimeOffset: newAvailabilityTimeOffset,
-                    availabilityTimeComplete: newBaseUrl.availabilityTimeComplete });
+                    serviceLocation: newBaseUrl.serviceLocation ??
+                                     curBaseUrl.serviceLocation });
+
     }
   }
   return result;

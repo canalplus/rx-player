@@ -18,6 +18,7 @@ import Adaptation, {
   SUPPORTED_ADAPTATIONS_TYPE,
 } from "./adaptation";
 import Manifest, {
+  IDecipherabilityUpdateElement,
   IManifestParsingOptions,
   ISupplementaryImageTrack,
   ISupplementaryTextTrack,
@@ -54,6 +55,7 @@ export {
   // types
   IAdaptationType,
   IBaseContentInfos,
+  IDecipherabilityUpdateElement,
   IManifestParsingOptions,
   IMetaPlaylistPrivateInfos,
   IRepresentationIndex,

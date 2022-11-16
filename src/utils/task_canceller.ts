@@ -299,8 +299,7 @@ export class CancellationSignal {
 export type ICancellationListener = (error : CancellationError) => void;
 
 /**
- * Error created when a task is cancelled through the TaskCanceller.
- *
+ * Error created when a task is cancelled.
  * @class CancellationError
  * @extends Error
  */

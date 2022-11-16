@@ -307,7 +307,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
     return { id: "init",
              isInit: true,
              privateInfos: { smoothInitSegment: this._initSegmentInfos },
-             mediaURLs: null,
+             url: null,
              time: 0,
              end: 0,
              duration: 0,
@@ -361,7 +361,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
                           duration: duration / timescale,
                           timescale: 1 as const,
                           number,
-                          mediaURLs: [replaceSegmentSmoothTokens(media, time)],
+                          url: replaceSegmentSmoothTokens(media, time),
                           complete: true,
                           privateInfos: { smoothMediaSegment: { time,
                                                                 duration } } };

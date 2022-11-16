@@ -18,7 +18,7 @@ import config from "../../../../config";
 import log from "../../../../log";
 import Manifest from "../../../../manifest";
 import arrayFind from "../../../../utils/array_find";
-import { normalizeBaseURL } from "../../../../utils/resolve_url";
+import { getFilenameIndexInUrl } from "../../../../utils/resolve_url";
 import { IParsedManifest } from "../../types";
 import {
   IMPDIntermediateRepresentation,
@@ -241,9 +241,7 @@ function parseCompleteIntermediateRepresentation(
           attributes: rootAttributes } = mpdIR;
   const isDynamic : boolean = rootAttributes.type === "dynamic";
   const initialBaseUrl : IResolvedBaseUrl[] = args.url !== undefined ?
-    [{ url: normalizeBaseURL(args.url),
-       availabilityTimeOffset: 0,
-       availabilityTimeComplete: true }] :
+    [{ url: args.url.substring(0, getFilenameIndexInUrl(args.url)) }] :
     [];
   const mpdBaseUrls = resolveBaseURLs(initialBaseUrl, rootChildren.baseURLs);
   const availabilityStartTime = parseAvailabilityStartTime(rootAttributes,

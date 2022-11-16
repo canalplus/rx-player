@@ -15,6 +15,7 @@
  */
 
 import { CustomLoaderError } from "../../errors";
+import { ICdnMetadata } from "../../parsers/manifest";
 import { ISegmentLoader as ICustomSegmentLoader } from "../../public_types";
 import request, {
   fetchIsSupported,
@@ -37,6 +38,7 @@ import {
 import byteRange from "../utils/byte_range";
 import inferSegmentContainer from "../utils/infer_segment_container";
 import addSegmentIntegrityChecks from "./add_segment_integrity_checks_to_loader";
+import constructSegmentUrl from "./construct_segment_url";
 import initSegmentLoader from "./init_segment_loader";
 import lowLatencySegmentLoader from "./low_latency_segment_loader";
 
@@ -104,11 +106,11 @@ export default function generateSegmentLoader(
                                                addSegmentIntegrityChecks(segmentLoader);
 
   /**
-   * @param {Object} content
+   * @param {Object|null} wantedCdn
    * @returns {Observable}
    */
   function segmentLoader(
-    url : string | null,
+    wantedCdn : ICdnMetadata | null,
     content : ISegmentContext,
     options : ISegmentLoaderOptions,
     cancelSignal : CancellationSignal,
@@ -117,6 +119,7 @@ export default function generateSegmentLoader(
               ISegmentLoaderResultSegmentCreated<ILoadedAudioVideoSegmentFormat> |
               ISegmentLoaderResultChunkedComplete>
   {
+    const url = constructSegmentUrl(wantedCdn, content.segment);
     if (url == null) {
       return Promise.resolve({ resultType: "segment-created",
                                resultData: null });

@@ -14,21 +14,15 @@
  * limitations under the License.
  */
 
-import { ISegment } from "../../../manifest";
-import { IContentInfos } from "./types";
+import { ISegment } from "../../manifest";
+import { ICdnMetadata } from "../../parsers/manifest";
+import resolveURL from "../../utils/resolve_url";
 
-/**
- * Build a segment id that may be unique in a given content.
- * @param {Object} contentInfo
- * @param {Object} segment
- * @returns {string}
- */
-export default function getCompleteSegmentId(contentInfo: IContentInfos,
-                                             segment: ISegment): string {
-  const { manifest, period, adaptation, representation } = contentInfo;
-  return manifest.id +
-         period.id +
-         adaptation.id +
-         representation.id.toString() +
-         segment.id;
+export default function constructSegmentUrl(
+  wantedCdn : ICdnMetadata | null,
+  segment : ISegment
+) : string | null {
+  return wantedCdn === null   ? null :
+         segment.url === null ? wantedCdn.baseUrl :
+                                resolveURL(wantedCdn.baseUrl, segment.url);
 }

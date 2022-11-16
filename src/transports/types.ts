@@ -23,6 +23,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../manifest";
+import { ICdnMetadata } from "../parsers/manifest";
 import {
   IBifThumbnail,
   ILoadedManifestFormat,
@@ -52,6 +53,7 @@ export type ITransportFunction = (options : ITransportOptions) =>
 export interface ITransportPipelines {
   /** Functions allowing to load an parse the Manifest for this transport. */
   manifest : ITransportManifestPipeline;
+
   /** Functions allowing to load an parse audio segments. */
   audio : ISegmentPipeline<ILoadedAudioVideoSegmentFormat,
                            Uint8Array | ArrayBuffer | null>;
@@ -222,8 +224,9 @@ export interface ISegmentPipeline<
 
 /**
  * Segment loader function, allowing to load a segment of any type.
- * @param {string|null} url - URL at which the segment should be downloaded.
- * `null` if we do not have an URL (in which case the segment should be loaded
+ * @param {string|null} wantedCdn - CDN metadata for the CDN on which the
+ * segment should be downloaded.
+ * `null` if we do not have such CDN (in which case the segment should be loaded
  * through other means, such as information taken from the segment's content).
  * @param {Object} content - Content linked to the wanted segment.
  * @param {CancellationSignal} cancelSignal - Cancellation signal which will
@@ -237,7 +240,7 @@ export interface ISegmentPipeline<
  * the segment.
  */
 export type ISegmentLoader<TLoadedFormat> = (
-  url : string | null,
+  wantedCdn : ICdnMetadata | null,
   content : ISegmentContext,
   options : ISegmentLoaderOptions,
   cancelSignal : CancellationSignal,

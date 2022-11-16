@@ -46,13 +46,12 @@ import emitLoadedEvent from "./emit_loaded_event";
 import { maintainEndOfStream } from "./end_of_stream";
 import initialSeekAndPlay from "./initial_seek_and_play";
 import MediaDurationUpdater from "./media_duration_updater";
-import StallAvoider, {
+import RebufferingController, {
   IDiscontinuityEvent,
   ILockedStreamEvent,
-} from "./stall_avoider";
+} from "./rebuffering_controller";
 import streamEventsEmitter from "./stream_events_emitter";
 import { IMediaSourceLoaderEvent } from "./types";
-import updatePlaybackRate from "./update_playback_rate";
 
 // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
 // first type parameter as `any` instead of the perfectly fine `unknown`,
@@ -196,34 +195,23 @@ export default function createMediaSourceLoader(
                                                               streamObserver)
       .pipe(
         mergeMap((evt) => {
-          switch (evt.type) {
-            case "contentDurationUpdate":
-              log.debug("Init: Duration has to be updated.", evt.value);
-              mediaDurationUpdater.updateKnownDuration(evt.value);
-              return EMPTY;
-            default:
-              return observableOf(evt);
+          if (evt.type === "contentDurationUpdate") {
+            log.debug("Init: Duration has to be updated.", evt.value);
+            mediaDurationUpdater.updateKnownDuration(evt.value);
+            return EMPTY;
           }
+          return observableOf(evt);
         }));
 
-    /**
-     * On subscription, keep the playback speed synchronized to the speed set by
-     * the user on the media element and force a speed of `0` when the buffer is
-     * empty, so it can build back buffer.
-     */
-    const playbackRate$ =
-      updatePlaybackRate(mediaElement, speed, observation$)
-        .pipe(ignoreElements());
-
-    /**
-     * Observable trying to avoid various stalling situations, emitting "stalled"
-     * events when it cannot, as well as "unstalled" events when it get out of one.
-     */
-    const stallAvoider$ = StallAvoider(playbackObserver,
-                                       manifest,
-                                       speed,
-                                       lockedStream$,
-                                       discontinuityUpdate$);
+   /**
+    * Observable trying to avoid various stalling situations, emitting "stalled"
+    * events when it cannot, as well as "unstalled" events when it get out of one.
+    */
+    const rebuffer$ = RebufferingController(playbackObserver,
+                                            manifest,
+                                            speed,
+                                            lockedStream$,
+                                            discontinuityUpdate$);
 
     /**
      * Emit a "loaded" events once the initial play has been performed and the
@@ -236,8 +224,7 @@ export default function createMediaSourceLoader(
         emitLoadedEvent(observation$, mediaElement, segmentBuffersStore, false)));
 
     return observableMerge(loadingEvts$,
-                           playbackRate$,
-                           stallAvoider$,
+                           rebuffer$,
                            streams$,
                            contentTimeObserver,
                            streamEvents$

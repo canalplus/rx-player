@@ -44,10 +44,9 @@ import emitLoadedEvent from "./emit_loaded_event";
 import { IInitialTimeOptions } from "./get_initial_time";
 import initialSeekAndPlay from "./initial_seek_and_play";
 import linkDrmAndContent from "./link_drm_and_content";
-import StallAvoider from "./stall_avoider";
+import RebufferingController from "./rebuffering_controller";
 import throwOnMediaError from "./throw_on_media_error";
 import { IDirectfileEvent } from "./types";
-import updatePlaybackRate from "./update_playback_rate";
 
 // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
 // first type parameter as `any` instead of the perfectly fine `unknown`,
@@ -160,17 +159,11 @@ export default function initializeDirectfileContent({
 
   const observation$ = playbackObserver.getReference().asObservable();
 
-  // Set the speed set by the user on the media element while pausing a
-  // little longer while the buffer is empty.
-  const playbackRate$ =
-    updatePlaybackRate(mediaElement, speed, observation$)
-      .pipe(ignoreElements());
-
   /**
    * Observable trying to avoid various stalling situations, emitting "stalled"
    * events when it cannot, as well as "unstalled" events when it get out of one.
    */
-  const stallAvoider$ = StallAvoider(playbackObserver, null, speed, EMPTY, EMPTY);
+  const rebuffer$ = RebufferingController(playbackObserver, null, speed, EMPTY, EMPTY);
 
   /**
    * Emit a "loaded" events once the initial play has been performed and the
@@ -192,8 +185,7 @@ export default function initializeDirectfileContent({
   return observableMerge(loadingEvts$,
                          drmEvents$.pipe(ignoreElements()),
                          mediaError$,
-                         playbackRate$,
-                         stallAvoider$);
+                         rebuffer$);
 }
 
 export { IDirectfileEvent };

@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-import {
-  combineLatest as observableCombineLatest,
-  Observable,
-  of as observableOf,
-} from "rxjs";
 import { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implementations";
+import { CancellationSignal } from "../../../utils/task_canceller";
 
 /**
  * Remove buffer around wanted time, considering a margin around
@@ -30,23 +26,29 @@ import { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implement
  * @param {Object} sourceBuffer
  * @param {Number} time
  * @param {Number|undefined} margin
+ * @param {Object} cancelSignal
  * @returns {Observable}
  */
-export default function removeBufferAroundTime$(
+export default function removeBufferAroundTime(
   videoElement: HTMLMediaElement,
   sourceBuffer: AudioVideoSegmentBuffer,
   time: number,
-  margin: number = 10 * 60
-): Observable<unknown> {
+  margin: number | undefined,
+  cancelSignal: CancellationSignal
+): Promise<unknown> {
+  const removalMargin = margin ?? 10 * 60;
   if (videoElement.buffered.length === 0) {
-    return observableOf(null);
+    return Promise.resolve();
   }
-  const bufferRemovals$ = [];
-  if ((time - margin) > 0) {
-    bufferRemovals$.push(sourceBuffer.removeBuffer(0, time - margin));
+  const bufferRemovals = [];
+  if ((time - removalMargin) > 0) {
+    bufferRemovals.push(
+      sourceBuffer.removeBuffer(0, time - removalMargin, cancelSignal));
   }
-  if ((time + margin) < videoElement.duration) {
-    bufferRemovals$.push(sourceBuffer.removeBuffer(time + margin, videoElement.duration));
+  if ((time + removalMargin) < videoElement.duration) {
+    bufferRemovals.push(sourceBuffer.removeBuffer(time + removalMargin,
+                                                  videoElement.duration,
+                                                  cancelSignal));
   }
-  return observableCombineLatest(bufferRemovals$);
+  return Promise.all(bufferRemovals);
 }

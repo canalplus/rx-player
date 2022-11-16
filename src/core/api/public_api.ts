@@ -120,7 +120,6 @@ import {
   IManifestFetcherParsedResult,
   IManifestFetcherWarningEvent,
   ManifestFetcher,
-  SegmentFetcherCreator,
 } from "../fetchers";
 import initializeMediaSourcePlayback, {
   IInitEvent,
@@ -461,7 +460,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /* PLAYER_VERSION */"3.28.0";
+    this.version = /* PLAYER_VERSION */"3.29.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -790,14 +789,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           maxRetryOffline: offlineRetry,
           requestTimeout:  manifestRequestTimeout });
 
-      /** Interface used to download segments. */
-      const segmentFetcherCreator = new SegmentFetcherCreator(
-        transportPipelines,
-        { lowLatencyMode,
-          maxRetryOffline: offlineRetry,
-          maxRetryRegular: segmentRetry,
-          requestTimeout: segmentRequestTimeout });
-
       /** Observable emitting the initial Manifest */
       let manifest$ : Observable<IManifestFetcherParsedResult |
                                  IManifestFetcherWarningEvent>;
@@ -897,6 +888,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                            onCodecSwitch },
                                          this._priv_bufferOptions);
 
+      const segmentRequestOptions = { regularError: segmentRetry,
+                                      requestTimeout: segmentRequestTimeout,
+                                      offlineError: offlineRetry };
+
       // We've every options set up. Start everything now
       const init$ = initializeMediaSourcePlayback({ adaptiveOptions,
                                                     autoPlay,
@@ -908,9 +903,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                                     manifestFetcher,
                                                     mediaElement: videoElement,
                                                     minimumManifestUpdateInterval,
-                                                    segmentFetcherCreator,
+                                                    segmentRequestOptions,
                                                     speed: this._priv_speed,
                                                     startAt,
+                                                    transport: transportPipelines,
                                                     textTrackOptions })
         .pipe(takeUntil(stoppedContent$));
 
@@ -3006,7 +3002,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return activeRepresentations[currentPeriod.id];
   }
 }
-Player.version = /* PLAYER_VERSION */"3.28.0";
+Player.version = /* PLAYER_VERSION */"3.29.0";
 
 /** Every events sent by the RxPlayer's public API. */
 interface IPublicAPIEvent {

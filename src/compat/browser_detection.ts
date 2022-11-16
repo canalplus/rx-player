@@ -51,11 +51,21 @@ const isTizen : boolean = !isNode &&
                           /Tizen/.test(navigator.userAgent);
 
 const isWebOs : boolean = !isNode &&
-                          /Web0S/.test(navigator.userAgent);
-const isWebOs2021 : boolean = !isNode &&
-                              /WebOS.TV-2021/.test(navigator.userAgent);
-const isWebOs2022 : boolean = !isNode &&
-                              /WebOS.TV-2022/.test(navigator.userAgent);
+                          navigator.userAgent.indexOf("Web0S") >= 0;
+
+// Inspired form: http://webostv.developer.lge.com/discover/specifications/web-engine/
+// Note: even that page doesn't correspond to what we've actually seen in the
+// wild
+const isWebOs2021 : boolean = isWebOs &&
+                              (
+                                /[Ww]eb[O0]S.TV-2021/.test(navigator.userAgent) ||
+                                /[Cc]hr[o0]me\/79/.test(navigator.userAgent)
+                              );
+const isWebOs2022 : boolean = isWebOs &&
+                              (
+                                /[Ww]eb[O0]S.TV-2022/.test(navigator.userAgent) ||
+                                /[Cc]hr[o0]me\/87/.test(navigator.userAgent)
+                              );
 
 interface ISafariWindowObject extends Window {
   safari? : { pushNotification? : { toString() : string } };

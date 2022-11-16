@@ -24,10 +24,13 @@ import {
   ISegmentParser,
   ITransportPipelines,
 } from "../../../transports";
-export interface IContentInfos { manifest: Manifest;
-                                 period: Period;
-                                 adaptation: Adaptation;
-                                 representation: Representation; }
+
+export interface IContentInfo {
+  manifest: Manifest;
+  period: Period;
+  adaptation: Adaptation;
+  representation: Representation;
+}
 
 export type ILoaders = Partial<Record<string, ITransportPipelines>>;
 

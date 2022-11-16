@@ -15,7 +15,7 @@
  */
 
 import resolveURL, {
-  normalizeBaseURL,
+  getFilenameIndexInUrl,
 } from "../resolve_url";
 
 describe("utils - resolveURL", () => {
@@ -66,31 +66,35 @@ describe("utils - resolveURL", () => {
   });
 });
 
-describe("utils - normalizeBaseURL", () => {
-  it("should do nothing if there is no / in the given string", () => {
-    expect(normalizeBaseURL(";.<;L'dl'02984lirsahg;oliwr"))
-      .toBe(";.<;L'dl'02984lirsahg;oliwr");
+describe("utils - getFilenameIndexInUrl", () => {
+  it("should return the length for a string without slash", () => {
+    const str = ";.<;L'dl'02984lirsahg;oliwr";
+    expect(getFilenameIndexInUrl(str))
+      .toEqual(str.length);
   });
-  it("should remove the content of a string after the last /", () => {
-    expect(normalizeBaseURL(";ojdsfgje/eprowig/tohjroj/9ohyjwoij/s"))
-      .toBe(";ojdsfgje/eprowig/tohjroj/9ohyjwoij/");
+  it("should return the index after the last / if one in URL", () => {
+    expect(getFilenameIndexInUrl(";ojdsfgje/eprowig/tohjroj/9ohyjwoij/s"))
+      .toEqual(36);
   });
-  it("should do nothing if the only slash are part of the protocol", () => {
-    expect(normalizeBaseURL("http://www.example.com"))
-      .toBe("http://www.example.com");
-    expect(normalizeBaseURL("https://a.t"))
-      .toBe("https://a.t");
-    expect(normalizeBaseURL("ftp://s"))
-      .toBe("ftp://s");
+  it("should return length if the only slash are part of the protocol", () => {
+    const url1 = "http://www.example.com";
+    expect(getFilenameIndexInUrl(url1))
+      .toEqual(url1.length);
+    const url2 = "https://a.t";
+    expect(getFilenameIndexInUrl(url2))
+      .toEqual(url2.length);
+    const url3 = "ftp://s";
+    expect(getFilenameIndexInUrl(url3))
+      .toEqual(url3.length);
   });
   it("should not include slash coming in query parameters", () => {
-    expect(normalizeBaseURL("http://www.example.com?test/toto"))
-      .toBe("http://www.example.com");
-    expect(normalizeBaseURL("https://ww/ddd?test/toto/efewf/ffe/"))
-      .toBe("https://ww/");
-    expect(normalizeBaseURL("https://ww/rr/d?test/toto/efewf/ffe/"))
-      .toBe("https://ww/rr/");
-    expect(normalizeBaseURL("https://ww/rr/d/?test/toto/efewf/ffe/"))
-      .toBe("https://ww/rr/d/");
+    expect(getFilenameIndexInUrl("http://www.example.com?test/toto"))
+      .toEqual(22);
+    expect(getFilenameIndexInUrl("https://ww/ddd?test/toto/efewf/ffe/"))
+      .toEqual(11);
+    expect(getFilenameIndexInUrl("https://ww/rr/d?test/toto/efewf/ffe/"))
+      .toEqual(14);
+    expect(getFilenameIndexInUrl("https://ww/rr/d/?test/toto/efewf/ffe/"))
+      .toEqual(16);
   });
 });

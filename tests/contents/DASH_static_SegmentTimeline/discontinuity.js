@@ -30,26 +30,26 @@ export default {
                 mimeType: "audio/mp4",
                 index: {
                   init: {
-                    mediaURLs: [BASE_URL + "dash/ateam-audio=128000.dash"],
+                    url: "ateam-audio=128000.dash",
                   },
                   segments: [
                     {
                       time: 0,
                       duration: 177341 / 44100,
                       timescale: 1,
-                      mediaURLs: [BASE_URL + "dash/ateam-audio=128000-0.dash"],
+                      url: "ateam-audio=128000-0.dash",
                     },
                     {
                       time: 177341 / 44100,
                       duration: 176128 / 44100,
                       timescale: 1,
-                      mediaURLs: [BASE_URL + "dash/ateam-audio=128000-177341.dash"],
+                      url: "ateam-audio=128000-177341.dash",
                     },
                     {
                       time: 353469 / 44100,
                       duration: 177152 / 44100,
                       timescale: 1,
-                      mediaURLs: [BASE_URL + "dash/ateam-audio=128000-353469.dash"],
+                      url: "ateam-audio=128000-353469.dash",
                     },
                   ],
                   // ...
@@ -70,26 +70,26 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURLs: [BASE_URL + "dash/ateam-video=400000.dash"],
+                    url: "ateam-video=400000.dash",
                   },
                   segments: [
                     {
                       time: 0,
                       duration: 4004 / 1000,
                       timescale: 1,
-                      mediaURLs: [BASE_URL + "dash/ateam-video=400000-0.dash"],
+                      url: "ateam-video=400000-0.dash",
                     },
                     {
                       time: 4004 / 1000,
                       duration: 4004 / 1000,
                       timescale: 1,
-                      mediaURLs: [BASE_URL + "dash/ateam-video=400000-360360.dash"],
+                      url: "ateam-video=400000-360360.dash",
                     },
                     {
                       time: 8008 / 1000,
                       duration: 4004 / 1000,
                       timescale: 1,
-                      mediaURLs: [BASE_URL + "dash/ateam-video=400000-720720.dash"],
+                      url: "ateam-video=400000-720720.dash",
                     },
                     // ...
                   ],
@@ -104,26 +104,26 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURLs: [BASE_URL + "dash/ateam-video=795000.dash"],
+                    url: "ateam-video=795000.dash",
                   },
                   segments: [
                     {
                       time: 0,
                       duration: 4004 / 1000,
                       timescale: 1,
-                      mediaURLs: [BASE_URL + "dash/ateam-video=795000-0.dash"],
+                      url: "ateam-video=795000-0.dash",
                     },
                     {
                       time: 4004 / 1000,
                       duration: 4004 / 1000,
                       timescale: 1,
-                      mediaURLs: [BASE_URL + "dash/ateam-video=795000-360360.dash"],
+                      url: "ateam-video=795000-360360.dash",
                     },
                     {
                       time: 8008 / 1000,
                       duration: 4004 / 1000,
                       timescale: 1,
-                      mediaURLs: [BASE_URL + "dash/ateam-video=795000-720720.dash"],
+                      url: "ateam-video=795000-720720.dash",
                     },
                     // ...
                   ],
@@ -138,26 +138,26 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURLs: [BASE_URL + "dash/ateam-video=1193000.dash"],
+                    url: "ateam-video=1193000.dash",
                   },
                   segments: [
                     {
                       time: 0,
                       duration: 4004 / 1000,
                       timescale: 1,
-                      mediaURLs: [BASE_URL + "dash/ateam-video=1193000-0.dash"],
+                      url: "ateam-video=1193000-0.dash",
                     },
                     {
                       time: 4004 / 1000,
                       duration: 4004 / 1000,
                       timescale: 1,
-                      mediaURLs: [BASE_URL + "dash/ateam-video=1193000-360360.dash"],
+                      url: "ateam-video=1193000-360360.dash",
                     },
                     {
                       time: 8008 / 1000,
                       duration: 4004 / 1000,
                       timescale: 1,
-                      mediaURLs: [BASE_URL + "dash/ateam-video=1193000-720720.dash"],
+                      url: "ateam-video=1193000-720720.dash",
                     },
                     // ...
                   ],
@@ -172,26 +172,26 @@ export default {
                 mimeType: "video/mp4",
                 index: {
                   init: {
-                    mediaURLs: [BASE_URL + "dash/ateam-video=1996000.dash"],
+                    url: "ateam-video=1996000.dash",
                   },
                   segments: [
                     {
                       time: 0,
                       duration: 4004 / 1000,
                       timescale: 1,
-                      mediaURLs: [BASE_URL + "dash/ateam-video=1996000-0.dash"],
+                      url: "ateam-video=1996000-0.dash",
                     },
                     {
                       time: 4004 / 1000,
                       duration: 4004 / 1000,
                       timescale: 1,
-                      mediaURLs: [BASE_URL + "dash/ateam-video=1996000-360360.dash"],
+                      url: "ateam-video=1996000-360360.dash",
                     },
                     {
                       time: 8008 / 1000,
                       duration: 4004 / 1000,
                       timescale: 1,
-                      mediaURLs: [BASE_URL + "dash/ateam-video=1996000-720720.dash"],
+                      url: "ateam-video=1996000-720720.dash",
                     },
                     // ...
                   ],

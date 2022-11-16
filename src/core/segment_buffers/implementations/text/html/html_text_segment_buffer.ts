@@ -15,25 +15,15 @@
  */
 
 import {
-  concat as observableConcat,
-  defer as observableDefer,
-  interval as observableInterval,
-  map,
-  merge as observableMerge,
-  Observable,
-  of as observableOf,
-  startWith,
-  Subject,
-  switchMap,
-  takeUntil,
-} from "rxjs";
-import {
   events,
   onHeightWidthChange,
 } from "../../../../../compat";
 import config from "../../../../../config";
 import log from "../../../../../log";
 import { ITextTrackSegmentData } from "../../../../../transports";
+import TaskCanceller, {
+  CancellationSignal,
+} from "../../../../../utils/task_canceller";
 import {
   IEndOfSegmentInfos,
   IPushChunkInfos,
@@ -44,31 +34,7 @@ import parseTextTrackToElements from "./parsers";
 import TextTrackCuesStore from "./text_track_cues_store";
 import updateProportionalElements from "./update_proportional_elements";
 
-const { onEnded$,
-        onSeeked$,
-        onSeeking$ } = events;
-
-
-/**
- * Generate the interval at which TextTrack HTML Cues should be refreshed.
- * @param {HTMLMediaElement} videoElement
- * @returns {Observable}
- */
-function generateRefreshInterval(videoElement : HTMLMediaElement) : Observable<boolean> {
-  const seeking$ = onSeeking$(videoElement);
-  const seeked$ = onSeeked$(videoElement);
-  const ended$ = onEnded$(videoElement);
-  const { MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL } = config.getCurrent();
-  const manualRefresh$ = observableMerge(seeked$, ended$);
-  const autoRefresh$ = observableInterval(MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL)
-    .pipe(startWith(null));
-
-  return manualRefresh$.pipe(
-    startWith(null),
-    switchMap(() => observableConcat(autoRefresh$.pipe(map(() => true),
-                                                       takeUntil(seeking$)),
-                                     observableOf(false))));
-}
+const { onEnded, onSeeked, onSeeking } = events;
 
 /**
  * @param {Element} element
@@ -116,12 +82,8 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
    */
   private readonly _videoElement : HTMLMediaElement;
 
-  /**
-   * When "nexting" that subject, every Observable declared here will be
-   * unsubscribed.
-   * Used for clean-up
-   */
-  private readonly _destroy$ : Subject<void>;
+  /** Used for clean-up. */
+  private readonly _canceller : TaskCanceller;
 
   /** HTMLElement which will contain the cues */
   private readonly _textTrackElement : HTMLElement;
@@ -131,10 +93,10 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
 
   /**
    * We could need us to automatically update styling depending on
-   * `_textTrackElement`'s size. This Subject allows to stop that
+   * `_textTrackElement`'s size. This TaskCanceller allows to stop that
    * regular check.
    */
-  private _clearSizeUpdates$ : Subject<void>;
+  private _sizeUpdateCanceller : TaskCanceller;
 
   /** Information on cues currently displayed. */
   private _currentCues : Array<{
@@ -167,78 +129,46 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
 
     this._videoElement = videoElement;
     this._textTrackElement = textTrackElement;
-    this._clearSizeUpdates$ = new Subject();
-    this._destroy$ = new Subject();
+    this._sizeUpdateCanceller = new TaskCanceller();
+    this._canceller = new TaskCanceller();
     this._buffer = new TextTrackCuesStore();
     this._currentCues = [];
 
-    // update text tracks
-    generateRefreshInterval(this._videoElement)
-      .pipe(takeUntil(this._destroy$))
-      .subscribe((shouldDisplay) => {
-        if (!shouldDisplay) {
-          this._disableCurrentCues();
-          return;
-        }
-        const videoElt = this._videoElement;
-        const { MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL } = config.getCurrent();
-        let time;
-        if (videoElt.paused || videoElt.playbackRate <= 0) {
-          time = videoElt.currentTime;
-        } else {
-          // to spread the time error, we divide the regular chosen interval.
-          time = Math.max(this._videoElement.currentTime +
-                           (MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL / 1000) / 2,
-                          0);
-        }
-        const cues = this._buffer.get(time);
-        if (cues.length === 0) {
-          this._disableCurrentCues();
-        } else {
-          this._displayCues(cues);
-        }
-      });
+    this.autoRefreshSubtitles(this._canceller.signal);
   }
 
   /**
    * Push segment on Subscription.
    * @param {Object} infos
-   * @returns {Observable}
+   * @returns {Promise}
    */
-  public pushChunk(infos : IPushChunkInfos<unknown>) : Observable<void> {
-    return observableDefer(() => {
+  public pushChunk(infos : IPushChunkInfos<unknown>) : Promise<void> {
+    try {
       this.pushChunkSync(infos);
-      return observableOf(undefined);
-    });
+    } catch (err) {
+      return Promise.reject(err);
+    }
+    return Promise.resolve();
   }
 
   /**
    * Remove buffered data.
    * @param {number} start - start position, in seconds
    * @param {number} end - end position, in seconds
-   * @returns {Observable}
+   * @returns {Promise}
    */
-  public removeBuffer(start : number, end : number) : Observable<void> {
-    return observableDefer(() => {
-      this.removeBufferSync(start, end);
-      return observableOf(undefined);
-    });
+  public removeBuffer(start : number, end : number) : Promise<void> {
+    this.removeBufferSync(start, end);
+    return Promise.resolve();
   }
 
   /**
-   * Indicate that every chunks from a Segment has been given to pushChunk so
-   * far.
-   * This will update our internal Segment inventory accordingly.
-   * The returned Observable will emit and complete successively once the whole
-   * segment has been pushed and this indication is acknowledged.
    * @param {Object} infos
-   * @returns {Observable}
+   * @returns {Promise}
    */
-  public endOfSegment(_infos : IEndOfSegmentInfos) : Observable<void> {
-    return observableDefer(() => {
-      this._segmentInventory.completeSegment(_infos, this._buffered);
-      return observableOf(undefined);
-    });
+  public endOfSegment(infos : IEndOfSegmentInfos) : Promise<void> {
+    this._segmentInventory.completeSegment(infos, this._buffered);
+    return Promise.resolve();
   }
 
   /**
@@ -254,8 +184,7 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
     this._disableCurrentCues();
     this._buffer.remove(0, Infinity);
     this._buffered.remove(0, Infinity);
-    this._destroy$.next();
-    this._destroy$.complete();
+    this._canceller.cancel();
   }
 
   /**
@@ -270,7 +199,7 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
    *
    * /!\ This method won't add any data to the linked inventory.
    * Please use the `pushChunk` method for most use-cases.
-   * @param {Object} data
+   * @param {Object} infos
    * @returns {boolean}
    */
   public pushChunkSync(infos : IPushChunkInfos<unknown>) : void {
@@ -381,7 +310,7 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
    * Remove the current cue from being displayed.
    */
   private _disableCurrentCues() : void {
-    this._clearSizeUpdates$.next();
+    this._sizeUpdateCanceller.cancel();
     if (this._currentCues.length > 0) {
       for (let i = 0; i < this._currentCues.length; i++) {
         safelyRemoveChild(this._textTrackElement, this._currentCues[i].element);
@@ -392,7 +321,7 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
 
   /**
    * Display a new Cue. If one was already present, it will be replaced.
-   * @param {HTMLElement} element
+   * @param {HTMLElement} elements
    */
   private _displayCues(elements : HTMLElement[]) : void {
     const nothingChanged = this._currentCues.length === elements.length &&
@@ -405,7 +334,7 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
     // Remove and re-display everything
     // TODO More intelligent handling
 
-    this._clearSizeUpdates$.next();
+    this._sizeUpdateCanceller.cancel();
     for (let i = 0; i < this._currentCues.length; i++) {
       safelyRemoveChild(this._textTrackElement, this._currentCues[i].element);
     }
@@ -424,17 +353,80 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
                                element : HTMLElement; } => cue.resolution !== null);
 
     if (proportionalCues.length > 0) {
+      this._sizeUpdateCanceller = new TaskCanceller({ cancelOn: this._canceller.signal });
       const { TEXT_TRACK_SIZE_CHECKS_INTERVAL } = config.getCurrent();
       // update propertionally-sized elements periodically
-      onHeightWidthChange(this._textTrackElement, TEXT_TRACK_SIZE_CHECKS_INTERVAL)
-        .pipe(takeUntil(this._clearSizeUpdates$),
-              takeUntil(this._destroy$))
-        .subscribe(({ height, width }) => {
-          for (let i = 0; i < proportionalCues.length; i++) {
-            const { resolution, element } = proportionalCues[i];
-            updateProportionalElements(height, width, resolution, element);
-          }
-        });
+      const heightWidthRef = onHeightWidthChange(this._textTrackElement,
+                                                 TEXT_TRACK_SIZE_CHECKS_INTERVAL,
+                                                 this._sizeUpdateCanceller.signal);
+      heightWidthRef.onUpdate(({ height, width }) => {
+        for (let i = 0; i < proportionalCues.length; i++) {
+          const { resolution, element } = proportionalCues[i];
+          updateProportionalElements(height, width, resolution, element);
+        }
+      }, { clearSignal: this._sizeUpdateCanceller.signal,
+           emitCurrentValue: true });
+    }
+  }
+
+  /**
+   * Auto-refresh the display of subtitles according to the media element's
+   * position and events.
+   * @param {Object} cancellationSignal
+   */
+  private autoRefreshSubtitles(
+    cancellationSignal : CancellationSignal
+  ) : void {
+    let autoRefreshCanceller : TaskCanceller | null = null;
+    const { MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL } = config.getCurrent();
+
+    const startAutoRefresh = () => {
+      stopAutoRefresh();
+      autoRefreshCanceller = new TaskCanceller({ cancelOn: cancellationSignal });
+      const intervalId = setInterval(() => this.refreshSubtitles(),
+                                     MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL);
+      autoRefreshCanceller.signal.register(() => {
+        clearInterval(intervalId);
+      });
+      this.refreshSubtitles();
+    };
+
+    onSeeking(this._videoElement, () => {
+      stopAutoRefresh();
+      this._disableCurrentCues();
+    }, cancellationSignal);
+    onSeeked(this._videoElement, startAutoRefresh, cancellationSignal);
+    onEnded(this._videoElement, startAutoRefresh, cancellationSignal);
+
+    startAutoRefresh();
+    function stopAutoRefresh() {
+      if (autoRefreshCanceller !== null) {
+        autoRefreshCanceller.cancel();
+        autoRefreshCanceller = null;
+      }
+    }
+  }
+
+  /**
+   * Refresh current subtitles according to the current media element's
+   * position.
+   */
+  private refreshSubtitles() : void {
+    const { MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL } = config.getCurrent();
+    let time;
+    if (this._videoElement.paused || this._videoElement.playbackRate <= 0) {
+      time = this._videoElement.currentTime;
+    } else {
+      // to spread the time error, we divide the regular chosen interval.
+      time = Math.max(this._videoElement.currentTime +
+                       (MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL / 1000) / 2,
+                      0);
+    }
+    const cues = this._buffer.get(time);
+    if (cues.length === 0) {
+      this._disableCurrentCues();
+    } else {
+      this._displayCues(cues);
     }
   }
 }
