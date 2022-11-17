@@ -14,38 +14,24 @@
  * limitations under the License.
  */
 
-import {
-  finalize,
-  ignoreElements,
-  map,
-  merge as observableMerge,
-  Observable,
-  scan,
-  tap,
-  withLatestFrom,
-} from "rxjs";
-import isSeekingApproximate from "../../compat/is_seeking_approximate";
-import config from "../../config";
-import { MediaError } from "../../errors";
-import log from "../../log";
+import isSeekingApproximate from "../../../compat/is_seeking_approximate";
+import config from "../../../config";
+import { MediaError } from "../../../errors";
+import log from "../../../log";
 import Manifest, {
   Period,
-} from "../../manifest";
-import { getNextRangeGap } from "../../utils/ranges";
-import { IReadOnlySharedReference } from "../../utils/reference";
-import TaskCanceller from "../../utils/task_canceller";
+} from "../../../manifest";
+import { IPlayerError } from "../../../public_types";
+import EventEmitter from "../../../utils/event_emitter";
+import { getNextRangeGap } from "../../../utils/ranges";
+import { IReadOnlySharedReference } from "../../../utils/reference";
+import TaskCanceller from "../../../utils/task_canceller";
 import {
   IPlaybackObservation,
   PlaybackObserver,
-} from "../api";
-import { IBufferType } from "../segment_buffers";
-import EVENTS from "../stream/events_generators";
-import {
-  IStalledEvent,
-  IStallingSituation,
-  IUnstalledEvent,
-  IWarningEvent,
-} from "./types";
+} from "../../api";
+import { IBufferType } from "../../segment_buffers";
+import { IStallingSituation } from "../types";
 
 
 /**
@@ -54,70 +40,6 @@ import {
  */
 const EPSILON = 1 / 60;
 
-export interface ILockedStreamEvent {
-  /** Buffer type for which no segment will currently load. */
-  bufferType : IBufferType;
-  /** Period for which no segment will currently load. */
-  period : Period;
-}
-
-/**
- * Event indicating that a discontinuity has been found.
- * Each event for a `bufferType` and `period` combination replaces the previous
- * one.
- */
-export interface IDiscontinuityEvent {
-  /** Buffer type concerned by the discontinuity. */
-  bufferType : IBufferType;
-  /** Period concerned by the discontinuity. */
-  period : Period;
-  /**
-   * Close discontinuity time information.
-   * `null` if no discontinuity has been detected currently for that buffer
-   * type and Period.
-   */
-  discontinuity : IDiscontinuityTimeInfo | null;
-  /**
-   * Position at which the discontinuity was found.
-   * Can be important for when a current discontinuity's start is unknown.
-   */
-  position : number;
-}
-
-/** Information on a found discontinuity. */
-export interface IDiscontinuityTimeInfo {
-  /**
-   * Start time of the discontinuity.
-   * `undefined` for when the start is unknown but the discontinuity was
-   * currently encountered at the position we were in when this event was
-   * created.
-   */
-  start : number | undefined;
-  /**
-   * End time of the discontinuity, in seconds.
-   * If `null`, no further segment can be loaded for the corresponding Period.
-   */
-  end : number | null;
-}
-
-/**
- * Internally stored information about a known discontinuity in the audio or
- * video buffer.
- */
-interface IDiscontinuityStoredInfo {
-  /** Buffer type concerned by the discontinuity. */
-  bufferType : IBufferType;
-  /** Period concerned by the discontinuity. */
-  period : Period;
-  /** Discontinuity time information. */
-  discontinuity : IDiscontinuityTimeInfo;
-  /**
-   * Position at which the discontinuity was found.
-   * Can be important for when a current discontinuity's start is unknown.
-   */
-  position : number;
-}
-
 /**
  * Monitor playback, trying to avoid stalling situation.
  * If stopping the player to build buffer is needed, temporarily set the
@@ -125,105 +47,86 @@ interface IDiscontinuityStoredInfo {
  *
  * Emit "stalled" then "unstalled" respectively when an unavoidable stall is
  * encountered and exited.
- * @param {object} playbackObserver - emit the current playback conditions.
- * @param {Object} manifest - The Manifest of the currently-played content.
- * @param {Object} speed - The last speed set by the user
- * @param {Observable} lockedStream$ - Emit information on currently "locked"
- * streams.
- * @param {Observable} discontinuityUpdate$ - Observable emitting encountered
- * discontinuities for loaded Period and buffer types.
- * @returns {Observable}
  */
-export default function RebufferingController(
-  playbackObserver : PlaybackObserver,
-  manifest: Manifest | null,
-  speed : IReadOnlySharedReference<number>,
-  lockedStream$ : Observable<ILockedStreamEvent>,
-  discontinuityUpdate$: Observable<IDiscontinuityEvent>
-) : Observable<IStalledEvent | IUnstalledEvent | IWarningEvent> {
-  const initialDiscontinuitiesStore : IDiscontinuityStoredInfo[] = [];
+export default class RebufferingController
+  extends EventEmitter<IRebufferingControllerEvent> {
+
+  /** Emit the current playback conditions */
+  private _playbackObserver : PlaybackObserver;
+  private _manifest : Manifest | null;
+  private _speed : IReadOnlySharedReference<number>;
+  private _isStarted : boolean;
 
   /**
-   * Emit every known audio and video buffer discontinuities in chronological
+   * Every known audio and video buffer discontinuities in chronological
    * order (first ordered by Period's start, then by bufferType in any order.
    */
-  const discontinuitiesStore$ = discontinuityUpdate$.pipe(
-    withLatestFrom(playbackObserver.getReference().asObservable()),
-    scan(
-      (discontinuitiesStore, [evt, observation]) =>
-        updateDiscontinuitiesStore(discontinuitiesStore, evt, observation),
-      initialDiscontinuitiesStore));
+  private _discontinuitiesStore : IDiscontinuityStoredInfo[];
+
+  private _canceller : TaskCanceller;
 
   /**
-   * On some devices (right now only seen on Tizen), seeking through the
-   * `currentTime` property can lead to the browser re-seeking once the
-   * segments have been loaded to improve seeking performances (for
-   * example, by seeking right to an intra video frame).
-   * In that case, we risk being in a conflict with that behavior: if for
-   * example we encounter a small discontinuity at the position the browser
-   * seeks to, we will seek over it, the browser would seek back and so on.
-   *
-   * This variable allows to store the last known position we were seeking to
-   * so we can detect when the browser seeked back (to avoid performing another
-   * seek after that). When browsers seek back to a position behind a
-   * discontinuity, they are usually able to skip them without our help.
+   * @param {object} playbackObserver - emit the current playback conditions.
+   * @param {Object} manifest - The Manifest of the currently-played content.
+   * @param {Object} speed - The last speed set by the user
    */
-  let lastSeekingPosition : number | null = null;
+  constructor(
+    playbackObserver : PlaybackObserver,
+    manifest: Manifest | null,
+    speed : IReadOnlySharedReference<number>
+  ) {
+    super();
+    this._playbackObserver = playbackObserver;
+    this._manifest = manifest;
+    this._speed = speed;
+    this._discontinuitiesStore = [];
+    this._isStarted = false;
+    this._canceller = new TaskCanceller();
+  }
 
-  /**
-   * In some conditions (see `lastSeekingPosition`), we might want to not
-   * automatically seek over discontinuities because the browser might do it
-   * itself instead.
-   * In that case, we still want to perform the seek ourselves if the browser
-   * doesn't do it after sufficient time.
-   * This variable allows to store the timestamp at which a discontinuity began
-   * to be ignored.
-   */
-  let ignoredStallTimeStamp : number | null = null;
+  public start() : void {
+    if (this._isStarted) {
+      return;
+    }
+    this._isStarted = true;
 
-  let prevFreezingState : { attemptTimestamp : number } | null;
+    /**
+     * On some devices (right now only seen on Tizen), seeking through the
+     * `currentTime` property can lead to the browser re-seeking once the
+     * segments have been loaded to improve seeking performances (for
+     * example, by seeking right to an intra video frame).
+     * In that case, we risk being in a conflict with that behavior: if for
+     * example we encounter a small discontinuity at the position the browser
+     * seeks to, we will seek over it, the browser would seek back and so on.
+     *
+     * This variable allows to store the last known position we were seeking to
+     * so we can detect when the browser seeked back (to avoid performing another
+     * seek after that). When browsers seek back to a position behind a
+     * discontinuity, they are usually able to skip them without our help.
+     */
+    let lastSeekingPosition : number | null;
 
-  /**
-   * If we're rebuffering waiting on data of a "locked stream", seek into the
-   * Period handled by that stream to unlock the situation.
-   */
-  const unlock$ = lockedStream$.pipe(
-    withLatestFrom(playbackObserver.getReference().asObservable()),
-    tap(([lockedStreamEvt, observation]) => {
-      if (
-        !observation.rebuffering ||
-        observation.paused ||
-        speed.getValue() <= 0 || (
-          lockedStreamEvt.bufferType !== "audio" &&
-          lockedStreamEvt.bufferType !== "video"
-        )
-      ) {
-        return;
-      }
-      const currPos = observation.position;
-      const rebufferingPos = observation.rebuffering.position ?? currPos;
-      const lockedPeriodStart = lockedStreamEvt.period.start;
-      if (currPos < lockedPeriodStart &&
-          Math.abs(rebufferingPos - lockedPeriodStart) < 1)
-      {
-        log.warn("Init: rebuffering because of a future locked stream.\n" +
-                 "Trying to unlock by seeking to the next Period");
-        playbackObserver.setCurrentTime(lockedPeriodStart + 0.001);
-      }
-    }),
-    // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
-    // first type parameter as `any` instead of the perfectly fine `unknown`,
-    // leading to linter issues, as it forbids the usage of `any`.
-    // This is why we're disabling the eslint rule.
-    /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-    ignoreElements()
-  );
+    /**
+     * In some conditions (see `lastSeekingPosition`), we might want to not
+     * automatically seek over discontinuities because the browser might do it
+     * itself instead.
+     * In that case, we still want to perform the seek ourselves if the browser
+     * doesn't do it after sufficient time.
+     * This variable allows to store the timestamp at which a discontinuity began
+     * to be ignored.
+     */
+    let ignoredStallTimeStamp : number | null = null;
 
-  const playbackRateUpdater = new PlaybackRateUpdater(playbackObserver, speed);
+    const playbackRateUpdater = new PlaybackRateUpdater(this._playbackObserver,
+                                                        this._speed);
+    this._canceller.signal.register(() => {
+      playbackRateUpdater.dispose();
+    });
 
-  const stall$ = playbackObserver.getReference().asObservable().pipe(
-    withLatestFrom(discontinuitiesStore$),
-    map(([observation, discontinuitiesStore]) => {
+    let prevFreezingState : { attemptTimestamp : number } | null;
+
+    this._playbackObserver.listen((observation) => {
+      const discontinuitiesStore = this._discontinuitiesStore;
       const { buffered,
               position,
               readyState,
@@ -240,9 +143,8 @@ export default function RebufferingController(
         !observation.seeking &&
         isSeekingApproximate &&
         ignoredStallTimeStamp === null &&
-        lastSeekingPosition !== null &&
-        observation.position < lastSeekingPosition
-      ) {
+        lastSeekingPosition !== null && observation.position < lastSeekingPosition)
+      {
         log.debug("Init: the device appeared to have seeked back by itself.");
         const now = performance.now();
         ignoredStallTimeStamp = now;
@@ -261,8 +163,8 @@ export default function RebufferingController(
 
         if (now - referenceTimestamp > UNFREEZING_SEEK_DELAY) {
           log.warn("Init: trying to seek to un-freeze player");
-          playbackObserver.setCurrentTime(
-            playbackObserver.getCurrentTime() + UNFREEZING_DELTA_POSITION);
+          this._playbackObserver.setCurrentTime(
+            this._playbackObserver.getCurrentTime() + UNFREEZING_DELTA_POSITION);
           prevFreezingState = { attemptTimestamp: now };
         }
 
@@ -272,8 +174,8 @@ export default function RebufferingController(
           } else {
             playbackRateUpdater.startRebuffering();
           }
-          return { type: "stalled" as const,
-                   value: "freezing" as const };
+          this.trigger("stalled", "freezing");
+          return;
         }
       } else {
         prevFreezingState = null;
@@ -291,11 +193,11 @@ export default function RebufferingController(
           } else {
             reason = "not-ready";
           }
-          return { type: "stalled" as const,
-                   value: reason };
+          this.trigger("stalled", reason);
+          return ;
         }
-        return { type: "unstalled" as const,
-                 value: null };
+        this.trigger("unstalled", null);
+        return ;
       }
 
       // We want to separate a stall situation when a seek is due to a seek done
@@ -310,8 +212,8 @@ export default function RebufferingController(
         if (now - ignoredStallTimeStamp < FORCE_DISCONTINUITY_SEEK_DELAY) {
           playbackRateUpdater.stopRebuffering();
           log.debug("Init: letting the device get out of a stall by itself");
-          return { type: "stalled" as const,
-                   value: stalledReason };
+          this.trigger("stalled", stalledReason);
+          return ;
         } else {
           log.warn("Init: ignored stall for too long, checking discontinuity",
                    now - ignoredStallTimeStamp);
@@ -321,9 +223,9 @@ export default function RebufferingController(
       ignoredStallTimeStamp = null;
       playbackRateUpdater.startRebuffering();
 
-      if (manifest === null) {
-        return { type: "stalled" as const,
-                 value: stalledReason };
+      if (this._manifest === null) {
+        this.trigger("stalled", stalledReason);
+        return ;
       }
 
       /** Position at which data is awaited. */
@@ -331,22 +233,23 @@ export default function RebufferingController(
 
       if (stalledPosition !== null &&
           stalledPosition !== undefined &&
-          speed.getValue() > 0)
+          this._speed.getValue() > 0)
       {
         const skippableDiscontinuity = findSeekableDiscontinuity(discontinuitiesStore,
-                                                                 manifest,
+                                                                 this._manifest,
                                                                  stalledPosition);
         if (skippableDiscontinuity !== null) {
           const realSeekTime = skippableDiscontinuity + 0.001;
-          if (realSeekTime <= playbackObserver.getCurrentTime()) {
+          if (realSeekTime <= this._playbackObserver.getCurrentTime()) {
             log.info("Init: position to seek already reached, no seeking",
-                     playbackObserver.getCurrentTime(), realSeekTime);
+                     this._playbackObserver.getCurrentTime(), realSeekTime);
           } else {
             log.warn("SA: skippable discontinuity found in the stream",
                      position, realSeekTime);
-            playbackObserver.setCurrentTime(realSeekTime);
-            return EVENTS.warning(generateDiscontinuityError(stalledPosition,
-                                                             realSeekTime));
+            this._playbackObserver.setCurrentTime(realSeekTime);
+            this.trigger("warning", generateDiscontinuityError(stalledPosition,
+                                                               realSeekTime));
+            return;
           }
         }
       }
@@ -362,44 +265,89 @@ export default function RebufferingController(
       // case of small discontinuity in the content.
       const nextBufferRangeGap = getNextRangeGap(buffered, freezePosition);
       if (
-        speed.getValue() > 0 &&
+        this._speed.getValue() > 0 &&
         nextBufferRangeGap < BUFFER_DISCONTINUITY_THRESHOLD
       ) {
         const seekTo = (freezePosition + nextBufferRangeGap + EPSILON);
-        if (playbackObserver.getCurrentTime() < seekTo) {
+        if (this._playbackObserver.getCurrentTime() < seekTo) {
           log.warn("Init: discontinuity encountered inferior to the threshold",
                    freezePosition, seekTo, BUFFER_DISCONTINUITY_THRESHOLD);
-          playbackObserver.setCurrentTime(seekTo);
-          return EVENTS.warning(generateDiscontinuityError(freezePosition, seekTo));
+          this._playbackObserver.setCurrentTime(seekTo);
+          this.trigger("warning", generateDiscontinuityError(freezePosition, seekTo));
+          return;
         }
       }
 
       // Are we in a discontinuity between periods ? -> Seek at the beginning of the
       //                                                next period
-      for (let i = manifest.periods.length - 2; i >= 0; i--) {
-        const period = manifest.periods[i];
+      for (let i = this._manifest.periods.length - 2; i >= 0; i--) {
+        const period = this._manifest.periods[i];
         if (period.end !== undefined && period.end <= freezePosition) {
-          if (manifest.periods[i + 1].start > freezePosition &&
-              manifest.periods[i + 1].start > playbackObserver.getCurrentTime())
+          if (this._manifest.periods[i + 1].start > freezePosition &&
+              this._manifest.periods[i + 1].start >
+                this._playbackObserver.getCurrentTime())
           {
-            const nextPeriod = manifest.periods[i + 1];
-            playbackObserver.setCurrentTime(nextPeriod.start);
-            return EVENTS.warning(generateDiscontinuityError(freezePosition,
-                                                             nextPeriod.start));
+            const nextPeriod = this._manifest.periods[i + 1];
+            this._playbackObserver.setCurrentTime(nextPeriod.start);
+            this.trigger("warning", generateDiscontinuityError(freezePosition,
+                                                               nextPeriod.start));
+            return;
 
           }
           break;
         }
       }
 
-      return { type: "stalled" as const,
-               value: stalledReason };
-    }));
+      this.trigger("stalled", stalledReason);
+    }, { includeLastObservation: true, clearSignal: this._canceller.signal });
+  }
 
-  return observableMerge(unlock$, stall$)
-    .pipe(finalize(() =>  {
-      playbackRateUpdater.dispose();
-    }));
+  public updateDiscontinuityInfo(evt: IDiscontinuityEvent) : void {
+    if (!this._isStarted) {
+      this.start();
+    }
+    const lastObservation = this._playbackObserver.getReference().getValue();
+    updateDiscontinuitiesStore(this._discontinuitiesStore, evt, lastObservation);
+  }
+
+  /**
+   * Function to call when a Stream is currently locked, i.e. we cannot load
+   * segments for the corresponding Period and buffer type until it is seeked
+   * to.
+   * @param {string} bufferType - Buffer type for which no segment will
+   * currently load.
+   * @param {Object} period - Period for which no segment will currently load.
+   */
+  public onLockedStream(bufferType : IBufferType, period : Period) : void {
+    if (!this._isStarted) {
+      this.start();
+    }
+    const observation = this._playbackObserver.getReference().getValue();
+    if (
+      !observation.rebuffering ||
+      observation.paused ||
+      this._speed.getValue() <= 0 || (
+        bufferType !== "audio" &&
+        bufferType !== "video"
+      )
+    ) {
+      return;
+    }
+    const currPos = observation.position;
+    const rebufferingPos = observation.rebuffering.position ?? currPos;
+    const lockedPeriodStart = period.start;
+    if (currPos < lockedPeriodStart &&
+        Math.abs(rebufferingPos - lockedPeriodStart) < 1)
+    {
+      log.warn("Init: rebuffering because of a future locked stream.\n" +
+               "Trying to unlock by seeking to the next Period");
+      this._playbackObserver.setCurrentTime(lockedPeriodStart + 0.001);
+    }
+  }
+
+  public destroy() : void {
+    this._canceller.cancel();
+  }
 }
 
 /**
@@ -483,7 +431,7 @@ function updateDiscontinuitiesStore(
   discontinuitiesStore : IDiscontinuityStoredInfo[],
   evt : IDiscontinuityEvent,
   observation : IPlaybackObservation
-) : IDiscontinuityStoredInfo[] {
+) : void {
   // First, perform clean-up of old discontinuities
   while (discontinuitiesStore.length > 0 &&
          discontinuitiesStore[0].period.end !== undefined &&
@@ -494,7 +442,7 @@ function updateDiscontinuitiesStore(
 
   const { period, bufferType } = evt;
   if (bufferType !== "audio" && bufferType !== "video") {
-    return discontinuitiesStore;
+    return ;
   }
 
   for (let i = 0; i < discontinuitiesStore.length; i++) {
@@ -505,19 +453,19 @@ function updateDiscontinuitiesStore(
         } else {
           discontinuitiesStore[i] = evt;
         }
-        return discontinuitiesStore;
+        return ;
       }
     } else if (discontinuitiesStore[i].period.start > period.start) {
       if (eventContainsDiscontinuity(evt)) {
         discontinuitiesStore.splice(i, 0, evt);
       }
-      return discontinuitiesStore;
+      return ;
     }
   }
   if (eventContainsDiscontinuity(evt)) {
     discontinuitiesStore.push(evt);
   }
-  return discontinuitiesStore;
+  return ;
 }
 
 /**
@@ -618,4 +566,67 @@ class PlaybackRateUpdater {
       this._playbackObserver.setPlaybackRate(lastSpeed);
     }, { clearSignal: this._speedUpdateCanceller.signal, emitCurrentValue: true });
   }
+}
+
+export interface IRebufferingControllerEvent {
+  stalled : IStallingSituation;
+  unstalled : null;
+  warning : IPlayerError;
+}
+
+/**
+ * Event indicating that a discontinuity has been found.
+ * Each event for a `bufferType` and `period` combination replaces the previous
+ * one.
+ */
+export interface IDiscontinuityEvent {
+  /** Buffer type concerned by the discontinuity. */
+  bufferType : IBufferType;
+  /** Period concerned by the discontinuity. */
+  period : Period;
+  /**
+   * Close discontinuity time information.
+   * `null` if no discontinuity has been detected currently for that buffer
+   * type and Period.
+   */
+  discontinuity : IDiscontinuityTimeInfo | null;
+  /**
+   * Position at which the discontinuity was found.
+   * Can be important for when a current discontinuity's start is unknown.
+   */
+  position : number;
+}
+
+/** Information on a found discontinuity. */
+export interface IDiscontinuityTimeInfo {
+  /**
+   * Start time of the discontinuity.
+   * `undefined` for when the start is unknown but the discontinuity was
+   * currently encountered at the position we were in when this event was
+   * created.
+   */
+  start : number | undefined;
+  /**
+   * End time of the discontinuity, in seconds.
+   * If `null`, no further segment can be loaded for the corresponding Period.
+   */
+  end : number | null;
+}
+
+/**
+ * Internally stored information about a known discontinuity in the audio or
+ * video buffer.
+ */
+interface IDiscontinuityStoredInfo {
+  /** Buffer type concerned by the discontinuity. */
+  bufferType : IBufferType;
+  /** Period concerned by the discontinuity. */
+  period : Period;
+  /** Discontinuity time information. */
+  discontinuity : IDiscontinuityTimeInfo;
+  /**
+   * Position at which the discontinuity was found.
+   * Can be important for when a current discontinuity's start is unknown.
+   */
+  position : number;
 }

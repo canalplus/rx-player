@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import Manifest from "../../manifest";
+import Manifest from "../../../manifest";
 import createSharedReference, {
   IReadOnlySharedReference,
-} from "../../utils/reference";
-import { CancellationSignal } from "../../utils/task_canceller";
+} from "../../../utils/reference";
+import { CancellationSignal } from "../../../utils/task_canceller";
 import {
   IPlaybackObservation,
   IReadOnlyPlaybackObserver,
   PlaybackObserver,
-} from "../api";
-import { IStreamOrchestratorPlaybackObservation } from "../stream";
+} from "../../api";
+import { IStreamOrchestratorPlaybackObservation } from "../../stream";
 
 /** Arguments needed to create the Stream's version of the PlaybackObserver. */
 export interface IStreamPlaybackObserverArguments {
