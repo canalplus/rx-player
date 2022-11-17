@@ -93,8 +93,8 @@ function findSupportedEvent(
  */
 function eventPrefixed(eventNames : string[], prefixes? : string[]) : string[] {
   return eventNames.reduce((parent : string[], name : string) =>
-    parent.concat((prefixes == null ? BROWSER_PREFIXES :
-                                      prefixes)
+    parent.concat((prefixes === undefined ? BROWSER_PREFIXES :
+                                            prefixes)
       .map((p) => p + name)), []);
 }
 
@@ -509,33 +509,38 @@ const onTextTrackChanges$ =
 
 /**
  * @param {MediaSource} mediaSource
- * @returns {Observable}
+ * @param {Function} listener
+ * @param {Object} cancelSignal
  */
-const onSourceOpen$ = compatibleListener(["sourceopen", "webkitsourceopen"]);
+const onSourceOpen = createCompatibleEventListener(["sourceopen", "webkitsourceopen"]);
 
 /**
  * @param {MediaSource} mediaSource
- * @returns {Observable}
+ * @param {Function} listener
+ * @param {Object} cancelSignal
  */
-const onSourceClose$ = compatibleListener(["sourceclose", "webkitsourceclose"]);
+const onSourceClose = createCompatibleEventListener(["sourceclose", "webkitsourceclose"]);
 
 /**
  * @param {MediaSource} mediaSource
- * @returns {Observable}
+ * @param {Function} listener
+ * @param {Object} cancelSignal
  */
-const onSourceEnded$ = compatibleListener(["sourceended", "webkitsourceended"]);
-
-/**
- * @param {SourceBuffer} sourceBuffer
- * @returns {Observable}
- */
-const onUpdate$ = compatibleListener(["update"]);
+const onSourceEnded = createCompatibleEventListener(["sourceended", "webkitsourceended"]);
 
 /**
  * @param {MediaSource} mediaSource
- * @returns {Observable}
+ * @param {Function} listener
+ * @param {Object} cancelSignal
  */
-const onRemoveSourceBuffers$ = compatibleListener(["onremovesourcebuffer"]);
+const onSourceBufferUpdate = createCompatibleEventListener(["update"]);
+
+/**
+ * @param {SourceBufferList} sourceBuffers
+ * @param {Function} listener
+ * @param {Object} cancelSignal
+ */
+const onRemoveSourceBuffers = createCompatibleEventListener(["removesourcebuffer"]);
 
 /**
  * @param {HTMLMediaElement} mediaElement
@@ -624,15 +629,15 @@ export {
   onKeyMessage$,
   onKeyStatusesChange$,
   onLoadedMetadata$,
-  onRemoveSourceBuffers$,
+  onRemoveSourceBuffers,
   onSeeked,
   onSeeked$,
   onSeeking,
   onSeeking$,
-  onSourceClose$,
-  onSourceEnded$,
-  onSourceOpen$,
+  onSourceClose,
+  onSourceEnded,
+  onSourceOpen,
   onTextTrackChanges$,
   onTimeUpdate$,
-  onUpdate$,
+  onSourceBufferUpdate,
 };

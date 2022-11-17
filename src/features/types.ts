@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-import { Observable } from "rxjs";
 // eslint-disable-next-line max-len
 import MediaElementTrackChoiceManager from "../core/api/tracks_management/media_element_track_choice_manager";
 import type ContentDecryptor from "../core/decrypt";
-import {
-  IDirectfileEvent,
-  IDirectFileOptions,
-} from "../core/init/initialize_directfile";
+import DirectFileContentInitializer from "../core/init/directfile_content_initializer";
 import { SegmentBuffer } from "../core/segment_buffers";
 import {
   IDashParserResponse,
@@ -34,8 +30,7 @@ import {
 } from "../parsers/texttracks";
 import { ITransportFunction } from "../transports";
 
-export type IDirectFileInit = (args : IDirectFileOptions) =>
-                                Observable<IDirectfileEvent>;
+export type IDirectFileInit = typeof DirectFileContentInitializer;
 
 export type IContentDecryptorClass = typeof ContentDecryptor;
 
