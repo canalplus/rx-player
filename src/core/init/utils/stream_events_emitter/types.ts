@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IStreamEventData } from "../../../public_types";
+import { IStreamEventData } from "../../../../public_types";
 
 export interface IStreamEventPayload {
   id?: string | undefined;
@@ -44,21 +44,3 @@ export interface IPublicStreamEvent {
   end: number;
   onExit?: () => void;
 }
-
-/** Event emitted when a stream event is encountered. */
-export interface IStreamEventEvent {
-  type: "stream-event";
-  value: IPublicStreamEvent |
-         IPublicNonFiniteStreamEvent;
-}
-
-/** Event emitted when a stream event has just been skipped. */
-export interface IStreamEventSkipEvent {
-  type: "stream-event-skip";
-  value: IPublicStreamEvent |
-         IPublicNonFiniteStreamEvent;
-}
-
-/** Events sent by the `streamEventsEmitter`. */
-export type IStreamEvent = IStreamEventEvent |
-                           IStreamEventSkipEvent;
