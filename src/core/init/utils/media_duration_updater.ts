@@ -15,32 +15,19 @@
  */
 
 import {
-  combineLatest as observableCombineLatest,
-  distinctUntilChanged,
-  EMPTY,
-  fromEvent as observableFromEvent,
-  interval as observableInterval,
-  map,
-  merge as observableMerge,
-  mergeMap,
-  Observable,
-  of as observableOf,
-  startWith,
-  Subscription,
-  switchMap,
-  timer,
-} from "rxjs";
-import {
-  onSourceOpen$,
-  onSourceClose$,
-  onSourceEnded$,
-} from "../../compat/event_listeners";
-import log from "../../log";
-import Manifest from "../../manifest";
-import { fromEvent } from "../../utils/event_emitter";
+  onSourceOpen,
+  onSourceEnded,
+  onSourceClose,
+} from "../../../compat/event_listeners";
+import log from "../../../log";
+import Manifest from "../../../manifest";
 import createSharedReference, {
+  IReadOnlySharedReference,
   ISharedReference,
-} from "../../utils/reference";
+} from "../../../utils/reference";
+import TaskCanceller, {
+  CancellationSignal,
+} from "../../../utils/task_canceller";
 
 /** Number of seconds in a regular year. */
 const YEAR_IN_SECONDS = 365 * 24 * 3600;
@@ -50,14 +37,15 @@ const YEAR_IN_SECONDS = 365 * 24 * 3600;
  * @class MediaDurationUpdater
  */
 export default class MediaDurationUpdater {
-  private _subscription : Subscription;
+  private _canceller : TaskCanceller;
+
   /**
    * The last known audio Adaptation (i.e. track) chosen for the last Period.
    * Useful to determinate the duration of the current content.
    * `undefined` if the audio track for the last Period has never been known yet.
    * `null` if there are no chosen audio Adaptation.
    */
-  private _lastKnownDuration : ISharedReference<number | undefined>;
+  private _currentKnownDuration : ISharedReference<number | undefined>;
 
   /**
    * Create a new `MediaDurationUpdater` that will keep the given MediaSource's
@@ -69,30 +57,74 @@ export default class MediaDurationUpdater {
    * pushed.
    */
   constructor(manifest : Manifest, mediaSource : MediaSource) {
-    this._lastKnownDuration = createSharedReference(undefined);
-    this._subscription = isMediaSourceOpened$(mediaSource).pipe(
-      switchMap((canUpdate) =>
-        canUpdate ? observableCombineLatest([this._lastKnownDuration.asObservable(),
-                                             fromEvent(manifest, "manifestUpdate")
-                                               .pipe(startWith(null))]) :
-                    EMPTY
-      ),
-      switchMap(([lastKnownDuration]) =>
-        areSourceBuffersUpdating$(mediaSource.sourceBuffers).pipe(
-          switchMap((areSBUpdating) => {
-            return areSBUpdating ? EMPTY :
-                                   recursivelyTryUpdatingDuration();
-            function recursivelyTryUpdatingDuration() : Observable<never> {
-              const res = setMediaSourceDuration(mediaSource,
-                                                 manifest,
-                                                 lastKnownDuration);
-              if (res === MediaSourceDurationUpdateStatus.Success) {
-                return EMPTY;
-              }
-              return timer(2000)
-                .pipe(mergeMap(() => recursivelyTryUpdatingDuration()));
-            }
-          })))).subscribe();
+    const canceller = new TaskCanceller();
+    const currentKnownDuration = createSharedReference(undefined);
+
+    this._canceller = canceller;
+    this._currentKnownDuration = currentKnownDuration;
+
+    const isMediaSourceOpened = createMediaSourceOpenReference(mediaSource,
+                                                               this._canceller.signal);
+
+    /** TaskCanceller triggered each time the MediaSource open status changes. */
+    let msUpdateCanceller = new TaskCanceller({ cancelOn: this._canceller.signal });
+
+    isMediaSourceOpened.onUpdate(onMediaSourceOpenedStatusChanged,
+                                 { emitCurrentValue: true,
+                                   clearSignal: this._canceller.signal });
+
+
+    function onMediaSourceOpenedStatusChanged() {
+      msUpdateCanceller.cancel();
+      if (!isMediaSourceOpened.getValue()) {
+        return;
+      }
+      msUpdateCanceller = new TaskCanceller({ cancelOn: canceller.signal });
+
+      /** TaskCanceller triggered each time the content's duration may have change */
+      let durationChangeCanceller = new TaskCanceller({
+        cancelOn: msUpdateCanceller.signal,
+      });
+
+      const reSetDuration = () => {
+        durationChangeCanceller.cancel();
+        durationChangeCanceller = new TaskCanceller({
+          cancelOn: msUpdateCanceller.signal,
+        });
+        onDurationMayHaveChanged(durationChangeCanceller.signal);
+      };
+
+      currentKnownDuration.onUpdate(reSetDuration,
+                                    { emitCurrentValue: false,
+                                      clearSignal: msUpdateCanceller.signal });
+
+      manifest.addEventListener("manifestUpdate",
+                                reSetDuration,
+                                msUpdateCanceller.signal);
+
+      onDurationMayHaveChanged(durationChangeCanceller.signal);
+    }
+
+    function onDurationMayHaveChanged(cancelSignal : CancellationSignal) {
+      const areSourceBuffersUpdating = createSourceBuffersUpdatingReference(
+        mediaSource.sourceBuffers,
+        cancelSignal
+      );
+
+      /** TaskCanceller triggered each time SourceBuffers' updating status changes */
+      let sourceBuffersUpdatingCanceller = new TaskCanceller({ cancelOn: cancelSignal });
+      return areSourceBuffersUpdating.onUpdate((areUpdating) => {
+        sourceBuffersUpdatingCanceller.cancel();
+        sourceBuffersUpdatingCanceller = new TaskCanceller({ cancelOn: cancelSignal });
+        if (areUpdating) {
+          return;
+        }
+        recursivelyForceDurationUpdate(mediaSource,
+                                       manifest,
+                                       currentKnownDuration.getValue(),
+                                       cancelSignal);
+      }, { clearSignal: cancelSignal, emitCurrentValue: true });
+    }
   }
 
   /**
@@ -107,7 +139,7 @@ export default class MediaDurationUpdater {
   public updateKnownDuration(
     newDuration : number | undefined
   ) : void {
-    this._lastKnownDuration.setValue(newDuration);
+    this._currentKnownDuration.setValueIfChanged(newDuration);
   }
 
   /**
@@ -116,7 +148,7 @@ export default class MediaDurationUpdater {
    * `MediaDurationUpdater`.
    */
   public stop() {
-    this._subscription.unsubscribe();
+    this._canceller.cancel();
   }
 }
 
@@ -221,50 +253,103 @@ const enum MediaSourceDurationUpdateStatus {
 }
 
 /**
- * Returns an Observable which will emit only when all the SourceBuffers ended
- * all pending updates.
+ * Returns an `ISharedReference` wrapping a boolean that tells if all the
+ * SourceBuffers ended all pending updates.
  * @param {SourceBufferList} sourceBuffers
- * @returns {Observable}
+ * @param {Object} cancelSignal
+ * @returns {Object}
  */
-function areSourceBuffersUpdating$(
-  sourceBuffers: SourceBufferList
-) : Observable<boolean> {
+function createSourceBuffersUpdatingReference(
+  sourceBuffers : SourceBufferList,
+  cancelSignal : CancellationSignal
+) : IReadOnlySharedReference<boolean> {
+  // const areUpdating = createSharedReference(
   if (sourceBuffers.length === 0) {
-    return observableOf(false);
+    const notOpenedRef = createSharedReference(false);
+    notOpenedRef.finish();
+    return notOpenedRef;
   }
-  const sourceBufferUpdatingStatuses : Array<Observable<boolean>> = [];
+
+  const areUpdatingRef = createSharedReference(false);
+  reCheck();
 
   for (let i = 0; i < sourceBuffers.length; i++) {
     const sourceBuffer = sourceBuffers[i];
-    sourceBufferUpdatingStatuses.push(
-      observableMerge(
-        observableFromEvent(sourceBuffer, "updatestart").pipe(map(() => true)),
-        observableFromEvent(sourceBuffer, "update").pipe(map(() => false)),
-        observableInterval(500).pipe(map(() => sourceBuffer.updating))
-      ).pipe(
-        startWith(sourceBuffer.updating),
-        distinctUntilChanged()
-      )
-    );
+    sourceBuffer.addEventListener("updatestart", reCheck);
+    sourceBuffer.addEventListener("update", reCheck);
+    cancelSignal.register(() => {
+      sourceBuffer.removeEventListener("updatestart", reCheck);
+      sourceBuffer.removeEventListener("update", reCheck);
+    });
   }
-  return observableCombineLatest(sourceBufferUpdatingStatuses).pipe(
-    map((areUpdating) => {
-      return areUpdating.some((isUpdating) => isUpdating);
-    }),
-    distinctUntilChanged());
+
+  return areUpdatingRef;
+
+  function reCheck() {
+    for (let i = 0; i < sourceBuffers.length; i++) {
+      const sourceBuffer = sourceBuffers[i];
+      if (sourceBuffer.updating) {
+        areUpdatingRef.setValueIfChanged(true);
+        return;
+      }
+    }
+    areUpdatingRef.setValueIfChanged(false);
+  }
 }
 
 /**
- * Emit a boolean that tells if the media source is opened or not.
+ * Returns an `ISharedReference` wrapping a boolean that tells if the media
+ * source is opened or not.
  * @param {MediaSource} mediaSource
+ * @param {Object} cancelSignal
  * @returns {Object}
  */
-function isMediaSourceOpened$(mediaSource: MediaSource): Observable<boolean> {
-  return observableMerge(onSourceOpen$(mediaSource).pipe(map(() => true)),
-                         onSourceEnded$(mediaSource).pipe(map(() => false)),
-                         onSourceClose$(mediaSource).pipe(map(() => false))
-  ).pipe(
-    startWith(mediaSource.readyState === "open"),
-    distinctUntilChanged()
-  );
+function createMediaSourceOpenReference(
+  mediaSource : MediaSource,
+  cancelSignal : CancellationSignal
+): IReadOnlySharedReference<boolean> {
+  const isMediaSourceOpen = createSharedReference(mediaSource.readyState === "open");
+  onSourceOpen(mediaSource, () => {
+    isMediaSourceOpen.setValueIfChanged(true);
+  }, cancelSignal);
+  onSourceEnded(mediaSource, () => {
+    isMediaSourceOpen.setValueIfChanged(false);
+  }, cancelSignal);
+  onSourceClose(mediaSource, () => {
+    isMediaSourceOpen.setValueIfChanged(false);
+  }, cancelSignal);
+  cancelSignal.register(() => {
+    isMediaSourceOpen.finish();
+  });
+  return isMediaSourceOpen;
+}
+
+/**
+ * Immediately tries to set the MediaSource's duration to the most appropriate
+ * one according to the Manifest and duration given.
+ *
+ * If it fails, wait 2 seconds and retries.
+ *
+ * @param {MediaSource} mediaSource
+ * @param {Object} manifest
+ * @param {number|undefined} duration
+ * @param {Object} cancelSignal
+ */
+function recursivelyForceDurationUpdate(
+  mediaSource : MediaSource,
+  manifest : Manifest,
+  duration : number | undefined,
+  cancelSignal : CancellationSignal
+) : void {
+  const res = setMediaSourceDuration(mediaSource, manifest, duration);
+  if (res === MediaSourceDurationUpdateStatus.Success) {
+    return ;
+  }
+  const timeoutId = setTimeout(() => {
+    unregisterClear();
+    recursivelyForceDurationUpdate(mediaSource, manifest, duration, cancelSignal);
+  }, 2000);
+  const unregisterClear = cancelSignal.register(() => {
+    clearTimeout(timeoutId);
+  });
 }

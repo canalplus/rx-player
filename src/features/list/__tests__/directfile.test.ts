@@ -19,10 +19,11 @@
 
 // eslint-disable-next-line max-len
 import mediaElementTrackChoiceManager from "../../../core/api/tracks_management/media_element_track_choice_manager";
-import initDirectFile from "../../../core/init/initialize_directfile";
+import initDirectFile from "../../../core/init/directfile_content_initializer";
 import addDirectfileFeature from "../directfile";
 
-jest.mock("../../../core/init/initialize_directfile", () => ({
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
+jest.mock("../../../core/init/directfile_content_initializer", () => ({
   __esModule: true as const,
   default: jest.fn(),
 }));
