@@ -107,9 +107,9 @@ export default class DashWasmParser {
    * future improvements.
    */
   private _isParsing : boolean;
+
   /**
    * Create a new `DashWasmParser`.
-   * @param {object} opts
    */
   constructor() {
     this._parsersStack = new ParsersStack();

@@ -15,7 +15,7 @@
  */
 
 import { MediaSource_ } from "../../../compat";
-import { resetMediaSource } from "../../../core/init/create_media_source";
+import { resetMediaSource } from "../../../core/init/utils/create_media_source";
 import { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implementations";
 import log from "../../../log";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
