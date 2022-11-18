@@ -22,7 +22,7 @@ import { CancellationSignal } from "./task_canceller";
 
 /**
  * A value behind a shared reference, meaning that any update to its value from
- * anywhere can be retrieved from any other parts of the code in posession of
+ * anywhere can be retrieved from any other parts of the code in possession of
  * the same `ISharedReference`.
  *
  * @example
@@ -92,12 +92,12 @@ export interface ISharedReference<T> {
    * reference is updated.
    * @param {Function} cb - Callback to be called each time the reference is
    * updated. Takes as first argument its new value and in second argument a
-   * callback allowing to unregister the callback.
+   * function allowing to unregister the update listening callback.
    * @param {Object} [options]
    * @param {Object} [options.clearSignal] - Allows to provide a
    * CancellationSignal which will unregister the callback when it emits.
    * @param {boolean} [options.emitCurrentValue] - If `true`, the callback will
-   * also be immediately called with the current value.
+   * also be immediately (synchronously) called with the current value.
    */
   onUpdate(
     cb : (val : T, stopListening : () => void) => void,
@@ -115,6 +115,16 @@ export interface ISharedReference<T> {
    *
    * This method can be used as a lighter weight alternative to `onUpdate` when
    * just waiting that the stored value becomes defined.
+   * As such, it is an explicit equivalent to something like:
+   * ```js
+   * myReference.onUpdate((newVal, stopListening) => {
+   *  if (newVal !== undefined) {
+   *    stopListening();
+   *
+   *    // ... do the logic
+   *  }
+   * }, { emitCurrentValue: true });
+   * ```
    * @param {Function} cb - Callback to be called each time the reference is
    * updated. Takes the new value in argument.
    * @param {Object} [options]
@@ -138,6 +148,11 @@ export interface ISharedReference<T> {
 /**
  * An `ISharedReference` which can only be read and not updated.
  *
+ * Because an `ISharedReference` is structurally compatible to a
+ * `IReadOnlySharedReference`, and because of TypeScript variance rules, it can
+ * be upcasted into a `IReadOnlySharedReference` at any time to make it clear in
+ * the code that some logic is not supposed to update the referenced value.
+ *
  * @example
  * ```ts
  * const myReference : ISharedReference<number> = createSharedReference(4);
@@ -151,11 +166,6 @@ export interface ISharedReference<T> {
  * myReference.setValue(12);
  * shouldOnlyReadIt(myReference); // output: "current value: 12"
  * ```
- *
- * Because an `ISharedReference` is structurally compatible to a
- * `IReadOnlySharedReference`, and because of TypeScript variance rules, it can
- * be upcasted into a `IReadOnlySharedReference` at any time to make it clear in
- * the code that some logic is not supposed to update the referenced value.
  */
 export type IReadOnlySharedReference<T> =
   Pick<ISharedReference<T>,
@@ -357,16 +367,12 @@ export default function createSharedReference<T>(initialValue : T) : ISharedRefe
       options? : { clearSignal?: CancellationSignal | undefined } |
                  undefined
     ) : void {
-      if (value !== undefined) {
-        cb(value as Exclude<T, undefined>);
-      } else if (!isFinished) {
-        this.onUpdate((val : T, stopListening) => {
-          if (val !== undefined) {
-            stopListening();
-            cb(value as Exclude<T, undefined>);
-          }
-        }, { clearSignal: options?.clearSignal });
-      }
+      this.onUpdate((val : T, stopListening) => {
+        if (val !== undefined) {
+          stopListening();
+          cb(value as Exclude<T, undefined>);
+        }
+      }, { clearSignal: options?.clearSignal, emitCurrentValue: true });
     },
 
     /**
