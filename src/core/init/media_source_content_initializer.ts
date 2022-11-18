@@ -21,13 +21,9 @@ import log from "../../log";
 import Manifest from "../../manifest";
 import {
   IKeySystemOption,
-  ILoadedManifestFormat,
   IPlayerError,
 } from "../../public_types";
-import {
-  IManifestParserResult,
-  ITransportPipelines,
-} from "../../transports";
+import { ITransportPipelines } from "../../transports";
 import assert from "../../utils/assert";
 import assertUnreachable from "../../utils/assert_unreachable";
 import objectAssign from "../../utils/object_assign";
@@ -36,7 +32,7 @@ import createSharedReference, {
   ISharedReference,
 } from "../../utils/reference";
 import TaskCanceller, {
-  CancellationError, CancellationSignal,
+  CancellationSignal,
 } from "../../utils/task_canceller";
 import AdaptiveRepresentationSelector, {
   IAdaptiveRepresentationSelectorArguments,
@@ -71,9 +67,6 @@ import getInitialTime, {
 import getLoadedReference from "./utils/get_loaded_reference";
 import performInitialSeekAndPlay from "./utils/initial_seek_and_play";
 import initializeContentDecryption from "./utils/initialize_content_decryption";
-import manifestUpdateScheduler, {
-  IManifestUpdateScheduler,
-} from "./utils/manifest_update_scheduler";
 import MediaDurationUpdater from "./utils/media_duration_updater";
 import RebufferingController from "./utils/rebuffering_controller";
 import streamEventsEmitter from "./utils/stream_events_emitter";
@@ -104,7 +97,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * Promise resolving with the Manifest once it has been initially loaded.
    * `null` if the load task has not started yet.
    */
-  private _initialManifestProm : Promise<IManifestParserResult> | null;
+  private _initialManifestProm : Promise<Manifest> | null;
 
   /**
    * Create a new `MediaSourceContentInitializer`, associated to the given
@@ -116,9 +109,14 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     this._settings = settings;
     this._initCanceller = new TaskCanceller();
     this._initialManifestProm = null;
-    this._manifestFetcher = new ManifestFetcher(settings.url,
+    const urls = settings.url === undefined ? undefined :
+                                              [settings.url];
+    this._manifestFetcher = new ManifestFetcher(urls,
                                                 settings.transport,
                                                 settings.manifestRequestSettings);
+    this._initCanceller.signal.register(() => {
+      this._manifestFetcher.dispose();
+    });
   }
 
   /**
@@ -129,27 +127,24 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     if (this._initialManifestProm !== null) {
       return;
     }
-    const initialManifest = this._settings.initialManifest;
-    this._settings.initialManifest = undefined; // Reset to free resources
-    if (initialManifest instanceof Manifest) {
-      this._initialManifestProm = Promise.resolve({ manifest: initialManifest });
-    } else if (initialManifest !== undefined) {
-      this._initialManifestProm = this._manifestFetcher
-        .parse(initialManifest,
-               { previousManifest: null,
-                 unsafeMode: false },
-               (err : IPlayerError) =>
-                 this.trigger("warning", err),
-               this._initCanceller.signal);
-    } else {
-      this._initialManifestProm = this._manifestFetcher.fetch(undefined, (err) => {
-        this.trigger("warning", err);
-      }, this._initCanceller.signal)
-        .then((res) => res.parse({ previousManifest: null,
-                                   unsafeMode: false }));
-    }
+    this._initialManifestProm = new Promise((res, rej) => {
+      this._manifestFetcher.addEventListener("warning", (err : IPlayerError) =>
+        this.trigger("warning", err));
+      this._manifestFetcher.addEventListener("error", (err : unknown) => {
+        this.trigger("error", err);
+        rej(err);
+      });
+      this._manifestFetcher.addEventListener("manifestReady", (manifest) => {
+        res(manifest);
+      });
+      this._manifestFetcher.start();
+    });
   }
 
+  /**
+   * @param {HTMLMediaElement} mediaElement
+   * @param {Object} playbackObserver
+   */
   public start(
     mediaElement : HTMLMediaElement,
     playbackObserver : PlaybackObserver
@@ -172,9 +167,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                                                           protectionRef,
                                                           initResult.unlinkMediaSource))
       .catch((err) => {
-        if (err instanceof CancellationError) {
-          return;
-        }
         this._onFatalError(err);
       });
   }
@@ -184,6 +176,9 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 
   private _onFatalError(err : unknown) {
+    if (this._initCanceller.isUsed) {
+      return;
+    }
     this._initCanceller.cancel();
     this.trigger("error", err);
   }
@@ -259,12 +254,11 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     drmSystemId : string | undefined,
     protectionRef : ISharedReference<IContentProtection | null>,
     initialMediaSourceCanceller : TaskCanceller
-  ) : Promise<unknown> {
+  ) : Promise<void> {
     const { adaptiveOptions,
             autoPlay,
             bufferOptions,
             lowLatencyMode,
-            minimumManifestUpdateInterval,
             segmentRequestOptions,
             speed,
             startAt,
@@ -273,8 +267,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     const initCanceller = this._initCanceller;
     assert(this._initialManifestProm !== null);
     const manifestProm = this._initialManifestProm;
-    const manifestResponse = await manifestProm;
-    const { manifest } = manifestResponse;
+    let manifest : Manifest;
+    try {
+      manifest = await manifestProm;
+    } catch (_e) {
+      return ; // The error should already have been processed through an event listener
+    }
 
     manifest.addEventListener("manifestUpdate", () => {
       this.trigger("manifestUpdate", null);
@@ -291,18 +289,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     const representationEstimator = AdaptiveRepresentationSelector(adaptiveOptions);
     const subBufferOptions = objectAssign({ textTrackOptions, drmSystemId },
                                           bufferOptions);
-    const manifestUpdater = manifestUpdateScheduler(manifestResponse,
-                                                    this._manifestFetcher,
-                                                    minimumManifestUpdateInterval,
-                                                    (err : IPlayerError) =>
-                                                      this.trigger("warning", err),
-                                                    (err : unknown) => {
-                                                      initCanceller.cancel();
-                                                      this.trigger("error", err);
-                                                    });
-    initCanceller.signal.register(() => {
-      manifestUpdater.stop();
-    });
 
     const segmentFetcherCreator = new SegmentFetcherCreator(transport,
                                                             segmentRequestOptions,
@@ -310,7 +296,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
     this.trigger("manifestReady", manifest);
     if (initCanceller.isUsed) {
-      return undefined;
+      return ;
     }
 
     const bufferOnMediaSource = this._startBufferingOnMediaSource.bind(this);
@@ -342,7 +328,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       const opts = { mediaElement,
                      playbackObserver,
                      mediaSource,
-                     manifestUpdater,
                      initialTime: startingPos,
                      autoPlay: shouldPlay,
                      manifest,
@@ -397,7 +382,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             bufferOptions,
             initialTime,
             manifest,
-            manifestUpdater,
             mediaElement,
             mediaSource,
             playbackObserver,
@@ -552,12 +536,14 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             });
             break;
           case "needs-manifest-refresh":
-            return manifestUpdater.forceRefresh({ completeRefresh: false,
-                                                  canUseUnsafeMode: true });
+            return this._manifestFetcher.scheduleManualRefresh({
+              enablePartialRefresh: true,
+              canUseUnsafeMode: true,
+            });
           case "manifest-might-be-out-of-sync":
             const { OUT_OF_SYNC_MANIFEST_REFRESH_DELAY } = config.getCurrent();
-            manifestUpdater.forceRefresh({
-              completeRefresh: true,
+            this._manifestFetcher.scheduleManualRefresh({
+              enablePartialRefresh: false,
               canUseUnsafeMode: false,
               delay: OUT_OF_SYNC_MANIFEST_REFRESH_DELAY,
             });
@@ -647,19 +633,12 @@ export interface IInitializeArguments {
     /** Behavior when a new video and/or audio codec is encountered. */
     onCodecSwitch : "continue" | "reload";
   };
-  /**
-   * Potential first Manifest to rely on, allowing to skip the initial Manifest
-   * fetching.
-   */
-  initialManifest : ILoadedManifestFormat | undefined;
   /** Every encryption configuration set. */
   keySystems : IKeySystemOption[];
   /** `true` to play low-latency contents optimally. */
   lowLatencyMode : boolean;
   /** Settings linked to Manifest requests. */
   manifestRequestSettings : IManifestFetcherSettings;
-  /** Limit the frequency of Manifest updates. */
-  minimumManifestUpdateInterval : number;
   /** Logic linked Manifest and segment loading and parsing. */
   transport : ITransportPipelines;
   /** Configuration for the segment requesting logic. */
@@ -709,8 +688,6 @@ interface IBufferingMediaSettings {
   protectionRef : ISharedReference<IContentProtection | null>;
   /** `MediaSource` element on which the media will be buffered. */
   mediaSource : MediaSource;
-  /** Interface allowing to refresh the Manifest. */
-  manifestUpdater : IManifestUpdateScheduler;
   initialTime : number;
   autoPlay : boolean;
 }

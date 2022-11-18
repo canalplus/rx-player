@@ -15,8 +15,9 @@
  */
 
 import ManifestFetcher, {
-  IManifestFetcherParsedResult,
-  IManifestFetcherParserOptions,
+  IManifestFetcherSettings,
+  IManifestFetcherEvent,
+  IManifestRefreshSettings,
 } from "./manifest";
 import SegmentFetcherCreator, {
   IPrioritizedSegmentFetcher,
@@ -27,8 +28,9 @@ export {
   ManifestFetcher,
   SegmentFetcherCreator,
 
-  IManifestFetcherParserOptions,
-  IManifestFetcherParsedResult,
+  IManifestFetcherSettings,
+  IManifestFetcherEvent,
+  IManifestRefreshSettings,
 
   IPrioritizedSegmentFetcher,
 
