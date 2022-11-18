@@ -665,7 +665,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       const manifestRequestSettings = { lowLatencyMode,
                                         maxRetryRegular: manifestRetry,
                                         maxRetryOffline: offlineRetry,
-                                        requestTimeout:  manifestRequestTimeout };
+                                        requestTimeout:  manifestRequestTimeout,
+                                        minimumManifestUpdateInterval,
+                                        initialManifest };
 
       const relyOnVideoVisibilityAndSize = canRelyOnVideoVisibilityAndSize();
       const throttlers : IABRThrottlers = { throttle: {},
@@ -744,11 +746,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         adaptiveOptions,
         autoPlay,
         bufferOptions,
-        initialManifest,
         keySystems,
         lowLatencyMode,
         manifestRequestSettings,
-        minimumManifestUpdateInterval,
         transport: transportPipelines,
         segmentRequestOptions,
         speed: this._priv_speed,

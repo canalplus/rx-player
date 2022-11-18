@@ -21,6 +21,9 @@ protocol-agnostic.
 This is the part of the code that interacts with `transports` to perform the
 request and parsing of the Manifest file.
 
+It also regularly refreshes the Manifest, based on its attributes and other
+criteria, like performances when doing that.
+
 
 
 ## The SegmentFetcherCreator ###################################################

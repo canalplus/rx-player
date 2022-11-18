@@ -15,12 +15,14 @@
  */
 
 import ManifestFetcher, {
-  IManifestFetcherParsedResult,
-  IManifestFetcherParserOptions,
+  IManifestFetcherSettings,
+  IManifestFetcherEvent,
+  IManifestRefreshSettings,
 } from "./manifest_fetcher";
 
-export default ManifestFetcher;
 export {
-  IManifestFetcherParsedResult,
-  IManifestFetcherParserOptions,
+  IManifestFetcherSettings,
+  IManifestFetcherEvent,
+  IManifestRefreshSettings,
 };
+export default ManifestFetcher;
