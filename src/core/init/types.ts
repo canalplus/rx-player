@@ -84,6 +84,18 @@ export abstract class ContentInitializer extends EventEmitter<IContentInitialize
   ) : void;
 
   /**
+   * Update URL of the content currently being played (e.g. DASH's MPD).
+   * @param {Array.<string>|undefined} urls - URLs to reach that content /
+   * Manifest from the most prioritized URL to the least prioritized URL.
+   * @param {boolean} refreshNow - If `true` the resource in question (e.g.
+   * DASH's MPD) will be refreshed immediately.
+   */
+  public abstract updateContentUrls(
+    urls : string[] | undefined,
+    refreshNow : boolean
+  ) : void;
+
+  /**
    * Stop playing the content linked to this `ContentInitializer` on the
    * `HTMLMediaElement` linked to it and dispose of every resources taken while
    * trying to do so.
