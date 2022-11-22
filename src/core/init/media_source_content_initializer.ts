@@ -32,6 +32,7 @@ import createSharedReference, {
   ISharedReference,
 } from "../../utils/reference";
 import TaskCanceller, {
+  CancellationError,
   CancellationSignal,
 } from "../../utils/task_canceller";
 import AdaptiveRepresentationSelector, {
@@ -114,9 +115,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     this._manifestFetcher = new ManifestFetcher(urls,
                                                 settings.transport,
                                                 settings.manifestRequestSettings);
-    this._initCanceller.signal.register(() => {
-      this._manifestFetcher.dispose();
-    });
   }
 
   /**
@@ -128,6 +126,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       return;
     }
     this._initialManifestProm = new Promise((res, rej) => {
+      this._initCanceller.signal.register((err : CancellationError) => {
+        this._manifestFetcher.dispose();
+        rej(err);
+      });
       this._manifestFetcher.addEventListener("warning", (err : IPlayerError) =>
         this.trigger("warning", err));
       this._manifestFetcher.addEventListener("error", (err : unknown) => {
