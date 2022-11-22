@@ -640,8 +640,8 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     if (this._canceller.isUsed) {
       return;
     }
-    this.dispose();
     this.trigger("error", err);
+    this.dispose();
   }
 }
 
