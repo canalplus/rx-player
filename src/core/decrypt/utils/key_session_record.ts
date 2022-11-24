@@ -158,18 +158,9 @@ export default class KeySessionRecord {
   private _checkInitializationDataCompatibility(
     initializationData : IProcessedProtectionData
   ) : boolean {
-    if (initializationData.keyIds !== undefined &&
-        initializationData.keyIds.length > 0 &&
-        this._initializationData.keyIds !== undefined)
-    {
-      return areAllKeyIdsContainedIn(initializationData.keyIds,
-                                     this._initializationData.keyIds);
-    }
-
     if (this._initializationData.type !== initializationData.type) {
       return false;
     }
-
     return this._initializationData.values
       .isCompatibleWith(initializationData.values);
   }
