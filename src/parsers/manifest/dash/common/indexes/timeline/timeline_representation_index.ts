@@ -88,6 +88,8 @@ export interface ITimelineIndex {
   segmentUrlTemplate : string | null ;
   /** Number from which the first segments in this index starts with. */
   startNumber? : number | undefined;
+  /** Number associated to the last segment in this index. */
+  endNumber? : number | undefined;
   /**
    * Every segments defined in this index.
    * `null` at the beginning as this property is parsed lazily (only when first
@@ -125,6 +127,7 @@ export interface ITimelineIndexIndexArgument {
                     undefined;
   media? : string | undefined;
   startNumber? : number | undefined;
+  endNumber? : number | undefined;
   timescale? : number | undefined;
   /**
    * Offset present in the index to convert from the mediaTime (time declared in
@@ -306,6 +309,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
                       },
                     segmentUrlTemplate,
                     startNumber: index.startNumber,
+                    endNumber: index.endNumber,
                     timeline: index.timeline ?? null,
                     timescale };
     this._scaledPeriodStart = toIndexTime(periodStart, this._index);
@@ -336,11 +340,13 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     // destructuring to please TypeScript
     const { segmentUrlTemplate,
             startNumber,
+            endNumber,
             timeline,
             timescale,
             indexTimeOffset } = this._index;
     return getSegmentsFromTimeline({ segmentUrlTemplate,
                                      startNumber,
+                                     endNumber,
                                      timeline,
                                      timescale,
                                      indexTimeOffset },
@@ -536,6 +542,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     if (hasReplaced) {
       this._index.startNumber = newIndex._index.startNumber;
     }
+    this._index.endNumber = newIndex._index.endNumber;
     this._isDynamic = newIndex._isDynamic;
     this._scaledPeriodStart = newIndex._scaledPeriodStart;
     this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
