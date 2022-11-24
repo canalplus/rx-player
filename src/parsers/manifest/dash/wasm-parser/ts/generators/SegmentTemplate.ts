@@ -121,6 +121,13 @@ export function generateSegmentTemplateAttrParser(
         break;
       }
 
+      case AttributeName.EndNumber: {
+        const dataView = new DataView(linearMemory.buffer);
+        segmentTemplateAttrs.endNumber =
+          dataView.getFloat64(ptr, true);
+        break;
+      }
+
     }
   };
 }
