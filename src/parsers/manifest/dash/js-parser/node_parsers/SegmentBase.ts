@@ -99,6 +99,12 @@ export default function parseSegmentBase(
                                  parser: parseMPDInteger,
                                  dashName: "startNumber" });
         break;
+
+      case "endNumber":
+        parseValue(attr.value, { asKey: "endNumber",
+                                 parser: parseMPDInteger,
+                                 dashName: "endNumber" });
+        break;
     }
   }
 

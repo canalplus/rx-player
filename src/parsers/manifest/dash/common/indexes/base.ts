@@ -69,6 +69,8 @@ export interface IBaseIndex {
   segmentUrlTemplate : string | null;
   /** Number from which the first segments in this index starts with. */
   startNumber? : number | undefined;
+  /** Number associated to the last segment in this index. */
+  endNumber? : number | undefined;
   /** Every segments defined in this index. */
   timeline : IIndexSegment[];
   /**
@@ -90,6 +92,7 @@ export interface IBaseIndexIndexArgument {
   indexRange?: [number, number];
   initialization?: { media?: string; range?: [number, number] };
   startNumber? : number;
+  endNumber? : number;
   /**
    * Offset present in the index to convert from the mediaTime (time declared in
    * the media segments and in this index) to the presentationTime (time wanted
@@ -222,6 +225,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
                     initialization: { url: initializationUrl, range },
                     segmentUrlTemplate,
                     startNumber: index.startNumber,
+                    endNumber: index.endNumber,
                     timeline: index.timeline ?? [],
                     timescale };
     this._scaledPeriodStart = toIndexTime(periodStart, this._index);
