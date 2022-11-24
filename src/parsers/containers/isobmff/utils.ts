@@ -83,6 +83,25 @@ export interface ISidxSegment {
 }
 
 /**
+ * Test if value equal zero. Used as a callback for array functions to test
+ * undefined keyId in the ISOBMFF init segment.
+ * @param {number} value The value to test
+ * @returns {Boolean} True if value equals zero
+ */
+function isZero(value: number) {
+  return value === 0;
+}
+
+/**
+ * Check if a keyId is valid. Zero filled keyId are invalid.
+ * @param {Uint8Array} keyId
+ * @returns {Boolean} True if keyId valid
+ */
+function isValidKeyId(keyId: Uint8Array) {
+  return !keyId.every(isZero);
+}
+
+/**
  * Parse the sidx part (segment index) of an ISOBMFF buffer and construct a
  * corresponding Array of available segments.
  *
@@ -539,7 +558,10 @@ function getKeyIdFromInitSegment(
   if (tenc === null || tenc.byteLength < 24) {
     return null;
   }
-  return tenc.subarray(8, 24);
+  const keyId = tenc.subarray(8, 24);
+  return isValidKeyId(keyId)
+    ? keyId
+    : null;
 }
 
 export {
