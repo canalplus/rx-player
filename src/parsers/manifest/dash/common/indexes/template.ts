@@ -94,6 +94,8 @@ export interface ITemplateIndex {
   presentationTimeOffset : number;
   /** Number from which the first segments in this index starts with. */
   startNumber? : number | undefined;
+  /** Number associated to the last segment in this index. */
+  endNumber? : number | undefined;
 }
 
 /**
@@ -109,6 +111,7 @@ export interface ITemplateIndexIndexArgument {
   media? : string | undefined;
   presentationTimeOffset? : number | undefined;
   startNumber? : number | undefined;
+  endNumber? : number | undefined;
   timescale? : number | undefined;
 }
 
@@ -213,7 +216,8 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                         range: index.initialization.range },
                     url: segmentUrlTemplate,
                     presentationTimeOffset,
-                    startNumber: index.startNumber };
+                    startNumber: index.startNumber,
+                    endNumber: index.endNumber };
     this._isDynamic = isDynamic;
     this._periodStart = periodStart;
     this._scaledRelativePeriodEnd = periodEnd === undefined ?
@@ -239,6 +243,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const index = this._index;
     const { duration,
             startNumber,
+            endNumber,
             timescale,
             url } = index;
 
@@ -276,6 +281,9 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     ) {
       // To obtain the real number, adds the real number from the Period's start
       const realNumber = numberIndexedToZero + numberOffset;
+      if (endNumber !== undefined && realNumber > endNumber) {
+        return segments;
+      }
 
       const realDuration = scaledEnd != null &&
                            timeFromPeriodStart + duration > scaledEnd ?
