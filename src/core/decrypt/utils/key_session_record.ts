@@ -148,8 +148,8 @@ export default class KeySessionRecord {
       if (this._keyIds !== null && areAllKeyIdsContainedIn(keyIds, this._keyIds)) {
         return true;
       }
-      if (this._initializationData.keyIds !== undefined) {
-        return areAllKeyIdsContainedIn(keyIds, this._initializationData.keyIds);
+      if (this._initializationData.keyIds !== undefined && areAllKeyIdsContainedIn(keyIds, this._initializationData.keyIds)) {
+        return true;
       }
     }
     return this._checkInitializationDataCompatibility(initializationData);
