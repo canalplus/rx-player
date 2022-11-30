@@ -147,14 +147,13 @@ function hasSignLanguageInterpretation(
 /**
  * Contruct Adaptation ID from the information we have.
  * @param {Object} adaptation
- * @param {Array.<Object>} representations
- * @param {Array.<Object>} representations
  * @param {Object} infos
  * @returns {string}
  */
 function getAdaptationID(
   adaptation : IAdaptationSetIntermediateRepresentation,
   infos : { isClosedCaption : boolean | undefined;
+            isForcedSubtitle : boolean | undefined;
             isAudioDescription : boolean | undefined;
             isSignInterpreted : boolean | undefined;
             isTrickModeTrack: boolean;
@@ -165,6 +164,7 @@ function getAdaptationID(
   }
 
   const { isClosedCaption,
+          isForcedSubtitle,
           isAudioDescription,
           isSignInterpreted,
           isTrickModeTrack,
@@ -175,6 +175,9 @@ function getAdaptationID(
     idString += `-${adaptation.attributes.language}`;
   }
   if (isClosedCaption === true) {
+    idString += "-cc";
+  }
+  if (isForcedSubtitle === true) {
     idString += "-cc";
   }
   if (isAudioDescription === true) {
@@ -369,6 +372,15 @@ export default function parseAdaptationSets(
         isClosedCaption = accessibilities.some(isHardOfHearing);
       }
 
+      let isForcedSubtitle;
+      if (type === "text" &&
+          roles !== undefined &&
+          roles.some((role) => role.value === "forced-subtitle" ||
+                               role.value === "forced_subtitle"))
+      {
+        isForcedSubtitle = true;
+      }
+
       let isAudioDescription;
       if (type !== "audio") {
         isAudioDescription = false;
@@ -385,6 +397,7 @@ export default function parseAdaptationSets(
 
       let adaptationID = getAdaptationID(adaptation,
                                          { isAudioDescription,
+                                           isForcedSubtitle,
                                            isClosedCaption,
                                            isSignInterpreted,
                                            isTrickModeTrack,
@@ -420,6 +433,9 @@ export default function parseAdaptationSets(
       }
       if (isDub === true) {
         parsedAdaptationSet.isDub = true;
+      }
+      if (isForcedSubtitle !== undefined) {
+        parsedAdaptationSet.forcedSubtitles = isForcedSubtitle;
       }
       if (isSignInterpreted === true) {
         parsedAdaptationSet.isSignInterpreted = true;
