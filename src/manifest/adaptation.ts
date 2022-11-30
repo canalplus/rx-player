@@ -128,6 +128,9 @@ export default class Adaptation {
     if (parsedAdaptation.isDub !== undefined) {
       this.isDub = parsedAdaptation.isDub;
     }
+    if (parsedAdaptation.forcedSubtitles !== undefined) {
+      this.isForcedSubtitles = parsedAdaptation.forcedSubtitles;
+    }
     if (parsedAdaptation.isSignInterpreted !== undefined) {
       this.isSignInterpreted = parsedAdaptation.isSignInterpreted;
     }
