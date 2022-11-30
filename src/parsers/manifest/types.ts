@@ -194,6 +194,13 @@ export interface IParsedAdaptation {
    */
   closedCaption? : boolean | undefined;
   /**
+   * If `true` this Adaptation are subtitles Meant for display when no other text
+   * Adaptation is selected. It is used to clarify dialogue, alternate
+   * languages, texted graphics or location/person IDs that are not otherwise
+   * covered in the dubbed/localized audio Adaptation.
+   */
+  forcedSubtitles? : boolean;
+  /**
    * If true this Adaptation is in a dub: it was recorded in another language
    * than the original(s) one(s).
    */
