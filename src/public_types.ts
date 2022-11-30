@@ -636,6 +636,7 @@ export type IAudioTrackPreference = null |
 /** Single preference for a text track Adaptation. */
 export type ITextTrackPreference = null |
                                    { language : string;
+                                     forced? : boolean | undefined;
                                      closedCaption : boolean; };
 
 /** Single preference for a video track Adaptation. */
@@ -763,6 +764,7 @@ export interface IAudioTrack { language : string;
 export interface ITextTrack { language : string;
                               normalized : string;
                               closedCaption : boolean;
+                              forced? : boolean | undefined;
                               label? : string | undefined;
                               id : number|string; }
 
