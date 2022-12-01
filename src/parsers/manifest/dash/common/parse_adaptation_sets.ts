@@ -107,21 +107,36 @@ function isVisuallyImpaired(
 /**
  * Detect if the accessibility given defines an adaptation for the hard of
  * hearing.
- * Based on DVB Document A168 (DVB-DASH).
- * @param {Object} accessibility
+ * Based on DVB Document A168 (DVB-DASH) and DASH specification.
+ * @param {Array.<Object>} accessibilities
+ * @param {Array.<Object>} roles
  * @returns {Boolean}
  */
-function isHardOfHearing(
-  accessibility : { schemeIdUri? : string | undefined;
-                    value? : string | undefined; } |
-                  undefined
+function isCaptionning(
+  accessibilities : Array<{ schemeIdUri? : string | undefined;
+                            value? : string | undefined; }> |
+                    undefined,
+  roles : Array<{ schemeIdUri? : string | undefined;
+                  value? : string | undefined; }> |
+         undefined
 ) : boolean {
-  if (accessibility === undefined) {
-    return false;
+  if (accessibilities !== undefined) {
+    const hasDvbClosedCaptionSignaling = accessibilities.some(accessibility =>
+      (accessibility.schemeIdUri === "urn:tva:metadata:cs:AudioPurposeCS:2007" &&
+       accessibility.value === "2"));
+    if (hasDvbClosedCaptionSignaling) {
+      return true;
+    }
   }
-
-  return (accessibility.schemeIdUri === "urn:tva:metadata:cs:AudioPurposeCS:2007" &&
-          accessibility.value === "2");
+  if (roles !== undefined) {
+    const hasDashCaptionSinaling = roles.some(role =>
+      (role.schemeIdUri === "urn:mpeg:dash:role:2011" &&
+       role.value === "caption"));
+    if (hasDashCaptionSinaling) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
@@ -368,8 +383,8 @@ export default function parseAdaptationSets(
       let isClosedCaption;
       if (type !== "text") {
         isClosedCaption = false;
-      } else if (accessibilities !== undefined) {
-        isClosedCaption = accessibilities.some(isHardOfHearing);
+      } else {
+        isClosedCaption = isCaptionning(accessibilities, roles);
       }
 
       let isForcedSubtitle;
