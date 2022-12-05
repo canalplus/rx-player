@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" mediaPresentationDuration="PT0H1M40.760S" minBufferTime="PT0H0M4.000S" profiles="urn:mpeg:dash:profile:isoff-on-demand:2011" type="static" xmlns="urn:mpeg:dash:schema:mpd:2011" xsi:schemalocation="urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd">
-   <Period duration="PT0H1M40.760S" start="PT0S">
+   <Period start="PT0S">
       <AdaptationSet contentType="video" frameRate="25" maxFrameRate="25" maxHeight="540" maxWidth="960" mimeType="video/mp4" par="16:9" sar="1:1" scanType="progressive" subsegmentAlignment="true" subsegmentStartsWithSAP="2">
          <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
          <Representation bandwidth="1502584" codecs="avc1.4D401F" height="540" id="Video4.1.1.1" width="960">
