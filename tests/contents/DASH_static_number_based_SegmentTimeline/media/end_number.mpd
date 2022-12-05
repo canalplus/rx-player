@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" mediaPresentationDuration="PT0H1M40.760S" minBufferTime="PT0H0M4.000S" profiles="urn:mpeg:dash:profile:isoff-on-demand:2011" type="static" xmlns="urn:mpeg:dash:schema:mpd:2011" xsi:schemalocation="urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd">
+   <Period duration="PT0H1M40.760S" start="PT0S">
+      <AdaptationSet contentType="video" frameRate="25" maxFrameRate="25" maxHeight="540" maxWidth="960" mimeType="video/mp4" par="16:9" sar="1:1" scanType="progressive" subsegmentAlignment="true" subsegmentStartsWithSAP="2">
+         <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+         <Representation bandwidth="1502584" codecs="avc1.4D401F" height="540" id="Video4.1.1.1" width="960">
+            <SegmentTemplate endNumber="5" initialization="video_1500_avc-init.mp4" media="video_1500_avc-$Number$.mp4"  timescale="90000"><SegmentTimeline><S d="360000" r="24" t="0" /><S d="68400" /></SegmentTimeline></SegmentTemplate></Representation>
+         <Representation bandwidth="1102584" codecs="avc1.4D401F" height="540" id="Video5.1.1.1" width="960">
+            <SegmentTemplate endNumber="5" initialization="video_1100_avc-init.mp4" media="video_1100_avc-$Number$.mp4"  timescale="90000"><SegmentTimeline><S d="360000" r="24" t="0" /><S d="68400" /></SegmentTimeline></SegmentTemplate></Representation>
+         <Representation bandwidth="752568" codecs="avc1.4D401E" height="432" id="Video3.1.1.1" width="768">
+            <SegmentTemplate endNumber="5" initialization="video_750_avc-init.mp4" media="video_750_avc-$Number$.mp4"  timescale="90000"><SegmentTimeline><S d="360000" r="24" t="0" /><S d="68400" /></SegmentTimeline></SegmentTemplate></Representation>
+         <Representation bandwidth="302584" codecs="avc1.4D401E" height="360" id="Video2.1.1.1" width="640">
+            <SegmentTemplate endNumber="5" initialization="video_300_avc-init.mp4" media="video_300_avc-$Number$.mp4"  timescale="90000"><SegmentTimeline><S d="360000" r="24" t="0" /><S d="68400" /></SegmentTimeline></SegmentTemplate></Representation>
+         <Representation bandwidth="192568" codecs="avc1.4D401E" height="234" id="Video1.1.1.1" width="416">
+            <SegmentTemplate endNumber="5" initialization="video_190_avc-init.mp4" media="video_190_avc-$Number$.mp4"  timescale="90000"><SegmentTimeline><S d="360000" r="24" t="0" /><S d="68400" /></SegmentTimeline></SegmentTemplate></Representation>
+      </AdaptationSet>
+      <AdaptationSet audioSamplingRate="48000" codecs="mp4a.40.2" contentType="audio" lang="fr" mimeType="audio/mp4" subsegmentAlignment="true" subsegmentStartsWithSAP="1">
+         <AudioChannelConfiguration schemeIdUri="urn:mpeg:mpegB:cicp:ChannelConfiguration" value="2" />
+         <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+         <Representation bandwidth="68700" id="Audio1.1.1">
+            <SegmentTemplate endNumber="5" initialization="audio_64_aaclc_fra-init.ts" media="audio_64_aaclc_fra-$Number$.ts"  timescale="90000"><SegmentTimeline><S d="360960" t="0" /><S d="359040" /><S d="360960" /><S d="359040" /><S d="360960" /><S d="359040" /><S d="360960" /><S d="359040" /><S d="360960" /><S d="359040" /><S d="360960" /><S d="359040" /><S d="360960" /><S d="359040" /><S d="360960" /><S d="359040" /><S d="360960" /><S d="359040" /><S d="360960" /><S d="359040" /><S d="360960" /><S d="359040" /><S d="360960" /><S d="359040" /><S d="360960" /><S d="67200" /></SegmentTimeline></SegmentTemplate></Representation>
+      </AdaptationSet>
+   </Period>
+</MPD>
