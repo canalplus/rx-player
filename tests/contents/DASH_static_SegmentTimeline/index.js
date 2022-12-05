@@ -8,6 +8,7 @@ import notStartingAt0ManifestInfos from "./not_starting_at_0.js";
 import streamEventsInfos from "./event-stream";
 import segmentTemplateInheritanceASRep from "./segment_template_inheritance_as_rep";
 import segmentTemplateInheritancePeriodAS from "./segment_template_inheritance_period_as";
+import segmentTimelineEndNumber from "./segment_timeline_end_number";
 
 export {
   manifestInfos,
@@ -19,5 +20,6 @@ export {
   notStartingAt0ManifestInfos,
   segmentTemplateInheritanceASRep,
   segmentTemplateInheritancePeriodAS,
+  segmentTimelineEndNumber,
   streamEventsInfos,
 };
