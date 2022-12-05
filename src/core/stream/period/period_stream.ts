@@ -202,7 +202,7 @@ export default function PeriodStream({
 
         return observableConcat(
           cleanBuffer$.pipe(map(() => EVENTS.adaptationChange(bufferType, null, period))),
-          createEmptyStream(playbackObserver, bufferType, { period })
+          createEmptyStream(playbackObserver, wantedBufferAhead, bufferType, { period })
         );
       }
 
@@ -313,7 +313,7 @@ export default function PeriodStream({
           });
           return observableConcat(
             observableOf(EVENTS.warning(formattedError)),
-            createEmptyStream(playbackObserver, bufferType, { period })
+            createEmptyStream(playbackObserver, wantedBufferAhead, bufferType, { period })
           );
         }
         log.error(`Stream: ${bufferType} Stream crashed. Stopping playback.`,
