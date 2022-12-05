@@ -367,23 +367,22 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
   });
 
   it("should not update the current tracks for non-applied preferences", async () => {
-    player.setPreferredTextTracks([ { language: "de",
-                                      closedCaption: false } ], undefined);
     await loadContent();
     player.setPreferredAudioTracks([ { language: "be",
                                        audioDescription: true } ]);
     player.setPreferredVideoTracks([ { codec: { all: false,
                                                 test: /avc1\.640028/},
                                        signInterpreted: true }], false);
-    player.setPreferredTextTracks([ null ], undefined);
+    player.setPreferredTextTracks([ { language: "de",
+                                      closedCaption: false } ], undefined);
     await sleep(100);
     checkAudioTrack("de", "deu", false);
-    checkTextTrack("de", "deu", false);
+    checkNoTextTrack();
     checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
 
     await goToSecondPeriod();
     checkAudioTrack("be", "bel", true);
-    checkNoTextTrack();
+    checkTextTrack("de", "deu", false);
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, true);
   });
 
