@@ -164,7 +164,7 @@ export default class XHRMock {
       Math.min(len, nbrOfRequests) : len;
     const nbrOfRequestThatStays = len - nbrOfRequestsToFlush;
     while (this._sendingQueue.length > nbrOfRequestThatStays) {
-      const { xhr, data } = this._sendingQueue.pop();
+      const { xhr, data } = this._sendingQueue.shift();
       this.__xhrSend(xhr, data);
       proms.push(xhr._finished);
     }

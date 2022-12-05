@@ -107,6 +107,11 @@ module.exports = [
     contentType: "application/dash+xml",
   },
   {
+    url: BASE_URL + "segment_timeline_end_number.mpd",
+    path: path.join(__dirname, "media/segment_timeline_end_number.mpd"),
+    contentType: "application/dash+xml",
+  },
+  {
     url: BASE_URL + "discontinuity.mpd",
     path: path.join(__dirname, "media/discontinuity.mpd"),
     contentType: "application/dash+xml",
