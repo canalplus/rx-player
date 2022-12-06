@@ -52,6 +52,37 @@ export const defaultKSConfig = [{
                        { contentType: "video/webm;codecs=\"vp8\"" } ],
 }];
 
+/**
+ * Default "com.microsoft.playready.recommendation" MediaKeySystemAccess
+ * configuration used by the RxPlayer.
+ */
+export const defaultPRRecommendationKSConfig = [{
+  audioCapabilities: [ { robustness: "3000",
+                         contentType: "audio/mp4;codecs=\"mp4a.40.2\"" },
+                       { robustness: "3000",
+                         contentType: "audio/webm;codecs=opus" },
+                       { robustness: "2000",
+                         contentType: "audio/mp4;codecs=\"mp4a.40.2\"" },
+                       { robustness: "2000",
+                         contentType: "audio/webm;codecs=opus" } ],
+  distinctiveIdentifier: "optional" as const,
+  initDataTypes: ["cenc"] as const,
+  persistentState: "optional" as const,
+  sessionTypes: ["temporary"] as const,
+  videoCapabilities: [ { robustness: "3000",
+                         contentType: "video/mp4;codecs=\"avc1.4d401e\"" },
+                       { robustness: "3000",
+                         contentType: "video/mp4;codecs=\"avc1.42e01e\"" },
+                       { robustness: "3000",
+                         contentType: "video/webm;codecs=\"vp8\"" },
+                       { robustness: "2000",
+                         contentType: "video/mp4;codecs=\"avc1.4d401e\"" },
+                       { robustness: "2000",
+                         contentType: "video/mp4;codecs=\"avc1.42e01e\"" },
+                       { robustness: "2000",
+                         contentType: "video/webm;codecs=\"vp8\"" } ],
+}];
+
 /** Default Widevine MediaKeySystemAccess configuration used by the RxPlayer. */
 export const defaultWidevineConfig = (() => {
   const ROBUSTNESSES = [ "HW_SECURE_ALL",

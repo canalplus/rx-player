@@ -25,6 +25,7 @@ import log from "../../log";
 import { IKeySystemOption } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
 import flatMap from "../../utils/flat_map";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import { CancellationSignal } from "../../utils/task_canceller";
 import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 
@@ -124,14 +125,18 @@ function findKeySystemCanonicalName(ksType: string) : string | undefined {
 /**
  * Build configuration for the requestMediaKeySystemAccess EME API, based
  * on the current keySystem object.
- * @param {string} [ksName] - Generic name for the key system. e.g. "clearkey",
- * "widevine", "playready". Can be used to make exceptions depending on it.
+ * @param {string|undefined} ksName - Generic name for the key system. e.g.
+ * "clearkey", "widevine", "playready". Can be used to make exceptions depending
+ * on it.
+ * @param {string|undefined} ksType - KeySystem complete type (e.g.
+ * "com.widevine.alpha").
  * @param {Object} keySystem
  * @returns {Array.<Object>} - Configuration to give to the
  * requestMediaKeySystemAccess API.
  */
 function buildKeySystemConfigurations(
   ksName : string | undefined,
+  ksType : string | undefined,
   keySystem : IKeySystemOption
 ) : MediaKeySystemConfiguration[] {
   const sessionTypes = ["temporary"];
@@ -150,21 +155,35 @@ function buildKeySystemConfigurations(
   if (keySystem.distinctiveIdentifierRequired === true) {
     distinctiveIdentifier = "required";
   }
-  const { EME_DEFAULT_WIDEVINE_ROBUSTNESSES } = config.getCurrent();
+  const { EME_DEFAULT_WIDEVINE_ROBUSTNESSES,
+          EME_DEFAULT_PLAYREADY_ROBUSTNESSES } = config.getCurrent();
 
   // Set robustness, in order of consideration:
   //   1. the user specified its own robustnesses
   //   2. a "widevine" key system is used, in that case set the default widevine
   //      robustnesses as defined in the config
   //   3. set an undefined robustness
-  const videoRobustnesses = keySystem.videoRobustnesses != null ?
-    keySystem.videoRobustnesses :
-    (ksName === "widevine" ? EME_DEFAULT_WIDEVINE_ROBUSTNESSES :
-                             []);
-  const audioRobustnesses = keySystem.audioRobustnesses != null ?
-    keySystem.audioRobustnesses :
-    (ksName === "widevine" ? EME_DEFAULT_WIDEVINE_ROBUSTNESSES :
-                             []);
+  let videoRobustnesses : Array<string | undefined>;
+  if (!isNullOrUndefined(keySystem.videoRobustnesses)) {
+    videoRobustnesses = keySystem.videoRobustnesses;
+  } else if (ksName === "widevine") {
+    videoRobustnesses = EME_DEFAULT_WIDEVINE_ROBUSTNESSES;
+  } else if (ksType === "com.microsoft.playready.recommendation") {
+    videoRobustnesses = EME_DEFAULT_PLAYREADY_ROBUSTNESSES;
+  } else {
+    videoRobustnesses = [];
+  }
+
+  let audioRobustnesses : Array<string | undefined>;
+  if (!isNullOrUndefined(keySystem.audioRobustnesses)) {
+    audioRobustnesses = keySystem.audioRobustnesses;
+  } else if (ksName === "widevine") {
+    audioRobustnesses = EME_DEFAULT_WIDEVINE_ROBUSTNESSES;
+  } else if (ksType === "com.microsoft.playready.recommendation") {
+    audioRobustnesses = EME_DEFAULT_PLAYREADY_ROBUSTNESSES;
+  } else {
+    audioRobustnesses = [];
+  }
 
   if (videoRobustnesses.length === 0) {
     videoRobustnesses.push(undefined);
@@ -327,6 +346,7 @@ export default function getMediaKeySystemAccess(
     const { keyName, keyType, keySystemOptions } = keySystemsType[index];
 
     const keySystemConfigurations = buildKeySystemConfigurations(keyName,
+                                                                 keyType,
                                                                  keySystemOptions);
 
     log.debug(`DRM: Request keysystem access ${keyType},` +
