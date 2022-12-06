@@ -177,11 +177,6 @@ export interface IContentInitializerEvents {
      */
     period : Period;
   };
-  /**
-   * The last (chronologically) `Period` for a given type has pushed all
-   * the segments it needs until the end.
-   */
-   completeStream: { type: IBufferType };
   /** Emitted when a new `Adaptation` is being considered. */
   adaptationChange: {
     /** The type of buffer for which the Representation is changing. */

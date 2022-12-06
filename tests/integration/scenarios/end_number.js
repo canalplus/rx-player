@@ -11,7 +11,7 @@ import {
 } from "../../contents/DASH_static_SegmentTimeline";
 import RxPlayer from "../../../src";
 import sleep from "../../utils/sleep.js";
-import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
+import waitForState, { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 
 let player;
 
@@ -71,13 +71,11 @@ describe("end number", function () {
     await sleep(500);
     expect(xhrMock.getLockedXHR().length).to.equal(2);
     xhrMock.flush();
-    player.seekTo(19.7);
+    player.seekTo(19);
     await sleep(50);
     expect(xhrMock.getLockedXHR().length).to.equal(2);
     xhrMock.flush();
-    await sleep(5000);
-    expect(xhrMock.getLockedXHR().length).to.equal(0);
-    expect(player.getPlayerState()).to.eql("ENDED");
+    await waitForState(player, "ENDED", ["BUFFERING", "RELOADING", "PLAYING"]);
     expect(player.getPosition()).to.be.closeTo(20, 1);
   });
 
