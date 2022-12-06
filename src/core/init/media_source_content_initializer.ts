@@ -569,8 +569,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             return this.trigger("periodStreamCleared", evt.value);
           case "representationChange":
             return this.trigger("representationChange", evt.value);
-          case "complete-stream":
-            return this.trigger("completeStream", evt.value);
           case "bitrateEstimationChange":
             return this.trigger("bitrateEstimationChange", evt.value);
           case "added-segment":
