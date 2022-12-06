@@ -22,7 +22,9 @@ import {
   Observable,
   startWith,
 } from "rxjs";
-import { IStreamOrchestratorEvent } from "../types";
+import Manifest from "../../../manifest";
+import filterMap from "../../../utils/filter_map";
+import { IStreamOrchestratorEvent, IStreamStatusEvent } from "../types";
 
 /**
  * Returns an Observable which emits ``true`` when all PeriodStreams given are
@@ -38,10 +40,12 @@ import { IStreamOrchestratorEvent } from "../types";
  * segments needed for this Stream have been downloaded.
  *
  * When the Observable returned here emits, every Stream are finished.
+ * @param {Object} manifest
  * @param {...Observable} streams
  * @returns {Observable}
  */
 export default function areStreamsComplete(
+  manifest : Manifest,
   ...streams : Array<Observable<IStreamOrchestratorEvent>>
 ) : Observable<boolean> {
   /**
@@ -53,11 +57,15 @@ export default function areStreamsComplete(
   const isCompleteArray : Array<Observable<boolean>> = streams
     .map((stream) => {
       return stream.pipe(
-        filter((evt) => {
-          return evt.type === "complete-stream" ||
-                 (evt.type === "stream-status" && !evt.value.hasFinishedLoading);
-        }),
-        map((evt) => evt.type === "complete-stream"),
+        filter((evt) : evt is IStreamStatusEvent => evt.type === "stream-status"),
+        filterMap<IStreamStatusEvent, boolean, null>((evt) => {
+          if (evt.value.hasFinishedLoading || evt.value.isEmptyStream) {
+            return manifest.getPeriodAfter(evt.value.period) === null ?
+              true :
+              null; // not the last Period: ignore event
+          }
+          return false;
+        }, null),
         startWith(false),
         distinctUntilChanged()
       );

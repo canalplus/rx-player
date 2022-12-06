@@ -187,7 +187,7 @@ export default function StreamOrchestrator(
 
   // Emits an "end-of-stream" event once every PeriodStream are complete.
   // Emits a 'resume-stream" when it's not
-  const endOfStream$ = combineLatest([areStreamsComplete(...streamsArray),
+  const endOfStream$ = combineLatest([areStreamsComplete(manifest, ...streamsArray),
                                       isLastPeriodKnown$])
     .pipe(map(([areComplete, isLastPeriodKnown]) => areComplete && isLastPeriodKnown),
           distinctUntilChanged(),
@@ -498,8 +498,7 @@ export default function StreamOrchestrator(
           if (evt.value.hasFinishedLoading) {
             const nextPeriod = manifest.getPeriodAfter(basePeriod);
             if (nextPeriod === null) {
-              return observableConcat(observableOf(evt),
-                                      observableOf(EVENTS.streamComplete(bufferType)));
+              return observableOf(evt);
             }
 
             // current Stream is full, create the next one if not
