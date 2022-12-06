@@ -98,6 +98,11 @@ export interface IStreamStatusEvent {
      */
     hasFinishedLoading : boolean;
     /**
+     * If `true`, this stream is a placeholder stream which will never load any
+     * segment.
+     */
+    isEmptyStream : boolean;
+    /**
      * Segments that will be scheduled for download to fill the buffer until
      * the buffer goal (first element of that list might already be ).
      */
@@ -318,13 +323,6 @@ export interface IResumeStreamEvent { type: "resume-stream";
                                       value: undefined; }
 
 /**
- * The last (chronologically) `PeriodStream` for a given type has pushed all
- * the segments it needs until the end.
- */
-export interface ICompletedStreamEvent { type: "complete-stream";
-                                         value : { type: IBufferType }; }
-
-/**
  * A situation needs the MediaSource to be reloaded.
  *
  * Once the MediaSource is reloaded, the Streams need to be restarted from
@@ -499,7 +497,6 @@ export type IPeriodStreamEvent = IPeriodStreamReadyEvent |
 
 /** Event coming from function(s) managing multiple PeriodStreams. */
 export type IMultiplePeriodStreamsEvent = IPeriodStreamClearedEvent |
-                                          ICompletedStreamEvent |
 
                                           // From a PeriodStream
 
@@ -531,7 +528,6 @@ export type IStreamOrchestratorEvent = IActivePeriodChangedEvent |
                                        IResumeStreamEvent |
 
                                        IPeriodStreamClearedEvent |
-                                       ICompletedStreamEvent |
 
                                        // From a PeriodStream
 
