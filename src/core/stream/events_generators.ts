@@ -29,7 +29,6 @@ import {
   IActivePeriodChangedEvent,
   IAdaptationChangeEvent,
   IBitrateEstimationChangeEvent,
-  ICompletedStreamEvent,
   IEncryptionDataEncounteredEvent,
   IEndOfStreamEvent,
   ILockedStreamEvent,
@@ -86,11 +85,6 @@ const EVENTS = {
   ) : IBitrateEstimationChangeEvent {
     return { type: "bitrateEstimationChange",
              value: { type, bitrate } };
-  },
-
-  streamComplete(bufferType: IBufferType) : ICompletedStreamEvent {
-    return { type: "complete-stream",
-             value: { type: bufferType } };
   },
 
   endOfStream() : IEndOfStreamEvent {

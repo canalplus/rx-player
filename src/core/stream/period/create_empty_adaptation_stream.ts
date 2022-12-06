@@ -62,6 +62,7 @@ export default function createEmptyAdaptationStream(
                                      bufferType,
                                      position,
                                      imminentDiscontinuity: null,
+                                     isEmptyStream: true,
                                      hasFinishedLoading,
                                      neededSegments: [],
                                      shouldRefreshManifest: false } });
