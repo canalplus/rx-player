@@ -48,7 +48,7 @@ describe("end number", function () {
   });
 
   it("should not load segment later than the end number on a time-based SegmentTimeline", async function () {
-    this.timeout(10000);
+    this.timeout(15000);
     xhrMock.lock();
     player.setVideoBitrate(0);
     player.setWantedBufferAhead(15);
@@ -71,11 +71,11 @@ describe("end number", function () {
     await sleep(500);
     expect(xhrMock.getLockedXHR().length).to.equal(2);
     xhrMock.flush();
-    player.seekTo(19);
+    player.seekTo(19.7);
     await sleep(50);
     expect(xhrMock.getLockedXHR().length).to.equal(2);
     xhrMock.flush();
-    await sleep(3000);
+    await sleep(5000);
     expect(xhrMock.getLockedXHR().length).to.equal(0);
     expect(player.getPlayerState()).to.eql("ENDED");
     expect(player.getPosition()).to.be.closeTo(20, 1);
