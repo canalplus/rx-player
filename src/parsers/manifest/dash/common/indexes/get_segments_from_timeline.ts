@@ -55,6 +55,7 @@ export default function getSegmentsFromTimeline(
   index : { availabilityTimeComplete? : boolean | undefined;
             segmentUrlTemplate : string | null;
             startNumber? : number | undefined;
+            endNumber? : number | undefined;
             timeline : IIndexSegment[];
             timescale : number;
             indexTimeOffset : number; },
@@ -65,7 +66,7 @@ export default function getSegmentsFromTimeline(
 ) : ISegment[] {
   const scaledUp = toIndexTime(from, index);
   const scaledTo = toIndexTime(from + durationWanted, index);
-  const { timeline, timescale, segmentUrlTemplate, startNumber } = index;
+  const { timeline, timescale, segmentUrlTemplate, startNumber, endNumber } = index;
 
   let currentNumber = startNumber ?? 1;
   const segments : ISegment[] = [];
@@ -84,6 +85,9 @@ export default function getSegmentsFromTimeline(
     let segmentTime = start + segmentNumberInCurrentRange * duration;
     while (segmentTime < scaledTo && segmentNumberInCurrentRange <= repeat) {
       const segmentNumber = currentNumber + segmentNumberInCurrentRange;
+      if (endNumber !== undefined && segmentNumber > endNumber) {
+        break;
+      }
 
       const detokenizedURL = segmentUrlTemplate === null ?
         null :
@@ -121,6 +125,9 @@ export default function getSegmentsFromTimeline(
     }
 
     currentNumber += repeat + 1;
+    if (endNumber !== undefined && currentNumber > endNumber) {
+      return segments;
+    }
   }
 
   return segments;

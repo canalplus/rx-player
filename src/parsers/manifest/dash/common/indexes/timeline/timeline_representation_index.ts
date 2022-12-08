@@ -88,6 +88,8 @@ export interface ITimelineIndex {
   segmentUrlTemplate : string | null ;
   /** Number from which the first segments in this index starts with. */
   startNumber? : number | undefined;
+  /** Number associated to the last segment in this index. */
+  endNumber? : number | undefined;
   /**
    * Every segments defined in this index.
    * `null` at the beginning as this property is parsed lazily (only when first
@@ -125,6 +127,7 @@ export interface ITimelineIndexIndexArgument {
                     undefined;
   media? : string | undefined;
   startNumber? : number | undefined;
+  endNumber? : number | undefined;
   timescale? : number | undefined;
   /**
    * Offset present in the index to convert from the mediaTime (time declared in
@@ -306,7 +309,12 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
                       },
                     segmentUrlTemplate,
                     startNumber: index.startNumber,
-                    timeline: index.timeline ?? null,
+                    endNumber: index.endNumber,
+                    timeline: index.timeline === undefined ?
+                      null :
+                      updateTimelineFromEndNumber(index.timeline,
+                                                  index.startNumber,
+                                                  index.endNumber),
                     timescale };
     this._scaledPeriodStart = toIndexTime(periodStart, this._index);
     this._scaledPeriodEnd = periodEnd === undefined ? undefined :
@@ -336,11 +344,13 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     // destructuring to please TypeScript
     const { segmentUrlTemplate,
             startNumber,
+            endNumber,
             timeline,
             timescale,
             indexTimeOffset } = this._index;
     return getSegmentsFromTimeline({ segmentUrlTemplate,
                                      startNumber,
+                                     endNumber,
                                      timeline,
                                      timescale,
                                      indexTimeOffset },
@@ -536,6 +546,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     if (hasReplaced) {
       this._index.startNumber = newIndex._index.startNumber;
     }
+    this._index.endNumber = newIndex._index.endNumber;
     this._isDynamic = newIndex._isDynamic;
     this._scaledPeriodStart = newIndex._scaledPeriodStart;
     this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
@@ -613,6 +624,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
                                                     scaledFirstPosition);
     if (this._index.startNumber !== undefined) {
       this._index.startNumber += nbEltsRemoved;
+    } else if (this._index.endNumber !== undefined) {
+      this._index.startNumber = nbEltsRemoved + 1;
     }
   }
 
@@ -666,7 +679,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
         newElements.length < MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY)
     {
       // Just completely parse the current timeline
-      return constructTimelineFromElements(newElements);
+      return updateTimelineFromEndNumber(constructTimelineFromElements(newElements),
+                                         this._index.startNumber,
+                                         this._index.endNumber);
     }
 
     // Construct previously parsed timeline if not already done
@@ -679,7 +694,50 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     }
     this._unsafelyBaseOnPreviousIndex = null; // Free memory
 
-    return constructTimelineFromPreviousTimeline(newElements, prevTimeline);
+    return updateTimelineFromEndNumber(
+      constructTimelineFromPreviousTimeline(newElements, prevTimeline),
+      this._index.startNumber,
+      this._index.endNumber);
 
   }
+}
+
+/**
+ * Take the original SegmentTimeline's parsed timeline and, if an `endNumber` is
+ * specified, filter segments which possess a number superior to that number.
+ *
+ * This should only be useful in only rare and broken MPDs, but we aim to
+ * respect the specification even in those cases.
+ *
+ * @param {Array.<Object>} timeline
+ * @param {number|undefined} startNumber
+ * @param {Array.<Object>} endNumber
+ * @returns {number|undefined}
+ */
+function updateTimelineFromEndNumber(
+  timeline : IIndexSegment[],
+  startNumber : number | undefined,
+  endNumber : number | undefined
+) : IIndexSegment[] {
+  if (endNumber === undefined) {
+    return timeline;
+  }
+  let currNumber = startNumber ?? 1;
+  for (let idx = 0; idx < timeline.length; idx++) {
+    const seg = timeline[idx];
+    currNumber += seg.repeatCount + 1;
+    if (currNumber > endNumber) {
+      if (currNumber === endNumber + 1) {
+        return timeline.slice(0, idx + 1);
+      } else {
+        const newTimeline = timeline.slice(0, idx);
+        const lastElt = { ...seg };
+        const beginningNumber = currNumber - seg.repeatCount - 1;
+        lastElt.repeatCount = Math.max(0, endNumber - beginningNumber);
+        newTimeline.push(lastElt);
+        return newTimeline;
+      }
+    }
+  }
+  return timeline;
 }
