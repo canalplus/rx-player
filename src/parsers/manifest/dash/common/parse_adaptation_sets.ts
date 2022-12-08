@@ -107,21 +107,36 @@ function isVisuallyImpaired(
 /**
  * Detect if the accessibility given defines an adaptation for the hard of
  * hearing.
- * Based on DVB Document A168 (DVB-DASH).
- * @param {Object} accessibility
+ * Based on DVB Document A168 (DVB-DASH) and DASH specification.
+ * @param {Array.<Object>} accessibilities
+ * @param {Array.<Object>} roles
  * @returns {Boolean}
  */
-function isHardOfHearing(
-  accessibility : { schemeIdUri? : string | undefined;
-                    value? : string | undefined; } |
-                  undefined
+function isCaptionning(
+  accessibilities : Array<{ schemeIdUri? : string | undefined;
+                            value? : string | undefined; }> |
+                    undefined,
+  roles : Array<{ schemeIdUri? : string | undefined;
+                  value? : string | undefined; }> |
+         undefined
 ) : boolean {
-  if (accessibility === undefined) {
-    return false;
+  if (accessibilities !== undefined) {
+    const hasDvbClosedCaptionSignaling = accessibilities.some(accessibility =>
+      (accessibility.schemeIdUri === "urn:tva:metadata:cs:AudioPurposeCS:2007" &&
+       accessibility.value === "2"));
+    if (hasDvbClosedCaptionSignaling) {
+      return true;
+    }
   }
-
-  return (accessibility.schemeIdUri === "urn:tva:metadata:cs:AudioPurposeCS:2007" &&
-          accessibility.value === "2");
+  if (roles !== undefined) {
+    const hasDashCaptionSinaling = roles.some(role =>
+      (role.schemeIdUri === "urn:mpeg:dash:role:2011" &&
+       role.value === "caption"));
+    if (hasDashCaptionSinaling) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
@@ -147,14 +162,13 @@ function hasSignLanguageInterpretation(
 /**
  * Contruct Adaptation ID from the information we have.
  * @param {Object} adaptation
- * @param {Array.<Object>} representations
- * @param {Array.<Object>} representations
  * @param {Object} infos
  * @returns {string}
  */
 function getAdaptationID(
   adaptation : IAdaptationSetIntermediateRepresentation,
   infos : { isClosedCaption : boolean | undefined;
+            isForcedSubtitle : boolean | undefined;
             isAudioDescription : boolean | undefined;
             isSignInterpreted : boolean | undefined;
             isTrickModeTrack: boolean;
@@ -165,6 +179,7 @@ function getAdaptationID(
   }
 
   const { isClosedCaption,
+          isForcedSubtitle,
           isAudioDescription,
           isSignInterpreted,
           isTrickModeTrack,
@@ -175,6 +190,9 @@ function getAdaptationID(
     idString += `-${adaptation.attributes.language}`;
   }
   if (isClosedCaption === true) {
+    idString += "-cc";
+  }
+  if (isForcedSubtitle === true) {
     idString += "-cc";
   }
   if (isAudioDescription === true) {
@@ -365,8 +383,17 @@ export default function parseAdaptationSets(
       let isClosedCaption;
       if (type !== "text") {
         isClosedCaption = false;
-      } else if (accessibilities !== undefined) {
-        isClosedCaption = accessibilities.some(isHardOfHearing);
+      } else {
+        isClosedCaption = isCaptionning(accessibilities, roles);
+      }
+
+      let isForcedSubtitle;
+      if (type === "text" &&
+          roles !== undefined &&
+          roles.some((role) => role.value === "forced-subtitle" ||
+                               role.value === "forced_subtitle"))
+      {
+        isForcedSubtitle = true;
       }
 
       let isAudioDescription;
@@ -385,6 +412,7 @@ export default function parseAdaptationSets(
 
       let adaptationID = getAdaptationID(adaptation,
                                          { isAudioDescription,
+                                           isForcedSubtitle,
                                            isClosedCaption,
                                            isSignInterpreted,
                                            isTrickModeTrack,
@@ -420,6 +448,9 @@ export default function parseAdaptationSets(
       }
       if (isDub === true) {
         parsedAdaptationSet.isDub = true;
+      }
+      if (isForcedSubtitle !== undefined) {
+        parsedAdaptationSet.forcedSubtitles = isForcedSubtitle;
       }
       if (isSignInterpreted === true) {
         parsedAdaptationSet.isSignInterpreted = true;
