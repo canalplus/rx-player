@@ -173,6 +173,8 @@ pub fn report_segment_template_attrs(tag_bs : &quick_xml::events::BytesStart) {
                     Duration.try_report_as_u64(&attr),
                 b"startNumber" =>
                     StartNumber.try_report_as_u64(&attr),
+                b"endNumber" =>
+                    EndNumber.try_report_as_u64(&attr),
                 b"media" => Media.try_report_as_string(&attr),
                 b"bitstreamSwitching" => BitstreamSwitching.try_report_as_bool(&attr),
                 _ => {},
@@ -201,6 +203,8 @@ pub fn report_segment_base_attrs(tag_bs : &quick_xml::events::BytesStart) {
                     Duration.try_report_as_u64(&attr),
                 b"startNumber" =>
                     StartNumber.try_report_as_u64(&attr),
+                b"endNumber" =>
+                    EndNumber.try_report_as_u64(&attr),
                 _ => {},
             },
             Err(err) => ParsingError::from(err).report_err(),

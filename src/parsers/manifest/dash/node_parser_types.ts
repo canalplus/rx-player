@@ -285,6 +285,7 @@ export interface ISegmentBaseIntermediateRepresentation {
   media?: string;
   presentationTimeOffset?: number;
   startNumber? : number;
+  endNumber? : number;
   timescale?: number;
 }
 
@@ -299,6 +300,7 @@ export interface ISegmentListIntermediateRepresentation {
   media?: string;
   presentationTimeOffset?: number;
   startNumber? : number;
+  endNumber? : number;
   timescale?: number;
 }
 
@@ -348,6 +350,7 @@ export interface ISegmentTemplateIntermediateRepresentation {
   media? : string | undefined;
   presentationTimeOffset? : number | undefined;
   startNumber? : number | undefined;
+  endNumber? : number | undefined;
   timescale? : number | undefined;
   initialization? : { media?: string } | undefined;
   timeline? : ISegmentTimelineElement[] | undefined;
