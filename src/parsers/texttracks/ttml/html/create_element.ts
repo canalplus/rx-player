@@ -311,6 +311,14 @@ function applyPStyle(
 ) {
   element.style.margin = "0px";
 
+  // Set on it the default font-size, more specific font sizes may then be set
+  // on children elements.
+  // Doing this on the parent <p> elements seems to fix some CSS issues we had
+  // with too large inner line breaks spacing when the text track element was
+  // too small, for some reasons.
+  addClassName(element, "proportional-style");
+  element.setAttribute("data-proportional-font-size", "1");
+
   // applies to body, div, p, region, span
   const paragraphBackgroundColor = style.backgroundColor;
   if (isNonEmptyString(paragraphBackgroundColor)) {
