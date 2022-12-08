@@ -56,6 +56,14 @@ export default class Adaptation {
   /** Whether this Adaptation contains closed captions for the hard-of-hearing. */
   public isClosedCaption? : boolean;
 
+  /**
+   * If `true` this Adaptation are subtitles Meant for display when no other text
+   * Adaptation is selected. It is used to clarify dialogue, alternate
+   * languages, texted graphics or location/person IDs that are not otherwise
+   * covered in the dubbed/localized audio Adaptation.
+   */
+  public isForcedSubtitles? : boolean;
+
   /** If true this Adaptation contains sign interpretation. */
   public isSignInterpreted? : boolean;
 
@@ -119,6 +127,9 @@ export default class Adaptation {
     }
     if (parsedAdaptation.isDub !== undefined) {
       this.isDub = parsedAdaptation.isDub;
+    }
+    if (parsedAdaptation.forcedSubtitles !== undefined) {
+      this.isForcedSubtitles = parsedAdaptation.forcedSubtitles;
     }
     if (parsedAdaptation.isSignInterpreted !== undefined) {
       this.isSignInterpreted = parsedAdaptation.isSignInterpreted;

@@ -13,14 +13,22 @@ apply to every future loaded content in the current RxPlayer instance.
 The first argument should be set as an array of objects, each object describing
 constraints a text track should respect.
 
+Here are the list of properties that can be set on each of those objects:
+
+  - **language** (`string`): The wanted language (preferably as an ISO 639-1,
+    ISO 639-2 or ISO 639-3 language code)
+
+  - **closedCaption** (`boolean`): Whether the text track should be a closed
+    caption for the hard of hearing
+
+  - **forced** (`boolean|undefined`): If `true` the text track should be a
+    "forced subtitle", which are default text tracks used when no other text
+    track is selected.
+
 Here is all the properties that should be set in a single object of that array.
 
 ```js
 {
-  language: "fra", // {string} The wanted language
-                   // (ISO 639-1, ISO 639-2 or ISO 639-3 language code)
-  closedCaption: false // {Boolean} Whether the text track should be a closed
-                       // caption for the hard of hearing
 }
 ```
 
