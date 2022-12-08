@@ -18,5 +18,10 @@ module.exports = [
     path: path.join(__dirname, "./media/manifest.mpd"),
     contentType: "application/dash+xml",
   },
+  {
+    url: baseURL + "end_number.mpd",
+    path: path.join(__dirname, "./media/end_number.mpd"),
+    contentType: "application/dash+xml",
+  },
 ];
 

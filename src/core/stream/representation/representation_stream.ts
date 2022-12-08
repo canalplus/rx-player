@@ -260,6 +260,7 @@ export default function RepresentationStream<TSegmentDataType>({
                                 position: observation.position.last,
                                 bufferType,
                                 imminentDiscontinuity: status.imminentDiscontinuity,
+                                isEmptyStream: false,
                                 hasFinishedLoading: status.hasFinishedLoading,
                                 neededSegments: status.neededSegments } });
       let bufferRemoval = EMPTY;
