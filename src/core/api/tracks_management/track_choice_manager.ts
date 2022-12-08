@@ -84,6 +84,7 @@ type INormalizedPreferredTextTrack = null |
 /** Text track preference when it is not set to `null`. */
 interface INormalizedPreferredTextTrackObject {
   normalized : string;
+  forced : boolean | undefined;
   closedCaption : boolean;
 }
 
@@ -116,6 +117,7 @@ function normalizeTextTracks(
   return tracks.map(t => t === null ?
     t :
     { normalized: normalizeLanguage(t.language),
+      forced: t.forced,
       closedCaption: t.closedCaption });
 }
 
@@ -384,8 +386,10 @@ export default class TrackChoiceManager {
       // Find the optimal text Adaptation
       const preferredTextTracks = this._preferredTextTracks;
       const normalizedPref = normalizeTextTracks(preferredTextTracks);
-      const optimalAdaptation = findFirstOptimalTextAdaptation(textAdaptations,
-                                                               normalizedPref);
+      const optimalAdaptation = findFirstOptimalTextAdaptation(
+        textAdaptations,
+        normalizedPref,
+        this._audioChoiceMemory.get(period));
       this._textChoiceMemory.set(period, optimalAdaptation);
       textInfos.adaptation$.next(optimalAdaptation);
     } else {
@@ -645,13 +649,17 @@ export default class TrackChoiceManager {
       return null;
     }
 
-    return {
+    const formatted : ITextTrack = {
       language: takeFirstSet<string>(chosenTextAdaptation.language, ""),
       normalized: takeFirstSet<string>(chosenTextAdaptation.normalizedLanguage, ""),
       closedCaption: chosenTextAdaptation.isClosedCaption === true,
       id: chosenTextAdaptation.id,
       label: chosenTextAdaptation.label,
     };
+    if (chosenTextAdaptation.isForcedSubtitles !== undefined) {
+      formatted.forced = chosenTextAdaptation.isForcedSubtitles;
+    }
+    return formatted;
   }
 
   /**
@@ -768,15 +776,21 @@ export default class TrackChoiceManager {
       null;
 
     return textInfos.adaptations
-      .map((adaptation) => ({
-        language: takeFirstSet<string>(adaptation.language, ""),
-        normalized: takeFirstSet<string>(adaptation.normalizedLanguage, ""),
-        closedCaption: adaptation.isClosedCaption === true,
-        id: adaptation.id,
-        active: currentId === null ? false :
-                                     currentId === adaptation.id,
-        label: adaptation.label,
-      }));
+      .map((adaptation) => {
+        const formatted : IAvailableTextTrack = {
+          language: takeFirstSet<string>(adaptation.language, ""),
+          normalized: takeFirstSet<string>(adaptation.normalizedLanguage, ""),
+          closedCaption: adaptation.isClosedCaption === true,
+          id: adaptation.id,
+          active: currentId === null ? false :
+                                       currentId === adaptation.id,
+          label: adaptation.label,
+        };
+        if (adaptation.isForcedSubtitles !== undefined) {
+          formatted.forced = adaptation.isForcedSubtitles;
+        }
+        return formatted;
+      });
   }
 
   /**
@@ -956,8 +970,10 @@ export default class TrackChoiceManager {
         return;
       }
 
-      const optimalAdaptation = findFirstOptimalTextAdaptation(textAdaptations,
-                                                               normalizedPref);
+      const optimalAdaptation = findFirstOptimalTextAdaptation(
+        textAdaptations,
+        normalizedPref,
+        this._audioChoiceMemory.get(period));
 
       this._textChoiceMemory.set(period, optimalAdaptation);
       textItem.adaptation$.next(optimalAdaptation);
@@ -1162,7 +1178,9 @@ function createTextPreferenceMatcher(
     return takeFirstSet<string>(textAdaptation.normalizedLanguage,
                                 "") === preferredTextTrack.normalized &&
     (preferredTextTrack.closedCaption ? textAdaptation.isClosedCaption === true :
-                                        textAdaptation.isClosedCaption !== true);
+                                        textAdaptation.isClosedCaption !== true) &&
+    (preferredTextTrack.forced === true ? textAdaptation.isForcedSubtitles === true :
+                                          textAdaptation.isForcedSubtitles !== true);
   };
 }
 
@@ -1173,12 +1191,14 @@ function createTextPreferenceMatcher(
  * `null` if the most optimal text adaptation is no text adaptation.
  * @param {Array.<Object>} textAdaptations
  * @param {Array.<Object|null>} preferredTextTracks
+ * @param {Object|null|undefined} chosenAudioAdaptation
  * @returns {Adaptation|null}
  */
 function findFirstOptimalTextAdaptation(
   textAdaptations : Adaptation[],
-  preferredTextTracks : INormalizedPreferredTextTrack[]
-) : Adaptation|null {
+  preferredTextTracks : INormalizedPreferredTextTrack[],
+  chosenAudioAdaptation : Adaptation | null | undefined
+) : Adaptation | null {
   if (textAdaptations.length === 0) {
     return null;
   }
@@ -1196,6 +1216,19 @@ function findFirstOptimalTextAdaptation(
     if (foundAdaptation !== undefined) {
       return foundAdaptation;
     }
+  }
+
+  const forcedSubtitles = textAdaptations.filter((ad) => ad.isForcedSubtitles === true);
+  if (forcedSubtitles.length > 0) {
+    if (chosenAudioAdaptation !== null && chosenAudioAdaptation !== undefined) {
+      const sameLanguage = arrayFind(forcedSubtitles, (f) =>
+        f.normalizedLanguage === chosenAudioAdaptation.normalizedLanguage);
+      if (sameLanguage !== undefined) {
+        return sameLanguage;
+      }
+    }
+    return arrayFind(forcedSubtitles, (f) => f.normalizedLanguage === undefined) ??
+      null;
   }
 
   // no optimal adaptation

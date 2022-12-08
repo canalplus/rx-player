@@ -217,6 +217,12 @@ The array emitted contains object describing each available text track:
 - `closedCaption` (`Boolean`): Whether the track is specially adapted for
   the hard of hearing or not.
 
+- `forced` (`Boolean`): If `true` this text track is meant to be displayed by
+  default if no other text track is selected.
+
+  It is often used to clarify dialogue, alternate languages, texted graphics or
+  location and person identification.
+
 - `active` (`Boolean`): Whether the track is the one currently active or
   not.
 
@@ -259,9 +265,18 @@ The payload is an object describing the new track, with the following
 properties:
 
 - `id` (`Number|string`): The id used to identify the track.
+
 - `language` (`string`): The language the text track is in.
+
 - `closedCaption` (`Boolean`): Whether the track is specially adapted for
   the hard of hearing or not.
+
+- `forced` (`Boolean`): If `true` this text track is meant to be displayed by
+  default if no other text track is selected.
+
+  It is often used to clarify dialogue, alternate languages, texted graphics or
+  location and person identification.
+
 - `label` (`string|undefined`): A human readable label that may be displayed in
   the user interface providing a choice between text tracks.
 
