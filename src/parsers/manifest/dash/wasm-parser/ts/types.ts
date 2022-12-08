@@ -290,4 +290,7 @@ export const enum AttributeName {
   ProxyServerUrl = 74, // String
 
   DefaultServiceLocation = 75,
+
+  // SegmentTemplate
+  EndNumber = 76, // f64
 }
