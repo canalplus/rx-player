@@ -20,7 +20,6 @@ import { IHDRInformation } from "../../../../public_types";
 import arrayFind from "../../../../utils/array_find";
 import objectAssign from "../../../../utils/object_assign";
 import {
-  ICdnMetadata,
   IContentProtections,
   IParsedRepresentation,
 } from "../../types";
@@ -163,9 +162,14 @@ export default function parseRepresentations(
 
     const representationBaseURLs = resolveBaseURLs(context.baseURLs,
                                                    representation.children.baseURLs);
-    const cdnMetadata : ICdnMetadata[] = representationBaseURLs.map(x =>
-      ({ baseUrl: x.url, id: x.serviceLocation }));
 
+    const cdnMetadata = representationBaseURLs.length === 0 ?
+      // No BaseURL seems to be associated to this Representation, nor to the MPD,
+      // but underlying segments might have one. To indicate that segments should
+      // still be available through a CDN without giving any root CDN URL here,
+      // we just communicate about an empty `baseUrl`, as documented.
+      [ { baseUrl: "", id: undefined } ] :
+      representationBaseURLs.map(x => ({ baseUrl: x.url, id: x.serviceLocation }));
 
     // Construct Representation Base
     const parsedRepresentation : IParsedRepresentation =

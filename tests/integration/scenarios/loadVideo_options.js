@@ -414,6 +414,57 @@ describe("loadVideo Options", () => {
           .to.equal(nbVideoSegmentRequests);
         expect(nbVideoSegmentRequests).to.be.above(0);
       });
+
+      it("should pass through the custom segmentLoader even when no hint is given about the URL", () => {
+        const fakeMpdWithoutBaseURLs = `<?xml version="1.0" encoding="utf-8"?>
+<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="urn:mpeg:dash:schema:mpd:2011"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
+  profiles="urn:mpeg:dash:profile:isoff-live:2011"
+  type="dynamic"
+  minimumUpdatePeriod="PT500S"
+  suggestedPresentationDelay="PT1S"
+  availabilityStartTime="2022-12-07T08:52:13.150Z"
+  publishTime="2022-12-07T08:52:13.926Z"
+  maxSegmentDuration="PT1.0S"
+  minBufferTime="PT2.0S">
+  <Period id="0" start="PT0.0S">
+    <AdaptationSet id="0" contentType="video" startWithSAP="1" segmentAlignment="true" bitstreamSwitching="true" frameRate="25/1" maxWidth="768" maxHeight="576" par="4:3">
+      <Representation id="0" mimeType="video/mp4" codecs="avc1.640028" bandwidth="176736" width="768" height="576" sar="1:1">
+        <SegmentTemplate timescale="1000000" duration="1000000" initialization="init-stream$RepresentationID$.m4s" media="chunk-stream$RepresentationID$-$Number%05d$.m4s" startNumber="1">
+        </SegmentTemplate>
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet id="1" contentType="audio" startWithSAP="1" segmentAlignment="true" bitstreamSwitching="true">
+      <Representation id="1" mimeType="audio/mp4" codecs="mp4a.40.2" bandwidth="69000" audioSamplingRate="44100">
+        <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="1" />
+        <SegmentTemplate timescale="1000000" duration="1000000" initialization="init-stream$RepresentationID$.m4s" media="chunk-stream$RepresentationID$-$Number%05d$.m4s" startNumber="1">
+        </SegmentTemplate>
+      </Representation>
+    </AdaptationSet>
+  </Period>
+</MPD>`;
+        return new Promise((res, rej) => {
+          player.loadVideo({
+            transport: manifestInfos.transport,
+            transportOptions: {
+              manifestLoader(_url, callbacks) {
+                callbacks.resolve({ data: fakeMpdWithoutBaseURLs });
+              },
+              segmentLoader(infos) {
+                expect(infos.url).to.satisfy((s) => s.includes("init-stream") ||
+                                                    s.includes("chunk-stream"));
+                player.stop();
+                res();
+              },
+            },
+          });
+          player.addEventListener("error", (err) => {
+            rej(err);
+          });
+        });
+      });
     });
 
     describe("manifestLoader", () => {
@@ -457,7 +508,7 @@ describe("loadVideo Options", () => {
         };
       };
 
-      it("should pass through the custom segmentLoader for segment requests", async () => {
+      it("should pass through the custom manifestLoader for manifest requests", async () => {
         player.loadVideo({
           transport: manifestInfos.transport,
           url: manifestInfos.url,
