@@ -314,7 +314,8 @@ export default class PlaybackObserver {
       return timings;
     };
 
-    const returnedSharedReference = createSharedReference(getCurrentObservation("init"));
+    const returnedSharedReference = createSharedReference(getCurrentObservation("init"),
+                                                          this._canceller.signal);
 
     const generateObservationForEvent = (event : IPlaybackObserverEventType) => {
       const newObservation = getCurrentObservation(event);

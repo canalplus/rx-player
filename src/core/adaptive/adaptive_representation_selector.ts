@@ -49,6 +49,23 @@ import PendingRequestsStore, {
 import RepresentationScoreCalculator from "./utils/representation_score_calculator";
 import selectOptimalRepresentation from "./utils/select_optimal_representation";
 
+// Create default shared references
+
+const manualBitrateDefaultRef = createSharedReference(-1);
+manualBitrateDefaultRef.finish();
+
+const minAutoBitrateDefaultRef = createSharedReference(0);
+minAutoBitrateDefaultRef.finish();
+
+const maxAutoBitrateDefaultRef = createSharedReference(Infinity);
+maxAutoBitrateDefaultRef.finish();
+
+const limitWidthDefaultRef = createSharedReference(undefined);
+limitWidthDefaultRef.finish();
+
+const throttleBitrateDefaultRef = createSharedReference(Infinity);
+throttleBitrateDefaultRef.finish();
+
 /**
  * Select the most adapted Representation according to the network and buffer
  * metrics it receives.
@@ -99,22 +116,22 @@ export default function createAdaptiveRepresentationSelector(
     const bandwidthEstimator = _getBandwidthEstimator(type);
     const manualBitrate = takeFirstSet<IReadOnlySharedReference<number>>(
       manualBitrates[type],
-      createSharedReference(-1));
+      manualBitrateDefaultRef);
     const minAutoBitrate = takeFirstSet<IReadOnlySharedReference<number>>(
       minAutoBitrates[type],
-      createSharedReference(0));
+      minAutoBitrateDefaultRef);
     const maxAutoBitrate = takeFirstSet<IReadOnlySharedReference<number>>(
       maxAutoBitrates[type],
-      createSharedReference(Infinity));
+      maxAutoBitrateDefaultRef);
     const initialBitrate = takeFirstSet<number>(initialBitrates[type], 0);
     const filters = {
       limitWidth: takeFirstSet<IReadOnlySharedReference<number | undefined>>(
         throttlers.limitWidth[type],
-        createSharedReference(undefined)),
+        limitWidthDefaultRef),
       throttleBitrate: takeFirstSet<IReadOnlySharedReference<number>>(
         throttlers.throttleBitrate[type],
         throttlers.throttle[type],
-        createSharedReference(Infinity)),
+        throttleBitrateDefaultRef),
     };
     return getEstimateReference({ bandwidthEstimator,
                                   context,

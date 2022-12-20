@@ -103,7 +103,10 @@ export default function PeriodStream(
    * `null` when no Adaptation is chosen (e.g. no subtitles)
    * `undefined` at the beginning (it can be ignored.).
    */
-  const adaptationRef = createSharedReference<Adaptation|null|undefined>(undefined);
+  const adaptationRef = createSharedReference<Adaptation|null|undefined>(
+    undefined,
+    parentCancelSignal
+  );
 
   callbacks.periodStreamReady({ type: bufferType, period, adaptationRef });
   if (parentCancelSignal.isCancelled) {
@@ -396,17 +399,13 @@ function createAdaptationStreamPlaybackObserver(
     observationRef : IReadOnlySharedReference<IPeriodStreamPlaybackObservation>,
     cancellationSignal : CancellationSignal
   ) : IReadOnlySharedReference<IAdaptationStreamPlaybackObservation> {
-    const newRef = createSharedReference(constructAdaptationStreamPlaybackObservation());
+    const newRef = createSharedReference(constructAdaptationStreamPlaybackObservation(),
+                                         cancellationSignal);
 
     observationRef.onUpdate(emitAdaptationStreamPlaybackObservation, {
       clearSignal: cancellationSignal,
       emitCurrentValue: false,
     });
-
-    cancellationSignal.register(() => {
-      newRef.finish();
-    });
-
     return newRef;
 
     function constructAdaptationStreamPlaybackObservation(

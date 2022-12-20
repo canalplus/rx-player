@@ -60,7 +60,8 @@ export default function createStreamPlaybackObserver(
     observationRef : IReadOnlySharedReference<IPlaybackObservation>,
     cancellationSignal : CancellationSignal
   ) : IReadOnlySharedReference<IStreamOrchestratorPlaybackObservation> {
-    const newRef = createSharedReference(constructStreamPlaybackObservation());
+    const newRef = createSharedReference(constructStreamPlaybackObservation(),
+                                         cancellationSignal);
 
     speed.onUpdate(emitStreamPlaybackObservation, {
       clearSignal: cancellationSignal,
@@ -71,11 +72,6 @@ export default function createStreamPlaybackObserver(
       clearSignal: cancellationSignal,
       emitCurrentValue: false,
     });
-
-    cancellationSignal.register(() => {
-      newRef.finish();
-    });
-
     return newRef;
 
     function constructStreamPlaybackObservation() {

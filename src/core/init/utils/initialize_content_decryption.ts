@@ -59,9 +59,11 @@ export default function initializeContentDecryption(
                                           "EME feature not activated.");
       callbacks.onError(err);
     }, { clearSignal: cancelSignal });
-    return createSharedReference({ initializationState: { type: "initialized",
-                                                          value: null },
-                                   drmSystemId: undefined });
+    const ref = createSharedReference({
+      initializationState: { type: "initialized" as const, value: null },
+      drmSystemId: undefined });
+    ref.finish(); // We know that no new value will be triggered
+    return ref;
   } else if (!hasEMEAPIs()) {
     protectionRef.onUpdate((data, stopListening) => {
       if (data === null) { // initial value
@@ -73,16 +75,18 @@ export default function initializeContentDecryption(
                                           "Encryption APIs not found.");
       callbacks.onError(err);
     }, { clearSignal: cancelSignal });
-    return createSharedReference({ initializationState: { type: "initialized",
-                                                          value: null },
-                                   drmSystemId: undefined });
+    const ref = createSharedReference({
+      initializationState: { type: "initialized" as const, value: null },
+      drmSystemId: undefined });
+    ref.finish(); // We know that no new value will be triggered
+    return ref;
   }
 
   const decryptorCanceller = new TaskCanceller({ cancelOn: cancelSignal });
   const drmStatusRef = createSharedReference<IDrmInitializationStatus>({
     initializationState: { type: "uninitialized", value: null },
     drmSystemId: undefined,
-  });
+  }, cancelSignal);
 
   log.debug("Init: Creating ContentDecryptor");
   const contentDecryptor = new ContentDecryptor(mediaElement, keySystems);

@@ -77,7 +77,7 @@ export default function onHeightWidthChange(
   const ref = createSharedReference<IResolution>({
     height: initHeight,
     width: initWidth,
-  });
+  }, cancellationSignal);
   let lastHeight : number = initHeight;
   let lastWidth : number = initWidth;
 
