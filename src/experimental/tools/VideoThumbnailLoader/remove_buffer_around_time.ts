@@ -27,7 +27,7 @@ import { CancellationSignal } from "../../../utils/task_canceller";
  * @param {Number} time
  * @param {Number|undefined} margin
  * @param {Object} cancelSignal
- * @returns {Observable}
+ * @returns {Promise}
  */
 export default function removeBufferAroundTime(
   videoElement: HTMLMediaElement,

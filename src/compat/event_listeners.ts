@@ -14,11 +14,6 @@
  * limitations under the License.
  */
 
-/**
- * This file provides browser-agnostic event listeners under the form of
- * RxJS Observables
- */
-
 import config from "../config";
 import log from "../log";
 import { IEventEmitter } from "../utils/event_emitter";

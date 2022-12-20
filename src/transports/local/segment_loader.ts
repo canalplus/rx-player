@@ -102,7 +102,7 @@ function loadInitSegment(
  * @param {Object} segment
  * @param {Function} customSegmentLoader
  * @param {Object} cancelSignal
- * @returns {Observable}
+ * @returns {Promise.<Object>}
  */
 function loadSegment(
   segment : { time : number; duration : number; timestampOffset? : number },

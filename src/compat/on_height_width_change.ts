@@ -66,7 +66,7 @@ const _ResizeObserver : IResizeObserverConstructor |
  * milliseconds at which we should query that element's size.
  * @param {HTMLElement} element
  * @param {number} interval
- * @returns {Observable}
+ * @returns {Object}
  */
 export default function onHeightWidthChange(
   element : HTMLElement,

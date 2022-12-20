@@ -274,7 +274,7 @@ function getEstimateReference(
     /** Reference through which estimates are emitted. */
     const innerEstimateRef = createSharedReference<IABREstimate>(getCurrentEstimate());
 
-    // subscribe to subsequent playback observations
+    // Listen to playback observations
     playbackObserver.listen((obs) => {
       lastPlaybackObservation = obs;
       updateEstimate();

@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-import {
-  Observable,
-  Observer,
-} from "rxjs";
 import log from "../log";
 import isNullOrUndefined from "./is_null_or_undefined";
 import { CancellationSignal } from "./task_canceller";
@@ -146,26 +142,4 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
       }
     });
   }
-}
-
-/**
- * Simple redefinition of the fromEvent from rxjs to also work on our
- * implementation of EventEmitter with type-checked strings
- * @param {Object} target
- * @param {string} eventName
- * @returns {Observable}
- */
-export function fromEvent<T, TEventName extends keyof T>(
-  target : IEventEmitter<T>,
-  eventName : TEventName
-) : Observable<IArgs<T, TEventName>> {
-  return new Observable((obs : Observer<IArgs<T, TEventName>>) => {
-    function handler(event : IArgs<T, TEventName>) {
-      obs.next(event);
-    }
-    target.addEventListener(eventName, handler);
-    return () => {
-      target.removeEventListener(eventName, handler);
-    };
-  });
 }

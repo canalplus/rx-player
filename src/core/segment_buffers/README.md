@@ -134,7 +134,7 @@ periodically perform "garbage collection" manually on a given
 
 It is based on the following building bricks:
 
-  - An observable emitting the current time (in seconds) when the garbage
+  - A playback observer emitting the current time (in seconds) when the garbage
     collection task should be performed
 
   - The `SegmentBuffer` on which the garbage collection task should run
@@ -145,9 +145,10 @@ It is based on the following building bricks:
   - The maximum time margin authorized for the buffer ahead of the current
     position
 
-Basically, each times the given Observable emits, the BufferGarbageCollector will
-ensure that the volume of data before and ahead of the current position does not
-grow into a larger value than what is configured.
+Basically, each times the given playback observer emits, the
+BufferGarbageCollector will ensure that the volume of data before and ahead
+of the current position does not grow into a larger value than what is
+configured.
 
 For now, its code is completely decoupled for the rest of the code in that
 directory. This is why it is not included in the schema included on the top of
