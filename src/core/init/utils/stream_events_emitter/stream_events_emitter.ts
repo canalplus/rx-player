@@ -48,7 +48,8 @@ export default function streamEventsEmitter(
   const eventsBeingPlayed =
     new WeakMap<IStreamEventPayload|INonFiniteStreamEventPayload, true>();
   const scheduledEventsRef = createSharedReference(refreshScheduledEventsList([],
-                                                                              manifest));
+                                                                              manifest),
+                                                   cancelSignal);
   manifest.addEventListener("manifestUpdate", () => {
     const prev = scheduledEventsRef.getValue();
     scheduledEventsRef.setValue(refreshScheduledEventsList(prev, manifest));

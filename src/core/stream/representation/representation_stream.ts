@@ -119,7 +119,7 @@ export default function RepresentationStream<TSegmentDataType>(
   const lastSegmentQueue = createSharedReference<IDownloadQueueItem>({
     initSegment: null,
     segmentQueue: [],
-  });
+  }, segmentsLoadingCanceller.signal);
 
   /** If `true`, the current Representation has a linked initialization segment. */
   const hasInitSegment = initSegmentState.segment !== null;
