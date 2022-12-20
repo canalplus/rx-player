@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import config from "../../../config";
+import config from "../../../../config";
 import {
   Adaptation,
   Period,
-} from "../../../manifest";
-import { IAudioTrackSwitchingMode } from "../../../public_types";
-import areCodecsCompatible from "../../../utils/are_codecs_compatible";
+} from "../../../../manifest";
+import { IAudioTrackSwitchingMode } from "../../../../public_types";
+import areCodecsCompatible from "../../../../utils/are_codecs_compatible";
 import {
   convertToRanges,
   excludeFromRanges,
@@ -28,11 +28,11 @@ import {
   isTimeInRange,
   isTimeInRanges,
   keepRangeIntersection,
-} from "../../../utils/ranges";
+} from "../../../../utils/ranges";
 import {
   IBufferedChunk,
   SegmentBuffer,
-} from "../../segment_buffers";
+} from "../../../segment_buffers";
 
 
 export type IAdaptationSwitchStrategy =
