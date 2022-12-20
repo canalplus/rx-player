@@ -37,30 +37,6 @@ import TaskPrioritizer from "./task_prioritizer";
  * priority.
  *
  * @class SegmentFetcherCreator
- *
- * @example
- * ```js
- * const creator = new SegmentFetcherCreator(transport, {
- *   lowLatencyMode: false,
- *   maxRetryRegular: Infinity,
- *   maxRetryOffline: Infinity,
- * });
- *
- * // 2 - create a new fetcher with its backoff options
- * const fetcher = creator.createSegmentFetcher("audio", {
- *   // ... (lifecycle callbacks if wanted)
- * });
- *
- * // 3 - load a segment with a given priority
- * fetcher.createRequest(myContent, 1)
- *   // 4 - parse it
- *   .pipe(
- *     filter(evt => evt.type === "chunk"),
- *     mergeMap(response => response.parse());
- *   )
- *   // 5 - use it
- *   .subscribe((res) => console.log("audio chunk downloaded:", res));
- * ```
  */
 export default class SegmentFetcherCreator {
   /**

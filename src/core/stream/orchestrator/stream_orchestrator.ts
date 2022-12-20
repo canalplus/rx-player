@@ -65,7 +65,7 @@ import getTimeRangesForContent from "./get_time_ranges_for_content";
  *   - Call various callbacks to notify of its health and issues
  *
  * @param {Object} content
- * @param {Observable} playbackObserver - Emit position information
+ * @param {Object} playbackObserver - Emit position information
  * @param {Object} representationEstimator - Emit bitrate estimates and best
  * Representation to play.
  * @param {Object} segmentBuffersStore - Will be used to lazily create

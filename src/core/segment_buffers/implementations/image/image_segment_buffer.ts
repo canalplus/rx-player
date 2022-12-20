@@ -97,9 +97,9 @@ export default class ImageSegmentBuffer extends SegmentBuffer {
    * Indicate that every chunks from a Segment has been given to pushChunk so
    * far.
    * This will update our internal Segment inventory accordingly.
-   * The returned Observable will emit and complete successively once the whole
-   * segment has been pushed and this indication is acknowledged.
-   * @param {Object} infos
+   * The returned Promise will resolve once the whole segment has been pushed
+   * and this indication is acknowledged.
+   * @param {Object} _infos
    * @returns {Promise}
    */
   public endOfSegment(_infos : IEndOfSegmentInfos) : Promise<void> {

@@ -1,10 +1,9 @@
-import { Subject } from "rxjs";
 import Manifest, {
   Adaptation,
   Period,
 } from "../../../manifest";
 import { IAudioTrackSwitchingMode } from "../../../public_types";
-import { IReadOnlySharedReference } from "../../../utils/reference";
+import { IReadOnlySharedReference, ISharedReference } from "../../../utils/reference";
 import { CancellationSignal } from "../../../utils/task_canceller";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import { IRepresentationEstimator } from "../../adaptive";
@@ -67,15 +66,17 @@ export interface IPeriodStreamReadyPayload {
   /** The `Period` linked to the `PeriodStream` we have created. */
   period : Period;
   /**
-   * The subject through which any Adaptation (i.e. track) choice should be
+   * The reference through which any Adaptation (i.e. track) choice should be
    * emitted for that `PeriodStream`.
    *
-   * The `PeriodStream` will not do anything until this subject has emitted
+   * The `PeriodStream` will not do anything until this Reference has emitted
    * at least one to give its initial choice.
    * You can send `null` through it to tell this `PeriodStream` that you don't
    * want any `Adaptation`.
+   * It is set to `undefined` by default, you SHOULD NOT set it to `undefined`
+   * yourself.
    */
-  adaptation$ : Subject<Adaptation|null>;
+  adaptationRef : ISharedReference<Adaptation|null|undefined>;
 }
 
 /** Playback observation required by the `PeriodStream`. */
