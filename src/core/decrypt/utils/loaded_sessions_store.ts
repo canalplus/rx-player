@@ -479,7 +479,7 @@ export interface IStoredSessionEntry {
  * Close a MediaKeySession and just log an error if it fails (while resolving).
  * Emits then complete when done.
  * @param {MediaKeySession} mediaKeySession
- * @returns {Observable}
+ * @returns {Promise}
  */
 async function safelyCloseMediaKeySession(
   mediaKeySession : MediaKeySession | ICustomMediaKeySession

@@ -23,7 +23,7 @@ import LoadedSessionsStore from "./loaded_sessions_store";
  * Emit event when a MediaKeySession begin to be closed and another when the
  * MediaKeySession is closed.
  * @param {Object} loadedSessionsStore
- * @returns {Observable}
+ * @returns {Promise}
  */
 export default async function cleanOldLoadedSessions(
   loadedSessionsStore : LoadedSessionsStore,

@@ -19,7 +19,6 @@
  * It also starts the different sub-parts of the player on various API calls.
  */
 
-import { Subject } from "rxjs";
 import {
   events,
   exitFullscreen,
@@ -403,7 +402,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       // We can have two consecutive textTrackChanges with the exact same
       // payload when we perform multiple texttrack operations before the event
       // loop is freed.
-      // In that case we only want to fire one time the observable.
       if (oldTextTracks.length !== textTrackArr.length) {
         this._priv_onNativeTextTracksNext(textTrackArr);
         return;
@@ -522,7 +520,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // free resources linked to the Player instance
     this._destroyCanceller.cancel();
 
-    // Complete all subjects and references
+    // Complete all references
     this._priv_speed.finish();
     this._priv_contentLock.finish();
     this._priv_bufferOptions.wantedBufferAhead.finish();
@@ -631,9 +629,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     const isDirectFile = transport === "directfile";
 
-    /** Subject which will emit to stop the current content. */
+    /** Emit to stop the current content. */
     const currentContentCanceller = new TaskCanceller();
-
 
     const videoElement = this.videoElement;
 
@@ -2417,13 +2414,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     value : {
       type : IBufferType;
       period : Period;
-      adaptation$ : Subject<Adaptation|null>;
+      adaptationRef : ISharedReference<Adaptation|null|undefined>;
     }
   ) : void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
     }
-    const { type, period, adaptation$ } = value;
+    const { type, period, adaptationRef } = value;
     const trackChoiceManager = contentInfos.trackChoiceManager;
 
     switch (type) {
@@ -2431,9 +2428,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       case "video":
         if (isNullOrUndefined(trackChoiceManager)) {
           log.error("API: TrackChoiceManager not instanciated for a new video period");
-          adaptation$.next(null);
+          adaptationRef.setValue(null);
         } else {
-          trackChoiceManager.addPeriod(type, period, adaptation$);
+          trackChoiceManager.addPeriod(type, period, adaptationRef);
           trackChoiceManager.setInitialVideoTrack(period);
         }
         break;
@@ -2441,9 +2438,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       case "audio":
         if (isNullOrUndefined(trackChoiceManager)) {
           log.error(`API: TrackChoiceManager not instanciated for a new ${type} period`);
-          adaptation$.next(null);
+          adaptationRef.setValue(null);
         } else {
-          trackChoiceManager.addPeriod(type, period, adaptation$);
+          trackChoiceManager.addPeriod(type, period, adaptationRef);
           trackChoiceManager.setInitialAudioTrack(period);
         }
         break;
@@ -2451,9 +2448,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       case "text":
         if (isNullOrUndefined(trackChoiceManager)) {
           log.error(`API: TrackChoiceManager not instanciated for a new ${type} period`);
-          adaptation$.next(null);
+          adaptationRef.setValue(null);
         } else {
-          trackChoiceManager.addPeriod(type, period, adaptation$);
+          trackChoiceManager.addPeriod(type, period, adaptationRef);
           trackChoiceManager.setInitialTextTrack(period);
         }
         break;
@@ -2461,9 +2458,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       default:
         const adaptations = period.adaptations[type];
         if (!isNullOrUndefined(adaptations) && adaptations.length > 0) {
-          adaptation$.next(adaptations[0]);
+          adaptationRef.setValue(adaptations[0]);
         } else {
-          adaptation$.next(null);
+          adaptationRef.setValue(null);
         }
         break;
     }

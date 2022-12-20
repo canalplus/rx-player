@@ -32,7 +32,7 @@ import forceGarbageCollection from "./force_garbage_collection";
  * Append a segment to the given segmentBuffer.
  * If it leads to a QuotaExceededError, try to run our custom range
  * _garbage collector_ then retry.
- * @param {Observable} playbackObserver
+ * @param {Object} playbackObserver
  * @param {Object} segmentBuffer
  * @param {Object} dataInfos
  * @param {Object} cancellationSignal

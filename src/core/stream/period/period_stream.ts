@@ -15,7 +15,6 @@
  */
 
 import nextTick from "next-tick";
-import { ReplaySubject } from "rxjs";
 import config from "../../../config";
 import {
   formatError,
@@ -53,7 +52,7 @@ import {
 import getAdaptationSwitchStrategy from "./utils/get_adaptation_switch_strategy";
 
 /**
- * Create single PeriodStream Observable:
+ * Create a single PeriodStream:
  *   - Lazily create (or reuse) a SegmentBuffer for the given type.
  *   - Create a Stream linked to an Adaptation each time it changes, to
  *     download and append the corresponding segments to the SegmentBuffer.
@@ -99,11 +98,14 @@ export default function PeriodStream(
 ) : void {
   const { period } = content;
 
-  // Emits the chosen Adaptation for the current type.
-  // `null` when no Adaptation is chosen (e.g. no subtitles)
-  const adaptation$ = new ReplaySubject<Adaptation|null>(1);
+  /**
+   * Emits the chosen Adaptation for the current type.
+   * `null` when no Adaptation is chosen (e.g. no subtitles)
+   * `undefined` at the beginning (it can be ignored.).
+   */
+  const adaptationRef = createSharedReference<Adaptation|null|undefined>(undefined);
 
-  callbacks.periodStreamReady({ type: bufferType, period, adaptation$ });
+  callbacks.periodStreamReady({ type: bufferType, period, adaptationRef });
   if (parentCancelSignal.isCancelled) {
     return;
   }
@@ -111,9 +113,12 @@ export default function PeriodStream(
   let currentStreamCanceller : TaskCanceller | undefined;
   let isFirstAdaptationSwitch = true;
 
-  const subscription = adaptation$.subscribe((adaptation : Adaptation | null) => {
-    // As an IIFE to profit from async/await while respecting subscribe's signature
+  adaptationRef.onUpdate((adaptation : Adaptation | null | undefined) => {
+    // As an IIFE to profit from async/await while respecting onUpdate's signature
     (async () : Promise<void> => {
+      if (adaptation === undefined) {
+        return;
+      }
       const streamCanceller = new TaskCanceller({ cancelOn: parentCancelSignal });
       currentStreamCanceller?.cancel(); // Cancel oreviously created stream if one
       currentStreamCanceller = streamCanceller;
@@ -233,16 +238,12 @@ export default function PeriodStream(
       currentStreamCanceller?.cancel();
       callbacks.error(err);
     });
-  });
-
-  parentCancelSignal.register(() => {
-    subscription.unsubscribe();
-  });
+  }, { clearSignal: parentCancelSignal, emitCurrentValue: true });
 
   /**
    * @param {Object} adaptation
    * @param {Object} segmentBuffer
-   * @returns {Observable}
+   * @param {Object} cancelSignal
    */
   function createAdaptationStream(
     adaptation : Adaptation,
@@ -427,7 +428,7 @@ function createAdaptationStreamPlaybackObserver(
  * Create empty AdaptationStream, linked to a Period.
  * This AdaptationStream will never download any segment and just emit a "full"
  * event when reaching the end.
- * @param {Observable} playbackObserver
+ * @param {Object} playbackObserver
  * @param {Object} wantedBufferAhead
  * @param {string} bufferType
  * @param {Object} content

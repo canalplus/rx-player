@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-import {
-  Observable,
-  Subscriber,
-} from "rxjs";
 import { CancellationSignal } from "./task_canceller";
 
 /**
@@ -80,14 +76,6 @@ export interface ISharedReference<T> {
   setValueIfChanged(newVal : T) : void;
 
   /**
-   * Returns an Observable which synchronously emits the current value (unless
-   * the `skipCurrentValue` argument has been set to `true`) and then each time
-   * a new value is set.
-   * @param {boolean} [skipCurrentValue]
-   * @returns {Observable}
-   */
-  asObservable(skipCurrentValue? : boolean) : Observable<T>;
-  /**
    * Allows to register a callback to be called each time the value inside the
    * reference is updated.
    * @param {Function} cb - Callback to be called each time the reference is
@@ -139,8 +127,8 @@ export interface ISharedReference<T> {
 
   /**
    * Indicate that no new values will be emitted.
-   * Allows to automatically close all Observables and listeners subscribed to
-   * this `ISharedReference`.
+   * Allows to automatically close all listeners listening to this
+   * `ISharedReference`.
    */
   finish() : void;
 }
@@ -170,7 +158,6 @@ export interface ISharedReference<T> {
 export type IReadOnlySharedReference<T> =
   Pick<ISharedReference<T>,
        "getValue" |
-       "asObservable" |
        "onUpdate" |
        "waitUntilDefined">;
 
@@ -180,7 +167,7 @@ export type IReadOnlySharedReference<T> =
  *
  * @see ISharedReference
  * @param {*} initialValue
- * @returns {Observable}
+ * @returns {Object}
  */
 export default function createSharedReference<T>(initialValue : T) : ISharedReference<T> {
   /** Current value referenced by this `ISharedReference`. */
@@ -195,8 +182,8 @@ export default function createSharedReference<T>(initialValue : T) : ISharedRefe
    *     once it changes
    *   - `complete`: Allows to clean-up the listener, will be called once the
    *     reference is finished.
-   *   - `hasBeenCleared`: becomes `true` when the Observable becomes
-   *     unsubscribed and thus when it is removed from the `cbs` array.
+   *   - `hasBeenCleared`: becomes `true` when the reference is
+   *     removed from the `cbs` array.
    *     Adding this property allows to detect when a previously-added
    *     listener has since been removed e.g. as a side-effect during a
    *     function call.
@@ -257,44 +244,6 @@ export default function createSharedReference<T>(initialValue : T) : ISharedRefe
     },
 
     /**
-     * Returns an Observable which synchronously emits the current value (unless
-     * the `skipCurrentValue` argument has been set to `true`) and then each
-     * time a new value is set.
-     * @param {boolean} [skipCurrentValue]
-     * @returns {Observable}
-     */
-    asObservable(skipCurrentValue? : boolean) : Observable<T> {
-      return new Observable((obs : Subscriber<T>) => {
-        if (skipCurrentValue !== true) {
-          obs.next(value);
-        }
-        if (isFinished) {
-          obs.complete();
-          return undefined;
-        }
-        const cbObj = { trigger: obs.next.bind(obs),
-                        complete: obs.complete.bind(obs),
-                        hasBeenCleared: false };
-        cbs.push(cbObj);
-        return () => {
-          if (cbObj.hasBeenCleared) {
-            return;
-          }
-          /**
-           * Code in here can still be running while this is happening.
-           * Set `hasBeenCleared` to `true` to avoid still using the
-           * `subscriber` from this object.
-           */
-          cbObj.hasBeenCleared = true;
-          const indexOf = cbs.indexOf(cbObj);
-          if (indexOf >= 0) {
-            cbs.splice(indexOf, 1);
-          }
-        };
-      });
-    },
-
-    /**
      * Allows to register a callback to be called each time the value inside the
      * reference is updated.
      * @param {Function} cb - Callback to be called each time the reference is
@@ -335,11 +284,6 @@ export default function createSharedReference<T>(initialValue : T) : ISharedRefe
         if (cbObj.hasBeenCleared) {
           return;
         }
-        /**
-         * Code in here can still be running while this is happening.
-         * Set `hasBeenCleared` to `true` to avoid still using the
-         * `subscriber` from this object.
-         */
         cbObj.hasBeenCleared = true;
         const indexOf = cbs.indexOf(cbObj);
         if (indexOf >= 0) {
@@ -377,8 +321,7 @@ export default function createSharedReference<T>(initialValue : T) : ISharedRefe
 
     /**
      * Indicate that no new values will be emitted.
-     * Allows to automatically close all Observables generated from this shared
-     * reference.
+     * Allows to automatically free all listeners linked to this reference.
      */
     finish() : void {
       isFinished = true;

@@ -75,8 +75,8 @@ export function resetMediaSource(
 }
 
 /**
- * Create, on subscription, a MediaSource instance and attach it to the given
- * mediaElement element's src attribute.
+ * Create a MediaSource instance and attach it to the given mediaElement element's
+ * src attribute.
  *
  * Returns a Promise which resolves with the MediaSource when created and attached
  * to the `mediaElement` element.

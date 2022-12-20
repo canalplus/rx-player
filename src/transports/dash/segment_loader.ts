@@ -107,7 +107,7 @@ export default function generateSegmentLoader(
 
   /**
    * @param {Object|null} wantedCdn
-   * @returns {Observable}
+   * @returns {Promise.<Object>}
    */
   function segmentLoader(
     wantedCdn : ICdnMetadata | null,

@@ -130,7 +130,7 @@ export default async function getMediaKeysInfos(
  * Create `MediaKeys` from the `MediaKeySystemAccess` given.
  * Throws the right formatted error if it fails.
  * @param {MediaKeySystemAccess} mediaKeySystemAccess
- * @returns {Observable.<MediaKeys>}
+ * @returns {Promise.<MediaKeys>}
  */
 async function createMediaKeys(
   mediaKeySystemAccess : MediaKeySystemAccess | ICustomMediaKeySystemAccess
