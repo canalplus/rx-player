@@ -14,16 +14,10 @@
  * limitations under the License.
  */
 
-import {
-  map,
-  Observable,
-  throwError,
-} from "rxjs";
 import config from "../../../config";
 import { IMetaPlaylist } from "../../../parsers/manifest/metaplaylist";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import request from "../../../utils/request/xhr";
-import fromCancellablePromise from "../../../utils/rx-from_cancellable_promise";
 import TaskCanceller from "../../../utils/task_canceller";
 
 const iso8601Duration =
@@ -71,79 +65,77 @@ function parseDuration(val : string) : number | null {
  * Load manifest and get duration from it.
  * @param {String} url
  * @param {String} transport
- * @returns {Observable<number>}
+ * @returns {Promise.<number>}
  */
-function getDurationFromManifest(url: string,
-                                 transport: "dash" | "smooth" | "metaplaylist"
-): Observable<number> {
+async function getDurationFromManifest(
+  url: string,
+  transport: "dash" | "smooth" | "metaplaylist"
+): Promise<number> {
 
   if (transport !== "dash" &&
       transport !== "smooth" &&
       transport !== "metaplaylist") {
-    return throwError(() => new Error("createMetaplaylist: Unknown transport type."));
+    throw new Error("createMetaplaylist: Unknown transport type.");
   }
 
-  const canceller = new TaskCanceller();
   if (transport === "dash" || transport === "smooth") {
-    return fromCancellablePromise(
-      canceller,
-      () => request({ url,
-                      responseType: "document",
-                      timeout: config.getCurrent().DEFAULT_REQUEST_TIMEOUT,
-                      cancelSignal: canceller.signal })
-    ).pipe(map((response) => {
-      const { responseData } = response;
-      const root = responseData.documentElement;
-      if (transport === "dash") {
-        const dashDurationAttribute = root.getAttribute("mediaPresentationDuration");
-        if (dashDurationAttribute === null) {
-          throw new Error("createMetaplaylist: No duration on DASH content.");
-        }
-        const periodElements = root.getElementsByTagName("Period");
-        const firstDASHStartAttribute = periodElements[0]?.getAttribute("start");
-        const firstDASHStart =
-          firstDASHStartAttribute !== null ? parseDuration(firstDASHStartAttribute) :
-                                             0;
-        const dashDuration = parseDuration(dashDurationAttribute);
-        if (firstDASHStart === null || dashDuration === null) {
-          throw new Error("createMetaplaylist: Cannot parse " +
-                          "the duration from a DASH content.");
-        }
-        return dashDuration - firstDASHStart;
+    const response = await request({
+      url,
+      responseType: "document",
+      timeout: config.getCurrent().DEFAULT_REQUEST_TIMEOUT,
+      // We won't cancel
+      cancelSignal: new TaskCanceller().signal,
+    });
+    const { responseData } = response;
+    const root = responseData.documentElement;
+    if (transport === "dash") {
+      const dashDurationAttribute = root.getAttribute("mediaPresentationDuration");
+      if (dashDurationAttribute === null) {
+        throw new Error("createMetaplaylist: No duration on DASH content.");
       }
-      // smooth
-      const smoothDurationAttribute = root.getAttribute("Duration");
-      const smoothTimeScaleAttribute = root.getAttribute("TimeScale");
-      if (smoothDurationAttribute === null) {
-        throw new Error("createMetaplaylist: No duration on smooth content.");
+      const periodElements = root.getElementsByTagName("Period");
+      const firstDASHStartAttribute = periodElements[0]?.getAttribute("start");
+      const firstDASHStart =
+        firstDASHStartAttribute !== null ? parseDuration(firstDASHStartAttribute) :
+                                           0;
+      const dashDuration = parseDuration(dashDurationAttribute);
+      if (firstDASHStart === null || dashDuration === null) {
+        throw new Error("createMetaplaylist: Cannot parse " +
+                        "the duration from a DASH content.");
       }
-      const timescale = smoothTimeScaleAttribute !== null ?
-        parseInt(smoothTimeScaleAttribute, 10) :
-        10000000;
-      return (parseInt(smoothDurationAttribute, 10)) / timescale;
-    }));
+      return dashDuration - firstDASHStart;
+    }
+    // smooth
+    const smoothDurationAttribute = root.getAttribute("Duration");
+    const smoothTimeScaleAttribute = root.getAttribute("TimeScale");
+    if (smoothDurationAttribute === null) {
+      throw new Error("createMetaplaylist: No duration on smooth content.");
+    }
+    const timescale = smoothTimeScaleAttribute !== null ?
+      parseInt(smoothTimeScaleAttribute, 10) :
+      10000000;
+    return (parseInt(smoothDurationAttribute, 10)) / timescale;
   }
 
   // metaplaylist
-  return fromCancellablePromise(
-    canceller,
-    () => request({ url,
-                    responseType: "text",
-                    timeout: config.getCurrent().DEFAULT_REQUEST_TIMEOUT,
-                    cancelSignal: canceller.signal })
-  ).pipe(map((response) => {
-    const { responseData } = response;
-    const metaplaylist = JSON.parse(responseData) as IMetaPlaylist;
-    if (metaplaylist.contents === undefined ||
-        metaplaylist.contents.length === undefined ||
-        metaplaylist.contents.length === 0) {
-      throw new Error("createMetaplaylist: No duration on Metaplaylist content.");
-    }
-    const { contents } = metaplaylist;
-    const lastEnd = contents[contents.length - 1].endTime;
-    const firstStart = contents[0].startTime;
-    return lastEnd - firstStart;
-  }));
+  const response = await request({
+    url,
+    responseType: "text",
+    timeout: config.getCurrent().DEFAULT_REQUEST_TIMEOUT,
+    // We won't cancel
+    cancelSignal: new TaskCanceller().signal,
+  });
+  const { responseData } = response;
+  const metaplaylist = JSON.parse(responseData) as IMetaPlaylist;
+  if (metaplaylist.contents === undefined ||
+      metaplaylist.contents.length === undefined ||
+      metaplaylist.contents.length === 0) {
+    throw new Error("createMetaplaylist: No duration on Metaplaylist content.");
+  }
+  const { contents } = metaplaylist;
+  const lastEnd = contents[contents.length - 1].endTime;
+  const firstStart = contents[0].startTime;
+  return lastEnd - firstStart;
 }
 
 export default getDurationFromManifest;
