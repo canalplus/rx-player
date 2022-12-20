@@ -44,7 +44,6 @@ export interface IGarbageCollectorArgument {
  *
  * @param {Object} opt
  * @param {Object} cancellationSignal
- * @returns {Observable}
  */
 export default function BufferGarbageCollector(
   { segmentBuffer,
