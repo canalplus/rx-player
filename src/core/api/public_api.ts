@@ -19,13 +19,7 @@
  * It also starts the different sub-parts of the player on various API calls.
  */
 
-import {
-  distinctUntilChanged,
-  map,
-  Subject,
-  take,
-  takeUntil,
-} from "rxjs";
+import { Subject } from "rxjs";
 import {
   events,
   exitFullscreen,
@@ -137,8 +131,9 @@ const { getPageActivityRef,
         getPictureOnPictureStateRef,
         getVideoVisibilityRef,
         getVideoWidthRef,
-        onFullscreenChange$,
-        onTextTrackChanges$ } = events;
+        onFullscreenChange,
+        onTextTrackAdded,
+        onTextTrackRemoved } = events;
 
 /**
  * @class Player
@@ -172,7 +167,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * used for its normal functionment can be freed.
    * The player will be unusable after that.
    */
-  private readonly _priv_destroy$ : Subject<void>;
+  private readonly _destroyCanceller : TaskCanceller;
 
   /**
    * Contains `true` when the previous content is cleaning-up, `false` when it's
@@ -371,52 +366,65 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this.videoElement = videoElement;
 
     const destroyCanceller = new TaskCanceller();
-    this._priv_destroy$ = new Subject(); // TODO Remove the need for this Subject
-    this._priv_destroy$.pipe(take(1)).subscribe(() => {
-      destroyCanceller.cancel();
-    });
+    this._destroyCanceller = destroyCanceller;
 
     this._priv_pictureInPictureRef = getPictureOnPictureStateRef(videoElement,
                                                                  destroyCanceller.signal);
 
     /** @deprecated */
-    onFullscreenChange$(videoElement)
-      .pipe(takeUntil(this._priv_destroy$))
+    onFullscreenChange(videoElement, () => {
       /* eslint-disable import/no-deprecated */
-      .subscribe(() => this.trigger("fullscreenChange", this.isFullscreen()));
+      this.trigger("fullscreenChange", this.isFullscreen());
       /* eslint-enable import/no-deprecated */
+    }, destroyCanceller.signal);
 
-    /** @deprecated */
-    onTextTrackChanges$(videoElement.textTracks)
-      .pipe(
-        takeUntil(this._priv_destroy$),
-        map((evt : Event) => { // prepare TextTrack array
-          const target = evt.target as TextTrackList;
-          const arr : TextTrack[] = [];
-          for (let i = 0; i < target.length; i++) {
-            const textTrack = target[i];
-            arr.push(textTrack);
-          }
-          return arr;
-        }),
+    /** Store last known TextTrack array linked to the media element. */
+    let prevTextTracks : TextTrack[] = [] ;
+    for (let i = 0; i < videoElement.textTracks?.length; i++) {
+      const textTrack = videoElement.textTracks?.[i];
+      if (!isNullOrUndefined(textTrack)) {
+        prevTextTracks.push(textTrack);
+      }
+    }
 
-        // We can have two consecutive textTrackChanges with the exact same
-        // payload when we perform multiple texttrack operations before the event
-        // loop is freed.
-        // In that case we only want to fire one time the observable.
-        distinctUntilChanged((textTracksA, textTracksB) => {
-          if (textTracksA.length !== textTracksB.length) {
-            return false;
-          }
-          for (let i = 0; i < textTracksA.length; i++) {
-            if (textTracksA[i] !== textTracksB[i]) {
-              return false;
-            }
-          }
-          return true;
-        })
-      )
-      .subscribe((x : TextTrack[]) => this._priv_onNativeTextTracksNext(x));
+    /** Callback called when a TextTrack element is added or removed. */
+    const onTextTrackChanges = (_evt : unknown) => {
+      const evt = _evt as Event;
+      const target = evt.target as TextTrackList;
+      const textTrackArr : TextTrack[] = [];
+      for (let i = 0; i < target.length; i++) {
+        const textTrack = target[i];
+        textTrackArr.push(textTrack);
+      }
+
+      const oldTextTracks = prevTextTracks;
+      prevTextTracks = textTrackArr;
+
+      // We can have two consecutive textTrackChanges with the exact same
+      // payload when we perform multiple texttrack operations before the event
+      // loop is freed.
+      // In that case we only want to fire one time the observable.
+      if (oldTextTracks.length !== textTrackArr.length) {
+        this._priv_onNativeTextTracksNext(textTrackArr);
+        return;
+      }
+      for (let i = 0; i < oldTextTracks.length; i++) {
+        if (oldTextTracks[i] !== textTrackArr[i]) {
+          this._priv_onNativeTextTracksNext(textTrackArr);
+          return ;
+        }
+      }
+      return ;
+    };
+
+    if (!isNullOrUndefined(videoElement.textTracks)) {
+      onTextTrackAdded(videoElement.textTracks,
+                       onTextTrackChanges,
+                       destroyCanceller.signal);
+      onTextTrackRemoved(videoElement.textTracks,
+                         onTextTrackChanges,
+                         destroyCanceller.signal);
+    }
 
     this._priv_speed = createSharedReference(videoElement.playbackRate);
     this._priv_preferTrickModeTracks = false;
@@ -511,9 +519,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         });
     }
 
-    // free Observables linked to the Player instance
-    this._priv_destroy$.next();
-    this._priv_destroy$.complete();
+    // free resources linked to the Player instance
+    this._destroyCanceller.cancel();
 
     // Complete all subjects and references
     this._priv_speed.finish();
