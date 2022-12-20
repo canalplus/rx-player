@@ -120,6 +120,124 @@ describe("Memory tests", () => {
     expect(heapDifference).to.be.below(3e6);
   });
 
+  it("should not have a sensible memory leak after 1000 instances of the RxPlayer", async function() {
+    if (window.performance == null ||
+        window.performance.memory == null ||
+        window.gc == null)
+    {
+      // eslint-disable-next-line no-console
+      console.warn("API not available. Skipping test.");
+      return;
+    }
+    window.gc();
+    await sleep(1000);
+    const initialMemory = window.performance.memory;
+    this.timeout(5 * 60 * 1000);
+    for (let i = 0; i < 1000; i++) {
+      player = new RxPlayer({ initialVideoBitrate: Infinity,
+                              initialAudiobitrate: Infinity,
+                              preferredtexttracks: [{ language: "fra",
+                                                      closedcaption: true }] });
+      player.loadVideo({ url: manifestInfos.url,
+                         transport: manifestInfos.transport,
+                         supplementaryTextTracks: [{ url: textTrackInfos.url,
+                                                     language: "fra",
+                                                     mimeType: "application/ttml+xml",
+                                                     closedCaption: true }],
+                         supplementaryImageTracks: [{ mimeType: "application/bif",
+                                                      url: imageInfos.url }],
+                         autoPlay: true });
+      await waitForLoadedStateAfterLoadVideo(player);
+      player.dispose();
+    }
+    await sleep(100);
+    window.gc();
+    await sleep(1000);
+    const newMemory = window.performance.memory;
+    const heapDifference = newMemory.usedJSHeapSize -
+                           initialMemory.usedJSHeapSize;
+
+    // eslint-disable-next-line no-console
+    console.log(`
+      ===========================================================
+      | Current heap usage (B) | ${newMemory.usedJSHeapSize}
+      | Initial heap usage (B) | ${initialMemory.usedJSHeapSize}
+      | Difference (B)         | ${heapDifference}
+    `);
+    expect(heapDifference).to.be.below(4e6);
+  });
+
+  it("should not have a sensible memory leak after many video quality switches", async function() {
+    if (window.performance == null ||
+        window.performance.memory == null ||
+        window.gc == null)
+    {
+      // eslint-disable-next-line no-console
+      console.warn("API not available. Skipping test.");
+      return;
+    }
+    this.timeout(15 * 60 * 1000);
+    player = new RxPlayer({ initialVideoBitrate: Infinity,
+                            initialAudiobitrate: Infinity,
+                            preferredtexttracks: [{ language: "fra",
+                                                    closedcaption: true }] });
+    await sleep(1000);
+    player.setWantedBufferAhead(5);
+    player.setMaxBufferBehind(5);
+    player.setMaxBufferAhead(15);
+    player.loadVideo({ url: manifestInfos.url,
+                       transport: manifestInfos.transport,
+                       supplementaryTextTracks: [{ url: textTrackInfos.url,
+                                                   language: "fra",
+                                                   mimeType: "application/ttml+xml",
+                                                   closedCaption: true }],
+                       supplementaryImageTracks: [{ mimeType: "application/bif",
+                                                    url: imageInfos.url }],
+                       autoPlay: false });
+    await waitForLoadedStateAfterLoadVideo(player);
+    const videoBitrates = player.getAvailableVideoBitrates();
+    if (videoBitrates.length <= 1) {
+      throw new Error(
+        "Not enough video bitrates to perform sufficiently pertinent tests"
+      );
+    }
+    await sleep(1000);
+
+    window.gc();
+    const initialMemory = window.performance.memory;
+
+    // Allows to alternate between two positions
+    let seekToBeginning = false;
+    for (
+      let iterationIdx = 0;
+      iterationIdx < 500;
+      iterationIdx++
+    ) {
+      if (seekToBeginning) {
+        player.seekTo(0);
+      } else {
+        player.seekTo(20);
+      }
+      const bitrateIdx = iterationIdx % videoBitrates.length;
+      player.setVideoBitrate(videoBitrates[bitrateIdx]);
+      await sleep(1000);
+    }
+    window.gc();
+    await sleep(1000);
+    const newMemory = window.performance.memory;
+    const heapDifference = newMemory.usedJSHeapSize -
+                           initialMemory.usedJSHeapSize;
+
+    // eslint-disable-next-line no-console
+    console.log(`
+      ===========================================================
+      | Current heap usage (B) | ${newMemory.usedJSHeapSize}
+      | Initial heap usage (B) | ${initialMemory.usedJSHeapSize}
+      | Difference (B)         | ${heapDifference}
+    `);
+    expect(heapDifference).to.be.below(9e6);
+  });
+
   it("should not have a sensible memory leak after 1000 setTime calls of VideoThumbnailLoader", async function() {
     if (window.performance == null ||
         window.performance.memory == null ||
