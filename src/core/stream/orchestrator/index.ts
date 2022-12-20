@@ -15,12 +15,14 @@
  */
 
 import StreamOrchestrator, {
+  IStreamOrchestratorCallbacks,
   IStreamOrchestratorOptions,
   IStreamOrchestratorPlaybackObservation,
 } from "./stream_orchestrator";
 
 export default StreamOrchestrator;
 export {
+  IStreamOrchestratorCallbacks,
   IStreamOrchestratorOptions,
   IStreamOrchestratorPlaybackObservation,
 };

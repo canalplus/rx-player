@@ -14,17 +14,7 @@
  * limitations under the License.
  */
 
-import RepresentationStream, {
-  IPositionPlaybackObservation,
-  IRepresentationStreamArguments,
-  IRepresentationStreamPlaybackObservation,
-  ITerminationOrder,
-} from "./representation_stream";
+import RepresentationStream from "./representation_stream";
+export * from "./types";
 
 export default RepresentationStream;
-export {
-  IPositionPlaybackObservation,
-  IRepresentationStreamArguments,
-  IRepresentationStreamPlaybackObservation,
-  ITerminationOrder,
-};

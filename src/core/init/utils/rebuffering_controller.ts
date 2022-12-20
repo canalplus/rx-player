@@ -302,6 +302,12 @@ export default class RebufferingController
     }, { includeLastObservation: true, clearSignal: this._canceller.signal });
   }
 
+  /**
+   * Update information on an upcoming discontinuity for a given buffer type and
+   * Period.
+   * Each new update for the same Period and type overwrites the previous one.
+   * @param {Object} evt
+   */
   public updateDiscontinuityInfo(evt: IDiscontinuityEvent) : void {
     if (!this._isStarted) {
       this.start();
@@ -345,6 +351,10 @@ export default class RebufferingController
     }
   }
 
+  /**
+   * Stops the `RebufferingController` from montoring stalling situations,
+   * forever.
+   */
   public destroy() : void {
     this._canceller.cancel();
   }

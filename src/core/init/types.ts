@@ -190,18 +190,7 @@ export interface IContentInitializerEvents {
     period : Period;
   };
   /** Emitted when a new `Adaptation` is being considered. */
-  adaptationChange: {
-    /** The type of buffer for which the Representation is changing. */
-    type : IBufferType;
-    /** The `Period` linked to the `RepresentationStream` we're creating. */
-    period : Period;
-    /**
-     * The `Adaptation` linked to the `AdaptationStream` we're creating.
-     * `null` when we're choosing no Adaptation at all.
-     */
-    adaptation : Adaptation |
-                 null;
-  };
+  adaptationChange: IAdaptationChangeEventPayload;
   /** Emitted as new bitrate estimates are done. */
   bitrateEstimationChange: {
     /** The type of buffer for which the estimation is done. */
@@ -243,6 +232,19 @@ export interface IContentInitializerEvents {
    * given segment) have been encountered.
    */
   inbandEvents : IInbandEvent[];
+}
+
+export interface IAdaptationChangeEventPayload {
+  /** The type of buffer for which the Representation is changing. */
+  type : IBufferType;
+  /** The `Period` linked to the `RepresentationStream` we're creating. */
+  period : Period;
+  /**
+   * The `Adaptation` linked to the `AdaptationStream` we're creating.
+   * `null` when we're choosing no Adaptation at all.
+   */
+  adaptation : Adaptation |
+    null;
 }
 
 export type IStallingSituation =
