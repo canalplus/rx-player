@@ -66,8 +66,10 @@ export default class DirectFileContentInitializer extends ContentInitializer {
       throw new Error("No URL for a DirectFile content");
     }
 
+    const decryptionRef = createSharedReference(null);
+    decryptionRef.finish();
     const drmInitRef =
-      initializeContentDecryption(mediaElement, keySystems, createSharedReference(null), {
+      initializeContentDecryption(mediaElement, keySystems, decryptionRef, {
         onError: (err) =>  this._onFatalError(err),
         onWarning: (err : IPlayerError) => this.trigger("warning", err),
       }, cancelSignal);

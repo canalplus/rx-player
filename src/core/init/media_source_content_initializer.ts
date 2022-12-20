@@ -159,7 +159,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                        this._initCanceller.signal);
 
     /** Send content protection initialization data to the decryption logic. */
-    const protectionRef = createSharedReference<IContentProtection | null>(null);
+    const protectionRef = createSharedReference<IContentProtection | null>(
+      null,
+      this._initCanceller.signal
+    );
 
     this._initializeMediaSourceAndDecryption(mediaElement, protectionRef)
       .then(initResult => this._onInitialMediaSourceReady(mediaElement,

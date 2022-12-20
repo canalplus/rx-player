@@ -210,16 +210,12 @@ function getDocumentVisibilityRef(
                                                            "visibilitychange";
 
   const isHidden = document[hidden as "hidden"];
-  const ref = createSharedReference(!isHidden);
+  const ref = createSharedReference(!isHidden, stopListening);
 
   addEventListener(document, visibilityChangeEvent, () => {
     const isVisible = !(document[hidden as "hidden"]);
     ref.setValueIfChanged(isVisible);
   }, stopListening);
-
-  stopListening.register(() => {
-    ref.finish();
-  });
 
   return ref;
 }
@@ -237,11 +233,10 @@ function getPageActivityRef(
 ) : IReadOnlySharedReference<boolean> {
   const isDocVisibleRef = getDocumentVisibilityRef(stopListening);
   let currentTimeout : number | undefined;
-  const ref = createSharedReference(true);
+  const ref = createSharedReference(true, stopListening);
   stopListening.register(() => {
     clearTimeout(currentTimeout);
     currentTimeout = undefined;
-    ref.finish();
   });
 
   isDocVisibleRef.onUpdate(function onDocVisibilityChange(isVisible : boolean) : void {
@@ -299,14 +294,11 @@ function getPictureOnPictureStateRef(
     const ref = createSharedReference<IPictureInPictureEvent>({
       isEnabled: isWebKitPIPEnabled,
       pipWindow: null,
-    });
+    }, stopListening);
     addEventListener(mediaElement, "webkitpresentationmodechanged", () => {
       const isEnabled = mediaElement.webkitPresentationMode === "picture-in-picture";
       ref.setValue({ isEnabled, pipWindow: null });
     }, stopListening);
-    stopListening.register(() => {
-      ref.finish();
-    });
     return ref;
   }
 
@@ -314,7 +306,8 @@ function getPictureOnPictureStateRef(
     (document as ICompatDocument).pictureInPictureElement === mediaElement
   );
   const ref = createSharedReference<IPictureInPictureEvent>({ isEnabled: isPIPEnabled,
-                                                              pipWindow: null });
+                                                              pipWindow: null },
+                                                            stopListening);
   addEventListener(mediaElement, "enterpictureinpicture", (evt) => {
     ref.setValue({
       isEnabled: true,
@@ -326,9 +319,6 @@ function getPictureOnPictureStateRef(
   addEventListener(mediaElement, "leavepictureinpicture", () => {
     ref.setValue({ isEnabled: false, pipWindow: null });
   }, stopListening);
-  stopListening.register(() => {
-    ref.finish();
-  });
   return ref;
 }
 
@@ -348,11 +338,10 @@ function getVideoVisibilityRef(
 ) : IReadOnlySharedReference<boolean> {
   const isDocVisibleRef = getDocumentVisibilityRef(stopListening);
   let currentTimeout : number | undefined;
-  const ref = createSharedReference(true);
+  const ref = createSharedReference(true, stopListening);
   stopListening.register(() => {
     clearTimeout(currentTimeout);
     currentTimeout = undefined;
-    ref.finish();
   });
 
   isDocVisibleRef.onUpdate(checkCurrentVisibility,
@@ -389,7 +378,8 @@ function getVideoWidthRef(
   pipStatusRef : IReadOnlySharedReference<IPictureInPictureEvent>,
   stopListening : CancellationSignal
 ) : IReadOnlySharedReference<number> {
-  const ref = createSharedReference<number>(mediaElement.clientWidth * pixelRatio);
+  const ref = createSharedReference<number>(mediaElement.clientWidth * pixelRatio,
+                                            stopListening);
   let clearPreviousEventListener = noop;
   pipStatusRef.onUpdate(checkVideoWidth, { clearSignal: stopListening });
   addEventListener(window, "resize", checkVideoWidth, stopListening);
@@ -400,7 +390,6 @@ function getVideoWidthRef(
   stopListening.register(function stopUpdatingVideoWidthRef() {
     clearPreviousEventListener();
     clearInterval(interval);
-    ref.finish();
   });
   return ref;
 

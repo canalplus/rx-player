@@ -89,7 +89,8 @@ export function constructPlayerStateReference(
   playbackObserver : IReadOnlyPlaybackObserver<IPlaybackObservation>,
   cancelSignal : CancellationSignal
 ) : IReadOnlySharedReference<IPlayerState> {
-  const playerStateRef = createSharedReference<IPlayerState>(PLAYER_STATES.LOADING);
+  const playerStateRef = createSharedReference<IPlayerState>(PLAYER_STATES.LOADING,
+                                                             cancelSignal);
   initializer.addEventListener("loaded", () => {
     if (playerStateRef.getValue() === PLAYER_STATES.LOADING) {
       playerStateRef.setValue(PLAYER_STATES.LOADED);

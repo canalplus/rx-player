@@ -167,9 +167,18 @@ export type IReadOnlySharedReference<T> =
  *
  * @see ISharedReference
  * @param {*} initialValue
+ * @param {Object|undefined} [cancelSignal] - If set, the created shared
+ * reference will be automatically "finished" once that signal emits.
+ * Finished references won't be able to update their value anymore, and will
+ * also automatically have their listeners (callbacks linked to value change)
+ * removed - as they cannot be triggered anymore, thus providing a security
+ * against memory leaks.
  * @returns {Object}
  */
-export default function createSharedReference<T>(initialValue : T) : ISharedReference<T> {
+export default function createSharedReference<T>(
+  initialValue : T,
+  cancelSignal? : CancellationSignal
+) : ISharedReference<T> {
   /** Current value referenced by this `ISharedReference`. */
   let value = initialValue;
 
@@ -194,6 +203,10 @@ export default function createSharedReference<T>(initialValue : T) : ISharedRefe
                       hasBeenCleared : boolean; }> = [];
 
   let isFinished = false;
+
+  if (cancelSignal !== undefined) {
+    cancelSignal.register(finish);
+  }
 
   return {
     /**
@@ -323,22 +336,23 @@ export default function createSharedReference<T>(initialValue : T) : ISharedRefe
      * Indicate that no new values will be emitted.
      * Allows to automatically free all listeners linked to this reference.
      */
-    finish() : void {
-      isFinished = true;
-      const clonedCbs = cbs.slice();
-      for (const cbObj of clonedCbs) {
-        try {
-          if (!cbObj.hasBeenCleared) {
-            cbObj.complete();
-            cbObj.hasBeenCleared = true;
-          }
-        } catch (_) {
-          /* nothing */
-        }
-      }
-      cbs.length = 0;
-    },
+    finish,
   };
+  function finish() {
+    isFinished = true;
+    const clonedCbs = cbs.slice();
+    for (const cbObj of clonedCbs) {
+      try {
+        if (!cbObj.hasBeenCleared) {
+          cbObj.complete();
+          cbObj.hasBeenCleared = true;
+        }
+      } catch (_) {
+        /* nothing */
+      }
+    }
+    cbs.length = 0;
+  }
 }
 
 /**
@@ -348,27 +362,23 @@ export default function createSharedReference<T>(initialValue : T) : ISharedRefe
  * over.
  * @param {Function} mappingFn - The mapping function which will receives
  * `originalRef`'s value and outputs this new reference's value.
- * @param {Object | undefined} [cancellationSignal] - Optionally, a
- * `CancellationSignal` which will finish that reference when it emits.
+ * @param {Object} cancellationSignal - Optionally, a `CancellationSignal` which
+ * will finish that reference when it emits.
  * @returns {Object} - The new, mapped, reference.
  */
 export function createMappedReference<T, U>(
   originalRef : IReadOnlySharedReference<T>,
   mappingFn : (x : T) => U,
-  cancellationSignal? : CancellationSignal
+  cancellationSignal : CancellationSignal
 ) : IReadOnlySharedReference<U> {
-  const newRef = createSharedReference(mappingFn(originalRef.getValue()));
+  const newRef = createSharedReference(mappingFn(originalRef.getValue()),
+                                       cancellationSignal);
   originalRef.onUpdate(function mapOriginalReference(x) {
     newRef.setValue(mappingFn(x));
   }, { clearSignal: cancellationSignal });
 
   // TODO nothing is done if `originalRef` is finished, though the returned
   // reference could also be finished in that case. To do?
-  if (cancellationSignal !== undefined) {
-    cancellationSignal.register(() => {
-      newRef.finish();
-    });
-  }
 
   return newRef;
 }
