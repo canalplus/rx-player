@@ -14,17 +14,7 @@
  * limitations under the License.
  */
 
-export { IAudioTrackSwitchingMode } from "../../../public_types";
-import PeriodStream, {
-  IPeriodStreamArguments,
-  IPeriodStreamOptions,
-  IPeriodStreamPlaybackObservation,
-} from "./period_stream";
+import PeriodStream from "./period_stream";
+export * from "./types";
 
 export default PeriodStream;
-
-export {
-  IPeriodStreamArguments,
-  IPeriodStreamOptions,
-  IPeriodStreamPlaybackObservation,
-};

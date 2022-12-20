@@ -110,6 +110,10 @@ export default class SortedList<T> {
     return this._array[index];
   }
 
+  public toArray() : T[] {
+    return this._array.slice();
+  }
+
   /**
    * Find the first element corresponding to the given predicate.
    *

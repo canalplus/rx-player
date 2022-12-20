@@ -25,7 +25,6 @@ import {
 } from "../../public_types";
 import { ITransportPipelines } from "../../transports";
 import assert from "../../utils/assert";
-import assertUnreachable from "../../utils/assert_unreachable";
 import objectAssign from "../../utils/object_assign";
 import createSharedReference, {
   IReadOnlySharedReference,
@@ -39,7 +38,7 @@ import AdaptiveRepresentationSelector, {
   IAdaptiveRepresentationSelectorArguments,
   IRepresentationEstimator,
 } from "../adaptive";
-import { PlaybackObserver } from "../api";
+import { IReadOnlyPlaybackObserver, PlaybackObserver } from "../api";
 import {
   getCurrentKeySystem,
   IContentProtection,
@@ -53,9 +52,10 @@ import SegmentBuffersStore, {
   ITextTrackSegmentBufferOptions,
 } from "../segment_buffers";
 import StreamOrchestrator, {
-  IAdaptationChangeEvent,
   IAudioTrackSwitchingMode,
   IStreamOrchestratorOptions,
+  IStreamOrchestratorCallbacks,
+  IStreamOrchestratorPlaybackObservation,
 } from "../stream";
 import { ContentInitializer } from "./types";
 import ContentTimeBoundariesObserver from "./utils/content_time_boundaries_observer";
@@ -356,6 +356,9 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                         autoPlay : boolean; }
       ) : void {
         currentCanceller.cancel();
+        if (initCanceller.isUsed) {
+          return;
+        }
         triggerEvent("reloadingMediaSource", null);
         if (initCanceller.isUsed) {
           return;
@@ -403,12 +406,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             segmentFetcherCreator,
             speed } = args;
 
-    /** Maintains the MediaSource's duration up-to-date with the Manifest */
-    const mediaDurationUpdater = new MediaDurationUpdater(manifest, mediaSource);
-    cancelSignal.register(() => {
-      mediaDurationUpdater.stop();
-    });
-
     const initialPeriod = manifest.getPeriodForTime(initialTime) ??
                           manifest.getNextPeriod(initialTime);
     if (initialPeriod === undefined) {
@@ -435,24 +432,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       return;
     }
 
-    /**
-     * Class trying to avoid various stalling situations, emitting "stalled"
-     * events when it cannot, as well as "unstalled" events when it get out of one.
-     */
-    const rebufferingController = new RebufferingController(playbackObserver,
-                                                            manifest,
-                                                            speed);
-    rebufferingController.addEventListener("stalled", (evt) =>
-      this.trigger("stalled", evt));
-    rebufferingController.addEventListener("unstalled", () =>
-      this.trigger("unstalled", null));
-    rebufferingController.addEventListener("warning", (err) =>
-      this.trigger("warning", err));
-    cancelSignal.register(() => {
-      rebufferingController.destroy();
-    });
-    rebufferingController.start();
-
     initialPlayPerformed.onUpdate((isPerformed, stopListening) => {
       if (isPerformed) {
         stopListening();
@@ -473,21 +452,17 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                                                           speed,
                                                           startTime: initialTime });
 
-    /** Emit each time a new Adaptation is considered by the `StreamOrchestrator`. */
-    const lastAdaptationChange = createSharedReference<
-      IAdaptationChangeEvent | null
-    >(null);
+    const rebufferingController = this._createRebufferingController(playbackObserver,
+                                                                    manifest,
+                                                                    speed,
+                                                                    cancelSignal);
 
-    const durationRef = ContentTimeBoundariesObserver(manifest,
-                                                      lastAdaptationChange,
-                                                      streamObserver,
-                                                      (err) =>
-                                                        this.trigger("warning", err),
-                                                      cancelSignal);
-    durationRef.onUpdate((newDuration) => {
-      log.debug("Init: Duration has to be updated.", newDuration);
-      mediaDurationUpdater.updateKnownDuration(newDuration);
-    }, { emitCurrentValue: true, clearSignal: cancelSignal });
+    const contentTimeBoundariesObserver = this
+      ._createContentTimeBoundariesObserver(manifest,
+                                            mediaSource,
+                                            streamObserver,
+                                            segmentBuffersStore,
+                                            cancelSignal);
 
     /**
      * Emit a "loaded" events once the initial play has been performed and the
@@ -506,113 +481,248 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       })
       .catch((err) => {
         if (cancelSignal.isCancelled) {
-          return;
+          return; // Current loading cancelled, no need to trigger the error
         }
         this._onFatalError(err);
       });
 
-    let endOfStreamCanceller : TaskCanceller | null = null;
+    /* eslint-disable-next-line @typescript-eslint/no-this-alias */
+    const self = this;
+    StreamOrchestrator({ manifest, initialPeriod },
+                       streamObserver,
+                       representationEstimator,
+                       segmentBuffersStore,
+                       segmentFetcherCreator,
+                       bufferOptions,
+                       handleStreamOrchestratorCallbacks(),
+                       cancelSignal);
 
-    // Creates Observable which will manage every Stream for the given Content.
-    const streamSub = StreamOrchestrator({ manifest, initialPeriod },
-                                         streamObserver,
-                                         representationEstimator,
-                                         segmentBuffersStore,
-                                         segmentFetcherCreator,
-                                         bufferOptions
-    ).subscribe({
-      next: (evt) => {
-        switch (evt.type) {
-          case "needs-buffer-flush":
-            playbackObserver.setCurrentTime(mediaElement.currentTime + 0.001);
-            break;
-          case "end-of-stream":
-            if (endOfStreamCanceller === null) {
-              endOfStreamCanceller = new TaskCanceller({ cancelOn: cancelSignal });
-              log.debug("Init: end-of-stream order received.");
-              maintainEndOfStream(mediaSource, endOfStreamCanceller.signal);
-            }
-            break;
-          case "resume-stream":
-            if (endOfStreamCanceller !== null) {
-              log.debug("Init: resume-stream order received.");
-              endOfStreamCanceller.cancel();
-            }
-            break;
-          case "stream-status":
-            const { period, bufferType, imminentDiscontinuity, position } = evt.value;
-            rebufferingController.updateDiscontinuityInfo({
-              period,
-              bufferType,
-              discontinuity: imminentDiscontinuity,
-              position,
-            });
-            break;
-          case "needs-manifest-refresh":
-            return this._manifestFetcher.scheduleManualRefresh({
-              enablePartialRefresh: true,
-              canUseUnsafeMode: true,
-            });
-          case "manifest-might-be-out-of-sync":
-            const { OUT_OF_SYNC_MANIFEST_REFRESH_DELAY } = config.getCurrent();
-            this._manifestFetcher.scheduleManualRefresh({
-              enablePartialRefresh: false,
-              canUseUnsafeMode: false,
-              delay: OUT_OF_SYNC_MANIFEST_REFRESH_DELAY,
-            });
-            return ;
-          case "locked-stream":
-            rebufferingController.onLockedStream(evt.value.bufferType, evt.value.period);
-            break;
-          case "adaptationChange":
-            lastAdaptationChange.setValue(evt);
-            this.trigger("adaptationChange", evt.value);
-            break;
-          case "inband-events":
-            return this.trigger("inbandEvents", evt.value);
-          case "warning":
-            return this.trigger("warning", evt.value);
-          case "periodStreamReady":
-            return this.trigger("periodStreamReady", evt.value);
-          case "activePeriodChanged":
-            return this.trigger("activePeriodChanged", evt.value);
-          case "periodStreamCleared":
-            return this.trigger("periodStreamCleared", evt.value);
-          case "representationChange":
-            return this.trigger("representationChange", evt.value);
-          case "bitrateEstimationChange":
-            return this.trigger("bitrateEstimationChange", evt.value);
-          case "added-segment":
-            return this.trigger("addedSegment", evt.value);
-          case "needs-media-source-reload":
-            onReloadOrder(evt.value);
-            break;
-          case "needs-decipherability-flush":
-            const keySystem = getCurrentKeySystem(mediaElement);
-            if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem)) {
-              onReloadOrder(evt.value);
+    /**
+     * Returns Object handling the callbacks from a `StreamOrchestrator`, which
+     * are basically how it communicates about events.
+     * @returns {Object}
+     */
+    function handleStreamOrchestratorCallbacks() : IStreamOrchestratorCallbacks {
+      return {
+        needsBufferFlush: () =>
+          playbackObserver.setCurrentTime(mediaElement.currentTime + 0.001),
+
+        streamStatusUpdate(value) {
+          // Announce discontinuities if found
+          const { period, bufferType, imminentDiscontinuity, position } = value;
+          rebufferingController.updateDiscontinuityInfo({
+            period,
+            bufferType,
+            discontinuity: imminentDiscontinuity,
+            position,
+          });
+          if (cancelSignal.isCancelled) {
+            return; // Previous call has stopped streams due to a side-effect
+          }
+
+          // If the status for the last Period indicates that segments are all loaded
+          // or on the contrary that the loading resumed, announce it to the
+          // ContentTimeBoundariesObserver.
+          if (manifest.isLastPeriodKnown &&
+              value.period.id === manifest.periods[manifest.periods.length - 1].id)
+          {
+            const hasFinishedLoadingLastPeriod = value.hasFinishedLoading ||
+                                                 value.isEmptyStream;
+            if (hasFinishedLoadingLastPeriod) {
+              contentTimeBoundariesObserver
+                .onLastSegmentFinishedLoading(value.bufferType);
             } else {
-              // simple seek close to the current position
-              // to flush the buffers
-              if (evt.value.position + 0.001 < evt.value.duration) {
-                playbackObserver.setCurrentTime(mediaElement.currentTime + 0.001);
-              } else {
-                playbackObserver.setCurrentTime(evt.value.position);
-              }
+              contentTimeBoundariesObserver
+                .onLastSegmentLoadingResume(value.bufferType);
             }
-            break;
-          case "encryption-data-encountered":
-            protectionRef.setValue(evt.value);
-            break;
-          default:
-            assertUnreachable(evt);
-        }
-      },
-      error: (err) => this._onFatalError(err),
-    });
+          }
+        },
+
+        needsManifestRefresh: () => self._manifestFetcher.scheduleManualRefresh({
+          enablePartialRefresh: true,
+          canUseUnsafeMode: true,
+        }),
+
+        manifestMightBeOufOfSync: () => {
+          const { OUT_OF_SYNC_MANIFEST_REFRESH_DELAY } = config.getCurrent();
+          self._manifestFetcher.scheduleManualRefresh({
+            enablePartialRefresh: false,
+            canUseUnsafeMode: false,
+            delay: OUT_OF_SYNC_MANIFEST_REFRESH_DELAY,
+          });
+        },
+
+        lockedStream: (value) =>
+          rebufferingController.onLockedStream(value.bufferType, value.period),
+
+        adaptationChange: (value) => {
+          self.trigger("adaptationChange", value);
+          if (cancelSignal.isCancelled) {
+            return; // Previous call has stopped streams due to a side-effect
+          }
+          contentTimeBoundariesObserver.onAdaptationChange(value.type,
+                                                           value.period,
+                                                           value.adaptation);
+        },
+
+        representationChange: (value) => {
+          self.trigger("representationChange", value);
+          if (cancelSignal.isCancelled) {
+            return; // Previous call has stopped streams due to a side-effect
+          }
+          contentTimeBoundariesObserver.onRepresentationChange(value.type, value.period);
+        },
+
+        inbandEvent: (value) => self.trigger("inbandEvents", value),
+
+        warning: (value) => self.trigger("warning", value),
+
+        periodStreamReady: (value) => self.trigger("periodStreamReady", value),
+
+        periodStreamCleared: (value) => {
+          contentTimeBoundariesObserver.onPeriodCleared(value.type, value.period);
+          if (cancelSignal.isCancelled) {
+            return; // Previous call has stopped streams due to a side-effect
+          }
+          self.trigger("periodStreamCleared", value);
+        },
+
+        bitrateEstimationChange: (value) =>
+          self.trigger("bitrateEstimationChange", value),
+
+        addedSegment: (value) => self.trigger("addedSegment", value),
+
+        needsMediaSourceReload: (value) => onReloadOrder(value),
+
+        needsDecipherabilityFlush(value) {
+          const keySystem = getCurrentKeySystem(mediaElement);
+          if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem)) {
+            onReloadOrder(value);
+          } else {
+            // simple seek close to the current position
+            // to flush the buffers
+            if (value.position + 0.001 < value.duration) {
+              playbackObserver.setCurrentTime(mediaElement.currentTime + 0.001);
+            } else {
+              playbackObserver.setCurrentTime(value.position);
+            }
+          }
+        },
+
+        encryptionDataEncountered: (value) => {
+          for (const protectionData of value) {
+            protectionRef.setValue(protectionData);
+            if (cancelSignal.isCancelled) {
+              return; // Previous call has stopped streams due to a side-effect
+            }
+          }
+        },
+
+        error: (err) => self._onFatalError(err),
+      };
+    }
+  }
+
+  /**
+   * Creates a `ContentTimeBoundariesObserver`, a class indicating various
+   * events related to media time (such as duration updates, period changes,
+   * warnings about being out of the Manifest time boundaries or "endOfStream"
+   * management), handle those events and returns the class.
+   *
+   * Various methods from that class need then to be called at various events
+   * (see `ContentTimeBoundariesObserver`).
+   * @param {Object} manifest
+   * @param {MediaSource} mediaSource
+   * @param {Object} streamObserver
+   * @param {Object} segmentBuffersStore
+   * @param {Object} cancelSignal
+   * @returns {Object}
+   */
+  private _createContentTimeBoundariesObserver(
+    manifest : Manifest,
+    mediaSource : MediaSource,
+    streamObserver : IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>,
+    segmentBuffersStore : SegmentBuffersStore,
+    cancelSignal : CancellationSignal
+  ) : ContentTimeBoundariesObserver {
+    /** Maintains the MediaSource's duration up-to-date with the Manifest */
+    const mediaDurationUpdater = new MediaDurationUpdater(manifest, mediaSource);
     cancelSignal.register(() => {
-      streamSub.unsubscribe();
+      mediaDurationUpdater.stop();
     });
+    /** Allows to cancel a pending `end-of-stream` operation. */
+    let endOfStreamCanceller : TaskCanceller | null = null;
+    const contentTimeBoundariesObserver = new ContentTimeBoundariesObserver(
+      manifest,
+      streamObserver,
+      segmentBuffersStore.getBufferTypes()
+    );
+    cancelSignal.register(() => {
+      contentTimeBoundariesObserver.dispose();
+    });
+    contentTimeBoundariesObserver.addEventListener("warning", (err) =>
+      this.trigger("warning", err));
+    contentTimeBoundariesObserver.addEventListener("periodChange", (period) => {
+      this.trigger("activePeriodChanged", { period });
+    });
+    contentTimeBoundariesObserver.addEventListener("durationUpdate", (newDuration) => {
+      log.debug("Init: Duration has to be updated.", newDuration);
+      mediaDurationUpdater.updateKnownDuration(newDuration);
+    });
+    contentTimeBoundariesObserver.addEventListener("endOfStream", () => {
+      if (endOfStreamCanceller === null) {
+        endOfStreamCanceller = new TaskCanceller({ cancelOn: cancelSignal });
+        log.debug("Init: end-of-stream order received.");
+        maintainEndOfStream(mediaSource, endOfStreamCanceller.signal);
+      }
+    });
+    contentTimeBoundariesObserver.addEventListener("resumeStream", () => {
+      if (endOfStreamCanceller !== null) {
+        log.debug("Init: resume-stream order received.");
+        endOfStreamCanceller.cancel();
+        endOfStreamCanceller = null;
+      }
+    });
+    return contentTimeBoundariesObserver;
+  }
+
+  /**
+   * Creates a `RebufferingController`, a class trying to avoid various stalling
+   * situations (such as rebuffering periods), and returns it.
+   *
+   * Various methods from that class need then to be called at various events
+   * (see `RebufferingController` definition).
+   *
+   * This function also handles the `RebufferingController`'s events:
+   *   - emit "stalled" events when stalling situations cannot be prevented,
+   *   - emit "unstalled" events when we could get out of one,
+   *   - emit "warning" on various rebuffering-related minor issues
+   *     like discontinuity skipping.
+   * @param {Object} playbackObserver
+   * @param {Object} manifest
+   * @param {Object} speed
+   * @param {Object} cancelSignal
+   * @returns {Object}
+   */
+  private _createRebufferingController(
+    playbackObserver : PlaybackObserver,
+    manifest : Manifest,
+    speed : IReadOnlySharedReference<number>,
+    cancelSignal : CancellationSignal
+  ) : RebufferingController {
+    const rebufferingController = new RebufferingController(playbackObserver,
+                                                            manifest,
+                                                            speed);
+    // Bubble-up events
+    rebufferingController.addEventListener("stalled",
+                                           (evt) => this.trigger("stalled", evt));
+    rebufferingController.addEventListener("unstalled",
+                                           () => this.trigger("unstalled", null));
+    rebufferingController.addEventListener("warning",
+                                           (err) => this.trigger("warning", err));
+    cancelSignal.register(() => rebufferingController.destroy());
+    rebufferingController.start();
+    return rebufferingController;
   }
 }
 
@@ -699,6 +809,8 @@ interface IBufferingMediaSettings {
   protectionRef : ISharedReference<IContentProtection | null>;
   /** `MediaSource` element on which the media will be buffered. */
   mediaSource : MediaSource;
+  /** The initial position to seek to in media time, in seconds. */
   initialTime : number;
+  /** If `true` it should automatically play once enough data is loaded. */
   autoPlay : boolean;
 }

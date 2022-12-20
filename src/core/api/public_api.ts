@@ -630,16 +630,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     const videoElement = this.videoElement;
 
-    /** Global "playback observer" which will emit playback conditions */
-    const playbackObserver = new PlaybackObserver(videoElement, {
-      withMediaSource: !isDirectFile,
-      lowLatencyMode,
-    });
-
-    currentContentCanceller.signal.register(() => {
-      playbackObserver.stop();
-    });
-
     let initializer : ContentInitializer;
 
     let mediaElementTrackChoiceManager : MediaElementTrackChoiceManager | null =
@@ -884,6 +874,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     //   - we can avoid involontarily catching events linked to the previous
     //     content.
     this.stop();
+
+    /** Global "playback observer" which will emit playback conditions */
+    const playbackObserver = new PlaybackObserver(videoElement, {
+      withMediaSource: !isDirectFile,
+      lowLatencyMode,
+    });
+
+    currentContentCanceller.signal.register(() => {
+      playbackObserver.stop();
+    });
 
     // Update the RxPlayer's state at the right events
     const playerStateRef = constructPlayerStateReference(initializer,

@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-import config from "../../../config";
+import config from "../../../../config";
 import Manifest, {
   Adaptation,
   Period,
   Representation,
-} from "../../../manifest";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import { IReadOnlyPlaybackObserver } from "../../api";
+} from "../../../../manifest";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
+import { IReadOnlyPlaybackObserver } from "../../../api";
 import {
   IBufferedChunk,
   IEndOfSegmentOperation,
   SegmentBuffer,
   SegmentBufferOperation,
-} from "../../segment_buffers";
+} from "../../../segment_buffers";
 import {
   IBufferDiscontinuity,
   IQueuedSegment,

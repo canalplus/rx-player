@@ -14,17 +14,7 @@
  * limitations under the License.
  */
 
-import AdaptationStream, {
-  IAdaptationStreamArguments,
-  IAdaptationStreamPlaybackObservation,
-  IAdaptationStreamOptions,
-  IPausedPlaybackObservation,
-} from "./adaptation_stream";
+import AdaptationStream from "./adaptation_stream";
+export * from "./types";
 
 export default AdaptationStream;
-export {
-  IAdaptationStreamArguments,
-  IAdaptationStreamPlaybackObservation,
-  IAdaptationStreamOptions,
-  IPausedPlaybackObservation,
-};
