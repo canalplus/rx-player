@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-import config from "../../../config";
-import log from "../../../log";
-import { getInnerAndOuterTimeRanges } from "../../../utils/ranges";
-import { CancellationSignal } from "../../../utils/task_canceller";
-import { SegmentBuffer } from "../../segment_buffers";
-
+import config from "../../../../config";
+import log from "../../../../log";
+import { getInnerAndOuterTimeRanges } from "../../../../utils/ranges";
+import { CancellationSignal } from "../../../../utils/task_canceller";
+import { SegmentBuffer } from "../../../segment_buffers";
 
 /**
  * Run the garbage collector.

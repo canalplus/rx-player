@@ -60,20 +60,21 @@ describe("end number", function () {
       autoPlay: true,
     });
     await sleep(50);
-    expect(xhrMock.getLockedXHR().length).to.equal(1);
+    expect(xhrMock.getLockedXHR().length).to.equal(1); // Manifest
     await xhrMock.flush();
     await sleep(50);
     expect(player.getMaximumPosition()).to.be.closeTo(20, 1);
-    expect(xhrMock.getLockedXHR().length).to.equal(4);
+    expect(xhrMock.getLockedXHR().length).to.equal(4); // Init + media of audio
+                                                       // + video
     await xhrMock.flush();
     await waitForLoadedStateAfterLoadVideo(player);
 
-    await sleep(500);
-    expect(xhrMock.getLockedXHR().length).to.equal(2);
+    await sleep(50);
+    expect(xhrMock.getLockedXHR().length).to.equal(2); // next audio + video
     xhrMock.flush();
     player.seekTo(19);
     await sleep(50);
-    expect(xhrMock.getLockedXHR().length).to.equal(2);
+    expect(xhrMock.getLockedXHR().length).to.equal(2); // last audio + video
     xhrMock.flush();
     await waitForState(player, "ENDED", ["BUFFERING", "RELOADING", "PLAYING"]);
     expect(player.getPosition()).to.be.closeTo(20, 1);

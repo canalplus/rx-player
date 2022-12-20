@@ -17,12 +17,20 @@
 import StreamOrchestrator, {
   IStreamOrchestratorOptions,
   IStreamOrchestratorPlaybackObservation,
+  IStreamOrchestratorCallbacks,
 } from "./orchestrator";
 export { IAudioTrackSwitchingMode } from "./period";
-export * from "./types";
+export {
+  IInbandEvent,
+  IStreamStatusPayload,
+} from "./representation";
+export {
+  IWaitingMediaSourceReloadPayload,
+} from "./adaptation";
 
 export default StreamOrchestrator;
 export {
   IStreamOrchestratorPlaybackObservation,
   IStreamOrchestratorOptions,
+  IStreamOrchestratorCallbacks,
 };
