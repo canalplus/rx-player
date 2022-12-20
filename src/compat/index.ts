@@ -55,7 +55,6 @@ import isVTTCue from "./is_vtt_cue";
 import makeVTTCue from "./make_vtt_cue";
 import onHeightWidthChange from "./on_height_width_change";
 import patchWebkitSourceBuffer from "./patch_webkit_source_buffer";
-import play from "./play";
 // eslint-disable-next-line max-len
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "./should_reload_media_source_on_decipherability_update";
 import shouldRenewMediaKeySystemAccess from "./should_renew_media_key_system_access";
@@ -98,10 +97,8 @@ export {
   makeVTTCue,
   MediaSource_,
   onHeightWidthChange,
-  play,
   requestFullscreen,
   requestMediaKeySystemAccess,
-  setElementSrc$,
   setMediaKeys,
   shouldReloadMediaSourceOnDecipherabilityUpdate,
   shouldRenewMediaKeySystemAccess,
@@ -109,5 +106,4 @@ export {
   shouldValidateMetadata,
   shouldWaitForDataBeforeLoaded,
   tryToChangeSourceBufferType,
-  whenLoadedMetadata$,
 };
