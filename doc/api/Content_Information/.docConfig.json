@@ -5,6 +5,10 @@
       "displayName": "getUrl"
     },
     {
+      "path": "./updateContentUrls.md",
+      "displayName": "updateContentUrls"
+    },
+    {
       "path": "./isLive.md",
       "displayName": "isLive"
     },
