@@ -453,6 +453,9 @@ properties, methods, events and so on.
   - [`getUrl`](../api/Content_Information/getUrl.md):
     Get URL of the currently-played content.
 
+  - [`updateContentUrls`](../api/Content_Information/updateContentUrls.md):
+    Update URL(s) of the content currently being played.
+
   - [`isLive`](../api/Content_Information/isLive.md):
     Returns `true` if the content is a "live" content.
 
