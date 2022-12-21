@@ -24,7 +24,7 @@ this method has no effect.
 ```js
 player.updateContentUrls(urls);
 // or
-player.updateContentUrls(urls, refreshNow);
+player.updateContentUrls(urls, params);
 ```
 
   - **arguments**:
@@ -32,8 +32,13 @@ player.updateContentUrls(urls, refreshNow);
      1. _urls_ `Array.<string>|under`: URLs to reach that content / Manifest
      from the most prioritized URL to the least prioritized URL.
 
-     2. _refreshNow_ `boolean`: If `true` the resource in question (e.g.
-     DASH's MPD) will be refreshed immediately.
+     2. _params_ `Object|undefined`: Optional parameters linked to this URL
+     change.
+
+     Can contain the following properties:
+
+       - _refresh_ `boolean`: If `true` the resource in question (e.g.
+         DASH's MPD) will be refreshed immediately.
 
 ## Examples
 
@@ -52,5 +57,5 @@ player.updateContentUrls([
 player.updateContentUrls(undefined);
 
 // Update and ask to refresh immediately
-player.updateContentUrls(["http://my.new.url"], true);
+player.updateContentUrls(["http://my.new.url"], { refresh: true });
 ```
