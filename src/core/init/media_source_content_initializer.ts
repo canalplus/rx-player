@@ -173,6 +173,17 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       });
   }
 
+  /**
+   * Update URL of the Manifest.
+   * @param {Array.<string>|undefined} urls - URLs to reach that Manifest from
+   * the most prioritized URL to the least prioritized URL.
+   * @param {boolean} refreshNow - If `true` the resource in question (e.g.
+   * DASH's MPD) will be refreshed immediately.
+   */
+  public updateContentUrls(urls : string[] | undefined, refreshNow : boolean) : void {
+    this._manifestFetcher.updateContentUrls(urls, refreshNow);
+  }
+
   public dispose(): void {
     this._initCanceller.cancel();
   }

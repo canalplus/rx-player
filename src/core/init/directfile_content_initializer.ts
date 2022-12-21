@@ -123,6 +123,10 @@ export default class DirectFileContentInitializer extends ContentInitializer {
     }, { emitCurrentValue: true, clearSignal: cancelSignal });
   }
 
+  public updateContentUrls(_urls : string[] | undefined, _refreshNow : boolean) : void {
+    throw new Error("Cannot update content URL of directfile contents");
+  }
+
   public dispose(): void {
     this._initCanceller.cancel();
   }
