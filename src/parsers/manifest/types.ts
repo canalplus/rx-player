@@ -83,9 +83,13 @@ export interface IContentProtections {
 /** Represents metadata of a CDN which can serve resources. */
 export interface ICdnMetadata {
   /**
-   * The base URL on which resources can be requested though this CDN.
+   * The root URL on which resources can be requested though this CDN.
+   *
    * In most transports, you will want to add the wanted media resource's URL
-   * to that one to request it.
+   * to that one to request it as they should be relative to it.
+   *
+   * May be an empty string to indicate that all segments should contain the
+   * full URL.
    */
   baseUrl : string;
 
