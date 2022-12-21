@@ -79,6 +79,11 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
   private _isRefreshPending;
   /** Number of consecutive times the Manifest parsing has been done in `unsafeMode`. */
   private _consecutiveUnsafeMode;
+  /**
+   * If set to a string or `undefined`, the given URL should be prioritized on
+   * the next Manifest fetching operation, it can then be reset to `null`.
+   */
+  private _prioritizedContentUrl : string | undefined | null;
 
   /**
    * Construct a new ManifestFetcher.
@@ -104,6 +109,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     this._isStarted = false;
     this._isRefreshPending = false;
     this._consecutiveUnsafeMode = 0;
+    this._prioritizedContentUrl = null;
   }
 
   /**
@@ -154,6 +160,24 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
         }
       })
       .catch((err : unknown) => this._onFatalError(err));
+  }
+
+  /**
+   * Update URL of the fetched Manifest.
+   * @param {Array.<string> | undefined} urls - New Manifest URLs by order of
+   * priority or `undefined` if there's now no URL.
+   * @param {boolean} refreshNow - If set to `true`, the next Manifest refresh
+   * will be triggered immediately.
+   */
+  public updateContentUrls(urls : string[] | undefined, refreshNow : boolean) : void {
+    this._prioritizedContentUrl = urls?.[0] ?? undefined;
+    if (refreshNow) {
+      this.scheduleManualRefresh({
+        enablePartialRefresh: false,
+        delay: 0,
+        canUseUnsafeMode: false,
+      });
+    }
   }
 
   /**
@@ -560,9 +584,17 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
                        unsafeMode : boolean; }
   ) {
     const manifestUpdateUrl = manifest.updateUrl;
-    const fullRefresh = !enablePartialRefresh || manifestUpdateUrl === undefined;
-    const refreshURL = fullRefresh ? manifest.getUrl() :
-                                     manifestUpdateUrl;
+    let fullRefresh : boolean;
+    let refreshURL : string | undefined;
+    if (this._prioritizedContentUrl !== null) {
+      fullRefresh = true;
+      refreshURL = this._prioritizedContentUrl;
+      this._prioritizedContentUrl = null;
+    } else {
+      fullRefresh = !enablePartialRefresh || manifestUpdateUrl === undefined;
+      refreshURL = fullRefresh ? manifest.getUrl() :
+                                 manifestUpdateUrl;
+    }
     const externalClockOffset = manifest.clockOffset;
 
     if (unsafeMode) {

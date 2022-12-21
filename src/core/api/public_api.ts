@@ -777,6 +777,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       contentId: generateContentId(),
       originalUrl: url,
       currentContentCanceller,
+      initializer,
       isDirectFile,
       segmentBuffersStore: null,
       thumbnails: null,
@@ -1127,6 +1128,25 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return manifest.getUrl();
     }
     return undefined;
+  }
+
+  /**
+   * Update URL of the content currently being played (e.g. DASH's MPD).
+   * @param {Array.<string>|undefined} urls - URLs to reach that content /
+   * Manifest from the most prioritized URL to the least prioritized URL.
+   * @param {Object|undefined} [params]
+   * @param {boolean} params.refresh - If `true` the resource in question
+   * (e.g. DASH's MPD) will be refreshed immediately.
+   */
+  public updateContentUrls(
+    urls : string[] | undefined,
+    params? : { refresh?: boolean } | undefined
+  ) : void {
+    if (this._priv_contentInfos === null) {
+      throw new Error("No content loaded");
+    }
+    const refreshNow = params?.refresh === true;
+    this._priv_contentInfos.initializer.updateContentUrls(urls, refreshNow);
   }
 
   /**
@@ -2851,6 +2871,8 @@ interface IPublicApiContentInfos {
   contentId : string;
   /** Original URL set to load the content. */
   originalUrl : string | undefined;
+  /** `ContentInitializer` used to load the content. */
+  initializer : ContentInitializer;
   /** TaskCanceller triggered when it's time to stop the current content. */
   currentContentCanceller : TaskCanceller;
   /**
