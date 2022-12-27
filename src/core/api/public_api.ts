@@ -957,7 +957,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       throw new Error("Disposed player");
     }
     const videoElement = this.videoElement;
-    return getLeftSizeOfRange(videoElement.buffered, videoElement.currentTime);
+    const bufferGap = getLeftSizeOfRange(videoElement.buffered, videoElement.currentTime);
+    if (bufferGap === Infinity) {
+      return 0;
+    }
+    return bufferGap;
   }
 
   /**
