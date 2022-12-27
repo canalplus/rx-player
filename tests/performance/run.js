@@ -417,7 +417,10 @@ function createResultServer() {
       request.on("end", function () {
         try {
           const parsedBody = JSON.parse(body);
-          if (parsedBody.type === "done") {
+          if (parsedBody.type === "log") {
+            /* eslint-disable-next-line no-console */
+            console.log("LOG:", parsedBody.data);
+          } else if (parsedBody.type === "done") {
             if (currentBrowser !== undefined) {
               currentBrowser.kill();
               currentBrowser = undefined;

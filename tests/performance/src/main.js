@@ -20,9 +20,10 @@ async function test() {
   await waitForLoadedStateAfterLoadVideo(player);
   const timeToLoad = performance.now() - timeBeforeLoad;
   sendTestResult("loading", timeToLoad);
+  await sleep(1);
   const timeBeforeSeek = performance.now();
   player.seekTo(20);
-  await waitForPlayerState(player, "PAUSED", ["SEEKING"]);
+  await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
   const timeToSeek = performance.now() - timeBeforeSeek;
   sendTestResult("seeking", timeToSeek);
   reloadIfNeeded();
@@ -34,6 +35,14 @@ function sendTestResult(testName, testResult) {
     method: "POST",
     body: JSON.stringify({ type: "value",
                            data: { name: testName, value: testResult } }),
+  });
+}
+
+function sendLog(log) {
+  fetch("http://127.0.0.1:6789", {
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+    body: JSON.stringify({ type: "log", data: log }),
   });
 }
 
@@ -63,3 +72,5 @@ function getTestNumber() {
   return Number(location.hash.substring(1));
 }
 
+// Allow to display logs in the RxPlayer source code
+window.sendLog = sendLog;
