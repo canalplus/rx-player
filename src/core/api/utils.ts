@@ -102,7 +102,7 @@ export function constructPlayerStateReference(
         }
       }
     } else {
-      playerStateRef.setValueIfChanged(getLoadedContentState(mediaElement, null));
+      updateStateIfLoaded(null);
     }
   }, cancelSignal);
 
@@ -119,31 +119,37 @@ export function constructPlayerStateReference(
   let prevStallReason : IStallingSituation | null = null;
   initializer.addEventListener("stalled", (s) => {
     if (s !== prevStallReason) {
-      if (isLoadedState(playerStateRef.getValue())) {
-        playerStateRef.setValueIfChanged(getLoadedContentState(mediaElement, s));
-      }
+      updateStateIfLoaded(s);
       prevStallReason = s;
     }
   }, cancelSignal);
   initializer.addEventListener("unstalled", () => {
     if (prevStallReason !== null) {
-      if (isLoadedState(playerStateRef.getValue())) {
-        playerStateRef.setValueIfChanged(getLoadedContentState(mediaElement, null));
-      }
+      updateStateIfLoaded(null);
       prevStallReason = null;
     }
   }, cancelSignal);
 
   playbackObserver.listen((observation) => {
-    if (isLoadedState(playerStateRef.getValue()) &&
-        arrayIncludes(["seeking", "ended", "play", "pause"], observation.event))
-    {
-      playerStateRef.setValueIfChanged(
-        getLoadedContentState(mediaElement, prevStallReason)
-      );
+    if (arrayIncludes(["seeking", "ended", "play", "pause"], observation.event)) {
+      updateStateIfLoaded(prevStallReason);
     }
   }, { clearSignal: cancelSignal });
   return playerStateRef;
+
+  function updateStateIfLoaded(stallRes : IStallingSituation | null) : void {
+    if (!isLoadedState(playerStateRef.getValue())) {
+      return;
+    }
+    const newState = getLoadedContentState(mediaElement, stallRes);
+    const prevState = playerStateRef.getValue();
+
+    // Some safety checks to avoid having nonsense state switches
+    if (prevState === PLAYER_STATES.LOADED && newState === PLAYER_STATES.PAUSED) {
+      return;
+    }
+    playerStateRef.setValueIfChanged(newState);
+  }
 }
 
 /**
