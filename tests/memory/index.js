@@ -217,6 +217,7 @@ describe("Memory tests", () => {
         player.seekTo(0);
       } else {
         player.seekTo(20);
+        seekToBeginning = true;
       }
       const bitrateIdx = iterationIdx % videoBitrates.length;
       player.setVideoBitrate(videoBitrates[bitrateIdx]);
