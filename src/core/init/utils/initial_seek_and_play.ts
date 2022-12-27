@@ -82,8 +82,8 @@ export default function performInitialSeekAndPlay(
     rejectAutoPlay = rej;
   });
 
-  const initialSeekPerformed = createSharedReference(false);
-  const initialPlayPerformed = createSharedReference(false);
+  const initialSeekPerformed = createSharedReference(false, cancelSignal);
+  const initialPlayPerformed = createSharedReference(false, cancelSignal);
 
   mediaElement.addEventListener("loadedmetadata", onLoadedMetadata);
   if (mediaElement.readyState >= READY_STATES.HAVE_METADATA) {

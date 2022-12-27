@@ -26,74 +26,9 @@ import {
 const DEFAULT_RESPONSE_TYPE : XMLHttpRequestResponseType = "json";
 
 /**
- * # request function
+ * Perform an HTTP request, according to the options given.
  *
- * Translate GET requests into Rx.js Observables.
- *
- * ## Overview
- *
- * Perform the request on subscription.
- * Emit zero, one or more progress event(s) and then the data if the request
- * was successful.
- *
- * Throw if an error happened or if the status code is not in the 200 range at
- * the time of the response.
- * Complete after emitting the data.
- * Abort the xhr on unsubscription.
- *
- * ## Emitted Objects
- *
- * The emitted objects are under the following form:
- * ```
- *   {
- *     type {string}: the type of event
- *     value {Object}: the event value
- *   }
- * ```
- *
- * The type of event can either be "progress" or "data-loaded". The value is
- * under a different form depending on the type.
- *
- * For "progress" events, the value should be the following object:
- * ```
- *   {
- *     url {string}: url on which the request is being done
- *     sendingTime {Number}: timestamp at which the request was sent.
- *     currentTime {Number}: timestamp at which the progress event was
- *                           triggered
- *     size {Number}: current size downloaded, in bytes (without
- *                          overhead)
- *     totalSize {Number|undefined}: total size to download, in bytes
- *                                   (without overhead)
- *   }
- * ```
- *
- * For "data-loaded" events, the value should be the following object:
- * ```
- *   {
- *     status {Number}: xhr status code
- *     url {string}: URL on which the request was done (can be different than
- *                   the one given in arguments when we go through
- *                   redirections).
- *     responseType {string}: the responseType of the request
- *                            (e.g. "json", "document"...).
- *     sendingTime {Number}: time at which the request was sent, in ms.
- *     receivedTime {Number}: timest at which the response was received, in ms.
- *     size {Number}: size of the received data, in bytes.
- *     responseData {*}: Data in the response. Format depends on the
- *                       responseType.
- *   }
- * ```
- *
- * For any successful request you should have 0+ "progress" events and 1
- * "data-loaded" event.
- *
- * For failing request, you should have 0+ "progress" events and 0 "data-loaded"
- * event (the Observable will throw before).
- *
- * ## Errors
- *
- * Several errors can be emitted (the Rx.js way). Namely:
+ * Several errors can be rejected. Namely:
  *   - RequestErrorTypes.TIMEOUT_ERROR: the request timeouted (took too long to
  *     respond).
  *   - RequestErrorTypes.PARSE_ERROR: the browser APIs used to parse the
@@ -104,7 +39,7 @@ const DEFAULT_RESPONSE_TYPE : XMLHttpRequestResponseType = "json";
  *   - RequestErrorTypes.ERROR_EVENT: The XHR had an error event before the
  *                                    response could be fetched.
  * @param {Object} options
- * @returns {Observable}
+ * @returns {Promise.<Object>}
  */
 export default function request(
   options : IRequestOptions< undefined | null | "" | "text" >

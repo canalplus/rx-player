@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-import { MediaError } from "../../../errors";
+import { MediaError } from "../../../../errors";
 import Manifest, {
   Adaptation,
   Period,
   Representation,
-} from "../../../manifest";
-import { IPlayerError } from "../../../public_types";
+} from "../../../../manifest";
+import { IPlayerError } from "../../../../public_types";
 import createSharedReference, {
   IReadOnlySharedReference,
-} from "../../../utils/reference";
-import { CancellationSignal } from "../../../utils/task_canceller";
+} from "../../../../utils/reference";
+import { CancellationSignal } from "../../../../utils/task_canceller";
 import {
   IABREstimate,
   IRepresentationEstimatorPlaybackObservation,
   IRepresentationEstimator,
   IRepresentationEstimatorCallbacks,
-} from "../../adaptive";
-import { IReadOnlyPlaybackObserver } from "../../api";
+} from "../../../adaptive";
+import { IReadOnlyPlaybackObserver } from "../../../api";
 
 /**
  * Produce estimates to know which Representation should be played.
@@ -66,7 +66,9 @@ export default function getRepresentationEstimate(
       abrCallbacks : IRepresentationEstimatorCallbacks; }
 {
   const { manifest, adaptation } = content;
-  const representations = createSharedReference<Representation[]>([]);
+  const representations = createSharedReference<Representation[]>(
+    [],
+    cancellationSignal);
   updateRepresentationsReference();
   manifest.addEventListener("decipherabilityUpdate", updateRepresentationsReference);
   const unregisterCleanUp = cancellationSignal.register(cleanUp);
@@ -102,7 +104,6 @@ export default function getRepresentationEstimate(
   /** Clean-up all resources taken here. */
   function cleanUp() : void {
     manifest.removeEventListener("decipherabilityUpdate", updateRepresentationsReference);
-    representations.finish();
 
     // check to protect against the case where it is not yet defined.
     if (typeof unregisterCleanUp !== "undefined") {

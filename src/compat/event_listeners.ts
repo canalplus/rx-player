@@ -14,17 +14,6 @@
  * limitations under the License.
  */
 
-/**
- * This file provides browser-agnostic event listeners under the form of
- * RxJS Observables
- */
-
-import {
-  NEVER,
-  Observable,
-  fromEvent as observableFromEvent,
-  merge as observableMerge,
-} from "rxjs";
 import config from "../config";
 import log from "../log";
 import { IEventEmitter } from "../utils/event_emitter";
@@ -112,11 +101,15 @@ export type IEventTargetLike = HTMLElement |
  * optionally automatically adding browser prefixes if needed.
  * @param {Array.<string>} eventNames - The event(s) to listen to. If multiple
  * events are set, the event listener will be triggered when any of them emits.
+ * @param {Array.<string>|undefined} [prefixes] - Optional vendor prefixes with
+ * which the event might also be sent. If not defined, default prefixes might be
+ * tested.
  * @returns {Function} - Returns function allowing to easily add a callback to
  * be triggered when that event is emitted on a given event target.
  */
 function createCompatibleEventListener(
-  eventNames : string[]
+  eventNames : string[],
+  prefixes? : string[]
 ) :
   (
     element : IEventTargetLike,
@@ -125,7 +118,7 @@ function createCompatibleEventListener(
   ) => void
 {
   let mem : string|undefined;
-  const prefixedEvents = eventPrefixed(eventNames);
+  const prefixedEvents = eventPrefixed(eventNames, prefixes);
 
   return (
     element : IEventTargetLike,
@@ -161,51 +154,30 @@ function createCompatibleEventListener(
     }
 
     prefixedEvents.forEach(eventName => {
-      (element as IEventEmitterLike).addEventListener(eventName, listener);
+      let hasSetOnFn = false;
+      if (typeof element.addEventListener === "function") {
+        (element as IEventEmitterLike).addEventListener(eventName, listener);
+      } else {
+        hasSetOnFn = true;
+        /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+        (element as any)["on" + eventName] = listener;
+        /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+      }
       cancelSignal.register(() => {
-        (element as IEventEmitterLike).removeEventListener(eventName, listener);
+        if (typeof element.removeEventListener === "function") {
+          (element as IEventEmitterLike).removeEventListener(eventName, listener);
+        }
+        if (hasSetOnFn) {
+          /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+          /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+          delete (element as any)["on" + eventName];
+          /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+        }
       });
     });
   };
 
-}
-
-/**
- * @param {Array.<string>} eventNames
- * @param {Array.<string>|undefined} prefixes
- * @returns {Observable}
- */
-function compatibleListener<T extends Event>(
-  eventNames : string[],
-  prefixes? : string[]
-) : (element : IEventTargetLike) => Observable<T> {
-  let mem : string|undefined;
-  const prefixedEvents = eventPrefixed(eventNames, prefixes);
-  return (element : IEventTargetLike) => {
-    // if the element is a HTMLElement we can detect
-    // the supported event, and memoize it in `mem`
-    if (element instanceof HTMLElement) {
-      if (typeof mem === "undefined") {
-        mem = findSupportedEvent(element, prefixedEvents);
-      }
-
-      if (isNonEmptyString(mem)) {
-        return observableFromEvent(element, mem) as Observable<T>;
-      } else {
-        if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
-          log.warn(`compat: element ${element.tagName}` +
-                   " does not support any of these events: " +
-                   prefixedEvents.join(", "));
-        }
-        return NEVER;
-      }
-    }
-
-    // otherwise, we need to listen to all the events
-    // and merge them into one observable sequence
-    return observableMerge(...prefixedEvents.map(eventName =>
-      observableFromEvent(element, eventName)));
-  };
 }
 
 /**
@@ -238,16 +210,12 @@ function getDocumentVisibilityRef(
                                                            "visibilitychange";
 
   const isHidden = document[hidden as "hidden"];
-  const ref = createSharedReference(!isHidden);
+  const ref = createSharedReference(!isHidden, stopListening);
 
   addEventListener(document, visibilityChangeEvent, () => {
     const isVisible = !(document[hidden as "hidden"]);
     ref.setValueIfChanged(isVisible);
   }, stopListening);
-
-  stopListening.register(() => {
-    ref.finish();
-  });
 
   return ref;
 }
@@ -265,11 +233,10 @@ function getPageActivityRef(
 ) : IReadOnlySharedReference<boolean> {
   const isDocVisibleRef = getDocumentVisibilityRef(stopListening);
   let currentTimeout : number | undefined;
-  const ref = createSharedReference(true);
+  const ref = createSharedReference(true, stopListening);
   stopListening.register(() => {
     clearTimeout(currentTimeout);
     currentTimeout = undefined;
-    ref.finish();
   });
 
   isDocVisibleRef.onUpdate(function onDocVisibilityChange(isVisible : boolean) : void {
@@ -312,7 +279,7 @@ export interface IPictureInPictureEvent {
  * Emit when video enters and leaves Picture-In-Picture mode.
  * @param {HTMLMediaElement} elt
  * @param {Object} stopListening
- * @returns {Observable}
+ * @returns {Object}
  */
 function getPictureOnPictureStateRef(
   elt: HTMLMediaElement,
@@ -327,14 +294,11 @@ function getPictureOnPictureStateRef(
     const ref = createSharedReference<IPictureInPictureEvent>({
       isEnabled: isWebKitPIPEnabled,
       pipWindow: null,
-    });
+    }, stopListening);
     addEventListener(mediaElement, "webkitpresentationmodechanged", () => {
       const isEnabled = mediaElement.webkitPresentationMode === "picture-in-picture";
       ref.setValue({ isEnabled, pipWindow: null });
     }, stopListening);
-    stopListening.register(() => {
-      ref.finish();
-    });
     return ref;
   }
 
@@ -342,7 +306,8 @@ function getPictureOnPictureStateRef(
     (document as ICompatDocument).pictureInPictureElement === mediaElement
   );
   const ref = createSharedReference<IPictureInPictureEvent>({ isEnabled: isPIPEnabled,
-                                                              pipWindow: null });
+                                                              pipWindow: null },
+                                                            stopListening);
   addEventListener(mediaElement, "enterpictureinpicture", (evt) => {
     ref.setValue({
       isEnabled: true,
@@ -354,9 +319,6 @@ function getPictureOnPictureStateRef(
   addEventListener(mediaElement, "leavepictureinpicture", () => {
     ref.setValue({ isEnabled: false, pipWindow: null });
   }, stopListening);
-  stopListening.register(() => {
-    ref.finish();
-  });
   return ref;
 }
 
@@ -368,7 +330,7 @@ function getPictureOnPictureStateRef(
  * @param {Object} pipStatus
  * @param {Object} stopListening - `CancellationSignal` allowing to free the
  * resources reserved to listen to video visibility change.
- * @returns {Observable}
+ * @returns {Object}
  */
 function getVideoVisibilityRef(
   pipStatus : IReadOnlySharedReference<IPictureInPictureEvent>,
@@ -376,11 +338,10 @@ function getVideoVisibilityRef(
 ) : IReadOnlySharedReference<boolean> {
   const isDocVisibleRef = getDocumentVisibilityRef(stopListening);
   let currentTimeout : number | undefined;
-  const ref = createSharedReference(true);
+  const ref = createSharedReference(true, stopListening);
   stopListening.register(() => {
     clearTimeout(currentTimeout);
     currentTimeout = undefined;
-    ref.finish();
   });
 
   isDocVisibleRef.onUpdate(checkCurrentVisibility,
@@ -417,7 +378,8 @@ function getVideoWidthRef(
   pipStatusRef : IReadOnlySharedReference<IPictureInPictureEvent>,
   stopListening : CancellationSignal
 ) : IReadOnlySharedReference<number> {
-  const ref = createSharedReference<number>(mediaElement.clientWidth * pixelRatio);
+  const ref = createSharedReference<number>(mediaElement.clientWidth * pixelRatio,
+                                            stopListening);
   let clearPreviousEventListener = noop;
   pipStatusRef.onUpdate(checkVideoWidth, { clearSignal: stopListening });
   addEventListener(window, "resize", checkVideoWidth, stopListening);
@@ -428,7 +390,6 @@ function getVideoWidthRef(
   stopListening.register(function stopUpdatingVideoWidthRef() {
     clearPreviousEventListener();
     clearInterval(interval);
-    ref.finish();
   });
   return ref;
 
@@ -459,39 +420,18 @@ function getVideoWidthRef(
 
 /**
  * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
  */
-const onLoadedMetadata$ = compatibleListener(["loadedmetadata"]);
+const onLoadedMetadata = createCompatibleEventListener(["loadedmetadata"]);
 
 /**
  * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
  */
-const onSeeking$ = compatibleListener(["seeking"]);
-
-/**
- * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
- */
-const onSeeked$ = compatibleListener(["seeked"]);
-
-/**
- * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
- */
-const onEnded$ = compatibleListener(["ended"]);
-
-/**
- * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
- */
-const onTimeUpdate$ = compatibleListener(["timeupdate"]);
+const onTimeUpdate = createCompatibleEventListener(["timeupdate"]);
 
 /**
  * @param {HTMLElement} element
- * @returns {Observable}
  */
-const onFullscreenChange$ = compatibleListener(
+const onFullscreenChange = createCompatibleEventListener(
   ["fullscreenchange", "FullscreenChange"],
 
   // On IE11, fullscreen change events is called MSFullscreenChange
@@ -499,13 +439,14 @@ const onFullscreenChange$ = compatibleListener(
 );
 
 /**
- * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
+ * @param {TextTrackList} textTrackList
  */
-const onTextTrackChanges$ =
-  (textTrackList : TextTrackList) : Observable<TrackEvent> =>
-    observableMerge(compatibleListener<TrackEvent>(["addtrack"])(textTrackList),
-                    compatibleListener<TrackEvent>(["removetrack"])(textTrackList));
+const onTextTrackAdded = createCompatibleEventListener(["addtrack"]);
+
+/**
+ * @param {TextTrackList} textTrackList
+ */
+const onTextTrackRemoved = createCompatibleEventListener(["removetrack"]);
 
 /**
  * @param {MediaSource} mediaSource
@@ -544,51 +485,43 @@ const onRemoveSourceBuffers = createCompatibleEventListener(["removesourcebuffer
 
 /**
  * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
  */
-const onEncrypted$ = compatibleListener<MediaEncryptedEvent>(
+const onEncrypted = createCompatibleEventListener(
   shouldFavourCustomSafariEME() ? ["needkey"] :
                                   ["encrypted", "needkey"]);
 
 /**
  * @param {MediaKeySession} mediaKeySession
- * @returns {Observable}
  */
-const onKeyMessage$ = compatibleListener<MediaKeyMessageEvent>(["keymessage", "message"]);
+const onKeyMessage = createCompatibleEventListener(["keymessage", "message"]);
 
 /**
  * @param {MediaKeySession} mediaKeySession
- * @returns {Observable}
  */
-const onKeyAdded$ = compatibleListener(["keyadded", "ready"]);
+const onKeyAdded = createCompatibleEventListener(["keyadded", "ready"]);
 
 /**
  * @param {MediaKeySession} mediaKeySession
- * @returns {Observable}
  */
-const onKeyError$ = compatibleListener(["keyerror", "error"]);
+const onKeyError = createCompatibleEventListener(["keyerror", "error"]);
 
 /**
  * @param {MediaKeySession} mediaKeySession
- * @returns {Observable}
  */
-const onKeyStatusesChange$ = compatibleListener(["keystatuseschange"]);
+const onKeyStatusesChange = createCompatibleEventListener(["keystatuseschange"]);
 
 /**
  * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
  */
 const onSeeking = createCompatibleEventListener(["seeking"]);
 
 /**
  * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
  */
 const onSeeked = createCompatibleEventListener(["seeked"]);
 
 /**
  * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
  */
 const onEnded = createCompatibleEventListener(["ended"]);
 
@@ -620,24 +553,22 @@ export {
   getPictureOnPictureStateRef,
   getVideoVisibilityRef,
   getVideoWidthRef,
-  onEncrypted$,
+  onEncrypted,
   onEnded,
-  onEnded$,
-  onFullscreenChange$,
-  onKeyAdded$,
-  onKeyError$,
-  onKeyMessage$,
-  onKeyStatusesChange$,
-  onLoadedMetadata$,
+  onFullscreenChange,
+  onKeyAdded,
+  onKeyError,
+  onKeyMessage,
+  onKeyStatusesChange,
+  onLoadedMetadata,
   onRemoveSourceBuffers,
   onSeeked,
-  onSeeked$,
   onSeeking,
-  onSeeking$,
   onSourceClose,
   onSourceEnded,
   onSourceOpen,
-  onTextTrackChanges$,
-  onTimeUpdate$,
+  onTimeUpdate,
   onSourceBufferUpdate,
+  onTextTrackAdded,
+  onTextTrackRemoved,
 };

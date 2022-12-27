@@ -49,9 +49,8 @@ import {
  * Item added to the AudioVideoSegmentBuffer's queue before being processed into
  * a task (see `IAVSBPendingTask`).
  *
- * Here we add the `subject` property which will allow the
- * AudioVideoSegmentBuffer to emit an event when the corresponding queued
- * operation is completely processed.
+ * Here we add `resolve` and `reject` callbacks to anounce when the task is
+ * finished.
  */
 type IAVSBQueueItem = ISBOperation<BufferSource> & {
   resolve : () => void;
@@ -361,11 +360,6 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
   }
 
   /**
-   * When the returned observable is subscribed:
-   *   1. Add your operation to the queue.
-   *   2. Begin the queue if not pending.
-   *
-   * Cancel queued operation on unsubscription.
    * @private
    * @param {Object} operation
    * @param {Object} cancellationSignal
