@@ -14,6 +14,30 @@ function VideoAdaptiveSettings({
   onLimitVideoWidthChange,
   onThrottleVideoBitrateWhenHiddenChange,
 }) {
+  let defaultVideoRepresentationsSwitchingModeDescMsg;
+  switch (defaultVideoRepresentationsSwitchingMode) {
+    case "reload":
+      defaultVideoRepresentationsSwitchingModeDescMsg =
+        "Reloading by default when video Representations are manually changed";
+      break;
+    case "lazy":
+      defaultVideoRepresentationsSwitchingModeDescMsg =
+        "Keeping previous data when video Representations are manually changed";
+      break;
+    case "direct":
+      defaultVideoRepresentationsSwitchingModeDescMsg =
+        "Directly visible transition when video Representations are manually changed";
+      break;
+    case "seamless":
+      defaultVideoRepresentationsSwitchingModeDescMsg =
+        "Smooth transition when video Representations are manually changed";
+      break;
+    default:
+      defaultVideoRepresentationsSwitchingModeDescMsg =
+        "Unknown value";
+      break;
+  }
+
   return (
     <Fragment>
       <li className="featureWrapperWithSelectMode">
@@ -27,6 +51,9 @@ function VideoAdaptiveSettings({
         >
             Default Video Representations switching mode
         </Select>
+        <span className="option-desc">
+          {defaultVideoRepresentationsSwitchingModeDescMsg}
+        </span>
       </li>
       <li>
         <div className="playerOptionInput">
@@ -42,12 +69,12 @@ function VideoAdaptiveSettings({
           >
             Limit Video Width
           </Checkbox>
+          <span className="option-desc">
+            {limitVideoWidth ?
+              "Limiting video width to the current <video> element's width" :
+              "Not limiting video width to the current <video> element's width"}
+          </span>
         </div>
-        <span className="option-desc">
-          {limitVideoWidth ?
-            "Limiting video width to the current <video> element's width" :
-            "Not limiting video width to the current <video> element's width"}
-        </span>
       </li>
       <li>
         <div className="playerOptionInput">
