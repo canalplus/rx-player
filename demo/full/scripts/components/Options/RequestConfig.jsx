@@ -309,6 +309,11 @@ function RequestConfig({
         >
           Do not limit
         </Checkbox>
+        <span className="option-desc">
+          {parseFloat(manifestTimeout) === -1 || !isManifestTimeoutLimited ?
+            "Perform manifest requests without timeout" :
+            `Stop manifest requests after ${manifestTimeout} millisecond(s)`}
+        </span>
       </li>
     </Fragment>
   );
