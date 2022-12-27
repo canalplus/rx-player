@@ -425,6 +425,11 @@ body {
   margin: 5px;
 }
 
+.option-desc {
+  font-weight: normal;
+  font-style: italic;
+}
+
 .choice-input-button {
   font-family: "icons", sans-serif;
   border: solid 1px #d1d1d1;
@@ -1212,7 +1217,7 @@ input:checked + .slider:before {
 }
 
 .loadVideooptions li {
-  padding: 5px 10px;
+  padding: 10px;
   border-top: dashed 1px black;
   display: flex;
   flex-direction: column;

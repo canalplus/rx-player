@@ -75,6 +75,14 @@ function AudioAdaptiveSettings({
             />
           </span>
         </div>
+        <span className="option-desc">
+          {
+            parseFloat(initialAudioBr) === 0 ?
+              "Starts loading the lowest audio bitrate" :
+              `Starts with an audio bandwidth estimate of ${initialAudioBr}` +
+              " bits per seconds."
+          }
+        </span>
       </li>
       <li>
         <div className="playerOptionInput">
@@ -116,6 +124,14 @@ function AudioAdaptiveSettings({
         >
           Do not limit
         </Checkbox>
+        <span className="option-desc">
+          {
+            !isMinAudioBrLimited || parseFloat(minAudioBr) <= 0 ?
+              "Not limiting the lowest audio bitrate reachable through the adaptive logic" :
+              "Limiting the lowest audio bitrate reachable through the adaptive " +
+              `logic to ${minAudioBr} bits per seconds`
+          }
+        </span>
       </li>
       <li>
         <div className="playerOptionInput">
@@ -159,6 +175,14 @@ function AudioAdaptiveSettings({
             Do not limit
           </Checkbox>
         </div>
+        <span className="option-desc">
+          {
+            !isMaxAudioBrLimited || parseFloat(maxAudioBr) === Infinity ?
+              "Not limiting the highest audio bitrate reachable through the adaptive logic" :
+              "Limiting the highest audio bitrate reachable through the adaptive " +
+              `logic to ${maxAudioBr} bits per seconds`
+          }
+        </span>
       </li>
     </Fragment>
   );
