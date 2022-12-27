@@ -37,6 +37,8 @@ import type {
   IAvailableVideoTrack,
   IConstructorOptions,
   ILoadVideoOptions,
+  IAudioRepresentationsSwitchingMode,
+  IVideoRepresentationsSwitchingMode,
   ITextTrack,
   IVideoRepresentation,
   IVideoTrack
@@ -109,12 +111,15 @@ export interface IPlayerModuleState {
   availableVideoTracks: IAvailableVideoTrack[];
   bufferGap: number;
   bufferedData: null | {
+
     audio: IBufferedData[] | null;
     video: IBufferedData[] | null;
     text: IBufferedData[] | null;
   };
   cannotLoadMetadata: boolean;
   currentTime: number | undefined;
+  defaultAudioRepresentationsSwitchingMode: IAudioRepresentationsSwitchingMode;
+  defaultVideoRepresentationsSwitchingMode: IVideoRepresentationsSwitchingMode;
   duration: number | undefined;
   error: Error | null;
   hasCurrentContent: boolean;
@@ -164,6 +169,8 @@ const PlayerModule = declareModule(
     bufferedData: null,
     cannotLoadMetadata: false,
     currentTime: undefined,
+    defaultAudioRepresentationsSwitchingMode: "reload",
+    defaultVideoRepresentationsSwitchingMode: "reload",
     duration: undefined,
     error: null,
     hasCurrentContent: false,
@@ -250,10 +257,11 @@ const PlayerModule = declareModule(
           textTrackElement,
           transportOptions: { checkMediaSegmentIntegrity: true },
         }, arg) as ILoadVideoOptions);
-        state.updateBulk({
+        const newState: Partial<IPlayerModuleState> = {
           loadedVideo: arg,
           lowLatencyMode: arg.lowLatencyMode === true,
-        });
+        };
+        state.updateBulk(newState);
       },
 
       play() {
@@ -295,10 +303,24 @@ const PlayerModule = declareModule(
         player.unMute();
       },
 
+      setDefaultVideoRepresentationSwitchingMode(
+        mode: IVideoRepresentationsSwitchingMode
+      ): void {
+        state.update("defaultVideoRepresentationsSwitchingMode", mode);
+      },
+
+      setDefaultAudioRepresentationSwitchingMode(
+        mode: IAudioRepresentationsSwitchingMode
+      ): void {
+        state.update("defaultAudioRepresentationsSwitchingMode", mode);
+      },
+
       lockVideoRepresentations(reps: IVideoRepresentation[]) {
         player.lockVideoRepresentations({
           representations: reps.map(r => r.id),
-          switchingMode: "reload",
+          switchingMode: state.get(
+            "defaultVideoRepresentationsSwitchingMode"
+          ),
         });
         state.update(
           "videoRepresentationsLocked",
@@ -317,7 +339,9 @@ const PlayerModule = declareModule(
       lockAudioRepresentations(reps: IAudioRepresentation[]) {
         player.lockAudioRepresentations({
           representations: reps.map(r => String(r.id)),
-          switchingMode: "reload",
+          switchingMode: state.get(
+            "defaultAudioRepresentationsSwitchingMode"
+          ),
         });
         state.update(
           "audioRepresentationsLocked",
