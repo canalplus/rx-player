@@ -269,6 +269,9 @@ export default function AdaptationStream<T>(
         callbacks.addedSegment(segmentInfo);
       },
       terminating() {
+        if (repStreamTerminatingCanceller.isUsed) {
+          return; // Already handled
+        }
         repStreamTerminatingCanceller.cancel();
         return recursivelyCreateRepresentationStreams(false);
       },
