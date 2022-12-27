@@ -248,6 +248,13 @@ class Settings extends React.Component {
 
     return (
       <div className="settingsWrapper">
+        <div className="settings-title">
+          Content options
+        </div>
+        <div className="settings-note">
+          Note: Those options won't be retroactively applied to
+          already-loaded contents
+        </div>
         <div style={{ display: "flex" }}>
           <Option title="Playback">
             <Playback
