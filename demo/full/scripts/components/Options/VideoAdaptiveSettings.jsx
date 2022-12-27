@@ -1,5 +1,5 @@
 import React, { Fragment } from "react";
-
+import Select from "../Select";
 import Checkbox from "../../components/CheckBox";
 
 /**
@@ -7,6 +7,8 @@ import Checkbox from "../../components/CheckBox";
  * @returns {Object}
  */
 function VideoAdaptiveSettings({
+  defaultVideoRepresentationsSwitchingMode,
+  onDefaultVideoRepresentationsSwitchingModeChange,
   limitVideoWidth,
   throttleVideoBitrateWhenHidden,
   onLimitVideoWidthClick,
@@ -14,6 +16,18 @@ function VideoAdaptiveSettings({
 }) {
   return (
     <Fragment>
+      <li className="featureWrapperWithSelectMode">
+        <Select
+          className="playerOptionInput"
+          name="defaultVideoRepresentationsSwitchingMode"
+          onChange={({ value }) =>
+            onDefaultVideoRepresentationsSwitchingModeChange(value)}
+          selected={{ value: defaultVideoRepresentationsSwitchingMode }}
+          options={["seamless", "lazy", "direct", "reload"]}
+        >
+            Default Video Representations switching mode
+        </Select>
+      </li>
       <li>
         <div className="playerOptionInput">
           <Checkbox

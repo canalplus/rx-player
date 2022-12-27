@@ -75,6 +75,8 @@ const PLAYER = ({ $destroy, state }, initOpts) => {
     bufferedData: null,
     cannotLoadMetadata: false,
     currentTime: undefined,
+    defaultAudioRepresentationsSwitchingMode: "reload",
+    defaultVideoRepresentationsSwitchingMode: "reload",
     duration: undefined,
     error: null,
     hasCurrentContent: false,
@@ -164,10 +166,19 @@ const PLAYER = ({ $destroy, state }, initOpts) => {
         textTrackElement,
         transportOptions: { checkMediaSegmentIntegrity: true },
       }, arg));
-      state.set({
+      const newState = {
         loadedVideo: arg,
         lowLatencyMode: arg.lowLatencyMode === true,
-      });
+      };
+      if (typeof arg.defaultVideoRepresentationsSwitchingMode === "string") {
+        newState.defaultVideoRepresentationsSwitchingMode =
+          arg.defaultVideoRepresentationsSwitchingMode;
+      }
+      if (typeof arg.defaultAudioRepresentationsSwitchingMode === "string") {
+        newState.defaultAudioRepresentationsSwitchingMode =
+          arg.defaultAudioRepresentationsSwitchingMode;
+      }
+      state.set(newState);
     },
 
     PLAY: () => {
@@ -208,7 +219,7 @@ const PLAYER = ({ $destroy, state }, initOpts) => {
     LOCK_VIDEO_REPRESENTATIONS: (reps) => {
       player.lockVideoRepresentations({
         representations: reps.map(r => r.id),
-        switchingMode: "reload",
+        switchingMode: state.get().defaultVideoRepresentationsSwitchingMode,
       });
       state.set({
         videoRepresentationsLocked:
@@ -227,7 +238,7 @@ const PLAYER = ({ $destroy, state }, initOpts) => {
     LOCK_AUDIO_REPRESENTATIONS: (reps) => {
       player.lockAudioRepresentations({
         representations: reps.map(r => r.id),
-        switchingMode: "reload",
+        switchingMode: state.get().defaultAudioRepresentationsSwitchingMode,
       });
       state.set({
         audioRepresentationsLocked:
