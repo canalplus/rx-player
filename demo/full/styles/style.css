@@ -428,6 +428,8 @@ body {
 .option-desc {
   font-weight: normal;
   font-style: italic;
+  color: #242424;
+  font-size: 0.95em;
 }
 
 .choice-input-button {
@@ -647,10 +649,9 @@ body {
 }
 
 .settings-title {
-  font-weight: bold;
   text-align: center;
   margin-bottom: 12px;
-  font-size: 1.3em;
+  font-size: 1.5em;
 }
 
 .settings-note {
@@ -1268,9 +1269,9 @@ select {
 }
 
 .settingsWrapper {
-  margin: 10px 0;
-  background-color: #e3e3e3;
+  border: 1px dashed #d1d1d1;
   padding: 10px;
+  margin-top: 10px;
 }
 
 .featureWrapperWithSelectMode {
