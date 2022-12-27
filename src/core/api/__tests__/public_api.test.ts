@@ -93,10 +93,10 @@ describe("API - Public API", () => {
     });
 
     describe("getCurrentBufferGap", () => {
-      it("should return Infinity in getCurrentBufferGap by default", () => {
+      it("should return 0 in getCurrentBufferGap by default", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
-        expect(player.getCurrentBufferGap()).toBe(Infinity);
+        expect(player.getCurrentBufferGap()).toBe(0);
       });
     });
 
