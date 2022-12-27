@@ -14,22 +14,21 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line max-len
-import config from "../../../config";
-import log from "../../../log";
+import config from "../../../../config";
+import log from "../../../../log";
 import Manifest, {
   Adaptation,
   areSameContent,
   ISegment,
   Period,
   Representation,
-} from "../../../manifest";
-import objectAssign from "../../../utils/object_assign";
-import { IBufferedChunk, IEndOfSegmentInfos } from "../../segment_buffers";
+} from "../../../../manifest";
+import objectAssign from "../../../../utils/object_assign";
+import { IBufferedChunk, IEndOfSegmentInfos } from "../../../segment_buffers";
 import {
   IBufferedHistoryEntry,
   IChunkContext,
-} from "../../segment_buffers/inventory";
+} from "../../../segment_buffers/inventory";
 
 
 interface IContentContext {

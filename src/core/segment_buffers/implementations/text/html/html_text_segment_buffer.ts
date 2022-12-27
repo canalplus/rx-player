@@ -138,7 +138,7 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
   }
 
   /**
-   * Push segment on Subscription.
+   * Push text segment to the HTMLTextSegmentBuffer.
    * @param {Object} infos
    * @returns {Promise}
    */

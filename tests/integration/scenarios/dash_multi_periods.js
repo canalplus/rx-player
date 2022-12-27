@@ -125,7 +125,6 @@ describe("DASH multi-Period with different choices", function () {
     expect(periodChangeEvents).to.have.length(1);
     expect(periodChangeEvents[0].id).to.equal("1");
 
-
     await goToSecondPeriod();
 
     expect(availableAudioTracksChange).to.have.length(2);

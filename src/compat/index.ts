@@ -55,15 +55,12 @@ import isVTTCue from "./is_vtt_cue";
 import makeVTTCue from "./make_vtt_cue";
 import onHeightWidthChange from "./on_height_width_change";
 import patchWebkitSourceBuffer from "./patch_webkit_source_buffer";
-import play from "./play";
-import setElementSrc$ from "./set_element_src";
 // eslint-disable-next-line max-len
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "./should_reload_media_source_on_decipherability_update";
 import shouldRenewMediaKeySystemAccess from "./should_renew_media_key_system_access";
 import shouldUnsetMediaKeys from "./should_unset_media_keys";
 import shouldValidateMetadata from "./should_validate_metadata";
 import shouldWaitForDataBeforeLoaded from "./should_wait_for_data_before_loaded";
-import whenLoadedMetadata$ from "./when_loaded_metadata";
 
 // TODO To remove. This seems to be the only side-effect done on import, which
 // we  would prefer to disallow (both for the understandability of the code and
@@ -100,10 +97,8 @@ export {
   makeVTTCue,
   MediaSource_,
   onHeightWidthChange,
-  play,
   requestFullscreen,
   requestMediaKeySystemAccess,
-  setElementSrc$,
   setMediaKeys,
   shouldReloadMediaSourceOnDecipherabilityUpdate,
   shouldRenewMediaKeySystemAccess,
@@ -111,5 +106,4 @@ export {
   shouldValidateMetadata,
   shouldWaitForDataBeforeLoaded,
   tryToChangeSourceBufferType,
-  whenLoadedMetadata$,
 };

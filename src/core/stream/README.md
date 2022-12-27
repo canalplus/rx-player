@@ -32,7 +32,7 @@ The ``PeriodStream`` creates and destroys ``AdaptationStream``s for a single
 Manifest's Period and a single type of buffer (e.g. "audio", "video", "text"
 etc.).
 
-It does so after asking through an event which Adaptation has to be chosen for
+It does so after asking through a callback which Adaptation has to be chosen for
 that Period and type.
 
 It also takes care of creating the right "`SegmentBuffer`" for its associated

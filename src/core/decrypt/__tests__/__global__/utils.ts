@@ -26,18 +26,18 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable no-restricted-properties */
 
-import { Subject } from "rxjs";
 import { IEncryptedEventData } from "../../../../compat/eme";
 import {
   base64ToBytes,
   bytesToBase64,
 } from "../../../../utils/base64";
-import EventEmitter, { fromEvent } from "../../../../utils/event_emitter";
+import EventEmitter from "../../../../utils/event_emitter";
 import flatMap from "../../../../utils/flat_map";
 import {
   strToUtf8,
   utf8ToStr,
 } from "../../../../utils/string_parsing";
+import { CancellationSignal } from "../../../../utils/task_canceller";
 
 /** Default MediaKeySystemAccess configuration used by the RxPlayer. */
 export const defaultKSConfig = [{
@@ -274,25 +274,83 @@ export function requestMediaKeySystemAccessImpl(
   return Promise.resolve(new MediaKeySystemAccessImpl(keySystem, config));
 }
 
+class MockedDecryptorEventEmitter extends EventEmitter<{
+  encrypted : { elt : HTMLMediaElement; value : unknown };
+  keymessage : { session : MediaKeySessionImpl; value : unknown };
+  keyerror : { session : MediaKeySessionImpl; value : unknown };
+  keystatuseschange : { session : MediaKeySessionImpl; value : unknown };
+}> {
+  public triggerEncrypted(elt : HTMLMediaElement, value : unknown) {
+    this.trigger("encrypted", { elt, value });
+  }
+  public triggerKeyError(session : MediaKeySessionImpl, value : unknown) {
+    this.trigger("keyerror", { session, value });
+  }
+  public triggerKeyStatusesChange(session : MediaKeySessionImpl, value : unknown) {
+    this.trigger("keystatuseschange", { session, value });
+  }
+  public triggerKeyMessage(session : MediaKeySessionImpl, value : unknown) {
+    this.trigger("keymessage", { session, value });
+  }
+}
+
 /**
  * Mock functions coming from the compat directory.
  */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function mockCompat(exportedFunctions = {}) {
-  const triggerEncrypted = new Subject<IEncryptedEventData>();
-  const triggerKeyMessage = new Subject();
-  const triggerKeyError = new Subject();
-  const triggerKeyStatusesChange = new Subject();
+  const ee = new MockedDecryptorEventEmitter();
   const mockEvents : Record<string, jest.Mock> = {
-    onEncrypted$: jest.fn(() => triggerEncrypted),
-    onKeyMessage$: jest.fn((mediaKeySession : MediaKeySessionImpl) => {
-      return fromEvent(mediaKeySession, "message");
+    onEncrypted: jest.fn((
+      elt : HTMLMediaElement,
+      fn : (x : unknown) => void,
+      signal : CancellationSignal
+    ) => {
+      elt.addEventListener("encrypted", fn);
+      signal.register(() => {
+        elt.removeEventListener("encrypted", fn);
+      });
+      ee.addEventListener("encrypted", (evt) => {
+        if (evt.elt === elt) {
+          fn(evt.value);
+        }
+      }, signal);
     }),
-    onKeyError$: jest.fn((mediaKeySession : MediaKeySessionImpl) => {
-      return fromEvent(mediaKeySession, "error");
+    onKeyMessage: jest.fn((
+      elt : MediaKeySessionImpl,
+      fn : (x : unknown) => void,
+      signal : CancellationSignal
+    ) => {
+      elt.addEventListener("message", fn, signal);
+      ee.addEventListener("keymessage", (evt) => {
+        if (evt.session === elt) {
+          fn(evt.value);
+        }
+      }, signal);
     }),
-    onKeyStatusesChange$: jest.fn((mediaKeySession : MediaKeySessionImpl) => {
-      return fromEvent(mediaKeySession, "keyStatusesChange");
+    onKeyError: jest.fn((
+      elt : MediaKeySessionImpl,
+      fn : (x : unknown) => void,
+      signal : CancellationSignal
+    ) => {
+      elt.addEventListener("error", fn, signal);
+      ee.addEventListener("keyerror", (evt) => {
+        if (evt.session === elt) {
+          fn(evt.value);
+        }
+      }, signal);
+    }),
+    onKeyStatusesChange: jest.fn((
+      elt : MediaKeySessionImpl,
+      fn : (x : unknown) => void,
+      signal : CancellationSignal
+    ) => {
+      elt.addEventListener("keystatuseschange", fn, signal);
+      ee.addEventListener("keystatuseschange", (evt) => {
+        if (evt.session === elt) {
+          fn(evt.value);
+        }
+      }, signal);
     }),
   };
 
@@ -322,10 +380,20 @@ export function mockCompat(exportedFunctions = {}) {
       ...exportedFunctions }));
 
   return { mockEvents,
-           eventTriggers: { triggerEncrypted,
-                            triggerKeyMessage,
-                            triggerKeyError,
-                            triggerKeyStatusesChange },
+           eventTriggers: {
+             triggerEncrypted(elt : HTMLMediaElement, value : unknown) {
+               ee.triggerEncrypted(elt, value);
+             },
+             triggerKeyMessage(session : MediaKeySessionImpl, value : unknown) {
+               ee.triggerKeyMessage(session, value);
+             },
+             triggerKeyError(session : MediaKeySessionImpl, value : unknown) {
+               ee.triggerKeyError(session, value);
+             },
+             triggerKeyStatusesChange(session : MediaKeySessionImpl, value : unknown) {
+               ee.triggerKeyStatusesChange(session, value);
+             },
+           },
            mockRequestMediaKeySystemAccess: mockRmksa,
            mockGetInitData,
            mockSetMediaKeys,

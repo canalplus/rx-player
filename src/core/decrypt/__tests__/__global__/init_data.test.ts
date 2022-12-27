@@ -313,7 +313,6 @@ describe("core - decrypt - global tests - init data", () => {
     return new Promise<void>((res, rej) => {
       // == mocks ==
       const { mockGenerateKeyRequest, eventTriggers, mockGetInitData } = mockCompat();
-      const { triggerEncrypted } = eventTriggers;
       const mediaKeySession = new MediaKeySessionImpl();
       const mockCreateSession = jest.spyOn(MediaKeysImpl.prototype, "createSession")
         .mockReturnValue(mediaKeySession);
@@ -336,7 +335,7 @@ describe("core - decrypt - global tests - init data", () => {
         type: "cenc",
         values: [ { systemId: "15", data: initData } ],
       };
-      triggerEncrypted.next(initDataEvent);
+      eventTriggers.triggerEncrypted(videoElt, initDataEvent);
       setTimeout(() => {
         try {
           expect(mockGetInitData).toHaveBeenCalledTimes(1);
@@ -363,7 +362,6 @@ describe("core - decrypt - global tests - init data", () => {
     return new Promise<void>((res, rej) => {
       // == mocks ==
       const { mockGenerateKeyRequest, eventTriggers, mockGetInitData } = mockCompat();
-      const { triggerEncrypted } = eventTriggers;
       const mediaKeySession = new MediaKeySessionImpl();
       const mockCreateSession = jest.spyOn(MediaKeysImpl.prototype, "createSession")
         .mockReturnValue(mediaKeySession);
@@ -386,10 +384,10 @@ describe("core - decrypt - global tests - init data", () => {
         type: "cenc",
         values: [ { systemId: "15", data: initData } ],
       };
-      triggerEncrypted.next(initDataEvent);
-      triggerEncrypted.next(initDataEvent);
+      eventTriggers.triggerEncrypted(videoElt, initDataEvent);
+      eventTriggers.triggerEncrypted(videoElt, initDataEvent);
       setTimeout(() => {
-        triggerEncrypted.next(initDataEvent);
+        eventTriggers.triggerEncrypted(videoElt, initDataEvent);
       }, 5);
       setTimeout(() => {
         try {
@@ -424,7 +422,6 @@ describe("core - decrypt - global tests - init data", () => {
     return new Promise<void>((res, rej) => {
       // == mocks ==
       const { mockGenerateKeyRequest, eventTriggers, mockGetInitData } = mockCompat();
-      const { triggerEncrypted } = eventTriggers;
       const mediaKeySessions = [ new MediaKeySessionImpl(),
                                  new MediaKeySessionImpl(),
                                  new MediaKeySessionImpl() ];
@@ -456,14 +453,14 @@ describe("core - decrypt - global tests - init data", () => {
         contentDecryptor.removeEventListener("stateChange");
         contentDecryptor.attach();
       });
-      triggerEncrypted.next(initDataEvents[0]);
-      triggerEncrypted.next(initDataEvents[1]);
-      triggerEncrypted.next(initDataEvents[0]);
+      eventTriggers.triggerEncrypted(videoElt, initDataEvents[0]);
+      eventTriggers.triggerEncrypted(videoElt, initDataEvents[1]);
+      eventTriggers.triggerEncrypted(videoElt, initDataEvents[0]);
       setTimeout(() => {
-        triggerEncrypted.next(initDataEvents[2]);
+        eventTriggers.triggerEncrypted(videoElt, initDataEvents[2]);
       });
       setTimeout(() => {
-        triggerEncrypted.next(initDataEvents[1]);
+        eventTriggers.triggerEncrypted(videoElt, initDataEvents[1]);
       }, 5);
       setTimeout(() => {
         try {
@@ -519,7 +516,6 @@ describe("core - decrypt - global tests - init data", () => {
     return new Promise<void>((res, rej) => {
       // == mocks ==
       const { mockGenerateKeyRequest, eventTriggers, mockGetInitData } = mockCompat();
-      const { triggerEncrypted } = eventTriggers;
       const mediaKeySessions = [ new MediaKeySessionImpl(),
                                  new MediaKeySessionImpl() ];
       let createSessionCallIdx = 0;
@@ -545,8 +541,8 @@ describe("core - decrypt - global tests - init data", () => {
         contentDecryptor.removeEventListener("stateChange");
         contentDecryptor.attach();
       });
-      triggerEncrypted.next(initDataEvents[0]);
-      triggerEncrypted.next(initDataEvents[1]);
+      eventTriggers.triggerEncrypted(videoElt, initDataEvents[0]);
+      eventTriggers.triggerEncrypted(videoElt, initDataEvents[1]);
       setTimeout(() => {
         try {
           expect(mockGetInitData).toHaveBeenCalledTimes(2);
@@ -584,7 +580,6 @@ describe("core - decrypt - global tests - init data", () => {
     return new Promise<void>((res, rej) => {
       // == mocks ==
       const { mockGenerateKeyRequest, eventTriggers, mockGetInitData } = mockCompat();
-      const { triggerEncrypted } = eventTriggers;
       const mediaKeySessions = [ new MediaKeySessionImpl(),
                                  new MediaKeySessionImpl(),
                                  new MediaKeySessionImpl() ];
@@ -616,13 +611,13 @@ describe("core - decrypt - global tests - init data", () => {
         contentDecryptor.removeEventListener("stateChange");
         contentDecryptor.attach();
       });
-      triggerEncrypted.next(initDataEvents[0]);
+      eventTriggers.triggerEncrypted(videoElt, initDataEvents[0]);
       contentDecryptor.onInitializationData(initDataEvents[1]);
-      triggerEncrypted.next(initDataEvents[1]);
-      triggerEncrypted.next(initDataEvents[0]);
+      eventTriggers.triggerEncrypted(videoElt, initDataEvents[1]);
+      eventTriggers.triggerEncrypted(videoElt, initDataEvents[0]);
       setTimeout(() => {
         contentDecryptor.onInitializationData(initDataEvents[0]);
-        triggerEncrypted.next(initDataEvents[2]);
+        eventTriggers.triggerEncrypted(videoElt, initDataEvents[2]);
       });
       setTimeout(() => {
         try {

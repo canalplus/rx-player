@@ -346,7 +346,4 @@ At the end, we should only have _PeriodStream[s]_ for consecutive Period[s]:
 
 Any "Stream" communicates to the API about creations and destructions of
 _PeriodStreams_ respectively through ``"periodStreamReady"`` and
-``"periodStreamCleared"`` events.
-
-When the currently seen Period changes, an ``activePeriodChanged`` event is
-sent.
+``"periodStreamCleared"`` callbacks.

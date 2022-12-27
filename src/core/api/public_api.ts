@@ -20,13 +20,6 @@
  */
 
 import {
-  distinctUntilChanged,
-  map,
-  Subject,
-  take,
-  takeUntil,
-} from "rxjs";
-import {
   events,
   exitFullscreen,
   getStartDate,
@@ -137,8 +130,9 @@ const { getPageActivityRef,
         getPictureOnPictureStateRef,
         getVideoVisibilityRef,
         getVideoWidthRef,
-        onFullscreenChange$,
-        onTextTrackChanges$ } = events;
+        onFullscreenChange,
+        onTextTrackAdded,
+        onTextTrackRemoved } = events;
 
 /**
  * @class Player
@@ -172,7 +166,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * used for its normal functionment can be freed.
    * The player will be unusable after that.
    */
-  private readonly _priv_destroy$ : Subject<void>;
+  private readonly _destroyCanceller : TaskCanceller;
 
   /**
    * Contains `true` when the previous content is cleaning-up, `false` when it's
@@ -371,73 +365,96 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this.videoElement = videoElement;
 
     const destroyCanceller = new TaskCanceller();
-    this._priv_destroy$ = new Subject(); // TODO Remove the need for this Subject
-    this._priv_destroy$.pipe(take(1)).subscribe(() => {
-      destroyCanceller.cancel();
-    });
+    this._destroyCanceller = destroyCanceller;
 
     this._priv_pictureInPictureRef = getPictureOnPictureStateRef(videoElement,
                                                                  destroyCanceller.signal);
 
     /** @deprecated */
-    onFullscreenChange$(videoElement)
-      .pipe(takeUntil(this._priv_destroy$))
+    onFullscreenChange(videoElement, () => {
       /* eslint-disable import/no-deprecated */
-      .subscribe(() => this.trigger("fullscreenChange", this.isFullscreen()));
+      this.trigger("fullscreenChange", this.isFullscreen());
       /* eslint-enable import/no-deprecated */
+    }, destroyCanceller.signal);
 
-    /** @deprecated */
-    onTextTrackChanges$(videoElement.textTracks)
-      .pipe(
-        takeUntil(this._priv_destroy$),
-        map((evt : Event) => { // prepare TextTrack array
-          const target = evt.target as TextTrackList;
-          const arr : TextTrack[] = [];
-          for (let i = 0; i < target.length; i++) {
-            const textTrack = target[i];
-            arr.push(textTrack);
-          }
-          return arr;
-        }),
+    /** Store last known TextTrack array linked to the media element. */
+    let prevTextTracks : TextTrack[] = [] ;
+    for (let i = 0; i < videoElement.textTracks?.length; i++) {
+      const textTrack = videoElement.textTracks?.[i];
+      if (!isNullOrUndefined(textTrack)) {
+        prevTextTracks.push(textTrack);
+      }
+    }
 
-        // We can have two consecutive textTrackChanges with the exact same
-        // payload when we perform multiple texttrack operations before the event
-        // loop is freed.
-        // In that case we only want to fire one time the observable.
-        distinctUntilChanged((textTracksA, textTracksB) => {
-          if (textTracksA.length !== textTracksB.length) {
-            return false;
-          }
-          for (let i = 0; i < textTracksA.length; i++) {
-            if (textTracksA[i] !== textTracksB[i]) {
-              return false;
-            }
-          }
-          return true;
-        })
-      )
-      .subscribe((x : TextTrack[]) => this._priv_onNativeTextTracksNext(x));
+    /** Callback called when a TextTrack element is added or removed. */
+    const onTextTrackChanges = (_evt : unknown) => {
+      const evt = _evt as Event;
+      const target = evt.target as TextTrackList;
+      const textTrackArr : TextTrack[] = [];
+      for (let i = 0; i < target.length; i++) {
+        const textTrack = target[i];
+        textTrackArr.push(textTrack);
+      }
 
-    this._priv_speed = createSharedReference(videoElement.playbackRate);
+      const oldTextTracks = prevTextTracks;
+      prevTextTracks = textTrackArr;
+
+      // We can have two consecutive textTrackChanges with the exact same
+      // payload when we perform multiple texttrack operations before the event
+      // loop is freed.
+      if (oldTextTracks.length !== textTrackArr.length) {
+        this._priv_onNativeTextTracksNext(textTrackArr);
+        return;
+      }
+      for (let i = 0; i < oldTextTracks.length; i++) {
+        if (oldTextTracks[i] !== textTrackArr[i]) {
+          this._priv_onNativeTextTracksNext(textTrackArr);
+          return ;
+        }
+      }
+      return ;
+    };
+
+    if (!isNullOrUndefined(videoElement.textTracks)) {
+      onTextTrackAdded(videoElement.textTracks,
+                       onTextTrackChanges,
+                       destroyCanceller.signal);
+      onTextTrackRemoved(videoElement.textTracks,
+                         onTextTrackChanges,
+                         destroyCanceller.signal);
+    }
+
+    this._priv_speed = createSharedReference(videoElement.playbackRate,
+                                             this._destroyCanceller.signal);
     this._priv_preferTrickModeTracks = false;
-    this._priv_contentLock = createSharedReference<boolean>(false);
+    this._priv_contentLock = createSharedReference<boolean>(
+      false,
+      this._destroyCanceller.signal);
 
     this._priv_bufferOptions = {
-      wantedBufferAhead: createSharedReference(wantedBufferAhead),
-      maxBufferAhead: createSharedReference(maxBufferAhead),
-      maxBufferBehind: createSharedReference(maxBufferBehind),
-      maxVideoBufferSize: createSharedReference(maxVideoBufferSize),
+      wantedBufferAhead: createSharedReference(wantedBufferAhead,
+                                               this._destroyCanceller.signal),
+      maxBufferAhead: createSharedReference(maxBufferAhead,
+                                            this._destroyCanceller.signal),
+      maxBufferBehind: createSharedReference(maxBufferBehind,
+                                             this._destroyCanceller.signal),
+      maxVideoBufferSize: createSharedReference(maxVideoBufferSize,
+                                                this._destroyCanceller.signal),
     };
 
     this._priv_bitrateInfos = {
       lastBitrates: { audio: initialAudioBitrate,
                       video: initialVideoBitrate },
-      minAutoBitrates: { audio: createSharedReference(minAudioBitrate),
-                         video: createSharedReference(minVideoBitrate) },
-      maxAutoBitrates: { audio: createSharedReference(maxAudioBitrate),
-                         video: createSharedReference(maxVideoBitrate) },
-      manualBitrates: { audio: createSharedReference(-1),
-                        video: createSharedReference(-1) },
+      minAutoBitrates: { audio: createSharedReference(minAudioBitrate,
+                                                      this._destroyCanceller.signal),
+                         video: createSharedReference(minVideoBitrate,
+                                                      this._destroyCanceller.signal) },
+      maxAutoBitrates: { audio: createSharedReference(maxAudioBitrate,
+                                                      this._destroyCanceller.signal),
+                         video: createSharedReference(maxVideoBitrate,
+                                                      this._destroyCanceller.signal) },
+      manualBitrates: { audio: createSharedReference(-1, this._destroyCanceller.signal),
+                        video: createSharedReference(-1, this._destroyCanceller.signal) },
     };
 
     this._priv_throttleWhenHidden = throttleWhenHidden;
@@ -511,23 +528,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         });
     }
 
-    // free Observables linked to the Player instance
-    this._priv_destroy$.next();
-    this._priv_destroy$.complete();
-
-    // Complete all subjects and references
-    this._priv_speed.finish();
-    this._priv_contentLock.finish();
-    this._priv_bufferOptions.wantedBufferAhead.finish();
-    this._priv_bufferOptions.maxVideoBufferSize.finish();
-    this._priv_bufferOptions.maxBufferAhead.finish();
-    this._priv_bufferOptions.maxBufferBehind.finish();
-    this._priv_bitrateInfos.manualBitrates.video.finish();
-    this._priv_bitrateInfos.manualBitrates.audio.finish();
-    this._priv_bitrateInfos.minAutoBitrates.video.finish();
-    this._priv_bitrateInfos.minAutoBitrates.audio.finish();
-    this._priv_bitrateInfos.maxAutoBitrates.video.finish();
-    this._priv_bitrateInfos.maxAutoBitrates.audio.finish();
+    // free resources linked to the Player instance
+    this._destroyCanceller.cancel();
 
     this._priv_reloadingMetadata = {};
 
@@ -624,21 +626,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     const isDirectFile = transport === "directfile";
 
-    /** Subject which will emit to stop the current content. */
+    /** Emit to stop the current content. */
     const currentContentCanceller = new TaskCanceller();
 
-
     const videoElement = this.videoElement;
-
-    /** Global "playback observer" which will emit playback conditions */
-    const playbackObserver = new PlaybackObserver(videoElement, {
-      withMediaSource: !isDirectFile,
-      lowLatencyMode,
-    });
-
-    currentContentCanceller.signal.register(() => {
-      playbackObserver.stop();
-    });
 
     let initializer : ContentInitializer;
 
@@ -884,6 +875,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     //   - we can avoid involontarily catching events linked to the previous
     //     content.
     this.stop();
+
+    /** Global "playback observer" which will emit playback conditions */
+    const playbackObserver = new PlaybackObserver(videoElement, {
+      withMediaSource: !isDirectFile,
+      lowLatencyMode,
+    });
+
+    currentContentCanceller.signal.register(() => {
+      playbackObserver.stop();
+    });
 
     // Update the RxPlayer's state at the right events
     const playerStateRef = constructPlayerStateReference(initializer,
@@ -2410,13 +2411,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     value : {
       type : IBufferType;
       period : Period;
-      adaptation$ : Subject<Adaptation|null>;
+      adaptationRef : ISharedReference<Adaptation|null|undefined>;
     }
   ) : void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
     }
-    const { type, period, adaptation$ } = value;
+    const { type, period, adaptationRef } = value;
     const trackChoiceManager = contentInfos.trackChoiceManager;
 
     switch (type) {
@@ -2424,9 +2425,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       case "video":
         if (isNullOrUndefined(trackChoiceManager)) {
           log.error("API: TrackChoiceManager not instanciated for a new video period");
-          adaptation$.next(null);
+          adaptationRef.setValue(null);
         } else {
-          trackChoiceManager.addPeriod(type, period, adaptation$);
+          trackChoiceManager.addPeriod(type, period, adaptationRef);
           trackChoiceManager.setInitialVideoTrack(period);
         }
         break;
@@ -2434,9 +2435,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       case "audio":
         if (isNullOrUndefined(trackChoiceManager)) {
           log.error(`API: TrackChoiceManager not instanciated for a new ${type} period`);
-          adaptation$.next(null);
+          adaptationRef.setValue(null);
         } else {
-          trackChoiceManager.addPeriod(type, period, adaptation$);
+          trackChoiceManager.addPeriod(type, period, adaptationRef);
           trackChoiceManager.setInitialAudioTrack(period);
         }
         break;
@@ -2444,9 +2445,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       case "text":
         if (isNullOrUndefined(trackChoiceManager)) {
           log.error(`API: TrackChoiceManager not instanciated for a new ${type} period`);
-          adaptation$.next(null);
+          adaptationRef.setValue(null);
         } else {
-          trackChoiceManager.addPeriod(type, period, adaptation$);
+          trackChoiceManager.addPeriod(type, period, adaptationRef);
           trackChoiceManager.setInitialTextTrack(period);
         }
         break;
@@ -2454,9 +2455,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       default:
         const adaptations = period.adaptations[type];
         if (!isNullOrUndefined(adaptations) && adaptations.length > 0) {
-          adaptation$.next(adaptations[0]);
+          adaptationRef.setValue(adaptations[0]);
         } else {
-          adaptation$.next(null);
+          adaptationRef.setValue(null);
         }
         break;
     }

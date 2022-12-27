@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
+import log from "../../../../log";
 import Manifest, {
   Adaptation,
   Period,
   Representation,
-} from "../../../manifest";
-import { IBufferedChunk } from "../../segment_buffers";
+} from "../../../../manifest";
+import { IBufferedChunk } from "../../../segment_buffers";
 import { IBufferDiscontinuity } from "../types";
 
 /**
