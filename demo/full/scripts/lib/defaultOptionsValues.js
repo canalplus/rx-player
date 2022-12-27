@@ -8,6 +8,8 @@ const defaultOptionsValues = {
   segmentTimeout: 30000,
   manifestTimeout: 30000,
   enableFastSwitching: true,
+  defaultAudioRepresentationsSwitchingMode: "reload",
+  defaultVideoRepresentationsSwitchingMode: "reload",
   defaultAudioTrackSwitchingMode: "reload",
   onCodecSwitch: "continue",
   wantedBufferAhead: 30,
