@@ -10,15 +10,24 @@ import type {
   IConstructorSettings,
   ILoadVideoSettings,
 } from "../lib/defaultOptionsValues";
+import {
+  IAudioRepresentationsSwitchingMode,
+  IVideoRepresentationsSwitchingMode,
+} from "../../../../src/public_types";
 
 const { useCallback } = React;
 
 function Settings({
+  // TODO add to RxPlayer API?
+  defaultAudioRepresentationsSwitchingMode,
+  defaultVideoRepresentationsSwitchingMode,
   playerOptions,
   updatePlayerOptions,
   loadVideoOptions,
   updateLoadVideoOptions,
   showOptions,
+  updateDefaultAudioRepresentationsSwitchingMode,
+  updateDefaultVideoRepresentationsSwitchingMode,
 }: {
   playerOptions: IConstructorSettings;
   updatePlayerOptions: (
@@ -27,6 +36,14 @@ function Settings({
   loadVideoOptions: ILoadVideoSettings;
   updateLoadVideoOptions: (
     cb: (previousOpts: ILoadVideoSettings) => ILoadVideoSettings
+  ) => void;
+  defaultAudioRepresentationsSwitchingMode: IAudioRepresentationsSwitchingMode;
+  defaultVideoRepresentationsSwitchingMode: IVideoRepresentationsSwitchingMode;
+  updateDefaultAudioRepresentationsSwitchingMode: (
+    mode: IAudioRepresentationsSwitchingMode
+  ) => void;
+  updateDefaultVideoRepresentationsSwitchingMode: (
+    mode: IVideoRepresentationsSwitchingMode
   ) => void;
   showOptions: boolean;
 }): JSX.Element | null {
@@ -183,6 +200,17 @@ function Settings({
     [updateLoadVideoOptions]
   );
 
+  const onDefaultVideoRepresentationsSwitchingModeChange =
+    useCallback((value: IVideoRepresentationsSwitchingMode) => {
+      updateDefaultVideoRepresentationsSwitchingMode(value);
+    }, [updateLoadVideoOptions]);
+
+  const onDefaultAudioRepresentationsSwitchingModeChange =
+    useCallback((value: IAudioRepresentationsSwitchingMode) => {
+      updateDefaultAudioRepresentationsSwitchingMode(value);
+    }, [updateLoadVideoOptions]);
+
+
   const onCodecSwitchChange = useCallback((value: string) => {
     updateLoadVideoOptions((prevOptions) => {
       if (value === prevOptions.onCodecSwitch) {
@@ -254,8 +282,14 @@ function Settings({
         </Option>
         <Option title="Video adaptive settings">
           <VideoAdaptiveSettings
+            defaultVideoRepresentationsSwitchingMode={
+              defaultVideoRepresentationsSwitchingMode
+            }
             limitVideoWidth={limitVideoWidth}
             throttleVideoBitrateWhenHidden={throttleVideoBitrateWhenHidden}
+            onDefaultVideoRepresentationsSwitchingModeChange={
+              onDefaultVideoRepresentationsSwitchingModeChange
+            }
             onLimitVideoWidthChange={onLimitVideoWidthChange}
             onThrottleVideoBitrateWhenHiddenChange={
               onThrottleVideoBitrateWhenHiddenChange
@@ -263,7 +297,14 @@ function Settings({
           />
         </Option>
         <Option title="Audio adaptive settings">
-          <AudioAdaptiveSettings />
+          <AudioAdaptiveSettings
+            defaultAudioRepresentationsSwitchingMode={
+              defaultAudioRepresentationsSwitchingMode
+            }
+            onDefaultAudioRepresentationsSwitchingModeChange={
+              onDefaultAudioRepresentationsSwitchingModeChange
+            }
+          />
         </Option>
       </div>
       <div style={{ display: "flex" }}>
