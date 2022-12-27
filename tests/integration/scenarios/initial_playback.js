@@ -376,11 +376,11 @@ describe("basic playback use cases: non-linear DASH SegmentTimeline", function (
 
     player.seekTo(10);
     await waitForState(player, "SEEKING", ["PLAYING"]);
-    expect(player.getCurrentBufferGap()).to.equal(Infinity);
+    expect(player.getCurrentBufferGap()).to.equal(0);
 
     await sleep(100);
     expect(player.getPlayerState()).to.equal("SEEKING");
-    expect(player.getCurrentBufferGap()).to.equal(Infinity);
+    expect(player.getCurrentBufferGap()).to.equal(0);
 
     await xhrMock.flush();
     await sleep(100);
