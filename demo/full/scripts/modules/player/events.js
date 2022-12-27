@@ -51,6 +51,9 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
   // TODO Only active for content playback
   intervalObservable(POSITION_UPDATES_INTERVAL).pipe(
     map(() => {
+      if (player.getPlayerState() === "STOPPED") {
+        return {};
+      }
       const position = player.getPosition();
       const duration = player.getVideoDuration();
       const videoTrack = player.getVideoTrack();
@@ -122,7 +125,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
         stateUpdates.videoTrack = null;
         stateUpdates.currentTime = undefined;
         stateUpdates.wallClockDiff = undefined;
-        stateUpdates.bufferGap = undefined;
+        stateUpdates.bufferGap = 0;
         stateUpdates.bufferedData = null;
         stateUpdates.duration = undefined;
         stateUpdates.minimumPosition = undefined;
