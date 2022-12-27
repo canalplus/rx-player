@@ -79,6 +79,14 @@ function VideoAdaptiveSettings({
             />
           </span>
         </div>
+        <span className="option-desc">
+          {
+            parseFloat(initialVideoBr) === 0 ?
+              "Starts loading the lowest video bitrate" :
+              `Starts with a video bandwidth estimate of ${initialVideoBr}` +
+              " bits per seconds."
+          }
+        </span>
       </li>
       <li>
         <div className="playerOptionInput">
@@ -120,6 +128,14 @@ function VideoAdaptiveSettings({
         >
           Do not limit
         </Checkbox>
+        <span className="option-desc">
+          {
+            !isMinVideoBrLimited || parseFloat(minVideoBr) <= 0 ?
+              "Not limiting the lowest video bitrate reachable through the adaptive logic" :
+              "Limiting the lowest video bitrate reachable through the adaptive " +
+              `logic to ${minVideoBr} bits per seconds`
+          }
+        </span>
       </li>
       <li>
         <div className="playerOptionInput">
@@ -163,29 +179,51 @@ function VideoAdaptiveSettings({
             Do not limit
           </Checkbox>
         </div>
+        <span className="option-desc">
+          {
+            !isMaxVideoBrLimited || parseFloat(maxVideoBr) === Infinity ?
+              "Not limiting the highest video bitrate reachable through the adaptive logic" :
+              "Limiting the highest video bitrate reachable through the adaptive " +
+              `logic to ${maxVideoBr} bits per seconds`
+          }
+        </span>
       </li>
       <li>
-        <Checkbox
-          className="playerOptionsCheckBox playerOptionsCheckBoxTitle"
-          name="limitVideoWidth"
-          id="limitVideoWidth"
-          ariaLabel="Limit video width option"
-          checked={limitVideoWidth}
-          onChange={onLimitVideoWidthClick}
-        >
-          Limit Video Width
-        </Checkbox>
+        <div>
+          <Checkbox
+            className="playerOptionsCheckBox playerOptionsCheckBoxTitle"
+            name="limitVideoWidth"
+            id="limitVideoWidth"
+            ariaLabel="Limit video width option"
+            checked={limitVideoWidth}
+            onChange={onLimitVideoWidthClick}
+          >
+            Limit Video Width
+          </Checkbox>
+          <span className="option-desc">
+            {limitVideoWidth ?
+              "Limiting video width to the current <video> element's width" :
+              "Not limiting video width to the current <video> element's width"}
+          </span>
+        </div>
       </li>
       <li>
-        <Checkbox
-          className="playerOptionsCheckBox playerOptionsCheckBoxTitle"
-          name="throttleVideoBitrateWhenHidden"
-          ariaLabel="Throttle video bitrate when hidden option"
-          checked={throttleVideoBitrateWhenHidden}
-          onChange={onThrottleVideoBitrateWhenHiddenClick}
-        >
-          Throttle Video Bitrate When Hidden
-        </Checkbox>
+        <div className="playerOptionInput">
+          <Checkbox
+            className="playerOptionsCheckBox playerOptionsCheckBoxTitle"
+            name="throttleVideoBitrateWhenHidden"
+            ariaLabel="Throttle video bitrate when hidden option"
+            checked={throttleVideoBitrateWhenHidden}
+            onChange={onThrottleVideoBitrateWhenHiddenClick}
+          >
+            Throttle Video Bitrate When Hidden
+          </Checkbox>
+          <span className="option-desc">
+            {throttleVideoBitrateWhenHidden ?
+              "Throttling the video bitrate when the page is hidden for a time" :
+              "Not throttling the video bitrate when the page is hidden for a time"}
+          </span>
+        </div>
       </li>
     </Fragment>
   );

@@ -135,6 +135,11 @@ function RequestConfig({
         >
           Do not limit
         </Checkbox>
+        <span className="option-desc">
+          {parseFloat(segmentRetry) === Infinity || !isSegmentRetryLimited ?
+            "Retry \"retryable\" segment requests with no limit" :
+            `Retry "retryable" segment requests at most ${segmentRetry} time(s)`}
+        </span>
       </li>
 
       <li>
@@ -178,6 +183,11 @@ function RequestConfig({
         >
           Do not limit
         </Checkbox>
+        <span className="option-desc">
+          {parseFloat(segmentTimeout) === -1 || !isSegmentTimeoutLimited ?
+            "Perform segment requests without timeout" :
+            `Stop segment requests after ${segmentTimeout} millisecond(s)`}
+        </span>
       </li>
 
       <li>
@@ -221,6 +231,11 @@ function RequestConfig({
         >
           Do not limit
         </Checkbox>
+        <span className="option-desc">
+          {parseFloat(manifestRetry) === Infinity || !isManifestRetryLimited ?
+            "Retry \"retryable\" manifest requests with no limit" :
+            `Retry "retryable" manifest requests at most ${manifestRetry} time(s)`}
+        </span>
       </li>
       <li>
         <div className="playerOptionInput">
@@ -263,6 +278,11 @@ function RequestConfig({
         >
           Do not limit
         </Checkbox>
+        <span className="option-desc">
+          {parseFloat(offlineRetry) === Infinity || !isOfflineRetryLimited ?
+            "Retry \"retryable\" requests when offline with no limit" :
+            `Retry "retryable" requests when offline at most ${offlineRetry} time(s)`}
+        </span>
       </li>
 
       <li>
@@ -306,6 +326,11 @@ function RequestConfig({
         >
           Do not limit
         </Checkbox>
+        <span className="option-desc">
+          {parseFloat(manifestTimeout) === -1 || !isManifestTimeoutLimited ?
+            "Perform manifest requests without timeout" :
+            `Stop manifest requests after ${manifestTimeout} millisecond(s)`}
+        </span>
       </li>
     </Fragment>
   );

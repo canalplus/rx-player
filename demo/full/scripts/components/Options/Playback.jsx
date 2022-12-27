@@ -14,6 +14,21 @@ function TrackSwitch({
   stopAtEnd,
   onStopAtEndClick,
 }) {
+  let manualBitrateSwitchingModeDesc;
+  switch (manualBrSwitchingMode) {
+    case "direct":
+      manualBitrateSwitchingModeDesc =
+        "Directly visible transition when a Representation is manually changed";
+      break;
+    case "seamless":
+      manualBitrateSwitchingModeDesc =
+        "Smooth transition when a Representation is manually changed";
+      break;
+    default:
+      manualBitrateSwitchingModeDesc =
+        "Unknown value";
+      break;
+  }
   return (
     <Fragment>
       <li>
@@ -26,6 +41,11 @@ function TrackSwitch({
         >
           Auto Play
         </Checkbox>
+        <span className="option-desc">
+          {autoPlay ?
+            "Playing directly when the content is loaded." :
+            "Staying in pause when the content is loaded."}
+        </span>
       </li>
       <li className="featureWrapperWithSelectMode">
         <Select
@@ -37,6 +57,9 @@ function TrackSwitch({
         >
           Manual bitrate switching mode
         </Select>
+        <span className="option-desc">
+          {manualBitrateSwitchingModeDesc}
+        </span>
       </li>
       <li>
         <Checkbox
@@ -48,6 +71,11 @@ function TrackSwitch({
         >
           Stop At End
         </Checkbox>
+        <span className="option-desc">
+          {stopAtEnd ?
+            "Automatically stop when reaching the end of the content." :
+            "Don't stop when reaching the end of the content."}
+        </span>
       </li>
     </Fragment>
   );
