@@ -18,11 +18,6 @@ describe("DASH forced-subtitles content (SegmentTimeline)", function () {
     await waitForLoadedStateAfterLoadVideo(player);
   }
 
-  function checkNoTextTrack() {
-    const currentTextTrack = player.getTextTrack();
-    expect(currentTextTrack).to.equal(null);
-  }
-
   function checkAudioTrack(language, normalizedLanguage, isAudioDescription) {
     const currentAudioTrack = player.getAudioTrack();
     expect(currentAudioTrack).to.not.equal(null);
@@ -57,92 +52,40 @@ describe("DASH forced-subtitles content (SegmentTimeline)", function () {
     xhrMock.restore();
   });
 
-  it("should set the forced text track associated to the current audio track", async function () {
-    player.dispose();
-    player = new RxPlayer({
-      preferredAudioTracks: [{
-        language: "fr",
-        audioDescription: false,
-      }],
-    });
+  it("should use the forced text track linked to the default audio track by default", async function () {
+    player = new RxPlayer();
 
     await loadContent();
     checkAudioTrack("fr", "fra", false);
     checkTextTrack("fr", "fra", { closedCaption: false, forced: true });
-
-    player.setPreferredAudioTracks([{ language: "de", audioDescription: false }]);
-    await loadContent();
-    checkAudioTrack("de", "deu", false);
-    checkTextTrack("de", "deu", { closedCaption: false, forced: true });
   });
 
-  it("should set the forced text track associated to no language if none is linked to the audio track", async function () {
-    player.dispose();
-    player = new RxPlayer({
-      preferredAudioTracks: [{
-        language: "en",
-        audioDescription: false,
-      }],
+  it("should list the corresponding text tracks as \"forced\"", function () {
+    return new Promise((resolve, reject) => {
+      player = new RxPlayer();
+
+      player.addEventListener("error", err => {
+        reject(err);
+      });
+      player.addEventListener("newAvailablePeriods", (periods) => {
+        try {
+          expect(periods).to.have.length(1);
+          const tracksPeriod1 = player.getAvailableTextTracks(periods[0].id);
+          expect(tracksPeriod1).to.have.length(5);
+          const forcedTracksPeriod1 = tracksPeriod1
+            .filter(t => t.forced);
+          expect(forcedTracksPeriod1).to.have.length(3);
+          const forcedTracksLanguages = forcedTracksPeriod1
+            .map(t => t.language);
+          expect(forcedTracksLanguages).to.include("fr");
+          expect(forcedTracksLanguages).to.include("de");
+          expect(forcedTracksLanguages).to.include("");
+          resolve();
+        } catch (err) {
+          reject(err);
+        }
+      });
+      loadContent();
     });
-
-    await loadContent();
-    checkAudioTrack("en", "eng", false);
-    checkTextTrack("", "", {
-      closedCaption: false,
-      forced: true,
-    });
-  });
-
-  it("should still prefer preferences over forced subtitles", async function () {
-    player.dispose();
-    player = new RxPlayer({
-      preferredAudioTracks: [{
-        language: "fr",
-        audioDescription: false,
-      }],
-      preferredTextTracks: [{
-        language: "fr",
-        closedCaption: false,
-      }],
-    });
-
-    await loadContent();
-    checkAudioTrack("fr", "fra", false);
-    checkTextTrack("fr", "fra", { closedCaption: false, forced: undefined });
-
-    player.setPreferredTextTracks([{ language: "fr", closedCaption: true }]);
-    await loadContent();
-    checkAudioTrack("fr", "fra", false);
-    checkTextTrack("fr", "fra", { closedCaption: true, forced: undefined });
-
-    player.setPreferredAudioTracks([{ language: "de", audioDescription: undefined }]);
-    await loadContent();
-    checkAudioTrack("de", "deu", false);
-    checkTextTrack("fr", "fra", { closedCaption: true, forced: undefined });
-
-    player.setPreferredTextTracks([null]);
-    await loadContent();
-    checkNoTextTrack();
-  });
-
-  it("should fallback to forced subtitles if no preference match", async function () {
-    player.dispose();
-    player = new RxPlayer({
-      preferredAudioTracks: [{
-        language: "fr",
-        audioDescription: false,
-      }],
-      preferredTextTracks: [{
-        language: "swa",
-        closedCaption: false,
-      }, {
-        language: "de",
-        closedCaption: true,
-      }],
-    });
-
-    await loadContent();
-    checkAudioTrack("fr", "fra", false);
-    checkTextTrack("fr", "fra", { closedCaption: false, forced: true });
   });
 });
