@@ -122,12 +122,6 @@ describe("Memory tests", () => {
                                                       closedcaption: true }] });
       player.loadVideo({ url: manifestInfos.url,
                          transport: manifestInfos.transport,
-                         supplementaryTextTracks: [{ url: textTrackInfos.url,
-                                                     language: "fra",
-                                                     mimeType: "application/ttml+xml",
-                                                     closedCaption: true }],
-                         supplementaryImageTracks: [{ mimeType: "application/bif",
-                                                      url: imageInfos.url }],
                          autoPlay: true });
       await waitForLoadedStateAfterLoadVideo(player);
       player.dispose();
@@ -169,18 +163,12 @@ describe("Memory tests", () => {
     player.setMaxBufferAhead(15);
     player.loadVideo({ url: manifestInfos.url,
                        transport: manifestInfos.transport,
-                       supplementaryTextTracks: [{ url: textTrackInfos.url,
-                                                   language: "fra",
-                                                   mimeType: "application/ttml+xml",
-                                                   closedCaption: true }],
-                       supplementaryImageTracks: [{ mimeType: "application/bif",
-                                                    url: imageInfos.url }],
                        autoPlay: false });
     await waitForLoadedStateAfterLoadVideo(player);
-    const videoBitrates = player.getAvailableVideoBitrates();
-    if (videoBitrates.length <= 1) {
+    const videoTrack = player.getVideoTrack();
+    if (videoTrack.representations.length <= 1) {
       throw new Error(
-        "Not enough video bitrates to perform sufficiently pertinent tests"
+        "Not enough video Representations to perform sufficiently pertinent tests"
       );
     }
     await sleep(1000);
@@ -201,8 +189,8 @@ describe("Memory tests", () => {
         player.seekTo(20);
         seekToBeginning = true;
       }
-      const bitrateIdx = iterationIdx % videoBitrates.length;
-      player.setVideoBitrate(videoBitrates[bitrateIdx]);
+      const repIdx = iterationIdx % videoTrack.representations.length;
+      player.lockVideoRepresentations([videoTrack.representations[repIdx].id]);
       await sleep(1000);
     }
     window.gc();
