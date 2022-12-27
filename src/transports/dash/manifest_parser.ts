@@ -115,7 +115,7 @@ export default function generateManifestParser(
      * Parse the MPD through the default JS-written parser (as opposed to the
      * WebAssembly one).
      * If it is not defined, throws.
-     * @returns {Observable}
+     * @returns {Object|Promise.<Object>}
      */
     function runDefaultJsParser() {
       if (parsers.js === null) {
@@ -130,7 +130,7 @@ export default function generateManifestParser(
      * Process return of one of the MPD parser.
      * If it asks for a resource, load it then continue.
      * @param {Object} parserResponse - Response returned from a MPD parser.
-     * @returns {Observable}
+     * @returns {Object|Promise.<Object>}
      */
     function processMpdParserResponse(
       parserResponse : IDashParserResponse<string> | IDashParserResponse<ArrayBuffer>

@@ -18,21 +18,21 @@
  * This file allows any Stream to push data to a SegmentBuffer.
  */
 
-import { MediaError } from "../../../errors";
-import { CancellationSignal } from "../../../utils/task_canceller";
-import { IReadOnlyPlaybackObserver } from "../../api";
+import { MediaError } from "../../../../errors";
+import { CancellationError, CancellationSignal } from "../../../../utils/task_canceller";
+import { IReadOnlyPlaybackObserver } from "../../../api";
 import {
   IPushChunkInfos,
   SegmentBuffer,
-} from "../../segment_buffers";
+} from "../../../segment_buffers";
+import { IRepresentationStreamPlaybackObservation } from "../types";
 import forceGarbageCollection from "./force_garbage_collection";
-import { IRepresentationStreamPlaybackObservation } from "./representation_stream";
 
 /**
  * Append a segment to the given segmentBuffer.
  * If it leads to a QuotaExceededError, try to run our custom range
  * _garbage collector_ then retry.
- * @param {Observable} playbackObserver
+ * @param {Object} playbackObserver
  * @param {Object} segmentBuffer
  * @param {Object} dataInfos
  * @param {Object} cancellationSignal
@@ -47,7 +47,11 @@ export default async function appendSegmentToBuffer<T>(
   try {
     await segmentBuffer.pushChunk(dataInfos, cancellationSignal);
   } catch (appendError : unknown) {
-    if (!(appendError instanceof Error) || appendError.name !== "QuotaExceededError") {
+    if (cancellationSignal.isCancelled && appendError instanceof CancellationError) {
+      throw appendError;
+    } else if (!(appendError instanceof Error) ||
+               appendError.name !== "QuotaExceededError")
+    {
       const reason = appendError instanceof Error ?
         appendError.toString() :
         "An unknown error happened when pushing content";

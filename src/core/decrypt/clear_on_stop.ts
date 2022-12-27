@@ -23,7 +23,7 @@ import MediaKeysInfosStore from "./utils/media_keys_infos_store";
  * Clear DRM-related resources that should be cleared when the current content
  * stops its playback.
  * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
+ * @returns {Promise}
  */
 export default function clearOnStop(
   mediaElement : HTMLMediaElement

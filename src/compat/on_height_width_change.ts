@@ -66,7 +66,7 @@ const _ResizeObserver : IResizeObserverConstructor |
  * milliseconds at which we should query that element's size.
  * @param {HTMLElement} element
  * @param {number} interval
- * @returns {Observable}
+ * @returns {Object}
  */
 export default function onHeightWidthChange(
   element : HTMLElement,
@@ -77,7 +77,7 @@ export default function onHeightWidthChange(
   const ref = createSharedReference<IResolution>({
     height: initHeight,
     width: initWidth,
-  });
+  }, cancellationSignal);
   let lastHeight : number = initHeight;
   let lastWidth : number = initWidth;
 

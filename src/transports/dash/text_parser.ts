@@ -55,7 +55,7 @@ import {
  * @param {boolean} __priv_patchLastSegmentInSidx - Enable ugly Canal+-specific
  * fix for an issue people on the content-packaging side could not fix.
  * For more information on that, look at the code using it.
- * @returns {Observable.<Object>}
+ * @returns {Object}
  */
 function parseISOBMFFEmbeddedTextTrack(
   data : ArrayBuffer | Uint8Array | string,
@@ -133,7 +133,7 @@ function parseISOBMFFEmbeddedTextTrack(
  * @param {Object} content - Object describing the context of the given
  * segment's data: of which segment, `Representation`, `Adaptation`, `Period`,
  * `Manifest` it is a part of etc.
- * @returns {Observable.<Object>}
+ * @returns {Object}
  */
 function parsePlainTextTrack(
   data : ArrayBuffer | Uint8Array | string,
@@ -188,7 +188,7 @@ export default function generateTextTrackParser(
    * @param {Object} loadedSegment
    * @param {Object} content
    * @param {number|undefined} initTimescale
-   * @returns {Observable.<Object>}
+   * @returns {Object}
    */
   return function textTrackParser(
     loadedSegment : { data : ArrayBuffer | Uint8Array | string | null;

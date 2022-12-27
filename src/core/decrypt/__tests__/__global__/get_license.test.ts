@@ -180,16 +180,16 @@ describe("core - decrypt - global tests - getLicense", () => {
 
   it("should fail after first failure when getLicenseConfig.retry is set to `0`", async () => {
     await checkGetLicense({ isGetLicensePromiseBased: true,
-                            configuredRetries: 1,
+                            configuredRetries: 0,
                             configuredTimeout: undefined,
                             getTimeout: () => undefined,
-                            nbRetries: 0,
+                            nbRetries: 1,
                             ignoreLicenseRequests: false });
   });
 
   it("should fail after two failures when getLicenseConfig.retry is set to `1`", async () => {
     await checkGetLicense({ isGetLicensePromiseBased: true,
-                            configuredRetries: 2,
+                            configuredRetries: 1,
                             configuredTimeout: undefined,
                             getTimeout: () => undefined,
                             nbRetries: 2,
@@ -198,28 +198,28 @@ describe("core - decrypt - global tests - getLicense", () => {
 
   it("should not fail after one failure when getLicenseConfig.retry is set to `1`", async () => {
     await checkGetLicense({ isGetLicensePromiseBased: true,
-                            configuredRetries: 2,
+                            configuredRetries: 1,
                             configuredTimeout: undefined,
                             getTimeout: () => undefined,
                             nbRetries: 1,
                             ignoreLicenseRequests: false });
   });
 
-  it("should not fail after 5 failures when getLicenseConfig.retry is set to `6`", async () => {
-    await checkGetLicense({ isGetLicensePromiseBased: true,
-                            configuredRetries: 6,
-                            configuredTimeout: undefined,
-                            getTimeout: () => undefined,
-                            nbRetries: 5,
-                            ignoreLicenseRequests: false });
-  }, 15000);
-
-  it("should fail after 6 failures when getLicenseConfig.retry is set to `6`", async () => {
+  it("should not fail after 6 failures when getLicenseConfig.retry is set to `6`", async () => {
     await checkGetLicense({ isGetLicensePromiseBased: true,
                             configuredRetries: 6,
                             configuredTimeout: undefined,
                             getTimeout: () => undefined,
                             nbRetries: 6,
+                            ignoreLicenseRequests: false });
+  }, 15000);
+
+  it("should fail after 7 failures when getLicenseConfig.retry is set to `6`", async () => {
+    await checkGetLicense({ isGetLicensePromiseBased: true,
+                            configuredRetries: 6,
+                            configuredTimeout: undefined,
+                            getTimeout: () => undefined,
+                            nbRetries: 7,
                             ignoreLicenseRequests: false });
   }, 25000);
 
@@ -269,8 +269,8 @@ function checkGetLicense(
     configuredTimeout : number | undefined;
       /**
        * Nb of times getLicense should fail in a row.
-       * If put at a higher value or equal to `configuredRetries`, no license
-       * will be obtained.
+       * If put at a higher value than `configuredRetries`, no license will be
+       * obtained.
        */
     nbRetries : number;
       /**
@@ -317,9 +317,9 @@ function checkGetLicense(
 
     // == vars ==
     /** Default keySystems configuration used in our tests. */
-    const maxRetries = configuredRetries === undefined ? 3 :
+    const maxRetries = configuredRetries === undefined ? 2 :
                                                          configuredRetries;
-    const shouldFail = nbRetries >= maxRetries;
+    const shouldFail = nbRetries > maxRetries;
     let warningsLeft = nbRetries;
     const ksConfig = [{ type: "com.widevine.alpha",
                         getLicense: mockGetLicense,
@@ -360,8 +360,10 @@ function checkGetLicense(
       if (shouldFail) {
         try {
           checkKeyLoadError(error);
-          expect(mockGetLicense).toHaveBeenCalledTimes(maxRetries);
-          expect(mockGetLicense).toHaveBeenNthCalledWith(maxRetries, challenge, "license-request");
+          expect(mockGetLicense).toHaveBeenCalledTimes(maxRetries + 1);
+          for (let i = 1; i <= maxRetries + 1; i++) {
+            expect(mockGetLicense).toHaveBeenNthCalledWith(i, challenge, "license-request");
+          }
           expect(mockUpdate).toHaveBeenCalledTimes(0);
           res();
         } catch (e) {
@@ -389,30 +391,32 @@ function checkGetLicense(
 
     contentDecryptor.onInitializationData(initDataEvent);
 
-    const timeout = nbRetries === 0 ? 100 :
-                    nbRetries === 1 ? 300 :
-                    nbRetries === 2 ? 800 :
-                    nbRetries === 3 ? 1200 :
-                    nbRetries === 4 ? 3000 :
-                                      10000;
-    setTimeout(() => {
-      try {
-        if (ignoreLicenseRequests) {
-          expect(mockUpdate).toHaveBeenCalledTimes(0);
-        } else {
-          const license = concat(challenge, challenge);
-          expect(mockUpdate).toHaveBeenCalledTimes(1);
-          expect(mockUpdate).toHaveBeenCalledWith(license);
+    if (!shouldFail) {
+      const timeout = nbRetries === 0 ? 100 :
+                      nbRetries === 1 ? 300 :
+                      nbRetries === 2 ? 800 :
+                      nbRetries === 3 ? 1200 :
+                      nbRetries === 4 ? 3000 :
+                                        10000;
+      setTimeout(() => {
+        try {
+          if (ignoreLicenseRequests) {
+            expect(mockUpdate).toHaveBeenCalledTimes(0);
+          } else {
+            const license = concat(challenge, challenge);
+            expect(mockUpdate).toHaveBeenCalledTimes(1);
+            expect(mockUpdate).toHaveBeenCalledWith(license);
+          }
+          expect(mockGetLicense).toHaveBeenCalledTimes(nbRetries + 1);
+          for (let i = 1; i <= nbRetries + 1; i++) {
+            expect(mockGetLicense).toHaveBeenNthCalledWith(i, challenge, "license-request");
+          }
+          contentDecryptor.dispose();
+          res();
+        } catch (e) {
+          rej(e);
         }
-        expect(mockGetLicense).toHaveBeenCalledTimes(nbRetries + 1);
-        for (let i = 1; i <= nbRetries + 1; i++) {
-          expect(mockGetLicense).toHaveBeenNthCalledWith(i, challenge, "license-request");
-        }
-        contentDecryptor.dispose();
-        res();
-      } catch (e) {
-        rej(e);
-      }
-    }, timeout);
+      }, timeout);
+    }
   });
 }

@@ -58,7 +58,7 @@ export default class MediaDurationUpdater {
    */
   constructor(manifest : Manifest, mediaSource : MediaSource) {
     const canceller = new TaskCanceller();
-    const currentKnownDuration = createSharedReference(undefined);
+    const currentKnownDuration = createSharedReference(undefined, canceller.signal);
 
     this._canceller = canceller;
     this._currentKnownDuration = currentKnownDuration;
@@ -263,14 +263,13 @@ function createSourceBuffersUpdatingReference(
   sourceBuffers : SourceBufferList,
   cancelSignal : CancellationSignal
 ) : IReadOnlySharedReference<boolean> {
-  // const areUpdating = createSharedReference(
   if (sourceBuffers.length === 0) {
     const notOpenedRef = createSharedReference(false);
     notOpenedRef.finish();
     return notOpenedRef;
   }
 
-  const areUpdatingRef = createSharedReference(false);
+  const areUpdatingRef = createSharedReference(false, cancelSignal);
   reCheck();
 
   for (let i = 0; i < sourceBuffers.length; i++) {
@@ -308,7 +307,8 @@ function createMediaSourceOpenReference(
   mediaSource : MediaSource,
   cancelSignal : CancellationSignal
 ): IReadOnlySharedReference<boolean> {
-  const isMediaSourceOpen = createSharedReference(mediaSource.readyState === "open");
+  const isMediaSourceOpen = createSharedReference(mediaSource.readyState === "open",
+                                                  cancelSignal);
   onSourceOpen(mediaSource, () => {
     isMediaSourceOpen.setValueIfChanged(true);
   }, cancelSignal);
@@ -318,9 +318,6 @@ function createMediaSourceOpenReference(
   onSourceClose(mediaSource, () => {
     isMediaSourceOpen.setValueIfChanged(false);
   }, cancelSignal);
-  cancelSignal.register(() => {
-    isMediaSourceOpen.finish();
-  });
   return isMediaSourceOpen;
 }
 
