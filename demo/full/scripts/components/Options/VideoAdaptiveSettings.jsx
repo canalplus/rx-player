@@ -7,6 +7,8 @@ import getCheckBoxValue from "../../lib/getCheckboxValue";
  * @returns {Object}
  */
 function VideoAdaptiveSettings({
+  defaultVideoRepresentationsSwitchingMode,
+  onDefaultVideoRepresentationsSwitchingModeChange,
   limitVideoWidth,
   throttleVideoBitrateWhenHidden,
   onLimitVideoWidthChange,
@@ -14,6 +16,18 @@ function VideoAdaptiveSettings({
 }) {
   return (
     <Fragment>
+      <li className="featureWrapperWithSelectMode">
+        <Select
+          className="playerOptionInput"
+          name="defaultVideoRepresentationsSwitchingMode"
+          onChange={({ value }) =>
+            onDefaultVideoRepresentationsSwitchingModeChange(value)}
+          selected={{ value: defaultVideoRepresentationsSwitchingMode }}
+          options={["seamless", "lazy", "direct", "reload"]}
+        >
+            Default Video Representations switching mode
+        </Select>
+      </li>
       <li>
         <div className="playerOptionInput">
           <Checkbox

@@ -9,6 +9,8 @@ const defaultOptionsValues = {
   },
   loadVideo: {
     autoPlay: true,
+    defaultAudioRepresentationsSwitchingMode: "reload",
+    defaultVideoRepresentationsSwitchingMode: "reload",
     defaultAudioTrackSwitchingMode: "reload",
     enableFastSwitching: true,
     requestConfig: {

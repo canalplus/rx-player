@@ -24,6 +24,8 @@ function Settings({
   } = playerOptions;
   const {
     autoPlay,
+    defaultAudioRepresentationsSwitchingMode,
+    defaultVideoRepresentationsSwitchingMode,
     defaultAudioTrackSwitchingMode,
     enableFastSwitching,
     requestConfig,
@@ -147,6 +149,30 @@ function Settings({
     });
   }, [updateLoadVideoOptions]);
 
+  const onDefaultVideoRepresentationsSwitchingModeChange =
+    useCallback((value) => {
+      updateLoadVideoOptions((prevOptions) => {
+        if (value === prevOptions.defaultVideoRepresentationsSwitchingMode) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, {
+          defaultVideoRepresentationsSwitchingMode: value,
+        });
+      });
+    }, [updateLoadVideoOptions]);
+
+  const onDefaultAudioRepresentationsSwitchingModeChange =
+    useCallback((value) => {
+      updateLoadVideoOptions((prevOptions) => {
+        if (value === prevOptions.defaultAudioRepresentationsSwitchingMode) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, {
+          defaultAudioRepresentationsSwitchingMode: value,
+        });
+      });
+    }, [updateLoadVideoOptions]);
+
   const onDefaultAudioTrackSwitchingModeChange = useCallback((value) => {
     updateLoadVideoOptions((prevOptions) => {
       if (value === prevOptions.defaultAudioTrackSwitchingMode) {
@@ -227,8 +253,14 @@ function Settings({
         </Option>
         <Option title="Video adaptive settings">
           <VideoAdaptiveSettings
+            defaultVideoRepresentationsSwitchingMode={
+              defaultVideoRepresentationsSwitchingMode
+            }
             limitVideoWidth={limitVideoWidth}
             throttleVideoBitrateWhenHidden={throttleVideoBitrateWhenHidden}
+            onDefaultVideoRepresentationsSwitchingModeChange={
+              onDefaultVideoRepresentationsSwitchingModeChange
+            }
             onLimitVideoWidthChange={onLimitVideoWidthChange}
             onThrottleVideoBitrateWhenHiddenChange={
               onThrottleVideoBitrateWhenHiddenChange
@@ -236,7 +268,14 @@ function Settings({
           />
         </Option>
         <Option title="Audio adaptive settings">
-          <AudioAdaptiveSettings />
+          <AudioAdaptiveSettings
+            defaultAudioRepresentationsSwitchingMode={
+              defaultAudioRepresentationsSwitchingMode
+            }
+            onDefaultAudioRepresentationsSwitchingModeChange={
+              onDefaultAudioRepresentationsSwitchingModeChange
+            }
+          />
         </Option>
       </div>
       <div style={{ display: "flex" }}>
