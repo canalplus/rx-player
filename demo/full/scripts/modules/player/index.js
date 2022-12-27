@@ -77,7 +77,7 @@ const PLAYER = ({ $destroy, state }, initOpts) => {
     availableSubtitles: [],
     availableVideoBitrates: [],
     availableVideoTracks: [],
-    bufferGap: undefined,
+    bufferGap: 0,
     bufferedData: null,
     cannotLoadMetadata: false,
     currentTime: undefined,
