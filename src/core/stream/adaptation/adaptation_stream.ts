@@ -355,18 +355,13 @@ export default function AdaptationStream<T>(
     representationStreamCallbacks : IRepresentationStreamCallbacks<T>,
     fnCancelSignal : CancellationSignal
   ) : void {
-    /**
-     * `TaskCanceller` triggered when the `RepresentationStream` calls its
-     * `terminating` callback.
-     */
-    const terminatingRepStreamCanceller = new TaskCanceller({ cancelOn: fnCancelSignal });
+    const bufferGoalCanceller = new TaskCanceller({ cancelOn: fnCancelSignal });
     const bufferGoal = createMappedReference(wantedBufferAhead, prev => {
       return prev * getBufferGoalRatio(representation);
-    }, terminatingRepStreamCanceller.signal);
+    }, bufferGoalCanceller.signal);
     const maxBufferSize = adaptation.type === "video" ?
       maxVideoBufferSize :
       createSharedReference(Infinity);
-
     log.info("Stream: changing representation",
              adaptation.type,
              representation.id,
@@ -394,7 +389,7 @@ export default function AdaptationStream<T>(
         representationStreamCallbacks.error(err);
       },
       terminating() {
-        terminatingRepStreamCanceller.cancel();
+        bufferGoalCanceller.cancel();
         representationStreamCallbacks.terminating();
       },
     });
