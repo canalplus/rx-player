@@ -425,6 +425,7 @@ body {
   margin: 5px;
 }
 
+<<<<<<< HEAD
 .option-desc {
   font-weight: normal;
   font-style: italic;
@@ -432,6 +433,14 @@ body {
   font-size: 0.95em;
 }
 
+||||||| parent of 69b304ec2 (demo: add descriptions to every option of the demo page)
+=======
+.option-desc {
+  font-weight: normal;
+  font-style: italic;
+}
+
+>>>>>>> 69b304ec2 (demo: add descriptions to every option of the demo page)
 .choice-input-button {
   font-family: "icons", sans-serif;
   border: solid 1px #d1d1d1;

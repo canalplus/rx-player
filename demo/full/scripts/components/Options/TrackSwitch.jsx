@@ -14,6 +14,26 @@ function TrackSwitchConfig({
   onDefaultAudioTrackSwitchingModeChange,
   onCodecSwitchChange,
 }) {
+  let defaultAudioTrackSwitchingModeDescMsg;
+  switch (defaultAudioTrackSwitchingMode) {
+    case "reload":
+      defaultAudioTrackSwitchingModeDescMsg =
+        "Reloading by default when the audio track is changed";
+      break;
+    case "direct":
+      defaultAudioTrackSwitchingModeDescMsg =
+        "Directly audible transition when the audio track is changed";
+      break;
+    case "seamless":
+      defaultAudioTrackSwitchingModeDescMsg =
+        "Smooth transition when the audio track is changed";
+      break;
+    default:
+      defaultAudioTrackSwitchingModeDescMsg =
+        "Unknown value";
+      break;
+  }
+
   let onCodecSwitchDescMsg;
   switch (onCodecSwitch) {
     case "reload":
@@ -59,6 +79,9 @@ function TrackSwitchConfig({
         >
             Default Audio track switching mode
         </Select>
+        <span className="option-desc">
+          {defaultAudioTrackSwitchingModeDescMsg}
+        </span>
       </li>
       <li className="featureWrapperWithSelectMode">
         <Select
