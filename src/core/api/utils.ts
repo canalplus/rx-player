@@ -127,6 +127,8 @@ export function constructPlayerStateReference(
           playerStateRef.setValue(newState);
         }
       }
+    } else if (playerStateRef.getValue() === PLAYER_STATES.RELOADING) {
+      playerStateRef.setValue(getLoadedContentState(mediaElement, null));
     } else {
       updateStateIfLoaded(null);
     }
