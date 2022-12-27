@@ -57,7 +57,7 @@ function TrackSwitchConfig({
           selected={{ value: defaultAudioTrackSwitchingMode }}
           options={["seamless", "direct", "reload"]}
         >
-            Audio track switching mode
+            Default Audio track switching mode
         </Select>
       </li>
       <li className="featureWrapperWithSelectMode">

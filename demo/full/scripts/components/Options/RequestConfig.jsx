@@ -267,6 +267,49 @@ function RequestConfig({
             `Stop manifest requests after ${manifestTimeout} millisecond(s)`}
         </span>
       </li>
+
+      <li>
+        <div className="playerOptionInput">
+          <label htmlFor="manifestTimeout">Manifest Timeout</label>
+          <span className="wrapperInputWithResetBtn">
+            <input
+              type="text"
+              name="manifestTimeout"
+              id="manifestTimeout"
+              aria-label="Manifest timeout option"
+              placeholder="Number"
+              onChange={(evt) => onManifestTimeoutInput(evt.target.value)}
+              value={manifestTimeout}
+              disabled={isManifestTimeoutLimited === false}
+              className="optionInput"
+            />
+            <Button
+              className={
+                parseFloat(manifestTimeout) === DEFAULT_VALUES.manifestTimeout
+                  ? "resetBtn disabledResetBtn"
+                  : "resetBtn"
+              }
+              ariaLabel="Reset option to default value"
+              title="Reset option to default value"
+              onClick={() => {
+                setManifestTimeoutLimit(DEFAULT_VALUES.manifestTimeout !==
+                  Infinity);
+                onManifestTimeoutInput(DEFAULT_VALUES.manifestTimeout);
+              }}
+              value={String.fromCharCode(0xf021)}
+            />
+          </span>
+        </div>
+        <Checkbox
+          className="playerOptionsCheckBox"
+          ariaLabel="Manifest timeout limit option"
+          name="manifestTimeoutLimit"
+          checked={isManifestTimeoutLimited === false}
+          onChange={onChangeLimitManifestTimeout}
+        >
+          Do not limit
+        </Checkbox>
+      </li>
     </Fragment>
   );
 }

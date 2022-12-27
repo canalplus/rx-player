@@ -51,10 +51,14 @@ class Settings extends React.Component {
         onCodecSwitch,
         enableFastSwitching,
         requestConfig: {
-          segment: { maxRetry: parseFloat(segmentRetry),
-                     timeout: parseFloat(segmentTimeout) },
-          manifest: { maxRetry: parseFloat(manifestRetry),
-                      timeout: parseFloat(manifestTimeout) },
+          segment: {
+            maxRetry: parseFloat(segmentRetry),
+            timeout: parseFloat(segmentTimeout),
+          },
+          manifest: {
+            maxRetry: parseFloat(manifestRetry),
+            timeout: parseFloat(manifestTimeout),
+          },
         },
       },
     };
@@ -193,7 +197,7 @@ class Settings extends React.Component {
           </Option>
         </div>
         <div style={{ display: "flex" }}>
-          <Option title="Network Config">
+          <Option title="Request Config">
             <RequestConfig {...requestConfig} />
           </Option>
           <Option title="Track Switch Mode">
