@@ -1,5 +1,9 @@
 import * as React from "react";
+import {
+  IVideoRepresentationsSwitchingMode,
+} from "../../../../../src/public_types";
 import Checkbox from "../../components/CheckBox";
+import Select from "../Select";
 
 const { Fragment } = React;
 
@@ -8,18 +12,48 @@ const { Fragment } = React;
  * @returns {Object}
  */
 function VideoAdaptiveSettings({
+  defaultVideoRepresentationsSwitchingMode,
+  onDefaultVideoRepresentationsSwitchingModeChange,
   limitVideoWidth,
   throttleVideoBitrateWhenHidden,
   onLimitVideoWidthChange,
   onThrottleVideoBitrateWhenHiddenChange,
 }: {
+  defaultVideoRepresentationsSwitchingMode: IVideoRepresentationsSwitchingMode;
+  onDefaultVideoRepresentationsSwitchingModeChange: (
+    mode: IVideoRepresentationsSwitchingMode
+  ) => void;
   limitVideoWidth: boolean;
   throttleVideoBitrateWhenHidden: boolean;
   onLimitVideoWidthChange: (newVal: boolean) => void;
   onThrottleVideoBitrateWhenHiddenChange: (newVal: boolean) => void;
 }): JSX.Element {
+  const onSwitchModeChange = React.useCallback(
+    ({ value }: { value: string }) => {
+      onDefaultVideoRepresentationsSwitchingModeChange(
+        value as IVideoRepresentationsSwitchingMode
+      );
+    },
+    [onDefaultVideoRepresentationsSwitchingModeChange]
+  );
   return (
     <Fragment>
+      <li className="featureWrapperWithSelectMode">
+        <Select
+          ariaLabel="Select the defaultVideoRepresentationsSwitchingMode"
+          className="playerOptionInput"
+          disabled={false}
+          name="defaultVideoRepresentationsSwitchingMode"
+          onChange={onSwitchModeChange}
+          selected={{
+            value: defaultVideoRepresentationsSwitchingMode,
+            index: undefined,
+          }}
+          options={["seamless", "lazy", "direct", "reload"]}
+        >
+            Default Video Representations switching mode
+        </Select>
+      </li>
       <li>
         <div>
           <Checkbox
