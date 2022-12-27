@@ -19,11 +19,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { take } from "rxjs";
 import log from "../../log";
-import EventEmitter, {
-  fromEvent,
-} from "../event_emitter";
+import EventEmitter from "../event_emitter";
 
 describe("utils - EventEmitter", () => {
   it("should be able to call synchronously a callback on a given event", () => {
@@ -578,77 +575,5 @@ describe("utils - EventEmitter", () => {
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith(errMessage, thrownErr);
     eventEmitter.removeEventListener();
-  });
-});
-
-describe("utils - fromEvent", () => {
-  it("should subscribe to a given event", (done) => {
-    let stringItemsReceived = 0;
-    let numberItemsReceived = 0;
-    const eventEmitter = new EventEmitter<{
-      test: undefined|"a"|{ a: string };
-      fooba: undefined|number|"a"|"b"|"c"|{ a: string };
-    }>();
-    fromEvent(eventEmitter, "fooba")
-      .pipe(take(6))
-      .subscribe({
-        next(item) {
-          if (typeof item === "number") {
-            numberItemsReceived++;
-          } else if (typeof item === "string") {
-            stringItemsReceived++;
-          }
-        },
-        complete() {
-          (eventEmitter as any).trigger("fooba", 6);
-          expect(numberItemsReceived).toBe(2);
-          expect(stringItemsReceived).toBe(3);
-          done();
-        },
-      });
-
-    (eventEmitter as any).trigger("test", undefined);
-    (eventEmitter as any).trigger("fooba", undefined);
-    (eventEmitter as any).trigger("fooba", 5);
-    (eventEmitter as any).trigger("fooba", "a");
-    (eventEmitter as any).trigger("test", undefined);
-    (eventEmitter as any).trigger("test", undefined);
-    (eventEmitter as any).trigger("test", undefined);
-    (eventEmitter as any).trigger("fooba", "b");
-    (eventEmitter as any).trigger("fooba", "c");
-    (eventEmitter as any).trigger("fooba", 6);
-  });
-
-  it("should remove the event listener on unsubscription", () => {
-    let stringItemsReceived = 0;
-    let numberItemsReceived = 0;
-    const eventEmitter = new EventEmitter<{
-      test: undefined|"a"|{ a: string };
-      fooba: undefined|number|"a"|"b"|"c"|{ a: string };
-    }>();
-    const subscription = fromEvent(eventEmitter, "fooba")
-      .pipe(take(6))
-      .subscribe((item) => {
-        if (typeof item === "number") {
-          numberItemsReceived++;
-        } else if (typeof item === "string") {
-          stringItemsReceived++;
-        }
-      });
-
-    (eventEmitter as any).trigger("test", undefined);
-    (eventEmitter as any).trigger("fooba", undefined);
-    (eventEmitter as any).trigger("fooba", 5);
-    (eventEmitter as any).trigger("fooba", "a");
-    subscription.unsubscribe();
-    (eventEmitter as any).trigger("test", undefined);
-    (eventEmitter as any).trigger("test", undefined);
-    (eventEmitter as any).trigger("test", undefined);
-    (eventEmitter as any).trigger("fooba", "b");
-    (eventEmitter as any).trigger("fooba", "c");
-    (eventEmitter as any).trigger("fooba", 6);
-
-    expect(stringItemsReceived).toBe(1);
-    expect(numberItemsReceived).toBe(1);
   });
 });

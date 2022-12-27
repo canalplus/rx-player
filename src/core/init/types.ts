@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { Subject } from "rxjs";
 import Manifest, {
   Adaptation,
   ISegment,
@@ -23,6 +22,7 @@ import Manifest, {
 } from "../../manifest";
 import { IPlayerError } from "../../public_types";
 import EventEmitter from "../../utils/event_emitter";
+import { ISharedReference } from "../../utils/reference";
 import { PlaybackObserver } from "../api";
 import SegmentBuffersStore, {
   IBufferType,
@@ -157,21 +157,23 @@ export interface IContentInitializerEvents {
     /** The `Period` linked to the `PeriodStream` we have created. */
     period : Period;
     /**
-     * The subject through which any Adaptation (i.e. track) choice should be
+     * The Reference through which any Adaptation (i.e. track) choice should be
      * emitted for that `PeriodStream`.
      *
-     * The `PeriodStream` will not do anything until this subject has emitted
+     * The `PeriodStream` will not do anything until this Reference has emitted
      * at least one to give its initial choice.
      * You can send `null` through it to tell this `PeriodStream` that you don't
      * want any `Adaptation`.
+     * It is set to `undefined` by default, you SHOULD NOT set it to `undefined`
+     * yourself.
      */
-    adaptation$ : Subject<Adaptation|null>;
+    adaptationRef : ISharedReference<Adaptation|null|undefined>;
   };
   /**
    * A `PeriodStream` has been removed.
    * This event can be used for clean-up purposes. For example, you are free to
-   * remove from scope the subject that you used to choose a track for that
-   * `PeriodStream`.
+   * remove from scope the shared reference that you used to choose a track for
+   * that `PeriodStream`.
    */
   periodStreamCleared: {
     /**
@@ -190,18 +192,7 @@ export interface IContentInitializerEvents {
     period : Period;
   };
   /** Emitted when a new `Adaptation` is being considered. */
-  adaptationChange: {
-    /** The type of buffer for which the Representation is changing. */
-    type : IBufferType;
-    /** The `Period` linked to the `RepresentationStream` we're creating. */
-    period : Period;
-    /**
-     * The `Adaptation` linked to the `AdaptationStream` we're creating.
-     * `null` when we're choosing no Adaptation at all.
-     */
-    adaptation : Adaptation |
-                 null;
-  };
+  adaptationChange: IAdaptationChangeEventPayload;
   /** Emitted as new bitrate estimates are done. */
   bitrateEstimationChange: {
     /** The type of buffer for which the estimation is done. */
@@ -243,6 +234,19 @@ export interface IContentInitializerEvents {
    * given segment) have been encountered.
    */
   inbandEvents : IInbandEvent[];
+}
+
+export interface IAdaptationChangeEventPayload {
+  /** The type of buffer for which the Representation is changing. */
+  type : IBufferType;
+  /** The `Period` linked to the `RepresentationStream` we're creating. */
+  period : Period;
+  /**
+   * The `Adaptation` linked to the `AdaptationStream` we're creating.
+   * `null` when we're choosing no Adaptation at all.
+   */
+  adaptation : Adaptation |
+    null;
 }
 
 export type IStallingSituation =

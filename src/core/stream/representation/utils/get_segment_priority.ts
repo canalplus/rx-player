@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import config from "../../../config";
-
+import config from "../../../../config";
 
 /**
  * Calculate the priority number for a given segment start time, in function of

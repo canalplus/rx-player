@@ -45,7 +45,7 @@ import createOrLoadSession from "./create_or_load_session";
 import { IMediaKeysInfos } from "./get_media_keys";
 import initMediaKeys from "./init_media_keys";
 import SessionEventsListener, {
-  BlacklistedSessionError,
+  BlacklistedSessionError, IKeyUpdateValue,
 } from "./session_events_listener";
 import setServerCertificate from "./set_server_certificate";
 import {
@@ -66,7 +66,7 @@ import {
 } from "./utils/key_id_comparison";
 import KeySessionRecord from "./utils/key_session_record";
 
-const { onEncrypted$ } = events;
+const { onEncrypted } = events;
 
 /**
  * Module communicating with the Content Decryption Module (or CDM) to be able
@@ -172,16 +172,13 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
                         data: null };
     this.error = null;
 
-    const listenerSub = onEncrypted$(mediaElement).subscribe(evt => {
+    onEncrypted(mediaElement, evt => {
       log.debug("DRM: Encrypted event received from media element.");
-      const initData = getInitData(evt);
+      const initData = getInitData(evt as MediaEncryptedEvent);
       if (initData !== null) {
         this.onInitializationData(initData);
       }
-    });
-    canceller.signal.register(() => {
-      listenerSub.unsubscribe();
-    });
+    }, canceller.signal);
 
     initMediaKeys(mediaElement, ksOptions, canceller.signal)
       .then((mediaKeysInfo) => {
@@ -481,24 +478,19 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
      */
     let isSessionPersisted = false;
 
-    const sub = SessionEventsListener(mediaKeySession,
-                                      options,
-                                      mediaKeySystemAccess.keySystem)
-      .subscribe({
-
-        next: (evt) : void => {
-          if (evt.type === "warning") {
-            this.trigger("warning", evt.value);
-            return;
-          }
-
+    SessionEventsListener(
+      mediaKeySession,
+      options,
+      mediaKeySystemAccess.keySystem,
+      {
+        onKeyUpdate: (value : IKeyUpdateValue) : void => {
           const linkedKeys = getKeyIdsLinkedToSession(
             initializationData,
             sessionInfo.record,
             options.singleLicensePer,
             sessionInfo.source === MediaKeySessionLoadingType.Created,
-            evt.value.whitelistedKeyIds,
-            evt.value.blacklistedKeyIds);
+            value.whitelistedKeyIds,
+            value.blacklistedKeyIds);
 
           sessionInfo.record.associateKeyIds(linkedKeys.whitelisted);
           sessionInfo.record.associateKeyIds(linkedKeys.blacklisted);
@@ -529,8 +521,10 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
 
           this._unlockInitDataQueue();
         },
-
-        error: (err) => {
+        onWarning: (value : IPlayerError) : void => {
+          this.trigger("warning", value);
+        },
+        onError: (err : unknown) : void => {
           if (err instanceof DecommissionedSessionError) {
             log.warn("DRM: A session's closing condition has been triggered");
             this._lockInitDataQueue();
@@ -577,10 +571,8 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
 
           // TODO warning for blacklisted session?
         },
-      });
-    this._canceller.signal.register(() => {
-      sub.unsubscribe();
-    });
+      },
+      this._canceller.signal);
 
     if (options.singleLicensePer === undefined ||
         options.singleLicensePer === "init-data")

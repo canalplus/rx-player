@@ -61,7 +61,7 @@ async function setServerCertificate(
  * and complete.
  * @param {MediaKeys} mediaKeys
  * @param {ArrayBuffer} serverCertificate
- * @returns {Observable}
+ * @returns {Promise.<Object>}
  */
 export default async function trySettingServerCertificate(
   mediaKeys : ICustomMediaKeys|MediaKeys,

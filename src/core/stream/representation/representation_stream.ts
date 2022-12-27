@@ -23,93 +23,90 @@
  * position and what is currently buffered.
  */
 
-import nextTick from "next-tick";
-import {
-  combineLatest as observableCombineLatest,
-  concat as observableConcat,
-  defer as observableDefer,
-  EMPTY,
-  ignoreElements,
-  merge as observableMerge,
-  mergeMap,
-  Observable,
-  of as observableOf,
-  share,
-  startWith,
-  Subject,
-  take,
-  takeWhile,
-  withLatestFrom,
-} from "rxjs";
 import config from "../../../config";
 import log from "../../../log";
-import Manifest, {
-  Adaptation,
-  ISegment,
-  Period,
-  Representation,
-} from "../../../manifest";
-import assertUnreachable from "../../../utils/assert_unreachable";
+import { ISegment } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
 import { createSharedReference } from "../../../utils/reference";
-import fromCancellablePromise from "../../../utils/rx-from_cancellable_promise";
-import TaskCanceller from "../../../utils/task_canceller";
-import { IReadOnlyPlaybackObserver } from "../../api";
-import { IPrioritizedSegmentFetcher } from "../../fetchers";
-import { SegmentBuffer } from "../../segment_buffers";
-import EVENTS from "../events_generators";
+import TaskCanceller, {
+  CancellationError,
+  CancellationSignal,
+} from "../../../utils/task_canceller";
 import {
-  IEncryptionDataEncounteredEvent,
   IQueuedSegment,
-  IRepresentationStreamEvent,
-  IStreamEventAddedSegment,
-  IStreamManifestMightBeOutOfSync,
-  IStreamNeedsManifestRefresh,
-  IStreamStatusEvent,
-  IStreamTerminatingEvent,
-  IInbandEventsEvent,
-  IStreamWarningEvent,
-} from "../types";
+  IRepresentationStreamArguments,
+  IRepresentationStreamCallbacks,
+} from "./types";
 import DownloadingQueue, {
-  IDownloadingQueueEvent,
   IDownloadQueueItem,
-  IParsedInitSegmentEvent,
-  IParsedSegmentEvent,
-} from "./downloading_queue";
-import getBufferStatus from "./get_buffer_status";
-import getSegmentPriority from "./get_segment_priority";
-import pushInitSegment from "./push_init_segment";
-import pushMediaSegment from "./push_media_segment";
+  IParsedInitSegmentPayload,
+  IParsedSegmentPayload,
+} from "./utils/downloading_queue";
+import getBufferStatus from "./utils/get_buffer_status";
+import getSegmentPriority from "./utils/get_segment_priority";
+import pushInitSegment from "./utils/push_init_segment";
+import pushMediaSegment from "./utils/push_media_segment";
 
 /**
- * Build up buffer for a single Representation.
+ * Perform the logic to load the right segments for the given Representation and
+ * push them to the given `SegmentBuffer`.
  *
- * Download and push segments linked to the given Representation according
- * to what is already in the SegmentBuffer and where the playback currently is.
+ * In essence, this is the entry point of the core streaming logic of the
+ * RxPlayer, the one actually responsible for finding which are the current
+ * right segments to load, loading them, and pushing them so they can be decoded.
  *
- * Multiple RepresentationStream observables can run on the same SegmentBuffer.
+ * Multiple RepresentationStream can run on the same SegmentBuffer.
  * This allows for example smooth transitions between multiple periods.
  *
- * @param {Object} args
- * @returns {Observable}
+ * @param {Object} args - Various arguments allowing to know which segments to
+ * load, loading them and pushing them.
+ * You can check the corresponding type for more information.
+ * @param {Object} callbacks - The `RepresentationStream` relies on a system of
+ * callbacks that it will call on various events.
+ *
+ * Depending on the event, the caller may be supposed to perform actions to
+ * react upon some of them.
+ *
+ * This approach is taken instead of a more classical EventEmitter pattern to:
+ *   - Allow callbacks to be called synchronously after the
+ *     `RepresentationStream` is called.
+ *   - Simplify bubbling events up, by just passing through callbacks
+ *   - Force the caller to explicitely handle or not the different events.
+ *
+ * Callbacks may start being called immediately after the `RepresentationStream`
+ * call and may be called until either the `parentCancelSignal` argument is
+ * triggered, until the `terminating` callback has been triggered AND all loaded
+ * segments have been pushed, or until the `error` callback is called, whichever
+ * comes first.
+ * @param {Object} parentCancelSignal - `CancellationSignal` allowing, when
+ * triggered, to immediately stop all operations the `RepresentationStream` is
+ * doing.
  */
-export default function RepresentationStream<TSegmentDataType>({
-  content,
-  options,
-  playbackObserver,
-  segmentBuffer,
-  segmentFetcher,
-  terminate$,
-} : IRepresentationStreamArguments<TSegmentDataType>
-) : Observable<IRepresentationStreamEvent> {
-  const { period,
-          adaptation,
-          representation } = content;
-  const { bufferGoal$,
-          maxBufferSize$,
-          drmSystemId,
-          fastSwitchThreshold$ } = options;
+export default function RepresentationStream<TSegmentDataType>(
+  { content,
+    options,
+    playbackObserver,
+    segmentBuffer,
+    segmentFetcher,
+    terminate } : IRepresentationStreamArguments<TSegmentDataType>,
+  callbacks : IRepresentationStreamCallbacks<TSegmentDataType>,
+  parentCancelSignal : CancellationSignal
+) : void {
+  const { period, adaptation, representation } = content;
+  const { bufferGoal, maxBufferSize, drmSystemId, fastSwitchThreshold } = options;
   const bufferType = adaptation.type;
+
+  /** `TaskCanceller` stopping ALL operations performed by the `RepresentationStream` */
+  const globalCanceller = new TaskCanceller({ cancelOn: parentCancelSignal });
+
+  /**
+   * `TaskCanceller` allowing to only stop segment loading and checking operations.
+   * This allows to stop only tasks linked to network resource usage, which is
+   * often a limited resource, while still letting buffer operations to finish.
+   */
+  const segmentsLoadingCanceller = new TaskCanceller({
+    cancelOn: globalCanceller.signal,
+  });
 
   /** Saved initialization segment state for this representation. */
   const initSegmentState : IInitSegmentState<TSegmentDataType> = {
@@ -118,21 +115,14 @@ export default function RepresentationStream<TSegmentDataType>({
     isLoaded: false,
   };
 
-  /** Allows to manually re-check which segments are needed. */
-  const reCheckNeededSegments$ = new Subject<void>();
-
   /** Emit the last scheduled downloading queue for segments. */
   const lastSegmentQueue = createSharedReference<IDownloadQueueItem>({
     initSegment: null,
     segmentQueue: [],
-  });
-  const hasInitSegment = initSegmentState.segment !== null;
+  }, segmentsLoadingCanceller.signal);
 
-  /** Will load every segments in `lastSegmentQueue` */
-  const downloadingQueue = new DownloadingQueue(content,
-                                                lastSegmentQueue,
-                                                segmentFetcher,
-                                                hasInitSegment);
+  /** If `true`, the current Representation has a linked initialization segment. */
+  const hasInitSegment = initSegmentState.segment !== null;
 
   if (!hasInitSegment) {
     initSegmentState.segmentData = null;
@@ -145,7 +135,6 @@ export default function RepresentationStream<TSegmentDataType>({
    * Allows to avoid sending multiple times protection events.
    */
   let hasSentEncryptionData = false;
-  let encryptionEvent$ : Observable<IEncryptionDataEncounteredEvent> = EMPTY;
 
   // If the DRM system id is already known, and if we already have encryption data
   // for it, we may not need to wait until the initialization segment is loaded to
@@ -156,190 +145,181 @@ export default function RepresentationStream<TSegmentDataType>({
     // If some key ids are not known yet, it may be safer to wait for this initialization
     // segment to be loaded first
     if (encryptionData.length > 0 && encryptionData.every(e => e.keyIds !== undefined)) {
-      encryptionEvent$ = observableOf(...encryptionData.map(d =>
-        EVENTS.encryptionDataEncountered(d, content)));
       hasSentEncryptionData = true;
+      callbacks.encryptionDataEncountered(
+        encryptionData.map(d => objectAssign({ content }, d))
+      );
+      if (globalCanceller.isUsed) {
+        return ; // previous callback has stopped everything by side-effect
+      }
     }
   }
 
-  /** Observable loading and pushing segments scheduled through `lastSegmentQueue`. */
-  const queue$ = downloadingQueue.start()
-    .pipe(mergeMap(onQueueEvent));
+  /** Will load every segments in `lastSegmentQueue` */
+  const downloadingQueue = new DownloadingQueue(content,
+                                                lastSegmentQueue,
+                                                segmentFetcher,
+                                                hasInitSegment);
+  downloadingQueue.addEventListener("error", (err) => {
+    if (segmentsLoadingCanceller.signal.isCancelled) {
+      return; // ignore post requests-cancellation loading-related errors,
+    }
+    globalCanceller.cancel(); // Stop every operations
+    callbacks.error(err);
+  });
+  downloadingQueue.addEventListener("parsedInitSegment", onParsedChunk);
+  downloadingQueue.addEventListener("parsedMediaSegment", onParsedChunk);
+  downloadingQueue.addEventListener("emptyQueue", checkStatus);
+  downloadingQueue.addEventListener("requestRetry", (payload) => {
+    callbacks.warning(payload.error);
+    if (segmentsLoadingCanceller.signal.isCancelled) {
+      return; // If the previous callback led to loading operations being stopped, skip
+    }
+    const retriedSegment = payload.segment;
+    const { index } = representation;
+    if (index.isSegmentStillAvailable(retriedSegment) === false) {
+      checkStatus();
+    } else if (index.canBeOutOfSyncError(payload.error, retriedSegment)) {
+      callbacks.manifestMightBeOufOfSync();
+    }
+  });
+  downloadingQueue.addEventListener("fullyLoadedSegment", (segment) => {
+    segmentBuffer.endOfSegment(objectAssign({ segment }, content), globalCanceller.signal)
+      .catch(onFatalBufferError);
+  });
+  downloadingQueue.start();
+  segmentsLoadingCanceller.signal.register(() => {
+    downloadingQueue.removeEventListener();
+    downloadingQueue.stop();
+  });
 
-  /** Observable emitting the stream "status" and filling `lastSegmentQueue`. */
-  const status$ = observableCombineLatest([
-    playbackObserver.getReference().asObservable(),
-    bufferGoal$,
-    maxBufferSize$,
-    terminate$.pipe(take(1),
-                    startWith(null)),
-    reCheckNeededSegments$.pipe(startWith(undefined)),
-  ]).pipe(
-    withLatestFrom(fastSwitchThreshold$),
-    mergeMap(function (
-      [ [ observation, bufferGoal, maxBufferSize, terminate ],
-        fastSwitchThreshold ]
-    ) : Observable<IStreamStatusEvent |
-                   IStreamNeedsManifestRefresh |
-                   IStreamTerminatingEvent>
-    {
-      const initialWantedTime = observation.position.pending ??
-                                observation.position.last;
-      const status = getBufferStatus(content,
-                                     initialWantedTime,
-                                     playbackObserver,
-                                     fastSwitchThreshold,
-                                     bufferGoal,
-                                     maxBufferSize,
-                                     segmentBuffer);
-      const { neededSegments } = status;
-
-      let neededInitSegment : IQueuedSegment | null = null;
-
-      // Add initialization segment if required
-      if (!representation.index.isInitialized()) {
-        if (initSegmentState.segment === null) {
-          log.warn("Stream: Uninitialized index without an initialization segment");
-        } else if (initSegmentState.isLoaded) {
-          log.warn("Stream: Uninitialized index with an already loaded " +
-                   "initialization segment");
-        } else {
-          const wantedStart = observation.position.pending ??
-                              observation.position.last;
-          neededInitSegment = { segment: initSegmentState.segment,
-                                priority: getSegmentPriority(period.start,
-                                                             wantedStart) };
-        }
-      } else if (neededSegments.length > 0 &&
-                 !initSegmentState.isLoaded &&
-                 initSegmentState.segment !== null)
-      {
-        const initSegmentPriority = neededSegments[0].priority;
-        neededInitSegment = { segment: initSegmentState.segment,
-                              priority: initSegmentPriority };
-      }
-
-      if (terminate === null) {
-        lastSegmentQueue.setValue({ initSegment: neededInitSegment,
-                                    segmentQueue: neededSegments });
-      } else if (terminate.urgent) {
-        log.debug("Stream: Urgent switch, terminate now.", bufferType);
-        lastSegmentQueue.setValue({ initSegment: null, segmentQueue: [] });
-        lastSegmentQueue.finish();
-        return observableOf(EVENTS.streamTerminating());
-      } else {
-        // Non-urgent termination wanted:
-        // End the download of the current media segment if pending and
-        // terminate once either that request is finished or another segment
-        // is wanted instead, whichever comes first.
-
-        const mostNeededSegment = neededSegments[0];
-        const initSegmentRequest = downloadingQueue.getRequestedInitSegment();
-        const currentSegmentRequest = downloadingQueue.getRequestedMediaSegment();
-
-        const nextQueue = currentSegmentRequest === null ||
-                          mostNeededSegment === undefined ||
-                          currentSegmentRequest.id !== mostNeededSegment.segment.id ?
-          [] :
-          [mostNeededSegment];
-
-        const nextInit = initSegmentRequest === null ? null :
-                                                       neededInitSegment;
-        lastSegmentQueue.setValue({ initSegment: nextInit,
-                                    segmentQueue: nextQueue });
-        if (nextQueue.length === 0 && nextInit === null) {
-          log.debug("Stream: No request left, terminate", bufferType);
-          lastSegmentQueue.finish();
-          return observableOf(EVENTS.streamTerminating());
-        }
-      }
-
-      const bufferStatusEvt : Observable<IStreamStatusEvent> =
-        observableOf({ type: "stream-status" as const,
-                       value: { period,
-                                position: observation.position.last,
-                                bufferType,
-                                imminentDiscontinuity: status.imminentDiscontinuity,
-                                isEmptyStream: false,
-                                hasFinishedLoading: status.hasFinishedLoading,
-                                neededSegments: status.neededSegments } });
-      let bufferRemoval = EMPTY;
-      const { UPTO_CURRENT_POSITION_CLEANUP } = config.getCurrent();
-      if (status.isBufferFull) {
-        const gcedPosition = Math.max(
-          0,
-          initialWantedTime - UPTO_CURRENT_POSITION_CLEANUP);
-        if (gcedPosition > 0) {
-          const removalCanceller = new TaskCanceller();
-          bufferRemoval = fromCancellablePromise(removalCanceller, () =>
-            segmentBuffer.removeBuffer(0, gcedPosition, removalCanceller.signal)
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          ).pipe(ignoreElements());
-        }
-      }
-      return status.shouldRefreshManifest ?
-        observableConcat(observableOf(EVENTS.needsManifestRefresh()),
-                         bufferStatusEvt, bufferRemoval) :
-        observableConcat(bufferStatusEvt, bufferRemoval);
-    }),
-    takeWhile((e) => e.type !== "stream-terminating", true)
-  );
-
-  return observableMerge(status$, queue$, encryptionEvent$).pipe(share());
+  playbackObserver.listen(checkStatus, {
+    includeLastObservation: false,
+    clearSignal: segmentsLoadingCanceller.signal,
+  });
+  bufferGoal.onUpdate(checkStatus, {
+    emitCurrentValue: false,
+    clearSignal: segmentsLoadingCanceller.signal ,
+  });
+  maxBufferSize.onUpdate(checkStatus, {
+    emitCurrentValue: false,
+    clearSignal: segmentsLoadingCanceller.signal,
+  });
+  terminate.onUpdate(checkStatus, {
+    emitCurrentValue: false,
+    clearSignal: segmentsLoadingCanceller.signal,
+  });
+  checkStatus();
+  return ;
 
   /**
-   * React to event from the `DownloadingQueue`.
-   * @param {Object} evt
-   * @returns {Observable}
+   * Produce a buffer status update synchronously on call, update the list
+   * of current segments to update and check various buffer and manifest related
+   * issues at the current time, calling the right callbacks if necessary.
    */
-  function onQueueEvent(
-    evt : IDownloadingQueueEvent<TSegmentDataType>
-  ) : Observable<IStreamEventAddedSegment<TSegmentDataType> |
-                 IStreamWarningEvent |
-                 IEncryptionDataEncounteredEvent |
-                 IInbandEventsEvent |
-                 IStreamNeedsManifestRefresh |
-                 IStreamManifestMightBeOutOfSync>
-  {
-    switch (evt.type) {
-      case "retry":
-        return observableConcat(
-          observableOf({ type: "warning" as const, value: evt.value.error }),
-          observableDefer(() => { // better if done after warning is emitted
-            const retriedSegment = evt.value.segment;
-            const { index } = representation;
-            if (index.isSegmentStillAvailable(retriedSegment) === false) {
-              reCheckNeededSegments$.next();
-            } else if (index.canBeOutOfSyncError(evt.value.error, retriedSegment)) {
-              return observableOf(EVENTS.manifestMightBeOufOfSync());
-            }
-            return EMPTY; // else, ignore.
-          }));
+  function checkStatus() : void {
+    if (segmentsLoadingCanceller.isUsed) {
+      return ; // Stop all buffer status checking if load operations are stopped
+    }
+    const observation = playbackObserver.getReference().getValue();
+    const initialWantedTime = observation.position.pending ??
+                              observation.position.last;
+    const status = getBufferStatus(content,
+                                   initialWantedTime,
+                                   playbackObserver,
+                                   fastSwitchThreshold.getValue(),
+                                   bufferGoal.getValue(),
+                                   maxBufferSize.getValue(),
+                                   segmentBuffer);
+    const { neededSegments } = status;
 
-      case "parsed-init":
-      case "parsed-media":
-        return onParsedChunk(evt);
+    let neededInitSegment : IQueuedSegment | null = null;
 
-      case "end-of-segment": {
-        const { segment } = evt.value;
-        const endOfSegmentCanceller = new TaskCanceller();
-        return fromCancellablePromise(endOfSegmentCanceller, () =>
-          segmentBuffer.endOfSegment(objectAssign({ segment }, content),
-                                     endOfSegmentCanceller.signal))
-          // NOTE As of now (RxJS 7.4.0), RxJS defines `ignoreElements` default
-          // first type parameter as `any` instead of the perfectly fine `unknown`,
-          // leading to linter issues, as it forbids the usage of `any`.
-          // This is why we're disabling the eslint rule.
-          /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument */
-          .pipe(ignoreElements());
+    // Add initialization segment if required
+    if (!representation.index.isInitialized()) {
+      if (initSegmentState.segment === null) {
+        log.warn("Stream: Uninitialized index without an initialization segment");
+      } else if (initSegmentState.isLoaded) {
+        log.warn("Stream: Uninitialized index with an already loaded " +
+                 "initialization segment");
+      } else {
+        const wantedStart = observation.position.pending ??
+                            observation.position.last;
+        neededInitSegment = { segment: initSegmentState.segment,
+                              priority: getSegmentPriority(period.start,
+                                                           wantedStart) };
       }
+    } else if (neededSegments.length > 0 &&
+               !initSegmentState.isLoaded &&
+               initSegmentState.segment !== null)
+    {
+      const initSegmentPriority = neededSegments[0].priority;
+      neededInitSegment = { segment: initSegmentState.segment,
+                            priority: initSegmentPriority };
+    }
 
-      case "end-of-queue":
-        reCheckNeededSegments$.next();
-        return EMPTY;
+    const terminateVal = terminate.getValue();
+    if (terminateVal === null) {
+      lastSegmentQueue.setValue({ initSegment: neededInitSegment,
+                                  segmentQueue: neededSegments });
+    } else if (terminateVal.urgent) {
+      log.debug("Stream: Urgent switch, terminate now.", bufferType);
+      lastSegmentQueue.setValue({ initSegment: null, segmentQueue: [] });
+      lastSegmentQueue.finish();
+      segmentsLoadingCanceller.cancel();
+      callbacks.terminating();
+      return;
+    } else {
+      // Non-urgent termination wanted:
+      // End the download of the current media segment if pending and
+      // terminate once either that request is finished or another segment
+      // is wanted instead, whichever comes first.
 
-      default:
-        assertUnreachable(evt);
+      const mostNeededSegment = neededSegments[0];
+      const initSegmentRequest = downloadingQueue.getRequestedInitSegment();
+      const currentSegmentRequest = downloadingQueue.getRequestedMediaSegment();
+
+      const nextQueue = currentSegmentRequest === null ||
+                        mostNeededSegment === undefined ||
+                        currentSegmentRequest.id !== mostNeededSegment.segment.id ?
+        [] :
+        [mostNeededSegment];
+
+      const nextInit = initSegmentRequest === null ? null :
+                                                     neededInitSegment;
+      lastSegmentQueue.setValue({ initSegment: nextInit,
+                                  segmentQueue: nextQueue });
+      if (nextQueue.length === 0 && nextInit === null) {
+        log.debug("Stream: No request left, terminate", bufferType);
+        lastSegmentQueue.finish();
+        segmentsLoadingCanceller.cancel();
+        callbacks.terminating();
+        return;
+      }
+    }
+
+    callbacks.streamStatusUpdate({ period,
+                                   position: observation.position.last,
+                                   bufferType,
+                                   imminentDiscontinuity: status.imminentDiscontinuity,
+                                   isEmptyStream: false,
+                                   hasFinishedLoading: status.hasFinishedLoading,
+                                   neededSegments: status.neededSegments });
+    if (segmentsLoadingCanceller.signal.isCancelled) {
+      return ; // previous callback has stopped loading operations by side-effect
+    }
+    const { UPTO_CURRENT_POSITION_CLEANUP } = config.getCurrent();
+    if (status.isBufferFull) {
+      const gcedPosition = Math.max(
+        0,
+        initialWantedTime - UPTO_CURRENT_POSITION_CLEANUP);
+      if (gcedPosition > 0) {
+        segmentBuffer.removeBuffer(0, gcedPosition, segmentsLoadingCanceller.signal)
+          .catch(onFatalBufferError);
+      }
+    }
+    if (status.shouldRefreshManifest) {
+      callbacks.needsManifestRefresh();
     }
   }
 
@@ -347,39 +327,48 @@ export default function RepresentationStream<TSegmentDataType>({
    * Process a chunk that has just been parsed by pushing it to the
    * SegmentBuffer and emitting the right events.
    * @param {Object} evt
-   * @returns {Observable}
    */
   function onParsedChunk(
-    evt : IParsedInitSegmentEvent<TSegmentDataType> |
-          IParsedSegmentEvent<TSegmentDataType>
-  ) : Observable<IStreamEventAddedSegment<TSegmentDataType> |
-                 IEncryptionDataEncounteredEvent |
-                 IInbandEventsEvent |
-                 IStreamNeedsManifestRefresh |
-                 IStreamManifestMightBeOutOfSync>
-  {
+    evt : IParsedInitSegmentPayload<TSegmentDataType> |
+          IParsedSegmentPayload<TSegmentDataType>
+  ) : void {
+    if (globalCanceller.isUsed) {
+      // We should not do anything with segments if the `RepresentationStream`
+      // is not running anymore.
+      return ;
+    }
     if (evt.segmentType === "init") {
-      nextTick(() => {
-        reCheckNeededSegments$.next();
-      });
       initSegmentState.segmentData = evt.initializationData;
       initSegmentState.isLoaded = true;
 
       // Now that the initialization segment has been parsed - which may have
       // included encryption information - take care of the encryption event
       // if not already done.
-      const allEncryptionData = representation.getAllEncryptionData();
-      const initEncEvt$ = !hasSentEncryptionData &&
-                          allEncryptionData.length > 0 ?
-        observableOf(...allEncryptionData.map(p =>
-          EVENTS.encryptionDataEncountered(p, content))) :
-        EMPTY;
-      const pushEvent$ = pushInitSegment({ playbackObserver,
-                                           content,
-                                           segment: evt.segment,
-                                           segmentData: evt.initializationData,
-                                           segmentBuffer });
-      return observableMerge(initEncEvt$, pushEvent$);
+      if (!hasSentEncryptionData) {
+        const allEncryptionData = representation.getAllEncryptionData();
+        if (allEncryptionData.length > 0) {
+          callbacks.encryptionDataEncountered(
+            allEncryptionData.map(p => objectAssign({ content }, p))
+          );
+        }
+      }
+
+      pushInitSegment({ playbackObserver,
+                        content,
+                        segment: evt.segment,
+                        segmentData: evt.initializationData,
+                        segmentBuffer },
+                      globalCanceller.signal)
+        .then((result) => {
+          if (result !== null) {
+            callbacks.addedSegment(result);
+          }
+        })
+        .catch(onFatalBufferError);
+
+      // Sometimes the segment list is only known once the initialization segment
+      // is parsed. Thus we immediately re-check if there's new segments to load.
+      checkStatus();
     } else {
       const { inbandEvents,
               needsManifestRefresh,
@@ -387,154 +376,64 @@ export default function RepresentationStream<TSegmentDataType>({
 
       // TODO better handle use cases like key rotation by not always grouping
       // every protection data together? To check.
-      const segmentEncryptionEvent$ = protectionDataUpdate &&
-                                     !hasSentEncryptionData ?
-        observableOf(...representation.getAllEncryptionData().map(p =>
-          EVENTS.encryptionDataEncountered(p, content))) :
-        EMPTY;
+      if (!hasSentEncryptionData && protectionDataUpdate) {
+        const allEncryptionData = representation.getAllEncryptionData();
+        if (allEncryptionData.length > 0) {
+          callbacks.encryptionDataEncountered(
+            allEncryptionData.map(p => objectAssign({ content }, p))
+          );
+          if (globalCanceller.isUsed) {
+            return ; // previous callback has stopped everything by side-effect
+          }
+        }
+      }
 
-      const manifestRefresh$ =  needsManifestRefresh === true ?
-        observableOf(EVENTS.needsManifestRefresh()) :
-        EMPTY;
-      const inbandEvents$ = inbandEvents !== undefined &&
-                            inbandEvents.length > 0 ?
-        observableOf({ type: "inband-events" as const,
-                       value: inbandEvents }) :
-        EMPTY;
+      if (needsManifestRefresh === true) {
+        callbacks.needsManifestRefresh();
+        if (globalCanceller.isUsed) {
+          return ; // previous callback has stopped everything by side-effect
+        }
+      }
+      if (inbandEvents !== undefined && inbandEvents.length > 0) {
+        callbacks.inbandEvent(inbandEvents);
+        if (globalCanceller.isUsed) {
+          return ; // previous callback has stopped everything by side-effect
+        }
+      }
 
       const initSegmentData = initSegmentState.segmentData;
-      const pushMediaSegment$ = pushMediaSegment({ playbackObserver,
-                                                   content,
-                                                   initSegmentData,
-                                                   parsedSegment: evt,
-                                                   segment: evt.segment,
-                                                   segmentBuffer });
-      return observableConcat(segmentEncryptionEvent$,
-                              manifestRefresh$,
-                              inbandEvents$,
-                              pushMediaSegment$);
+      pushMediaSegment({ playbackObserver,
+                         content,
+                         initSegmentData,
+                         parsedSegment: evt,
+                         segment: evt.segment,
+                         segmentBuffer },
+                       globalCanceller.signal)
+        .then((result) => {
+          if (result !== null) {
+            callbacks.addedSegment(result);
+          }
+        })
+        .catch(onFatalBufferError);
     }
   }
-}
-
-/** Object that should be emitted by the given `IReadOnlyPlaybackObserver`. */
-export interface IRepresentationStreamPlaybackObservation {
-  /**
-   * Information on the current media position in seconds at the time of a
-   * Playback Observation.
-   */
-  position : IPositionPlaybackObservation;
-}
-
-/** Position-related information linked to an emitted Playback observation. */
-export interface IPositionPlaybackObservation {
-  /**
-   * Known position at the time the Observation was emitted, in seconds.
-   *
-   * Note that it might have changed since. If you want truly precize
-   * information, you should recuperate it from the HTMLMediaElement directly
-   * through another mean.
-   */
-  last : number;
-  /**
-   * Actually wanted position in seconds that is not yet reached.
-   *
-   * This might for example be set to the initial position when the content is
-   * loading (and thus potentially at a `0` position) but which will be seeked
-   * to a given position once possible.
-   */
-  pending : number | undefined;
-}
-
-/** Item emitted by the `terminate$` Observable given to a RepresentationStream. */
-export interface ITerminationOrder {
-  /*
-   * If `true`, the RepresentationStream should interrupt immediately every long
-   * pending operations such as segment downloads.
-   * If it is set to `false`, it can continue until those operations are
-   * finished.
-   */
-  urgent : boolean;
-}
-
-/** Arguments to give to the RepresentationStream. */
-export interface IRepresentationStreamArguments<TSegmentDataType> {
-  /** The context of the Representation you want to load. */
-  content: { adaptation : Adaptation;
-             manifest : Manifest;
-             period : Period;
-             representation : Representation; };
-  /** The `SegmentBuffer` on which segments will be pushed. */
-  segmentBuffer : SegmentBuffer;
-  /** Interface used to load new segments. */
-  segmentFetcher : IPrioritizedSegmentFetcher<TSegmentDataType>;
-  /**
-   * Observable emitting when the RepresentationStream should "terminate".
-   *
-   * When this Observable emits, the RepresentationStream will begin a
-   * "termination process": it will, depending on the type of termination
-   * wanted, either stop immediately pending segment requests or wait until they
-   * are finished before fully terminating (sending the
-   * `IStreamTerminatingEvent` and then completing the `RepresentationStream`
-   * Observable once the corresponding segments have been pushed).
-   */
-  terminate$ : Observable<ITerminationOrder>;
-  /** Periodically emits the current playback conditions. */
-  playbackObserver : IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>;
-  /** Supplementary arguments which configure the RepresentationStream's behavior. */
-  options: IRepresentationStreamOptions;
-}
-
-
-/**
- * Various specific stream "options" which tweak the behavior of the
- * RepresentationStream.
- */
-export interface IRepresentationStreamOptions {
-  /**
-   * The buffer size we have to reach in seconds (compared to the current
-   * position. When that size is reached, no segments will be loaded until it
-   * goes below that size again.
-   */
-  bufferGoal$ : Observable<number>;
 
   /**
-   *  The buffer size limit in memory that we can reach.
-   *  Once reached, no segments will be loaded until it
-   *  goes below that size again
+   * Handle Buffer-related fatal errors by cancelling everything the
+   * `RepresentationStream` is doing and calling the error callback with the
+   * corresponding error.
+   * @param {*} err
    */
-  maxBufferSize$ : Observable<number>;
-
-  /**
-   * Hex-encoded DRM "system ID" as found in:
-   * https://dashif.org/identifiers/content_protection/
-   *
-   * Allows to identify which DRM system is currently used, to allow potential
-   * optimizations.
-   *
-   * Set to `undefined` in two cases:
-   *   - no DRM system is used (e.g. the content is unencrypted).
-   *   - We don't know which DRM system is currently used.
-   */
-  drmSystemId : string | undefined;
-  /**
-   * Bitrate threshold from which no "fast-switching" should occur on a segment.
-   *
-   * Fast-switching is an optimization allowing to replace segments from a
-   * low-bitrate Representation by segments from a higher-bitrate
-   * Representation. This allows the user to see/hear an improvement in quality
-   * faster, hence "fast-switching".
-   *
-   * This Observable allows to limit this behavior to only allow the replacement
-   * of segments with a bitrate lower than a specific value - the number emitted
-   * by that Observable.
-   *
-   * If set to `undefined`, no threshold is active and any segment can be
-   * replaced by higher quality segment(s).
-   *
-   * `0` can be emitted to disable any kind of fast-switching.
-   */
-  fastSwitchThreshold$: Observable< undefined | number>;
+  function onFatalBufferError(err : unknown) : void {
+    if (globalCanceller.isUsed && err instanceof CancellationError) {
+      // The error is linked to cancellation AND we explicitely cancelled buffer
+      // operations.
+      // We can thus ignore it, it is very unlikely to lead to true buffer issues.
+      return;
+    }
+    globalCanceller.cancel();
+    callbacks.error(err);
+  }
 }
 
 /**
