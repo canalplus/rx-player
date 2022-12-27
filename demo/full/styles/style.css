@@ -96,7 +96,7 @@ body {
 }
 
 .video-player-content {
-  max-width: 1000px;
+  max-width: 1050px;
   margin: auto;
   text-align: left;
 }
@@ -644,6 +644,18 @@ body {
 
 .settings-button {
   width: auto;
+}
+
+.settings-title {
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 12px;
+  font-size: 1.3em;
+}
+
+.settings-note {
+  font-style: italic;
+  text-align: center;
 }
 
 .volume {
@@ -1257,6 +1269,8 @@ select {
 
 .settingsWrapper {
   margin: 10px 0;
+  background-color: #e3e3e3;
+  padding: 10px;
 }
 
 .featureWrapperWithSelectMode {
