@@ -23,7 +23,7 @@ import /* waitForState, */ {
 } from "../../utils/waitForPlayerState";
 import XHRMock from "../../utils/request_mock";
 
-describe.only("loadVideo Options", () => {
+describe("loadVideo Options", () => {
   let player;
   let xhrMock;
 
