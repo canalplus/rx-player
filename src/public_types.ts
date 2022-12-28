@@ -449,12 +449,6 @@ export interface IKeySystemOption {
   videoCapabilitiesConfig?: IVideoCapabilitiesConfiguration;
   audioCapabilitiesConfig?: IAudioCapabilitiesConfiguration;
   /**
-   * If explicitely set to `false`, we won't throw on error when a used license
-   * is expired.
-   * @deprecated
-   */
-  throwOnLicenseExpiration? : boolean;
-  /**
    * If set to `true`, we will not wait until the MediaKeys instance is attached
    * to the media element before pushing segments to it.
    * Setting it to `true` might be needed on some targets to work-around a
