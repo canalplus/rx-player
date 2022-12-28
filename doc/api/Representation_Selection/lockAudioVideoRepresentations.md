@@ -177,7 +177,8 @@ RxPlayer will automatically unlock Representations for that track so it can
 continue to play the content, a mechanism we call here "breaking the lock".
 You can be notified when this happens and react accordingly (e.g. to lock
 other Representations or stop playback) by listening and reacting to the
-`brokenRepresentationsLock` RxPlayer event.
+[`brokenRepresentationsLock`](../Player_Events.md#brokenrepresentationslock)
+RxPlayer event.
 
 ```js
 // example: stopping playback when the lock is broken
@@ -197,7 +198,9 @@ the `newAvailablePeriods` event:
 rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
   for (const period of periods) {
     const videoTrack = rxPlayer.getVideoTrack(period.id);
-    rxPlayer.lockVideoRepresentations([videoTrack.representations[0]]);
+    if (videoTrack.representations.length > 0) {
+      rxPlayer.lockVideoRepresentations([videoTrack.representations[0].id]);
+    }
   }
 });
 ```
@@ -211,7 +214,9 @@ already-loaded Periods (and lock their Representations) thanks to the
 const periods = rxPlayer.getAvailablePeriods();
 for (const period of periods) {
   const videoTrack = rxPlayer.getVideoTrack(period.id);
-  rxPlayer.lockVideoRepresentations([videoTrack.representations[0]]);
+  if (videoTrack.representations.length > 0) {
+    rxPlayer.lockVideoRepresentations([videoTrack.representations[0].id]);
+  }
 }
 ```
 
@@ -230,6 +235,28 @@ const wantedVideoTrack = videoTracks[1];
 rxPlayer.setVideoTrack({
   trackId: wantedVideoTrack.id,
   lockedRepresentations: [wantedVideoTrack.representations[0]],
+});
+```
+
+Or more generally, you can apply that locking logic anytime the video or audio
+track switches, whether it is done explicitly (for example through a
+`setVideoTrack` call) or implicitly (for example because the previously-chosen
+track is not available anymore), by reacting to the
+[`trackUpdate`](../Player_Events.md#trackupdate) event:
+```js
+rxPlayer.addEventListener("trackUpdate", (evt) => {
+    if (evt.trackType === "video") {
+      const videoTrack = rxPlayer.getVideoTrack(evt.period.id);
+      if (videoTrack.representations.length > 0) {
+        rxPlayer.lockVideoRepresentations([videoTrack.representations[0].id]);
+      }
+    } else if (evt.trackType === "audio") {
+      const audioTrack = rxPlayer.getAudioTrack(evt.period.id);
+      if (audioTrack.representations.length > 0) {
+        rxPlayer.lockAudioRepresentations([audioTrack.representations[0].id]);
+      }
+    }
+  }
 });
 ```
 
