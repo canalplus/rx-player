@@ -9,6 +9,10 @@
       "displayName": "Tutorials"
     },
     {
+      "path": "./Migration_From_v3",
+      "displayName": "Migration from RxPlayer v3"
+    },
+    {
       "path": "./Minimal_Player.md",
       "displayName": "Importing a minimal RxPlayer"
     },

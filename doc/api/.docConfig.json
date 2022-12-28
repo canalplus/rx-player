@@ -41,10 +41,6 @@
       "displayName": "Representation Selection"
     },
     {
-      "path": "./Bitrate_Control",
-      "displayName": "Bitrate Control"
-    },
-    {
       "path": "./Speed_Control",
       "displayName": "Speed Control"
     },

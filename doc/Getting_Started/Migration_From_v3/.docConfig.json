@@ -1,0 +1,40 @@
+{
+  "pages": [
+    {
+      "path": "./Overview.md",
+      "displayName": "Overview"
+    },
+    {
+      "path": "./Preferences.md",
+      "displayName": "Track Preferences"
+    },
+    {
+      "path": "./Bitrate_Selection.md",
+      "displayName": "Bitrate Selection"
+    },
+    {
+      "path": "./Constructor_Options.md",
+      "displayName": "Constructor Options"
+    },
+    {
+      "path": "./loadVideo_Options.md",
+      "displayName": "loadVideo Options"
+    },
+    {
+      "path": "./Player_Events.md",
+      "displayName": "Player Events"
+    },
+    {
+      "path": "./Player_Errors.md",
+      "displayName": "Player Errors"
+    },
+    {
+      "path": "./Player_Methods.md",
+      "displayName": "Player Methods"
+    },
+    {
+      "path": "./Player_Types.md",
+      "displayName": "Player Types"
+    }
+  ]
+}
