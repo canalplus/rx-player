@@ -56,7 +56,7 @@ const KEY_STATUSES = { EXPIRED: "expired",
                        OUTPUT_RESTRICTED: "output-restricted" };
 
 export type IKeyStatusesCheckingOptions =
-  Pick<IKeySystemOption, "throwOnLicenseExpiration" | "fallbackOn" | "onKeyExpiration">;
+  Pick<IKeySystemOption, "fallbackOn" | "onKeyExpiration">;
 
 /**
  * MediaKeyStatusMap's iterator seems to be quite peculiar and wrongly defined
@@ -89,7 +89,6 @@ export default function checkKeyStatuses(
       whitelistedKeyIds : Uint8Array[]; }
 {
   const { fallbackOn = {},
-          throwOnLicenseExpiration,
           onKeyExpiration } = options;
   const blacklistedKeyIds : Uint8Array[] = [];
   const whitelistedKeyIds : Uint8Array[] = [];
@@ -122,9 +121,7 @@ export default function checkKeyStatuses(
           `A decryption key expired (${bytesToHex(keyId)})`,
           { keyStatuses: [keyStatusObj, ...badKeyStatuses] });
 
-        if (onKeyExpiration === "error" ||
-            (onKeyExpiration === undefined && throwOnLicenseExpiration === false))
-        {
+        if (onKeyExpiration === "error" || onKeyExpiration === undefined) {
           throw error;
         }
 
