@@ -130,9 +130,7 @@ While this state is active, multiple player API are unavailable:
 
 - you cannot play or pause
 - you cannot seek
-- you cannot obtain the position or duration
-- you cannot get or switch the available video, text or audio tracks.
-- you cannot get or switch the available video or audio qualities.
+- you cannot obtain the last playing position or the content duration
 
 This is why we sometime recommend to manage this state as if it was the
 `LOADING` state (where those APIs - and other - are also not available).
