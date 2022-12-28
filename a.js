@@ -1,3 +1,12 @@
+// XXX TODO
+// AUDIO VIDEO VARIANTS OF `onCodecSwitch`
+// fallbackOn => `onKeyInternalError`, `onKeyOutputRestricted`
+// IMPLICIT FEATURE IMPORT MINIMAL
+// Event when quality becomes unplayable because quality list has changed here
+// defaultAudioRepresentationsSwitchingMode?
+// defaultVideoRepresentationsSwitchingMode?
+// TODO available...Tracks when tracks are missing
+//
 // Cas les plus fréquents
 
 // Seulement mettre la piste courante en français

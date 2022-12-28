@@ -23,18 +23,6 @@ properties, methods, events and so on.
   - [`baseBandwidth`](../api/Creating_a_Player.md#basebandwidth):
     Base value for the bandwidth calculated by the RxPlayer.
 
-  - [`minVideoBitrate`](../api/Creating_a_Player.md#minvideobitrate):
-    Minimum video bitrate reachable through adaptive streaming.
-
-  - [`minAudioBitrate`](../api/Creating_a_Player.md#minaudiobitrate):
-    Minimum audio bitrate reachable through adaptive streaming.
-
-  - [`maxVideoBitrate`](../api/Creating_a_Player.md#maxvideobitrate):
-    Maximum video bitrate reachable through adaptive streaming.
-
-  - [`maxAudioBitrate`](../api/Creating_a_Player.md#maxaudiobitrate):
-    Maximum audio bitrate reachable through adaptive streaming.
-
   - [`wantedBufferAhead`](../api/Creating_a_Player.md#wantedbufferahead):
     Set the default buffering goal.
 
@@ -302,36 +290,6 @@ properties, methods, events and so on.
 
   - [`isTrickModeEnabled`](../api/Track_Selection/isTrickModeEnabled.md):
     Returns `true` if trick mode tracks are currently enabled by default.
-
-  - [`getVideoBitrate`](../api/Bitrate_Control/getVideoBitrate.md):
-    Returns the bitrate of the current video quality.
-
-  - [`getAudioBitrate`](../api/Bitrate_Control/getAudioBitrate.md):
-    Returns the bitrate of the current audio quality.
-
-  - [`setMinVideoBitrate`](../api/Bitrate_Control/setMinVideoBitrate.md):
-    Set the minimum video bitrate reachable through adaptive streaming.
-
-  - [`setMinAudioBitrate`](../api/Bitrate_Control/setMinAudioBitrate.md):
-    Set the minimum audio bitrate reachable through adaptive streaming.
-
-  - [`setMaxVideoBitrate`](../api/Bitrate_Control/setMaxVideoBitrate.md):
-    Set the maximum video bitrate reachable through adaptive streaming.
-
-  - [`setMaxAudioBitrate`](../api/Bitrate_Control/setMaxAudioBitrate.md):
-    Set the maximum audio bitrate reachable through adaptive streaming.
-
-  - [`getMinVideoBitrate`](../api/Bitrate_Control/getMinVideoBitrate.md):
-    Returns the minimum video bitrate reachable through adaptive streaming.
-
-  - [`getMinAudioBitrate`](../api/Bitrate_Control/getMinAudioBitrate.md):
-    Returns the minimum audio bitrate reachable through adaptive streaming.
-
-  - [`getMaxVideoBitrate`](../api/Bitrate_Control/getMaxVideoBitrate.md):
-    Returns the maximum video bitrate reachable through adaptive streaming.
-
-  - [`getMaxAudioBitrate`](../api/Bitrate_Control/getMaxAudioBitrate.md):
-    Returns the maximum audio bitrate reachable through adaptive streaming.
 
   - [`setPlaybackRate`](../api/Speed_Control/setPlaybackRate.md):
     Update the speed at which the content is played.

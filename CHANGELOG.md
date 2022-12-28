@@ -7,13 +7,14 @@
   - Create `"FREEZING"` player state for cases where the playback position is currently not advancing due to an unknown reason, to separate it from regular `"BUFFERING"`. [#1146]
   - The `RELOADING` player state (gettable  through the `getPlayerState` and `playerStateChange` API) can now happen at any time to unlock playback.
   - Remove bitrate API: `getAvailableVideoBitrates`, `getAvailableAudioBitrates`, `setAudioBitrate`, `setVideoBitrate`, `getAudioBitrate`, `getVideoBitrate` in profit of the Representations lock APIs [#1144]
-  - Remove max bitrate API: `setMaxVideoBitrate`, `setMaxAudioBitrate`, `getMaxVideoBitrate` and `getMaxAudioBitrate` methods in profit of the Representations lock APIs
+  - Remove max bitrate API: `setMaxVideoBitrate`, `setMaxAudioBitrate`, `getMaxVideoBitrate` and `getMaxAudioBitrate` methods as well as the `maxVideoBitrate` and `maxAudioBitrate` options in profit of the Representations lock APIs
+  - Remove min bitrate API: `setMinVideoBitrate`, `setMinAudioBitrate`, `getMinVideoBitrate` and `getMinAudioBitrate` methods as well as the `minVideoBitrate` and `minAudioBitrate` options in profit of the Representations lock APIs
   - Remove track preferences API (methods: `getPreferredAudioTracks`, `getPreferredVideoTracks`, `setPreferredAudioTracks` and `setPreferredVideoTracks`, types: `IAudioTrackPreference`, `ITextTrackPreference` and `IVideoTrackPreference`) in profit of the new tracks API
   - Remove `getManualVideoBitrate` and `getManualAudioBitrate` in profit of the new Representations lock APIs
   - Replace `initialAudioBitrate` and `initialVideoBitrate` constructor options with a single `baseBandwidth` option, which better translates what this option is actually doing and allows for future optimizations on our side. [#1155]
   - Rename `audioTrackSwitchingMode` loadVideo option into `defaultAudioTrackSwitchingMode` [#1030]
   - Remove `manualBitrateSwitchingMode` loadVideo option to instead rely on the `switchingMode` property of each `lockVideoRepresentations` and `lockAudioRepresentations` calls. [#1030]
-  - Remove `audioBitrateChange` and `videoBitrateChange` API in profit of the new `audioRepresentationChange` and `videoRepresentationChange` events
+  - Remove `audioBitrateChange` and `videoBitrateChange` events in profit of the new `audioRepresentationChange` and `videoRepresentationChange` events
   - Remove `availableAudioBitratesChange` and `availableVideoBitratesChange` events. Those are less needed with the new Representations lock API and can be mostly replicated through the `audioTrackChange` and `videoTrackChange` events
   - "Flatten" the `transportOptions` loadVideo options by putting all its inner properties directly at the top level of loadVideo options, to simplify its documentation and discoverability [#1149]
   - Rename `networkConfig` into `requestConfig` and re-organize its inner properties to pave the way for future request-related APIs.
@@ -32,6 +33,7 @@
   - Remove `persistentStateRequired` API, in profit of the more powerful `persistentState` API [#1148]
   - Remove `distinctiveIdentifierRequired` API, in profit of the more powerful `distinctiveIdentifier` API [#1148]
   - Remove `keySystems[].onKeyStatusesChange` API as it seems to never be used [#1148]
+  - Remove `keySystems[].throwOnLicenseExpiration` API as it can now be fully replaced by the `keySystems[].onKeyExpiration` option
   - Remove `aggressiveMode` from the `transportOptions` `loadVideo` option
   - Remove deprecated `throttleWhenHidden` player option in profit of `throttleVideoBitrateWhenHidden`
   - Change payload of `periodChange` events, so they emit only core properties related to a `Period`.
@@ -53,6 +55,7 @@
   - Remove public types `IBitrateEstimate` as no API depend on it anymore.
   - Remove public types `IManifest`, `IPeriod`, `IAdaptation`, `IRepresentation`, `IRepresentationInfos`, `IBifThumbnail`, `IBifObject` and `IExposedSegment` as no API depend on them anymore.
   - Remove public types `IDefaultAudioTrackOption` and `IDefaultTextTrackOption`. Those are the types respectively for `defaultAudioTrack` and `defaultTextTrack` `loadVideo` options which have been removed
+  - Stop officially supporting the Internet Explorer 11 browser
 
 ### Features
 
