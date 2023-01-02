@@ -70,6 +70,7 @@ import {
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import assert from "../../utils/assert";
 import EventEmitter, {
+  IEventPayload,
   IListener,
 } from "../../utils/event_emitter";
 import idGenerator from "../../utils/id_generator";
@@ -86,7 +87,9 @@ import createSharedReference, {
   IReadOnlySharedReference,
   ISharedReference,
 } from "../../utils/reference";
-import TaskCanceller from "../../utils/task_canceller";
+import TaskCanceller, {
+  CancellationSignal,
+} from "../../utils/task_canceller";
 import warnOnce from "../../utils/warn_once";
 import { IABRThrottlers } from "../adaptive";
 import {
@@ -754,8 +757,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         throw new Error("DirectFile feature not activated in your build.");
       }
       mediaElementTrackChoiceManager =
-        this._priv_initializeMediaElementTrackChoiceManager(defaultAudioTrack,
-                                                            defaultTextTrack);
+        this._priv_initializeMediaElementTrackChoiceManager(
+          defaultAudioTrack,
+          defaultTextTrack,
+          currentContentCanceller.signal
+        );
+      if (currentContentCanceller.isUsed) {
+        return;
+      }
       initializer = new features.directfile.initDirectFile({ autoPlay,
                                                              keySystems,
                                                              speed: this._priv_speed,
@@ -2365,36 +2374,58 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentEventsMemory.periodChange !== period) {
       this._priv_contentEventsMemory.periodChange = period;
       this.trigger("periodChange", period);
+      if (contentInfos.currentContentCanceller.isUsed) {
+        return;
+      }
     }
 
-    this.trigger("availableAudioTracksChange", this.getAvailableAudioTracks());
-    this.trigger("availableTextTracksChange", this.getAvailableTextTracks());
-    this.trigger("availableVideoTracksChange", this.getAvailableVideoTracks());
+    const triggerEventIfNotStopped =  <TEventName extends keyof IPublicAPIEvent>(
+      evt : TEventName,
+      arg : IEventPayload<IPublicAPIEvent, TEventName>
+    ) => {
+      if (!contentInfos.currentContentCanceller.isUsed) {
+        this.trigger(evt, arg);
+      }
+    };
+
+    const availableAudioTracks = this.getAvailableAudioTracks();
+    triggerEventIfNotStopped("availableAudioTracksChange", availableAudioTracks);
+    const availableTextTracks = this.getAvailableTextTracks();
+    triggerEventIfNotStopped("availableTextTracksChange", availableTextTracks);
+    const availableVideoTracks = this.getAvailableVideoTracks();
+    triggerEventIfNotStopped("availableVideoTracksChange", availableVideoTracks);
 
     const trackChoiceManager = this._priv_contentInfos?.trackChoiceManager;
 
     // Emit intial events for the Period
     if (!isNullOrUndefined(trackChoiceManager)) {
       const audioTrack = trackChoiceManager.getChosenAudioTrack(period);
+      triggerEventIfNotStopped("audioTrackChange", audioTrack);
       const textTrack = trackChoiceManager.getChosenTextTrack(period);
+      triggerEventIfNotStopped("textTrackChange", textTrack);
       const videoTrack = trackChoiceManager.getChosenVideoTrack(period);
-
-      this.trigger("audioTrackChange", audioTrack);
-      this.trigger("textTrackChange", textTrack);
-      this.trigger("videoTrackChange", videoTrack);
+      triggerEventIfNotStopped("videoTrackChange", videoTrack);
     } else {
-      this.trigger("audioTrackChange", null);
-      this.trigger("textTrackChange", null);
-      this.trigger("videoTrackChange", null);
+      triggerEventIfNotStopped("audioTrackChange", null);
+      triggerEventIfNotStopped("textTrackChange", null);
+      triggerEventIfNotStopped("videoTrackChange", null);
     }
 
     this._priv_triggerAvailableBitratesChangeEvent("availableAudioBitratesChange",
                                                    this.getAvailableAudioBitrates());
+    if (contentInfos.currentContentCanceller.isUsed) {
+      return;
+    }
     this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange",
                                                    this.getAvailableVideoBitrates());
-
+    if (contentInfos.currentContentCanceller.isUsed) {
+      return;
+    }
     const audioBitrate = this._priv_getCurrentRepresentations()?.audio?.bitrate ?? -1;
     this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange", audioBitrate);
+    if (contentInfos.currentContentCanceller.isUsed) {
+      return;
+    }
 
     const videoBitrate = this._priv_getCurrentRepresentations()?.video?.bitrate ?? -1;
     this._priv_triggerCurrentBitrateChangeEvent("videoBitrateChange", videoBitrate);
@@ -2765,9 +2796,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return activeRepresentations[currentPeriod.id];
   }
 
+  /**
+   * @param {Object} defaultAudioTrack
+   * @param {Object} defaultTextTrack
+   * @param {Object} cancelSignal
+   * @returns {Object}
+   */
   private _priv_initializeMediaElementTrackChoiceManager(
     defaultAudioTrack : IAudioTrackPreference | null | undefined,
-    defaultTextTrack : ITextTrackPreference | null | undefined
+    defaultTextTrack : ITextTrackPreference | null | undefined,
+    cancelSignal : CancellationSignal
   ) : MediaElementTrackChoiceManager {
     assert(features.directfile !== null,
            "Initializing `MediaElementTrackChoiceManager` without Directfile feature");
@@ -2792,20 +2830,38 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this.trigger("availableAudioTracksChange",
                  mediaElementTrackChoiceManager.getAvailableAudioTracks());
+    if (cancelSignal.isCancelled) {
+      return mediaElementTrackChoiceManager;
+    }
     this.trigger("availableVideoTracksChange",
                  mediaElementTrackChoiceManager.getAvailableVideoTracks());
+    if (cancelSignal.isCancelled) {
+      return mediaElementTrackChoiceManager;
+    }
     this.trigger("availableTextTracksChange",
                  mediaElementTrackChoiceManager.getAvailableTextTracks());
+    if (cancelSignal.isCancelled) {
+      return mediaElementTrackChoiceManager;
+    }
 
     this.trigger("audioTrackChange",
                  mediaElementTrackChoiceManager.getChosenAudioTrack()
                  ?? null);
+    if (cancelSignal.isCancelled) {
+      return mediaElementTrackChoiceManager;
+    }
     this.trigger("textTrackChange",
                  mediaElementTrackChoiceManager.getChosenTextTrack()
                  ?? null);
+    if (cancelSignal.isCancelled) {
+      return mediaElementTrackChoiceManager;
+    }
     this.trigger("videoTrackChange",
                  mediaElementTrackChoiceManager.getChosenVideoTrack()
                  ?? null);
+    if (cancelSignal.isCancelled) {
+      return mediaElementTrackChoiceManager;
+    }
 
     mediaElementTrackChoiceManager
       .addEventListener("availableVideoTracksChange", (val) =>

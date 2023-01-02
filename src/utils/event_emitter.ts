@@ -28,12 +28,14 @@ export interface IEventEmitter<T> {
 }
 
 // Type of the argument in the listener's callback
-type IArgs<TEventRecord, TEventName
+export type IEventPayload<TEventRecord, TEventName
      extends keyof TEventRecord> = TEventRecord[TEventName];
 
 // Type of the listener function
-export type IListener<TEventRecord, TEventName
-     extends keyof TEventRecord> = (args: IArgs<TEventRecord, TEventName>) => void;
+export type IListener<
+  TEventRecord,
+  TEventName extends keyof TEventRecord
+> = (args: IEventPayload<TEventRecord, TEventName>) => void;
 
 type IListeners<TEventRecord> = {
   [P in keyof TEventRecord]? : Array<IListener<TEventRecord, P>>
@@ -127,7 +129,7 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
    */
   protected trigger<TEventName extends keyof T>(
     evt : TEventName,
-    arg : IArgs<T, TEventName>
+    arg : IEventPayload<T, TEventName>
   ) : void {
     const listeners = this._listeners[evt];
     if (!Array.isArray(listeners)) {
