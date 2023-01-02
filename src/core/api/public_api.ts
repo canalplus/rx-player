@@ -633,9 +633,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         throw new Error("DirectFile feature not activated in your build.");
       }
       mediaElementTracksStore =
-        this._priv_initializeMediaElementTracksStore(
-          currentContentCanceller.signal
-        );
+        this._priv_initializeMediaElementTracksStore(currentContentCanceller.signal);
       if (currentContentCanceller.isUsed) {
         return;
       }
