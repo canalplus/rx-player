@@ -36,7 +36,6 @@ import {
 import arrayIncludes from "../../utils/array_includes";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import objectAssign from "../../utils/object_assign";
-import warnOnce from "../../utils/warn_once";
 
 /** Value once parsed for the `startAt` option of the `loadVideo` method. */
 export type IParsedStartAtOption = { position : number } |
@@ -317,11 +316,6 @@ function parseLoadVideoOptions(
       ) {
         throw new Error("Invalid key system given: Missing type string or " +
                         "getLicense callback");
-      }
-      if (!isNullOrUndefined(keySystem.throwOnLicenseExpiration)) {
-        warnOnce("`keySystems[].throwOnLicenseExpiration` is deprecated and won't " +
-                 "be present in the next major version. " +
-                 "Please open an issue if you still need this.");
       }
     }
   }
