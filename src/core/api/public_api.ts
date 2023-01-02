@@ -659,9 +659,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         throw new Error("No URL for a DirectFile content");
       }
       mediaElementTracksStore =
-        this._priv_initializeMediaElementTracksStore(
-          currentContentCanceller.signal
-        );
+        this._priv_initializeMediaElementTracksStore(currentContentCanceller.signal);
       if (currentContentCanceller.isUsed()) {
         return;
       }
