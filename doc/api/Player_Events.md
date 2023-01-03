@@ -112,8 +112,13 @@ This chapter describes events linked to the current audio, video or text track.
 
 _payload type_: `Array.<Object>`
 
-Triggered when the currently available audio tracks change (e.g.: at the
-beginning of the content, when period changes...).
+Triggered when the currently available audio tracks might have changed (e.g.: at
+the beginning of the content, when period changes...) for the currently-playing
+Period.
+
+_The event might also rarely be emitted even if the list of available audio
+tracks did not really change - as the RxPlayer might send it in situations where
+there's a chance it had without thoroughly checking it._
 
 The array emitted contains object describing each available audio track:
 
@@ -152,8 +157,13 @@ This event only concerns the currently-playing Period.
 
 _payload type_: `Array.<Object>`
 
-Triggered when the currently available video tracks change (e.g.: at the
-beginning of the content, when period changes...).
+Triggered when the currently available video tracks might change (e.g.: at the
+beginning of the content, when period changes...) for the currently-playing
+Period.
+
+_The event might also rarely be emitted even if the list of available video
+tracks did not really change - as the RxPlayer might send it in situations where
+there's a chance it had without thoroughly checking it._
 
 The array emitted contains object describing each available video track:
 
@@ -192,8 +202,13 @@ This event only concerns the currently-playing Period.
 
 _payload type_: `Array.<Object>`
 
-Triggered when the currently available text tracks change (e.g.: at the
-beginning of the content, when period changes...).
+Triggered when the currently available text tracks might change (e.g.: at the
+beginning of the content, when period changes...) for the currently-playing
+Period.
+
+_The event might also rarely be emitted even if the list of available text
+tracks did not really change - as the RxPlayer might send it in situations where
+there's a chance it had without thoroughly checking it._
 
 The array emitted contains object describing each available text track:
 
