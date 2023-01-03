@@ -2327,6 +2327,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return; // Event for another content
     }
     contentInfos.manifest = manifest;
+    const cancelSignal = contentInfos.currentContentCanceller.signal;
     this._priv_reloadingMetadata.manifest = manifest;
 
     const { initialAudioTrack, initialTextTrack } = contentInfos;
@@ -2347,10 +2348,37 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     contentInfos.trackChoiceManager
       .setPreferredVideoTracks(this._priv_preferredVideoTracks,
                                true);
-    manifest.addEventListener("manifestUpdate", () => {
+    manifest.addEventListener("manifestUpdate", (updates) => {
       // Update the tracks chosen if it changed
       if (contentInfos.trackChoiceManager !== null) {
         contentInfos.trackChoiceManager.update();
+      }
+      const currentPeriod = this._priv_contentInfos?.currentPeriod ?? undefined;
+      const trackChoiceManager = this._priv_contentInfos?.trackChoiceManager;
+      if (currentPeriod === undefined || isNullOrUndefined(trackChoiceManager)) {
+        return;
+      }
+      for (const update of updates.updatedPeriods) {
+        if (update.period.id === currentPeriod.id) {
+          if (update.result.addedAdaptations.length > 0 ||
+              update.result.removedAdaptations.length > 0)
+          {
+            // We might have new (or less) tracks, send events just to be sure
+            const audioTracks = trackChoiceManager.getAvailableAudioTracks(currentPeriod);
+            this._priv_triggerEventIfNotStopped("availableAudioTracksChange",
+                                                audioTracks ?? [],
+                                                cancelSignal);
+            const textTracks = trackChoiceManager.getAvailableTextTracks(currentPeriod);
+            this._priv_triggerEventIfNotStopped("availableTextTracksChange",
+                                                textTracks ?? [],
+                                                cancelSignal);
+            const videoTracks = trackChoiceManager.getAvailableVideoTracks(currentPeriod);
+            this._priv_triggerEventIfNotStopped("availableVideoTracksChange",
+                                                videoTracks ?? [],
+                                                cancelSignal);
+          }
+        }
+        return;
       }
     }, contentInfos.currentContentCanceller.signal);
   }
@@ -2371,64 +2399,68 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     contentInfos.currentPeriod = period;
 
+    const cancelSignal = contentInfos.currentContentCanceller.signal;
     if (this._priv_contentEventsMemory.periodChange !== period) {
       this._priv_contentEventsMemory.periodChange = period;
-      this.trigger("periodChange", period);
-      if (contentInfos.currentContentCanceller.isUsed) {
-        return;
-      }
+      this._priv_triggerEventIfNotStopped("periodChange", period, cancelSignal);
     }
 
-    const triggerEventIfNotStopped =  <TEventName extends keyof IPublicAPIEvent>(
-      evt : TEventName,
-      arg : IEventPayload<IPublicAPIEvent, TEventName>
-    ) => {
-      if (!contentInfos.currentContentCanceller.isUsed) {
-        this.trigger(evt, arg);
-      }
-    };
-
-    const availableAudioTracks = this.getAvailableAudioTracks();
-    triggerEventIfNotStopped("availableAudioTracksChange", availableAudioTracks);
-    const availableTextTracks = this.getAvailableTextTracks();
-    triggerEventIfNotStopped("availableTextTracksChange", availableTextTracks);
-    const availableVideoTracks = this.getAvailableVideoTracks();
-    triggerEventIfNotStopped("availableVideoTracksChange", availableVideoTracks);
+    this._priv_triggerEventIfNotStopped("availableAudioTracksChange",
+                                        this.getAvailableAudioTracks(),
+                                        cancelSignal);
+    this._priv_triggerEventIfNotStopped("availableTextTracksChange",
+                                        this.getAvailableTextTracks(),
+                                        cancelSignal);
+    this._priv_triggerEventIfNotStopped("availableVideoTracksChange",
+                                        this.getAvailableVideoTracks(),
+                                        cancelSignal);
 
     const trackChoiceManager = this._priv_contentInfos?.trackChoiceManager;
 
     // Emit intial events for the Period
     if (!isNullOrUndefined(trackChoiceManager)) {
       const audioTrack = trackChoiceManager.getChosenAudioTrack(period);
-      triggerEventIfNotStopped("audioTrackChange", audioTrack);
+      this._priv_triggerEventIfNotStopped("audioTrackChange",
+                                          audioTrack,
+                                          cancelSignal);
       const textTrack = trackChoiceManager.getChosenTextTrack(period);
-      triggerEventIfNotStopped("textTrackChange", textTrack);
+      this._priv_triggerEventIfNotStopped("textTrackChange",
+                                          textTrack,
+                                          cancelSignal);
       const videoTrack = trackChoiceManager.getChosenVideoTrack(period);
-      triggerEventIfNotStopped("videoTrackChange", videoTrack);
+      this._priv_triggerEventIfNotStopped("videoTrackChange",
+                                          videoTrack,
+                                          cancelSignal);
     } else {
-      triggerEventIfNotStopped("audioTrackChange", null);
-      triggerEventIfNotStopped("textTrackChange", null);
-      triggerEventIfNotStopped("videoTrackChange", null);
+      this._priv_triggerEventIfNotStopped("audioTrackChange", null, cancelSignal);
+      this._priv_triggerEventIfNotStopped("textTrackChange", null, cancelSignal);
+      this._priv_triggerEventIfNotStopped("videoTrackChange", null, cancelSignal);
     }
 
     this._priv_triggerAvailableBitratesChangeEvent("availableAudioBitratesChange",
-                                                   this.getAvailableAudioBitrates());
+                                                   this.getAvailableAudioBitrates(),
+                                                   cancelSignal);
     if (contentInfos.currentContentCanceller.isUsed) {
       return;
     }
     this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange",
-                                                   this.getAvailableVideoBitrates());
+                                                   this.getAvailableVideoBitrates(),
+                                                   cancelSignal);
     if (contentInfos.currentContentCanceller.isUsed) {
       return;
     }
     const audioBitrate = this._priv_getCurrentRepresentations()?.audio?.bitrate ?? -1;
-    this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange", audioBitrate);
+    this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange",
+                                                audioBitrate,
+                                                cancelSignal);
     if (contentInfos.currentContentCanceller.isUsed) {
       return;
     }
 
     const videoBitrate = this._priv_getCurrentRepresentations()?.video?.bitrate ?? -1;
-    this._priv_triggerCurrentBitrateChangeEvent("videoBitrateChange", videoBitrate);
+    this._priv_triggerCurrentBitrateChangeEvent("videoBitrateChange",
+                                                videoBitrate,
+                                                cancelSignal);
   }
 
   /**
@@ -2574,6 +2606,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     const { trackChoiceManager } = contentInfos;
+    const cancelSignal = contentInfos.currentContentCanceller.signal;
     if (trackChoiceManager !== null &&
         currentPeriod !== null && !isNullOrUndefined(period) &&
         period.id === currentPeriod.id)
@@ -2581,23 +2614,29 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       switch (type) {
         case "audio":
           const audioTrack = trackChoiceManager.getChosenAudioTrack(currentPeriod);
-          this.trigger("audioTrackChange", audioTrack);
+          this._priv_triggerEventIfNotStopped("audioTrackChange",
+                                              audioTrack,
+                                              cancelSignal);
 
           const availableAudioBitrates = this.getAvailableAudioBitrates();
           this._priv_triggerAvailableBitratesChangeEvent("availableAudioBitratesChange",
-                                                         availableAudioBitrates);
+                                                         availableAudioBitrates,
+                                                         cancelSignal);
           break;
         case "text":
           const textTrack = trackChoiceManager.getChosenTextTrack(currentPeriod);
-          this.trigger("textTrackChange", textTrack);
+          this._priv_triggerEventIfNotStopped("textTrackChange", textTrack, cancelSignal);
           break;
         case "video":
           const videoTrack = trackChoiceManager.getChosenVideoTrack(currentPeriod);
-          this.trigger("videoTrackChange", videoTrack);
+          this._priv_triggerEventIfNotStopped("videoTrackChange",
+                                              videoTrack,
+                                              cancelSignal);
 
           const availableVideoBitrates = this.getAvailableVideoBitrates();
           this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange",
-                                                         availableVideoBitrates);
+                                                         availableVideoBitrates,
+                                                         cancelSignal);
           break;
       }
     }
@@ -2640,10 +2679,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         currentPeriod !== null &&
         currentPeriod.id === period.id)
     {
+      const cancelSignal = this._priv_contentInfos.currentContentCanceller.signal;
       if (type === "video") {
-        this._priv_triggerCurrentBitrateChangeEvent("videoBitrateChange", bitrate);
+        this._priv_triggerCurrentBitrateChangeEvent("videoBitrateChange",
+                                                    bitrate,
+                                                    cancelSignal);
       } else if (type === "audio") {
-        this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange", bitrate);
+        this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange",
+                                                    bitrate,
+                                                    cancelSignal);
       }
     }
   }
@@ -2753,13 +2797,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * the previously stored value.
    * @param {string} event
    * @param {Array.<number>} newVal
+   * @param {Object} currentContentCancelSignal
    */
   private _priv_triggerAvailableBitratesChangeEvent(
     event : "availableAudioBitratesChange" | "availableVideoBitratesChange",
-    newVal : number[]
+    newVal : number[],
+    currentContentCancelSignal  : CancellationSignal
   ) : void {
     const prevVal = this._priv_contentEventsMemory[event];
-    if (prevVal === undefined || !areArraysOfNumbersEqual(newVal, prevVal)) {
+    if (!currentContentCancelSignal.isCancelled &&
+        (prevVal === undefined || !areArraysOfNumbersEqual(newVal, prevVal)))
+    {
       this._priv_contentEventsMemory[event] = newVal;
       this.trigger(event, newVal);
     }
@@ -2770,12 +2818,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * previously stored value.
    * @param {string} event
    * @param {number} newVal
+   * @param {Object} currentContentCancelSignal
    */
   private _priv_triggerCurrentBitrateChangeEvent(
     event : "audioBitrateChange" | "videoBitrateChange",
-    newVal : number
+    newVal : number,
+    currentContentCancelSignal  : CancellationSignal
   ) : void {
-    if (newVal !== this._priv_contentEventsMemory[event]) {
+    if (!currentContentCancelSignal.isCancelled &&
+        newVal !== this._priv_contentEventsMemory[event])
+    {
       this._priv_contentEventsMemory[event] = newVal;
       this.trigger(event, newVal);
     }
@@ -2794,6 +2846,21 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return null;
     }
     return activeRepresentations[currentPeriod.id];
+  }
+
+  /**
+   * @param {string} evt
+   * @param {*} arg
+   * @param {Object} currentContentCancelSignal
+   */
+  private _priv_triggerEventIfNotStopped<TEventName extends keyof IPublicAPIEvent>(
+    evt : TEventName,
+    arg : IEventPayload<IPublicAPIEvent, TEventName>,
+    currentContentCancelSignal  : CancellationSignal
+  ) {
+    if (!currentContentCancelSignal.isCancelled) {
+      this.trigger(evt, arg);
+    }
   }
 
   /**
@@ -2828,40 +2895,30 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     mediaElementTrackChoiceManager
       .setPreferredVideoTracks(this._priv_preferredVideoTracks, true);
 
-    this.trigger("availableAudioTracksChange",
-                 mediaElementTrackChoiceManager.getAvailableAudioTracks());
-    if (cancelSignal.isCancelled) {
-      return mediaElementTrackChoiceManager;
-    }
-    this.trigger("availableVideoTracksChange",
-                 mediaElementTrackChoiceManager.getAvailableVideoTracks());
-    if (cancelSignal.isCancelled) {
-      return mediaElementTrackChoiceManager;
-    }
-    this.trigger("availableTextTracksChange",
-                 mediaElementTrackChoiceManager.getAvailableTextTracks());
-    if (cancelSignal.isCancelled) {
-      return mediaElementTrackChoiceManager;
-    }
-
-    this.trigger("audioTrackChange",
-                 mediaElementTrackChoiceManager.getChosenAudioTrack()
-                 ?? null);
-    if (cancelSignal.isCancelled) {
-      return mediaElementTrackChoiceManager;
-    }
-    this.trigger("textTrackChange",
-                 mediaElementTrackChoiceManager.getChosenTextTrack()
-                 ?? null);
-    if (cancelSignal.isCancelled) {
-      return mediaElementTrackChoiceManager;
-    }
-    this.trigger("videoTrackChange",
-                 mediaElementTrackChoiceManager.getChosenVideoTrack()
-                 ?? null);
-    if (cancelSignal.isCancelled) {
-      return mediaElementTrackChoiceManager;
-    }
+    this._priv_triggerEventIfNotStopped(
+      "availableAudioTracksChange",
+      mediaElementTrackChoiceManager.getAvailableAudioTracks(),
+      cancelSignal);
+    this._priv_triggerEventIfNotStopped(
+      "availableVideoTracksChange",
+      mediaElementTrackChoiceManager.getAvailableVideoTracks(),
+      cancelSignal);
+    this._priv_triggerEventIfNotStopped(
+      "availableTextTracksChange",
+      mediaElementTrackChoiceManager.getAvailableTextTracks(),
+      cancelSignal);
+    this._priv_triggerEventIfNotStopped(
+      "audioTrackChange",
+      mediaElementTrackChoiceManager.getChosenAudioTrack() ?? null,
+      cancelSignal);
+    this._priv_triggerEventIfNotStopped(
+      "textTrackChange",
+      mediaElementTrackChoiceManager.getChosenTextTrack() ?? null,
+      cancelSignal);
+    this._priv_triggerEventIfNotStopped(
+      "videoTrackChange",
+      mediaElementTrackChoiceManager.getChosenVideoTrack() ?? null,
+      cancelSignal);
 
     mediaElementTrackChoiceManager
       .addEventListener("availableVideoTracksChange", (val) =>
