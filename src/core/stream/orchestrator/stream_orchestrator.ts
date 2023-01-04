@@ -216,7 +216,7 @@ export default function StreamOrchestrator(
         ...callbacks,
         waitingMediaSourceReload(payload : IWaitingMediaSourceReloadPayload) : void {
           // Only reload the MediaSource when the more immediately required
-          // Period is the one asking for it
+          // Period is the one it is asked for
           const firstPeriod = periodList.head();
           if (firstPeriod === undefined ||
               firstPeriod.id !== payload.period.id)
@@ -497,6 +497,7 @@ export default function StreamOrchestrator(
     };
 
     PeriodStream(periodStreamArgs, periodStreamCallbacks, currentStreamCanceller.signal);
+    handleUnexpectedManifestUpdates(currentStreamCanceller.signal);
 
     /**
      * Create `PeriodStream` for the next Period, specified under `nextPeriod`.
@@ -522,6 +523,65 @@ export default function StreamOrchestrator(
                                      nextPeriod,
                                      consecutivePeriodStreamCb,
                                      nextStreamInfo.canceller.signal);
+    }
+
+    /**
+     * Check on Manifest updates that the Manifest still appears coherent
+     * regarding its internal Period structure to what we created for now,
+     * handling cases where it does not.
+     * @param {Object} innerCancelSignal - When that cancel signal emits, stop
+     * performing checks.
+     */
+    function handleUnexpectedManifestUpdates(
+      innerCancelSignal : CancellationSignal
+    ) {
+      manifest.addEventListener("manifestUpdate", updates => {
+        // If current period has been unexpectedly removed, ask to reload
+        for (const period of updates.removedPeriods) {
+          if (period.id === basePeriod.id) {
+            // Check that this was not just one  of the earliests Periods that
+            // was removed, in which case this is a normal cleanup scenario
+            if (manifest.periods.length > 0 &&
+                manifest.periods[0].start <= period.start)
+            {
+              // We begin by scheduling a micro-task to reduce the possibility of race
+              // conditions where the inner logic would be called synchronously before
+              // the next observation (which may reflect very different playback
+              // conditions) is actually received.
+              return nextTick(() => {
+                if (innerCancelSignal.isCancelled()) {
+                  return;
+                }
+                return callbacks.needsMediaSourceReload({ timeOffset: 0,
+                                                          minimumPosition: undefined,
+                                                          maximumPosition: undefined });
+              });
+            }
+          } else if (period.start > basePeriod.start) {
+            break;
+          }
+        }
+
+        if (updates.addedPeriods.length > 0) {
+          // If the next period changed, cancel the next created one if one
+          if (nextStreamInfo !== null) {
+            const newNextPeriod = manifest.getPeriodAfter(basePeriod);
+            if (newNextPeriod === null ||
+                nextStreamInfo.period.id !== newNextPeriod.id)
+            {
+              // current Stream is active, destroy next Stream if created
+              log.warn("Stream: Destroying next PeriodStream due to new one being added",
+                       bufferType, nextStreamInfo.period.start);
+              consecutivePeriodStreamCb
+                .periodStreamCleared({ type: bufferType,
+                                       manifest,
+                                       period: nextStreamInfo.period });
+              nextStreamInfo.canceller.cancel();
+              nextStreamInfo = null;
+            }
+          }
+        }
+      }, innerCancelSignal);
     }
   }
 }
