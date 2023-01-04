@@ -109,14 +109,38 @@ The `networkConfig` `loadVideo` option has been entirely renamed, both the
 option itself, renamed to [`requestConfig`](../../api/Loading_a_Content.md#requestconfig),
 and its inner properties.
 
+Moreover, the `offlineRetry` option has been removed because it was too
+unreliable for real offline detection. If you miss this feature and wish for a
+replacement, please open an issue!
+
 Basically what was written previously as:
 ```js
+rxPlayer.loadVideo({
+  networkConfig: {
+    segmentRetry: 2,
+    segmentRequestTimeout: 15000,
+    manifestRetry: 3,
+    manifestRequestTimeout : 7000,
+  },
+  // ...
+});
 ```
 Can now be written as:
 ```js
+rxPlayer.loadVideo({
+  requestConfig: {
+    segment: {
+      maxRetry: 2,
+      timeout: 15000,
+    },
+    manifest: {
+      maxRetry: 3,
+      timeout: 7000,
+    },
+  },
+  // ...
+});
 ```
-
-XXX TODO
 
 
 ### `audioTrackSwitchingMode`
