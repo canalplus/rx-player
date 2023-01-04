@@ -35,6 +35,9 @@ export interface IAdaptationStreamCallbacks<T>
   /**
    * Callback called when a stream cannot go forward loading segments because it
    * needs the `MediaSource` to be reloaded first.
+   *
+   * The MediaSource will only be reloaded once the communicated Period is the
+   * current one.
    */
   waitingMediaSourceReload(payload : IWaitingMediaSourceReloadPayload) : void;
   /**
@@ -74,7 +77,12 @@ export interface IRepresentationChangePayload {
 
 /** Payload for the `waitingMediaSourceReload` callback. */
 export interface IWaitingMediaSourceReloadPayload {
-  /** Period concerned. */
+  /**
+   * Period asking for the reload.
+   *
+   * The MediaSource will only be reloaded if that Period becomes the current
+   * one.
+   */
   period : Period;
   /** Buffer type concerned. */
   bufferType : IBufferType;
