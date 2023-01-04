@@ -390,6 +390,38 @@ export default function AdaptationStream<T>(
       updatedCallbacks,
       adapStreamCanceller.signal,
     );
+
+    // Reload if the Representation disappears from the Manifest.
+    manifest.addEventListener(
+      "manifestUpdate",
+      (updates) => {
+        for (const element of updates.updatedPeriods) {
+          if (element.period.id === period.id) {
+            for (const updated of element.result.updatedAdaptations) {
+              if (updated.adaptation.id === adaptation.id) {
+                for (const removedRepresentation of updated.removedRepresentations) {
+                  if (removedRepresentation.id === representation.id) {
+                    if (terminatingRepStreamCanceller.isUsed()) {
+                      return;
+                    }
+                    callbacks.waitingMediaSourceReload({
+                      bufferType: adaptation.type,
+                      period,
+                      timeOffset: 0,
+                      stayInPeriod: true,
+                    });
+                    return;
+                  }
+                }
+              }
+            }
+          } else if (element.period.start > period.start) {
+            break;
+          }
+        }
+      },
+      terminatingRepStreamCanceller.signal,
+    );
   }
 
   /**

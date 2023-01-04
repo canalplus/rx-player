@@ -91,7 +91,7 @@ export default function PeriodStream(
   callbacks: IPeriodStreamCallbacks,
   parentCancelSignal: CancellationSignal,
 ): void {
-  const { period } = content;
+  const { manifest, period } = content;
 
   /**
    * Emits the chosen Adaptation for the current type.
@@ -197,6 +197,30 @@ export default function PeriodStream(
           );
         }
 
+        // Reload if the Adaptation disappears from the Manifest.
+        manifest.addEventListener(
+          "manifestUpdate",
+          (updates) => {
+            for (const element of updates.updatedPeriods) {
+              if (element.period.id === period.id) {
+                for (const removedAdaptation of element.result.removedAdaptations) {
+                  if (removedAdaptation.id === adaptation.id) {
+                    askForMediaSourceReload(
+                      relativePosAfterSwitch,
+                      true,
+                      streamCanceller.signal,
+                    );
+                    return;
+                  }
+                }
+              } else if (element.period.start > period.start) {
+                break;
+              }
+            }
+          },
+          streamCanceller.signal,
+        );
+
         log.info(
           `Stream: Updating ${bufferType} adaptation`,
           `A: ${adaptation.id}`,
@@ -276,7 +300,6 @@ export default function PeriodStream(
     segmentBuffer: SegmentBuffer,
     cancelSignal: CancellationSignal,
   ): void {
-    const { manifest } = content;
     const adaptationPlaybackObserver = createAdaptationStreamPlaybackObserver(
       playbackObserver,
       segmentBuffer,
@@ -366,6 +389,9 @@ export default function PeriodStream(
     nextTick(() => {
       playbackObserver.listen(
         () => {
+          if (cancelSignal.isCancelled()) {
+            return;
+          }
           callbacks.waitingMediaSourceReload({
             bufferType,
             period,
