@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import nextTick from "next-tick";
 import config from "../../../config";
 import {
   formatError,
@@ -46,6 +45,7 @@ import AdaptationStream, {
   IAdaptationStreamPlaybackObservation,
 } from "../adaptation";
 import { IRepresentationsChoice } from "../representation";
+import createReloadRequest from "../utils/create_reload_request";
 import {
   IPeriodStreamArguments,
   IPeriodStreamCallbacks,
@@ -135,7 +135,10 @@ export default function PeriodStream(
         if (segmentBufferStatus.type === "initialized") {
           log.info(`Stream: Clearing previous ${bufferType} SegmentBuffer`);
           if (SegmentBuffersStore.isNative(bufferType)) {
-            return askForMediaSourceReload(0, streamCanceller.signal);
+            return createReloadRequest(playbackObserver, ({ position, autoPlay }) => {
+              callbacks
+                .waitingMediaSourceReload({ bufferType, period, position, autoPlay });
+            }, 0, period, streamCanceller.signal);
           } else {
             const periodEnd = period.end ?? Infinity;
             if (period.start > periodEnd) {
@@ -174,7 +177,7 @@ export default function PeriodStream(
        * delta to the current position so we can re-play back some media in the
        * new Adaptation to give some context back.
        * This value contains this relative position, in seconds.
-       * @see askForMediaSourceReload
+       * @see createMediaSourceReloadRequester
        */
       const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
       const relativePosAfterSwitch =
@@ -187,8 +190,29 @@ export default function PeriodStream(
       if (SegmentBuffersStore.isNative(bufferType) &&
           segmentBuffersStore.getStatus(bufferType).type === "disabled")
       {
-        return askForMediaSourceReload(relativePosAfterSwitch, streamCanceller.signal);
+        return createReloadRequest(playbackObserver, ({ position, autoPlay }) => {
+          callbacks.waitingMediaSourceReload({ bufferType, period, position, autoPlay });
+        }, relativePosAfterSwitch, period, streamCanceller.signal);
       }
+
+      // Reload if the Adaptation disappears from the manifest
+      manifest.addEventListener("manifestUpdate", updates => {
+        // If current period has been unexpectedly removed, ask to reload
+        for (const element of updates.updatedPeriods) {
+          if (element.period.id === period.id) {
+            for (const adap of element.result.removedAdaptations) {
+              if (adap.id === adaptation.id) {
+                return createReloadRequest(playbackObserver, ({ position, autoPlay }) => {
+                  callbacks
+                    .waitingMediaSourceReload({ bufferType, period, position, autoPlay });
+                }, relativePosAfterSwitch, period, streamCanceller.signal);
+              }
+            }
+          } else if (element.period.start > period.start) {
+            break;
+          }
+        }
+      }, currentStreamCanceller.signal);
 
       const { adaptation, representations } = choice;
       log.info(`Stream: Updating ${bufferType} adaptation`,
@@ -214,7 +238,9 @@ export default function PeriodStream(
                                                    playbackInfos,
                                                    options);
       if (strategy.type === "needs-reload") {
-        return askForMediaSourceReload(relativePosAfterSwitch, streamCanceller.signal);
+        return createReloadRequest(playbackObserver, ({ position, autoPlay }) => {
+          callbacks.waitingMediaSourceReload({ bufferType, period, position, autoPlay });
+        }, relativePosAfterSwitch, period, streamCanceller.signal);
       }
 
       await segmentBuffersStore.waitForUsableBuffers(streamCanceller.signal);
@@ -308,51 +334,6 @@ export default function PeriodStream(
                 error instanceof Error ? error : "");
       callbacks.error(error);
     }
-  }
-
-  /**
-   * Regularly ask to reload the MediaSource on each playback observation
-   * performed by the playback observer.
-   *
-   * If and only if the Period currently played corresponds to the concerned
-   * Period, applies an offset to the reloaded position corresponding to
-   * `deltaPos`.
-   * This can be useful for example when switching the audio/video tracks, where
-   * you might want to give back some context if that was the currently played
-   * track.
-   *
-   * @param {number} deltaPos - If the concerned Period is playing at the time
-   * this function is called, we will add this value, in seconds, to the current
-   * position to indicate the position we should reload at.
-   * This value allows to give back context (by replaying some media data) after
-   * a switch.
-   * @param {Object} cancelSignal
-   */
-  function askForMediaSourceReload(
-    deltaPos : number,
-    cancelSignal : CancellationSignal
-  ) : void {
-    // We begin by scheduling a micro-task to reduce the possibility of race
-    // conditions where `askForMediaSourceReload` would be called synchronously before
-    // the next observation (which may reflect very different playback conditions)
-    // is actually received.
-    // It can happen when `askForMediaSourceReload` is called as a side-effect of
-    // the same event that triggers the playback observation to be emitted.
-    nextTick(() => {
-      playbackObserver.listen((observation) => {
-        const currentTime = playbackObserver.getCurrentTime();
-        const pos = currentTime + deltaPos;
-
-        // Bind to Period start and end
-        const position = Math.min(Math.max(period.start, pos),
-                                  period.end ?? Infinity);
-        const autoPlay = !(observation.paused.pending ?? playbackObserver.getIsPaused());
-        callbacks.waitingMediaSourceReload({ bufferType,
-                                             period,
-                                             position,
-                                             autoPlay });
-      }, { includeLastObservation: true, clearSignal: cancelSignal });
-    });
   }
 }
 
