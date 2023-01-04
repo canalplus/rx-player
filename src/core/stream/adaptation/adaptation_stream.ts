@@ -193,15 +193,17 @@ export default function AdaptationStream<T>(
         // the next observation (which may reflect very different playback conditions)
         // is actually received.
         return nextTick(() => {
-          if (fnCancelSignal.isCancelled()) {
-            return;
-          }
-          const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
-          const timeOffset = DELTA_POSITION_AFTER_RELOAD.bitrateSwitch;
-          return callbacks.waitingMediaSourceReload({ bufferType: adaptation.type,
-                                                      period,
-                                                      timeOffset,
-                                                      stayInPeriod: true });
+          playbackObserver.listen(() => {
+            if (fnCancelSignal.isCancelled()) {
+              return;
+            }
+            const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
+            const timeOffset = DELTA_POSITION_AFTER_RELOAD.bitrateSwitch;
+            return callbacks.waitingMediaSourceReload({ bufferType: adaptation.type,
+                                                        period,
+                                                        timeOffset,
+                                                        stayInPeriod: true });
+          }, { includeLastObservation: true, clearSignal: fnCancelSignal });
         });
 
       case "flush-buffer": // Clean + flush
@@ -395,6 +397,34 @@ export default function AdaptationStream<T>(
                                       fastSwitchThreshold } },
                          updatedCallbacks,
                          fnCancelSignal);
+
+    // reload if the Representation disappears from the Manifest
+    manifest.addEventListener("manifestUpdate", updates => {
+      // If current period has been unexpectedly removed, ask to reload
+      for (const element of updates.updatedPeriods) {
+        if (element.period.id === period.id) {
+          for (const updated of element.result.updatedAdaptations) {
+            if (updated.adaptation.id === adaptation.id) {
+              for (const rep of updated.removedRepresentations) {
+                if (rep.id === representation.id) {
+                  if (fnCancelSignal.isCancelled()) {
+                    return;
+                  }
+                  return callbacks.waitingMediaSourceReload({
+                    bufferType: adaptation.type,
+                    period,
+                    timeOffset: 0,
+                    stayInPeriod: true,
+                  });
+                }
+              }
+            }
+          }
+        } else if (element.period.start > period.start) {
+          break;
+        }
+      }
+    }, fnCancelSignal);
   }
 
   /**
