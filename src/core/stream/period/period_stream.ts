@@ -175,7 +175,7 @@ export default function PeriodStream(
        * delta to the current position so we can re-play back some media in the
        * new Adaptation to give some context back.
        * This value contains this relative position, in seconds.
-       * @see askForMediaSourceReload
+       * @see createMediaSourceReloadRequester
        */
       const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
       const relativePosAfterSwitch =
@@ -192,6 +192,24 @@ export default function PeriodStream(
                                        true,
                                        streamCanceller.signal);
       }
+
+      // Reload if the Adaptation disappears from the manifest
+      manifest.addEventListener("manifestUpdate", updates => {
+        // If current period has been unexpectedly removed, ask to reload
+        for (const element of updates.updatedPeriods) {
+          if (element.period.id === period.id) {
+            for (const adap of element.result.removedAdaptations) {
+              if (adap.id === adaptation.id) {
+                return askForMediaSourceReload(relativePosAfterSwitch,
+                                               true,
+                                               streamCanceller.signal);
+              }
+            }
+          } else if (element.period.start > period.start) {
+            break;
+          }
+        }
+      }, currentStreamCanceller.signal);
 
       const { adaptation, representations } = choice;
       log.info(`Stream: Updating ${bufferType} adaptation`,
@@ -346,6 +364,9 @@ export default function PeriodStream(
     // the same event that triggers the playback observation to be emitted.
     nextTick(() => {
       playbackObserver.listen(() => {
+        if (cancelSignal.isCancelled()) {
+          return;
+        }
         callbacks.waitingMediaSourceReload({ bufferType,
                                              period,
                                              timeOffset,
