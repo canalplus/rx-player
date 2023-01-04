@@ -1,4 +1,3 @@
-import nextTick from "next-tick";
 import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
@@ -18,6 +17,7 @@ import RepresentationStream, {
   IRepresentationStreamCallbacks,
   ITerminationOrder,
 } from "../representation";
+import createReloadRequest from "../utils/create_reload_request";
 import getRepresentationsSwitchingStrategy from "./get_representations_switch_strategy";
 import {
   IAdaptationStreamArguments,
@@ -185,27 +185,11 @@ export default function AdaptationStream<T>(
       case "continue":
         break; // nothing to do
       case "needs-reload": // Just ask to reload
-        // We begin by scheduling a micro-task to reduce the possibility of race
-        // conditions where the inner logic would be called synchronously before
-        // the next observation (which may reflect very different playback conditions)
-        // is actually received.
-        return nextTick(() => {
-          const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
-          playbackObserver.listen((observation) => {
-            const currentTime = playbackObserver.getCurrentTime();
-            const pos = currentTime + DELTA_POSITION_AFTER_RELOAD.bitrateSwitch;
-
-            // Bind to Period start and end
-            const position = Math.min(Math.max(period.start, pos),
-                                      period.end ?? Infinity);
-            const autoPlay = !(observation.paused.pending ??
-                               playbackObserver.getIsPaused());
-            callbacks.waitingMediaSourceReload({ bufferType: adaptation.type,
-                                                 period,
-                                                 position,
-                                                 autoPlay });
-          }, { includeLastObservation: true, clearSignal: fnCancelSignal });
-        });
+        const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
+        const bufferType = adaptation.type;
+        return createReloadRequest(playbackObserver, ({ position, autoPlay }) => {
+          callbacks.waitingMediaSourceReload({ bufferType, period, position, autoPlay });
+        }, DELTA_POSITION_AFTER_RELOAD.bitrateSwitch, period, fnCancelSignal);
 
       case "flush-buffer": // Clean + flush
       case "clean-buffer": // Just clean
@@ -388,6 +372,26 @@ export default function AdaptationStream<T>(
                                       fastSwitchThreshold } },
                          updatedCallbacks,
                          fnCancelSignal);
+
+    // reload if the Representation disappears from the Manifest
+    manifest.addEventListener("manifestUpdate", updates => {
+      // If current period has been unexpectedly removed, ask to reload
+      for (const element of updates.updatedPeriods) {
+        if (element.period.id === period.id) {
+          for (const adap of element.result.removedAdaptations) {
+            if (adap.id === adaptation.id) {
+              const bufferType = adaptation.type;
+              return createReloadRequest(playbackObserver, ({ position, autoPlay }) => {
+                callbacks
+                  .waitingMediaSourceReload({ bufferType, period, position, autoPlay });
+              }, 0, period, fnCancelSignal);
+            }
+          }
+        } else if (element.period.start > period.start) {
+          break;
+        }
+      }
+    }, fnCancelSignal);
   }
 
   /**
