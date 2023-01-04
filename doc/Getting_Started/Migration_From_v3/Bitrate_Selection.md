@@ -217,6 +217,7 @@ if (representations500.length > 0) {
 ### Reacting to the lock "breaking"
 
 XXX TODO
+In rare and very specific situations
 
 ### Switching at new "Periods"
 
@@ -267,5 +268,7 @@ if (periods.length > 0) {
 ```
 
 ### Locking each time a track is chosen
+
+XXX TODO
 
 ## Full examples of bitrate selection replacements
