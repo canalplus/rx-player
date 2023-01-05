@@ -375,7 +375,6 @@ export default function AdaptationStream<T>(
 
     // reload if the Representation disappears from the Manifest
     manifest.addEventListener("manifestUpdate", updates => {
-      // If current period has been unexpectedly removed, ask to reload
       for (const element of updates.updatedPeriods) {
         if (element.period.id === period.id) {
           for (const adap of element.result.removedAdaptations) {
