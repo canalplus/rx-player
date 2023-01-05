@@ -54,7 +54,7 @@ export default function createReloadRequest (
   // to postpone it after other potential synchronous solutions from other
   // modules have been tested.
   //
-  // At last, because reloading is such an agressive situation, we prefer to
+  // At last, because reloading is such an aggressive situation, we prefer to
   // trigger it always asynchronously so behavior is better predictible.
   nextTick(() => {
     playbackObserver.listen((observation) => {

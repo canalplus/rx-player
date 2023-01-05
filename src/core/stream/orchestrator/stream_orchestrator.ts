@@ -542,7 +542,6 @@ export default function StreamOrchestrator(
             if (newNextPeriod === null ||
                 nextStreamInfo.period.id !== newNextPeriod.id)
             {
-              // current Stream is active, destroy next Stream if created
               log.warn("Stream: Destroying next PeriodStream due to new one being added",
                        bufferType, nextStreamInfo.period.start);
               consecutivePeriodStreamCb
