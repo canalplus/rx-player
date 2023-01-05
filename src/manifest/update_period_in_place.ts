@@ -124,19 +124,19 @@ export default function updatePeriodInPlace(
  * Period.
  */
 export interface IUpdatedPeriodResult {
-  // XXX TODO doc
-  /** `true` if at least one Adaptation has been updated. */
+  /** Information on Adaptations that have been updated. */
   updatedAdaptations : Array<{
+    /** The concerned Adaptation. */
     adaptation: Adaptation;
-    /** `true` if at least one Representation has been updated. */
+    /** Representations that have been updated. */
     updatedRepresentations : Representation[];
-    /** `true` if at least one Representation has been removed. */
+    /** Representations that have been removed from the Adaptation. */
     removedRepresentations : Representation[];
-    /** `true` if at least one Representation has been added. */
+    /** Representations that have been added to the Adaptation. */
     addedRepresentations : Representation[];
   }>;
-  /** `true` if at least one Adaptation has been removed. */
+  /** Adaptation that have been removed from the Period. */
   removedAdaptations : Adaptation[];
-  /** `true` if at least one Adaptation has been added. */
+  /** Adaptation that have been added to the Period. */
   addedAdaptations : Adaptation[];
 }
