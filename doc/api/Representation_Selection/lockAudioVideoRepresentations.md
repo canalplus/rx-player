@@ -84,7 +84,7 @@ const audioTrack = rxPlayer.getAudioTrack(secondPeriod.id);
 
 rxPlayer.lockAudioRepresentations({
   // we will just lock the first one here
-  representations: [audioTrack.representations[0].id,
+  representations: [audioTrack.representations[0].id],
   periodId: secondPeriod.id,
 });
 ```
@@ -248,12 +248,18 @@ rxPlayer.addEventListener("trackUpdate", (evt) => {
     if (evt.trackType === "video") {
       const videoTrack = rxPlayer.getVideoTrack(evt.period.id);
       if (videoTrack.representations.length > 0) {
-        rxPlayer.lockVideoRepresentations([videoTrack.representations[0].id]);
+        rxPlayer.lockVideoRepresentations({
+          representations: [videoTrack.representations[0].id],
+          periodId: evt.period.id,
+        });
       }
     } else if (evt.trackType === "audio") {
       const audioTrack = rxPlayer.getAudioTrack(evt.period.id);
       if (audioTrack.representations.length > 0) {
-        rxPlayer.lockAudioRepresentations([audioTrack.representations[0].id]);
+        rxPlayer.lockAudioRepresentations({
+          representations: [audioTrack.representations[0].id],
+          periodId: evt.period.id,
+        });
       }
     }
   }
