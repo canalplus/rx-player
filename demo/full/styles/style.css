@@ -96,7 +96,7 @@ body {
 }
 
 .video-player-content {
-  max-width: 1000px;
+  max-width: 1050px;
   margin: auto;
   text-align: left;
 }
@@ -425,6 +425,13 @@ body {
   margin: 5px;
 }
 
+.option-desc {
+  font-weight: normal;
+  font-style: italic;
+  color: #242424;
+  font-size: 0.95em;
+}
+
 .choice-input-button {
   font-family: "icons", sans-serif;
   border: solid 1px #d1d1d1;
@@ -639,6 +646,17 @@ body {
 
 .settings-button {
   width: auto;
+}
+
+.settings-title {
+  text-align: center;
+  margin-bottom: 12px;
+  font-size: 1.5em;
+}
+
+.settings-note {
+  font-style: italic;
+  text-align: center;
 }
 
 .volume {
@@ -1212,7 +1230,7 @@ input:checked + .slider:before {
 }
 
 .loadVideooptions li {
-  padding: 5px 10px;
+  padding: 10px;
   border-top: dashed 1px black;
   display: flex;
   flex-direction: column;
@@ -1251,7 +1269,9 @@ select {
 }
 
 .settingsWrapper {
-  margin: 10px 0;
+  border: 1px dashed #d1d1d1;
+  padding: 10px;
+  margin-top: 10px;
 }
 
 .featureWrapperWithSelectMode {
