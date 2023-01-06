@@ -14,7 +14,6 @@ import ControlBar from "./ControlBar.jsx";
 import ContentList from "./ContentList.jsx";
 import Settings from "./Settings.jsx";
 import ErrorDisplayer from "./ErrorDisplayer.jsx";
-import LogDisplayer from "./LogDisplayer.jsx";
 import ChartsManager from "./charts/index.jsx";
 import PlayerKnobsSettings from "./PlayerKnobsSettings.jsx";
 import isEqual from "../lib/isEqual"
@@ -238,7 +237,6 @@ function Player() {
           }
         </div>
         <ChartsManager player={player} />
-        {player ?  <LogDisplayer player={player} /> : null}
       </div>
     </section>
   );
