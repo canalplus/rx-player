@@ -13,6 +13,8 @@ const defaultOptionsValues = {
   segmentRetry: 4,
   manifestRetry: 4,
   offlineRetry: Infinity,
+  segmentTimeout: 30000,
+  manifestTimeout: 30000,
   enableFastSwitching: true,
   audioTrackSwitchingMode: "reload",
   onCodecSwitch: "continue",

@@ -16,9 +16,7 @@ class Settings extends React.Component {
   constructor(...args) {
     super(...args);
 
-    this.state = {
-      ...defaultOptionsValues,
-    };
+    this.state = Object.assign({}, defaultOptionsValues);
   }
 
   getOptions() {
@@ -42,8 +40,10 @@ class Settings extends React.Component {
       onCodecSwitch,
       enableFastSwitching,
       segmentRetry,
+      segmentTimeout,
       manifestRetry,
       offlineRetry,
+      manifestTimeout,
     } = this.state;
     return {
       initOpts: {
@@ -69,77 +69,108 @@ class Settings extends React.Component {
         enableFastSwitching,
         networkConfig: {
           segmentRetry: parseFloat(segmentRetry),
+          segmentRequestTimeout: parseFloat(segmentTimeout),
           manifestRetry: parseFloat(manifestRetry),
+          manifestRequestTimeout: parseFloat(manifestTimeout),
           offlineRetry: parseFloat(offlineRetry),
         },
       },
     };
   }
 
-  onAutoPlayClick = (evt) =>
+  onAutoPlayClick(evt) {
     this.setState({ autoPlay: getCheckBoxValue(evt.target) });
+  }
 
-  onManualBrSwitchingModeChange = (value) =>
+  onManualBrSwitchingModeChange(value) {
     this.setState({ manualBrSwitchingMode: value });
+  }
 
-  onInitialVideoBrInput = (value) =>
+  onInitialVideoBrInput(value) {
     this.setState({ initialVideoBr: value });
+  }
 
-  onInitialAudioBrInput = (value) =>
+  onInitialAudioBrInput(value) {
     this.setState({ initialAudioBr: value });
+  }
 
-  onMinVideoBrInput = (value) =>
+  onMinVideoBrInput(value) {
     this.setState({ minVideoBr: value });
+  }
 
-  onMinAudioBrInput = (value) =>
+  onMinAudioBrInput(value) {
     this.setState({ minAudioBr: value });
+  }
 
-  onMaxVideoBrInput = (value) =>
+  onMaxVideoBrInput(value) {
     this.setState({ maxVideoBr: value });
+  }
 
-  onMaxAudioBrInput = (value) =>
+  onMaxAudioBrInput(value) {
     this.setState({ maxAudioBr: value });
+  }
 
-  onLimitVideoWidthClick = (evt) =>
+  onLimitVideoWidthClick(evt) {
     this.setState({ limitVideoWidth: getCheckBoxValue(evt.target) });
+  }
 
-  onThrottleVideoBitrateWhenHiddenClick = (evt) =>
+  onThrottleVideoBitrateWhenHiddenClick(evt) {
     this.setState({
       throttleVideoBitrateWhenHidden: getCheckBoxValue(evt.target),
     });
+  }
 
-  onStopAtEndClick = (evt) =>
+  onStopAtEndClick(evt) {
     this.setState({ stopAtEnd: getCheckBoxValue(evt.target) });
+  }
 
-  onSegmentRetryInput = (value) =>
+  onSegmentRetryInput(value) {
     this.setState({ segmentRetry: value });
+  }
 
-  onManifestRetryInput = (value) =>
+  onSegmentTimeoutInput(value) {
+    this.setState({ segmentTimeout: value });
+  }
+
+  onManifestRetryInput(value) {
     this.setState({ manifestRetry: value });
+  }
 
-  onOfflineRetryInput = (value) =>
+  onOfflineRetryInput(value) {
     this.setState({ offlineRetry: value });
+  }
 
-  onEnableFastSwitchingClick = (evt) =>
+  onManifestTimeoutInput(value) {
+    this.setState({ manifestTimeout: value });
+  }
+
+  onEnableFastSwitchingClick(evt) {
     this.setState({ enableFastSwitching: getCheckBoxValue(evt.target) });
+  }
 
-  onAudioTrackSwitchingModeChange = (value) =>
+  onAudioTrackSwitchingModeChange(value) {
     this.setState({ audioTrackSwitchingMode: value });
+  }
 
-  onCodecSwitchChange = (value) =>
+  onCodecSwitchChange(value) {
     this.setState({ onCodecSwitch: value });
+  }
 
-  onWantedBufferAheadInput = (value) =>
+  onWantedBufferAheadInput(value) {
     this.setState({ wantedBufferAhead: value });
-  
-  onMaxVideoBufferSizeInput = (value) => 
+  }
+
+  onMaxVideoBufferSizeInput(value) {
     this.setState({ maxVideoBufferSize: value});
+  }
 
-  onMaxBufferBehindInput = (value) =>
+  onMaxBufferBehindInput(value) {
     this.setState({ maxBufferBehind: value });
+  }
 
-  onMaxBufferAheadInput = (value) =>
+  onMaxBufferAheadInput(value) {
     this.setState({ maxBufferAhead: value });
+  }
 
   render() {
     const {
@@ -155,8 +186,10 @@ class Settings extends React.Component {
       throttleVideoBitrateWhenHidden,
       stopAtEnd,
       segmentRetry,
+      segmentTimeout,
       manifestRetry,
       offlineRetry,
+      manifestTimeout,
       enableFastSwitching,
       audioTrackSwitchingMode,
       onCodecSwitch,
@@ -175,33 +208,38 @@ class Settings extends React.Component {
       maxAudioBr,
       limitVideoWidth,
       throttleVideoBitrateWhenHidden,
-      onInitialVideoBrInput: this.onInitialVideoBrInput,
-      onInitialAudioBrInput: this.onInitialAudioBrInput,
-      onMinAudioBrInput: this.onMinAudioBrInput,
-      onMinVideoBrInput: this.onMinVideoBrInput,
-      onMaxAudioBrInput: this.onMaxAudioBrInput,
-      onMaxVideoBrInput: this.onMaxVideoBrInput,
-      onLimitVideoWidthClick: this.onLimitVideoWidthClick,
+      onInitialVideoBrInput: this.onInitialVideoBrInput.bind(this),
+      onInitialAudioBrInput: this.onInitialAudioBrInput.bind(this),
+      onMinAudioBrInput: this.onMinAudioBrInput.bind(this),
+      onMinVideoBrInput: this.onMinVideoBrInput.bind(this),
+      onMaxAudioBrInput: this.onMaxAudioBrInput.bind(this),
+      onMaxVideoBrInput: this.onMaxVideoBrInput.bind(this),
+      onLimitVideoWidthClick: this.onLimitVideoWidthClick.bind(this),
       onThrottleVideoBitrateWhenHiddenClick:
-        this.onThrottleVideoBitrateWhenHiddenClick,
+        this.onThrottleVideoBitrateWhenHiddenClick.bind(this),
     };
 
     const networkConfig = {
+      manifestTimeout,
       segmentRetry,
+      segmentTimeout,
       manifestRetry,
       offlineRetry,
-      onSegmentRetryInput: this.onSegmentRetryInput,
-      onManifestRetryInput: this.onManifestRetryInput,
-      onOfflineRetryInput: this.onOfflineRetryInput,
+      onSegmentRetryInput: this.onSegmentRetryInput.bind(this),
+      onSegmentTimeoutInput: this.onSegmentTimeoutInput.bind(this),
+      onManifestRetryInput: this.onManifestRetryInput.bind(this),
+      onManifestTimeoutInput: this.onManifestTimeoutInput.bind(this),
+      onOfflineRetryInput: this.onOfflineRetryInput.bind(this),
     };
 
     const trackSwitchModeConfig = {
       enableFastSwitching,
       audioTrackSwitchingMode,
       onCodecSwitch,
-      onEnableFastSwitchingClick: this.onEnableFastSwitchingClick,
-      onAudioTrackSwitchingModeChange: this.onAudioTrackSwitchingModeChange,
-      onCodecSwitchChange: this.onCodecSwitchChange,
+      onEnableFastSwitchingClick: this.onEnableFastSwitchingClick.bind(this),
+      onAudioTrackSwitchingModeChange: this
+        .onAudioTrackSwitchingModeChange.bind(this),
+      onCodecSwitchChange: this.onCodecSwitchChange.bind(this),
     };
 
     if (!this.props.showOptions) {
@@ -210,15 +248,24 @@ class Settings extends React.Component {
 
     return (
       <div className="settingsWrapper">
+        <div className="settings-title">
+          Content options
+        </div>
+        <div className="settings-note">
+          Note: Those options won't be retroactively applied to
+          already-loaded contents
+        </div>
         <div style={{ display: "flex" }}>
           <Option title="Playback">
             <Playback
               autoPlay={autoPlay}
               manualBrSwitchingMode={manualBrSwitchingMode}
-              onAutoPlayClick={this.onAutoPlayClick}
-              onManualBrSwitchingModeChange={this.onManualBrSwitchingModeChange}
+              onAutoPlayClick={this.onAutoPlayClick.bind(this)}
+              onManualBrSwitchingModeChange={
+                this.onManualBrSwitchingModeChange.bind(this)
+              }
               stopAtEnd={stopAtEnd}
-              onStopAtEndClick={this.onStopAtEndClick}
+              onStopAtEndClick={this.onStopAtEndClick.bind(this)}
             />
           </Option>
           <Option title="Video adaptive settings">
@@ -241,10 +288,14 @@ class Settings extends React.Component {
               maxVideoBufferSize={maxVideoBufferSize}
               maxBufferAhead={maxBufferAhead}
               maxBufferBehind={maxBufferBehind}
-              onWantedBufferAheadInput={this.onWantedBufferAheadInput}
-              onMaxBufferAheadInput={this.onMaxBufferAheadInput}
-              onMaxBufferBehindInput={this.onMaxBufferBehindInput}
-              onMaxVideoBufferSizeInput={this.onMaxVideoBufferSizeInput}
+              onWantedBufferAheadInput={
+                this.onWantedBufferAheadInput.bind(this)
+              }
+              onMaxBufferAheadInput={this.onMaxBufferAheadInput.bind(this)}
+              onMaxBufferBehindInput={this.onMaxBufferBehindInput.bind(this)}
+              onMaxVideoBufferSizeInput={
+                this.onMaxVideoBufferSizeInput.bind(this)
+              }
             />
           </Option>
         </div>
