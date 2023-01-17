@@ -234,6 +234,16 @@ function getEstimateReference(
     representations : Representation[],
     innerCancellationSignal : CancellationSignal
   ) : ISharedReference<IABREstimate> {
+    if (representations.length === 0) {
+      // No Representation given, return `null` as documented
+      return createSharedReference({
+        representation: null,
+        bitrate: undefined,
+        knownStableBitrate: undefined,
+        manual: false,
+        urgent: true,
+      });
+    }
     if (manualBitrateVal >= 0) {
       // A manual bitrate has been set. Just choose Representation according to it.
       const manualRepresentation = selectOptimalRepresentation(representations,
@@ -583,8 +593,10 @@ export interface IABREstimate {
   /**
    * The Representation considered as the most adapted to the current network
    * and playback conditions.
+   * `null` in the rare occurence where there is no `Representation` to choose
+   * from.
    */
-  representation: Representation;
+  representation: Representation | null;
   /**
    * If `true`, the current `representation` suggested should be switched to as
    * soon as possible. For example, you might want to interrupt all pending
