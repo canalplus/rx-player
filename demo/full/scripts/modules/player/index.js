@@ -22,6 +22,7 @@ import {
 import {
   DASH_WASM,
   METAPLAYLIST,
+  DEBUG_ELEMENT,
 } from "../../../../../src/experimental/features";
 import RxPlayer from "../../../../../src/minimal.ts";
 import { linkPlayerEventsToState } from "./events.js";
@@ -43,6 +44,7 @@ RxPlayer.addFeatures([
   IMAGE_BUFFER,
   SMOOTH,
   METAPLAYLIST,
+  DEBUG_ELEMENT,
 ]);
 
 /* eslint-disable no-undef */

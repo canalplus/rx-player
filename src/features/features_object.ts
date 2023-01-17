@@ -22,6 +22,7 @@ import { IFeaturesObject } from "./types";
  */
 const features : IFeaturesObject = { dashParsers: { wasm: null,
                                                     js: null },
+                                     createDebugElement: null,
                                      directfile: null,
                                      ContentDecryptor: null,
                                      htmlTextTracksBuffer: null,

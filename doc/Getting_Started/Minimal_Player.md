@@ -131,6 +131,7 @@ Here is the anotated exhaustive list (notes are at the bottom of the table):
 | `DASH_WASM` [5] [6]      | Enable DASH playback using a WebAssembly-based MPD parser |
 | `LOCAL_MANIFEST` [5]     | Enable playback of "local" contents                       |
 | `METAPLAYLIST` [5]       | Enable playback of "metaplaylist" contents                |
+| `DEBUG_ELEMENT` [5]      | Allows to use the `createDebugElement` RxPlayer method    |
 
 ---
 
@@ -254,6 +255,11 @@ build.
 
 False by default. If set to "true", all code relative to metaplaylist streaming
 will be included during a build.
+
+#### RXP_DEBUG_ELEMENT
+
+False by default. If set to "true", the method RxPlayer's `createDebugElement`
+method will be callable.
 
 #### RXP_EME
 

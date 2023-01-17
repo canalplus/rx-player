@@ -57,6 +57,9 @@ export default function initializeFeaturesObject() : void {
     features.transports.metaplaylist =
       require("../transports/metaplaylist/index.ts").default;
   }
+  if (__FEATURES__.DEBUG_ELEMENT === __FEATURES__.IS_ENABLED as number) {
+    features.createDebugElement = require("../core/api/debug/index.ts").default;
+  }
 
   if (HAS_NATIVE_MODE === __FEATURES__.IS_ENABLED as number) {
     features.nativeTextTracksBuffer =
