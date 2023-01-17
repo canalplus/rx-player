@@ -166,6 +166,9 @@ export default function AdaptationStream<T>(
       cancelOn: adapStreamCanceller.signal,
     });
     const { representation, manual } = estimateRef.getValue();
+    if (representation === null) {
+      return;
+    }
 
     // A manual bitrate switch might need an immediate feedback.
     // To do that properly, we need to reload the MediaSource
@@ -210,7 +213,9 @@ export default function AdaptationStream<T>(
 
     /** Allows to stop listening to estimateRef on the following line. */
     estimateRef.onUpdate((estimate) => {
-      if (estimate.representation.id === representation.id) {
+      if (estimate.representation === null ||
+          estimate.representation.id === representation.id)
+      {
         return;
       }
       if (estimate.urgent) {
