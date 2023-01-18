@@ -124,14 +124,7 @@ async function generateImportFilesFromTemplates() {
  * @returns {Promise}
  */
 function removeFile(fileName) {
-  return new Promise((res, rej) => {
-    rimraf(fileName, (err) => {
-      if (err !== null && err !== undefined) {
-        rej(err);
-      }
-      res();
-    });
-  });
+  return rimraf(fileName);
 }
 
 /**
