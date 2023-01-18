@@ -283,12 +283,6 @@ pub enum AttributeName {
 
     ServiceLocation = 72, // String
 
-    QueryBeforeStart = 73, // Boolean
-
-    ProxyServerUrl = 74, // String
-
-    DefaultServiceLocation = 75,
-
     // SegmentTemplate
     EndNumber = 76, // f64
 }
