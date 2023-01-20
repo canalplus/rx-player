@@ -188,8 +188,7 @@ is currently buffered and an estimation of the size of the next segments.
 </div>
 
 <div class="warning">
-In <i>DirectFile</i> mode (see <a
-href="../Loading_a_Content.md#transport">loadVideo options</a>),
+In <i>DirectFile</i> mode (see <a href="./Loading_a_Content.md#transport">loadVideo options</a>),
 this method has no effect.
 </div>
 

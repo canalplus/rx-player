@@ -90,12 +90,6 @@ Among its properties, you have:
   - `"ERROR_HTTP_CODE"`: The request finished with a status code not in
     the 2xx range.
 
-<div class="warning">
-This last property is deprecated. It will disappear in the next major
-release, the `v4.0.0` (see <a href="./Miscellaneous/Deprecated_APIs.md">Deprecated
-APIs</a>).
-</div>
-
 ### MEDIA_ERROR
 
 Error related to the media itself. It can both come from the player itself
