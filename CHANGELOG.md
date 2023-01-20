@@ -21,6 +21,7 @@
   - Remove `stopAtEnd` `loadVideo` option and don't automatically stop when reaching the end by default. This behavior can be counter-intuitive and can be very easily implemented by the application.
   - Remove `decipherabilityUpdate` event as it appeared to be not easily exploitable and exposed internal logic too much [#1168]
   - Remove `getUrl` method in profit of the more powerful `getContentUrls`
+  - Impossibility to play the content due to unsupported audio and/or video tracks now triggers an error with the `MANIFEST_INCOMPATIBLE_CODECS_ERROR` instead of `MANIFEST_PARSE_ERROR`
   - Remove methods: `getManifest`, `getCurrentAdaptations` and `getCurrentRepresentations`, as they reveal the RxPlayer's internals too much
   - The `"smooth"` transport now needs to be communicated the URL of the Manifest directly (previously, it was possible to redirect it to a XML or JSON file first due to Canal+ legacy reasons).
   - Remove the `supplementaryTextTracks` loadVideo option. You can use the `TextTrackRenderer` tool if you wish to diplay external subtitles on top of your content.
@@ -55,6 +56,7 @@
   - Remove public types `IBitrateEstimate` as no API depend on it anymore.
   - Remove public types `IManifest`, `IPeriod`, `IAdaptation`, `IRepresentation`, `IRepresentationInfos`, `IBifThumbnail`, `IBifObject` and `IExposedSegment` as no API depend on them anymore.
   - Remove public types `IDefaultAudioTrackOption` and `IDefaultTextTrackOption`. Those are the types respectively for `defaultAudioTrack` and `defaultTextTrack` `loadVideo` options which have been removed
+  - Remove public types `IAudioTrackPreference`, `ITextTrackPreference` and `IVideoTrackPreference` as the corresponding API do not exist anymore.
   - Stop officially supporting the Internet Explorer 11 browser
 
 ### Features
