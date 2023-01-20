@@ -70,8 +70,14 @@ properties, methods, events and so on.
     - [`keySystems[].persistentLicenseConfig`](../api/Decryption_Options.md#persistentLicenseConfig):
       Allows to ask for the DRM session to persist the license.
 
-    - [`keySystems[].fallbackOn`](../api/Decryption_Options.md#fallbackon):
-      Allows to fallback to another quality when a key is refused.
+    - [`keySystems[].onKeyExpiration`](../api/Decryption_Options.md#onkeyexpiration):
+      Behavior when a key has an `"internal-error"` status.
+
+    - [`keySystems[].onKeyOutputRestricted`](../api/Decryption_Options.md#onkeyoutputrestricted):
+      Behavior when a key has an `"output-restricted"` status.
+
+    - [`keySystems[].onKeyInternalError`](../api/Decryption_Options.md#onkeyinternalerror):
+      Behavior when a key has an `"internal-error"` status.
 
     - [`keySystems[].maxSessionCacheSize`](../api/Decryption_Options.md#maxsessioncachesize):
       Maximum number of DRM sessions cached by the RxPlayer.

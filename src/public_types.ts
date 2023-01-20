@@ -457,24 +457,52 @@ export interface IKeySystemOption {
    * unencrypted data, most especially on Chromium and Chromium-derived browsers.
    */
   disableMediaKeysAttachmentLock? : boolean;
+
   /**
-   * Enable fallback logic, to switch to other Representations when a key linked
-   * to another one fails with an error.
-   * Configure only this if you have contents with multiple keys depending on
-   * the Representation (also known as qualities/profiles).
+   * Behavior the RxPlayer should have when one of the key has the
+   * `MediaKeyStatus` `"internal-error"`.
+   *
+   * `onKeyInternalError` can be set to a string, each describing a different
+   * behavior, the default one if not is defined being `"error"`:
+   *
+   *   - `"error"`: The RxPlayer will stop on an error.
+   *     This is the default behavior.
+   *
+   *   - `"continue"`: The RxPlayer will not do anything.
+   *     This may lead in many cases to infinite rebuffering.
+   *
+   *   - `"fallback"`: The Representation(s) linked to those key(s) will
+   *     be fallbacked from, meaning the RxPlayer will switch to other
+   *     representation.
+   *
+   *   - `"close-session"`: The RxPlayer will close and re-create a DRM session
+   *     (and thus re-download the corresponding license).
    */
-  fallbackOn? : {
-    /**
-     * If `true`, we will fallback when a key obtain the "internal-error" status.
-     * If `false`, we fill just throw a fatal error instead.
-     */
-    keyInternalError? : boolean;
-    /**
-     * If `true`, we will fallback when a key obtain the "internal-error" status.
-     * If `false`, we fill just throw a fatal error instead.
-     */
-    keyOutputRestricted? : boolean;
-  };
+  onKeyInternalError? : "error" |
+                        "continue" |
+                        "fallback" |
+                        "close-session";
+
+  /**
+   * Behavior the RxPlayer should have when one of the key has the
+   * `MediaKeyStatus` `"output-restricted"`.
+   *
+   * `onKeyOutputRestricted` can be set to a string, each describing a different
+   * behavior, the default one if not is defined being `"error"`:
+   *
+   *   - `"error"`: The RxPlayer will stop on an error.
+   *     This is the default behavior.
+   *
+   *   - `"continue"`: The RxPlayer will not do anything.
+   *     This may lead in many cases to infinite rebuffering.
+   *
+   *   - `"fallback"`: The Representation(s) linked to those key(s) will
+   *     be fallbacked from, meaning the RxPlayer will switch to other
+   *     representation.
+   */
+  onKeyOutputRestricted? : "error" |
+                           "continue" |
+                           "fallback";
 
   /**
    * Behavior the RxPlayer should have when one of the key is known to be
@@ -493,23 +521,9 @@ export interface IKeySystemOption {
    *     be fallbacked from, meaning the RxPlayer will switch to other
    *     representation without expired keys.
    *
-   *     If no Representation remain, a NO_PLAYABLE_REPRESENTATION error will
-   *     be thrown.
-   *
-   *     Note that when the "fallbacking" action is taken, the RxPlayer might
-   *     temporarily switch to the `"RELOADING"` state - which should thus be
-   *     properly handled.
-   *
    *   - `"close-session"`: The RxPlayer will close and re-create a DRM session
    *     (and thus re-download the corresponding license) if any of the key
    *     associated to this session expired.
-   *
-   *     It will try to do so in an efficient manner, only reloading the license
-   *     when the corresponding content plays.
-   *
-   *     The RxPlayer might go through the `"RELOADING"` state after an expired
-   *     key and/or light decoding glitches can arise, depending on the
-   *     platform, for some seconds, under that mode.
    */
   onKeyExpiration? : "error" |
                      "continue" |
