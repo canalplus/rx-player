@@ -90,13 +90,11 @@ import createSharedReference, {
 import TaskCanceller, {
   CancellationSignal,
 } from "../../utils/task_canceller";
-import warnOnce from "../../utils/warn_once";
 import { IABRThrottlers } from "../adaptive";
 import {
   clearOnStop,
   disposeDecryptionResources,
   getKeySystemConfiguration,
-  getCurrentKeySystem,
 } from "../decrypt";
 import { ContentInitializer } from "../init";
 import MediaSourceContentInitializer from "../init/media_source_content_initializer";
@@ -1359,21 +1357,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   getMaxVideoBufferSize() : number {
     return this._priv_bufferOptions.maxVideoBufferSize.getValue();
-  }
-
-  /**
-   * Returns type of current keysystem (e.g. playready, widevine) if the content
-   * is encrypted. null otherwise.
-   * @deprecated
-   * @returns {string|null}
-   */
-  getCurrentKeySystem() : string|null {
-    warnOnce("`getCurrentKeySystem` is deprecated." +
-             "Please use the `getKeySystemConfiguration` method instead.");
-    if (this.videoElement === null) {
-      throw new Error("Disposed player");
-    }
-    return getCurrentKeySystem(this.videoElement);
   }
 
   getCurrentPeriod() : IPeriod | null {

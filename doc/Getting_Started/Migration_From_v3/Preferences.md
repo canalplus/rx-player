@@ -46,7 +46,7 @@ in a single audio language followed by a multi-lingual film, here we would have
 two periods, each with its own selected track.
 
 To know the list of periods currently considered by the RxPlayer, you can now call
-the [`getAvailablePeriods`](../../api/Basic_Methods/getAvailablePeriod.md)
+the [`getAvailablePeriods`](../../api/Basic_Methods/getAvailablePeriods.md)
 RxPlayer method:
 ```js
 const periods = rxPlayer.getAvailablePeriods();
@@ -175,7 +175,7 @@ function applyAudioTrackPreferences(period) {
 This logic will only apply for future encountered periods, even though you may
 also want to apply the preference retroactively to the currently loaded Periods.
 If that is the case, you can also get the list of currently-considered Periods
-through the [`getAvailablePeriods`](../../api/Basic_Methods/getAvailablePeriod.md)
+through the [`getAvailablePeriods`](../../api/Basic_Methods/getAvailablePeriods.md)
 method and also select a track for those:
 ```js
   const currentPeriods = rxPlayer.getAvailablePeriods();

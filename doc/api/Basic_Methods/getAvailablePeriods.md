@@ -2,7 +2,7 @@
 
 ## Description
 
-Returns information on all [Periods](../Getting_Started/Glossary.md#period)
+Returns information on all [Periods](../../Getting_Started/Glossary.md#period)
 currently in the current content.
 
 This method mainly allows to obtain and information on the audio, video or text

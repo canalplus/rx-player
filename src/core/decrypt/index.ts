@@ -25,9 +25,7 @@ import ContentDecryptor, {
   IContentDecryptorEvent,
 } from "./content_decryptor";
 import disposeDecryptionResources from "./dispose_decryption_resources";
-import getKeySystemConfiguration, {
-  getCurrentKeySystem,
-} from "./get_key_system_configuration";
+import getKeySystemConfiguration from "./get_key_system_configuration";
 export * from "./types";
 
 export default ContentDecryptor;
@@ -36,6 +34,5 @@ export {
   ContentDecryptorState,
   disposeDecryptionResources,
   getKeySystemConfiguration,
-  getCurrentKeySystem,
   IContentDecryptorEvent,
 };

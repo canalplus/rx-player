@@ -34,18 +34,3 @@ export default function getKeySystemConfiguration(
     currentState.mediaKeySystemAccess.getConfiguration(),
   ];
 }
-
-/**
- * Returns the name of the current key system used, as originally indicated by
- * the user.
- * @deprecated
- * @param {HTMLMediaElement} mediaElement
- * @returns {string|null}
- */
-export function getCurrentKeySystem(
-  mediaElement : HTMLMediaElement
-) : string | null {
-  const currentState = MediaKeysInfosStore.getState(mediaElement);
-  return currentState == null ? null :
-                                currentState.keySystemOptions.type;
-}

@@ -11,7 +11,7 @@ Get information about the video track currently set.
 If a video track is set and information about it is known, this method will
 return an object with the following properties:
 
-  - `id` (`Number|string`): The id used to identify this track. No other
+  - `id` (`string`): The id used to identify this track. No other
     video track for the same [Period](../../Getting_Started/Glossary.md#period)
     will have the same `id`.
 
@@ -35,14 +35,16 @@ return an object with the following properties:
 
       `undefined` if unknown.
 
-    - `width` (`Number|undefined`): The width of video, in pixels.
+    - `width` (`Number|undefined`): The width of this video Representation, in
+      pixels.
 
-    - `height` (`Number|undefined`): The height of video, in pixels.
+    - `height` (`Number|undefined`): The height of this video Representation, in
+      pixels.
 
     - `codec` (`string|undefined`): The video codec the Representation is
       in, as announced in the corresponding Manifest.
 
-    - `frameRate` (`number|undefined`): The video frame rate.
+    - `frameRate` (`number|undefined`): The video frame rate, in frames per second.
 
     - `hdrInfo` (`Object|undefined`) Information about the hdr
       characteristics of the track.

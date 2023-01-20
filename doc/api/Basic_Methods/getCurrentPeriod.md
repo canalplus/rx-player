@@ -2,7 +2,7 @@
 
 ## Description
 
-Returns information on the current[Periods](../Getting_Started/Glossary.md#period)
+Returns information on the current[Periods](../../Getting_Started/Glossary.md#period)
 being played.
 
 The value returned by this method is either `null`, for when no content is

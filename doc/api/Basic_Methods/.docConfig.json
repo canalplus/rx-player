@@ -57,7 +57,7 @@
       "displayName": "getVideoElement"
     },
     {
-      "path": "./getAvailablePeriod.md",
+      "path": "./getAvailablePeriods.md",
       "displayName": "getAvailablePeriods"
     },
     {
