@@ -102,7 +102,7 @@ export default class Period {
             adaptationsForType.length > 0 &&
             (type === "video" || type === "audio")
         ) {
-          throw new MediaError("MANIFEST_PARSE_ERROR",
+          throw new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
                                "No supported " + type + " adaptations");
         }
 
