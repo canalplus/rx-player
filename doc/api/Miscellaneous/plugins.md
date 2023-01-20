@@ -36,7 +36,7 @@ const customSegmentLoader = (segmentInfo, callbacks) => {
 
   // we will only use this custom loader for videos segments.
   // we will also ignore edge cases where the URL is undefined.
-  if (segmentInfo.type !== "video" || segmentInfo.url === undefined) {
+  if (segmentInfo.trackType !== "video" || segmentInfo.url === undefined) {
     callbacks.fallback();
     return;
   }
@@ -58,10 +58,9 @@ const customSegmentLoader = (segmentInfo, callbacks) => {
 
   xhr.onprogress = function onXHRProgress(event) {
     const currentTime = performance.now();
-    callbacks.progress({ type: "progress",
-                         value: { duration: currentTime - sendingTime,
-                                  size: event.loaded,
-                                  totalSize: event.total } });
+    callbacks.progress({ duration: currentTime - sendingTime,
+                         size: event.loaded,
+                         totalSize: event.total });
   };
 
   xhr.onerror = function onXHRError() {
@@ -122,7 +121,7 @@ As you can see, this function takes two arguments:
          initialization segment.
          This case is not currently possible but may be in future versions.
 
-       - `byteRanges` (`Array.<[number, number]>|undefined`): If defined, only
+       - *byteRanges* (`Array.<[number, number]>|undefined`): If defined, only
          the corresponding byte-ranges, which are subsets in bytes of the full
          data concerned, should be loaded.
 
@@ -133,6 +132,9 @@ As you can see, this function takes two arguments:
          (included) and from 150 to 180 (included) should be requested.
          The communicated result should then be a concatenation of both in the same
          order.
+
+       - *trackType* (`string`): The concerned type of track. Can be
+        `"video"`, `"audio"`, `"text"` (for subtitles)
 
   2. **callbacks**: An object containing multiple callbacks to allow this
      `segmentLoader` to communicate various events to the RxPlayer.
@@ -399,7 +401,7 @@ The representationFilter will be called each time we load a
 - context `{Object}`: Basic context about this `Representation`.
   Contains the following keys:
 
-  - bufferType `{string}`: The concerned type of buffer. Can be
+  - trackType `{string}`: The concerned type of track. Can be
     `"video"`, `"audio"`, `"text"` (for subtitles)
 
   - language `{string|undefined}`: The language the `Representation`
@@ -445,7 +447,7 @@ For example, here is a `representationFilter` that removes video
  * @returns {boolean}
  */
 function representationFilter(representation, infos) {
-  if (infos.bufferType === "video") {
+  if (infos.trackType === "video") {
     // If video representation, allows only those for which the height and width
     // is known to be below our 1920x1080 limit
     const { width, height } = representation;
