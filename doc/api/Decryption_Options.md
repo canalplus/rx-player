@@ -134,12 +134,20 @@ If the `getLicense` call throws/rejects, you can add any of the following
 properties (none are mandatory) to configure the behavior of the RxPlayer
 relative to that failure:
   - `noRetry` (`Boolean`): If set to `true`, we won't make another attempt
-    to call `getLicense`. Its failure
-    `getLicense` another time.
-    This will result in: trigger a fallback to other
-    Representations (and a `KEY_LOAD_ERROR` warning being sent) or th
-    will throw directly a `KEY_LOAD_ERROR`.
-    the current retry parameters will be applied (see `getLicenseConfig`)
+    to call `getLicense` for this particular message.
+
+    This will result in:
+      - if the `fallbackOnLastTry` boolean has been set to `true`, it will
+        trigger a fallback to another Representations (and a `KEY_LOAD_ERROR`
+        warning being sent) if possible (and throw a
+        `NO_PLAYABLE_REPRESENTATION` error code if there's no Representation
+        left to fallback to, as documented in the `fallbackOnLastTry`
+        property documentation).
+      - If not, a `KEY_LOAD_ERROR` error code will be directly thrown and
+        playback will be stopped.
+
+    If set to `false` or not set, the current retry parameters will be applied
+    (see `getLicenseConfig`)
 
   - `message` (`string`): If the `message` property is set as a "string",
     this message will be set as the `message` property of the
