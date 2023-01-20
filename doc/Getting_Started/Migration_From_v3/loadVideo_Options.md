@@ -43,6 +43,7 @@ It was previously mostly used as a work-around to optimize the time at which new
 segments were requested, but was always too risky and experimental for our
 taste.
 
+
 ### `transportOptions.supplementaryTextTracks`
 
 The deprecated `supplementaryTextTracks` option has been completely removed in
@@ -64,7 +65,7 @@ tool to parse thumbnails in the "BIF" format.
 ### `keySystems[].persistentLicense`
 
 The `persistentLicense` option has now been removed because it is, and already
-was,unnecessary.
+was, unnecessary.
 
 The simple presence of the `keySystems[].persistentLicenseConfig` option - which
 is the renaming of the old `keySystems[].licenseStorage` option (see below) - now
@@ -361,23 +362,74 @@ Change will be documented below.
 
 ### `transportOptions.manifestLoader`
 
-  - Custom `manifestLoader` function added to what was previously the `loadVideo`'s `transportOptions` option now set an object as argument (with an `url`property), to let us bring improvements on it in the future [#995]
+The `transportOptions.manifestLoader` option, which is now just `manifestLoader`
+(at the root of `loadVideo` options) now only received two arguments:
 
-XXX TODO
+  - The first argument - which was previously just the Manifest's URL - is now
+    an object with two properties:
+      - **url** (`string|undefined`): The same URL that was previously
+        communicated directly.
+
+      - *timeout* (`number|undefined`): Timeout in milliseconds after which a
+        request should preferably be aborted, according to current
+        configuration.
+
+        This property is mainly indicative, you may or may not want to exploit
+        this information depending on your use cases.
+
+        Previously, this property was communicated through a third argument.
+
+  - The second argument didn't change, it is still its callbacks
+
+  - The third argument has been removed and integrated in the first one.
+
+The [`manifestLoader`
+documentation](../../api/Miscellaneous/plugins.md#manifestloader) has been
+updated if you wish to have an example and more documentation.
+
 
 ### `transportOptions.segmentLoader`
 
-transportOptions.segmentLoader loadVideo options don't give the full Manifest, Period, Adaptation, Representation and ISegment structures in arguments but a small subset of it.
+The `transportOptions.segmentLoader` option, which is now just `segmentLoader`
+(at the root of `loadVideo` options) has seen its first argument updated:
 
-XXX TODO
+  - Its `url` property, before always a string, can now be set to `undefined` if
+    unknown.
 
-  - A Representation's `frameRate` is now always a number - in terms of frame per seconds - instead of a string.
-  - `Representations` (in methods: `getAvailableVideoTracks`, `getVideoTrack`, `representationFilter`, `getAvailableAudioTracks`, `getAudioTrack` and events: `audioTrackChange` and `videoTrackChange`) can have an `undefined` bitrate
+  - The `manifest`, `period`, `adaptation`, `representation` and `segment`
+    properties have been removed as it exposed the RxPlayer's internals too
+    much.
+
+  - An `isInit` boolean (or set to `undefined`) property has been added to
+    indicate whether this is an initialization segment.
+
+  - a `type` string has been added to signal which track's type this segment
+    is part of.
+
+  - A `byteRanges` array (or set to `undefined`) property has been added to
+    announce the byte-range(s) for which the resource should be requested.
+    More information on its format [in the `segmentLoader`
+    documentation](../../api/Miscellaneous/plugins.md#segmentloader).
+
+The [`segmentLoader`
+documentation](../../api/Miscellaneous/plugins.md#segmentloader) has been
+updated if you wish to have an example and more documentation.
 
 
 ### `transportOptions.representationFilter`
 
-XXX TODO
+The `transportOptions.representationFilter` option, which is now just
+`representationFilter` (at the root of `loadVideo` options) has seen its first
+argument updated:
+  - `frameRate` is now either a number - in terms of frame per seconds - or
+    `undefined`, instead of a string.
+  - `bitrate` can now be `undefined` or just not be defined as a property at
+    all.
+  - The `decipherable` property has been removed.
+  - The `index` property has been removed.
+  - A new `contentProtections` property has been added, describing protections
+    associated to the corresponding Representation.
 
-  - A Representation's `frameRate` is now always a number - in terms of frame per seconds - instead of a string.
-  - `Representations` (in methods: `getAvailableVideoTracks`, `getVideoTrack`, `representationFilter`, `getAvailableAudioTracks`, `getAudioTrack` and events: `audioTrackChange` and `videoTrackChange`) can have an `undefined` bitrate
+The [`representationFilter`
+documentation](../../api/Miscellaneous/plugins.md#representationfilter) has been
+updated if you wish to have an example and more documentation.
