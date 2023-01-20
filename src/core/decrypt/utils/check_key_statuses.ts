@@ -55,7 +55,9 @@ const KEY_STATUSES = { EXPIRED: "expired",
                        OUTPUT_RESTRICTED: "output-restricted" };
 
 export type IKeyStatusesCheckingOptions =
-  Pick<IKeySystemOption, "fallbackOn" | "onKeyExpiration">;
+  Pick<IKeySystemOption, "onKeyOutputRestricted" |
+                         "onKeyInternalError" |
+                         "onKeyExpiration">;
 
 /**
  * MediaKeyStatusMap's iterator seems to be quite peculiar and wrongly defined
@@ -87,7 +89,8 @@ export default function checkKeyStatuses(
       blacklistedKeyIds : Uint8Array[];
       whitelistedKeyIds : Uint8Array[]; }
 {
-  const { fallbackOn = {},
+  const { onKeyInternalError,
+          onKeyOutputRestricted,
           onKeyExpiration } = options;
   const blacklistedKeyIds : Uint8Array[] = [];
   const whitelistedKeyIds : Uint8Array[] = [];
@@ -142,26 +145,62 @@ export default function checkKeyStatuses(
       }
 
       case KEY_STATUSES.INTERNAL_ERROR: {
-        if (fallbackOn.keyInternalError !== true) {
-          throw new EncryptedMediaError(
-            "KEY_STATUS_CHANGE_ERROR",
-            `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`,
-            { keyStatuses: [keyStatusObj, ...badKeyStatuses] });
+        const error = new EncryptedMediaError(
+          "KEY_STATUS_CHANGE_ERROR",
+          `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`,
+          { keyStatuses: [keyStatusObj, ...badKeyStatuses] });
+        switch (onKeyInternalError) {
+          case undefined:
+          case "error":
+            throw error;
+          case "close-session":
+            throw new DecommissionedSessionError(error);
+          case "fallback":
+            blacklistedKeyIds.push(keyId);
+            break;
+          case "continue":
+            whitelistedKeyIds.push(keyId);
+            break;
+          default:
+            // Weirdly enough, TypeScript is not checking properly
+            // `case undefined` (bug?)
+            if (onKeyInternalError !== undefined) {
+              assertUnreachable(onKeyInternalError);
+            } else {
+              throw error;
+            }
         }
+
         badKeyStatuses.push(keyStatusObj);
-        blacklistedKeyIds.push(keyId);
         break;
       }
 
       case KEY_STATUSES.OUTPUT_RESTRICTED: {
-        if (fallbackOn.keyOutputRestricted !== true) {
-          throw new EncryptedMediaError(
-            "KEY_STATUS_CHANGE_ERROR",
-            `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`,
-            { keyStatuses: [keyStatusObj, ...badKeyStatuses] });
+        const error = new EncryptedMediaError(
+          "KEY_STATUS_CHANGE_ERROR",
+          `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`,
+          { keyStatuses: [keyStatusObj, ...badKeyStatuses] });
+        switch (onKeyOutputRestricted) {
+          case undefined:
+          case "error":
+            throw error;
+          case "fallback":
+            blacklistedKeyIds.push(keyId);
+            break;
+          case "continue":
+            whitelistedKeyIds.push(keyId);
+            break;
+          default:
+            // Weirdly enough, TypeScript is not checking properly
+            // `case undefined` (bug?)
+            if (onKeyOutputRestricted !== undefined) {
+              assertUnreachable(onKeyOutputRestricted);
+            } else {
+              throw error;
+            }
         }
+
         badKeyStatuses.push(keyStatusObj);
-        blacklistedKeyIds.push(keyId);
         break;
       }
 
