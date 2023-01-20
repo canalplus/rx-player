@@ -229,7 +229,7 @@ export default function generateSegmentLoader(
       const args = { isInit: context.segment.isInit,
                      timeout: options.timeout,
                      byteRanges,
-                     type: context.type,
+                     trackType: context.type,
                      url };
       const abort = customSegmentLoader(args, customCallbacks);
 
