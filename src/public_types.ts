@@ -380,6 +380,7 @@ export interface ISegmentLoaderContext {
    */
   byteRanges? : Array<[number, number]> | undefined;
   /** Type of the corresponding track. */
+  // XXX TODO trackType instead?
   type : ITrackType;
 }
 
