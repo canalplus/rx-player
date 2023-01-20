@@ -74,6 +74,41 @@ suffice by itself to indicate that you want to use persistent license.
 The `persistentLicense` property can thus be safely removed.
 
 
+### `keySystems[].fallbackOn`
+
+The `fallbackOn` object has been removed, and its content has been completely
+replaced by the more powerful
+[`keySystems[].onKeyOutputRestricted`](../../api/Decryption_Options.md#onkeyoutputrestricted)
+option (replacing `keySystems[].fallbackOn.keyOutputRestricted`) and
+[`keySystems[].onKeyInternalError`](../../api/Decryption_Options.md#onkeyinternalerror)
+option (replacing `keySystems[].fallbackOn.keyInternalError`).
+
+As such what was previously written:
+```js
+rxPlayer.loadVideo({
+  keySystems: [{
+    fallbackOn: {
+      keyOutputRestricted: true,
+      keyInternalError: true,
+    }
+    // ...
+  }],
+  // ...
+});
+```
+
+Can now be written:
+```js
+rxPlayer.loadVideo({
+  keySystems: [{
+    onKeyOutputRestricted: "fallback",
+    onKeyInternalError: "fallback",
+    // ...
+  }],
+  // ...
+});
+```
+
 ### `keySystems[].onKeyStatusesChange`
 
 The `onKeyStatusesChange` callback has been removed with no replacement as no
