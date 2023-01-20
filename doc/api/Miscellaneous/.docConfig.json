@@ -37,10 +37,6 @@
       "displayName": "MetaPlaylist"
     },
     {
-      "path": "./Deprecated_APIs.md",
-      "displayName": "Deprecated APIs"
-    },
-    {
       "path": "./Initial_Position.md",
       "displayName": "Initial Position"
     },
