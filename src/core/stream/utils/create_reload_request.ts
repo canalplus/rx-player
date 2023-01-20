@@ -32,7 +32,7 @@ export default function createReloadRequest (
   timeBounds : { start : number | undefined; end : number | undefined },
   cancelSignal : CancellationSignal
 ) : void {
-  if (cancelSignal.isCancelled) {
+  if (cancelSignal.isCancelled()) {
     return;
   }
 

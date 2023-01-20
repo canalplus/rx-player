@@ -37,7 +37,6 @@ Both the `getAudioBitrate` and `getVideoBitrate` methods have been removed,
 like most bitrate-oriented API.
 
 Its behavior is however easy to replace, just by using respectively the
-// XXX TODO
 [`getAudioRepresentation`](../../api/Representation_Selection/getAudioRepresentation.md) and
 and
 [`getVideoRepresentation`](../../api/Representation_Selection/getVideoRepresentation.md)

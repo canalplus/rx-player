@@ -233,7 +233,7 @@ properties, methods, events and so on.
   - [`reload`](../api/Basic_Methods/reload.md): Reload the last loade content as
     fast as possible.
 
-  - [`getAvailablePeriods`](../api/Basic_Methods/getAvailablePeriod.md): Returns
+  - [`getAvailablePeriods`](../api/Basic_Methods/getAvailablePeriods.md): Returns
     the list of available Periods for the current content.
 
   - [`getCurrentPeriod`](../api/Basic_Methods/getCurrentPeriod.md): Returns
@@ -272,6 +272,12 @@ properties, methods, events and so on.
   - [`disableVideoTrack`](../api/Track_Selection/disableVideoTrack.md):
     Disable the current video track.
 
+  - [`getVideoRepresentation`](../api/Representation_Selection/getVideoRepresentation.md):
+    Returns the currently-loading video Representation.
+
+  - [`getAudioRepresentation`](../api/Representation_Selection/getAudioRepresentation.md):
+    Returns the currently-loading audio Representation.
+
   - [`lockVideoRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
     Select video Representations (a.k.a. qualities) that should the only one
     being played.
@@ -279,6 +285,12 @@ properties, methods, events and so on.
   - [`lockAudioRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
     Select audio Representations (a.k.a. qualities) that should the only one
     being played.
+
+  - [`unlockVideoRepresentations`](../api/Representation_Selection/unlockAudioVideoRepresentations.md):
+    Disable a lock previously set with `lockVideoRepresentations`.
+
+  - [`unlockAudioRepresentations`](../api/Representation_Selection/unlockAudioVideoRepresentations.md):
+    Disable a lock previously set with `lockAudioRepresentations`.
 
   - [`getLockedVideoRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
     Get the list of currently "locked" video Representations (a.k.a. qualities).
