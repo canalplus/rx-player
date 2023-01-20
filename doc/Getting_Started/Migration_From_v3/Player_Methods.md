@@ -37,7 +37,6 @@ Both the `getAudioBitrate` and `getVideoBitrate` methods have been removed,
 like most bitrate-oriented API.
 
 Its behavior is however easy to replace, just by using respectively the
-// XXX TODO
 [`getAudioRepresentation`](../../api/Representation_Selection/getAudioRepresentation.md) and
 and
 [`getVideoRepresentation`](../../api/Representation_Selection/getVideoRepresentation.md)
@@ -223,7 +222,7 @@ If you need to parse BIF file, you can use the
 ### `getUrl`
 
 The `getUrl` has both be updated and renamed, into the
-[`getContentUrls`](../../api/Content_Information/getContentUrls.md) method.
+[`getContentUrls`](../../api/Playback_Information/getContentUrls.md) method.
 
 However `getContentUrls` returns an optional array of URL (all URLs at which
 the content can be reached) whereas `getUrl` only provided a single one.

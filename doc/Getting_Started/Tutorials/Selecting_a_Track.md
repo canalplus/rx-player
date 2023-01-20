@@ -186,7 +186,7 @@ rxPlayer.getAvailableAudioTracks("foo");
 ```
 
 That `id` can be known in several ways:
-  - the [`getAvailablePeriods` method](../../api/Basic_Methods/getAvailablePeriod.md)
+  - the [`getAvailablePeriods` method](../../api/Basic_Methods/getAvailablePeriods.md)
     can list the different Periods and their respective `id` property:
 
     ```js
@@ -479,7 +479,26 @@ same method call.
 
 ## Tracks now missing from the Manifest ########################################
 
-XXX TODO
+There is a very unlikely event that could theoretically arise on some contents:
+the select track disappearing after a Manifest update.
+
+For example, after refreshing the Manifest files, it turns out that the
+previously-selected audio track has been completely removed from the Manifest,
+for the same Period.
+
+Here, the RxPlayer will by itself select another track instead and immediately
+emit a [`"trackUpdate"` event](../../api/Player_Events.md#trackupdate)
+a `reason` property set to `"missing"`:
+```js
+rxPlayer.addEventListener("trackUpdate", (data) => {
+  if (data.reason === "missing") {
+    console.warn(
+      `The previously-chosen ${data.trackType} track for the Period ` +
+      `"${data.period.id}" disappeared. A new track has been selected instead.`
+    );
+  }
+});
+```
 
 
 ## Notes about the "textTrackMode" option ######################################
