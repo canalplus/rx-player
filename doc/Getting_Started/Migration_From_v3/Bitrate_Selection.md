@@ -216,8 +216,44 @@ if (representations500.length > 0) {
 
 ### Reacting to the lock "breaking"
 
-XXX TODO
-In rare and very specific situations
+In rare and very specific situations, locked Representation may all become
+unplayable during playback.
+This can for example happen when all the locked Representations appear to be
+undecipherable once their licence have been fetched.
+
+Instead of stopping on error when this happens, the RxPlayer choose to "break
+the lock", which means it goes back to play all Representation from the chosen
+track. Just before doing that, it emits the
+[`"brokenRepresentationsLock"`](../../api/Player_Events.md#brokenrepresentationslock)
+event, allowing you to react to this.
+
+In the context of replacing bitrate API, you may want to profit from this event
+to re-apply the bitrate limitation you had - or to stop the content if you want
+to.
+
+For example, only play the lowest video bitrate after the lock is broken, you
+can write:
+```js
+player.addEventListener("brokenRepresentationsLock", (data) => {
+  const videoTrack = rxPlayer.getVideoTrack(data.period.id);
+  const lowestBitrate = videoTrack.representations.reduce((acc, r) => {
+    if (acc === undefined || acc.bitrate === undefined) {
+      return r;
+    }
+    if (r.bitrate !== undefined && r.bitrate < acc.bitrate) {
+      return r;
+    }
+    return acc;
+  }, undefined);
+  if (lowestBitrate !== undefined) {
+    rxPlayer.lockVideoRepresentations({
+      representations: [lowestBitrate],
+      periodId: data.period.id,
+    });
+  }
+}
+```
+
 
 ### Switching at new "Periods"
 
@@ -260,7 +296,7 @@ if (periods.length > 0) {
   const firstPeriodVideoTrack = rxPlayer.getVideoTrack(periods[0].id);
   if (firstPeriodVideoTrack.representations.length > 0) {
     rxPlayer.lockVideoRepresentations({
-      representations: firstPeriodVideoTrack.representations[0].id,
+      representations: [firstPeriodVideoTrack.representations[0].id],
       periodId: periods[0].id,
     });
   }
@@ -269,6 +305,248 @@ if (periods.length > 0) {
 
 ### Locking each time a track is chosen
 
-XXX TODO
+The choice of Representation has to be performed basically at each new chosen
+track, whether it is for a new Period or an already-known one whose track has
+been changed.
+
+The former (new periods) can be reacted to via the `"newAvailablePeriods"`
+events we wrote about in previous chapters.
+
+The latter (track change, for any Period) now also has its own event
+[`"trackUpdate"`](../../api/Player_Events.md#trackupdate).
+
+For example to only play the video Representations whose bitrate is inferior
+or equal to `1000000`, you can write:
+```js
+player.addEventListener("trackUpdate", (data) => {
+  const videoTrack = rxPlayer.getVideoTrack(data.period.id);
+  const filtered = videoTrack.representations.filter((r) => {
+    return r.bitrate !== undefined && r.bitrate <= 1000000;
+  });
+  if (filtered.length > 0) {
+    rxPlayer.lockVideoRepresentations({
+      representations: filtered,
+      periodId: data.period.id,
+    });
+  } else {
+    // To be defined on your side what you want to do here
+  }
+}
+```
+
 
 ## Full examples of bitrate selection replacements
+
+### `setMaxVideoBitrate` / `maxVideoBitrate` / `setMaxAudioBitrate` / `maxAudioBitrate`
+
+_The following examples only talk about the video variants of these API to_
+_simplify, but it can be applied to the audio variant._
+
+To replace the `setMaxVideoBitrate` method or the `maxVideoBitrate` option, we
+will first declare a function replicating its behavior for a given bitrate and
+Period:
+```js
+function lockMaxBitrateForPeriod(maxBitrate, period) {
+  if (maxBitrate === Infinity) {
+    // /!\ If you also have other bitrate restrictions, you may not want to
+    // unlock here
+    rxPlayer.unlockVideoRepresentations(period.id);
+  } else {
+    const videoTrack = rxPlayer.getVideoTrack(period.id);
+    const representationIds = videoTrack.representations.reduce(
+      (acc, representation) => {
+        if (
+          representation.bitrate !== undefined &&
+          representation.bitrate <= maxBitrate
+        ) {
+          acc.push(representation.id);
+        }
+        return acc;
+      },
+      [],
+    );
+
+    if (representationIds.length > 0) {
+      rxPlayer.lockVideoRepresentations({
+        periodId: period.id,
+        representations: representationIds,
+      });
+    } else {
+      // Special case for when no Representation respects the maximum bitrate:
+      // Lock Representation(s) with the lowest bitrate
+      const lowestBitrate = videoTrack.representations
+        .map((representation) => representation.bitrate)
+        .filter((representation) => representation !== undefined)
+        .sort((a, b) => a - b)[0];
+      if (lowestBitrate === undefined) {
+        rxPlayer.unlockVideoRepresentations(period.id);
+      } else {
+        rxPlayer.lockVideoRepresentations({
+          periodId: period.id,
+          representations: videoTrack.representations.filter(
+            (representation) => representation.bitrate <= lowestBitrate,
+          ),
+        });
+      }
+    }
+  }
+}
+```
+
+Then we want to apply it each times a new Period is available and each time the
+track for any Period is changed:
+
+```js
+rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
+  for (let i = 0; i < periods.length; i += 1) {
+    lockMaxBitrateForPeriod(
+      maxBitrate, // To set to the bitrate wanted
+      periods[i],
+    );
+  }
+});
+
+rxPlayer.addEventListener("trackUpdate", (data) => {
+  lockMaxBitrateForPeriod(
+    maxBitrate, // To set to the bitrate wanted
+    data.period,
+  );
+});
+```
+
+Because we might want to still re-apply the same logic when/if the lock is
+broken, we can also add:
+```js
+rxPlayer.addEventListener("brokenRepresentationsLock", (data) => {
+  lockMaxBitrateForPeriod(
+    maxBitrate, // To set to the bitrate wanted
+    data.period,
+  );
+});
+```
+
+And finally, if you want to apply the maximum bitrate while the content is
+already playing, you can write:
+```js
+const periods = rxPlayer.getAvailablePeriods();
+for (let i = 0; i < periods.length; i += 1) {
+  const period = periods[i];
+  lockMaxBitrateForPeriod(
+    maxBitrate, // To set to the bitrate wanted
+    period,
+  );
+}
+```
+
+### `setMinVideoBitrate` / `minVideoBitrate` / `setMinAudioBitrate` / `minAudioBitrate`
+
+_The following examples only talk about the video variants of these API to_
+_simplify, but it can be applied to the audio variant._
+
+Replacing the `setMinVideoBitrate` method or the `minVideoBitrate` option
+is very close than what has to be done to replace the `setMaxVideoBitrate`
+method and / or the `maxVideoBitrate` option. Because of these we will only here
+describe a `lockMinBitrateForPeriod` function, which is supposed to be the
+`lockMaxBitrateForPeriod` function equivalent for minimum bitrates:
+```js
+function lockMinBitrateForPeriod(minBitrate, period) {
+  if (minBitrate === 0) {
+    // /!\ If you also have other bitrate restrictions, you may not want to
+    // unlock here
+    rxPlayer.unlockVideoRepresentations(period.id);
+  } else {
+    const videoTrack = rxPlayer.getVideoTrack(period.id);
+    const representationIds = videoTrack.representations.reduce(
+      (acc, representation) => {
+        if (
+          representation.bitrate !== undefined &&
+          representation.bitrate >= minBitrate
+        ) {
+          acc.push(representation.id);
+        }
+        return acc;
+      },
+      [],
+    );
+
+    if (representationIds.length > 0) {
+      rxPlayer.lockVideoRepresentations({
+        periodId: period.id,
+        representations: representationIds,
+      });
+    } else {
+      // Special case for when no Representation respects the minimum bitrate:
+      // Lock Representation(s) with the highest bitrate
+      const highestBitrate = videoTrack.representations
+        .map((representation) => representation.bitrate)
+        .filter((representation) => representation !== undefined)
+        .sort((a, b) => b - a)[0];
+      if (highestBitrate === undefined) {
+        rxPlayer.unlockVideoRepresentations(period.id);
+      } else {
+        rxPlayer.lockVideoRepresentations({
+          periodId: period.id,
+          representations: videoTrack.representations.filter(
+            (representation) => representation.bitrate >= highestBitrate,
+          ),
+        });
+      }
+    }
+  }
+}
+```
+
+## `setAudioBitrate` / `setVideoBitrate`
+
+_The following examples only talk about the video variants of these API to_
+_simplify, but it can be applied to the audio variant._
+
+Replacing the `setVideoBitrate` method is very close than what has to be done to
+replace the `setMaxVideoBitrate` method or the `maxVideoBitrate` option.
+Because of these we will only here describe a `lockBitrateForPeriod` function,
+which is supposed to be the `lockMaxBitrateForPeriod` function equivalent for a
+chosen bitrates:
+```js
+function lockBitrateForPeriod(bitrate, period) {
+  if (bitrate === 0) {
+    // /!\ If you also have other bitrate restrictions, you may not want to
+    // unlock here
+    rxPlayer.unlockVideoRepresentations(period.id);
+  } else {
+    const videoTrack = rxPlayer.getVideoTrack(period.id);
+    const filteredReps = videoTrack.representations
+      .filter((representation) => {
+        return (
+          representation.bitrate !== undefined &&
+          representation.bitrate <= bitrate
+        );
+      });
+
+    if (filteredReps.length > 0) {
+      const highestBitrateId = filteredReps
+        .sort((a, b) => b.bitrate - a.bitrate)[0];
+      rxPlayer.lockVideoRepresentations({
+        periodId: period.id,
+        representations: [highestBitrateId],
+      });
+    } else {
+      // Special case for when no Representation respects the given bitrate:
+      // Lock Representation(s) with the lowest bitrate
+      const lowestBitrate = videoTrack.representations
+        .map((representation) => representation.bitrate)
+        .filter((representation) => representation !== undefined)
+        .sort((a, b) => a - b)[0];
+      if (lowestBitrate === undefined) {
+        rxPlayer.unlockVideoRepresentations(period.id);
+      } else {
+        rxPlayer.lockVideoRepresentations({
+          periodId: period.id,
+          representations: videoTrack.representations.filter(
+            (representation) => representation.bitrate <= lowestBitrate,
+          ),
+        });
+      }
+    }
+  }
+}
+```

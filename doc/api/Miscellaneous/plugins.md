@@ -278,11 +278,19 @@ As you can see, this function takes three arguments:
   1. **manifestInfo** (`object`): An Object giving information about the wanted
      Manifest. This object contains the following properties:
 
-     - **url**: The URL the Manifest request should normally be performed at.
+     - **url** (`string|undefined`): The URL the Manifest request should
+       normally be performed at.
 
        This argument can be `undefined` in very rare and specific conditions
        where the Manifest URL doesn't exist or has not been communicated by the
        application.
+
+     - *timeout* (`number|undefined`): Timeout in milliseconds after which a
+       request should preferably be aborted, according to current
+       configuration.
+
+       This property is mainly indicative, you may or may not want to exploit
+       this information depending on your use cases.
 
   2. **callbacks**: An object containing multiple callbacks to allow this
      `manifestLoader` to communicate the loaded Manifest or an encountered error
@@ -332,16 +340,6 @@ As you can see, this function takes three arguments:
 
        - **fallback**: Callback to call if you want to call our default
          implementation instead for this Manifest. No argument is needed.
-
-  3. **options**: Various other options. For the moment, it's an object with
-     only the following property:
-
-       - *timeout* (`number|undefined`): Timeout in milliseconds after which a
-         request should preferably be aborted, according to current
-         configuration.
-
-         This property is mainly indicative, you may or may not want to exploit
-         this information depending on your use cases.
 
 
 The `manifestLoader` can also return a function, which will be called if/when
