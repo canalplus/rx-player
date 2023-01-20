@@ -403,8 +403,8 @@ The `transportOptions.segmentLoader` option, which is now just `segmentLoader`
   - An `isInit` boolean (or set to `undefined`) property has been added to
     indicate whether this is an initialization segment.
 
-  - a `type` string has been added to signal which track's type this segment
-    is part of.
+  - a `trackType` string has been added to signal which track's type this
+    segment is part of.
 
   - A `byteRanges` array (or set to `undefined`) property has been added to
     announce the byte-range(s) for which the resource should be requested.
@@ -429,6 +429,9 @@ argument updated:
   - The `index` property has been removed.
   - A new `contentProtections` property has been added, describing protections
     associated to the corresponding Representation.
+
+The `bufferType` property of its second argument also has been renamed
+`trackType` to align with other APIs.
 
 The [`representationFilter`
 documentation](../../api/Miscellaneous/plugins.md#representationfilter) has been

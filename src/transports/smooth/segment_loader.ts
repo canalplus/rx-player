@@ -264,7 +264,7 @@ const generateSegmentLoader = ({
       const args = { isInit: context.segment.isInit,
                      timeout: loaderOptions.timeout,
                      byteRanges,
-                     type: context.type,
+                     trackType: context.type,
                      url };
       const abort = customSegmentLoader(args, customCallbacks);
 

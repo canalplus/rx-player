@@ -168,7 +168,7 @@ export default class Adaptation {
           }
         }
         shouldAdd = representationFilter(reprObject,
-                                         { bufferType: this.type,
+                                         { trackType: this.type,
                                            language: this.language,
                                            normalizedLanguage: this.normalizedLanguage,
                                            isClosedCaption: this.isClosedCaption,

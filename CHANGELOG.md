@@ -41,6 +41,7 @@
   - Change arguments given to a `transportOptions.segmentLoader` function (the `loadVideo` option): it now doesn't give the full `Manifest`, `Period`, `Adaptation`, `Representation` and `ISegment` structures in arguments but only core properties from it [#995]
   - Custom `manifestLoader` function added to what was previously the `loadVideo`'s `transportOptions` option now set an object as argument (with an `url`property), to let us bring improvements on it in the future [#995]
   - A Representation's `frameRate` is now always a number - in terms of frame per seconds - instead of a string.
+  - Update the arguments of the `representationFilter` API
   - `Representations` (in methods: `getAvailableVideoTracks`, `getVideoTrack`, `representationFilter`, `getAvailableAudioTracks`, `getAudioTrack` and events: `audioTrackChange` and `videoTrackChange`) can have an `undefined` bitrate
   - Remove deprecated fullscreen related APIs (methods: `isFullscreen`, `setFullscreen`, `exitFullscreen`, event: `fullscreenChange`) as a a UI is much more adapted to that task and can also bring with it things like a progress bar or HTML text tracks
   - Remove deprecated `getNativeTextTrack` method. If advanced features are wanted, it's better to just use the HTML text track API
