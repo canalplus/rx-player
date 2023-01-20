@@ -99,10 +99,10 @@ Now, there's a new set of methods and options allowing to explicitly filter
     });
     ```
 
-  - the [`getLockedVideoRepresentations` and `getLockedAudioRepresentations`
-    methods](../../api/Representation_Selection/XXX TODO), allows to get the
-    list of respectively the currently locked video and audio Representations,
-    or `null` if none are locked for that type:
+  - the [`getLockedVideoRepresentations`](../../api/Representation_Selection/getLockedVideoRepresentations.md)
+    and [`getLockedAudioRepresentations`](../../api/Representation_Selection/getLockedAudioRepresentations.md)),
+    methods allows to get the list of respectively the currently locked video
+    and audio Representations, or `null` if none are locked for that type:
     ```js
     const lockedVideoRepresentations = rxPlayer.getLockedVideoRepresentations();
     if (lockedVideoRepresentations === null) {
@@ -116,8 +116,9 @@ Now, there's a new set of methods and options allowing to explicitly filter
     ```
 
   - the [`unlockVideoRepresentations` and `unlockAudioRepresentations`
-    methods](../../api/Representation_Selection/XXX TODO), allows to unlock
-    previously respectively "locked" video and audio Representations.
+    methods](../../api/Representation_Selection/unlockAudioVideoRepresentations.md),
+    allows to unlock previously respectively "locked" video and audio
+    Representations.
 
     ```js
     // Re-enable all video Representations (which previously have been
@@ -247,7 +248,7 @@ player.addEventListener("brokenRepresentationsLock", (data) => {
   }, undefined);
   if (lowestBitrate !== undefined) {
     rxPlayer.lockVideoRepresentations({
-      representations: [lowestBitrate],
+      representations: [lowestBitrate.id],
       periodId: data.period.id,
     });
   }
@@ -267,7 +268,7 @@ Representations ranging up to UHD. Here we would have two periods, each with its
 own tracks and Representations.
 
 To know the list of periods currently considered by the RxPlayer, you can now call
-the [`getAvailablePeriods`](../../api/Basic_Methods/getAvailablePeriod.md)
+the [`getAvailablePeriods`](../../api/Basic_Methods/getAvailablePeriods.md)
 RxPlayer method:
 ```js
 const periods = rxPlayer.getAvailablePeriods();
