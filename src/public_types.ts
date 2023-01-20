@@ -380,8 +380,7 @@ export interface ISegmentLoaderContext {
    */
   byteRanges? : Array<[number, number]> | undefined;
   /** Type of the corresponding track. */
-  // XXX TODO trackType instead?
-  type : ITrackType;
+  trackType : ITrackType;
 }
 
 /** Every possible value for the Adaptation's `type` property. */
@@ -679,7 +678,7 @@ export type IPlayerError = EncryptedMediaError |
  * Information describing a single Representation from an Adaptation, to be used
  * in the `representationFilter` API.
  */
-export interface IRepresentationContext { bufferType: string;
+export interface IRepresentationContext { trackType: string;
                                           language?: string | undefined;
                                           isAudioDescription? : boolean | undefined;
                                           isClosedCaption? : boolean | undefined;
