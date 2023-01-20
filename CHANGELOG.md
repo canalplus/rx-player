@@ -33,6 +33,7 @@
   - Replace `keySystems[].licenseStorage` `keySystems` option (for a `loadVideo` call) by the better-named `persistentLicenseConfig`. The `persistentLicense` boolean (also a `keySystems` option) has also been removed because it was redundant with it) [#1147]
   - Remove `persistentStateRequired` API, in profit of the more powerful `persistentState` API [#1148]
   - Remove `distinctiveIdentifierRequired` API, in profit of the more powerful `distinctiveIdentifier` API [#1148]
+  - Remove `keySystems[].fallbackOn` `loadVideo` property as it's now replaced by the more powerful `keySystems[].onKeyOutputRestricted` and `keySystems[].onKeyInternalError` properties.
   - Remove `keySystems[].onKeyStatusesChange` API as it seems to never be used [#1148]
   - Remove `keySystems[].throwOnLicenseExpiration` API as it can now be fully replaced by the `keySystems[].onKeyExpiration` option
   - Remove `aggressiveMode` from the `transportOptions` `loadVideo` option
@@ -79,6 +80,7 @@
   - Add `trackUpdate` event for when a track has been updated for any type and Period
   - Add  `distinctiveIdentifier` property in the `keySystems` option (given to the `loadVideo` method) to have full control over the MediaKeySystemConfiguration of the same name in the chosen key system [#1148]
   - Add  `persistentState`  property in the `keySystems` option (given to the `loadVideo` method) to have full control over the MediaKeySystemConfiguration of the same name in the chosen key system [#1148]
+  - Add `keySystems[].onKeyOutputRestricted` and `keySystems[].onKeyInternalError` properties to configure the RxPlayer's behavior when a key switches to the status respectively `"output-restricted"` and `"internal-error"`
   - Add `audioCapabilitiesConfig` and `videoCapabilitiesConfig` properties in the `keySystems` option (given to the `loadVideo` method)  to allow advanced configuration of respectively the "audioCapabilities" and "videoCapabilities" in the asked MediaKeySystemConfiguration [#1148]
   - Add `ISegmentLoaderContext` public type for the first argument of the `segmentLoader` API
   - Add `IRepresentationFilterRepresentation` public type for the first argument of the `representationFilter` API

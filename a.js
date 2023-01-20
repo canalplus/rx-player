@@ -1,6 +1,5 @@
 // XXX TODO
 // AUDIO VIDEO VARIANTS OF `onCodecSwitch`?
-// fallbackOn => `onKeyInternalError`, `onKeyOutputRestricted`?
 // IMPLICIT FEATURE IMPORT MINIMAL
 // Event when quality becomes unplayable because quality list has changed here
 // defaultAudioRepresentationsSwitchingMode?
