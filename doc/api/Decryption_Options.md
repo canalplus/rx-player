@@ -430,11 +430,99 @@ declared [here in the EME specification](#https://www.w3.org/TR/encrypted-media/
 This is not needed for most use cases.
 
 
+### onKeyOutputRestricted
+
+_type_: `string | undefined`
+
+`"error"` by default.
+
+Behavior the RxPlayer should have when a key has the
+[status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
+`"output-restricted"`. This is the proper status for a key refused due to output
+restrictions.
+
+`onKeyOutputRestricted` can be set to a string, each describing a different
+behavior, the default one if not is defined being `"error"`:
+
+  - `"error"`: The RxPlayer will stop on an error when any key has the
+    `"output-restricted"` status.
+    This is the default behavior.
+
+    The error emitted in that case should be an
+    [EncryptedMediaError](./Player_Errors.md#encryptedmediaerror) with a
+    `KEY_STATUS_CHANGE_ERROR` `code` property with a set `keyStatuses`
+    property containing at least one string set to `"output-restricted"`.
+
+  - `"continue"`: The RxPlayer will not do anything when a key has the
+    `"output-restricted"` status.
+    This may lead in many cases to infinite rebuffering.
+
+  - `"fallback"`: The Representation(s) linked to the problematic key(s) will
+    be fallbacked from, meaning the RxPlayer will switch to other
+    representation without keys with a problematic status.
+
+    If no Representation remains, an error with the `NO_PLAYABLE_REPRESENTATION`
+    code will be thrown.
+
+    Note that when the "fallbacking" action is taken, the RxPlayer might
+    temporarily switch to the `"RELOADING"` state - which should thus be
+    properly handled.
+
+
+### onKeyInternalError
+
+_type_: `string | undefined`
+
+`"error"` by default.
+
+Behavior the RxPlayer should have when a key has the
+[status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
+`"internal-error"`.
+
+`onKeyInternalError` can be set to a string, each describing a different
+behavior, the default one if not is defined being `"error"`:
+
+  - `"error"`: The RxPlayer will stop on an error when any key has the
+    `"internal-error"` status.
+    This is the default behavior.
+
+    The error emitted in that case should be an
+    [EncryptedMediaError](./Player_Errors.md#encryptedmediaerror) with a
+    `KEY_STATUS_CHANGE_ERROR` `code` property with a set `keyStatuses`
+    property containing at least one string set to `"internal-error"`.
+
+  - `"continue"`: The RxPlayer will not do anything when a key has the
+    `"internal-error"` status.
+    This may lead in many cases to infinite rebuffering.
+
+  - `"fallback"`: The Representation(s) linked to the problematic key(s) will
+    be fallbacked from, meaning the RxPlayer will switch to other
+    representation without keys with a problematic status.
+
+    If no Representation remains, an error with the `NO_PLAYABLE_REPRESENTATION`
+    code will be thrown.
+
+    Note that when the "fallbacking" action is taken, the RxPlayer might
+    temporarily switch to the `"RELOADING"` state - which should thus be
+    properly handled.
+
+  - `"close-session"`: The RxPlayer will close and re-create a DRM session
+    (and thus re-download the corresponding license) if any of the key
+    associated to this session has the `"internal-error"` status.
+
+    It will try to do so in an efficient manner, only reloading the license
+    when the corresponding content plays.
+
+    The RxPlayer might go through the `"RELOADING"` and/or light decoding
+    glitches can arise while doing so, depending on the platform, for some
+    seconds, under that mode.
+
+
 ### onKeyExpiration
 
 _type_: `string | undefined`
 
-`true` by default.
+`"error"` by default.
 
 Behavior the RxPlayer should have when one of the key is known to be expired.
 
@@ -444,7 +532,7 @@ the default one if not is defined being `"error"`:
   - `"error"`: The RxPlayer will stop on an error when any key is expired.
     This is the default behavior.
 
-    The error emiited in that case should be an
+    The error emitted in that case should be an
     [EncryptedMediaError](./Player_Errors.md#encryptedmediaerror) with a
     `KEY_STATUS_CHANGE_ERROR` `code` property with a set `keyStatuses`
     property containing at least one string set to `"expired"`.
@@ -456,8 +544,8 @@ the default one if not is defined being `"error"`:
     be fallbacked from, meaning the RxPlayer will switch to other
     representation without expired keys.
 
-    If no Representation remain, a NO_PLAYABLE_REPRESENTATION error will
-    be thrown.
+    If no Representation remains, an error with the `NO_PLAYABLE_REPRESENTATION`
+    code will be thrown.
 
     Note that when the "fallbacking" action is taken, the RxPlayer might
     temporarily switch to the `"RELOADING"` state - which should thus be
@@ -474,36 +562,6 @@ the default one if not is defined being `"error"`:
     key and/or light decoding glitches can arise, depending on the
     platform, for some seconds, under that mode.
 
-
-
-### throwOnLicenseExpiration
-
-<div class="warning">
-This option is deprecated, it will disappear in the next major release
-`v4.0.0` (see <a href="./Miscellaneous/Deprecated_APIs.md">Deprecated
-APIs</a>).
-</div>
-
-_type_: `Boolean | undefined`
-
-`true` by default.
-
-If set to `true` or not set, the playback will be interrupted as soon as one
-of the current licenses expires. In that situation, you will be warned with
-an [`error` event](./Player_Errors.md) with, as a payload, an error with the code
-`KEY_STATUS_CHANGE_ERROR`.
-
-If set to `false`, the playback of the current content will not be
-interrupted even if one of the current licenses is expired. It might however
-stop decoding in that situation.
-
-It's then up to you to update the problematic license, usually through the
-usual `getLicense` callback.
-
-You may want to set this value to `false` if a session expiration leads to
-a license renewal.
-In that case, content may continue to play once the license has been
-updated.
 
 ### videoCapabilitiesConfig / audioCapabilitiesConfig
 

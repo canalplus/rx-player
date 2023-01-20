@@ -22,10 +22,8 @@ export default function parseDRMConfigurations(drmConfigurations) {
       getLicense: generateGetLicense(licenseServerUrl,
                                      type,
                                      !!fallbackLicenseRequest),
-      fallbackOn: {
-        keyInternalError: !!fallbackKeyError,
-        keyOutputRestricted: !!fallbackKeyError,
-      },
+      onKeyInternalError: !!fallbackKeyError,
+      onKeyOutputRestricted: !!fallbackKeyError,
     };
 
     if (!serverCertificateUrl) {
