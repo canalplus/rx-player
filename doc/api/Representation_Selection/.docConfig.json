@@ -1,8 +1,28 @@
 {
   "pages": [
     {
+      "path": "./getVideoRepresentation.md",
+      "displayName": "getVideoRepresentation"
+    },
+    {
+      "path": "./getAudioRepresentation.md",
+      "displayName": "getAudioRepresentation"
+    },
+    {
       "path": "./lockAudioVideoRepresentations.md",
       "displayName": "lockVideoRepresentations / lockAudioRepresentations"
+    },
+    {
+      "path": "./getLockedVideoRepresentations.md",
+      "displayName": "getLockedVideoRepresentations"
+    },
+    {
+      "path": "./getLockedAudioRepresentations.md",
+      "displayName": "getLockedAudioRepresentations"
+    },
+    {
+      "path": "./unlockAudioVideoRepresentations.md",
+      "displayName": "unlockVideoRepresentations / unlockAudioRepresentations"
     }
   ]
 }
