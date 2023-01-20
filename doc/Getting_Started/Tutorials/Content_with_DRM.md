@@ -407,39 +407,47 @@ concerned previous part of this tutorial.
 Please note that this option does not concern every errors linked to a refused
 key. It only concerns issues when the license server refuse to deliver a
 license.
-On most cases you will also need the API documented in the next part,
-`fallbackOn`.
+On most cases you will also need the API documented in the next part.
 
-### fallbackOn
+### `onKeyInternalError`, `onKeyOutputRestricted` and `onKeyExpiration`
 
-Where `fallbackOnLastTry` really is about the failure of a license request, the
-`fallbackOn` is about the refused keys themselves.
+Where `fallbackOnLastTry` really is about the failure of a license request, those
+options is about the refused keys themselves.
 
 As an example, the Content Decryption Module in the browser might decide that
 your current device cannot provide a high enough guarantee that the content
 cannot be copied. It might thus refuse to use one of the decryption key found in
 a license, especially the one needed for the higher content qualities.
 
-The `fallbackOn` object allows to fallback when this happens.
-There is two possible sub-properties in it:
-
-- `keyInternalError`: fallback when the corresponding key has the
+Those options then allows to fallback when this happens.
+- `onKeyInternalError`: Behavior to set when the corresponding key has the
   [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
   `"internal-error"`. We found that most widevine implementation use
   this error when a key is refused.
-- `keyOutputRestricted`: fallback when the corresponding key has the
+
+  You can set it to `"fallback"` so the RxPlayer switch to other, decipherable,
+  Representations when this status is received.
+
+- `onKeyOutputRestricted`: Behavior to set when the corresponding key has the
   [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
   `"output-restricted"`. This is the proper status for a key refused due
   to output restrictions.
 
-Both are booleans, and for the moment we recommend to set both to true in most
-cases.
+  You can set it to `"fallback"` so the RxPlayer switch to other, decipherable,
+  Representations when this status is received.
+
+- `onKeyOutputRestricted`: Behavior to set when the corresponding key has the
+  [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
+  `"expired"`.
+
+  You can set it to `"fallback"` so the RxPlayer switch to other, decipherable,
+  Representations when this status is received.
 
 For people on embedded devices with specific key systems, you can look a little
 more into what [MediaKeyStatus](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
-is set when a key is refused, and just set one of both.
+is set when a key is refused.
 
-Here is an example:
+Here is an example which would be adapted to most cases:
 
 ```js
 rxPlayer.loadVideo({
@@ -449,10 +457,8 @@ rxPlayer.loadVideo({
     {
       type: "widevine",
       getLicense,
-      fallbackOn: {
-        keyInternalError: true,
-        keyOutputRestricted: true,
-      },
+      onKeyOutputRestricted: "fallback",
+      onKeyInternalError: "fallback",
     },
   ],
 });
