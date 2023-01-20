@@ -440,17 +440,16 @@ For example, here is a `representationFilter` that removes video
 
 ```js
 /**
- * @param {Object} representation - The Representation object, as defined in
- * the documentation linked bellow [1]
+ * @param {Object} representationInfo
  * @param {Object} infos - supplementary information about the given
  * Representation.
  * @returns {boolean}
  */
-function representationFilter(representation, infos) {
+function representationFilter(representationInfo, infos) {
   if (infos.trackType === "video") {
     // If video representation, allows only those for which the height and width
     // is known to be below our 1920x1080 limit
-    const { width, height } = representation;
+    const { width, height } = representationInfo;
     return width != null && height != null && width <= 1920 && height <= 1080;
   }
 
@@ -458,5 +457,3 @@ function representationFilter(representation, infos) {
   return true;
 }
 ```
-
-[1] [Representation structure](./Manifest_Object.md#representation)
