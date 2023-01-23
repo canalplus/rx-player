@@ -788,6 +788,14 @@ export interface IVideoTrack { id : number|string;
                                label? : string | undefined;
                                representations: IVideoRepresentation[]; }
 
+/** Output of the `getKeySystemConfiguration` method. */
+export interface IKeySystemConfigurationOutput {
+  /** Key system string. */
+  keySystem : string;
+  /** `MediaKeySystemConfiguration` actually used by the key system. */
+  configuration : MediaKeySystemConfiguration;
+}
+
 /** Audio track from a list of audio tracks returned by the RxPlayer. */
 export interface IAvailableAudioTrack
   extends IAudioTrack { active : boolean }

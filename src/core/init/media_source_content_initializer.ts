@@ -40,7 +40,7 @@ import AdaptiveRepresentationSelector, {
 } from "../adaptive";
 import { IReadOnlyPlaybackObserver, PlaybackObserver } from "../api";
 import {
-  getCurrentKeySystem,
+  getKeySystemConfiguration,
   IContentProtection,
 } from "../decrypt";
 import {
@@ -598,8 +598,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         needsMediaSourceReload: (value) => onReloadOrder(value),
 
         needsDecipherabilityFlush(value) {
-          const keySystem = getCurrentKeySystem(mediaElement);
-          if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem)) {
+          const keySystem = getKeySystemConfiguration(mediaElement);
+          if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem?.[0])) {
             onReloadOrder(value);
           } else {
             // simple seek close to the current position

@@ -17,11 +17,32 @@
 import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 
 /**
- * Returns the name of the current key system used.
+ * Returns the name of the current key system used as well as its configuration,
+ * as reported by the `MediaKeySystemAccess` itself.
+ * @param {HTMLMediaElement} mediaElement
+ * @returns {Array|null}
+ */
+export default function getKeySystemConfiguration(
+  mediaElement : HTMLMediaElement
+) : [string, MediaKeySystemConfiguration] | null {
+  const currentState = MediaKeysInfosStore.getState(mediaElement);
+  if (currentState === null) {
+    return null;
+  }
+  return [
+    currentState.mediaKeySystemAccess.keySystem,
+    currentState.mediaKeySystemAccess.getConfiguration(),
+  ];
+}
+
+/**
+ * Returns the name of the current key system used, as originally indicated by
+ * the user.
+ * @deprecated
  * @param {HTMLMediaElement} mediaElement
  * @returns {string|null}
  */
-export default function getCurrentKeySystem(
+export function getCurrentKeySystem(
   mediaElement : HTMLMediaElement
 ) : string | null {
   const currentState = MediaKeysInfosStore.getState(mediaElement);
