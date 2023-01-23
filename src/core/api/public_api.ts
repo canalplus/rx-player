@@ -55,6 +55,7 @@ import {
   IBitrateEstimate,
   IConstructorOptions,
   IDecipherabilityUpdateContent,
+  IKeySystemConfigurationOutput,
   ILoadVideoOptions,
   IPeriod,
   IPlayerError,
@@ -95,6 +96,7 @@ import { IABRThrottlers } from "../adaptive";
 import {
   clearOnStop,
   disposeDecryptionResources,
+  getKeySystemConfiguration,
   getCurrentKeySystem,
 } from "../decrypt";
 import { ContentInitializer } from "../init";
@@ -1807,13 +1809,35 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * Returns type of current keysystem (e.g. playready, widevine) if the content
    * is encrypted. null otherwise.
+   * @deprecated
    * @returns {string|null}
    */
   getCurrentKeySystem() : string|null {
+    warnOnce("`getCurrentKeySystem` is deprecated." +
+             "Please use the `getKeySystemConfiguration` method instead.");
     if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
     return getCurrentKeySystem(this.videoElement);
+  }
+
+  /**
+   * Returns both the name of the key system (e.g. `"com.widevine.alpha"`) and
+   * the `MediaKeySystemConfiguration` currently associated to the
+   * HTMLMediaElement linked to the RxPlayer.
+   *
+   * Returns `null` if no such capabilities is associated or if unknown.
+   * @returns {Object|null}
+   */
+  getKeySystemConfiguration() : IKeySystemConfigurationOutput | null {
+    if (this.videoElement === null) {
+      throw new Error("Disposed player");
+    }
+    const values = getKeySystemConfiguration(this.videoElement);
+    if (values === null) {
+      return null;
+    }
+    return { keySystem: values[0], configuration: values[1] };
   }
 
   /**

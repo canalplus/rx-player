@@ -459,8 +459,12 @@ properties, methods, events and so on.
   - [`isLive`](../api/Content_Information/isLive.md):
     Returns `true` if the content is a "live" content.
 
-  - [`getCurrentKeySystem`](../api/Content_Information/getCurrentKeySystem.md):
-    Returns the name of the current key system.
+  - [`getKeySystemConfiguration`](../api/Content_Information/getKeySystemConfiguration.md):
+    Returns information on the key system currently attached to the
+    HTMLMediaElement linked to the RxPlayer.
+
+  - [`getCurrentKeySystem`](../api/Deprecated/getCurrentKeySystem.md):
+    [Deprecated] Returns the name of the current key system.
 
   - [`getManifest`](../api/Deprecated/getManifest.md):
     [Deprecated] Information on the current Manifest.
