@@ -19,7 +19,7 @@ import shouldReloadMediaSourceOnDecipherabilityUpdate from "../should_reload_med
 
 describe("Compat - shouldReloadMediaSourceOnDecipherabilityUpdate", () => {
   it("should return true for an unknown key system", () => {
-    expect(shouldReloadMediaSourceOnDecipherabilityUpdate(null)).toEqual(true);
+    expect(shouldReloadMediaSourceOnDecipherabilityUpdate(undefined)).toEqual(true);
   });
 
   it("should return false for any string containing the string \"widevine\"", () => {
