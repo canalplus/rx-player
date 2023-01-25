@@ -225,6 +225,50 @@ You can read [the related chapter](#bif-apis) for more information.
 You can replace this API by using the
 [parseBifThumbnails](../Tools/parseBifThumbnails.md) tool.
 
+
+### getCurrentKeySystem
+
+`getCurrentKeySystem` has been deprecated in profit of the similar
+[`getKeySystemConfiguration`](../Content_Information/getKeySystemConfiguration.md)
+method.
+
+Note however that the key system string optionally returned as a `keySystem`
+property from the latter is slightly different than the optional string returned
+from the former:
+
+  - `getCurrentKeySystem` returned the same keysystem name used as `type`
+    property of the `keySystems` `loadVideo` option originally communicated.
+
+    For example, calling the `loadVideo` like this:
+    ```js
+    rxPlayer.loadVideo({
+      keySystems: [{
+        type: "widevine",
+        // ...
+      }],
+      // ...
+    });
+    ```
+    May lead to `getCurrentKeySystem` returning just `"widevine"`.
+
+  - The `keySystem` property from `getKeySystemConfiguration` returns the actual
+    key system string used, alongside the actual configuration used in its
+    `configuration` key.
+
+    For example, calling the `loadVideo` like this:
+    ```js
+    rxPlayer.loadVideo({
+      keySystems: [{
+        type: "widevine",
+        // ...
+      }],
+      // ...
+    });
+    ```
+    May lead to a more complex `keySystem` property being reported, like for
+    example, `"com.widevine.alpha"`.
+
+
 ## RxPlayer Events
 
 The following RxPlayer events has been deprecated.
