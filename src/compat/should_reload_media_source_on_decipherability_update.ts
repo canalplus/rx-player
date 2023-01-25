@@ -21,12 +21,12 @@
  * We found that on all Widevine targets tested, a simple seek is sufficient.
  * As widevine clients make a good chunk of users, we can make a difference
  * between them and others as it is for the better.
- * @param {string|null} currentKeySystem
+ * @param {string|undefined} currentKeySystem
  * @returns {Boolean}
  */
 export default function shouldReloadMediaSourceOnDecipherabilityUpdate(
-  currentKeySystem : string | null
+  currentKeySystem : string | undefined
 ) : boolean {
-  return currentKeySystem === null ||
+  return currentKeySystem === undefined ||
          currentKeySystem.indexOf("widevine") < 0;
 }
