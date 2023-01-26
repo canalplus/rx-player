@@ -335,7 +335,7 @@ describe("loadVideo Options", () => {
         transport: manifestInfos.transport,
         url: manifestInfos.url,
         representationFilter(representation, infos) {
-          if (infos.bufferType === "video") {
+          if (infos.trackType === "video") {
             numberOfTimeRepresentationFilterIsCalledForVideo++;
             return representation.bitrate <
               representationInTheMiddle.bitrate;
