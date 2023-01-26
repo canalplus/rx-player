@@ -192,7 +192,8 @@ describe("Manifest - Period", () => {
       throw new Error("Impossible: already checked it was an Error instance");
     }
 
-    expect((errorReceived as { code? : string }).code).toBe("MANIFEST_PARSE_ERROR");
+    expect((errorReceived as { code? : string }).code)
+      .toBe("MANIFEST_INCOMPATIBLE_CODECS_ERROR");
     expect((errorReceived as { type? : string }).type).toBe("MEDIA_ERROR");
     expect(errorReceived.message).toContain("No supported audio adaptations");
   });
@@ -252,7 +253,8 @@ describe("Manifest - Period", () => {
       throw new Error("Impossible: already checked it was an Error instance");
     }
 
-    expect((errorReceived as { code? : string }).code).toBe("MANIFEST_PARSE_ERROR");
+    expect((errorReceived as { code? : string }).code)
+      .toBe("MANIFEST_INCOMPATIBLE_CODECS_ERROR");
     expect((errorReceived as { type? : string }).type).toBe("MEDIA_ERROR");
     expect(errorReceived.message).toContain("No supported audio adaptations");
   });
@@ -312,7 +314,8 @@ describe("Manifest - Period", () => {
       throw new Error("Impossible: already checked it was an Error instance");
     }
 
-    expect((errorReceived as { code? : string }).code).toBe("MANIFEST_PARSE_ERROR");
+    expect((errorReceived as { code? : string }).code)
+      .toBe("MANIFEST_INCOMPATIBLE_CODECS_ERROR");
     expect((errorReceived as { type? : string }).type).toBe("MEDIA_ERROR");
     expect(errorReceived.message).toContain("No supported video adaptation");
   });
@@ -372,7 +375,8 @@ describe("Manifest - Period", () => {
       throw new Error("Impossible: already checked it was an Error instance");
     }
 
-    expect((errorReceived as { code? : string }).code).toBe("MANIFEST_PARSE_ERROR");
+    expect((errorReceived as { code? : string }).code)
+      .toBe("MANIFEST_INCOMPATIBLE_CODECS_ERROR");
     expect((errorReceived as { type? : string }).type).toBe("MEDIA_ERROR");
     expect(errorReceived.message).toContain("No supported video adaptation");
   });
