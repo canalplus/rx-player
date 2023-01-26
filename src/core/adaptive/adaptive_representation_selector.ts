@@ -38,7 +38,9 @@ import GuessBasedChooser from "./guess_based_chooser";
 import NetworkAnalyzer from "./network_analyzer";
 import BandwidthEstimator from "./utils/bandwidth_estimator";
 import filterByBitrate from "./utils/filter_by_bitrate";
-import filterByWidth from "./utils/filter_by_width";
+import filterByResolution, {
+  IResolutionInfo,
+} from "./utils/filter_by_resolution";
 import LastEstimateStorage, {
   ABRAlgorithmType,
 } from "./utils/last_estimate_storage";
@@ -104,9 +106,9 @@ export default function createAdaptiveRepresentationSelector(
     const bandwidthEstimator = _getBandwidthEstimator(type);
     const initialBitrate = takeFirstSet<number>(initialBitrates[type], 0);
     const filters = {
-      limitWidth: takeFirstSet<IReadOnlySharedReference<number | undefined>>(
-        throttlers.limitWidth[type],
-        limitWidthDefaultRef),
+      limitResolution: takeFirstSet<
+        IReadOnlySharedReference<IResolutionInfo | undefined>
+      >(throttlers.limitResolution[type], limitWidthDefaultRef),
       throttleBitrate: takeFirstSet<IReadOnlySharedReference<number>>(
         throttlers.throttleBitrate[type],
         throttleBitrateDefaultRef),
@@ -268,8 +270,10 @@ function getEstimateReference(
       onAddedSegment = noop;
     });
 
-    filters.limitWidth.onUpdate(updateEstimate, { clearSignal: innerCancellationSignal });
-    filters.limitWidth.onUpdate(updateEstimate, { clearSignal: innerCancellationSignal });
+    filters.throttleBitrate.onUpdate(updateEstimate,
+                                     { clearSignal: innerCancellationSignal });
+    filters.limitResolution.onUpdate(updateEstimate,
+                                     { clearSignal: innerCancellationSignal });
 
     return innerEstimateRef;
 
@@ -280,12 +284,12 @@ function getEstimateReference(
     /** Returns the actual estimate based on all methods and algorithm available. */
     function getCurrentEstimate() {
       const { bufferGap, position, maximumPosition } = lastPlaybackObservation;
-      const widthLimit = filters.limitWidth.getValue();
+      const resolutionLimit = filters.limitResolution.getValue();
       const bitrateThrottle = filters.throttleBitrate.getValue();
       const currentRepresentationVal = currentRepresentation.getValue();
 
       const filteredReps = getFilteredRepresentations(representations,
-                                                      widthLimit,
+                                                      resolutionLimit,
                                                       bitrateThrottle);
       const requests = requestsStore.getRequests();
       const { bandwidthEstimate, bitrateChosen } = networkAnalyzer
@@ -475,22 +479,23 @@ function getEstimateReference(
 /**
  * Filter representations given through filters options.
  * @param {Array.<Representation>} representations
- * @param {number | undefined} widthLimit - Filter Object.
+ * @param {Object | undefined} resolutionLimit
+ * @param {number | undefined} bitrateThrottle
  * @returns {Array.<Representation>}
  */
 function getFilteredRepresentations(
   representations : Representation[],
-  widthLimit : number | undefined,
-  bitrateThrottle : number
+  resolutionLimit : IResolutionInfo | undefined,
+  bitrateThrottle : number | undefined
 ) : Representation[] {
   let filteredReps = representations;
 
-  if (bitrateThrottle < Infinity) {
+  if (bitrateThrottle !== undefined && bitrateThrottle < Infinity) {
     filteredReps = filterByBitrate(filteredReps, bitrateThrottle);
   }
 
-  if (widthLimit !== undefined) {
-    filteredReps = filterByWidth(filteredReps, widthLimit);
+  if (resolutionLimit !== undefined) {
+    filteredReps = filterByResolution(filteredReps, resolutionLimit);
   }
 
   return filteredReps;
@@ -691,7 +696,8 @@ export interface IRepresentationEstimatorArguments {
   currentRepresentation : IReadOnlySharedReference<Representation | null>;
   /** Throttle Representation pool according to filters. */
   filters: {
-    limitWidth : IReadOnlySharedReference<number | undefined>;
+    limitResolution : IReadOnlySharedReference<IResolutionInfo |
+                                               undefined>;
     throttleBitrate : IReadOnlySharedReference<number>;
   };
   /**
@@ -779,8 +785,9 @@ export interface IAdaptiveRepresentationSelectorArguments {
  * to choose from.
  */
 export interface IRepresentationEstimatorThrottlers {
-  limitWidth : Partial<Record<IBufferType,
-                              IReadOnlySharedReference<number>>>;
+  limitResolution : Partial<Record<IBufferType, IReadOnlySharedReference<
+    IResolutionInfo
+  >>>;
   throttleBitrate : Partial<Record<IBufferType,
                                    IReadOnlySharedReference<number>>>;
 }
