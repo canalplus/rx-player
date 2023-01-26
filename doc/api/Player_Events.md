@@ -514,13 +514,16 @@ This event is not sent in <i>DirectFile</i> mode (see
 
 _payload type_: `Array.<Object>`
 
-Triggered when one or multiple
-[Periods](../Getting_Started/Glossary.md#period) are made available in the
-current content.
+This event is triggered when one or multiple new
+[Periods](../Getting_Started/Glossary.md#period) start to be considered by the
+RxPlayer in the current content.
 
-This event is first sent once the Manifest has been parsed and then may be
-triggered again for dynamic contents upon Manifest refresh if new Periods are
-found.
+This event mainly allows to choose the text, audio and/or video tracks as well
+as the audio and/or video Representations to select for those Period(s).
+
+This event is first sent once the content is first loaded and then may be
+triggered gain everytime the RxPlayer is considering another `Period` of the
+content.
 
 The payload of this event is an array of object, each describing a single Period
 in chronological order.
