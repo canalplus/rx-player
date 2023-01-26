@@ -3,9 +3,9 @@
 ## Description
 
 Returns information on all [Periods](../../Getting_Started/Glossary.md#period)
-currently in the current content.
+currently considered by the RxPlayer in the current content.
 
-This method mainly allows to obtain and information on the audio, video or text
+This method mainly allows to obtain information on its audio, video or text
 tracks as well as on audio and video Representations - and to change any of
 them - by using the corresponding Period's `id` property returned here.
 
@@ -41,4 +41,3 @@ const periods = rxPlayer.getAvailablePeriods();
 
   - **return value** `Array.<Object>`: Information on all Periods currently
     available in the content.
-
