@@ -266,44 +266,43 @@ This option will have no effect for contents loaded in <i>Directfile</i>
 mode (see <a href="./Loading_a_Content.md#transport">loadVideo options</a>).
 </div>
 
-### limitVideoWidth
+### videoResolutionLimit
 
-_type_: `Boolean`
+_type_: `string`
 
-_defaults_: `false`
+_defaults_: `"none"`
 
-With this feature, the possible video
-[Representations](../Getting_Started/Glossary.md#representation) considered are
-filtered by width:
+This option allows to throttle the played video resolution according to either
+the `videoElement`'s resolution or to the screen resolution, thus preventing to
+unnecessarily waste bandwidth to load a video quality that won't be able to be
+properly displayed anyway.
 
-The maximum width considered is the closest superior or equal to the video
-element's width.
+This option can have the following values:
 
-This is done because the other, "superior" Representations will not have any
-difference in glossary of pixels (as in most case, the display limits the maximum
-resolution displayable). It thus save bandwidth with no visible difference.
+  - `"videoElement"`: The loaded video Representation will be throttled
+    according to the given `videoElement`'s dimensions. Meaning that the
+    RxPlayer won't be trying to play higher qualities whose resolutions should
+    not be discernible, with an exception when the picture-in-picture mode is
+    enabled in which case the resolution limit is compared to the
+    picture-in-picture window instead.
 
-To activate this feature, set it to `true`.
+  - `"screen"`: The loaded video Representation will be throttled according to
+    the screen's dimensions. Simply written, the RxPlayer won't try to play
+    Representation with a resolution higher than the screen resolution with the
+    exception of the immediately superior resolution if no Representation has
+    the same resolution than the screen.
 
-```js
-const player = Player({
-  limitVideoWidth: true,
-});
-```
+    You might prefer this value over `"videoElement"` to stay ready when and if
+    the user decides to enter a "fullscreen mode".
 
-For some reasons (displaying directly a good quality when switching to
-fullscreen, specific environments), you might not want to activate this limit.
+  - `"none"`: No such limit on the video Representation's resolution will be
+    automatically applied.
 
 <div class="warning">
-This option will have no effect for contents loaded :
-
-- In <i>DirectFile</i> mode (see <a href="./Loading_a_Content.md#transport">loadVideo options</a>).
-- On Firefox browsers (version >= 67) : We can't know if the Picture-In-Picture
-  feature or window is enabled and we can't know PIP window size. Thus we can't
-  rely on video element size attributes, that may not reflect the real video size
-  when PIP is enabled.
-
+This option will have no effect for contents loaded in <i>Directfile</i>
+mode (see <a href="./Loading_a_Content.md#transport">loadVideo options</a>).
 </div>
+
 
 ### throttleVideoBitrateWhenHidden
 

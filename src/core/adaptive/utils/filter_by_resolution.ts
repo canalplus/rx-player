@@ -19,17 +19,23 @@ import arrayFind from "../../../utils/array_find";
 import takeFirstSet from "../../../utils/take_first_set";
 
 /**
- * Filter representations based on their width:
- *   - the highest width considered will be the one linked to the first
- *     representation which has a superior width to the one given.
+ * Filter representations based on their resolution.
+ *   - the highest resolution considered will be the one linked to the first
+ *     representation which has a superior resolution or equal to the one
+ *     given.
  * @param {Array.<Object>} representations - The representations array
- * @param {Number} width
+ * @param {Object} resolution
  * @returns {Array.<Object>}
  */
-export default function filterByWidth(
+export default function filterByResolution(
   representations : Representation[],
-  width : number
+  resolution : IResolutionInfo
 ) : Representation[] {
+  if (resolution.width === undefined || resolution.height === undefined) {
+    return representations;
+  }
+  const width = resolution.width * resolution.pixelRatio;
+  const height = resolution.height * resolution.pixelRatio;
   const sortedRepsByWidth = representations
     .slice() // clone
     .sort((a, b) => takeFirstSet<number>(a.width, 0) -
@@ -37,7 +43,9 @@ export default function filterByWidth(
 
   const repWithMaxWidth = arrayFind(sortedRepsByWidth, (representation) =>
     typeof representation.width === "number" &&
-    representation.width >= width);
+    representation.width >= width &&
+    typeof representation.height === "number" &&
+    representation.height >= height);
 
   if (repWithMaxWidth === undefined) {
     return representations;
@@ -48,4 +56,10 @@ export default function filterByWidth(
   return representations.filter(representation =>
     typeof representation.width === "number" ? representation.width <= maxWidth :
                                                true);
+}
+
+export interface IResolutionInfo {
+  height : number | undefined;
+  width : number | undefined;
+  pixelRatio : number;
 }

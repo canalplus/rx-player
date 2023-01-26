@@ -6,6 +6,25 @@ Several have been removed, they will all be listed in this page.
 
 ## Removed options
 
+### `limitVideoWidth`
+
+The `limitVideoWidth` option has been removed.
+
+Instead, a more complete [`videoResolutionLimit`](../../api/Creating_a_Player.md)
+constructor option exists, allowing either to limit the width to the media
+element - so roughly similar to `limitVideoWidth` - or even to the screen
+resolution, if you want to be ready with a higher resolution in case the user
+enables fullscreen mode.
+
+To replace `limitVideoWidth`, you can write:
+```js
+const rxPlayer = new RxPlayer({
+  // ...
+  videoResolutionLimit: "videoElement",
+});
+```
+
+
 ### `initialAudioBitrate` / `initialVideoBitrate`
 
 Both the `initialAudioBitrate` and `initialVideoBitrate` constructor options
