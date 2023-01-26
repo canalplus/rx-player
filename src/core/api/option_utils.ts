@@ -50,7 +50,9 @@ export interface IParsedConstructorOptions {
   maxBufferBehind : number;
   wantedBufferAhead : number;
   maxVideoBufferSize : number;
-  limitVideoWidth : boolean;
+  videoResolutionLimit : "videoElement" |
+                         "screen" |
+                         "none";
   throttleVideoBitrateWhenHidden : boolean;
 
   videoElement : HTMLMediaElement;
@@ -130,7 +132,7 @@ function parseConstructorOptions(
   let baseBandwidth : number;
 
   const { DEFAULT_BASE_BANDWIDTH,
-          DEFAULT_LIMIT_VIDEO_WIDTH,
+          DEFAULT_VIDEO_RESOLUTION_LIMIT,
           DEFAULT_MAX_BUFFER_AHEAD,
           DEFAULT_MAX_BUFFER_BEHIND,
           DEFAULT_MAX_VIDEO_BUFFER_SIZE,
@@ -177,10 +179,9 @@ function parseConstructorOptions(
     }
   }
 
-
-  const limitVideoWidth = isNullOrUndefined(options.limitVideoWidth) ?
-    DEFAULT_LIMIT_VIDEO_WIDTH :
-    !!options.limitVideoWidth;
+  const videoResolutionLimit = isNullOrUndefined(options.videoResolutionLimit) ?
+    DEFAULT_VIDEO_RESOLUTION_LIMIT :
+    options.videoResolutionLimit;
 
   const throttleVideoBitrateWhenHidden =
     isNullOrUndefined(options.throttleVideoBitrateWhenHidden) ?
@@ -210,7 +211,7 @@ function parseConstructorOptions(
 
   return { maxBufferAhead,
            maxBufferBehind,
-           limitVideoWidth,
+           videoResolutionLimit,
            videoElement,
            wantedBufferAhead,
            maxVideoBufferSize,
