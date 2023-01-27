@@ -404,6 +404,7 @@ function getElementResolutionRef(
   function checkElementResolution() {
     clearPreviousEventListener();
     const pipStatus = pipStatusRef.getValue();
+    const { pipWindow } = pipStatus;
     if (!pipStatus.isEnabled) {
       const oldVal = ref.getValue();
       if (oldVal.width !== mediaElement.clientWidth ||
@@ -414,8 +415,7 @@ function getElementResolutionRef(
                        height: mediaElement.clientHeight,
                        pixelRatio });
       }
-    } else if (!isNullOrUndefined(pipStatus.pipWindow)) {
-      const { pipWindow } = pipStatus;
+    } else if (!isNullOrUndefined(pipWindow)) {
       const onPipResize = () => {
         updateToPipWindowResolution();
       };
@@ -425,17 +425,6 @@ function getElementResolutionRef(
         clearPreviousEventListener = noop;
       };
       updateToPipWindowResolution();
-      function updateToPipWindowResolution() {
-        const oldVal = ref.getValue();
-        if (oldVal.width !== pipWindow.width ||
-            oldVal.height !== pipWindow.height ||
-            oldVal.pixelRatio !== pixelRatio)
-        {
-          ref.setValue({ width: pipWindow.width,
-                         height: pipWindow.height,
-                         pixelRatio });
-        }
-      }
     } else {
       const oldVal = ref.getValue();
       if (oldVal.width !== undefined ||
@@ -444,6 +433,17 @@ function getElementResolutionRef(
       {
         ref.setValue({ width: undefined,
                        height: undefined,
+                       pixelRatio });
+      }
+    }
+    function updateToPipWindowResolution() {
+      const oldVal = ref.getValue();
+      if (oldVal.width !== pipWindow?.width ||
+          oldVal.height !== pipWindow?.height ||
+          oldVal.pixelRatio !== pixelRatio)
+      {
+        ref.setValue({ width: pipWindow?.width,
+                       height: pipWindow?.height,
                        pixelRatio });
       }
     }
