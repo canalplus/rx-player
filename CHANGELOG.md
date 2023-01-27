@@ -17,6 +17,7 @@
   - Remove `audioBitrateChange` and `videoBitrateChange` events in profit of the new `audioRepresentationChange` and `videoRepresentationChange` events
   - Remove `availableAudioBitratesChange` and `availableVideoBitratesChange` events. Those are less needed with the new Representations lock API and can be mostly replicated through the `audioTrackChange` and `videoTrackChange` events
   - "Flatten" the `transportOptions` loadVideo options by putting all its inner properties directly at the top level of loadVideo options, to simplify its documentation and discoverability [#1149]
+  - Remove `limitVideoWidth` constructor option in profit of the more configurable `videoResolutionLimit` constructor option
   - Rename `networkConfig` into `requestConfig` and re-organize its inner properties to pave the way for future request-related APIs.
   - Remove `stopAtEnd` `loadVideo` option and don't automatically stop when reaching the end by default. This behavior can be counter-intuitive and can be very easily implemented by the application.
   - Remove `decipherabilityUpdate` event as it appeared to be not easily exploitable and exposed internal logic too much [#1168]
@@ -75,6 +76,7 @@
   - Add `getVideoRepresentation` and `getAudioRepresentation` method to retrieve information on the currently loaded representations [#1144]
   - Add `audioRepresentationChange` and `videoRepresentationChange` events to be notified when the currently-loaded Representation for the current Period changes.
   - Add `getContentUrls` allowing to retrieve the one or several known URLs through which the current Manifest or content is reachable.
+  - Add `videoResolutionLimit` constructor option allowing to automatically limit a video Representation's resolution.
   - Add `newAvailablePeriods` event to signal new Period on which a track and/or Representation choice can be made
   - Add `brokenRepresentationsLock` event for when a Representations lock could not be respected anymore
   - Add `trackUpdate` event for when a track has been updated for any type and Period

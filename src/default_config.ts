@@ -203,14 +203,15 @@ const DEFAULT_CONFIG = {
   DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN: false,
 
     /**
-     * If true, the video representations you can switch to in adaptive mode
-     * are limited by the video element's width.
+     * Default video resolution limit behavior.
      *
-     * Basically in that case, we won't switch to a video Representation with
-     * a width higher than the current width of the video HTMLElement.
+     * This option allows for example to throttle the video resolution so it
+     * does not exceed the screen resolution.
+     *
+     * Here set to "none" by default to disable throttling.
      * @type {Boolean}
      */
-  DEFAULT_LIMIT_VIDEO_WIDTH: false,
+  DEFAULT_VIDEO_RESOLUTION_LIMIT: "none" as const,
 
     /**
      * Default initial live gap considered if no presentation delay has been
