@@ -160,6 +160,7 @@ A solution in that case would be to propose to your users an UI element to
 trigger the play with an interaction.
 </div>
 
+
 ### startAt
 
 _type_: `Object|undefined`
@@ -277,6 +278,132 @@ player.loadVideo({
 });
 ```
 
+
+### requestConfig
+
+_type_: `Object`
+
+_defaults_: `{}`
+
+<div class="warning">
+This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
+transport option</a>)
+</div>
+
+Configuration linked to [Manifest](../Getting_Started/Glossary.md#manifest) and
+segment requests.
+This object can take the following properties (all are optional):
+
+- `segment` (`object|undefined`): If set, segment-specific request
+  configuration. That object can contain any of the following properties:
+
+    - `maxRetry` (`number|undefined`): Maximum number of times a segment
+      request will be retried when an error happen - only on some condition [1].
+
+      Those retry will be done with a progressive delay, to avoid overloading a
+      CDN. When this count is reached, the player will stop and throw a fatal
+      error.
+
+      Defaults to `4`.
+
+    - `timeout` (`number|undefined`): Timeout, in milliseconds, after which
+      segment requests are aborted and, depending on other options, retried.
+
+      To set to `-1` for no timeout.
+
+      `undefined` (the default) will lead to a default, large, timeout being
+      used.
+
+- `manifest` (`object|undefined`): If set, manifest-specific request
+  configuration. That object can contain any of the following properties:
+
+    - `maxRetry` (`number|undefined`): Maximum number of times a Manifest request
+      will be retried when a request error happen - only on some condition [1].
+      Defaults to `4`.
+
+      Those retry will be done with a progressive delay, to avoid overloading a
+      CDN. When this count is reached, the player will stop and throw a fatal
+      error.
+
+      Defaults to `4`.
+
+    - `timeout` (`number|undefined`): Timeout, in milliseconds, after which
+      manifest requests are aborted and, depending on other options, retried.
+
+      To set to `-1` for no timeout.
+
+      `undefined` (the default) will lead to a default, large, timeout being used.
+
+[1] To retry a request, one of the following condition should be met:
+
+- The request failed because of a `404` HTTP code
+
+- The request failed because of an HTTP code in the `500` family
+
+- The request failed because of a timeout
+
+- the request failed because of an unknown request error (might be a
+  parsing/interface error)
+
+
+### textTrackMode
+
+_type_: `string|undefined`
+
+_defaults_: `"native"`
+
+<div class="warning">
+This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
+transport option</a>)
+</div>
+
+This option allows to specify how the text tracks should be displayed.
+
+There is two possible values:
+
+- `"native"`
+- `"html"`
+
+In the default `"native"` mode, a `<track>` element will be created on the
+video and the subtitles will be displayed by it, with a minimal style.
+There is no action on your side, the subtitles will be correctly displayed at
+the right time.
+
+In `"html"` mode, the text tracks will be displayed on a specific HTML
+element. This mode allows us to do much more stylisation, such as the one
+defined by TTML styling attributes or SAMI's CSS. It is particularly useful to
+correctly manage complex closed captions (with multiple colors, positionning
+etc.).
+With this mode, you will need to provide a wrapper HTML element with the
+[textTrackElement option](#texttrackelement).
+
+All text track formats supported in `"native"` mode also work in `"html"`
+mode.
+
+More infos on supported text tracks can be found in the [text track
+documentation](./Miscellaneous/Text_Tracks.md).
+
+
+### textTrackElement
+
+_type_: `HTMLElement|undefined`
+
+<div class="warning">
+This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
+transport option</a>)
+</div>
+
+`textTrackElement` is only required and used if you provided a `"html"`
+[textTrackMode](#texttrackmode).
+
+This property will be the element on which text tracks will be set, as child
+elements, at the right time. We expect that this element is the exact same size
+than the media element it applies to (this allows us to properly place the
+subtitles position without polling where the video is in your UI).
+You can however re-size or update the style of it as you wish, to better suit
+your UI needs.
+
+
 ### minimumManifestUpdateInterval
 
 _type_: `number|undefined`
@@ -316,6 +443,7 @@ rxPlayer.loadVideo({
   },
 });
 ```
+
 
 ### initialManifest
 
@@ -403,6 +531,7 @@ timeshift window instead of 10 hours for the full Manifest). The content
 will keep its original timeshift window and the RxPlayer will be able to get
 information about new segments at a lower cost.
 
+
 ### representationFilter
 
 _type_: `Function|undefined`
@@ -423,6 +552,7 @@ rxPlayer.loadVideo({
   },
 });
 ```
+
 
 ### segmentLoader
 
@@ -447,6 +577,7 @@ rxPlayer.loadVideo({
 
 More info on it can be found [here](../api/Miscellaneous/plugins.md#segmentloader).
 
+
 ### manifestLoader
 
 _type_: `Function|undefined`
@@ -470,175 +601,6 @@ rxPlayer.loadVideo({
 
 More info on it can be found [here](../api/Miscellaneous/plugins.md#manifestloader).
 
-### checkMediaSegmentIntegrity
-
-_type_: `Function|undefined`
-
-<div class="warning">
-This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
-transport option</a>)
-</div>
-
-If set to true, the RxPlayer will retry a media segment request if that
-segment seems corrupted.
-
-If not set or set to false, the RxPlayer might interrupt playback in the
-same situation.
-
-You can set this option if you suspect the CDN providing your contents to
-sometimes send you incomplete/corrupted segments.
-
-Example:
-
-```js
-rxPlayer.loadVideo({
-  // ...
-  checkMediaSegmentIntegrity: true,
-});
-```
-
-### serverSyncInfos
-
-_type_: `Function|undefined`
-
-<div class="warning">
-This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
-transport option</a>)
-</div>
-
-Allows to provide a time synchronization mechanism between the client and
-the server.
-
-This value is mainly useful for live DASH contents based on a
-SegmentTemplate scheme without SegmentTimeline elements as those rely on
-having a synchronized clock on the client side.
-
-The `serverSyncInfos` object contains two keys:
-
-- `serverTimestamp` (`number`): Unix timestamp of the server at a given
-  point in time, in milliseconds.
-
-- `clientTime` (`number`): Value of the `performance.now()` API at the time
-  the `serverTimestamp` value was true. Please note that if your page contains
-  multiple worker, the `performance.now()` call should be done on the same
-  worker than the one in which loadVideo is called.
-
-  <div class="note">
-  The `performance.now()` API is used here because it is the main API to
-  obtain a monotically increasing clock on the client-side.
-  </div</div>
-
-Example:
-
-```js
-const timeResponse = await fetch(timeServerURL);
-const clientTime = performance.now();
-const serverTimestamp = await timeResponse.text();
-const serverSyncInfos = { serverTimestamp, clientTime };
-rxPlayer.loadVideo({
-  // ...
-  serverSyncInfos,
-});
-```
-
-If indicated, we will ignore any time indication on the MPD and only consider
-`serverSyncInfos` to calculate the time on the server side.
-
-This value is also very useful for low-latency contents, as some of them do not
-indicate any server's time, relying on the client one instead.
-
-Note that there is a risk of us losing synchronization when leap seconds are
-added/substracted to unix time. However we consider those situations rare enough
-(and the effect should be relatively weak) to let this as is for the moment. For
-a complete explanation, you can look at the [corresponding chapter of the
-low-latency documentation](./Miscellaneous/Low_Latency.md#note-time-sync).
-
-### referenceDateTime
-
-_type_: `Function|undefined`
-
-<div class="warning">
-This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
-transport option</a>)
-</div>
-
-Only useful for live contents. This is the default amount of time, in
-seconds, to add as an offset to a given media content's time, to obtain the
-real live time.
-
-For example, if the media has it's `0` time corresponding to the 30th of
-January 2010 at midnight, you can set the `referenceDateTime` to
-`new Date(2010-01-30) / 1000`. This value is useful to communicate back to you
-the "live time", for example through the `getWallClockTime` method.
-
-This will only be taken into account for live contents, and if the Manifest
-/ MPD does not already contain an offset (example: an
-"availabilityStartTime" attribute in a DASH MPD).
-
-Example:
-
-```js
-rxPlayer.loadVideo({
-  // ...
-  referenceDateTime: new Date(2015 - 05 - 29) / 1000,
-});
-```
-
-### textTrackMode
-
-_type_: `string|undefined`
-
-_defaults_: `"native"`
-
-<div class="warning">
-This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
-transport option</a>)
-</div>
-
-This option allows to specify how the text tracks should be displayed.
-
-There is two possible values:
-
-- `"native"`
-- `"html"`
-
-In the default `"native"` mode, a `<track>` element will be created on the
-video and the subtitles will be displayed by it, with a minimal style.
-There is no action on your side, the subtitles will be correctly displayed at
-the right time.
-
-In `"html"` mode, the text tracks will be displayed on a specific HTML
-element. This mode allows us to do much more stylisation, such as the one
-defined by TTML styling attributes or SAMI's CSS. It is particularly useful to
-correctly manage complex closed captions (with multiple colors, positionning
-etc.).
-With this mode, you will need to provide a wrapper HTML element with the
-[textTrackElement option](#texttrackelement).
-
-All text track formats supported in `"native"` mode also work in `"html"`
-mode.
-
-More infos on supported text tracks can be found in the [text track
-documentation](./Miscellaneous/Text_Tracks.md).
-
-### textTrackElement
-
-_type_: `HTMLElement|undefined`
-
-<div class="warning">
-This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
-transport option</a>)
-</div>
-
-`textTrackElement` is only required and used if you provided a `"html"`
-[textTrackMode](#texttrackmode).
-
-This property will be the element on which text tracks will be set, as child
-elements, at the right time. We expect that this element is the exact same size
-than the media element it applies to (this allows us to properly place the
-subtitles position without polling where the video is in your UI).
-You can however re-size or update the style of it as you wish, to better suit
-your UI needs.
 
 ### onCodecSwitch
 
@@ -679,6 +641,7 @@ Can be set to one of those two values:
 
   _More information about the `"RELOADING"` state can be found in [the
   player states documentation](./Player_States.md)._
+
 
 ### defaultAudioTrackSwitchingMode
 
@@ -747,71 +710,6 @@ through the `startAt` option.
 More information on playing low-latency DASH contents can be found in the
 [corresponding documentation page](./Miscellaneous/Low_Latency.md).
 
-### requestConfig
-
-_type_: `Object`
-
-_defaults_: `{}`
-
-<div class="warning">
-This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
-transport option</a>)
-</div>
-
-Configuration linked to [Manifest](../Getting_Started/Glossary.md#manifest) and
-segment requests.
-This object can take the following properties (all are optional):
-
-- `segment` (`object|undefined`): If set, segment-specific request
-  configuration. That object can contain any of the following properties:
-
-    - `maxRetry` (`number|undefined`): Maximum number of times a segment
-      request will be retried when an error happen - only on some condition [1].
-
-      Those retry will be done with a progressive delay, to avoid overloading a
-      CDN. When this count is reached, the player will stop and throw a fatal
-      error.
-
-      Defaults to `4`.
-
-    - `timeout` (`number|undefined`): Timeout, in milliseconds, after which
-      segment requests are aborted and, depending on other options, retried.
-
-      To set to `-1` for no timeout.
-
-      `undefined` (the default) will lead to a default, large, timeout being
-      used.
-
-- `manifest` (`object|undefined`): If set, manifest-specific request
-  configuration. That object can contain any of the following properties:
-
-    - `maxRetry` (`number|undefined`): Maximum number of times a Manifest request
-      will be retried when a request error happen - only on some condition [1].
-      Defaults to `4`.
-
-      Those retry will be done with a progressive delay, to avoid overloading a
-      CDN. When this count is reached, the player will stop and throw a fatal
-      error.
-
-      Defaults to `4`.
-
-    - `timeout` (`number|undefined`): Timeout, in milliseconds, after which
-      manifest requests are aborted and, depending on other options, retried.
-
-      To set to `-1` for no timeout.
-
-      `undefined` (the default) will lead to a default, large, timeout being used.
-
-[1] To retry a request, one of the following condition should be met:
-
-- The request failed because of a `404` HTTP code
-
-- The request failed because of an HTTP code in the `500` family
-
-- The request failed because of a timeout
-
-- the request failed because of an unknown request error (might be a
-  parsing/interface error)
 
 ### enableFastSwitching
 
@@ -858,3 +756,120 @@ Forbiding the RxPlayer to replace segments altogether is today not possible and
 would even break playback in some situations: when multi-Period DASH contents
 have overlapping segments, when the browser garbage-collect partially a
 segment...
+
+
+### checkMediaSegmentIntegrity
+
+_type_: `Function|undefined`
+
+<div class="warning">
+This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
+transport option</a>)
+</div>
+
+If set to true, the RxPlayer will retry a media segment request if that
+segment seems corrupted.
+
+If not set or set to false, the RxPlayer might interrupt playback in the
+same situation.
+
+You can set this option if you suspect the CDN providing your contents to
+sometimes send you incomplete/corrupted segments.
+
+Example:
+
+```js
+rxPlayer.loadVideo({
+  // ...
+  checkMediaSegmentIntegrity: true,
+});
+```
+
+
+### serverSyncInfos
+
+_type_: `Function|undefined`
+
+<div class="warning">
+This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
+transport option</a>)
+</div>
+
+Allows to provide a time synchronization mechanism between the client and
+the server.
+
+This value is mainly useful for live DASH contents based on a
+SegmentTemplate scheme without SegmentTimeline elements as those rely on
+having a synchronized clock on the client side.
+
+The `serverSyncInfos` object contains two keys:
+
+- `serverTimestamp` (`number`): Unix timestamp of the server at a given
+  point in time, in milliseconds.
+
+- `clientTime` (`number`): Value of the `performance.now()` API at the time
+  the `serverTimestamp` value was true. Please note that if your page contains
+  multiple worker, the `performance.now()` call should be done on the same
+  worker than the one in which loadVideo is called.
+
+  <div class="note">
+  The `performance.now()` API is used here because it is the main API to
+  obtain a monotically increasing clock on the client-side.
+  </div</div>
+
+Example:
+
+```js
+const timeResponse = await fetch(timeServerURL);
+const clientTime = performance.now();
+const serverTimestamp = await timeResponse.text();
+const serverSyncInfos = { serverTimestamp, clientTime };
+rxPlayer.loadVideo({
+  // ...
+  serverSyncInfos,
+});
+```
+
+If indicated, we will ignore any time indication on the MPD and only consider
+`serverSyncInfos` to calculate the time on the server side.
+
+This value is also very useful for low-latency contents, as some of them do not
+indicate any server's time, relying on the client one instead.
+
+Note that there is a risk of us losing synchronization when leap seconds are
+added/substracted to unix time. However we consider those situations rare enough
+(and the effect should be relatively weak) to let this as is for the moment. For
+a complete explanation, you can look at the [corresponding chapter of the
+low-latency documentation](./Miscellaneous/Low_Latency.md#note-time-sync).
+
+
+### referenceDateTime
+
+_type_: `Function|undefined`
+
+<div class="warning">
+This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
+transport option</a>)
+</div>
+
+Only useful for live contents. This is the default amount of time, in
+seconds, to add as an offset to a given media content's time, to obtain the
+real live time.
+
+For example, if the media has it's `0` time corresponding to the 30th of
+January 2010 at midnight, you can set the `referenceDateTime` to
+`new Date(2010-01-30) / 1000`. This value is useful to communicate back to you
+the "live time", for example through the `getWallClockTime` method.
+
+This will only be taken into account for live contents, and if the Manifest
+/ MPD does not already contain an offset (example: an
+"availabilityStartTime" attribute in a DASH MPD).
+
+Example:
+
+```js
+rxPlayer.loadVideo({
+  // ...
+  referenceDateTime: new Date(2015 - 05 - 29) / 1000,
+});
+```
