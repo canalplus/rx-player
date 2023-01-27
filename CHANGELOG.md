@@ -1,8 +1,8 @@
 # Changelog
 
-## v4.0.0-alpha.2022110300 (2022-11-03)
+## v4.0.0-beta.0 (2023-01-27)
 
-### Changed
+### Changes
 
   - Create `"FREEZING"` player state for cases where the playback position is currently not advancing due to an unknown reason, to separate it from regular `"BUFFERING"`. [#1146]
   - The `RELOADING` player state (gettable  through the `getPlayerState` and `playerStateChange` API) can now happen at any time to unlock playback.
