@@ -1,0 +1,612 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Plugins - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "../..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../../static/img/logo.png" /></a><a class="navbar-item hideable"href="../../Getting_Started/Welcome.html">Getting Started</a>
+<a class="navbar-item navbar-active hideable"href="../Overview.html">API</a>
+<a class="navbar-item hideable"href="../../reference/API_Reference.html">Reference</a>
+<a class="navbar-item hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
+<span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
+<a aria-label="Link to repository" class="navbar-item first-right hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 4.0.0-beta.0</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="../Overview.html">Overview</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Creating_a_Player.html">Creating a Player</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Loading_a_Content.html">Loading a Content</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Decryption_Options.html">Decryption Options</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Basic Methods</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getPlayerState.html">getPlayerState</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/addEventListener.html">addEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/removeEventListener.html">removeEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/play.html">play</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/pause.html">pause</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/stop.html">stop</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getPosition.html">getPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getWallClockTime.html">getWallClockTime</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/seekTo.html">seekTo</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getMediaDuration.html">getMediaDuration</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getError.html">getError</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getVideoElement.html">getVideoElement</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getAvailablePeriods.html">getAvailablePeriods</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getCurrentPeriod.html">getCurrentPeriod</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/dispose.html">dispose</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/reload.html">reload</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_States.html">Player States</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_Events.html">Player Events</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_Errors.html">Player Errors</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Track Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAudioTrack.html">getAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getTextTrack.html">getTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getVideoTrack.html">getVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setAudioTrack.html">setAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setTextTrack.html">setTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setVideoTrack.html">setVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/disableTextTrack.html">disableTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Representation Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/getVideoRepresentation.html">getVideoRepresentation</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/getAudioRepresentation.html">getAudioRepresentation</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/lockAudioVideoRepresentations.html">lockVideoRepresentations / lockAudioRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/getLockedVideoRepresentations.html">getLockedVideoRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/getLockedAudioRepresentations.html">getLockedAudioRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/unlockAudioVideoRepresentations.html">unlockVideoRepresentations / unlockAudioRepresentations</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Speed Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Volume Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/setVolume.html">setVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/getVolume.html">getVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/mute.html">mute</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/isMute.html">isMute</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/unMute.html">unMute</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Information/getCurrentBufferGap.html">getCurrentBufferGap</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Content Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/getContentUrls.html">getContentUrls</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/updateContentUrls.html">updateContentUrls</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/isLive.html">isLive</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="../Static_Properties.html">RxPlayer Static Properties</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Typescript_Types.html">Typescript Types</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Tools</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Tools/TextTrackRenderer.html">TextTrackRenderer</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/StringUtils.html">StringUtils</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/parseBifThumbnails.html">parseBifThumbnails</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group active opened">Miscellaneous</div><ul><li class="sidebar-item"><a class="sidebar-link active" href="./plugins.html">Plugins</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Low_Latency.html">Low Latency</a></li><li class="sidebar-item"><a class="sidebar-link" href="./DASH_WASM_Parser.html">DASH WASM Parser</a></li><li class="sidebar-item"><a class="sidebar-link" href="./hdr.html">HDR</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Local_Contents.html">Local Contents</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Local_Manifest_v0.1.html">Local Manifest v0.1</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Text_Tracks.html">Text Tracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./MetaPlaylist.html">MetaPlaylist</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Initial_Position.html">Initial Position</a></li><li class="sidebar-item"><a class="sidebar-link" href="./presentationTimeOffset.html">presentationTimeOffset</a></li><li class="sidebar-item"><a class="sidebar-link" href="./DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="plugins"></a></p>
+<h1>Plugins</h1>
+<p><a name="overview"></a></p>
+<h2>Overview</h2>
+<p>To allow the player to be extended, a system of “plugins” has been added.</p>
+<p>Those plugins are often under the form of functions passed as an argument to the
+<code>loadVideo</code> API call.</p>
+<p><a name="segmentloader"></a></p>
+<h2>segmentLoader</h2>
+<p>The <code>segmentLoader</code> is a function that can be included as an option of the
+<code>loadVideo</code> API call.</p>
+<p>A <code>segmentLoader</code> allows to define a custom audio/video segment loader (it might
+on the future work for other types of segments, so always check the type if you
+only want those two).
+The segment loader is the part performing the segment request. One usecase where
+you might want to set your own segment loader is to integrate Peer-to-Peer
+segment downloading through the player.</p>
+<p>Before the complete documentation, let’s write an example which will just use
+an XMLHttpRequest (it has no use, as our implementation does the same thing and
+more):</p>
+<pre><code class="language-js"><span class="hljs-comment">/**
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Object</span>} <span class="hljs-variable">segmentInfo</span> - Information about the segment to download
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Object</span>} <span class="hljs-variable">callbacks</span> - Object containing several callbacks to indicate
+ * that the segment has been loaded, the loading operation has failed or to
+ * fallback to our default implementation. More information on this object below
+ * this code example.
+ * <span class="hljs-doctag">@returns</span> {<span class="hljs-type">Function|undefined</span>} - If a function is defined in the return value,
+ * it will be called if and when the request is canceled.
+ */</span>
+<span class="hljs-keyword">const</span> <span class="hljs-title function_">customSegmentLoader</span> = (<span class="hljs-params">segmentInfo, callbacks</span>) =&gt; {
+
+  <span class="hljs-comment">// we will only use this custom loader for videos segments.</span>
+  <span class="hljs-comment">// we will also ignore edge cases where the URL is undefined.</span>
+  <span class="hljs-keyword">if</span> (segmentInfo.<span class="hljs-property">trackType</span> !== <span class="hljs-string">"video"</span> || segmentInfo.<span class="hljs-property">url</span> === <span class="hljs-literal">undefined</span>) {
+    callbacks.<span class="hljs-title function_">fallback</span>();
+    <span class="hljs-keyword">return</span>;
+  }
+
+  <span class="hljs-keyword">const</span> xhr = <span class="hljs-keyword">new</span> <span class="hljs-title class_">XMLHttpRequest</span>();
+  <span class="hljs-keyword">const</span> sendingTime = performance.<span class="hljs-title function_">now</span>();
+
+  xhr.<span class="hljs-property">onload</span> = <span class="hljs-keyword">function</span> <span class="hljs-title function_">onXHRLoaded</span>(<span class="hljs-params">r</span>) {
+    <span class="hljs-keyword">if</span> (<span class="hljs-number">200</span> &lt;= xhr.<span class="hljs-property">status</span> &amp;&amp; xhr.<span class="hljs-property">status</span> &lt; <span class="hljs-number">300</span>) {
+      <span class="hljs-keyword">const</span> duration = performance.<span class="hljs-title function_">now</span>() - sendingTime;
+      <span class="hljs-keyword">const</span> size = r.<span class="hljs-property">total</span>;
+      <span class="hljs-keyword">const</span> data = xhr.<span class="hljs-property">response</span>;
+      callbacks.<span class="hljs-title function_">resolve</span>({ duration, size, data });
+    } <span class="hljs-keyword">else</span> {
+      <span class="hljs-keyword">const</span> err = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">"didn't work"</span>);
+      callbacks.<span class="hljs-title function_">reject</span>(err);
+    }
+  };
+
+  xhr.<span class="hljs-property">onprogress</span> = <span class="hljs-keyword">function</span> <span class="hljs-title function_">onXHRProgress</span>(<span class="hljs-params">event</span>) {
+    <span class="hljs-keyword">const</span> currentTime = performance.<span class="hljs-title function_">now</span>();
+    callbacks.<span class="hljs-title function_">progress</span>({ <span class="hljs-attr">duration</span>: currentTime - sendingTime,
+                         <span class="hljs-attr">size</span>: event.<span class="hljs-property">loaded</span>,
+                         <span class="hljs-attr">totalSize</span>: event.<span class="hljs-property">total</span> });
+  };
+
+  xhr.<span class="hljs-property">onerror</span> = <span class="hljs-keyword">function</span> <span class="hljs-title function_">onXHRError</span>(<span class="hljs-params"></span>) {
+    <span class="hljs-keyword">const</span> err = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">"didn't work"</span>);
+    callbacks.<span class="hljs-title function_">reject</span>(err);
+  };
+
+  xhr.<span class="hljs-title function_">open</span>(<span class="hljs-string">"GET"</span>, segmentInfo.<span class="hljs-property">url</span>);
+  xhr.<span class="hljs-property">responseType</span> = <span class="hljs-string">"arraybuffer"</span>;
+
+  <span class="hljs-keyword">const</span> range = segmentInfo.<span class="hljs-property">range</span>;
+  <span class="hljs-keyword">if</span> (range) {
+    <span class="hljs-keyword">if</span> (range[<span class="hljs-number">1</span>] &amp;&amp; range[<span class="hljs-number">1</span>] !== <span class="hljs-title class_">Infinity</span>) {
+      xhr.<span class="hljs-title function_">setRequestHeader</span>(<span class="hljs-string">"Range"</span>, <span class="hljs-string">`bytes=<span class="hljs-subst">${range[<span class="hljs-number">0</span>]}</span>-<span class="hljs-subst">${range[<span class="hljs-number">1</span>]}</span>`</span>);
+    } <span class="hljs-keyword">else</span> {
+      xhr.<span class="hljs-title function_">setRequestHeader</span>(<span class="hljs-string">"Range"</span>, <span class="hljs-string">`bytes=<span class="hljs-subst">${range[<span class="hljs-number">0</span>]}</span>-`</span>);
+    }
+  }
+
+  xhr.<span class="hljs-title function_">send</span>();
+
+  <span class="hljs-keyword">return</span> <span class="hljs-function">() =&gt;</span> {
+    xhr.<span class="hljs-title function_">abort</span>();
+  };
+};
+</code></pre>
+<p>As you can see, this function takes two arguments:</p>
+<ol>
+<li>
+<p><strong>segmentInfo</strong> (<code>object</code>): An Object giving information about the wanted
+segments.  This object contains the following properties:</p>
+<ul>
+<li>
+<p><strong>url</strong> (<code>string|undefined</code>): The URL the segment request should
+normally be performed at.</p>
+<p>This property can be <code>undefined</code> in a condition where the segment URL
+either doesn’t exist or has not been communicated by the Manifest.</p>
+</li>
+<li>
+<p><em>timeout</em> (<code>number|undefined</code>: Timeout in milliseconds after which a
+request should preferably be aborted, according to current
+configuration.</p>
+<p>This property is mainly indicative, you may or may not want to exploit
+this information depending on your use cases.</p>
+</li>
+<li>
+<p><em>isInit</em> (<code>boolean|undefined</code>): If true this segment is an
+initialization segment which contains no decodable data.</p>
+<p>Those types of segment are mainly there for initialization
+purposes, such as giving initial infos to the decoder on
+subsequent media segments that will be pushed.</p>
+<p>Note that if <code>isInit</code> is false, it only means that the segment
+contains decodable media, it can also contain important
+initialization information.</p>
+<p>If <code>undefined</code>, we could not determine whether this segment was an
+initialization segment.
+This case is not currently possible but may be in future versions.</p>
+</li>
+<li>
+<p><em>byteRanges</em> (<code>Array.&lt;[number, number]&gt;|undefined</code>): If defined, only
+the corresponding byte-ranges, which are subsets in bytes of the full
+data concerned, should be loaded.</p>
+<p>If multiple non-contiguous byte-ranges are given, the result should be
+the concatenation of those byte-ranges, in the same order.</p>
+<p>For example <code>[[0, 100], [150, 180]]</code> means that the bytes of both 0 to 100
+(included) and from 150 to 180 (included) should be requested.
+The communicated result should then be a concatenation of both in the same
+order.</p>
+</li>
+<li>
+<p><em>trackType</em> (<code>string</code>): The concerned type of track. Can be
+<code>"video"</code>, <code>"audio"</code>, <code>"text"</code> (for subtitles)</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>callbacks</strong>: An object containing multiple callbacks to allow this
+<code>segmentLoader</code> to communicate various events to the RxPlayer.</p>
+<p>This Object contains the following functions:</p>
+<ul>
+<li>
+<p><strong>resolve</strong>: To call after the segment is loaded, to communicate it to
+the RxPlayer.</p>
+<p>When called, it should be given an object with the following
+properties:</p>
+<ul>
+<li>
+<p><em>data</em> (<code>ArrayBuffer</code>|<code>Uint8Array</code>) - the segment data.</p>
+</li>
+<li>
+<p><em>duration</em> (<code>Number|undefined</code>) - the duration the request took, in
+milliseconds.</p>
+<p>This value may be used to estimate the ideal user bandwidth.</p>
+</li>
+<li>
+<p><em>size</em> (<code>Number|undefined</code>) size, in bytes, of the total downloaded
+response.</p>
+<p>This value may be used to estimate the ideal user bandwidth.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>progress</strong> - Callback to call when progress information is available
+on the current request. This callback allows to improve our adaptive
+streaming logic by better predicting the bandwidth before the request
+is finished and whether a request is stalling.</p>
+<p>When called, it should be given an object with the following
+properties:</p>
+<ul>
+<li>
+<p><em>duration</em> (<code>Number</code>) - The duration since the beginning of the
+request, in milliseconds.</p>
+</li>
+<li>
+<p><em>size</em> (<code>Number</code>) - the current size loaded, in bytes.</p>
+</li>
+<li>
+<p><em>totalSize</em> (<code>Number|undefined</code>) - the whole size of the wanted
+data, in bytes. Can be let to undefined when not known.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>reject</strong>: Callback to call when an error is encountered which made
+loading the segment impossible.</p>
+<p>It is recommended (but not enforced) to give it an Object or error
+instance with the following properties:</p>
+<ul>
+<li>
+<p><em>canRetry</em> (<code>boolean|undefined</code>): If set to <code>true</code>, the RxPlayer
+may retry the request (depending on the configuration set by the
+application).</p>
+<p>If set to <code>false</code>, the RxPlayer will never try to retry this
+request and will probably just stop the current content.</p>
+<p>If not set or set to <code>undefined</code>, the RxPlayer might retry or fail
+depending on other factors.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>fallback</strong>: Callback to call if you want to call our default
+implementation instead for loading this segment. No argument is needed.</p>
+</li>
+</ul>
+</li>
+</ol>
+<p>The <code>segmentLoader</code> can also return a function, which will be called if/when
+the request is aborted. You can define one to clean-up or dispose all resources.</p>
+<p><a name="manifestloader"></a></p>
+<h2>manifestLoader</h2>
+<p>The <code>manifestLoader</code> is a function that can be included as an option of the
+<code>loadVideo</code> API call.</p>
+<p>A manifestLoader allows to define a custom <a href="../../Getting_Started/Glossary.html#manifest">Manifest</a>
+loader.</p>
+<p>Before the complete documentation, let’s write an example which will just use
+an XMLHttpRequest (it has no use, as our implementation does the same thing and
+more):</p>
+<pre><code class="language-js"><span class="hljs-comment">/**
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Object</span>} <span class="hljs-variable">manifestInfo</span> - Information about the Manifest to download
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Object</span>} <span class="hljs-variable">callbacks</span> - Object containing several callbacks to indicate
+ * that the manifest has been loaded, the loading operation has failed or to
+ * fallback to our default implementation. More information on this object below
+ * this code example.
+ * <span class="hljs-doctag">@returns</span> {<span class="hljs-type">Function|undefined</span>} - If a function is defined in the return value,
+ * it will be called if and when the request is canceled.
+ */</span>
+<span class="hljs-keyword">const</span> <span class="hljs-title function_">customManifestLoader</span> = (<span class="hljs-params">manifestInfo, callbacks</span>) =&gt; {
+  <span class="hljs-keyword">const</span> { url } = manifestInfo;
+  <span class="hljs-keyword">const</span> xhr = <span class="hljs-keyword">new</span> <span class="hljs-title class_">XMLHttpRequest</span>();
+  <span class="hljs-keyword">const</span> baseTime = performance.<span class="hljs-title function_">now</span>();
+
+  xhr.<span class="hljs-property">onload</span> = <span class="hljs-function">(<span class="hljs-params">r</span>) =&gt;</span> {
+    <span class="hljs-keyword">if</span> (<span class="hljs-number">200</span> &lt;= xhr.<span class="hljs-property">status</span> &amp;&amp; xhr.<span class="hljs-property">status</span> &lt; <span class="hljs-number">300</span>) {
+      <span class="hljs-keyword">const</span> duration = performance.<span class="hljs-title function_">now</span>() - baseTime;
+
+      <span class="hljs-keyword">const</span> now = <span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>();
+      <span class="hljs-keyword">const</span> receivingTime = now;
+
+      <span class="hljs-comment">// Note: We could have calculated `sendingTime` before the request, but</span>
+      <span class="hljs-comment">// that date would be wrong if the user updated the clock while the</span>
+      <span class="hljs-comment">// request was pending.</span>
+      <span class="hljs-comment">// `performance.now` doesn't depend on the user's clock. It is thus a</span>
+      <span class="hljs-comment">// better candidate here.</span>
+      <span class="hljs-comment">// This is why we re-calculate the sendingTime a posteriori, we are now</span>
+      <span class="hljs-comment">// sure to be aligned with the current clock.</span>
+      <span class="hljs-keyword">const</span> sendingTime = now - duration;
+
+      <span class="hljs-comment">// the request could have been redirected,</span>
+      <span class="hljs-comment">// we have to feed back the real URL</span>
+      <span class="hljs-keyword">const</span> _url = xhr.<span class="hljs-property">responseURL</span> || url;
+
+      <span class="hljs-keyword">const</span> size = r.<span class="hljs-property">total</span>;
+      <span class="hljs-keyword">const</span> data = xhr.<span class="hljs-property">response</span>;
+      callbacks.<span class="hljs-title function_">resolve</span>({
+        <span class="hljs-attr">url</span>: _url,
+        sendingTime,
+        receivingTime,
+        duration,
+        size,
+        data,
+      });
+    } <span class="hljs-keyword">else</span> {
+      <span class="hljs-keyword">const</span> err = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">"didn't work"</span>);
+      err.<span class="hljs-property">xhr</span> = xhr;
+      callbacks.<span class="hljs-title function_">reject</span>(err);
+    }
+  };
+
+  xhr.<span class="hljs-property">onerror</span> = <span class="hljs-function">() =&gt;</span> {
+    <span class="hljs-keyword">const</span> err = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">"didn't work"</span>);
+    err.<span class="hljs-property">xhr</span> = xhr;
+    callbacks.<span class="hljs-title function_">reject</span>(err);
+  };
+
+  xhr.<span class="hljs-title function_">open</span>(<span class="hljs-string">"GET"</span>, url);
+  xhr.<span class="hljs-property">responseType</span> = <span class="hljs-string">"document"</span>;
+
+  xhr.<span class="hljs-title function_">send</span>();
+
+  <span class="hljs-keyword">return</span> <span class="hljs-function">() =&gt;</span> {
+    xhr.<span class="hljs-title function_">abort</span>();
+  };
+};
+</code></pre>
+<p>As you can see, this function takes three arguments:</p>
+<ol>
+<li>
+<p><strong>manifestInfo</strong> (<code>object</code>): An Object giving information about the wanted
+Manifest. This object contains the following properties:</p>
+<ul>
+<li>
+<p><strong>url</strong> (<code>string|undefined</code>): The URL the Manifest request should
+normally be performed at.</p>
+<p>This argument can be <code>undefined</code> in very rare and specific conditions
+where the Manifest URL doesn’t exist or has not been communicated by the
+application.</p>
+</li>
+<li>
+<p><em>timeout</em> (<code>number|undefined</code>): Timeout in milliseconds after which a
+request should preferably be aborted, according to current
+configuration.</p>
+<p>This property is mainly indicative, you may or may not want to exploit
+this information depending on your use cases.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>callbacks</strong>: An object containing multiple callbacks to allow this
+<code>manifestLoader</code> to communicate the loaded Manifest or an encountered error
+to the RxPlayer.</p>
+<p>This Object contains the following functions:</p>
+<ul>
+<li>
+<p><strong>resolve</strong>: To call after the Manifest is loaded, to communicate it to
+the RxPlayer.</p>
+<p>When called, it should be given an object with the following
+properties:</p>
+<ul>
+<li>
+<p><em>data</em> - the Manifest data.
+Many formats are accepted depending on what makes sense in the
+current transport: string, Document, ArrayBuffer, Uint8Array,
+object.</p>
+</li>
+<li>
+<p><em>duration</em> (<code>Number|undefined</code>) - the duration of the request, in
+milliseconds.</p>
+</li>
+<li>
+<p><em>size</em> (<code>Number|undefined</code>) size, in bytes, of the total downloaded
+response.</p>
+</li>
+<li>
+<p><em>url</em> (<code>string|undefined</code>) - url of the Manifest (after any
+potential redirection if one).</p>
+</li>
+<li>
+<p><em>sendingTime</em> (<code>number|undefined</code>) - Time at which the manifest
+request was done as a unix timestamp in milliseconds.</p>
+</li>
+<li>
+<p><em>receivingTime</em> (<code>number|undefined</code>) - Time at which the manifest
+request was finished as a unix timestamp in milliseconds.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>reject</strong>: Callback to call when an error is encountered which made
+loading the Manifest impossible.</p>
+<p>It is recommended (but not enforced) to give it an Object or error
+instance with the following properties:</p>
+<ul>
+<li>
+<p><em>canRetry</em> (<code>boolean|undefined</code>): If set to <code>true</code>, the RxPlayer
+may retry the request (depending on the configuration set by the
+application).</p>
+<p>If set to <code>false</code>, the RxPlayer will never try to retry this
+request and will probably just stop the current content.</p>
+<p>If not set or set to <code>undefined</code>, the RxPlayer might retry or fail
+depending on other factors.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>fallback</strong>: Callback to call if you want to call our default
+implementation instead for this Manifest. No argument is needed.</p>
+</li>
+</ul>
+</li>
+</ol>
+<p>The <code>manifestLoader</code> can also return a function, which will be called if/when
+the request is aborted. You can define one to clean-up or dispose all resources.</p>
+<p><a name="representationfilter"></a></p>
+<h2>representationFilter</h2>
+<p>The representationFilter is a function that can be included as an option of the
+<code>loadVideo</code> API call.</p>
+<p>A representationFilter allows you to filter out
+<a href="../../Getting_Started/Glossary.html#representation">Representations</a> (i.e. media qualities) based on
+its attributes.</p>
+<p>The representationFilter will be called each time we load a
+<a href="../../Getting_Started/Glossary.html#manifest">Manifest</a> with two arguments:</p>
+<ul>
+<li>
+<p>representation <code>{Object}</code>: An object describing the <code>Representation</code>.</p>
+<p>This object contains the following properties:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify this Representation.</p>
+</li>
+<li>
+<p><code>bitrate</code> (<code>Number|undefined</code>): The bitrate of this Representation, in
+bits per seconds.</p>
+<p><code>undefined</code> if unknown.</p>
+</li>
+<li>
+<p><code>width</code> (<code>Number|undefined</code>): If the <code>Representation</code> is from a video
+track and if its width is known, this is the width of video, in pixels.</p>
+</li>
+<li>
+<p><code>height</code> (<code>Number|undefined</code>): If the <code>Representation</code> is from a video
+track and if its height is known, this is the height of video, in pixels.</p>
+</li>
+<li>
+<p><code>codec</code> (<code>string|undefined</code>): The codec the Representation is in.</p>
+</li>
+<li>
+<p><code>frameRate</code> (<code>Number|undefined</code>): If the <code>Representation</code> is from a video
+track and if its frame rate is known, this is the frame rate of video, in
+image per seconds.</p>
+</li>
+<li>
+<p><code>hdrInfo</code> (<code>Object|undefined</code>): If the <code>Representation</code> is from a video
+track and if it has HDR information associated to it, this is set to an
+object describing the hdr characteristics of the track.
+(see <a href="./hdr.html#hdrinfo">HDR support documentation</a>)</p>
+</li>
+<li>
+<p><code>contentProtections</code> (<code>Object|undefined</code>): Encryption information linked
+to this content.</p>
+<p>If set to an Object, the Representation is known to be encrypted.
+If unset or set to <code>undefined</code> the Representation is either unencrypted or
+we don’t know if it is.</p>
+<p>When set to an object, it may contain the following properties:</p>
+<ul>
+<li><code>keyIds</code> (<code>Array.&lt;Uint8Array&gt;|undefined</code>): Known key ids linked to that
+Representation.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>context <code>{Object}</code>: Basic context about this <code>Representation</code>.
+Contains the following keys:</p>
+<ul>
+<li>
+<p>trackType <code>{string}</code>: The concerned type of track. Can be
+<code>"video"</code>, <code>"audio"</code>, <code>"text"</code> (for subtitles)</p>
+</li>
+<li>
+<p>language <code>{string|undefined}</code>: The language the <code>Representation</code>
+is in, as announced by the Manifest.</p>
+</li>
+<li>
+<p>normalizedLanguage <code>{string|undefined}</code>: An attempt to translate the
+language into an ISO 639-3 code.
+If the translation attempt fails (no corresponding ISO 639-3 language
+code is found), it will equal the value of <code>language</code></p>
+</li>
+<li>
+<p>isClosedCaption <code>{Boolean|undefined}</code>: If set to <code>true</code> and if this is a
+text track, the <code>Representation</code> links to subtitles with added hints for
+the hard of hearing.</p>
+</li>
+<li>
+<p>isAudioDescription <code>{Boolean|undefined}</code>: If set to <code>true</code> and if this is an
+audio track, the <code>Representation</code> links to an audio track with added
+commentary for the visually impaired.</p>
+</li>
+<li>
+<p>isDub <code>{Boolean|undefined}</code>): If set to <code>true</code> and if this is an audio
+track, then this audio track is a “dub”, meaning it was recorded in
+another language than the original.
+If set to <code>false</code>, we know that this audio track is in an original
+language.</p>
+<p>This property is <code>undefined</code> if we do not known whether it is in an
+original language or if does not apply for the track type.</p>
+</li>
+<li>
+<p>isSignInterpreted <code>{Boolean|undefined}</code>): If set to <code>true</code> and if this is a
+video track, then it contains visual sign interpretation.</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>This function should then returns <code>true</code> if the <code>Representation</code> should be
+kept or <code>false</code> if it should be removed.</p>
+<p>For example, here is a <code>representationFilter</code> that removes video
+<code>Representation</code>s with a video resolution higher than HD (1920x1080):</p>
+<pre><code class="language-js"><span class="hljs-comment">/**
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Object</span>} <span class="hljs-variable">representationInfo</span>
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Object</span>} <span class="hljs-variable">infos</span> - supplementary information about the given
+ * Representation.
+ * <span class="hljs-doctag">@returns</span> {<span class="hljs-type">boolean</span>}
+ */</span>
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">representationFilter</span>(<span class="hljs-params">representationInfo, infos</span>) {
+  <span class="hljs-keyword">if</span> (infos.<span class="hljs-property">trackType</span> === <span class="hljs-string">"video"</span>) {
+    <span class="hljs-comment">// If video representation, allows only those for which the height and width</span>
+    <span class="hljs-comment">// is known to be below our 1920x1080 limit</span>
+    <span class="hljs-keyword">const</span> { width, height } = representationInfo;
+    <span class="hljs-keyword">return</span> width != <span class="hljs-literal">null</span> &amp;&amp; height != <span class="hljs-literal">null</span> &amp;&amp; width &lt;= <span class="hljs-number">1920</span> &amp;&amp; height &lt;= <span class="hljs-number">1080</span>;
+  }
+
+  <span class="hljs-comment">// Otherwise, allow all non-video representations</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+}
+</code></pre>
+</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="../Tools/TextTrackRenderer.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">TextTrackRenderer</div></a></div><div class="next-or-previous-page next-page"><a class="next-or-previous-page-link" href="./Low_Latency.html"><div class="next-or-previous-page-link-label">Next</div><div class="next-or-previous-page-link-name">Low Latency</div></a></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#plugins">Plugins</a></p>
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#segmentloader">segmentLoader</a></li>
+<li><a href="#manifestloader">manifestLoader</a></li>
+<li><a href="#representationfilter">representationFilter</a></li>
+</ul>
+</div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../Getting_Started/Welcome.html">Welcome</a></li>
+<li><div class="page-list-item page-list-group">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../Getting_Started/Tutorials/Quick_Start.html">Quick Start</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/Content_with_DRM.html">Contents with DRM</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/Selecting_a_Track.html">Selecting a Track</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Migration from RxPlayer v3</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Preferences.html">Track Preferences</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Bitrate_Selection.html">Bitrate Selection</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Constructor_Options.html">Constructor Options</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/loadVideo_Options.html">loadVideo Options</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Player_Errors.html">Player Errors</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Player_Methods.html">Player Methods</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Player_Types.html">Player Types</a></li></ul></li>
+<li class="page-list-item"><a href="../../Getting_Started/Minimal_Player.html">Importing a minimal RxPlayer</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Glossary.html">Glossary</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Troubleshooting.html">Troubleshooting</a></li></ul></li>
+<li class="page-list-item"><div class="page-list-group opened active">API</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../Creating_a_Player.html">Creating a Player</a></li>
+<li class="page-list-item"><a href="../Loading_a_Content.html">Loading a Content</a></li>
+<li class="page-list-item"><a href="../Decryption_Options.html">Decryption Options</a></li>
+<li><div class="page-list-item page-list-group">Basic Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Basic_Methods/getPlayerState.html">getPlayerState</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/addEventListener.html">addEventListener</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/removeEventListener.html">removeEventListener</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/play.html">play</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/pause.html">pause</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/stop.html">stop</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getPosition.html">getPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getWallClockTime.html">getWallClockTime</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/seekTo.html">seekTo</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getMediaDuration.html">getMediaDuration</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getError.html">getError</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getVideoElement.html">getVideoElement</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getAvailablePeriods.html">getAvailablePeriods</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getCurrentPeriod.html">getCurrentPeriod</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/dispose.html">dispose</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/reload.html">reload</a></li></ul></li>
+<li class="page-list-item"><a href="../Player_States.html">Player States</a></li>
+<li class="page-list-item"><a href="../Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../Player_Errors.html">Player Errors</a></li>
+<li><div class="page-list-item page-list-group">Track Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Track_Selection/getAudioTrack.html">getAudioTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getTextTrack.html">getTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getVideoTrack.html">getVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setAudioTrack.html">setAudioTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setTextTrack.html">setTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setVideoTrack.html">setVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/disableTextTrack.html">disableTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Representation Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Representation_Selection/getVideoRepresentation.html">getVideoRepresentation</a></li>
+<li class="page-list-item"><a href="../Representation_Selection/getAudioRepresentation.html">getAudioRepresentation</a></li>
+<li class="page-list-item"><a href="../Representation_Selection/lockAudioVideoRepresentations.html">lockVideoRepresentations / lockAudioRepresentations</a></li>
+<li class="page-list-item"><a href="../Representation_Selection/getLockedVideoRepresentations.html">getLockedVideoRepresentations</a></li>
+<li class="page-list-item"><a href="../Representation_Selection/getLockedAudioRepresentations.html">getLockedAudioRepresentations</a></li>
+<li class="page-list-item"><a href="../Representation_Selection/unlockAudioVideoRepresentations.html">unlockVideoRepresentations / unlockAudioRepresentations</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Speed Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li>
+<li class="page-list-item"><a href="../Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li>
+<li class="page-list-item"><a href="../Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Volume Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Volume_Control/setVolume.html">setVolume</a></li>
+<li class="page-list-item"><a href="../Volume_Control/getVolume.html">getVolume</a></li>
+<li class="page-list-item"><a href="../Volume_Control/mute.html">mute</a></li>
+<li class="page-list-item"><a href="../Volume_Control/isMute.html">isMute</a></li>
+<li class="page-list-item"><a href="../Volume_Control/unMute.html">unMute</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Buffer_Information/getCurrentBufferGap.html">getCurrentBufferGap</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Content Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Content_Information/getContentUrls.html">getContentUrls</a></li>
+<li class="page-list-item"><a href="../Content_Information/updateContentUrls.html">updateContentUrls</a></li>
+<li class="page-list-item"><a href="../Content_Information/isLive.html">isLive</a></li>
+<li class="page-list-item"><a href="../Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li></ul></li>
+<li class="page-list-item"><a href="../Static_Properties.html">RxPlayer Static Properties</a></li>
+<li class="page-list-item"><a href="../Typescript_Types.html">Typescript Types</a></li>
+<li><div class="page-list-item page-list-group">Tools</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Tools/TextTrackRenderer.html">TextTrackRenderer</a></li>
+<li class="page-list-item"><a href="../Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li>
+<li class="page-list-item"><a href="../Tools/StringUtils.html">StringUtils</a></li>
+<li class="page-list-item"><a href="../Tools/parseBifThumbnails.html">parseBifThumbnails</a></li>
+<li class="page-list-item"><a href="../Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li>
+<li class="page-list-item"><a href="../Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li>
+<li><div class="page-list-item page-list-group opened active">Miscellaneous</div><ul class="page-list-group-group"><li class="page-list-item active"><a href="./plugins.html">Plugins</a></li>
+<li class="page-list-item"><a href="./Low_Latency.html">Low Latency</a></li>
+<li class="page-list-item"><a href="./DASH_WASM_Parser.html">DASH WASM Parser</a></li>
+<li class="page-list-item"><a href="./hdr.html">HDR</a></li>
+<li class="page-list-item"><a href="./Local_Contents.html">Local Contents</a></li>
+<li class="page-list-item"><a href="./Local_Manifest_v0.1.html">Local Manifest v0.1</a></li>
+<li class="page-list-item"><a href="./Text_Tracks.html">Text Tracks</a></li>
+<li class="page-list-item"><a href="./MetaPlaylist.html">MetaPlaylist</a></li>
+<li class="page-list-item"><a href="./Initial_Position.html">Initial Position</a></li>
+<li class="page-list-item"><a href="./presentationTimeOffset.html">presentationTimeOffset</a></li>
+<li class="page-list-item"><a href="./DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">Reference</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../reference/API_Reference.html">API Reference</a></li></ul></li>
+<li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
+
+<li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
+</ul></div><script type="text/javascript" src="../../scripts/lunr.js" charset="utf-8"></script><script type="text/javascript" src="../../scripts/script.js" charset="utf-8"></script></body></html>

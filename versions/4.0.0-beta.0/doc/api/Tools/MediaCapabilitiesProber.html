@@ -1,0 +1,616 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>MediaCapabilitiesProber - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "../..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../../static/img/logo.png" /></a><a class="navbar-item hideable"href="../../Getting_Started/Welcome.html">Getting Started</a>
+<a class="navbar-item navbar-active hideable"href="../Overview.html">API</a>
+<a class="navbar-item hideable"href="../../reference/API_Reference.html">Reference</a>
+<a class="navbar-item hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
+<span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
+<a aria-label="Link to repository" class="navbar-item first-right hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 4.0.0-beta.0</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="../Overview.html">Overview</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Creating_a_Player.html">Creating a Player</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Loading_a_Content.html">Loading a Content</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Decryption_Options.html">Decryption Options</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Basic Methods</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getPlayerState.html">getPlayerState</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/addEventListener.html">addEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/removeEventListener.html">removeEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/play.html">play</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/pause.html">pause</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/stop.html">stop</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getPosition.html">getPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getWallClockTime.html">getWallClockTime</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/seekTo.html">seekTo</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getMediaDuration.html">getMediaDuration</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getError.html">getError</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getVideoElement.html">getVideoElement</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getAvailablePeriods.html">getAvailablePeriods</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getCurrentPeriod.html">getCurrentPeriod</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/dispose.html">dispose</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/reload.html">reload</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_States.html">Player States</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_Events.html">Player Events</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_Errors.html">Player Errors</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Track Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAudioTrack.html">getAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getTextTrack.html">getTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getVideoTrack.html">getVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setAudioTrack.html">setAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setTextTrack.html">setTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setVideoTrack.html">setVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/disableTextTrack.html">disableTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Representation Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/getVideoRepresentation.html">getVideoRepresentation</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/getAudioRepresentation.html">getAudioRepresentation</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/lockAudioVideoRepresentations.html">lockVideoRepresentations / lockAudioRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/getLockedVideoRepresentations.html">getLockedVideoRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/getLockedAudioRepresentations.html">getLockedAudioRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/unlockAudioVideoRepresentations.html">unlockVideoRepresentations / unlockAudioRepresentations</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Speed Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Volume Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/setVolume.html">setVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/getVolume.html">getVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/mute.html">mute</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/isMute.html">isMute</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/unMute.html">unMute</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Information/getCurrentBufferGap.html">getCurrentBufferGap</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Content Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/getContentUrls.html">getContentUrls</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/updateContentUrls.html">updateContentUrls</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/isLive.html">isLive</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="../Static_Properties.html">RxPlayer Static Properties</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Typescript_Types.html">Typescript Types</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group active opened">Tools</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./TextTrackRenderer.html">TextTrackRenderer</a></li><li class="sidebar-item"><a class="sidebar-link" href="./VideoThumbnailLoader.html">VideoThumbnailLoader</a></li><li class="sidebar-item"><a class="sidebar-link" href="./StringUtils.html">StringUtils</a></li><li class="sidebar-item"><a class="sidebar-link" href="./parseBifThumbnails.html">parseBifThumbnails</a></li><li class="sidebar-item"><a class="sidebar-link active" href="./MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li><li class="sidebar-item"><a class="sidebar-link" href="./createMetaplaylist.html">createMetaplaylist</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Miscellaneous</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/plugins.html">Plugins</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Low_Latency.html">Low Latency</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/hdr.html">HDR</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Local_Contents.html">Local Contents</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Text_Tracks.html">Text Tracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Initial_Position.html">Initial Position</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="mediacapabilitiesprober"></a></p>
+<h1>MediaCapabilitiesProber</h1>
+<p><a name="overview"></a></p>
+<h2>Overview</h2>
+<p>The MediaCapabilitiesProber is a tool probing what your browser can do,
+especially:</p>
+<ul>
+<li>
+<p>Which DRM system is supported</p>
+</li>
+<li>
+<p>Check for HDCP support</p>
+</li>
+<li>
+<p>which codecs are available</p>
+</li>
+<li>
+<p>Check the color space support</p>
+</li>
+</ul>
+<div class="warning">
+This tool is still in an experimental phase, meaning that its API can
+change at any new release. This is not because it is not stable (it is actually)
+or should not be used in production. This is just because we want to receive
+your feedbacks before locking definitely the API.
+</div>
+<p>We can for example add supplementary information of even explode the
+MediaCapabilitiesProber into several tools to lower the size of the import.
+We’re waiting for your feedbacks!</p>
+<p><a name="how_to_use_it"></a></p>
+<h2>How to use it</h2>
+<p>As an experimental tool, the MediaCapabilitiesProber won’t be included in a
+default RxPlayer build.</p>
+<p>Instead, it should be imported by adding the RxPlayer through a dependency
+trough the npm registry (e.g. by doing something like <code>npm install rx-player</code>) and then specifically importing this tool from
+<code>"rx-player/experimental/tools"</code>:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { mediaCapabilitiesProber } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/tools"</span>;
+
+mediaCapabilitiesProber.<span class="hljs-title function_">getStatusForHDCP</span>(<span class="hljs-string">"1.1"</span>).<span class="hljs-title function_">then</span>(<span class="hljs-function">(<span class="hljs-params">hdcp11Status</span>) =&gt;</span> {
+  <span class="hljs-keyword">if</span> (hdcp11Status === <span class="hljs-string">"Supported"</span>) {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"HDCP 1.1 is supported"</span>);
+  }
+});
+</code></pre>
+<p><a name="properties"></a></p>
+<h2>Properties</h2>
+<p><a name="loglevel"></a></p>
+<h3>LogLevel</h3>
+<p><em>type</em>: <code>string</code></p>
+<p><em>default</em>: <code>"WARNING"</code></p>
+<p>The current level of verbosity for this prober logs. Those logs all use the
+console.</p>
+<p>From the less verbose to the most:</p>
+<ul>
+<li>
+<p><code>"NONE"</code>: no log</p>
+</li>
+<li>
+<p><code>"ERROR"</code>: unexpected errors (via <code>console.error</code>)</p>
+</li>
+<li>
+<p><code>"WARNING"</code>: The previous level + minor problems encountered (via
+<code>console.warn</code>)</p>
+</li>
+<li>
+<p><code>"INFO"</code>: The previous levels + noteworthy events (via <code>console.info</code>)</p>
+</li>
+<li>
+<p><code>"DEBUG"</code>: The previous levels + normal events of the prober (via
+<code>console.log</code>)</p>
+</li>
+</ul>
+<p>If the value set to this property is different than those, it will be
+automatically set to <code>"NONE"</code>.</p>
+<p>It is set to <code>"WARNING"</code> by default as it allows you to know if you forgot to
+set required information on each APIs, if some APIs are missing in your
+browser, etc.</p>
+<p>You might want to set it to <code>"NONE"</code> when in production.</p>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { mediaCapabilitiesProber } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/tools"</span>;
+mediaCapabilitiesProber.<span class="hljs-property">LogLevel</span> = <span class="hljs-string">"NONE"</span>;
+</code></pre>
+<p><a name="functions"></a></p>
+<h2>Functions</h2>
+<p><a name="getcompatibledrmconfigurations"></a></p>
+<h3>getCompatibleDRMConfigurations</h3>
+<p><em>arguments</em>:</p>
+<ul>
+<li>
+<p><em>keySystems</em> (<code>Array.&lt;Object&gt;</code>): An array of key system
+configurations. Those objects have the following properties:</p>
+<ul>
+<li>
+<p><em>type</em> (<code>string</code>): Key system string identifying it in the browser.
+Always a reverse domain name (e.g. “org.w3.clearkey”).</p>
+</li>
+<li>
+<p><em>configuration</em> (<code>Object</code>): Wanted MediaKeySystemConfiguration for this
+key system, as defined in <a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration">the EME w3c
+specification.</a></p>
+</li>
+</ul>
+</li>
+</ul>
+<p><em>return value</em>: <code>Array.&lt;Object&gt;</code></p>
+<p>Probe the support of various key sytems and for each compatible ones, returns
+the corresponding configuration that will be used.</p>
+<h4>Return value</h4>
+<p>The returned value is an array of object with the same number of elements than
+the one given in argument.</p>
+<p>It indicates the support for each Key System given in argument in the same
+order.</p>
+<p>Due to that, the objects in this array look like the ones given in argument (but
+with an added property):</p>
+<ul>
+<li>
+<p><em>type</em> (<code>string</code>): Corresponding key system string given in input.</p>
+</li>
+<li>
+<p><em>configuration</em> (<code>Object</code>): Corresponding wanted
+MediaKeySystemConfiguration given in input.</p>
+</li>
+<li>
+<p><em>compatibleConfiguration</em> (<code>undefined|Object</code>):</p>
+<p>if the type and configuration are both compatible with the browser, this
+is the corresponding actual MediaKeySystemConfiguration that will be
+effectively used.
+It will often correspond to a subset of the inputted <em>configuration</em>
+object (for example, you might have there fewer <em>videoCapabilities</em> that
+in the <em>configuration</em> object).</p>
+<p>If the type and/or the configuration are not compatible, this property
+will not be defined.</p>
+</li>
+</ul>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { mediaCapabilitiesProber } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/tools"</span>;
+
+<span class="hljs-keyword">const</span> mksConfiguration = {
+  <span class="hljs-attr">initDataTypes</span>: [<span class="hljs-string">"cenc"</span>],
+  <span class="hljs-attr">videoCapabilities</span>: [
+    {
+      <span class="hljs-attr">contentType</span>: <span class="hljs-string">'video/mp4;codecs="avc1.4d401e"'</span>, <span class="hljs-comment">// standard mp4 codec</span>
+      <span class="hljs-attr">robustness</span>: <span class="hljs-string">"HW_SECURE_CRYPTO"</span>,
+    },
+    {
+      <span class="hljs-attr">contentType</span>: <span class="hljs-string">'video/mp4;codecs="avc1.4d401e"'</span>,
+      <span class="hljs-attr">robustness</span>: <span class="hljs-string">"SW_SECURE_DECODE"</span>,
+    },
+  ],
+};
+
+<span class="hljs-keyword">const</span> keySystems = [
+  <span class="hljs-comment">// Let's consider this one as a compatible key system configuration</span>
+  { <span class="hljs-attr">type</span>: <span class="hljs-string">"com.widevine.alpha"</span>, <span class="hljs-attr">configuration</span>: mksConfiguration },
+
+  <span class="hljs-comment">// Let's consider this one as not compatible</span>
+  { <span class="hljs-attr">type</span>: <span class="hljs-string">"com.microsoft.playready"</span>, <span class="hljs-attr">configuration</span>: mksConfiguration },
+];
+
+mediaCapabilitiesProber
+  .<span class="hljs-title function_">getCompatibleDRMConfigurations</span>(keySystems)
+  .<span class="hljs-title function_">then</span>(<span class="hljs-function">(<span class="hljs-params">drmConfigs</span>) =&gt;</span> {
+    drmConfigs.<span class="hljs-title function_">forEach</span>(<span class="hljs-function">(<span class="hljs-params">config</span>) =&gt;</span> {
+      <span class="hljs-keyword">const</span> { type, configuration, compatibleConfiguration } = config;
+
+      <span class="hljs-keyword">if</span> (compatibleConfiguration !== <span class="hljs-literal">undefined</span>) {
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"# Compatible configuration #############################"</span>);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"Key System:"</span>, type);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"Wanted configuration:"</span>, configuration);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"Compatible configuration:"</span>, compatibleConfiguration);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"########################################################"</span>);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">""</span>);
+      } <span class="hljs-keyword">else</span> {
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"# Incompatible configuration ###########################"</span>);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"Key System:"</span>, type);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"Wanted configuration:"</span>, configuration);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"########################################################"</span>);
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">""</span>);
+      }
+    });
+  });
+
+<span class="hljs-comment">// Example output (please note that in this example, one of the widevine</span>
+<span class="hljs-comment">// robustness is not supported):</span>
+<span class="hljs-comment">//</span>
+<span class="hljs-comment">// # Compatible configuration #############################</span>
+<span class="hljs-comment">// Key System: com.widevine.alpha</span>
+<span class="hljs-comment">// Wanted configuration:</span>
+<span class="hljs-comment">// {</span>
+<span class="hljs-comment">//   "initDataTypes":["cenc"],</span>
+<span class="hljs-comment">//   "videoCapabilities": [</span>
+<span class="hljs-comment">//     {</span>
+<span class="hljs-comment">//       "contentType": "video/mp4;codecs=\"avc1.4d401e\"",</span>
+<span class="hljs-comment">//       "robustness": "HW_SECURE_CRYPTO"</span>
+<span class="hljs-comment">//     },</span>
+<span class="hljs-comment">//     {</span>
+<span class="hljs-comment">//       "contentType": "video/mp4;codecs=\"avc1.4d401e\"",</span>
+<span class="hljs-comment">//       "robustness": "SW_SECURE_DECODE"</span>
+<span class="hljs-comment">//     }</span>
+<span class="hljs-comment">//   ]</span>
+<span class="hljs-comment">// }</span>
+<span class="hljs-comment">// Compatible configuration:</span>
+<span class="hljs-comment">// {</span>
+<span class="hljs-comment">//   "audioCapabilities": [],</span>
+<span class="hljs-comment">//   "distinctiveIdentifier": "not-allowed",</span>
+<span class="hljs-comment">//   "initDataTypes": ["cenc"],</span>
+<span class="hljs-comment">//   "label": "",</span>
+<span class="hljs-comment">//   "persistentState": "not-allowed",</span>
+<span class="hljs-comment">//   "sessionTypes": ["temporary"],</span>
+<span class="hljs-comment">//   "videoCapabilities": [</span>
+<span class="hljs-comment">//     {</span>
+<span class="hljs-comment">//       "contentType": "video/mp4;codecs=\"avc1.4d401e\"",</span>
+<span class="hljs-comment">//       "robustness":"SW_SECURE_DECODE"</span>
+<span class="hljs-comment">//     }</span>
+<span class="hljs-comment">//   ]</span>
+<span class="hljs-comment">// }</span>
+<span class="hljs-comment">// ########################################################</span>
+<span class="hljs-comment">//</span>
+<span class="hljs-comment">// # Incompatible configuration ###########################</span>
+<span class="hljs-comment">// Key System: com.microsoft.playready</span>
+<span class="hljs-comment">// Wanted configuration:</span>
+<span class="hljs-comment">// {</span>
+<span class="hljs-comment">//   "initDataTypes":["cenc"],</span>
+<span class="hljs-comment">//   "videoCapabilities": [</span>
+<span class="hljs-comment">//     {</span>
+<span class="hljs-comment">//       "contentType": "video/mp4;codecs=\"avc1.4d401e\"",</span>
+<span class="hljs-comment">//       "robustness": "HW_SECURE_CRYPTO"</span>
+<span class="hljs-comment">//     },</span>
+<span class="hljs-comment">//     {</span>
+<span class="hljs-comment">//       "contentType": "video/mp4;codecs=\"avc1.4d401e\"",</span>
+<span class="hljs-comment">//       "robustness": "SW_SECURE_DECODE"</span>
+<span class="hljs-comment">//     }</span>
+<span class="hljs-comment">//   ]</span>
+<span class="hljs-comment">// }</span>
+<span class="hljs-comment">// ########################################################</span>
+</code></pre>
+<p><a name="getstatusforhdcp"></a></p>
+<h3>getStatusForHDCP</h3>
+<p><em>arguments</em>:</p>
+<ul>
+<li><em>type</em> (<code>string</code>): The HDCP type (e.g. “1.0”, “1.1” or “2.0”)</li>
+</ul>
+<p><em>return value</em>: <code>string</code></p>
+<p>Test for an HDCP configuration.</p>
+<p>The returned string of this function is either:</p>
+<ul>
+<li>
+<p><code>"Supported"</code>: This HDCP configuration is supported.</p>
+</li>
+<li>
+<p><code>"NotSupported"</code>: The HDCP configuration is not supported.</p>
+</li>
+<li>
+<p><code>"Unknown"</code>: The API is not available or it is but could not check if the
+HDCP type is supported.</p>
+</li>
+</ul>
+<div class="warning">
+As of the 2018-july-03, this feature is very poorly supported (with only
+some support on the EDGE browser).
+<br>
+We should have a real support of it in the coming months on
+<a href="https://www.chromestatus.com/feature/5652917147140096">Chrome</a> and
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1404230">Firefox</a>.
+</div>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { mediaCapabilitiesProber } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/tools"</span>;
+
+mediaCapabilitiesProber.<span class="hljs-title function_">getStatusForHDCP</span>(<span class="hljs-string">"1.1"</span>).<span class="hljs-title function_">then</span>(<span class="hljs-function">(<span class="hljs-params">hdcpStatus</span>) =&gt;</span> {
+  <span class="hljs-keyword">switch</span> (hdcpStatus) {
+    <span class="hljs-keyword">case</span> <span class="hljs-string">"Supported"</span>:
+      <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"This HDCP version is supported"</span>);
+      <span class="hljs-keyword">break</span>;
+
+    <span class="hljs-keyword">case</span> <span class="hljs-string">"NotSupported"</span>:
+      <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"This HDCP version is not supported"</span>);
+      <span class="hljs-keyword">break</span>;
+
+    <span class="hljs-keyword">case</span> <span class="hljs-string">"Unknown"</span>:
+      <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"We could'nt tell if this HDCP version is supported."</span>);
+      <span class="hljs-keyword">break</span>;
+  }
+});
+</code></pre>
+<p><a name="getdecodingcapabilities"></a></p>
+<h3>getDecodingCapabilities</h3>
+<p><em>arguments</em>:</p>
+<ul>
+<li><em>config</em> (<code>Object</code>): Object with type, video and audio configuration.</li>
+</ul>
+<p><em>return value</em>: <code>string</code></p>
+<p>Probe for audio/video decoding capabilities.</p>
+<h4>Argument</h4>
+<p>The object in argument is inspired from the concerned API configurations.
+All its properties are optional, here are what you can set.</p>
+<ul>
+<li>
+<p><em>type</em> (<code>string</code>): The media is either buffered in MediaSource, or
+directly as a file.
+As such, you can specify which one you want to probe through one of the
+following strings:</p>
+<ul>
+<li>“media-source”</li>
+<li>“file”.</li>
+</ul>
+</li>
+<li>
+<p><em>video</em> (<code>Object</code>): The video capabilities you want to probe.</p>
+<ul>
+<li><em>contentType</em> (<code>string</code>): Media codec in mimeType format.</li>
+<li><em>width</em> (<code>number</code>): Video width.</li>
+<li><em>height</em> (<code>number</code>): Video Height.</li>
+<li><em>bitrate</em> (<code>number</code>): Bitrate of the video (in bits per second).</li>
+<li><em>framerate</em> (<code>string</code>): Number of frames used in one second.</li>
+<li><em>bitsPerComponent</em> (<code>number</code>): Number of bits used to encode one
+component par pixel.</li>
+</ul>
+</li>
+<li>
+<p><em>audio</em> (<code>Object</code>): The video capabilities you want to probe.</p>
+<ul>
+<li><em>contentType</em> (<code>string</code>): Media codec in mimeType format.</li>
+<li><em>channels</em> (<code>string</code>): Audio channels used by the track.</li>
+<li><em>bitrate</em> (<code>number</code>): Bitrate from stream (bits/second).</li>
+<li><em>samplerate</em> (<code>number</code>): Number of samples of audio carried per second.</li>
+</ul>
+</li>
+</ul>
+<h4>Return value</h4>
+<p>The returned string of this function is either:</p>
+<ul>
+<li>
+<p><code>"Supported"</code>: This configuration is supported.</p>
+</li>
+<li>
+<p><code>"MaybeSupported"</code>: Some set configuration could not be probed because
+not enough information was provided, but what has been probed is supported.</p>
+</li>
+<li>
+<p><code>"NotSupported"</code>: The configuration is not supported.</p>
+</li>
+</ul>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { mediaCapabilitiesProber } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/tools"</span>;
+
+mediaCapabilitiesProber
+  .<span class="hljs-title function_">getDecodingCapabilities</span>({
+    <span class="hljs-attr">type</span>: <span class="hljs-string">"media-source"</span>,
+    <span class="hljs-attr">video</span>: {
+      <span class="hljs-attr">contentType</span>: <span class="hljs-string">'video/webm; codecs="vp09.00.10.08"'</span>,
+      <span class="hljs-attr">width</span>: <span class="hljs-number">1920</span>,
+      <span class="hljs-attr">height</span>: <span class="hljs-number">1080</span>,
+      <span class="hljs-attr">bitrate</span>: <span class="hljs-number">3450000</span>,
+      <span class="hljs-attr">framerate</span>: <span class="hljs-string">"25"</span>,
+      <span class="hljs-attr">bitsPerComponent</span>: <span class="hljs-number">8</span>,
+    },
+    <span class="hljs-attr">audio</span>: {
+      <span class="hljs-attr">contentType</span>: <span class="hljs-string">'audio/webm; codecs="opus"'</span>,
+      <span class="hljs-attr">channels</span>: <span class="hljs-number">6</span>,
+      <span class="hljs-attr">bitrate</span>: <span class="hljs-number">1200</span>,
+      <span class="hljs-attr">samplerate</span>: <span class="hljs-number">44100</span>,
+    },
+  })
+  .<span class="hljs-title function_">then</span>(<span class="hljs-function">(<span class="hljs-params">status</span>) =&gt;</span> {
+    <span class="hljs-keyword">switch</span> (status) {
+      <span class="hljs-keyword">case</span> <span class="hljs-string">"Supported"</span>:
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"The configuration is supported"</span>);
+        <span class="hljs-keyword">break</span>;
+
+      <span class="hljs-keyword">case</span> <span class="hljs-string">"MaybeSupported"</span>:
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"The configuration may be supported"</span>);
+        <span class="hljs-keyword">break</span>;
+
+      <span class="hljs-keyword">case</span> <span class="hljs-string">"NotSupported"</span>:
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"The configuration is not supported"</span>);
+        <span class="hljs-keyword">break</span>;
+    }
+  });
+</code></pre>
+<p><a name="getdisplaycapabilities"></a></p>
+<h3>getDisplayCapabilities</h3>
+<p><em>arguments</em>:</p>
+<ul>
+<li><em>config</em> (<code>Object</code>): Object with display configuration.</li>
+</ul>
+<p><em>return value</em>: <code>string</code></p>
+<p>Probe what can be displayed on the screen.</p>
+<h4>Argument</h4>
+<p>The object in argument is inspired from the concerned API configurations.
+All its properties are optional, here are what you can set.</p>
+<ul>
+<li><em>colorSpace</em> (<code>string</code>): Wanted color space (“srgb”, “p3”, etc).</li>
+<li><em>width</em> (<code>number</code>): Wanted display horizontal resolution.</li>
+<li><em>height</em> (<code>number</code>): Wanted display vertical resolution.</li>
+<li><em>bitsPerComponent</em> (<code>number</code>): Wanted display bpc capability.</li>
+</ul>
+<h4>Return Value</h4>
+<p>The returned string of this function is either:</p>
+<ul>
+<li>
+<p><code>"Supported"</code>: This configuration is supported.</p>
+</li>
+<li>
+<p><code>"MaybeSupported"</code>: Some set configuration could not be probed because
+not enough information was provided, but what has been probed is supported.</p>
+</li>
+<li>
+<p><code>"NotSupported"</code>: The configuration is not supported.</p>
+</li>
+</ul>
+<h4>Example</h4>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> { mediaCapabilitiesProber } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/tools"</span>;
+
+mediaCapabilitiesProber
+  .<span class="hljs-title function_">getDisplayCapabilities</span>({
+    <span class="hljs-attr">colorSpace</span>: <span class="hljs-string">"p3"</span>,
+    <span class="hljs-attr">width</span>: <span class="hljs-number">3840</span>,
+    <span class="hljs-attr">height</span>: <span class="hljs-number">2160</span>,
+    <span class="hljs-attr">bitsPerComponent</span>: <span class="hljs-number">10</span>,
+  })
+  .<span class="hljs-title function_">then</span>(<span class="hljs-function">(<span class="hljs-params">status</span>) =&gt;</span> {
+    <span class="hljs-keyword">switch</span> (status) {
+      <span class="hljs-keyword">case</span> <span class="hljs-string">"Supported"</span>:
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"The configuration is supported"</span>);
+        <span class="hljs-keyword">break</span>;
+
+      <span class="hljs-keyword">case</span> <span class="hljs-string">"MaybeSupported"</span>:
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"The configuration may be supported"</span>);
+        <span class="hljs-keyword">break</span>;
+
+      <span class="hljs-keyword">case</span> <span class="hljs-string">"NotSupported"</span>:
+        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"The configuration is not supported"</span>);
+        <span class="hljs-keyword">break</span>;
+    }
+  });
+</code></pre>
+<p><a name="exploited_browser_apis"></a></p>
+<h2>Exploited browser APIs</h2>
+<p>The tool probes media capabilities from browsers (Chrome, Firefox, etc.)
+exploiting current available media API:</p>
+<ul>
+<li>
+<p><strong>mediaCapabilities</strong> - Chrome &gt;= 64
+(<a href="https://github.com/WICG/media-capabilities">https://github.com/WICG/media-capabilities</a>)</p>
+<ul>
+<li>Check for decoding capabilites from video and audio attributes.</li>
+</ul>
+</li>
+<li>
+<p><strong>isTypeSupportedWithFeatures</strong> - Microsoft EDGE</p>
+<ul>
+<li>Check for DRM support + decoding and displaying capabilites from video,
+audio, display and media protection configuration.</li>
+</ul>
+</li>
+<li>
+<p><strong>isTypeSupported</strong> - Chrome &gt;= 31 / Firefox &gt;= 41 / EDGE / IE &gt;= 11 / Safari</p>
+<blockquote>
+<p>= 8
+(<a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaSource/isTypeSupported">https://developer.mozilla.org/en-US/docs/Web/API/MediaSource/isTypeSupported</a>)</p>
+</blockquote>
+<ul>
+<li>Check for video and audio decoding support from content type.</li>
+</ul>
+</li>
+<li>
+<p><strong>matchMedia</strong> (with color gamut support) - Chrome &gt;= 58.</p>
+<ul>
+<li>Check for color space support.</li>
+</ul>
+</li>
+<li>
+<p><strong>requestMediaKeySystemAccess</strong> - Chrome &gt;= 42 / Firefox / EDGE / Safari
+(<a href="https://developer.mozilla.org/fr/docs/Web/API/Navigator/requestMediaKeySystemAccess">https://developer.mozilla.org/fr/docs/Web/API/Navigator/requestMediaKeySystemAccess</a>)</p>
+<ul>
+<li>Check for DRM support.</li>
+</ul>
+</li>
+<li>
+<p><strong>getStatusForPolicy</strong> - ?
+(<a href="https://github.com/WICG/hdcp-detection/blob/master/explainer.md">https://github.com/WICG/hdcp-detection/blob/master/explainer.md</a>)</p>
+<ul>
+<li>Query a hypothetical status associated with an HDCP policy.</li>
+</ul>
+</li>
+</ul>
+</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="./parseBifThumbnails.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">parseBifThumbnails</div></a></div><div class="next-or-previous-page next-page"><a class="next-or-previous-page-link" href="./createMetaplaylist.html"><div class="next-or-previous-page-link-label">Next</div><div class="next-or-previous-page-link-name">createMetaplaylist</div></a></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#mediacapabilitiesprober">MediaCapabilitiesProber</a></p>
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#how_to_use_it">How to use it</a></li>
+<li><a href="#properties">Properties</a>
+<ul>
+<li><a href="#loglevel">LogLevel</a></li>
+</ul>
+</li>
+<li><a href="#functions">Functions</a>
+<ul>
+<li><a href="#getcompatibledrmconfigurations">getCompatibleDRMConfigurations</a></li>
+<li><a href="#getstatusforhdcp">getStatusForHDCP</a></li>
+<li><a href="#getdecodingcapabilities">getDecodingCapabilities</a></li>
+<li><a href="#getdisplaycapabilities">getDisplayCapabilities</a></li>
+</ul>
+</li>
+<li><a href="#exploited_browser_apis">Exploited browser APIs</a></li>
+</ul>
+</div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../Getting_Started/Welcome.html">Welcome</a></li>
+<li><div class="page-list-item page-list-group">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../Getting_Started/Tutorials/Quick_Start.html">Quick Start</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/Content_with_DRM.html">Contents with DRM</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/Selecting_a_Track.html">Selecting a Track</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Migration from RxPlayer v3</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Preferences.html">Track Preferences</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Bitrate_Selection.html">Bitrate Selection</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Constructor_Options.html">Constructor Options</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/loadVideo_Options.html">loadVideo Options</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Player_Errors.html">Player Errors</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Player_Methods.html">Player Methods</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Player_Types.html">Player Types</a></li></ul></li>
+<li class="page-list-item"><a href="../../Getting_Started/Minimal_Player.html">Importing a minimal RxPlayer</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Glossary.html">Glossary</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Troubleshooting.html">Troubleshooting</a></li></ul></li>
+<li class="page-list-item"><div class="page-list-group opened active">API</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../Creating_a_Player.html">Creating a Player</a></li>
+<li class="page-list-item"><a href="../Loading_a_Content.html">Loading a Content</a></li>
+<li class="page-list-item"><a href="../Decryption_Options.html">Decryption Options</a></li>
+<li><div class="page-list-item page-list-group">Basic Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Basic_Methods/getPlayerState.html">getPlayerState</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/addEventListener.html">addEventListener</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/removeEventListener.html">removeEventListener</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/play.html">play</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/pause.html">pause</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/stop.html">stop</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getPosition.html">getPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getWallClockTime.html">getWallClockTime</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/seekTo.html">seekTo</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getMediaDuration.html">getMediaDuration</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getError.html">getError</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getVideoElement.html">getVideoElement</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getAvailablePeriods.html">getAvailablePeriods</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getCurrentPeriod.html">getCurrentPeriod</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/dispose.html">dispose</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/reload.html">reload</a></li></ul></li>
+<li class="page-list-item"><a href="../Player_States.html">Player States</a></li>
+<li class="page-list-item"><a href="../Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../Player_Errors.html">Player Errors</a></li>
+<li><div class="page-list-item page-list-group">Track Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Track_Selection/getAudioTrack.html">getAudioTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getTextTrack.html">getTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getVideoTrack.html">getVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setAudioTrack.html">setAudioTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setTextTrack.html">setTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setVideoTrack.html">setVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/disableTextTrack.html">disableTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Representation Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Representation_Selection/getVideoRepresentation.html">getVideoRepresentation</a></li>
+<li class="page-list-item"><a href="../Representation_Selection/getAudioRepresentation.html">getAudioRepresentation</a></li>
+<li class="page-list-item"><a href="../Representation_Selection/lockAudioVideoRepresentations.html">lockVideoRepresentations / lockAudioRepresentations</a></li>
+<li class="page-list-item"><a href="../Representation_Selection/getLockedVideoRepresentations.html">getLockedVideoRepresentations</a></li>
+<li class="page-list-item"><a href="../Representation_Selection/getLockedAudioRepresentations.html">getLockedAudioRepresentations</a></li>
+<li class="page-list-item"><a href="../Representation_Selection/unlockAudioVideoRepresentations.html">unlockVideoRepresentations / unlockAudioRepresentations</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Speed Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li>
+<li class="page-list-item"><a href="../Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li>
+<li class="page-list-item"><a href="../Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Volume Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Volume_Control/setVolume.html">setVolume</a></li>
+<li class="page-list-item"><a href="../Volume_Control/getVolume.html">getVolume</a></li>
+<li class="page-list-item"><a href="../Volume_Control/mute.html">mute</a></li>
+<li class="page-list-item"><a href="../Volume_Control/isMute.html">isMute</a></li>
+<li class="page-list-item"><a href="../Volume_Control/unMute.html">unMute</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Buffer_Information/getCurrentBufferGap.html">getCurrentBufferGap</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Content Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Content_Information/getContentUrls.html">getContentUrls</a></li>
+<li class="page-list-item"><a href="../Content_Information/updateContentUrls.html">updateContentUrls</a></li>
+<li class="page-list-item"><a href="../Content_Information/isLive.html">isLive</a></li>
+<li class="page-list-item"><a href="../Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li></ul></li>
+<li class="page-list-item"><a href="../Static_Properties.html">RxPlayer Static Properties</a></li>
+<li class="page-list-item"><a href="../Typescript_Types.html">Typescript Types</a></li>
+<li><div class="page-list-item page-list-group opened active">Tools</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./TextTrackRenderer.html">TextTrackRenderer</a></li>
+<li class="page-list-item"><a href="./VideoThumbnailLoader.html">VideoThumbnailLoader</a></li>
+<li class="page-list-item"><a href="./StringUtils.html">StringUtils</a></li>
+<li class="page-list-item"><a href="./parseBifThumbnails.html">parseBifThumbnails</a></li>
+<li class="page-list-item active"><a href="./MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li>
+<li class="page-list-item"><a href="./createMetaplaylist.html">createMetaplaylist</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Miscellaneous</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Miscellaneous/plugins.html">Plugins</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Low_Latency.html">Low Latency</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/hdr.html">HDR</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Local_Contents.html">Local Contents</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Text_Tracks.html">Text Tracks</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Initial_Position.html">Initial Position</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">Reference</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../reference/API_Reference.html">API Reference</a></li></ul></li>
+<li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
+
+<li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
+</ul></div><script type="text/javascript" src="../../scripts/lunr.js" charset="utf-8"></script><script type="text/javascript" src="../../scripts/script.js" charset="utf-8"></script></body></html>

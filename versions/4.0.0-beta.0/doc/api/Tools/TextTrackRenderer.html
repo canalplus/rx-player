@@ -1,0 +1,421 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>TextTrackRenderer - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "../..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../../static/img/logo.png" /></a><a class="navbar-item hideable"href="../../Getting_Started/Welcome.html">Getting Started</a>
+<a class="navbar-item navbar-active hideable"href="../Overview.html">API</a>
+<a class="navbar-item hideable"href="../../reference/API_Reference.html">Reference</a>
+<a class="navbar-item hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
+<span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
+<a aria-label="Link to repository" class="navbar-item first-right hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 4.0.0-beta.0</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="../Overview.html">Overview</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Creating_a_Player.html">Creating a Player</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Loading_a_Content.html">Loading a Content</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Decryption_Options.html">Decryption Options</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Basic Methods</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getPlayerState.html">getPlayerState</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/addEventListener.html">addEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/removeEventListener.html">removeEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/play.html">play</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/pause.html">pause</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/stop.html">stop</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getPosition.html">getPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getWallClockTime.html">getWallClockTime</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/seekTo.html">seekTo</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getMediaDuration.html">getMediaDuration</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getError.html">getError</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getVideoElement.html">getVideoElement</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getAvailablePeriods.html">getAvailablePeriods</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getCurrentPeriod.html">getCurrentPeriod</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/dispose.html">dispose</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/reload.html">reload</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_States.html">Player States</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_Events.html">Player Events</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_Errors.html">Player Errors</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Track Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAudioTrack.html">getAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getTextTrack.html">getTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getVideoTrack.html">getVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setAudioTrack.html">setAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setTextTrack.html">setTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setVideoTrack.html">setVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/disableTextTrack.html">disableTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Representation Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/getVideoRepresentation.html">getVideoRepresentation</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/getAudioRepresentation.html">getAudioRepresentation</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/lockAudioVideoRepresentations.html">lockVideoRepresentations / lockAudioRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/getLockedVideoRepresentations.html">getLockedVideoRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/getLockedAudioRepresentations.html">getLockedAudioRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/unlockAudioVideoRepresentations.html">unlockVideoRepresentations / unlockAudioRepresentations</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Speed Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Volume Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/setVolume.html">setVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/getVolume.html">getVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/mute.html">mute</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/isMute.html">isMute</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/unMute.html">unMute</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Information/getCurrentBufferGap.html">getCurrentBufferGap</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Content Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/getContentUrls.html">getContentUrls</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/updateContentUrls.html">updateContentUrls</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/isLive.html">isLive</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="../Static_Properties.html">RxPlayer Static Properties</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Typescript_Types.html">Typescript Types</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group active opened">Tools</div><ul><li class="sidebar-item"><a class="sidebar-link active" href="./TextTrackRenderer.html">TextTrackRenderer</a></li><li class="sidebar-item"><a class="sidebar-link" href="./VideoThumbnailLoader.html">VideoThumbnailLoader</a></li><li class="sidebar-item"><a class="sidebar-link" href="./StringUtils.html">StringUtils</a></li><li class="sidebar-item"><a class="sidebar-link" href="./parseBifThumbnails.html">parseBifThumbnails</a></li><li class="sidebar-item"><a class="sidebar-link" href="./MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li><li class="sidebar-item"><a class="sidebar-link" href="./createMetaplaylist.html">createMetaplaylist</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Miscellaneous</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/plugins.html">Plugins</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Low_Latency.html">Low Latency</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/hdr.html">HDR</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Local_Contents.html">Local Contents</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Text_Tracks.html">Text Tracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Initial_Position.html">Initial Position</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="texttrackrenderer"></a></p>
+<h1>TextTrackRenderer</h1>
+<p><a name="overview"></a></p>
+<h2>Overview</h2>
+<p>The TextTrackRenderer is a tool allowing to render subtitles synchronized with
+a video element (or any HTMLMediaElement).</p>
+<p>For now it supports the following formats:</p>
+<ul>
+<li>TTML</li>
+<li>webVTT</li>
+<li>srt</li>
+<li>sami</li>
+</ul>
+<p>The video does not need to be played through the RxPlayer for the
+TextTrackRenderer to work. It is a completely independent tool which just
+rely on the video element for synchronization information.</p>
+<p><a name="brief_summary"></a></p>
+<h2>Brief summary</h2>
+<p>If you don’t want to read all this documentation, here is a complete example of
+how it can be used:</p>
+<pre><code class="language-js"><span class="hljs-comment">// import TextTrackRenderer and the parsers we want</span>
+<span class="hljs-keyword">import</span> <span class="hljs-title class_">TextTrackRenderer</span>, {
+  <span class="hljs-variable constant_">TTML_PARSER</span>,
+  <span class="hljs-variable constant_">VTT_PARSER</span>,
+  <span class="hljs-variable constant_">SRT_PARSER</span>,
+  <span class="hljs-variable constant_">SAMI_PARSER</span>,
+} <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/tools/TextTrackRenderer"</span>;
+
+<span class="hljs-comment">// Add the needed parsers to the TextTrackRenderer</span>
+<span class="hljs-title class_">TextTrackRenderer</span>.<span class="hljs-title function_">addParsers</span>([
+  <span class="hljs-variable constant_">TTML_PARSER</span>,
+  <span class="hljs-variable constant_">VTT_PARSER</span>,
+  <span class="hljs-variable constant_">SRT_PARSER</span>,
+  <span class="hljs-variable constant_">SAMI_PARSER</span>,
+]);
+
+<span class="hljs-comment">// get video element the subtitles has to be synchronized to</span>
+<span class="hljs-keyword">const</span> videoElement = <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">querySelector</span>(<span class="hljs-string">"video"</span>);
+
+<span class="hljs-comment">// get HTML element in which the text track will be displayed</span>
+<span class="hljs-comment">// Should generally be on top of the video, with the same size than it (but can</span>
+<span class="hljs-comment">// also be in any shape, corresponding to your UI needs).</span>
+<span class="hljs-keyword">const</span> textTrackElement = <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">querySelector</span>(<span class="hljs-string">".text-track-container"</span>);
+
+<span class="hljs-keyword">const</span> textTrackRenderer = <span class="hljs-keyword">new</span> <span class="hljs-title class_">TextTrackRenderer</span>({
+  videoElement,
+  textTrackElement,
+});
+
+<span class="hljs-comment">// example: a ".srt" track</span>
+<span class="hljs-keyword">const</span> exampleSRT = <span class="hljs-string">`1
+00:00:01,600 --&gt; 00:00:04,200
+English (US)
+
+2
+00:00:05,900 --&gt; 00:00:07,999
+This is a subtitle in American English
+
+3
+00:00:10,000 --&gt; 00:00:14,000
+Adding subtitles is very easy to do
+`</span>;
+
+<span class="hljs-keyword">try</span> {
+  textTrackRenderer.<span class="hljs-title function_">setTextTrack</span>({
+    <span class="hljs-attr">data</span>: exampleSRT,
+    <span class="hljs-attr">type</span>: <span class="hljs-string">"srt"</span>, <span class="hljs-comment">// or "ttml" / "vtt" / "sami"</span>
+    <span class="hljs-comment">// timeOffset: 2.3, // optional offset in seconds to add to the subtitles</span>
+  });
+} <span class="hljs-keyword">catch</span> (e) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">`Could not parse the subtitles: <span class="hljs-subst">${e}</span>`</span>);
+}
+</code></pre>
+<p><a name="how_to_import_it"></a></p>
+<h2>How to import it</h2>
+<p>The TextTrackRenderer alone can be imported as such:</p>
+<pre><code class="language-ts"><span class="hljs-keyword">import</span> <span class="hljs-title class_">TextTrackRenderer</span> <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/tools/TextTrackRenderer"</span>;
+</code></pre>
+<p>But just importing the TextTrackRenderer alone is pointless, you also have to
+import the text track parsers you want to use manually (this is a choice we
+made to avoid wasting space for subtitles formats you might not want).</p>
+<p>To import the parsers you want, you just have to do something along the line
+of:</p>
+<pre><code class="language-js"><span class="hljs-comment">// Add two parsers to the TextTrackRenderer: one for TTML subtitles and one for</span>
+<span class="hljs-comment">// srt subtitles</span>
+<span class="hljs-keyword">import</span> <span class="hljs-title class_">TextTrackRenderer</span>, {
+  <span class="hljs-variable constant_">TTML_PARSER</span>,
+  <span class="hljs-variable constant_">SRT_PARSER</span>,
+} <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/tools/TextTrackRenderer"</span>;
+<span class="hljs-title class_">TextTrackRenderer</span>.<span class="hljs-title function_">addParsers</span>([<span class="hljs-variable constant_">TTML_PARSER</span>, <span class="hljs-variable constant_">SRT_PARSER</span>]);
+</code></pre>
+<p>Here are the different available parsers:</p>
+<table>
+<thead>
+<tr>
+<th>Import name</th>
+<th>Subtitles format parsed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TTML_PARSER</code></td>
+<td>TTML</td>
+</tr>
+<tr>
+<td><code>VTT_PARSER</code></td>
+<td>WebVTT</td>
+</tr>
+<tr>
+<td><code>SRT_PARSER</code></td>
+<td>SubRip (.srt)</td>
+</tr>
+<tr>
+<td><code>SAMI_PARSER</code></td>
+<td>SAMI</td>
+</tr>
+</tbody>
+</table>
+<p><a name="how_to_use_it"></a></p>
+<h2>How to use it</h2>
+<p><a name="preamble"></a></p>
+<h3>Preamble</h3>
+<p>Now that it is imported, we can begin to use it.</p>
+<p>We will need three items:</p>
+<ol>
+<li>
+<p>The video element our subtitles has to be synchronized to.</p>
+</li>
+<li>
+<p>Another HTML element, in which the various subtitles will be rendered by
+the TextTrackRenderer. In general, you want that element to be on top of
+the video element, with the same dimensions. You might however set it in
+the shape and size you want.</p>
+<p>It can even be reduced dynamically at any time (for example, to reduce this
+element’s height when a UI element appear at the bottom of the screen,
+thus avoiding the subtitles from overlapping that new element).</p>
+</li>
+<li>
+<p>The whole text track data, as a string (you will have to download the
+subtitles yourself).</p>
+</li>
+</ol>
+<p>To simplify, let’s give a name to all those 3 elements:</p>
+<ol>
+<li>the <code>videoElement</code></li>
+<li>the <code>textTrackElement</code></li>
+<li>the <code>textTrackData</code></li>
+</ol>
+<p><a name="creating_a_texttrackrenderer"></a></p>
+<h3>Creating a TextTrackRenderer</h3>
+<p>We first have to create a new TextTrackRenderer with the first two items:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> textTrackRenderer = <span class="hljs-keyword">new</span> <span class="hljs-title class_">TextTrackRenderer</span>({
+  videoElement,
+  textTrackElement,
+});
+</code></pre>
+<p><a name="setting_a_text_track_on_it"></a></p>
+<h3>Setting a text track on it</h3>
+<p>With <code>textTrackRenderer</code>, the TextTrackRenderer instance, we can now add at
+any time a text track through its <code>setTextTrack</code> method:</p>
+<pre><code class="language-js"><span class="hljs-keyword">try</span> {
+  textTrackRenderer.<span class="hljs-title function_">setTextTrack</span>({
+    <span class="hljs-attr">data</span>: textTrackData,
+    <span class="hljs-attr">type</span>: <span class="hljs-variable constant_">SUBTITLES_FORMAT</span>,
+  });
+} <span class="hljs-keyword">catch</span> (e) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">`Could not parse the subtitles: <span class="hljs-subst">${e}</span>`</span>);
+}
+</code></pre>
+<p>Here, <code>SUBTITLES_FORMAT</code> is a string indicating in which format the subtitles
+are. It can be any of those strings:</p>
+<table>
+<thead>
+<tr>
+<th>type</th>
+<th>Corresponding subtitles format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>"ttml"</code></td>
+<td>TTML</td>
+</tr>
+<tr>
+<td><code>"vtt"</code></td>
+<td>WebVTT</td>
+</tr>
+<tr>
+<td><code>"srt"</code></td>
+<td>SubRip (.srt)</td>
+</tr>
+<tr>
+<td><code>"sami"</code></td>
+<td>SAMI</td>
+</tr>
+</tbody>
+</table>
+<p>(Each format needs the corresponding parser to be imported. See the previous
+chapter for more information.)</p>
+<p>Note that the <code>setTextTrack</code> method can throw if the subtitles are found to be
+invalid.</p>
+<p>Any subsequent call to <code>setTextTrack</code> will remove the current text track and
+replace them with the new text track instead:</p>
+<pre><code class="language-js"><span class="hljs-comment">// Add TTML subtitles</span>
+textTrackRenderer.<span class="hljs-title function_">setTextTrack</span>({
+  <span class="hljs-attr">data</span>: textTrackData1,
+  <span class="hljs-attr">type</span>: <span class="hljs-string">"ttml"</span>,
+});
+
+<span class="hljs-comment">// Completely removes the TTML subtitles and replace them by other subtitles, in</span>
+<span class="hljs-comment">// webVTT this time</span>
+textTrackRenderer.<span class="hljs-title function_">setTextTrack</span>({
+  <span class="hljs-attr">data</span>: textTrackData2,
+  <span class="hljs-attr">type</span>: <span class="hljs-string">"vtt"</span>,
+});
+</code></pre>
+<p>If your subtitles have a delay or are in advance relatively to the video, you
+can also set an offset in seconds through the <code>timeOffset</code> property.</p>
+<p>For example, this will display each subtitles 1.3 seconds later (for when
+subtitles appear and disappear too much in advance):</p>
+<pre><code class="language-js">textTrackRenderer.<span class="hljs-title function_">setTextTrack</span>({
+  <span class="hljs-attr">data</span>: textTrackData,
+  <span class="hljs-attr">type</span>: <span class="hljs-string">"srt"</span>,
+  <span class="hljs-attr">timeOffset</span>: <span class="hljs-number">1.3</span>,
+});
+</code></pre>
+<p>And this will display each subtitles 1.3 seconds before they normally appear
+and disappear (for when subtitles are too late):</p>
+<pre><code class="language-js">textTrackRenderer.<span class="hljs-title function_">setTextTrack</span>({
+  <span class="hljs-attr">data</span>: textTrackData,
+  <span class="hljs-attr">type</span>: <span class="hljs-string">"srt"</span>,
+  <span class="hljs-attr">timeOffset</span>: -<span class="hljs-number">1.3</span>,
+});
+</code></pre>
+<p><a name="removing_the_current_text_track"></a></p>
+<h3>Removing the current text track</h3>
+<p>If you just want to completely remove the current text track, you can call the
+<code>removeTextTrack</code> method:</p>
+<pre><code class="language-js">textTrackRenderer.<span class="hljs-title function_">removeTextTrack</span>();
+</code></pre>
+<p><a name="disposing_of_the_texttrackrenderer"></a></p>
+<h3>Disposing of the TextTrackRenderer</h3>
+<p>If you’re sure that you won’t need the TextTrackRenderer anymore, you can
+dispose of most ressources (which is not much) it took on your page by calling
+the <code>dispose</code> method:</p>
+<pre><code class="language-js">textTrackRenderer.<span class="hljs-title function_">dispose</span>();
+</code></pre>
+<p>That TextTrackRenderer instance won’t be usable once you’ve call this method,
+so be sure you don’t need it anymore before calling it.</p>
+<p><a name="notes_on_the_sami_format"></a></p>
+<h3>Notes on the SAMI format</h3>
+<p>The SAMI subtitles format might necessitate you to specify the language you want
+to parse.</p>
+<p>This can be done on the <code>setTextTrack</code> call like this:</p>
+<pre><code class="language-js">textTrackRenderer.<span class="hljs-title function_">setTextTrack</span>({
+  <span class="hljs-attr">data</span>: textTrackData,
+  <span class="hljs-attr">type</span>: <span class="hljs-string">"sami"</span>,
+  <span class="hljs-attr">language</span>: <span class="hljs-string">"en-US"</span>, <span class="hljs-comment">// or fr-FR...</span>
+});
+</code></pre>
+<p><a name="about_logs"></a></p>
+<h2>About logs</h2>
+<p>The TextTrackRenderer can display logs to the console. It relies on the exact
+same logger instance than the RxPlayer.</p>
+<p>This logger can be independently imported from <code>"rx-player/logger"</code>:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> logger <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/logger"</span>;
+</code></pre>
+<p>You can then set its verbosity through its <code>setLevel</code> method:</p>
+<pre><code class="language-js">logger.<span class="hljs-title function_">setLevel</span>(<span class="hljs-variable constant_">LOGGER_LEVEL</span>);
+</code></pre>
+<p><code>LOGGER_LEVEL</code> can be any of those strings (from the less verbose to the most):</p>
+<ul>
+<li>
+<p><code>"NONE"</code>: no log</p>
+</li>
+<li>
+<p><code>"ERROR"</code>: unexpected errors (via <code>console.error</code>)</p>
+</li>
+<li>
+<p><code>"WARNING"</code>: The previous level + minor problems encountered (via
+<code>console.warn</code>)</p>
+</li>
+<li>
+<p><code>"INFO"</code>: The previous levels + noteworthy events (via <code>console.info</code>)</p>
+</li>
+<li>
+<p><code>"DEBUG"</code>: The previous levels + regular events (via <code>console.log</code>)</p>
+</li>
+</ul>
+<div class="warning">
+Updating the logger level will also update the RxPlayer's logger
+level as it is the exact same logger that is used there.
+</div>
+</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="../Typescript_Types.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">Typescript Types</div></a></div><div class="next-or-previous-page next-page"><a class="next-or-previous-page-link" href="./VideoThumbnailLoader.html"><div class="next-or-previous-page-link-label">Next</div><div class="next-or-previous-page-link-name">VideoThumbnailLoader</div></a></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#texttrackrenderer">TextTrackRenderer</a></p>
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#brief_summary">Brief summary</a></li>
+<li><a href="#how_to_import_it">How to import it</a></li>
+<li><a href="#how_to_use_it">How to use it</a>
+<ul>
+<li><a href="#preamble">Preamble</a></li>
+<li><a href="#creating_a_texttrackrenderer">Creating a TextTrackRenderer</a></li>
+<li><a href="#setting_a_text_track_on_it">Setting a text track on it</a></li>
+<li><a href="#removing_the_current_text_track">Removing the current text track</a></li>
+<li><a href="#disposing_of_the_texttrackrenderer">Disposing of the TextTrackRenderer</a></li>
+<li><a href="#notes_on_the_sami_format">Notes on the SAMI format</a></li>
+</ul>
+</li>
+<li><a href="#about_logs">About logs</a></li>
+</ul>
+</div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../Getting_Started/Welcome.html">Welcome</a></li>
+<li><div class="page-list-item page-list-group">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../Getting_Started/Tutorials/Quick_Start.html">Quick Start</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/Content_with_DRM.html">Contents with DRM</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/Selecting_a_Track.html">Selecting a Track</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Migration from RxPlayer v3</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Preferences.html">Track Preferences</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Bitrate_Selection.html">Bitrate Selection</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Constructor_Options.html">Constructor Options</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/loadVideo_Options.html">loadVideo Options</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Player_Errors.html">Player Errors</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Player_Methods.html">Player Methods</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Player_Types.html">Player Types</a></li></ul></li>
+<li class="page-list-item"><a href="../../Getting_Started/Minimal_Player.html">Importing a minimal RxPlayer</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Glossary.html">Glossary</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Troubleshooting.html">Troubleshooting</a></li></ul></li>
+<li class="page-list-item"><div class="page-list-group opened active">API</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../Creating_a_Player.html">Creating a Player</a></li>
+<li class="page-list-item"><a href="../Loading_a_Content.html">Loading a Content</a></li>
+<li class="page-list-item"><a href="../Decryption_Options.html">Decryption Options</a></li>
+<li><div class="page-list-item page-list-group">Basic Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Basic_Methods/getPlayerState.html">getPlayerState</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/addEventListener.html">addEventListener</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/removeEventListener.html">removeEventListener</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/play.html">play</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/pause.html">pause</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/stop.html">stop</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getPosition.html">getPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getWallClockTime.html">getWallClockTime</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/seekTo.html">seekTo</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getMediaDuration.html">getMediaDuration</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getError.html">getError</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getVideoElement.html">getVideoElement</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getAvailablePeriods.html">getAvailablePeriods</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getCurrentPeriod.html">getCurrentPeriod</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/dispose.html">dispose</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/reload.html">reload</a></li></ul></li>
+<li class="page-list-item"><a href="../Player_States.html">Player States</a></li>
+<li class="page-list-item"><a href="../Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../Player_Errors.html">Player Errors</a></li>
+<li><div class="page-list-item page-list-group">Track Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Track_Selection/getAudioTrack.html">getAudioTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getTextTrack.html">getTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getVideoTrack.html">getVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setAudioTrack.html">setAudioTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setTextTrack.html">setTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setVideoTrack.html">setVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/disableTextTrack.html">disableTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Representation Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Representation_Selection/getVideoRepresentation.html">getVideoRepresentation</a></li>
+<li class="page-list-item"><a href="../Representation_Selection/getAudioRepresentation.html">getAudioRepresentation</a></li>
+<li class="page-list-item"><a href="../Representation_Selection/lockAudioVideoRepresentations.html">lockVideoRepresentations / lockAudioRepresentations</a></li>
+<li class="page-list-item"><a href="../Representation_Selection/getLockedVideoRepresentations.html">getLockedVideoRepresentations</a></li>
+<li class="page-list-item"><a href="../Representation_Selection/getLockedAudioRepresentations.html">getLockedAudioRepresentations</a></li>
+<li class="page-list-item"><a href="../Representation_Selection/unlockAudioVideoRepresentations.html">unlockVideoRepresentations / unlockAudioRepresentations</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Speed Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li>
+<li class="page-list-item"><a href="../Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li>
+<li class="page-list-item"><a href="../Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Volume Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Volume_Control/setVolume.html">setVolume</a></li>
+<li class="page-list-item"><a href="../Volume_Control/getVolume.html">getVolume</a></li>
+<li class="page-list-item"><a href="../Volume_Control/mute.html">mute</a></li>
+<li class="page-list-item"><a href="../Volume_Control/isMute.html">isMute</a></li>
+<li class="page-list-item"><a href="../Volume_Control/unMute.html">unMute</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Buffer_Information/getCurrentBufferGap.html">getCurrentBufferGap</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Content Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Content_Information/getContentUrls.html">getContentUrls</a></li>
+<li class="page-list-item"><a href="../Content_Information/updateContentUrls.html">updateContentUrls</a></li>
+<li class="page-list-item"><a href="../Content_Information/isLive.html">isLive</a></li>
+<li class="page-list-item"><a href="../Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li></ul></li>
+<li class="page-list-item"><a href="../Static_Properties.html">RxPlayer Static Properties</a></li>
+<li class="page-list-item"><a href="../Typescript_Types.html">Typescript Types</a></li>
+<li><div class="page-list-item page-list-group opened active">Tools</div><ul class="page-list-group-group"><li class="page-list-item active"><a href="./TextTrackRenderer.html">TextTrackRenderer</a></li>
+<li class="page-list-item"><a href="./VideoThumbnailLoader.html">VideoThumbnailLoader</a></li>
+<li class="page-list-item"><a href="./StringUtils.html">StringUtils</a></li>
+<li class="page-list-item"><a href="./parseBifThumbnails.html">parseBifThumbnails</a></li>
+<li class="page-list-item"><a href="./MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li>
+<li class="page-list-item"><a href="./createMetaplaylist.html">createMetaplaylist</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Miscellaneous</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Miscellaneous/plugins.html">Plugins</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Low_Latency.html">Low Latency</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/hdr.html">HDR</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Local_Contents.html">Local Contents</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Text_Tracks.html">Text Tracks</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Initial_Position.html">Initial Position</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">Reference</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../reference/API_Reference.html">API Reference</a></li></ul></li>
+<li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
+
+<li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
+</ul></div><script type="text/javascript" src="../../scripts/lunr.js" charset="utf-8"></script><script type="text/javascript" src="../../scripts/script.js" charset="utf-8"></script></body></html>

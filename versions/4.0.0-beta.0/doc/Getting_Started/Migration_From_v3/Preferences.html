@@ -1,0 +1,722 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Track Preferences - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "../..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../../static/img/logo.png" /></a><a class="navbar-item navbar-active hideable"href="../Welcome.html">Getting Started</a>
+<a class="navbar-item hideable"href="../../api/Overview.html">API</a>
+<a class="navbar-item hideable"href="../../reference/API_Reference.html">Reference</a>
+<a class="navbar-item hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
+<span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
+<a aria-label="Link to repository" class="navbar-item first-right hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 4.0.0-beta.0</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="../Welcome.html">Welcome</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Tutorials</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Tutorials/Quick_Start.html">Quick Start</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tutorials/Content_with_DRM.html">Contents with DRM</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tutorials/Selecting_a_Track.html">Selecting a Track</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group active opened">Migration from RxPlayer v3</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Overview.html">Overview</a></li><li class="sidebar-item"><a class="sidebar-link active" href="./Preferences.html">Track Preferences</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection.html">Bitrate Selection</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Constructor_Options.html">Constructor Options</a></li><li class="sidebar-item"><a class="sidebar-link" href="./loadVideo_Options.html">loadVideo Options</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Player_Events.html">Player Events</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Player_Errors.html">Player Errors</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Player_Methods.html">Player Methods</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Player_Types.html">Player Types</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="../Minimal_Player.html">Importing a minimal RxPlayer</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Glossary.html">Glossary</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Troubleshooting.html">Troubleshooting</a></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="removal_of_track_preferences_api"></a></p>
+<h1>Removal of track preferences API</h1>
+<p><a name="methods_and_options_removed"></a></p>
+<h2>Methods and options removed</h2>
+<p>All track preferences API have been removed in profit of a now more flexible
+track switching API which should allow to perform the same logic and more.</p>
+<p>This means that the following methods are all removed:</p>
+<ul>
+<li><code>setPreferredAudioTracks</code></li>
+<li><code>setPreferredTextTracks</code></li>
+<li><code>setPreferredVideoTracks</code></li>
+<li><code>getPreferredAudioTracks</code></li>
+<li><code>getPreferredTextTracks</code></li>
+<li><code>getPreferredVideoTracks</code></li>
+</ul>
+<p>As well as the following constructor options:</p>
+<ul>
+<li><code>preferredAudioTracks</code></li>
+<li><code>preferredTextTracks</code></li>
+<li><code>preferredVideoTracks</code></li>
+</ul>
+<p><a name="why_was_those_removed?"></a></p>
+<h2>Why was those removed?</h2>
+<p>Those methods and options have been removed because the new track switching API
+now allows an application to handle the full preference functionalities with
+even more customizability.</p>
+<p>Keeping both the preferences API and the new enhanced track switching API could
+have brought confusion in how they would interact, we have thus taken the choice
+of removing the preferences API altogether.</p>
+<p><a name="how_to_replace_them"></a></p>
+<h2>How to replace them</h2>
+<p><a name="the_notion_of_a_%22period%22"></a></p>
+<h3>The notion of a “Period”</h3>
+<p>The preferences API basically allowed to automatically set a default track each time a new
+track choice was available.
+Thus, the RxPlayer relied on them each time a new content was played, and more
+generally each time a new <code>Period</code> was encountered.</p>
+<p>This “Period” notion allows for example to handle several track choices on DASH
+contents with multiple <code>&lt;Period&gt;</code> elements, each with its own list of tracks.
+For example you could consider a multi-period live channel with a weather report
+in a single audio language followed by a multi-lingual film, here we would have
+two periods, each with its own selected track.</p>
+<p>To know the list of periods currently considered by the RxPlayer, you can now call
+the <a href="../../api/Basic_Methods/getAvailablePeriods.html"><code>getAvailablePeriods</code></a>
+RxPlayer method:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> periods = rxPlayer.<span class="hljs-title function_">getAvailablePeriods</span>();
+</code></pre>
+<p>To be notified when new Periods are being considered by the RxPlayer, you can
+react to the new
+<a href="../../api/Player_Events.html#newavailableperiods"><code>newAvailablePeriods</code></a> RxPlayer
+event:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"newAvailablePeriods"</span>, <span class="hljs-function">(<span class="hljs-params">periods</span>) =&gt;</span> {
+  <span class="hljs-comment">// Do things with those periods</span>
+});
+</code></pre>
+<p><a name="enhanced_track_methods"></a></p>
+<h3>Enhanced track methods</h3>
+<p>Moreover, to let an application change the track of any of those <code>Period</code>
+elements linked to the current content, whether that Period already have been
+played, are playing or will be played, the following track setting methods can
+now receive the concerned period’s <code>id</code> property as argument.</p>
+<ul>
+<li>
+<p><a href="../../api/Track_Selection/getAudioTrack.html"><code>getAudioTrack</code></a>:</p>
+<p>For example, to get the audio track currently set for some <code>period</code> Period,
+object returned by either <code>getAvailablePeriods</code> or the <code>newAvailablePeriods</code>
+event, you can do:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> audioTrackForPeriod = rxPlayer.<span class="hljs-title function_">getAudioTrack</span>(period.<span class="hljs-property">id</span>);
+</code></pre>
+</li>
+<li>
+<p><a href="../../api/Track_Selection/getTextTrack.html"><code>getTextTrack</code></a>:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> textTrackForPeriod = rxPlayer.<span class="hljs-title function_">getTextTrack</span>(period.<span class="hljs-property">id</span>);
+</code></pre>
+</li>
+<li>
+<p><a href="../../api/Track_Selection/getVideoTrack.html"><code>getVideoTrack</code></a>:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> videoTrackForPeriod = rxPlayer.<span class="hljs-title function_">getVideoTrack</span>(period.<span class="hljs-property">id</span>);
+</code></pre>
+</li>
+<li>
+<p><a href="../../api/Track_Selection/getAvailableAudioTracks.html"><code>getAvailableAudioTracks</code></a>:</p>
+<p>For example, to get the list of available audio tracks for a Period <code>period</code>:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> allAudioTracksForPeriod = rxPlayer.<span class="hljs-title function_">getAvailableAudioTracks</span>(period.<span class="hljs-property">id</span>);
+</code></pre>
+</li>
+<li>
+<p><a href="../../api/Track_Selection/getAvailableTextTracks.html"><code>getAvailableTextTracks</code></a>:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> allTextTracksForPeriod = rxPlayer.<span class="hljs-title function_">getAvailableTextTracks</span>(period.<span class="hljs-property">id</span>);
+</code></pre>
+</li>
+<li>
+<p><a href="../../api/Track_Selection/getAvailableVideoTracks.html"><code>getAvailableVideoTracks</code></a>:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> allVideoTracksForPeriod = rxPlayer.<span class="hljs-title function_">getAvailableVideoTracks</span>(period.<span class="hljs-property">id</span>);
+</code></pre>
+</li>
+<li>
+<p><a href="../../api/Track_Selection/setAudioTrack.html"><code>setAudioTrack</code></a>:</p>
+<p>For example, to set the audio track of some <code>period</code> element returned by
+either <code>getAvailablePeriods</code> or the <code>newAvailablePeriods</code> event, you can do:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">setAudioTrack</span>({
+  <span class="hljs-attr">trackId</span>: wantedAudioTrack.<span class="hljs-property">id</span>,
+  <span class="hljs-attr">periodId</span>: period.<span class="hljs-property">id</span>,
+});
+</code></pre>
+</li>
+<li>
+<p><a href="../../api/Track_Selection/setTextTrack.html"><code>setTextTrack</code></a>:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">setTextTrack</span>({
+  <span class="hljs-attr">trackId</span>: wantedTextTrack.<span class="hljs-property">id</span>,
+  <span class="hljs-attr">periodId</span>: period.<span class="hljs-property">id</span>,
+});
+</code></pre>
+</li>
+<li>
+<p><a href="../../api/Track_Selection/setVideoTrack.html"><code>setVideoTrack</code></a>:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">setVideoTrack</span>({
+  <span class="hljs-attr">trackId</span>: wantedVideoTrack.<span class="hljs-property">id</span>,
+  <span class="hljs-attr">periodId</span>: period.<span class="hljs-property">id</span>,
+});
+</code></pre>
+</li>
+</ul>
+<p><a name="simple_example"></a></p>
+<h3>Simple example</h3>
+<p>Thus, you can replicate most of the preferences API by simply manually listing
+the current tracks on new Periods as they start being considered by the
+RxPlayer, setting the more adapted one each time.</p>
+<p>This can be done by reacting to the <code>newAvailablePeriods</code> event, like this:</p>
+<pre><code class="language-js"><span class="hljs-comment">// Example: selecting the english audio track by default for all future contents</span>
+
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"newAvailablePeriods"</span>, <span class="hljs-function">(<span class="hljs-params">periods</span>) =&gt;</span> {
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> period <span class="hljs-keyword">of</span> periods) {
+    <span class="hljs-title function_">applyAudioTrackPreferences</span>(period);
+  }
+});
+
+<span class="hljs-comment">/**
+ * Choose regular (not audio description) english audio track if one, else
+ * the default one.
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Object</span>} <span class="hljs-variable">period</span> - Period Object as returned by the RxPlayer
+ */</span>
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">applyAudioTrackPreferences</span>(<span class="hljs-params">period</span>) {
+  <span class="hljs-comment">// Getting the tracks available in that Period, through its id</span>
+  <span class="hljs-keyword">const</span> audioTracks = rxPlayer.<span class="hljs-title function_">getAvailableAudioTracks</span>(period.<span class="hljs-property">id</span>);
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> audioTrack <span class="hljs-keyword">of</span> audioTracks) {
+    <span class="hljs-keyword">if</span> (
+      audioTrack.<span class="hljs-property">normalized</span> === <span class="hljs-string">"eng"</span> &amp;&amp;
+      audioTrack.<span class="hljs-property">audioDescription</span> !== <span class="hljs-literal">true</span>
+    ) {
+      <span class="hljs-comment">// Setting the audio track for that Period</span>
+      rxPlayer.<span class="hljs-title function_">setAudioTrack</span>({
+        <span class="hljs-attr">trackId</span>: audioTrack.<span class="hljs-property">id</span>,
+        <span class="hljs-attr">periodId</span>: period.<span class="hljs-property">id</span>,
+      });
+      <span class="hljs-keyword">return</span>;
+    }
+  }
+}
+</code></pre>
+<p>This logic will only apply for future encountered periods, even though you may
+also want to apply the preference retroactively to the currently loaded Periods.
+If that is the case, you can also get the list of currently-considered Periods
+through the <a href="../../api/Basic_Methods/getAvailablePeriods.html"><code>getAvailablePeriods</code></a>
+method and also select a track for those:</p>
+<pre><code class="language-js">  <span class="hljs-keyword">const</span> currentPeriods = rxPlayer.<span class="hljs-title function_">getAvailablePeriods</span>();
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> period <span class="hljs-keyword">of</span> currentPeriods) {
+    <span class="hljs-title function_">applyAudioTrackPreferences</span>(period);
+  }
+</code></pre>
+<p>If you want to be thorough, you may also want to re-apply preferences in the
+extremely rare case where the chosen track would simply disappear for the
+corresponding Period (for example after a Manifest refresh).
+This almost never happens, but the RxPlayer now send
+a <a href="../../api/Player_Events.html#trackupdate"><code>trackUpdate</code></a> event in that case
+with a <code>reason</code> property set to <code>"missing"</code>.</p>
+<p>Here is how you could handle this:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"trackUpdate"</span>, <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
+  <span class="hljs-keyword">if</span> (evt.<span class="hljs-property">reason</span> === <span class="hljs-string">"missing"</span> &amp;&amp; evt.<span class="hljs-property">trackType</span> === <span class="hljs-string">"audio"</span>) {
+    <span class="hljs-comment">// The last chosen audio track just disappeared from the content.</span>
+    <span class="hljs-comment">// Re-apply preferences</span>
+    <span class="hljs-title function_">applyAudioTrackPreferences</span>(evt.<span class="hljs-property">period</span>);
+  }
+});
+</code></pre>
+<p><a name="full_example_for_audio_preferences_replacement"></a></p>
+<h2>Full example for audio preferences replacement</h2>
+<p>As you’ve seen, applications now have all the elements to implement the same
+audio track preferences API than before, though now all that preference logic
+has to be written on the application-side.</p>
+<p>Because we understand that just translating the preferences API to the newer
+more explicit one might take some time, we’ve written in this chapter code
+allowing to rely on the same preferences array as before while profiting from
+the more powerful API.</p>
+<p>Here’s how a complete <code>applyAudioTrackPreferences</code> function, applying the audio
+preferences array from the v3.x.x on a specific Period, would be implemented:</p>
+<pre><code class="language-js"><span class="hljs-comment">/**
+ * For the given Period (or the current one if `period` is not indicated),
+ * apply the currently-preferred audio track according to the given
+ * preferences.
+ *
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Object|undefined</span>} <span class="hljs-variable">period</span> - The Period object for the wanted Period.
+ * If undefined, the current Period will be considered instead.
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Array.&lt;Object&gt;</span>} <span class="hljs-variable">preferencesArray</span> - The audio preferences, in the
+ * format of the RxPlayer v3 API
+ */</span>
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">applyAudioTrackPreferences</span>(<span class="hljs-params">period, preferencesArray</span>) {
+  <span class="hljs-keyword">const</span> availableAudioTracks = rxPlayer.<span class="hljs-title function_">getAvailableAudioTracks</span>(
+    period?.<span class="hljs-property">id</span>,
+  );
+  <span class="hljs-keyword">const</span> optimalTrack = <span class="hljs-title function_">findFirstOptimalAudioTrack</span>(
+    availableAudioTracks,
+    preferencesArray
+  );
+  <span class="hljs-keyword">if</span> (optimalTrack === <span class="hljs-literal">null</span>) {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">warn</span>(
+      <span class="hljs-string">"It's not possible for now to disable the audio track. "</span> +
+      <span class="hljs-string">"Keeping the default one instead."</span>
+      );
+  } <span class="hljs-keyword">else</span> {
+    rxPlayer.<span class="hljs-title function_">setAudioTrack</span>({
+      <span class="hljs-attr">trackId</span>: optimalTrack.<span class="hljs-property">id</span>,
+      <span class="hljs-attr">periodId</span>: period?.<span class="hljs-property">id</span>,
+    });
+  }
+}
+
+<span class="hljs-comment">/**
+ * Find the optimal audio track given their list and the array of preferred
+ * audio tracks sorted from the most preferred to the least preferred.
+ *
+ * `null` if the most optimal audio track is no audio track.
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Array.&lt;Object&gt;</span>} <span class="hljs-variable">audioTracks</span> - Available audio tracks
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Array.&lt;Object&gt;</span>} <span class="hljs-variable">preferredAudioTrack</span> - The audio preferences, in the
+ * format of the RxPlayer v3 API
+ * <span class="hljs-doctag">@returns</span> {<span class="hljs-type">Object|null</span>}
+ */</span>
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">findFirstOptimalAudioTrack</span>(<span class="hljs-params">
+  audioTracks,
+  preferredAudioTracks
+</span>) {
+  <span class="hljs-keyword">if</span> (audioTracks.<span class="hljs-property">length</span> === <span class="hljs-number">0</span>) {
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>;
+  }
+
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; preferredAudioTracks.<span class="hljs-property">length</span>; i += <span class="hljs-number">1</span>) {
+    <span class="hljs-keyword">const</span> preferredAudioTrack = preferredAudioTracks[i];
+    <span class="hljs-keyword">if</span> (preferredAudioTrack === <span class="hljs-literal">null</span>) {
+      <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>;
+    }
+
+    <span class="hljs-keyword">const</span> matchPreferredAudio =
+      <span class="hljs-title function_">createAudioPreferenceMatcher</span>(preferredAudioTrack);
+    <span class="hljs-keyword">const</span> foundTrack = audioTracks.<span class="hljs-title function_">find</span>(matchPreferredAudio);
+
+    <span class="hljs-keyword">if</span> (foundTrack !== <span class="hljs-literal">undefined</span>) {
+      <span class="hljs-keyword">return</span> foundTrack;
+    }
+  }
+
+  <span class="hljs-comment">// no optimal track, just return the first one</span>
+  <span class="hljs-keyword">return</span> audioTracks[<span class="hljs-number">0</span>];
+}
+
+<span class="hljs-comment">/**
+ * Create a function allowing to compare an audio track with a given
+ * `preferredAudioTrack` preference to see if they match.
+ *
+ * This function is curried to be easily and optimally used in a loop context.
+ *
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Object</span>} <span class="hljs-variable">preferredAudioTrack</span> - The audio track preference you want to
+ * compare audio tracks to.
+ * <span class="hljs-doctag">@returns</span> {<span class="hljs-type">Function</span>} - Function taking in argument an audio track and
+ * returning `true` if it matches the `preferredAudioTrack` preference (and
+ * `false` otherwise.
+ */</span>
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">createAudioPreferenceMatcher</span>(<span class="hljs-params">preferredAudioTrack</span>) {
+  <span class="hljs-comment">/**
+   * Compares an audio track to the given `preferredAudioTrack` preference.
+   * Returns `true` if it matches, false otherwise.
+   * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Object</span>} <span class="hljs-variable">audioTrack</span>
+   * <span class="hljs-doctag">@returns</span> {<span class="hljs-type">boolean</span>}
+   */</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">matchAudioPreference</span>(<span class="hljs-params">audioTrack</span>) {
+    <span class="hljs-keyword">if</span> (preferredAudioTrack.<span class="hljs-property">language</span> !== <span class="hljs-literal">undefined</span>) {
+      <span class="hljs-keyword">const</span> language = audioTrack.<span class="hljs-property">language</span> ?? <span class="hljs-string">''</span>;
+      <span class="hljs-keyword">if</span> (language !== preferredAudioTrack.<span class="hljs-property">language</span>) {
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+      }
+    }
+    <span class="hljs-keyword">if</span> (preferredAudioTrack.<span class="hljs-property">audioDescription</span> !== <span class="hljs-literal">undefined</span>) {
+      <span class="hljs-keyword">if</span> (preferredAudioTrack.<span class="hljs-property">audioDescription</span>) {
+        <span class="hljs-keyword">if</span> (audioTrack.<span class="hljs-property">audioDescription</span> !== <span class="hljs-literal">true</span>) {
+          <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+        }
+      } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (audioTrack.<span class="hljs-property">audioDescription</span> === <span class="hljs-literal">true</span>) {
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+      }
+    }
+    <span class="hljs-keyword">if</span> (preferredAudioTrack.<span class="hljs-property">codec</span> === <span class="hljs-literal">undefined</span>) {
+      <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+    }
+    <span class="hljs-keyword">const</span> regxp = preferredAudioTrack.<span class="hljs-property">codec</span>.<span class="hljs-property">test</span>;
+    <span class="hljs-keyword">const</span> <span class="hljs-title function_">codecTestingFn</span> = (<span class="hljs-params">rep</span>) =&gt;
+      rep.<span class="hljs-property">codec</span> !== <span class="hljs-literal">undefined</span> &amp;&amp; regxp.<span class="hljs-title function_">test</span>(rep.<span class="hljs-property">codec</span>);
+
+    <span class="hljs-keyword">if</span> (preferredAudioTrack.<span class="hljs-property">codec</span>.<span class="hljs-property">all</span>) {
+      <span class="hljs-keyword">return</span> audioTrack.<span class="hljs-property">representations</span>.<span class="hljs-title function_">every</span>(codecTestingFn);
+    }
+    <span class="hljs-keyword">return</span> audioTrack.<span class="hljs-property">representations</span>.<span class="hljs-title function_">some</span>(codecTestingFn);
+  };
+}
+</code></pre>
+<p>Like seen in the <code>How to replace then</code> chapter, you can trigger that logic for
+all futures track choices by listening to <code>newAvailablePeriods</code> and to
+<code>trackUpdate</code> events:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"newAvailablePeriods"</span>, <span class="hljs-function">(<span class="hljs-params">periods</span>) =&gt;</span> {
+  <span class="hljs-comment">// Apply preferences each time a new Period is available</span>
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> period <span class="hljs-keyword">of</span> periods) {
+    <span class="hljs-title function_">applyAudioTrackPreferences</span>(period);
+  }
+});
+
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"trackUpdate"</span>, <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
+  <span class="hljs-keyword">if</span> (evt.<span class="hljs-property">reason</span> === <span class="hljs-string">"missing"</span> &amp;&amp; evt.<span class="hljs-property">trackType</span> === <span class="hljs-string">"audio"</span>) {
+    <span class="hljs-comment">// The last chosen audio track just disappeared from the content.</span>
+    <span class="hljs-comment">// Re-apply preferences</span>
+    <span class="hljs-title function_">applyAudioTrackPreferences</span>(evt.<span class="hljs-property">period</span>);
+  }
+});
+</code></pre>
+<p>And if you also want to apply it to the Periods currently considered by the
+RxPlayer:</p>
+<pre><code class="language-js">  <span class="hljs-keyword">const</span> currentPeriods = rxPlayer.<span class="hljs-title function_">getAvailablePeriods</span>();
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> period <span class="hljs-keyword">of</span> currentPeriods) {
+    <span class="hljs-title function_">applyAudioTrackPreferences</span>(period);
+  }
+</code></pre>
+<p><a name="full_example_for_text_preferences_replacement"></a></p>
+<h2>Full example for text preferences replacement</h2>
+<p>Likewise, here’s how a complete <code>applyTextTrackPreferences</code> function, applying
+the text preferences array from the v3.x.x on a specific Period, would be
+implemented:</p>
+<pre><code class="language-js"><span class="hljs-comment">/**
+ * For the given Period (or the current one if `period` is not indicated),
+ * apply the currently-preferred text track according to the given
+ * preferences.
+ *
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Object|undefined</span>} <span class="hljs-variable">period</span> - The Period object for the wanted Period.
+ * If undefined, the current Period will be considered instead.
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Array.&lt;Object&gt;</span>} <span class="hljs-variable">preferencesArray</span> - The audio preferences, in the
+ * format of the RxPlayer v3 API
+ */</span>
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">applyTextTrackPreferences</span>(<span class="hljs-params">period, preferencesArray</span>) {
+  <span class="hljs-keyword">const</span> availableTextTracks = rxPlayer.<span class="hljs-title function_">getAvailableTextTracks</span>(
+    period?.<span class="hljs-property">id</span>,
+  );
+  <span class="hljs-keyword">const</span> optimalTrack = <span class="hljs-title function_">findFirstOptimalTextTrack</span>(
+    availableTextTracks,
+    preferencesArray
+  );
+  <span class="hljs-keyword">if</span> (optimalTrack === <span class="hljs-literal">null</span>) {
+    rxPlayer.<span class="hljs-title function_">disableTextTrack</span>(period?.<span class="hljs-property">id</span>);
+  } <span class="hljs-keyword">else</span> {
+    rxPlayer.<span class="hljs-title function_">setTextTrack</span>({
+      <span class="hljs-attr">trackId</span>: optimalTrack.<span class="hljs-property">id</span>,
+      <span class="hljs-attr">periodId</span>: period?.<span class="hljs-property">id</span>,
+    });
+  }
+}
+
+<span class="hljs-comment">/**
+ * Find an optimal text adaptation given their list and the array of preferred
+ * text tracks sorted from the most preferred to the least preferred.
+ *
+ * `null` if the most optimal text adaptation is no text adaptation.
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Array.&lt;Object&gt;</span>} <span class="hljs-variable">textTracks</span>
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Array.&lt;Object|null&gt;</span>} <span class="hljs-variable">preferredTextTracks</span>
+ * <span class="hljs-doctag">@returns</span> {<span class="hljs-type">Object|null</span>}
+ */</span>
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">findFirstOptimalTextTrack</span>(<span class="hljs-params">
+  textTracks,
+  preferredTextTracks
+</span>) {
+  <span class="hljs-keyword">if</span> (textTracks.<span class="hljs-property">length</span> === <span class="hljs-number">0</span>) {
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>;
+  }
+
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; preferredTextTracks.<span class="hljs-property">length</span>; i += <span class="hljs-number">1</span>) {
+    <span class="hljs-keyword">const</span> preferredTextTrack = preferredTextTracks[i];
+
+    <span class="hljs-keyword">if</span> (preferredTextTrack === <span class="hljs-literal">null</span>) {
+      <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>;
+    }
+
+    <span class="hljs-keyword">const</span> matchPreferredText = <span class="hljs-title function_">createTextPreferenceMatcher</span>(preferredTextTrack);
+    <span class="hljs-keyword">const</span> foundTrack = textTracks.<span class="hljs-title function_">find</span>(matchPreferredText);
+
+    <span class="hljs-keyword">if</span> (foundTrack !== <span class="hljs-literal">undefined</span>) {
+      <span class="hljs-keyword">return</span> foundTrack;
+    }
+  }
+
+  <span class="hljs-comment">// no optimal adaptation</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>;
+}
+
+<span class="hljs-comment">/**
+ * Create a function allowing to compare text tracks with a given
+ * `preferredTextTrack` preference to see if they match.
+ *
+ * This function is curried to be easily and optimally used in a loop context.
+ *
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Object</span>} <span class="hljs-variable">preferredTextTrack</span> - The text track preference you want to
+ * compare text tracks to.
+ * <span class="hljs-doctag">@returns</span> {<span class="hljs-type">Function</span>} - Function taking in argument a text track and
+ * returning `true` if it matches the `preferredTextTrack` preference (and
+ * `false` otherwise.
+ */</span>
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">createTextPreferenceMatcher</span>(<span class="hljs-params">preferredTextTrack</span>) {
+  <span class="hljs-comment">/**
+   * Compares a text track to the given `preferredTextTrack` preference.
+   * Returns `true` if it matches, false otherwise.
+   * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Object</span>} <span class="hljs-variable">textTrack</span>
+   * <span class="hljs-doctag">@returns</span> {<span class="hljs-type">boolean</span>}
+   */</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">matchTextPreference</span>(<span class="hljs-params">textTrack</span>) {
+    <span class="hljs-keyword">return</span> (
+      textTrack.<span class="hljs-property">language</span> === preferredTextTrack.<span class="hljs-property">language</span> &amp;&amp;
+      (preferredTextTrack.<span class="hljs-property">closedCaption</span>
+        ? textTrack.<span class="hljs-property">closedCaption</span> === <span class="hljs-literal">true</span>
+        : textTrack.<span class="hljs-property">closedCaption</span> !== <span class="hljs-literal">true</span>) &amp;&amp;
+      (preferredTextTrack.<span class="hljs-property">forced</span>
+        ? textTrack.<span class="hljs-property">forced</span> === <span class="hljs-literal">true</span>
+        : textTrack.<span class="hljs-property">forced</span> !== <span class="hljs-literal">true</span>)
+    );
+  };
+}
+</code></pre>
+<p>Like seen in the <code>How to replace then</code> chapter, you can trigger that logic for
+all futures track choices by listening to <code>newAvailablePeriods</code> and to
+<code>trackUpdate</code> events:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"newAvailablePeriods"</span>, <span class="hljs-function">(<span class="hljs-params">periods</span>) =&gt;</span> {
+  <span class="hljs-comment">// Apply preferences each time a new Period is available</span>
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> period <span class="hljs-keyword">of</span> periods) {
+    <span class="hljs-title function_">applyTextTrackPreferences</span>(period);
+  }
+});
+
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"trackUpdate"</span>, <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
+  <span class="hljs-keyword">if</span> (evt.<span class="hljs-property">reason</span> === <span class="hljs-string">"missing"</span> &amp;&amp; evt.<span class="hljs-property">trackType</span> === <span class="hljs-string">"audio"</span>) {
+    <span class="hljs-comment">// The last chosen audio track just disappeared from the content.</span>
+    <span class="hljs-comment">// Re-apply preferences</span>
+    <span class="hljs-title function_">applyTextTrackPreferences</span>(evt.<span class="hljs-property">period</span>);
+  }
+});
+</code></pre>
+<p>And if you also want to apply it to the Periods currently considered by the RxPlayer:</p>
+<pre><code class="language-js">  <span class="hljs-keyword">const</span> currentPeriods = rxPlayer.<span class="hljs-title function_">getAvailablePeriods</span>();
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> period <span class="hljs-keyword">of</span> currentPeriods) {
+    <span class="hljs-title function_">applyTextTrackPreferences</span>(period);
+  }
+</code></pre>
+<p><a name="full_example_for_video_preferences_replacement"></a></p>
+<h2>Full example for video preferences replacement</h2>
+<p>As for video tracks, an <code>applyVideoTrackPreferences</code> function, applying the
+video preferences array from the v3.x.x on a specific Period, could be
+implemented this way:</p>
+<pre><code class="language-js"><span class="hljs-comment">/**
+ * For the given Period (or the current one if `period` is not indicated),
+ * apply the currently-preferred video track according to the given
+ * preferences.
+ *
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Object|undefined</span>} <span class="hljs-variable">period</span> - The Period object for the wanted Period.
+ * If undefined, the current Period will be considered instead.
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Array.&lt;Object&gt;</span>} <span class="hljs-variable">preferencesArray</span> - The video preferences, in the
+ * format of the RxPlayer v3 API
+ */</span>
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">applyVideoTrackPreferences</span>(<span class="hljs-params">period, preferencesArray</span>) {
+  <span class="hljs-keyword">const</span> availableVideoTracks = rxPlayer.<span class="hljs-title function_">getAvailableVideoTracks</span>(
+    period?.<span class="hljs-property">id</span>,
+  );
+  <span class="hljs-keyword">const</span> optimalTrack = <span class="hljs-title function_">findFirstOptimalVideoTrack</span>(
+    availableVideoTracks,
+    preferencesArray
+  );
+  <span class="hljs-keyword">if</span> (optimalTrack === <span class="hljs-literal">null</span>) {
+    rxPlayer.<span class="hljs-title function_">disableVideoTrack</span>(period?.<span class="hljs-property">id</span>);
+  } <span class="hljs-keyword">else</span> {
+    rxPlayer.<span class="hljs-title function_">setVideoTrack</span>({
+      <span class="hljs-attr">trackId</span>: optimalTrack.<span class="hljs-property">id</span>,
+      <span class="hljs-attr">periodId</span>: period?.<span class="hljs-property">id</span>,
+    });
+  }
+}
+
+<span class="hljs-comment">/**
+ * Find the optimal video track given their list and the array of preferred
+ * video tracks sorted from the most preferred to the least preferred.
+ *
+ * `null` if the most optimal video track is no video track.
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Array.&lt;Object&gt;</span>} <span class="hljs-variable">videoTracks</span> - Available video tracks
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Array.&lt;Object&gt;</span>} <span class="hljs-variable">preferredVideoTrack</span> - The video preferences, in the
+ * format of the RxPlayer v3 API
+ * <span class="hljs-doctag">@returns</span> {<span class="hljs-type">Object|null</span>}
+ */</span>
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">findFirstOptimalVideoTrack</span>(<span class="hljs-params">
+  videoTracks,
+  preferredVideoTracks
+</span>) {
+  <span class="hljs-keyword">if</span> (videoTracks.<span class="hljs-property">length</span> === <span class="hljs-number">0</span>) {
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>;
+  }
+
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; preferredVideoTracks.<span class="hljs-property">length</span>; i += <span class="hljs-number">1</span>) {
+    <span class="hljs-keyword">const</span> preferredVideoTrack = preferredVideoTracks[i];
+    <span class="hljs-keyword">if</span> (preferredVideoTrack === <span class="hljs-literal">null</span>) {
+      <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>;
+    }
+
+    <span class="hljs-keyword">const</span> matchPreferredVideo =
+      <span class="hljs-title function_">createVideoPreferenceMatcher</span>(preferredVideoTrack);
+    <span class="hljs-keyword">const</span> foundTrack = videoTracks.<span class="hljs-title function_">find</span>(matchPreferredVideo);
+
+    <span class="hljs-keyword">if</span> (foundTrack !== <span class="hljs-literal">undefined</span>) {
+      <span class="hljs-keyword">return</span> foundTrack;
+    }
+  }
+
+  <span class="hljs-comment">// no optimal track, just return the first one</span>
+  <span class="hljs-keyword">return</span> videoTracks[<span class="hljs-number">0</span>];
+}
+
+<span class="hljs-comment">/**
+ * Create a function allowing to compare an video track with a given
+ * `preferredVideoTrack` preference to see if they match.
+ *
+ * This function is curried to be easily and optimally used in a loop context.
+ *
+ * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Object</span>} <span class="hljs-variable">preferredVideoTrack</span> - The video track preference you want to
+ * compare video tracks to.
+ * <span class="hljs-doctag">@returns</span> {<span class="hljs-type">Function</span>} - Function taking in argument an video track and
+ * returning `true` if it matches the `preferredVideoTrack` preference (and
+ * `false` otherwise.
+ */</span>
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">createVideoPreferenceMatcher</span>(<span class="hljs-params">preferredVideoTrack</span>) {
+  <span class="hljs-comment">/**
+   * Compares a video track to the given `preferredVideoTrack` preference.
+   * Returns `true` if it matches, false otherwise.
+   * <span class="hljs-doctag">@param</span> {<span class="hljs-type">Object</span>} <span class="hljs-variable">videoTrack</span>
+   * <span class="hljs-doctag">@returns</span> {<span class="hljs-type">boolean</span>}
+   */</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">matchVideoPreference</span>(<span class="hljs-params">videoTrack</span>) {
+    <span class="hljs-keyword">if</span> (preferredVideoTrack.<span class="hljs-property">signInterpreted</span> !== <span class="hljs-literal">undefined</span> &amp;&amp;
+        preferredVideoTrack.<span class="hljs-property">signInterpreted</span> !== videoTrack.<span class="hljs-property">isSignInterpreted</span>)
+    {
+      <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }
+    <span class="hljs-keyword">if</span> (preferredVideoTrack.<span class="hljs-property">codec</span> === <span class="hljs-literal">undefined</span>) {
+      <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+    }
+    <span class="hljs-keyword">const</span> regxp = preferredVideoTrack.<span class="hljs-property">codec</span>.<span class="hljs-property">test</span>;
+    <span class="hljs-keyword">const</span> <span class="hljs-title function_">codecTestingFn</span> = (<span class="hljs-params">rep</span>) =&gt;
+      rep.<span class="hljs-property">codec</span> !== <span class="hljs-literal">undefined</span> &amp;&amp; regxp.<span class="hljs-title function_">test</span>(rep.<span class="hljs-property">codec</span>);
+
+    <span class="hljs-keyword">if</span> (preferredVideoTrack.<span class="hljs-property">codec</span>.<span class="hljs-property">all</span>) {
+      <span class="hljs-keyword">return</span> videoTrack.<span class="hljs-property">representations</span>.<span class="hljs-title function_">every</span>(codecTestingFn);
+    }
+    <span class="hljs-keyword">return</span> videoTrack.<span class="hljs-property">representations</span>.<span class="hljs-title function_">some</span>(codecTestingFn);
+  };
+}
+</code></pre>
+<p>Like seen in the <code>How to replace then</code> chapter, you can trigger that logic for
+all futures track choices by listening to <code>newAvailablePeriods</code> and to
+<code>trackUpdate</code> events:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"newAvailablePeriods"</span>, <span class="hljs-function">(<span class="hljs-params">periods</span>) =&gt;</span> {
+  <span class="hljs-comment">// Apply preferences each time a new Period is available</span>
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> period <span class="hljs-keyword">of</span> periods) {
+    <span class="hljs-title function_">applyVideoTrackPreferences</span>(period);
+  }
+});
+
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"trackUpdate"</span>, <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
+  <span class="hljs-keyword">if</span> (evt.<span class="hljs-property">reason</span> === <span class="hljs-string">"missing"</span> &amp;&amp; evt.<span class="hljs-property">trackType</span> === <span class="hljs-string">"video"</span>) {
+    <span class="hljs-comment">// The last chosen video track just disappeared from the content.</span>
+    <span class="hljs-comment">// Re-apply preferences</span>
+    <span class="hljs-title function_">applyVideoTrackPreferences</span>(evt.<span class="hljs-property">period</span>);
+  }
+});
+</code></pre>
+<p>And if you also want to apply it to the Periods currently considered by the RxPlayer:</p>
+<pre><code class="language-js">  <span class="hljs-keyword">const</span> currentPeriods = rxPlayer.<span class="hljs-title function_">getAvailablePeriods</span>();
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> period <span class="hljs-keyword">of</span> currentPeriods) {
+    <span class="hljs-title function_">applyVideoTrackPreferences</span>(period);
+  }
+</code></pre>
+</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="./Overview.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">Overview</div></a></div><div class="next-or-previous-page next-page"><a class="next-or-previous-page-link" href="./Bitrate_Selection.html"><div class="next-or-previous-page-link-label">Next</div><div class="next-or-previous-page-link-name">Bitrate Selection</div></a></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#removal_of_track_preferences_api">Removal of track preferences API</a></p>
+<ul>
+<li><a href="#methods_and_options_removed">Methods and options removed</a></li>
+<li><a href="#why_was_those_removed?">Why was those removed?</a></li>
+<li><a href="#how_to_replace_them">How to replace them</a>
+<ul>
+<li><a href="#the_notion_of_a_%22period%22">The notion of a “Period”</a></li>
+<li><a href="#enhanced_track_methods">Enhanced track methods</a></li>
+<li><a href="#simple_example">Simple example</a></li>
+</ul>
+</li>
+<li><a href="#full_example_for_audio_preferences_replacement">Full example for audio preferences replacement</a></li>
+<li><a href="#full_example_for_text_preferences_replacement">Full example for text preferences replacement</a></li>
+<li><a href="#full_example_for_video_preferences_replacement">Full example for video preferences replacement</a></li>
+</ul>
+</div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group opened active">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../Welcome.html">Welcome</a></li>
+<li><div class="page-list-item page-list-group">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Tutorials/Quick_Start.html">Quick Start</a></li>
+<li class="page-list-item"><a href="../Tutorials/Content_with_DRM.html">Contents with DRM</a></li>
+<li class="page-list-item"><a href="../Tutorials/Selecting_a_Track.html">Selecting a Track</a></li>
+<li class="page-list-item"><a href="../Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li>
+<li><div class="page-list-item page-list-group opened active">Migration from RxPlayer v3</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Overview.html">Overview</a></li>
+<li class="page-list-item active"><a href="./Preferences.html">Track Preferences</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection.html">Bitrate Selection</a></li>
+<li class="page-list-item"><a href="./Constructor_Options.html">Constructor Options</a></li>
+<li class="page-list-item"><a href="./loadVideo_Options.html">loadVideo Options</a></li>
+<li class="page-list-item"><a href="./Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="./Player_Errors.html">Player Errors</a></li>
+<li class="page-list-item"><a href="./Player_Methods.html">Player Methods</a></li>
+<li class="page-list-item"><a href="./Player_Types.html">Player Types</a></li></ul></li>
+<li class="page-list-item"><a href="../Minimal_Player.html">Importing a minimal RxPlayer</a></li>
+<li class="page-list-item"><a href="../Glossary.html">Glossary</a></li>
+<li class="page-list-item"><a href="../Troubleshooting.html">Troubleshooting</a></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">API</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../api/Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../../api/Creating_a_Player.html">Creating a Player</a></li>
+<li class="page-list-item"><a href="../../api/Loading_a_Content.html">Loading a Content</a></li>
+<li class="page-list-item"><a href="../../api/Decryption_Options.html">Decryption Options</a></li>
+<li><div class="page-list-item page-list-group">Basic Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Basic_Methods/getPlayerState.html">getPlayerState</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/addEventListener.html">addEventListener</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/removeEventListener.html">removeEventListener</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/play.html">play</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/pause.html">pause</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/stop.html">stop</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getPosition.html">getPosition</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getWallClockTime.html">getWallClockTime</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/seekTo.html">seekTo</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getMediaDuration.html">getMediaDuration</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getError.html">getError</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getVideoElement.html">getVideoElement</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getAvailablePeriods.html">getAvailablePeriods</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getCurrentPeriod.html">getCurrentPeriod</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/dispose.html">dispose</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/reload.html">reload</a></li></ul></li>
+<li class="page-list-item"><a href="../../api/Player_States.html">Player States</a></li>
+<li class="page-list-item"><a href="../../api/Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../../api/Player_Errors.html">Player Errors</a></li>
+<li><div class="page-list-item page-list-group">Track Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Track_Selection/getAudioTrack.html">getAudioTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getTextTrack.html">getTextTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getVideoTrack.html">getVideoTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/setAudioTrack.html">setAudioTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/setTextTrack.html">setTextTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/setVideoTrack.html">setVideoTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/disableTextTrack.html">disableTextTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Representation Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Representation_Selection/getVideoRepresentation.html">getVideoRepresentation</a></li>
+<li class="page-list-item"><a href="../../api/Representation_Selection/getAudioRepresentation.html">getAudioRepresentation</a></li>
+<li class="page-list-item"><a href="../../api/Representation_Selection/lockAudioVideoRepresentations.html">lockVideoRepresentations / lockAudioRepresentations</a></li>
+<li class="page-list-item"><a href="../../api/Representation_Selection/getLockedVideoRepresentations.html">getLockedVideoRepresentations</a></li>
+<li class="page-list-item"><a href="../../api/Representation_Selection/getLockedAudioRepresentations.html">getLockedAudioRepresentations</a></li>
+<li class="page-list-item"><a href="../../api/Representation_Selection/unlockAudioVideoRepresentations.html">unlockVideoRepresentations / unlockAudioRepresentations</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Speed Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li>
+<li class="page-list-item"><a href="../../api/Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li>
+<li class="page-list-item"><a href="../../api/Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Volume Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Volume_Control/setVolume.html">setVolume</a></li>
+<li class="page-list-item"><a href="../../api/Volume_Control/getVolume.html">getVolume</a></li>
+<li class="page-list-item"><a href="../../api/Volume_Control/mute.html">mute</a></li>
+<li class="page-list-item"><a href="../../api/Volume_Control/isMute.html">isMute</a></li>
+<li class="page-list-item"><a href="../../api/Volume_Control/unMute.html">unMute</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Buffer_Information/getCurrentBufferGap.html">getCurrentBufferGap</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Content Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Content_Information/getContentUrls.html">getContentUrls</a></li>
+<li class="page-list-item"><a href="../../api/Content_Information/updateContentUrls.html">updateContentUrls</a></li>
+<li class="page-list-item"><a href="../../api/Content_Information/isLive.html">isLive</a></li>
+<li class="page-list-item"><a href="../../api/Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li></ul></li>
+<li class="page-list-item"><a href="../../api/Static_Properties.html">RxPlayer Static Properties</a></li>
+<li class="page-list-item"><a href="../../api/Typescript_Types.html">Typescript Types</a></li>
+<li><div class="page-list-item page-list-group">Tools</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Tools/TextTrackRenderer.html">TextTrackRenderer</a></li>
+<li class="page-list-item"><a href="../../api/Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li>
+<li class="page-list-item"><a href="../../api/Tools/StringUtils.html">StringUtils</a></li>
+<li class="page-list-item"><a href="../../api/Tools/parseBifThumbnails.html">parseBifThumbnails</a></li>
+<li class="page-list-item"><a href="../../api/Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li>
+<li class="page-list-item"><a href="../../api/Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Miscellaneous</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Miscellaneous/plugins.html">Plugins</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Low_Latency.html">Low Latency</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/hdr.html">HDR</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Local_Contents.html">Local Contents</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Text_Tracks.html">Text Tracks</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Initial_Position.html">Initial Position</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">Reference</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../reference/API_Reference.html">API Reference</a></li></ul></li>
+<li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
+
+<li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
+</ul></div><script type="text/javascript" src="../../scripts/lunr.js" charset="utf-8"></script><script type="text/javascript" src="../../scripts/script.js" charset="utf-8"></script></body></html>
