@@ -29,15 +29,9 @@ import {
   ICompatHTMLMediaElement,
   ICompatPictureInPictureWindow,
 } from "./browser_compatibility_types";
-import isNode from "./is_node";
 import shouldFavourCustomSafariEME from "./should_favour_custom_safari_EME";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
-
-const pixelRatio = isNode ||
-                   window.devicePixelRatio == null ||
-                   window.devicePixelRatio === 0 ? 1 :
-                                                   window.devicePixelRatio;
 
 /**
  * Find the first supported event from the list given.
@@ -226,16 +220,6 @@ function getDocumentVisibilityRef(
  * @param {Object} pipWindow
  * @returns {number}
  */
-function getVideoWidthFromPIPWindow(
-  mediaElement: HTMLMediaElement,
-  pipWindow: ICompatPictureInPictureWindow
-): number {
-  const { width, height } = pipWindow;
-  const videoRatio = mediaElement.clientHeight / mediaElement.clientWidth;
-  const calcWidth = height / videoRatio;
-  return Math.min(width, calcWidth);
-}
-
 export interface IPictureInPictureEvent {
   isEnabled : boolean;
   pipWindow : ICompatPictureInPictureWindow | null;
@@ -332,54 +316,137 @@ function getVideoVisibilityRef(
 }
 
 /**
- * Get video width from HTML video element, or video estimated dimensions
- * when Picture-in-Picture is activated.
+ * Get video width and height from the screen dimensions.
+ * @param {Object} stopListening
+ * @returns {Object}
+ */
+function getScreenResolutionRef(
+  stopListening : CancellationSignal
+) : IReadOnlySharedReference<{ width : number | undefined;
+                               height : number | undefined;
+                               pixelRatio : number; }> {
+  const pixelRatio = window.devicePixelRatio == null ||
+                     window.devicePixelRatio === 0 ? 1 :
+                                                     window.devicePixelRatio;
+  const ref = createSharedReference<{
+    width : number | undefined;
+    height : number | undefined;
+    pixelRatio : number;
+  }>({ width: window.screen.width,
+       height: window.screen.height,
+       pixelRatio },
+     stopListening);
+  const interval = window.setInterval(checkScreenResolution, 20000);
+  stopListening.register(function stopUpdating() {
+    clearInterval(interval);
+  });
+  return ref;
+  function checkScreenResolution() {
+    const oldVal = ref.getValue();
+    if (oldVal.width !== screen.width ||
+        oldVal.height !== screen.height ||
+        oldVal.pixelRatio !== pixelRatio)
+    {
+      ref.setValue({ width: screen.width,
+                     height: screen.height,
+                     pixelRatio });
+    }
+  }
+}
+
+/**
+ * Get video width and height from HTML media element, or video estimated
+ * dimensions when Picture-in-Picture is activated.
  * @param {HTMLMediaElement} mediaElement
  * @param {Object} pipStatusRef
  * @param {Object} stopListening
  * @returns {Object}
  */
-function getVideoWidthRef(
+function getElementResolutionRef(
   mediaElement : HTMLMediaElement,
   pipStatusRef : IReadOnlySharedReference<IPictureInPictureEvent>,
   stopListening : CancellationSignal
-) : IReadOnlySharedReference<number> {
-  const ref = createSharedReference<number>(mediaElement.clientWidth * pixelRatio,
-                                            stopListening);
+) : IReadOnlySharedReference<{ width : number | undefined;
+                               height : number | undefined;
+                               pixelRatio : number; }> {
+
+  const pixelRatio = window.devicePixelRatio == null ||
+                     window.devicePixelRatio === 0 ? 1 :
+                                                     window.devicePixelRatio;
+  const ref = createSharedReference<{
+    width : number | undefined;
+    height : number | undefined;
+    pixelRatio : number;
+  }>({ width: mediaElement.clientWidth,
+       height: mediaElement.clientHeight,
+       pixelRatio },
+     stopListening);
   let clearPreviousEventListener = noop;
-  pipStatusRef.onUpdate(checkVideoWidth, { clearSignal: stopListening });
-  addEventListener(window, "resize", checkVideoWidth, stopListening);
-  const interval = window.setInterval(checkVideoWidth, 20000);
+  pipStatusRef.onUpdate(checkElementResolution, { clearSignal: stopListening });
+  addEventListener(window, "resize", checkElementResolution, stopListening);
+  addEventListener(mediaElement,
+                   "enterpictureinpicture",
+                   checkElementResolution,
+                   stopListening);
+  addEventListener(mediaElement,
+                   "leavepictureinpicture",
+                   checkElementResolution,
+                   stopListening);
+  const interval = window.setInterval(checkElementResolution, 20000);
 
-  checkVideoWidth();
+  checkElementResolution();
 
-  stopListening.register(function stopUpdatingVideoWidthRef() {
+  stopListening.register(function stopUpdating() {
     clearPreviousEventListener();
     clearInterval(interval);
   });
   return ref;
 
-  function checkVideoWidth() {
+  function checkElementResolution() {
     clearPreviousEventListener();
     const pipStatus = pipStatusRef.getValue();
     if (!pipStatus.isEnabled) {
-      ref.setValueIfChanged(mediaElement.clientWidth * pixelRatio);
+      const oldVal = ref.getValue();
+      if (oldVal.width !== mediaElement.clientWidth ||
+          oldVal.height !== mediaElement.clientHeight ||
+          oldVal.pixelRatio !== pixelRatio)
+      {
+        ref.setValue({ width: mediaElement.clientWidth,
+                       height: mediaElement.clientHeight,
+                       pixelRatio });
+      }
     } else if (!isNullOrUndefined(pipStatus.pipWindow)) {
       const { pipWindow } = pipStatus;
-      const firstWidth = getVideoWidthFromPIPWindow(mediaElement, pipWindow);
       const onPipResize = () => {
-        ref.setValueIfChanged(
-          getVideoWidthFromPIPWindow(mediaElement, pipWindow) * pixelRatio
-        );
+        updateToPipWindowResolution();
       };
       pipWindow.addEventListener("resize", onPipResize);
       clearPreviousEventListener = () => {
         pipWindow.removeEventListener("resize", onPipResize);
         clearPreviousEventListener = noop;
       };
-      ref.setValueIfChanged(firstWidth * pixelRatio);
+      updateToPipWindowResolution();
+      function updateToPipWindowResolution() {
+        const oldVal = ref.getValue();
+        if (oldVal.width !== pipWindow.width ||
+            oldVal.height !== pipWindow.height ||
+            oldVal.pixelRatio !== pixelRatio)
+        {
+          ref.setValue({ width: pipWindow.width,
+                         height: pipWindow.height,
+                         pixelRatio });
+        }
+      }
     } else {
-      ref.setValueIfChanged(Infinity);
+      const oldVal = ref.getValue();
+      if (oldVal.width !== undefined ||
+          oldVal.height !== undefined ||
+          oldVal.pixelRatio !== pixelRatio)
+      {
+        ref.setValue({ width: undefined,
+                       height: undefined,
+                       pixelRatio });
+      }
     }
   }
 }
@@ -507,7 +574,8 @@ export {
   addEventListener,
   getPictureOnPictureStateRef,
   getVideoVisibilityRef,
-  getVideoWidthRef,
+  getElementResolutionRef,
+  getScreenResolutionRef,
   onEncrypted,
   onEnded,
   onKeyAdded,
