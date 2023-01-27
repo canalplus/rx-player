@@ -75,6 +75,8 @@
   - Add `lockVideoRepresentations`, `lockAudioRepresentations`, `getLockedVideoRepresentations`, `getLockedAudioRepresentations`, `unlockVideoRepresentations` and `unlockAudioRepresentations` methods to allow a complex selection of Representations that are currently allowed to play.
   - Add `getVideoRepresentation` and `getAudioRepresentation` method to retrieve information on the currently loaded representations [#1144]
   - Add `audioRepresentationChange` and `videoRepresentationChange` events to be notified when the currently-loaded Representation for the current Period changes.
+  - Add `updateContentUrls` API, allowing to update the Manifest's URL during playback [#1182]
+  - DASH: implement forced-subtitles, adding the `forced` property to the audio tracks API and selecting by default a forced text track linked to the audio track's language if present [#1187]
   - Add `getContentUrls` allowing to retrieve the one or several known URLs through which the current Manifest or content is reachable.
   - Add `videoResolutionLimit` constructor option allowing to automatically limit a video Representation's resolution.
   - Add `newAvailablePeriods` event to signal new Period on which a track and/or Representation choice can be made
@@ -100,6 +102,18 @@
   - Add `IAudioTrackSetting` public type to define the object that may be given to the `setAudioTrack` method
   - Add `IVideoTrackSetting` public type to define the object that may be given to the `setVideoTrack` method
   - Add `ITextTrackSetting` public type to define the object that may be given to the `setTextTrack` method
+
+### Bug fixes
+
+  - Fix segment requesting error when playing a DASH content without an url and without BaseURL elements [#1192]
+  - API: Stop sending events if the content is stopped due to a side-effect of one of the event handler [#1197]
+  - text-tracks/ttml: fix inconsistent line spacing when resizing the `textTrackElement` [#1191]
+  - DRM: Fix race condition leading to a JS error instead of a `NO_PLAYABLE_REPRESENTATION` [#1201]
+  - DRM/Compat: Renew MediaKeys at each `loadVideo` on all WebOS (LG TV) platforms to work around issues [#1188]
+
+### Other improvements
+
+  - Remove dependency to RxJS, improving the debugging experience and preventing some uncaught Error from being thrown
 
 
 ## v3.29.0 (2022-11-16)
