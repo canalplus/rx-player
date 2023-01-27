@@ -36,8 +36,9 @@ properties, methods, events and so on.
     Set the default maximum size the video buffer can take in the memory, in
     kilobytes (kb).
 
-  - [`limitVideoWidth`](../api/Creating_a_Player.md#limitvideowidth):
-    Limit the maximum video width according to the video element's current width.
+  - [`videoResolutionLimit`](../api/Creating_a_Player.md#videoresolutionlimit):
+    Limit the maximum video resolution according to the element's or screen's
+    resolution.
 
   - [`throttleVideoBitrateWhenHidden`](../api/Creating_a_Player.md#throttlevideobitratewhenhidden):
     Limit the maximum video bitrate when the current video is hidden to the
