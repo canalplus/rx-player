@@ -1,7 +1,7 @@
 /**
  * Copyright 2015 CANAL+ Group
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");publicapi
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -136,7 +136,8 @@ const generateContentId = idGenerator();
 
 const { getPictureOnPictureStateRef,
         getVideoVisibilityRef,
-        getVideoWidthRef } = events;
+        getElementResolutionRef,
+        getScreenResolutionRef } = events;
 
 /**
  * @class Player
@@ -228,8 +229,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     events.IPictureInPictureEvent
   >;
 
-  /** Store wanted configuration for the `limitVideoWidth` option. */
-  private readonly _priv_limitVideoWidth : boolean;
+  /** Store wanted configuration for the `videoResolutionLimit` option. */
+  private readonly _priv_videoResolutionLimit : "videoElement" |
+                                                "screen" |
+                                                "none";
 
   /** Store wanted configuration for the `throttleVideoBitrateWhenHidden` option. */
   private readonly _priv_throttleVideoBitrateWhenHidden : boolean;
@@ -318,7 +321,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   constructor(options : IConstructorOptions = {}) {
     super();
     const { baseBandwidth,
-            limitVideoWidth,
+            videoResolutionLimit,
             maxBufferAhead,
             maxBufferBehind,
             throttleVideoBitrateWhenHidden,
@@ -364,7 +367,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     };
 
     this._priv_throttleVideoBitrateWhenHidden = throttleVideoBitrateWhenHidden;
-    this._priv_limitVideoWidth = limitVideoWidth;
+    this._priv_videoResolutionLimit = videoResolutionLimit;
     this._priv_mutedMemory = DEFAULT_UNMUTED_VOLUME;
 
     this._priv_currentError = null;
@@ -584,7 +587,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
       const relyOnVideoVisibilityAndSize = canRelyOnVideoVisibilityAndSize();
       const throttlers : IABRThrottlers = { throttleBitrate: {},
-                                            limitWidth: {} };
+                                            limitResolution: {} };
 
       if (this._priv_throttleVideoBitrateWhenHidden) {
         if (!relyOnVideoVisibilityAndSize) {
@@ -600,17 +603,21 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           };
         }
       }
-      if (this._priv_limitVideoWidth) {
+      if (this._priv_videoResolutionLimit === "videoElement") {
         if (!relyOnVideoVisibilityAndSize) {
-          log.warn("API: Can't apply limitVideoWidth because browser can't be " +
+          log.warn("API: Can't apply videoResolutionLimit because browser can't be " +
                    "trusted for video size.");
         } else {
-          throttlers.limitWidth = {
-            video: getVideoWidthRef(videoElement,
-                                    this._priv_pictureInPictureRef,
-                                    currentContentCanceller.signal),
+          throttlers.limitResolution = {
+            video: getElementResolutionRef(videoElement,
+                                           this._priv_pictureInPictureRef,
+                                           currentContentCanceller.signal),
           };
         }
+      } else if (this._priv_videoResolutionLimit === "screen") {
+        throttlers.limitResolution = {
+          video: getScreenResolutionRef(currentContentCanceller.signal),
+        };
       }
 
       /** Options used by the adaptive logic. */

@@ -52,7 +52,7 @@ describe("API - parseConstructorOptions", () => {
   const {
     // DEFAULT_AUTO_PLAY,
     DEFAULT_BASE_BANDWIDTH,
-    DEFAULT_LIMIT_VIDEO_WIDTH,
+    DEFAULT_VIDEO_RESOLUTION_LIMIT,
     // DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
     DEFAULT_MAX_BUFFER_AHEAD,
     DEFAULT_MAX_BUFFER_BEHIND,
@@ -66,7 +66,7 @@ describe("API - parseConstructorOptions", () => {
     maxBufferAhead: DEFAULT_MAX_BUFFER_AHEAD,
     maxBufferBehind: DEFAULT_MAX_BUFFER_BEHIND,
     wantedBufferAhead: DEFAULT_WANTED_BUFFER_AHEAD,
-    limitVideoWidth: DEFAULT_LIMIT_VIDEO_WIDTH,
+    videoResolutionLimit: DEFAULT_VIDEO_RESOLUTION_LIMIT,
     throttleVideoBitrateWhenHidden: DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
     videoElement,
     baseBandwidth: DEFAULT_BASE_BANDWIDTH,
@@ -121,14 +121,18 @@ describe("API - parseConstructorOptions", () => {
     });
   });
 
-  it("should authorize setting a limitVideoWidth option", () => {
-    expect(parseConstructorOptions({ limitVideoWidth: false })).toEqual({
+  it("should authorize setting a videoResolutionLimit option", () => {
+    expect(parseConstructorOptions({ videoResolutionLimit: "screen" })).toEqual({
       ...defaultConstructorOptions,
-      limitVideoWidth: false,
+      videoResolutionLimit: "screen",
     });
-    expect(parseConstructorOptions({ limitVideoWidth: true })).toEqual({
+    expect(parseConstructorOptions({ videoResolutionLimit: "videoElement" })).toEqual({
       ...defaultConstructorOptions,
-      limitVideoWidth: true,
+      videoResolutionLimit: "videoElement",
+    });
+    expect(parseConstructorOptions({ videoResolutionLimit: "none" })).toEqual({
+      ...defaultConstructorOptions,
+      videoResolutionLimit: "none",
     });
   });
 
