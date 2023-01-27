@@ -10,10 +10,12 @@ documentation](../api/Overview.md) for when you're already familiar with it.
 API are splitted here in multiple categories depending on if they are
 properties, methods, events and so on.
 
+
 ## Constructor
 
   - [`new RxPlayer()`](../api/Creating_a_Player.md#instantiation):
     Create a new RxPlayer.
+
 
 ## Constructor options
 
@@ -43,6 +45,7 @@ properties, methods, events and so on.
   - [`throttleVideoBitrateWhenHidden`](../api/Creating_a_Player.md#throttlevideobitratewhenhidden):
     Limit the maximum video bitrate when the current video is hidden to the
     user.
+
 
 ## `loadVideo` options
 
@@ -103,9 +106,6 @@ properties, methods, events and so on.
       Allows the configuration of the [persistentState](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-persistentstate)
       property.
 
-    - [`keySystems[].throwOnLicenseExpiration`](../api/Decryption_Options.md#throwonlicenseexpiration):
-      Allows to stop or not when the current license has expired.
-
     - [`keySystems[].audioCapabilitiesConfig`](../api/Decryption_Options.md#videocapabilitiesconfigaudiocapabilitiesconfig):
       Allows the configuration of the [`audioCapabilities`](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-audiocapabilities)
       property.
@@ -120,6 +120,27 @@ properties, methods, events and so on.
 
   - [`startAt`](../api/Loading_a_Content.md#startat):
     Define the position at which the RxPlayer should start.
+
+  - [`requestConfig`](../api/Loading_a_Content.md#requestconfig):
+    Configuration linked to the Manifest and segment requests.
+
+    - [`requestConfig.segment.maxRetry`](../api/Loading_a_Content.md#requestconfig):
+      Maximum number of retries when a segment request fails.
+
+    - [`requestConfig.segment.timeout`](../api/Loading_a_Content.md#requestconfig):
+      Timeout after which segment requests are aborted.
+
+    - [`requestConfig.manifest.maxRetry`](../api/Loading_a_Content.md#requestconfig):
+      Maximum number of retries when a Manifest request fails.
+
+    - [`requestConfig.manifest.timeout`](../api/Loading_a_Content.md#requestconfig):
+      Timeout after which manifest requests are aborted.
+
+  - [`textTrackMode`](../api/Loading_a_Content.md#texttrackmode):
+    The way in which the text tracks should be displayed.
+
+  - [`textTrackElement`](../api/Loading_a_Content.md#texttrackelement):
+    `HTMLElement` in which text tracks should be displayed.
 
   - [`minimumManifestUpdateInterval`](../api/Loading_a_Content.md#minimummanifestupdateinterval):
     Allows to limit the frequency of Manifest updates.
@@ -140,6 +161,19 @@ properties, methods, events and so on.
   - [`manifestLoader`](../api/Loading_a_Content.md#manifestloader):
     Provide a custom logic to fetch the Manifest.
 
+  - [`onCodecSwitch`](../api/Loading_a_Content.md#oncodecswitch):
+    Behavior when the codec changes between incompatible ones.
+
+  - [`defaultAudioTrackSwitchingMode`](../api/Loading_a_Content.md#defaultaudiotrackswitchingmode):
+    Default behavior when switching the audio track.
+
+  - [`lowLatencyMode`](../api/Loading_a_Content.md#lowlatencymode):
+    Allows to play low-latency contents efficiently.
+
+  - [`enableFastSwitching`](../api/Loading_a_Content.md#enablefastswitching):
+    Enable or disable an optimization replacing segments of poor quality with
+    segments of a better quality.
+
   - [`checkMediaSegmentIntegrity`](../api/Loading_a_Content.md#checkmediasegmentintegrity):
     Enable supplementary checks to retry a request if a segment appears
     corrupted.
@@ -151,40 +185,6 @@ properties, methods, events and so on.
     Default offset to add to the segment's time to obtain a live time. This is
     in most cases not needed.
 
-  - [`textTrackMode`](../api/Loading_a_Content.md#texttrackmode):
-    The way in which the text tracks should be displayed.
-
-  - [`textTrackElement`](../api/Loading_a_Content.md#texttrackelement):
-    `HTMLElement` in which text tracks should be displayed.
-
-  - [`defaultAudioTrackSwitchingMode`](../api/Loading_a_Content.md#defaultaudiotrackswitchingmode):
-    Default behavior when switching the audio track.
-
-
-  - [`onCodecSwitch`](../api/Loading_a_Content.md#oncodecswitch):
-    Behavior when the codec changes between incompatible ones.
-
-  - [`lowLatencyMode`](../api/Loading_a_Content.md#lowlatencymode):
-    Allows to play low-latency contents efficiently.
-
-  - [`requestConfig`](../api/Loading_a_Content.md#requestconfig):
-    Configuration linked to the Manifest and segment requests.
-
-    - [`requestConfig.segment.maxRetry`](../api/Loading_a_Content.md#requestconfig):
-      Maximum number of retries when a segment request fails.
-
-    - [`requestConfig.segment.timeout`](../api/Loading_a_Content.md#requestconfig):
-      Timeout after which segment requests are aborted.
-
-    - [`requestConfig.manifest.maxRetry`](../api/Loading_a_Content.md#requestconfig):
-      Maximum number of retries when a Manifest request fails.
-
-    - [`requestConfig.manifest.timeout`](../api/Loading_a_Content.md#requestconfig):
-      Timeout after which manifest requests are aborted.
-
-  - [`enableFastSwitching`](../api/Loading_a_Content.md#enablefastswitching):
-    Enable or disable an optimization replacing segments of poor quality with
-    segments of a better quality.
 
 ## Methods
 
@@ -380,8 +380,6 @@ properties, methods, events and so on.
     Returns information on the key system currently attached to the
     HTMLMediaElement linked to the RxPlayer.
 
-  - [`getCurrentKeySystem`](../api/Deprecated/getCurrentKeySystem.md):
-    [Deprecated] Returns the name of the current key system.
 
 ## Static Properties
 
