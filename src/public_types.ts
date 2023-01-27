@@ -45,8 +45,9 @@ export interface IConstructorOptions {
   maxBufferBehind? : number;
   wantedBufferAhead? : number;
   maxVideoBufferSize?: number;
-
-  limitVideoWidth? : boolean;
+  videoResolutionLimit? : "videoElement" |
+                          "screen" |
+                          "none";
   throttleVideoBitrateWhenHidden? : boolean;
 
   videoElement? : HTMLMediaElement;
