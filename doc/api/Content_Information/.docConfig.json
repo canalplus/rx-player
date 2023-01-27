@@ -13,8 +13,8 @@
       "displayName": "isLive"
     },
     {
-      "path": "./getCurrentKeySystem.md",
-      "displayName": "getCurrentKeySystem"
+      "path": "./getKeySystemConfiguration.md",
+      "displayName": "getKeySystemConfiguration"
     }
   ]
 }
