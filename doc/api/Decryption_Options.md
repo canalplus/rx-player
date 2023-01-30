@@ -404,7 +404,7 @@ or
 will be required, optional or not-allowed.
 
 It can be set to any value of the `MediaKeysRequirement` enumeration, as
-declared [here in the EME specification](#https://www.w3.org/TR/encrypted-media/#dom-mediakeysrequirement).
+declared [here in the EME specification](https://www.w3.org/TR/encrypted-media/#dom-mediakeysrequirement).
 This is not needed for most use cases.
 
 
@@ -426,7 +426,7 @@ exploiting persistent licenses already necessitate the ability to persist
 session state).
 
 It can be set to any value of the `MediaKeysRequirement` enumeration, as
-declared [here in the EME specification](#https://www.w3.org/TR/encrypted-media/#dom-mediakeysrequirement).
+declared [here in the EME specification](https://www.w3.org/TR/encrypted-media/#dom-mediakeysrequirement).
 This is not needed for most use cases.
 
 
