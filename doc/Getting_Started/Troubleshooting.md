@@ -51,7 +51,7 @@ If that solution does not work for you, do not hesitate to create an issue.
     audio buffers) on that device.
 
     To fix that solution, you might want to set either [the
-    `audioTrackSwitchingMode`](../api/Loading_a_Content.md#audiotrackswitchingmode)
+    `defaultAudioTrackSwitchingMode`](../api/Loading_a_Content.md#defaultaudiotrackswitchingmode)
     `loadVideo` option or [the `switchingMode` property on
     calls to `setAudioTrack`](../api/Track_Selection/setAudioTrack.md) to
     `"direct"`, or `"reload"` if you have issues with the former value.

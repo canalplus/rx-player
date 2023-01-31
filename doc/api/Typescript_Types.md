@@ -475,28 +475,6 @@ rxPlayer.addEventListener("streamEvent", (evt : IStreamEvent) {
 });
 ```
 
-### decipherabilityUpdate event
-
-The type `IDecipherabilityUpdateContent` corresponds to the payload of a
-`decipherabilityUpdate` event.
-
-Example:
-
-```ts
-// the type(s) wanted
-import { IDecipherabilityUpdateContent } from "rx-player/types";
-
-// hypothetical file exporting an RxPlayer instance
-import rxPlayer from "./player";
-
-rxPlayer.addEventListener("decipherabilityUpdate", (evt : IDecipherabilityUpdateContent) {
-  console.log(evt);
-});
-```
-
-The `IDecipherabilityUpdatePeriodInfo` defines specifically the conten to the
-`periodInfo` property of a `IDecipherabilityUpdateContent` object.
-
 
 ### brokenRepresentationsLock event
 
