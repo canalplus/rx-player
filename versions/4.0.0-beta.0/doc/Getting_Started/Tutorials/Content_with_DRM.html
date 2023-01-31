@@ -350,11 +350,6 @@ key and to instead fallback on another, decipherable, quality.</p>
 <p>That’s exactly what the RxPlayer does, when the right options are set:</p>
 <ol>
 <li>
-<p>when it detects a quality to be un-decipherable, it first emit a
-<code>decipherabilityUpdate</code> event through its API, to signal to an application
-which qualities have been blacklisted.</p>
-</li>
-<li>
 <p>it automatically removes from the current media buffer the data linked to
 the un-decipherable quality and put it in a black list: we will not load
 this quality for the current content anymore.</p>
@@ -431,20 +426,6 @@ is set when a key is refused.</p>
   ],
 });
 </code></pre>
-<p><a name="decipherabilityupdate_event"></a></p>
-<h3>decipherabilityUpdate event</h3>
-<p>When the RxPlayer detects a quality to be un-decipherable (which can only
-happens when one of the properties explained here is set), it sends a
-<code>decipherabilityUpdate</code> event.</p>
-<p>This event allows an application to know that some key or license could not be
-used by the RxPlayer.</p>
-<p>The application could then infer that other contents from the same right holders
-will have the same issues.
-In that case, an optimization is possible by using the <code>representationFilter</code>
-API which is a <code>loadVideo</code> option, <a href="../../api/Loading_a_Content.html#representationfilter">documented
-here</a>. By using this API,
-we can filter out un-decipherable quality to avoid downloading them in the first
-place.</p>
 <p><a name="server_certificate"></a></p>
 <h2>Server certificate</h2>
 <p>The “server Certificate” is a certificate allowing to encrypt messages coming
@@ -566,7 +547,6 @@ above, you can call <code>JSON.stringify</code> on that data and retrieve it thr
 <li><a href="#the_strategy_adopted_by_the_rxplayer">The strategy adopted by the RxPlayer</a></li>
 <li><a href="#fallbackonlasttry">fallbackOnLastTry</a></li>
 <li><a href="#%60onkeyinternalerror%60,_%60onkeyoutputrestricted%60_and_%60onkeyexpiration%60"><code>onKeyInternalError</code>, <code>onKeyOutputRestricted</code> and <code>onKeyExpiration</code></a></li>
-<li><a href="#decipherabilityupdate_event">decipherabilityUpdate event</a></li>
 </ul>
 </li>
 <li><a href="#server_certificate">Server certificate</a></li>

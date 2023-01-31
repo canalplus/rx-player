@@ -406,23 +406,6 @@ rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class=
   <span class="hljs-title function_">processEventData</span>(evt.<span class="hljs-property">data</span>);
 });
 </code></pre>
-<p><a name="decipherabilityupdate_event"></a></p>
-<h3>decipherabilityUpdate event</h3>
-<p>The type <code>IDecipherabilityUpdateContent</code> corresponds to the payload of a
-<code>decipherabilityUpdate</code> event.</p>
-<p>Example:</p>
-<pre><code class="language-ts"><span class="hljs-comment">// the type(s) wanted</span>
-<span class="hljs-keyword">import</span> { <span class="hljs-title class_">IDecipherabilityUpdateContent</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
-
-<span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
-<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
-
-rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"decipherabilityUpdate"</span>, (evt : <span class="hljs-title class_">IDecipherabilityUpdateContent</span>) {
-  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(evt);
-});
-</code></pre>
-<p>The <code>IDecipherabilityUpdatePeriodInfo</code> defines specifically the conten to the
-<code>periodInfo</code> property of a <code>IDecipherabilityUpdateContent</code> object.</p>
 <p><a name="brokenrepresentationslock_event"></a></p>
 <h3>brokenRepresentationsLock event</h3>
 <p>The type <code>IBrokenRepresentationsLockContext</code> corresponds to the payload of a
@@ -528,7 +511,6 @@ rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class=
 <li><a href="#positionupdate_event">positionUpdate event</a></li>
 <li><a href="#periodchange_event">periodChange event</a></li>
 <li><a href="#streamevent_/_streameventskip_events">streamEvent / streamEventSkip events</a></li>
-<li><a href="#decipherabilityupdate_event">decipherabilityUpdate event</a></li>
 <li><a href="#brokenrepresentationslock_event">brokenRepresentationsLock event</a></li>
 <li><a href="#autotrackswitch_event">autoTrackSwitch event</a></li>
 <li><a href="#rxplayer_errors_and_warnings">RxPlayer errors and warnings</a></li>

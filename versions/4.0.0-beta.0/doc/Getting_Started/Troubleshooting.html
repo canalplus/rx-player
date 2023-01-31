@@ -55,8 +55,8 @@ when the <code>textTrackElement</code> <code>loadVideo</code> option is not set)
 <p>If audio tracks take a LOT of time on some devices to change, it may be due
 to how often low-level audio buffers are updated (from higher-level browser
 audio buffers) on that device.</p>
-<p>To fix that solution, you might want to set either <a href="../api/Loading_a_Content.html#audiotrackswitchingmode">the
-<code>audioTrackSwitchingMode</code></a>
+<p>To fix that solution, you might want to set either <a href="../api/Loading_a_Content.html#defaultaudiotrackswitchingmode">the
+<code>defaultAudioTrackSwitchingMode</code></a>
 <code>loadVideo</code> option or <a href="../api/Track_Selection/setAudioTrack.html">the <code>switchingMode</code> property on
 calls to <code>setAudioTrack</code></a> to
 <code>"direct"</code>, or <code>"reload"</code> if you have issues with the former value.</p>

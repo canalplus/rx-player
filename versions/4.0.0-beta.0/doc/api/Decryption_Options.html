@@ -157,10 +157,6 @@ Representations (e.g. qualities) which might have a different decryption
 key. If no Representation is left, we will throw a MediaError with a
 <code>NO_PLAYABLE_REPRESENTATION</code> code, as documented <a href="./Player_Errors.html#types-media_error">in the errors
 documentation</a>.</p>
-<p>You will receive a <code>decipherabilityUpdate</code> event when the RxPlayer
-fallbacks from any Representation. You can find documentation on this
-event <a href="./Player_Events.html#decipherabilityupdate">in the corresponding chapter of the events
-documentation</a>.</p>
 <p>This option is thus only useful for contents depending on multiple
 licenses.</p>
 <p>When fallbacking, we might need to reload the current MediaSource,
