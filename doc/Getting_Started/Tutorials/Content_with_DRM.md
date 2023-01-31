@@ -558,6 +558,10 @@ It needs to contain two functions:
   last `save` call. Any return value which is not an Array will be ignored
   (example: when `save` has never been called).
 
+If the ability to retrieve persistent-licenses from older RxPlayer version is
+not important to you, you can also add a `disableRetroCompatibility` property
+set to `true`, this will unlock supplementary optimizations on contents.
+
 This API can very simply be implemented with the
 [localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage)
 browser API:

@@ -134,13 +134,16 @@ than the whole content at a single time.
 
 ### Period
 
-Simply put, a Period defines what the content will be from a starting time to
-an ending time. It is an element contained in the [Manifest](#manifest)) and it
-will contain the [Adaptations](#adaptation) available for the corresponding
-time period.
+A Period is a sub-element of the the [Manifest](#manifest) which defines what
+the content will be from a starting time to an ending time.
+
+It contains its own [Adaptations](#adaptation) and
+[Representations](#representation). Having multiple Periods in the same Manifest
+allows for example to define multiple programs on the same content, each with
+its own tracks and quality characteristics.
+
 
 Depending on the transport used, they correspond to different concepts:
-
 - for DASH contents, it is more or less the same thing than an MPD's
   `<Period>` element
 - for "local" contents, it corresponds to a single object from the `periods`
@@ -190,7 +193,8 @@ of the [Manifest](#manifest)) that describes an interchangeable way to represent
 the parent Adaptation.
 
 For example, a video Adaptation can have several Representations, each having
-its own bitrate, its own width or its own height.
+its own resolution (width and height) or its own bitrate (amount of bytes per
+seconds of content).
 The idea behind a Representation is that it can be changed by any other one in
 the same Adaptation as the content plays.
 

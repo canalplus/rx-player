@@ -113,7 +113,7 @@ function generateFullDemo(options) {
           CURRENT_ENV: isDevMode ? 1 : 0,
         },
         __LOGGER_LEVEL__: {
-          CURRENT_LEVEL: isDevMode ? "DEBUG" : "\"INFO\"",
+          CURRENT_LEVEL: "\"INFO\"",
         },
       }),
     ],

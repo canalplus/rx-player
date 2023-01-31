@@ -45,7 +45,7 @@ due to the browser's policy.
 <br>
 <br>
 In that case, the player won't be able to play (it will stay in a `LOADED`
-state) and you will receive a <a href="./Player_Errors.md">warning event</a>
+state) and you will receive a <a href="../Player_Errors.md">warning event</a>
 containing a `MEDIA_ERROR` with the code: `MEDIA_ERR_BLOCKED_AUTOPLAY`.
 <br>
 <br>

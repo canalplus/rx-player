@@ -58,25 +58,25 @@ switch (player.getPlayerState()) {
     console.log("The new content is loaded and ready to be played");
     break;
   case "PLAYING":
-    console.log("The content is currently playing");
+    console.log("The player is currently playing");
     break;
   case "PAUSED":
-    console.log("The content is currently paused");
+    console.log("The player is currently paused");
     break;
   case "BUFFERING":
-    console.log("The content is buffering new data");
+    console.log("The player is paused while buffering new data");
     break;
   case "SEEKING":
-    console.log("The content is still seeking, waiting for new data");
+    console.log("The player is still seeking, waiting for new data");
     break;
   case "ENDED":
-    console.log("The content has reached the end.");
+    console.log("The player has reached the end of the content.");
     break;
   case "RELOADING":
-    console.log("The content is currently reloading");
+    console.log("The player is currently reloading");
     break;
   default:
-    console.log("This is impossible (issue material!).");
+    console.log("This is impossible!");
     break;
 }
 ```

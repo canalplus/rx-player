@@ -134,12 +134,20 @@ If the `getLicense` call throws/rejects, you can add any of the following
 properties (none are mandatory) to configure the behavior of the RxPlayer
 relative to that failure:
   - `noRetry` (`Boolean`): If set to `true`, we won't make another attempt
-    to call `getLicense`. Its failure
-    `getLicense` another time.
-    This will result in: trigger a fallback to other
-    Representations (and a `KEY_LOAD_ERROR` warning being sent) or th
-    will throw directly a `KEY_LOAD_ERROR`.
-    the current retry parameters will be applied (see `getLicenseConfig`)
+    to call `getLicense` for this particular message.
+
+    This will result in:
+      - if the `fallbackOnLastTry` boolean has been set to `true`, it will
+        trigger a fallback to another Representations (and a `KEY_LOAD_ERROR`
+        warning being sent) if possible (and throw a
+        `NO_PLAYABLE_REPRESENTATION` error code if there's no Representation
+        left to fallback to, as documented in the `fallbackOnLastTry`
+        property documentation).
+      - If not, a `KEY_LOAD_ERROR` error code will be directly thrown and
+        playback will be stopped.
+
+    If set to `false` or not set, the current retry parameters will be applied
+    (see `getLicenseConfig`)
 
   - `message` (`string`): If the `message` property is set as a "string",
     this message will be set as the `message` property of the
@@ -157,9 +165,9 @@ relative to that failure:
     `NO_PLAYABLE_REPRESENTATION` code, as documented [in the errors
     documentation](./Player_Errors.md#types-media_error).
 
-    You will receive a `decipherabilityUpdate` event when we fallback from
-    a given Representation. You can find documentation on this event [in
-    the corresponding chapter of the events
+    You will receive a `decipherabilityUpdate` event when the RxPlayer
+    fallbacks from any Representation. You can find documentation on this
+    event [in the corresponding chapter of the events
     documentation](../api/Player_Events.md#decipherabilityupdate).
 
     This option is thus only useful for contents depending on multiple
@@ -212,25 +220,13 @@ still continue to try deciphering the content (albeit a
 `"LICENSE_SERVER_CERTIFICATE_ERROR"`).
 
 
-### persistentLicense
-
-_type_: `Boolean | undefined`
-
-Set it to `true` if you want the ability to persist the license for later
-retrieval.
-
-In that case, you will also need to set the `licenseStorage` attribute to
-be able to persist the license through your preferred method.
-
-Note that not all licenses can be persisted, this is dependent both on the
-loaded licenses and on the Content Decryption Module used in the browser.
-
-
-### licenseStorage
+### persistentLicenseConfig
 
 _type_: `Object | undefined`
 
-Required only if `persistentLicense` has been set to `true`.
+Set it only if you want to load persistent-license(s) for later retrieval.
+Note that not all licenses can be persisted, this is dependent both on the
+loaded licenses and on the Content Decryption Module used in the browser.
 
 This is an object containing the following properties:
 
@@ -249,47 +245,6 @@ This is an object containing the following properties:
 
     We recommend setting that option to `true` if retrieving persisted
     licenses through older versions are not that warning to you.
-
-
-### fallbackOn
-
-_type_: `Object | undefined`
-
-This advanced option allows to fallback on other Representations (a.k.a.
-quality) when one of them has its decription key refused.
-
-This option is thus only useful for contents depending on multiple keys.
-
-This object can have the following properties:
-
-  - `keyInternalError`: fallback when the corresponding key has the
-    [`"internal-error"`
-    status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus).
-
-    We found that most widevine implementation use this status to signal
-    that a key is refused.
-
-  - `keyOutputRestricted`: fallback when the corresponding key has the
-    [`"output-restricted"`
-    status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus).
-
-    This is the proper status for a key refused due to output restrictions.
-
-For most cases where you want to fallback in case of a refused key, we
-recommend setting both properties to `true`.
-
-You will receive a `decipherabilityUpdate` event when we fallback from
-a given Representation. You can find documentation on this event
-[in the corresponding chapter of the events
-documentation](../api/Player_Events.md#decipherabilityupdate).
-
-When fallbacking, we might need to reload the current MediaSource, leading
-to a black screen during a brief instant. When reloading, the RxPlayer
-will have the `"RELOADING"` [player state](./Player_States.md).
-
-If we have no Representation to fallback to anymore, we will throw a
-MediaError with a `NO_PLAYABLE_REPRESENTATION` code, as documented [in
-the errors documentation](./Player_Errors.md#types-media_error).
 
 
 ### maxSessionCacheSize

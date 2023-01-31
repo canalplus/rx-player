@@ -86,7 +86,7 @@ function fastDemoBuild(options) {
         CURRENT_ENV: isDevMode ? 1 : 0,
       }),
       __LOGGER_LEVEL__: JSON.stringify({
-        CURRENT_LEVEL: isDevMode ? "DEBUG" : "INFO",
+        CURRENT_LEVEL: "INFO",
       }),
     }
   }).then(
