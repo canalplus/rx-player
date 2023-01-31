@@ -165,11 +165,6 @@ relative to that failure:
     `NO_PLAYABLE_REPRESENTATION` code, as documented [in the errors
     documentation](./Player_Errors.md#types-media_error).
 
-    You will receive a `decipherabilityUpdate` event when the RxPlayer
-    fallbacks from any Representation. You can find documentation on this
-    event [in the corresponding chapter of the events
-    documentation](../api/Player_Events.md#decipherabilityupdate).
-
     This option is thus only useful for contents depending on multiple
     licenses.
 
