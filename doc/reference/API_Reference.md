@@ -466,9 +466,6 @@ properties, methods, events and so on.
   - [`autoTrackSwitch`](../api/Player_Events.md#autotrackswitch):
     A track previously set was automatically changed by the RxPlayer.
 
-  - [`decipherabilityUpdate`](../api/Player_Events.md#decipherabilityupdate):
-    A Representation's decipherability status has been updated.
-
   - [`play`](../api/Player_Events.md#play):
     Emitted when playback is no longer consider paused.
 
