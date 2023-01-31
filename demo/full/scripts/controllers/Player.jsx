@@ -4,10 +4,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-import {
-  Subject,
-  takeUntil,
-} from "rxjs";
 import { createModule } from "../lib/vespertine.js";
 import PlayerModule from "../modules/player";
 import ControlBar from "./ControlBar.jsx";
@@ -31,8 +27,7 @@ function Player() {
   const [showOptions, setShowOptions] = useState(false);
 
   const initOptsRef = useRef(null);
-  const $destroySubjectRef = useRef(null);
-  const displaySpinnerTimeoutRef = useRef(0);
+  const displaySpinnerTimeoutRef = useRef(null);
 
   const videoElementRef = useRef(null);
   const textTrackElement = useRef(null);
@@ -51,50 +46,46 @@ function Player() {
     });
     initOptsRef.current = initOpts;
 
-    $destroySubjectRef.current = new Subject();
-    $destroySubjectRef.current.subscribe(() => playerMod.destroy());
-
-    // update isStopped and displaySpinner
-    playerMod.$get("autoPlayBlocked" ,
-                   "isSeeking",
-                   "isBuffering",
-                   "isLoading",
-                   "isReloading",
-                   "isStopped",
-                   "videoTrackHasTrickMode",
-                   "videoElement")
-      .pipe(takeUntil($destroySubjectRef.current))
-      .subscribe(([
-        newAutoPlayBlocked,
-        isSeeking,
-        isBuffering,
-        isLoading,
-        isReloading,
-        newIsStopped,
-        videoTrackHasTrickMode,
-      ]) => {
-        setAutoPlayBlocked(newAutoPlayBlocked);
-        setIsStopped(newIsStopped);
-        if (isLoading || isReloading) {
-          setDisplaySpinner(true);
-        } else if (isSeeking || isBuffering) {
-          if (displaySpinnerTimeoutRef.current) {
-            clearTimeout(displaySpinnerTimeoutRef.current);
-          }
+    function reCheckSpinner() {
+      const isSeeking = playerMod.get("isSeeking");
+      const isBuffering = playerMod.get("isBuffering");
+      const isLoading = playerMod.get("isLoading");
+      const isReloading = playerMod.get("isReloading");
+      if (isLoading || isReloading) {
+        if (displaySpinnerTimeoutRef.current !== null) {
+          clearTimeout(displaySpinnerTimeoutRef.current);
+        }
+        setDisplaySpinner(true);
+      } else if (isSeeking || isBuffering) {
+        if (displaySpinnerTimeoutRef.current === null) {
           displaySpinnerTimeoutRef.current = setTimeout(() => {
             setDisplaySpinner(true);
           }, SPINNER_TIMEOUT);
-        } else {
-          if (displaySpinnerTimeoutRef.current) {
-            clearTimeout(displaySpinnerTimeoutRef.current);
-            displaySpinnerTimeoutRef.current = 0;
-          }
-          setDisplaySpinner(false);
         }
-        if (enableVideoThumbnails !== videoTrackHasTrickMode) {
-          setEnableVideoThumbnails(videoTrackHasTrickMode);
+      } else {
+        if (displaySpinnerTimeoutRef.current !== null) {
+          clearTimeout(displaySpinnerTimeoutRef.current);
+          displaySpinnerTimeoutRef.current = null;
         }
-      });
+        setDisplaySpinner(false);
+      }
+    }
+
+    playerMod.addStateListener("autoPlayBlocked", (newAutoPlayBlocked) => {
+      setAutoPlayBlocked(newAutoPlayBlocked);
+    });
+    playerMod.addStateListener("isStopped", (newIsStopped) => {
+      setIsStopped(newIsStopped);
+    });
+    playerMod.addStateListener("videoTrackHasTrickMode", (videoTrackHasTrickMode) => {
+      setEnableVideoThumbnails(videoTrackHasTrickMode);
+    });
+
+    playerMod.addStateListener("isSeeking", reCheckSpinner);
+    playerMod.addStateListener("isBuffering", reCheckSpinner);
+    playerMod.addStateListener("isLoading", reCheckSpinner);
+    playerMod.addStateListener("isReloading", reCheckSpinner);
+    reCheckSpinner();
     if (videoContent) {
       const { loadVideoOpts } = optionsComp.current.getOptions();
       if (videoContent.lowLatencyMode) {
@@ -107,12 +98,11 @@ function Player() {
                                    ...loadVideoOpts });
       }
     setPlayer(playerMod);
-  }
+  };
 
   const cleanCurrentPlayer = () => {
-    if ($destroySubjectRef.current) {
-      $destroySubjectRef.current.next();
-      $destroySubjectRef.current.complete();
+    if (player !== null) {
+      player.destroy();
     }
     if (displaySpinnerTimeoutRef.current) {
       clearTimeout(displaySpinnerTimeoutRef.current);
@@ -122,9 +112,7 @@ function Player() {
 
   useEffect(() => {
     createNewPlayerModule();
-    return () => {
-      cleanCurrentPlayer();
-    }
+    return cleanCurrentPlayer;
   }, []);
 
   const onVideoClick = useCallback(() => {
@@ -216,7 +204,7 @@ function Player() {
               <video ref={videoElementRef} />
 
             </div>
-            { player ? 
+            { player ?
                 <PlayerKnobsSettings
                   close={closeSettings}
                   shouldDisplay={displaySettings}

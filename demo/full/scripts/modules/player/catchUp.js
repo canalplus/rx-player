@@ -1,14 +1,3 @@
-import {
-  distinctUntilChanged,
-  EMPTY,
-  interval,
-  map,
-  of as observableOf,
-  startWith,
-  switchMap,
-} from "rxjs";
-import fromPlayerEvent from "./fromPlayerEvent";
-
 // Distance from live edge we try to reach when the catching up button
 // is enabled.
 const LIVE_GAP_GOAL_WHEN_CATCHING_UP = 3.5;
@@ -38,81 +27,116 @@ const MAX_RATE = 5;
  *   - Update playback rate and `isCatchingUp` if it is far from the live edge
  *     but not enough too trigger the seek
  */
-export default function $handleCatchUpMode(
-  $switchCatchUpMode,
-  rxPlayer,
-  state
-) {
-  let isCatchingUp = false;
-
-  function stopCatchingUp() {
-    if (!isCatchingUp) {
-      return EMPTY;
-    }
-    rxPlayer.setPlaybackRate(1);
-    isCatchingUp = false;
-    state.set({ isCatchingUp, playbackRate: 1 });
-    return observableOf(false);
+export default class CatchUpModeController {
+  constructor(rxPlayer, state) {
+    this._rxPlayer = rxPlayer;
+    this._state = state;
+    this._catchUpAborter = null;
   }
 
-  return $switchCatchUpMode.pipe(switchMap((isCatchUpEnabled) => {
-    return fromPlayerEvent(rxPlayer, "playerStateChange").pipe(
-      startWith(rxPlayer.getPlayerState()),
-      distinctUntilChanged(),
-      map((playerState) => {
-        return playerState === "LOADED" ||
-               playerState === "PLAYING" ||
-               playerState === "PAUSED" ||
-               playerState === "BUFFERING" ||
-               playerState === "SEEKING";
-      }),
-      switchMap(canCatchUp => {
-        if (!rxPlayer.isLive()) {
-          state.set({ isCatchUpEnabled: false });
-          return stopCatchingUp();
-        }
-        state.set({ isCatchUpEnabled });
+  enableCatchUp() {
+    if (this._catchUpAborter !== null) {
+      return;
+    }
+    this._catchUpAborter = new AbortController();
+    let interval = null;
+    const onStateChange = () => {
+      if (interval !== null) {
+        clearInterval(interval);
+        interval = null;
+      }
+      const playerState = this._rxPlayer.getPlayerState();
+      const canCatchUp = playerState === "LOADED" ||
+        playerState === "PLAYING" ||
+        playerState === "PAUSED" ||
+        playerState === "BUFFERING" ||
+        playerState === "SEEKING";
+      if (!this._rxPlayer.isLive()) {
+        // Catch-up is only authorized for live contents
+        this.stopCatchUp();
+      } else if (!canCatchUp) {
+        // Stop catching up if the state does not make sense for it
+        this._rxPlayer.setPlaybackRate(1);
+        this._state.set({ isCatchingUp: false, playbackRate: 1 });
+      } else {
+        const checkCatchUp = () => {
+          const maximumPosition = this._rxPlayer.getMaximumPosition();
+          const position = this._rxPlayer.getPosition();
+          const liveGap = maximumPosition - position;
+          if (liveGap >= CATCH_UP_SEEKING_STEP) {
+            // If we're too far from the live to just change the playback rate,
+            // seek directly close to live
+            this._rxPlayer
+              .seekTo(maximumPosition - LIVE_GAP_GOAL_WHEN_CATCHING_UP);
+            this._rxPlayer.setPlaybackRate(1);
+            this._state.set({ isCatchingUp: false, playbackRate: 1 });
+            return;
+          }
 
-        if (!isCatchUpEnabled || !canCatchUp) {
-          return stopCatchingUp();
-        }
-
-        return interval(200).pipe(
-          startWith(0),
-          map(() => [ rxPlayer.getMaximumPosition(), rxPlayer.getPosition() ]),
-          switchMap(([maximumPosition, position]) => {
-            const liveGap = maximumPosition - position;
-            if (liveGap >= CATCH_UP_SEEKING_STEP) {
-              rxPlayer.seekTo(maximumPosition - LIVE_GAP_GOAL_WHEN_CATCHING_UP);
-              return stopCatchingUp();
+          if (this._state.get().isCatchingUp) {
+            if (liveGap <= LIVE_GAP_GOAL_WHEN_CATCHING_UP) {
+              // If we reached `LIVE_GAP_GOAL_WHEN_CATCHING_UP`, we can stop
+              // catching up
+              this._rxPlayer.setPlaybackRate(1);
+              this._state.set({ isCatchingUp: false, playbackRate: 1 });
+              return;
             }
+          } else if (liveGap < CATCH_UP_CHANGE_RATE_STEP) {
+            // Not catching up but we're close enough to the live, so no problem
+            // here.
+            return;
+          }
 
-            if (isCatchingUp) {
-              if (liveGap <= LIVE_GAP_GOAL_WHEN_CATCHING_UP) {
-                return stopCatchingUp();
-              }
-            } else if (liveGap < CATCH_UP_CHANGE_RATE_STEP) {
-              return stopCatchingUp();
-            }
+          // If we reached this point, we need to catch up by modifiying the
+          // playback rate. The following code determine by how much
 
-            const factor = (liveGap - LIVE_GAP_GOAL_WHEN_CATCHING_UP) / 4;
-            const rate = Math.round(Math.min(MAX_RATE, 1.1 + factor) * 10) / 10;
-            if (rate <= 1) {
-              return stopCatchingUp();
-            }
+          const factor = (liveGap - LIVE_GAP_GOAL_WHEN_CATCHING_UP) / 4;
+          const rate = Math.round(Math.min(MAX_RATE, 1.1 + factor) * 10) / 10;
+          if (rate <= 1) {
+            this._rxPlayer.setPlaybackRate(1);
+            this._state.set({ isCatchingUp: false, playbackRate: 1 });
+            return;
+          }
 
-            if (!isCatchingUp) {
-              isCatchingUp = true;
-              state.set({ isCatchingUp: true });
-            }
+          const currentPlaybackRate = this._rxPlayer.getPlaybackRate();
+          if (rate !== currentPlaybackRate) {
+            this._rxPlayer.setPlaybackRate(rate);
+          }
+          if (!this._state.get().isCatchingUp) {
+            this._state.set({ isCatchingUp: true, playbackRate: rate });
+          } else {
+            this._state.set({ playbackRate: rate });
+          }
+        };
+        interval = setInterval(checkCatchUp, 200);
+        checkCatchUp();
 
-            state.set({ playbackRate: rate });
-            const currentPlaybackRate = rxPlayer.getPlaybackRate();
-            if (rate !== currentPlaybackRate) {
-              rxPlayer.setPlaybackRate(rate);
-            }
-            return observableOf(true);
-          }));
-      }));
-  }));
+        this._catchUpAborter.signal.addEventListener("abort", () => {
+          if (interval !== null) {
+            clearInterval(interval);
+            interval = null;
+          }
+        });
+      }
+    };
+    this._rxPlayer.addEventListener("playerStateChange", onStateChange);
+
+    this._catchUpAborter.signal.addEventListener("abort", () => {
+      this._rxPlayer.removeEventListener("playerStateChange", onStateChange);
+    });
+  }
+
+  stopCatchUp() {
+    if (this._catchUpAborter === null) {
+      return ;
+    }
+    this._catchUpAborter.abort();
+    this._catchUpAborter = null;
+    this._rxPlayer.setPlaybackRate(1);
+    this._state.set({
+      isCatchUpEnabled: false,
+      isCatchingUp: false,
+      playbackRate: 1,
+    });
+  }
 }

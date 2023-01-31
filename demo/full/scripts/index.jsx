@@ -10,5 +10,5 @@ import Main from "./controllers/Main.jsx";
 
 window.onload = function() {
   const root = ReactDOM.createRoot(document.getElementById("player-container"));
-  root.render(<Main />);
+  root.render(<React.StrictMode><Main /></React.StrictMode>);
 };
