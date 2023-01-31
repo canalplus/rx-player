@@ -447,9 +447,6 @@ properties, methods, events and so on.
   - [`autoTrackSwitch`](../api/Player_Events.md#autotrackswitch):
     A track previously set was automatically changed by the RxPlayer.
 
-  - [`decipherabilityUpdate`](../api/Player_Events.md#decipherabilityupdate):
-    A Representation's decipherability status has been updated.
-
   - [`inbandEvents`](../api/Player_Events.md#inbandevents):
     Events in the media have been encountered.
 
