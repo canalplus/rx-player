@@ -378,15 +378,11 @@ key and to instead fallback on another, decipherable, quality.
 
 That's exactly what the RxPlayer does, when the right options are set:
 
-1. when it detects a quality to be un-decipherable, it first emit a
-   `decipherabilityUpdate` event through its API, to signal to an application
-   which qualities have been blacklisted.
-
-2. it automatically removes from the current media buffer the data linked to
+1. it automatically removes from the current media buffer the data linked to
    the un-decipherable quality and put it in a black list: we will not load
    this quality for the current content anymore.
 
-3. it switches to another, hopefully decipherable, quality.
+2. it switches to another, hopefully decipherable, quality.
 
 Let's now talk about the API.
 
@@ -463,23 +459,6 @@ rxPlayer.loadVideo({
   ],
 });
 ```
-
-### decipherabilityUpdate event
-
-When the RxPlayer detects a quality to be un-decipherable (which can only
-happens when one of the properties explained here is set), it sends a
-`decipherabilityUpdate` event.
-
-This event allows an application to know that some key or license could not be
-used by the RxPlayer.
-
-The application could then infer that other contents from the same right holders
-will have the same issues.
-In that case, an optimization is possible by using the `representationFilter`
-API which is a `loadVideo` option, [documented
-here](../../api/Loading_a_Content.md#representationfilter). By using this API,
-we can filter out un-decipherable quality to avoid downloading them in the first
-place.
 
 ## Server certificate
 
