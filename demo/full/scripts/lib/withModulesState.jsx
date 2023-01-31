@@ -45,7 +45,7 @@ import React from "react";
  */
 const withModulesState = (modulesState) => (Comp) => {
   const modulesProps = Object.keys(modulesState);
-  const modulesSubscriptions = {};
+  const stopListenersForProp = {};
   return class extends React.Component {
     constructor(...args) {
       super(...args);
@@ -71,19 +71,18 @@ const withModulesState = (modulesState) => (Comp) => {
           return;
         }
 
-        modulesSubscriptions[moduleProp] = [];
+        stopListenersForProp[moduleProp] = [];
 
         const translations = modulesState[modulesProps];
         const module = this.props[moduleProp];
         const wantedProps = Object.keys(modulesState[moduleProp]);
         wantedProps.forEach((state) => {
-          const sub = module
-            .$get(state)
-            .subscribe(val => this.setState({
+          const stopListening = module.addStateListener(state, val =>
+            this.setState({
               [translations[state]]: val,
             }));
 
-          modulesSubscriptions[moduleProp].push(sub);
+          stopListenersForProp[moduleProp].push(stopListening);
         });
       });
     }
@@ -93,38 +92,37 @@ const withModulesState = (modulesState) => (Comp) => {
         if (!Object.prototype.hasOwnProperty.call(nextProps, moduleProp) ||
             nextProps[moduleProp] !== this.props[moduleProp])
         {
-          if (modulesSubscriptions[moduleProp]) {
-            modulesSubscriptions[moduleProp]
-              .forEach(sub => sub.unsubscribe());
-            delete modulesSubscriptions[moduleProp];
+          if (stopListenersForProp[moduleProp]) {
+            stopListenersForProp[moduleProp]
+              .forEach(stop => stop());
+            delete stopListenersForProp[moduleProp];
           }
         }
 
         if (Object.prototype.hasOwnProperty.call(nextProps, moduleProp) &&
-            !modulesSubscriptions[moduleProp])
+            !stopListenersForProp[moduleProp])
         {
-          modulesSubscriptions[moduleProp] = [];
+          stopListenersForProp[moduleProp] = [];
           const translations = modulesState[modulesProps];
           const module = nextProps[moduleProp];
           const wantedProps = Object.keys(modulesState[moduleProp]);
           wantedProps.forEach((state) => {
-            const sub = module
-              .$get(state)
-              .subscribe(val => this.setState({
+            const stopListening = module.addStateListener(state, val =>
+              this.setState({
                 [translations[state]]: val,
               }));
 
-            modulesSubscriptions[moduleProp].push(sub);
+            stopListenersForProp[moduleProp].push(stopListening);
           });
         }
       });
     }
 
     componentWillUnmount() {
-      Object.keys(modulesSubscriptions).forEach(moduleProp => {
-        modulesSubscriptions[moduleProp]
-          .forEach(sub => sub.unsubscribe());
-        delete modulesSubscriptions[moduleProp];
+      Object.keys(stopListenersForProp).forEach(moduleProp => {
+        stopListenersForProp[moduleProp]
+          .forEach(stop => stop());
+        delete stopListenersForProp[moduleProp];
       });
     }
 

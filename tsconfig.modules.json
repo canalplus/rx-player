@@ -13,7 +13,7 @@
     "strictPropertyInitialization": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true,
-    "types": ["rxjs", "node", "jest"],
+    "types": ["node", "jest"],
     "moduleResolution": "node",
     "module": "es2015",
     "typeRoots": [
