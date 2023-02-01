@@ -1194,6 +1194,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getVideoLoadedTime() : number {
+    warnOnce("`getVideoLoadedTime` is deprecated and won't be present in the " +
+             "next major version");
     if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
@@ -1208,6 +1210,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getVideoPlayedTime() : number {
+    warnOnce("`getVideoPlayedTime` is deprecated and won't be present in the " +
+             "next major version");
     if (this.videoElement === null) {
       throw new Error("Disposed player");
     }

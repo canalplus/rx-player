@@ -533,6 +533,12 @@ considered stable:
 
 - **aggressiveMode** (`boolean|undefined`):
 
+<div class="warning">
+This option is deprecated, it will disappear in the next major release
+`v4.0.0` (see <a href="./Miscellaneous/Deprecated_APIs.md">Deprecated
+APIs</a>).
+</div>
+
   If set to true, we will try to download segments very early, even if we are
   not sure they had time to be completely generated.
 
