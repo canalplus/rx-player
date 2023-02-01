@@ -1,11 +1,3 @@
-import {
-  combineLatest as observableCombineLatest,
-  distinctUntilChanged,
-  map,
-  Subject,
-  takeUntil,
-} from "rxjs";
-
 /**
  * Homemade redux and r9webapp-core inspired state management architecture.
  *
@@ -77,11 +69,15 @@ import {
  * // 2 - The interactions with it
  * const todoList = createModule(TodoList, { maxLength: 2 });
  *
- * // display todos when they change ($get is asynchronous, get is synchronous)
- * todoList.$get("todos")
- *   .subscribe(todos => {
- *     display(todos);
- *   });
+ * // display todos when they change
+ * const stopListening = todoList.addStateListener("todos", todos => {
+ *   display(todos);
+ * });
+ *
+ * // stop the callback given to the previous `addStateListener` from being
+ * // triggered again
+ * stopListening();
+ *
  * console.log(todoList.get("todos").length); // 0
  *
  * const firstId = todoList.dispatch("ADD_TODO", "do something");
@@ -98,7 +94,8 @@ import {
  * todoList.dispatch("REMOVE_TODO", firstId);
  * console.log(todoList.get("todos").length); // back to 1
  *
- * todoList.destroy(); // cleanup and stop $get subscriptions
+ * todoList.destroy(); // cleanup and stop callbacks added through
+ *                     // `addStateListener` from being triggered
  * ```
  *
  * @param {Function} module
@@ -112,9 +109,8 @@ import {
  *   - get: get the entire module state, or the property named after the
  *     argument (a string).
  *
- *   - $get: same as get, but returns an observable instead. Start emitting at
- *     the first change (I do not know yet if it's better to first emit the
- *     initial value immediately).
+ *   - addStateListener: Allow to add a callback that will be triggered when the
+ *     asked state changes.
  *
  *   - destroy: destroy the module. Completes all subscriptions.
  */
@@ -124,8 +120,7 @@ const createModule = (module, payload) => {
   }
 
   const moduleState = {};
-  const $destroy = new Subject();
-  const $updates = new Subject().pipe(takeUntil($destroy));
+  const stateListeners = {};
 
   const getFromModule = (...args) => {
     if (!args.length) {
@@ -137,42 +132,51 @@ const createModule = (module, payload) => {
     return args.map(arg => moduleState[arg]);
   };
 
-  const $getFromModule = (...args) => {
-    if (!args.length) {
-      return $updates;
+  const addStateListener = (arg, cb) => {
+    if (typeof arg === "string") {
+      if (stateListeners[arg] === undefined) {
+        stateListeners[arg] = [];
+      }
+      stateListeners[arg].push(onStateUpdate);
+      function onStateUpdate() {
+        cb(moduleState[arg]);
+      }
+      return () => {
+        if (stateListeners[arg] !== undefined) {
+          const indexOf = stateListeners[arg].indexOf(onStateUpdate);
+          stateListeners[arg].splice(indexOf, 1);
+          if (stateListeners[arg].length === 0) {
+            delete stateListeners[arg];
+          }
+        }
+      };
     }
 
-    if (args.length === 1) {
-      return $updates
-        .pipe(
-          map(state => state[args]),
-          distinctUntilChanged()
-        );
-    }
-
-    const observables = args.map(arg =>
-      $updates
-        .pipe(
-          map(state => state[arg]),
-          distinctUntilChanged()
-        )
-    );
-
-    return observableCombineLatest(observables);
+    /* eslint-disable-next-line no-console */
+    console.error("Invalid usage of `addStateListener`");
   };
 
-  const moduleArgs = {
-    state: {
-      get: getFromModule,
-      set: (arg) => {
-        const newState = Object.assign(moduleState, arg);
-        $updates.next(newState);
-      },
+  const abortController = new AbortController();
+  const state = {
+    get: getFromModule,
+    set: (arg) => {
+      Object.assign(moduleState, arg);
+      for (const key of Object.keys(arg)) {
+        if (stateListeners[key] !== undefined) {
+          for (const listener of stateListeners[key].slice()) {
+            try {
+              listener(moduleState[key]);
+            } catch (err) {
+              /* eslint-disable-next-line no-console */
+              console.error("Error when calling listener for", key, err);
+            }
+          }
+        }
+      }
     },
-    $destroy,
   };
 
-  const moduleActions = module(moduleArgs, payload);
+  const moduleActions = module(state, payload, abortController.signal);
 
   return {
     dispatch: (actionName, actionPayload) => {
@@ -185,10 +189,9 @@ const createModule = (module, payload) => {
     },
 
     get: getFromModule,
-    $get: $getFromModule,
+    addStateListener,
     destroy: () => {
-      $destroy.next();
-      $destroy.complete();
+      abortController.abort();
     },
   };
 };
