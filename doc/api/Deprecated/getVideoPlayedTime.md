@@ -1,5 +1,11 @@
 # getVideoPlayedTime
 
+<div class="warning">
+This method is deprecated, it will disappear in the next major release
+`v4.0.0` (see <a href="../Miscellaneous/Deprecated_APIs.md">Deprecated
+APIs</a>).
+</div>
+
 ## Description
 
 Returns in seconds the difference between:
