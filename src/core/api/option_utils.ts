@@ -469,6 +469,12 @@ function parseLoadVideoOptions(
     transport = String(options.transport);
   }
 
+  if (!isNullOrUndefined(options.transportOptions?.aggressiveMode)) {
+    warnOnce("`transportOptions.aggressiveMode` is deprecated and won't " +
+             "be present in the next major version. " +
+             "Please open an issue if you still need this.");
+  }
+
   const autoPlay = isNullOrUndefined(options.autoPlay) ? DEFAULT_AUTO_PLAY :
                                                          !!options.autoPlay;
 
@@ -483,6 +489,16 @@ function parseLoadVideoOptions(
       ) {
         throw new Error("Invalid key system given: Missing type string or " +
                         "getLicense callback");
+      }
+      if (!isNullOrUndefined(keySystem.onKeyStatusesChange)) {
+        warnOnce("`keySystems[].onKeyStatusesChange` is deprecated and won't " +
+                 "be present in the next major version. " +
+                 "Please open an issue if you still need this.");
+      }
+      if (!isNullOrUndefined(keySystem.throwOnLicenseExpiration)) {
+        warnOnce("`keySystems[].throwOnLicenseExpiration` is deprecated and won't " +
+                 "be present in the next major version. " +
+                 "Please open an issue if you still need this.");
       }
     }
   }

@@ -3,14 +3,6 @@
     {
       "path": "./getVideoBufferGap.md",
       "displayName": "getVideoBufferGap"
-    },
-    {
-      "path": "./getVideoLoadedTime.md",
-      "displayName": "getVideoLoadedTime"
-    },
-    {
-      "path": "./getVideoPlayedTime.md",
-      "displayName": "getVideoPlayedTime"
     }
   ]
 }
