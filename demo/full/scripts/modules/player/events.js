@@ -1,31 +1,27 @@
-import {
-  distinctUntilChanged,
-  EMPTY,
-  interval as intervalObservable,
-  map,
-  startWith,
-  switchMap,
-  takeUntil,
-  tap,
-} from "rxjs";
-import fromPlayerEvent from "./fromPlayerEvent";
-
 const POSITION_UPDATES_INTERVAL = 100;
 const BUFFERED_DATA_UPDATES_INTERVAL = 100;
+
+function addEventListener(eventTarget, event, fn, abortSignal) {
+  eventTarget.addEventListener(event, fn);
+  abortSignal.addEventListener("abort", () => {
+    eventTarget.removeEventListener(event, fn);
+  });
+}
 
 /**
  * Add event listeners to the RxPlayer to update the module's state at the right
  * time.
  * Unsubscribe when $destroy emit.
  * @param {RxPlayer} player
- * @param {Subject} state
- * @param {Subject} $destroy
+ * @param {Object} state
+ * @param {AbortSignal} abortSignal
  */
-const linkPlayerEventsToState = (player, state, $destroy) => {
-  const linkPlayerEventToState = (event, stateItem) =>
-    fromPlayerEvent(player, event)
-      .pipe(takeUntil($destroy))
-      .subscribe(arg => state.set({ [stateItem]: arg }));
+const linkPlayerEventsToState = (player, state, abortSignal) => {
+  const linkPlayerEventToState = (event, stateItem) => {
+    addEventListener(player, event, (payload) => {
+      state.set({ [stateItem]: payload });
+    }, abortSignal);
+  };
 
   linkPlayerEventToState("textTrackChange", "subtitle");
   linkPlayerEventToState("audioTrackChange", "language");
@@ -40,60 +36,52 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
   linkPlayerEventToState("availableAudioBitratesChange", "availableAudioBitrates");
   linkPlayerEventToState("availableVideoBitratesChange", "availableVideoBitrates");
 
-
-  fromPlayerEvent(player, "imageTrackUpdate").pipe(
-    distinctUntilChanged(),
-    takeUntil($destroy),
-    map(({ data }) => data)
-  ).subscribe(images => state.set({ images }));
+  addEventListener(player, "imageTrackUpdate", ({ data }) => {
+    state.set({ images: data });
+  }, abortSignal);
 
   // use an interval for current position
   // TODO Only active for content playback
-  intervalObservable(POSITION_UPDATES_INTERVAL).pipe(
-    map(() => {
-      if (player.getPlayerState() === "STOPPED") {
-        return {};
-      }
-      const position = player.getPosition();
-      const duration = player.getVideoDuration();
-      const videoTrack = player.getVideoTrack();
-      return {
-        currentTime: player.getPosition(),
-        wallClockDiff: player.getWallClockTime() - position,
-        bufferGap: player.getVideoLoadedTime() - player.getVideoPlayedTime(),
-        duration: Number.isNaN(duration) ? undefined : duration,
-        minimumPosition: player.getMinimumPosition(),
-        maximumPosition: player.getMaximumPosition(),
-        liveGap: player.getMaximumPosition() - player.getPosition(),
-        playbackPosition: player.getPlaybackRate(),
-        videoTrackHasTrickMode: videoTrack !== null &&
-          videoTrack !== undefined &&
-          videoTrack.trickModeTracks !== undefined &&
-          videoTrack.trickModeTracks.length > 0,
-      };
-    }),
-    takeUntil($destroy)
-  ).subscribe(arg => {
-    state.set(arg);
+  const intervalId = setInterval(() => {
+    if (player.getPlayerState() === "STOPPED") {
+      return;
+    }
+    const position = player.getPosition();
+    const duration = player.getVideoDuration();
+    const videoTrack = player.getVideoTrack();
+    state.set({
+      currentTime: player.getPosition(),
+      wallClockDiff: player.getWallClockTime() - position,
+      bufferGap: player.getVideoLoadedTime() - player.getVideoPlayedTime(),
+      duration: Number.isNaN(duration) ? undefined : duration,
+      minimumPosition: player.getMinimumPosition(),
+      maximumPosition: player.getMaximumPosition(),
+      liveGap: player.getMaximumPosition() - player.getPosition(),
+      playbackPosition: player.getPlaybackRate(),
+      videoTrackHasTrickMode: videoTrack !== null &&
+        videoTrack !== undefined &&
+        videoTrack.trickModeTracks !== undefined &&
+        videoTrack.trickModeTracks.length > 0,
+    });
+  }, POSITION_UPDATES_INTERVAL);
+  abortSignal.addEventListener("abort", () => {
+    clearInterval(intervalId);
   });
 
-  fromPlayerEvent(player, "playerStateChange").pipe(
-    distinctUntilChanged(),
-    takeUntil($destroy)
-  ).subscribe((arg) => {
+  addEventListener(player, "playerStateChange", (playerState) => {
     const stateUpdates = {
       cannotLoadMetadata: false,
-      hasEnded: arg === "ENDED",
-      hasCurrentContent: !["STOPPED", "LOADING"].includes(arg),
-      isContentLoaded: !["STOPPED", "LOADING", "RELOADING"].includes(arg),
-      isBuffering: arg === "BUFFERING",
-      isLoading: arg === "LOADING",
-      isReloading: arg === "RELOADING",
-      isSeeking: arg === "SEEKING",
-      isStopped: arg === "STOPPED",
+      hasEnded: playerState === "ENDED",
+      hasCurrentContent: !["STOPPED", "LOADING"].includes(playerState),
+      isContentLoaded: !["STOPPED", "LOADING", "RELOADING"].includes(playerState),
+      isBuffering: playerState === "BUFFERING",
+      isLoading: playerState === "LOADING",
+      isReloading: playerState === "RELOADING",
+      isSeeking: playerState === "SEEKING",
+      isStopped: playerState === "STOPPED",
     };
 
-    switch (arg) {
+    switch (playerState) {
       case "ENDED":
         stateUpdates.autoPlayBlocked = false;
         stateUpdates.isPaused = true;
@@ -133,53 +121,45 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
         break;
     }
 
-    if (arg !== "STOPPED") {
+    if (playerState !== "STOPPED") {
       // error is never cleaned up
       stateUpdates.error = null;
     }
 
     state.set(stateUpdates);
+  }, abortSignal);
+
+  const updateBufferedData = () => {
+    if (player.getPlayerState === "STOPPED") {
+      return;
+    }
+    let audioContent = player.__priv_getSegmentBufferContent("audio");
+    if (Array.isArray(audioContent)) {
+      audioContent = audioContent.slice();
+    }
+    let textContent = player.__priv_getSegmentBufferContent("text");
+    if (Array.isArray(textContent)) {
+      textContent = textContent.slice();
+    }
+    let videoContent = player.__priv_getSegmentBufferContent("video");
+    if (Array.isArray(videoContent)) {
+      videoContent = videoContent.slice();
+    }
+    state.set({ bufferedData: { audio: audioContent,
+                                video: videoContent,
+                                text: textContent } });
+  };
+
+  const bufferedDataItv = setInterval(
+    updateBufferedData(),
+    BUFFERED_DATA_UPDATES_INTERVAL
+  );
+  updateBufferedData();
+  abortSignal.addEventListener("abort", () => {
+    clearInterval(bufferedDataItv);
   });
 
-  // update bufferedData
-  fromPlayerEvent(player, "playerStateChange").pipe(
-    map((playerState) => playerState === "STOPPED"),
-    distinctUntilChanged(),
-    takeUntil($destroy),
-    switchMap((isStopped) => {
-      if (isStopped) {
-        state.set({ bufferedData: null });
-        return EMPTY;
-      }
-      return intervalObservable(BUFFERED_DATA_UPDATES_INTERVAL).pipe(
-        startWith(0),
-        tap(() => {
-          let audioContent = player.__priv_getSegmentBufferContent("audio");
-          if (Array.isArray(audioContent)) {
-            audioContent = audioContent.slice();
-          }
-          let textContent = player.__priv_getSegmentBufferContent("text");
-          if (Array.isArray(textContent)) {
-            textContent = textContent.slice();
-          }
-          let videoContent = player.__priv_getSegmentBufferContent("video");
-          if (Array.isArray(videoContent)) {
-            videoContent = videoContent.slice();
-          }
-          state.set({ bufferedData: { audio: audioContent,
-                                      video: videoContent,
-                                      text: textContent } });
-        }));
-
-    })
-  ).subscribe();
-
-  fromPlayerEvent(player, "warning").pipe(
-    takeUntil($destroy)
-  ).subscribe(warning => {
-    if (warning === null || warning === undefined) {
-      return ;
-    }
+  addEventListener(player, "warning", (warning) => {
     switch (warning.code) {
       case "MEDIA_ERR_NOT_LOADED_METADATA":
         state.set({ cannotLoadMetadata: true });
@@ -188,7 +168,7 @@ const linkPlayerEventsToState = (player, state, $destroy) => {
         state.set({ autoPlayBlocked: true });
         break;
     }
-  });
+  }, abortSignal);
 };
 
 export {
