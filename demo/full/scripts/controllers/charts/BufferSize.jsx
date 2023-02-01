@@ -74,28 +74,24 @@ function BufferSizeChart({ module }) {
   }, []);
 
   useEffect(() => {
-    const subscription = module.$get("data")
-      .subscribe(data => {
-        if (data.length > 0) {
-          const lastDate = data.length === 0 ?
-            null :
-            data[data.length - 1].date;
-          const minimumTime = lastDate - TIME_SAMPLES_MS;
-          let i;
-          for (i = data.length - 1; i >= 1; i--) {
-            if (data[i].date <= minimumTime) {
-              break;
-            }
+    return module.addStateListener("data", data => {
+      if (data.length > 0) {
+        const lastDate = data.length === 0 ?
+          null :
+          data[data.length - 1].date;
+        const minimumTime = lastDate - TIME_SAMPLES_MS;
+        let i;
+        for (i = data.length - 1; i >= 1; i--) {
+          if (data[i].date <= minimumTime) {
+            break;
           }
-          const consideredData = data.slice(i);
-          onNewData(consideredData);
-        } else {
-          onNewData([]);
         }
-      });
-    return function cleanUpSubscription() {
-      subscription.unsubscribe();
-    };
+        const consideredData = data.slice(i);
+        onNewData(consideredData);
+      } else {
+        onNewData([]);
+      }
+    });
   }, [module]);
 
   return (
