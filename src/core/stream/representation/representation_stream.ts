@@ -314,7 +314,7 @@ export default function RepresentationStream<TSegmentDataType>(
         0,
         initialWantedTime - UPTO_CURRENT_POSITION_CLEANUP);
       if (gcedPosition > 0) {
-        segmentBuffer.removeBuffer(0, gcedPosition, segmentsLoadingCanceller.signal)
+        segmentBuffer.removeBuffer(0, gcedPosition, globalCanceller.signal)
           .catch(onFatalBufferError);
       }
     }
