@@ -21,11 +21,8 @@ import {
 import config from "../../../../config";
 import log from "../../../../log";
 import { getLoggableSegmentId } from "../../../../manifest";
-import areArraysOfNumbersEqual from "../../../../utils/are_arrays_of_numbers_equal";
 import assertUnreachable from "../../../../utils/assert_unreachable";
-import { toUint8Array } from "../../../../utils/byte_parsing";
 import createCancellablePromise from "../../../../utils/create_cancellable_promise";
-import hashBuffer from "../../../../utils/hash_buffer";
 import noop from "../../../../utils/noop";
 import objectAssign from "../../../../utils/object_assign";
 import TaskCanceller, {
@@ -139,20 +136,26 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
   private _pendingTask : IAVSBPendingTask | null;
 
   /**
-   * Keep track of the of the latest init segment pushed in the linked
-   * SourceBuffer.
+   * Keep track of the unique identifier of the  of the latest init segment
+   * pushed to the linked SourceBuffer.
    *
-   * This allows to be sure the right initialization segment is pushed before
-   * any chunk is.
+   * Such identifiers are first declared through the `declareInitSegment`
+   * method and the corresponding initialization segment is then pushed through
+   * the `pushChunk` method.
+   *
+   * Keeping track of this allows to be sure the right initialization segment is
+   * pushed before any chunk is.
    *
    * `null` if no initialization segment have been pushed to the
    * `AudioVideoSegmentBuffer` yet.
    */
-  private _lastInitSegment : { /** The init segment itself. */
-                               data : Uint8Array;
-                               /** Hash of the initSegment for fast comparison */
-                               hash : number; } |
-                             null;
+  private _lastInitSegmentUniqueId : string | null;
+
+  /**
+   * Link unique identifiers for initialization segments (as communicated by
+   * `declareInitSegment`) to the corresponding initialization data.
+   */
+  private _initSegmentsMap : Map<string, BufferSource>;
 
   /**
    * @constructor
@@ -174,8 +177,9 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
     this._sourceBuffer = sourceBuffer;
     this._queue = [];
     this._pendingTask = null;
-    this._lastInitSegment = null;
+    this._lastInitSegmentUniqueId = null;
     this.codec = codec;
+    this._initSegmentsMap = new Map();
 
     const onError = this._onPendingTaskError.bind(this);
     const reCheck = this._flush.bind(this);
@@ -196,6 +200,20 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
       this._sourceBuffer.removeEventListener("error", onError);
       this._sourceBuffer.removeEventListener("updateend", reCheck);
     });
+  }
+
+  public declareInitSegment(
+    uniqueId : string,
+    initSegmentData : unknown
+  ) : void {
+    assertDataIsBufferSource(initSegmentData);
+    this._initSegmentsMap.set(uniqueId, initSegmentData);
+  }
+
+  public freeInitSegment(
+    uniqueId : string
+  ) : void {
+    this._initSegmentsMap.delete(uniqueId);
   }
 
   /**
@@ -229,12 +247,12 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
     infos : IPushChunkInfos<unknown>,
     cancellationSignal : CancellationSignal
   ) : Promise<void> {
-    assertPushedDataIsBufferSource(infos);
+    assertDataIsBufferSource(infos.data.chunk);
     log.debug("AVSB: receiving order to push data to the SourceBuffer",
               this.bufferType,
               getLoggableSegmentId(infos.inventoryInfos));
     return this._addToQueue({ type: SegmentBufferOperation.Push,
-                              value: infos },
+                              value: infos as IPushChunkInfos<BufferSource> },
                             cancellationSignal);
   }
 
@@ -350,7 +368,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
    * @param {Event} err
    */
   private _onPendingTaskError(err : unknown) : void {
-    this._lastInitSegment = null; // initialize init segment as a security
+    this._lastInitSegmentUniqueId = null; // initialize init segment as a security
     if (this._pendingTask !== null) {
       const error = err instanceof Error ?
                       err :
@@ -447,7 +465,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
           const error = e instanceof Error ?
             e :
             new Error("An unknown error occured when preparing a push operation");
-          this._lastInitSegment = null; // initialize init segment as a security
+          this._lastInitSegmentUniqueId = null; // initialize init segment as a security
           nextItem.reject(error);
           return;
         }
@@ -557,15 +575,17 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
       this._sourceBuffer.appendWindowEnd = appendWindow[1];
     }
 
-    if (data.initSegment !== null &&
-        (hasUpdatedSourceBufferType || !this._isLastInitSegment(data.initSegment)))
+    if (data.initSegmentUniqueId !== null &&
+        (hasUpdatedSourceBufferType ||
+         !this._isLastInitSegment(data.initSegmentUniqueId)))
     {
       // Push initialization segment before the media segment
-      const segmentData = data.initSegment;
+      const segmentData = this._initSegmentsMap.get(data.initSegmentUniqueId);
+      if (segmentData === undefined) {
+        throw new Error("Invalid initialization segment uniqueId");
+      }
       dataToPush.push(segmentData);
-      const initU8 = toUint8Array(segmentData);
-      this._lastInitSegment = { data: initU8,
-                                hash: hashBuffer(initU8) };
+      this._lastInitSegmentUniqueId = data.initSegmentUniqueId;
     }
 
     if (data.chunk !== null) {
@@ -576,28 +596,16 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
   }
 
  /**
-  * Return `true` if the given `segmentData` is the same segment than the last
+  * Return `true` if the given `uniqueId` is the identifier of the last
   * initialization segment pushed to the `AudioVideoSegmentBuffer`.
-  * @param {BufferSource} segmentData
+  * @param {string} uniqueId
   * @returns {boolean}
   */
-  private _isLastInitSegment(segmentData : BufferSource) : boolean {
-    if (this._lastInitSegment === null) {
+  private _isLastInitSegment(uniqueId : string) : boolean {
+    if (this._lastInitSegmentUniqueId === null) {
       return false;
     }
-    if (this._lastInitSegment.data === segmentData) {
-      return true;
-    }
-    const oldInit = this._lastInitSegment.data;
-    if (oldInit.byteLength === segmentData.byteLength) {
-      const newInitU8 = toUint8Array(segmentData);
-      if (hashBuffer(newInitU8) === this._lastInitSegment.hash &&
-          areArraysOfNumbersEqual(oldInit, newInitU8))
-      {
-        return true;
-      }
-    }
-    return false;
+    return this._lastInitSegmentUniqueId === uniqueId;
   }
 }
 
@@ -605,27 +613,20 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
  * Throw if the given input is not in the expected format.
  * Allows to enforce runtime type-checking as compile-time type-checking here is
  * difficult to enforce.
- * @param {Object} pushedData
+ * @param {Object} data
  */
-function assertPushedDataIsBufferSource(
-  pushedData : IPushChunkInfos<unknown>
-) : asserts pushedData is IPushChunkInfos<BufferSource> {
+function assertDataIsBufferSource(
+  data : unknown
+) : asserts data is BufferSource {
   if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.PRODUCTION as number) {
     return;
   }
-  const { chunk, initSegment } = pushedData.data;
   if (
-    typeof chunk !== "object" ||
-    typeof initSegment !== "object" ||
+    typeof data !== "object" ||
     (
-      chunk !== null &&
-      !(chunk instanceof ArrayBuffer) &&
-      !((chunk as ArrayBufferView).buffer instanceof ArrayBuffer)
-    ) ||
-    (
-      initSegment !== null &&
-      !(initSegment instanceof ArrayBuffer) &&
-      !((initSegment as ArrayBufferView).buffer instanceof ArrayBuffer)
+      data !== null &&
+      !(data instanceof ArrayBuffer) &&
+      !((data as ArrayBufferView).buffer instanceof ArrayBuffer)
     )
   ) {
     throw new Error("Invalid data given to the AudioVideoSegmentBuffer");
