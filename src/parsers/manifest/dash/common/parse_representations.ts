@@ -66,16 +66,17 @@ function combineInbandEventStreams(
  */
 function getHDRInformation(
   { adaptationProfiles,
+    essentialProperties,
+    supplementalProperties,
     manifestProfiles,
     codecs,
   }: { adaptationProfiles?: string | undefined;
+       essentialProperties? : IScheme[] | undefined;
+       supplementalProperties? : IScheme[] | undefined;
        manifestProfiles?: string | undefined;
        codecs?: string | undefined; }
 ): undefined | IHDRInformation {
   const profiles = (adaptationProfiles ?? "") + (manifestProfiles ?? "");
-  if (codecs === undefined) {
-    return undefined;
-  }
   if (
     profiles.indexOf(
       "http://dashif.org/guidelines/dash-if-uhd#hevc-hdr-pq10") !== -1
@@ -87,7 +88,20 @@ function getHDRInformation(
                colorSpace: "rec2020" };
     }
   }
-  if (/^vp(08|09|10)/.exec(codecs)) {
+  const transferCharacteristicScheme = arrayFind(
+    [...(essentialProperties ?? []), ...(supplementalProperties ?? [])],
+    (p) => p.schemeIdUri === "urn:mpeg:mpegB:cicp:TransferCharacteristics");
+  if (transferCharacteristicScheme !== undefined) {
+    switch (transferCharacteristicScheme.value) {
+      case "15":
+        return undefined; // SDR
+      case "16":
+        return { eotf: "pq" };
+      case "18":
+        return { eotf: "hlg" };
+    }
+  }
+  if (codecs !== undefined && /^vp(08|09|10)/.exec(codecs)) {
     return getWEBMHDRInformation(codecs);
   }
 }
@@ -273,6 +287,9 @@ export default function parseRepresentations(
 
     parsedRepresentation.hdrInfo =
       getHDRInformation({ adaptationProfiles: adaptation.attributes.profiles,
+                          supplementalProperties: adaptation.children
+                            .supplementalProperties,
+                          essentialProperties: adaptation.children.essentialProperties,
                           manifestProfiles: context.manifestProfiles,
                           codecs });
 
