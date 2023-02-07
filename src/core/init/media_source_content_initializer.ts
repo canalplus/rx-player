@@ -192,7 +192,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 
   private _onFatalError(err : unknown) {
-    if (this._initCanceller.isUsed) {
+    if (this._initCanceller.isUsed()) {
       return;
     }
     this._initCanceller.cancel();
@@ -227,9 +227,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         }
         stopListeningToDrmUpdates();
 
-        const mediaSourceCanceller = new TaskCanceller({
-          cancelOn: initCanceller.signal,
-        });
+        const mediaSourceCanceller = new TaskCanceller();
+        mediaSourceCanceller.linkToSignal(initCanceller.signal);
         openMediaSource(mediaElement, mediaSourceCanceller.signal)
           .then((mediaSource) => {
             const lastDrmStatus = drmInitRef.getValue();
@@ -254,7 +253,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             }
           })
           .catch((err) => {
-            if (mediaSourceCanceller.isUsed) {
+            if (mediaSourceCanceller.isUsed()) {
               return;
             }
             this._onFatalError(err);
@@ -311,7 +310,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                                                             initCanceller.signal);
 
     this.trigger("manifestReady", manifest);
-    if (initCanceller.isUsed) {
+    if (initCanceller.isUsed()) {
       return ;
     }
 
@@ -359,15 +358,16 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                         autoPlay : boolean; }
       ) : void {
         currentCanceller.cancel();
-        if (initCanceller.isUsed) {
+        if (initCanceller.isUsed()) {
           return;
         }
         triggerEvent("reloadingMediaSource", null);
-        if (initCanceller.isUsed) {
+        if (initCanceller.isUsed()) {
           return;
         }
 
-        const newCanceller = new TaskCanceller({ cancelOn: initCanceller.signal });
+        const newCanceller = new TaskCanceller();
+        newCanceller.linkToSignal(initCanceller.signal);
         openMediaSource(mediaElement, newCanceller.signal)
           .then(newMediaSource => {
             recursivelyLoadOnMediaSource(newMediaSource,
@@ -376,7 +376,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                                          newCanceller);
           })
           .catch((err) => {
-            if (newCanceller.isUsed) {
+            if (newCanceller.isUsed()) {
               return;
             }
             onFatalError(err);
@@ -431,7 +431,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                                 (err) => this.trigger("warning", err),
                                 cancelSignal);
 
-    if (cancelSignal.isCancelled) {
+    if (cancelSignal.isCancelled()) {
       return;
     }
 
@@ -483,7 +483,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           }, { emitCurrentValue: true, clearSignal: cancelSignal });
       })
       .catch((err) => {
-        if (cancelSignal.isCancelled) {
+        if (cancelSignal.isCancelled()) {
           return; // Current loading cancelled, no need to trigger the error
         }
         this._onFatalError(err);
@@ -519,7 +519,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             discontinuity: imminentDiscontinuity,
             position,
           });
-          if (cancelSignal.isCancelled) {
+          if (cancelSignal.isCancelled()) {
             return; // Previous call has stopped streams due to a side-effect
           }
 
@@ -560,7 +560,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
         adaptationChange: (value) => {
           self.trigger("adaptationChange", value);
-          if (cancelSignal.isCancelled) {
+          if (cancelSignal.isCancelled()) {
             return; // Previous call has stopped streams due to a side-effect
           }
           contentTimeBoundariesObserver.onAdaptationChange(value.type,
@@ -570,7 +570,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
         representationChange: (value) => {
           self.trigger("representationChange", value);
-          if (cancelSignal.isCancelled) {
+          if (cancelSignal.isCancelled()) {
             return; // Previous call has stopped streams due to a side-effect
           }
           contentTimeBoundariesObserver.onRepresentationChange(value.type, value.period);
@@ -584,7 +584,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
         periodStreamCleared: (value) => {
           contentTimeBoundariesObserver.onPeriodCleared(value.type, value.period);
-          if (cancelSignal.isCancelled) {
+          if (cancelSignal.isCancelled()) {
             return; // Previous call has stopped streams due to a side-effect
           }
           self.trigger("periodStreamCleared", value);
@@ -615,7 +615,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         encryptionDataEncountered: (value) => {
           for (const protectionData of value) {
             protectionRef.setValue(protectionData);
-            if (cancelSignal.isCancelled) {
+            if (cancelSignal.isCancelled()) {
               return; // Previous call has stopped streams due to a side-effect
             }
           }
@@ -674,7 +674,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     });
     contentTimeBoundariesObserver.addEventListener("endOfStream", () => {
       if (endOfStreamCanceller === null) {
-        endOfStreamCanceller = new TaskCanceller({ cancelOn: cancelSignal });
+        endOfStreamCanceller = new TaskCanceller();
+        endOfStreamCanceller.linkToSignal(cancelSignal);
         log.debug("Init: end-of-stream order received.");
         maintainEndOfStream(mediaSource, endOfStreamCanceller.signal);
       }

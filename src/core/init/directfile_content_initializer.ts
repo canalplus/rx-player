@@ -167,7 +167,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
             }
           }, { emitCurrentValue: true, clearSignal: cancelSignal }))
       .catch((err) => {
-        if (!cancelSignal.isCancelled) {
+        if (!cancelSignal.isCancelled()) {
           this._onFatalError(err);
         }
       });

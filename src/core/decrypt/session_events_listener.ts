@@ -58,13 +58,14 @@ export default function SessionEventsListener(
   const { getLicenseConfig = {} } = keySystemOptions;
 
   /** Allows to manually cancel everything the `SessionEventsListener` is doing. */
-  const manualCanceller = new TaskCanceller({ cancelOn: cancelSignal });
+  const manualCanceller = new TaskCanceller();
+  manualCanceller.linkToSignal(cancelSignal);
 
   if (!isNullOrUndefined(session.closed)) {
     session.closed
       .then(() => manualCanceller.cancel())
       .catch((err) => { // Should never happen
-        if (cancelSignal.isCancelled) {
+        if (cancelSignal.isCancelled()) {
           return;
         }
         manualCanceller.cancel();
@@ -79,8 +80,8 @@ export default function SessionEventsListener(
 
   onKeyStatusesChange(session, (keyStatusesEvent) => {
     handleKeyStatusesChangeEvent(keyStatusesEvent as Event).catch(error => {
-      if (cancelSignal.isCancelled ||
-          (manualCanceller.isUsed && error instanceof CancellationSignal))
+      if (cancelSignal.isCancelled() ||
+          (manualCanceller.isUsed() && error instanceof CancellationSignal))
       {
         return;
       }
@@ -104,7 +105,7 @@ export default function SessionEventsListener(
                             backoffOptions,
                             manualCanceller.signal)
       .then((licenseObject) => {
-        if (manualCanceller.isUsed) {
+        if (manualCanceller.isUsed()) {
           return Promise.resolve();
         }
         if (isNullOrUndefined(licenseObject)) {
@@ -114,7 +115,7 @@ export default function SessionEventsListener(
         }
       })
       .catch((err : unknown) => {
-        if (manualCanceller.isUsed) {
+        if (manualCanceller.isUsed()) {
           return;
         }
         manualCanceller.cancel();
@@ -148,18 +149,18 @@ export default function SessionEventsListener(
     ]);
 
     async function runOnKeyStatusesChangeCallback() {
-      if (manualCanceller.isUsed) {
+      if (manualCanceller.isUsed()) {
         return;
       }
       if (typeof keySystemOptions.onKeyStatusesChange === "function") {
         let ret;
         try {
           ret = await keySystemOptions.onKeyStatusesChange(keyStatusesEvent, session);
-          if (manualCanceller.isUsed) {
+          if (manualCanceller.isUsed()) {
             return;
           }
         } catch (error) {
-          if (cancelSignal.isCancelled) {
+          if (cancelSignal.isCancelled()) {
             return;
           }
           const err = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
@@ -186,14 +187,14 @@ export default function SessionEventsListener(
      *   - call onKeyUpdate callback when the MediaKeyStatus of any key is updated
      */
     function handleKeyStatusEvent() : void {
-      if (manualCanceller.isUsed || session.keyStatuses.size === 0) {
+      if (manualCanceller.isUsed() || session.keyStatuses.size === 0) {
         return ;
       }
       const { warning, blacklistedKeyIds, whitelistedKeyIds } =
         checkKeyStatuses(session, keySystemOptions, keySystem);
       if (warning !== undefined) {
         callbacks.onWarning(warning);
-        if (manualCanceller.isUsed) {
+        if (manualCanceller.isUsed()) {
           return;
         }
       }

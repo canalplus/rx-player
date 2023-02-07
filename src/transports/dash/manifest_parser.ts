@@ -139,7 +139,7 @@ export default function generateManifestParser(
         if (parserResponse.value.warnings.length > 0) {
           onWarnings(parserResponse.value.warnings);
         }
-        if (cancelSignal.isCancelled) {
+        if (cancelSignal.isCancelled()) {
           return Promise.reject(cancelSignal.cancellationError);
         }
         const manifest = new Manifest(parserResponse.value.parsed, options);

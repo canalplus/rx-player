@@ -82,7 +82,8 @@ export default function initializeContentDecryption(
     return ref;
   }
 
-  const decryptorCanceller = new TaskCanceller({ cancelOn: cancelSignal });
+  const decryptorCanceller = new TaskCanceller();
+  decryptorCanceller.linkToSignal(cancelSignal);
   const drmStatusRef = createSharedReference<IDrmInitializationStatus>({
     initializationState: { type: "uninitialized", value: null },
     drmSystemId: undefined,
