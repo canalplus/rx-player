@@ -375,9 +375,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
       }
       const shouldRestartQueue = this._queue.length === 0 &&
                                  this._pendingTask === null;
-      const queueItem = objectAssign({ resolve, reject }, operation);
-      this._queue.push(queueItem);
-      cancellationSignal.register((error : CancellationError) => {
+      const onCancellation = (error : CancellationError) => {
         // Remove the corresponding element from the AudioVideoSegmentBuffer's
         // queue.
         // If the operation was a pending task, it should still continue to not
@@ -389,7 +387,20 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
         queueItem.resolve = noop;
         queueItem.reject = noop;
         reject(error);
-      });
+      };
+
+      const queueItem = objectAssign({
+        resolve() {
+          cancellationSignal.deregister(onCancellation);
+          resolve();
+        },
+        reject(err : unknown) {
+          cancellationSignal.deregister(onCancellation);
+          reject(err);
+        },
+      }, operation);
+      this._queue.push(queueItem);
+      cancellationSignal.register(onCancellation);
 
       if (shouldRestartQueue) {
         this._flush();
