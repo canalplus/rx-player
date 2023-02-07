@@ -90,7 +90,7 @@ export default function performInitialSeekAndPlay(
     onLoadedMetadata();
   }
 
-  cancelSignal.register((err : CancellationError) => {
+  const deregisterCancellation = cancelSignal.register((err : CancellationError) => {
     mediaElement.removeEventListener("loadedmetadata", onLoadedMetadata);
     rejectAutoPlay(err);
   });
@@ -112,7 +112,7 @@ export default function performInitialSeekAndPlay(
                                    "falsely announced having loaded the content.");
       onWarning(error);
     }
-    if (cancelSignal.isCancelled) {
+    if (cancelSignal.isCancelled()) {
       return ;
     }
 
@@ -136,6 +136,7 @@ export default function performInitialSeekAndPlay(
       }
       initialPlayPerformed.setValue(true);
       initialPlayPerformed.finish();
+      deregisterCancellation();
       return resolveAutoPlay({ type: "skipped" as const });
     }
 
@@ -143,19 +144,22 @@ export default function performInitialSeekAndPlay(
     try {
       playResult = mediaElement.play() ?? Promise.resolve();
     } catch (playError) {
+      deregisterCancellation();
       return rejectAutoPlay(playError);
     }
     playResult
       .then(() => {
-        if (cancelSignal.isCancelled) {
+        if (cancelSignal.isCancelled()) {
           return;
         }
         initialPlayPerformed.setValue(true);
         initialPlayPerformed.finish();
+        deregisterCancellation();
         return resolveAutoPlay({ type: "autoplay" as const });
       })
       .catch((playError : unknown) => {
-        if (cancelSignal.isCancelled) {
+        deregisterCancellation();
+        if (cancelSignal.isCancelled()) {
           return;
         }
         if (playError instanceof Error && playError.name === "NotAllowedError") {
@@ -167,7 +171,7 @@ export default function performInitialSeekAndPlay(
                                        "Cannot trigger auto-play automatically: " +
                                        "your browser does not allow it.");
           onWarning(error);
-          if (cancelSignal.isCancelled) {
+          if (cancelSignal.isCancelled()) {
             return;
           }
           return resolveAutoPlay({ type: "autoplay-blocked" as const });

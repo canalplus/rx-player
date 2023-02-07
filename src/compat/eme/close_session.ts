@@ -86,7 +86,7 @@ export default function closeSession(
     try {
       await session.update(new Uint8Array(1));
     } catch (err) {
-      if (timeoutCanceller.isUsed) { // Reminder: cancelled == session closed
+      if (timeoutCanceller.isUsed()) { // Reminder: cancelled == session closed
         return;
       }
 
@@ -102,7 +102,7 @@ export default function closeSession(
       await cancellableSleep(1000, timeoutCanceller.signal);
     }
 
-    if (timeoutCanceller.isUsed) { // Reminder: cancelled == session closed
+    if (timeoutCanceller.isUsed()) { // Reminder: cancelled == session closed
       return;
     }
 

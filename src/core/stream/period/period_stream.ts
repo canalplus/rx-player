@@ -109,7 +109,7 @@ export default function PeriodStream(
   );
 
   callbacks.periodStreamReady({ type: bufferType, period, adaptationRef });
-  if (parentCancelSignal.isCancelled) {
+  if (parentCancelSignal.isCancelled()) {
     return;
   }
 
@@ -122,7 +122,8 @@ export default function PeriodStream(
       if (adaptation === undefined) {
         return;
       }
-      const streamCanceller = new TaskCanceller({ cancelOn: parentCancelSignal });
+      const streamCanceller = new TaskCanceller();
+      streamCanceller.linkToSignal(parentCancelSignal);
       currentStreamCanceller?.cancel(); // Cancel oreviously created stream if one
       currentStreamCanceller = streamCanceller;
 
@@ -142,20 +143,20 @@ export default function PeriodStream(
               await segmentBufferStatus.value.removeBuffer(period.start,
                                                            periodEnd,
                                                            streamCanceller.signal);
-              if (streamCanceller.isUsed) {
+              if (streamCanceller.isUsed()) {
                 return; // The stream has been cancelled
               }
             }
           }
         } else if (segmentBufferStatus.type === "uninitialized") {
           segmentBuffersStore.disableSegmentBuffer(bufferType);
-          if (streamCanceller.isUsed) {
+          if (streamCanceller.isUsed()) {
             return; // The stream has been cancelled
           }
         }
 
         callbacks.adaptationChange({ type: bufferType, adaptation: null, period });
-        if (streamCanceller.isUsed) {
+        if (streamCanceller.isUsed()) {
           return; // Previous call has provoken Stream cancellation by side-effect
         }
 
@@ -193,7 +194,7 @@ export default function PeriodStream(
                `P: ${period.start}`);
 
       callbacks.adaptationChange({ type: bufferType, adaptation, period });
-      if (streamCanceller.isUsed) {
+      if (streamCanceller.isUsed()) {
         return; // Previous call has provoken cancellation by side-effect
       }
 
@@ -214,19 +215,19 @@ export default function PeriodStream(
       }
 
       await segmentBuffersStore.waitForUsableBuffers(streamCanceller.signal);
-      if (streamCanceller.isUsed) {
+      if (streamCanceller.isUsed()) {
         return; // The Stream has since been cancelled
       }
       if (strategy.type === "flush-buffer" || strategy.type === "clean-buffer") {
         for (const { start, end } of strategy.value) {
           await segmentBuffer.removeBuffer(start, end, streamCanceller.signal);
-          if (streamCanceller.isUsed) {
+          if (streamCanceller.isUsed()) {
             return; // The Stream has since been cancelled
           }
         }
         if (strategy.type === "flush-buffer") {
           callbacks.needsBufferFlush();
-          if (streamCanceller.isUsed) {
+          if (streamCanceller.isUsed()) {
             return ; // Previous callback cancelled the Stream by side-effect
           }
         }
@@ -282,7 +283,7 @@ export default function PeriodStream(
           defaultReason: "Unknown `AdaptationStream` error",
         });
         callbacks.warning(formattedError);
-        if (cancelSignal.isCancelled) {
+        if (cancelSignal.isCancelled()) {
           return ; // Previous callback cancelled the Stream by side-effect
         }
 

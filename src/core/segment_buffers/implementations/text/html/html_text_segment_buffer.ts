@@ -353,7 +353,8 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
                                element : HTMLElement; } => cue.resolution !== null);
 
     if (proportionalCues.length > 0) {
-      this._sizeUpdateCanceller = new TaskCanceller({ cancelOn: this._canceller.signal });
+      this._sizeUpdateCanceller = new TaskCanceller();
+      this._sizeUpdateCanceller.linkToSignal(this._canceller.signal);
       const { TEXT_TRACK_SIZE_CHECKS_INTERVAL } = config.getCurrent();
       // update propertionally-sized elements periodically
       const heightWidthRef = onHeightWidthChange(this._textTrackElement,
@@ -382,7 +383,8 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
 
     const startAutoRefresh = () => {
       stopAutoRefresh();
-      autoRefreshCanceller = new TaskCanceller({ cancelOn: cancellationSignal });
+      autoRefreshCanceller = new TaskCanceller();
+      autoRefreshCanceller.linkToSignal(cancellationSignal);
       const intervalId = setInterval(() => this.refreshSubtitles(),
                                      MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL);
       autoRefreshCanceller.signal.register(() => {

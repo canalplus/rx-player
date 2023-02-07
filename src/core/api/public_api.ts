@@ -764,7 +764,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           defaultTextTrack,
           currentContentCanceller.signal
         );
-      if (currentContentCanceller.isUsed) {
+      if (currentContentCanceller.isUsed()) {
         return;
       }
       initializer = new features.directfile.initDirectFile({ autoPlay,
@@ -943,7 +943,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       updateReloadingMetadata(newState);
       this._priv_setPlayerState(newState);
 
-      if (currentContentCanceller.isUsed) {
+      if (currentContentCanceller.isUsed()) {
         return;
       }
 
@@ -953,9 +953,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           seekEventsCanceller = null;
         }
       } else if (isLoadedState(this.state)) {
-        seekEventsCanceller = new TaskCanceller({
-          cancelOn: currentContentCanceller.signal,
-        });
+        seekEventsCanceller = new TaskCanceller();
+        seekEventsCanceller.linkToSignal(currentContentCanceller.signal);
         emitSeekEvents(videoElement,
                        playbackObserver,
                        () => this.trigger("seeking", null),
@@ -2468,20 +2467,20 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_triggerAvailableBitratesChangeEvent("availableAudioBitratesChange",
                                                    this.getAvailableAudioBitrates(),
                                                    cancelSignal);
-    if (contentInfos.currentContentCanceller.isUsed) {
+    if (contentInfos.currentContentCanceller.isUsed()) {
       return;
     }
     this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange",
                                                    this.getAvailableVideoBitrates(),
                                                    cancelSignal);
-    if (contentInfos.currentContentCanceller.isUsed) {
+    if (contentInfos.currentContentCanceller.isUsed()) {
       return;
     }
     const audioBitrate = this._priv_getCurrentRepresentations()?.audio?.bitrate ?? -1;
     this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange",
                                                 audioBitrate,
                                                 cancelSignal);
-    if (contentInfos.currentContentCanceller.isUsed) {
+    if (contentInfos.currentContentCanceller.isUsed()) {
       return;
     }
 
@@ -2833,7 +2832,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     currentContentCancelSignal  : CancellationSignal
   ) : void {
     const prevVal = this._priv_contentEventsMemory[event];
-    if (!currentContentCancelSignal.isCancelled &&
+    if (!currentContentCancelSignal.isCancelled() &&
         (prevVal === undefined || !areArraysOfNumbersEqual(newVal, prevVal)))
     {
       this._priv_contentEventsMemory[event] = newVal;
@@ -2853,7 +2852,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     newVal : number,
     currentContentCancelSignal  : CancellationSignal
   ) : void {
-    if (!currentContentCancelSignal.isCancelled &&
+    if (!currentContentCancelSignal.isCancelled() &&
         newVal !== this._priv_contentEventsMemory[event])
     {
       this._priv_contentEventsMemory[event] = newVal;
@@ -2886,7 +2885,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     arg : IEventPayload<IPublicAPIEvent, TEventName>,
     currentContentCancelSignal  : CancellationSignal
   ) {
-    if (!currentContentCancelSignal.isCancelled) {
+    if (!currentContentCancelSignal.isCancelled()) {
       this.trigger(evt, arg);
     }
   }

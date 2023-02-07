@@ -97,16 +97,16 @@ export default function RepresentationStream<TSegmentDataType>(
   const bufferType = adaptation.type;
 
   /** `TaskCanceller` stopping ALL operations performed by the `RepresentationStream` */
-  const globalCanceller = new TaskCanceller({ cancelOn: parentCancelSignal });
+  const globalCanceller = new TaskCanceller();
+  globalCanceller.linkToSignal(parentCancelSignal);
 
   /**
    * `TaskCanceller` allowing to only stop segment loading and checking operations.
    * This allows to stop only tasks linked to network resource usage, which is
    * often a limited resource, while still letting buffer operations to finish.
    */
-  const segmentsLoadingCanceller = new TaskCanceller({
-    cancelOn: globalCanceller.signal,
-  });
+  const segmentsLoadingCanceller = new TaskCanceller();
+  segmentsLoadingCanceller.linkToSignal(globalCanceller.signal);
 
   /** Saved initialization segment state for this representation. */
   const initSegmentState : IInitSegmentState<TSegmentDataType> = {
@@ -149,7 +149,7 @@ export default function RepresentationStream<TSegmentDataType>(
       callbacks.encryptionDataEncountered(
         encryptionData.map(d => objectAssign({ content }, d))
       );
-      if (globalCanceller.isUsed) {
+      if (globalCanceller.isUsed()) {
         return ; // previous callback has stopped everything by side-effect
       }
     }
@@ -161,7 +161,7 @@ export default function RepresentationStream<TSegmentDataType>(
                                                 segmentFetcher,
                                                 hasInitSegment);
   downloadingQueue.addEventListener("error", (err) => {
-    if (segmentsLoadingCanceller.signal.isCancelled) {
+    if (segmentsLoadingCanceller.signal.isCancelled()) {
       return; // ignore post requests-cancellation loading-related errors,
     }
     globalCanceller.cancel(); // Stop every operations
@@ -172,7 +172,7 @@ export default function RepresentationStream<TSegmentDataType>(
   downloadingQueue.addEventListener("emptyQueue", checkStatus);
   downloadingQueue.addEventListener("requestRetry", (payload) => {
     callbacks.warning(payload.error);
-    if (segmentsLoadingCanceller.signal.isCancelled) {
+    if (segmentsLoadingCanceller.signal.isCancelled()) {
       return; // If the previous callback led to loading operations being stopped, skip
     }
     const retriedSegment = payload.segment;
@@ -218,7 +218,7 @@ export default function RepresentationStream<TSegmentDataType>(
    * issues at the current time, calling the right callbacks if necessary.
    */
   function checkStatus() : void {
-    if (segmentsLoadingCanceller.isUsed) {
+    if (segmentsLoadingCanceller.isUsed()) {
       return ; // Stop all buffer status checking if load operations are stopped
     }
     const observation = playbackObserver.getReference().getValue();
@@ -305,7 +305,7 @@ export default function RepresentationStream<TSegmentDataType>(
                                    isEmptyStream: false,
                                    hasFinishedLoading: status.hasFinishedLoading,
                                    neededSegments: status.neededSegments });
-    if (segmentsLoadingCanceller.signal.isCancelled) {
+    if (segmentsLoadingCanceller.signal.isCancelled()) {
       return ; // previous callback has stopped loading operations by side-effect
     }
     const { UPTO_CURRENT_POSITION_CLEANUP } = config.getCurrent();
@@ -332,7 +332,7 @@ export default function RepresentationStream<TSegmentDataType>(
     evt : IParsedInitSegmentPayload<TSegmentDataType> |
           IParsedSegmentPayload<TSegmentDataType>
   ) : void {
-    if (globalCanceller.isUsed) {
+    if (globalCanceller.isUsed()) {
       // We should not do anything with segments if the `RepresentationStream`
       // is not running anymore.
       return ;
@@ -382,7 +382,7 @@ export default function RepresentationStream<TSegmentDataType>(
           callbacks.encryptionDataEncountered(
             allEncryptionData.map(p => objectAssign({ content }, p))
           );
-          if (globalCanceller.isUsed) {
+          if (globalCanceller.isUsed()) {
             return ; // previous callback has stopped everything by side-effect
           }
         }
@@ -390,13 +390,13 @@ export default function RepresentationStream<TSegmentDataType>(
 
       if (needsManifestRefresh === true) {
         callbacks.needsManifestRefresh();
-        if (globalCanceller.isUsed) {
+        if (globalCanceller.isUsed()) {
           return ; // previous callback has stopped everything by side-effect
         }
       }
       if (inbandEvents !== undefined && inbandEvents.length > 0) {
         callbacks.inbandEvent(inbandEvents);
-        if (globalCanceller.isUsed) {
+        if (globalCanceller.isUsed()) {
           return ; // previous callback has stopped everything by side-effect
         }
       }
@@ -425,7 +425,7 @@ export default function RepresentationStream<TSegmentDataType>(
    * @param {*} err
    */
   function onFatalBufferError(err : unknown) : void {
-    if (globalCanceller.isUsed && err instanceof CancellationError) {
+    if (globalCanceller.isUsed() && err instanceof CancellationError) {
       // The error is linked to cancellation AND we explicitely cancelled buffer
       // operations.
       // We can thus ignore it, it is very unlikely to lead to true buffer issues.

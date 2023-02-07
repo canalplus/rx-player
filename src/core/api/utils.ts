@@ -48,14 +48,14 @@ export function emitSeekEvents(
   onSeeked: () => void,
   cancelSignal : CancellationSignal
 ) : void {
-  if (cancelSignal.isCancelled || mediaElement === null) {
+  if (cancelSignal.isCancelled() || mediaElement === null) {
     return ;
   }
 
   let wasSeeking = playbackObserver.getReference().getValue().seeking;
   if (wasSeeking) {
     onSeeking();
-    if (cancelSignal.isCancelled) {
+    if (cancelSignal.isCancelled()) {
       return;
     }
   }
@@ -94,7 +94,7 @@ export function constructPlayerStateReference(
   initializer.addEventListener("loaded", () => {
     if (playerStateRef.getValue() === PLAYER_STATES.LOADING) {
       playerStateRef.setValue(PLAYER_STATES.LOADED);
-      if (!cancelSignal.isCancelled) {
+      if (!cancelSignal.isCancelled()) {
         const newState = getLoadedContentState(mediaElement, null);
         if (newState !== PLAYER_STATES.PAUSED) {
           playerStateRef.setValue(newState);
