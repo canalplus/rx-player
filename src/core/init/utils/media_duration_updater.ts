@@ -67,7 +67,8 @@ export default class MediaDurationUpdater {
                                                                this._canceller.signal);
 
     /** TaskCanceller triggered each time the MediaSource open status changes. */
-    let msUpdateCanceller = new TaskCanceller({ cancelOn: this._canceller.signal });
+    let msUpdateCanceller = new TaskCanceller();
+    msUpdateCanceller.linkToSignal(this._canceller.signal);
 
     isMediaSourceOpened.onUpdate(onMediaSourceOpenedStatusChanged,
                                  { emitCurrentValue: true,
@@ -79,18 +80,17 @@ export default class MediaDurationUpdater {
       if (!isMediaSourceOpened.getValue()) {
         return;
       }
-      msUpdateCanceller = new TaskCanceller({ cancelOn: canceller.signal });
+      msUpdateCanceller = new TaskCanceller();
+      msUpdateCanceller.linkToSignal(canceller.signal);
 
-      /** TaskCanceller triggered each time the content's duration may have change */
-      let durationChangeCanceller = new TaskCanceller({
-        cancelOn: msUpdateCanceller.signal,
-      });
+      /** TaskCanceller triggered each time the content's duration may have changed */
+      let durationChangeCanceller = new TaskCanceller();
+      durationChangeCanceller.linkToSignal(msUpdateCanceller.signal);
 
       const reSetDuration = () => {
         durationChangeCanceller.cancel();
-        durationChangeCanceller = new TaskCanceller({
-          cancelOn: msUpdateCanceller.signal,
-        });
+        durationChangeCanceller = new TaskCanceller();
+        durationChangeCanceller.linkToSignal(msUpdateCanceller.signal);
         onDurationMayHaveChanged(durationChangeCanceller.signal);
       };
 
@@ -112,10 +112,12 @@ export default class MediaDurationUpdater {
       );
 
       /** TaskCanceller triggered each time SourceBuffers' updating status changes */
-      let sourceBuffersUpdatingCanceller = new TaskCanceller({ cancelOn: cancelSignal });
+      let sourceBuffersUpdatingCanceller = new TaskCanceller();
+      sourceBuffersUpdatingCanceller.linkToSignal(cancelSignal);
       return areSourceBuffersUpdating.onUpdate((areUpdating) => {
         sourceBuffersUpdatingCanceller.cancel();
-        sourceBuffersUpdatingCanceller = new TaskCanceller({ cancelOn: cancelSignal });
+        sourceBuffersUpdatingCanceller = new TaskCanceller();
+        sourceBuffersUpdatingCanceller.linkToSignal(cancelSignal);
         if (areUpdating) {
           return;
         }

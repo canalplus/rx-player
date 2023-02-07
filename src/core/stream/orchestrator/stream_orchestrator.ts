@@ -167,7 +167,8 @@ export default function StreamOrchestrator(
     let enableOutOfBoundsCheck = false;
 
     /** Cancels currently created `PeriodStream`s. */
-    let currentCanceller = new TaskCanceller({ cancelOn: orchestratorCancelSignal });
+    let currentCanceller = new TaskCanceller();
+    currentCanceller.linkToSignal(orchestratorCancelSignal);
 
     // Restart the current Stream when the wanted time is in another period
     // than the ones already considered
@@ -186,7 +187,8 @@ export default function StreamOrchestrator(
         callbacks.periodStreamCleared({ type: bufferType, period });
       }
       currentCanceller.cancel();
-      currentCanceller = new TaskCanceller({ cancelOn: orchestratorCancelSignal });
+      currentCanceller = new TaskCanceller();
+      currentCanceller.linkToSignal(orchestratorCancelSignal);
 
       const nextPeriod = manifest.getPeriodForTime(time) ??
                          manifest.getNextPeriod(time);
@@ -324,7 +326,8 @@ export default function StreamOrchestrator(
       }
 
       currentCanceller.cancel();
-      currentCanceller = new TaskCanceller({ cancelOn: orchestratorCancelSignal });
+      currentCanceller = new TaskCanceller();
+      currentCanceller.linkToSignal(orchestratorCancelSignal);
 
       /** Remove from the `SegmentBuffer` all the concerned time ranges. */
       for (const { start, end } of [...undecipherableRanges, ...rangesToRemove]) {
@@ -425,7 +428,8 @@ export default function StreamOrchestrator(
     } | null = null;
 
     /** Emits when the `PeriodStream` linked to `basePeriod` should be destroyed. */
-    const currentStreamCanceller = new TaskCanceller({ cancelOn: cancelSignal });
+    const currentStreamCanceller = new TaskCanceller();
+    currentStreamCanceller.linkToSignal(cancelSignal);
 
     // Stop current PeriodStream when the current position goes over the end of
     // that Period.
@@ -498,7 +502,9 @@ export default function StreamOrchestrator(
                                                         period: nextStreamInfo.period });
         nextStreamInfo.canceller.cancel();
       }
-      nextStreamInfo = { canceller: new TaskCanceller({ cancelOn: cancelSignal }),
+      const nextStreamCanceller = new TaskCanceller();
+      nextStreamCanceller.linkToSignal(cancelSignal);
+      nextStreamInfo = { canceller: nextStreamCanceller,
                          period: nextPeriod };
       manageConsecutivePeriodStreams(bufferType,
                                      nextPeriod,

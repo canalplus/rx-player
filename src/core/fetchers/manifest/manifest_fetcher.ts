@@ -470,7 +470,8 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
      * be effectively considered.
      * `nextRefreshCanceller` will allow to cancel every other when one is triggered.
      */
-    const nextRefreshCanceller = new TaskCanceller({ cancelOn: this._canceller.signal });
+    const nextRefreshCanceller = new TaskCanceller();
+    nextRefreshCanceller.linkToSignal(this._canceller.signal);
 
     /* Function to manually schedule a Manifest refresh */
     this.scheduleManualRefresh = (settings : IManifestRefreshSettings) => {

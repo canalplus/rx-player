@@ -358,8 +358,10 @@ export async function scheduleRequestWithCdns<T>(
       return requestCdn(nextWantedCdn);
     }
 
-    const canceller = new TaskCanceller({ cancelOn: cancellationSignal });
     return new Promise<T>((res, rej) => {
+      const canceller = new TaskCanceller();
+      const unlinkCanceller = canceller.linkToSignal(cancellationSignal);
+
       /* eslint-disable-next-line @typescript-eslint/no-misused-promises */
       cdnPrioritizer?.addEventListener("priorityChange", () => {
         const updatedPrioritaryCdn = getCdnToRequest();
@@ -367,17 +369,26 @@ export async function scheduleRequestWithCdns<T>(
           throw cancellationSignal.cancellationError;
         }
         if (updatedPrioritaryCdn === undefined) {
-          return rej(prevRequestError);
+          return reject(prevRequestError);
         }
         if (updatedPrioritaryCdn !== nextWantedCdn) {
           canceller.cancel();
           waitPotentialBackoffAndRequest(updatedPrioritaryCdn, prevRequestError)
-            .then(res, rej);
+            .then(resolve, reject);
         }
       }, canceller.signal);
 
       cancellableSleep(blockedFor, canceller.signal)
-        .then(() => requestCdn(nextWantedCdn).then(res, rej), noop);
+        .then(() => requestCdn(nextWantedCdn).then(resolve, reject), noop);
+
+      function resolve(val : T) {
+        unlinkCanceller();
+        res(val);
+      }
+      function reject(err : unknown) {
+        unlinkCanceller();
+        rej(err);
+      }
     });
   }
 

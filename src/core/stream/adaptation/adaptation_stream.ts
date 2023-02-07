@@ -84,7 +84,8 @@ export default function AdaptationStream<T>(
   const { manifest, period, adaptation } = content;
 
   /** Allows to cancel everything the `AdaptationStream` is doing. */
-  const adapStreamCanceller = new TaskCanceller({ cancelOn: parentCancelSignal });
+  const adapStreamCanceller = new TaskCanceller();
+  adapStreamCanceller.linkToSignal(parentCancelSignal);
 
   /**
    * The buffer goal ratio base itself on the value given by `wantedBufferAhead`
@@ -162,9 +163,8 @@ export default function AdaptationStream<T>(
      * terminating and as such the next one might be immediately created
      * recursively.
      */
-    const repStreamTerminatingCanceller = new TaskCanceller({
-      cancelOn: adapStreamCanceller.signal,
-    });
+    const repStreamTerminatingCanceller = new TaskCanceller();
+    repStreamTerminatingCanceller.linkToSignal(adapStreamCanceller.signal);
     const { representation, manual } = estimateRef.getValue();
     if (representation === null) {
       return;
@@ -306,9 +306,8 @@ export default function AdaptationStream<T>(
      * `TaskCanceller` triggered when the `RepresentationStream` calls its
      * `terminating` callback.
      */
-    const terminatingRepStreamCanceller = new TaskCanceller({
-      cancelOn: adapStreamCanceller.signal,
-    });
+    const terminatingRepStreamCanceller = new TaskCanceller();
+    terminatingRepStreamCanceller.linkToSignal(adapStreamCanceller.signal);
     const bufferGoal = createMappedReference(wantedBufferAhead, prev => {
       return prev * getBufferGoalRatio(representation);
     }, terminatingRepStreamCanceller.signal);

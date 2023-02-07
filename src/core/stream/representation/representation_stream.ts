@@ -97,16 +97,16 @@ export default function RepresentationStream<TSegmentDataType>(
   const bufferType = adaptation.type;
 
   /** `TaskCanceller` stopping ALL operations performed by the `RepresentationStream` */
-  const globalCanceller = new TaskCanceller({ cancelOn: parentCancelSignal });
+  const globalCanceller = new TaskCanceller();
+  globalCanceller.linkToSignal(parentCancelSignal);
 
   /**
    * `TaskCanceller` allowing to only stop segment loading and checking operations.
    * This allows to stop only tasks linked to network resource usage, which is
    * often a limited resource, while still letting buffer operations to finish.
    */
-  const segmentsLoadingCanceller = new TaskCanceller({
-    cancelOn: globalCanceller.signal,
-  });
+  const segmentsLoadingCanceller = new TaskCanceller();
+  segmentsLoadingCanceller.linkToSignal(globalCanceller.signal);
 
   /** Saved initialization segment state for this representation. */
   const initSegmentState : IInitSegmentState<TSegmentDataType> = {

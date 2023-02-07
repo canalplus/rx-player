@@ -122,7 +122,8 @@ export default function PeriodStream(
       if (adaptation === undefined) {
         return;
       }
-      const streamCanceller = new TaskCanceller({ cancelOn: parentCancelSignal });
+      const streamCanceller = new TaskCanceller();
+      streamCanceller.linkToSignal(parentCancelSignal);
       currentStreamCanceller?.cancel(); // Cancel oreviously created stream if one
       currentStreamCanceller = streamCanceller;
 
