@@ -65,14 +65,14 @@ export default function lowLatencySegmentLoader(
     partialChunk = res[1];
     for (let i = 0; i < completeChunks.length; i++) {
       callbacks.onNewChunk(completeChunks[i]);
-      if (cancelSignal.isCancelled) {
+      if (cancelSignal.isCancelled()) {
         return;
       }
     }
     callbacks.onProgress({ duration: info.duration,
                            size: info.size,
                            totalSize: info.totalSize });
-    if (cancelSignal.isCancelled) {
+    if (cancelSignal.isCancelled()) {
       return;
     }
   }

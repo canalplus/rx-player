@@ -161,7 +161,7 @@ export default function streamEventsEmitter(
         } else {
           onEventSkip(event.value);
         }
-        if (stopSignal.isCancelled) {
+        if (stopSignal.isCancelled()) {
           return;
         }
       }
@@ -172,7 +172,7 @@ export default function streamEventsEmitter(
         if (typeof event.onExit === "function") {
           event.onExit();
         }
-        if (stopSignal.isCancelled) {
+        if (stopSignal.isCancelled()) {
           return;
         }
       }

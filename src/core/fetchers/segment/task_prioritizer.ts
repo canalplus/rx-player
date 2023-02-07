@@ -76,7 +76,7 @@ export default class TaskPrioritizer<T> {
         newTask.interrupter = interrupter;
         interrupter.signal.register(() => {
           newTask.interrupter = null;
-          if (!cancelSignal.isCancelled) {
+          if (!cancelSignal.isCancelled()) {
             callbacks.beforeInterrupted();
           }
         });
@@ -89,8 +89,8 @@ export default class TaskPrioritizer<T> {
         newTask.taskFn(interrupter.signal)
           .then(onResolve)
           .catch((err) => {
-            if (!cancelSignal.isCancelled &&
-                interrupter.isUsed &&
+            if (!cancelSignal.isCancelled() &&
+                interrupter.isUsed() &&
                 err instanceof CancellationError)
             {
               return;

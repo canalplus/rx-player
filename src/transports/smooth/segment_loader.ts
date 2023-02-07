@@ -185,7 +185,7 @@ const generateSegmentLoader = ({
         size? : number | undefined;
         duration? : number | undefined;
       }) => {
-        if (hasFinished || cancelSignal.isCancelled) {
+        if (hasFinished || cancelSignal.isCancelled()) {
           return;
         }
         hasFinished = true;
@@ -213,7 +213,7 @@ const generateSegmentLoader = ({
        * @param {*} err - The corresponding error encountered
        */
       const reject = (err : unknown) => {
-        if (hasFinished || cancelSignal.isCancelled) {
+        if (hasFinished || cancelSignal.isCancelled()) {
           return;
         }
         hasFinished = true;
@@ -239,7 +239,7 @@ const generateSegmentLoader = ({
                   size : number;
                   totalSize? : number | undefined; }
       ) => {
-        if (hasFinished || cancelSignal.isCancelled) {
+        if (hasFinished || cancelSignal.isCancelled()) {
           return;
         }
         callbacks.onProgress({ duration: _args.duration,
@@ -248,7 +248,7 @@ const generateSegmentLoader = ({
       };
 
       const fallback = () => {
-        if (hasFinished || cancelSignal.isCancelled) {
+        if (hasFinished || cancelSignal.isCancelled()) {
           return;
         }
         hasFinished = true;

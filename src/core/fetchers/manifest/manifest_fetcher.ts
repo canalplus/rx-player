@@ -155,7 +155,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     manifestProm
       .then((val : IManifestFetcherParsedResult) => {
         this.trigger("manifestReady", val.manifest);
-        if (!this._canceller.isUsed) {
+        if (!this._canceller.isUsed()) {
           this._recursivelyRefreshManifest(val.manifest, val);
         }
       })
@@ -362,7 +362,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
      */
     function onWarnings(warnings : Error[]) : void {
       for (const warning of warnings) {
-        if (cancelSignal.isCancelled) {
+        if (cancelSignal.isCancelled()) {
           return;
         }
         const formattedError = formatError(warning, {
@@ -669,7 +669,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
   }
 
   private _onFatalError(err : unknown) : void {
-    if (this._canceller.isUsed) {
+    if (this._canceller.isUsed()) {
       return;
     }
     this.trigger("error", err);

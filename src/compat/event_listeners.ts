@@ -125,7 +125,7 @@ function createCompatibleEventListener(
     listener: (event? : unknown) => void,
     cancelSignal: CancellationSignal
   ) => {
-    if (cancelSignal.isCancelled) {
+    if (cancelSignal.isCancelled()) {
       return;
     }
 

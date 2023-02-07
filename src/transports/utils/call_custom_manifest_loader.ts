@@ -62,7 +62,7 @@ export default function callCustomManifestLoader(
                                  receivingTime? : number | undefined;
                                  sendingTime? : number | undefined; }) =>
       {
-        if (hasFinished || cancelSignal.isCancelled) {
+        if (hasFinished || cancelSignal.isCancelled()) {
           return;
         }
         hasFinished = true;
@@ -87,7 +87,7 @@ export default function callCustomManifestLoader(
        * @param {*} err - The corresponding error encountered
        */
       const reject = (err : unknown) : void => {
-        if (hasFinished || cancelSignal.isCancelled) {
+        if (hasFinished || cancelSignal.isCancelled()) {
           return;
         }
         hasFinished = true;
@@ -113,7 +113,7 @@ export default function callCustomManifestLoader(
        * the "regular" implementation
        */
       const fallback = () => {
-        if (hasFinished || cancelSignal.isCancelled) {
+        if (hasFinished || cancelSignal.isCancelled()) {
           return;
         }
         hasFinished = true;

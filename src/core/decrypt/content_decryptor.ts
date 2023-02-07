@@ -727,7 +727,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    * formatted and sent in an "error" event.
    */
   private _onFatalError(err : unknown) : void {
-    if (this._canceller.isUsed) {
+    if (this._canceller.isUsed()) {
       return;
     }
     const formattedErr = err instanceof Error ?
