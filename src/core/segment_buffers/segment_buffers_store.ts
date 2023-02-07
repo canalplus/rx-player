@@ -195,20 +195,30 @@ export default class SegmentBuffersStore {
       return Promise.resolve();
     }
     return new Promise((res, rej) => {
-      const onAddedOrDisabled = () => {
+      /* eslint-disable-next-line prefer-const */
+      let onAddedOrDisabled : () => void;
+
+      const removeCallback = () => {
+        const indexOf = this._onNativeBufferAddedOrDisabled.indexOf(onAddedOrDisabled);
+        if (indexOf >= 0) {
+          this._onNativeBufferAddedOrDisabled.splice(indexOf, 1);
+        }
+      };
+
+      const onCancellation = (error : CancellationError) => {
+        removeCallback();
+        rej(error);
+      };
+      onAddedOrDisabled = () => {
         if (this._areNativeBuffersUsable()) {
+          removeCallback();
+          cancelWaitSignal.deregister(onCancellation);
           res();
         }
       };
       this._onNativeBufferAddedOrDisabled.push(onAddedOrDisabled);
 
-      cancelWaitSignal.register((error : CancellationError) => {
-        const indexOf = this._onNativeBufferAddedOrDisabled.indexOf(onAddedOrDisabled);
-        if (indexOf >= 0) {
-          this._onNativeBufferAddedOrDisabled.splice(indexOf, 1);
-        }
-        rej(error);
-      });
+      cancelWaitSignal.register(onCancellation);
     });
   }
 

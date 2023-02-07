@@ -22,9 +22,7 @@ import {
 import { MediaError } from "../../../errors";
 import log from "../../../log";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
-import TaskCanceller, {
-  CancellationSignal,
-} from "../../../utils/task_canceller";
+import { CancellationSignal } from "../../../utils/task_canceller";
 
 /**
  * Dispose of ressources taken by the MediaSource:
@@ -129,20 +127,11 @@ export default function openMediaSource(
   unlinkSignal : CancellationSignal
 ) : Promise<MediaSource> {
   return new Promise((resolve, reject) => {
-    let hasResolved = false;
     const mediaSource = createMediaSource(mediaElement, unlinkSignal);
-    const eventListenerCanceller = new TaskCanceller({ cancelOn: unlinkSignal });
-
     events.onSourceOpen(mediaSource, () => {
-      eventListenerCanceller.cancel();
-      hasResolved = true;
+      unlinkSignal.deregister(reject);
       resolve(mediaSource);
-    }, eventListenerCanceller.signal);
-
-    unlinkSignal.register((error) => {
-      if (!hasResolved) {
-        reject(error);
-      }
-    });
+    }, unlinkSignal);
+    unlinkSignal.register(reject);
   });
 }

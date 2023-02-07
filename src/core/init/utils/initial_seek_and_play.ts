@@ -90,7 +90,7 @@ export default function performInitialSeekAndPlay(
     onLoadedMetadata();
   }
 
-  cancelSignal.register((err : CancellationError) => {
+  const deregisterCancellation = cancelSignal.register((err : CancellationError) => {
     mediaElement.removeEventListener("loadedmetadata", onLoadedMetadata);
     rejectAutoPlay(err);
   });
@@ -136,6 +136,7 @@ export default function performInitialSeekAndPlay(
       }
       initialPlayPerformed.setValue(true);
       initialPlayPerformed.finish();
+      deregisterCancellation();
       return resolveAutoPlay({ type: "skipped" as const });
     }
 
@@ -143,6 +144,7 @@ export default function performInitialSeekAndPlay(
     try {
       playResult = mediaElement.play() ?? Promise.resolve();
     } catch (playError) {
+      deregisterCancellation();
       return rejectAutoPlay(playError);
     }
     playResult
@@ -152,9 +154,11 @@ export default function performInitialSeekAndPlay(
         }
         initialPlayPerformed.setValue(true);
         initialPlayPerformed.finish();
+        deregisterCancellation();
         return resolveAutoPlay({ type: "autoplay" as const });
       })
       .catch((playError : unknown) => {
+        deregisterCancellation();
         if (cancelSignal.isCancelled) {
           return;
         }
