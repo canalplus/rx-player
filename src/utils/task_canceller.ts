@@ -266,6 +266,7 @@ export class CancellationSignal {
     if (this.isCancelled) {
       assert(this.cancellationError !== null);
       fn(this.cancellationError);
+      return noop;
     }
     this._listeners.push(fn);
     return () => this.deregister(fn);
