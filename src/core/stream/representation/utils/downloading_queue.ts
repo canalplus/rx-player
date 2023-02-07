@@ -28,6 +28,7 @@ import {
 } from "../../../../transports";
 import assert from "../../../../utils/assert";
 import EventEmitter from "../../../../utils/event_emitter";
+import noop from "../../../../utils/noop";
 import objectAssign from "../../../../utils/object_assign";
 import createSharedReference, {
   IReadOnlySharedReference,
@@ -255,7 +256,10 @@ export default class DownloadingQueue<T>
         this.trigger("emptyQueue", null);
         return;
       }
-      const canceller = new TaskCanceller({ cancelOn: this._currentCanceller?.signal });
+      const canceller = new TaskCanceller();
+      const unlinkCanceller = this._currentCanceller === null ?
+        noop :
+        canceller.linkToSignal(this._currentCanceller.signal);
 
       const { segment, priority } = startingSegment;
       const context = objectAssign({ segment }, this._content);
@@ -369,6 +373,7 @@ export default class DownloadingQueue<T>
          * requests are scheduled. It is used to schedule the next segment.
          */
         beforeEnded: () : void => {
+          unlinkCanceller();
           this._mediaSegmentRequest = null;
 
           if (isWaitingOnInitSegment) {
@@ -382,6 +387,7 @@ export default class DownloadingQueue<T>
       }, canceller.signal);
 
       request.catch((error : unknown) => {
+        unlinkCanceller();
         if (!isComplete) {
           isComplete = true;
           this.stop();
@@ -411,7 +417,10 @@ export default class DownloadingQueue<T>
       return ;
     }
 
-    const canceller = new TaskCanceller({ cancelOn: this._currentCanceller?.signal });
+    const canceller = new TaskCanceller();
+    const unlinkCanceller = this._currentCanceller === null ?
+      noop :
+      canceller.linkToSignal(this._currentCanceller.signal);
     const { segment, priority } = queuedInitSegment;
     const context = objectAssign({ segment }, this._content);
 
@@ -429,6 +438,7 @@ export default class DownloadingQueue<T>
         log.info("Stream: init segment request interrupted temporarly.", segment.id);
       },
       beforeEnded: () => {
+        unlinkCanceller();
         this._initSegmentRequest = null;
         isComplete = true;
       },
@@ -447,6 +457,7 @@ export default class DownloadingQueue<T>
     }, canceller.signal);
 
     request.catch((error : unknown) => {
+      unlinkCanceller();
       if (!isComplete) {
         isComplete = true;
         this.stop();

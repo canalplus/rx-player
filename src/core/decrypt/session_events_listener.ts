@@ -58,7 +58,8 @@ export default function SessionEventsListener(
   const { getLicenseConfig = {} } = keySystemOptions;
 
   /** Allows to manually cancel everything the `SessionEventsListener` is doing. */
-  const manualCanceller = new TaskCanceller({ cancelOn: cancelSignal });
+  const manualCanceller = new TaskCanceller();
+  manualCanceller.linkToSignal(cancelSignal);
 
   if (!isNullOrUndefined(session.closed)) {
     session.closed

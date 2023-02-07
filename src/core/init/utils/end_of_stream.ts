@@ -70,7 +70,8 @@ export default function triggerEndOfStream(
 
   log.debug("Init: Waiting SourceBuffers to be updated before calling endOfStream.");
 
-  const innerCanceller = new TaskCanceller({ cancelOn: cancelSignal });
+  const innerCanceller = new TaskCanceller();
+  innerCanceller.linkToSignal(cancelSignal);
   for (const sourceBuffer of updatingSourceBuffers) {
     onSourceBufferUpdate(sourceBuffer, () => {
       innerCanceller.cancel();
@@ -94,10 +95,12 @@ export function maintainEndOfStream(
   mediaSource : MediaSource,
   cancelSignal : CancellationSignal
 ) : void {
-  let endOfStreamCanceller = new TaskCanceller({ cancelOn: cancelSignal });
+  let endOfStreamCanceller = new TaskCanceller();
+  endOfStreamCanceller.linkToSignal(cancelSignal);
   onSourceOpen(mediaSource, () => {
     endOfStreamCanceller.cancel();
-    endOfStreamCanceller = new TaskCanceller({ cancelOn: cancelSignal });
+    endOfStreamCanceller = new TaskCanceller();
+    endOfStreamCanceller.linkToSignal(cancelSignal);
     triggerEndOfStream(mediaSource, endOfStreamCanceller.signal);
   }, cancelSignal);
   triggerEndOfStream(mediaSource, endOfStreamCanceller.signal);

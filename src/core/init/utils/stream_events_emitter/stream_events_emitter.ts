@@ -56,13 +56,15 @@ export default function streamEventsEmitter(
   }, cancelSignal);
 
   let isPollingEvents = false;
-  let cancelCurrentPolling = new TaskCanceller({ cancelOn: cancelSignal });
+  let cancelCurrentPolling = new TaskCanceller();
+  cancelCurrentPolling.linkToSignal(cancelSignal);
 
   scheduledEventsRef.onUpdate(({ length: scheduledEventsLength }) => {
     if (scheduledEventsLength === 0) {
       if (isPollingEvents) {
         cancelCurrentPolling.cancel();
-        cancelCurrentPolling = new TaskCanceller({ cancelOn: cancelSignal });
+        cancelCurrentPolling = new TaskCanceller();
+        cancelCurrentPolling.linkToSignal(cancelSignal);
         isPollingEvents = false;
       }
       return;
