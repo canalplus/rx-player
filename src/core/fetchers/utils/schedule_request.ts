@@ -315,7 +315,7 @@ export async function scheduleRequestWithCdns<T>(
   async function retryWithNextCdn(prevRequestError : unknown) : Promise<T> {
     const nextCdn = getCdnToRequest();
 
-    if (cancellationSignal.isCancelled) {
+    if (cancellationSignal.isCancelled()) {
       throw cancellationSignal.cancellationError;
     }
 
@@ -324,7 +324,7 @@ export async function scheduleRequestWithCdns<T>(
     }
 
     onRetry(prevRequestError);
-    if (cancellationSignal.isCancelled) {
+    if (cancellationSignal.isCancelled()) {
       throw cancellationSignal.cancellationError;
     }
 
@@ -363,7 +363,7 @@ export async function scheduleRequestWithCdns<T>(
       /* eslint-disable-next-line @typescript-eslint/no-misused-promises */
       cdnPrioritizer?.addEventListener("priorityChange", () => {
         const updatedPrioritaryCdn = getCdnToRequest();
-        if (cancellationSignal.isCancelled) {
+        if (cancellationSignal.isCancelled()) {
           throw cancellationSignal.cancellationError;
         }
         if (updatedPrioritaryCdn === undefined) {

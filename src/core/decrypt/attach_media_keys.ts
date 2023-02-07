@@ -62,7 +62,7 @@ export default async function attachMediaKeys(
 
   // If this task has been cancelled while we were closing previous sessions,
   // stop now (and thus avoid setting the new media keys);
-  if (cancelSignal.isCancelled) {
+  if (cancelSignal.isCancelled()) {
     throw cancelSignal.cancellationError;
   }
 

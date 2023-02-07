@@ -112,7 +112,7 @@ export default function performInitialSeekAndPlay(
                                    "falsely announced having loaded the content.");
       onWarning(error);
     }
-    if (cancelSignal.isCancelled) {
+    if (cancelSignal.isCancelled()) {
       return ;
     }
 
@@ -149,7 +149,7 @@ export default function performInitialSeekAndPlay(
     }
     playResult
       .then(() => {
-        if (cancelSignal.isCancelled) {
+        if (cancelSignal.isCancelled()) {
           return;
         }
         initialPlayPerformed.setValue(true);
@@ -159,7 +159,7 @@ export default function performInitialSeekAndPlay(
       })
       .catch((playError : unknown) => {
         deregisterCancellation();
-        if (cancelSignal.isCancelled) {
+        if (cancelSignal.isCancelled()) {
           return;
         }
         if (playError instanceof Error && playError.name === "NotAllowedError") {
@@ -171,7 +171,7 @@ export default function performInitialSeekAndPlay(
                                        "Cannot trigger auto-play automatically: " +
                                        "your browser does not allow it.");
           onWarning(error);
-          if (cancelSignal.isCancelled) {
+          if (cancelSignal.isCancelled()) {
             return;
           }
           return resolveAutoPlay({ type: "autoplay-blocked" as const });

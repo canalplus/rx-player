@@ -28,7 +28,7 @@ export default function listenToMediaError(
   onError : (error : MediaError) => void,
   cancelSignal : CancellationSignal
 ) : void {
-  if (cancelSignal.isCancelled) {
+  if (cancelSignal.isCancelled()) {
     return;
   }
 

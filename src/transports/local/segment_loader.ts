@@ -54,7 +54,7 @@ function loadInitSegment(
       size? : number;
       duration? : number;
     }) => {
-      if (hasFinished || cancelSignal.isCancelled) {
+      if (hasFinished || cancelSignal.isCancelled()) {
         return;
       }
       hasFinished = true;
@@ -70,7 +70,7 @@ function loadInitSegment(
      * @param {*} err - The corresponding error encountered
      */
     const reject = (err? : Error) => {
-      if (hasFinished || cancelSignal.isCancelled) {
+      if (hasFinished || cancelSignal.isCancelled()) {
         return;
       }
       hasFinished = true;
@@ -122,7 +122,7 @@ function loadSegment(
       size? : number;
       duration? : number;
     }) => {
-      if (hasFinished || cancelSignal.isCancelled) {
+      if (hasFinished || cancelSignal.isCancelled()) {
         return;
       }
       hasFinished = true;
@@ -138,7 +138,7 @@ function loadSegment(
      * @param {*} err - The corresponding error encountered
      */
     const reject = (err? : Error) => {
-      if (hasFinished || cancelSignal.isCancelled) {
+      if (hasFinished || cancelSignal.isCancelled()) {
         return;
       }
       hasFinished = true;

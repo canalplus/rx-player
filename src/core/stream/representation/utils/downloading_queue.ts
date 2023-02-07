@@ -231,6 +231,7 @@ export default class DownloadingQueue<T>
 
   public stop() {
     this._currentCanceller?.cancel();
+    this._currentCanceller = null;
   }
 
   /**
@@ -245,7 +246,7 @@ export default class DownloadingQueue<T>
     const recursivelyRequestSegments = (
       startingSegment : IQueuedSegment | undefined
     ) : void  => {
-      if (this._currentCanceller !== null && this._currentCanceller.isUsed) {
+      if (this._currentCanceller !== null && this._currentCanceller.isUsed()) {
         this._mediaSegmentRequest = null;
         return;
       }
@@ -400,7 +401,7 @@ export default class DownloadingQueue<T>
   private _restartInitSegmentDownloadingQueue(
     queuedInitSegment : IQueuedSegment | null
   ) : void {
-    if (this._currentCanceller !== null && this._currentCanceller.isUsed) {
+    if (this._currentCanceller !== null && this._currentCanceller.isUsed()) {
       return;
     }
     if (this._initSegmentRequest !== null) {

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../log";
 import assert from "./assert";
 import noop from "./noop";
 
@@ -120,12 +121,12 @@ export default class TaskCanceller {
    * notified that it should be aborted when this `TaskCanceller` is triggered
    * (through its `cancel` method).
    */
-  public signal : CancellationSignal;
+  public readonly signal : CancellationSignal;
   /**
    * `true` if this `TaskCanceller` has already been triggered.
    * `false` otherwise.
    */
-  public isUsed : boolean;
+  private _isUsed : boolean;
   /**
    * @private
    * Internal function called when the `TaskCanceller` is triggered`.
@@ -146,7 +147,7 @@ export default class TaskCanceller {
     cancelOn? : CancellationSignal | undefined;
   } | undefined) {
     const [trigger, register] = createCancellationFunctions();
-    this.isUsed = false;
+    this._isUsed = false;
     this._trigger = trigger;
     this.signal = new CancellationSignal(register);
 
@@ -156,6 +157,14 @@ export default class TaskCanceller {
       });
       this.signal.register(unregisterParent);
     }
+  }
+
+  /**
+   * Returns `true` if this `TaskCanceller` has already been triggered.
+   * `false` otherwise.
+   */
+  public isUsed() : boolean {
+    return this._isUsed;
   }
 
 
@@ -171,10 +180,10 @@ export default class TaskCanceller {
    * @param {Error} [srcError]
    */
   public cancel(srcError? : CancellationError) : void {
-    if (this.isUsed) {
+    if (this._isUsed) {
       return ;
     }
-    this.isUsed = true;
+    this._isUsed = true;
     const cancellationError = srcError ?? new CancellationError();
     this._trigger(cancellationError);
   }
@@ -197,11 +206,6 @@ export default class TaskCanceller {
  */
 export class CancellationSignal {
   /**
-   * True when the cancellation order was already triggered, meaning that the
-   * linked task needs to be aborted.
-   */
-  public isCancelled : boolean;
-  /**
    * Error associated to the cancellation, only set if the `CancellationSignal`
    * has been used (which means that the task has been cancelled).
    *
@@ -221,24 +225,45 @@ export class CancellationSignal {
   private _listeners : Array<(error : CancellationError) => void>;
 
   /**
+   * True when the cancellation order was already triggered, meaning that the
+   * linked task needs to be aborted.
+   */
+  private _isCancelled : boolean;
+
+  /**
    * Creates a new CancellationSignal.
    * /!\ Note: Only a `TaskCanceller` is supposed to be able to create one.
    * @param {Function} registerToSource - Function called when the task is
    * cancelled.
    */
   constructor(registerToSource : (listener: ICancellationListener) => void) {
-    this.isCancelled = false;
+    this._isCancelled = false;
     this.cancellationError = null;
     this._listeners = [];
 
     registerToSource((cancellationError : CancellationError) : void => {
       this.cancellationError = cancellationError;
-      this.isCancelled = true;
+      this._isCancelled = true;
       while (this._listeners.length > 0) {
-        const listener = this._listeners.splice(this._listeners.length - 1, 1)[0];
-        listener(cancellationError);
+        try {
+          const listener = this._listeners.pop();
+          listener?.(cancellationError);
+        } catch (err) {
+          log.error("Error while calling clean up listener",
+                    err instanceof Error ? err.toString() :
+                                           "Unknown error");
+        }
       }
     });
+  }
+
+  /**
+   * Returns `true` when the cancellation order was already triggered, meaning
+   * that the linked task needs to be aborted.
+   * @returns boolean
+   */
+  public isCancelled() : boolean {
+    return this._isCancelled;
   }
 
   /**
@@ -263,7 +288,7 @@ export class CancellationSignal {
    * performed.
    */
   public register(fn : ICancellationListener) : () => void {
-    if (this.isCancelled) {
+    if (this._isCancelled) {
       assert(this.cancellationError !== null);
       fn(this.cancellationError);
       return noop;
@@ -281,13 +306,9 @@ export class CancellationSignal {
    * @param {Function} fn
    */
   public deregister(fn : ICancellationListener) : void {
-    if (this.isCancelled) {
-      return;
-    }
-    for (let i = 0; i < this._listeners.length; i++) {
+    for (let i = this._listeners.length - 1; i >= 0; i--) {
       if (this._listeners[i] === fn) {
         this._listeners.splice(i, 1);
-        return;
       }
     }
   }

@@ -53,7 +53,7 @@ export default function addSegmentIntegrityChecks<T>(
           }
         },
       }).then((info) => {
-        if (requestCanceller.isUsed) {
+        if (requestCanceller.isUsed()) {
           return;
         }
         stopRejectingOnCancel();

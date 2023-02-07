@@ -247,11 +247,11 @@ export default function AdaptationStream<T>(
 
     const repInfo = { type: adaptation.type, period, representation };
     currentRepresentation.setValue(representation);
-    if (adapStreamCanceller.isUsed) {
+    if (adapStreamCanceller.isUsed()) {
       return ; // previous callback has stopped everything by side-effect
     }
     callbacks.representationChange(repInfo);
-    if (adapStreamCanceller.isUsed) {
+    if (adapStreamCanceller.isUsed()) {
       return ; // previous callback has stopped everything by side-effect
     }
 
@@ -268,13 +268,13 @@ export default function AdaptationStream<T>(
       },
       addedSegment(segmentInfo) {
         abrCallbacks.addedSegment(segmentInfo);
-        if (adapStreamCanceller.isUsed) {
+        if (adapStreamCanceller.isUsed()) {
           return;
         }
         callbacks.addedSegment(segmentInfo);
       },
       terminating() {
-        if (repStreamTerminatingCanceller.isUsed) {
+        if (repStreamTerminatingCanceller.isUsed()) {
           return; // Already handled
         }
         repStreamTerminatingCanceller.cancel();

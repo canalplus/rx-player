@@ -112,7 +112,7 @@ export default class ContentTimeBoundariesObserver
 
     manifest.addEventListener("manifestUpdate", () => {
       this.trigger("durationUpdate", getManifestDuration());
-      if (cancelSignal.isCancelled) {
+      if (cancelSignal.isCancelled()) {
         return;
       }
       this._checkEndOfStream();
@@ -161,7 +161,7 @@ export default class ContentTimeBoundariesObserver
         }
       }
     }
-    if (this._canceller.isUsed) {
+    if (this._canceller.isUsed()) {
       return;
     }
     if (adaptation === null) {

@@ -125,7 +125,7 @@ export default function request<T>(
           reject(err);
         });
 
-      if (cancelSignal.isCancelled) {
+      if (cancelSignal.isCancelled()) {
         return;
       }
     }

@@ -329,7 +329,7 @@ export default function StreamOrchestrator(
       // to reduce the risk of race conditions where the next observation
       // was going to be emitted synchronously.
       nextTick(() => {
-        if (orchestratorCancelSignal.isCancelled) {
+        if (orchestratorCancelSignal.isCancelled()) {
           return ;
         }
         const observation = playbackObserver.getReference().getValue();
@@ -339,12 +339,12 @@ export default function StreamOrchestrator(
           callbacks.needsDecipherabilityFlush({ position: observation.position.last,
                                                 autoPlay: shouldAutoPlay,
                                                 duration: observation.duration });
-          if (orchestratorCancelSignal.isCancelled) {
+          if (orchestratorCancelSignal.isCancelled()) {
             return ;
           }
         } else if (needsFlushingAfterClean(observation, rangesToRemove)) {
           callbacks.needsBufferFlush();
-          if (orchestratorCancelSignal.isCancelled) {
+          if (orchestratorCancelSignal.isCancelled()) {
             return ;
           }
         }
