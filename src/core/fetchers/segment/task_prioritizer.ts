@@ -72,7 +72,26 @@ export default class TaskPrioritizer<T> {
           unregisterCancelSignal();
           return;
         }
-        const interrupter =  new TaskCanceller({ cancelOn: cancelSignal });
+
+        const finishTask = () => {
+          unlinkInterrupter();
+          unregisterCancelSignal();
+          this._endTask(newTask);
+        };
+
+        const onResolve = (value: T) => {
+          callbacks.beforeEnded();
+          finishTask();
+          resolve(value);
+        };
+
+        const onReject = (err: unknown) => {
+          finishTask();
+          reject(err);
+        };
+
+        const interrupter =  new TaskCanceller();
+        const unlinkInterrupter = interrupter.linkToSignal(cancelSignal);
         newTask.interrupter = interrupter;
         interrupter.signal.register(() => {
           newTask.interrupter = null;
@@ -105,22 +124,6 @@ export default class TaskPrioritizer<T> {
           reject(cancellationError);
         }
       );
-
-      const finishTask = () => {
-        unregisterCancelSignal();
-        this._endTask(newTask);
-      };
-
-      const onResolve = (value: T) => {
-        callbacks.beforeEnded();
-        finishTask();
-        resolve(value);
-      };
-
-      const onReject = (err: unknown) => {
-        finishTask();
-        reject(err);
-      };
 
       newTask = {
         hasEnded: false,

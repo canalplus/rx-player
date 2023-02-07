@@ -137,26 +137,12 @@ export default class TaskCanceller {
    * Creates a new `TaskCanceller`, with its own `CancellationSignal` created
    * as its `signal` provide.
    * You can then pass this property to async task you wish to be cancellable.
-   * @param {Object|undefined} options
    */
-  constructor(options? : {
-    /**
-     * If set the TaskCanceller created here will automatically be triggered
-     * when that signal emits.
-     */
-    cancelOn? : CancellationSignal | undefined;
-  } | undefined) {
+  constructor() {
     const [trigger, register] = createCancellationFunctions();
     this._isUsed = false;
     this._trigger = trigger;
     this.signal = new CancellationSignal(register);
-
-    if (options?.cancelOn !== undefined) {
-      const unregisterParent = options.cancelOn.register(() => {
-        this.cancel();
-      });
-      this.signal.register(unregisterParent);
-    }
   }
 
   /**
@@ -167,6 +153,27 @@ export default class TaskCanceller {
     return this._isUsed;
   }
 
+  /**
+   * Bind this `TaskCanceller` to a `CancellationSignal`, so the former
+   * is automatically cancelled when the latter is triggered.
+   *
+   * Note that this call registers a callback on the given signal, until either
+   * the current `TaskCanceller` is cancelled or until this given
+   * `CancellationSignal` is triggered.
+   * To avoid leaking memory, the returned callback allow to undo this link.
+   * It should be called if/when that link is not needed anymore, such as when
+   * there is no need for this `TaskCanceller` anymore.
+   *
+   * @param {Object} signal
+   * @returns {Function}
+   */
+  public linkToSignal(signal : CancellationSignal) : () => void {
+    const unregister = signal.register(() => {
+      this.cancel();
+    });
+    this.signal.register(unregister);
+    return unregister;
+  }
 
   /**
    * "Trigger" the `TaskCanceller`, notify through its associated

@@ -215,7 +215,8 @@ function getEstimateReference(
    * This TaskCanceller is used both for restarting estimates with a new
    * configuration and to cancel them altogether.
    */
-  let currentEstimatesCanceller = new TaskCanceller({ cancelOn: stopAllEstimates });
+  let currentEstimatesCanceller = new TaskCanceller();
+  currentEstimatesCanceller.linkToSignal(stopAllEstimates);
 
   // Create `ISharedReference` on which estimates will be emitted.
   const estimateRef = createEstimateReference(manualBitrate.getValue(),
@@ -491,7 +492,8 @@ function getEstimateReference(
     const manualBitrateVal = manualBitrate.getValue();
     const representations = representationsRef.getValue();
     currentEstimatesCanceller.cancel();
-    currentEstimatesCanceller = new TaskCanceller({ cancelOn: stopAllEstimates });
+    currentEstimatesCanceller = new TaskCanceller();
+    currentEstimatesCanceller.linkToSignal(stopAllEstimates);
     const newRef = createEstimateReference(
       manualBitrateVal,
       representations,

@@ -243,15 +243,16 @@ export default class VideoThumbnailLoader {
           if (pending !== undefined) {
             promises.push(pending.promise);
           } else {
-            const requestCanceller = new TaskCanceller({
-              cancelOn: lastRepInfo.cleaner.signal,
-            });
+            const requestCanceller = new TaskCanceller();
+            const unlinkSignal = requestCanceller
+              .linkToSignal(lastRepInfo.cleaner.signal);
             const segmentInfo = objectAssign({ segment },
                                              content);
             const prom = loadAndPushSegment(segmentInfo,
                                             segmentBuffer,
                                             lastRepInfo.segmentFetcher,
-                                            requestCanceller.signal);
+                                            requestCanceller.signal)
+              .finally(unlinkSignal);
             const newReq = {
               segmentId: segment.id,
               canceller: requestCanceller,

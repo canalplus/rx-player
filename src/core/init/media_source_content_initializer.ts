@@ -227,9 +227,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         }
         stopListeningToDrmUpdates();
 
-        const mediaSourceCanceller = new TaskCanceller({
-          cancelOn: initCanceller.signal,
-        });
+        const mediaSourceCanceller = new TaskCanceller();
+        mediaSourceCanceller.linkToSignal(initCanceller.signal);
         openMediaSource(mediaElement, mediaSourceCanceller.signal)
           .then((mediaSource) => {
             const lastDrmStatus = drmInitRef.getValue();
@@ -367,7 +366,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           return;
         }
 
-        const newCanceller = new TaskCanceller({ cancelOn: initCanceller.signal });
+        const newCanceller = new TaskCanceller();
+        newCanceller.linkToSignal(initCanceller.signal);
         openMediaSource(mediaElement, newCanceller.signal)
           .then(newMediaSource => {
             recursivelyLoadOnMediaSource(newMediaSource,
@@ -674,7 +674,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     });
     contentTimeBoundariesObserver.addEventListener("endOfStream", () => {
       if (endOfStreamCanceller === null) {
-        endOfStreamCanceller = new TaskCanceller({ cancelOn: cancelSignal });
+        endOfStreamCanceller = new TaskCanceller();
+        endOfStreamCanceller.linkToSignal(cancelSignal);
         log.debug("Init: end-of-stream order received.");
         maintainEndOfStream(mediaSource, endOfStreamCanceller.signal);
       }
