@@ -217,7 +217,7 @@ export default class PlaybackObserver {
     options? : { includeLastObservation? : boolean | undefined;
                  clearSignal? : CancellationSignal | undefined; }
   ) {
-    if (this._canceller.isUsed || options?.clearSignal?.isCancelled === true) {
+    if (this._canceller.isUsed() || options?.clearSignal?.isCancelled() === true) {
       return noop;
     }
     this._observationRef.onUpdate(cb, {
@@ -971,7 +971,9 @@ function generateReadOnlyObserver<TSource, TDest>(
       options? : { includeLastObservation? : boolean | undefined;
                    clearSignal? : CancellationSignal | undefined; }
     ) : void {
-      if (cancellationSignal.isCancelled || options?.clearSignal?.isCancelled === true) {
+      if (cancellationSignal.isCancelled() ||
+          options?.clearSignal?.isCancelled() === true)
+      {
         return ;
       }
       mappedRef.onUpdate(cb, {

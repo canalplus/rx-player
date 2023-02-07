@@ -213,7 +213,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
         requestInfo = null;
       }
 
-      if (!cancellationSignal.isCancelled) {
+      if (!cancellationSignal.isCancelled()) {
         // The current task could have been canceled as a result of one
         // of the previous callbacks call. In that case, we don't want to send
         // a "requestEnd" again as it has already been sent on cancellation.

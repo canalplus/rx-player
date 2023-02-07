@@ -47,7 +47,7 @@ export default async function appendSegmentToBuffer<T>(
   try {
     await segmentBuffer.pushChunk(dataInfos, cancellationSignal);
   } catch (appendError : unknown) {
-    if (cancellationSignal.isCancelled && appendError instanceof CancellationError) {
+    if (cancellationSignal.isCancelled() && appendError instanceof CancellationError) {
       throw appendError;
     } else if (!(appendError instanceof Error) ||
                appendError.name !== "QuotaExceededError")
