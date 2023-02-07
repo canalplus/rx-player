@@ -294,6 +294,9 @@ export default function createSharedReference<T>(
       options.clearSignal.register(unlisten);
 
       function unlisten() : void {
+        if (options?.clearSignal !== undefined) {
+          options.clearSignal.deregister(unlisten);
+        }
         if (cbObj.hasBeenCleared) {
           return;
         }
@@ -339,6 +342,9 @@ export default function createSharedReference<T>(
     finish,
   };
   function finish() {
+    if (cancelSignal !== undefined) {
+      cancelSignal.deregister(finish);
+    }
     isFinished = true;
     const clonedCbs = cbs.slice();
     for (const cbObj of clonedCbs) {

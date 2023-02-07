@@ -196,14 +196,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
                                           id: requestId,
                                           content });
 
-    cancellationSignal.register(() => {
-      if (requestInfo !== undefined) {
-        return; // Request already terminated
-      }
-      log.debug("SF: Segment request cancelled", segmentIdString);
-      requestInfo = null;
-      lifecycleCallbacks.onRequestEnd?.({ id: requestId });
-    });
+    cancellationSignal.register(onCancellation);
 
     try {
       const res = await scheduleRequestWithCdns(content.representation.cdnMetadata,
@@ -238,14 +231,26 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
         // a "requestEnd" again as it has already been sent on cancellation.
         lifecycleCallbacks.onRequestEnd?.({ id: requestId });
       }
+      cancellationSignal.deregister(onCancellation);
     } catch (err) {
+      cancellationSignal.deregister(onCancellation);
       requestInfo = null;
       if (err instanceof CancellationError) {
         log.debug("SF: Segment request aborted", segmentIdString);
         throw err;
       }
       log.debug("SF: Segment request failed", segmentIdString);
+      lifecycleCallbacks.onRequestEnd?.({ id: requestId });
       throw errorSelector(err);
+    }
+
+    function onCancellation() {
+      if (requestInfo !== undefined) {
+        return; // Request already terminated
+      }
+      log.debug("SF: Segment request cancelled", segmentIdString);
+      requestInfo = null;
+      lifecycleCallbacks.onRequestEnd?.({ id: requestId });
     }
 
     /**
