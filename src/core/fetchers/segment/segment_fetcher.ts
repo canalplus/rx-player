@@ -64,10 +64,22 @@ const generateRequestID = idGenerator();
  * An `ISegmentFetcher` also implements a retry mechanism, based on the given
  * `options` argument, which may retry a segment request when it fails.
  *
- * @param {string} bufferType
- * @param {Object} pipeline
- * @param {Object} lifecycleCallbacks
- * @param {Object} options
+ * @param {string} bufferType - Type of  buffer concerned (e.g. `"audio"`,
+ * `"video"`, `"text" etc.)
+ * @param {Object} pipeline - The transport-specific logic allowing to load
+ * segments of the given buffer type and transport protocol (e.g. DASH).
+ * @param {Object|null} cdnPrioritizer - Abstraction allowing to synchronize,
+ * update and keep track of the priorization of the CDN to use to load any given
+ * segment, in cases where multiple ones are available.
+ *
+ * Can be set to `null` in which case a minimal priorization logic will be used
+ * instead.
+ * @param {Object} lifecycleCallbacks - Callbacks that can be registered to be
+ * informed when new requests are made, ended, new metrics are available etc.
+ * This should be mainly useful to implement an adaptive logic relying on those
+ * metrics and events.
+ * @param {Object} options - Various tweaking options allowing to configure the
+ * behavior of the returned `ISegmentFetcher`.
  * @returns {Function}
  */
 export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
@@ -360,11 +372,16 @@ export interface ISegmentFetcherCallbacks<TSegmentDataType> {
   /**
    * Callback called when all decodable chunks of the loaded segment have been
    * communicated through the `onChunk` callback.
+   *
+   * This callback is called before the corresponding `ISegmentFetcher`'s
+   * returned Promise is resolved.
    */
   onAllChunksReceived() : void;
 
   /**
-   * Callback called when the segment request has to restart from scratch. */
+   * Callback called when the segment request has to restart from scratch, e.g.
+   * due to a request error.
+   */
   onRetry(error : IPlayerError) : void;
 }
 

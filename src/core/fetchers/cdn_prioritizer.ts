@@ -16,19 +16,22 @@
 
 import config from "../../config";
 import { ICdnMetadata } from "../../parsers/manifest";
-import { IPlayerError } from "../../public_types";
 import arrayFindIndex from "../../utils/array_find_index";
 import EventEmitter from "../../utils/event_emitter";
 import { CancellationSignal } from "../../utils/task_canceller";
 
 /**
- * Class signaling the priority between multiple CDN available for any given
- * resource.
+ * Class storing and signaling the priority between multiple CDN available for
+ * any given resource.
  *
- * This class might perform requests and schedule timeouts by itself to keep its
- * internal list of CDN priority up-to-date.
- * When it is not needed anymore, you should call the `dispose` method to clear
- * all resources.
+ * This class was first created to implement the complexities behind
+ * Content Steering features, though its handling hasn't been added yet as we
+ * wait for its specification to be both standardized and relied on in the wild.
+ * In the meantime, it acts as an abstraction for the simple concept of
+ * avoiding to request a CDN for any segment when an issue is encountered with
+ * one (e.g. HTTP 500 statuses) and several CDN exist for a given resource. It
+ * should be noted that this is also one of the planified features of the
+ * Content Steering specification.
  *
  * @class CdnPrioritizer
  */
@@ -41,7 +44,7 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
   private _downgradedCdnList : {
     /**
      * Metadata of downgraded CDN, sorted by the time at which they have
-     * been downgraded.
+     * been downgraded ascending.
      */
     metadata : ICdnMetadata[];
     /**
@@ -174,8 +177,14 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
   }
 }
 
+/** Events sent by a `CdnPrioritizer` */
 export interface ICdnPrioritizerEvents {
-  warnings : IPlayerError[];
+  /**
+   * The priority of one or several CDN changed.
+   *
+   * You might want to re-check if a CDN should still be used when this event
+   * is triggered.
+   */
   priorityChange : null;
 }
 
