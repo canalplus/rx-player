@@ -324,8 +324,16 @@ export default function StreamOrchestrator(
       const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
       const ofCurrentType = updates
         .filter(update => update.adaptation.type === bufferType);
-      if (ofCurrentType.length === 0 || segmentBufferStatus.type !== "initialized") {
-        return EMPTY; // no need to stop the current Streams.
+      if (
+        // No update concerns the current type of data
+        ofCurrentType.length === 0 ||
+        segmentBufferStatus.type !== "initialized" ||
+        // The update only notifies of now-decipherable streams
+        ofCurrentType.every(x => x.representation.decipherable === true)
+      ) {
+        // Data won't have to be removed from the buffers, no need to stop the
+        // current Streams.
+        return EMPTY;
       }
 
       const segmentBuffer = segmentBufferStatus.value;
