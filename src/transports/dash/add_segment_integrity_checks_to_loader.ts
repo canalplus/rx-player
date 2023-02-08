@@ -52,24 +52,25 @@ export default function addSegmentIntegrityChecks<T>(
             reject(err);
           }
         },
-      }).then((info) => {
-        cleanUpCancellers();
-        if (requestCanceller.isUsed()) {
-          return;
-        }
-        if (info.resultType === "segment-loaded") {
-          try {
-            trowOnIntegrityError(info.resultData.responseData);
-          } catch (err) {
-            reject(err);
-            return;
-          }
-        }
-        resolve(info);
-      }, (error : unknown) => {
-        cleanUpCancellers();
-        reject(error);
-      });
+      })
+        .finally(() =>  cleanUpCancellers())
+        .then(
+          (info) => {
+            if (requestCanceller.isUsed()) {
+              return;
+            }
+            if (info.resultType === "segment-loaded") {
+              try {
+                trowOnIntegrityError(info.resultData.responseData);
+              } catch (err) {
+                reject(err);
+                return;
+              }
+            }
+            resolve(info);
+          },
+          reject
+        );
 
       function cleanUpCancellers() {
         requestCanceller.signal.deregister(reject);

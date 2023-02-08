@@ -21,6 +21,7 @@ import {
 } from "../../../compat";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
+import createCancellablePromise from "../../../utils/create_cancellable_promise";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import { CancellationSignal } from "../../../utils/task_canceller";
 
@@ -126,12 +127,10 @@ export default function openMediaSource(
   mediaElement : HTMLMediaElement,
   unlinkSignal : CancellationSignal
 ) : Promise<MediaSource> {
-  return new Promise((resolve, reject) => {
+  return createCancellablePromise(unlinkSignal, (resolve) => {
     const mediaSource = createMediaSource(mediaElement, unlinkSignal);
     events.onSourceOpen(mediaSource, () => {
-      unlinkSignal.deregister(reject);
       resolve(mediaSource);
     }, unlinkSignal);
-    unlinkSignal.register(reject);
   });
 }

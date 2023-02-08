@@ -206,14 +206,14 @@ export default function SessionEventsListener(
     message : Uint8Array,
     messageType : MediaKeyMessageType
   ) : Promise<BufferSource | null> {
-    return new Promise((res, rej) => {
+    let timeoutId : number | undefined;
+    return new Promise<BufferSource | null>((res, rej) => {
       log.debug("DRM: Calling `getLicense`", messageType);
       const getLicense = keySystemOptions.getLicense(message, messageType);
       const getLicenseTimeout = isNullOrUndefined(getLicenseConfig.timeout) ?
         10 * 1000 :
         getLicenseConfig.timeout;
 
-      let timeoutId : number | undefined;
       if (getLicenseTimeout >= 0) {
         timeoutId = setTimeout(() => {
           rej(new GetLicenseTimeoutError(
@@ -221,25 +221,14 @@ export default function SessionEventsListener(
           ));
         }, getLicenseTimeout) as unknown as number;
       }
-
       try {
-        Promise.resolve(getLicense).then(
-          (val) => {
-            clearTimeoutIfOne();
-            res(val);
-          },
-          (err) => {
-            clearTimeoutIfOne();
-            rej(err);
-          });
+        Promise.resolve(getLicense).then(res, rej);
       } catch (err) {
-        clearTimeoutIfOne();
         rej(err);
       }
-      function clearTimeoutIfOne() {
-        if (timeoutId !== undefined) {
-          clearTimeout(timeoutId);
-        }
+    }).finally(() => {
+      if (timeoutId !== undefined) {
+        clearTimeout(timeoutId);
       }
     });
   }

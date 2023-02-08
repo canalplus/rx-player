@@ -18,6 +18,7 @@ import { MediaSource_ } from "../../../compat";
 import { resetMediaSource } from "../../../core/init/utils/create_media_source";
 import { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implementations";
 import log from "../../../log";
+import createCancellablePromise from "../../../utils/create_cancellable_promise";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import { CancellationSignal } from "../../../utils/task_canceller";
 
@@ -33,7 +34,7 @@ export default function prepareSourceBuffer(
   codec: string,
   cleanUpSignal: CancellationSignal
 ): Promise<AudioVideoSegmentBuffer> {
-  return new Promise((resolve, reject) => {
+  return createCancellablePromise(cleanUpSignal, (resolve, reject) => {
     if (MediaSource_ == null) {
       throw new Error("No MediaSource Object was found in the current browser.");
     }
@@ -49,15 +50,17 @@ export default function prepareSourceBuffer(
 
     log.info("Init: Attaching MediaSource URL to the media element", objectURL);
     videoElement.src = objectURL;
+    cleanUpSignal.register(() => {
+      resetMediaSource(videoElement, mediaSource, objectURL);
+    });
 
     mediaSource.addEventListener("sourceopen", onSourceOpen);
     mediaSource.addEventListener("webkitsourceopen", onSourceOpen);
 
-    cleanUpSignal.register(() => {
+    return () => {
       mediaSource.removeEventListener("sourceopen", onSourceOpen);
       mediaSource.removeEventListener("webkitsourceopen", onSourceOpen);
-      resetMediaSource(videoElement, mediaSource, objectURL);
-    });
+    };
 
     function onSourceOpen() {
       try {

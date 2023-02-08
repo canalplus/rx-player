@@ -24,6 +24,7 @@ import { getLoggableSegmentId } from "../../../../manifest";
 import areArraysOfNumbersEqual from "../../../../utils/are_arrays_of_numbers_equal";
 import assertUnreachable from "../../../../utils/assert_unreachable";
 import { toUint8Array } from "../../../../utils/byte_parsing";
+import createCancellablePromise from "../../../../utils/create_cancellable_promise";
 import hashBuffer from "../../../../utils/hash_buffer";
 import noop from "../../../../utils/noop";
 import objectAssign from "../../../../utils/object_assign";
@@ -369,13 +370,15 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
     operation : ISBOperation<BufferSource>,
     cancellationSignal : CancellationSignal
   ) : Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (cancellationSignal.cancellationError !== null) {
-        return reject(cancellationSignal.cancellationError);
-      }
+    return createCancellablePromise(cancellationSignal, (resolve, reject) => {
       const shouldRestartQueue = this._queue.length === 0 &&
                                  this._pendingTask === null;
-      const onCancellation = (error : CancellationError) => {
+      const queueItem = objectAssign({ resolve, reject }, operation);
+      this._queue.push(queueItem);
+      if (shouldRestartQueue) {
+        this._flush();
+      }
+      return () => {
         // Remove the corresponding element from the AudioVideoSegmentBuffer's
         // queue.
         // If the operation was a pending task, it should still continue to not
@@ -386,25 +389,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
         }
         queueItem.resolve = noop;
         queueItem.reject = noop;
-        reject(error);
       };
-
-      const queueItem = objectAssign({
-        resolve() {
-          cancellationSignal.deregister(onCancellation);
-          resolve();
-        },
-        reject(err : unknown) {
-          cancellationSignal.deregister(onCancellation);
-          reject(err);
-        },
-      }, operation);
-      this._queue.push(queueItem);
-      cancellationSignal.register(onCancellation);
-
-      if (shouldRestartQueue) {
-        this._flush();
-      }
     });
   }
 

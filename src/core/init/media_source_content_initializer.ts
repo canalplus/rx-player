@@ -25,13 +25,13 @@ import {
 } from "../../public_types";
 import { ITransportPipelines } from "../../transports";
 import assert from "../../utils/assert";
+import createCancellablePromise from "../../utils/create_cancellable_promise";
 import objectAssign from "../../utils/object_assign";
 import createSharedReference, {
   IReadOnlySharedReference,
   ISharedReference,
 } from "../../utils/reference";
 import TaskCanceller, {
-  CancellationError,
   CancellationSignal,
 } from "../../utils/task_canceller";
 import AdaptiveRepresentationSelector, {
@@ -125,21 +125,22 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     if (this._initialManifestProm !== null) {
       return;
     }
-    this._initialManifestProm = new Promise((res, rej) => {
-      this._initCanceller.signal.register((err : CancellationError) => {
-        this._manifestFetcher.dispose();
-        rej(err);
+    this._initialManifestProm = createCancellablePromise(
+      this._initCanceller.signal,
+      (res, rej) => {
+        this._manifestFetcher.addEventListener("warning", (err : IPlayerError) =>
+          this.trigger("warning", err));
+        this._manifestFetcher.addEventListener("error", (err : unknown) => {
+          this.trigger("error", err);
+          rej(err);
+        });
+        this._manifestFetcher.addEventListener("manifestReady", (manifest) => {
+          res(manifest);
+        });
       });
-      this._manifestFetcher.addEventListener("warning", (err : IPlayerError) =>
-        this.trigger("warning", err));
-      this._manifestFetcher.addEventListener("error", (err : unknown) => {
-        this.trigger("error", err);
-        rej(err);
-      });
-      this._manifestFetcher.addEventListener("manifestReady", (manifest) => {
-        res(manifest);
-      });
-      this._manifestFetcher.start();
+    this._manifestFetcher.start();
+    this._initCanceller.signal.register(() => {
+      this._manifestFetcher.dispose();
     });
   }
 
@@ -206,13 +207,9 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                 drmSystemId : string | undefined;
                 unlinkMediaSource : TaskCanceller; }>
   {
-    return new Promise((resolve, reject) => {
-      const { keySystems } = this._settings;
       const initCanceller = this._initCanceller;
-
-      const unregisterReject = initCanceller.signal.register((err) => {
-        reject(err);
-      });
+    return createCancellablePromise(initCanceller.signal, (resolve) => {
+      const { keySystems } = this._settings;
 
       /** Initialize decryption capabilities. */
       const drmInitRef =
@@ -237,7 +234,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               drmInitRef.onUpdate((newDrmStatus, stopListeningToDrmUpdatesAgain) => {
                 if (newDrmStatus.initializationState.type === "initialized") {
                   stopListeningToDrmUpdatesAgain();
-                  unregisterReject();
                   resolve({ mediaSource,
                             drmSystemId: newDrmStatus.drmSystemId,
                             unlinkMediaSource: mediaSourceCanceller });
@@ -245,7 +241,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                 }
               }, { emitCurrentValue: true, clearSignal: initCanceller.signal });
             } else if (drmStatus.initializationState.type === "initialized") {
-              unregisterReject();
               resolve({ mediaSource,
                         drmSystemId: drmStatus.drmSystemId,
                         unlinkMediaSource: mediaSourceCanceller });
