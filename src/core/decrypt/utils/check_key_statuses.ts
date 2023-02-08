@@ -18,6 +18,7 @@ import { ICustomMediaKeySession } from "../../../compat";
 /* eslint-disable-next-line max-len */
 import getUUIDKidFromKeyStatusKID from "../../../compat/eme/get_uuid_kid_from_keystatus_kid";
 import { EncryptedMediaError } from "../../../errors";
+import log from "../../../log";
 import {
   IEncryptedMediaErrorKeyStatusObject,
   IKeySystemOption,
@@ -109,6 +110,11 @@ export default function checkKeyStatuses(
                                              new Uint8Array(keyStatusKeyId));
 
     const keyStatusObj = { keyId: keyId.buffer, keyStatus };
+
+    if (log.hasLevel("DEBUG")) {
+      log.debug(`DRM: key status update (${bytesToHex(keyId)}:`, keyStatus);
+    }
+
     switch (keyStatus) {
       case KEY_STATUSES.EXPIRED: {
         const error = new EncryptedMediaError(
