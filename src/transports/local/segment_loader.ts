@@ -20,11 +20,9 @@ import {
   ILocalManifestInitSegmentLoader,
   ILocalManifestSegmentLoader,
 } from "../../parsers/manifest/local";
+import createCancellablePromise from "../../utils/create_cancellable_promise";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import {
-  CancellationError,
-  CancellationSignal,
-} from "../../utils/task_canceller";
+import { CancellationSignal } from "../../utils/task_canceller";
 import {
   ISegmentContext,
   ISegmentLoaderCallbacks,
@@ -41,7 +39,7 @@ function loadInitSegment(
   customSegmentLoader : ILocalManifestInitSegmentLoader,
   cancelSignal : CancellationSignal
 ) : Promise<ISegmentLoaderResultSegmentLoaded<ArrayBuffer | null>> {
-  return new Promise((res, rej) => {
+  return createCancellablePromise(cancelSignal, (res, rej) => {
     /** `true` when the custom segmentLoader should not be active anymore. */
     let hasFinished = false;
 
@@ -58,7 +56,6 @@ function loadInitSegment(
         return;
       }
       hasFinished = true;
-      cancelSignal.deregister(abortLoader);
       res({ resultType: "segment-loaded",
             resultData: { responseData: _args.data,
                           size: _args.size,
@@ -74,18 +71,13 @@ function loadInitSegment(
         return;
       }
       hasFinished = true;
-      cancelSignal.deregister(abortLoader);
       rej(err);
     };
 
     const abort = customSegmentLoader({ resolve, reject });
 
-    cancelSignal.register(abortLoader);
-    /**
-     * The logic to run when this loader is cancelled while pending.
-     * @param {Error} err
-     */
-    function abortLoader(err : CancellationError) {
+    /** The logic to run when this loader is cancelled while pending. */
+    return () => {
       if (hasFinished) {
         return;
       }
@@ -93,8 +85,7 @@ function loadInitSegment(
       if (typeof abort === "function") {
         abort();
       }
-      rej(err);
-    }
+    };
   });
 }
 
@@ -109,7 +100,7 @@ function loadSegment(
   customSegmentLoader : ILocalManifestSegmentLoader,
   cancelSignal : CancellationSignal
 ) : Promise< ISegmentLoaderResultSegmentLoaded<ArrayBuffer | null>> {
-  return new Promise((res, rej) => {
+  return createCancellablePromise(cancelSignal, (res, rej) => {
     /** `true` when the custom segmentLoader should not be active anymore. */
     let hasFinished = false;
 
@@ -126,7 +117,6 @@ function loadSegment(
         return;
       }
       hasFinished = true;
-      cancelSignal.deregister(abortLoader);
       res({ resultType: "segment-loaded",
             resultData: { responseData: _args.data,
                           size: _args.size,
@@ -142,7 +132,6 @@ function loadSegment(
         return;
       }
       hasFinished = true;
-      cancelSignal.deregister(abortLoader);
 
       // Format error and send it
       const castedErr = err as (null | undefined | { message? : string;
@@ -161,12 +150,8 @@ function loadSegment(
 
     const abort = customSegmentLoader(segment, { resolve, reject });
 
-    cancelSignal.register(abortLoader);
-    /**
-     * The logic to run when this loader is cancelled while pending.
-     * @param {Error} err
-     */
-    function abortLoader(err : CancellationError) {
+    /** The logic to run when this loader is cancelled while pending. */
+    return () => {
       if (hasFinished) {
         return;
       }
@@ -174,8 +159,7 @@ function loadSegment(
       if (typeof abort === "function") {
         abort();
       }
-      rej(err);
-    }
+    };
   });
 }
 

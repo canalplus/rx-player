@@ -1,5 +1,6 @@
 import log from "../../../log";
 import arrayFindIndex from "../../../utils/array_find_index";
+import createCancellablePromise from "../../../utils/create_cancellable_promise";
 import TaskCanceller, {
   CancellationError,
   CancellationSignal,
@@ -64,18 +65,14 @@ export default class TaskPrioritizer<T> {
     cancelSignal: CancellationSignal
   ): Promise<T> {
     let newTask: IPrioritizerTask<T>;
-
-    return new Promise<T>((resolve, reject) => {
+    return createCancellablePromise<T>(cancelSignal, (resolve, reject) => {
       /** Function allowing to start the underlying Promise. */
       const trigger = () => {
         if (newTask.hasEnded) {
-          unregisterCancelSignal();
           return;
         }
-
         const finishTask = () => {
           unlinkInterrupter();
-          unregisterCancelSignal();
           this._endTask(newTask);
         };
 
@@ -118,13 +115,6 @@ export default class TaskPrioritizer<T> {
           });
       };
 
-      const unregisterCancelSignal = cancelSignal.register(
-        (cancellationError: CancellationError) => {
-          this._endTask(newTask);
-          reject(cancellationError);
-        }
-      );
-
       newTask = {
         hasEnded: false,
         priority,
@@ -149,6 +139,8 @@ export default class TaskPrioritizer<T> {
           this._interruptCancellableTasks();
         }
       }
+
+      return () => this._endTask(newTask);
     });
   }
 
