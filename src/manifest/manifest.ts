@@ -15,6 +15,7 @@
  */
 
 import { MediaError } from "../errors";
+import log from "../log";
 import { IParsedManifest } from "../parsers/manifest";
 import {
   IPlayerError,
@@ -786,6 +787,9 @@ function updateDeciperability(
         const result = isDecipherable(representation);
         if (result !== representation.decipherable) {
           updates.push({ manifest, period, adaptation, representation });
+          log.debug(`Decipherability changed for "${representation.id}"`,
+                    `(${representation.bitrate})`,
+                    String(representation.decipherable));
           representation.decipherable = result;
         }
       }

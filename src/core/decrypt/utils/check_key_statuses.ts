@@ -112,7 +112,7 @@ export default function checkKeyStatuses(
     const keyStatusObj = { keyId: keyId.buffer, keyStatus };
 
     if (log.hasLevel("DEBUG")) {
-      log.debug(`DRM: key status update (${bytesToHex(keyId)}:`, keyStatus);
+      log.debug(`DRM: key status update (${bytesToHex(keyId)}): ${keyStatus}`);
     }
 
     switch (keyStatus) {

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../log";
 import { IParsedAdaptation } from "../parsers/manifest";
 import { IRepresentationFilter } from "../public_types";
 import arrayFind from "../utils/array_find";
@@ -164,6 +165,12 @@ export default class Adaptation {
         if (!isSupported && representation.isSupported) {
           isSupported = true;
         }
+      } else {
+        log.debug("Filtering Representation due to representationFilter",
+                  this.type,
+                  `Adaptation: ${this.id}`,
+                  `Representation: ${representation.id}`,
+                  `(${representation.bitrate})`);
       }
     }
     representations.sort((a, b) => a.bitrate - b.bitrate);
