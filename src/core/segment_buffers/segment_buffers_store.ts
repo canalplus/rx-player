@@ -17,10 +17,8 @@
 import { MediaError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
-import {
-  CancellationError,
-  CancellationSignal,
-} from "../../utils/task_canceller";
+import createCancellablePromise from "../../utils/create_cancellable_promise";
+import { CancellationSignal } from "../../utils/task_canceller";
 import {
   AudioVideoSegmentBuffer,
   IBufferType,
@@ -194,7 +192,7 @@ export default class SegmentBuffersStore {
     if (this._areNativeBuffersUsable()) {
       return Promise.resolve();
     }
-    return new Promise((res, rej) => {
+    return createCancellablePromise(cancelWaitSignal, (res) => {
       /* eslint-disable-next-line prefer-const */
       let onAddedOrDisabled : () => void;
 
@@ -205,20 +203,15 @@ export default class SegmentBuffersStore {
         }
       };
 
-      const onCancellation = (error : CancellationError) => {
-        removeCallback();
-        rej(error);
-      };
       onAddedOrDisabled = () => {
         if (this._areNativeBuffersUsable()) {
           removeCallback();
-          cancelWaitSignal.deregister(onCancellation);
           res();
         }
       };
       this._onNativeBufferAddedOrDisabled.push(onAddedOrDisabled);
 
-      cancelWaitSignal.register(onCancellation);
+      return removeCallback;
     });
   }
 
