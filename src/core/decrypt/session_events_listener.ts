@@ -134,6 +134,8 @@ export default function SessionEventsListener(
       });
   }, manualCanceller.signal);
 
+  checkAndHandleCurrentKeyStatuses();
+  return;
   /**
    * @param {Event} keyStatusesEvent
    * @returns {Promise}
@@ -145,7 +147,7 @@ export default function SessionEventsListener(
 
     await Promise.all([
       runOnKeyStatusesChangeCallback(),
-      Promise.resolve(handleKeyStatusEvent()),
+      Promise.resolve(checkAndHandleCurrentKeyStatuses()),
     ]);
 
     async function runOnKeyStatusesChangeCallback() {
@@ -179,27 +181,27 @@ export default function SessionEventsListener(
         }
       }
     }
+  }
 
-    /**
-     * Check current MediaKeyStatus for each key in the given MediaKeySession and:
-     *   - throw if at least one status is a non-recoverable error
-     *   - call warning callback for recoverable errors
-     *   - call onKeyUpdate callback when the MediaKeyStatus of any key is updated
-     */
-    function handleKeyStatusEvent() : void {
-      if (manualCanceller.isUsed() || session.keyStatuses.size === 0) {
-        return ;
-      }
-      const { warning, blacklistedKeyIds, whitelistedKeyIds } =
-        checkKeyStatuses(session, keySystemOptions, keySystem);
-      if (warning !== undefined) {
-        callbacks.onWarning(warning);
-        if (manualCanceller.isUsed()) {
-          return;
-        }
-      }
-      callbacks.onKeyUpdate({ whitelistedKeyIds, blacklistedKeyIds });
+  /**
+   * Check current MediaKeyStatus for each key in the given MediaKeySession and:
+   *   - throw if at least one status is a non-recoverable error
+   *   - call warning callback for recoverable errors
+   *   - call onKeyUpdate callback when the MediaKeyStatus of any key is updated
+   */
+  function checkAndHandleCurrentKeyStatuses() : void {
+    if (manualCanceller.isUsed() || session.keyStatuses.size === 0) {
+      return ;
     }
+    const { warning, blacklistedKeyIds, whitelistedKeyIds } =
+      checkKeyStatuses(session, keySystemOptions, keySystem);
+    if (warning !== undefined) {
+      callbacks.onWarning(warning);
+      if (manualCanceller.isUsed()) {
+        return;
+      }
+    }
+    callbacks.onKeyUpdate({ whitelistedKeyIds, blacklistedKeyIds });
   }
 
   function runGetLicense(
