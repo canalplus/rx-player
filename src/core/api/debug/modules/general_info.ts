@@ -84,13 +84,13 @@ export default function constructDebugGeneralInfo(
       if (mav !== Infinity) {
         valuesLine2.push(["mav", String(mav)]);
       }
-      const ab = instance.getManualAudioBitrate();
-      if (ab >= 0) {
-        valuesLine2.push(["ab", String(ab)]);
+      const fab = instance.getManualAudioBitrate();
+      if (fab >= 0) {
+        valuesLine2.push(["fab", String(fab)]);
       }
-      const vb = instance.getManualVideoBitrate();
-      if (vb >= 0) {
-        valuesLine2.push(["vb", String(vb)]);
+      const fvb = instance.getManualVideoBitrate();
+      if (fvb >= 0) {
+        valuesLine2.push(["fvb", String(fvb)]);
       }
       const mbs = instance.getMaxVideoBufferSize();
       if (mbs !== Infinity) {
@@ -99,12 +99,12 @@ export default function constructDebugGeneralInfo(
       const minPos = instance.getMinimumPosition();
       if (minPos !== null) {
         valuesLine1.push(["mip", minPos.toFixed(2)]);
-        valuesLine2.push(["dma", (currentTime - minPos).toFixed(2)]);
+        valuesLine2.push(["dmi", (currentTime - minPos).toFixed(2)]);
       }
       const maxPos = instance.getMaximumPosition();
       if (maxPos !== null) {
         valuesLine1.push(["map", maxPos.toFixed(2)]);
-        valuesLine2.push(["dmi", (maxPos - currentTime).toFixed(2)]);
+        valuesLine2.push(["dma", (maxPos - currentTime).toFixed(2)]);
       }
       const valuesLine3 : Array<[string, string]> = [];
       const error = instance.getError();
