@@ -602,6 +602,21 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_initializeContentPlayback(newOptions);
   }
 
+  public createDebugElement(element : HTMLElement) : {
+    dispose() : void;
+  } {
+    if (features.createDebugElement === null) {
+      throw new Error("Feature `DEBUG_ELEMENT` not added to the RxPlayer");
+    }
+    const canceller = new TaskCanceller() ;
+    features.createDebugElement(element, this, canceller.signal);
+    return {
+      dispose() {
+        canceller.cancel();
+      },
+    };
+  }
+
   /**
    * From given options, initialize content playback.
    * @param {Object} options

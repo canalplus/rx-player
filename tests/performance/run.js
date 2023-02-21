@@ -713,6 +713,7 @@ function createBundle(options) {
           HTML_VTT: 1,
           LOCAL_MANIFEST: 1,
           METAPLAYLIST: 1,
+          DEBUG_ELEMENT: 1,
           NATIVE_SAMI: 1,
           NATIVE_SRT: 1,
           NATIVE_TTML: 1,

@@ -33,6 +33,7 @@ declare const __FEATURES__ : {
   HTML_VTT : number;
   LOCAL_MANIFEST : number;
   METAPLAYLIST : number;
+  DEBUG_ELEMENT : number;
   NATIVE_SAMI : number;
   NATIVE_SRT : number;
   NATIVE_TTML : number;
@@ -54,6 +55,7 @@ declare const enum FEATURES_ENUM {
   HTML_VTT,
   LOCAL_MANIFEST,
   METAPLAYLIST,
+  DEBUG_ELEMENT,
   NATIVE_SAMI,
   NATIVE_SRT,
   NATIVE_TTML,

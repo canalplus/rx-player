@@ -244,6 +244,7 @@ export interface IAdaptation {
   normalizedLanguage? : string | undefined;
   isAudioDescription? : boolean | undefined;
   isClosedCaption? : boolean | undefined;
+  isSignInterpreted? : boolean | undefined;
   isTrickModeTrack? : boolean | undefined;
   representations : IRepresentation[];
 
