@@ -207,7 +207,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                 drmSystemId : string | undefined;
                 unlinkMediaSource : TaskCanceller; }>
   {
-      const initCanceller = this._initCanceller;
+    const initCanceller = this._initCanceller;
     return createCancellablePromise(initCanceller.signal, (resolve) => {
       const { keySystems } = this._settings;
 
