@@ -140,9 +140,9 @@ export default function StreamOrchestrator(
     });
 
   // Create automatically the right `PeriodStream` for every possible types
-  segmentBuffersStore.getBufferTypes().map((bufferType) => {
+  for (const bufferType of segmentBuffersStore.getBufferTypes()) {
     manageEveryStreams(bufferType, initialPeriod);
-  });
+  }
 
   /**
    * Manage creation and removal of Streams for every Periods for a given type.

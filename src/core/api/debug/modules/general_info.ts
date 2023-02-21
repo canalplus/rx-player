@@ -56,9 +56,9 @@ export default function constructDebugGeneralInfo(
       ];
 
       const valuesLine2 : Array<[string, string]> = [];
-      const ks = instance.getCurrentKeySystem();
+      const ks = instance.getKeySystemConfiguration();
       if (ks !== null) {
-        valuesLine2.push(["ks", ks]);
+        valuesLine2.push(["ks", ks.keySystem]);
       }
       const mbb = instance.getMaxBufferBehind();
       if (mbb !== Infinity) {

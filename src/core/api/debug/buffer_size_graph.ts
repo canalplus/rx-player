@@ -83,30 +83,6 @@ export default class BufferSizeGraph {
       return Math.max(maxPoint + 5, MINIMUM_MAX_BUFFER_SIZE);
     }
 
-//     /**
-//      * Draw grid lines on canvas and their correspinding values.
-//      */
-//     function drawGrid () {
-//       if (canvasCtx === null) {
-//         return;
-//       }
-//       canvasCtx.beginPath();
-//       canvasCtx.strokeStyle = "lightgrey";
-//       canvasCtx.lineWidth = 1;
-//       const stepHeight = height / NUMBER_GRID_LINES_HEIGHT;
-//       const stepVal = currentMaxSize / NUMBER_GRID_LINES_HEIGHT;
-//       for (let i = 0; i <= NUMBER_GRID_LINES_HEIGHT; i++) {
-//         const height = stepHeight * i + HEIGHT_MARGIN_TOP;
-//         canvasCtx.moveTo(0, height);
-//         canvasCtx.font = "14px Arial";
-//         const currStepVal = (stepVal * (NUMBER_GRID_LINES_HEIGHT - i))
-//           .toFixed(1);
-//         canvasCtx.fillText(`${currStepVal} s`, 0, height - 5);
-//         canvasCtx.lineTo(CANVAS_WIDTH, height);
-//       }
-//       canvasCtx.stroke();
-//     }
-
     /**
      * Draw all data contained in `history` in the canvas given.
      */

@@ -151,7 +151,7 @@ const linkPlayerEventsToState = (player, state, abortSignal) => {
   };
 
   const bufferedDataItv = setInterval(
-    updateBufferedData(),
+    updateBufferedData,
     BUFFERED_DATA_UPDATES_INTERVAL
   );
   updateBufferedData();

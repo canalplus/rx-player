@@ -37,5 +37,4 @@ export default function renderDebugElement(
   cancelSignal.register(() => {
     parentElt.removeChild(debugWrapperElt);
   });
-  return;
 }
