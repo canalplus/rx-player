@@ -124,6 +124,21 @@ export default function constructDebugGeneralInfo(
           generalInfoElt.appendChild(lineInfoElt);
         }
       }
+      if (isExtendedMode(parentElt)) {
+        const url = instance.getUrl();
+        if (url !== undefined) {
+          const reducedUrl = url.length > 100 ?
+            url.substring(0, 99) + "…" :
+            url;
+
+          generalInfoElt.appendChild(createCompositeElement("div", [
+            createMetricTitle("url"),
+            createElement("span", {
+              textContent: reducedUrl,
+            }),
+          ]));
+        }
+      }
     }
     if (isExtendedMode(parentElt)) {
       const videoId = instance.getAvailableVideoTracks().map(({ id, active }) =>
@@ -136,7 +151,7 @@ export default function constructDebugGeneralInfo(
       if (videoId.length > 0) {
         let textContent = `${videoId.length}:${videoId.join(" ")} `;
         if (textContent.length > 100) {
-          textContent = textContent.substring(0, 96) + "... ";
+          textContent = textContent.substring(0, 98) + "… ";
         }
         const videoAdaps = createCompositeElement("div", [
           createMetricTitle("vt"),
@@ -147,7 +162,7 @@ export default function constructDebugGeneralInfo(
       if (audioId.length > 0) {
         let textContent = `${audioId.length}:${audioId.join(" ")} `;
         if (textContent.length > 100) {
-          textContent = textContent.substring(0, 96) + "... ";
+          textContent = textContent.substring(0, 98) + "… ";
         }
         const audioAdaps = createCompositeElement("div", [
           createMetricTitle("at"),
@@ -158,7 +173,7 @@ export default function constructDebugGeneralInfo(
       if (textId.length > 0) {
         let textContent = `${textId.length}:${textId.join(" ")} `;
         if (textContent.length > 100) {
-          textContent = textContent.substring(0, 96) + "... ";
+          textContent = textContent.substring(0, 98) + "… ";
         }
         const textAdaps = createCompositeElement("div", [
           createMetricTitle("tt"),
