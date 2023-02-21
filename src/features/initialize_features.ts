@@ -37,10 +37,10 @@ export default function initializeFeaturesObject() : void {
   }
 
   // Feature switching the Native TextTrack implementation
-  const HAS_NATIVE_MODE = __FEATURES__.NATIVE_VTT ||
-                          __FEATURES__.NATIVE_SAMI ||
-                          __FEATURES__.NATIVE_TTML ||
-                          __FEATURES__.NATIVE_SRT;
+  const HAS_NATIVE_MODE = __FEATURES__.NATIVE_VTT === __FEATURES__.IS_ENABLED ||
+                          __FEATURES__.NATIVE_SAMI === __FEATURES__.IS_ENABLED ||
+                          __FEATURES__.NATIVE_TTML === __FEATURES__.IS_ENABLED ||
+                          __FEATURES__.NATIVE_SRT === __FEATURES__.IS_ENABLED;
 
   if (__FEATURES__.SMOOTH === __FEATURES__.IS_ENABLED as number) {
     features.transports.smooth = require("../transports/smooth/index.ts").default;
@@ -61,7 +61,7 @@ export default function initializeFeaturesObject() : void {
     features.createDebugElement = require("../core/api/debug/index.ts").default;
   }
 
-  if (HAS_NATIVE_MODE === __FEATURES__.IS_ENABLED as number) {
+  if (HAS_NATIVE_MODE) {
     features.nativeTextTracksBuffer =
       require("../core/segment_buffers/implementations/text/native/index.ts").default;
     if (__FEATURES__.NATIVE_VTT === __FEATURES__.IS_ENABLED as number) {
@@ -86,12 +86,12 @@ export default function initializeFeaturesObject() : void {
   }
 
   // Feature switching the HTML TextTrack implementation
-  const HAS_HTML_MODE = __FEATURES__.HTML_VTT ||
-                        __FEATURES__.HTML_SAMI ||
-                        __FEATURES__.HTML_TTML ||
-                        __FEATURES__.HTML_SRT;
+  const HAS_HTML_MODE = __FEATURES__.HTML_VTT === __FEATURES__.IS_ENABLED ||
+                        __FEATURES__.HTML_SAMI === __FEATURES__.IS_ENABLED ||
+                        __FEATURES__.HTML_TTML === __FEATURES__.IS_ENABLED ||
+                        __FEATURES__.HTML_SRT === __FEATURES__.IS_ENABLED;
 
-  if (HAS_HTML_MODE === __FEATURES__.IS_ENABLED as number) {
+  if (HAS_HTML_MODE) {
     features.htmlTextTracksBuffer =
       require("../core/segment_buffers/implementations/text/html/index.ts").default;
     if (__FEATURES__.HTML_SAMI === __FEATURES__.IS_ENABLED as number) {
