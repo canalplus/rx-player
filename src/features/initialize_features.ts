@@ -37,10 +37,11 @@ export default function initializeFeaturesObject() : void {
   }
 
   // Feature switching the Native TextTrack implementation
-  const HAS_NATIVE_MODE = __FEATURES__.NATIVE_VTT === __FEATURES__.IS_ENABLED ||
-                          __FEATURES__.NATIVE_SAMI === __FEATURES__.IS_ENABLED ||
-                          __FEATURES__.NATIVE_TTML === __FEATURES__.IS_ENABLED ||
-                          __FEATURES__.NATIVE_SRT === __FEATURES__.IS_ENABLED;
+  const HAS_NATIVE_MODE =
+    __FEATURES__.NATIVE_VTT === __FEATURES__.IS_ENABLED as number ||
+    __FEATURES__.NATIVE_SAMI === __FEATURES__.IS_ENABLED as number ||
+    __FEATURES__.NATIVE_TTML === __FEATURES__.IS_ENABLED as number ||
+    __FEATURES__.NATIVE_SRT === __FEATURES__.IS_ENABLED as number;
 
   if (__FEATURES__.SMOOTH === __FEATURES__.IS_ENABLED as number) {
     features.transports.smooth = require("../transports/smooth/index.ts").default;
@@ -86,10 +87,11 @@ export default function initializeFeaturesObject() : void {
   }
 
   // Feature switching the HTML TextTrack implementation
-  const HAS_HTML_MODE = __FEATURES__.HTML_VTT === __FEATURES__.IS_ENABLED ||
-                        __FEATURES__.HTML_SAMI === __FEATURES__.IS_ENABLED ||
-                        __FEATURES__.HTML_TTML === __FEATURES__.IS_ENABLED ||
-                        __FEATURES__.HTML_SRT === __FEATURES__.IS_ENABLED;
+  const HAS_HTML_MODE =
+    __FEATURES__.HTML_VTT === __FEATURES__.IS_ENABLED as number ||
+    __FEATURES__.HTML_SAMI === __FEATURES__.IS_ENABLED as number ||
+    __FEATURES__.HTML_TTML === __FEATURES__.IS_ENABLED as number ||
+    __FEATURES__.HTML_SRT === __FEATURES__.IS_ENABLED as number;
 
   if (HAS_HTML_MODE) {
     features.htmlTextTracksBuffer =
