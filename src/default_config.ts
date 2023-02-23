@@ -936,7 +936,8 @@ const DEFAULT_CONFIG = {
                                        "HW_SECURE_DECODE",
                                        "HW_SECURE_CRYPTO",
                                        "SW_SECURE_DECODE",
-                                       "SW_SECURE_CRYPTO" ],
+                                       "SW_SECURE_CRYPTO",
+                                       undefined ],
 
   /**
    * Robustnesses used in the {audio,video}Capabilities of the
@@ -947,7 +948,7 @@ const DEFAULT_CONFIG = {
    * Defined in order of importance (first will be tested first etc.)
    * @type {Array.<string>}
    */
-  EME_DEFAULT_PLAYREADY_ROBUSTNESSES: [ "3000", "2000" ],
+  EME_DEFAULT_PLAYREADY_ROBUSTNESSES: [ "3000", "2000", undefined ],
 
     /**
      * Link canonical key systems names to their respective reverse domain name,
