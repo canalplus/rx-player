@@ -123,7 +123,7 @@ export default class RebufferingController
       playbackRateUpdater.dispose();
     });
 
-    let prevFreezingState : { attemptTimestamp : number } | null;
+    let prevFreezingState : { attemptTimestamp : number } | null = null;
 
     this._playbackObserver.listen((observation) => {
       const discontinuitiesStore = this._discontinuitiesStore;
