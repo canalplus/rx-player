@@ -1,5 +1,3 @@
-import { isWebOs } from "./browser_detection";
-
 /**
  * Returns `true` if a `MediaKeys` instance (the  `Encrypted Media Extension`
  * concept) can be reused between contents.
@@ -13,5 +11,5 @@ import { isWebOs } from "./browser_detection";
  * @returns {boolean}
  */
 export default function canReuseMediaKeys() : boolean {
-  return !isWebOs;
+  return false;
 }
