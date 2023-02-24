@@ -16,10 +16,18 @@ module.exports = {
   "plugins": [
     "eslint-plugin-import",
     "eslint-plugin-jsdoc",
+    "ban",
     "@typescript-eslint",
     "@typescript-eslint/tslint"
   ],
   "rules": {
+    "ban/ban": [
+      2,
+      {
+        "name": ["*", "finally"],
+        "message": "Promise.prototype.finally is forbidden due to poor support from older devices.\nNote that this linting rule just bans naively all \"finally\" method calls, if in this case it wasn't called on a Promise, you can safely ignore this error",
+      }
+    ],
     "@typescript-eslint/adjacent-overload-signatures": "error",
     "@typescript-eslint/array-type": [
       "error",

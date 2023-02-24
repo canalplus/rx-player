@@ -97,6 +97,7 @@
     "core-js": "3.28.0",
     "esbuild": "0.17.10",
     "eslint": "8.34.0",
+    "eslint-plugin-ban": "1.6.0",
     "eslint-plugin-import": "2.27.5",
     "eslint-plugin-jsdoc": "40.0.0",
     "eslint-plugin-react": "7.32.2",
