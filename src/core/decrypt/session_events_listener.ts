@@ -210,27 +210,36 @@ export default function SessionEventsListener(
   ) : Promise<BufferSource | null> {
     let timeoutId : number | undefined;
     return new Promise<BufferSource | null>((res, rej) => {
-      log.debug("DRM: Calling `getLicense`", messageType);
-      const getLicense = keySystemOptions.getLicense(message, messageType);
-      const getLicenseTimeout = isNullOrUndefined(getLicenseConfig.timeout) ?
-        10 * 1000 :
-        getLicenseConfig.timeout;
-
-      if (getLicenseTimeout >= 0) {
-        timeoutId = setTimeout(() => {
-          rej(new GetLicenseTimeoutError(
-            `"getLicense" timeout exceeded (${getLicenseTimeout} ms)`
-          ));
-        }, getLicenseTimeout) as unknown as number;
-      }
       try {
-        Promise.resolve(getLicense).then(res, rej);
+        log.debug("DRM: Calling `getLicense`", messageType);
+        const getLicense = keySystemOptions.getLicense(message, messageType);
+        const getLicenseTimeout = isNullOrUndefined(getLicenseConfig.timeout) ?
+          10 * 1000 :
+          getLicenseConfig.timeout;
+
+        if (getLicenseTimeout >= 0) {
+          timeoutId = setTimeout(() => {
+            rej(new GetLicenseTimeoutError(
+              `"getLicense" timeout exceeded (${getLicenseTimeout} ms)`
+            ));
+          }, getLicenseTimeout) as unknown as number;
+        }
+        Promise.resolve(getLicense)
+          .then(clearTimeoutAndResolve, clearTimeoutAndReject);
       } catch (err) {
-        rej(err);
+        clearTimeoutAndReject(err);
       }
-    }).finally(() => {
-      if (timeoutId !== undefined) {
-        clearTimeout(timeoutId);
+      function clearTimeoutAndResolve(data : BufferSource | null) {
+        if (timeoutId !== undefined) {
+          clearTimeout(timeoutId);
+        }
+        res(data);
+      }
+      function clearTimeoutAndReject(err : unknown) {
+        if (timeoutId !== undefined) {
+          clearTimeout(timeoutId);
+        }
+        rej(err);
       }
     });
   }

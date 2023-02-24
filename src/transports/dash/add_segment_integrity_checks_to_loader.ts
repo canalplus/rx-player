@@ -53,9 +53,9 @@ export default function addSegmentIntegrityChecks<T>(
           }
         },
       })
-        .finally(() =>  cleanUpCancellers())
         .then(
           (info) => {
+            cleanUpCancellers();
             if (requestCanceller.isUsed()) {
               return;
             }
@@ -69,7 +69,10 @@ export default function addSegmentIntegrityChecks<T>(
             }
             resolve(info);
           },
-          reject
+          (err : unknown) => {
+            cleanUpCancellers();
+            reject(err);
+          }
         );
 
       function cleanUpCancellers() {
