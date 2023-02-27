@@ -10,22 +10,43 @@ import DEFAULT_VALUES from "../../lib/defaultOptionsValues";
  * @returns {Object}
  */
 function RequestConfig({
-  segmentRetry,
-  segmentTimeout,
+  manifestRequestTimeout,
   manifestRetry,
   offlineRetry,
-  manifestTimeout,
-  onSegmentRetryInput,
-  onSegmentTimeoutInput,
-  onManifestRetryInput,
-  onOfflineRetryInput,
-  onManifestTimeoutInput,
+  onManifestRequestTimeoutChange,
+  onManifestRetryChange,
+  onOfflineRetryChange,
+  onSegmentRequestTimeoutChange,
+  onSegmentRetryChange,
+  segmentRequestTimeout,
+  segmentRetry,
 }) {
+  const [segmentRetryTxt, updateSegmentRetryText] = useState(
+    segmentRetry
+  );
+  const [segmentRequestTimeoutTxt, updateSegmentRequestTimeoutText] = useState(
+    segmentRequestTimeout
+  );
+  const [manifestRetryTxt, updateManifestRetryText] = useState(
+    manifestRetry
+  );
+  const [offlineRetryTxt, updateOfflineRetryText] = useState(
+    offlineRetry
+  );
+  const [
+    manifestRequestTimeoutTxt,
+    updateManifestRequestTimeoutText
+  ] = useState(
+    manifestRequestTimeout
+  );
   const [isSegmentRetryLimited, setSegmentRetryLimit] = useState(
     segmentRetry !== Infinity
   );
-  const [isSegmentTimeoutLimited, setSegmentTimeoutLimit] = useState(
-    segmentTimeout !== -1
+  const [
+    isSegmentRequestTimeoutLimited,
+    setSegmentRequestTimeoutLimit
+  ] = useState(
+    segmentRequestTimeout !== -1
   );
   const [isManifestRetryLimited, setManifestRetryLimit] = useState(
     manifestRetry !== Infinity
@@ -34,28 +55,46 @@ function RequestConfig({
     offlineRetry !== Infinity
   );
 
-  const [isManifestTimeoutLimited, setManifestTimeoutLimit] = useState(
-    manifestTimeout !== -1
+  const [
+    isManifestRequestTimeoutLimited,
+    setManifestRequestTimeoutLimit
+  ] = useState(
+    manifestRequestTimeout !== -1
   );
+
+  const defaultSegmentRetry =
+    DEFAULT_VALUES.loadVideo.networkConfig.segmentRetry;
+  const defaultSegmentRequestTimeout =
+    DEFAULT_VALUES.loadVideo.networkConfig.segmentRequestTimeout;
+  const defaultManifestRetry =
+    DEFAULT_VALUES.loadVideo.networkConfig.manifestRetry;
+  const defaultManifestRequestTimeout =
+    DEFAULT_VALUES.loadVideo.networkConfig.manifestRequestTimeout;
+  const defaultOfflineRetry =
+    DEFAULT_VALUES.loadVideo.networkConfig.offlineRetry;
   const onChangeLimitSegmentRetry = (evt) => {
     const isNotLimited = getCheckBoxValue(evt.target);
     if (isNotLimited) {
       setSegmentRetryLimit(false);
-      onSegmentRetryInput("Infinity");
+      updateSegmentRetryText(String(Infinity));
+      onSegmentRetryChange(Infinity);
     } else {
       setSegmentRetryLimit(true);
-      onSegmentRetryInput(DEFAULT_VALUES.segmentRetry);
+      updateSegmentRetryText(String(defaultSegmentRetry));
+      onSegmentRetryChange(defaultSegmentRetry);
     }
   };
 
-  const onChangeLimitSegmentTimeout = (evt) => {
+  const onChangeLimitSegmentRequestTimeout = (evt) => {
     const isNotLimited = getCheckBoxValue(evt.target);
     if (isNotLimited) {
-      setSegmentTimeoutLimit(false);
-      onSegmentTimeoutInput("-1");
+      setSegmentRequestTimeoutLimit(false);
+      updateSegmentRequestTimeoutText(String(-1));
+      onSegmentRequestTimeoutChange(-1);
     } else {
-      setSegmentTimeoutLimit(true);
-      onSegmentTimeoutInput(DEFAULT_VALUES.segmentTimeout);
+      setSegmentRequestTimeoutLimit(true);
+      updateSegmentRequestTimeoutText(String(defaultSegmentRequestTimeout));
+      onSegmentRequestTimeoutChange(defaultSegmentRequestTimeout);
     }
   };
 
@@ -63,10 +102,12 @@ function RequestConfig({
     const isNotLimited = getCheckBoxValue(evt.target);
     if (isNotLimited) {
       setManifestRetryLimit(false);
-      onManifestRetryInput(Infinity);
+      updateManifestRetryText(String(Infinity));
+      onManifestRetryChange(Infinity);
     } else {
       setManifestRetryLimit(true);
-      onManifestRetryInput(DEFAULT_VALUES.manifestRetry);
+      updateManifestRetryText(String(defaultManifestRetry));
+      onManifestRetryChange(defaultManifestRetry);
     }
   };
 
@@ -74,21 +115,25 @@ function RequestConfig({
     const isNotLimited = getCheckBoxValue(evt.target);
     if (isNotLimited) {
       setOfflineRetryLimit(false);
-      onOfflineRetryInput(Infinity);
+      updateOfflineRetryText(String(Infinity));
+      onOfflineRetryChange(Infinity);
     } else {
       setOfflineRetryLimit(true);
-      onOfflineRetryInput(DEFAULT_VALUES.offlineRetry);
+      updateOfflineRetryText(String(defaultOfflineRetry));
+      onOfflineRetryChange(defaultOfflineRetry);
     }
   };
 
-  const onChangeLimitManifestTimeout = (evt) => {
+  const onChangeLimitManifestRequestTimeout = (evt) => {
     const isNotLimited = getCheckBoxValue(evt.target);
     if (isNotLimited) {
-      setManifestTimeoutLimit(false);
-      onManifestTimeoutInput("-1");
+      setManifestRequestTimeoutLimit(false);
+      updateManifestRequestTimeoutText(String(-1));
+      onManifestRequestTimeoutChange(-1);
     } else {
-      setManifestTimeoutLimit(true);
-      onManifestTimeoutInput(DEFAULT_VALUES.manifestTimeout);
+      setManifestRequestTimeoutLimit(true);
+      updateManifestRequestTimeoutText(String(defaultManifestRequestTimeout));
+      onManifestRequestTimeoutChange(defaultManifestRequestTimeout);
     }
   };
 
@@ -104,23 +149,33 @@ function RequestConfig({
               id="segmentRetry"
               aria-label="Segment retry option"
               placeholder="Number"
-              onChange={(evt) => onSegmentRetryInput(evt.target.value)}
-              value={segmentRetry}
+              onChange={(evt) => {
+                const { value } = evt.target;
+                updateSegmentRetryText(value);
+                let newValue = value === "" ?
+                  defaultSegmentRetry :
+                  parseFloat(value);
+                newValue = isNaN(newValue) ?
+                  defaultSegmentRetry :
+                  newValue;
+                onSegmentRetryChange(newValue);
+              }}
+              value={segmentRetryTxt}
               disabled={isSegmentRetryLimited === false}
               className="optionInput"
             />
             <Button
               className={
-                parseFloat(segmentRetry) === DEFAULT_VALUES.segmentRetry
+                parseFloat(segmentRetryTxt) === defaultSegmentRetry
                   ? "resetBtn disabledResetBtn"
                   : "resetBtn"
               }
               ariaLabel="Reset option to default value"
               title="Reset option to default value"
               onClick={() => {
-                setSegmentRetryLimit(DEFAULT_VALUES.segmentRetry !==
-                  Infinity);
-                onSegmentRetryInput(DEFAULT_VALUES.segmentRetry);
+                updateSegmentRetryText(String(defaultSegmentRetry));
+                onSegmentRetryChange(defaultSegmentRetry);
+                setSegmentRetryLimit(defaultSegmentRetry !== Infinity);
               }}
               value={String.fromCharCode(0xf021)}
             />
@@ -136,7 +191,7 @@ function RequestConfig({
           Do not limit
         </Checkbox>
         <span className="option-desc">
-          {parseFloat(segmentRetry) === Infinity || !isSegmentRetryLimited ?
+          {segmentRetry === Infinity || !isSegmentRetryLimited ?
             "Retry \"retryable\" segment requests with no limit" :
             `Retry "retryable" segment requests at most ${segmentRetry} time(s)`}
         </span>
@@ -144,31 +199,47 @@ function RequestConfig({
 
       <li>
         <div className="playerOptionInput">
-          <label htmlFor="segmentTimeout">Segment Timeout</label>
+          <label htmlFor="segmentRequestTimeout">Segment Timeout</label>
           <span className="wrapperInputWithResetBtn">
             <input
               type="text"
-              name="segmentTimeout"
-              id="segmentTimeout"
+              name="segmentRequestTimeout"
+              id="segmentRequestTimeout"
               aria-label="Segment timeout option"
               placeholder="Number"
-              onChange={(evt) => onSegmentTimeoutInput(evt.target.value)}
-              value={segmentTimeout}
-              disabled={isSegmentTimeoutLimited === false}
+              onChange={(evt) => {
+                const { value } = evt.target;
+                updateSegmentRequestTimeoutText(value);
+                let newValue = value === "" ?
+                  defaultSegmentRequestTimeout :
+                  parseFloat(value);
+                newValue = isNaN(newValue) ?
+                  defaultSegmentRequestTimeout :
+                  newValue;
+                onSegmentRequestTimeoutChange(newValue);
+              }}
+              value={segmentRequestTimeout}
+              disabled={isSegmentRequestTimeoutLimited === false}
               className="optionInput"
             />
             <Button
               className={
-                parseFloat(segmentTimeout) === DEFAULT_VALUES.segmentTimeout
+                parseFloat(
+                  segmentRequestTimeoutTxt
+                ) === defaultSegmentRequestTimeout
                   ? "resetBtn disabledResetBtn"
                   : "resetBtn"
               }
               ariaLabel="Reset option to default value"
               title="Reset option to default value"
               onClick={() => {
-                setSegmentTimeoutLimit(DEFAULT_VALUES.segmentTimeout !==
-                  Infinity);
-                onSegmentTimeoutInput(DEFAULT_VALUES.segmentTimeout);
+                updateSegmentRequestTimeoutText(
+                  String(defaultSegmentRequestTimeout)
+                );
+                onSegmentRequestTimeoutChange(defaultSegmentRequestTimeout);
+                setSegmentRequestTimeoutLimit(
+                  defaultSegmentRequestTimeout !== Infinity
+                );
               }}
               value={String.fromCharCode(0xf021)}
             />
@@ -177,16 +248,16 @@ function RequestConfig({
         <Checkbox
           className="playerOptionsCheckBox"
           ariaLabel="Segment timeout limit option"
-          name="segmentTimeoutLimit"
-          checked={isSegmentTimeoutLimited === false}
-          onChange={onChangeLimitSegmentTimeout}
+          name="segmentRequestTimeoutLimit"
+          checked={isSegmentRequestTimeoutLimited === false}
+          onChange={onChangeLimitSegmentRequestTimeout}
         >
           Do not limit
         </Checkbox>
         <span className="option-desc">
-          {parseFloat(segmentTimeout) === -1 || !isSegmentTimeoutLimited ?
+          {segmentRequestTimeout === -1 || !isSegmentRequestTimeoutLimited ?
             "Perform segment requests without timeout" :
-            `Stop segment requests after ${segmentTimeout} millisecond(s)`}
+            `Stop segment requests after ${segmentRequestTimeout} millisecond(s)`}
         </span>
       </li>
 
@@ -197,26 +268,38 @@ function RequestConfig({
             <input
               type="text"
               name="manifestRetry"
-              id="segmentRetry"
+              id="manifestRetry"
               aria-label="Manifest retry"
               placeholder="Number"
-              onChange={(evt) => onManifestRetryInput(evt.target.value)}
-              value={manifestRetry}
+              onChange={(evt) => {
+                const { value } = evt.target;
+                updateManifestRetryText(value);
+                let newValue = value === "" ?
+                  defaultManifestRetry :
+                  parseFloat(value);
+                newValue = isNaN(newValue) ?
+                  defaultManifestRetry :
+                  newValue;
+                onManifestRetryChange(newValue);
+              }}
+              value={manifestRetryTxt}
               disabled={isManifestRetryLimited === false}
               className="optionInput"
             />
             <Button
               className={
-                parseFloat(manifestRetry) === DEFAULT_VALUES.manifestRetry
+                parseFloat(manifestRetryTxt) === defaultManifestRetry
                   ? "resetBtn disabledResetBtn"
                   : "resetBtn"
               }
               ariaLabel="Reset option to default value"
               title="Reset option to default value"
               onClick={() => {
-                setManifestRetryLimit(DEFAULT_VALUES.manifestRetry !==
-                  Infinity);
-                onManifestRetryInput(DEFAULT_VALUES.manifestRetry);
+                updateManifestRetryText(
+                  String(defaultManifestRetry)
+                );
+                onManifestRetryChange(defaultManifestRetry);
+                setManifestRetryLimit(defaultManifestRetry !== Infinity);
               }}
               value={String.fromCharCode(0xf021)}
             />
@@ -232,7 +315,7 @@ function RequestConfig({
           Do not limit
         </Checkbox>
         <span className="option-desc">
-          {parseFloat(manifestRetry) === Infinity || !isManifestRetryLimited ?
+          {manifestRetry === Infinity || !isManifestRetryLimited ?
             "Retry \"retryable\" manifest requests with no limit" :
             `Retry "retryable" manifest requests at most ${manifestRetry} time(s)`}
         </span>
@@ -248,21 +331,32 @@ function RequestConfig({
               id="offlineRetry"
               placeholder="Number"
               className="optionInput"
-              onChange={(evt) => onOfflineRetryInput(evt.target.value)}
-              value={offlineRetry}
+              onChange={(evt) => {
+                const { value } = evt.target;
+                updateOfflineRetryText(value);
+                let newValue = value === "" ?
+                  defaultOfflineRetry :
+                  parseFloat(value);
+                newValue = isNaN(newValue) ?
+                  defaultOfflineRetry :
+                  newValue;
+                onOfflineRetryChange(newValue);
+              }}
+              value={offlineRetryTxt}
               disabled={isOfflineRetryLimited === false}
             />
             <Button
               className={
-                parseFloat(offlineRetry) === DEFAULT_VALUES.offlineRetry
+                parseFloat(offlineRetryTxt) === defaultOfflineRetry
                   ? "resetBtn disabledResetBtn"
                   : "resetBtn"
               }
               ariaLabel="Reset option to default value"
               title="Reset option to default value"
               onClick={() => {
-                setOfflineRetryLimit(DEFAULT_VALUES.offlineRetry !== Infinity);
-                onOfflineRetryInput(DEFAULT_VALUES.offlineRetry);
+                updateOfflineRetryText(String(defaultOfflineRetry));
+                onOfflineRetryChange(defaultOfflineRetry);
+                setOfflineRetryLimit(defaultOfflineRetry !== Infinity);
               }}
               value={String.fromCharCode(0xf021)}
             />
@@ -279,7 +373,7 @@ function RequestConfig({
           Do not limit
         </Checkbox>
         <span className="option-desc">
-          {parseFloat(offlineRetry) === Infinity || !isOfflineRetryLimited ?
+          {offlineRetry === Infinity || !isOfflineRetryLimited ?
             "Retry \"retryable\" requests when offline with no limit" :
             `Retry "retryable" requests when offline at most ${offlineRetry} time(s)`}
         </span>
@@ -287,31 +381,47 @@ function RequestConfig({
 
       <li>
         <div className="playerOptionInput">
-          <label htmlFor="manifestTimeout">Manifest Timeout</label>
+          <label htmlFor="manifestRequestTimeout">Manifest Timeout</label>
           <span className="wrapperInputWithResetBtn">
             <input
               type="text"
-              name="manifestTimeout"
-              id="manifestTimeout"
+              name="manifestRequestTimeout"
+              id="manifestRequestTimeout"
               aria-label="Manifest timeout option"
               placeholder="Number"
-              onChange={(evt) => onManifestTimeoutInput(evt.target.value)}
-              value={manifestTimeout}
-              disabled={isManifestTimeoutLimited === false}
+              onChange={(evt) => {
+                const { value } = evt.target;
+                updateManifestRequestTimeoutText(value);
+                let newValue = value === "" ?
+                  defaultManifestRequestTimeout :
+                  parseFloat(value);
+                newValue = isNaN(newValue) ?
+                  defaultManifestRequestTimeout :
+                  newValue;
+                onManifestRequestTimeoutChange(newValue);
+              }}
+              value={manifestRequestTimeout}
+              disabled={isManifestRequestTimeoutLimited === false}
               className="optionInput"
             />
             <Button
               className={
-                parseFloat(manifestTimeout) === DEFAULT_VALUES.manifestTimeout
+                parseFloat(
+                  manifestRequestTimeoutTxt
+                ) === defaultManifestRequestTimeout
                   ? "resetBtn disabledResetBtn"
                   : "resetBtn"
               }
               ariaLabel="Reset option to default value"
               title="Reset option to default value"
               onClick={() => {
-                setManifestTimeoutLimit(DEFAULT_VALUES.manifestTimeout !==
-                  Infinity);
-                onManifestTimeoutInput(DEFAULT_VALUES.manifestTimeout);
+                updateManifestRequestTimeoutText(
+                  String(defaultManifestRequestTimeout)
+                );
+                onManifestRequestTimeoutChange(defaultManifestRequestTimeout);
+                setManifestRequestTimeoutLimit(
+                  defaultManifestRequestTimeout !== Infinity
+                );
               }}
               value={String.fromCharCode(0xf021)}
             />
@@ -320,16 +430,16 @@ function RequestConfig({
         <Checkbox
           className="playerOptionsCheckBox"
           ariaLabel="Manifest timeout limit option"
-          name="manifestTimeoutLimit"
-          checked={isManifestTimeoutLimited === false}
-          onChange={onChangeLimitManifestTimeout}
+          name="manifestRequestTimeoutLimit"
+          checked={isManifestRequestTimeoutLimited === false}
+          onChange={onChangeLimitManifestRequestTimeout}
         >
           Do not limit
         </Checkbox>
         <span className="option-desc">
-          {parseFloat(manifestTimeout) === -1 || !isManifestTimeoutLimited ?
+          {manifestRequestTimeout === -1 || !isManifestRequestTimeoutLimited ?
             "Perform manifest requests without timeout" :
-            `Stop manifest requests after ${manifestTimeout} millisecond(s)`}
+            `Stop manifest requests after ${manifestRequestTimeout} millisecond(s)`}
         </span>
       </li>
     </Fragment>

@@ -10,41 +10,60 @@ import DEFAULT_VALUES from "../../lib/defaultOptionsValues";
  * @returns {Object}
  */
 function VideoAdaptiveSettings({
-  initialVideoBr,
-  minVideoBr,
-  maxVideoBr,
-  onInitialVideoBrInput,
-  onMinVideoBrInput,
-  onMaxVideoBrInput,
+  initialVideoBitrate,
+  minVideoBitrate,
+  maxVideoBitrate,
+  onInitialVideoBitrateChange,
+  onMinVideoBitrateChange,
+  onMaxVideoBitrateChange,
   limitVideoWidth,
   throttleVideoBitrateWhenHidden,
-  onLimitVideoWidthClick,
-  onThrottleVideoBitrateWhenHiddenClick,
+  onLimitVideoWidthChange,
+  onThrottleVideoBitrateWhenHiddenChange,
 }) {
-  const [isMinVideoBrLimited, setMinVideoBrLimit] = useState(minVideoBr !== 0);
-  const [isMaxVideoBrLimited, setMaxVideoBrLimit] = useState(
-    maxVideoBr !== Infinity
+  const [initialVideoBitrateTxt, updateInitialVideoBitrateText] = useState(
+    initialVideoBitrate
+  );
+  const [minVideoBitrateTxt, updateMinVideoBitrateText] = useState(
+    minVideoBitrate
+  );
+  const [maxVideoBitrateTxt, updateMaxVideoBitrateText] = useState(
+    maxVideoBitrate
+  );
+  const [isMinVideoBitrateLimited, setMinVideoBitrateLimit] = useState(
+    minVideoBitrate !== 0
+  );
+  const [isMaxVideoBitrateLimited, setMaxVideoBitrateLimit] = useState(
+    maxVideoBitrate !== Infinity
   );
 
-  const onChangeLimitMinVideoBr = (evt) => {
+  const defaultInitialVideoBitrate = DEFAULT_VALUES.player.initialVideoBitrate;
+  const defaultMinVideoBitrate = DEFAULT_VALUES.player.minVideoBitrate;
+  const defaultMaxVideoBitrate = DEFAULT_VALUES.player.maxVideoBitrate;
+
+  const onChangeLimitMinVideoBitrate = (evt) => {
     const isNotLimited = getCheckBoxValue(evt.target);
     if (isNotLimited) {
-      setMinVideoBrLimit(false);
-      onMinVideoBrInput(0);
+      setMinVideoBitrateLimit(false);
+      updateMinVideoBitrateText(String(0));
+      onMinVideoBitrateChange(0);
     } else {
-      setMinVideoBrLimit(true);
-      onMinVideoBrInput(DEFAULT_VALUES.minVideoBr);
+      setMinVideoBitrateLimit(true);
+      updateMinVideoBitrateText(String(defaultMinVideoBitrate));
+      onMinVideoBitrateChange(defaultMinVideoBitrate);
     }
   };
 
-  const onChangeLimitMaxVideoBr = (evt) => {
+  const onChangeLimitMaxVideoBitrate = (evt) => {
     const isNotLimited = getCheckBoxValue(evt.target);
     if (isNotLimited) {
-      setMaxVideoBrLimit(false);
-      onMaxVideoBrInput(Infinity);
+      setMaxVideoBitrateLimit(false);
+      updateMaxVideoBitrateText(String(Infinity));
+      onMaxVideoBitrateChange(Infinity);
     } else {
-      setMaxVideoBrLimit(true);
-      onMaxVideoBrInput(DEFAULT_VALUES.maxVideoBr);
+      setMaxVideoBitrateLimit(true);
+      updateMaxVideoBitrateText(String(defaultMaxVideoBitrate));
+      onMaxVideoBitrateChange(defaultMaxVideoBitrate);
     }
   };
 
@@ -55,25 +74,40 @@ function VideoAdaptiveSettings({
           <label htmlFor="initialVideoBitrate">Initial Video Bitrate</label>
           <span className="wrapperInputWithResetBtn">
             <input
-              type="number"
+              type="text"
               name="initialVideoBitrate"
               id="initialVideoBitrate"
               aria-label="Initial video bitrate option"
               placeholder="Number"
-              onChange={(evt) => onInitialVideoBrInput(evt.target.value)}
-              value={initialVideoBr}
+              onChange={(evt) => {
+                const { value } = evt.target;
+                updateInitialVideoBitrateText(value);
+                let newBitrate = value === "" ?
+                  defaultInitialVideoBitrate :
+                  parseFloat(value);
+                newBitrate = isNaN(newBitrate) ?
+                  defaultInitialVideoBitrate :
+                  newBitrate;
+                onInitialVideoBitrateChange(newBitrate);
+              }}
+              value={initialVideoBitrateTxt}
               className="optionInput"
             />
             <Button
               className={
-                parseFloat(initialVideoBr) === DEFAULT_VALUES.initialVideoBr
+                parseFloat(
+                  initialVideoBitrateTxt
+                ) === defaultInitialVideoBitrate
                   ? "resetBtn disabledResetBtn"
                   : "resetBtn"
               }
               ariaLabel="Reset option to default value"
               title="Reset option to default value"
               onClick={() => {
-                onInitialVideoBrInput(DEFAULT_VALUES.initialVideoBr);
+                updateInitialVideoBitrateText(String(
+                  defaultInitialVideoBitrate
+                ));
+                onInitialVideoBitrateChange(defaultInitialVideoBitrate);
               }}
               value={String.fromCharCode(0xf021)}
             />
@@ -81,9 +115,9 @@ function VideoAdaptiveSettings({
         </div>
         <span className="option-desc">
           {
-            parseFloat(initialVideoBr) === 0 ?
+            initialVideoBitrate === 0 ?
               "Starts loading the lowest video bitrate" :
-              `Starts with a video bandwidth estimate of ${initialVideoBr}` +
+              `Starts with a video bandwidth estimate of ${initialVideoBitrate}` +
               " bits per seconds."
           }
         </span>
@@ -93,27 +127,38 @@ function VideoAdaptiveSettings({
           <label htmlFor="minVideoBitrate">Min Video Bitrate</label>
           <span className="wrapperInputWithResetBtn">
             <input
-              type="number"
+              type="text"
               name="minVideoBitrate"
               id="minVideoBitrate"
               aria-label="Min video bitrate option"
               placeholder="Number"
-              onChange={(evt) => onMinVideoBrInput(evt.target.value)}
-              value={minVideoBr}
-              disabled={isMinVideoBrLimited === false}
+              onChange={(evt) => {
+                const { value } = evt.target;
+                updateMinVideoBitrateText(value);
+                let newBitrate = value === "" ?
+                  defaultMinVideoBitrate :
+                  parseFloat(value);
+                newBitrate = isNaN(newBitrate) ?
+                  defaultMinVideoBitrate :
+                  newBitrate;
+                onMinVideoBitrateChange(newBitrate);
+              }}
+              value={minVideoBitrateTxt}
+              disabled={isMinVideoBitrateLimited === false}
               className="optionInput"
             />
             <Button
               className={
-                parseInt(minVideoBr) === DEFAULT_VALUES.minVideoBr
+                parseFloat(minVideoBitrateTxt) === defaultMinVideoBitrate
                   ? "resetBtn disabledResetBtn"
                   : "resetBtn"
               }
               ariaLabel="Reset option to default value"
               title="Reset option to default value"
               onClick={() => {
-                setMinVideoBrLimit(DEFAULT_VALUES.minVideoBr !== 0);
-                onMinVideoBrInput(DEFAULT_VALUES.minVideoBr);
+                updateMinVideoBitrateText(String(defaultMinVideoBitrate));
+                onMinVideoBitrateChange(defaultMinVideoBitrate);
+                setMinVideoBitrateLimit(defaultMinVideoBitrate !== 0);
               }}
               value={String.fromCharCode(0xf021)}
             />
@@ -123,17 +168,17 @@ function VideoAdaptiveSettings({
           className="playerOptionsCheckBox"
           ariaLabel="Min video bitrate limit"
           name="minVideoBitrateLimit"
-          checked={isMinVideoBrLimited === false}
-          onChange={onChangeLimitMinVideoBr}
+          checked={isMinVideoBitrateLimited === false}
+          onChange={onChangeLimitMinVideoBitrate}
         >
           Do not limit
         </Checkbox>
         <span className="option-desc">
           {
-            !isMinVideoBrLimited || parseFloat(minVideoBr) <= 0 ?
+            !isMinVideoBitrateLimited || minVideoBitrate <= 0 ?
               "Not limiting the lowest video bitrate reachable through the adaptive logic" :
               "Limiting the lowest video bitrate reachable through the adaptive " +
-              `logic to ${minVideoBr} bits per seconds`
+              `logic to ${minVideoBitrate} bits per seconds`
           }
         </span>
       </li>
@@ -147,22 +192,33 @@ function VideoAdaptiveSettings({
               id="maxVideoBitrate"
               aria-label="Max video bitrate option"
               placeholder="Number"
-              onChange={(evt) => onMaxVideoBrInput(evt.target.value)}
-              value={maxVideoBr}
-              disabled={isMaxVideoBrLimited === false}
+              onChange={(evt) => {
+                const { value } = evt.target;
+                updateMaxVideoBitrateText(value);
+                let newBitrate = value === "" ?
+                  defaultMaxVideoBitrate :
+                  parseFloat(value);
+                newBitrate = isNaN(newBitrate) ?
+                  defaultMaxVideoBitrate :
+                  newBitrate;
+                onMaxVideoBitrateChange(newBitrate);
+              }}
+              value={maxVideoBitrateTxt}
+              disabled={isMaxVideoBitrateLimited === false}
               className="optionInput"
             />
             <Button
               className={
-                parseFloat(maxVideoBr) === DEFAULT_VALUES.maxVideoBr
+                parseFloat(maxVideoBitrateTxt) === defaultMaxVideoBitrate
                   ? "resetBtn disabledResetBtn"
                   : "resetBtn"
               }
               ariaLabel="Reset option to default value"
               title="Reset option to default value"
               onClick={() => {
-                setMaxVideoBrLimit(DEFAULT_VALUES.maxVideoBr !== Infinity);
-                onMaxVideoBrInput(DEFAULT_VALUES.maxVideoBr);
+                updateMaxVideoBitrateText(String(defaultMaxVideoBitrate));
+                onMaxVideoBitrateChange(defaultMaxVideoBitrate);
+                setMaxVideoBitrateLimit(defaultMaxVideoBitrate !== Infinity);
               }}
               value={String.fromCharCode(0xf021)}
             />
@@ -173,18 +229,19 @@ function VideoAdaptiveSettings({
             className="playerOptionsCheckBox"
             aria-label="Max video bitrate limit"
             name="maxVideoBitrateLimit"
-            checked={isMaxVideoBrLimited === false}
-            onChange={onChangeLimitMaxVideoBr}
+            checked={isMaxVideoBitrateLimited === false}
+            onChange={onChangeLimitMaxVideoBitrate}
           >
             Do not limit
           </Checkbox>
         </div>
         <span className="option-desc">
           {
-            !isMaxVideoBrLimited || parseFloat(maxVideoBr) === Infinity ?
+            !isMaxVideoBitrateLimited ||
+            parseFloat(maxVideoBitrate) === Infinity ?
               "Not limiting the highest video bitrate reachable through the adaptive logic" :
               "Limiting the highest video bitrate reachable through the adaptive " +
-              `logic to ${maxVideoBr} bits per seconds`
+              `logic to ${maxVideoBitrate} bits per seconds`
           }
         </span>
       </li>
@@ -196,7 +253,9 @@ function VideoAdaptiveSettings({
             id="limitVideoWidth"
             ariaLabel="Limit video width option"
             checked={limitVideoWidth}
-            onChange={onLimitVideoWidthClick}
+            onChange={(evt) => {
+              onLimitVideoWidthChange(getCheckBoxValue(evt.target));
+            }}
           >
             Limit Video Width
           </Checkbox>
@@ -214,7 +273,11 @@ function VideoAdaptiveSettings({
             name="throttleVideoBitrateWhenHidden"
             ariaLabel="Throttle video bitrate when hidden option"
             checked={throttleVideoBitrateWhenHidden}
-            onChange={onThrottleVideoBitrateWhenHiddenClick}
+            onChange={(evt) => {
+              onThrottleVideoBitrateWhenHiddenChange(
+                getCheckBoxValue(evt.target)
+              );
+            }}
           >
             Throttle Video Bitrate When Hidden
           </Checkbox>

@@ -1,4 +1,5 @@
 import React, { Fragment } from "react";
+import getCheckBoxValue from "../../lib/getCheckboxValue";
 import Checkbox from "../CheckBox";
 import Select from "../Select";
 
@@ -7,12 +8,12 @@ import Select from "../Select";
  * @returns {Object}
  */
 function NetworkConfig({
-  enableFastSwitching,
   audioTrackSwitchingMode,
-  onCodecSwitch,
-  onEnableFastSwitchingClick,
+  enableFastSwitching,
   onAudioTrackSwitchingModeChange,
+  onCodecSwitch,
   onCodecSwitchChange,
+  onEnableFastSwitchingChange,
 }) {
   let audioTrackSwitchingModeDescMsg;
   switch (audioTrackSwitchingMode) {
@@ -58,7 +59,9 @@ function NetworkConfig({
           name="fastSwitching"
           id="fastSwitching"
           checked={enableFastSwitching}
-          onChange={onEnableFastSwitchingClick}
+          onChange={(evt) => {
+            onEnableFastSwitchingChange(getCheckBoxValue(evt.target));
+          }}
         >
           Fast Switching
         </Checkbox>

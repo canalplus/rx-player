@@ -12,51 +12,60 @@ import Settings from "./Settings.jsx";
 import ErrorDisplayer from "./ErrorDisplayer.jsx";
 import ChartsManager from "./charts/index.jsx";
 import PlayerKnobsSettings from "./PlayerKnobsSettings.jsx";
-import isEqual from "../lib/isEqual"
+import defaultOptionsValues from "../lib/defaultOptionsValues.js";
 
 // time in ms while seeking/loading/buffering after which the spinner is shown
 const SPINNER_TIMEOUT = 300;
 
 function Player() {
-  const [player, setPlayer] = useState(null);
+  const [playerModule, setPlayerModule] = useState(null);
   const [autoPlayBlocked, setAutoPlayBlocked] = useState(false);
   const [displaySpinner, setDisplaySpinner] = useState(false);
   const [displaySettings, setDisplaySettings] = useState(false);
   const [isStopped, setIsStopped] = useState(false);
   const [enableVideoThumbnails, setEnableVideoThumbnails] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
-
-  const initOptsRef = useRef(null);
+  const [playerOpts, setPlayerOpts] = useState(defaultOptionsValues.player);
+  const [loadVideoOpts, setLoadVideoOpts] = useState(
+    defaultOptionsValues.loadVideo
+  );
+  const [hasUpdatedPlayerOptions, setHasUpdatedPlayerOptions] = useState(false);
   const displaySpinnerTimeoutRef = useRef(null);
 
   const videoElementRef = useRef(null);
-  const textTrackElement = useRef(null);
-  const playerWrapperElement = useRef(null);
-  const optionsComp = useRef(null);
+  const textTrackElementRef = useRef(null);
+  const playerWrapperElementRef = useRef(null);
 
-  const onOptionToggle = () =>
+  const onOptionToggle = useCallback(() => {
     setShowOptions((prevState) => !prevState);
+  }, []);
 
-  const createNewPlayerModule = (videoContent) => {
-    const { initOpts } = optionsComp.current.getOptions();
-    const playerMod = createModule(PlayerModule, {
-      videoElement: videoElementRef.current,
-      textTrackElement: textTrackElement.current,
-      ...initOpts
-    });
-    initOptsRef.current = initOpts;
+  const clearSpinner = useCallback(() => {
+    if (displaySpinnerTimeoutRef.current) {
+      clearTimeout(displaySpinnerTimeoutRef.current);
+      displaySpinnerTimeoutRef.current = null;
+    }
+  }, []);
 
+  // Bind events on player module creation and destroy old when it changes
+  useEffect(() => {
+    if (playerModule === null) {
+      return;
+    }
     function reCheckSpinner() {
-      const isSeeking = playerMod.get("isSeeking");
-      const isBuffering = playerMod.get("isBuffering");
-      const isLoading = playerMod.get("isLoading");
-      const isReloading = playerMod.get("isReloading");
+      const isSeeking = playerModule.get("isSeeking");
+      const isBuffering = playerModule.get("isBuffering");
+      const isLoading = playerModule.get("isLoading");
+      const isReloading = playerModule.get("isReloading");
       if (isLoading || isReloading) {
+        // When loading/reloading: show spinner immediately
         if (displaySpinnerTimeoutRef.current !== null) {
           clearTimeout(displaySpinnerTimeoutRef.current);
+          displaySpinnerTimeoutRef.current = null;
         }
         setDisplaySpinner(true);
       } else if (isSeeking || isBuffering) {
+        // When seeking/rebuffering: show spinner after a delay
         if (displaySpinnerTimeoutRef.current === null) {
           displaySpinnerTimeoutRef.current = setTimeout(() => {
             setDisplaySpinner(true);
@@ -71,85 +80,73 @@ function Player() {
       }
     }
 
-    playerMod.addStateListener("autoPlayBlocked", (newAutoPlayBlocked) => {
+    playerModule.addStateListener("autoPlayBlocked", (newAutoPlayBlocked) => {
       setAutoPlayBlocked(newAutoPlayBlocked);
     });
-    playerMod.addStateListener("isStopped", (newIsStopped) => {
+    playerModule.addStateListener("isStopped", (newIsStopped) => {
       setIsStopped(newIsStopped);
     });
-    playerMod.addStateListener("videoTrackHasTrickMode", (videoTrackHasTrickMode) => {
+    playerModule.addStateListener("videoTrackHasTrickMode", (videoTrackHasTrickMode) => {
       setEnableVideoThumbnails(videoTrackHasTrickMode);
     });
 
-    playerMod.addStateListener("isSeeking", reCheckSpinner);
-    playerMod.addStateListener("isBuffering", reCheckSpinner);
-    playerMod.addStateListener("isLoading", reCheckSpinner);
-    playerMod.addStateListener("isReloading", reCheckSpinner);
+    playerModule.addStateListener("isSeeking", reCheckSpinner);
+    playerModule.addStateListener("isBuffering", reCheckSpinner);
+    playerModule.addStateListener("isLoading", reCheckSpinner);
+    playerModule.addStateListener("isReloading", reCheckSpinner);
     reCheckSpinner();
-    if (videoContent) {
-      const { loadVideoOpts } = optionsComp.current.getOptions();
-      if (videoContent.lowLatencyMode) {
-        playerMod.dispatch("ENABLE_LIVE_CATCH_UP");
-      } else {
-        playerMod.dispatch("DISABLE_LIVE_CATCH_UP");
-      }
-      playerMod.dispatch("SET_PLAYBACK_RATE", 1);
-      playerMod.dispatch("LOAD", { ...videoContent,
-                                   ...loadVideoOpts });
-      }
-    setPlayer(playerMod);
-  };
+    return () => {
+      playerModule.destroy();
+      clearSpinner();
+    };
+  }, [playerModule]);
 
-  const cleanCurrentPlayer = () => {
-    if (player !== null) {
-      player.destroy();
-    }
-    if (displaySpinnerTimeoutRef.current) {
-      clearTimeout(displaySpinnerTimeoutRef.current);
-    }
-    setPlayer(null);
-  }
-
-  useEffect(() => {
-    createNewPlayerModule();
-    return cleanCurrentPlayer;
-  }, []);
+  const createNewPlayerModule = useCallback(() => {
+    const playerMod = createModule(
+      PlayerModule,
+      Object.assign(
+        {},
+        {
+          videoElement: videoElementRef.current,
+          textTrackElement: textTrackElementRef.current,
+        },
+        playerOpts
+      )
+    );
+    setPlayerModule(playerMod);
+    return playerMod;
+  }, [playerOpts]);
 
   const onVideoClick = useCallback(() => {
-    const { isPaused, isContentLoaded } = player.get();
+    const { isPaused, isContentLoaded } = playerModule.get();
 
     if (!isContentLoaded) {
       return;
     }
 
     if (isPaused) {
-      player.dispatch("PLAY");
+      playerModule.dispatch("PLAY");
     } else {
-      player.dispatch("DISABLE_LIVE_CATCH_UP");
-      player.dispatch("PAUSE");
+      playerModule.dispatch("DISABLE_LIVE_CATCH_UP");
+      playerModule.dispatch("PAUSE");
     }
-  }, [player]);
+  }, [playerModule]);
 
-  const loadVideo = useCallback((video) => {
-    const { initOpts: newInitOpts, loadVideoOpts } = optionsComp.current.getOptions();
-    if (!isEqual(initOptsRef.current, newInitOpts)) {
-      initOptsRef.current = newInitOpts;
-      cleanCurrentPlayer();
-      createNewPlayerModule(video);
-    } else {
-      if (video.lowLatencyMode) {
-        player.dispatch("ENABLE_LIVE_CATCH_UP");
-      } else {
-        player.dispatch("DISABLE_LIVE_CATCH_UP");
-      }
-      player.dispatch("SET_PLAYBACK_RATE", 1);
-      player.dispatch("LOAD", { ...video,
-                                ...loadVideoOpts });
+  const startContent = useCallback((contentInfo) => {
+    let playerMod = playerModule;
+    if (playerMod === null || hasUpdatedPlayerOptions) {
+      setHasUpdatedPlayerOptions(false);
+      playerMod = createNewPlayerModule();
     }
-  }, [player]);
+    loadContent(playerMod, contentInfo, loadVideoOpts);
+  }, [
+    playerModule,
+    hasUpdatedPlayerOptions,
+    createNewPlayerModule,
+    loadVideoOpts,
+  ]);
 
-
-  const stopVideo = useCallback(() => player.dispatch("STOP"), [player]);
+  const stopVideo = useCallback(() => playerModule.dispatch("STOP"), [playerModule]);
 
   const closeSettings = useCallback(() => {
     setDisplaySettings(false);
@@ -163,22 +160,28 @@ function Player() {
     <section className="video-player-section">
       <div className="video-player-content">
         <ContentList
-          loadVideo={loadVideo}
+          loadVideo={startContent}
           isStopped={isStopped}
           showOptions={showOptions}
           onOptionToggle={onOptionToggle}
         />
-        <Settings showOptions={showOptions} ref={optionsComp} />
+        <Settings
+          playerOptions={playerOpts}
+          updatePlayerOptions={updatePlayerOptions}
+          loadVideoOptions={loadVideoOpts}
+          updateLoadVideoOptions={setLoadVideoOpts}
+          showOptions={showOptions}
+        />
         <div
           className="video-player-wrapper"
-          ref={playerWrapperElement}
+          ref={playerWrapperElementRef}
         >
           <div className="video-screen-parent">
             <div
               className="video-screen"
               onClick={() => onVideoClick()}
             >
-              { player ? <ErrorDisplayer player={player} /> : null }
+              { playerModule ? <ErrorDisplayer player={playerModule} /> : null }
               {
                 autoPlayBlocked ?
                   <div className="video-player-manual-play-container" >
@@ -199,35 +202,51 @@ function Player() {
               }
               <div
                 className="text-track"
-                ref={textTrackElement}
+                ref={textTrackElementRef}
               />
               <video ref={videoElementRef} />
 
             </div>
-            { player ?
+            {
+              playerModule ?
                 <PlayerKnobsSettings
                   close={closeSettings}
                   shouldDisplay={displaySettings}
-                  player={player}
+                  player={playerModule}
                 /> :
                 null
             }
           </div>
           {
-            player ?
+            playerModule ?
               <ControlBar
-                player={player}
-                videoElement={playerWrapperElement.current}
+                player={playerModule}
+                videoElement={playerWrapperElementRef.current}
                 toggleSettings={toggleSettings}
                 stopVideo={stopVideo}
                 enableVideoThumbnails={enableVideoThumbnails}
               /> : null
           }
         </div>
-        <ChartsManager player={player} />
+        <ChartsManager player={playerModule} />
       </div>
     </section>
   );
+
+  function updatePlayerOptions(fn) {
+    setHasUpdatedPlayerOptions(true);
+    setPlayerOpts(fn);
+  }
+}
+
+function loadContent(playerModule, contentInfo, loadVideoOpts) {
+  if (contentInfo.lowLatencyMode) {
+    playerModule.dispatch("ENABLE_LIVE_CATCH_UP");
+  } else {
+    playerModule.dispatch("DISABLE_LIVE_CATCH_UP");
+  }
+  playerModule.dispatch("SET_PLAYBACK_RATE", 1);
+  playerModule.dispatch("LOAD", Object.assign({}, contentInfo, loadVideoOpts));
 }
 
 export default Player;

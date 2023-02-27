@@ -14,12 +14,24 @@ function BufferOptions({
   maxVideoBufferSize,
   maxBufferAhead,
   maxBufferBehind,
-  onWantedBufferAheadInput,
-  onMaxVideoBufferSizeInput,
-  onMaxBufferAheadInput,
-  onMaxBufferBehindInput,
+  onWantedBufferAheadChange,
+  onMaxVideoBufferSizeChange,
+  onMaxBufferAheadChange,
+  onMaxBufferBehindChange,
 }) {
-  const [isMaxBufferAHeadLimited, setMaxBufferAHeadLimit] = useState(
+  const [wantedBufferAheadTxt, updateWantedBufferAheadText] = useState(
+    wantedBufferAhead
+  );
+  const [maxVideoBufferSizeTxt, updateMaxVideoBufferSizeText] = useState(
+    maxVideoBufferSize
+  );
+  const [maxBufferBehindTxt, updateMaxBufferBehindText] = useState(
+    maxBufferBehind
+  );
+  const [maxBufferAheadTxt, updateMaxBufferAheadText] = useState(
+    maxBufferAhead
+  );
+  const [isMaxBufferAheadLimited, setMaxBufferAheadLimit] = useState(
     maxBufferAhead !== Infinity
   );
   const [isMaxBufferBehindLimited, setMaxBufferBehindLimit] = useState(
@@ -30,14 +42,21 @@ function BufferOptions({
     maxVideoBufferSize !== Infinity
   );
 
-  const onChangeLimitMaxBufferAHead = (evt) => {
+  const defaultMaxBufferAhead = DEFAULT_VALUES.player.maxBufferAhead;
+  const defaultMaxBufferBehind = DEFAULT_VALUES.player.maxBufferBehind;
+  const defaultMaxVideoBufferSize = DEFAULT_VALUES.player.maxVideoBufferSize;
+  const defaultWantedBufferAhead = DEFAULT_VALUES.player.wantedBufferAhead;
+
+  const onChangeLimitMaxBufferAhead = (evt) => {
     const isNotLimited = getCheckBoxValue(evt.target);
     if (isNotLimited) {
-      setMaxBufferAHeadLimit(false);
-      onMaxBufferAheadInput(Infinity);
+      setMaxBufferAheadLimit(false);
+      updateMaxBufferAheadText(String(Infinity));
+      onMaxBufferAheadChange(Infinity);
     } else {
-      setMaxBufferAHeadLimit(true);
-      onMaxBufferAheadInput(DEFAULT_VALUES.maxBufferAhead);
+      setMaxBufferAheadLimit(true);
+      updateMaxBufferAheadText(String(defaultMaxBufferAhead));
+      onMaxBufferAheadChange(defaultMaxBufferAhead);
     }
   };
 
@@ -45,10 +64,12 @@ function BufferOptions({
     const isNotLimited = getCheckBoxValue(evt.target);
     if (isNotLimited) {
       setMaxBufferBehindLimit(false);
-      onMaxBufferBehindInput(Infinity);
+      updateMaxBufferBehindText(String(defaultMaxBufferAhead));
+      onMaxBufferBehindChange(Infinity);
     } else {
       setMaxBufferBehindLimit(true);
-      onMaxBufferAheadInput(DEFAULT_VALUES.maxBufferBehind);
+      updateMaxBufferBehindText(String(defaultMaxBufferBehind));
+      onMaxBufferBehindChange(defaultMaxBufferBehind);
     }
   };
 
@@ -56,10 +77,12 @@ function BufferOptions({
     const isNotLimited = getCheckBoxValue(evt.target);
     if (isNotLimited){
       setMaxVideoBufferSizeLimit(false);
-      onMaxVideoBufferSizeInput(Infinity);
+      updateMaxVideoBufferSizeText(String(Infinity));
+      onMaxVideoBufferSizeChange(Infinity);
     } else {
       setMaxVideoBufferSizeLimit(true);
-      onMaxVideoBufferSizeInput(DEFAULT_VALUES.maxVideoBufferSize);
+      updateMaxVideoBufferSizeText(String(defaultMaxVideoBufferSize));
+      onMaxVideoBufferSizeChange(defaultMaxVideoBufferSize);
     }
   };
 
@@ -76,21 +99,33 @@ function BufferOptions({
               name="wantedBufferAhead"
               id="wantedBufferAhead"
               placeholder="Number"
-              onChange={(evt) => onWantedBufferAheadInput(evt.target.value)}
-              value={wantedBufferAhead}
+              onChange={(evt) => {
+                const { value } = evt.target;
+                updateWantedBufferAheadText(value);
+                let newValue = value === "" ?
+                  defaultWantedBufferAhead :
+                  parseFloat(value);
+                newValue = isNaN(newValue) ?
+                  defaultWantedBufferAhead :
+                  newValue;
+                onWantedBufferAheadChange(newValue);
+              }}
+              value={wantedBufferAheadTxt}
               className="optionInput"
             />
             <Button
               className={
-                parseFloat(wantedBufferAhead) ===
-                  DEFAULT_VALUES.wantedBufferAhead
+                parseFloat(wantedBufferAheadTxt) === defaultWantedBufferAhead
                   ? "resetBtn disabledResetBtn"
                   : "resetBtn"
               }
               ariaLabel="Reset option to default value"
               title="Reset option to default value"
               onClick={() => {
-                onWantedBufferAheadInput(DEFAULT_VALUES.wantedBufferAhead);
+                updateWantedBufferAheadText(String(
+                  defaultWantedBufferAhead
+                ));
+                onWantedBufferAheadChange(defaultWantedBufferAhead);
               }}
               value={String.fromCharCode(0xf021)}
             />
@@ -112,24 +147,37 @@ function BufferOptions({
               name="maxVideoBufferSize"
               id="maxVideoBufferSize"
               placeholder="Number"
-              onChange={(evt) => onMaxVideoBufferSizeInput(evt.target.value)}
-              value={maxVideoBufferSize}
+              onChange={(evt) => {
+                const { value } = evt.target;
+                updateMaxVideoBufferSizeText(value);
+                let newValue = value === "" ?
+                  defaultMaxVideoBufferSize :
+                  parseFloat(value);
+                newValue = isNaN(newValue) ?
+                  defaultMaxVideoBufferSize :
+                  newValue;
+                onMaxVideoBufferSizeChange(newValue);
+              }}
+              value={maxVideoBufferSizeTxt}
               disabled={isMaxVideoBufferSizeLimited === false}
               className="optionInput"
             />
             <Button
               className={
-                parseFloat(maxVideoBufferSize) ===
-                  DEFAULT_VALUES.maxVideoBufferSize
+                parseFloat(maxVideoBufferSizeTxt) === defaultMaxVideoBufferSize
                   ? "resetBtn disabledResetBtn"
                   : "resetBtn"
               }
               ariaLabel="Reset option to default value"
               title="Reset option to default value"
               onClick={() => {
-                setMaxVideoBufferSizeLimit(DEFAULT_VALUES.maxVideoBufferSize !==
-                  Infinity);
-                onMaxVideoBufferSizeInput(DEFAULT_VALUES.maxVideoBufferSize);
+                updateMaxVideoBufferSizeText(String(
+                  defaultMaxVideoBufferSize
+                ));
+                onMaxVideoBufferSizeChange(defaultMaxVideoBufferSize);
+                setMaxVideoBufferSizeLimit(
+                  defaultMaxVideoBufferSize !== Infinity
+                );
               }}
               value={String.fromCharCode(0xf021)}
             />
@@ -146,7 +194,7 @@ function BufferOptions({
         </Checkbox>
         <span className="option-desc">
           {
-            parseFloat(maxVideoBufferSize) === Infinity ||
+            maxVideoBufferSize === Infinity ||
             !isMaxVideoBufferSizeLimited ?
               "Not setting a size limit to the video buffer (relying only on the wantedBufferAhead option)" :
               `Buffering at most around ${maxVideoBufferSize} kilobyte(s) on the video buffer`
@@ -163,23 +211,35 @@ function BufferOptions({
               name="maxBufferAhead"
               id="maxBufferAhead"
               placeholder="Number"
-              onChange={(evt) => onMaxBufferAheadInput(evt.target.value)}
-              value={maxBufferAhead}
-              disabled={isMaxBufferAHeadLimited === false}
+              onChange={(evt) => {
+                const { value } = evt.target;
+                updateMaxBufferAheadText(value);
+                let newValue = value === "" ?
+                  defaultMaxBufferAhead :
+                  parseFloat(value);
+                newValue = isNaN(newValue) ?
+                  defaultMaxBufferAhead :
+                  newValue;
+                onMaxBufferAheadChange(newValue);
+              }}
+              value={maxBufferAheadTxt}
+              disabled={isMaxBufferAheadLimited === false}
               className="optionInput"
             />
             <Button
               className={
-                parseFloat(maxBufferAhead) === DEFAULT_VALUES.maxBufferAhead
+                parseFloat(maxBufferAheadTxt) === defaultMaxBufferAhead
                   ? "resetBtn disabledResetBtn"
                   : "resetBtn"
               }
               ariaLabel="Reset option to default value"
               title="Reset option to default value"
               onClick={() => {
-                setMaxBufferAHeadLimit(DEFAULT_VALUES.maxBufferAhead !==
-                  Infinity);
-                onMaxBufferAheadInput(DEFAULT_VALUES.maxBufferAhead);
+                updateMaxBufferAheadText(String(
+                  defaultMaxBufferAhead
+                ));
+                onMaxBufferAheadChange(defaultMaxBufferAhead);
+                setMaxBufferAheadLimit(defaultMaxBufferAhead !== Infinity);
               }}
               value={String.fromCharCode(0xf021)}
             />
@@ -189,15 +249,15 @@ function BufferOptions({
           className="playerOptionsCheckBox"
           ariaLabel="Do not limit max buffer a head option"
           name="maxBufferAheadLimit"
-          checked={isMaxBufferAHeadLimited === false}
-          onChange={onChangeLimitMaxBufferAHead}
+          checked={isMaxBufferAheadLimited === false}
+          onChange={onChangeLimitMaxBufferAhead}
         >
           Do not limit
         </Checkbox>
         <span className="option-desc">
           {
-            parseFloat(maxBufferAhead) === Infinity ||
-            !isMaxBufferAHeadLimited ?
+            maxBufferAhead === Infinity ||
+            !isMaxBufferAheadLimited ?
               "Not manually cleaning buffer far ahead of the current position" :
               `Manually cleaning data ${maxBufferAhead} second(s) ahead of the current position`
           }
@@ -213,23 +273,35 @@ function BufferOptions({
               name="maxBufferBehind"
               id="maxBufferBehind"
               placeholder="Number"
-              onChange={(evt) => onMaxBufferBehindInput(evt.target.value)}
-              value={maxBufferBehind}
+              onChange={(evt) => {
+                const { value } = evt.target;
+                updateMaxBufferBehindText(value);
+                let newValue = value === "" ?
+                  defaultMaxBufferBehind :
+                  parseFloat(value);
+                newValue = isNaN(newValue) ?
+                  defaultMaxBufferBehind :
+                  newValue;
+                onMaxBufferBehindChange(newValue);
+              }}
+              value={maxBufferBehindTxt}
               disabled={isMaxBufferBehindLimited === false}
               className="optionInput"
             />
             <Button
               className={
-                parseFloat(maxBufferBehind) === DEFAULT_VALUES.maxBufferBehind
+                parseFloat(maxBufferBehindTxt) === defaultMaxBufferBehind
                   ? "resetBtn disabledResetBtn"
                   : "resetBtn"
               }
               ariaLabel="Reset option to default value"
               title="Reset option to default value"
               onClick={() => {
-                setMaxBufferBehindLimit(DEFAULT_VALUES.maxBufferBehind !==
-                  Infinity);
-                onMaxBufferBehindInput(DEFAULT_VALUES.maxBufferBehind);
+                updateMaxBufferBehindText(String(
+                  defaultMaxBufferBehind
+                ));
+                onMaxBufferBehindChange(defaultMaxBufferBehind);
+                setMaxBufferBehindLimit(defaultMaxBufferBehind !== Infinity);
               }}
               value={String.fromCharCode(0xf021)}
             />
@@ -246,7 +318,7 @@ function BufferOptions({
         </Checkbox>
         <span className="option-desc">
           {
-            parseFloat(maxBufferBehind) === Infinity ||
+            maxBufferBehind === Infinity ||
             !isMaxBufferBehindLimited ?
               "Not manually cleaning buffer behind the current position" :
               `Manually cleaning data ${maxBufferBehind} second(s) behind the current position`
