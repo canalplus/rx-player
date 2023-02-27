@@ -252,7 +252,10 @@ export default class VideoThumbnailLoader {
                                             segmentBuffer,
                                             lastRepInfo.segmentFetcher,
                                             requestCanceller.signal)
-              .finally(unlinkSignal);
+              .then(unlinkSignal, (err) => {
+                unlinkSignal();
+                throw err;
+              });
             const newReq = {
               segmentId: segment.id,
               canceller: requestCanceller,
