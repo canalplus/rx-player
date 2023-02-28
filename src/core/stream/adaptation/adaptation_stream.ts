@@ -19,6 +19,8 @@ import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
 import { Representation } from "../../../manifest";
+import cancellableSleep from "../../../utils/cancellable_sleep";
+import noop from "../../../utils/noop";
 import objectAssign from "../../../utils/object_assign";
 import {
   createMappedReference,
@@ -325,19 +327,27 @@ export default function AdaptationStream<T>(
           defaultCode: "NONE",
           defaultReason: "Unknown `RepresentationStream` error",
         });
-        if (formattedError.code === "BUFFER_FULL_ERROR") {
+        if (formattedError.code !== "BUFFER_FULL_ERROR") {
+          representationStreamCallbacks.error(err);
+        } else {
           const wba = wantedBufferAhead.getValue();
           const lastBufferGoalRatio = bufferGoalRatioMap.get(representation.id) ?? 1;
-          if (lastBufferGoalRatio <= 0.25 || wba * lastBufferGoalRatio <= 2) {
+          // 70%, 49%, 34.3%, 24%, 16.81%, 11.76%, 8.24% and 5.76%
+          const newBufferGoalRatio = lastBufferGoalRatio * 0.7;
+          if (newBufferGoalRatio <= 0.05 || wba * newBufferGoalRatio <= 2) {
             throw formattedError;
           }
-          bufferGoalRatioMap.set(representation.id, lastBufferGoalRatio - 0.25);
-          return createRepresentationStream(representation,
-                                            terminateCurrentStream,
-                                            fastSwitchThreshold,
-                                            representationStreamCallbacks);
+          bufferGoalRatioMap.set(representation.id, newBufferGoalRatio);
+
+          // We wait 4 seconds to let the situation evolve by itself before
+          // retrying loading segments with a lower buffer goal
+          cancellableSleep(4000, adapStreamCanceller.signal).then(() => {
+            return createRepresentationStream(representation,
+                                              terminateCurrentStream,
+                                              fastSwitchThreshold,
+                                              representationStreamCallbacks);
+          }).catch(noop);
         }
-        representationStreamCallbacks.error(err);
       },
       terminating() {
         terminatingRepStreamCanceller.cancel();
