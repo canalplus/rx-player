@@ -1,4 +1,5 @@
 import React, { Fragment } from "react";
+import getCheckBoxValue from "../../lib/getCheckboxValue";
 import Checkbox from "../CheckBox";
 import Select from "../Select";
 
@@ -7,15 +8,15 @@ import Select from "../Select";
  * @returns {Object}
  */
 function TrackSwitch({
-  onAutoPlayClick,
   autoPlay,
-  onManualBrSwitchingModeChange,
-  manualBrSwitchingMode,
+  manualBitrateSwitchingMode,
+  onAutoPlayChange,
+  onManualBitrateSwitchingModeChange,
+  onStopAtEndChange,
   stopAtEnd,
-  onStopAtEndClick,
 }) {
   let manualBitrateSwitchingModeDesc;
-  switch (manualBrSwitchingMode) {
+  switch (manualBitrateSwitchingMode) {
     case "direct":
       manualBitrateSwitchingModeDesc =
         "Directly visible transition when a Representation is manually changed";
@@ -37,7 +38,9 @@ function TrackSwitch({
           name="autoPlay"
           ariaLabel="Auto play option"
           checked={autoPlay}
-          onChange={onAutoPlayClick}
+          onChange={(evt) => {
+            onAutoPlayChange(getCheckBoxValue(evt.target));
+          }}
         >
           Auto Play
         </Checkbox>
@@ -51,8 +54,8 @@ function TrackSwitch({
         <Select
           className="playerOptionInput"
           name="manualBitrateSwitchingMode"
-          onChange={({ value }) => onManualBrSwitchingModeChange(value)}
-          selected={{ value: manualBrSwitchingMode }}
+          onChange={({ value }) => onManualBitrateSwitchingModeChange(value)}
+          selected={{ value: manualBitrateSwitchingMode }}
           options={["seamless", "direct"]}
         >
           Manual bitrate switching mode
@@ -67,7 +70,9 @@ function TrackSwitch({
           name="stopAtEnd"
           ariaLabel="Stop at end option"
           checked={stopAtEnd}
-          onChange={onStopAtEndClick}
+          onChange={(evt) => {
+            onStopAtEndChange(getCheckBoxValue(evt.target));
+          }}
         >
           Stop At End
         </Checkbox>
