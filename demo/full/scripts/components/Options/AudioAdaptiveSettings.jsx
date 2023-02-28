@@ -1,8 +1,12 @@
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useState } from "react";
 import getCheckBoxValue from "../../lib/getCheckboxValue";
 import Checkbox from "../../components/CheckBox";
 import Button from "../Button";
 import DEFAULT_VALUES from "../../lib/defaultOptionsValues";
+
+const defaultInitialAudioBitrate = DEFAULT_VALUES.player.initialAudioBitrate;
+const defaultMinAudioBitrate = DEFAULT_VALUES.player.minAudioBitrate;
+const defaultMaxAudioBitrate = DEFAULT_VALUES.player.maxAudioBitrate;
 
 /**
  * @param {Object} props
@@ -16,55 +20,102 @@ function AudioAdaptiveSettings({
   onMinAudioBitrateChange,
   onMaxAudioBitrateChange,
 }) {
-  const [initialAudioBitrateTxt, updateInitialAudioBitrateText] = useState(
-    initialAudioBitrate
+  /* Value of the `initialVideoBitrate` input */
+  const [initialAudioBitrateStr, setInitialAudioBitrateStr] = useState(
+    String(initialAudioBitrate)
   );
-  const [minAudioBitrateTxt, updateMinAudioBitrateText] = useState(
-    minAudioBitrate
+  /* Value of the `minAudioBitrate` input */
+  const [minAudioBitrateStr, setMinAudioBitrateStr] = useState(
+    String(minAudioBitrate)
   );
-  const [maxAudioBitrateTxt, updateMaxAudioBitrateText] = useState(
-    maxAudioBitrate
+  /* Value of the `maxAudioBitrate` input */
+  const [maxAudioBitrateStr, setMaxAudioBitrateStr] = useState(
+    String(maxAudioBitrate)
   );
+  /*
+   * Keep track of the "limit minAudioBitrate" toggle:
+   * `false` == checkbox enabled
+   */
   const [isMinAudioBitrateLimited, setMinAudioBitrateLimit] = useState(
     minAudioBitrate !== 0
   );
+  /*
+   * Keep track of the "limit maxAudioBitrate" toggle:
+   * `false` == checkbox enabled
+   */
   const [isMaxAudioBitrateLimited, setMaxAudioBitrateLimit] = useState(
     maxAudioBitrate !== Infinity
   );
 
-  const defaultInitialAudioBitrate = DEFAULT_VALUES.player.initialAudioBitrate;
-  const defaultMinAudioBitrate = DEFAULT_VALUES.player.minAudioBitrate;
-  const defaultMaxAudioBitrate = DEFAULT_VALUES.player.maxAudioBitrate;
+  // Update initialAudioBitrate when its linked text change
+  useEffect(() => {
+    // Note that this unnecessarily also run on first render - there seem to be
+    // no quick and easy way to disable this in react.
+    // This is not too problematic so I put up with it.
+    let newBitrate = parseFloat(initialAudioBitrateStr);
+    newBitrate = isNaN(newBitrate) ?
+      defaultInitialAudioBitrate :
+      newBitrate;
+    onInitialAudioBitrateChange(newBitrate);
+  }, [initialAudioBitrateStr]);
 
-  const onChangeLimitMinAudioBitrate = (evt) => {
+  // Update minAudioBitrate when its linked text change
+  useEffect(() => {
+    let newBitrate = parseFloat(minAudioBitrateStr);
+    newBitrate = isNaN(newBitrate) ?
+      defaultMinAudioBitrate :
+      newBitrate;
+    onMinAudioBitrateChange(newBitrate);
+  }, [minAudioBitrateStr]);
+
+  // Update maxAudioBitrate when its linked text change
+  useEffect(() => {
+    let newBitrate = parseFloat(maxAudioBitrateStr);
+    newBitrate = isNaN(newBitrate) ?
+      defaultMaxAudioBitrate :
+      newBitrate;
+    onMaxAudioBitrateChange(newBitrate);
+  }, [maxAudioBitrateStr]);
+
+  const onChangeLimitMinAudioBitrate = useCallback((evt) => {
     const isNotLimited = getCheckBoxValue(evt.target);
     if (isNotLimited) {
       setMinAudioBitrateLimit(false);
-      updateMinAudioBitrateText(String(0));
-      onMinAudioBitrateChange(0);
+      setMinAudioBitrateStr(String(0));
     } else {
       setMinAudioBitrateLimit(true);
-      updateMinAudioBitrateText(String(defaultMinAudioBitrate));
-      onMinAudioBitrateChange(defaultMinAudioBitrate);
+      setMinAudioBitrateStr(String(defaultMinAudioBitrate));
     }
-  };
+  }, []);
 
-  const onChangeLimitMaxAudioBitrate = (evt) => {
+  const onChangeLimitMaxAudioBitrate = useCallback((evt) => {
     const isNotLimited = getCheckBoxValue(evt.target);
     if (isNotLimited) {
       setMaxAudioBitrateLimit(false);
-      updateMaxAudioBitrateText(String(Infinity));
-      onMaxAudioBitrateChange(Infinity);
+      setMaxAudioBitrateStr(String(Infinity));
     } else {
       setMaxAudioBitrateLimit(true);
-      updateMaxAudioBitrateText(String(defaultMaxAudioBitrate));
-      onMaxAudioBitrateChange(defaultMaxAudioBitrate);
+      setMaxAudioBitrateStr(String(defaultMaxAudioBitrate));
     }
-  };
+  }, []);
 
   return (
     <Fragment>
       <li>
+        <PlayerOptionNumberInput
+          ariaLabel="Initial audio bitrate option"
+          label="initialAudioBitrate"
+          title="Initial Audio Bitrate"
+          value={initialAudioBitrateStr}
+          defaultValueAsNumber={defaultInitialAudioBitrate}
+          isDisabled={false}
+          onUpdateValue={setInitialAudioBitrateStr}
+          onResetClick={() => {
+            setInitialAudioBitrateStr(String(
+              defaultInitialAudioBitrate
+            ));
+          }}
+        />
         <div className="playerOptionInput">
           <label htmlFor="initialAudioBitrate">Initial Audio Bitrate</label>
           <span className="wrapperInputWithResetBtn">
@@ -74,24 +125,16 @@ function AudioAdaptiveSettings({
               id="initialAudioBitrate"
               aria-label="Initial audio bitrate option"
               placeholder="Number"
-              onChange={(evt) => {
-                const { value } = evt.target;
-                updateInitialAudioBitrateText(value);
-                let newBitrate = value === "" ?
-                  defaultInitialAudioBitrate :
-                  parseFloat(value);
-                newBitrate = isNaN(newBitrate) ?
-                  defaultInitialAudioBitrate :
-                  newBitrate;
-                onInitialAudioBitrateChange(newBitrate);
-              }}
-              value={initialAudioBitrateTxt}
+              onChange={(evt) =>
+                setInitialAudioBitrateStr(evt.target.value)
+              }
+              value={initialAudioBitrateStr}
               className="optionInput"
             />
             <Button
               className={
                 parseFloat(
-                  initialAudioBitrateTxt
+                  initialAudioBitrateStr
                 ) === defaultInitialAudioBitrate
                   ? "resetBtn disabledResetBtn"
                   : "resetBtn"
@@ -99,10 +142,9 @@ function AudioAdaptiveSettings({
               ariaLabel="Reset option to default value"
               title="Reset option to default value"
               onClick={() => {
-                updateInitialAudioBitrateText(String(
+                setInitialAudioBitrateStr(String(
                   defaultInitialAudioBitrate
                 ));
-                onInitialAudioBitrateChange(defaultInitialAudioBitrate);
               }}
               value={String.fromCharCode(0xf021)}
             />
@@ -127,32 +169,21 @@ function AudioAdaptiveSettings({
               id="minAudioBitrate"
               aria-label="Min audio bitrate option"
               placeholder="Number"
-              onChange={(evt) => {
-                const { value } = evt.target;
-                updateMinAudioBitrateText(value);
-                let newBitrate = value === "" ?
-                  defaultMinAudioBitrate :
-                  parseFloat(value);
-                newBitrate = isNaN(newBitrate) ?
-                  defaultMinAudioBitrate :
-                  newBitrate;
-                onMinAudioBitrateChange(newBitrate);
-              }}
-              value={minAudioBitrateTxt}
+              onChange={(evt) => setMinAudioBitrateStr(evt.target.value)}
+              value={minAudioBitrateStr}
               disabled={isMinAudioBitrateLimited === false}
               className="optionInput"
             />
             <Button
               className={
-                parseFloat(minAudioBitrateTxt) === defaultMinAudioBitrate
+                parseFloat(minAudioBitrateStr) === defaultMinAudioBitrate
                   ? "resetBtn disabledResetBtn"
                   : "resetBtn"
               }
               ariaLabel="Reset option to default value"
               title="Reset option to default value"
               onClick={() => {
-                updateMinAudioBitrateText(String(defaultMinAudioBitrate));
-                onMinAudioBitrateChange(defaultMinAudioBitrate);
+                setMinAudioBitrateStr(String(defaultMinAudioBitrate));
                 setMinAudioBitrateLimit(defaultMinAudioBitrate !== 0);
               }}
               value={String.fromCharCode(0xf021)}
@@ -189,7 +220,7 @@ function AudioAdaptiveSettings({
               placeholder="Number"
               onChange={(evt) => {
                 const { value } = evt.target;
-                updateMaxAudioBitrateText(value);
+                setMaxAudioBitrateStr(value);
                 let newBitrate = value === "" ?
                   defaultMaxAudioBitrate :
                   parseFloat(value);
@@ -198,20 +229,20 @@ function AudioAdaptiveSettings({
                   newBitrate;
                 onMaxAudioBitrateChange(newBitrate);
               }}
-              value={maxAudioBitrateTxt}
+              value={maxAudioBitrateStr}
               disabled={isMaxAudioBitrateLimited === false}
               className="optionInput"
             />
             <Button
               className={
-                parseFloat(maxAudioBitrateTxt) === defaultMaxAudioBitrate
+                parseFloat(maxAudioBitrateStr) === defaultMaxAudioBitrate
                   ? "resetBtn disabledResetBtn"
                   : "resetBtn"
               }
               ariaLabel="Reset option to default value"
               title="Reset option to default value"
               onClick={() => {
-                updateMaxAudioBitrateText(String(defaultMaxAudioBitrate));
+                setMaxAudioBitrateStr(String(defaultMaxAudioBitrate));
                 onMaxAudioBitrateChange(defaultMaxAudioBitrate);
                 setMaxAudioBitrateLimit(defaultMaxAudioBitrate !== Infinity);
               }}
@@ -247,3 +278,42 @@ function AudioAdaptiveSettings({
 }
 
 export default React.memo(AudioAdaptiveSettings);
+
+function PlayerOptionNumberInput({
+  ariaLabel,
+  label,
+  title,
+  onUpdateValue,
+  value,
+  defaultValueAsNumber,
+  isDisabled,
+  onResetClick,
+}) {
+  return <div className="playerOptionInput">
+    <label htmlFor={label}>{title}</label>
+    <span className="wrapperInputWithResetBtn">
+      <input
+        type="text"
+        name={label}
+        id={label}
+        aria-label={ariaLabel}
+        placeholder="Number"
+        onChange={(evt) => onUpdateValue(evt.target.value)}
+        value={value}
+        disabled={isDisabled}
+        className="optionInput"
+      />
+      <Button
+        className={
+          parseFloat(value) === defaultValueAsNumber
+            ? "resetBtn disabledResetBtn"
+            : "resetBtn"
+        }
+        ariaLabel="Reset option to default value"
+        title="Reset option to default value"
+        onClick={onResetClick}
+        value={String.fromCharCode(0xf021)}
+      />
+    </span>
+  </div>;
+}
