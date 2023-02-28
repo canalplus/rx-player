@@ -980,7 +980,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       // Previous call could have performed all kind of side-effects, thus,
       // we re-check the current state associated to the RxPlayer
       if (this.state === PLAYER_STATES.ENDED && this._priv_stopAtEnd) {
-        currentContentCanceller.cancel();
+        this.stop();
       }
     }, { emitCurrentValue: true, clearSignal: currentContentCanceller.signal });
 
