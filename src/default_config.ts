@@ -923,21 +923,41 @@ const DEFAULT_CONFIG = {
      */
   MIN_CANCELABLE_PRIORITY: 3, // priority number 3 onward can be cancelled
 
-    /**
-     * Robustnesses used in the {audio,video}Capabilities of the
-     * MediaKeySystemConfiguration (DRM).
-     *
-     * Only used for widevine keysystems.
-     *
-     * Defined in order of importance (first will be tested first etc.)
-     * @type {Array.<string>}
-     */
+  /**
+   * Codecs used in the videoCapabilities of the MediaKeySystemConfiguration
+   * (DRM).
+   *
+   * Defined in order of importance (first will be tested first etc.)
+   * @type {Array.<string>}
+   */
+  EME_DEFAULT_VIDEO_CODECS: [ "video/mp4;codecs=\"avc1.4d401e\"",
+                              "video/mp4;codecs=\"avc1.42e01e\"",
+                              "video/webm;codecs=\"vp8\"" ],
+
+  /**
+   * Codecs used in the audioCapabilities of the MediaKeySystemConfiguration
+   * (DRM).
+   *
+   * Defined in order of importance (first will be tested first etc.)
+   * @type {Array.<string>}
+   */
+  EME_DEFAULT_AUDIO_CODECS: [ "audio/mp4;codecs=\"mp4a.40.2\"",
+                              "audio/webm;codecs=opus" ],
+
+  /**
+   * Robustnesses used in the {audio,video}Capabilities of the
+   * MediaKeySystemConfiguration (DRM).
+   *
+   * Only used for widevine keysystems.
+   *
+   * Defined in order of importance (first will be tested first etc.)
+   * @type {Array.<string>}
+   */
   EME_DEFAULT_WIDEVINE_ROBUSTNESSES: [ "HW_SECURE_ALL",
                                        "HW_SECURE_DECODE",
                                        "HW_SECURE_CRYPTO",
                                        "SW_SECURE_DECODE",
-                                       "SW_SECURE_CRYPTO",
-                                       undefined ],
+                                       "SW_SECURE_CRYPTO" ],
 
   /**
    * Robustnesses used in the {audio,video}Capabilities of the
@@ -948,7 +968,7 @@ const DEFAULT_CONFIG = {
    * Defined in order of importance (first will be tested first etc.)
    * @type {Array.<string>}
    */
-  EME_DEFAULT_PLAYREADY_ROBUSTNESSES: [ "3000", "2000", undefined ],
+  EME_DEFAULT_PLAYREADY_ROBUSTNESSES: [ "3000", "2000" ],
 
     /**
      * Link canonical key systems names to their respective reverse domain name,
