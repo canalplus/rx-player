@@ -57,6 +57,9 @@ let isWebOs2021 = false;
 /** `true` specifically for WebOS 2022 version. */
 let isWebOs2022 = false;
 
+/** `true` for Panasonic devices. */
+let isPanasonic = false;
+
 ((function findCurrentBrowser() : void {
   if (isNode) {
     return ;
@@ -93,18 +96,18 @@ let isWebOs2022 = false;
 
   // 2 - Find out specific device/platform information
 
+  // Samsung browser e.g. on Android
   if (/SamsungBrowser/.test(navigator.userAgent)) {
     isSamsungBrowser = true;
   }
 
   if (/Tizen/.test(navigator.userAgent)) {
     isTizen = true;
-  }
 
   // Inspired form: http://webostv.developer.lge.com/discover/specifications/web-engine/
   // Note: even that page doesn't correspond to what we've actually seen in the
   // wild
-  if (/[Ww]eb[O0]S/.test(navigator.userAgent)) {
+  } else if (/[Ww]eb[O0]S/.test(navigator.userAgent)) {
     isWebOs = true;
 
     if (
@@ -118,6 +121,8 @@ let isWebOs2022 = false;
     ) {
       isWebOs2021 = true;
     }
+  } else if (/[Pp]anasonic/.test(navigator.userAgent)) {
+    isPanasonic = true;
   }
 })());
 
@@ -130,6 +135,7 @@ export {
   isIE11,
   isIEOrEdge,
   isFirefox,
+  isPanasonic,
   isSafariDesktop,
   isSafariMobile,
   isSamsungBrowser,
