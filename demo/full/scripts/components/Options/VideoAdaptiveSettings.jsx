@@ -1,9 +1,12 @@
-import React, { Fragment, useState } from "react";
-
+import React, { Fragment, useCallback, useEffect, useState } from "react";
 import getCheckBoxValue from "../../lib/getCheckboxValue";
 import Checkbox from "../../components/CheckBox";
-import Button from "../Button";
 import DEFAULT_VALUES from "../../lib/defaultOptionsValues";
+import PlayerOptionNumberInput from "./PlayerOptionNumberInput";
+
+const defaultInitialVideoBitrate = DEFAULT_VALUES.player.initialVideoBitrate;
+const defaultMinVideoBitrate = DEFAULT_VALUES.player.minVideoBitrate;
+const defaultMaxVideoBitrate = DEFAULT_VALUES.player.maxVideoBitrate;
 
 /**
  * @param {Object} props
@@ -21,98 +24,102 @@ function VideoAdaptiveSettings({
   onLimitVideoWidthChange,
   onThrottleVideoBitrateWhenHiddenChange,
 }) {
-  const [initialVideoBitrateTxt, updateInitialVideoBitrateText] = useState(
+  /* Value of the `initialVideoBitrate` input */
+  const [initialVideoBitrateStr, setInitialVideoBitrateStr] = useState(
     initialVideoBitrate
   );
-  const [minVideoBitrateTxt, updateMinVideoBitrateText] = useState(
+  /* Value of the `minVideoBitrate` input */
+  const [minVideoBitrateStr, setMinVideoBitrateStr] = useState(
     minVideoBitrate
   );
-  const [maxVideoBitrateTxt, updateMaxVideoBitrateText] = useState(
+  /* Value of the `maxVideoBitrate` input */
+  const [maxVideoBitrateStr, setMaxVideoBitrateStr] = useState(
     maxVideoBitrate
   );
+  /*
+   * Keep track of the "limit minVideoBitrate" toggle:
+   * `false` == checkbox enabled
+   */
   const [isMinVideoBitrateLimited, setMinVideoBitrateLimit] = useState(
     minVideoBitrate !== 0
   );
+  /*
+   * Keep track of the "limit maxVideoBitrate" toggle:
+   * `false` == checkbox enabled
+   */
   const [isMaxVideoBitrateLimited, setMaxVideoBitrateLimit] = useState(
     maxVideoBitrate !== Infinity
   );
 
-  const defaultInitialVideoBitrate = DEFAULT_VALUES.player.initialVideoBitrate;
-  const defaultMinVideoBitrate = DEFAULT_VALUES.player.minVideoBitrate;
-  const defaultMaxVideoBitrate = DEFAULT_VALUES.player.maxVideoBitrate;
+  // Update initialVideoBitrate when its linked text change
+  useEffect(() => {
+    // Note that this unnecessarily also run on first render - there seem to be
+    // no quick and easy way to disable this in react.
+    // This is not too problematic so I put up with it.
+    let newBitrate = parseFloat(initialVideoBitrateStr);
+    newBitrate = isNaN(newBitrate) ?
+      defaultInitialVideoBitrate :
+      newBitrate;
+    onInitialVideoBitrateChange(newBitrate);
+  }, [initialVideoBitrateStr]);
 
-  const onChangeLimitMinVideoBitrate = (evt) => {
+  // Update minVideoBitrate when its linked text change
+  useEffect(() => {
+    let newBitrate = parseFloat(minVideoBitrateStr);
+    newBitrate = isNaN(newBitrate) ?
+      defaultMinVideoBitrate :
+      newBitrate;
+    onMinVideoBitrateChange(newBitrate);
+  }, [minVideoBitrateStr]);
+
+  // Update maxVideoBitrate when its linked text change
+  useEffect(() => {
+    let newBitrate = parseFloat(maxVideoBitrateStr);
+    newBitrate = isNaN(newBitrate) ?
+      defaultMaxVideoBitrate :
+      newBitrate;
+    onMaxVideoBitrateChange(newBitrate);
+  }, [maxVideoBitrateStr]);
+
+  const onChangeLimitMinVideoBitrate = useCallback((evt) => {
     const isNotLimited = getCheckBoxValue(evt.target);
     if (isNotLimited) {
       setMinVideoBitrateLimit(false);
-      updateMinVideoBitrateText(String(0));
-      onMinVideoBitrateChange(0);
+      setMinVideoBitrateStr(String(0));
     } else {
       setMinVideoBitrateLimit(true);
-      updateMinVideoBitrateText(String(defaultMinVideoBitrate));
-      onMinVideoBitrateChange(defaultMinVideoBitrate);
+      setMinVideoBitrateStr(String(defaultMinVideoBitrate));
     }
-  };
+  }, []);
 
-  const onChangeLimitMaxVideoBitrate = (evt) => {
+  const onChangeLimitMaxVideoBitrate = useCallback((evt) => {
     const isNotLimited = getCheckBoxValue(evt.target);
     if (isNotLimited) {
       setMaxVideoBitrateLimit(false);
-      updateMaxVideoBitrateText(String(Infinity));
-      onMaxVideoBitrateChange(Infinity);
+      setMaxVideoBitrateStr(String(Infinity));
     } else {
       setMaxVideoBitrateLimit(true);
-      updateMaxVideoBitrateText(String(defaultMaxVideoBitrate));
-      onMaxVideoBitrateChange(defaultMaxVideoBitrate);
+      setMaxVideoBitrateStr(String(defaultMaxVideoBitrate));
     }
-  };
+  }, []);
 
   return (
     <Fragment>
       <li>
-        <div className="playerOptionInput">
-          <label htmlFor="initialVideoBitrate">Initial Video Bitrate</label>
-          <span className="wrapperInputWithResetBtn">
-            <input
-              type="text"
-              name="initialVideoBitrate"
-              id="initialVideoBitrate"
-              aria-label="Initial video bitrate option"
-              placeholder="Number"
-              onChange={(evt) => {
-                const { value } = evt.target;
-                updateInitialVideoBitrateText(value);
-                let newBitrate = value === "" ?
-                  defaultInitialVideoBitrate :
-                  parseFloat(value);
-                newBitrate = isNaN(newBitrate) ?
-                  defaultInitialVideoBitrate :
-                  newBitrate;
-                onInitialVideoBitrateChange(newBitrate);
-              }}
-              value={initialVideoBitrateTxt}
-              className="optionInput"
-            />
-            <Button
-              className={
-                parseFloat(
-                  initialVideoBitrateTxt
-                ) === defaultInitialVideoBitrate
-                  ? "resetBtn disabledResetBtn"
-                  : "resetBtn"
-              }
-              ariaLabel="Reset option to default value"
-              title="Reset option to default value"
-              onClick={() => {
-                updateInitialVideoBitrateText(String(
-                  defaultInitialVideoBitrate
-                ));
-                onInitialVideoBitrateChange(defaultInitialVideoBitrate);
-              }}
-              value={String.fromCharCode(0xf021)}
-            />
-          </span>
-        </div>
+        <PlayerOptionNumberInput
+          ariaLabel="Initial video bitrate option"
+          label="initialVideoBitrate"
+          title="Initial Video Bitrate"
+          valueAsString={initialVideoBitrateStr}
+          defaultValueAsNumber={defaultInitialVideoBitrate}
+          isDisabled={false}
+          onUpdateValue={setInitialVideoBitrateStr}
+          onResetClick={() => {
+            setInitialVideoBitrateStr(String(
+              defaultInitialVideoBitrate
+            ));
+          }}
+        />
         <span className="option-desc">
           {
             initialVideoBitrate === 0 ?
@@ -123,47 +130,19 @@ function VideoAdaptiveSettings({
         </span>
       </li>
       <li>
-        <div className="playerOptionInput">
-          <label htmlFor="minVideoBitrate">Min Video Bitrate</label>
-          <span className="wrapperInputWithResetBtn">
-            <input
-              type="text"
-              name="minVideoBitrate"
-              id="minVideoBitrate"
-              aria-label="Min video bitrate option"
-              placeholder="Number"
-              onChange={(evt) => {
-                const { value } = evt.target;
-                updateMinVideoBitrateText(value);
-                let newBitrate = value === "" ?
-                  defaultMinVideoBitrate :
-                  parseFloat(value);
-                newBitrate = isNaN(newBitrate) ?
-                  defaultMinVideoBitrate :
-                  newBitrate;
-                onMinVideoBitrateChange(newBitrate);
-              }}
-              value={minVideoBitrateTxt}
-              disabled={isMinVideoBitrateLimited === false}
-              className="optionInput"
-            />
-            <Button
-              className={
-                parseFloat(minVideoBitrateTxt) === defaultMinVideoBitrate
-                  ? "resetBtn disabledResetBtn"
-                  : "resetBtn"
-              }
-              ariaLabel="Reset option to default value"
-              title="Reset option to default value"
-              onClick={() => {
-                updateMinVideoBitrateText(String(defaultMinVideoBitrate));
-                onMinVideoBitrateChange(defaultMinVideoBitrate);
-                setMinVideoBitrateLimit(defaultMinVideoBitrate !== 0);
-              }}
-              value={String.fromCharCode(0xf021)}
-            />
-          </span>
-        </div>
+        <PlayerOptionNumberInput
+          ariaLabel="Min video bitrate option"
+          label="minVideoBitrate"
+          title="Min Video Bitrate"
+          valueAsString={minVideoBitrateStr}
+          defaultValueAsNumber={defaultMinVideoBitrate}
+          isDisabled={isMinVideoBitrateLimited === false}
+          onUpdateValue={setMinVideoBitrateStr}
+          onResetClick={() => {
+            setMinVideoBitrateStr(String(defaultMinVideoBitrate));
+            setMinVideoBitrateLimit(defaultMinVideoBitrate !== 0);
+          }}
+        />
         <Checkbox
           className="playerOptionsCheckBox"
           ariaLabel="Min video bitrate limit"
@@ -183,47 +162,19 @@ function VideoAdaptiveSettings({
         </span>
       </li>
       <li>
-        <div className="playerOptionInput">
-          <label htmlFor="maxVideoBitrate">Max Video Bitrate</label>
-          <span className="wrapperInputWithResetBtn">
-            <input
-              type="text"
-              name="maxVideoBitrate"
-              id="maxVideoBitrate"
-              aria-label="Max video bitrate option"
-              placeholder="Number"
-              onChange={(evt) => {
-                const { value } = evt.target;
-                updateMaxVideoBitrateText(value);
-                let newBitrate = value === "" ?
-                  defaultMaxVideoBitrate :
-                  parseFloat(value);
-                newBitrate = isNaN(newBitrate) ?
-                  defaultMaxVideoBitrate :
-                  newBitrate;
-                onMaxVideoBitrateChange(newBitrate);
-              }}
-              value={maxVideoBitrateTxt}
-              disabled={isMaxVideoBitrateLimited === false}
-              className="optionInput"
-            />
-            <Button
-              className={
-                parseFloat(maxVideoBitrateTxt) === defaultMaxVideoBitrate
-                  ? "resetBtn disabledResetBtn"
-                  : "resetBtn"
-              }
-              ariaLabel="Reset option to default value"
-              title="Reset option to default value"
-              onClick={() => {
-                updateMaxVideoBitrateText(String(defaultMaxVideoBitrate));
-                onMaxVideoBitrateChange(defaultMaxVideoBitrate);
-                setMaxVideoBitrateLimit(defaultMaxVideoBitrate !== Infinity);
-              }}
-              value={String.fromCharCode(0xf021)}
-            />
-          </span>
-        </div>
+        <PlayerOptionNumberInput
+          ariaLabel="Max video bitrate option"
+          label="maxVideoBitrate"
+          title="Max Video Bitrate"
+          valueAsString={maxVideoBitrateStr}
+          defaultValueAsNumber={defaultMaxVideoBitrate}
+          isDisabled={isMaxVideoBitrateLimited === false}
+          onUpdateValue={setMaxVideoBitrateStr}
+          onResetClick={() => {
+            setMaxVideoBitrateStr(String(defaultMaxVideoBitrate));
+            setMaxVideoBitrateLimit(defaultMaxVideoBitrate !== Infinity);
+          }}
+        />
         <div>
           <Checkbox
             className="playerOptionsCheckBox"
