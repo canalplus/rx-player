@@ -408,7 +408,6 @@ function createResultServer() {
     if (request.method === "OPTIONS") {
       answerWithCORS(response, 200);
       response.end();
-      return;
     } else if (request.method == "POST") {
       let body = "";
       request.on("data", function (data) {
@@ -459,7 +458,6 @@ function createResultServer() {
     } else {
       response.end();
     }
-    return;
   }
 }
 
@@ -780,8 +778,7 @@ async function getChromeCmd() {
     case "win32": {
       const suffix = "\\Google\\Chrome\\Application\\chrome.exe";
       const prefixes = [process.env.LOCALAPPDATA, process.env.PROGRAMFILES, process.env["PROGRAMFILES(X86)"]];
-      for (let i = 0; i < prefixes.length; i++) {
-        const prefix = prefixes[i];
+      for (const prefix of prefixes) {
         try {
           const windowsChromeDirectory = path.join(prefix, suffix);
           fs.accessSync(windowsChromeDirectory);

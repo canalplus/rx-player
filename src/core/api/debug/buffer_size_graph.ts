@@ -72,7 +72,6 @@ export default class BufferSizeGraph {
     const gridWidth = width / TIME_SAMPLES_MS;
 
     drawData();
-    // drawGrid();
 
     /**
      * Get more appropriate maximum buffer size to put on top of the graph
