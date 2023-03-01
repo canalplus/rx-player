@@ -45,10 +45,6 @@ function Settings({
     offlineRetry,
   } = networkConfig;
 
-  if (!showOptions) {
-    return null;
-  }
-
   const onAutoPlayChange = useCallback((autoPlay) => {
     updateLoadVideoOptions((prevOptions) => {
       if (autoPlay === prevOptions.autoPlay) {
@@ -292,6 +288,10 @@ function Settings({
       return Object.assign({}, prevOptions, { maxBufferAhead });
     });
   }, [playerOptions]);
+
+  if (!showOptions) {
+    return null;
+  }
 
   return (
     <div className="settingsWrapper">
