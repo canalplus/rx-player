@@ -72,8 +72,13 @@ more):</p>
   xhr.<span class="hljs-title function_">open</span>(<span class="hljs-string">"GET"</span>, segmentInfo.<span class="hljs-property">url</span>);
   xhr.<span class="hljs-property">responseType</span> = <span class="hljs-string">"arraybuffer"</span>;
 
-  <span class="hljs-keyword">const</span> range = segmentInfo.<span class="hljs-property">range</span>;
-  <span class="hljs-keyword">if</span> (range) {
+  <span class="hljs-keyword">const</span> ranges = segmentInfo.<span class="hljs-property">byteRanges</span>;
+  <span class="hljs-keyword">if</span> (ranges) {
+    <span class="hljs-comment">// Theoretically, we could have multiple non-contiguous byte ranges, which</span>
+    <span class="hljs-comment">// would imply several requests.</span>
+    <span class="hljs-comment">// In reality, this is extremely rare so we just create a global byte-range</span>
+    <span class="hljs-comment">// encompassing all in this example.</span>
+    <span class="hljs-keyword">const</span> range = [ranges[<span class="hljs-number">0</span>][<span class="hljs-number">0</span>], ranges[ranges.<span class="hljs-property">length</span> - <span class="hljs-number">1</span>][<span class="hljs-number">1</span>]];
     <span class="hljs-keyword">if</span> (range[<span class="hljs-number">1</span>] &amp;&amp; range[<span class="hljs-number">1</span>] !== <span class="hljs-title class_">Infinity</span>) {
       xhr.<span class="hljs-title function_">setRequestHeader</span>(<span class="hljs-string">"Range"</span>, <span class="hljs-string">`bytes=<span class="hljs-subst">${range[<span class="hljs-number">0</span>]}</span>-<span class="hljs-subst">${range[<span class="hljs-number">1</span>]}</span>`</span>);
     } <span class="hljs-keyword">else</span> {
