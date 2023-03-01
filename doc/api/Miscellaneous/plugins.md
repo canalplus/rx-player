@@ -71,8 +71,13 @@ const customSegmentLoader = (segmentInfo, callbacks) => {
   xhr.open("GET", segmentInfo.url);
   xhr.responseType = "arraybuffer";
 
-  const range = segmentInfo.range;
-  if (range) {
+  const ranges = segmentInfo.byteRanges;
+  if (ranges) {
+    // Theoretically, we could have multiple non-contiguous byte ranges, which
+    // would imply several requests.
+    // In reality, this is extremely rare so we just create a global byte-range
+    // encompassing all in this example.
+    const range = [ranges[0][0], ranges[ranges.length - 1][1]];
     if (range[1] && range[1] !== Infinity) {
       xhr.setRequestHeader("Range", `bytes=${range[0]}-${range[1]}`);
     } else {
