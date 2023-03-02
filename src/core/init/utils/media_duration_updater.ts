@@ -19,7 +19,6 @@ import {
   onSourceEnded,
   onSourceClose,
 } from "../../../compat/event_listeners";
-import getLiveContentDuration from "../../../compat/get_live_content_duration";
 import log from "../../../log";
 import Manifest from "../../../manifest";
 import createSharedReference, {
@@ -29,6 +28,9 @@ import createSharedReference, {
 import TaskCanceller, {
   CancellationSignal,
 } from "../../../utils/task_canceller";
+
+/** Number of seconds in a regular year. */
+const YEAR_IN_SECONDS = 365 * 24 * 3600;
 
 /**
  * Keep the MediaSource's duration up-to-date with what is being played.
@@ -181,7 +183,13 @@ function setMediaSourceDuration(
   }
 
   if (manifest.isDynamic) {
-    newDuration =  getLiveContentDuration(newDuration);
+    // Some targets poorly support setting a very high number for durations.
+    // Yet, in dynamic contents, we would prefer setting a value as high as possible
+    // to still be able to seek anywhere we want to (even ahead of the Manifest if
+    // we want to). As such, we put it at a safe default value of 2^32 excepted
+    // when the maximum position is already relatively close to that value, where
+    // we authorize exceptionally going over it.
+    newDuration =  Math.max(Math.pow(2, 32), newDuration + YEAR_IN_SECONDS);
   }
 
   let maxBufferedEnd : number = 0;
