@@ -60,6 +60,9 @@ let isWebOs2022 = false;
 /** `true` for Panasonic devices. */
 let isPanasonic = false;
 
+/** `true` for the PlayStation 5 game console. */
+let isPlayStation5 = false;
+
 ((function findCurrentBrowser() : void {
   if (isNode) {
     return ;
@@ -101,7 +104,9 @@ let isPanasonic = false;
     isSamsungBrowser = true;
   }
 
-  if (/Tizen/.test(navigator.userAgent)) {
+  if (navigator.userAgent.indexOf("PlayStation 5") !== -1) {
+    isPlayStation5 = true;
+  } else if (navigator.userAgent.indexOf("Tizen") !== -1) {
     isTizen = true;
 
   // Inspired form: http://webostv.developer.lge.com/discover/specifications/web-engine/
@@ -136,6 +141,7 @@ export {
   isIEOrEdge,
   isFirefox,
   isPanasonic,
+  isPlayStation5,
   isSafariDesktop,
   isSafariMobile,
   isSamsungBrowser,
