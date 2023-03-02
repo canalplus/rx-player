@@ -40,48 +40,68 @@ import {
 import { CancellationSignal } from "../../../../utils/task_canceller";
 
 /** Default MediaKeySystemAccess configuration used by the RxPlayer. */
-export const defaultKSConfig = [{
-  audioCapabilities: [ { contentType: "audio/mp4;codecs=\"mp4a.40.2\"" },
-                       { contentType: "audio/webm;codecs=opus" } ],
-  distinctiveIdentifier: "optional" as const,
-  initDataTypes: ["cenc"] as const,
-  persistentState: "optional" as const,
-  sessionTypes: ["temporary"] as const,
-  videoCapabilities: [ { contentType: "video/mp4;codecs=\"avc1.4d401e\"" },
-                       { contentType: "video/mp4;codecs=\"avc1.42e01e\"" },
-                       { contentType: "video/webm;codecs=\"vp8\"" } ],
-}];
+export const defaultKSConfig = [
+  {
+    audioCapabilities: [ { contentType: "audio/mp4;codecs=\"mp4a.40.2\"" },
+                         { contentType: "audio/webm;codecs=opus" } ],
+    distinctiveIdentifier: "optional" as const,
+    initDataTypes: ["cenc"] as const,
+    persistentState: "optional" as const,
+    sessionTypes: ["temporary"] as const,
+    videoCapabilities: [ { contentType: "video/mp4;codecs=\"avc1.4d401e\"" },
+                         { contentType: "video/mp4;codecs=\"avc1.42e01e\"" },
+                         { contentType: "video/webm;codecs=\"vp8\"" } ],
+  },
+  {
+    audioCapabilities: undefined,
+    distinctiveIdentifier: "optional" as const,
+    initDataTypes: ["cenc"] as const,
+    persistentState: "optional" as const,
+    sessionTypes: ["temporary"] as const,
+    videoCapabilities: undefined,
+  },
+];
 
 /**
  * Default "com.microsoft.playready.recommendation" MediaKeySystemAccess
  * configuration used by the RxPlayer.
  */
-export const defaultPRRecommendationKSConfig = [{
-  audioCapabilities: [ { robustness: "3000",
-                         contentType: "audio/mp4;codecs=\"mp4a.40.2\"" },
-                       { robustness: "3000",
-                         contentType: "audio/webm;codecs=opus" },
-                       { robustness: "2000",
-                         contentType: "audio/mp4;codecs=\"mp4a.40.2\"" },
-                       { robustness: "2000",
-                         contentType: "audio/webm;codecs=opus" } ],
-  distinctiveIdentifier: "optional" as const,
-  initDataTypes: ["cenc"] as const,
-  persistentState: "optional" as const,
-  sessionTypes: ["temporary"] as const,
-  videoCapabilities: [ { robustness: "3000",
-                         contentType: "video/mp4;codecs=\"avc1.4d401e\"" },
-                       { robustness: "3000",
-                         contentType: "video/mp4;codecs=\"avc1.42e01e\"" },
-                       { robustness: "3000",
-                         contentType: "video/webm;codecs=\"vp8\"" },
-                       { robustness: "2000",
-                         contentType: "video/mp4;codecs=\"avc1.4d401e\"" },
-                       { robustness: "2000",
-                         contentType: "video/mp4;codecs=\"avc1.42e01e\"" },
-                       { robustness: "2000",
-                         contentType: "video/webm;codecs=\"vp8\"" } ],
-}];
+export const defaultPRRecommendationKSConfig = [
+  {
+    audioCapabilities: [ { robustness: "3000",
+                           contentType: "audio/mp4;codecs=\"mp4a.40.2\"" },
+                         { robustness: "3000",
+                           contentType: "audio/webm;codecs=opus" },
+                         { robustness: "2000",
+                           contentType: "audio/mp4;codecs=\"mp4a.40.2\"" },
+                         { robustness: "2000",
+                           contentType: "audio/webm;codecs=opus" } ],
+    distinctiveIdentifier: "optional" as const,
+    initDataTypes: ["cenc"] as const,
+    persistentState: "optional" as const,
+    sessionTypes: ["temporary"] as const,
+    videoCapabilities: [ { robustness: "3000",
+                           contentType: "video/mp4;codecs=\"avc1.4d401e\"" },
+                         { robustness: "3000",
+                           contentType: "video/mp4;codecs=\"avc1.42e01e\"" },
+                         { robustness: "3000",
+                           contentType: "video/webm;codecs=\"vp8\"" },
+                         { robustness: "2000",
+                           contentType: "video/mp4;codecs=\"avc1.4d401e\"" },
+                         { robustness: "2000",
+                           contentType: "video/mp4;codecs=\"avc1.42e01e\"" },
+                         { robustness: "2000",
+                           contentType: "video/webm;codecs=\"vp8\"" } ],
+  },
+  {
+    audioCapabilities: undefined,
+    distinctiveIdentifier: "optional" as const,
+    initDataTypes: ["cenc"] as const,
+    persistentState: "optional" as const,
+    sessionTypes: ["temporary"] as const,
+    videoCapabilities: undefined,
+  },
+];
 
 /** Default Widevine MediaKeySystemAccess configuration used by the RxPlayer. */
 export const defaultWidevineConfig = (() => {
@@ -104,9 +124,10 @@ export const defaultWidevineConfig = (() => {
             { contentType: "audio/webm;codecs=opus",
               robustness } ];
   });
-  return defaultKSConfig.map(conf => {
-    return { ...conf,  audioCapabilities, videoCapabilities };
-  });
+  return [
+    { ...defaultKSConfig[0],  audioCapabilities, videoCapabilities },
+    defaultKSConfig[1],
+  ];
 })();
 
 /**

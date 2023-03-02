@@ -1,4 +1,7 @@
-import { isWebOs } from "./browser_detection";
+import {
+  isPanasonic,
+  isWebOs,
+} from "./browser_detection";
 
 /**
  * Returns `true` if a `MediaKeys` instance (the  `Encrypted Media Extension`
@@ -13,5 +16,5 @@ import { isWebOs } from "./browser_detection";
  * @returns {boolean}
  */
 export default function canReuseMediaKeys() : boolean {
-  return !isWebOs;
+  return !isWebOs && !isPanasonic;
 }
