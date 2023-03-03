@@ -209,7 +209,7 @@ function setMediaSourceDuration(
     if (maxBufferedEnd < mediaSource.duration) {
       try {
         log.info("Init: Updating duration to what is currently buffered", maxBufferedEnd);
-        mediaSource.duration = newDuration;
+        mediaSource.duration = maxBufferedEnd;
       } catch (err) {
         log.warn("Duration Updater: Can't update duration on the MediaSource.",
                  err instanceof Error ? err : "");
