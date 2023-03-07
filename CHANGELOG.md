@@ -28,6 +28,8 @@
 
   - DASH: better detect closed captions [#1187]
   - DASH: handle `endNumber` DASH attribute [#1186]
+  - DASH: Do not merge AdaptationSet with role "main" anymore [#1214]
+  - DASH: parse `transferCharacteristics` property in the MPD to better detect hdr [#1212]
   - Support encrypted contents on Panasonic 2019 TVs [#1226]
   - Better handle SourceBuffer's QuotaExceededError, responsible for `MediaError` with the `BUFFER_FULL_ERROR` code [#1221]
   - API: send available...TracksChange events in the very unlikely scenario where tracks are added after a manifest update [#1197]
