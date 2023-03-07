@@ -19,7 +19,6 @@
  * switching for an easier API management.
  */
 
-import { Subject } from "rxjs";
 import log from "../../../log";
 import {
   Adaptation,
@@ -43,26 +42,35 @@ import arrayFind from "../../../utils/array_find";
 import arrayIncludes from "../../../utils/array_includes";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import normalizeLanguage from "../../../utils/languages";
+import { ISharedReference } from "../../../utils/reference";
 import SortedList from "../../../utils/sorted_list";
 import takeFirstSet from "../../../utils/take_first_set";
 
 /** Audio information stored for a single Period. */
-interface ITMPeriodAudioInfos { adaptations : Adaptation[];
-                                adaptation$ : Subject<Adaptation|null>; }
+interface ITMPeriodAudioInfos {
+  adaptations : Adaptation[];
+  adaptationRef : ISharedReference<Adaptation|null|undefined>;
+}
 
 /** Text information stored for a single Period. */
-interface ITMPeriodTextInfos { adaptations : Adaptation[];
-                               adaptation$ : Subject<Adaptation|null>; }
+interface ITMPeriodTextInfos {
+  adaptations : Adaptation[];
+  adaptationRef : ISharedReference<Adaptation|null|undefined>;
+}
 
 /** Video information stored for a single Period. */
-interface ITMPeriodVideoInfos { adaptations : Adaptation[];
-                                adaptation$ : Subject<Adaptation|null>; }
+interface ITMPeriodVideoInfos {
+  adaptations : Adaptation[];
+  adaptationRef : ISharedReference<Adaptation|null|undefined>;
+}
 
 /** Every information stored for a single Period. */
-interface ITMPeriodInfos { period : Period;
-                           audio? : ITMPeriodAudioInfos;
-                           text? : ITMPeriodTextInfos;
-                           video? : ITMPeriodVideoInfos; }
+interface ITMPeriodInfos {
+  period : Period;
+  audio? : ITMPeriodAudioInfos;
+  text? : ITMPeriodTextInfos;
+  video? : ITMPeriodVideoInfos;
+}
 
 /** Audio track preference once normalized by the TrackChoiceManager. */
 type INormalizedPreferredAudioTrack = null |
@@ -84,6 +92,7 @@ type INormalizedPreferredTextTrack = null |
 /** Text track preference when it is not set to `null`. */
 interface INormalizedPreferredTextTrackObject {
   normalized : string;
+  forced : boolean | undefined;
   closedCaption : boolean;
 }
 
@@ -116,6 +125,7 @@ function normalizeTextTracks(
   return tracks.map(t => t === null ?
     t :
     { normalized: normalizeLanguage(t.language),
+      forced: t.forced,
       closedCaption: t.closedCaption });
 }
 
@@ -247,16 +257,15 @@ export default class TrackChoiceManager {
   }
 
   /**
-   * Add Subject to choose Adaptation for new "audio" or "text" Period.
+   * Add shared reference to choose Adaptation for new "audio" or "text" Period.
    * @param {string} bufferType - The concerned buffer type
    * @param {Period} period - The concerned Period.
-   * @param {Subject.<Object|null>} adaptation$ - A subject through which the
-   * choice will be given
+   * @param {Object} adaptationRef
    */
   public addPeriod(
     bufferType : "audio" | "text"| "video",
     period : Period,
-    adaptation$ : Subject<Adaptation|null>
+    adaptationRef : ISharedReference<Adaptation|null|undefined>
   ) : void {
     const periodItem = getPeriodItem(this._periods, period);
     const adaptations = period.getSupportedAdaptations(bufferType);
@@ -266,17 +275,17 @@ export default class TrackChoiceManager {
                  period.start);
         return;
       } else {
-        periodItem[bufferType] = { adaptations, adaptation$ };
+        periodItem[bufferType] = { adaptations, adaptationRef };
       }
     } else {
       this._periods.add({ period,
-                          [bufferType]: { adaptations, adaptation$ } });
+                          [bufferType]: { adaptations, adaptationRef } });
     }
   }
 
   /**
-   * Remove Subject to choose an "audio", "video" or "text" Adaptation for a
-   * Period.
+   * Remove shared reference to choose an "audio", "video" or "text" Adaptation
+   * for a Period.
    * @param {string} bufferType - The concerned buffer type
    * @param {Period} period - The concerned Period.
    */
@@ -324,7 +333,7 @@ export default class TrackChoiceManager {
   }
 
   /**
-   * Emit initial audio Adaptation through the given Subject based on:
+   * Emit initial audio Adaptation through the given shared reference based on:
    *   - the preferred audio tracks
    *   - the last choice for this period, if one
    * @param {Period} period - The concerned Period.
@@ -342,7 +351,7 @@ export default class TrackChoiceManager {
 
     if (chosenAudioAdaptation === null) {
       // If the Period was previously without audio, keep it that way
-      audioInfos.adaptation$.next(null);
+      audioInfos.adaptationRef.setValue(null);
     } else if (chosenAudioAdaptation === undefined ||
                !arrayIncludes(audioAdaptations, chosenAudioAdaptation)
     ) {
@@ -353,14 +362,14 @@ export default class TrackChoiceManager {
                                                                 normalizedPref);
 
       this._audioChoiceMemory.set(period, optimalAdaptation);
-      audioInfos.adaptation$.next(optimalAdaptation);
+      audioInfos.adaptationRef.setValue(optimalAdaptation);
     } else {
-      audioInfos.adaptation$.next(chosenAudioAdaptation); // set last one
+      audioInfos.adaptationRef.setValue(chosenAudioAdaptation); // set last one
     }
   }
 
   /**
-   * Emit initial text Adaptation through the given Subject based on:
+   * Emit initial text Adaptation through the given shared reference based on:
    *   - the preferred text tracks
    *   - the last choice for this period, if one
    * @param {Period} period - The concerned Period.
@@ -377,24 +386,26 @@ export default class TrackChoiceManager {
     const chosenTextAdaptation = this._textChoiceMemory.get(period);
     if (chosenTextAdaptation === null) {
       // If the Period was previously without text, keep it that way
-      textInfos.adaptation$.next(null);
+      textInfos.adaptationRef.setValue(null);
     } else if (chosenTextAdaptation === undefined ||
                !arrayIncludes(textAdaptations, chosenTextAdaptation)
     ) {
       // Find the optimal text Adaptation
       const preferredTextTracks = this._preferredTextTracks;
       const normalizedPref = normalizeTextTracks(preferredTextTracks);
-      const optimalAdaptation = findFirstOptimalTextAdaptation(textAdaptations,
-                                                               normalizedPref);
+      const optimalAdaptation = findFirstOptimalTextAdaptation(
+        textAdaptations,
+        normalizedPref,
+        this._audioChoiceMemory.get(period));
       this._textChoiceMemory.set(period, optimalAdaptation);
-      textInfos.adaptation$.next(optimalAdaptation);
+      textInfos.adaptationRef.setValue(optimalAdaptation);
     } else {
-      textInfos.adaptation$.next(chosenTextAdaptation); // set last one
+      textInfos.adaptationRef.setValue(chosenTextAdaptation); // set last one
     }
   }
 
   /**
-   * Emit initial video Adaptation through the given Subject based on:
+   * Emit initial video Adaptation through the given shared reference based on:
    *   - the preferred video tracks
    *   - the last choice for this period, if one
    * @param {Period} period - The concerned Period.
@@ -429,7 +440,7 @@ export default class TrackChoiceManager {
 
     if (newBaseAdaptation === null) {
       this._videoChoiceMemory.set(period, null);
-      videoInfos.adaptation$.next(null);
+      videoInfos.adaptationRef.setValue(null);
       return;
     }
 
@@ -437,7 +448,7 @@ export default class TrackChoiceManager {
                                                   this.trickModeTrackEnabled);
     this._videoChoiceMemory.set(period, { baseAdaptation: newBaseAdaptation,
                                           adaptation: newVideoAdaptation });
-    videoInfos.adaptation$.next(newVideoAdaptation);
+    videoInfos.adaptationRef.setValue(newVideoAdaptation);
   }
 
   /**
@@ -465,7 +476,7 @@ export default class TrackChoiceManager {
     }
 
     this._audioChoiceMemory.set(period, wantedAdaptation);
-    audioInfos.adaptation$.next(wantedAdaptation);
+    audioInfos.adaptationRef.setValue(wantedAdaptation);
   }
 
   /**
@@ -492,7 +503,7 @@ export default class TrackChoiceManager {
     }
 
     this._textChoiceMemory.set(period, wantedAdaptation);
-    textInfos.adaptation$.next(wantedAdaptation);
+    textInfos.adaptationRef.setValue(wantedAdaptation);
   }
 
   /**
@@ -523,7 +534,7 @@ export default class TrackChoiceManager {
                                                   this.trickModeTrackEnabled);
     this._videoChoiceMemory.set(period, { baseAdaptation: wantedBaseAdaptation,
                                           adaptation: newVideoAdaptation });
-    videoInfos.adaptation$.next(newVideoAdaptation);
+    videoInfos.adaptationRef.setValue(newVideoAdaptation);
   }
 
   /**
@@ -546,7 +557,7 @@ export default class TrackChoiceManager {
     }
 
     this._textChoiceMemory.set(period, null);
-    textInfos.adaptation$.next(null);
+    textInfos.adaptationRef.setValue(null);
   }
 
   /**
@@ -565,7 +576,7 @@ export default class TrackChoiceManager {
       return;
     }
     this._videoChoiceMemory.set(period, null);
-    videoInfos.adaptation$.next(null);
+    videoInfos.adaptationRef.setValue(null);
   }
 
   public disableVideoTrickModeTracks(): void {
@@ -645,13 +656,17 @@ export default class TrackChoiceManager {
       return null;
     }
 
-    return {
+    const formatted : ITextTrack = {
       language: takeFirstSet<string>(chosenTextAdaptation.language, ""),
       normalized: takeFirstSet<string>(chosenTextAdaptation.normalizedLanguage, ""),
       closedCaption: chosenTextAdaptation.isClosedCaption === true,
       id: chosenTextAdaptation.id,
       label: chosenTextAdaptation.label,
     };
+    if (chosenTextAdaptation.isForcedSubtitles !== undefined) {
+      formatted.forced = chosenTextAdaptation.isForcedSubtitles;
+    }
+    return formatted;
   }
 
   /**
@@ -768,15 +783,21 @@ export default class TrackChoiceManager {
       null;
 
     return textInfos.adaptations
-      .map((adaptation) => ({
-        language: takeFirstSet<string>(adaptation.language, ""),
-        normalized: takeFirstSet<string>(adaptation.normalizedLanguage, ""),
-        closedCaption: adaptation.isClosedCaption === true,
-        id: adaptation.id,
-        active: currentId === null ? false :
-                                     currentId === adaptation.id,
-        label: adaptation.label,
-      }));
+      .map((adaptation) => {
+        const formatted : IAvailableTextTrack = {
+          language: takeFirstSet<string>(adaptation.language, ""),
+          normalized: takeFirstSet<string>(adaptation.normalizedLanguage, ""),
+          closedCaption: adaptation.isClosedCaption === true,
+          id: adaptation.id,
+          active: currentId === null ? false :
+                                       currentId === adaptation.id,
+          label: adaptation.label,
+        };
+        if (adaptation.isForcedSubtitles !== undefined) {
+          formatted.forced = adaptation.isForcedSubtitles;
+        }
+        return formatted;
+      });
   }
 
   /**
@@ -906,7 +927,7 @@ export default class TrackChoiceManager {
                                                                 normalizedPref);
 
       this._audioChoiceMemory.set(period, optimalAdaptation);
-      audioItem.adaptation$.next(optimalAdaptation);
+      audioItem.adaptationRef.setValue(optimalAdaptation);
 
       // previous "next" call could have changed everything, start over
       recursiveUpdateAudioTrack(0);
@@ -956,11 +977,13 @@ export default class TrackChoiceManager {
         return;
       }
 
-      const optimalAdaptation = findFirstOptimalTextAdaptation(textAdaptations,
-                                                               normalizedPref);
+      const optimalAdaptation = findFirstOptimalTextAdaptation(
+        textAdaptations,
+        normalizedPref,
+        this._audioChoiceMemory.get(period));
 
       this._textChoiceMemory.set(period, optimalAdaptation);
-      textItem.adaptation$.next(optimalAdaptation);
+      textItem.adaptationRef.setValue(optimalAdaptation);
 
       // previous "next" call could have changed everything, start over
       recursiveUpdateTextTrack(0);
@@ -1020,7 +1043,7 @@ export default class TrackChoiceManager {
             baseAdaptation: chosenVideoAdaptation.baseAdaptation,
             adaptation: wantedVideoAdaptation,
           });
-          videoItem.adaptation$.next(wantedVideoAdaptation);
+          videoItem.adaptationRef.setValue(wantedVideoAdaptation);
 
           // previous "next" call could have changed everything, start over
           return recursiveUpdateVideoTrack(0);
@@ -1031,7 +1054,7 @@ export default class TrackChoiceManager {
                                                                 preferredVideoTracks);
       if (optimalAdaptation === null) {
         this._videoChoiceMemory.set(period, null);
-        videoItem.adaptation$.next(null);
+        videoItem.adaptationRef.setValue(null);
         // previous "next" call could have changed everything, start over
         return recursiveUpdateVideoTrack(0);
       }
@@ -1040,7 +1063,7 @@ export default class TrackChoiceManager {
                                                     this.trickModeTrackEnabled);
       this._videoChoiceMemory.set(period, { baseAdaptation: optimalAdaptation,
                                             adaptation: newVideoAdaptation });
-      videoItem.adaptation$.next(newVideoAdaptation);
+      videoItem.adaptationRef.setValue(newVideoAdaptation);
 
       // previous "next" call could have changed everything, start over
       return recursiveUpdateVideoTrack(0);
@@ -1162,7 +1185,9 @@ function createTextPreferenceMatcher(
     return takeFirstSet<string>(textAdaptation.normalizedLanguage,
                                 "") === preferredTextTrack.normalized &&
     (preferredTextTrack.closedCaption ? textAdaptation.isClosedCaption === true :
-                                        textAdaptation.isClosedCaption !== true);
+                                        textAdaptation.isClosedCaption !== true) &&
+    (preferredTextTrack.forced === true ? textAdaptation.isForcedSubtitles === true :
+                                          textAdaptation.isForcedSubtitles !== true);
   };
 }
 
@@ -1173,12 +1198,14 @@ function createTextPreferenceMatcher(
  * `null` if the most optimal text adaptation is no text adaptation.
  * @param {Array.<Object>} textAdaptations
  * @param {Array.<Object|null>} preferredTextTracks
+ * @param {Object|null|undefined} chosenAudioAdaptation
  * @returns {Adaptation|null}
  */
 function findFirstOptimalTextAdaptation(
   textAdaptations : Adaptation[],
-  preferredTextTracks : INormalizedPreferredTextTrack[]
-) : Adaptation|null {
+  preferredTextTracks : INormalizedPreferredTextTrack[],
+  chosenAudioAdaptation : Adaptation | null | undefined
+) : Adaptation | null {
   if (textAdaptations.length === 0) {
     return null;
   }
@@ -1196,6 +1223,19 @@ function findFirstOptimalTextAdaptation(
     if (foundAdaptation !== undefined) {
       return foundAdaptation;
     }
+  }
+
+  const forcedSubtitles = textAdaptations.filter((ad) => ad.isForcedSubtitles === true);
+  if (forcedSubtitles.length > 0) {
+    if (chosenAudioAdaptation !== null && chosenAudioAdaptation !== undefined) {
+      const sameLanguage = arrayFind(forcedSubtitles, (f) =>
+        f.normalizedLanguage === chosenAudioAdaptation.normalizedLanguage);
+      if (sameLanguage !== undefined) {
+        return sameLanguage;
+      }
+    }
+    return arrayFind(forcedSubtitles, (f) => f.normalizedLanguage === undefined) ??
+      null;
   }
 
   // no optimal adaptation

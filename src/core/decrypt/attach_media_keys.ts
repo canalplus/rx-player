@@ -39,9 +39,10 @@ export function disableMediaKeys(mediaElement : HTMLMediaElement): void {
  * Attach MediaKeys and its associated state to an HTMLMediaElement.
  *
  * /!\ Mutates heavily MediaKeysInfosStore
- * @param {Object} mediaKeysInfos
  * @param {HTMLMediaElement} mediaElement
- * @returns {Observable}
+ * @param {Object} mediaKeysInfos
+ * @param {Object} cancelSignal
+ * @returns {Promise}
  */
 export default async function attachMediaKeys(
   mediaElement : HTMLMediaElement,
@@ -61,7 +62,7 @@ export default async function attachMediaKeys(
 
   // If this task has been cancelled while we were closing previous sessions,
   // stop now (and thus avoid setting the new media keys);
-  if (cancelSignal.isCancelled) {
+  if (cancelSignal.isCancelled()) {
     throw cancelSignal.cancellationError;
   }
 

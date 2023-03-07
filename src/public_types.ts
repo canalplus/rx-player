@@ -244,6 +244,7 @@ export interface IAdaptation {
   normalizedLanguage? : string | undefined;
   isAudioDescription? : boolean | undefined;
   isClosedCaption? : boolean | undefined;
+  isSignInterpreted? : boolean | undefined;
   isTrickModeTrack? : boolean | undefined;
   representations : IRepresentation[];
 
@@ -636,6 +637,7 @@ export type IAudioTrackPreference = null |
 /** Single preference for a text track Adaptation. */
 export type ITextTrackPreference = null |
                                    { language : string;
+                                     forced? : boolean | undefined;
                                      closedCaption : boolean; };
 
 /** Single preference for a video track Adaptation. */
@@ -763,6 +765,7 @@ export interface IAudioTrack { language : string;
 export interface ITextTrack { language : string;
                               normalized : string;
                               closedCaption : boolean;
+                              forced? : boolean | undefined;
                               label? : string | undefined;
                               id : number|string; }
 
@@ -785,6 +788,14 @@ export interface IVideoTrack { id : number|string;
                                trickModeTracks?: IVideoTrack[];
                                label? : string | undefined;
                                representations: IVideoRepresentation[]; }
+
+/** Output of the `getKeySystemConfiguration` method. */
+export interface IKeySystemConfigurationOutput {
+  /** Key system string. */
+  keySystem : string;
+  /** `MediaKeySystemConfiguration` actually used by the key system. */
+  configuration : MediaKeySystemConfiguration;
+}
 
 /** Audio track from a list of audio tracks returned by the RxPlayer. */
 export interface IAvailableAudioTrack

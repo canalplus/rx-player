@@ -107,21 +107,36 @@ function isVisuallyImpaired(
 /**
  * Detect if the accessibility given defines an adaptation for the hard of
  * hearing.
- * Based on DVB Document A168 (DVB-DASH).
- * @param {Object} accessibility
+ * Based on DVB Document A168 (DVB-DASH) and DASH specification.
+ * @param {Array.<Object>} accessibilities
+ * @param {Array.<Object>} roles
  * @returns {Boolean}
  */
-function isHardOfHearing(
-  accessibility : { schemeIdUri? : string | undefined;
-                    value? : string | undefined; } |
-                  undefined
+function isCaptionning(
+  accessibilities : Array<{ schemeIdUri? : string | undefined;
+                            value? : string | undefined; }> |
+                    undefined,
+  roles : Array<{ schemeIdUri? : string | undefined;
+                  value? : string | undefined; }> |
+         undefined
 ) : boolean {
-  if (accessibility === undefined) {
-    return false;
+  if (accessibilities !== undefined) {
+    const hasDvbClosedCaptionSignaling = accessibilities.some(accessibility =>
+      (accessibility.schemeIdUri === "urn:tva:metadata:cs:AudioPurposeCS:2007" &&
+       accessibility.value === "2"));
+    if (hasDvbClosedCaptionSignaling) {
+      return true;
+    }
   }
-
-  return (accessibility.schemeIdUri === "urn:tva:metadata:cs:AudioPurposeCS:2007" &&
-          accessibility.value === "2");
+  if (roles !== undefined) {
+    const hasDashCaptionSinaling = roles.some(role =>
+      (role.schemeIdUri === "urn:mpeg:dash:role:2011" &&
+       role.value === "caption"));
+    if (hasDashCaptionSinaling) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
@@ -147,14 +162,13 @@ function hasSignLanguageInterpretation(
 /**
  * Contruct Adaptation ID from the information we have.
  * @param {Object} adaptation
- * @param {Array.<Object>} representations
- * @param {Array.<Object>} representations
  * @param {Object} infos
  * @returns {string}
  */
 function getAdaptationID(
   adaptation : IAdaptationSetIntermediateRepresentation,
   infos : { isClosedCaption : boolean | undefined;
+            isForcedSubtitle : boolean | undefined;
             isAudioDescription : boolean | undefined;
             isSignInterpreted : boolean | undefined;
             isTrickModeTrack: boolean;
@@ -165,6 +179,7 @@ function getAdaptationID(
   }
 
   const { isClosedCaption,
+          isForcedSubtitle,
           isAudioDescription,
           isSignInterpreted,
           isTrickModeTrack,
@@ -175,6 +190,9 @@ function getAdaptationID(
     idString += `-${adaptation.attributes.language}`;
   }
   if (isClosedCaption === true) {
+    idString += "-cc";
+  }
+  if (isForcedSubtitle === true) {
     idString += "-cc";
   }
   if (isAudioDescription === true) {
@@ -253,15 +271,6 @@ export default function parseAdaptationSets(
 
   const parsedAdaptationsIDs : string[] = [];
 
-  /**
-   * Index of the last parsed Video AdaptationSet with a Role set as "main" in
-   * `parsedAdaptations.video`.
-   * `-1` if not yet encountered.
-   * Used as we merge all main video AdaptationSet due to a comprehension of the
-   * DASH-IF IOP.
-   */
-  let lastMainVideoAdapIdx = -1;
-
   for (let adaptationIdx = 0; adaptationIdx < adaptationsIR.length; adaptationIdx++) {
     const adaptation = adaptationsIR[adaptationIdx];
     const adaptationChildren = adaptation.children;
@@ -298,7 +307,6 @@ export default function parseAdaptationSets(
 
     const priority = adaptation.attributes.selectionPriority ?? 1;
     const originalID = adaptation.attributes.id;
-    let newID : string;
     const adaptationSetSwitchingIDs = getAdaptationSetSwitchingIDs(adaptation);
     const parentSegmentTemplates = [];
     if (context.segmentTemplate !== undefined) {
@@ -338,148 +346,136 @@ export default function parseAdaptationSets(
 
     const isTrickModeTrack = trickModeAttachedAdaptationIds !== undefined;
 
-    if (type === "video" &&
-        isMainAdaptation &&
-        lastMainVideoAdapIdx >= 0 &&
-        parsedAdaptations.video.length > lastMainVideoAdapIdx &&
-        !isTrickModeTrack)
+    const { accessibilities } = adaptationChildren;
+
+    let isDub : boolean|undefined;
+    if (roles !== undefined &&
+        roles.some((role) => role.value === "dub"))
     {
-      const videoMainAdaptation = parsedAdaptations.video[lastMainVideoAdapIdx][0];
-      reprCtxt.unsafelyBaseOnPreviousAdaptation = context
-        .unsafelyBaseOnPreviousPeriod?.getAdaptation(videoMainAdaptation.id) ?? null;
-      const representations = parseRepresentations(representationsIR,
-                                                   adaptation,
-                                                   reprCtxt);
-      videoMainAdaptation.representations.push(...representations);
-      newID = videoMainAdaptation.id;
+      isDub = true;
+    }
+
+    let isClosedCaption;
+    if (type !== "text") {
+      isClosedCaption = false;
     } else {
-      const { accessibilities } = adaptationChildren;
+      isClosedCaption = isCaptionning(accessibilities, roles);
+    }
 
-      let isDub : boolean|undefined;
-      if (roles !== undefined &&
-          roles.some((role) => role.value === "dub"))
-      {
-        isDub = true;
-      }
+    let isForcedSubtitle;
+    if (type === "text" &&
+        roles !== undefined &&
+        roles.some((role) => role.value === "forced-subtitle" ||
+                             role.value === "forced_subtitle"))
+    {
+      isForcedSubtitle = true;
+    }
 
-      let isClosedCaption;
-      if (type !== "text") {
-        isClosedCaption = false;
-      } else if (accessibilities !== undefined) {
-        isClosedCaption = accessibilities.some(isHardOfHearing);
-      }
+    let isAudioDescription;
+    if (type !== "audio") {
+      isAudioDescription = false;
+    } else if (accessibilities !== undefined) {
+      isAudioDescription = accessibilities.some(isVisuallyImpaired);
+    }
 
-      let isAudioDescription;
-      if (type !== "audio") {
-        isAudioDescription = false;
-      } else if (accessibilities !== undefined) {
-        isAudioDescription = accessibilities.some(isVisuallyImpaired);
-      }
+    let isSignInterpreted;
+    if (type !== "video") {
+      isSignInterpreted = false;
+    } else if (accessibilities !== undefined) {
+      isSignInterpreted = accessibilities.some(hasSignLanguageInterpretation);
+    }
 
-      let isSignInterpreted;
-      if (type !== "video") {
-        isSignInterpreted = false;
-      } else if (accessibilities !== undefined) {
-        isSignInterpreted = accessibilities.some(hasSignLanguageInterpretation);
-      }
+    let adaptationID = getAdaptationID(adaptation,
+                                       { isAudioDescription,
+                                         isForcedSubtitle,
+                                         isClosedCaption,
+                                         isSignInterpreted,
+                                         isTrickModeTrack,
+                                         type });
 
-      let adaptationID = getAdaptationID(adaptation,
-                                         { isAudioDescription,
-                                           isClosedCaption,
-                                           isSignInterpreted,
-                                           isTrickModeTrack,
-                                           type });
+    // Avoid duplicate IDs
+    while (arrayIncludes(parsedAdaptationsIDs, adaptationID)) {
+      adaptationID += "-dup";
+    }
 
-      // Avoid duplicate IDs
-      while (arrayIncludes(parsedAdaptationsIDs, adaptationID)) {
-        adaptationID += "-dup";
-      }
+    const newID = adaptationID;
+    parsedAdaptationsIDs.push(adaptationID);
 
-      newID = adaptationID;
-      parsedAdaptationsIDs.push(adaptationID);
+    reprCtxt.unsafelyBaseOnPreviousAdaptation = context
+      .unsafelyBaseOnPreviousPeriod?.getAdaptation(adaptationID) ?? null;
 
-      reprCtxt.unsafelyBaseOnPreviousAdaptation = context
-        .unsafelyBaseOnPreviousPeriod?.getAdaptation(adaptationID) ?? null;
+    const representations = parseRepresentations(representationsIR,
+                                                 adaptation,
+                                                 reprCtxt);
+    const parsedAdaptationSet : IParsedAdaptation =
+      { id: adaptationID,
+        representations,
+        type,
+        isTrickModeTrack };
+    if (adaptation.attributes.language != null) {
+      parsedAdaptationSet.language = adaptation.attributes.language;
+    }
+    if (isClosedCaption != null) {
+      parsedAdaptationSet.closedCaption = isClosedCaption;
+    }
+    if (isAudioDescription != null) {
+      parsedAdaptationSet.audioDescription = isAudioDescription;
+    }
+    if (isDub === true) {
+      parsedAdaptationSet.isDub = true;
+    }
+    if (isForcedSubtitle !== undefined) {
+      parsedAdaptationSet.forcedSubtitles = isForcedSubtitle;
+    }
+    if (isSignInterpreted === true) {
+      parsedAdaptationSet.isSignInterpreted = true;
+    }
 
-      const representations = parseRepresentations(representationsIR,
-                                                   adaptation,
-                                                   reprCtxt);
-      const parsedAdaptationSet : IParsedAdaptation =
-        { id: adaptationID,
-          representations,
-          type,
-          isTrickModeTrack };
-      if (adaptation.attributes.language != null) {
-        parsedAdaptationSet.language = adaptation.attributes.language;
-      }
-      if (isClosedCaption != null) {
-        parsedAdaptationSet.closedCaption = isClosedCaption;
-      }
-      if (isAudioDescription != null) {
-        parsedAdaptationSet.audioDescription = isAudioDescription;
-      }
-      if (isDub === true) {
-        parsedAdaptationSet.isDub = true;
-      }
-      if (isSignInterpreted === true) {
-        parsedAdaptationSet.isSignInterpreted = true;
-      }
+    if (label !== undefined) {
+      parsedAdaptationSet.label = label;
+    }
 
-      if (label !== undefined) {
-        parsedAdaptationSet.label = label;
-      }
+    if (trickModeAttachedAdaptationIds !== undefined) {
+      trickModeAdaptations.push({ adaptation: parsedAdaptationSet,
+                                  trickModeAttachedAdaptationIds });
+    } else {
 
-      if (trickModeAttachedAdaptationIds !== undefined) {
-        trickModeAdaptations.push({ adaptation: parsedAdaptationSet,
-                                    trickModeAttachedAdaptationIds });
-      } else {
-
-        // look if we have to merge this into another Adaptation
-        let mergedIntoIdx = -1;
-        for (const id of adaptationSetSwitchingIDs) {
-          const switchingInfos = adaptationSwitchingInfos[id];
-          if (switchingInfos !== undefined &&
-              switchingInfos.newID !== newID &&
-              arrayIncludes(switchingInfos.adaptationSetSwitchingIDs, originalID))
+      // look if we have to merge this into another Adaptation
+      let mergedIntoIdx = -1;
+      for (const id of adaptationSetSwitchingIDs) {
+        const switchingInfos = adaptationSwitchingInfos[id];
+        if (switchingInfos !== undefined &&
+            switchingInfos.newID !== newID &&
+            arrayIncludes(switchingInfos.adaptationSetSwitchingIDs, originalID))
+        {
+          mergedIntoIdx = arrayFindIndex(parsedAdaptations[type],
+                                         (a) => a[0].id === id);
+          const mergedInto = parsedAdaptations[type][mergedIntoIdx];
+          if (mergedInto !== undefined &&
+              mergedInto[0].audioDescription ===
+                parsedAdaptationSet.audioDescription &&
+              mergedInto[0].closedCaption ===
+                parsedAdaptationSet.closedCaption &&
+              mergedInto[0].language === parsedAdaptationSet.language)
           {
-            mergedIntoIdx = arrayFindIndex(parsedAdaptations[type],
-                                           (a) => a[0].id === id);
-            const mergedInto = parsedAdaptations[type][mergedIntoIdx];
-            if (mergedInto !== undefined &&
-                mergedInto[0].audioDescription ===
-                  parsedAdaptationSet.audioDescription &&
-                mergedInto[0].closedCaption ===
-                  parsedAdaptationSet.closedCaption &&
-                mergedInto[0].language === parsedAdaptationSet.language)
-            {
-              log.info("DASH Parser: merging \"switchable\" AdaptationSets",
-                       originalID, id);
-              mergedInto[0].representations.push(...parsedAdaptationSet.representations);
-              if (type === "video" &&
-                  isMainAdaptation &&
-                  !mergedInto[1].isMainAdaptation)
-              {
-                lastMainVideoAdapIdx = Math.max(lastMainVideoAdapIdx, mergedIntoIdx);
-              }
-              mergedInto[1] = {
-                priority: Math.max(priority, mergedInto[1].priority),
-                isMainAdaptation: isMainAdaptation ||
-                                  mergedInto[1].isMainAdaptation,
-                indexInMpd: Math.min(adaptationIdx, mergedInto[1].indexInMpd),
-              };
-            }
+            log.info("DASH Parser: merging \"switchable\" AdaptationSets",
+                     originalID, id);
+            mergedInto[0].representations.push(...parsedAdaptationSet.representations);
+            mergedInto[1] = {
+              priority: Math.max(priority, mergedInto[1].priority),
+              isMainAdaptation: isMainAdaptation ||
+                                mergedInto[1].isMainAdaptation,
+              indexInMpd: Math.min(adaptationIdx, mergedInto[1].indexInMpd),
+            };
           }
         }
+      }
 
-        if (mergedIntoIdx < 0) {
-          parsedAdaptations[type].push([ parsedAdaptationSet,
-                                         { priority,
-                                           isMainAdaptation,
-                                           indexInMpd: adaptationIdx }]);
-          if (type === "video" && isMainAdaptation) {
-            lastMainVideoAdapIdx = parsedAdaptations.video.length - 1;
-          }
-        }
+      if (mergedIntoIdx < 0) {
+        parsedAdaptations[type].push([ parsedAdaptationSet,
+                                       { priority,
+                                         isMainAdaptation,
+                                         indexInMpd: adaptationIdx }]);
       }
     }
 

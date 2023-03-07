@@ -408,7 +408,6 @@ function createResultServer() {
     if (request.method === "OPTIONS") {
       answerWithCORS(response, 200);
       response.end();
-      return;
     } else if (request.method == "POST") {
       let body = "";
       request.on("data", function (data) {
@@ -459,7 +458,6 @@ function createResultServer() {
     } else {
       response.end();
     }
-    return;
   }
 }
 
@@ -713,6 +711,7 @@ function createBundle(options) {
           HTML_VTT: 1,
           LOCAL_MANIFEST: 1,
           METAPLAYLIST: 1,
+          DEBUG_ELEMENT: 1,
           NATIVE_SAMI: 1,
           NATIVE_SRT: 1,
           NATIVE_TTML: 1,
@@ -744,14 +743,7 @@ function createBundle(options) {
  * @returns {Promise}
  */
 function removeFile(fileName) {
-  return new Promise((res, rej) => {
-    rimraf(fileName, (err) => {
-      if (err !== null && err !== undefined) {
-        rej(err);
-      }
-      res();
-    });
-  });
+  return rimraf(fileName);
 }
 
 /**
@@ -786,8 +778,7 @@ async function getChromeCmd() {
     case "win32": {
       const suffix = "\\Google\\Chrome\\Application\\chrome.exe";
       const prefixes = [process.env.LOCALAPPDATA, process.env.PROGRAMFILES, process.env["PROGRAMFILES(X86)"]];
-      for (let i = 0; i < prefixes.length; i++) {
-        const prefix = prefixes[i];
+      for (const prefix of prefixes) {
         try {
           const windowsChromeDirectory = path.join(prefix, suffix);
           fs.accessSync(windowsChromeDirectory);

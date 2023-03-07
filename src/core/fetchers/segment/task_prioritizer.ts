@@ -1,5 +1,6 @@
 import log from "../../../log";
 import arrayFindIndex from "../../../utils/array_find_index";
+import createCancellablePromise from "../../../utils/create_cancellable_promise";
 import TaskCanceller, {
   CancellationError,
   CancellationSignal,
@@ -64,19 +65,34 @@ export default class TaskPrioritizer<T> {
     cancelSignal: CancellationSignal
   ): Promise<T> {
     let newTask: IPrioritizerTask<T>;
-
-    return new Promise<T>((resolve, reject) => {
+    return createCancellablePromise<T>(cancelSignal, (resolve, reject) => {
       /** Function allowing to start the underlying Promise. */
       const trigger = () => {
         if (newTask.hasEnded) {
-          unregisterCancelSignal();
           return;
         }
-        const interrupter =  new TaskCanceller({ cancelOn: cancelSignal });
+        const finishTask = () => {
+          unlinkInterrupter();
+          this._endTask(newTask);
+        };
+
+        const onResolve = (value: T) => {
+          callbacks.beforeEnded();
+          finishTask();
+          resolve(value);
+        };
+
+        const onReject = (err: unknown) => {
+          finishTask();
+          reject(err);
+        };
+
+        const interrupter =  new TaskCanceller();
+        const unlinkInterrupter = interrupter.linkToSignal(cancelSignal);
         newTask.interrupter = interrupter;
         interrupter.signal.register(() => {
           newTask.interrupter = null;
-          if (!cancelSignal.isCancelled) {
+          if (!cancelSignal.isCancelled()) {
             callbacks.beforeInterrupted();
           }
         });
@@ -89,37 +105,14 @@ export default class TaskPrioritizer<T> {
         newTask.taskFn(interrupter.signal)
           .then(onResolve)
           .catch((err) => {
-            if (!cancelSignal.isCancelled &&
-                interrupter.isUsed &&
+            if (!cancelSignal.isCancelled() &&
+                interrupter.isUsed() &&
                 err instanceof CancellationError)
             {
               return;
             }
             onReject(err);
           });
-      };
-
-      const unregisterCancelSignal = cancelSignal.register(
-        (cancellationError: CancellationError) => {
-          this._endTask(newTask);
-          reject(cancellationError);
-        }
-      );
-
-      const finishTask = () => {
-        unregisterCancelSignal();
-        this._endTask(newTask);
-      };
-
-      const onResolve = (value: T) => {
-        callbacks.beforeEnded();
-        finishTask();
-        resolve(value);
-      };
-
-      const onReject = (err: unknown) => {
-        finishTask();
-        reject(err);
       };
 
       newTask = {
@@ -146,6 +139,8 @@ export default class TaskPrioritizer<T> {
           this._interruptCancellableTasks();
         }
       }
+
+      return () => this._endTask(newTask);
     });
   }
 

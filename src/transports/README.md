@@ -94,17 +94,17 @@ Its concept can be illustrated as such:
 ```
 
 As the wanted resource could be obtained asynchronously (like when an HTTP
-request has to be performed), the loader returns an Observable and the resource
-is then emitted through it.
+request has to be performed), the loader returns a Promise which resolves once
+the full resource is loaded.
 
-This Observable will throw on any problem arising during that step, such as an
+This Promise will reject on any problem arising during that step, such as an
 HTTP error.
 
 In some specific conditions, the loader can also emit the wanted resource in
 multiple sub-parts. This allows for example to play a media file while still
 downloading it and is at the basis of low-latency streaming.
 To allow such use cases, the segment loaders can also emit the wanted resource
-by cutting it into chunks and emitting them through the Observable as they are
+by cutting it into chunks and emitting them through a callback as it becomes
 available.
 This is better explained in the related chapter below.
 
@@ -133,8 +133,8 @@ Its concept can be illustrated as such:
 Depending on the type of parser (e.g. Manifest parser or segment parser), that
 task can be synchronous or asynchronous.
 
-In asynchronous cases, the parser will return an Observable emitting a unique
-time the result when done and throwing if an error is encountered.
+In asynchronous cases, the parser will return a Promise resolving with
+the result when done and rejecting if an error is encountered.
 
 In synchronous cases, the parser returns directly the result, and can throw
 directly when/if an error is encountered.
@@ -152,7 +152,7 @@ just for those requests.
 The Manifest loader is the "loader" downloading the Manifest (or MPD) file.
 
 It is a function which receives as argument the URL of the manifest and then
-returns an Observable emitting a single time the corresponding Manifest when it
+returns a Promise resolving with the corresponding loaded Manifest when it
 finished downloading it:
 ```
   INPUT:                              OUTPUT:
@@ -178,8 +178,8 @@ allowing it to ask for supplementary requests before completing (e.g. to fetch
 the current time from an URL or to load sub-parts of the Manifests only known
 at parse-time).
 
-This function returns an Observable wich emits a single time the parsed
-Manifest:
+This function returns either the parsed Manifest object directly or wrapped in a
+Promise:
 ```
  INPUT:                                       OUTPUT:
  ------                                       -------
@@ -208,8 +208,7 @@ It receives information linked to the segment you want to download:
   - The `Representation` it is linked to
   - The `Segment` object it is linked to
 
-It then return an Observable which send events as it loads the corresponding
-segment.
+It then return a Promise resolving when the segment is loaded.
 
 ```
   INPUT:                              OUTPUT:
@@ -239,50 +238,12 @@ The latter mode is usually active under the following conditions:
   - the segment is in a CMAF container
   - the `Fetch` JS API is available
 
-In most other cases, it will be in the regular mode.
+In most other cases, it will be in the regular mode, where the segment is fully
+communicated as the returned Promise resolves.
 
-You can deduce which mode we are in simply by looking a the events the loader
-sends.
-
-In the regular mode, any of the following events can be sent through the
-Observable:
-
-  - `"progress"`: We have new metrics on the current download (e.g. the amount
-    currently downloaded, the time since the beginning of the request...)
-
-  - `"data-created"`: The segment is available without needing to perform a
-    network request. This is usually the case when segments are generated like
-    Smooth Streaming's initialization segments.
-    The segment's data is also communicated via this event.
-
-    The `"data-created"` event, when sent, is the last event sent from the
-    loader. The loader will complete just after emitting it.
-
-  - `"data-loaded"`: The segment has been compeletely downloaded from the
-    network. The segment's data is also communicated via this event.
-
-    Like `"data-created"`, the `"data-loaded"` will be the last event sent by
-    the loader.
-    This means that you will either have a single `"data-created"` event or a
-    single `"data-loaded"` event with the data when the segment has been loaded
-    succesfully.
-
-In the low-latency mode, the following events can be sent instead:
-
-  - `"progress"`: We have new metrics on the current download (e.g. the amount
-    currently downloaded, the time since the beginning of the request...)
-
-  - `"data-chunk"`: A sub-segment (or chunk) of the data is currently available.
-    The corresponding sub-segment is communicated in the payload of this event.
-
-    This event can be communicated multiple times until a
-    `"data-chunk-complete"` event is received.
-
-  - `"data-chunk-complete"`: The segment request just finished. All
-    corresponding data has been sent through `"data-chunk"` events.
-
-    If sent, this is the last event sent by a segment loader. The loader will
-    complete just after emitting it.
+In the low-latency mode, chunks of the data are sent through a callback given
+to the segment loaded and the promise only resolves once all chunks have been
+communicated that way.
 
 
 

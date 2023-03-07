@@ -92,6 +92,11 @@ module.exports = [
     contentType: "application/dash+xml",
   },
   {
+    url: BASE_URL + "forced-subtitles.mpd",
+    path: path.join(__dirname, "media/forced-subtitles.mpd"),
+    contentType: "application/dash+xml",
+  },
+  {
     url: BASE_URL + "event-streams.mpd",
     path: path.join(__dirname, "media/event-streams.mpd"),
     contentType: "application/dash+xml",
@@ -104,6 +109,11 @@ module.exports = [
   {
     url: BASE_URL + "segment_template_inheritance_as_rep.mpd",
     path: path.join(__dirname, "media/segment_template_inheritance_as_rep.mpd"),
+    contentType: "application/dash+xml",
+  },
+  {
+    url: BASE_URL + "segment_timeline_end_number.mpd",
+    path: path.join(__dirname, "media/segment_timeline_end_number.mpd"),
     contentType: "application/dash+xml",
   },
   {

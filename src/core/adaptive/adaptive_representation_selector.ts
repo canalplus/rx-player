@@ -49,6 +49,23 @@ import PendingRequestsStore, {
 import RepresentationScoreCalculator from "./utils/representation_score_calculator";
 import selectOptimalRepresentation from "./utils/select_optimal_representation";
 
+// Create default shared references
+
+const manualBitrateDefaultRef = createSharedReference(-1);
+manualBitrateDefaultRef.finish();
+
+const minAutoBitrateDefaultRef = createSharedReference(0);
+minAutoBitrateDefaultRef.finish();
+
+const maxAutoBitrateDefaultRef = createSharedReference(Infinity);
+maxAutoBitrateDefaultRef.finish();
+
+const limitWidthDefaultRef = createSharedReference(undefined);
+limitWidthDefaultRef.finish();
+
+const throttleBitrateDefaultRef = createSharedReference(Infinity);
+throttleBitrateDefaultRef.finish();
+
 /**
  * Select the most adapted Representation according to the network and buffer
  * metrics it receives.
@@ -99,22 +116,22 @@ export default function createAdaptiveRepresentationSelector(
     const bandwidthEstimator = _getBandwidthEstimator(type);
     const manualBitrate = takeFirstSet<IReadOnlySharedReference<number>>(
       manualBitrates[type],
-      createSharedReference(-1));
+      manualBitrateDefaultRef);
     const minAutoBitrate = takeFirstSet<IReadOnlySharedReference<number>>(
       minAutoBitrates[type],
-      createSharedReference(0));
+      minAutoBitrateDefaultRef);
     const maxAutoBitrate = takeFirstSet<IReadOnlySharedReference<number>>(
       maxAutoBitrates[type],
-      createSharedReference(Infinity));
+      maxAutoBitrateDefaultRef);
     const initialBitrate = takeFirstSet<number>(initialBitrates[type], 0);
     const filters = {
       limitWidth: takeFirstSet<IReadOnlySharedReference<number | undefined>>(
         throttlers.limitWidth[type],
-        createSharedReference(undefined)),
+        limitWidthDefaultRef),
       throttleBitrate: takeFirstSet<IReadOnlySharedReference<number>>(
         throttlers.throttleBitrate[type],
         throttlers.throttle[type],
-        createSharedReference(Infinity)),
+        throttleBitrateDefaultRef),
     };
     return getEstimateReference({ bandwidthEstimator,
                                   context,
@@ -198,7 +215,8 @@ function getEstimateReference(
    * This TaskCanceller is used both for restarting estimates with a new
    * configuration and to cancel them altogether.
    */
-  let currentEstimatesCanceller = new TaskCanceller({ cancelOn: stopAllEstimates });
+  let currentEstimatesCanceller = new TaskCanceller();
+  currentEstimatesCanceller.linkToSignal(stopAllEstimates);
 
   // Create `ISharedReference` on which estimates will be emitted.
   const estimateRef = createEstimateReference(manualBitrate.getValue(),
@@ -217,6 +235,16 @@ function getEstimateReference(
     representations : Representation[],
     innerCancellationSignal : CancellationSignal
   ) : ISharedReference<IABREstimate> {
+    if (representations.length === 0) {
+      // No Representation given, return `null` as documented
+      return createSharedReference({
+        representation: null,
+        bitrate: undefined,
+        knownStableBitrate: undefined,
+        manual: false,
+        urgent: true,
+      });
+    }
     if (manualBitrateVal >= 0) {
       // A manual bitrate has been set. Just choose Representation according to it.
       const manualRepresentation = selectOptimalRepresentation(representations,
@@ -274,7 +302,7 @@ function getEstimateReference(
     /** Reference through which estimates are emitted. */
     const innerEstimateRef = createSharedReference<IABREstimate>(getCurrentEstimate());
 
-    // subscribe to subsequent playback observations
+    // Listen to playback observations
     playbackObserver.listen((obs) => {
       lastPlaybackObservation = obs;
       updateEstimate();
@@ -464,7 +492,8 @@ function getEstimateReference(
     const manualBitrateVal = manualBitrate.getValue();
     const representations = representationsRef.getValue();
     currentEstimatesCanceller.cancel();
-    currentEstimatesCanceller = new TaskCanceller({ cancelOn: stopAllEstimates });
+    currentEstimatesCanceller = new TaskCanceller();
+    currentEstimatesCanceller.linkToSignal(stopAllEstimates);
     const newRef = createEstimateReference(
       manualBitrateVal,
       representations,
@@ -566,8 +595,10 @@ export interface IABREstimate {
   /**
    * The Representation considered as the most adapted to the current network
    * and playback conditions.
+   * `null` in the rare occurence where there is no `Representation` to choose
+   * from.
    */
-  representation: Representation;
+  representation: Representation | null;
   /**
    * If `true`, the current `representation` suggested should be switched to as
    * soon as possible. For example, you might want to interrupt all pending

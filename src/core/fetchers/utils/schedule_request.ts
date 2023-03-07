@@ -315,7 +315,7 @@ export async function scheduleRequestWithCdns<T>(
   async function retryWithNextCdn(prevRequestError : unknown) : Promise<T> {
     const nextCdn = getCdnToRequest();
 
-    if (cancellationSignal.isCancelled) {
+    if (cancellationSignal.isCancelled()) {
       throw cancellationSignal.cancellationError;
     }
 
@@ -324,7 +324,7 @@ export async function scheduleRequestWithCdns<T>(
     }
 
     onRetry(prevRequestError);
-    if (cancellationSignal.isCancelled) {
+    if (cancellationSignal.isCancelled()) {
       throw cancellationSignal.cancellationError;
     }
 
@@ -358,26 +358,37 @@ export async function scheduleRequestWithCdns<T>(
       return requestCdn(nextWantedCdn);
     }
 
-    const canceller = new TaskCanceller({ cancelOn: cancellationSignal });
+    const canceller = new TaskCanceller();
+    const unlinkCanceller = canceller.linkToSignal(cancellationSignal);
     return new Promise<T>((res, rej) => {
       /* eslint-disable-next-line @typescript-eslint/no-misused-promises */
       cdnPrioritizer?.addEventListener("priorityChange", () => {
         const updatedPrioritaryCdn = getCdnToRequest();
-        if (cancellationSignal.isCancelled) {
+        if (cancellationSignal.isCancelled()) {
           throw cancellationSignal.cancellationError;
         }
         if (updatedPrioritaryCdn === undefined) {
-          return rej(prevRequestError);
+          return cleanAndReject(prevRequestError);
         }
         if (updatedPrioritaryCdn !== nextWantedCdn) {
           canceller.cancel();
           waitPotentialBackoffAndRequest(updatedPrioritaryCdn, prevRequestError)
-            .then(res, rej);
+            .then(cleanAndResolve, cleanAndReject);
         }
       }, canceller.signal);
 
       cancellableSleep(blockedFor, canceller.signal)
-        .then(() => requestCdn(nextWantedCdn).then(res, rej), noop);
+        .then(() => requestCdn(nextWantedCdn)
+          .then(cleanAndResolve, cleanAndReject), noop);
+
+      function cleanAndResolve(response : T) {
+        unlinkCanceller();
+        res(response);
+      }
+      function cleanAndReject(err : unknown) {
+        unlinkCanceller();
+        rej(err);
+      }
     });
   }
 

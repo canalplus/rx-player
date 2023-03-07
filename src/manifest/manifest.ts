@@ -15,6 +15,7 @@
  */
 
 import { MediaError } from "../errors";
+import log from "../log";
 import { IParsedManifest } from "../parsers/manifest";
 import {
   IPlayerError,
@@ -36,6 +37,7 @@ import {
   MANIFEST_UPDATE_TYPE,
 } from "./types";
 import {
+  IPeriodsUpdateResult,
   replacePeriods,
   updatePeriods,
 } from "./update_periods";
@@ -104,7 +106,7 @@ export interface IDecipherabilityUpdateElement { manifest : Manifest;
 /** Events emitted by a `Manifest` instance */
 export interface IManifestEvents {
   /** The Manifest has been updated */
-  manifestUpdate : null;
+  manifestUpdate : IPeriodsUpdateResult;
   /** Some Representation's decipherability status has been updated */
   decipherabilityUpdate : IDecipherabilityUpdateElement[];
 }
@@ -726,14 +728,15 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.transport = newManifest.transport;
     this.publishTime = newManifest.publishTime;
 
+    let updatedPeriodsResult;
     if (updateType === MANIFEST_UPDATE_TYPE.Full) {
       this._timeBounds = newManifest._timeBounds;
       this.uris = newManifest.uris;
-      replacePeriods(this.periods, newManifest.periods);
+      updatedPeriodsResult = replacePeriods(this.periods, newManifest.periods);
     } else {
       this._timeBounds.maximumTimeData = newManifest._timeBounds.maximumTimeData;
       this.updateUrl = newManifest.uris[0];
-      updatePeriods(this.periods, newManifest.periods);
+      updatedPeriodsResult = updatePeriods(this.periods, newManifest.periods);
 
       // Partial updates do not remove old Periods.
       // This can become a memory problem when playing a content long enough.
@@ -758,7 +761,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     // Let's trigger events at the end, as those can trigger side-effects.
     // We do not want the current Manifest object to be incomplete when those
     // happen.
-    this.trigger("manifestUpdate", null);
+    this.trigger("manifestUpdate", updatedPeriodsResult);
   }
 }
 
@@ -784,6 +787,9 @@ function updateDeciperability(
         const result = isDecipherable(representation);
         if (result !== representation.decipherable) {
           updates.push({ manifest, period, adaptation, representation });
+          log.debug(`Decipherability changed for "${representation.id}"`,
+                    `(${representation.bitrate})`,
+                    String(representation.decipherable));
           representation.decipherable = result;
         }
       }

@@ -145,10 +145,16 @@ class Representation {
     this.cdnMetadata = args.cdnMetadata;
 
     this.index = args.index;
-    this.isSupported = opts.type === "audio" ||
-                       opts.type === "video" ?
-      isCodecSupported(this.getMimeTypeString()) :
-      true; // TODO for other types
+    if (opts.type === "audio" || opts.type === "video") {
+      const mimeTypeStr = this.getMimeTypeString();
+      const isSupported = isCodecSupported(mimeTypeStr);
+      if (!isSupported) {
+        log.info("Unsupported Representation", mimeTypeStr, this.id, this.bitrate);
+      }
+      this.isSupported = isSupported;
+    } else {
+      this.isSupported = true; // TODO for other types
+    }
   }
 
   /**

@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-import {
-  Observable,
-  Observer,
-} from "rxjs";
 import log from "../log";
 import isNullOrUndefined from "./is_null_or_undefined";
 import { CancellationSignal } from "./task_canceller";
@@ -32,12 +28,14 @@ export interface IEventEmitter<T> {
 }
 
 // Type of the argument in the listener's callback
-type IArgs<TEventRecord, TEventName
+export type IEventPayload<TEventRecord, TEventName
      extends keyof TEventRecord> = TEventRecord[TEventName];
 
 // Type of the listener function
-export type IListener<TEventRecord, TEventName
-     extends keyof TEventRecord> = (args: IArgs<TEventRecord, TEventName>) => void;
+export type IListener<
+  TEventRecord,
+  TEventName extends keyof TEventRecord
+> = (args: IEventPayload<TEventRecord, TEventName>) => void;
 
 type IListeners<TEventRecord> = {
   [P in keyof TEventRecord]? : Array<IListener<TEventRecord, P>>
@@ -131,7 +129,7 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
    */
   protected trigger<TEventName extends keyof T>(
     evt : TEventName,
-    arg : IArgs<T, TEventName>
+    arg : IEventPayload<T, TEventName>
   ) : void {
     const listeners = this._listeners[evt];
     if (!Array.isArray(listeners)) {
@@ -146,26 +144,4 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
       }
     });
   }
-}
-
-/**
- * Simple redefinition of the fromEvent from rxjs to also work on our
- * implementation of EventEmitter with type-checked strings
- * @param {Object} target
- * @param {string} eventName
- * @returns {Observable}
- */
-export function fromEvent<T, TEventName extends keyof T>(
-  target : IEventEmitter<T>,
-  eventName : TEventName
-) : Observable<IArgs<T, TEventName>> {
-  return new Observable((obs : Observer<IArgs<T, TEventName>>) => {
-    function handler(event : IArgs<T, TEventName>) {
-      obs.next(event);
-    }
-    target.addEventListener(eventName, handler);
-    return () => {
-      target.removeEventListener(eventName, handler);
-    };
-  });
 }

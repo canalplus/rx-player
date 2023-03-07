@@ -37,10 +37,11 @@ export default function initializeFeaturesObject() : void {
   }
 
   // Feature switching the Native TextTrack implementation
-  const HAS_NATIVE_MODE = __FEATURES__.NATIVE_VTT ||
-                          __FEATURES__.NATIVE_SAMI ||
-                          __FEATURES__.NATIVE_TTML ||
-                          __FEATURES__.NATIVE_SRT;
+  const HAS_NATIVE_MODE =
+    __FEATURES__.NATIVE_VTT === __FEATURES__.IS_ENABLED as number ||
+    __FEATURES__.NATIVE_SAMI === __FEATURES__.IS_ENABLED as number ||
+    __FEATURES__.NATIVE_TTML === __FEATURES__.IS_ENABLED as number ||
+    __FEATURES__.NATIVE_SRT === __FEATURES__.IS_ENABLED as number;
 
   if (__FEATURES__.SMOOTH === __FEATURES__.IS_ENABLED as number) {
     features.transports.smooth = require("../transports/smooth/index.ts").default;
@@ -57,8 +58,11 @@ export default function initializeFeaturesObject() : void {
     features.transports.metaplaylist =
       require("../transports/metaplaylist/index.ts").default;
   }
+  if (__FEATURES__.DEBUG_ELEMENT === __FEATURES__.IS_ENABLED as number) {
+    features.createDebugElement = require("../core/api/debug/index.ts").default;
+  }
 
-  if (HAS_NATIVE_MODE === __FEATURES__.IS_ENABLED as number) {
+  if (HAS_NATIVE_MODE) {
     features.nativeTextTracksBuffer =
       require("../core/segment_buffers/implementations/text/native/index.ts").default;
     if (__FEATURES__.NATIVE_VTT === __FEATURES__.IS_ENABLED as number) {
@@ -83,12 +87,13 @@ export default function initializeFeaturesObject() : void {
   }
 
   // Feature switching the HTML TextTrack implementation
-  const HAS_HTML_MODE = __FEATURES__.HTML_VTT ||
-                        __FEATURES__.HTML_SAMI ||
-                        __FEATURES__.HTML_TTML ||
-                        __FEATURES__.HTML_SRT;
+  const HAS_HTML_MODE =
+    __FEATURES__.HTML_VTT === __FEATURES__.IS_ENABLED as number ||
+    __FEATURES__.HTML_SAMI === __FEATURES__.IS_ENABLED as number ||
+    __FEATURES__.HTML_TTML === __FEATURES__.IS_ENABLED as number ||
+    __FEATURES__.HTML_SRT === __FEATURES__.IS_ENABLED as number;
 
-  if (HAS_HTML_MODE === __FEATURES__.IS_ENABLED as number) {
+  if (HAS_HTML_MODE) {
     features.htmlTextTracksBuffer =
       require("../core/segment_buffers/implementations/text/html/index.ts").default;
     if (__FEATURES__.HTML_SAMI === __FEATURES__.IS_ENABLED as number) {
@@ -113,7 +118,8 @@ export default function initializeFeaturesObject() : void {
   }
 
   if (__FEATURES__.DIRECTFILE === __FEATURES__.IS_ENABLED as number) {
-    const initDirectFile = require("../core/init/initialize_directfile.ts").default;
+    const initDirectFile =
+      require("../core/init/directfile_content_initializer.ts").default;
     const mediaElementTrackChoiceManager =
       require("../core/api/tracks_management/media_element_track_choice_manager.ts")
         .default;

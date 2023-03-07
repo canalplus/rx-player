@@ -1,7 +1,4 @@
-import React from "react";
-
-import getCheckBoxValue from "../lib/getCheckboxValue";
-
+import React, {useCallback} from "react";
 import Option from "../components/Options/Option";
 import Playback from "../components/Options/Playback.jsx";
 import AudioAdaptiveSettings from "../components/Options/AudioAdaptiveSettings";
@@ -10,247 +7,385 @@ import NetworkConfig from "../components/Options/NetworkConfig.jsx";
 import TrackSwitch from "../components/Options/TrackSwitch.jsx";
 import BufferOptions from "../components/Options/BufferOptions.jsx";
 
-import defaultOptionsValues from "../lib/defaultOptionsValues";
+function Settings({
+  playerOptions,
+  updatePlayerOptions,
+  loadVideoOptions,
+  updateLoadVideoOptions,
+  showOptions,
+}) {
+  const {
+    initialAudioBitrate,
+    initialVideoBitrate,
+    limitVideoWidth,
+    maxAudioBitrate,
+    maxBufferAhead,
+    maxBufferBehind,
+    maxVideoBitrate,
+    maxVideoBufferSize,
+    minAudioBitrate,
+    minVideoBitrate,
+    stopAtEnd,
+    throttleVideoBitrateWhenHidden,
+    wantedBufferAhead,
+  } = playerOptions;
+  const {
+    audioTrackSwitchingMode,
+    autoPlay,
+    enableFastSwitching,
+    manualBitrateSwitchingMode,
+    networkConfig,
+    onCodecSwitch,
+  } = loadVideoOptions;
+  const {
+    segmentRetry,
+    segmentRequestTimeout,
+    manifestRetry,
+    manifestRequestTimeout,
+    offlineRetry,
+  } = networkConfig;
 
-class Settings extends React.Component {
-  constructor(...args) {
-    super(...args);
-
-    this.state = {
-      ...defaultOptionsValues,
-    };
-  }
-
-  getOptions() {
-    const {
-      initialVideoBr,
-      initialAudioBr,
-      minVideoBr,
-      minAudioBr,
-      maxVideoBr,
-      maxAudioBr,
-      wantedBufferAhead,
-      maxVideoBufferSize,
-      maxBufferAhead,
-      maxBufferBehind,
-      limitVideoWidth,
-      throttleVideoBitrateWhenHidden,
-      stopAtEnd,
-      autoPlay,
-      audioTrackSwitchingMode,
-      manualBrSwitchingMode,
-      onCodecSwitch,
-      enableFastSwitching,
-      segmentRetry,
-      manifestRetry,
-      offlineRetry,
-    } = this.state;
-    return {
-      initOpts: {
-        initialVideoBitrate: parseFloat(initialVideoBr),
-        initialAudioBitrate: parseFloat(initialAudioBr),
-        minVideoBitrate: parseFloat(minVideoBr),
-        minAudioBitrate: parseFloat(minAudioBr),
-        maxVideoBitrate: parseFloat(maxVideoBr),
-        maxAudioBitrate: parseFloat(maxAudioBr),
-        wantedBufferAhead: parseFloat(wantedBufferAhead),
-        maxVideoBufferSize: parseFloat(maxVideoBufferSize),
-        maxBufferAhead: parseFloat(maxBufferAhead),
-        maxBufferBehind: parseFloat(maxBufferBehind),
-        limitVideoWidth,
-        throttleVideoBitrateWhenHidden,
-        stopAtEnd,
-      },
-      loadVideoOpts: {
-        autoPlay,
-        audioTrackSwitchingMode,
-        manualBitrateSwitchingMode: manualBrSwitchingMode,
-        onCodecSwitch,
-        enableFastSwitching,
-        networkConfig: {
-          segmentRetry: parseFloat(segmentRetry),
-          manifestRetry: parseFloat(manifestRetry),
-          offlineRetry: parseFloat(offlineRetry),
-        },
-      },
-    };
-  }
-
-  onAutoPlayClick = (evt) =>
-    this.setState({ autoPlay: getCheckBoxValue(evt.target) });
-
-  onManualBrSwitchingModeChange = (value) =>
-    this.setState({ manualBrSwitchingMode: value });
-
-  onInitialVideoBrInput = (value) =>
-    this.setState({ initialVideoBr: value });
-
-  onInitialAudioBrInput = (value) =>
-    this.setState({ initialAudioBr: value });
-
-  onMinVideoBrInput = (value) =>
-    this.setState({ minVideoBr: value });
-
-  onMinAudioBrInput = (value) =>
-    this.setState({ minAudioBr: value });
-
-  onMaxVideoBrInput = (value) =>
-    this.setState({ maxVideoBr: value });
-
-  onMaxAudioBrInput = (value) =>
-    this.setState({ maxAudioBr: value });
-
-  onLimitVideoWidthClick = (evt) =>
-    this.setState({ limitVideoWidth: getCheckBoxValue(evt.target) });
-
-  onThrottleVideoBitrateWhenHiddenClick = (evt) =>
-    this.setState({
-      throttleVideoBitrateWhenHidden: getCheckBoxValue(evt.target),
+  const onAutoPlayChange = useCallback((autoPlay) => {
+    updateLoadVideoOptions((prevOptions) => {
+      if (autoPlay === prevOptions.autoPlay) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, { autoPlay });
     });
+  }, [updateLoadVideoOptions]);
 
-  onStopAtEndClick = (evt) =>
-    this.setState({ stopAtEnd: getCheckBoxValue(evt.target) });
+  const onManualBitrateSwitchingModeChange = useCallback((value) => {
+    updateLoadVideoOptions((prevOptions) => {
+      if (value === prevOptions.manualBitrateSwitchingMode) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, {
+        manualBitrateSwitchingMode: value,
+      });
+    });
+  }, [updateLoadVideoOptions]);
 
-  onSegmentRetryInput = (value) =>
-    this.setState({ segmentRetry: value });
+  const onStopAtEndChange = useCallback((stopAtEnd) => {
+    updatePlayerOptions((prevOptions) => {
+      if (stopAtEnd === prevOptions.stopAtEnd) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, { stopAtEnd });
+    });
+  }, [updatePlayerOptions]);
 
-  onManifestRetryInput = (value) =>
-    this.setState({ manifestRetry: value });
+  const onInitialVideoBitrateChange = useCallback((initialVideoBitrate)  => {
+    updatePlayerOptions((prevOptions) => {
+      if (initialVideoBitrate === prevOptions.initialVideoBitrate) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, { initialVideoBitrate });
+    });
+  }, [updatePlayerOptions]);
 
-  onOfflineRetryInput = (value) =>
-    this.setState({ offlineRetry: value });
+  const onInitialAudioBitrateChange = useCallback((initialAudioBitrate) => {
+    updatePlayerOptions((prevOptions) => {
+      if (initialAudioBitrate === prevOptions.initialAudioBitrate) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, { initialAudioBitrate });
+    });
+  }, [updatePlayerOptions]);
 
-  onEnableFastSwitchingClick = (evt) =>
-    this.setState({ enableFastSwitching: getCheckBoxValue(evt.target) });
+  const onMinVideoBitrateChange = useCallback((minVideoBitrate) => {
+    updatePlayerOptions((prevOptions) => {
+      if (minVideoBitrate === prevOptions.minVideoBitrate) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, { minVideoBitrate });
+    });
+  }, [updatePlayerOptions]);
 
-  onAudioTrackSwitchingModeChange = (value) =>
-    this.setState({ audioTrackSwitchingMode: value });
+  const onMinAudioBitrateChange = useCallback((minAudioBitrate) => {
+    updatePlayerOptions((prevOptions) => {
+      if (minAudioBitrate === prevOptions.minAudioBitrate) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, { minAudioBitrate });
+    });
+  }, [updatePlayerOptions]);
 
-  onCodecSwitchChange = (value) =>
-    this.setState({ onCodecSwitch: value });
+  const onMaxVideoBitrateChange = useCallback((maxVideoBitrate) => {
+    updatePlayerOptions((prevOptions) => {
+      if (maxVideoBitrate === prevOptions.maxVideoBitrate) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, { maxVideoBitrate });
+    });
+  }, [updatePlayerOptions]);
 
-  onWantedBufferAheadInput = (value) =>
-    this.setState({ wantedBufferAhead: value });
-  
-  onMaxVideoBufferSizeInput = (value) => 
-    this.setState({ maxVideoBufferSize: value});
+  const onMaxAudioBitrateChange = useCallback((maxAudioBitrate) => {
+    updatePlayerOptions((prevOptions) => {
+      if (maxAudioBitrate === prevOptions.maxAudioBitrate) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, { maxAudioBitrate });
+    });
+  }, [updatePlayerOptions]);
 
-  onMaxBufferBehindInput = (value) =>
-    this.setState({ maxBufferBehind: value });
+  const onLimitVideoWidthChange = useCallback((limitVideoWidth) => {
+    updatePlayerOptions((prevOptions) => {
+      if (limitVideoWidth === prevOptions.limitVideoWidth) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, { limitVideoWidth });
+    });
+  }, [updatePlayerOptions]);
 
-  onMaxBufferAheadInput = (value) =>
-    this.setState({ maxBufferAhead: value });
+  const onThrottleVideoBitrateWhenHiddenChange = useCallback((value) => {
+    updatePlayerOptions((prevOptions) => {
+      if (value === prevOptions.throttleVideoBitrateWhenHidden) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, {
+        throttleVideoBitrateWhenHidden: value,
+      });
+    });
+  }, [updatePlayerOptions]);
 
-  render() {
-    const {
-      autoPlay,
-      manualBrSwitchingMode,
-      initialVideoBr,
-      initialAudioBr,
-      minVideoBr,
-      minAudioBr,
-      maxVideoBr,
-      maxAudioBr,
-      limitVideoWidth,
-      throttleVideoBitrateWhenHidden,
-      stopAtEnd,
-      segmentRetry,
-      manifestRetry,
-      offlineRetry,
-      enableFastSwitching,
-      audioTrackSwitchingMode,
-      onCodecSwitch,
-      wantedBufferAhead,
-      maxVideoBufferSize,
-      maxBufferAhead,
-      maxBufferBehind,
-    } = this.state;
+  const onSegmentRetryChange = useCallback((segmentRetry) => {
+    updateLoadVideoOptions((prevOptions) => {
+      if (segmentRetry === prevOptions.networkConfig.segmentRetry) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, {
+        networkConfig: Object.assign({}, prevOptions.networkConfig, {
+          segmentRetry,
+        }),
+      });
+    });
+  }, [updateLoadVideoOptions]);
 
-    const initialSettings = {
-      initialVideoBr,
-      initialAudioBr,
-      minAudioBr,
-      minVideoBr,
-      maxVideoBr,
-      maxAudioBr,
-      limitVideoWidth,
-      throttleVideoBitrateWhenHidden,
-      onInitialVideoBrInput: this.onInitialVideoBrInput,
-      onInitialAudioBrInput: this.onInitialAudioBrInput,
-      onMinAudioBrInput: this.onMinAudioBrInput,
-      onMinVideoBrInput: this.onMinVideoBrInput,
-      onMaxAudioBrInput: this.onMaxAudioBrInput,
-      onMaxVideoBrInput: this.onMaxVideoBrInput,
-      onLimitVideoWidthClick: this.onLimitVideoWidthClick,
-      onThrottleVideoBitrateWhenHiddenClick:
-        this.onThrottleVideoBitrateWhenHiddenClick,
-    };
+  const onSegmentRequestTimeoutChange = useCallback((segmentRequestTimeout) => {
+    updateLoadVideoOptions((prevOptions) => {
+      if (
+        segmentRequestTimeout ===
+          prevOptions.networkConfig.segmentRequestTimeout
+      ) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, {
+        networkConfig: Object.assign({}, prevOptions.networkConfig, {
+          segmentRequestTimeout,
+        }),
+      });
+    });
+  }, [updateLoadVideoOptions]);
 
-    const networkConfig = {
-      segmentRetry,
-      manifestRetry,
-      offlineRetry,
-      onSegmentRetryInput: this.onSegmentRetryInput,
-      onManifestRetryInput: this.onManifestRetryInput,
-      onOfflineRetryInput: this.onOfflineRetryInput,
-    };
+  const onManifestRetryChange = useCallback((manifestRetry) => {
+    updateLoadVideoOptions((prevOptions) => {
+      if (manifestRetry === prevOptions.networkConfig.manifestRetry) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, {
+        networkConfig: Object.assign({}, prevOptions.networkConfig, {
+          manifestRetry,
+        }),
+      });
+    });
+  }, [updateLoadVideoOptions]);
 
-    const trackSwitchModeConfig = {
-      enableFastSwitching,
-      audioTrackSwitchingMode,
-      onCodecSwitch,
-      onEnableFastSwitchingClick: this.onEnableFastSwitchingClick,
-      onAudioTrackSwitchingModeChange: this.onAudioTrackSwitchingModeChange,
-      onCodecSwitchChange: this.onCodecSwitchChange,
-    };
+  const onOfflineRetryChange = useCallback((offlineRetry) => {
+    updateLoadVideoOptions((prevOptions) => {
+      if (offlineRetry === prevOptions.networkConfig.offlineRetry) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, {
+        networkConfig: Object.assign({}, prevOptions.networkConfig, {
+          offlineRetry,
+        }),
+      });
+    });
+  }, [updateLoadVideoOptions]);
 
-    if (!this.props.showOptions) {
-      return null;
-    }
+  const onManifestRequestTimeoutChange = useCallback(
+    (manifestRequestTimeout) => {
+      updateLoadVideoOptions((prevOptions) => {
+        if (
+          manifestRequestTimeout ===
+            prevOptions.networkConfig.manifestRequestTimeout
+        ) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, {
+          networkConfig: Object.assign({}, prevOptions.networkConfig, {
+            manifestRequestTimeout,
+          }),
+        });
+      });
+    },
+    [updateLoadVideoOptions]
+  );
 
-    return (
-      <div className="settingsWrapper">
-        <div style={{ display: "flex" }}>
-          <Option title="Playback">
-            <Playback
-              autoPlay={autoPlay}
-              manualBrSwitchingMode={manualBrSwitchingMode}
-              onAutoPlayClick={this.onAutoPlayClick}
-              onManualBrSwitchingModeChange={this.onManualBrSwitchingModeChange}
-              stopAtEnd={stopAtEnd}
-              onStopAtEndClick={this.onStopAtEndClick}
-            />
-          </Option>
-          <Option title="Video adaptive settings">
-            <VideoAdaptiveSettings {...initialSettings} />
-          </Option>
-          <Option title="Audio adaptive settings">
-            <AudioAdaptiveSettings {...initialSettings} />
-          </Option>
-        </div>
-        <div style={{ display: "flex" }}>
-          <Option title="Network Config">
-            <NetworkConfig {...networkConfig} />
-          </Option>
-          <Option title="Track Switch Mode">
-            <TrackSwitch {...trackSwitchModeConfig} />
-          </Option>
-          <Option title="Buffer Options">
-            <BufferOptions
-              wantedBufferAhead={wantedBufferAhead}
-              maxVideoBufferSize={maxVideoBufferSize}
-              maxBufferAhead={maxBufferAhead}
-              maxBufferBehind={maxBufferBehind}
-              onWantedBufferAheadInput={this.onWantedBufferAheadInput}
-              onMaxBufferAheadInput={this.onMaxBufferAheadInput}
-              onMaxBufferBehindInput={this.onMaxBufferBehindInput}
-              onMaxVideoBufferSizeInput={this.onMaxVideoBufferSizeInput}
-            />
-          </Option>
-        </div>
-      </div>
-    );
+  const onEnableFastSwitchingChange = useCallback((enableFastSwitching) => {
+    updateLoadVideoOptions((prevOptions) => {
+      if (enableFastSwitching === prevOptions.enableFastSwitching) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, { enableFastSwitching });
+    });
+  }, [updateLoadVideoOptions]);
+
+  const onAudioTrackSwitchingModeChange = useCallback((value) => {
+    updateLoadVideoOptions((prevOptions) => {
+      if (value === prevOptions.audioTrackSwitchingMode) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, {
+        audioTrackSwitchingMode: value,
+      });
+    });
+  }, [updateLoadVideoOptions]);
+
+  const onCodecSwitchChange = useCallback((value) => {
+    updateLoadVideoOptions((prevOptions) => {
+      if (value === prevOptions.onCodecSwitch) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, {
+        onCodecSwitch: value,
+      });
+    });
+  }, [updateLoadVideoOptions]);
+
+  const onWantedBufferAheadChange = useCallback((wantedBufferAhead) => {
+    updatePlayerOptions((prevOptions) => {
+      if (wantedBufferAhead === prevOptions.wantedBufferAhead) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, { wantedBufferAhead });
+    });
+  }, [playerOptions]);
+
+  const onMaxVideoBufferSizeChange = useCallback((maxVideoBufferSize) => {
+    updatePlayerOptions((prevOptions) => {
+      if (maxVideoBufferSize === prevOptions.maxVideoBufferSize) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, { maxVideoBufferSize });
+    });
+  }, [playerOptions]);
+
+  const onMaxBufferBehindChange = useCallback((maxBufferBehind) => {
+    updatePlayerOptions((prevOptions) => {
+      if (maxBufferBehind === prevOptions.maxBufferBehind) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, { maxBufferBehind });
+    });
+  }, [playerOptions]);
+
+  const onMaxBufferAheadChange = useCallback((maxBufferAhead) => {
+    updatePlayerOptions((prevOptions) => {
+      if (maxBufferAhead === prevOptions.maxBufferAhead) {
+        return prevOptions;
+      }
+      return Object.assign({}, prevOptions, { maxBufferAhead });
+    });
+  }, [playerOptions]);
+
+  if (!showOptions) {
+    return null;
   }
+
+  return (
+    <div className="settingsWrapper">
+      <div className="settings-title">
+        Content options
+      </div>
+      <div className="settings-note">
+        Note: Those options won't be retroactively applied to
+        already-loaded contents
+      </div>
+      <div style={{ display: "flex" }}>
+        <Option title="Playback">
+          <Playback
+            autoPlay={autoPlay}
+            manualBitrateSwitchingMode={manualBitrateSwitchingMode}
+            onAutoPlayChange={onAutoPlayChange}
+            onManualBitrateSwitchingModeChange={
+              onManualBitrateSwitchingModeChange
+            }
+            stopAtEnd={stopAtEnd}
+            onStopAtEndChange={onStopAtEndChange}
+          />
+        </Option>
+        <Option title="Video adaptive settings">
+          <VideoAdaptiveSettings
+            initialVideoBitrate={initialVideoBitrate}
+            minVideoBitrate={minVideoBitrate}
+            maxVideoBitrate={maxVideoBitrate}
+            onInitialVideoBitrateChange={onInitialVideoBitrateChange}
+            onMinVideoBitrateChange={onMinVideoBitrateChange}
+            onMaxVideoBitrateChange={onMaxVideoBitrateChange}
+            limitVideoWidth={limitVideoWidth}
+            throttleVideoBitrateWhenHidden={throttleVideoBitrateWhenHidden}
+            onLimitVideoWidthChange={onLimitVideoWidthChange}
+            onThrottleVideoBitrateWhenHiddenChange={
+              onThrottleVideoBitrateWhenHiddenChange
+            }
+          />
+        </Option>
+        <Option title="Audio adaptive settings">
+          <AudioAdaptiveSettings
+            initialAudioBitrate={initialAudioBitrate}
+            minAudioBitrate={minAudioBitrate}
+            maxAudioBitrate={maxAudioBitrate}
+            onInitialAudioBitrateChange={onInitialAudioBitrateChange}
+            onMinAudioBitrateChange={onMinAudioBitrateChange}
+            onMaxAudioBitrateChange={onMaxAudioBitrateChange}
+          />
+        </Option>
+      </div>
+      <div style={{ display: "flex" }}>
+        <Option title="Network Config">
+          <NetworkConfig
+            manifestRequestTimeout={manifestRequestTimeout}
+            segmentRetry={segmentRetry}
+            segmentRequestTimeout={segmentRequestTimeout}
+            manifestRetry={manifestRetry}
+            offlineRetry={offlineRetry}
+            onSegmentRetryChange={onSegmentRetryChange}
+            onSegmentRequestTimeoutChange={onSegmentRequestTimeoutChange}
+            onManifestRetryChange={onManifestRetryChange}
+            onManifestRequestTimeoutChange={onManifestRequestTimeoutChange}
+            onOfflineRetryChange={onOfflineRetryChange}
+          />
+        </Option>
+        <Option title="Track Switch Mode">
+          <TrackSwitch
+            enableFastSwitching={enableFastSwitching}
+            audioTrackSwitchingMode={audioTrackSwitchingMode}
+            onCodecSwitch={onCodecSwitch}
+            onEnableFastSwitchingChange={onEnableFastSwitchingChange}
+            onAudioTrackSwitchingModeChange={onAudioTrackSwitchingModeChange}
+            onCodecSwitchChange={onCodecSwitchChange}
+          />
+        </Option>
+        <Option title="Buffer Options">
+          <BufferOptions
+            wantedBufferAhead={wantedBufferAhead}
+            maxVideoBufferSize={maxVideoBufferSize}
+            maxBufferAhead={maxBufferAhead}
+            maxBufferBehind={maxBufferBehind}
+            onWantedBufferAheadChange={
+              onWantedBufferAheadChange
+            }
+            onMaxBufferAheadChange={onMaxBufferAheadChange}
+            onMaxBufferBehindChange={onMaxBufferBehindChange}
+            onMaxVideoBufferSizeChange={
+              onMaxVideoBufferSizeChange
+            }
+          />
+        </Option>
+      </div>
+    </div>
+  );
 }
 
 export default Settings;

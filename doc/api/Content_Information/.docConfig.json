@@ -5,12 +5,20 @@
       "displayName": "getUrl"
     },
     {
+      "path": "./updateContentUrls.md",
+      "displayName": "updateContentUrls"
+    },
+    {
       "path": "./isLive.md",
       "displayName": "isLive"
     },
     {
-      "path": "./getCurrentKeySystem.md",
-      "displayName": "getCurrentKeySystem"
+      "path": "./getKeySystemConfiguration.md",
+      "displayName": "getKeySystemConfiguration"
+    },
+    {
+      "path": "./createDebugElement.md",
+      "displayName": "createDebugElement"
     }
   ]
 }

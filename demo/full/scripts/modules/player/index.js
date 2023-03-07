@@ -7,10 +7,6 @@
  */
 
 import {
-  Subject,
-  takeUntil,
-} from "rxjs";
-import {
   BIF_PARSER,
   DASH,
   DIRECTFILE,
@@ -26,13 +22,14 @@ import {
 import {
   DASH_WASM,
   METAPLAYLIST,
+  DEBUG_ELEMENT,
 } from "../../../../../src/experimental/features";
 import RxPlayer from "../../../../../src/minimal.ts";
 import { linkPlayerEventsToState } from "./events.js";
-import $handleCatchUpMode from "./catchUp";
 import VideoThumbnailLoader, {
   DASH_LOADER
 } from "../../../../../src/experimental/tools/VideoThumbnailLoader";
+import CatchUpModeController from "./catchUp";
 
 RxPlayer.addFeatures([
   BIF_PARSER,
@@ -47,6 +44,7 @@ RxPlayer.addFeatures([
   IMAGE_BUFFER,
   SMOOTH,
   METAPLAYLIST,
+  DEBUG_ELEMENT,
 ]);
 
 /* eslint-disable no-undef */
@@ -59,7 +57,13 @@ if (__INCLUDE_WASM_PARSER__) {
 
 VideoThumbnailLoader.addLoader(DASH_LOADER);
 
-const PLAYER = ({ $destroy, state }, initOpts) => {
+/**
+ * @param {Object}  state
+ * @param {Object}  initOpts
+ * @param {AbortSignal} abortSignal
+ * @returns {Object}
+ */
+function PLAYER(state, initOpts, abortSignal) {
   const { textTrackElement } = initOpts;
   const player = new RxPlayer(initOpts);
 
@@ -77,7 +81,7 @@ const PLAYER = ({ $destroy, state }, initOpts) => {
     availableSubtitles: [],
     availableVideoBitrates: [],
     availableVideoTracks: [],
-    bufferGap: undefined,
+    bufferGap: 0,
     bufferedData: null,
     cannotLoadMetadata: false,
     currentTime: undefined,
@@ -124,15 +128,14 @@ const PLAYER = ({ $destroy, state }, initOpts) => {
     videoThumbnailsData: null,
   });
 
-  linkPlayerEventsToState(player, state, $destroy);
+  linkPlayerEventsToState(player, state, abortSignal);
 
-  const $switchCatchUpMode = new Subject();
-  $handleCatchUpMode($switchCatchUpMode, player, state)
-    .pipe(takeUntil($destroy))
-    .subscribe();
+  const catchUpModeController = new CatchUpModeController(player, state);
 
   // dispose of the RxPlayer when destroyed
-  $destroy.subscribe(() => player.dispose());
+  abortSignal.addEventListener("abort", () => {
+    player.dispose();
+  });
 
   function dettachVideoThumbnailLoader() {
     const { videoThumbnailsData } = state.get();
@@ -248,13 +251,13 @@ const PLAYER = ({ $destroy, state }, initOpts) => {
     },
 
     ENABLE_LIVE_CATCH_UP() {
-      $switchCatchUpMode.next(true);
+      catchUpModeController.enableCatchUp();
     },
 
     DISABLE_LIVE_CATCH_UP() {
-      $switchCatchUpMode.next(false);
+      catchUpModeController.stopCatchUp();
     },
   };
-};
+}
 
 export default PLAYER;

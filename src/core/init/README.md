@@ -1,30 +1,33 @@
-# The `Init` ###################################################################
+# The `ContentInitializer` #####################################################
 
-The Init is the part of the code starting the logic behind playing a content.
+The ContentInitializer is the part of the code actually starting and running the
+logic behind playing a content.
 
-Its code is written in the ``src/core/init`` directory.
+Its code is written in the `src/core/init` directory.
 
-Every time you're calling the API to load a new video, the init is called by it
-(with multiple options).
+Every time you're calling the API to load a new video, a ContentInitializer is
+called by it (with multiple options).
 
-The Init then starts loading the content and communicate back its progress to
+The ContentInitializer then starts loading the content and communicate back its progress to
 the API through events.
 
 ```
                  +-----------+
- 1. LOAD VIDEO   |           |      2. CALLS
+ 1. loadVideo    |           |      2. Instanciate
 ---------------> |    API    | -------------------+
                  |           |                    |
                  +-----------+                    |
                        ^                          v
-                       |                    +--------------+
-                       |   3. EMIT EVENTS   |              |
-                       +------------------- |     Init     |
-                                            |              |
-                                            +--------------+
+                       |                    +--------------------+
+                       |   3. Emit events   |                    |
+                       +------------------- | ContentInitializer |
+                                            |                    |
+                                            +--------------------+
 ```
-During the various events happening on content playback, the Init will create /
-destroy / update various player blocks. Example of such blocks are:
+During the various events happening on content playback, the ContentInitializer will
+create / destroy / update various player submodules.
+
+Example of such submodules are:
   - Adaptive streaming management
   - DRM handling
   - Manifest loading, parsing and refreshing
@@ -35,56 +38,39 @@ destroy / update various player blocks. Example of such blocks are:
 
 ## Usage #######################################################################
 
-Concretely, the Init is a function which returns an Observable.
-This Observable:
+Concretely, the ContentInitializer is a class respecting a given interface,
+allowing to:
 
-  - will automatically load the described content on subscription
-  - will automatically stop and clean-up infos related to the content on
-    unsubscription
-  - communicate on various streaming events through emitted notifications
-  - throw in the case of a fatal error (i.e. an error interrupting playback)
+  - prepare a future content for future play - without influencing a potentially
+    already-playing content (e.g. by pre-loading the next content's Manifest).
 
+  - start loading the content on a given media element
 
-### Communication between the API and the Init #################################
-
-Objects emitted by the Observable is the only way the Init should be able to
-communicate with the API.
-
-The API is then able to communicate back to the Init, either:
-  - by Observable provided by the API as arguments when the Init function was
-    called
-  - by emitting through Subject provided by the Init, as a payload of one of
-    its event
-
-Thus, there is three ways the API and Init can communicate:
-  - API -> Init: When the Init function is called (so a single time)
-  - Init -> API: Through events emitted by the returned Observable
-  - API -> Init: Through Observables/Subjects the Init function is in possession
-    of.
+  - communicate about various playback events
 
 
 ### Emitted Events #############################################################
 
-Events allows the Init to reports milestones of the content playback, such as
-when the content is ready to play.
+Events allows the ContentInitializer to reports milestones of the content
+playback, such as when the content is ready to play.
 
-It's also a way for the Init to communicate information about the content and
-give some controls to the user.
+It's also a way for the `ContentInitializer` to communicate information about
+the content and give some controls to the user.
 
 For example, as available audio languages are only known after the manifest has
 been downloaded and parsed, and as it is most of all a user preference, the
-Init can emit to the API, RxJS Subjects allowing the API to "choose" at any
-time the wanted language.
+ContentInitializer can emit to the API, objects allowing the API to "choose" at
+any time the wanted language.
 
 
 
 ### Playback rate management ###################################################
 
-The playback rate (or speed) is updated by the Init.
+The playback rate (or speed) is updated by the ContentInitializer.
 
 There can be three occasions for these updates:
 
-  - the API set a new Speed (``speed$`` Observable).
+  - the API set a new speed
 
   - the content needs to build its buffer.
 

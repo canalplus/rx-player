@@ -25,12 +25,24 @@
       "displayName": "exitFullscreen"
     },
     {
+      "path": "./getCurrentKeySystem.md",
+      "displayName": "getCurrentKeySystem"
+    },
+    {
       "path": "./getImageTrackData.md",
       "displayName": "getImageTrackData"
     },
     {
       "path": "./getNativeTextTrack.md",
       "displayName": "getNativeTextTrack"
+    },
+    {
+      "path": "./getVideoLoadedTime.md",
+      "displayName": "getVideoLoadedTime"
+    },
+    {
+      "path": "./getVideoPlayedTime.md",
+      "displayName": "getVideoPlayedTime"
     }
   ]
 }

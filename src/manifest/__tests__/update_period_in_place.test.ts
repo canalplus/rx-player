@@ -155,14 +155,17 @@ describe("Manifest - updatePeriodInPlace", () => {
   it("should fully update the first Period given by the second one in a full update", () => {
 /* eslint-enable max-len */
     const oldVideoAdaptation1 = { contentWarnings: [],
+                                  type: "video",
                                   id: "ada-video-1",
                                   representations: [oldVideoRepresentation1,
                                                     oldVideoRepresentation2] };
     const oldVideoAdaptation2 = { contentWarnings: [],
+                                  type: "video",
                                   id: "ada-video-2",
                                   representations: [oldVideoRepresentation3,
                                                     oldVideoRepresentation4] };
     const oldAudioAdaptation = { contentWarnings: [],
+                                 type: "audio",
                                  id: "ada-audio-1",
                                  representations: [oldAudioRepresentation] };
     const oldPeriod = {
@@ -180,14 +183,17 @@ describe("Manifest - updatePeriodInPlace", () => {
       },
     };
     const newVideoAdaptation1 = { contentWarnings: [],
+                                  type: "video",
                                   id: "ada-video-1",
                                   representations: [newVideoRepresentation1,
                                                     newVideoRepresentation2] };
     const newVideoAdaptation2 = { contentWarnings: [],
+                                  type: "video",
                                   id: "ada-video-2",
                                   representations: [newVideoRepresentation3,
                                                     newVideoRepresentation4] };
     const newAudioAdaptation = { contentWarnings: [],
+                                 type: "audio",
                                  id: "ada-audio-1",
                                  representations: [newAudioRepresentation] };
     const newPeriod = {
@@ -209,9 +215,40 @@ describe("Manifest - updatePeriodInPlace", () => {
     const newPeriodAdaptations = jest.spyOn(newPeriod, "getAdaptations");
     const mockLog = jest.spyOn(log, "warn");
 
-    updatePeriodInPlace(oldPeriod as unknown as Period,
-                        newPeriod as unknown as Period,
-                        MANIFEST_UPDATE_TYPE.Full);
+    const res = updatePeriodInPlace(oldPeriod as unknown as Period,
+                                    newPeriod as unknown as Period,
+                                    MANIFEST_UPDATE_TYPE.Full);
+
+    expect(res).toEqual({ addedAdaptations: [],
+                          removedAdaptations: [],
+                          updatedAdaptations: [
+                            {
+                              adaptation: oldVideoAdaptation1,
+                              addedRepresentations: [],
+                              removedRepresentations: [],
+                              updatedRepresentations: [
+                                oldVideoRepresentation1,
+                                oldVideoRepresentation2,
+                              ],
+                            },
+                            {
+                              adaptation: oldVideoAdaptation2,
+                              addedRepresentations: [],
+                              removedRepresentations: [],
+                              updatedRepresentations: [
+                                oldVideoRepresentation3,
+                                oldVideoRepresentation4,
+                              ],
+                            },
+                            {
+                              adaptation: oldAudioAdaptation,
+                              addedRepresentations: [],
+                              removedRepresentations: [],
+                              updatedRepresentations: [
+                                oldAudioRepresentation,
+                              ],
+                            },
+                          ] });
 
     expect(oldPeriod.start).toEqual(500);
     expect(oldPeriod.end).toEqual(520);
@@ -260,7 +297,7 @@ describe("Manifest - updatePeriodInPlace", () => {
     expect(mockNewVideoRepresentation4Update).not.toHaveBeenCalled();
     expect(mockNewAudioRepresentationUpdate).not.toHaveBeenCalled();
 
-    expect(mockLog).not.toHaveBeenCalled();
+    expect(mockLog).toHaveBeenCalledTimes(0);
     mockLog.mockRestore();
   });
 
@@ -269,14 +306,17 @@ describe("Manifest - updatePeriodInPlace", () => {
 /* eslint-enable max-len */
     const oldVideoAdaptation1 = { contentWarnings: [],
                                   id: "ada-video-1",
+                                  type: "video",
                                   representations: [oldVideoRepresentation1,
                                                     oldVideoRepresentation2] };
     const oldVideoAdaptation2 = { contentWarnings: [],
                                   id: "ada-video-2",
+                                  type: "video",
                                   representations: [oldVideoRepresentation3,
                                                     oldVideoRepresentation4] };
     const oldAudioAdaptation = { contentWarnings: [],
                                  id: "ada-audio-1",
+                                 type: "audio",
                                  representations: [oldAudioRepresentation] };
     const oldPeriod = {
       contentWarnings: [],
@@ -294,14 +334,17 @@ describe("Manifest - updatePeriodInPlace", () => {
     };
     const newVideoAdaptation1 = { contentWarnings: [],
                                   id: "ada-video-1",
+                                  type: "video",
                                   representations: [newVideoRepresentation1,
                                                     newVideoRepresentation2] };
     const newVideoAdaptation2 = { contentWarnings: [],
                                   id: "ada-video-2",
+                                  type: "video",
                                   representations: [newVideoRepresentation3,
                                                     newVideoRepresentation4] };
     const newAudioAdaptation = { contentWarnings: [],
                                  id: "ada-audio-1",
+                                 type: "audio",
                                  representations: [newAudioRepresentation] };
     const newPeriod = {
       contentWarnings: [],
@@ -322,9 +365,39 @@ describe("Manifest - updatePeriodInPlace", () => {
     const mockNewPeriodGetAdaptations = jest.spyOn(newPeriod, "getAdaptations");
     const mockLog = jest.spyOn(log, "warn");
 
-    updatePeriodInPlace(oldPeriod as unknown as Period,
-                        newPeriod as unknown as Period,
-                        MANIFEST_UPDATE_TYPE.Partial);
+    const res = updatePeriodInPlace(oldPeriod as unknown as Period,
+                                    newPeriod as unknown as Period,
+                                    MANIFEST_UPDATE_TYPE.Partial);
+    expect(res).toEqual({ addedAdaptations: [],
+                          removedAdaptations: [],
+                          updatedAdaptations: [
+                            {
+                              adaptation: oldVideoAdaptation1,
+                              addedRepresentations: [],
+                              removedRepresentations: [],
+                              updatedRepresentations: [
+                                oldVideoRepresentation1,
+                                oldVideoRepresentation2,
+                              ],
+                            },
+                            {
+                              adaptation: oldVideoAdaptation2,
+                              addedRepresentations: [],
+                              removedRepresentations: [],
+                              updatedRepresentations: [
+                                oldVideoRepresentation3,
+                                oldVideoRepresentation4,
+                              ],
+                            },
+                            {
+                              adaptation: oldAudioAdaptation,
+                              addedRepresentations: [],
+                              removedRepresentations: [],
+                              updatedRepresentations: [
+                                oldAudioRepresentation,
+                              ],
+                            },
+                          ] });
 
     expect(oldPeriod.start).toEqual(500);
     expect(oldPeriod.end).toEqual(520);
@@ -373,16 +446,18 @@ describe("Manifest - updatePeriodInPlace", () => {
     expect(mockNewVideoRepresentation4Replace).not.toHaveBeenCalled();
     expect(mockNewAudioRepresentationReplace).not.toHaveBeenCalled();
 
-    expect(mockLog).not.toHaveBeenCalled();
+    expect(mockLog).toHaveBeenCalledTimes(0);
     mockLog.mockRestore();
   });
 
-  it("should do nothing with new Adaptations", () => {
+  it("should add new Adaptations in Full mode", () => {
     const oldVideoAdaptation1 = { contentWarnings: [],
+                                  type: "video",
                                   id: "ada-video-1",
                                   representations: [oldVideoRepresentation1,
                                                     oldVideoRepresentation2] };
     const oldAudioAdaptation = { contentWarnings: [],
+                                 type: "audio",
                                  id: "ada-audio-1",
                                  representations: [oldAudioRepresentation] };
     const oldPeriod = {
@@ -399,14 +474,17 @@ describe("Manifest - updatePeriodInPlace", () => {
     };
     const newVideoAdaptation1 = { contentWarnings: [],
                                   id: "ada-video-1",
+                                  type: "video",
                                   representations: [newVideoRepresentation1,
                                                     newVideoRepresentation2] };
     const newVideoAdaptation2 = { contentWarnings: [],
                                   id: "ada-video-2",
+                                  type: "video",
                                   representations: [newVideoRepresentation3,
                                                     newVideoRepresentation4] };
     const newAudioAdaptation = { contentWarnings: [],
                                  id: "ada-audio-1",
+                                 type: "audio",
                                  representations: [newAudioRepresentation] };
     const newPeriod = {
       contentWarnings: [],
@@ -424,36 +502,144 @@ describe("Manifest - updatePeriodInPlace", () => {
     };
 
     const mockLog = jest.spyOn(log, "warn");
-    updatePeriodInPlace(oldPeriod as unknown as Period,
-                        newPeriod as unknown as Period,
-                        MANIFEST_UPDATE_TYPE.Full);
-    expect(mockLog).not.toHaveBeenCalled();
-    expect(oldPeriod.adaptations.video).toHaveLength(1);
-    updatePeriodInPlace(oldPeriod as unknown as Period,
-                        newPeriod as unknown as Period,
-                        MANIFEST_UPDATE_TYPE.Partial);
-    expect(mockLog).not.toHaveBeenCalled();
-    expect(oldPeriod.adaptations.video).toHaveLength(1);
+    const res = updatePeriodInPlace(oldPeriod as unknown as Period,
+                                    newPeriod as unknown as Period,
+                                    MANIFEST_UPDATE_TYPE.Full);
+    expect(res).toEqual({ addedAdaptations: [newVideoAdaptation2],
+                          removedAdaptations: [],
+                          updatedAdaptations: [
+                            {
+                              adaptation: oldVideoAdaptation1,
+                              addedRepresentations: [],
+                              removedRepresentations: [],
+                              updatedRepresentations: [
+                                oldVideoRepresentation1,
+                                oldVideoRepresentation2,
+                              ],
+                            },
+                            {
+                              adaptation: oldAudioAdaptation,
+                              addedRepresentations: [],
+                              removedRepresentations: [],
+                              updatedRepresentations: [
+                                oldAudioRepresentation,
+                              ],
+                            },
+                          ] });
+    expect(mockLog).toHaveBeenCalled();
+    expect(mockLog).toHaveBeenNthCalledWith(
+      1,
+      "Manifest: 1 new Adaptations found when merging."
+    );
+    expect(oldPeriod.adaptations.video).toHaveLength(2);
     mockLog.mockRestore();
   });
 
-  it("should warn if an old Adaptation is not found", () => {
+  it("should add new Adaptations in Partial mode", () => {
     const oldVideoAdaptation1 = { contentWarnings: [],
+                                  type: "video",
+                                  id: "ada-video-1",
+                                  representations: [oldVideoRepresentation1,
+                                                    oldVideoRepresentation2] };
+    const oldAudioAdaptation = { contentWarnings: [],
+                                 type: "audio",
+                                 id: "ada-audio-1",
+                                 representations: [oldAudioRepresentation] };
+    const oldPeriod = {
+      contentWarnings: [],
+      start: 5,
+      end: 15,
+      duration: 10,
+      adaptations: { video: [oldVideoAdaptation1],
+                     audio: [oldAudioAdaptation] },
+      getAdaptations() {
+        return [oldVideoAdaptation1,
+                oldAudioAdaptation];
+      },
+    };
+    const newVideoAdaptation1 = { contentWarnings: [],
+                                  id: "ada-video-1",
+                                  type: "video",
+                                  representations: [newVideoRepresentation1,
+                                                    newVideoRepresentation2] };
+    const newVideoAdaptation2 = { contentWarnings: [],
+                                  id: "ada-video-2",
+                                  type: "video",
+                                  representations: [newVideoRepresentation3,
+                                                    newVideoRepresentation4] };
+    const newAudioAdaptation = { contentWarnings: [],
+                                 id: "ada-audio-1",
+                                 type: "audio",
+                                 representations: [newAudioRepresentation] };
+    const newPeriod = {
+      contentWarnings: [],
+      start: 500,
+      end: 520,
+      duration: 20,
+      adaptations: { video: [newVideoAdaptation1,
+                             newVideoAdaptation2],
+                     audio: [newAudioAdaptation] },
+      getAdaptations() {
+        return [newVideoAdaptation1,
+                newVideoAdaptation2,
+                newAudioAdaptation];
+      },
+    };
+
+    const mockLog = jest.spyOn(log, "warn");
+    const res = updatePeriodInPlace(oldPeriod as unknown as Period,
+                                    newPeriod as unknown as Period,
+                                    MANIFEST_UPDATE_TYPE.Partial);
+    expect(res).toEqual({ addedAdaptations: [newVideoAdaptation2],
+                          removedAdaptations: [],
+                          updatedAdaptations: [
+                            {
+                              adaptation: oldVideoAdaptation1,
+                              addedRepresentations: [],
+                              removedRepresentations: [],
+                              updatedRepresentations: [
+                                oldVideoRepresentation1,
+                                oldVideoRepresentation2,
+                              ],
+                            },
+                            {
+                              adaptation: oldAudioAdaptation,
+                              addedRepresentations: [],
+                              removedRepresentations: [],
+                              updatedRepresentations: [
+                                oldAudioRepresentation,
+                              ],
+                            },
+                          ] });
+    expect(mockLog).toHaveBeenCalled();
+    expect(mockLog).toHaveBeenNthCalledWith(
+      1,
+      "Manifest: 1 new Adaptations found when merging."
+    );
+    expect(oldPeriod.adaptations.video).toHaveLength(2);
+    mockLog.mockRestore();
+  });
+
+  it("should remove unfound Adaptations in Full mode", () => {
+    const oldVideoAdaptation1 = { contentWarnings: [],
+                                  type: "video",
                                   id: "ada-video-1",
                                   representations: [oldVideoRepresentation1,
                                                     oldVideoRepresentation2] };
     const oldVideoAdaptation2 = { contentWarnings: [],
                                   id: "ada-video-2",
-                                  representations: [oldVideoRepresentation3,
-                                                    oldVideoRepresentation4] };
+                                  type: "video",
+                                  representations: [newVideoRepresentation3,
+                                                    newVideoRepresentation4] };
     const oldAudioAdaptation = { contentWarnings: [],
+                                 type: "audio",
                                  id: "ada-audio-1",
                                  representations: [oldAudioRepresentation] };
     const oldPeriod = {
       contentWarnings: [],
-      start: 500,
-      end: 520,
-      duration: 20,
+      start: 5,
+      end: 15,
+      duration: 10,
       adaptations: { video: [oldVideoAdaptation1,
                              oldVideoAdaptation2],
                      audio: [oldAudioAdaptation] },
@@ -465,49 +651,152 @@ describe("Manifest - updatePeriodInPlace", () => {
     };
     const newVideoAdaptation1 = { contentWarnings: [],
                                   id: "ada-video-1",
+                                  type: "video",
                                   representations: [newVideoRepresentation1,
                                                     newVideoRepresentation2] };
     const newAudioAdaptation = { contentWarnings: [],
                                  id: "ada-audio-1",
+                                 type: "audio",
                                  representations: [newAudioRepresentation] };
     const newPeriod = {
       contentWarnings: [],
-      start: 5,
-      end: 15,
-      duration: 10,
+      start: 500,
+      end: 520,
+      duration: 20,
       adaptations: { video: [newVideoAdaptation1],
                      audio: [newAudioAdaptation] },
       getAdaptations() {
-        return [newVideoAdaptation1, newAudioAdaptation];
+        return [newVideoAdaptation1,
+                newAudioAdaptation];
       },
     };
 
     const mockLog = jest.spyOn(log, "warn");
-    updatePeriodInPlace(oldPeriod as unknown as Period,
-                        newPeriod as unknown as Period,
-                        MANIFEST_UPDATE_TYPE.Full);
-    expect(mockLog).toHaveBeenCalledTimes(1);
-    expect(mockLog).toHaveBeenCalledWith(
-      "Manifest: Adaptation \"ada-video-2\" not found when merging."
-    );
-    expect(oldPeriod.adaptations.video).toHaveLength(2);
-    mockLog.mockClear();
-    updatePeriodInPlace(oldPeriod as unknown as Period,
-                        newPeriod as unknown as Period,
-                        MANIFEST_UPDATE_TYPE.Partial);
-    expect(mockLog).toHaveBeenCalledTimes(1);
-    expect(mockLog).toHaveBeenCalledWith(
+    const res = updatePeriodInPlace(oldPeriod as unknown as Period,
+                                    newPeriod as unknown as Period,
+                                    MANIFEST_UPDATE_TYPE.Full);
+    expect(res).toEqual({ addedAdaptations: [],
+                          removedAdaptations: [oldVideoAdaptation2],
+                          updatedAdaptations: [
+                            {
+                              adaptation: oldVideoAdaptation1,
+                              addedRepresentations: [],
+                              removedRepresentations: [],
+                              updatedRepresentations: [
+                                oldVideoRepresentation1,
+                                oldVideoRepresentation2,
+                              ],
+                            },
+                            {
+                              adaptation: oldAudioAdaptation,
+                              addedRepresentations: [],
+                              removedRepresentations: [],
+                              updatedRepresentations: [
+                                oldAudioRepresentation,
+                              ],
+                            },
+                          ] });
+    expect(mockLog).toHaveBeenCalled();
+    expect(mockLog).toHaveBeenNthCalledWith(
+      1,
       "Manifest: Adaptation \"ada-video-2\" not found when merging."
     );
     expect(oldPeriod.adaptations.video).toHaveLength(2);
     mockLog.mockRestore();
   });
 
-  it("should do nothing with new Representations", () => {
+  it("should remove unfound Adaptations in Partial mode", () => {
     const oldVideoAdaptation1 = { contentWarnings: [],
+                                  type: "video",
+                                  id: "ada-video-1",
+                                  representations: [oldVideoRepresentation1,
+                                                    oldVideoRepresentation2] };
+    const oldVideoAdaptation2 = { contentWarnings: [],
+                                  id: "ada-video-2",
+                                  type: "video",
+                                  representations: [newVideoRepresentation3,
+                                                    newVideoRepresentation4] };
+    const oldAudioAdaptation = { contentWarnings: [],
+                                 type: "audio",
+                                 id: "ada-audio-1",
+                                 representations: [oldAudioRepresentation] };
+    const oldPeriod = {
+      contentWarnings: [],
+      start: 5,
+      end: 15,
+      duration: 10,
+      adaptations: { video: [oldVideoAdaptation1,
+                             oldVideoAdaptation2],
+                     audio: [oldAudioAdaptation] },
+      getAdaptations() {
+        return [oldVideoAdaptation1,
+                oldVideoAdaptation2,
+                oldAudioAdaptation];
+      },
+    };
+    const newVideoAdaptation1 = { contentWarnings: [],
+                                  id: "ada-video-1",
+                                  type: "video",
+                                  representations: [newVideoRepresentation1,
+                                                    newVideoRepresentation2] };
+    const newAudioAdaptation = { contentWarnings: [],
+                                 id: "ada-audio-1",
+                                 type: "audio",
+                                 representations: [newAudioRepresentation] };
+    const newPeriod = {
+      contentWarnings: [],
+      start: 500,
+      end: 520,
+      duration: 20,
+      adaptations: { video: [newVideoAdaptation1],
+                     audio: [newAudioAdaptation] },
+      getAdaptations() {
+        return [newVideoAdaptation1,
+                newAudioAdaptation];
+      },
+    };
+
+    const mockLog = jest.spyOn(log, "warn");
+    const res = updatePeriodInPlace(oldPeriod as unknown as Period,
+                                    newPeriod as unknown as Period,
+                                    MANIFEST_UPDATE_TYPE.Partial);
+    expect(res).toEqual({ addedAdaptations: [],
+                          removedAdaptations: [oldVideoAdaptation2],
+                          updatedAdaptations: [
+                            {
+                              adaptation: oldVideoAdaptation1,
+                              addedRepresentations: [],
+                              removedRepresentations: [],
+                              updatedRepresentations: [
+                                oldVideoRepresentation1,
+                                oldVideoRepresentation2,
+                              ],
+                            },
+                            {
+                              adaptation: oldAudioAdaptation,
+                              addedRepresentations: [],
+                              removedRepresentations: [],
+                              updatedRepresentations: [
+                                oldAudioRepresentation,
+                              ],
+                            },
+                          ] });
+    expect(mockLog).toHaveBeenCalled();
+    expect(mockLog).toHaveBeenNthCalledWith(
+      1,
+      "Manifest: Adaptation \"ada-video-2\" not found when merging."
+    );
+    expect(oldPeriod.adaptations.video).toHaveLength(2);
+    mockLog.mockRestore();
+  });
+
+  it("should add new Representations in Full mode", () => {
+    const oldVideoAdaptation1 = { contentWarnings: [],
+                                  type: "video",
                                   id: "ada-video-1",
                                   representations: [oldVideoRepresentation1] };
     const oldAudioAdaptation = { contentWarnings: [],
+                                 type: "audio",
                                  id: "ada-audio-1",
                                  representations: [oldAudioRepresentation] };
     const oldPeriod = { contentWarnings: [],
@@ -521,10 +810,12 @@ describe("Manifest - updatePeriodInPlace", () => {
 
     const newVideoAdaptation1 = { contentWarnings: [],
                                   id: "ada-video-1",
+                                  type: "video",
                                   representations: [newVideoRepresentation1,
                                                     newVideoRepresentation2] };
     const newAudioAdaptation = { contentWarnings: [],
                                  id: "ada-audio-1",
+                                 type: "audio",
                                  representations: [newAudioRepresentation] };
     const newPeriod = {
       contentWarnings: [],
@@ -539,26 +830,117 @@ describe("Manifest - updatePeriodInPlace", () => {
     };
 
     const mockLog = jest.spyOn(log, "warn");
-    updatePeriodInPlace(oldPeriod as unknown as Period,
-                        newPeriod as unknown as Period,
-                        MANIFEST_UPDATE_TYPE.Full);
-    expect(mockLog).not.toHaveBeenCalled();
-    expect(oldVideoAdaptation1.representations).toHaveLength(1);
-    updatePeriodInPlace(oldPeriod as unknown as Period,
-                        newPeriod as unknown as Period,
-                        MANIFEST_UPDATE_TYPE.Partial);
-    expect(mockLog).not.toHaveBeenCalled();
-    expect(oldVideoAdaptation1.representations).toHaveLength(1);
+    const res = updatePeriodInPlace(oldPeriod as unknown as Period,
+                                    newPeriod as unknown as Period,
+                                    MANIFEST_UPDATE_TYPE.Full);
+    expect(res).toEqual({ addedAdaptations: [],
+                          removedAdaptations: [],
+                          updatedAdaptations: [
+                            {
+                              adaptation: oldVideoAdaptation1,
+                              addedRepresentations: [newVideoRepresentation2],
+                              removedRepresentations: [],
+                              updatedRepresentations: [
+                                oldVideoRepresentation1,
+                              ],
+                            },
+                            {
+                              adaptation: oldAudioAdaptation,
+                              addedRepresentations: [],
+                              removedRepresentations: [],
+                              updatedRepresentations: [
+                                oldAudioRepresentation,
+                              ],
+                            },
+                          ] });
+    expect(mockLog).toHaveBeenCalledTimes(1);
+    expect(mockLog).toHaveBeenCalledWith(
+      "Manifest: 1 new Representations found when merging."
+    );
+    expect(oldVideoAdaptation1.representations).toHaveLength(2);
     mockLog.mockRestore();
   });
 
-  it("should warn if an old Representation is not found", () => {
+  it("should add new Representations in Partial mode", () => {
+    const oldVideoAdaptation1 = { contentWarnings: [],
+                                  type: "video",
+                                  id: "ada-video-1",
+                                  representations: [oldVideoRepresentation1] };
+    const oldAudioAdaptation = { contentWarnings: [],
+                                 type: "audio",
+                                 id: "ada-audio-1",
+                                 representations: [oldAudioRepresentation] };
+    const oldPeriod = { contentWarnings: [],
+                        start: 5,
+                        end: 15,
+                        duration: 10,
+                        adaptations: { video: [oldVideoAdaptation1],
+                                       audio: [oldAudioAdaptation] },
+                        getAdaptations() { return [oldVideoAdaptation1,
+                                                   oldAudioAdaptation]; } };
+
+    const newVideoAdaptation1 = { contentWarnings: [],
+                                  id: "ada-video-1",
+                                  type: "video",
+                                  representations: [newVideoRepresentation1,
+                                                    newVideoRepresentation2] };
+    const newAudioAdaptation = { contentWarnings: [],
+                                 id: "ada-audio-1",
+                                 type: "audio",
+                                 representations: [newAudioRepresentation] };
+    const newPeriod = {
+      contentWarnings: [],
+      start: 500,
+      end: 520,
+      duration: 20,
+      adaptations: { video: [newVideoAdaptation1],
+                     audio: [newAudioAdaptation] },
+      getAdaptations() {
+        return [newVideoAdaptation1, newAudioAdaptation];
+      },
+    };
+
+    const mockLog = jest.spyOn(log, "warn");
+    const res = updatePeriodInPlace(oldPeriod as unknown as Period,
+                                    newPeriod as unknown as Period,
+                                    MANIFEST_UPDATE_TYPE.Partial);
+    expect(res).toEqual({ addedAdaptations: [],
+                          removedAdaptations: [],
+                          updatedAdaptations: [
+                            {
+                              adaptation: oldVideoAdaptation1,
+                              addedRepresentations: [newVideoRepresentation2],
+                              removedRepresentations: [],
+                              updatedRepresentations: [
+                                oldVideoRepresentation1,
+                              ],
+                            },
+                            {
+                              adaptation: oldAudioAdaptation,
+                              addedRepresentations: [],
+                              removedRepresentations: [],
+                              updatedRepresentations: [
+                                oldAudioRepresentation,
+                              ],
+                            },
+                          ] });
+    expect(mockLog).toHaveBeenCalledTimes(1);
+    expect(mockLog).toHaveBeenCalledWith(
+      "Manifest: 1 new Representations found when merging."
+    );
+    expect(oldVideoAdaptation1.representations).toHaveLength(2);
+    mockLog.mockRestore();
+  });
+
+  it("should remove an old Representation that is not found in Full mode", () => {
     const oldVideoAdaptation1 = { contentWarnings: [],
                                   id: "ada-video-1",
+                                  type: "video",
                                   representations: [oldVideoRepresentation1,
                                                     oldVideoRepresentation2] };
     const oldAudioAdaptation = { contentWarnings: [],
                                  id: "ada-audio-1",
+                                 type: "audio",
                                  representations: [oldAudioRepresentation] };
     const oldPeriod = { contentWarnings: [],
                         start: 500,
@@ -570,9 +952,11 @@ describe("Manifest - updatePeriodInPlace", () => {
                                                    oldAudioAdaptation]; } };
     const newVideoAdaptation1 = { contentWarnings: [],
                                   id: "ada-video-1",
+                                  type: "video",
                                   representations: [newVideoRepresentation1] };
     const newAudioAdaptation = { contentWarnings: [],
                                  id: "ada-audio-1",
+                                 type: "audio",
                                  representations: [newAudioRepresentation] };
     const newPeriod = { contentWarnings: [],
                         start: 5,
@@ -587,23 +971,104 @@ describe("Manifest - updatePeriodInPlace", () => {
     };
 
     const mockLog = jest.spyOn(log, "warn");
-    updatePeriodInPlace(oldPeriod as unknown as Period,
-                        newPeriod as unknown as Period,
-                        MANIFEST_UPDATE_TYPE.Full);
+    const res = updatePeriodInPlace(oldPeriod as unknown as Period,
+                                    newPeriod as unknown as Period,
+                                    MANIFEST_UPDATE_TYPE.Full);
+    expect(res).toEqual({ addedAdaptations: [],
+                          removedAdaptations: [],
+                          updatedAdaptations: [
+                            {
+                              adaptation: oldVideoAdaptation1,
+                              addedRepresentations: [],
+                              removedRepresentations: [oldVideoRepresentation2],
+                              updatedRepresentations: [
+                                oldVideoRepresentation1,
+                              ],
+                            },
+                            {
+                              adaptation: oldAudioAdaptation,
+                              addedRepresentations: [],
+                              removedRepresentations: [],
+                              updatedRepresentations: [
+                                oldAudioRepresentation,
+                              ],
+                            },
+                          ] });
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog).toHaveBeenCalledWith(
       "Manifest: Representation \"rep-video-2\" not found when merging."
     );
-    expect(oldVideoAdaptation1.representations).toHaveLength(2);
-    mockLog.mockClear();
-    updatePeriodInPlace(oldPeriod as unknown as Period,
-                        newPeriod as unknown as Period,
-                        MANIFEST_UPDATE_TYPE.Partial);
+    expect(oldVideoAdaptation1.representations).toHaveLength(1);
+    mockLog.mockRestore();
+  });
+
+  it("should remove an old Representation that is not found in Partial mode", () => {
+    const oldVideoAdaptation1 = { contentWarnings: [],
+                                  id: "ada-video-1",
+                                  type: "video",
+                                  representations: [oldVideoRepresentation1,
+                                                    oldVideoRepresentation2] };
+    const oldAudioAdaptation = { contentWarnings: [],
+                                 id: "ada-audio-1",
+                                 type: "audio",
+                                 representations: [oldAudioRepresentation] };
+    const oldPeriod = { contentWarnings: [],
+                        start: 500,
+                        end: 520,
+                        duration: 20,
+                        adaptations: { video: [oldVideoAdaptation1],
+                                       audio: [oldAudioAdaptation] },
+                        getAdaptations() { return [oldVideoAdaptation1,
+                                                   oldAudioAdaptation]; } };
+    const newVideoAdaptation1 = { contentWarnings: [],
+                                  id: "ada-video-1",
+                                  type: "video",
+                                  representations: [newVideoRepresentation1] };
+    const newAudioAdaptation = { contentWarnings: [],
+                                 id: "ada-audio-1",
+                                 type: "audio",
+                                 representations: [newAudioRepresentation] };
+    const newPeriod = { contentWarnings: [],
+                        start: 5,
+                        end: 15,
+                        duration: 10,
+                        adaptations: { video: [newVideoAdaptation1],
+                                       audio: [newAudioAdaptation],
+                        },
+                        getAdaptations() {
+                          return [newVideoAdaptation1, newAudioAdaptation];
+                        },
+    };
+
+    const mockLog = jest.spyOn(log, "warn");
+    const res = updatePeriodInPlace(oldPeriod as unknown as Period,
+                                    newPeriod as unknown as Period,
+                                    MANIFEST_UPDATE_TYPE.Partial);
+    expect(res).toEqual({ addedAdaptations: [],
+                          removedAdaptations: [],
+                          updatedAdaptations: [
+                            {
+                              adaptation: oldVideoAdaptation1,
+                              addedRepresentations: [],
+                              removedRepresentations: [oldVideoRepresentation2],
+                              updatedRepresentations: [
+                                oldVideoRepresentation1,
+                              ],
+                            },
+                            {
+                              adaptation: oldAudioAdaptation,
+                              addedRepresentations: [],
+                              removedRepresentations: [],
+                              updatedRepresentations: [
+                                oldAudioRepresentation,
+                              ],
+                            },
+                          ] });
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog).toHaveBeenCalledWith(
       "Manifest: Representation \"rep-video-2\" not found when merging."
     );
-    expect(oldVideoAdaptation1.representations).toHaveLength(2);
+    expect(oldVideoAdaptation1.representations).toHaveLength(1);
     mockLog.mockRestore();
   });
 });

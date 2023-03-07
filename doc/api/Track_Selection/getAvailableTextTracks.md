@@ -21,6 +21,12 @@ Each of the objects in the returned array have the following properties:
 - `closedCaption` (`Boolean`): Whether the track is specially adapted for
   the hard of hearing or not.
 
+- `forced` (`Boolean`): If `true` this text track is meant to be displayed by
+  default if no other text track is selected.
+
+  It is often used to clarify dialogue, alternate languages, texted graphics or
+  location and person identification.
+
 - `label` (`string|undefined`): A human readable label that may be displayed in
   the user interface providing a choice between text tracks.
 

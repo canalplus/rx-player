@@ -282,6 +282,9 @@ pub enum AttributeName {
     Label = 71, // String
 
     ServiceLocation = 72, // String
+
+    // SegmentTemplate
+    EndNumber = 76, // f64
 }
 
 impl TagName {

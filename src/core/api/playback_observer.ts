@@ -48,8 +48,8 @@ const SCANNED_MEDIA_ELEMENTS_EVENTS : IPlaybackObserverEventType[] = [ "canplay"
  * `PlaybackObserver` to know the current state of the media being played.
  *
  * You can use the PlaybackObserver to either get the last observation
- * performed, get the current media state or subscribe to an Observable emitting
- * regularly media conditions.
+ * performed, get the current media state or listen to media observation sent
+ * at a regular interval.
  *
  * @class {PlaybackObserver}
  */
@@ -116,8 +116,7 @@ export default class PlaybackObserver {
 
   /**
    * Stop the `PlaybackObserver` from emitting playback observations and free all
-   * resources reserved to emitting them such as event listeners, intervals and
-   * subscribing callbacks.
+   * resources reserved to emitting them such as event listeners and intervals.
    *
    * Once `stop` is called, no new playback observation will ever be emitted.
    *
@@ -192,7 +191,7 @@ export default class PlaybackObserver {
    * produced by the `PlaybackObserver` and updated each time a new one is
    * produced.
    *
-   * This value can then be for example subscribed to to be notified of future
+   * This value can then be for example listened to to be notified of future
    * playback observations.
    *
    * @returns {Object}
@@ -211,11 +210,14 @@ export default class PlaybackObserver {
    *     CancellationSignal emits.
    */
   public listen(
-    cb : (observation : IPlaybackObservation) => void,
+    cb : (
+      observation : IPlaybackObservation,
+      stopListening : () => void
+    ) => void,
     options? : { includeLastObservation? : boolean | undefined;
                  clearSignal? : CancellationSignal | undefined; }
   ) {
-    if (this._canceller.isUsed || options?.clearSignal?.isCancelled === true) {
+    if (this._canceller.isUsed() || options?.clearSignal?.isCancelled() === true) {
       return noop;
     }
     this._observationRef.onUpdate(cb, {
@@ -250,7 +252,7 @@ export default class PlaybackObserver {
   /**
    * Creates the `IReadOnlySharedReference` that will generate playback
    * observations.
-   * @returns {Observable}
+   * @returns {Object}
    */
   private _createSharedReference() : IReadOnlySharedReference<IPlaybackObservation> {
     if (this._observationRef !== undefined) {
@@ -312,7 +314,8 @@ export default class PlaybackObserver {
       return timings;
     };
 
-    const returnedSharedReference = createSharedReference(getCurrentObservation("init"));
+    const returnedSharedReference = createSharedReference(getCurrentObservation("init"),
+                                                          this._canceller.signal);
 
     const generateObservationForEvent = (event : IPlaybackObserverEventType) => {
       const newObservation = getCurrentObservation(event);
@@ -529,7 +532,7 @@ export interface IReadOnlyPlaybackObserver<TObservationType> {
    * produced by the `IReadOnlyPlaybackObserver` and updated each time a new one
    * is produced.
    *
-   * This value can then be for example subscribed to to be notified of future
+   * This value can then be for example listened to to be notified of future
    * playback observations.
    *
    * @returns {Object}
@@ -546,7 +549,10 @@ export interface IReadOnlyPlaybackObserver<TObservationType> {
    * @returns {Function} - Allows to easily unregister the callback
    */
   listen(
-    cb : (observation : TObservationType) => void,
+    cb : (
+      observation : TObservationType,
+      stopListening : () => void
+    ) => void,
     options? : { includeLastObservation? : boolean | undefined;
                  clearSignal? : CancellationSignal | undefined; }
   ) : void;
@@ -958,11 +964,16 @@ function generateReadOnlyObserver<TSource, TDest>(
       return mappedRef;
     },
     listen(
-      cb : (observation : TDest) => void,
+      cb : (
+        observation : TDest,
+        stopListening : () => void
+      ) => void,
       options? : { includeLastObservation? : boolean | undefined;
                    clearSignal? : CancellationSignal | undefined; }
     ) : void {
-      if (cancellationSignal.isCancelled || options?.clearSignal?.isCancelled === true) {
+      if (cancellationSignal.isCancelled() ||
+          options?.clearSignal?.isCancelled() === true)
+      {
         return ;
       }
       mappedRef.onUpdate(cb, {

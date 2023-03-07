@@ -442,22 +442,29 @@ properties, methods, events and so on.
     Returns in seconds the difference between the current position and the end
     of the current media time range.
 
-  - [`getVideoLoadedTime`](../api/Buffer_Information/getVideoLoadedTime.md):
-    Returns in seconds the difference between the start and the end of the
-    current media time range.
+  - [`getVideoLoadedTime`](../api/Deprecated/getVideoLoadedTime.md):
+    [Deprecated] Returns in seconds the difference between the start and the end
+    of the current media time range.
 
-  - [`getVideoPlayedTime`](../api/Buffer_Information/getVideoPlayedTime.md):
-    Returns in seconds the difference between the start of the current media
-    time range and the current position.
+  - [`getVideoPlayedTime`](../api/Deprecated/getVideoPlayedTime.md):
+    [Deprecated] Returns in seconds the difference between the start of the
+    current media time range and the current position.
 
   - [`getUrl`](../api/Content_Information/getUrl.md):
     Get URL of the currently-played content.
 
+  - [`updateContentUrls`](../api/Content_Information/updateContentUrls.md):
+    Update URL(s) of the content currently being played.
+
   - [`isLive`](../api/Content_Information/isLive.md):
     Returns `true` if the content is a "live" content.
 
-  - [`getCurrentKeySystem`](../api/Content_Information/getCurrentKeySystem.md):
-    Returns the name of the current key system.
+  - [`getKeySystemConfiguration`](../api/Content_Information/getKeySystemConfiguration.md):
+    Returns information on the key system currently attached to the
+    HTMLMediaElement linked to the RxPlayer.
+
+  - [`getCurrentKeySystem`](../api/Deprecated/getCurrentKeySystem.md):
+    [Deprecated] Returns the name of the current key system.
 
   - [`getManifest`](../api/Deprecated/getManifest.md):
     [Deprecated] Information on the current Manifest.

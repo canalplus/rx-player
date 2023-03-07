@@ -17,6 +17,10 @@
       "displayName": "HDR"
     },
     {
+      "path": "./Debug_Element.md",
+      "displayName": "Debug Element"
+    },
+    {
       "path": "./Local_Contents.md",
       "displayName": "Local Contents"
     },

@@ -17,10 +17,8 @@
 import { MediaError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
-import {
-  CancellationError,
-  CancellationSignal,
-} from "../../utils/task_canceller";
+import createCancellablePromise from "../../utils/create_cancellable_promise";
+import { CancellationSignal } from "../../utils/task_canceller";
 import {
   AudioVideoSegmentBuffer,
   IBufferType,
@@ -194,21 +192,26 @@ export default class SegmentBuffersStore {
     if (this._areNativeBuffersUsable()) {
       return Promise.resolve();
     }
-    return new Promise((res, rej) => {
-      const onAddedOrDisabled = () => {
+    return createCancellablePromise(cancelWaitSignal, (res) => {
+      /* eslint-disable-next-line prefer-const */
+      let onAddedOrDisabled : () => void;
+
+      const removeCallback = () => {
+        const indexOf = this._onNativeBufferAddedOrDisabled.indexOf(onAddedOrDisabled);
+        if (indexOf >= 0) {
+          this._onNativeBufferAddedOrDisabled.splice(indexOf, 1);
+        }
+      };
+
+      onAddedOrDisabled = () => {
         if (this._areNativeBuffersUsable()) {
+          removeCallback();
           res();
         }
       };
       this._onNativeBufferAddedOrDisabled.push(onAddedOrDisabled);
 
-      cancelWaitSignal.register((error : CancellationError) => {
-        const indexOf = this._onNativeBufferAddedOrDisabled.indexOf(onAddedOrDisabled);
-        if (indexOf >= 0) {
-          this._onNativeBufferAddedOrDisabled.splice(indexOf, 1);
-        }
-        rej(error);
-      });
+      return removeCallback;
     });
   }
 

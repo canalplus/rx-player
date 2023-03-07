@@ -52,6 +52,8 @@ module.exports = (env) => {
 
         METAPLAYLIST: +(process.env.RXP_METAPLAYLIST === "true"),
 
+        DEBUG_ELEMENT: +(process.env.RXP_DEBUG_ELEMENT === "true"),
+
         DIRECTFILE: +(isBarebone ?
           process.env.RXP_DIRECTFILE === "true" :
           process.env.RXP_DIRECTFILE !== "false"),
@@ -133,8 +135,8 @@ module.exports = (env) => {
       minimizer: shouldMinify ? [new TerserPlugin()] : [],
     },
     performance: {
-      maxEntrypointSize: shouldMinify ? 540000 : 2500000,
-      maxAssetSize: shouldMinify ? 540000 : 2500000,
+      maxEntrypointSize: shouldMinify ? 600000 : 2500000,
+      maxAssetSize: shouldMinify ? 600000 : 2500000,
     },
     resolve: {
       extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],

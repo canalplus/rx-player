@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-import {
-  merge as observableMerge,
-  Subject,
-  takeUntil,
-} from "rxjs";
 import EventEmitter from "../../../utils/event_emitter";
+import TaskCanceller from "../../../utils/task_canceller";
 import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
 import * as events from "../../event_listeners";
 import {
@@ -43,16 +39,16 @@ class IE11MediaKeySession
   public expiration: number;
   public keyStatuses: ICustomMediaKeyStatusMap;
   private readonly _mk: MSMediaKeys;
-  private readonly _closeSession$: Subject<void>;
+  private readonly _sessionClosingCanceller: TaskCanceller;
   private _ss: MSMediaKeySession | undefined;
   constructor(mk: MSMediaKeys) {
     super();
     this.expiration = NaN;
     this.keyStatuses = new Map();
     this._mk = mk;
-    this._closeSession$ = new Subject();
+    this._sessionClosingCanceller = new TaskCanceller();
     this.closed = new Promise((resolve) => {
-      this._closeSession$.subscribe(resolve);
+      this._sessionClosingCanceller.signal.register(() => resolve());
     });
     this.update = (license: Uint8Array) => {
       return new Promise((resolve, reject) => {
@@ -79,11 +75,15 @@ class IE11MediaKeySession
         initData instanceof ArrayBuffer ? new Uint8Array(initData) :
                                           new Uint8Array(initData.buffer);
       this._ss = this._mk.createSession("video/mp4", initDataU8);
-      observableMerge(events.onKeyMessage$(this._ss),
-                      events.onKeyAdded$(this._ss),
-                      events.onKeyError$(this._ss)
-      ).pipe(takeUntil(this._closeSession$))
-        .subscribe((evt: Event) => this.trigger(evt.type, evt));
+      events.onKeyMessage(this._ss, (evt) => {
+        this.trigger((evt as Event).type ?? "message", evt as Event);
+      }, this._sessionClosingCanceller.signal);
+      events.onKeyAdded(this._ss, (evt) => {
+        this.trigger((evt as Event).type ?? "keyadded", evt as Event);
+      }, this._sessionClosingCanceller.signal);
+      events.onKeyError(this._ss, (evt) => {
+        this.trigger((evt as Event).type ?? "keyerror", evt as Event);
+      }, this._sessionClosingCanceller.signal);
       resolve();
     });
   }
@@ -93,8 +93,7 @@ class IE11MediaKeySession
         this._ss.close();
         this._ss = undefined;
       }
-      this._closeSession$.next();
-      this._closeSession$.complete();
+      this._sessionClosingCanceller.cancel();
       resolve();
     });
   }

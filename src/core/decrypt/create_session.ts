@@ -151,7 +151,7 @@ async function createAndTryToRetrievePersistentSession(
   /**
    * Helper function to close and restart the current persistent session
    * considered, and re-create it from scratch.
-   * @returns {Observable}
+   * @returns {Promise.<Object>}
    */
   async function recreatePersistentSession() : Promise<INewSessionCreatedEvent> {
     if (cancelSignal.cancellationError !== null) {

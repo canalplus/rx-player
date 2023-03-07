@@ -31,11 +31,9 @@ export default function addSegmentIntegrityChecks<T>(
 ) : ISegmentLoader<T> {
   return (url, content, loaderOptions, initialCancelSignal, callbacks) => {
     return new Promise((resolve, reject) => {
-      const requestCanceller = new TaskCanceller({ cancelOn: initialCancelSignal });
-
-      // Reject the `CancellationError` when `requestCanceller`'s signal emits
-      // `stopRejectingOnCancel` here is a function allowing to stop this mechanism
-      const stopRejectingOnCancel = requestCanceller.signal.register(reject);
+      const requestCanceller = new TaskCanceller();
+      const unlinkCanceller = requestCanceller.linkToSignal(initialCancelSignal);
+      requestCanceller.signal.register(reject);
 
       segmentLoader(url, content, loaderOptions, requestCanceller.signal, {
         ...callbacks,
@@ -45,31 +43,42 @@ export default function addSegmentIntegrityChecks<T>(
             callbacks.onNewChunk(data);
           } catch (err) {
             // Do not reject with a `CancellationError` after cancelling the request
-            stopRejectingOnCancel();
+            cleanUpCancellers();
+
             // Cancel the request
             requestCanceller.cancel();
+
             // Reject with thrown error
             reject(err);
           }
         },
-      }).then((info) => {
-        if (requestCanceller.isUsed) {
-          return;
-        }
-        stopRejectingOnCancel();
-        if (info.resultType === "segment-loaded") {
-          try {
-            trowOnIntegrityError(info.resultData.responseData);
-          } catch (err) {
+      })
+        .then(
+          (info) => {
+            cleanUpCancellers();
+            if (requestCanceller.isUsed()) {
+              return;
+            }
+            if (info.resultType === "segment-loaded") {
+              try {
+                trowOnIntegrityError(info.resultData.responseData);
+              } catch (err) {
+                reject(err);
+                return;
+              }
+            }
+            resolve(info);
+          },
+          (err : unknown) => {
+            cleanUpCancellers();
             reject(err);
-            return;
           }
-        }
-        resolve(info);
-      }, (error : unknown) => {
-        stopRejectingOnCancel();
-        reject(error);
-      });
+        );
+
+      function cleanUpCancellers() {
+        requestCanceller.signal.deregister(reject);
+        unlinkCanceller();
+      }
     });
 
     /**

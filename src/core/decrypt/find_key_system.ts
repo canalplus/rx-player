@@ -155,7 +155,9 @@ function buildKeySystemConfigurations(
   if (keySystem.distinctiveIdentifierRequired === true) {
     distinctiveIdentifier = "required";
   }
-  const { EME_DEFAULT_WIDEVINE_ROBUSTNESSES,
+  const { EME_DEFAULT_AUDIO_CODECS,
+          EME_DEFAULT_VIDEO_CODECS,
+          EME_DEFAULT_WIDEVINE_ROBUSTNESSES,
           EME_DEFAULT_PLAYREADY_ROBUSTNESSES } = config.getCurrent();
 
   // Set robustness, in order of consideration:
@@ -206,42 +208,41 @@ function buildKeySystemConfigurations(
   // https://www.w3.org/TR/encrypted-media/#get-supported-configuration-and-consent
 
   const videoCapabilities: IMediaCapability[] =
-    flatMap(videoRobustnesses, (robustness) =>
-      ["video/mp4;codecs=\"avc1.4d401e\"",
-       "video/mp4;codecs=\"avc1.42e01e\"",
-       "video/webm;codecs=\"vp8\""].map(contentType => {
-        return robustness !== undefined ? { contentType, robustness } :
-                                          { contentType };
-      }));
+    flatMap(videoRobustnesses, (robustness) => {
+      return EME_DEFAULT_VIDEO_CODECS.map(contentType => {
+        return robustness === undefined ? { contentType } :
+                                          { contentType, robustness };
+      });
+    });
 
   const audioCapabilities: IMediaCapability[] =
-    flatMap(audioRobustnesses, (robustness) =>
-      ["audio/mp4;codecs=\"mp4a.40.2\"",
-       "audio/webm;codecs=opus"].map(contentType => {
-        return robustness !== undefined ? { contentType, robustness } :
-                                          { contentType };
-      }));
+    flatMap(audioRobustnesses, (robustness) => {
+      return EME_DEFAULT_AUDIO_CODECS.map(contentType => {
+        return robustness === undefined ? { contentType } :
+                                          { contentType, robustness };
+      });
+    });
 
-  // TODO Re-test with a set contentType but an undefined robustness on the
-  // STBs on which this problem was found.
-  //
-  // add another with no {audio,video}Capabilities for some legacy browsers.
-  // As of today's spec, this should return NotSupported but the first
-  // candidate configuration should be good, so we should have no downside
-  // doing that.
-  // initDataTypes: ["cenc"],
-  // videoCapabilities: undefined,
-  // audioCapabilities: undefined,
-  // distinctiveIdentifier,
-  // persistentState,
-  // sessionTypes,
+  const wantedMediaKeySystemConfiguration : MediaKeySystemConfiguration = {
+    initDataTypes: ["cenc"],
+    videoCapabilities,
+    audioCapabilities,
+    distinctiveIdentifier,
+    persistentState,
+    sessionTypes,
+  };
 
-  return [{ initDataTypes: ["cenc"],
-            videoCapabilities,
-            audioCapabilities,
-            distinctiveIdentifier,
-            persistentState,
-            sessionTypes }];
+  return [
+    wantedMediaKeySystemConfiguration,
+
+    // Some legacy implementations have issues with `audioCapabilities` and
+    // `videoCapabilities`, so we're including a supplementary
+    // `MediaKeySystemConfiguration` without those properties.
+    { ...wantedMediaKeySystemConfiguration,
+      audioCapabilities: undefined ,
+      videoCapabilities: undefined,
+    } as unknown as MediaKeySystemConfiguration,
+  ];
 }
 
 /**

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../log";
 import { IParsedAdaptation } from "../parsers/manifest";
 import { IRepresentationFilter } from "../public_types";
 import arrayFind from "../utils/array_find";
@@ -55,6 +56,14 @@ export default class Adaptation {
 
   /** Whether this Adaptation contains closed captions for the hard-of-hearing. */
   public isClosedCaption? : boolean;
+
+  /**
+   * If `true` this Adaptation are subtitles Meant for display when no other text
+   * Adaptation is selected. It is used to clarify dialogue, alternate
+   * languages, texted graphics or location/person IDs that are not otherwise
+   * covered in the dubbed/localized audio Adaptation.
+   */
+  public isForcedSubtitles? : boolean;
 
   /** If true this Adaptation contains sign interpretation. */
   public isSignInterpreted? : boolean;
@@ -120,6 +129,9 @@ export default class Adaptation {
     if (parsedAdaptation.isDub !== undefined) {
       this.isDub = parsedAdaptation.isDub;
     }
+    if (parsedAdaptation.forcedSubtitles !== undefined) {
+      this.isForcedSubtitles = parsedAdaptation.forcedSubtitles;
+    }
     if (parsedAdaptation.isSignInterpreted !== undefined) {
       this.isSignInterpreted = parsedAdaptation.isSignInterpreted;
     }
@@ -153,6 +165,12 @@ export default class Adaptation {
         if (!isSupported && representation.isSupported) {
           isSupported = true;
         }
+      } else {
+        log.debug("Filtering Representation due to representationFilter",
+                  this.type,
+                  `Adaptation: ${this.id}`,
+                  `Representation: ${representation.id}`,
+                  `(${representation.bitrate})`);
       }
     }
     representations.sort((a, b) => a.bitrate - b.bitrate);

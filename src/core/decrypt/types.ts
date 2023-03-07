@@ -19,7 +19,6 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import { IPlayerError } from "../../public_types";
 import InitDataValuesContainer from "./utils/init_data_values_container";
 import LoadedSessionsStore from "./utils/loaded_sessions_store";
 import PersistentSessionsStore from "./utils/persistent_sessions_store";
@@ -73,10 +72,6 @@ export interface IInitDataValue {
    */
    data: Uint8Array;
 }
-
-/** Event emitted when a minor - recoverable - error happened. */
-export interface IEMEWarningEvent { type : "warning";
-                                    value : IPlayerError; }
 
 export type ILicense = BufferSource |
                        ArrayBuffer;

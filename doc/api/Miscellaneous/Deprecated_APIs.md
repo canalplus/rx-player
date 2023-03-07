@@ -225,6 +225,132 @@ You can read [the related chapter](#bif-apis) for more information.
 You can replace this API by using the
 [parseBifThumbnails](../Tools/parseBifThumbnails.md) tool.
 
+
+### getCurrentKeySystem
+
+`getCurrentKeySystem` has been deprecated in profit of the similar
+[`getKeySystemConfiguration`](../Content_Information/getKeySystemConfiguration.md)
+method.
+
+Note however that the key system string optionally returned as a `keySystem`
+property from the latter is slightly different than the optional string returned
+from the former:
+
+  - `getCurrentKeySystem` returned the same keysystem name used as `type`
+    property of the `keySystems` `loadVideo` option originally communicated.
+
+    For example, calling the `loadVideo` like this:
+    ```js
+    rxPlayer.loadVideo({
+      keySystems: [{
+        type: "widevine",
+        // ...
+      }],
+      // ...
+    });
+    ```
+    May lead to `getCurrentKeySystem` returning just `"widevine"`.
+
+  - The `keySystem` property from `getKeySystemConfiguration` returns the actual
+    key system string used, alongside the actual configuration used in its
+    `configuration` key.
+
+    For example, calling the `loadVideo` like this:
+    ```js
+    rxPlayer.loadVideo({
+      keySystems: [{
+        type: "widevine",
+        // ...
+      }],
+      // ...
+    });
+    ```
+    May lead to a more complex `keySystem` property being reported, like for
+    example, `"com.widevine.alpha"`.
+
+
+### getVideoLoadedTime
+
+The `getVideoLoadedTime` method has been deprecated and won't be replaced in the
+next major version because it was poorly named, poorly understood, and it is
+easy to replace.
+
+#### How to replace that method
+
+To replace it, you can write:
+```js
+function getVideoLoadedTime() {
+  const position = rxPlayer.getPosition();
+  const mediaElement = rxPlayer.getVideoElement();
+  if (mediaElement === null) {
+    console.error("The RxPlayer is disposed");
+  } else {
+    const range = getRange(mediaElement.buffered, currentTime);
+    return range !== null ? range.end - range.start :
+                            0;
+  }
+}
+
+/**
+ * Get range object of a specific time in a TimeRanges object.
+ * @param {TimeRanges} timeRanges
+ * @returns {Object}
+ */
+function getRange(timeRanges, time) {
+  for (let i = timeRanges.length - 1; i >= 0; i--) {
+    const start = timeRanges.start(i);
+    if (time >= start) {
+      const end = timeRanges.end(i);
+      if (time < end) {
+        return { start, end };
+      }
+    }
+  }
+  return null;
+}
+```
+
+### getVideoPlayedTime
+
+The `getVideoPlayedTime` method has been deprecated and won't be replaced in the
+next major version because it was poorly named, poorly understood, and it is
+easy to replace.
+
+#### How to replace that method
+
+To replace it, you can write:
+```js
+function getVideoPlayedTime() {
+  const position = rxPlayer.getPosition();
+  const mediaElement = rxPlayer.getVideoElement();
+  if (mediaElement === null) {
+    console.error("The RxPlayer is disposed");
+  } else {
+    const range = getRange(mediaElement.buffered, currentTime);
+    return range !== null ? currentTime - range.start :
+  }
+}
+
+/**
+ * Get range object of a specific time in a TimeRanges object.
+ * @param {TimeRanges} timeRanges
+ * @returns {Object}
+ */
+function getRange(timeRanges, time) {
+  for (let i = timeRanges.length - 1; i >= 0; i--) {
+    const start = timeRanges.start(i);
+    if (time >= start) {
+      const end = timeRanges.end(i);
+      if (time < end) {
+        return { start, end };
+      }
+    }
+  }
+  return null;
+}
+```
+
+
 ## RxPlayer Events
 
 The following RxPlayer events has been deprecated.
@@ -355,7 +481,7 @@ Or at any time, through the `setPreferredTextTracks` method:
 player.setPreferredTextTracks([{ language: "fra", closedCaption: false }]);
 ```
 
-### supplementaryTextTracks
+### transportOptions.supplementaryTextTracks
 
 The `supplementaryTextTracks` has been deprecated for multiple reasons:
 
@@ -403,7 +529,7 @@ the transition might take some time.
 
 The `TextTrackRenderer` tool is documented [here](../Tools/TextTrackRenderer.md).
 
-### supplementaryImageTracks
+### transportOptions.supplementaryImageTracks
 
 The `supplementaryImageTracks` events have been deprecated like most API related
 to BIF thumbnail parsing.
@@ -411,6 +537,15 @@ You can read [the related chapter](#bif-apis) for more information.
 
 You can replace this API by using the
 [parseBifThumbnails](../Tools/parseBifThumbnails.md) tool.
+
+
+## transportOptions.aggressiveMode
+
+The `aggressiveMode` boolean from the `transportOptions` option will be removed
+from the next major version.
+
+It has no planned replacement. Please open an issue if you need it.
+
 
 ### hideNativeSubtitle
 
@@ -458,10 +593,18 @@ rxPlayer.loadVideo({
 ```
 
 You can have more information on the `onKeyExpiration` option [in the
-correspnding API documentation](./Decryption_Options.md#onkeyexpiration).
+correspnding API documentation](../Decryption_Options.md#onkeyexpiration).
 
 If you previously set `throwOnLicenseExpiration` to `true` or `undefined`, you
 can just remove this property as this still the default behavior.
+
+
+### keySystems[].onKeyStatusesChange
+
+The `onKeyStatusesChange` callback from the `keySystems` option will be removed
+from the next major version.
+
+It has no planned replacement. Please open an issue if you need it.
 
 
 ## RxPlayer constructor options

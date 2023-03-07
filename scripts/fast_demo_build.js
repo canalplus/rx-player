@@ -52,34 +52,39 @@ function fastDemoBuild(options) {
   const watch = !!options.watch;
   const isDevMode = !options.production;
   const includeWasmParser = !!options.includeWasmParser;
-  let beforeTime = process.hrtime.bigint();
 
-  esbuild.build({
+  /** Declare a plugin to anounce when a build begins and ends */
+  const consolePlugin = {
+    name: "onEnd",
+    setup(build) {
+      build.onStart(() => {
+        console.log(`\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
+          "New demo build started");
+      })
+      build.onEnd(result => {
+        if (result.errors.length > 0 || result.warnings.length > 0) {
+          const { errors, warnings } = result;
+          console.log(`\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
+            `Demo re-built with ${errors.length} error(s) and ` +
+            ` ${warnings.length} warning(s) ` +
+            `(in ${stats.endTime - stats.startTime} ms).`);
+        }
+        console.log(`\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` +
+          "Demo built!");
+      });
+    },
+  };
+
+  // Create a context for incremental builds
+  esbuild.context({
     entryPoints: [path.join(__dirname, "../demo/full/scripts/index.jsx")],
     bundle: true,
     minify,
     outfile: path.join(__dirname, "../demo/full/bundle.js"),
-    watch: !watch ? undefined : {
-      onRebuild(error, result) {
-        if (error) {
-          console.error(`\x1b[31m[${getHumanReadableHours()}]\x1b[0m Demo re-build failed:`,
-                        err);
-        } else {
-          if (result.errors > 0 || result.warnings > 0) {
-            const { errors, warnings } = result;
-            console.log(`\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
-                        `Demo re-built with ${errors.length} error(s) and ` +
-                        ` ${warnings.length} warning(s) ` +
-                        `(in ${stats.endTime - stats.startTime} ms).`);
-          }
-          console.log(`\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` +
-                      "Demo re-built!");
-        }
-      },
-    },
+    plugins: [consolePlugin],
     define: {
       "process.env.NODE_ENV": JSON.stringify(isDevMode ? "development" : "production"),
-      __INCLUDE_WASM_PARSER__: includeWasmParser,
+      __INCLUDE_WASM_PARSER__: JSON.stringify(includeWasmParser),
       __ENVIRONMENT__: JSON.stringify({
         PRODUCTION: 0,
         DEV: 1,
@@ -89,24 +94,18 @@ function fastDemoBuild(options) {
         CURRENT_LEVEL: "INFO",
       }),
     }
-  }).then(
-  (result) => {
-    if (result.errors > 0 || result.warnings > 0) {
-      const { errors, warnings } = result;
-      console.log(`\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
-                  `Demo built with ${errors.length} error(s) and ` +
-                  ` ${warnings.length} warning(s) ` +
-                  `(in ${stats.endTime - stats.startTime} ms).`);
-    }
-    const fullTime = (process.hrtime.bigint() - beforeTime) / 1000000n;
-    console.log(`\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` +
-                `Build done in ${fullTime}ms`);
-  },
-  (err) => {
-    console.error(`\x1b[31m[${getHumanReadableHours()}]\x1b[0m Demo build failed:`,
-                  err);
-    process.exit(1);
-  });
+  })
+    .then((context) => {
+      if (watch) {
+        return context.watch();
+      }
+    })
+    .catch((err) => {
+      console.error(
+        `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Demo build failed:`,
+        err);
+      process.exit(1);
+    });
 }
 
 /**

@@ -1,4 +1,4 @@
-export default ({ state }, { maxSize }) => {
+export default (state, { maxSize }) => {
   const data = [];
 
   state.set({ data: data.slice() });
