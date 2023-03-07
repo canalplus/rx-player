@@ -25,6 +25,10 @@
       "displayName": "exitFullscreen"
     },
     {
+      "path": "./getCurrentKeySystem.md",
+      "displayName": "getCurrentKeySystem"
+    },
+    {
       "path": "./getImageTrackData.md",
       "displayName": "getImageTrackData"
     },
