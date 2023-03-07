@@ -79,8 +79,60 @@
   - The `DEBUG_ELEMENT` feature now uses the `monospace` fallback font as a default for a better rendering on apple devices
   - doc: externalize documentation-generator code
 
+## v4.0.0-beta.1 (2023-03-08)
 
-## v4.0.0-alpha.2022100600 (2022-10-06)
+### Bug fixes
+
+  - (v4.0.0-beta.0-only issue) Fix memory leak
+  - (v4.0.0-beta.0-only issue) Fix MediaSource duration when maxBufferedEnd is inferior to current duration but superior to calculated duration
+  - (v4.0.0-beta.0-only issue) Fix stopAtEnd option by also switching to STOPPED state on ended
+  - (v4.0.0-beta.0-only issue) Fix some target's support by not relying on Promise.prototype.finally anymore [#1224]
+  - (v4.0.0-beta.0-only issue) For dynamic contents, always set a very high duration [#1220]
+  - (v4.0.0-beta.0-only issue) DRM: Fix fallbacking for an already-played content by checking key statuses initially linked to a MediaKeySession
+
+### Other improvements
+
+  - Based on the v3.30.0 of which it inherits all the features, bug fixes and other improvments
+
+
+## v3.30.0 (2023-03-07)
+
+### Features
+
+  - Add `updateContentUrls` API, allowing to update the Manifest's URL during playback [#1182]
+  - DASH: implement forced-subtitles, adding the `forced` property to the audio tracks API and selecting by default a forced text track linked to the audio track's language if present [#1187]
+  - DRM: add the `getKeySystemConfiguration` method to the RxPlayer [#1202]
+  - add experimental `DEBUG_ELEMENT` feature and `createDebugElement` method to render a default debugging HTML element [#1200]
+
+### Deprecated
+
+  - Deprecate the `getVideoLoadedTime` method which can be easily replaced (see Deprecated method documentation)
+  - Deprecate the `getVideoPlayedTime` method which can be easily replaced (see Deprecated method documentation)
+  - Deprecate the `transportOptions.aggressiveMode` option
+  - DRM: Deprecate the `keySystems[].onKeyStatusesChange` callback as no good use case was found for it.
+
+### Bug fixes
+
+  - Fix segment requesting error when playing a DASH content without an url and without BaseURL elements [#1192]
+  - API: Stop sending events if the content is stopped due to a side-effect of one of the event handler [#1197]
+  - text-tracks/ttml: fix inconsistent line spacing when resizing the `textTrackElement` [#1191]
+  - DRM: Fix race condition leading to a JS error instead of a `NO_PLAYABLE_REPRESENTATION` [#1201]
+  - DRM/Compat: Renew MediaKeys at each `loadVideo` on all WebOS (LG TV) platforms to work around issues [#1188]
+
+### Other improvements
+
+  - DASH: better detect closed captions [#1187]
+  - DASH: handle `endNumber` DASH attribute [#1186]
+  - DASH: Do not merge AdaptationSet with role "main" anymore [#1214]
+  - DASH: parse `transferCharacteristics` property in the MPD to better detect hdr [#1212]
+  - Support encrypted contents on Panasonic 2019 TVs [#1226]
+  - Better handle SourceBuffer's QuotaExceededError, responsible for `MediaError` with the `BUFFER_FULL_ERROR` code [#1221]
+  - API: send available...TracksChange events in the very unlikely scenario where tracks are added after a manifest update [#1197]
+  - Completely remove RxJS dependency from the RxPlayer's source code [#1193]
+  - DRM: Request PR recommendation when PlayReady is asked and try default recommendation robustnesses [#1189]
+
+
+## v4.0.0-beta.0 (2023-01-27)
 
 ### Changes
 
@@ -194,43 +246,6 @@
 ### Other improvements
 
   - Remove dependency to RxJS, improving the debugging experience and preventing some uncaught Error from being thrown
-
-
-## v3.30.0 (2023-03-07)
-
-### Features
-
-  - Add `updateContentUrls` API, allowing to update the Manifest's URL during playback [#1182]
-  - DASH: implement forced-subtitles, adding the `forced` property to the audio tracks API and selecting by default a forced text track linked to the audio track's language if present [#1187]
-  - DRM: add the `getKeySystemConfiguration` method to the RxPlayer [#1202]
-  - add experimental `DEBUG_ELEMENT` feature and `createDebugElement` method to render a default debugging HTML element [#1200]
-
-### Deprecated
-
-  - Deprecate the `getVideoLoadedTime` method which can be easily replaced (see Deprecated method documentation)
-  - Deprecate the `getVideoPlayedTime` method which can be easily replaced (see Deprecated method documentation)
-  - Deprecate the `transportOptions.aggressiveMode` option
-  - DRM: Deprecate the `keySystems[].onKeyStatusesChange` callback as no good use case was found for it.
-
-### Bug fixes
-
-  - Fix segment requesting error when playing a DASH content without an url and without BaseURL elements [#1192]
-  - API: Stop sending events if the content is stopped due to a side-effect of one of the event handler [#1197]
-  - text-tracks/ttml: fix inconsistent line spacing when resizing the `textTrackElement` [#1191]
-  - DRM: Fix race condition leading to a JS error instead of a `NO_PLAYABLE_REPRESENTATION` [#1201]
-  - DRM/Compat: Renew MediaKeys at each `loadVideo` on all WebOS (LG TV) platforms to work around issues [#1188]
-
-### Other improvements
-
-  - DASH: better detect closed captions [#1187]
-  - DASH: handle `endNumber` DASH attribute [#1186]
-  - DASH: Do not merge AdaptationSet with role "main" anymore [#1214]
-  - DASH: parse `transferCharacteristics` property in the MPD to better detect hdr [#1212]
-  - Support encrypted contents on Panasonic 2019 TVs [#1226]
-  - Better handle SourceBuffer's QuotaExceededError, responsible for `MediaError` with the `BUFFER_FULL_ERROR` code [#1221]
-  - API: send available...TracksChange events in the very unlikely scenario where tracks are added after a manifest update [#1197]
-  - Completely remove RxJS dependency from the RxPlayer's source code [#1193]
-  - DRM: Request PR recommendation when PlayReady is asked and try default recommendation robustnesses [#1189]
 
 
 ## v3.29.0 (2022-11-16)
