@@ -1,0 +1,376 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../styles/style.css"/><link rel="stylesheet" href="../styles/code.css"/><title>Troubleshooting - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../static/img/logo.png" /></a><a class="navbar-item navbar-active hideable"href="./Welcome.html">Getting Started</a>
+<a class="navbar-item hideable"href="../api/Overview.html">API</a>
+<a class="navbar-item hideable"href="../reference/API_Reference.html">Reference</a>
+<a class="navbar-item hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
+<span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
+<a aria-label="Link to repository" class="navbar-item first-right hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 3.30.0</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="./Welcome.html">Welcome</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Tutorials</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Tutorials/Quick_Start.html">Quick Start</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tutorials/Content_with_DRM.html">Contents with DRM</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tutorials/Selecting_a_Track.html">Selecting a Track</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="./Minimal_Player.html">Importing a minimal RxPlayer</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Glossary.html">Glossary</a></li><li class="sidebar-item"><a class="sidebar-link active" href="./Troubleshooting.html">Troubleshooting</a></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="troubleshooting"></a></p>
+<h1>Troubleshooting</h1>
+<p>This page regroups multiple frequent problems that have been encountered with
+the RxPlayer associated to the found solution.</p>
+<p>If that solution does not work for you, do not hesitate to create an issue.</p>
+<p><a name="%60autoplay%60_doesn't_work"></a></p>
+<h2><code>autoPlay</code> doesn’t work</h2>
+<ul>
+<li>
+<p>If the media plays automatically despite not setting the
+<a href="../api/Loading_a_Content.html#autoplay"><code>autoPlay</code></a> <code>loadVideo</code> option or
+setting it to <code>false</code>, check that the media element does not already have an
+<code>autoplay</code> attribute.</p>
+<p>If it has, you should remove it so the <code>autoPlay</code> <code>loadVideo</code> option work as
+intended.
+We hesitated doing it ourselves but finally chose not to, to not break other
+applications putting it there for a reason</p>
+</li>
+<li>
+<p>If the media does not play despite setting the
+<a href="../api/Loading_a_Content.html#autoplay"><code>autoPlay</code></a> <code>loadVideo</code> option
+to <code>true</code>, it is probably due to the browser blocking it (and in that case,
+you should also have received a <code>MEDIA_ERROR</code> <code>warning</code> event, with the code
+<code>MEDIA_ERR_BLOCKED_AUTOPLAY</code>).</p>
+<p>In that scenario, the content will only be able to play after a user
+interaction is done on the page (e.g. user clicking on a “play” button).</p>
+<p>This is a behavior forced by multiple browsers to prevent annoying
+autoplaying video, generally those who have sound enabled (on that matter,
+muting the media element might also work).</p>
+</li>
+</ul>
+<p><a name="text_tracks_does_not_respect_the_format's_style"></a></p>
+<h2>Text tracks does not respect the format’s style</h2>
+<ul>
+<li>
+<p>Check that you’re not in the default <code>"native"</code>
+<a href="../api/Loading_a_Content.html#texttrackmode"><code>textTrackMode</code></a> (when either
+the <code>textTrackMode</code> <code>loadVideo</code> option is not set or is set to <code>native</code>, or
+when the <code>textTrackElement</code> <code>loadVideo</code> option is not set).</p>
+<p>If you’re in that case, style-enriched subtitles are only available in the
+<code>"html"</code> <code>textTrackMode</code>. Please set both <code>textTrackMode</code> to <code>"html"</code> and a
+<code>textTrackElement</code> to display text tracks into.</p>
+</li>
+</ul>
+<p><a name="issues_when_switching_the_audio_track"></a></p>
+<h2>Issues when switching the audio track</h2>
+<ul>
+<li>
+<p>If audio tracks take a LOT of time on some devices to change, it may be due
+to how often low-level audio buffers are updated (from higher-level browser
+audio buffers) on that device.</p>
+<p>To fix that solution, you might want to set the
+<a href="../api/Loading_a_Content.html#audiotrackswitchingmode"><code>audioTrackSwitchingMode</code></a>
+<code>loadVideo</code> option to <code>"direct"</code> or <code>"reload"</code>, if you have issues with the
+former value.</p>
+</li>
+<li>
+<p>If you lose sound after switching the audio track and you’re in the
+<code>"direct"</code>
+<a href="../api/Loading_a_Content.html#audiotrackswitchingmode"><code>audioTrackSwitchingMode</code></a>,
+this is a known issue on some browser versions.
+Please change the <code>audioTrackSwitchingMode</code> to any other value (the closest to
+<code>"direct"</code> being <code>"reload"</code>.</p>
+</li>
+</ul>
+<p><a name="parts_of_a_content_are_automatically_skipped/seeked_over"></a></p>
+<h2>Parts of a content are automatically skipped/seeked over</h2>
+<p>The RxPlayer has two complex inner mechanisms that may lead to subparts of a
+content being seemingly automatically skipped:</p>
+<ul>
+<li>
+<p>A buffer discontinuity detection mechanism that tend to prioritize
+uninterrupted content playback over content completeness</p>
+</li>
+<li>
+<p>A browser’s garbage collection detection mechanism that also prioritize the
+same aspect</p>
+</li>
+</ul>
+<p>When some media data appears to be skipped, it generally means to the RxPlayer
+that either:</p>
+<ul>
+<li>no media data was available at that position</li>
+<li>media data was available, but the browser stalled trying to play it</li>
+<li>media data was available at that position, but was immediately garbage
+collected by the browser, potentially multiple times in a row.</li>
+</ul>
+<p>You can investigate in which scenario you are by looking at the RxPlayer’s logs.</p>
+<p>If you see logs about “GC” (garbage collector) before those skip happen, you
+might be in the last scenario.
+If it appears to be insistent, you may want to check the remaining available
+memory on the device when it happens. If it looks very low, you might want to
+configure the RxPlayer so less media data is buffered in advance, through
+either:</p>
+<ul>
+<li>
+<p>the <a href="../api/Creating_a_Player.html#maxvideobuffersize"><code>maxVideoBufferSize</code></a>
+constructor option, or</p>
+</li>
+<li>
+<p>the <a href="../api/Buffer_Control/setMaxVideoBufferSize.html"><code>setMaxVideoBufferSize</code></a>
+method</p>
+</li>
+</ul>
+<p><a name="codec_switching_does_not_work"></a></p>
+<h2>Codec switching does not work</h2>
+<p>By default, codec switching is performed seamlessly but that does not work on
+all devices.</p>
+<p>Please check the <a href="../api/Loading_a_Content.html#oncodecswitch"><code>onCodecSwitch</code></a>
+<code>loadVideo</code> option, and set it to <code>"reload"</code> - if that’s not already the
+case - to see if it fixes the issue.</p>
+<p><a name="the_rxplayer_uses_a_lot_of_memory"></a></p>
+<h2>The RxPlayer uses a lot of memory</h2>
+<p>By default the RxPlayer uses the most memory it can to provide the best
+experience.</p>
+<p>It may not always what you might want however. To let you configure how much
+media data is kept at maximum behind and ahead of the current position, you
+can set respectively a “maximum buffer behind” or a “maximum buffer ahead” in
+seconds through either:</p>
+<ul>
+<li>
+<p>the <a href="../api/Creating_a_Player.html#maxbufferbehind"><code>maxBufferBehind</code></a>
+and <a href="../api/Creating_a_Player.html#maxbufferahead"><code>maxBufferAhead</code></a>
+constructor options.</p>
+</li>
+<li>
+<p>the <a href="../api/Buffer_Control/setMaxBufferBehind.html"><code>setMaxBufferBehind</code></a> and
+the <a href="../api/Buffer_Control/setMaxBufferAhead.html"><code>setMaxBufferAhead</code></a>
+methods</p>
+</li>
+</ul>
+<p>If you’re setting a “maximum buffer ahead”, please keep in mind that it should
+always be higher than the set “wanted buffer ahead” option
+<a href="../api/Creating_a_Player.html#wantedbufferahead"><code>wantedBufferAhead</code></a>
+constructor option or <a href="../api/Buffer_Control/setWantedBufferAhead.html"><code>setWantedBufferAhead</code></a>
+method).</p>
+<p>If you want even a more precize control over memory usage of media data, you
+can set the “maximum video buffer size” setting through either:</p>
+<ul>
+<li>
+<p>the <a href="../api/Creating_a_Player.html#maxvideobuffersize"><code>maxVideoBufferSize</code></a>
+constructor option, or</p>
+</li>
+<li>
+<p>the <a href="../api/Buffer_Control/setMaxVideoBufferSize.html"><code>setMaxVideoBufferSize</code></a>
+method</p>
+</li>
+</ul>
+<p><a name="playback_issues_related_to_drms"></a></p>
+<h2>Playback issues related to DRMs</h2>
+<p>There is a lot of compatibility issues that may be linked to DRMs.</p>
+<p>Here is some of them.</p>
+<p><a name="issues_with_fallbacking_with_the_edge_browser_and_playready"></a></p>
+<h3>Issues with fallbacking with the Edge browser and PlayReady</h3>
+<p>We sometimes encountered a bug which makes the player loads indefinitely when
+fallbacking from an undecipherable quality, if done through the
+<code>fallbackOnLastTry</code> option. This was only constated on the Edge browser and
+appears to be a browser or CDM bug.</p>
+<p>Sadly, no work-around has been found for now for this issue. We’re currently
+trying to create a reproducible scenario and document that issue so it can
+hopefully be fixed in the future. In the meantime, you’re encouraged either to
+use Widevine (only on Chromium-based Edge) or to not make use of the
+<code>fallBackOnLastTry</code> option on that browser.</p>
+<p><a name="the_player_do_not_download_any_segment_when_playing_encrypted_contents"></a></p>
+<h3>The Player do not download any segment when playing encrypted contents</h3>
+<p>This is probably due to an issue we encountered several time on embedded
+devices.</p>
+<p>Basically, this behavior is due to a deadlock, where the RxPlayer is waiting for
+the CDM logic to be initialized to download segments but the CDM logic wait for
+the opposite: it will only initialize itself once segments have been downloaded.</p>
+<p>The RxPlayer is waiting for the CDM initialization for a very specific usage:
+playing a mix of unencrypted and encrypted data. We detected that on some Chrome
+versions we could not play encrypted data if we first played unencrypted data
+without the CDM logic in place.</p>
+<p>Fortunately, this usage is for very specific cases and you most likely won’t
+need it (or even if you will, you most likely will not encounter that problem).</p>
+<p>You can completely remove that deadlock with a property called
+<code>disableMediaKeysAttachmentLock</code>. Like other properties introduced here, you
+should put it in the <code>keySystems</code> object of <code>loadVideo</code>, like such:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">url</span>: <span class="hljs-variable constant_">MANIFEST_URL</span>,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">"dash"</span>,
+  <span class="hljs-attr">keySystems</span>: [
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">"widevine"</span>,
+      getLicense,
+      <span class="hljs-attr">disableMediaKeysAttachmentLock</span>: <span class="hljs-literal">true</span>,
+    },
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">"playready"</span>,
+      getLicense,
+      <span class="hljs-attr">disableMediaKeysAttachmentLock</span>: <span class="hljs-literal">true</span>,
+    },
+  ],
+});
+</code></pre>
+<p><a name="after_two_or_several_loadvideo_calls_the_rxplayer_refuses_to_play"></a></p>
+<h3>After two or several loadVideo calls the RxPlayer refuses to play</h3>
+<p>There’s a chance that you’re encountering another issue we found on embedded
+devices.</p>
+<p>By default, the RxPlayer maintains a cache containing the last loaded licenses.
+This allows to quickly switch to already-played contents, an important
+improvement when playing live contents for example.
+Rest assured, our cache size is not infinite, and as such it should work on most
+devices.</p>
+<p>However, we found that on some devices, this logic can be problematic, and it
+will just refuse to add a license at a given point.</p>
+<p>You can add a property which will flush that cache anytime the content changes,
+called <code>closeSessionsOnStop</code>.</p>
+<p>Like other properties introduced here, you should put it in the <code>keySystems</code>
+object of <code>loadVideo</code>, like such:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">url</span>: <span class="hljs-variable constant_">MANIFEST_URL</span>,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">"dash"</span>,
+  <span class="hljs-attr">keySystems</span>: [
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">"widevine"</span>,
+      getLicense,
+      <span class="hljs-attr">closeSessionsOnStop</span>: <span class="hljs-literal">true</span>,
+    },
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">"playready"</span>,
+      getLicense,
+      <span class="hljs-attr">closeSessionsOnStop</span>: <span class="hljs-literal">true</span>,
+    },
+  ],
+});
+</code></pre>
+</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="./Glossary.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">Glossary</div></a></div><div class="next-or-previous-page next-page"></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#troubleshooting">Troubleshooting</a></p>
+<ul>
+<li><a href="#%60autoplay%60_doesn't_work"><code>autoPlay</code> doesn’t work</a></li>
+<li><a href="#text_tracks_does_not_respect_the_format's_style">Text tracks does not respect the format’s style</a></li>
+<li><a href="#issues_when_switching_the_audio_track">Issues when switching the audio track</a></li>
+<li><a href="#parts_of_a_content_are_automatically_skipped/seeked_over">Parts of a content are automatically skipped/seeked over</a></li>
+<li><a href="#codec_switching_does_not_work">Codec switching does not work</a></li>
+<li><a href="#the_rxplayer_uses_a_lot_of_memory">The RxPlayer uses a lot of memory</a></li>
+<li><a href="#playback_issues_related_to_drms">Playback issues related to DRMs</a>
+<ul>
+<li><a href="#issues_with_fallbacking_with_the_edge_browser_and_playready">Issues with fallbacking with the Edge browser and PlayReady</a></li>
+<li><a href="#the_player_do_not_download_any_segment_when_playing_encrypted_contents">The Player do not download any segment when playing encrypted contents</a></li>
+<li><a href="#after_two_or_several_loadvideo_calls_the_rxplayer_refuses_to_play">After two or several loadVideo calls the RxPlayer refuses to play</a></li>
+</ul>
+</li>
+</ul>
+</div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group opened active">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="./Welcome.html">Welcome</a></li>
+<li><div class="page-list-item page-list-group">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Tutorials/Quick_Start.html">Quick Start</a></li>
+<li class="page-list-item"><a href="./Tutorials/Content_with_DRM.html">Contents with DRM</a></li>
+<li class="page-list-item"><a href="./Tutorials/Selecting_a_Track.html">Selecting a Track</a></li>
+<li class="page-list-item"><a href="./Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li>
+<li class="page-list-item"><a href="./Minimal_Player.html">Importing a minimal RxPlayer</a></li>
+<li class="page-list-item"><a href="./Glossary.html">Glossary</a></li>
+<li class="page-list-item active"><a href="./Troubleshooting.html">Troubleshooting</a></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">API</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../api/Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../api/Creating_a_Player.html">Creating a Player</a></li>
+<li class="page-list-item"><a href="../api/Loading_a_Content.html">Loading a Content</a></li>
+<li class="page-list-item"><a href="../api/Decryption_Options.html">Decryption Options</a></li>
+<li><div class="page-list-item page-list-group">Basic Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Basic_Methods/getPlayerState.html">getPlayerState</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/addEventListener.html">addEventListener</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/removeEventListener.html">removeEventListener</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/play.html">play</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/pause.html">pause</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/stop.html">stop</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getPosition.html">getPosition</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getWallClockTime.html">getWallClockTime</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/seekTo.html">seekTo</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getVideoDuration.html">getVideoDuration</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getError.html">getError</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getVideoElement.html">getVideoElement</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/dispose.html">dispose</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/reload.html">reload</a></li></ul></li>
+<li class="page-list-item"><a href="../api/Player_States.html">Player States</a></li>
+<li class="page-list-item"><a href="../api/Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../api/Player_Errors.html">Player Errors</a></li>
+<li><div class="page-list-item page-list-group">Track Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Track_Selection/getAudioTrack.html">getAudioTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getTextTrack.html">getTextTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getVideoTrack.html">getVideoTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/setAudioTrack.html">setAudioTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/setTextTrack.html">setTextTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/setVideoTrack.html">setVideoTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/disableTextTrack.html">disableTextTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/setPreferredAudioTracks.html">setPreferredAudioTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/setPreferredTextTracks.html">setPreferredTextTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/setPreferredVideoTracks.html">setPreferredVideoTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getPreferredAudioTracks.html">getPreferredAudioTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getPreferredTextTracks.html">getPreferredTextTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getPreferredVideoTracks.html">getPreferredVideoTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Bitrate Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Bitrate_Selection/getVideoBitrate.html">getVideoBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getAudioBitrate.html">getAudioBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getAvailableVideoBitrates.html">getAvailableVideoBitrates</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getAvailableAudioBitrates.html">getAvailableAudioBitrates</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/setVideoBitrate.html">setVideoBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/setAudioBitrate.html">setAudioBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getManualVideoBitrate.html">getManualVideoBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getManualAudioBitrate.html">getManualAudioBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/setMinVideoBitrate.html">setMinVideoBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/setMinAudioBitrate.html">setMinAudioBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/setMaxVideoBitrate.html">setMaxVideoBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/setMaxAudioBitrate.html">setMaxAudioBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getMinVideoBitrate.html">getMinVideoBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getMinAudioBitrate.html">getMinAudioBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getMaxVideoBitrate.html">getMaxVideoBitrate</a></li>
+<li class="page-list-item"><a href="../api/Bitrate_Selection/getMaxAudioBitrate.html">getMaxAudioBitrate</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Speed Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li>
+<li class="page-list-item"><a href="../api/Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li>
+<li class="page-list-item"><a href="../api/Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Volume Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Volume_Control/setVolume.html">setVolume</a></li>
+<li class="page-list-item"><a href="../api/Volume_Control/getVolume.html">getVolume</a></li>
+<li class="page-list-item"><a href="../api/Volume_Control/mute.html">mute</a></li>
+<li class="page-list-item"><a href="../api/Volume_Control/isMute.html">isMute</a></li>
+<li class="page-list-item"><a href="../api/Volume_Control/unMute.html">unMute</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Buffer_Information/getVideoBufferGap.html">getVideoBufferGap</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Content Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Content_Information/getUrl.html">getUrl</a></li>
+<li class="page-list-item"><a href="../api/Content_Information/updateContentUrls.html">updateContentUrls</a></li>
+<li class="page-list-item"><a href="../api/Content_Information/isLive.html">isLive</a></li>
+<li class="page-list-item"><a href="../api/Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li>
+<li class="page-list-item"><a href="../api/Content_Information/createDebugElement.html">createDebugElement</a></li></ul></li>
+<li class="page-list-item"><a href="../api/Static_Properties.html">RxPlayer Static Properties</a></li>
+<li class="page-list-item"><a href="../api/Typescript_Types.html">Typescript Types</a></li>
+<li><div class="page-list-item page-list-group">Tools</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Tools/TextTrackRenderer.html">TextTrackRenderer</a></li>
+<li class="page-list-item"><a href="../api/Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li>
+<li class="page-list-item"><a href="../api/Tools/StringUtils.html">StringUtils</a></li>
+<li class="page-list-item"><a href="../api/Tools/parseBifThumbnails.html">parseBifThumbnails</a></li>
+<li class="page-list-item"><a href="../api/Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li>
+<li class="page-list-item"><a href="../api/Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Miscellaneous</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Miscellaneous/plugins.html">Plugins</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Low_Latency.html">Low Latency</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/hdr.html">HDR</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Debug_Element.html">Debug Element</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Local_Contents.html">Local Contents</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Text_Tracks.html">Text Tracks</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/images.html">Images</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Manifest_Object.html">Manifest Object</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Deprecated_APIs.html">Deprecated APIs</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Initial_Position.html">Initial Position</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Deprecated Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Deprecated/getManifest.html">getManifest</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/getCurrentAdaptations.html">getCurrentAdaptations</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/getCurrentRepresentations.html">getCurrentRepresentations</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/setFullscreen.html">setFullscreen</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/isFullscreen.html">isFullscreen</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/exitFullscreen.html">exitFullscreen</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/getCurrentKeySystem.html">getCurrentKeySystem</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/getImageTrackData.html">getImageTrackData</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/getNativeTextTrack.html">getNativeTextTrack</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/getVideoLoadedTime.html">getVideoLoadedTime</a></li>
+<li class="page-list-item"><a href="../api/Deprecated/getVideoPlayedTime.html">getVideoPlayedTime</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">Reference</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../reference/API_Reference.html">API Reference</a></li></ul></li>
+<li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
+
+<li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
+</ul></div><script type="text/javascript" src="../scripts/lunr.js" charset="utf-8"></script><script type="text/javascript" src="../scripts/script.js" charset="utf-8"></script></body></html>

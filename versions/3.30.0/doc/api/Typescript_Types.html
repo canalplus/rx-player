@@ -1,0 +1,569 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../styles/style.css"/><link rel="stylesheet" href="../styles/code.css"/><title>Typescript Types - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../static/img/logo.png" /></a><a class="navbar-item hideable"href="../Getting_Started/Welcome.html">Getting Started</a>
+<a class="navbar-item navbar-active hideable"href="./Overview.html">API</a>
+<a class="navbar-item hideable"href="../reference/API_Reference.html">Reference</a>
+<a class="navbar-item hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
+<span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
+<a aria-label="Link to repository" class="navbar-item first-right hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 3.30.0</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="./Overview.html">Overview</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Creating_a_Player.html">Creating a Player</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Loading_a_Content.html">Loading a Content</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Decryption_Options.html">Decryption Options</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Basic Methods</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getPlayerState.html">getPlayerState</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/addEventListener.html">addEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/removeEventListener.html">removeEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/play.html">play</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/pause.html">pause</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/stop.html">stop</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getPosition.html">getPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getWallClockTime.html">getWallClockTime</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/seekTo.html">seekTo</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getVideoDuration.html">getVideoDuration</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getError.html">getError</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getVideoElement.html">getVideoElement</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/dispose.html">dispose</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/reload.html">reload</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="./Player_States.html">Player States</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Player_Events.html">Player Events</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Player_Errors.html">Player Errors</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Track Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getAudioTrack.html">getAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getTextTrack.html">getTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getVideoTrack.html">getVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setAudioTrack.html">setAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setTextTrack.html">setTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setVideoTrack.html">setVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/disableTextTrack.html">disableTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setPreferredAudioTracks.html">setPreferredAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setPreferredTextTracks.html">setPreferredTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setPreferredVideoTracks.html">setPreferredVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getPreferredAudioTracks.html">getPreferredAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getPreferredTextTracks.html">getPreferredTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getPreferredVideoTracks.html">getPreferredVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Bitrate Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getVideoBitrate.html">getVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getAudioBitrate.html">getAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getAvailableVideoBitrates.html">getAvailableVideoBitrates</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getAvailableAudioBitrates.html">getAvailableAudioBitrates</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/setVideoBitrate.html">setVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/setAudioBitrate.html">setAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getManualVideoBitrate.html">getManualVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getManualAudioBitrate.html">getManualAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/setMinVideoBitrate.html">setMinVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/setMinAudioBitrate.html">setMinAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/setMaxVideoBitrate.html">setMaxVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/setMaxAudioBitrate.html">setMaxAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getMinVideoBitrate.html">getMinVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getMinAudioBitrate.html">getMinAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getMaxVideoBitrate.html">getMaxVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getMaxAudioBitrate.html">getMaxAudioBitrate</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Speed Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Volume Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/setVolume.html">setVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/getVolume.html">getVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/mute.html">mute</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/isMute.html">isMute</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/unMute.html">unMute</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Information/getVideoBufferGap.html">getVideoBufferGap</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Content Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/getUrl.html">getUrl</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/updateContentUrls.html">updateContentUrls</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/isLive.html">isLive</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/createDebugElement.html">createDebugElement</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="./Static_Properties.html">RxPlayer Static Properties</a></li><li class="sidebar-item"><a class="sidebar-link active" href="./Typescript_Types.html">Typescript Types</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Tools</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Tools/TextTrackRenderer.html">TextTrackRenderer</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/StringUtils.html">StringUtils</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/parseBifThumbnails.html">parseBifThumbnails</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Miscellaneous</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/plugins.html">Plugins</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Low_Latency.html">Low Latency</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/hdr.html">HDR</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Debug_Element.html">Debug Element</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Local_Contents.html">Local Contents</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Text_Tracks.html">Text Tracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/images.html">Images</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Manifest_Object.html">Manifest Object</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Deprecated_APIs.html">Deprecated APIs</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Initial_Position.html">Initial Position</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Deprecated Methods</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/getManifest.html">getManifest</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/getCurrentAdaptations.html">getCurrentAdaptations</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/getCurrentRepresentations.html">getCurrentRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/setFullscreen.html">setFullscreen</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/isFullscreen.html">isFullscreen</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/exitFullscreen.html">exitFullscreen</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/getCurrentKeySystem.html">getCurrentKeySystem</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/getImageTrackData.html">getImageTrackData</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/getNativeTextTrack.html">getNativeTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/getVideoLoadedTime.html">getVideoLoadedTime</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/getVideoPlayedTime.html">getVideoPlayedTime</a></li></ul></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="exported_typescript_types"></a></p>
+<h1>Exported TypeScript Types</h1>
+<p>The RxPlayer being written in TypeScript, it has type definitions attached to
+its source code that can be helpful if you develop an application in TypeScript
+yourself.</p>
+<p><a name="%22using%22_types"></a></p>
+<h2>“Using” types</h2>
+<p>Because we follow the usual way of adding definition files (as <code>d.ts</code> file
+alongside our sources), those typings should be auto-exported when importing our
+library in your favorite editor (as long as it is linked to a TSServer of some
+sort).</p>
+<p><a name="importing_specific_types"></a></p>
+<h2>Importing specific types</h2>
+<p>As some APIs can have pretty complicated arguments, you might also want to
+import some of our internal type definitions into your code.</p>
+<p>To simplify this process, we export some type definitions which can be imported
+through the following line in your file:</p>
+<pre><code class="language-ts"><span class="hljs-keyword">import</span> { <span class="hljs-variable constant_">SOME_TYPE</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>
+</code></pre>
+<p>Here are the list of exported types, per category.</p>
+<p><a name="rxplayer_constructor"></a></p>
+<h3>RxPlayer Constructor</h3>
+<p>The type <code>IConstructorOptions</code> corresponds to the interface that the
+RxPlayer constructor accepts as an argument.</p>
+<p>Example:</p>
+<pre><code class="language-ts"><span class="hljs-keyword">import</span> <span class="hljs-title class_">RxPlayer</span> <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player"</span>;
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">IConstructorOptions</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">generateConstructorOptions</span>(<span class="hljs-params"></span>) : <span class="hljs-title class_">IConstructorOptions</span> {
+  <span class="hljs-keyword">const</span> videoElement = <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">querySelector</span>(<span class="hljs-string">"video"</span>);
+  <span class="hljs-keyword">return</span> {
+    <span class="hljs-attr">stopAtEnd</span>: <span class="hljs-literal">false</span>,
+    videoElement,
+  };
+}
+
+<span class="hljs-keyword">const</span> options = <span class="hljs-title function_">generateConstructorOptions</span>();
+<span class="hljs-keyword">const</span> player = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayer</span>(options);
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> player;
+</code></pre>
+<p>Two constructor options have also their type definition exported, those are:</p>
+<ul>
+<li>
+<p><code>IAudioTrackPreference</code>: which is the type of a single element in the
+<code>preferredAudioTracks</code> array.</p>
+</li>
+<li>
+<p><code>ITextTrackPreference</code>: which is the type of a single element in the
+<code>preferredTextTracks</code> array.</p>
+</li>
+<li>
+<p><code>IVideoTrackPreference</code>: which is the type of a single element in the
+<code>preferredVideoTracks</code> array.</p>
+</li>
+</ul>
+<p><a name="loadvideo"></a></p>
+<h3>loadVideo</h3>
+<p>The <code>ILoadVideoOptions</code> type corresponds to the argument to give to the
+RxPlayer’s method <code>loadVideo</code>.</p>
+<p>Example:</p>
+<pre><code class="language-ts"><span class="hljs-comment">// the type wanted</span>
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">ILoadVideoOptions</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
+
+<span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
+
+<span class="hljs-comment">// hypothetical file exporting a configuration object</span>
+<span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">"./config"</span>; <span class="hljs-comment">// define a global config</span>
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">generateLoadVideoOptions</span>(<span class="hljs-params">url : <span class="hljs-built_in">string</span></span>) : <span class="hljs-title class_">ILoadVideoOptions</span> {
+  <span class="hljs-keyword">return</span> {
+    url,
+    <span class="hljs-attr">transport</span>: <span class="hljs-string">"dash"</span>,
+    <span class="hljs-attr">autoPlay</span>: <span class="hljs-literal">true</span>,
+  };
+}
+
+<span class="hljs-keyword">const</span> loadVideoOpts = <span class="hljs-title function_">generateLoadVideoOptions</span>(config.<span class="hljs-property">DEFAULT_URL</span>);
+rxPlayer.<span class="hljs-title function_">loadVideo</span>(loadVideoOpts);
+</code></pre>
+<p>Speaking of <code>loadVideo</code>, some subparts of <code>ILoadVideoOptions</code> are also
+exported:</p>
+<ul>
+<li>
+<p><code>IKeySystemOption</code>: type for an element of the <code>keySystems</code> array,
+which is an optional property given to <code>loadVideo</code>.</p>
+<p>To clarify, the <code>keySystems</code> property in a <code>loadVideo</code> call is an
+optional array of one or multiple <code>IKeySystemOption</code>.</p>
+</li>
+<li>
+<p><code>IPersistentSessionStorage</code>: type of the <code>licenseStorage</code> property of the
+<code>keySystems</code> option given to <code>loadVideo</code>.</p>
+</li>
+<li>
+<p><code>IPersistentSessionInfo</code>: type used by an <code>IPersistentSessionStorage</code>.</p>
+</li>
+<li>
+<p><code>ITransportOptions</code>: type for the <code>transportOptions</code> property
+optionally given to <code>loadVideo</code>.</p>
+</li>
+<li>
+<p><code>IManifestLoader</code>: type for the <code>manifestLoader</code> function optionally set
+on the <code>transportOptions</code> option of <code>loadVideo</code>.</p>
+</li>
+<li>
+<p><code>IRepresentationFilter</code>: type for the <code>representationFilter</code> function
+optionally set on the <code>transportOptions</code> option of <code>loadVideo</code>.</p>
+</li>
+<li>
+<p><code>IRepresentationInfos</code>: type for the second argument of the
+<code>representationFilter</code> function (defined by <code>IRepresentationFilter</code>.)</p>
+</li>
+<li>
+<p><code>IServerSyncInfos</code>: type for the <code>serverSyncInfos</code> property
+optionally set on the <code>transportOptions</code> option of <code>loadVideo</code>.</p>
+</li>
+<li>
+<p><code>IInitialManifest</code>: type for the <code>initialManifest</code> property
+optionally set on the <code>transportOptions</code> option of <code>loadVideo</code>.</p>
+</li>
+<li>
+<p><code>ISegmentLoader</code>: type for the <code>segmentLoader</code> function optionally set on
+the <code>transportOptions</code> option of <code>loadVideo</code>.</p>
+</li>
+<li>
+<p><code>ISupplementaryTextTrackOption</code>: type for an element of the
+<code>supplementaryTextTracks</code> array, which is an optional property given to
+<code>loadVideo</code>.</p>
+</li>
+<li>
+<p><code>ISupplementaryImageTrackOption</code>: type for an element of the
+<code>supplementaryImageTracks</code> array, which is an optional property given to
+<code>loadVideo</code>.</p>
+</li>
+<li>
+<p><code>IDefaultAudioTrackOption</code>: type for the <code>defaultAudioTrack</code> property
+optionally given to <code>loadVideo</code>.</p>
+</li>
+<li>
+<p><code>IDefaultTextTrackOption</code>: type for the <code>defaultAudioTrack</code> property
+optionally given to <code>loadVideo</code>.</p>
+</li>
+<li>
+<p><code>INetworkConfigOption</code>: type for the <code>networkConfig</code> property
+optionally given to <code>loadVideo</code>.</p>
+</li>
+<li>
+<p><code>IStartAtOption</code>: type for the <code>startAt</code> property optionally given to
+<code>loadVideo</code>.</p>
+</li>
+<li>
+<p><code>IAudioTrackSwitchingMode</code>: The various values accepted on the
+<code>audioTrackSwitchingMode</code> property optionally given to <code>loadVideo</code>.</p>
+</li>
+</ul>
+<p><a name="manifest_structure"></a></p>
+<h3>Manifest structure</h3>
+<p>Several <code>RxPlayer</code> methods rely on a <code>Manifest</code> structure and one of its
+“children”: the <code>Period</code>, the <code>Adaptation</code>, the <code>Representation</code> or the
+<code>Segment</code>.</p>
+<p>All of those can be imported from <code>"rx-player/types"</code> respectively as
+<code>IManifest</code>, <code>IPeriod</code>, <code>IAdaptation</code>, <code>IRepresentation</code> and <code>ISegment</code></p>
+<p><a name="getplayerstate_method_/_playerstatechange_event"></a></p>
+<h3>getPlayerState method / playerStateChange event</h3>
+<p>The return type of the <code>getPlayerState</code> state method and of the
+<code>playerStateChange</code> events is a string describing the <a href="./Player_States.html">current state of the
+RxPlayer</a>.</p>
+<p>All values possible are defined through the <code>IPlayerState</code> type:</p>
+<pre><code class="language-ts"><span class="hljs-comment">// the type(s) wanted</span>
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">IPlayerState</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
+
+<span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">getPlayerState</span>(<span class="hljs-params"></span>) : <span class="hljs-title class_">IPlayerState</span> {
+  <span class="hljs-keyword">return</span> rxPlayer.<span class="hljs-title function_">getPlayerState</span>();
+}
+</code></pre>
+<p><a name="getavailableaudiotracks_method_/_availableaudiotrackschange_event"></a></p>
+<h3>getAvailableAudioTracks method / availableAudioTracksChange event</h3>
+<p>The return type of the <code>getAvailableAudioTracks</code> method is an array of objects.
+Each of this objects corresponds to the <code>IAvailableAudioTrack</code> interface.</p>
+<p>Example:</p>
+<pre><code class="language-ts"><span class="hljs-comment">// the type(s) wanted</span>
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">IAvailableAudioTrack</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
+
+<span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">getAvailableAudioTracks</span>(<span class="hljs-params"></span>) : <span class="hljs-title class_">IAvailableAudioTrack</span>[] {
+  <span class="hljs-keyword">return</span> rxPlayer.<span class="hljs-title function_">getAvailableAudioTracks</span>();
+}
+</code></pre>
+<p>The property of each track’s <code>representations</code> property corresponds to the
+<code>IAudioRepresentation</code> type.</p>
+<p><a name="getavailabletexttracks_method_/_availabletexttrackschange_event"></a></p>
+<h3>getAvailableTextTracks method / availabletextTracksChange event</h3>
+<p>The return type of the <code>getAvailableTextTracks</code> method is an array of objects.
+Each of this objects corresponds to the <code>IAvailableTextTrack</code> interface.</p>
+<p>Example:</p>
+<pre><code class="language-ts"><span class="hljs-comment">// the type(s) wanted</span>
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">IAvailableTextTrack</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
+
+<span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
+
+<span class="hljs-comment">// hypothetical file exporting a configuration object</span>
+<span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">"./config"</span>; <span class="hljs-comment">// define a global config</span>
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">getAvailableTextTracks</span>(<span class="hljs-params"></span>) : <span class="hljs-title class_">IAvailableTextTrack</span>[] {
+  <span class="hljs-keyword">return</span> rxPlayer.<span class="hljs-title function_">getAvailableTextTracks</span>();
+}
+</code></pre>
+<p><a name="getavailablevideotracks_method_/_availablevideotrackschange_event"></a></p>
+<h3>getAvailableVideoTracks method / availableVideoTracksChange event</h3>
+<p>The return type of the <code>getAvailableVideoTracks</code> method is an array of objects.
+Each of this objects corresponds to the <code>IAvailableVideoTrack</code> interface.</p>
+<p>Example:</p>
+<pre><code class="language-ts"><span class="hljs-comment">// the type(s) wanted</span>
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">IAvailableVideoTrack</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
+
+<span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
+
+<span class="hljs-comment">// hypothetical file exporting a configuration object</span>
+<span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">"./config"</span>; <span class="hljs-comment">// define a global config</span>
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">getAvailableVideoTracks</span>(<span class="hljs-params"></span>) : <span class="hljs-title class_">IAvailableVideoTrack</span>[] {
+  <span class="hljs-keyword">return</span> rxPlayer.<span class="hljs-title function_">getAvailableVideoTracks</span>();
+}
+</code></pre>
+<p>The property of each track’s <code>representations</code> property corresponds to the
+<code>IVideoRepresentation</code> type.</p>
+<p><a name="getaudiotrack_method_/audiotrackchange_event"></a></p>
+<h3>getAudioTrack method /audioTrackChange event</h3>
+<p>The <code>IAudioTrack</code> corresponds to both the type returned by the <code>getAudioTrack</code>
+method and emitted as the payload of the <code>audioTrackChange</code> event.</p>
+<p>Example:</p>
+<pre><code class="language-ts"><span class="hljs-comment">// the type(s) wanted</span>
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">IAudioTrack</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
+
+<span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
+
+<span class="hljs-comment">// hypothetical file exporting a configuration object</span>
+<span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">"./config"</span>; <span class="hljs-comment">// define a global config</span>
+
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"audioTrackChange"</span>, <span class="hljs-function">(<span class="hljs-params">track : IAudioTrack</span>) =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"current track:"</span>, track);
+});
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">getCurrentlyDownloadedAudioTrack</span>(<span class="hljs-params"></span>) : <span class="hljs-title class_">IAudioTrack</span> {
+  <span class="hljs-keyword">return</span> rxPlayer.<span class="hljs-title function_">getAudioTrack</span>();
+}
+</code></pre>
+<p>The <code>representations</code> property also has an exported type: <code>IAudioRepresentation</code>.</p>
+<p><a name="gettexttrack_method_/_texttrackchange_event"></a></p>
+<h3>getTextTrack method / textTrackChange event</h3>
+<p>The <code>ITextTrack</code> corresponds to both the type returned by the <code>getTextTrack</code>
+method and emitted as the payload of the <code>textTrackChange</code> event.</p>
+<p>Example:</p>
+<pre><code class="language-ts"><span class="hljs-comment">// the type(s) wanted</span>
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">ITextTrack</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
+
+<span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
+
+<span class="hljs-comment">// hypothetical file exporting a configuration object</span>
+<span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">"./config"</span>; <span class="hljs-comment">// define a global config</span>
+
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"textTrackChange"</span>, <span class="hljs-function">(<span class="hljs-params">track : ITextTrack</span>) =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"current track:"</span>, track);
+});
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">getCurrentlyDownloadedTextTrack</span>(<span class="hljs-params"></span>) : <span class="hljs-title class_">ITextTrack</span> {
+  <span class="hljs-keyword">return</span> rxPlayer.<span class="hljs-title function_">getTextTrack</span>();
+}
+</code></pre>
+<p><a name="getvideotrack_method_/_videotrackchange_event"></a></p>
+<h3>getVideoTrack method / videoTrackChange event</h3>
+<p>The <code>IVideoTrack</code> corresponds to both the type returned by the <code>getVideoTrack</code>
+method and emitted as the payload of the <code>videoTrackChange</code> event.</p>
+<p>Example:</p>
+<pre><code class="language-ts"><span class="hljs-comment">// the type(s) wanted</span>
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">IVideoTrack</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
+
+<span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
+
+<span class="hljs-comment">// hypothetical file exporting a configuration object</span>
+<span class="hljs-keyword">import</span> config <span class="hljs-keyword">from</span> <span class="hljs-string">"./config"</span>; <span class="hljs-comment">// define a global config</span>
+
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"videoTrackChange"</span>, <span class="hljs-function">(<span class="hljs-params">track : IVideoTrack</span>) =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"current track:"</span>, track);
+});
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">getCurrentlyDownloadedVideoTrack</span>(<span class="hljs-params"></span>) : <span class="hljs-title class_">IVideoTrack</span> {
+  <span class="hljs-keyword">return</span> rxPlayer.<span class="hljs-title function_">getVideoTrack</span>();
+}
+</code></pre>
+<p>The <code>representations</code> property also has an exported type: <code>IAudioRepresentation</code>.</p>
+<p><a name="positionupdate_event"></a></p>
+<h3>positionUpdate event</h3>
+<p>The type <code>IPositionUpdate</code> corresponds to the payload of a
+<code>positionUpdate</code> event.</p>
+<p>Example:</p>
+<pre><code class="language-ts"><span class="hljs-comment">// the type(s) wanted</span>
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">IPositionUpdate</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
+
+<span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
+
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"positionUpdate"</span>, (evt : <span class="hljs-title class_">IPositionUpdate</span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(evt);
+});
+</code></pre>
+<p><a name="streamevent_/_streameventskip_events"></a></p>
+<h3>streamEvent / streamEventSkip events</h3>
+<p>The type <code>IStreamEvent</code> corresponds to the payload of either a <code>streamEvent</code> or
+a <code>streamEventSkip</code> event.</p>
+<p>The type <code>IStreamEventData</code> is the type of its <code>data</code> property.</p>
+<p>Example:</p>
+<pre><code class="language-ts"><span class="hljs-comment">// the type(s) wanted</span>
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">IStreamEvent</span>, <span class="hljs-title class_">IStreamEventData</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
+
+<span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">processEventData</span>(<span class="hljs-params">eventData : IStreamEventData</span>) {
+  <span class="hljs-keyword">if</span> (eventData.<span class="hljs-property">type</span> === <span class="hljs-string">"dash-event-stream"</span>) {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"DASH EventStream's event received!"</span>);
+  }
+}
+
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"streamEvent"</span>, (evt : <span class="hljs-title class_">IStreamEvent</span>) {
+  <span class="hljs-title function_">processEventData</span>(evt.<span class="hljs-property">data</span>);
+});
+</code></pre>
+<p><a name="bitrateestimationchange_event"></a></p>
+<h3>bitrateEstimationChange event</h3>
+<p>The type <code>IBitrateEstimate</code> corresponds to the payload of a
+<code>bitrateEstimationChange</code> event.</p>
+<p>Example:</p>
+<pre><code class="language-ts"><span class="hljs-comment">// the type(s) wanted</span>
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">IBitrateEstimate</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
+
+<span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
+
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"bitrateEstimationChange"</span>, (evt : <span class="hljs-title class_">IBitrateEstimate</span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(evt);
+});
+</code></pre>
+<p><a name="decipherabilityupdate_event"></a></p>
+<h3>decipherabilityUpdate event</h3>
+<p>The type <code>IDecipherabilityUpdateContent</code> corresponds to the payload of a
+<code>decipherabilityUpdate</code> event.</p>
+<p>Example:</p>
+<pre><code class="language-ts"><span class="hljs-comment">// the type(s) wanted</span>
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">IDecipherabilityUpdateContent</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
+
+<span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
+
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"decipherabilityUpdate"</span>, (evt : <span class="hljs-title class_">IDecipherabilityUpdateContent</span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(evt);
+});
+</code></pre>
+<p><a name="rxplayer_errors_and_warnings"></a></p>
+<h3>RxPlayer errors and warnings</h3>
+<p>RxPlayer errors and warnings may for now be either a plain <code>Error</code> instance or
+a special RxPlayer-defined error (which extends the <code>Error</code> Object).</p>
+<p>All RxPlayer-defined error are compatible with the exported <code>IPlayerError</code> type.</p>
+<p>Which means that you could write the following:</p>
+<pre><code class="language-ts"><span class="hljs-comment">// the type wanted</span>
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">IPlayerError</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
+
+<span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
+
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"error"</span>, <span class="hljs-function">(<span class="hljs-params">err : <span class="hljs-built_in">Error</span> | IPlayerError</span>) =&gt;</span> {
+  <span class="hljs-comment">// ...</span>
+});
+
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"warning"</span>, <span class="hljs-function">(<span class="hljs-params">err : <span class="hljs-built_in">Error</span> | IPlayerError</span>) =&gt;</span> {
+  <span class="hljs-comment">// ...</span>
+});
+
+</code></pre>
+<p><a name="encryptedmediaerror's_%60keystatuses%60_property"></a></p>
+<h3>EncryptedMediaError’s <code>keyStatuses</code> property</h3>
+<p>Some <code>EncryptedMediaError</code> error thrown by the RxPlayer, may have a
+<code>keyStatuses</code> property set.
+In that case, the type is described by the
+<code>IEncryptedMediaErrorKeyStatusObject</code> type:</p>
+<pre><code class="language-ts"><span class="hljs-comment">// the type wanted</span>
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">IEncryptedMediaErrorKeyStatusObject</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/types"</span>;
+
+<span class="hljs-comment">// hypothetical file exporting an RxPlayer instance</span>
+<span class="hljs-keyword">import</span> rxPlayer <span class="hljs-keyword">from</span> <span class="hljs-string">"./player"</span>;
+
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"error"</span>, <span class="hljs-function">(<span class="hljs-params">err : <span class="hljs-built_in">Error</span> | IPlayerError</span>) =&gt;</span> {
+  <span class="hljs-keyword">if</span> (err.<span class="hljs-property">type</span> === <span class="hljs-string">"ENCRYPTED_MEDIA_ERROR"</span> &amp;&amp; err.<span class="hljs-property">keyStatuses</span> !== <span class="hljs-literal">undefined</span>) {
+    <span class="hljs-title function_">logKeyStatuses</span>(err.<span class="hljs-property">keyStatuses</span>);
+  }
+});
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">logKeyStatuses</span>(<span class="hljs-params">keyStatuses: IEncryptedMediaErrorKeyStatusObject</span>): <span class="hljs-built_in">void</span> {
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(keyStatuses);
+}
+
+</code></pre>
+</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="./Static_Properties.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">RxPlayer Static Properties</div></a></div><div class="next-or-previous-page next-page"><a class="next-or-previous-page-link" href="./Tools/TextTrackRenderer.html"><div class="next-or-previous-page-link-label">Next</div><div class="next-or-previous-page-link-name">TextTrackRenderer</div></a></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#exported_typescript_types">Exported TypeScript Types</a></p>
+<ul>
+<li><a href="#%22using%22_types">“Using” types</a></li>
+<li><a href="#importing_specific_types">Importing specific types</a>
+<ul>
+<li><a href="#rxplayer_constructor">RxPlayer Constructor</a></li>
+<li><a href="#loadvideo">loadVideo</a></li>
+<li><a href="#manifest_structure">Manifest structure</a></li>
+<li><a href="#getplayerstate_method_/_playerstatechange_event">getPlayerState method / playerStateChange event</a></li>
+<li><a href="#getavailableaudiotracks_method_/_availableaudiotrackschange_event">getAvailableAudioTracks method / availableAudioTracksChange event</a></li>
+<li><a href="#getavailabletexttracks_method_/_availabletexttrackschange_event">getAvailableTextTracks method / availabletextTracksChange event</a></li>
+<li><a href="#getavailablevideotracks_method_/_availablevideotrackschange_event">getAvailableVideoTracks method / availableVideoTracksChange event</a></li>
+<li><a href="#getaudiotrack_method_/audiotrackchange_event">getAudioTrack method /audioTrackChange event</a></li>
+<li><a href="#gettexttrack_method_/_texttrackchange_event">getTextTrack method / textTrackChange event</a></li>
+<li><a href="#getvideotrack_method_/_videotrackchange_event">getVideoTrack method / videoTrackChange event</a></li>
+<li><a href="#positionupdate_event">positionUpdate event</a></li>
+<li><a href="#streamevent_/_streameventskip_events">streamEvent / streamEventSkip events</a></li>
+<li><a href="#bitrateestimationchange_event">bitrateEstimationChange event</a></li>
+<li><a href="#decipherabilityupdate_event">decipherabilityUpdate event</a></li>
+<li><a href="#rxplayer_errors_and_warnings">RxPlayer errors and warnings</a></li>
+<li><a href="#encryptedmediaerror's_%60keystatuses%60_property">EncryptedMediaError’s <code>keyStatuses</code> property</a></li>
+</ul>
+</li>
+</ul>
+</div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../Getting_Started/Welcome.html">Welcome</a></li>
+<li><div class="page-list-item page-list-group">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Getting_Started/Tutorials/Quick_Start.html">Quick Start</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Tutorials/Content_with_DRM.html">Contents with DRM</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Tutorials/Selecting_a_Track.html">Selecting a Track</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li>
+<li class="page-list-item"><a href="../Getting_Started/Minimal_Player.html">Importing a minimal RxPlayer</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Glossary.html">Glossary</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Troubleshooting.html">Troubleshooting</a></li></ul></li>
+<li class="page-list-item"><div class="page-list-group opened active">API</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="./Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="./Creating_a_Player.html">Creating a Player</a></li>
+<li class="page-list-item"><a href="./Loading_a_Content.html">Loading a Content</a></li>
+<li class="page-list-item"><a href="./Decryption_Options.html">Decryption Options</a></li>
+<li><div class="page-list-item page-list-group">Basic Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Basic_Methods/getPlayerState.html">getPlayerState</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/addEventListener.html">addEventListener</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/removeEventListener.html">removeEventListener</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/play.html">play</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/pause.html">pause</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/stop.html">stop</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getPosition.html">getPosition</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getWallClockTime.html">getWallClockTime</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/seekTo.html">seekTo</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getVideoDuration.html">getVideoDuration</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getError.html">getError</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getVideoElement.html">getVideoElement</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/dispose.html">dispose</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/reload.html">reload</a></li></ul></li>
+<li class="page-list-item"><a href="./Player_States.html">Player States</a></li>
+<li class="page-list-item"><a href="./Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="./Player_Errors.html">Player Errors</a></li>
+<li><div class="page-list-item page-list-group">Track Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Track_Selection/getAudioTrack.html">getAudioTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getTextTrack.html">getTextTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getVideoTrack.html">getVideoTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setAudioTrack.html">setAudioTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setTextTrack.html">setTextTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setVideoTrack.html">setVideoTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/disableTextTrack.html">disableTextTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setPreferredAudioTracks.html">setPreferredAudioTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setPreferredTextTracks.html">setPreferredTextTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setPreferredVideoTracks.html">setPreferredVideoTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getPreferredAudioTracks.html">getPreferredAudioTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getPreferredTextTracks.html">getPreferredTextTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getPreferredVideoTracks.html">getPreferredVideoTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Bitrate Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Bitrate_Selection/getVideoBitrate.html">getVideoBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getAudioBitrate.html">getAudioBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getAvailableVideoBitrates.html">getAvailableVideoBitrates</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getAvailableAudioBitrates.html">getAvailableAudioBitrates</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/setVideoBitrate.html">setVideoBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/setAudioBitrate.html">setAudioBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getManualVideoBitrate.html">getManualVideoBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getManualAudioBitrate.html">getManualAudioBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/setMinVideoBitrate.html">setMinVideoBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/setMinAudioBitrate.html">setMinAudioBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/setMaxVideoBitrate.html">setMaxVideoBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/setMaxAudioBitrate.html">setMaxAudioBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getMinVideoBitrate.html">getMinVideoBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getMinAudioBitrate.html">getMinAudioBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getMaxVideoBitrate.html">getMaxVideoBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getMaxAudioBitrate.html">getMaxAudioBitrate</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Speed Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li>
+<li class="page-list-item"><a href="./Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li>
+<li class="page-list-item"><a href="./Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Volume Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Volume_Control/setVolume.html">setVolume</a></li>
+<li class="page-list-item"><a href="./Volume_Control/getVolume.html">getVolume</a></li>
+<li class="page-list-item"><a href="./Volume_Control/mute.html">mute</a></li>
+<li class="page-list-item"><a href="./Volume_Control/isMute.html">isMute</a></li>
+<li class="page-list-item"><a href="./Volume_Control/unMute.html">unMute</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Buffer_Information/getVideoBufferGap.html">getVideoBufferGap</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Content Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Content_Information/getUrl.html">getUrl</a></li>
+<li class="page-list-item"><a href="./Content_Information/updateContentUrls.html">updateContentUrls</a></li>
+<li class="page-list-item"><a href="./Content_Information/isLive.html">isLive</a></li>
+<li class="page-list-item"><a href="./Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li>
+<li class="page-list-item"><a href="./Content_Information/createDebugElement.html">createDebugElement</a></li></ul></li>
+<li class="page-list-item"><a href="./Static_Properties.html">RxPlayer Static Properties</a></li>
+<li class="page-list-item active"><a href="./Typescript_Types.html">Typescript Types</a></li>
+<li><div class="page-list-item page-list-group">Tools</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Tools/TextTrackRenderer.html">TextTrackRenderer</a></li>
+<li class="page-list-item"><a href="./Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li>
+<li class="page-list-item"><a href="./Tools/StringUtils.html">StringUtils</a></li>
+<li class="page-list-item"><a href="./Tools/parseBifThumbnails.html">parseBifThumbnails</a></li>
+<li class="page-list-item"><a href="./Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li>
+<li class="page-list-item"><a href="./Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Miscellaneous</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Miscellaneous/plugins.html">Plugins</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Low_Latency.html">Low Latency</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/hdr.html">HDR</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Debug_Element.html">Debug Element</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Local_Contents.html">Local Contents</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Text_Tracks.html">Text Tracks</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/images.html">Images</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Manifest_Object.html">Manifest Object</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Deprecated_APIs.html">Deprecated APIs</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Initial_Position.html">Initial Position</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Deprecated Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Deprecated/getManifest.html">getManifest</a></li>
+<li class="page-list-item"><a href="./Deprecated/getCurrentAdaptations.html">getCurrentAdaptations</a></li>
+<li class="page-list-item"><a href="./Deprecated/getCurrentRepresentations.html">getCurrentRepresentations</a></li>
+<li class="page-list-item"><a href="./Deprecated/setFullscreen.html">setFullscreen</a></li>
+<li class="page-list-item"><a href="./Deprecated/isFullscreen.html">isFullscreen</a></li>
+<li class="page-list-item"><a href="./Deprecated/exitFullscreen.html">exitFullscreen</a></li>
+<li class="page-list-item"><a href="./Deprecated/getCurrentKeySystem.html">getCurrentKeySystem</a></li>
+<li class="page-list-item"><a href="./Deprecated/getImageTrackData.html">getImageTrackData</a></li>
+<li class="page-list-item"><a href="./Deprecated/getNativeTextTrack.html">getNativeTextTrack</a></li>
+<li class="page-list-item"><a href="./Deprecated/getVideoLoadedTime.html">getVideoLoadedTime</a></li>
+<li class="page-list-item"><a href="./Deprecated/getVideoPlayedTime.html">getVideoPlayedTime</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">Reference</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../reference/API_Reference.html">API Reference</a></li></ul></li>
+<li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
+
+<li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
+</ul></div><script type="text/javascript" src="../scripts/lunr.js" charset="utf-8"></script><script type="text/javascript" src="../scripts/script.js" charset="utf-8"></script></body></html>

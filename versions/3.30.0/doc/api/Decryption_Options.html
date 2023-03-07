@@ -1,0 +1,653 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../styles/style.css"/><link rel="stylesheet" href="../styles/code.css"/><title>Decryption Options - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../static/img/logo.png" /></a><a class="navbar-item hideable"href="../Getting_Started/Welcome.html">Getting Started</a>
+<a class="navbar-item navbar-active hideable"href="./Overview.html">API</a>
+<a class="navbar-item hideable"href="../reference/API_Reference.html">Reference</a>
+<a class="navbar-item hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
+<span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
+<a aria-label="Link to repository" class="navbar-item first-right hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 3.30.0</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="./Overview.html">Overview</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Creating_a_Player.html">Creating a Player</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Loading_a_Content.html">Loading a Content</a></li><li class="sidebar-item"><a class="sidebar-link active" href="./Decryption_Options.html">Decryption Options</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Basic Methods</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getPlayerState.html">getPlayerState</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/addEventListener.html">addEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/removeEventListener.html">removeEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/play.html">play</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/pause.html">pause</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/stop.html">stop</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getPosition.html">getPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getWallClockTime.html">getWallClockTime</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/seekTo.html">seekTo</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getVideoDuration.html">getVideoDuration</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getError.html">getError</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getVideoElement.html">getVideoElement</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/dispose.html">dispose</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/reload.html">reload</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="./Player_States.html">Player States</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Player_Events.html">Player Events</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Player_Errors.html">Player Errors</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Track Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getAudioTrack.html">getAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getTextTrack.html">getTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getVideoTrack.html">getVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setAudioTrack.html">setAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setTextTrack.html">setTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setVideoTrack.html">setVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/disableTextTrack.html">disableTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setPreferredAudioTracks.html">setPreferredAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setPreferredTextTracks.html">setPreferredTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setPreferredVideoTracks.html">setPreferredVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getPreferredAudioTracks.html">getPreferredAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getPreferredTextTracks.html">getPreferredTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getPreferredVideoTracks.html">getPreferredVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Bitrate Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getVideoBitrate.html">getVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getAudioBitrate.html">getAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getAvailableVideoBitrates.html">getAvailableVideoBitrates</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getAvailableAudioBitrates.html">getAvailableAudioBitrates</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/setVideoBitrate.html">setVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/setAudioBitrate.html">setAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getManualVideoBitrate.html">getManualVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getManualAudioBitrate.html">getManualAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/setMinVideoBitrate.html">setMinVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/setMinAudioBitrate.html">setMinAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/setMaxVideoBitrate.html">setMaxVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/setMaxAudioBitrate.html">setMaxAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getMinVideoBitrate.html">getMinVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getMinAudioBitrate.html">getMinAudioBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getMaxVideoBitrate.html">getMaxVideoBitrate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection/getMaxAudioBitrate.html">getMaxAudioBitrate</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Speed Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Volume Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/setVolume.html">setVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/getVolume.html">getVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/mute.html">mute</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/isMute.html">isMute</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/unMute.html">unMute</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Information/getVideoBufferGap.html">getVideoBufferGap</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Content Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/getUrl.html">getUrl</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/updateContentUrls.html">updateContentUrls</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/isLive.html">isLive</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/createDebugElement.html">createDebugElement</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="./Static_Properties.html">RxPlayer Static Properties</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Typescript_Types.html">Typescript Types</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Tools</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Tools/TextTrackRenderer.html">TextTrackRenderer</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/StringUtils.html">StringUtils</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/parseBifThumbnails.html">parseBifThumbnails</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Miscellaneous</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/plugins.html">Plugins</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Low_Latency.html">Low Latency</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/hdr.html">HDR</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Debug_Element.html">Debug Element</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Local_Contents.html">Local Contents</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Text_Tracks.html">Text Tracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/images.html">Images</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Manifest_Object.html">Manifest Object</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Deprecated_APIs.html">Deprecated APIs</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Initial_Position.html">Initial Position</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Deprecated Methods</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/getManifest.html">getManifest</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/getCurrentAdaptations.html">getCurrentAdaptations</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/getCurrentRepresentations.html">getCurrentRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/setFullscreen.html">setFullscreen</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/isFullscreen.html">isFullscreen</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/exitFullscreen.html">exitFullscreen</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/getCurrentKeySystem.html">getCurrentKeySystem</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/getImageTrackData.html">getImageTrackData</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/getNativeTextTrack.html">getNativeTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/getVideoLoadedTime.html">getVideoLoadedTime</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Deprecated/getVideoPlayedTime.html">getVideoPlayedTime</a></li></ul></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="decryption_options"></a></p>
+<h1>Decryption Options</h1>
+<p><a name="overview"></a></p>
+<h2>Overview</h2>
+<p>The RxPlayer has a lot of decryption-related options that you can give when
+calling the <code>loadVideo</code> method, <a href="./Loading_a_Content.html">itself described in the previous documentation
+page</a>.</p>
+<p>This page will desribe most of them.</p>
+<p>In the case you find this documentation hard to grasp, we’ve written a <a href="../Getting_Started/Tutorials/Content_with_DRM.html">tutorial
+on DRM configuration here</a>.</p>
+<p><a name="loadvideo_%60keysystems%60_options"></a></p>
+<h2>loadVideo <code>keySystems</code> options</h2>
+<p><code>keySystems</code> is a <code>loadVideo</code> option allowing to communicate your
+decryption-related preferences.</p>
+<p>It takes the form of an array of objects, themselves potentially containing
+any of the properties described here.</p>
+<p>Each object in the <code>keySystems</code> array will describe decryption configuration,
+from the most preferred (the one you wish to be apply) to the least preferred
+(the fallback configurations).</p>
+<p>That way, the RxPlayer will first try to apply the configuration linked to the
+first object. If it fails, it will try the second and so on. If all
+configurations fail, the RxPlayer will stop playback with an
+<code>ENCRYPTED_MEDIA_ERROR</code> with the <code>INCOMPATIBLE_KEYSYSTEMS</code> code (see <a href="./Player_Errors.html">error
+documentation</a>).</p>
+<p>Mostly, the <code>type</code> and <code>getLicense</code> properties are usually mandatory for
+encrypted contents. Depending on your situation you might also want to set other
+options.</p>
+<p><a name="type"></a></p>
+<h3>type</h3>
+<p><em>type</em>: <code>string</code></p>
+<p>Name of the DRM system used. Can be either one of:</p>
+<ul>
+<li><code>"widevine"</code></li>
+<li><code>"playready"</code></li>
+<li><code>"clearkey"</code></li>
+</ul>
+<p>For more specific (or just different ones), the full reverse domain name of
+the key system can be used instead, for example:</p>
+<ul>
+<li><code>"com.widevine.alpha"</code>,</li>
+<li><code>"com.microsoft.playready.hardware"</code></li>
+<li><code>"com.apple.fps.1_0"</code></li>
+<li>etc.</li>
+</ul>
+<h4>Example</h4>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-comment">// ...</span>
+  <span class="hljs-attr">keySystems</span>: [
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">"com.microsoft.playready.recommendation"</span>,
+      <span class="hljs-comment">// ...</span>
+    }
+    <span class="hljs-comment">// ...</span>
+  ]
+});
+</code></pre>
+<p><a name="getlicense"></a></p>
+<h3>getLicense</h3>
+<p><em>type</em>: <code>Function</code></p>
+<p>Callback which will be triggered everytime a message is sent by the Content
+Decryption Module (CDM), usually to fetch/renew the license.</p>
+<p>Gets two arguments when called:</p>
+<ol>
+<li>the message (<code>Uint8Array</code>): The message, formatted to an Array of
+bytes.</li>
+<li>the messageType (<code>string</code>): String describing the type of message
+received.
+There is only 4 possible message types, all defined in <a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeymessagetype">the w3c
+specification</a>.</li>
+</ol>
+<p>This function should return either synchronously the license, <code>null</code> to not
+set a license for this <code>message</code> event or a Promise which should either:</p>
+<ul>
+<li>resolve if the license was fetched, with the licence in argument</li>
+<li>resolve with <code>null</code> if you do not want to set a license for this
+<code>message</code> event</li>
+<li>reject if an error was encountered.</li>
+</ul>
+<p>Note: We set a 10 seconds timeout by default on this request (configurable
+through the <code>keySystems[].getLicenseConfig</code> object).
+If the returned Promise do not resolve or reject under this limit, the
+RxPlayer will stop with an error.</p>
+<p>In any case, if a license is provided by this function it should be under a
+<code>BufferSource</code> type (example: an <code>Uint8Array</code> or an <code>ArrayBuffer</code>).</p>
+<p>If this callback throws or rejects, the RxPlayer will either:</p>
+<ul>
+<li>
+<p>retry if new retry attempts can be done according to the parameters
+given as <code>getLicenseConfig</code> and if the <code>noRetry</code> property of the last
+rejected/throwed value was not set to <code>true</code>.</p>
+<p>In that case an error with the <code>KEY_LOAD_ERROR</code> code will still be
+emitted through a <code>warning</code> event to indicate that this attempt as
+failed.</p>
+</li>
+<li>
+<p>stop playback, emitting an <code>error</code> event with the <code>KEY_LOAD_ERROR</code> code,
+if no attempt is left to be done (or if the <code>noRetry</code> property of the
+last throwed/rejected error was set to <code>true</code>) AND if the
+<code>fallbackOnLastTry</code> property on the last throwed/rejected error was not
+set to <code>true</code>.</p>
+</li>
+<li>
+<p>try to fallback to a different <code>Representation</code> (a.k.a. media profile)
+if no attempt is left to be done (or if the <code>noRetry</code> property of the
+last throwed/rejected error was set to <code>true</code>) AND if the
+<code>fallbackOnLastTry</code> property on the last throwed/rejected error WAS
+set to <code>true</code>.</p>
+<p>In that case an error with the <code>KEY_LOAD_ERROR</code> code will still be
+emitted through a <code>warning</code> event to indicate that this attempt as
+failed.</p>
+<p>If we have no Representation to fallback to anymore, we will throw a
+MediaError with a <code>NO_PLAYABLE_REPRESENTATION</code> code, as documented <a href="./Player_Errors.html#types-media_error">in
+the errors documentation</a>.</p>
+</li>
+</ul>
+<p>If the <code>getLicense</code> call throws/rejects, you can add any of the following
+properties (none are mandatory) to configure the behavior of the RxPlayer
+relative to that failure:</p>
+<ul>
+<li>
+<p><code>noRetry</code> (<code>Boolean</code>): If set to <code>true</code>, we won’t make another attempt
+to call <code>getLicense</code> for this particular message.</p>
+<p>This will result in:</p>
+<ul>
+<li>if the <code>fallbackOnLastTry</code> boolean has been set to <code>true</code>, it will
+trigger a fallback to another Representations (and a <code>KEY_LOAD_ERROR</code>
+warning being sent) if possible (and throw a
+<code>NO_PLAYABLE_REPRESENTATION</code> error code if there’s no Representation
+left to fallback to, as documented in the <code>fallbackOnLastTry</code>
+property documentation).</li>
+<li>If not, a <code>KEY_LOAD_ERROR</code> error code will be directly thrown and
+playback will be stopped.</li>
+</ul>
+<p>If set to <code>false</code> or not set, the current retry parameters will be applied
+(see <code>getLicenseConfig</code>)</p>
+</li>
+<li>
+<p><code>message</code> (<code>string</code>): If the <code>message</code> property is set as a “string”,
+this message will be set as the <code>message</code> property of the
+corresponding <code>EncryptedMediaError</code> (either communicated through an
+<code>"error"</code> event if we’re not retrying or through a <code>"warning"</code> event
+if we’re retrying).
+As every other <code>getLicense</code>-related errors, this error will have the
+<code>KEY_LOAD_ERROR</code> <code>code</code> property.</p>
+</li>
+<li>
+<p><code>fallbackOnLastTry</code> (<code>boolean</code>): If this getLicense is the last retry
+(if the <code>noRetry</code> property is set to <code>true</code>, this is always true), we
+will not throw immediately but rather try to fallback on other
+Representations (e.g. qualities) which might have a different decryption
+key. If no Representation is left, we will throw a MediaError with a
+<code>NO_PLAYABLE_REPRESENTATION</code> code, as documented <a href="./Player_Errors.html#types-media_error">in the errors
+documentation</a>.</p>
+<p>You will receive a <code>decipherabilityUpdate</code> event when the RxPlayer
+fallbacks from any Representation. You can find documentation on this
+event <a href="./Player_Events.html#decipherabilityupdate">in the corresponding chapter of the events
+documentation</a>.</p>
+<p>This option is thus only useful for contents depending on multiple
+licenses.</p>
+<p>When fallbacking, we might need to reload the current MediaSource,
+leading to a black screen during a brief instant. When reloading, the
+RxPlayer will have the <code>"RELOADING"</code> <a href="./Player_States.html">player state</a>.
+on most situations, we will however not reload the media source but
+only perform a very little seek (of some milliseconds). you might see
+the stream stutter for a very brief instant at that point.</p>
+<p>On the Edge browser, we found an issue that can arise when this option
+is set if PlayReady is used. This issue can make the player loads the
+content indefinitely.
+Sadly, no work-around has been found for now for this issue. We’re
+currently trying to create a reproducible scenario and document that
+issue so it can hopefully be fixed in the future. In the meantime,
+you’re encouraged either to use Widevine (only on Chromium-based Edge)
+or to not make use of the <code>fallBackOnLastTry</code> option on that browser.</p>
+</li>
+</ul>
+<p><a name="getlicenseconfig"></a></p>
+<h3>getLicenseConfig</h3>
+<p><em>type</em>: <code>Object | undefined</code></p>
+<p>Optional configuration for the <code>keySystems[].getLicense</code> callback.</p>
+<p>Can contain the following properties:</p>
+<ul>
+<li>
+<p><code>retry</code> (<code>Number</code>|<code>undefined</code>) (default: <code>2</code>): number of time
+<code>getLicense</code> is retried on error or on timeout before we fail on a
+<code>KEY_LOAD_ERROR</code></p>
+</li>
+<li>
+<p><code>timeout</code> (<code>Number</code>|<code>undefined</code>) (default: <code>10000</code>): timeout, in milliseconds
+after which we consider the <code>getLicense</code> callback to have failed.</p>
+<p>Set it to <code>-1</code> to disable any timeout.</p>
+</li>
+</ul>
+<p><a name="servercertificate"></a></p>
+<h3>serverCertificate</h3>
+<p><em>type</em>: <code>BufferSource | undefined</code></p>
+<p>Eventual certificate used to encrypt messages to the license server.</p>
+<p>If set, we will try to set this certificate on the CDM. If it fails, we will
+still continue to try deciphering the content (albeit a
+<a href="./Player_Errors.html">warning</a> will be emitted in that case with the code
+<code>"LICENSE_SERVER_CERTIFICATE_ERROR"</code>).</p>
+<p><a name="persistentlicenseconfig"></a></p>
+<h3>persistentLicenseConfig</h3>
+<p><em>type</em>: <code>Object | undefined</code></p>
+<p>Set it only if you want to load persistent-license(s) for later retrieval.
+Note that not all licenses can be persisted, this is dependent both on the
+loaded licenses and on the Content Decryption Module used in the browser.</p>
+<p>This is an object containing the following properties:</p>
+<ul>
+<li>
+<p><code>save</code> (<code>Function</code>): function which takes into argument an
+<code>Array.&lt;Object&gt;</code> which will contain information on all the DRM
+sessions the RxPlayer currently needs to save.
+No return value is needed.</p>
+</li>
+<li>
+<p><code>load</code> (<code>Function</code>): Function which takes no argument and returns the
+last stored <code>Array.&lt;Object&gt;</code> (the last one given to <code>save</code>).</p>
+</li>
+<li>
+<p><code>disableRetroCompatibility</code> (<code>boolean</code>): If set to <code>true</code> the RxPlayer
+might not be able to load licenses persisted through an older RxPlayer
+version. This will allow to unlock some optimizations, for example to
+allow a faster loading of the current content.</p>
+<p>We recommend setting that option to <code>true</code> if retrieving persisted
+licenses through older versions are not that warning to you.</p>
+</li>
+</ul>
+<p><a name="maxsessioncachesize"></a></p>
+<h3>maxSessionCacheSize</h3>
+<p><em>type</em>: <code>number | undefined</code></p>
+<p>The RxPlayer maintains a cache of recently opened <code>MediaKeySession</code> (and
+consequently of recently fetched licenses) as an optimization measure.</p>
+<p>That way, loading a content whose license had already been fetched won’t
+necessitate a new license request, leading to shorter loading times and less
+requests.</p>
+<p>The size of this cache is usually kept relatively low (in the 10s) by the
+player.
+We found out however that some devices have an even lower limit for the
+number of <code>MediaKeySession</code> that can be created at the same time.</p>
+<p>The <code>maxSessionCacheSize</code> option allows to configure the maximum number of
+<code>MediaKeySession</code> that should be kept “alive” at the same time. Any
+supplementary older <code>MediaKeySession</code> will be closed, at least when the time
+comes to create a new one.</p>
+<p><a name="closesessionsonstop"></a></p>
+<h3>closeSessionsOnStop</h3>
+<p><em>type</em>: <code>Boolean | undefined</code></p>
+<p>If set to <code>true</code>, the <code>MediaKeySession</code> created for a content will be
+immediately closed when the content stops its playback.</p>
+<p>This might be required by your key system implementation (most often, it is
+not).</p>
+<p>If set to <code>false</code> or not set, the <code>MediaKeySession</code> can be reused if the
+same content needs to be re-decrypted.</p>
+<p>If you want to set this property because the current device has a limited
+number of <code>MediaKeySession</code> that can be created at the same time, prefer
+using <code>maxSessionCacheSize</code> instead.</p>
+<p><a name="singlelicenseper"></a></p>
+<h3>singleLicensePer</h3>
+<p><em>type</em>: <code>string | undefined</code></p>
+<p>Allows to use optimally a single license for multiple decryption keys.</p>
+<p>Can be set to the following values:</p>
+<ul>
+<li>
+<p><code>"init-data"</code>: This is the default value.
+Under that behavior, the RxPlayer will try to fetch a new license any
+time it encounters an unknown encryption initialization data in the
+current content.</p>
+<p>This usually means that a license will be fetched any time a new
+decryption key is encountered, which is the most sensible thing to
+do in most cases.</p>
+</li>
+<li>
+<p><code>"content"</code>: Only fetch a single license for the whole content, even
+if the content has multiple keys.</p>
+<p>Under that behavior, only a single license will be fetched, with a
+“challenge” generated from the first encryption initialization data
+encountered.</p>
+<p>Not only that, all Representations (qualities) whose key was not present
+in the license will be fallbacked from[1], meaning that they won’t be
+played anymore.</p>
+</li>
+<li>
+<p><code>"periods"</code>: Each license fetched will be assumed to be for a group
+of <a href="../Getting_Started/Glossary.html#period">Periods</a>.</p>
+<p>That is, the RxPlayer will assume that any license fetched:</p>
+<ul>
+<li>
+<p>will contain all the compatible keys for the Period of the
+Representation for which the license request was done.</p>
+<p>That is, if the license request was done for a Representation in the
+second Period, the license fetched will be assumed to contain all
+compatible keys linked to the second Period.</p>
+<p>This means that all expected keys which are absent will be considered as
+not compatible - thus their corresponding Representation will be
+fallbacked from[1]).</p>
+</li>
+<li>
+<p>may contain all compatible keys for some other Periods (or all other
+Periods).</p>
+<p>The rule here is that as long as the license contain at least one
+decryption key linked to a Representation of any other Period, the
+RxPlayer will assume that the license server returned all compatible
+keys for that Period. Any other key linked to that Period but absent
+from the license will considered as not compatible - and thus their
+corresponding Representation will be fallbacked from[1].</p>
+</li>
+</ul>
+<p>This option allows to avoid doing too much license requests (compared to the
+default “init-data” mode) for contents encrypted with multiple keys, but
+also may be preferable to the “content” mode in any of the following
+situations:</p>
+<ul>
+<li>
+<p>You don’t know all upcoming keys in advance.</p>
+<p>Here you can just communicate them by groups of Periods</p>
+</li>
+<li>
+<p>The devices on which the RxPlayer will play are not able to store all
+keys needed for a single content at once</p>
+<p>Here you can just provide a limited number of keys, linked to a limited
+number of Periods.</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>[1] <em>Note that while fallbacking, it is possible that the player goes into
+the <code>"RELOADING"</code> state (during which the video will disappear and many
+APIs will become unavailable). More information about the <code>"RELOADING"</code>
+state can be found in <a href="./Player_States.html">the player states documentation</a>.</em></p>
+<p>You can set this option as an optimization (to only perform a single
+license requests instead of many while playing contents encrypted with
+multiple keys) but only if the corresponding optimizations have also
+been performed on the side of the license server (to return a license
+for every keys even if one for a single key was asked for).</p>
+<p><a name="disablemediakeysattachmentlock"></a></p>
+<h3>disableMediaKeysAttachmentLock</h3>
+<p><em>type</em>: <code>Boolean | undefined</code></p>
+<p>In regular conditions, we might want to wait for the media element to have
+decryption capabilities (what we call here “MediaKeys attachment”) before
+beginning to load the actual content.</p>
+<p>Waiting for that capability validation first allows for example to play a
+content which contains both encrypted and unencrypted data on Chrome and
+Chromium-derived browsers.</p>
+<p>However, we found that on some peculiar devices (like some set-top boxes)
+this can create a deadlock: the browser might wait for some content to be
+loaded before validating the media element’s decryption capabilities.</p>
+<p>Because we didn’t find a good enough compromise for now, we added the
+<code>disableMediaKeysAttachmentLock</code> boolean.
+By setting it to <code>true</code>, we won’t wait for “MediaKeys attachment” before
+pushing the first content. The downside being that content of mixed
+unencrypted/encrypted data might not be playable with that configuration.</p>
+<p>You can try that property if your encrypted contents seems to be loading
+indefinitely on some peculiar targets.</p>
+<p><a name="distinctiveidentifierrequired"></a></p>
+<h3>distinctiveIdentifierRequired</h3>
+<p><em>type</em>: <code>Boolean | undefined</code></p>
+<p>When set to <code>true</code>, the use of
+<a href="https://www.w3.org/TR/encrypted-media/#distinctive-identifier">Distinctive Indentifier(s)</a>
+or
+<a href="https://www.w3.org/TR/encrypted-media/#uses-distinctive-permanent-identifiers">Distinctive Permanent Identifier(s)</a>
+will be required.</p>
+<p>This is not needed for most use cases.</p>
+<p><a name="persistentstaterequired"></a></p>
+<h3>persistentStateRequired</h3>
+<p><em>type</em>: <code>Boolean | undefined</code></p>
+<p>Set it to <code>true</code> if the chosen CDM should have the ability to persist state.</p>
+<p>This includes session data and any other type of state, but does not include
+<a href="https://www.w3.org/TR/2017/REC-encrypted-media-20170918/#distinctive-identifier">distinctive
+identifiers</a>,
+for which there’s another <code>keySystems</code> option, <code>distinctiveIdentifierRequired</code>.</p>
+<p>If the <code>persistentLicense</code> <code>keySystems</code> option has been set to <code>true</code>,
+setting this value to <code>true</code> is redundant and therefore unnecessary (as
+exploiting persistent licenses already necessitate the ability to persist
+session state).</p>
+<p>This is very rarely needed.</p>
+<p><a name="onkeyexpiration"></a></p>
+<h3>onKeyExpiration</h3>
+<p><em>type</em>: <code>string | undefined</code></p>
+<p><code>true</code> by default.</p>
+<p>Behavior the RxPlayer should have when one of the key is known to be expired.</p>
+<p><code>onKeyExpiration</code> can be set to a string, each describing a different behavior,
+the default one if not is defined being <code>"error"</code>:</p>
+<ul>
+<li>
+<p><code>"error"</code>: The RxPlayer will stop on an error when any key is expired.
+This is the default behavior.</p>
+<p>The error emiited in that case should be an
+<a href="./Player_Errors.html#encryptedmediaerror">EncryptedMediaError</a> with a
+<code>KEY_STATUS_CHANGE_ERROR</code> <code>code</code> property with a set <code>keyStatuses</code>
+property containing at least one string set to <code>"expired"</code>.</p>
+</li>
+<li>
+<p><code>"continue"</code>: The RxPlayer will not do anything when a key expires.
+This may lead in many cases to infinite rebuffering.</p>
+</li>
+<li>
+<p><code>"fallback"</code>: The Representation(s) linked to the expired key(s) will
+be fallbacked from, meaning the RxPlayer will switch to other
+representation without expired keys.</p>
+<p>If no Representation remain, a NO_PLAYABLE_REPRESENTATION error will
+be thrown.</p>
+<p>Note that when the “fallbacking” action is taken, the RxPlayer might
+temporarily switch to the <code>"RELOADING"</code> state - which should thus be
+properly handled.</p>
+</li>
+<li>
+<p><code>"close-session"</code>: The RxPlayer will close and re-create a DRM session
+(and thus re-download the corresponding license) if any of the key
+associated to this session expired.</p>
+<p>It will try to do so in an efficient manner, only reloading the license
+when the corresponding content plays.</p>
+<p>The RxPlayer might go through the <code>"RELOADING"</code> state after an expired
+key and/or light decoding glitches can arise, depending on the
+platform, for some seconds, under that mode.</p>
+</li>
+</ul>
+<p><a name="throwonlicenseexpiration"></a></p>
+<h3>throwOnLicenseExpiration</h3>
+<div class="warning">
+This option is deprecated, it will disappear in the next major release
+`v4.0.0` (see <a href="./Miscellaneous/Deprecated_APIs.html">Deprecated
+APIs</a>).
+</div>
+<p><em>type</em>: <code>Boolean | undefined</code></p>
+<p><code>true</code> by default.</p>
+<p>If set to <code>true</code> or not set, the playback will be interrupted as soon as one
+of the current licenses expires. In that situation, you will be warned with
+an <a href="./Player_Errors.html"><code>error</code> event</a> with, as a payload, an error with the code
+<code>KEY_STATUS_CHANGE_ERROR</code>.</p>
+<p>If set to <code>false</code>, the playback of the current content will not be
+interrupted even if one of the current licenses is expired. It might however
+stop decoding in that situation.</p>
+<p>It’s then up to you to update the problematic license, usually through the
+usual <code>getLicense</code> callback.</p>
+<p>You may want to set this value to <code>false</code> if a session expiration leads to
+a license renewal.
+In that case, content may continue to play once the license has been
+updated.</p>
+<p><a name="onkeystatuseschange"></a></p>
+<h3>onKeyStatusesChange</h3>
+<div class="warning">
+This option is deprecated, it will disappear in the next major release
+`v4.0.0` (see <a href="./Miscellaneous/Deprecated_APIs.html">Deprecated
+APIs</a>).
+</div>
+<p><em>type</em>: <code>Function | undefined</code></p>
+<p>Callback triggered each time one of the key’s
+<a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus">status</a>
+is updated except for the following statuses and conditions (in which cases
+the RxPlayer throws instead):</p>
+<ul>
+<li><code>expired</code> if (and only if) <code>keySystems[].throwOnLicenseExpiration</code> is
+not set to <code>false</code></li>
+<li><code>internal-error</code> if (and only if)
+<code>keySystems[].fallbackOn.keyInternalError</code> is not set set to <code>true</code></li>
+</ul>
+<p>This option is very rarely needed (if ever).</p>
+<p>Takes 2 arguments:</p>
+<ol>
+<li>The keystatuseschange event <code>{Event}</code></li>
+<li>The session associated with the event <code>{MediaKeySession}</code></li>
+</ol>
+<p>Like <code>getLicense</code>, this function should return a promise which either
+emits a license or <code>null</code> (for no license) when resolved.
+It can also return directly the license or <code>null</code> if it can be done
+synchronously.</p>
+<p>In the case this callback throws or rejects, the playback will stop and an
+<code>"error"</code> event will be sent with a <code>KEY_STATUS_CHANGE_ERROR</code> <code>code</code>
+property.
+You can set the <code>message</code> property on the rejected/thrown value as a
+<code>string</code>. In this case, that string will be used as the error message of
+the <code>KEY_STATUS_CHANGE_ERROR</code> error (and used at its <code>message</code> property).</p>
+<p><a name="example"></a></p>
+<h2>Example</h2>
+<p>Example of a simple DRM configuration for widevine and playready DRMs:</p>
+<pre><code class="language-js">player.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">url</span>: manifestURL,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">"dash"</span>,
+  <span class="hljs-attr">keySystems</span>: [
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">"widevine"</span>,
+      <span class="hljs-title function_">getLicense</span>(<span class="hljs-params">challenge</span>) {
+        <span class="hljs-comment">// ajaxPromise is here an AJAX implementation doing a POST request on the</span>
+        <span class="hljs-comment">// widevineLicenseServer with the challenge in its body.</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-title function_">ajaxPromise</span>(widevineLicenseServer, challenge);
+      },
+    },
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">"playready"</span>,
+      <span class="hljs-title function_">getLicense</span>(<span class="hljs-params">challenge</span>) {
+        <span class="hljs-comment">// idem</span>
+        <span class="hljs-comment">// Note: you may need to format the challenge before doing the request</span>
+        <span class="hljs-comment">// depending on the server configuration.</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-title function_">ajaxPromise</span>(playreadyLicenseServer, challenge);
+      },
+    },
+  ],
+});
+</code></pre>
+</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="./Loading_a_Content.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">Loading a Content</div></a></div><div class="next-or-previous-page next-page"><a class="next-or-previous-page-link" href="./Basic_Methods/getPlayerState.html"><div class="next-or-previous-page-link-label">Next</div><div class="next-or-previous-page-link-name">getPlayerState</div></a></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#decryption_options">Decryption Options</a></p>
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#loadvideo_%60keysystems%60_options">loadVideo <code>keySystems</code> options</a>
+<ul>
+<li><a href="#type">type</a></li>
+<li><a href="#getlicense">getLicense</a></li>
+<li><a href="#getlicenseconfig">getLicenseConfig</a></li>
+<li><a href="#servercertificate">serverCertificate</a></li>
+<li><a href="#persistentlicenseconfig">persistentLicenseConfig</a></li>
+<li><a href="#maxsessioncachesize">maxSessionCacheSize</a></li>
+<li><a href="#closesessionsonstop">closeSessionsOnStop</a></li>
+<li><a href="#singlelicenseper">singleLicensePer</a></li>
+<li><a href="#disablemediakeysattachmentlock">disableMediaKeysAttachmentLock</a></li>
+<li><a href="#distinctiveidentifierrequired">distinctiveIdentifierRequired</a></li>
+<li><a href="#persistentstaterequired">persistentStateRequired</a></li>
+<li><a href="#onkeyexpiration">onKeyExpiration</a></li>
+<li><a href="#throwonlicenseexpiration">throwOnLicenseExpiration</a></li>
+<li><a href="#onkeystatuseschange">onKeyStatusesChange</a></li>
+</ul>
+</li>
+<li><a href="#example">Example</a></li>
+</ul>
+</div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../Getting_Started/Welcome.html">Welcome</a></li>
+<li><div class="page-list-item page-list-group">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Getting_Started/Tutorials/Quick_Start.html">Quick Start</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Tutorials/Content_with_DRM.html">Contents with DRM</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Tutorials/Selecting_a_Track.html">Selecting a Track</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li>
+<li class="page-list-item"><a href="../Getting_Started/Minimal_Player.html">Importing a minimal RxPlayer</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Glossary.html">Glossary</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Troubleshooting.html">Troubleshooting</a></li></ul></li>
+<li class="page-list-item"><div class="page-list-group opened active">API</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="./Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="./Creating_a_Player.html">Creating a Player</a></li>
+<li class="page-list-item"><a href="./Loading_a_Content.html">Loading a Content</a></li>
+<li class="page-list-item active"><a href="./Decryption_Options.html">Decryption Options</a></li>
+<li><div class="page-list-item page-list-group">Basic Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Basic_Methods/getPlayerState.html">getPlayerState</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/addEventListener.html">addEventListener</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/removeEventListener.html">removeEventListener</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/play.html">play</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/pause.html">pause</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/stop.html">stop</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getPosition.html">getPosition</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getWallClockTime.html">getWallClockTime</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/seekTo.html">seekTo</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getVideoDuration.html">getVideoDuration</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getError.html">getError</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getVideoElement.html">getVideoElement</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/dispose.html">dispose</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/reload.html">reload</a></li></ul></li>
+<li class="page-list-item"><a href="./Player_States.html">Player States</a></li>
+<li class="page-list-item"><a href="./Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="./Player_Errors.html">Player Errors</a></li>
+<li><div class="page-list-item page-list-group">Track Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Track_Selection/getAudioTrack.html">getAudioTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getTextTrack.html">getTextTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getVideoTrack.html">getVideoTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setAudioTrack.html">setAudioTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setTextTrack.html">setTextTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setVideoTrack.html">setVideoTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/disableTextTrack.html">disableTextTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setPreferredAudioTracks.html">setPreferredAudioTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setPreferredTextTracks.html">setPreferredTextTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setPreferredVideoTracks.html">setPreferredVideoTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getPreferredAudioTracks.html">getPreferredAudioTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getPreferredTextTracks.html">getPreferredTextTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getPreferredVideoTracks.html">getPreferredVideoTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Bitrate Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Bitrate_Selection/getVideoBitrate.html">getVideoBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getAudioBitrate.html">getAudioBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getAvailableVideoBitrates.html">getAvailableVideoBitrates</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getAvailableAudioBitrates.html">getAvailableAudioBitrates</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/setVideoBitrate.html">setVideoBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/setAudioBitrate.html">setAudioBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getManualVideoBitrate.html">getManualVideoBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getManualAudioBitrate.html">getManualAudioBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/setMinVideoBitrate.html">setMinVideoBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/setMinAudioBitrate.html">setMinAudioBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/setMaxVideoBitrate.html">setMaxVideoBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/setMaxAudioBitrate.html">setMaxAudioBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getMinVideoBitrate.html">getMinVideoBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getMinAudioBitrate.html">getMinAudioBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getMaxVideoBitrate.html">getMaxVideoBitrate</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection/getMaxAudioBitrate.html">getMaxAudioBitrate</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Speed Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li>
+<li class="page-list-item"><a href="./Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li>
+<li class="page-list-item"><a href="./Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Volume Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Volume_Control/setVolume.html">setVolume</a></li>
+<li class="page-list-item"><a href="./Volume_Control/getVolume.html">getVolume</a></li>
+<li class="page-list-item"><a href="./Volume_Control/mute.html">mute</a></li>
+<li class="page-list-item"><a href="./Volume_Control/isMute.html">isMute</a></li>
+<li class="page-list-item"><a href="./Volume_Control/unMute.html">unMute</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Buffer_Information/getVideoBufferGap.html">getVideoBufferGap</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Content Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Content_Information/getUrl.html">getUrl</a></li>
+<li class="page-list-item"><a href="./Content_Information/updateContentUrls.html">updateContentUrls</a></li>
+<li class="page-list-item"><a href="./Content_Information/isLive.html">isLive</a></li>
+<li class="page-list-item"><a href="./Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li>
+<li class="page-list-item"><a href="./Content_Information/createDebugElement.html">createDebugElement</a></li></ul></li>
+<li class="page-list-item"><a href="./Static_Properties.html">RxPlayer Static Properties</a></li>
+<li class="page-list-item"><a href="./Typescript_Types.html">Typescript Types</a></li>
+<li><div class="page-list-item page-list-group">Tools</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Tools/TextTrackRenderer.html">TextTrackRenderer</a></li>
+<li class="page-list-item"><a href="./Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li>
+<li class="page-list-item"><a href="./Tools/StringUtils.html">StringUtils</a></li>
+<li class="page-list-item"><a href="./Tools/parseBifThumbnails.html">parseBifThumbnails</a></li>
+<li class="page-list-item"><a href="./Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li>
+<li class="page-list-item"><a href="./Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Miscellaneous</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Miscellaneous/plugins.html">Plugins</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Low_Latency.html">Low Latency</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/hdr.html">HDR</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Debug_Element.html">Debug Element</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Local_Contents.html">Local Contents</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Text_Tracks.html">Text Tracks</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/images.html">Images</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Manifest_Object.html">Manifest Object</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Deprecated_APIs.html">Deprecated APIs</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Initial_Position.html">Initial Position</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Deprecated Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Deprecated/getManifest.html">getManifest</a></li>
+<li class="page-list-item"><a href="./Deprecated/getCurrentAdaptations.html">getCurrentAdaptations</a></li>
+<li class="page-list-item"><a href="./Deprecated/getCurrentRepresentations.html">getCurrentRepresentations</a></li>
+<li class="page-list-item"><a href="./Deprecated/setFullscreen.html">setFullscreen</a></li>
+<li class="page-list-item"><a href="./Deprecated/isFullscreen.html">isFullscreen</a></li>
+<li class="page-list-item"><a href="./Deprecated/exitFullscreen.html">exitFullscreen</a></li>
+<li class="page-list-item"><a href="./Deprecated/getCurrentKeySystem.html">getCurrentKeySystem</a></li>
+<li class="page-list-item"><a href="./Deprecated/getImageTrackData.html">getImageTrackData</a></li>
+<li class="page-list-item"><a href="./Deprecated/getNativeTextTrack.html">getNativeTextTrack</a></li>
+<li class="page-list-item"><a href="./Deprecated/getVideoLoadedTime.html">getVideoLoadedTime</a></li>
+<li class="page-list-item"><a href="./Deprecated/getVideoPlayedTime.html">getVideoPlayedTime</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">Reference</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../reference/API_Reference.html">API Reference</a></li></ul></li>
+<li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
+
+<li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
+</ul></div><script type="text/javascript" src="../scripts/lunr.js" charset="utf-8"></script><script type="text/javascript" src="../scripts/script.js" charset="utf-8"></script></body></html>
