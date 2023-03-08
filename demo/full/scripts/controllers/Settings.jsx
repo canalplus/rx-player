@@ -279,7 +279,7 @@ function Settings({
         </Option>
       </div>
       <div style={{ display: "flex" }}>
-        <Option title="Network Config">
+        <Option title="Request Configuration">
           <RequestConfig
             manifestRequestTimeout={manifestRequestTimeout}
             segmentRetry={segmentRetry}

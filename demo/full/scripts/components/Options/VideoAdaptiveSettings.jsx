@@ -1,5 +1,6 @@
 import React, { Fragment } from "react";
 import Checkbox from "../../components/CheckBox";
+import Select from "../../components/Select";
 import getCheckBoxValue from "../../lib/getCheckboxValue";
 
 /**

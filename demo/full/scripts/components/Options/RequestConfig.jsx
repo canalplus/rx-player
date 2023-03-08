@@ -5,13 +5,13 @@ import DEFAULT_VALUES from "../../lib/defaultOptionsValues";
 import PlayerOptionNumberInput from "./PlayerOptionNumberInput";
 
 const defaultSegmentRetry =
-  DEFAULT_VALUES.loadVideo.networkConfig.segmentRetry;
+  DEFAULT_VALUES.loadVideo.requestConfig.segmentRetry;
 const defaultSegmentRequestTimeout =
-  DEFAULT_VALUES.loadVideo.networkConfig.segmentRequestTimeout;
+  DEFAULT_VALUES.loadVideo.requestConfig.segmentRequestTimeout;
 const defaultManifestRetry =
-  DEFAULT_VALUES.loadVideo.networkConfig.manifestRetry;
+  DEFAULT_VALUES.loadVideo.requestConfig.manifestRetry;
 const defaultManifestRequestTimeout =
-  DEFAULT_VALUES.loadVideo.networkConfig.manifestRequestTimeout;
+  DEFAULT_VALUES.loadVideo.requestConfig.manifestRequestTimeout;
 
 /**
  * @param {Object} props
