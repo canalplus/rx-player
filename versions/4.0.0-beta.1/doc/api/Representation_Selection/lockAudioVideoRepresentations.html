@@ -1,0 +1,418 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>lockVideoRepresentations / lockAudioRepresentations - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "../..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../../static/img/logo.png" /></a><a class="navbar-item hideable"href="../../Getting_Started/Welcome.html">Getting Started</a>
+<a class="navbar-item navbar-active hideable"href="../Overview.html">API</a>
+<a class="navbar-item hideable"href="../../reference/API_Reference.html">Reference</a>
+<a class="navbar-item hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
+<span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
+<a aria-label="Link to repository" class="navbar-item first-right hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 4.0.0-beta.1</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="../Overview.html">Overview</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Creating_a_Player.html">Creating a Player</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Loading_a_Content.html">Loading a Content</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Decryption_Options.html">Decryption Options</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Basic Methods</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getPlayerState.html">getPlayerState</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/addEventListener.html">addEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/removeEventListener.html">removeEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/play.html">play</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/pause.html">pause</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/stop.html">stop</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getPosition.html">getPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getWallClockTime.html">getWallClockTime</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/seekTo.html">seekTo</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getMediaDuration.html">getMediaDuration</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getError.html">getError</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getVideoElement.html">getVideoElement</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getAvailablePeriods.html">getAvailablePeriods</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getCurrentPeriod.html">getCurrentPeriod</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/dispose.html">dispose</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/reload.html">reload</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_States.html">Player States</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_Events.html">Player Events</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_Errors.html">Player Errors</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Track Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAudioTrack.html">getAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getTextTrack.html">getTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getVideoTrack.html">getVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setAudioTrack.html">setAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setTextTrack.html">setTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setVideoTrack.html">setVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/disableTextTrack.html">disableTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group active opened">Representation Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./getVideoRepresentation.html">getVideoRepresentation</a></li><li class="sidebar-item"><a class="sidebar-link" href="./getAudioRepresentation.html">getAudioRepresentation</a></li><li class="sidebar-item"><a class="sidebar-link active" href="./lockAudioVideoRepresentations.html">lockVideoRepresentations / lockAudioRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="./getLockedVideoRepresentations.html">getLockedVideoRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="./getLockedAudioRepresentations.html">getLockedAudioRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="./unlockAudioVideoRepresentations.html">unlockVideoRepresentations / unlockAudioRepresentations</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Speed Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Volume Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/setVolume.html">setVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/getVolume.html">getVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/mute.html">mute</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/isMute.html">isMute</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/unMute.html">unMute</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Information/getCurrentBufferGap.html">getCurrentBufferGap</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Content Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/getContentUrls.html">getContentUrls</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/updateContentUrls.html">updateContentUrls</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/isLive.html">isLive</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/createDebugElement.html">createDebugElement</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="../Static_Properties.html">RxPlayer Static Properties</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Typescript_Types.html">Typescript Types</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Tools</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Tools/TextTrackRenderer.html">TextTrackRenderer</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/StringUtils.html">StringUtils</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/parseBifThumbnails.html">parseBifThumbnails</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Miscellaneous</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/plugins.html">Plugins</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Low_Latency.html">Low Latency</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/hdr.html">HDR</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Debug_Element.html">Debug Element</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Local_Contents.html">Local Contents</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Text_Tracks.html">Text Tracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/Initial_Position.html">Initial Position</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="lockvideorepresentations_/_lockaudiorepresentations"></a></p>
+<h1>lockVideoRepresentations / lockAudioRepresentations</h1>
+<p><a name="description"></a></p>
+<h2>Description</h2>
+<p>Allows to specify respectively which video or audio Representations (a.k.a.
+qualities) can be played in the current audio or video track, by specifying
+those Representations’s <code>id</code> property.</p>
+<p>The RxPlayer will then choose which Representation to play between them through
+its usual adaptive logic.
+You can also force a single Representation by setting only one id in the
+corresponding array.</p>
+<p>The list and characteristics of each video or audio Representation as well as
+their <code>id</code> property can be found in the <code>representations</code> array returned
+respectively by the <code>getVideoTrack()</code> or <code>getAudioTrack()</code> method:</p>
+<pre><code class="language-js"><span class="hljs-comment">// example: locking 1080p video Representations or more</span>
+
+<span class="hljs-keyword">const</span> videoTrack = rxPlayer.<span class="hljs-title function_">getVideoTrack</span>();
+<span class="hljs-keyword">if</span> (videoTrack === <span class="hljs-literal">null</span>) {
+  <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">"No video track currently"</span>);
+}
+<span class="hljs-keyword">const</span> repIds = videoTrack.<span class="hljs-property">representations</span>
+ .<span class="hljs-title function_">filter</span>(<span class="hljs-function"><span class="hljs-params">rep</span> =&gt;</span> rep.<span class="hljs-property">height</span> !== <span class="hljs-literal">undefined</span> &amp;&amp; rep.<span class="hljs-property">height</span> &gt;= <span class="hljs-number">1080</span>)
+ .<span class="hljs-title function_">map</span>(<span class="hljs-function"><span class="hljs-params">rep</span> =&gt;</span> rep.<span class="hljs-property">id</span>);
+rxPlayer.<span class="hljs-title function_">lockVideoRepresentations</span>(repIds);
+</code></pre>
+<p>This function can be used in a much more advanced way by giving it an object
+as argument (instead of just an array of the wanted Representations’ id), where
+the Representations’ id are set as a <code>representations</code> property.
+More information on this below.</p>
+<div class="warning">
+In <i>DirectFile</i> mode (see <a href="../Loading_a_Content.html#transport">loadVideo options</a>),
+this method has no effect.
+</div>
+<p><a name="about_%22locking%22_and_%22unlocking%22"></a></p>
+<h3>About “locking” and “unlocking”</h3>
+<p>This mechanism of only enabling some Representations for a given track is
+called “locking Representations”.</p>
+<p>Calling this method allows to start locking Representations until either:</p>
+<ul>
+<li>
+<p>they are unlocked (through respectively the <code>unlockVideoRepresentations</code>
+or <code>unlockAudioRepresentations</code> method)</p>
+</li>
+<li>
+<p>the corresponding track is changed: the lock is removed after switching
+the track for that Period. If you choose to come back to the
+original track in the future, it won’t be locked anymore either.</p>
+</li>
+<li>
+<p>the RxPlayer “break” the lock. This is a very rare occurence happening when
+locked Representations all become unavailable. More details on this below.</p>
+</li>
+</ul>
+<p>You can know if video or audio Representations are locked for the current
+track (or even for the track of any Period in the content) by calling
+respectively the <code>getLockedVideoRepresentations</code> or
+<code>getLockedAudioRepresentations</code> method. It will either return <code>null</code> if
+no lock is active or the list of locked Representations’s <code>id</code> if a lock is
+currently active.</p>
+<p><a name="locking_the_representations_for_another_period"></a></p>
+<h3>Locking the Representations for another Period</h3>
+<p><code>lockVideoRepresentations</code> / <code>lockAudioRepresentations</code> can also be used to
+lock video and audio Representations for a Period that is not yet being played.</p>
+<p>In those more advanced usages, those methods can take an object, where the
+representations to lock can be set as a <code>representations</code> property, and the
+wanted period can be indicated by setting its id as a <code>periodId</code> property.</p>
+<p>You can list all Periods in the current content and their id by calling the
+<code>getAvailablePeriods</code> API.</p>
+<pre><code class="language-js"><span class="hljs-comment">// example: locking an audio Representation for the second Period.</span>
+
+<span class="hljs-keyword">const</span> periods = rxPlayer.<span class="hljs-title function_">getAvailablePeriods</span>();
+<span class="hljs-keyword">const</span> secondPeriod = periods[<span class="hljs-number">1</span>];
+<span class="hljs-keyword">const</span> audioTrack = rxPlayer.<span class="hljs-title function_">getAudioTrack</span>(secondPeriod.<span class="hljs-property">id</span>);
+
+rxPlayer.<span class="hljs-title function_">lockAudioRepresentations</span>({
+  <span class="hljs-comment">// we will just lock the first one here</span>
+  <span class="hljs-attr">representations</span>: [audioTrack.<span class="hljs-property">representations</span>[<span class="hljs-number">0</span>].<span class="hljs-property">id</span>],
+  <span class="hljs-attr">periodId</span>: secondPeriod.<span class="hljs-property">id</span>,
+});
+</code></pre>
+<p><a name="configuring_the_%22switching_mode%22"></a></p>
+<h3>Configuring the “switching mode”</h3>
+<p>The RxPlayer might already have buffered data before you lock Representations,
+meaning that some Representations which are from now unwanted may already be in
+the buffer and thus might still be played.</p>
+<p>Because you might want an abrupt but direct transition between old
+Representations and the new ones, or a more seamless transition, you can
+configure the way with which the RxPlayer may switch from the previous
+Representations to the new locked ones.</p>
+<p>This is called the “switching mode” and it is configurable through the
+<code>switchingMode</code> property that can be passed to <code>lockAudioRepresentations</code> and
+<code>lockVideoRepresentations</code>.</p>
+<p>If you do not care that the old Representations in the buffer might still
+be played, you can set this mode to <code>"seamless"</code>(will clean the buffer but
+without cleaning the data around the current position to keep a smooth
+playback) or to <code>"lazy"</code> (keep the buffer as is, without cleaning what was
+there before).</p>
+<p>If however you want to perform a strict and directly visible/audible switch,
+you might prefer to set it to <code>"direct"</code> (which might trigger a brief
+rebuffering) or to <code>"reload"</code> (which might trigger a temporary black screen).</p>
+<p>Here is the description of all possible modes:</p>
+<ul>
+<li>
+<p><code>"seamless"</code>: Clean the buffer from buffered media content from now
+unwanted Representations, yet keep some of that data around the current
+position to ensure the transition stay seamless (i.e. playback still
+continue).</p>
+<p>This is the default mode when locking Representations.
+The advantage is that the switch will not be abrupt (playback will not be
+interrupted) but you might still have a few seconds playing in the
+previous quality.</p>
+</li>
+<li>
+<p><code>"lazy"</code>: Keep all other Representations in the buffer.</p>
+<p>This is the default RxPlayer’s behavior when changing the quality through
+regular adaptive streaming.</p>
+<p>The advantage here is that this is the most efficient in terms of network
+resources, though you might still play now unwanted Representations in the
+future.
+This option is particularly useful if the lock is for example used to
+ensure a networking bandwidth cap: here you might want that new segments
+only be from low quality Representations but you would not care about
+already-loaded segments.</p>
+</li>
+<li>
+<p><code>"direct"</code>: Directly visibly/audibly switch to the new Representations.
+Here you will ensure that the now unwanted Representations won’t be
+played in the future but you might be left with a playback interruption
+and some rebuffering time while the new quality is loaded.</p>
+</li>
+<li>
+<p><code>"reload"</code>: Directly visibly/audibly switch to the new Representations
+through a “reloading” step if necessary.</p>
+<p>Under that mode, you will ensure that the previous frame won’t be visible
+anymore and you might also have better results than <code>"direct"</code> on devices
+with poor compatibility, but the RxPlayer might temporarily go through
+a <code>"RELOADING"</code> state, during which a black screen is shown and multiple
+APIs are unavailable.</p>
+</li>
+</ul>
+<pre><code class="language-js"><span class="hljs-comment">// example: switching video qualities in "direct" mode</span>
+
+<span class="hljs-keyword">const</span> videoTrack = rxPlayer.<span class="hljs-title function_">getVideoTrack</span>();
+rxPlayer.<span class="hljs-title function_">lockVideoRepresentations</span>({
+  <span class="hljs-comment">// we will just lock the first one here</span>
+  <span class="hljs-attr">representations</span>: [videoTrack.<span class="hljs-property">representations</span>[<span class="hljs-number">0</span>].<span class="hljs-property">id</span>],
+  <span class="hljs-attr">switchingMode</span>: <span class="hljs-string">"direct"</span>,
+});
+</code></pre>
+<p><a name="%22breaking%22_the_lock"></a></p>
+<h3>“Breaking” the lock</h3>
+<p>There is an edge case that should be noted, especially for encrypted
+contents relying on multiple decryption keys:
+Some rare events can make some previously-available Representations become
+unavailable. The main (and as of v4.0.0, only) reason would be encrypted
+Representations whose decryption key cannot either be used or obtained.</p>
+<p>In the event where all locked Representations become unavailable, the
+RxPlayer will automatically unlock Representations for that track so it can
+continue to play the content, a mechanism we call here “breaking the lock”.
+You can be notified when this happens and react accordingly (e.g. to lock
+other Representations or stop playback) by listening and reacting to the
+<a href="../Player_Events.html#brokenrepresentationslock"><code>brokenRepresentationsLock</code></a>
+RxPlayer event.</p>
+<pre><code class="language-js"><span class="hljs-comment">// example: stopping playback when the lock is broken</span>
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"brokenRepresentationsLock"</span>, <span class="hljs-function">() =&gt;</span> {
+  rxPlayer.<span class="hljs-title function_">stop</span>();
+});
+</code></pre>
+<p><a name="locking_representations_as_soon_as_possible"></a></p>
+<h3>Locking Representations as soon as possible</h3>
+<p>You can choose to lock video and audio Representations from any Period before
+any media content from that Period is being loaded and buffered by reacting to
+the <code>newAvailablePeriods</code> event:</p>
+<pre><code class="language-js"><span class="hljs-comment">// example: locking the first video Representation for each future Period</span>
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"newAvailablePeriods"</span>, <span class="hljs-function">(<span class="hljs-params">periods</span>) =&gt;</span> {
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> period <span class="hljs-keyword">of</span> periods) {
+    <span class="hljs-keyword">const</span> videoTrack = rxPlayer.<span class="hljs-title function_">getVideoTrack</span>(period.<span class="hljs-property">id</span>);
+    <span class="hljs-keyword">if</span> (videoTrack.<span class="hljs-property">representations</span>.<span class="hljs-property">length</span> &gt; <span class="hljs-number">0</span>) {
+      rxPlayer.<span class="hljs-title function_">lockVideoRepresentations</span>([videoTrack.<span class="hljs-property">representations</span>[<span class="hljs-number">0</span>].<span class="hljs-property">id</span>]);
+    }
+  }
+});
+</code></pre>
+<p>If the content has already loaded, you can also retrieve the list of
+already-loaded Periods (and lock their Representations) thanks to the
+<code>getAvailablePeriods</code> method:</p>
+<pre><code class="language-js"><span class="hljs-comment">// example: locking the first video Representation for each current Period</span>
+<span class="hljs-keyword">const</span> periods = rxPlayer.<span class="hljs-title function_">getAvailablePeriods</span>();
+<span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> period <span class="hljs-keyword">of</span> periods) {
+  <span class="hljs-keyword">const</span> videoTrack = rxPlayer.<span class="hljs-title function_">getVideoTrack</span>(period.<span class="hljs-property">id</span>);
+  <span class="hljs-keyword">if</span> (videoTrack.<span class="hljs-property">representations</span>.<span class="hljs-property">length</span> &gt; <span class="hljs-number">0</span>) {
+    rxPlayer.<span class="hljs-title function_">lockVideoRepresentations</span>([videoTrack.<span class="hljs-property">representations</span>[<span class="hljs-number">0</span>].<span class="hljs-property">id</span>]);
+  }
+}
+</code></pre>
+<p><a name="locking_representations_when_switching_to_a_new_track"></a></p>
+<h3>Locking Representations when switching to a new track</h3>
+<p>You can also choose to lock video and audio Representations as soon as you
+switch respectively the video or audio track by calling <code>setVideoTrack</code> or
+<code>setAudioTrack</code> with a <code>lockedRepresentations</code> property, which will contain the
+ids of the Representations to lock.</p>
+<pre><code class="language-js"><span class="hljs-comment">// example: locking video Representations when switching the video track</span>
+<span class="hljs-keyword">const</span> videoTracks = rxPlayer.<span class="hljs-title function_">getAvailableVideoTracks</span>();
+<span class="hljs-keyword">const</span> wantedVideoTrack = videoTracks[<span class="hljs-number">1</span>];
+rxPlayer.<span class="hljs-title function_">setVideoTrack</span>({
+  <span class="hljs-attr">trackId</span>: wantedVideoTrack.<span class="hljs-property">id</span>,
+  <span class="hljs-attr">lockedRepresentations</span>: [wantedVideoTrack.<span class="hljs-property">representations</span>[<span class="hljs-number">0</span>]],
+});
+</code></pre>
+<p>Or more generally, you can apply that locking logic anytime the video or audio
+track switches, whether it is done explicitly (for example through a
+<code>setVideoTrack</code> call) or implicitly (for example because the previously-chosen
+track is not available anymore), by reacting to the
+<a href="../Player_Events.html#trackupdate"><code>trackUpdate</code></a> event:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"trackUpdate"</span>, <span class="hljs-function">(<span class="hljs-params">evt</span>) =&gt;</span> {
+    <span class="hljs-keyword">if</span> (evt.<span class="hljs-property">trackType</span> === <span class="hljs-string">"video"</span>) {
+      <span class="hljs-keyword">const</span> videoTrack = rxPlayer.<span class="hljs-title function_">getVideoTrack</span>(evt.<span class="hljs-property">period</span>.<span class="hljs-property">id</span>);
+      <span class="hljs-keyword">if</span> (videoTrack.<span class="hljs-property">representations</span>.<span class="hljs-property">length</span> &gt; <span class="hljs-number">0</span>) {
+        rxPlayer.<span class="hljs-title function_">lockVideoRepresentations</span>({
+          <span class="hljs-attr">representations</span>: [videoTrack.<span class="hljs-property">representations</span>[<span class="hljs-number">0</span>].<span class="hljs-property">id</span>],
+          <span class="hljs-attr">periodId</span>: evt.<span class="hljs-property">period</span>.<span class="hljs-property">id</span>,
+        });
+      }
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (evt.<span class="hljs-property">trackType</span> === <span class="hljs-string">"audio"</span>) {
+      <span class="hljs-keyword">const</span> audioTrack = rxPlayer.<span class="hljs-title function_">getAudioTrack</span>(evt.<span class="hljs-property">period</span>.<span class="hljs-property">id</span>);
+      <span class="hljs-keyword">if</span> (audioTrack.<span class="hljs-property">representations</span>.<span class="hljs-property">length</span> &gt; <span class="hljs-number">0</span>) {
+        rxPlayer.<span class="hljs-title function_">lockAudioRepresentations</span>({
+          <span class="hljs-attr">representations</span>: [audioTrack.<span class="hljs-property">representations</span>[<span class="hljs-number">0</span>].<span class="hljs-property">id</span>],
+          <span class="hljs-attr">periodId</span>: evt.<span class="hljs-property">period</span>.<span class="hljs-property">id</span>,
+        });
+      }
+    }
+  }
+});
+</code></pre>
+<p><a name="syntax"></a></p>
+<h2>Syntax</h2>
+<pre><code class="language-js"><span class="hljs-comment">// Locking the current video Representations</span>
+player.<span class="hljs-title function_">lockVideoRepresentations</span>(lockedRepresentationsId);
+
+<span class="hljs-comment">// More complex configurations</span>
+player.<span class="hljs-title function_">lockVideoRepresentations</span>({
+  <span class="hljs-comment">// required</span>
+  <span class="hljs-attr">representations</span>: lockedRepresentationsId,
+
+  <span class="hljs-comment">// all optional</span>
+  periodId,
+  switchingMode,
+});
+
+<span class="hljs-comment">// Locking the current audio Representations</span>
+player.<span class="hljs-title function_">lockAudioRepresentations</span>(lockedRepresentationsId);
+
+<span class="hljs-comment">// More complex configurations</span>
+player.<span class="hljs-title function_">lockAudioRepresentations</span>({
+  <span class="hljs-comment">// required</span>
+  <span class="hljs-attr">representations</span>: lockedRepresentationsId,
+
+  <span class="hljs-comment">// all optional</span>
+  periodId,
+  switchingMode,
+});
+</code></pre>
+<ul>
+<li>
+<p><strong>arguments</strong>:</p>
+<ol>
+<li>
+<p><em>arg</em> <code>Array.&lt;string&gt;|Object</code>: Either a list of the Representations’ id to
+lock for the current Period, or an object with the following properties
+(only <code>representations</code> is required):</p>
+<ul>
+<li>
+<p><code>representations</code> (<code>Array.&lt;string&gt;</code>): The list of Representations’id to
+lock.</p>
+</li>
+<li>
+<p><code>periodId</code> (<code>string|undefined</code>): If defined, the id of the concerned
+Period. If not defined, it will be applied for the current Period.</p>
+</li>
+<li>
+<p><code>switchingMode</code> (<code>string|undefined</code>): Behavior of the RxPlayer if there
+is a need to perform a transition between previous Representation(s)
+to the new locked ones. The list of modes available are described in
+this page.</p>
+</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="./getAudioRepresentation.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">getAudioRepresentation</div></a></div><div class="next-or-previous-page next-page"><a class="next-or-previous-page-link" href="./getLockedVideoRepresentations.html"><div class="next-or-previous-page-link-label">Next</div><div class="next-or-previous-page-link-name">getLockedVideoRepresentations</div></a></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#lockvideorepresentations_/_lockaudiorepresentations">lockVideoRepresentations / lockAudioRepresentations</a></p>
+<ul>
+<li><a href="#description">Description</a>
+<ul>
+<li><a href="#about_%22locking%22_and_%22unlocking%22">About “locking” and “unlocking”</a></li>
+<li><a href="#locking_the_representations_for_another_period">Locking the Representations for another Period</a></li>
+<li><a href="#configuring_the_%22switching_mode%22">Configuring the “switching mode”</a></li>
+<li><a href="#%22breaking%22_the_lock">“Breaking” the lock</a></li>
+<li><a href="#locking_representations_as_soon_as_possible">Locking Representations as soon as possible</a></li>
+<li><a href="#locking_representations_when_switching_to_a_new_track">Locking Representations when switching to a new track</a></li>
+</ul>
+</li>
+<li><a href="#syntax">Syntax</a></li>
+</ul>
+</div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../Getting_Started/Welcome.html">Welcome</a></li>
+<li><div class="page-list-item page-list-group">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../Getting_Started/Tutorials/Quick_Start.html">Quick Start</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/Content_with_DRM.html">Contents with DRM</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/Selecting_a_Track.html">Selecting a Track</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Migration from RxPlayer v3</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Preferences.html">Track Preferences</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Bitrate_Selection.html">Bitrate Selection</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Constructor_Options.html">Constructor Options</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/loadVideo_Options.html">loadVideo Options</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Player_Errors.html">Player Errors</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Player_Methods.html">Player Methods</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Player_Types.html">Player Types</a></li></ul></li>
+<li class="page-list-item"><a href="../../Getting_Started/Minimal_Player.html">Importing a minimal RxPlayer</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Glossary.html">Glossary</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Troubleshooting.html">Troubleshooting</a></li></ul></li>
+<li class="page-list-item"><div class="page-list-group opened active">API</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../Creating_a_Player.html">Creating a Player</a></li>
+<li class="page-list-item"><a href="../Loading_a_Content.html">Loading a Content</a></li>
+<li class="page-list-item"><a href="../Decryption_Options.html">Decryption Options</a></li>
+<li><div class="page-list-item page-list-group">Basic Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Basic_Methods/getPlayerState.html">getPlayerState</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/addEventListener.html">addEventListener</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/removeEventListener.html">removeEventListener</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/play.html">play</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/pause.html">pause</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/stop.html">stop</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getPosition.html">getPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getWallClockTime.html">getWallClockTime</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/seekTo.html">seekTo</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getMediaDuration.html">getMediaDuration</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getError.html">getError</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getVideoElement.html">getVideoElement</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getAvailablePeriods.html">getAvailablePeriods</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getCurrentPeriod.html">getCurrentPeriod</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/dispose.html">dispose</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/reload.html">reload</a></li></ul></li>
+<li class="page-list-item"><a href="../Player_States.html">Player States</a></li>
+<li class="page-list-item"><a href="../Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../Player_Errors.html">Player Errors</a></li>
+<li><div class="page-list-item page-list-group">Track Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Track_Selection/getAudioTrack.html">getAudioTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getTextTrack.html">getTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getVideoTrack.html">getVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setAudioTrack.html">setAudioTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setTextTrack.html">setTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setVideoTrack.html">setVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/disableTextTrack.html">disableTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group opened active">Representation Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./getVideoRepresentation.html">getVideoRepresentation</a></li>
+<li class="page-list-item"><a href="./getAudioRepresentation.html">getAudioRepresentation</a></li>
+<li class="page-list-item active"><a href="./lockAudioVideoRepresentations.html">lockVideoRepresentations / lockAudioRepresentations</a></li>
+<li class="page-list-item"><a href="./getLockedVideoRepresentations.html">getLockedVideoRepresentations</a></li>
+<li class="page-list-item"><a href="./getLockedAudioRepresentations.html">getLockedAudioRepresentations</a></li>
+<li class="page-list-item"><a href="./unlockAudioVideoRepresentations.html">unlockVideoRepresentations / unlockAudioRepresentations</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Speed Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li>
+<li class="page-list-item"><a href="../Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li>
+<li class="page-list-item"><a href="../Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Volume Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Volume_Control/setVolume.html">setVolume</a></li>
+<li class="page-list-item"><a href="../Volume_Control/getVolume.html">getVolume</a></li>
+<li class="page-list-item"><a href="../Volume_Control/mute.html">mute</a></li>
+<li class="page-list-item"><a href="../Volume_Control/isMute.html">isMute</a></li>
+<li class="page-list-item"><a href="../Volume_Control/unMute.html">unMute</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Buffer_Information/getCurrentBufferGap.html">getCurrentBufferGap</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Content Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Content_Information/getContentUrls.html">getContentUrls</a></li>
+<li class="page-list-item"><a href="../Content_Information/updateContentUrls.html">updateContentUrls</a></li>
+<li class="page-list-item"><a href="../Content_Information/isLive.html">isLive</a></li>
+<li class="page-list-item"><a href="../Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li>
+<li class="page-list-item"><a href="../Content_Information/createDebugElement.html">createDebugElement</a></li></ul></li>
+<li class="page-list-item"><a href="../Static_Properties.html">RxPlayer Static Properties</a></li>
+<li class="page-list-item"><a href="../Typescript_Types.html">Typescript Types</a></li>
+<li><div class="page-list-item page-list-group">Tools</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Tools/TextTrackRenderer.html">TextTrackRenderer</a></li>
+<li class="page-list-item"><a href="../Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li>
+<li class="page-list-item"><a href="../Tools/StringUtils.html">StringUtils</a></li>
+<li class="page-list-item"><a href="../Tools/parseBifThumbnails.html">parseBifThumbnails</a></li>
+<li class="page-list-item"><a href="../Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li>
+<li class="page-list-item"><a href="../Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Miscellaneous</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Miscellaneous/plugins.html">Plugins</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Low_Latency.html">Low Latency</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/hdr.html">HDR</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Debug_Element.html">Debug Element</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Local_Contents.html">Local Contents</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Text_Tracks.html">Text Tracks</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/Initial_Position.html">Initial Position</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li>
+<li class="page-list-item"><a href="../Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">Reference</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../reference/API_Reference.html">API Reference</a></li></ul></li>
+<li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
+
+<li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
+</ul></div><script type="text/javascript" src="../../scripts/lunr.js" charset="utf-8"></script><script type="text/javascript" src="../../scripts/script.js" charset="utf-8"></script></body></html>

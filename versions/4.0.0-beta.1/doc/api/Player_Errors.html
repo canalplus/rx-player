@@ -1,0 +1,463 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../styles/style.css"/><link rel="stylesheet" href="../styles/code.css"/><title>Player Errors - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../static/img/logo.png" /></a><a class="navbar-item hideable"href="../Getting_Started/Welcome.html">Getting Started</a>
+<a class="navbar-item navbar-active hideable"href="./Overview.html">API</a>
+<a class="navbar-item hideable"href="../reference/API_Reference.html">Reference</a>
+<a class="navbar-item hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
+<span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
+<a aria-label="Link to repository" class="navbar-item first-right hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 4.0.0-beta.1</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="./Overview.html">Overview</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Creating_a_Player.html">Creating a Player</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Loading_a_Content.html">Loading a Content</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Decryption_Options.html">Decryption Options</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Basic Methods</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getPlayerState.html">getPlayerState</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/addEventListener.html">addEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/removeEventListener.html">removeEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/play.html">play</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/pause.html">pause</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/stop.html">stop</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getPosition.html">getPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getWallClockTime.html">getWallClockTime</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/seekTo.html">seekTo</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getMediaDuration.html">getMediaDuration</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getError.html">getError</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getVideoElement.html">getVideoElement</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getAvailablePeriods.html">getAvailablePeriods</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getCurrentPeriod.html">getCurrentPeriod</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/dispose.html">dispose</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/reload.html">reload</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="./Player_States.html">Player States</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Player_Events.html">Player Events</a></li><li class="sidebar-item"><a class="sidebar-link active" href="./Player_Errors.html">Player Errors</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Track Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getAudioTrack.html">getAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getTextTrack.html">getTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getVideoTrack.html">getVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setAudioTrack.html">setAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setTextTrack.html">setTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setVideoTrack.html">setVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/disableTextTrack.html">disableTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Representation Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Representation_Selection/getVideoRepresentation.html">getVideoRepresentation</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Representation_Selection/getAudioRepresentation.html">getAudioRepresentation</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Representation_Selection/lockAudioVideoRepresentations.html">lockVideoRepresentations / lockAudioRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Representation_Selection/getLockedVideoRepresentations.html">getLockedVideoRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Representation_Selection/getLockedAudioRepresentations.html">getLockedAudioRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Representation_Selection/unlockAudioVideoRepresentations.html">unlockVideoRepresentations / unlockAudioRepresentations</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Speed Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Volume Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/setVolume.html">setVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/getVolume.html">getVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/mute.html">mute</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/isMute.html">isMute</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/unMute.html">unMute</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Information/getCurrentBufferGap.html">getCurrentBufferGap</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Content Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/getContentUrls.html">getContentUrls</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/updateContentUrls.html">updateContentUrls</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/isLive.html">isLive</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/createDebugElement.html">createDebugElement</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="./Static_Properties.html">RxPlayer Static Properties</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Typescript_Types.html">Typescript Types</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Tools</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Tools/TextTrackRenderer.html">TextTrackRenderer</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/StringUtils.html">StringUtils</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/parseBifThumbnails.html">parseBifThumbnails</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Miscellaneous</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/plugins.html">Plugins</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Low_Latency.html">Low Latency</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/hdr.html">HDR</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Debug_Element.html">Debug Element</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Local_Contents.html">Local Contents</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Text_Tracks.html">Text Tracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Initial_Position.html">Initial Position</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="player_errors_and_warnings"></a></p>
+<h1>Player errors and warnings</h1>
+<p><a name="overview"></a></p>
+<h2>Overview</h2>
+<p>Various errors can be triggered when playing a media content. Those can happen
+when:</p>
+<ul>
+<li>The network is unreachable</li>
+<li>The codecs are not supported</li>
+<li>We have no mean to decrypt the data</li>
+<li>…</li>
+</ul>
+<p>Some errors can be fatal to content playback in which case they will stop the
+player, others act more as warnings and are more along the line of a minor
+problem notification.</p>
+<p>You can know if a fatal error interrupted your playback by:</p>
+<ul>
+<li>
+<p>adding an event listener to the <code>"error"</code> event (see the <a href="./Player_Events.html">player
+events</a> documentation). This event listener will take the
+error directly in argument.</p>
+</li>
+<li>
+<p>calling the <code>getError</code> API if the current state is <code>STOPPED</code>. If
+different from <code>null</code>, it means that a fatal error happened (see the
+documentation for <a href="./Basic_Methods/getError.html">getError</a>).</p>
+</li>
+</ul>
+<p>You can also be warned of any non-fatal error by:</p>
+<ul>
+<li>adding an event listener to the <code>"warning"</code> event (see the <a href="./Player_Events.html">player
+events</a> documentation). The event listener will take the
+non-fatal error directly in argument.</li>
+</ul>
+<p>All of those are in essence <code>Error</code> instances with added information.</p>
+<p>Those supplementary information are described in this page.</p>
+<p><a name="structure_of_an_error"></a></p>
+<h2>Structure of an Error</h2>
+<p>Each of RxPlayer’s error objects have at least those properties:</p>
+<ul>
+<li>
+<p><code>type</code> (<code>string</code>): A large category for the error
+(e.g. <code>NETWORK_ERROR</code>, <code>ENCRYPTED_MEDIA_ERROR</code> …)</p>
+</li>
+<li>
+<p><code>code</code> (<code>string</code>): A set identification “code” for the error encountered</p>
+</li>
+<li>
+<p><code>message</code> (<code>string</code>): A displayable, human-readable, summary of the
+error.</p>
+</li>
+<li>
+<p><code>fatal</code> (<code>boolean</code>): If true, the error was fatal. Meaning that the
+playback was interrupted by it</p>
+</li>
+</ul>
+<p><a name="types"></a></p>
+<h2>Types</h2>
+<p>The types are the different strings you can have as the <code>type</code> property of an
+error.</p>
+<p>This chapter provides an exhaustive list of the possible type of error
+encountered.</p>
+<p><a name="network_error"></a></p>
+<h3>NETWORK_ERROR</h3>
+<p>A NetworkError is any Network-related error (HTTP 404, request timeout…), they
+all have a <code>type</code> property equal to <code>"NETWORK_ERROR"</code>.</p>
+<h4>codes</h4>
+<p>A NetworkError can only have the following code (<code>code</code> property):</p>
+<ul>
+<li><code>"PIPELINE_LOAD_ERROR"</code>: the
+<a href="../Getting_Started/Glossary.html#manifest">Manifest</a> or
+segment request failed.</li>
+</ul>
+<h4>more information</h4>
+<p>A NetworkError provide much more infos than this code.</p>
+<p>Among its properties, you have:</p>
+<ul>
+<li>
+<p><code>url</code> (<code>string</code>): The url the request has been on</p>
+</li>
+<li>
+<p><code>status</code> (<code>Number</code>): Status code of the HTTP request.</p>
+</li>
+<li>
+<p><code>errorType</code> (<code>string</code>): Further precision about what went wrong.</p>
+<p>This string can either be:</p>
+<ul>
+<li><code>"TIMEOUT"</code>: The request timeouted.</li>
+<li><code>"ERROR_EVENT"</code>: The XMLHttpRequest has sent an error event</li>
+<li><code>"PARSE_ERROR"</code>: No data could have been extracted from this request</li>
+<li><code>"ERROR_HTTP_CODE"</code>: The request finished with a status code not in
+the 2xx range.</li>
+</ul>
+</li>
+</ul>
+<p><a name="media_error"></a></p>
+<h3>MEDIA_ERROR</h3>
+<p>Error related to the media itself. It can both come from the player itself
+(<a href="../Getting_Started/Glossary.html#structure_of_a_manifest_object">Manifest</a>
+parsing) or from the browser itself (content playback).</p>
+<p>They all have a <code>type</code> property equal to <code>"MEDIA_ERROR"</code>.</p>
+<h4>codes</h4>
+<p>A MediaError can have the following codes (<code>code</code> property):</p>
+<ul>
+<li>
+<p><code>"BUFFER_APPEND_ERROR"</code>: A media segment could not have been added to the
+corresponding media buffer. This often happens with malformed segments.</p>
+</li>
+<li>
+<p><code>"BUFFER_FULL_ERROR"</code>: The needed segment could not have been added
+because the corresponding media buffer was full.</p>
+</li>
+<li>
+<p><code>"BUFFER_TYPE_UNKNOWN"</code>: The type of buffer considered (e.g. “audio” /
+“video” / “text”) has no media buffer implementation in your build.</p>
+</li>
+<li>
+<p><code>"MANIFEST_INCOMPATIBLE_CODECS_ERROR"</code>: An
+<a href="../Getting_Started/Glossary.html#adaptation">Adaptation</a> (or track) has none of its
+<a href="../Getting_Started/Glossary.html#representation">Representations</a> (read quality) in a supported
+codec.</p>
+</li>
+<li>
+<p><code>"MANIFEST_PARSE_ERROR"</code>: Generic error to signal than the
+<a href="../Getting_Started/Glossary.html#structure_of_a_manifest_object">Manifest</a> could not be parsed.</p>
+</li>
+<li>
+<p><code>"MANIFEST_UNSUPPORTED_ADAPTATION_TYPE"</code>: One of the
+<a href="../Getting_Started/Glossary.html#adaptation">Adaptation</a> has a type (e.g. “audio”, “text” or
+“video” which is not managed by the RxPlayer).</p>
+</li>
+<li>
+<p><code>"MEDIA_ERR_ABORTED"</code>: A crucial browser-side fetching operation was
+aborted.</p>
+</li>
+<li>
+<p><code>"MEDIA_ERR_BLOCKED_AUTOPLAY"</code>: The current browser has a policy which
+forbids us to autoPlay the content. As a consequence, the rx-player stays
+in a <code>"LOADED"</code> state.
+This code is always a warning and it never causes playback interruption.</p>
+</li>
+<li>
+<p><code>"MEDIA_ERR_PLAY_NOT_ALLOWED"</code>: A <code>play</code> call on our API (coming from you)
+failed because the current browser does not allow it.
+The content should still be in a paused state.
+This is in almost any case due a browser policy which prevents a content to
+play without any user interaction.
+In those cases, we recommend to display a UI element on your page inviting
+the final user to manually play the content.</p>
+</li>
+<li>
+<p><code>"MEDIA_ERR_NOT_LOADED_METADATA"</code>: The current browser falsely announce
+having loaded the content’s metadata.
+In that case, we cannot switch to the <code>LOADED</code> state directly (we will
+be blocked in either a <code>LOADING</code> or a <code>RELOADING</code> state) and you’re
+encouraged to call <code>play</code> manually when you want to play the content.
+This is a case only encountered in the Samsung browser (as found in
+Android) when loading a content in “directfile” mode.</p>
+</li>
+<li>
+<p><code>"MEDIA_ERR_DECODE"</code>: A pushed segment/media could not be decoded by the
+browser. This happens most-of-all with malformed segments.</p>
+</li>
+<li>
+<p><code>"MEDIA_ERR_NETWORK"</code>: A browser-side request failed.</p>
+</li>
+<li>
+<p><code>"MEDIA_ERR_SRC_NOT_SUPPORTED"</code>: The media associated to the video element
+is not valid.</p>
+</li>
+<li>
+<p><code>"MEDIA_ERR_UNKNOWN"</code>: Media error impossible to characterize.</p>
+</li>
+<li>
+<p><code>"MEDIA_KEYS_NOT_SUPPORTED"</code>: The current browser has no MediaKeys
+implementation and the content is encrypted.</p>
+</li>
+<li>
+<p><code>"MEDIA_SOURCE_NOT_SUPPORTED"</code>: No known MediaSource API is supported by
+your browser and we need to create one.</p>
+</li>
+<li>
+<p><code>"MEDIA_STARTING_TIME_NOT_FOUND"</code>: The provided or calculated starting
+time was not found in the corresponding media.</p>
+</li>
+<li>
+<p><code>"MEDIA_TIME_BEFORE_MANIFEST"</code>: The current time in the media is behind
+what is currently declared in the
+<a href="../Getting_Started/Glossary.html#structure_of_a_manifest_object">Manifest</a>.
+This can lead to stalling indefinitely as the player won’t be able to
+download new segments arround the current time.</p>
+</li>
+<li>
+<p><code>"MEDIA_TIME_AFTER_MANIFEST"</code>: The current time in the media is after what
+is currently declared in the
+<a href="../Getting_Started/Glossary.html#structure_of_a_manifest_object">Manifest</a>.
+This can lead to stalling indefinitely as the player won’t be able to
+download new segments arround the current time.</p>
+</li>
+<li>
+<p><code>"DISCONTINUITY_ENCOUNTERED"</code>: A discontinuity (i.e. a hole in the media
+buffer) has been encontered and seeked over.</p>
+<p>This is rarely a problem and may be encountered at a very start of a content
+when the initial segment’s start is much later than expected.</p>
+</li>
+<li>
+<p><code>"NO_PLAYABLE_REPRESENTATION"</code>: The currently chosen Adaptation does not
+contain any playable Representation. This usually happens when every
+Representation has been blacklisted due to encryption limitations.</p>
+</li>
+<li>
+<p><code>"MANIFEST_UPDATE_ERROR"</code>: This error should never be emitted as it is
+handled internally by the RxPlayer. Please open an issue if you encounter
+it.</p>
+<p>This error is triggered when an incoherent version of the Manifest was
+received during a partial update. The RxPlayer should catch the error and
+trigger a full update instead when that happens.</p>
+</li>
+<li>
+<p><code>"MEDIA_TIME_NOT_FOUND"</code>: This error should never be emitted by the
+RxPlayer. Please open an issue if you encounter it.</p>
+<p>It is triggered when a time we initially thought to be in the bounds of the
+Manifest actually does not link to any “Period” of the Manifest.</p>
+</li>
+</ul>
+<p><a name="encrypted_media_error"></a></p>
+<h3>ENCRYPTED_MEDIA_ERROR</h3>
+<p>Those errors are linked to the Encrypted Media Extensions. They concern various
+DRM-related problems.</p>
+<p>They all have a <code>type</code> property equal to <code>"ENCRYPTED_MEDIA_ERROR"</code>.</p>
+<h4>codes</h4>
+<p>An EncryptedMediaError can have the following codes (<code>code</code> property):</p>
+<ul>
+<li>
+<p><code>"INCOMPATIBLE_KEYSYSTEMS"</code>: None of the provided key systems was
+compatible with the current browser.</p>
+</li>
+<li>
+<p><code>"INVALID_ENCRYPTED_EVENT"</code>: An encountered <code>encrypted</code> event was not
+valid.</p>
+</li>
+<li>
+<p><code>"INVALID_KEY_SYSTEM"</code>: One of the given key system was not accepted by
+the RxPlayer.</p>
+</li>
+<li>
+<p><code>"KEY_ERROR"</code>: The <code>MediaKeySession</code> emitted an error.</p>
+</li>
+<li>
+<p><code>"KEY_GENERATE_REQUEST_ERROR"</code>: An error happened when calling the
+<code>generateRequest</code> API to generate a challenge.</p>
+</li>
+<li>
+<p><code>"KEY_LOAD_ERROR"</code>: An error was returned by the code fetching the
+license.</p>
+</li>
+<li>
+<p><code>"KEY_LOAD_TIMEOUT"</code>: The request for fetching the license had a duration
+of more than 10 seconds.</p>
+</li>
+<li>
+<p><code>"KEY_STATUS_CHANGE_ERROR"</code>: An error was detected when the
+<code>MediaKeySession</code> emitted a keyStatuseschange event (e.g. a key
+became <code>"expired"</code>).</p>
+<p><code>EncryptedMediaError</code> having the <code>KEY_STATUS_CHANGE_ERROR</code> code will also have
+a <code>keyStatuses</code> property, which is an array of objects - each describing a
+problematic key status with the following properties:</p>
+<ul>
+<li><code>keyId</code> (<code>ArrayBuffer</code>): The key id concerned by the status change
+indicated by <code>keyStatus</code></li>
+<li><code>keyStatus</code> (<a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus"><code>MediaKeyStatus</code></a>):
+The problematic key status encountered linked to the <code>keyId</code> of the same
+object.</li>
+</ul>
+<p>If multiple objects are found in the <code>keyStatuses</code> property, it means that
+multiple keys changed to a problematic status roughly around the same time.</p>
+</li>
+<li>
+<p><code>"KEY_UPDATE_ERROR"</code>: An error was detected after a message (like a
+license was given to the CDM).</p>
+</li>
+<li>
+<p><code>"LICENSE_SERVER_CERTIFICATE_ERROR"</code>: The server certificate of a
+<code>MediaKeys</code> could not be set.</p>
+</li>
+<li>
+<p><code>"MEDIA_IS_ENCRYPTED_ERROR"</code>: The media is encrypted and no key system
+was given to the RxPlayer’s APIs.</p>
+</li>
+<li>
+<p><code>CREATE_MEDIA_KEYS_ERROR</code>: An unknown error happened when creating a CDM
+instance (to decrypt the content).</p>
+<p>More specifically, this error happens when the EME <a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemaccess-createmediakeys"><code>createMediaKeys</code>
+API</a>
+throws or rejects.</p>
+<p>This is a relatively rare situation generally linked to an issue in the CDM.</p>
+<p>It has been encountered mainly on some faulty Android devices and Electron
+applications. If this happens repeatedly, try reinstalling the CDM
+module on your device.</p>
+</li>
+<li>
+<p><code>"MULTIPLE_SESSIONS_SAME_INIT_DATA"</code>: This error should never be emitted
+by the RxPlayer. Please open an issue if you encounter it.</p>
+<p>It is emitted when the RxPlayer try to open multiple <code>MediaKeySession</code> for
+the same initialization data (instead of using the exact same
+<code>MediaKeySession</code>).</p>
+</li>
+</ul>
+<p><a name="other_error"></a></p>
+<h3>OTHER_ERROR</h3>
+<p>Those errors are various other errors which does not belong to other types.</p>
+<p>They all have a <code>type</code> property equal to <code>"OTHER_ERROR"</code>.</p>
+<h4>codes</h4>
+<p>An OtherError can have the following codes (<code>code</code> property):</p>
+<ul>
+<li>
+<p><code>"PIPELINE_LOAD_ERROR"</code>: The
+<a href="../Getting_Started/Glossary.html#structure_of_a_manifest_object">Manifest</a> or segment
+request failed and the request has been done through a given callback (i.e.
+not the RxPlayer’s XMLHttpRequest implementation).</p>
+</li>
+<li>
+<p><code>"PIPELINE_PARSE_ERROR"</code>: The RxPlayer’s
+<a href="../Getting_Started/Glossary.html#structure_of_a_manifest_object">Manifest</a>
+or segment parsing logic failed. This is most likely due to a malformed
+Manifest or segment.</p>
+</li>
+<li>
+<p><code>"INTEGRITY_ERROR"</code>: An integrity-checking mechanism in the RxPlayer
+detected that there was an error with some loaded data. Such mechanism can
+be triggered for example when the <code>checkMediaSegmentIntegrity</code> option
+is set on the <code>loadVideo</code> call.</p>
+</li>
+<li>
+<p><code>"NONE"</code>: The error cannot be characterized.</p>
+</li>
+</ul>
+</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="./Player_Events.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">Player Events</div></a></div><div class="next-or-previous-page next-page"><a class="next-or-previous-page-link" href="./Track_Selection/getAudioTrack.html"><div class="next-or-previous-page-link-label">Next</div><div class="next-or-previous-page-link-name">getAudioTrack</div></a></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#player_errors_and_warnings">Player errors and warnings</a></p>
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#structure_of_an_error">Structure of an Error</a></li>
+<li><a href="#types">Types</a>
+<ul>
+<li><a href="#network_error">NETWORK_ERROR</a></li>
+<li><a href="#media_error">MEDIA_ERROR</a></li>
+<li><a href="#encrypted_media_error">ENCRYPTED_MEDIA_ERROR</a></li>
+<li><a href="#other_error">OTHER_ERROR</a></li>
+</ul>
+</li>
+</ul>
+</div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../Getting_Started/Welcome.html">Welcome</a></li>
+<li><div class="page-list-item page-list-group">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Getting_Started/Tutorials/Quick_Start.html">Quick Start</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Tutorials/Content_with_DRM.html">Contents with DRM</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Tutorials/Selecting_a_Track.html">Selecting a Track</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Migration from RxPlayer v3</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Getting_Started/Migration_From_v3/Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Migration_From_v3/Preferences.html">Track Preferences</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Migration_From_v3/Bitrate_Selection.html">Bitrate Selection</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Migration_From_v3/Constructor_Options.html">Constructor Options</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Migration_From_v3/loadVideo_Options.html">loadVideo Options</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Migration_From_v3/Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Migration_From_v3/Player_Errors.html">Player Errors</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Migration_From_v3/Player_Methods.html">Player Methods</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Migration_From_v3/Player_Types.html">Player Types</a></li></ul></li>
+<li class="page-list-item"><a href="../Getting_Started/Minimal_Player.html">Importing a minimal RxPlayer</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Glossary.html">Glossary</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Troubleshooting.html">Troubleshooting</a></li></ul></li>
+<li class="page-list-item"><div class="page-list-group opened active">API</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="./Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="./Creating_a_Player.html">Creating a Player</a></li>
+<li class="page-list-item"><a href="./Loading_a_Content.html">Loading a Content</a></li>
+<li class="page-list-item"><a href="./Decryption_Options.html">Decryption Options</a></li>
+<li><div class="page-list-item page-list-group">Basic Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Basic_Methods/getPlayerState.html">getPlayerState</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/addEventListener.html">addEventListener</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/removeEventListener.html">removeEventListener</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/play.html">play</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/pause.html">pause</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/stop.html">stop</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getPosition.html">getPosition</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getWallClockTime.html">getWallClockTime</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/seekTo.html">seekTo</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getMediaDuration.html">getMediaDuration</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getError.html">getError</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getVideoElement.html">getVideoElement</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getAvailablePeriods.html">getAvailablePeriods</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getCurrentPeriod.html">getCurrentPeriod</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/dispose.html">dispose</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/reload.html">reload</a></li></ul></li>
+<li class="page-list-item"><a href="./Player_States.html">Player States</a></li>
+<li class="page-list-item"><a href="./Player_Events.html">Player Events</a></li>
+<li class="page-list-item active"><a href="./Player_Errors.html">Player Errors</a></li>
+<li><div class="page-list-item page-list-group">Track Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Track_Selection/getAudioTrack.html">getAudioTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getTextTrack.html">getTextTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getVideoTrack.html">getVideoTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setAudioTrack.html">setAudioTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setTextTrack.html">setTextTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setVideoTrack.html">setVideoTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/disableTextTrack.html">disableTextTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Representation Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Representation_Selection/getVideoRepresentation.html">getVideoRepresentation</a></li>
+<li class="page-list-item"><a href="./Representation_Selection/getAudioRepresentation.html">getAudioRepresentation</a></li>
+<li class="page-list-item"><a href="./Representation_Selection/lockAudioVideoRepresentations.html">lockVideoRepresentations / lockAudioRepresentations</a></li>
+<li class="page-list-item"><a href="./Representation_Selection/getLockedVideoRepresentations.html">getLockedVideoRepresentations</a></li>
+<li class="page-list-item"><a href="./Representation_Selection/getLockedAudioRepresentations.html">getLockedAudioRepresentations</a></li>
+<li class="page-list-item"><a href="./Representation_Selection/unlockAudioVideoRepresentations.html">unlockVideoRepresentations / unlockAudioRepresentations</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Speed Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li>
+<li class="page-list-item"><a href="./Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li>
+<li class="page-list-item"><a href="./Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Volume Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Volume_Control/setVolume.html">setVolume</a></li>
+<li class="page-list-item"><a href="./Volume_Control/getVolume.html">getVolume</a></li>
+<li class="page-list-item"><a href="./Volume_Control/mute.html">mute</a></li>
+<li class="page-list-item"><a href="./Volume_Control/isMute.html">isMute</a></li>
+<li class="page-list-item"><a href="./Volume_Control/unMute.html">unMute</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Buffer_Information/getCurrentBufferGap.html">getCurrentBufferGap</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Content Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Content_Information/getContentUrls.html">getContentUrls</a></li>
+<li class="page-list-item"><a href="./Content_Information/updateContentUrls.html">updateContentUrls</a></li>
+<li class="page-list-item"><a href="./Content_Information/isLive.html">isLive</a></li>
+<li class="page-list-item"><a href="./Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li>
+<li class="page-list-item"><a href="./Content_Information/createDebugElement.html">createDebugElement</a></li></ul></li>
+<li class="page-list-item"><a href="./Static_Properties.html">RxPlayer Static Properties</a></li>
+<li class="page-list-item"><a href="./Typescript_Types.html">Typescript Types</a></li>
+<li><div class="page-list-item page-list-group">Tools</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Tools/TextTrackRenderer.html">TextTrackRenderer</a></li>
+<li class="page-list-item"><a href="./Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li>
+<li class="page-list-item"><a href="./Tools/StringUtils.html">StringUtils</a></li>
+<li class="page-list-item"><a href="./Tools/parseBifThumbnails.html">parseBifThumbnails</a></li>
+<li class="page-list-item"><a href="./Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li>
+<li class="page-list-item"><a href="./Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Miscellaneous</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Miscellaneous/plugins.html">Plugins</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Low_Latency.html">Low Latency</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/hdr.html">HDR</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Debug_Element.html">Debug Element</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Local_Contents.html">Local Contents</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Text_Tracks.html">Text Tracks</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Initial_Position.html">Initial Position</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">Reference</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../reference/API_Reference.html">API Reference</a></li></ul></li>
+<li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
+
+<li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
+</ul></div><script type="text/javascript" src="../scripts/lunr.js" charset="utf-8"></script><script type="text/javascript" src="../scripts/script.js" charset="utf-8"></script></body></html>

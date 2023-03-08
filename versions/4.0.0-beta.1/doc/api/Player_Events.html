@@ -1,0 +1,977 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../styles/style.css"/><link rel="stylesheet" href="../styles/code.css"/><title>Player Events - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../static/img/logo.png" /></a><a class="navbar-item hideable"href="../Getting_Started/Welcome.html">Getting Started</a>
+<a class="navbar-item navbar-active hideable"href="./Overview.html">API</a>
+<a class="navbar-item hideable"href="../reference/API_Reference.html">Reference</a>
+<a class="navbar-item hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
+<span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
+<a aria-label="Link to repository" class="navbar-item first-right hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 4.0.0-beta.1</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="./Overview.html">Overview</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Creating_a_Player.html">Creating a Player</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Loading_a_Content.html">Loading a Content</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Decryption_Options.html">Decryption Options</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Basic Methods</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getPlayerState.html">getPlayerState</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/addEventListener.html">addEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/removeEventListener.html">removeEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/play.html">play</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/pause.html">pause</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/stop.html">stop</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getPosition.html">getPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getWallClockTime.html">getWallClockTime</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/seekTo.html">seekTo</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getMediaDuration.html">getMediaDuration</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getError.html">getError</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getVideoElement.html">getVideoElement</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getAvailablePeriods.html">getAvailablePeriods</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/getCurrentPeriod.html">getCurrentPeriod</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/dispose.html">dispose</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Basic_Methods/reload.html">reload</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="./Player_States.html">Player States</a></li><li class="sidebar-item"><a class="sidebar-link active" href="./Player_Events.html">Player Events</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Player_Errors.html">Player Errors</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Track Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getAudioTrack.html">getAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getTextTrack.html">getTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getVideoTrack.html">getVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setAudioTrack.html">setAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setTextTrack.html">setTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/setVideoTrack.html">setVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/disableTextTrack.html">disableTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Representation Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Representation_Selection/getVideoRepresentation.html">getVideoRepresentation</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Representation_Selection/getAudioRepresentation.html">getAudioRepresentation</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Representation_Selection/lockAudioVideoRepresentations.html">lockVideoRepresentations / lockAudioRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Representation_Selection/getLockedVideoRepresentations.html">getLockedVideoRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Representation_Selection/getLockedAudioRepresentations.html">getLockedAudioRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Representation_Selection/unlockAudioVideoRepresentations.html">unlockVideoRepresentations / unlockAudioRepresentations</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Speed Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Volume Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/setVolume.html">setVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/getVolume.html">getVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/mute.html">mute</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/isMute.html">isMute</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Volume_Control/unMute.html">unMute</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Buffer_Information/getCurrentBufferGap.html">getCurrentBufferGap</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Content Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/getContentUrls.html">getContentUrls</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/updateContentUrls.html">updateContentUrls</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/isLive.html">isLive</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Content_Information/createDebugElement.html">createDebugElement</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="./Static_Properties.html">RxPlayer Static Properties</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Typescript_Types.html">Typescript Types</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Tools</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Tools/TextTrackRenderer.html">TextTrackRenderer</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/StringUtils.html">StringUtils</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/parseBifThumbnails.html">parseBifThumbnails</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Miscellaneous</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/plugins.html">Plugins</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Low_Latency.html">Low Latency</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/hdr.html">HDR</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Debug_Element.html">Debug Element</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Local_Contents.html">Local Contents</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Text_Tracks.html">Text Tracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/Initial_Position.html">Initial Position</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="player_events"></a></p>
+<h1>Player events</h1>
+<p><a name="overview"></a></p>
+<h2>Overview</h2>
+<p>To communicate about events (like an error or the update of the current video
+bitrate) the player use the event listener pattern.</p>
+<p>As <a href="./Basic_Methods/addEventListener.html">documented in the API</a>, you can call
+<code>addEventListener</code> to register a callback for a particular event, like:</p>
+<pre><code class="language-js">player.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"playerStateChange"</span>, <span class="hljs-function">(<span class="hljs-params">newState</span>) =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"the RxPlayer's state changed to:"</span>, newState);
+});
+</code></pre>
+<p>You can unregister a callback through the <code>removeEventListener</code> API,
+documented <a href="./Basic_Methods/removeEventListener.html">here</a>.</p>
+<p><a name="basic_events"></a></p>
+<h2>Basic events</h2>
+<p>This chapter describes the most important events sent by the player.</p>
+<p><a name="playerstatechange"></a></p>
+<h3>playerStateChange</h3>
+<p><em>payload type</em>: <code>string</code></p>
+<p>Emit the current state of the player, every time it changes.</p>
+<p>This is the event to catch if you want to know when the player is playing, is
+paused, is rebuffering, is ended or is stopped.</p>
+<p>As it is a central part of our API and can be difficult concept to understand,
+we have a special <a href="./Player_States.html">page of documentation on player states</a>.</p>
+<p><a name="error"></a></p>
+<h3>error</h3>
+<p><em>payload type</em>: <code>Error</code></p>
+<p>Triggered when a fatal error happened.</p>
+<p>A fatal error is an error that led the player to stop playing the current
+content.</p>
+<p>The payload is the corresponding error. See <a href="./Player_Errors.html">the Player
+Error</a> documentation for more information.</p>
+<p><a name="warning"></a></p>
+<h3>warning</h3>
+<p><em>payload type</em>: <code>Error</code></p>
+<p>Triggered each time a minor error happened.</p>
+<p>This error won’t lead the RxPlayer to stop the content. It can for example be
+an HTTP request error, some minor error detected in the content or the current
+position being to far below the minimum playable position.</p>
+<p>The payload is the corresponding error. See <a href="./Player_Errors.html">the Player
+Error</a> documentation for more information.</p>
+<p><a name="positionupdate"></a></p>
+<h3>positionUpdate</h3>
+<p><em>payload type</em>: <code>Object</code></p>
+<p>Emit information about the current position at most every seconds (also emits
+every time various player events are received).</p>
+<p>The object emitted as the following properties:</p>
+<ul>
+<li>
+<p><code>position</code> (<code>Number</code>): The current position in the video, in seconds.</p>
+</li>
+<li>
+<p><code>duration</code> (<code>Number</code>): The duration of the content.</p>
+</li>
+<li>
+<p><code>bufferGap</code> (<code>Number</code>): The gap, in seconds, between the current
+position and the end of the current buffered range.</p>
+</li>
+<li>
+<p><code>playbackRate</code> (<code>Number</code>): The current playback rate the content is on.</p>
+</li>
+<li>
+<p><code>liveGap</code> (<code>Number|undefined</code>): Only for live contents. The gap between
+the current position and the “live edge”.
+Might not be set for <code>directfile</code> contents.</p>
+</li>
+<li>
+<p><code>maximumPosition</code> (<code>Number|undefined</code>): The maximum time until which
+the buffer can currently be filled. That is:</p>
+<ul>
+<li>
+<p>for static contents (like VoD), the duration.</p>
+</li>
+<li>
+<p>for dynamic contents (like live contents), the current maximum available
+position (live edge for live contents) minus a security margin we added to
+avoid buffering ahead of it.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><code>wallClockTime</code> (<code>Number|undefined</code>): Only for live contents. The
+current time converted to wall-clock time in seconds.
+That is the real live position (and not the position as announced by the
+video element).</p>
+</li>
+</ul>
+<p><a name="seeking"></a></p>
+<h3>seeking</h3>
+<p>Emitted when a “seek” operation (to “move”/“skip” to another position) begins
+on the currently loaded content.</p>
+<p><a name="seeked"></a></p>
+<h3>seeked</h3>
+<p>Emitted when a “seek” operation (to “move”/“skip” to another position) on the
+currently loaded content has finished</p>
+<p><a name="track_selection_events"></a></p>
+<h2>Track selection events</h2>
+<p>This chapter describes events linked to the current audio, video or text track.</p>
+<p><a name="availableaudiotrackschange"></a></p>
+<h3>availableAudioTracksChange</h3>
+<p><em>payload type</em>: <code>Array.&lt;Object&gt;</code></p>
+<p>Triggered when the currently available audio tracks might have changed (e.g.: at
+the beginning of the content, when period changes…) for the currently-playing
+Period.</p>
+<p><em>The event might also rarely be emitted even if the list of available audio
+tracks did not really change - as the RxPlayer might send it in situations where
+there’s a chance it had without thoroughly checking it.</em></p>
+<p>The array emitted contains object describing each available audio track:</p>
+<ul>
+<li>
+<p><code>active</code> (<code>Boolean</code>): Whether the track is the one currently active or
+not.</p>
+</li>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for
+setting the track via <code>setAudioTrack</code>.</p>
+</li>
+<li>
+<p><code>language</code> (<code>string</code>): The language the audio track is in, as set in
+the <a href="../Getting_Started/Glossary.html#manifest">Manifest</a>.</p>
+</li>
+<li>
+<p><code>normalized</code> (<code>string</code>): An attempt to translate the <code>language</code>
+property into an ISO 639-3 language code (for now only support translations
+from ISO 639-1 and ISO 639-2 language codes). If the translation attempt
+fails (no corresponding ISO 639-3 language code is found), it will equal the
+value of <code>language</code></p>
+</li>
+<li>
+<p><code>audioDescription</code> (<code>Boolean</code>): Whether the track is an audio
+description of what is happening at the screen.</p>
+</li>
+<li>
+<p><code>dub</code> (<code>Boolean|undefined</code>): If set to <code>true</code>, this audio track is a
+“dub”, meaning it was recorded in another language than the original.
+If set to <code>false</code>, we know that this audio track is in an original language.
+This property is <code>undefined</code> if we do not known whether it is in an original
+language.</p>
+</li>
+<li>
+<p><code>label</code> (<code>string|undefined</code>): A human readable label that may be displayed in
+the user interface providing a choice between audio tracks.</p>
+<p>This information is usually set only if the current Manifest contains one.</p>
+</li>
+<li>
+<p><code>representations</code> (<code>Array.&lt;Object&gt;</code>):</p>
+<p>Array listing the available audio Representations linked to this audio track.
+Each object describing a single Representation, with the following properties:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify this Representation.</p>
+</li>
+<li>
+<p><code>bitrate</code> (<code>Number|undefined</code>): The bitrate of this Representation, in bits
+per seconds.</p>
+</li>
+<li>
+<p><code>codec</code> (<code>string|undefined</code>): The codec of the representation</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>This event only concerns the currently-playing
+<a href="../Getting_Started/Glossary.html">Period</a>.</p>
+<p><a name="availablevideotrackschange"></a></p>
+<h3>availableVideoTracksChange</h3>
+<p><em>payload type</em>: <code>Array.&lt;Object&gt;</code></p>
+<p>Triggered when the currently available video tracks might change (e.g.: at the
+beginning of the content, when period changes…) for the currently-playing
+Period.</p>
+<p><em>The event might also rarely be emitted even if the list of available video
+tracks did not really change - as the RxPlayer might send it in situations where
+there’s a chance it had without thoroughly checking it.</em></p>
+<p>The array emitted contains object describing each available video track:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for
+setting the track via <code>setVideoTrack</code>.</p>
+</li>
+<li>
+<p><code>active</code> (<code>Boolean</code>): Whether this track is the one currently
+active or not.</p>
+</li>
+<li>
+<p><code>label</code> (<code>string|undefined</code>): A human readable label that may be displayed in
+the user interface providing a choice between video tracks.</p>
+<p>This information is usually set only if the current Manifest contains one.</p>
+</li>
+<li>
+<p><code>representations</code> (<code>Array.&lt;Object&gt;</code>):
+<a href="../Getting_Started/Glossary.html#representation">Representations</a> of this video track, with
+attributes:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify this Representation.</p>
+</li>
+<li>
+<p><code>bitrate</code> (<code>Number|undefined</code>): The bitrate of this Representation, in bits
+per seconds.</p>
+<p><code>undefined</code> if unknown.</p>
+</li>
+<li>
+<p><code>width</code> (<code>Number|undefined</code>): The width of video, in pixels.</p>
+</li>
+<li>
+<p><code>height</code> (<code>Number|undefined</code>): The height of video, in pixels.</p>
+</li>
+<li>
+<p><code>codec</code> (<code>string|undefined</code>): The codec given in standard MIME type
+format.</p>
+</li>
+<li>
+<p><code>frameRate</code> (<code>number|undefined</code>): The video framerate.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><code>signInterpreted</code> (<code>Boolean</code>): Whether the track contains sign interpretation.</p>
+</li>
+</ul>
+<p>This event only concerns the currently-playing
+<a href="../Getting_Started/Glossary.html">Period</a>.</p>
+<p><a name="availabletexttrackschange"></a></p>
+<h3>availableTextTracksChange</h3>
+<p><em>payload type</em>: <code>Array.&lt;Object&gt;</code></p>
+<p>Triggered when the currently available text tracks might change (e.g.: at the
+beginning of the content, when period changes…) for the currently-playing
+Period.</p>
+<p><em>The event might also rarely be emitted even if the list of available text
+tracks did not really change - as the RxPlayer might send it in situations where
+there’s a chance it had without thoroughly checking it.</em></p>
+<p>The array emitted contains object describing each available text track:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for
+setting the track via <code>setTextTrack</code>.</p>
+</li>
+<li>
+<p><code>language</code> (<code>string</code>): The language the text track is in, as set in the
+<a href="../Getting_Started/Glossary.html#manifest">Manifest</a>.</p>
+</li>
+<li>
+<p><code>normalized</code> (<code>string</code>): An attempt to translate the <code>language</code>
+property into an ISO 639-3 language code (for now only support translations
+from ISO 639-1 and ISO 639-2 language codes). If the translation attempt
+fails (no corresponding ISO 639-3 language code is found), it will equal the
+value of <code>language</code></p>
+</li>
+<li>
+<p><code>label</code> (<code>string|undefined</code>): A human readable label that may be displayed in
+the user interface providing a choice between text tracks.</p>
+<p>This information is usually set only if the current Manifest contains one.</p>
+</li>
+<li>
+<p><code>closedCaption</code> (<code>Boolean</code>): Whether the track is specially adapted for
+the hard of hearing or not.</p>
+</li>
+<li>
+<p><code>forced</code> (<code>Boolean</code>): If <code>true</code> this text track is meant to be displayed by
+default if no other text track is selected.</p>
+<p>It is often used to clarify dialogue, alternate languages, texted graphics or
+location and person identification.</p>
+</li>
+<li>
+<p><code>active</code> (<code>Boolean</code>): Whether the track is the one currently active or
+not.</p>
+</li>
+</ul>
+<p>This event only concerns the currently-playing
+<a href="../Getting_Started/Glossary.html">Period</a>.</p>
+<p><a name="audiotrackchange"></a></p>
+<h3>audioTrackChange</h3>
+<p><em>payload type</em>: <code>Object|null</code></p>
+<p>Information about the current audio track, each time it changes for the
+currently-playing <a href="../Getting_Started/Glossary.html">Period</a>.</p>
+<p>The payload is an object describing the new track, with the following
+properties:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track.</p>
+</li>
+<li>
+<p><code>language</code> (<code>string</code>): The language the audio track is in.</p>
+</li>
+<li>
+<p><code>normalized</code> (<code>string</code>): An attempt to translate the <code>language</code>
+property into an ISO 639-3 language code (for now only support translations
+from ISO 639-1 and ISO 639-2 language codes). If the translation attempt
+fails (no corresponding ISO 639-3 language code is found), it will equal the
+value of <code>language</code></p>
+</li>
+<li>
+<p><code>audioDescription</code> (<code>Boolean</code>): Whether the track is an audio
+description of what is happening at the screen.</p>
+</li>
+<li>
+<p><code>dub</code> (<code>Boolean|undefined</code>): If set to <code>true</code>, this audio track is a
+“dub”, meaning it was recorded in another language than the original.
+If set to <code>false</code>, we know that this audio track is in an original language.
+This property is <code>undefined</code> if we do not known whether it is in an original
+language.</p>
+</li>
+<li>
+<p><code>label</code> (<code>string|undefined</code>): A human readable label that may be displayed in
+the user interface providing a choice between audio tracks.</p>
+<p>This information is usually set only if the current Manifest contains one.</p>
+</li>
+<li>
+<p><code>representations</code> (<code>Array.&lt;Object&gt;</code>):</p>
+<p>Array listing the available audio Representations linked to this audio track.
+Each object describing a single Representation, with the following properties:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify this Representation.</p>
+</li>
+<li>
+<p><code>bitrate</code> (<code>Number|undefined</code>): The bitrate of this Representation, in bits
+per seconds.</p>
+</li>
+<li>
+<p><code>codec</code> (<code>string|undefined</code>): The codec of the representation</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>This event only concerns the currently-playing
+<a href="../Getting_Started/Glossary.html">Period</a>.</p>
+<p><a name="texttrackchange"></a></p>
+<h3>textTrackChange</h3>
+<p><em>payload type</em>: <code>Object|null</code></p>
+<p>Information about the current audio track, each time it changes for the
+currently-playing <a href="../Getting_Started/Glossary.html">Period</a>.</p>
+<p>The payload is an object describing the new track, with the following
+properties:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track.</p>
+</li>
+<li>
+<p><code>language</code> (<code>string</code>): The language the text track is in.</p>
+</li>
+<li>
+<p><code>normalized</code> (<code>string</code>): An attempt to translate the <code>language</code>
+property into an ISO 639-3 language code (for now only support translations
+from ISO 639-1 and ISO 639-2 language codes). If the translation attempt
+fails (no corresponding ISO 639-3 language code is found), it will equal the
+value of <code>language</code></p>
+</li>
+<li>
+<p><code>closedCaption</code> (<code>Boolean</code>): Whether the track is specially adapted for
+the hard of hearing or not.</p>
+</li>
+<li>
+<p><code>forced</code> (<code>Boolean</code>): If <code>true</code> this text track is meant to be displayed by
+default if no other text track is selected.</p>
+<p>It is often used to clarify dialogue, alternate languages, texted graphics or
+location and person identification.</p>
+</li>
+<li>
+<p><code>label</code> (<code>string|undefined</code>): A human readable label that may be displayed in
+the user interface providing a choice between text tracks.</p>
+<p>This information is usually set only if the current Manifest contains one.</p>
+</li>
+</ul>
+<p>This event only concerns the currently-playing
+<a href="../Getting_Started/Glossary.html">Period</a>.</p>
+<p><a name="videotrackchange"></a></p>
+<h3>videoTrackChange</h3>
+<p><em>payload type</em>: <code>Object|null</code></p>
+<p>Information about the current audio track, each time it changes for the
+currently-playing <a href="../Getting_Started/Glossary.html">Period</a>.</p>
+<p>Information about the current video track, each time it changes (the last
+received segment got a new one).</p>
+<p>The payload is an object describing the new track, with the following
+properties:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify the track. Use it for setting
+the track via <code>setVideoTrack</code>.</p>
+</li>
+<li>
+<p><code>label</code> (<code>string|undefined</code>): A human readable label that may be displayed in
+the user interface providing a choice between video tracks.</p>
+<p>This information is usually set only if the current Manifest contains one.</p>
+</li>
+<li>
+<p><code>representations</code> (<code>Array.&lt;Object&gt;</code>):
+<a href="../Getting_Started/Glossary.html#representation">Representations</a> of this video track, with
+attributes:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify this Representation.</p>
+</li>
+<li>
+<p><code>bitrate</code> (<code>Number|undefined</code>): The bitrate of this Representation, in bits
+per seconds.</p>
+<p><code>undefined</code> if unknown.</p>
+</li>
+<li>
+<p><code>width</code> (<code>Number|undefined</code>): The width of video, in pixels.</p>
+</li>
+<li>
+<p><code>height</code> (<code>Number|undefined</code>): The height of video, in pixels.</p>
+</li>
+<li>
+<p><code>codec</code> (<code>string|undefined</code>): The codec given in standard MIME type
+format.</p>
+</li>
+<li>
+<p><code>frameRate</code> (<code>number|undefined</code>): The video framerate.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><code>isTrickModeTrack</code> (<code>Boolean|undefined</code>): If set to <code>true</code>, this track
+is a trick mode track. This type of tracks proposes video content that is
+often encoded with a very low framerate with the purpose to be played more
+efficiently at a much higher speed.</p>
+<p>To enter or exit a mode where trickmode tracks are used instead of regular
+non-trickmode ones, you can use the <code>setPlaybackRate</code> function.</p>
+</li>
+<li>
+<p><code>trickModeTracks</code> (<code>Object | undefined</code>): Trick mode video tracks
+attached to this video track.</p>
+<p>Each of those objects contain the same properties that a regular video track
+(same properties than what is documented here).</p>
+<p>It this property is either <code>undefined</code> or not set, then this track has no
+linked trickmode video track.</p>
+</li>
+<li>
+<p><code>signInterpreted</code> (<code>Boolean</code>): Whether the track contains sign interpretation.</p>
+</li>
+</ul>
+<p>A <code>null</code> payload means that video track has been disabled.</p>
+<p>This event only concerns the currently-playing
+<a href="../Getting_Started/Glossary.html">Period</a>.</p>
+<div class="warning">
+In <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.html#transport">transport option</a>),
+a `null` payload may be received even if the video track is still visually
+active.
+This seems due to difficult-to-detect browser bugs. We recommend not disabling
+video track when in directfile mode to avoid that case (this is documented
+in the corresponding APIs).
+</div>
+<p><a name="representation_selection_events"></a></p>
+<h2>Representation selection events</h2>
+<p>This chapter describes events linked to the current audio, video or
+Representation / quality.</p>
+<p><a name="videorepresentationchange"></a></p>
+<h3>videoRepresentationChange</h3>
+<p><em>payload type</em>: <code>Object|null</code></p>
+<p>Emitted when the current video Representation being considered by the RxPlayer
+changes.</p>
+<p>The payload is an object describing this new Representation, with the following
+properties:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify this Representation.</p>
+</li>
+<li>
+<p><code>bitrate</code> (<code>Number|undefined</code>): The bitrate of this Representation, in bits
+per seconds.</p>
+<p><code>undefined</code> if unknown.</p>
+</li>
+<li>
+<p><code>width</code> (<code>Number|undefined</code>): The width of video, in pixels.</p>
+</li>
+<li>
+<p><code>height</code> (<code>Number|undefined</code>): The height of video, in pixels.</p>
+</li>
+<li>
+<p><code>codec</code> (<code>string|undefined</code>): The codec of the Representation.</p>
+</li>
+<li>
+<p><code>frameRate</code> (<code>number|undefined</code>): The video framerate.</p>
+</li>
+</ul>
+<p>A <code>null</code> payload means that no video track is available now.</p>
+<p>This event only concerns the currently-playing
+<a href="../Getting_Started/Glossary.html">Period</a>.</p>
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.html#transport">transport option</a>)
+</div>
+<p><a name="audiorepresentationchange"></a></p>
+<h3>audioRepresentationChange</h3>
+<p><em>payload type</em>: <code>Object|null</code></p>
+<p>Emitted when the current audio Representation being considered by the RxPlayer
+changes.</p>
+<p>The payload is an object describing the new Representation, with the following
+properties:</p>
+<ul>
+<li>
+<p><code>id</code> (<code>string</code>): The id used to identify this Representation.</p>
+</li>
+<li>
+<p><code>bitrate</code> (<code>Number|undefined</code>): The bitrate of this Representation, in bits
+per seconds.</p>
+</li>
+<li>
+<p><code>codec</code> (<code>string|undefined</code>): The codec of the representation</p>
+</li>
+</ul>
+<p>This event only concerns the currently-playing
+<a href="../Getting_Started/Glossary.html">Period</a>.</p>
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.html#transport">transport option</a>)
+</div>
+<p><a name="playback_information"></a></p>
+<h2>Playback information</h2>
+<p>This chapter describes events describing miscellaneous information about the
+current content.</p>
+<p><a name="periodchange"></a></p>
+<h3>periodChange</h3>
+<p><em>payload type</em>: <code>Object</code></p>
+<p>Triggered when the current <a href="../Getting_Started/Glossary.html#period">Period</a> being seen changes.</p>
+<p>The payload of this event is an object containing the following properties:</p>
+<ul>
+<li>
+<p><code>start</code> (<code>number</code>): The starting position at which the Period starts, in
+seconds.</p>
+</li>
+<li>
+<p><code>end</code> (<code>number|undefined</code>): The position at which the Period ends, in
+seconds.</p>
+<p><code>undefined</code> either if not known or if the Period has no end yet (e.g. for
+live contents, the end might not be known for now).</p>
+</li>
+<li>
+<p><code>id</code> (<code>string</code>): <code>id</code> of the Period, allowing to call track and
+Representation selection APIs (such as <code>setAudioTrack</code> and
+<code>lockVideoRepresentations</code> for example) even when the Period changes.</p>
+</li>
+</ul>
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.html#transport">transport option</a>)
+</div>
+<p><a name="newavailableperiods"></a></p>
+<h3>newAvailablePeriods</h3>
+<p><em>payload type</em>: <code>Array.&lt;Object&gt;</code></p>
+<p>This event is triggered when one or multiple new
+<a href="../Getting_Started/Glossary.html#period">Periods</a> start to be considered by the
+RxPlayer in the current content.</p>
+<p>This event mainly allows to choose the text, audio and/or video tracks as well
+as the audio and/or video Representations to select for those Period(s).</p>
+<p>This event is first sent once the content is first loaded and then may be
+triggered gain everytime the RxPlayer is considering another <code>Period</code> of the
+content.</p>
+<p>The payload of this event is an array of object, each describing a single Period
+in chronological order.
+Those objects all contain the following properties:</p>
+<ul>
+<li>
+<p><code>start</code> (<code>number</code>): The starting position at which the Period starts, in
+seconds.</p>
+</li>
+<li>
+<p><code>end</code> (<code>number|undefined</code>): The position at which the Period ends, in
+seconds.</p>
+<p><code>undefined</code> either if not known or if the Period has no end yet (e.g. for
+live contents, the end might not be known for now).</p>
+</li>
+<li>
+<p><code>id</code> (<code>string</code>): <code>id</code> for this Period, allowing to call track and
+Representation selection APIs (such as <code>setAudioTrack</code> and
+<code>lockVideoRepresentations</code> for example) even if that Period is not currently
+playing.</p>
+</li>
+</ul>
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.html#transport">transport option</a>)
+</div>
+<p><a name="trackupdate"></a></p>
+<h3>trackUpdate</h3>
+<p><em>payload type</em>: <code>Object</code></p>
+<p>Event triggered if a video, audio or text track chosen for any
+<a href="../Getting_Started/Glossary.html#period">Period</a> is changed by the RxPlayer.</p>
+<p>This event is triggered just after the track is updated but before any of the
+corresponding data is actually loaded, thus allowing you to edit track or
+Representations settings before the RxPlayer can continue.</p>
+<p>However keep in mind that this event is not triggered for the initial default
+track choice made by the RxPlayer. If you want to react to this event instead,
+you can rely on the <code>newAvailablePeriods</code> event.</p>
+<p>Cases where the track changes include:</p>
+<ul>
+<li>
+<p>when the application updates a track manually (for example through a
+<code>setAudioTrack</code> call)</p>
+</li>
+<li>
+<p>when it had to be done as a side-effect of another API (for example after
+enabling trickmode video tracks through a <code>setPlaybackRate</code> call)</p>
+</li>
+<li>
+<p>or in the extremely rare situation where the RxPlayer had to do it by itself
+automatically (one situation would be when a refreshed content’s Manifest
+removes the previously-chosen track. There, the RxPlayer will send the
+<code>trackUpdate</code> event and - if no new track is chosen since - will
+automatically switch to that track so playback can continue).</p>
+</li>
+</ul>
+<p>The payload for this event is an object with the following properties:</p>
+<ul>
+<li>
+<p><code>trackType</code> (<code>string</code>): The type of track concerned. Can for example be
+<code>audio</code> for an audio track, <code>video</code> for a video track or <code>text</code> for a text
+track.</p>
+</li>
+<li>
+<p><code>period</code> (<code>Object</code>): Information about the concerned
+<a href="../Getting_Started/Glossary.html#period">Period</a>. This object contains as
+properties:</p>
+<ul>
+<li>
+<p><code>start</code> (<code>number</code>): The starting position at which the Period starts, in
+seconds.</p>
+</li>
+<li>
+<p><code>end</code> (<code>number|undefined</code>): The position at which the Period ends, in
+seconds.</p>
+<p><code>undefined</code> either if not known or if the Period has no end yet (e.g. for
+live contents, the end might not be known for now).</p>
+</li>
+<li>
+<p><code>id</code> (<code>string</code>): <code>id</code> of the Period, allowing to call track and
+Representation selection APIs (such as <code>setAudioTrack</code> and
+<code>lockVideoRepresentations</code> for example) even when the Period changes.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><code>reason</code> (<code>string</code>): The reason for the track update.
+For now, it can be set to:</p>
+<ul>
+<li>
+<p><code>"manual"</code>: the track was updated because the application called a
+method to directly update it.</p>
+<p>This event is the direct consequence of calling <code>setAudioTrack</code>,
+<code>setTextTrack</code>, <code>setVideoTrack</code>, <code>disableTextTrack</code> or
+<code>disableVideoTrack</code>, so it corresponds to track updates you should
+already be aware of.</p>
+</li>
+<li>
+<p><code>"trickmode-enabled"</code>: The track is being updated because the
+application wanted to enable video trickmode tracks (usually by setting
+the <code>preferTrickModeTracks</code> option of the <code>setPlaybackRate</code> method to
+<code>true</code>).</p>
+</li>
+<li>
+<p><code>"trickmode-disabled"</code>: The track is being updated because the
+application wanted to disable video trickmode tracks (usually by setting
+the <code>preferTrickModeTracks</code> option of the <code>setPlaybackRate</code> method to
+<code>false</code>).</p>
+</li>
+<li>
+<p><code>"missing"</code> the previously-chosen track was missing from the content’s
+refreshed Manifest.</p>
+</li>
+</ul>
+<p>Though other reasons may be added in the future (for future reasons not
+covered by those values), so you should expect this possibility in your
+application’s logic.</p>
+</li>
+</ul>
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.html#transport">transport option</a>)
+</div>
+<p><a name="brokenrepresentationslock"></a></p>
+<h3>brokenRepresentationsLock</h3>
+<p><em>payload type</em>: <code>Object</code></p>
+<p>Fairly rare event triggered if representations locked through Representations
+selection API such as <code>lockVideoRepresentations</code> or <code>lockAudioRepresentations</code>
+all became unplayable (most likely linked to encryption reasons), in which case,
+the RxPlayer “broke” that lock, i.e. it decided to remove that lock and play all
+Representations instead.</p>
+<p>This event is sent strictly before the RxPlayer had the chance to actually load
+those other Representations. You can thus profit from this event by
+synchronously locking Representations you wish to play and thus avoid playing
+the others.</p>
+<p>The payload for this event is an object with the following properties:</p>
+<ul>
+<li>
+<p><code>period</code> (<code>Object</code>): Information about the concerned
+<a href="../Getting_Started/Glossary.html#period">Period</a>. This object contains as
+properties:</p>
+<ul>
+<li>
+<p><code>start</code> (<code>number</code>): The starting position at which the Period starts, in
+seconds.</p>
+</li>
+<li>
+<p><code>end</code> (<code>number|undefined</code>): The position at which the Period ends, in
+seconds.</p>
+<p><code>undefined</code> either if not known or if the Period has no end yet (e.g. for
+live contents, the end might not be known for now).</p>
+</li>
+<li>
+<p><code>id</code> (<code>string</code>): <code>id</code> of the Period, allowing to call track and
+Representation selection APIs (such as <code>setAudioTrack</code> and
+<code>lockVideoRepresentations</code> for example) even when the Period changes.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><code>trackType</code> (<code>string</code>): The type of track concerned. Can for example be
+<code>audio</code> for audio Representations or <code>video</code> for video Representations.</p>
+</li>
+</ul>
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.html#transport">transport option</a>)
+</div>
+<p><a name="inbandevents"></a></p>
+<h2>inbandEvents</h2>
+<p><em>payload type</em>: <code>Object</code></p>
+<p>Event triggered when the player encounters inband events in the stream. These
+events are included in the loaded and parsed chunks, and are often used to carry
+content metadata.</p>
+<p>Each event contains :</p>
+<ul>
+<li>type (<em>type</em>: <code>String</code>) : defines the type of the event, specific to an
+inband event from a streaming protocol.</li>
+<li>value (<em>type</em>: <code>Object</code>) : the actual parsed content of the event.</li>
+</ul>
+<p>The supported inband event types are :</p>
+<ul>
+<li>
+<p>“emsg” : The emsg (Event message box) provides inband signaling for generic
+or MPEG-DASH specific events.
+One ISOBMFF media segment may contain one or several boxes. The parsed event
+contains :</p>
+<ul>
+<li>schemeIdUri (<code>String</code>)</li>
+<li>value (<code>String</code>)</li>
+<li>timescale (<code>Number</code>)</li>
+<li>presentationTimeDelta (<code>Number</code>)</li>
+<li>eventDuration (<code>Number</code>)</li>
+<li>id (<code>Number</code>)</li>
+<li>messageData (<code>Uint8Array</code>)</li>
+</ul>
+<p>These attributes are documented in the ISOBMFF specification.</p>
+</li>
+</ul>
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.html#transport">transport option</a>)
+</div>
+<p><a name="streamevent"></a></p>
+<h3>streamEvent</h3>
+<p><em>payload type</em>: <code>Object</code></p>
+<p>Event triggered when the player enters the time boundaries of a “stream event”.</p>
+<p>“Stream events” are metadata that can be defined in various streaming protocols,
+which indicates that an application should trigger some action when a specific
+time is reached in the content.</p>
+<p>Those events can either have only a start time or both a start time and an end
+time:</p>
+<ul>
+<li>
+<p>in the case where an event only has a start time, the RxPlayer will trigger
+a <code>streamEvent</code> right when the user reaches that time.</p>
+<p>If we return multiple time at that position (for example, when a user seeks
+back to it), you will receive a <code>streamEvent</code> as many times for that same
+event.</p>
+</li>
+<li>
+<p>in the case where an event has both a start and end time, the RxPlayer will
+trigger a <code>streamEvent</code> when the current position goes inside these time
+boundaries (between the start and end time).
+This can happen while reaching the start during regular playback but also
+when seeking at a position contained between the start and end time.</p>
+<p>The <code>streamEvent</code> event will not be re-sent until the current position
+“exits” those time boundaries. If the current position goes out of the
+boundaries of that event and then goes into it again (most likely due to the
+user seeking back into it), you will again receive a <code>streamEvent</code> for that
+same event.</p>
+</li>
+</ul>
+<p>The payload of a <code>streamEvent</code> depends on the source of the event. For example,
+it will not have the same format when it comes from a Manifest than when it
+comes from the media container.
+All possible formats are described in the <a href="../Getting_Started/Tutorials/EventStream_Handling.html">stream event
+tutorial</a>.</p>
+<p>Note: When an event has both a start and an end time, you can define a <code>onExit</code>
+callback on the payload. That callback will automatically be triggered when the
+current position goes after the end time or before the start time of that event.
+The <code>onExit</code> callback will only be called a single time at most and will only
+concern this iteration of the event (and not possible subsequent ones).</p>
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.html#transport">transport option</a>)
+</div>
+<p><a name="streameventskip"></a></p>
+<h3>streamEventSkip</h3>
+<p><em>payload type</em>: <code>Object</code></p>
+<p>Event triggered when the player skipped the time boundaries of a “stream event”
+(you can refer to the <a href="#streamevent"><code>streamEvent</code></a> event for a
+definition of what a “stream event” is).</p>
+<p>This means that the current position the player plays at, immediately changed
+from a time before the start time of a “stream event” to after its end time (or
+just after its end time for “stream event” without an end time).</p>
+<p>This is most likely due to the user seeking in the content. A “regular” content
+playback which continuously plays the content without seeking shouldn’t trigger
+any <code>streamEventSkip</code> event.</p>
+<p>The payload of a <code>streamEventSkip</code> is the same than for a <code>streamEvent</code> and as
+such depends on the source of the event.
+All possible formats are described in the <a href="../Getting_Started/Tutorials/EventStream_Handling.html">stream event
+tutorial</a>.</p>
+<p>Note that unlike <code>streamEvent</code> events, there’s no point to define an <code>onExit</code>
+callback on the payload of a <code>streamEventSkip</code> event. This is because this event
+was not entered, and will thus not be exited.</p>
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.html#transport">transport option</a>)
+</div>
+</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="./Player_States.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">Player States</div></a></div><div class="next-or-previous-page next-page"><a class="next-or-previous-page-link" href="./Player_Errors.html"><div class="next-or-previous-page-link-label">Next</div><div class="next-or-previous-page-link-name">Player Errors</div></a></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#player_events">Player events</a></p>
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#basic_events">Basic events</a>
+<ul>
+<li><a href="#playerstatechange">playerStateChange</a></li>
+<li><a href="#error">error</a></li>
+<li><a href="#warning">warning</a></li>
+<li><a href="#positionupdate">positionUpdate</a></li>
+<li><a href="#seeking">seeking</a></li>
+<li><a href="#seeked">seeked</a></li>
+</ul>
+</li>
+<li><a href="#track_selection_events">Track selection events</a>
+<ul>
+<li><a href="#availableaudiotrackschange">availableAudioTracksChange</a></li>
+<li><a href="#availablevideotrackschange">availableVideoTracksChange</a></li>
+<li><a href="#availabletexttrackschange">availableTextTracksChange</a></li>
+<li><a href="#audiotrackchange">audioTrackChange</a></li>
+<li><a href="#texttrackchange">textTrackChange</a></li>
+<li><a href="#videotrackchange">videoTrackChange</a></li>
+</ul>
+</li>
+<li><a href="#representation_selection_events">Representation selection events</a>
+<ul>
+<li><a href="#videorepresentationchange">videoRepresentationChange</a></li>
+<li><a href="#audiorepresentationchange">audioRepresentationChange</a></li>
+</ul>
+</li>
+<li><a href="#playback_information">Playback information</a>
+<ul>
+<li><a href="#periodchange">periodChange</a></li>
+<li><a href="#newavailableperiods">newAvailablePeriods</a></li>
+<li><a href="#trackupdate">trackUpdate</a></li>
+<li><a href="#brokenrepresentationslock">brokenRepresentationsLock</a></li>
+</ul>
+</li>
+<li><a href="#inbandevents">inbandEvents</a>
+<ul>
+<li><a href="#streamevent">streamEvent</a></li>
+<li><a href="#streameventskip">streamEventSkip</a></li>
+</ul>
+</li>
+</ul>
+</div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../Getting_Started/Welcome.html">Welcome</a></li>
+<li><div class="page-list-item page-list-group">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Getting_Started/Tutorials/Quick_Start.html">Quick Start</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Tutorials/Content_with_DRM.html">Contents with DRM</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Tutorials/Selecting_a_Track.html">Selecting a Track</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Migration from RxPlayer v3</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Getting_Started/Migration_From_v3/Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Migration_From_v3/Preferences.html">Track Preferences</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Migration_From_v3/Bitrate_Selection.html">Bitrate Selection</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Migration_From_v3/Constructor_Options.html">Constructor Options</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Migration_From_v3/loadVideo_Options.html">loadVideo Options</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Migration_From_v3/Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Migration_From_v3/Player_Errors.html">Player Errors</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Migration_From_v3/Player_Methods.html">Player Methods</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Migration_From_v3/Player_Types.html">Player Types</a></li></ul></li>
+<li class="page-list-item"><a href="../Getting_Started/Minimal_Player.html">Importing a minimal RxPlayer</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Glossary.html">Glossary</a></li>
+<li class="page-list-item"><a href="../Getting_Started/Troubleshooting.html">Troubleshooting</a></li></ul></li>
+<li class="page-list-item"><div class="page-list-group opened active">API</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="./Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="./Creating_a_Player.html">Creating a Player</a></li>
+<li class="page-list-item"><a href="./Loading_a_Content.html">Loading a Content</a></li>
+<li class="page-list-item"><a href="./Decryption_Options.html">Decryption Options</a></li>
+<li><div class="page-list-item page-list-group">Basic Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Basic_Methods/getPlayerState.html">getPlayerState</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/addEventListener.html">addEventListener</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/removeEventListener.html">removeEventListener</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/play.html">play</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/pause.html">pause</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/stop.html">stop</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getPosition.html">getPosition</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getWallClockTime.html">getWallClockTime</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/seekTo.html">seekTo</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getMediaDuration.html">getMediaDuration</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getError.html">getError</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getVideoElement.html">getVideoElement</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getAvailablePeriods.html">getAvailablePeriods</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/getCurrentPeriod.html">getCurrentPeriod</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/dispose.html">dispose</a></li>
+<li class="page-list-item"><a href="./Basic_Methods/reload.html">reload</a></li></ul></li>
+<li class="page-list-item"><a href="./Player_States.html">Player States</a></li>
+<li class="page-list-item active"><a href="./Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="./Player_Errors.html">Player Errors</a></li>
+<li><div class="page-list-item page-list-group">Track Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Track_Selection/getAudioTrack.html">getAudioTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getTextTrack.html">getTextTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getVideoTrack.html">getVideoTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setAudioTrack.html">setAudioTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setTextTrack.html">setTextTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/setVideoTrack.html">setVideoTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/disableTextTrack.html">disableTextTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li>
+<li class="page-list-item"><a href="./Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Representation Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Representation_Selection/getVideoRepresentation.html">getVideoRepresentation</a></li>
+<li class="page-list-item"><a href="./Representation_Selection/getAudioRepresentation.html">getAudioRepresentation</a></li>
+<li class="page-list-item"><a href="./Representation_Selection/lockAudioVideoRepresentations.html">lockVideoRepresentations / lockAudioRepresentations</a></li>
+<li class="page-list-item"><a href="./Representation_Selection/getLockedVideoRepresentations.html">getLockedVideoRepresentations</a></li>
+<li class="page-list-item"><a href="./Representation_Selection/getLockedAudioRepresentations.html">getLockedAudioRepresentations</a></li>
+<li class="page-list-item"><a href="./Representation_Selection/unlockAudioVideoRepresentations.html">unlockVideoRepresentations / unlockAudioRepresentations</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Speed Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li>
+<li class="page-list-item"><a href="./Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li>
+<li class="page-list-item"><a href="./Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Volume Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Volume_Control/setVolume.html">setVolume</a></li>
+<li class="page-list-item"><a href="./Volume_Control/getVolume.html">getVolume</a></li>
+<li class="page-list-item"><a href="./Volume_Control/mute.html">mute</a></li>
+<li class="page-list-item"><a href="./Volume_Control/isMute.html">isMute</a></li>
+<li class="page-list-item"><a href="./Volume_Control/unMute.html">unMute</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li>
+<li class="page-list-item"><a href="./Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Buffer_Information/getCurrentBufferGap.html">getCurrentBufferGap</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Content Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Content_Information/getContentUrls.html">getContentUrls</a></li>
+<li class="page-list-item"><a href="./Content_Information/updateContentUrls.html">updateContentUrls</a></li>
+<li class="page-list-item"><a href="./Content_Information/isLive.html">isLive</a></li>
+<li class="page-list-item"><a href="./Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li>
+<li class="page-list-item"><a href="./Content_Information/createDebugElement.html">createDebugElement</a></li></ul></li>
+<li class="page-list-item"><a href="./Static_Properties.html">RxPlayer Static Properties</a></li>
+<li class="page-list-item"><a href="./Typescript_Types.html">Typescript Types</a></li>
+<li><div class="page-list-item page-list-group">Tools</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Tools/TextTrackRenderer.html">TextTrackRenderer</a></li>
+<li class="page-list-item"><a href="./Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li>
+<li class="page-list-item"><a href="./Tools/StringUtils.html">StringUtils</a></li>
+<li class="page-list-item"><a href="./Tools/parseBifThumbnails.html">parseBifThumbnails</a></li>
+<li class="page-list-item"><a href="./Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li>
+<li class="page-list-item"><a href="./Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Miscellaneous</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Miscellaneous/plugins.html">Plugins</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Low_Latency.html">Low Latency</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/hdr.html">HDR</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Debug_Element.html">Debug Element</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Local_Contents.html">Local Contents</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Text_Tracks.html">Text Tracks</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/Initial_Position.html">Initial Position</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li>
+<li class="page-list-item"><a href="./Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">Reference</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../reference/API_Reference.html">API Reference</a></li></ul></li>
+<li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
+
+<li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
+</ul></div><script type="text/javascript" src="../scripts/lunr.js" charset="utf-8"></script><script type="text/javascript" src="../scripts/script.js" charset="utf-8"></script></body></html>

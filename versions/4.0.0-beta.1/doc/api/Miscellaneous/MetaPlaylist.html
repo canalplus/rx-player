@@ -1,0 +1,413 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>MetaPlaylist - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "../..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../../static/img/logo.png" /></a><a class="navbar-item hideable"href="../../Getting_Started/Welcome.html">Getting Started</a>
+<a class="navbar-item navbar-active hideable"href="../Overview.html">API</a>
+<a class="navbar-item hideable"href="../../reference/API_Reference.html">Reference</a>
+<a class="navbar-item hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
+<span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
+<a aria-label="Link to repository" class="navbar-item first-right hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 4.0.0-beta.1</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="../Overview.html">Overview</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Creating_a_Player.html">Creating a Player</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Loading_a_Content.html">Loading a Content</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Decryption_Options.html">Decryption Options</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Basic Methods</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getPlayerState.html">getPlayerState</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/addEventListener.html">addEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/removeEventListener.html">removeEventListener</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/play.html">play</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/pause.html">pause</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/stop.html">stop</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getPosition.html">getPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getWallClockTime.html">getWallClockTime</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/seekTo.html">seekTo</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getMediaDuration.html">getMediaDuration</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getError.html">getError</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getVideoElement.html">getVideoElement</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getAvailablePeriods.html">getAvailablePeriods</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/getCurrentPeriod.html">getCurrentPeriod</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/dispose.html">dispose</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Basic_Methods/reload.html">reload</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_States.html">Player States</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_Events.html">Player Events</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Player_Errors.html">Player Errors</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Track Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAudioTrack.html">getAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getTextTrack.html">getTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getVideoTrack.html">getVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setAudioTrack.html">setAudioTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setTextTrack.html">setTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/setVideoTrack.html">setVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/disableTextTrack.html">disableTextTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Representation Selection</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/getVideoRepresentation.html">getVideoRepresentation</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/getAudioRepresentation.html">getAudioRepresentation</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/lockAudioVideoRepresentations.html">lockVideoRepresentations / lockAudioRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/getLockedVideoRepresentations.html">getLockedVideoRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/getLockedAudioRepresentations.html">getLockedAudioRepresentations</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Representation_Selection/unlockAudioVideoRepresentations.html">unlockVideoRepresentations / unlockAudioRepresentations</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Speed Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Volume Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/setVolume.html">setVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/getVolume.html">getVolume</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/mute.html">mute</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/isMute.html">isMute</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Volume_Control/unMute.html">unMute</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Control</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Buffer Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Buffer_Information/getCurrentBufferGap.html">getCurrentBufferGap</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Content Information</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/getContentUrls.html">getContentUrls</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/updateContentUrls.html">updateContentUrls</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/isLive.html">isLive</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Content_Information/createDebugElement.html">createDebugElement</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="../Static_Properties.html">RxPlayer Static Properties</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Typescript_Types.html">Typescript Types</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Tools</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Tools/TextTrackRenderer.html">TextTrackRenderer</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/StringUtils.html">StringUtils</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/parseBifThumbnails.html">parseBifThumbnails</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group active opened">Miscellaneous</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./plugins.html">Plugins</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Low_Latency.html">Low Latency</a></li><li class="sidebar-item"><a class="sidebar-link" href="./DASH_WASM_Parser.html">DASH WASM Parser</a></li><li class="sidebar-item"><a class="sidebar-link" href="./hdr.html">HDR</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Debug_Element.html">Debug Element</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Local_Contents.html">Local Contents</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Local_Manifest_v0.1.html">Local Manifest v0.1</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Text_Tracks.html">Text Tracks</a></li><li class="sidebar-item"><a class="sidebar-link active" href="./MetaPlaylist.html">MetaPlaylist</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Initial_Position.html">Initial Position</a></li><li class="sidebar-item"><a class="sidebar-link" href="./presentationTimeOffset.html">presentationTimeOffset</a></li><li class="sidebar-item"><a class="sidebar-link" href="./DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="metaplaylist_v0.1"></a></p>
+<h1>MetaPlaylist v0.1</h1>
+<p><a name="overview"></a></p>
+<h2>Overview</h2>
+<p>The <code>MetaPlaylist</code> is a file allowing to define a content composed of multiple
+DASH or Smooth contents played one after another.</p>
+<p>It allows advanced use cases for an extremely low cost for the server
+infrastructure, the main one being creating a linear (live) contents from
+multiple non-linear (VOD) ones, without touching the original contents.</p>
+<p>You can also construct a new non-linear contents as a concatenation of multiple
+non-linear contents put one after the other. This method allows for example for
+a completely smooth streaming between multiple programs (e.g. when
+binge-watching a serie).</p>
+<p><a name="differences_with_plain_dash_contents"></a></p>
+<h2>Differences with plain DASH contents</h2>
+<p>The same result could be approximated with some advanced DASH features, but the
+MetaPlaylist has several advantages. Some of them are:</p>
+<ul>
+<li>
+<p>it supports DASH and HSS contents (technically HLS would also be possible)
+without modifying the original MPD/Manifest nor segments.</p>
+</li>
+<li>
+<p>the Manifest/MPD/Playlist corresponding to the original contents can
+be lazy-loaded (loaded only when the content will play).</p>
+<p>This is also possible in DASH with a feature called XLinks but it’s not
+always doable on the client-side, depending on the other elements present in
+that MPD.</p>
+<p>A MetaPlaylist file is much more strict in this regard.</p>
+<p>This is still a work-in-progress.</p>
+</li>
+<li>
+<p>it’s a format especially intended to be a concatenation of multiple
+contents to be played on the web.</p>
+<p>As such, advanced features such as declaring segments before they
+should be played or avoiding many customers doing the same manifest
+request at the exact same time are much easier to implement.</p>
+</li>
+<li>
+<p>this file rarely needs to be updated, improving the caching of this
+ressource.</p>
+</li>
+<li>
+<p>its format is very simple and in JSON, which is easy to integrate with
+JavaScript codebases. The file can even be very easily generated directly on
+the client’s page. This paves the way for contents personalized to a single
+customer.</p>
+</li>
+<li>
+<p>Digital right management is also much more flexible than with a DASH MPD.
+For example, different license servers for different contents could be
+integrated. This is still a work-in-progress.</p>
+</li>
+<li>
+<p>the specification is simple, try to allow no interpretation and is strict on
+what is permitted.</p>
+</li>
+<li>
+<p>All its features have been tested on web applications, meaning that you have
+the guarantee everything will work on most MSE-compatible browsers, even
+IE11.</p>
+</li>
+</ul>
+<p><a name="structure_of_a_metaplaylist"></a></p>
+<h2>Structure of a MetaPlaylist</h2>
+<p>A MetaPlaylist file is a simple JSON file.</p>
+<p>To jump into it right away, let me introduce some examples.</p>
+<p>For a VOD content:</p>
+<pre><code class="language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"MPL"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"version"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"0.1"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"contents"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"url"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"http://url.to.some/DASH/first_content.mpd"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"startTime"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">0</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"endTime"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">100.38</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"transport"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"dash"</span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"url"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"http://url.to.some/DASH/second_content.Manifest"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"startTime"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">100.38</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"endTime"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">372</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"transport"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"smooth"</span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"url"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"http://url.to.some/Smooth/third_content.mpd"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"startTime"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">372</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"endTime"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">450.787</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"transport"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"dash"</span>
+    <span class="hljs-punctuation">}</span>
+  <span class="hljs-punctuation">]</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+<p>For a live content:</p>
+<pre><code class="language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"MPL"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"version"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"0.1"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"dynamic"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"pollInterval"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">5</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"contents"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"url"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"http://url.to.some/DASH/content.mpd"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"startTime"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1545845950.176</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"endTime"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1545845985.571</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"transport"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"dash"</span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"url"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"http://url.to.some/other/DASH/content.mpd"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"startTime"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1545845985.571</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"endTime"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1545845998.71</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"transport"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"dash"</span>
+    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"url"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"http://url.to.some/Smooth/content.Manifest"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"startTime"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1545845998.71</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"endTime"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1545845117</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"transport"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"smooth"</span>
+    <span class="hljs-punctuation">}</span>
+  <span class="hljs-punctuation">]</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+<p>You may already have a basic understanding of it how works.
+Let’s define nonetheless every property in that JSON file.</p>
+<p><a name="the_header"></a></p>
+<h3>the header</h3>
+<p>What I call the “header” here is roughly all root properties but “contents”.</p>
+<p>Here is an exhaustive list of what you should put there:</p>
+<ul>
+<li>
+<p>type (<code>string</code>): should always be equal to <code>"MPL"</code>, for “MetaPlayList”.</p>
+<p>The purpose of this value is to facilitate the checks a player might want to
+perform to verify that it is handling a MetaPlaylist file.
+The end goal would be for example to improve error reporting for very
+frequent mistakes like not providing the URL of the right content.</p>
+</li>
+<li>
+<p>version (<code>string</code>): version of the MetaPlaylist file. Separated in two parts
+by a point (‘.’).</p>
+<p>The first part indicates the major version. If its number is higher than
+what the client presently manage, the client should not try to read that
+file.</p>
+<p>The last part indicates the minor version:
+A new feature or fix have been added but its support is not needed by a
+client (a client written for the <code>1.0</code> version can be used even for the
+<code>1.99</code> version).</p>
+<p>Please note that there is an exception for <code>0.x</code> versions, where each minor
+versions could have a breaking change (as it is in that case considered an
+experimental format).</p>
+<p>At the moment, there is only one version the version <code>"0.1"</code>. Thus, this is
+what you have to set in your JSON if you integrate this specification.</p>
+</li>
+<li>
+<p>dynamic (<code>boolean</code>|<code>undefined</code>): If <code>true</code>, the MetaPlaylist file is not
+finished, and might need to be updated. If <code>false</code>, the MetaPlaylist could
+still need to be updated but its current content indicates a finished
+content: A player should end when the end of the last content has been
+reached.</p>
+<p>This property is not mandatory and as such can be omitted. By default, it is
+considered as not dynamic (so <code>false</code>).</p>
+</li>
+<li>
+<p>pollInterval (<code>number</code>|<code>undefined</code>): If not set or set to a negative number,
+the MetaPlaylist file does not need to be reloaded.</p>
+<p>If set to a positive number, this is the maximum interval in seconds at
+which the MetaPlaylist file should be fetched from the server (which means
+that the MetaPlaylist could be refreshed more often depending on the current
+conditions).</p>
+<p>This should only be defined for dynamic contents.</p>
+<p>This property is not mandatory and as such can be omitted. By default, it is
+equivalent to <code>-1</code> (which means no reload).</p>
+</li>
+</ul>
+<p><a name="the_contents"></a></p>
+<h3>The contents</h3>
+<p>The contents are all defined as a property called <code>contents</code> at the top level of
+our MetaPlaylist file.</p>
+<p>It is an array of one or multiple objects (an empty <code>contents</code> array is not a
+valid MetaPlaylist file).</p>
+<p>Each of its objects are linked to a single content, here are the exhaustive
+list of its properties:</p>
+<ul>
+<li>
+<p>url (<code>string</code>): the URL to the original DASH’s MPD or Smooth’s Manifest.
+For now, only a subset of such contents is supported, mainly:</p>
+<ul>
+<li>DASH contents that have their MPD@type set to <code>"static"</code></li>
+<li>Smooth content that have their <code>isLive</code> attribute not set to <code>true</code>
+(Simply put, only on-demand contents are supported for the moment).</li>
+</ul>
+</li>
+<li>
+<p>startTime (<code>number</code>): time, in seconds, at which the beginning of this
+content should be played.
+This will correspond to the start time of the first Period in DASH or the
+first Chunk defined for Smooth content.</p>
+</li>
+<li>
+<p>endTime (<code>number</code>): time, in seconds, at which the content should end. It
+the original content is longer, it will be finished at that time instead.
+The original content should not be shorter.</p>
+</li>
+<li>
+<p>transport (<code>string</code>): indicates the original streaming protocol.
+Can be either of those values for now:</p>
+<ul>
+<li><code>"dash"</code>: the URL points to a DASH’s MPD</li>
+<li><code>"smooth"</code>: the URL points to a Microsoft Smooth Streaming’s Manifest.</li>
+<li><code>"metaplaylist"</code>: Yes, it is possible to put MetaPlaylist files inside
+other MetaPlaylist files!</li>
+</ul>
+</li>
+</ul>
+<p>All those contents should be contiguous (meaning that the <code>endTime</code> of one
+should be the same value than the <code>startTime</code> of the following one).</p>
+<p><a name="how_to_actually_play_a_metaplaylist_content"></a></p>
+<h2>How to actually play a MetaPlaylist content</h2>
+<p><a name="importing_the_metaplaylist_feature"></a></p>
+<h3>Importing the METAPLAYLIST feature</h3>
+<p>The <code>"METAPLAYLIST"</code> feature is not included in the default RxPlayer build.</p>
+<p>To import it, you first need to rely on the “minimal” version of the RxPlayer
+(through the <code>"rx-player/minimal"</code> import), you will need to import the
+<code>METAPLAYLIST</code> experimental feature and every transport protocol you might want
+to use.</p>
+<p>For example if you need to use MetaPlaylist with both Smooth and DASH contents,
+you have to import at least all three as such:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> <span class="hljs-title class_">RxPlayer</span> <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/minimal"</span>;
+<span class="hljs-keyword">import</span> { <span class="hljs-variable constant_">METAPLAYLIST</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/features"</span>;
+<span class="hljs-keyword">import</span> { <span class="hljs-variable constant_">DASH</span>, <span class="hljs-variable constant_">SMOOTH</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/features"</span>;
+
+<span class="hljs-title class_">RxPlayer</span>.<span class="hljs-title function_">addFeatures</span>([<span class="hljs-variable constant_">METAPLAYLIST</span>, <span class="hljs-variable constant_">DASH</span>, <span class="hljs-variable constant_">SMOOTH</span>]);
+</code></pre>
+<p>More information about the minimal version of the RxPlayer can be found in the
+<a href="../../Getting_Started/Minimal_Player.html">minimal player documentation</a>.</p>
+<p><a name="loading_a_metaplaylist_content"></a></p>
+<h3>Loading a MetaPlaylist content</h3>
+<p>A MetaPlaylist content can simply be played by setting a <code>"metaplaylist"</code>
+transport in <code>loadVideo</code>:</p>
+<pre><code class="language-js">player.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">url</span>: <span class="hljs-string">"http://www.example.com/metaplaylist.json"</span>,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">"metaplaylist"</span>,
+});
+</code></pre>
+<p>If you declare locally your MetaPlaylist file and do not want to set a URL for
+it, you can serve directly the file through the use of a Manifest Loader:</p>
+<pre><code class="language-js">player.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">"metaplaylist"</span>,
+
+  <span class="hljs-comment">// Note: `_url` here will be `undefined`</span>
+  <span class="hljs-title function_">manifestLoader</span>(<span class="hljs-params">_url, callbacks</span>) {
+    <span class="hljs-comment">// where `myMetaPlaylistObject` is the MetaPlaylist in either Object or</span>
+    <span class="hljs-comment">// String form</span>
+    callbacks.<span class="hljs-title function_">resolve</span>({ <span class="hljs-attr">data</span>: myMetaPlaylistObject });
+  },
+});
+</code></pre>
+<p>More infos on the <code>manifestLoader</code> can be found
+<a href="./plugins.html#manifestLoader">here</a>.</p>
+<p><a name="defining_an_initial_position_for_a_dynamic_metaplaylist"></a></p>
+<h3>Defining an initial position for a dynamic MetaPlaylist</h3>
+<p>As already explained, a MetaPlaylist can either be dynamic or static.</p>
+<p>For calculating the initial position of those contents, the RxPlayer will obey
+<a href="./Initial_Position.html">the same rules than for other contents</a>.</p>
+<p>As such, dynamic MetaPlaylist contents will by default start just before the end
+of the last defined content which might not be what you want.</p>
+<p>In those cases, you can make usage of the <code>serverSyncInfos</code> transport options
+when calling <code>loadVideo</code> to indicate the current time and construct the
+MetaPlaylist by using unix time for each content’s <code>startTime</code> and <code>endTime</code>.</p>
+<p>The <code>serverSyncInfos</code> option is explained <a href="../Loading_a_Content.html#serversyncinfos">in the <code>loadVideo</code> options
+documentation</a>.</p>
+<p>For example, if you trust the user’s system clock to indicate the current live
+time (in most cases this is risky however), you can use the <code>Date.now()</code> api:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> serverSyncInfos = {
+  <span class="hljs-attr">serverTimestamp</span>: <span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>(),
+  <span class="hljs-attr">clientTime</span>: performance.<span class="hljs-title function_">now</span>(),
+};
+
+player.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">"metaplaylist"</span>,
+  <span class="hljs-attr">url</span>: <span class="hljs-string">"https://www.example.com/metaplaylist"</span>,
+  serverSyncInfos,
+});
+</code></pre>
+</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="./Text_Tracks.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">Text Tracks</div></a></div><div class="next-or-previous-page next-page"><a class="next-or-previous-page-link" href="./Initial_Position.html"><div class="next-or-previous-page-link-label">Next</div><div class="next-or-previous-page-link-name">Initial Position</div></a></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#metaplaylist_v0.1">MetaPlaylist v0.1</a></p>
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#differences_with_plain_dash_contents">Differences with plain DASH contents</a></li>
+<li><a href="#structure_of_a_metaplaylist">Structure of a MetaPlaylist</a>
+<ul>
+<li><a href="#the_header">the header</a></li>
+<li><a href="#the_contents">The contents</a></li>
+</ul>
+</li>
+<li><a href="#how_to_actually_play_a_metaplaylist_content">How to actually play a MetaPlaylist content</a>
+<ul>
+<li><a href="#importing_the_metaplaylist_feature">Importing the METAPLAYLIST feature</a></li>
+<li><a href="#loading_a_metaplaylist_content">Loading a MetaPlaylist content</a></li>
+<li><a href="#defining_an_initial_position_for_a_dynamic_metaplaylist">Defining an initial position for a dynamic MetaPlaylist</a></li>
+</ul>
+</li>
+</ul>
+</div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../Getting_Started/Welcome.html">Welcome</a></li>
+<li><div class="page-list-item page-list-group">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../Getting_Started/Tutorials/Quick_Start.html">Quick Start</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/Content_with_DRM.html">Contents with DRM</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/Selecting_a_Track.html">Selecting a Track</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Migration from RxPlayer v3</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Preferences.html">Track Preferences</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Bitrate_Selection.html">Bitrate Selection</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Constructor_Options.html">Constructor Options</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/loadVideo_Options.html">loadVideo Options</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Player_Errors.html">Player Errors</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Player_Methods.html">Player Methods</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Migration_From_v3/Player_Types.html">Player Types</a></li></ul></li>
+<li class="page-list-item"><a href="../../Getting_Started/Minimal_Player.html">Importing a minimal RxPlayer</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Glossary.html">Glossary</a></li>
+<li class="page-list-item"><a href="../../Getting_Started/Troubleshooting.html">Troubleshooting</a></li></ul></li>
+<li class="page-list-item"><div class="page-list-group opened active">API</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../Creating_a_Player.html">Creating a Player</a></li>
+<li class="page-list-item"><a href="../Loading_a_Content.html">Loading a Content</a></li>
+<li class="page-list-item"><a href="../Decryption_Options.html">Decryption Options</a></li>
+<li><div class="page-list-item page-list-group">Basic Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Basic_Methods/getPlayerState.html">getPlayerState</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/addEventListener.html">addEventListener</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/removeEventListener.html">removeEventListener</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/play.html">play</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/pause.html">pause</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/stop.html">stop</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getPosition.html">getPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getWallClockTime.html">getWallClockTime</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/seekTo.html">seekTo</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getMediaDuration.html">getMediaDuration</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getError.html">getError</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getVideoElement.html">getVideoElement</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getAvailablePeriods.html">getAvailablePeriods</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/getCurrentPeriod.html">getCurrentPeriod</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/dispose.html">dispose</a></li>
+<li class="page-list-item"><a href="../Basic_Methods/reload.html">reload</a></li></ul></li>
+<li class="page-list-item"><a href="../Player_States.html">Player States</a></li>
+<li class="page-list-item"><a href="../Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../Player_Errors.html">Player Errors</a></li>
+<li><div class="page-list-item page-list-group">Track Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Track_Selection/getAudioTrack.html">getAudioTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getTextTrack.html">getTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getVideoTrack.html">getVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setAudioTrack.html">setAudioTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setTextTrack.html">setTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/setVideoTrack.html">setVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/disableTextTrack.html">disableTextTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li>
+<li class="page-list-item"><a href="../Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Representation Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Representation_Selection/getVideoRepresentation.html">getVideoRepresentation</a></li>
+<li class="page-list-item"><a href="../Representation_Selection/getAudioRepresentation.html">getAudioRepresentation</a></li>
+<li class="page-list-item"><a href="../Representation_Selection/lockAudioVideoRepresentations.html">lockVideoRepresentations / lockAudioRepresentations</a></li>
+<li class="page-list-item"><a href="../Representation_Selection/getLockedVideoRepresentations.html">getLockedVideoRepresentations</a></li>
+<li class="page-list-item"><a href="../Representation_Selection/getLockedAudioRepresentations.html">getLockedAudioRepresentations</a></li>
+<li class="page-list-item"><a href="../Representation_Selection/unlockAudioVideoRepresentations.html">unlockVideoRepresentations / unlockAudioRepresentations</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Speed Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li>
+<li class="page-list-item"><a href="../Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li>
+<li class="page-list-item"><a href="../Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Volume Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Volume_Control/setVolume.html">setVolume</a></li>
+<li class="page-list-item"><a href="../Volume_Control/getVolume.html">getVolume</a></li>
+<li class="page-list-item"><a href="../Volume_Control/mute.html">mute</a></li>
+<li class="page-list-item"><a href="../Volume_Control/isMute.html">isMute</a></li>
+<li class="page-list-item"><a href="../Volume_Control/unMute.html">unMute</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li>
+<li class="page-list-item"><a href="../Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Buffer_Information/getCurrentBufferGap.html">getCurrentBufferGap</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Content Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Content_Information/getContentUrls.html">getContentUrls</a></li>
+<li class="page-list-item"><a href="../Content_Information/updateContentUrls.html">updateContentUrls</a></li>
+<li class="page-list-item"><a href="../Content_Information/isLive.html">isLive</a></li>
+<li class="page-list-item"><a href="../Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li>
+<li class="page-list-item"><a href="../Content_Information/createDebugElement.html">createDebugElement</a></li></ul></li>
+<li class="page-list-item"><a href="../Static_Properties.html">RxPlayer Static Properties</a></li>
+<li class="page-list-item"><a href="../Typescript_Types.html">Typescript Types</a></li>
+<li><div class="page-list-item page-list-group">Tools</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Tools/TextTrackRenderer.html">TextTrackRenderer</a></li>
+<li class="page-list-item"><a href="../Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li>
+<li class="page-list-item"><a href="../Tools/StringUtils.html">StringUtils</a></li>
+<li class="page-list-item"><a href="../Tools/parseBifThumbnails.html">parseBifThumbnails</a></li>
+<li class="page-list-item"><a href="../Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li>
+<li class="page-list-item"><a href="../Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li>
+<li><div class="page-list-item page-list-group opened active">Miscellaneous</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./plugins.html">Plugins</a></li>
+<li class="page-list-item"><a href="./Low_Latency.html">Low Latency</a></li>
+<li class="page-list-item"><a href="./DASH_WASM_Parser.html">DASH WASM Parser</a></li>
+<li class="page-list-item"><a href="./hdr.html">HDR</a></li>
+<li class="page-list-item"><a href="./Debug_Element.html">Debug Element</a></li>
+<li class="page-list-item"><a href="./Local_Contents.html">Local Contents</a></li>
+<li class="page-list-item"><a href="./Local_Manifest_v0.1.html">Local Manifest v0.1</a></li>
+<li class="page-list-item"><a href="./Text_Tracks.html">Text Tracks</a></li>
+<li class="page-list-item active"><a href="./MetaPlaylist.html">MetaPlaylist</a></li>
+<li class="page-list-item"><a href="./Initial_Position.html">Initial Position</a></li>
+<li class="page-list-item"><a href="./presentationTimeOffset.html">presentationTimeOffset</a></li>
+<li class="page-list-item"><a href="./DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">Reference</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../reference/API_Reference.html">API Reference</a></li></ul></li>
+<li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
+
+<li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
+</ul></div><script type="text/javascript" src="../../scripts/lunr.js" charset="utf-8"></script><script type="text/javascript" src="../../scripts/script.js" charset="utf-8"></script></body></html>

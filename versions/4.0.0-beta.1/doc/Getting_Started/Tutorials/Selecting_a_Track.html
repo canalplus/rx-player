@@ -1,0 +1,586 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>Selecting a Track - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "../..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../../static/img/logo.png" /></a><a class="navbar-item navbar-active hideable"href="../Welcome.html">Getting Started</a>
+<a class="navbar-item hideable"href="../../api/Overview.html">API</a>
+<a class="navbar-item hideable"href="../../reference/API_Reference.html">Reference</a>
+<a class="navbar-item hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
+<span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
+<a aria-label="Link to repository" class="navbar-item first-right hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 4.0.0-beta.1</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="../Welcome.html">Welcome</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group active opened">Tutorials</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Quick_Start.html">Quick Start</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Content_with_DRM.html">Contents with DRM</a></li><li class="sidebar-item"><a class="sidebar-link active" href="./Selecting_a_Track.html">Selecting a Track</a></li><li class="sidebar-item"><a class="sidebar-link" href="./EventStream_Handling.html">EventStream handling</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Migration from RxPlayer v3</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Migration_From_v3/Overview.html">Overview</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Migration_From_v3/Preferences.html">Track Preferences</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Migration_From_v3/Bitrate_Selection.html">Bitrate Selection</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Migration_From_v3/Constructor_Options.html">Constructor Options</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Migration_From_v3/loadVideo_Options.html">loadVideo Options</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Migration_From_v3/Player_Events.html">Player Events</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Migration_From_v3/Player_Errors.html">Player Errors</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Migration_From_v3/Player_Methods.html">Player Methods</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Migration_From_v3/Player_Types.html">Player Types</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="../Minimal_Player.html">Importing a minimal RxPlayer</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Glossary.html">Glossary</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Troubleshooting.html">Troubleshooting</a></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="tutorial:_selecting_a_track"></a></p>
+<h1>Tutorial: Selecting a track</h1>
+<p><a name="the_goal_of_this_tutorial"></a></p>
+<h2>The goal of this tutorial</h2>
+<p>The RxPlayer has an advanced API when it comes to track selection:</p>
+<p>You can list, change, enable or disable video audio and text tracks for either
+what is currently being played or any other <a href="../Glossary.html#period">Period</a> in
+the current content.
+Because the RxPlayer’s track API tries to be complete and flexible, it can feel
+intimidating at first.</p>
+<p>This tutorial will help you understand what your options are, why you would use
+an API instead of another and how to use them.</p>
+<p><a name="what_is_a_%22track%22?"></a></p>
+<h2>What is a “track”?</h2>
+<p>We should first agree on what is a track, as a concept.
+Let’s take for example an italian film presented to an english-speaking
+audience.</p>
+<p>For that film, let’s imagine those multiple “audio tracks”:</p>
+<ul>
+<li>one being the original audio track, in italian</li>
+<li>one being a dub in the english language</li>
+<li>another in english with accessibility features such as an audio description
+of what visually happens in the film (for example, to give cues of what is
+happening to the visually-impaired).</li>
+</ul>
+<p>There also could be multiple “text tracks”:</p>
+<ul>
+<li>subtitles in english</li>
+<li>closed-captions in english (for example, for the hearing impaired)</li>
+</ul>
+<p>And we could even imagine multiple video tracks:</p>
+<ul>
+<li>one displaying the “regular” film</li>
+<li>another displaying either the same film from a different camera angle (seems
+far-fetched here but let’s just pretend we’re talking about some kind of
+experimental film!)</li>
+</ul>
+<p>All those will provide to the user a different way to offer the same film. In
+most cases, audiom video and text tracks are currently independent and can such
+be switched in a large number of combination to give a large number of different
+experience for what is effectively the same content.</p>
+<p><a name="listing_the_available_tracks"></a></p>
+<h2>Listing the available tracks</h2>
+<p><a name="nominal_case:_currently_played_content"></a></p>
+<h3>Nominal case: currently played content</h3>
+<h4>Using methods</h4>
+<p>Once the RxPlayer has loaded a content (meaning the RxPlayer is not in the
+<code>STOPPED</code>, <code>LOADING</code> or <code>RELOADING</code> <a href="../../api/Player_States.html">player state</a>) you can
+begin to ask it what is the current list of available tracks.</p>
+<p>This can be done through three RxPlayer methods:</p>
+<ul>
+<li><a href="../../api/Track_Selection/getAvailableAudioTracks.html"><code>getAvailableAudioTracks()</code></a>
+to list audio tracks</li>
+<li><a href="../../api/Track_Selection/getAvailableVideoTracks.html"><code>getAvailableVideoTracks()</code></a>
+to list video tracks</li>
+<li><a href="../../api/Track_Selection/getAvailableTextTracks.html"><code>getAvailableTextTracks()</code></a>
+to list text tracks</li>
+</ul>
+<p>Those methods will all return arrays of objects, each object containing
+information about a single track.</p>
+<p>It should be noted that the information for an audio track won’t be the same
+than for a video or a text track.
+For example, you might be interested by the height and width available in a
+video track. Those notions make absolutely no sense for an audio track.</p>
+<p>For more information about the structure of the data returned by those methods,
+you can refer to their API documentation (a shortcut is available by clicking
+on the method name).</p>
+<p>Note that you can still ask for the current tracks when the RxPlayer does not
+have loaded any content (is in the <code>STOPPED</code>, <code>LOADING</code> or <code>RELOADING</code> player
+state), but you will most likely only get an empty array in those cases.</p>
+<h5>Examples</h5>
+<p>Those methods are straightforward, here are some examples of how they can be
+used:</p>
+<pre><code class="language-js"><span class="hljs-comment">// Array of all available audio languages</span>
+<span class="hljs-keyword">const</span> availableLanguages = rxPlayer
+  .<span class="hljs-title function_">getAvailableAudioTracks</span>()
+  .<span class="hljs-title function_">map</span>(<span class="hljs-function">(<span class="hljs-params">track</span>) =&gt;</span> track.<span class="hljs-property">language</span>);
+
+<span class="hljs-comment">// List of audio tracks containing an audio description of what is visually</span>
+<span class="hljs-comment">// happening</span>
+<span class="hljs-keyword">const</span> audioDescriptionTracks = rxPlayer
+  .<span class="hljs-title function_">getAvailableAudioTracks</span>()
+  .<span class="hljs-title function_">filter</span>(<span class="hljs-function">(<span class="hljs-params">track</span>) =&gt;</span> track.<span class="hljs-property">audioDescription</span>);
+
+<span class="hljs-comment">// List of video tracks for which a profile with a 1080p resolution is available</span>
+<span class="hljs-keyword">const</span> highResVideoTracks = rxPlayer
+  .<span class="hljs-title function_">getAvailableVideoTracks</span>()
+  .<span class="hljs-title function_">filter</span>(<span class="hljs-function">(<span class="hljs-params">track</span>) =&gt;</span> {
+    <span class="hljs-keyword">return</span> track.<span class="hljs-property">representations</span>.<span class="hljs-title function_">some</span>(
+      <span class="hljs-function">(<span class="hljs-params">representation</span>) =&gt;</span>
+        representation.<span class="hljs-property">height</span> !== <span class="hljs-literal">undefined</span> &amp;&amp; representation.<span class="hljs-property">height</span> &gt;= <span class="hljs-number">1080</span>
+    );
+  });
+
+<span class="hljs-comment">// List of text tracks available in french</span>
+<span class="hljs-keyword">const</span> frenchTextTracks = rxPlayer
+  .<span class="hljs-title function_">getAvailableTextTracks</span>()
+  .<span class="hljs-title function_">filter</span>(<span class="hljs-function">(<span class="hljs-params">track</span>) =&gt;</span> track.<span class="hljs-property">normalized</span> === <span class="hljs-string">"fra"</span>);
+</code></pre>
+<h4>Using events</h4>
+<p>If you want to be alerted when the list of currently available tracks is set or
+change, it might be a good idea to rely on events.</p>
+<p>Here are the three events you will need to know:</p>
+<ul>
+<li>
+<p><a href="../../api/Player_Events.html#availableaudiotrackschange"><code>"availableAudioTracksChange"</code></a>:
+the list of available audio tracks for what is currently being played was just
+updated.</p>
+</li>
+<li>
+<p><a href="../../api/Player_Events.html#availablevideotrackschange"><code>"availableVideoTracksChange"</code></a>:
+idem for video tracks</p>
+</li>
+<li>
+<p><a href="../../api/Player_Events.html#availabletexttrackschange"><code>"availableTextTracksChange"</code></a>:
+idem for text tracks</p>
+</li>
+</ul>
+<p>All of those events will have the corresponding available tracks as a payload,
+which will be the exact same data that what you would get when calling the
+corresponding <code>getAvailable...Tracks</code> method at this point.</p>
+<p>Note that no <code>available...TracksChange</code> event will be sent when the RxPlayer
+stops the content or temporarly goes through the <code>RELOADING</code> player state
+with an empty array as a payload - as there is no current content in those
+cases.</p>
+<h5>Examples</h5>
+<p>Like any RxPlayer event, you will need to add an event listener for those:</p>
+<pre><code class="language-js"><span class="hljs-keyword">let</span> currentAudioTracks = [];
+<span class="hljs-keyword">let</span> currentVideoTracks = [];
+<span class="hljs-keyword">let</span> currentTextTracks = [];
+
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"availableAudioTracksChange"</span>, <span class="hljs-function">(<span class="hljs-params">audioTracks</span>) =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"New audio tracks:"</span>, audioTracks);
+  currentAudioTracks = audioTracks;
+});
+
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"availableVideoTracksChange"</span>, <span class="hljs-function">(<span class="hljs-params">videoTracks</span>) =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"New video tracks:"</span>, videoTracks);
+  currentVideoTracks = videoTracks;
+});
+
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"availableTextTracksChange"</span>, <span class="hljs-function">(<span class="hljs-params">textTracks</span>) =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"New text tracks:"</span>, textTracks);
+  currentTextTracks = textTracks;
+});
+</code></pre>
+<p><a name="advanced_case:_any_part_of_multi-period_contents"></a></p>
+<h3>Advanced case: Any part of multi-Period contents</h3>
+<p>For contents with multiple <a href="../Glossary.html#period">Periods</a> and/or when in the
+<code>LOADING</code> or <code>RELOADING</code> state, you may want to list the tracks for a part of
+the content that the RxPlayer is not yet playing.</p>
+<p>This can be for example for a future/previous live program, or even for the
+current one when the RxPlayer did not yet begin to play it.</p>
+<p>In those conditions, the three methods presented here
+(<code>getAvailableVideoTracks</code>, <code>getAvailableTextTracks</code> and
+<code>getAvailableAudioTracks</code>) can all take an argument: the <code>id</code> property of the
+wanted period:</p>
+<pre><code class="language-js"><span class="hljs-comment">// Getting the audio track list for the Period with the "foo" id.</span>
+rxPlayer.<span class="hljs-title function_">getAvailableAudioTracks</span>(<span class="hljs-string">"foo"</span>);
+</code></pre>
+<p>That <code>id</code> can be known in several ways:</p>
+<ul>
+<li>
+<p>the <a href="../../api/Basic_Methods/getAvailablePeriods.html"><code>getAvailablePeriods</code> method</a>
+can list the different Periods and their respective <code>id</code> property:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> periods = rxPlayer.<span class="hljs-title function_">getAvailablePeriods</span>();
+<span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> period <span class="hljs-keyword">of</span> periods) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Tracks for Period <span class="hljs-subst">${period.id}</span>:`</span>,
+              rxPlayer.<span class="hljs-title function_">getAvailableAudioTracks</span>(period.<span class="hljs-property">id</span>));
+}
+</code></pre>
+</li>
+<li>
+<p>the <a href="../../api/Player_Events.html#newavailableperiods"><code>newAvailablePeriods</code> event</a>
+triggered each time new Periods are known (either when the content is
+first loaded, or when the it is updated) with their respective <code>id</code> property:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"newAvailablePeriods, (periods) =&gt; {
+  for (const period of periods) {
+    console.log(`Tracks for Period ${period.id}:`,
+                rxPlayer.getAvailableAudioTracks(period.id));
+  }
+});
+</span></code></pre>
+</li>
+<li>
+<p>the <a href="../../api/Player_Events.html#periodchange"><code>periodChange</code> event</a>
+triggered when the current Period being played changes, with the
+corresponding <code>id</code> property:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"periodChange, (period) =&gt; {
+  console.log(`Tracks for the current Period ${period.id}:`,
+              rxPlayer.getAvailableAudioTracks(period.id));
+});
+</span></code></pre>
+</li>
+</ul>
+<p><a name="obtaining_those_lists_as_soon_as_possible"></a></p>
+<h3>Obtaining those lists as soon as possible</h3>
+<p>The RxPlayer does not “guess” the tracks available for a given content, it
+usually finds every information about them in the Manifest file which is
+loaded at the beginning.</p>
+<p>Thus, the list of available tracks will only be available once the RxPlayer has
+loaded and parsed that Manifest.
+Moreover, a Manifest can have several lists of available tracks depending on the
+player’s position (for example, a live channel with multiple programs might have
+different audio languages available for different programs).</p>
+<p>This means both that the available tracks won’t generally be known just after a
+<code>loadVideo</code> call and that it can then change at any time.
+The first instant when the list of available audio, video and text tracks is
+available after loading the content through <code>loadVideo</code> is on the
+<a href="../../api/Player_Events.html#newavailableperiods"><code>newAvailablePeriods</code></a> event:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">loadVideo</span>({ <span class="hljs-attr">url</span>: <span class="hljs-string">"foo/bar"</span>, <span class="hljs-attr">transport</span>: <span class="hljs-string">"dash"</span> <span class="hljs-comment">/* ... */</span> });
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"newAvailablePeriods"</span>, <span class="hljs-function">(<span class="hljs-params">periods</span>) =&gt;</span> {
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> period <span class="hljs-keyword">of</span> periods) {
+    <span class="hljs-keyword">const</span> periodId = period.<span class="hljs-property">id</span>;
+    <span class="hljs-keyword">const</span> videoTracks = rxPlayer.<span class="hljs-title function_">getAvailableVideoTracks</span>(periodId);
+    <span class="hljs-keyword">const</span> audioTracks = rxPlayer.<span class="hljs-title function_">getAvailableVideoTracks</span>(periodId);
+    <span class="hljs-keyword">const</span> textTracks = rxPlayer.<span class="hljs-title function_">getAvailableTextTracks</span>(periodId);
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Video tracks for Period "<span class="hljs-subst">${periodId}</span>":`</span>${videoTracks}<span class="hljs-string">`);
+    console.log(`</span><span class="hljs-title class_">Audio</span> tracks <span class="hljs-keyword">for</span> <span class="hljs-title class_">Period</span> <span class="hljs-string">"${periodId}"</span>:<span class="hljs-string">`<span class="hljs-subst">${audioTracks}</span>`</span>);
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Text tracks for Period "<span class="hljs-subst">${periodId}</span>":`</span>${textTracks}<span class="hljs-string">`);
+  }
+});
+</span></code></pre>
+<p>This <code>newAvailablePeriods</code> event is also the right one for setting the initial
+track (we will see how to below), as it’s guaranteed that at the point this
+event is sent, no media data has been loaded yet for the corresponding
+Period(s):</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"newAvailablePeriods"</span>, <span class="hljs-function">(<span class="hljs-params">periods</span>) =&gt;</span> {
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> period <span class="hljs-keyword">of</span> periods) {
+    <span class="hljs-comment">// Theoretical logic for initial track selections (presumably through the</span>
+    <span class="hljs-comment">// `getAvailable...Tracks` and `set...Track` families of API)</span>
+    <span class="hljs-title function_">setInitialVideoTrack</span>(period);
+    <span class="hljs-title function_">setInitialAudioTrack</span>(period);
+    <span class="hljs-title function_">setInitialTextTrack</span>(period);
+  }
+});
+</code></pre>
+<p><a name="knowing_the_current_track"></a></p>
+<h2>Knowing the current track</h2>
+<p><a name="nominal_case:_currently_played_content_(1)"></a></p>
+<h3>Nominal case: currently played content</h3>
+<h4>Using methods</h4>
+<p>You might also want to know which track is the one currently selected.
+There are several ways to do that.</p>
+<p><a name="through_methods"></a></p>
+<h3>Through methods</h3>
+<p>The RxPlayer has a set of methods that just return the currently active tracks:</p>
+<ul>
+<li>
+<p><a href="../../api/Track_Selection/getAudioTrack.html"><code>getAudioTrack</code></a>: return information
+on the current audio track</p>
+</li>
+<li>
+<p><a href="../../api/Track_Selection/getVideoTrack.html"><code>getVideoTrack</code></a>: return information
+on the current video track</p>
+</li>
+<li>
+<p><a href="../../api/Track_Selection/getTextTrack.html"><code>getTextTrack</code></a>: return information
+on the current text track</p>
+</li>
+</ul>
+<p>Those methods will return an object describing the attributes of the current
+tracks.
+They can also return <code>null</code> if no track has been enabled (for example, the user
+could have wanted to disable all text tracks) and <code>undefined</code> if the track is
+either unknown (which is a very rare occurence) or if no content is currently
+playing.</p>
+<p>Like the <code>getAvailable...Tracks</code> methods, the format of the objects returned
+will entirely depend on which method you call. You can refer to the API
+documentation to get more information on this.</p>
+<p>Also like the <code>getAvailable...Tracks</code> methods, the current text track will
+usually only be known once the RxPlayer has loaded a content (which means we are
+not in the <code>STOPPED</code>, <code>LOADING</code> or <code>RELOADING</code> <a href="../../api/Player_States.html">player state</a>). If no content is loaded, those APIs will just return
+<code>undefined</code>.</p>
+<h4>Examples</h4>
+<p>Here is an example on how you could use them:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> currentTextTrack = rxPlayer.<span class="hljs-title function_">getTextTrack</span>();
+<span class="hljs-keyword">if</span> (currentTextTrack === <span class="hljs-literal">null</span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"No text track is enabled"</span>);
+} <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (currentTextTrack === <span class="hljs-literal">undefined</span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(
+    <span class="hljs-string">"We don't know the current text track. "</span> +
+      <span class="hljs-string">"Are you sure a content is loaded?"</span>
+  );
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-keyword">const</span> language = currentTextTrack.<span class="hljs-property">language</span>;
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"We have a current text track in the "</span> + language + <span class="hljs-string">"language"</span>);
+}
+</code></pre>
+<p><a name="through_events"></a></p>
+<h3>Through events</h3>
+<p>Exactly like you would obtain the list of available tracks through the
+<code>available...TracksChange</code> events, you can know when the current track change as
+soon as possible through the following events:</p>
+<ul>
+<li>
+<p><a href="../../api/Player_Events.html#audiotrackchange"><code>"audioTrackChange"</code></a>:
+the currently-active audio track changed</p>
+</li>
+<li>
+<p><a href="../../api/Player_Events.html#videotrackchange"><code>"videoTrackChange"</code></a>:
+the currently-active video track changed</p>
+</li>
+<li>
+<p><a href="../../api/Player_Events.html#texttrackchange"><code>"textTrackChange"</code></a>:
+the currently-active text track changed</p>
+</li>
+</ul>
+<p>Those events just emit the current track information as soon as it changes, in
+the same format that the <code>get...Track</code> methods.</p>
+<p>Unlike for the <code>get...Track</code> methods however, its payload cannot be set to
+<code>undefined</code>: you won’t receive any <code>...TracksChange</code> event if the track is
+unknown or if there is no content.</p>
+<p>This also means that you won’t have any event when the RxPlayer stops or
+re-load the current content, despite the fact that you don’t have any current
+track in that case.
+Calling the <code>get...Track</code> method in those cases will return <code>undefined</code>, as it
+should. This has to be considered.</p>
+<h4>Example</h4>
+<p>Like for any events, you will have to register an event listener:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"textTrackChange"</span>, <span class="hljs-function">(<span class="hljs-params">track</span>) =&gt;</span> {
+  <span class="hljs-keyword">if</span> (track === <span class="hljs-literal">null</span>) {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"No text track is active"</span>);
+  } <span class="hljs-keyword">else</span> {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(
+      <span class="hljs-string">"new active text track in the following language: "</span> + track.<span class="hljs-property">language</span>
+    );
+  }
+});
+</code></pre>
+<p><a name="through_the_list_of_available_tracks"></a></p>
+<h3>Through the list of available tracks</h3>
+<p>As written earlier the <code>available...TracksChange</code> events and the
+<code>getAvailable...Tracks</code> methods both return arrays of objects, each object
+defining a single track.</p>
+<p>In each of those object, you will find an <code>active</code> boolean property, which will
+be set to <code>true</code> if the track is the currently chosen one and <code>false</code> otherwise.</p>
+<p>Note that it’s possible that none of the available tracks are active. This is
+for example the case when the track has been disabled (for example when the user
+wants no text tracks at all).</p>
+<pre><code class="language-js"><span class="hljs-comment">// get the active audio track through `getAvailableAudioTracks`</span>
+<span class="hljs-keyword">const</span> activeAudioTrack1 = rxPlayer
+  .<span class="hljs-title function_">getAvailableAudioTracks</span>()
+  .<span class="hljs-title function_">find</span>(<span class="hljs-function">(<span class="hljs-params">track</span>) =&gt;</span> track.<span class="hljs-property">active</span>);
+
+<span class="hljs-comment">// get the active audio track through `availableAudioTracksChange`</span>
+<span class="hljs-keyword">let</span> activeAudioTrack2;
+rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"availableAudioTracksChange"</span>, <span class="hljs-function">(<span class="hljs-params">tracks</span>) =&gt;</span> {
+  activeAudioTrack2 = tracks.<span class="hljs-title function_">find</span>(<span class="hljs-function">(<span class="hljs-params">track</span>) =&gt;</span> track.<span class="hljs-property">active</span>);
+});
+</code></pre>
+<p><a name="which_one_to_use?"></a></p>
+<h3>Which one to use?</h3>
+<p>As usual here, this is highly dependant on your application. All of those APIs
+give the same information through different means.</p>
+<p>Accessing with the <code>get...Track</code> method is simple to use, the events allow to
+know at the earliest possible time and relying on the list of available tracks
+can simplify your code if you want both of them.</p>
+<p><a name="selecting_a_track"></a></p>
+<h2>Selecting a track</h2>
+<p>Now that we have the list of available tracks and the current one, we might want
+to choose another one, or let the final user choose another one.</p>
+<p>To do that, you will have to use one of those three RxPlayer methods:</p>
+<ul>
+<li><a href="../../api/Track_Selection/setAudioTrack.html"><code>setAudioTrack()</code></a>: change the current
+audio track</li>
+<li><a href="../../api/Track_Selection/setVideoTrack.html"><code>setVideoTrack()</code></a>: change the current
+video track</li>
+<li><a href="../../api/Track_Selection/setTextTrack.html"><code>setTextTrack()</code></a>: change the current
+text track</li>
+</ul>
+<p>Each of those methods take a single string as argument. That string should be
+the value of the <code>id</code> property of the chosen track.</p>
+<p>For example, to choose the first audio track with an audio description, you can
+do:</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> firstAudioTrackWithAD = rxPlayer
+  .<span class="hljs-title function_">getAvailableAudioTracks</span>()
+  .<span class="hljs-title function_">find</span>(<span class="hljs-function">(<span class="hljs-params">track</span>) =&gt;</span> track.<span class="hljs-property">audioDescription</span>);
+
+<span class="hljs-keyword">if</span> (firstAudioTrackWithAD !== <span class="hljs-literal">undefined</span>) {
+  rxPlayer.<span class="hljs-title function_">setAudioTrack</span>(firstAudioTrackWithAD.<span class="hljs-property">id</span>);
+}
+</code></pre>
+<p>It’s important to consider that those APIs only allow to change the current
+track and will have no impact on the other contents you will encounter in the
+future.</p>
+<p>After manually setting a track through the <code>set...Track</code> methods, you will
+receive the corresponding <code>...TrackChange</code> event when the change is applied.</p>
+<p>Note that on some contents, changing a track from a given type might
+automatically also change the current track for another types. For example,
+switching to another audio language might also automatically turn on the
+subtitles. This is because some streaming protocols might “force” some
+combination.</p>
+<p>To detect those cases, you can either listen to every <code>...TrackChange</code> events
+or call the corresponding <code>get...Track</code> method everytime you want to use them.</p>
+<p><a name="disabling_a_track"></a></p>
+<h2>Disabling a track</h2>
+<p>Now what if you want no track at all?</p>
+<p>This is for example a frequent need for text tracks, where you might prefer to
+have no subtitles or closed captions appearing on the screen.</p>
+<p>You could also want to disable the video track, which is a trick often used to
+reduce the network bandwidth used by a content.</p>
+<p>You can disable respectively the current text track and the current video track
+by calling those methods:</p>
+<ul>
+<li><a href="../../api/Track_Selection/disableTextTrack.html"><code>disableTextTrack</code></a></li>
+<li><a href="../../api/Track_Selection/disableVideoTrack.html"><code>disableVideoTrack</code></a></li>
+</ul>
+<p>However, like for selecting a track, this only concerns the current content
+being played. When playing a new content or even when just switching to another
+part of the content with a different track list, you might need to re-do the
+same method call.</p>
+<p><a name="tracks_now_missing_from_the_manifest"></a></p>
+<h2>Tracks now missing from the Manifest</h2>
+<p>There is a very unlikely event that could theoretically arise on some contents:
+the select track disappearing after a Manifest update.</p>
+<p>For example, after refreshing the Manifest files, it turns out that the
+previously-selected audio track has been completely removed from the Manifest,
+for the same Period.</p>
+<p>Here, the RxPlayer will by itself select another track instead and immediately
+emit a <a href="../../api/Player_Events.html#trackupdate"><code>"trackUpdate"</code> event</a>
+a <code>reason</code> property set to <code>"missing"</code>:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">"trackUpdate"</span>, <span class="hljs-function">(<span class="hljs-params">data</span>) =&gt;</span> {
+  <span class="hljs-keyword">if</span> (data.<span class="hljs-property">reason</span> === <span class="hljs-string">"missing"</span>) {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">warn</span>(
+      <span class="hljs-string">`The previously-chosen <span class="hljs-subst">${data.trackType}</span> track for the Period `</span> +
+      <span class="hljs-string">`"<span class="hljs-subst">${data.period.id}</span>" disappeared. A new track has been selected instead.`</span>
+    );
+  }
+});
+</code></pre>
+<p><a name="notes_about_the_%22texttrackmode%22_option"></a></p>
+<h2>Notes about the “textTrackMode” option</h2>
+<p>This tutorial was focused on track selection but there’s still a last point I
+want to approach, which is how subtitles will be displayed to the user.</p>
+<p>By default, text tracks will be displayed through <code>&lt;tracks&gt;</code> elements which
+will be contained in the media element where the content plays.
+This allows to display subtitles but may not be sufficient when wanting to
+display richer subtitles (such as closed-captions).</p>
+<p>This is why the RxPlayer has a
+<a href="../../api/Loading_a_Content.html#texttrackmode"><code>textTrackMode</code></a> concept.</p>
+<p>By setting the <code>textTrackMode</code> to <code>"html"</code> in a
+<a href="../../api/Loading_a_Content.html"><code>loadVideo</code></a> call, you will be able to profit
+from much richer subtitles than what you could have by default.
+If you do that, you also need to set the
+<a href="../../api/Loading_a_Content.html#texttrackelement"><code>textTrackElement</code></a> property
+to an HTML element, that the RxPlayer will use to display subtitles into.</p>
+<p>More information on those options can be found in the RxPlayer API.</p>
+</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="./Content_with_DRM.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">Contents with DRM</div></a></div><div class="next-or-previous-page next-page"><a class="next-or-previous-page-link" href="./EventStream_Handling.html"><div class="next-or-previous-page-link-label">Next</div><div class="next-or-previous-page-link-name">EventStream handling</div></a></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#tutorial:_selecting_a_track">Tutorial: Selecting a track</a></p>
+<ul>
+<li><a href="#the_goal_of_this_tutorial">The goal of this tutorial</a></li>
+<li><a href="#what_is_a_%22track%22?">What is a “track”?</a></li>
+<li><a href="#listing_the_available_tracks">Listing the available tracks</a>
+<ul>
+<li><a href="#nominal_case:_currently_played_content">Nominal case: currently played content</a></li>
+<li><a href="#advanced_case:_any_part_of_multi-period_contents">Advanced case: Any part of multi-Period contents</a></li>
+<li><a href="#obtaining_those_lists_as_soon_as_possible">Obtaining those lists as soon as possible</a></li>
+</ul>
+</li>
+<li><a href="#knowing_the_current_track">Knowing the current track</a>
+<ul>
+<li><a href="#nominal_case:_currently_played_content_(1)">Nominal case: currently played content</a></li>
+<li><a href="#through_methods">Through methods</a></li>
+<li><a href="#through_events">Through events</a></li>
+<li><a href="#through_the_list_of_available_tracks">Through the list of available tracks</a></li>
+<li><a href="#which_one_to_use?">Which one to use?</a></li>
+</ul>
+</li>
+<li><a href="#selecting_a_track">Selecting a track</a></li>
+<li><a href="#disabling_a_track">Disabling a track</a></li>
+<li><a href="#tracks_now_missing_from_the_manifest">Tracks now missing from the Manifest</a></li>
+<li><a href="#notes_about_the_%22texttrackmode%22_option">Notes about the “textTrackMode” option</a></li>
+</ul>
+</div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group opened active">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../Welcome.html">Welcome</a></li>
+<li><div class="page-list-item page-list-group opened active">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Quick_Start.html">Quick Start</a></li>
+<li class="page-list-item"><a href="./Content_with_DRM.html">Contents with DRM</a></li>
+<li class="page-list-item active"><a href="./Selecting_a_Track.html">Selecting a Track</a></li>
+<li class="page-list-item"><a href="./EventStream_Handling.html">EventStream handling</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Migration from RxPlayer v3</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Migration_From_v3/Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../Migration_From_v3/Preferences.html">Track Preferences</a></li>
+<li class="page-list-item"><a href="../Migration_From_v3/Bitrate_Selection.html">Bitrate Selection</a></li>
+<li class="page-list-item"><a href="../Migration_From_v3/Constructor_Options.html">Constructor Options</a></li>
+<li class="page-list-item"><a href="../Migration_From_v3/loadVideo_Options.html">loadVideo Options</a></li>
+<li class="page-list-item"><a href="../Migration_From_v3/Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../Migration_From_v3/Player_Errors.html">Player Errors</a></li>
+<li class="page-list-item"><a href="../Migration_From_v3/Player_Methods.html">Player Methods</a></li>
+<li class="page-list-item"><a href="../Migration_From_v3/Player_Types.html">Player Types</a></li></ul></li>
+<li class="page-list-item"><a href="../Minimal_Player.html">Importing a minimal RxPlayer</a></li>
+<li class="page-list-item"><a href="../Glossary.html">Glossary</a></li>
+<li class="page-list-item"><a href="../Troubleshooting.html">Troubleshooting</a></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">API</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../api/Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../../api/Creating_a_Player.html">Creating a Player</a></li>
+<li class="page-list-item"><a href="../../api/Loading_a_Content.html">Loading a Content</a></li>
+<li class="page-list-item"><a href="../../api/Decryption_Options.html">Decryption Options</a></li>
+<li><div class="page-list-item page-list-group">Basic Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Basic_Methods/getPlayerState.html">getPlayerState</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/addEventListener.html">addEventListener</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/removeEventListener.html">removeEventListener</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/play.html">play</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/pause.html">pause</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/stop.html">stop</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getPosition.html">getPosition</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getWallClockTime.html">getWallClockTime</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/seekTo.html">seekTo</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getMediaDuration.html">getMediaDuration</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getError.html">getError</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getVideoElement.html">getVideoElement</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getAvailablePeriods.html">getAvailablePeriods</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getCurrentPeriod.html">getCurrentPeriod</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/dispose.html">dispose</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/reload.html">reload</a></li></ul></li>
+<li class="page-list-item"><a href="../../api/Player_States.html">Player States</a></li>
+<li class="page-list-item"><a href="../../api/Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../../api/Player_Errors.html">Player Errors</a></li>
+<li><div class="page-list-item page-list-group">Track Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Track_Selection/getAudioTrack.html">getAudioTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getTextTrack.html">getTextTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getVideoTrack.html">getVideoTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/setAudioTrack.html">setAudioTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/setTextTrack.html">setTextTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/setVideoTrack.html">setVideoTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/disableTextTrack.html">disableTextTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Representation Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Representation_Selection/getVideoRepresentation.html">getVideoRepresentation</a></li>
+<li class="page-list-item"><a href="../../api/Representation_Selection/getAudioRepresentation.html">getAudioRepresentation</a></li>
+<li class="page-list-item"><a href="../../api/Representation_Selection/lockAudioVideoRepresentations.html">lockVideoRepresentations / lockAudioRepresentations</a></li>
+<li class="page-list-item"><a href="../../api/Representation_Selection/getLockedVideoRepresentations.html">getLockedVideoRepresentations</a></li>
+<li class="page-list-item"><a href="../../api/Representation_Selection/getLockedAudioRepresentations.html">getLockedAudioRepresentations</a></li>
+<li class="page-list-item"><a href="../../api/Representation_Selection/unlockAudioVideoRepresentations.html">unlockVideoRepresentations / unlockAudioRepresentations</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Speed Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li>
+<li class="page-list-item"><a href="../../api/Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li>
+<li class="page-list-item"><a href="../../api/Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Volume Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Volume_Control/setVolume.html">setVolume</a></li>
+<li class="page-list-item"><a href="../../api/Volume_Control/getVolume.html">getVolume</a></li>
+<li class="page-list-item"><a href="../../api/Volume_Control/mute.html">mute</a></li>
+<li class="page-list-item"><a href="../../api/Volume_Control/isMute.html">isMute</a></li>
+<li class="page-list-item"><a href="../../api/Volume_Control/unMute.html">unMute</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Buffer_Information/getCurrentBufferGap.html">getCurrentBufferGap</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Content Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Content_Information/getContentUrls.html">getContentUrls</a></li>
+<li class="page-list-item"><a href="../../api/Content_Information/updateContentUrls.html">updateContentUrls</a></li>
+<li class="page-list-item"><a href="../../api/Content_Information/isLive.html">isLive</a></li>
+<li class="page-list-item"><a href="../../api/Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li>
+<li class="page-list-item"><a href="../../api/Content_Information/createDebugElement.html">createDebugElement</a></li></ul></li>
+<li class="page-list-item"><a href="../../api/Static_Properties.html">RxPlayer Static Properties</a></li>
+<li class="page-list-item"><a href="../../api/Typescript_Types.html">Typescript Types</a></li>
+<li><div class="page-list-item page-list-group">Tools</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Tools/TextTrackRenderer.html">TextTrackRenderer</a></li>
+<li class="page-list-item"><a href="../../api/Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li>
+<li class="page-list-item"><a href="../../api/Tools/StringUtils.html">StringUtils</a></li>
+<li class="page-list-item"><a href="../../api/Tools/parseBifThumbnails.html">parseBifThumbnails</a></li>
+<li class="page-list-item"><a href="../../api/Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li>
+<li class="page-list-item"><a href="../../api/Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Miscellaneous</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Miscellaneous/plugins.html">Plugins</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Low_Latency.html">Low Latency</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/hdr.html">HDR</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Debug_Element.html">Debug Element</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Local_Contents.html">Local Contents</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Text_Tracks.html">Text Tracks</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Initial_Position.html">Initial Position</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">Reference</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../reference/API_Reference.html">API Reference</a></li></ul></li>
+<li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
+
+<li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
+</ul></div><script type="text/javascript" src="../../scripts/lunr.js" charset="utf-8"></script><script type="text/javascript" src="../../scripts/script.js" charset="utf-8"></script></body></html>

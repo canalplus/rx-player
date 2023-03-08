@@ -1,0 +1,551 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../../styles/style.css"/><link rel="stylesheet" href="../../styles/code.css"/><title>loadVideo Options - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "../..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../../static/img/logo.png" /></a><a class="navbar-item navbar-active hideable"href="../Welcome.html">Getting Started</a>
+<a class="navbar-item hideable"href="../../api/Overview.html">API</a>
+<a class="navbar-item hideable"href="../../reference/API_Reference.html">Reference</a>
+<a class="navbar-item hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
+<span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
+<a aria-label="Link to repository" class="navbar-item first-right hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 4.0.0-beta.1</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="../Welcome.html">Welcome</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Tutorials</div><ul><li class="sidebar-item"><a class="sidebar-link" href="../Tutorials/Quick_Start.html">Quick Start</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tutorials/Content_with_DRM.html">Contents with DRM</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tutorials/Selecting_a_Track.html">Selecting a Track</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group active opened">Migration from RxPlayer v3</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Overview.html">Overview</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Preferences.html">Track Preferences</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Bitrate_Selection.html">Bitrate Selection</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Constructor_Options.html">Constructor Options</a></li><li class="sidebar-item"><a class="sidebar-link active" href="./loadVideo_Options.html">loadVideo Options</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Player_Events.html">Player Events</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Player_Errors.html">Player Errors</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Player_Methods.html">Player Methods</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Player_Types.html">Player Types</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="../Minimal_Player.html">Importing a minimal RxPlayer</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Glossary.html">Glossary</a></li><li class="sidebar-item"><a class="sidebar-link" href="../Troubleshooting.html">Troubleshooting</a></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="%60loadvideo%60_options"></a></p>
+<h1><code>loadVideo</code> Options</h1>
+<p>Multiple options of the <code>loadVideo</code> have been changed or removed.
+They will all be listed in this page.</p>
+<p><a name="removed_options"></a></p>
+<h2>Removed options</h2>
+<p><a name="%60manualbitrateswitchingmode%60"></a></p>
+<h3><code>manualBitrateSwitchingMode</code></h3>
+<p>The <code>manualBitrateSwitchingMode</code> option has been removed.</p>
+<p>It is now possible to indicate the wanted switching mode directly on the
+<a href="../../api/Representation_Selection/lockAudioVideoRepresentations.html"><code>lockVideoRepresentations</code> or
+<code>lockAudioRepresentations</code></a>
+call through its <code>switchingMode</code> property instead.</p>
+<p><a name="%60defaultaudiotrack%60_/_%60defaulttexttrack%60"></a></p>
+<h3><code>defaultAudioTrack</code> / <code>defaultTextTrack</code></h3>
+<p>The deprecated default tracks options have now been removed.
+Those can be replaced by the now more powerful track API, documented in the
+<a href="./Preferences.html">Track Preferences page</a> of the migration documentation.</p>
+<p><a name="%60hidenativesubtitles%60"></a></p>
+<h3><code>hideNativeSubtitles</code></h3>
+<p>The deprecated <code>hideNativeSubtitles</code> option has been removed without
+replacement.</p>
+<p>It had been added a long time ago, for knownj use cases that were since
+completely replaced by using the <code>"html"</code> <code>textTrackMode</code>.</p>
+<p>If you still need that option for a valid use case, you are welcomed to open an
+issue.</p>
+<p><a name="%60transportoptions.aggressivemode%60"></a></p>
+<h3><code>transportOptions.aggressiveMode</code></h3>
+<p>The <code>aggressiveMode</code> option has been removed without replacement.</p>
+<p>It was previously mostly used as a work-around to optimize the time at which new
+segments were requested, but was always too risky and experimental for our
+taste.</p>
+<p><a name="%60transportoptions.supplementarytexttracks%60"></a></p>
+<h3><code>transportOptions.supplementaryTextTracks</code></h3>
+<p>The deprecated <code>supplementaryTextTracks</code> option has been completely removed in
+profit of using the more flexiple <a href="../../api/Tools/TextTrackRenderer.html"><code>TextTrackRenderer</code></a>
+tool.</p>
+<p><a name="%60transportoptions.supplementaryimagetracks%60"></a></p>
+<h3><code>transportOptions.supplementaryImageTracks</code></h3>
+<p>The deprecated <code>supplementaryImageTracks</code> option has been completely removed.</p>
+<p>If you want to display image thumbnails, you now have to load and display them
+in your application.</p>
+<p>You can still use the <a href="../../api/Tools/parseBifThumbnails.html"><code>parseBifThumbnails</code></a>
+tool to parse thumbnails in the “BIF” format.</p>
+<p><a name="%60keysystems%5B%5D.persistentlicense%60"></a></p>
+<h3><code>keySystems[].persistentLicense</code></h3>
+<p>The <code>persistentLicense</code> option has now been removed because it is, and already
+was, unnecessary.</p>
+<p>The simple presence of the <code>keySystems[].persistentLicenseConfig</code> option - which
+is the renaming of the old <code>keySystems[].licenseStorage</code> option (see below) - now
+suffice by itself to indicate that you want to use persistent license.</p>
+<p>The <code>persistentLicense</code> property can thus be safely removed.</p>
+<p><a name="%60keysystems%5B%5D.fallbackon%60"></a></p>
+<h3><code>keySystems[].fallbackOn</code></h3>
+<p>The <code>fallbackOn</code> object has been removed, and its content has been completely
+replaced by the more powerful
+<a href="../../api/Decryption_Options.html#onkeyoutputrestricted"><code>keySystems[].onKeyOutputRestricted</code></a>
+option (replacing <code>keySystems[].fallbackOn.keyOutputRestricted</code>) and
+<a href="../../api/Decryption_Options.html#onkeyinternalerror"><code>keySystems[].onKeyInternalError</code></a>
+option (replacing <code>keySystems[].fallbackOn.keyInternalError</code>).</p>
+<p>As such what was previously written:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">keySystems</span>: [{
+    <span class="hljs-attr">fallbackOn</span>: {
+      <span class="hljs-attr">keyOutputRestricted</span>: <span class="hljs-literal">true</span>,
+      <span class="hljs-attr">keyInternalError</span>: <span class="hljs-literal">true</span>,
+    }
+    <span class="hljs-comment">// ...</span>
+  }],
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+<p>Can now be written:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">keySystems</span>: [{
+    <span class="hljs-attr">onKeyOutputRestricted</span>: <span class="hljs-string">"fallback"</span>,
+    <span class="hljs-attr">onKeyInternalError</span>: <span class="hljs-string">"fallback"</span>,
+    <span class="hljs-comment">// ...</span>
+  }],
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+<p><a name="%60keysystems%5B%5D.onkeystatuseschange%60"></a></p>
+<h3><code>keySystems[].onKeyStatusesChange</code></h3>
+<p>The <code>onKeyStatusesChange</code> callback has been removed with no replacement as no
+known usage was done of this callback.
+If you want it back, please open an issue.</p>
+<p><a name="%60keysystems%5B%5D.throwonlicenseexpiration%60"></a></p>
+<h3><code>keySystems[].throwOnLicenseExpiration</code></h3>
+<p>The deprecated <code>throwOnLicenseExpiration</code> option has been removed because it can
+be fully replaced by the <a href="../../api/Decryption_Options.html#onkeyexpiration"><code>keySystems[].onKeyExpiration</code>
+option</a> option.</p>
+<p><a name="renamed_and_updated_options"></a></p>
+<h2>Renamed and updated options</h2>
+<p><a name="%60url%60"></a></p>
+<h3><code>url</code></h3>
+<p>A very minor update to the <code>url</code> option of <code>loadVideo</code> is that it is now
+required to set it directly to the url of the Manifest for contents of the
+<code>"smooth"</code> <code>transport</code>.</p>
+<p>An undocumented feature of that option was that, for legacy reasons,
+it was previously possible to set it to a JSON or XML document that would
+contain the Manifest URL.</p>
+<p>You’re most probably not impacted by this change as as far as we know, the
+feature was only used internally at Canal+ and was not documented.</p>
+<p><a name="%60networkconfig%60"></a></p>
+<h3><code>networkConfig</code></h3>
+<p>The <code>networkConfig</code> <code>loadVideo</code> option has been entirely renamed, both the
+option itself, renamed to <a href="../../api/Loading_a_Content.html#requestconfig"><code>requestConfig</code></a>,
+and its inner properties.</p>
+<p>Moreover, the <code>offlineRetry</code> option has been removed because it was too
+unreliable for real offline detection. If you miss this feature and wish for a
+replacement, please open an issue!</p>
+<p>Basically what was written previously as:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">networkConfig</span>: {
+    <span class="hljs-attr">segmentRetry</span>: <span class="hljs-number">2</span>,
+    <span class="hljs-attr">segmentRequestTimeout</span>: <span class="hljs-number">15000</span>,
+    <span class="hljs-attr">manifestRetry</span>: <span class="hljs-number">3</span>,
+    manifestRequestTimeout : <span class="hljs-number">7000</span>,
+  },
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+<p>Can now be written as:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">requestConfig</span>: {
+    <span class="hljs-attr">segment</span>: {
+      <span class="hljs-attr">maxRetry</span>: <span class="hljs-number">2</span>,
+      <span class="hljs-attr">timeout</span>: <span class="hljs-number">15000</span>,
+    },
+    <span class="hljs-attr">manifest</span>: {
+      <span class="hljs-attr">maxRetry</span>: <span class="hljs-number">3</span>,
+      <span class="hljs-attr">timeout</span>: <span class="hljs-number">7000</span>,
+    },
+  },
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+<p><a name="%60audiotrackswitchingmode%60"></a></p>
+<h3><code>audioTrackSwitchingMode</code></h3>
+<p>The <code>audioTrackSwitchingMode</code> option can now be indicated directly on the
+corresponding <a href="../../api/Track_Selection/setAudioTrack.html"><code>setAudioTrack</code></a> call
+through its <code>switchingMode</code> property.</p>
+<p>However it is still possible to declare a default value when switching an audio
+track through the new
+<a href="../../api/Loading_a_Content.html#defaultaudiotrackswitchingmode"><code>defaultAudioTrackSwitchingMode</code></a>
+<code>loadVideo</code> option.</p>
+<p>This means that:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">audioTrackSwitchingMode</span>: <span class="hljs-string">"reload"</span>,
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+<p>Can be replaced by:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">defaultAudioTrackSwitchingMode</span>: <span class="hljs-string">"reload"</span>,
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+<p><a name="%60keysystems%5B%5D.licensestorage%60"></a></p>
+<h3><code>keySystems[].licenseStorage</code></h3>
+<p>The <code>licenseStorage</code> option has been renamed to
+<a href="../../api/Decryption_Options.html#persistentlicenseconfig"><code>persistentLicenseConfig</code></a>.</p>
+<p>This means that what was previously:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">keySystems</span>: [{
+    <span class="hljs-attr">licenseStorage</span>: {
+      <span class="hljs-title function_">save</span>(<span class="hljs-params">data</span>) {
+        <span class="hljs-variable language_">localStorage</span>.<span class="hljs-title function_">setItem</span>(<span class="hljs-string">"RxPlayer-persistent-storage"</span>, <span class="hljs-title class_">JSON</span>.<span class="hljs-title function_">stringify</span>(data));
+      },
+      <span class="hljs-title function_">load</span>(<span class="hljs-params"></span>) {
+        <span class="hljs-keyword">const</span> item = <span class="hljs-variable language_">localStorage</span>.<span class="hljs-title function_">getItem</span>(<span class="hljs-string">"RxPlayer-persistent-storage"</span>);
+        <span class="hljs-keyword">return</span> item === <span class="hljs-literal">null</span> ? [] : <span class="hljs-title class_">JSON</span>.<span class="hljs-title function_">parse</span>(item);
+      },
+    },
+    <span class="hljs-comment">// ...</span>
+  }],
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+<p>Now becomes:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">keySystems</span>: [{
+    <span class="hljs-attr">persistentLicenseConfig</span>: {
+      <span class="hljs-title function_">save</span>(<span class="hljs-params">data</span>) {
+        <span class="hljs-variable language_">localStorage</span>.<span class="hljs-title function_">setItem</span>(<span class="hljs-string">"RxPlayer-persistent-storage"</span>, <span class="hljs-title class_">JSON</span>.<span class="hljs-title function_">stringify</span>(data));
+      },
+      <span class="hljs-title function_">load</span>(<span class="hljs-params"></span>) {
+        <span class="hljs-keyword">const</span> item = <span class="hljs-variable language_">localStorage</span>.<span class="hljs-title function_">getItem</span>(<span class="hljs-string">"RxPlayer-persistent-storage"</span>);
+        <span class="hljs-keyword">return</span> item === <span class="hljs-literal">null</span> ? [] : <span class="hljs-title class_">JSON</span>.<span class="hljs-title function_">parse</span>(item);
+      },
+    },
+    <span class="hljs-comment">// ...</span>
+  }],
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+<p><a name="%60keysystems%5B%5D.persistentstaterequired%60"></a></p>
+<h3><code>keySystems[].persistentStateRequired</code></h3>
+<p>The <code>persistentStateRequired</code> boolean property of the <code>keySystems</code> option has
+been updated to a <a href="../../api/Decryption_Options.html#persistentstate"><code>persistentState</code></a>
+property accepting instead the <a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeysrequirement"><code>MediaKeysRequirement</code></a>
+the RxPlayer should set the <a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-persistentstate"><code>persistentState</code> property of the wanted
+<code>MediaKeySystemConfiguration</code></a>.</p>
+<p>This means that what was previously written as:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">keySystems</span>: [{
+    <span class="hljs-attr">persistentStateRequired</span>: <span class="hljs-literal">true</span>,
+    <span class="hljs-comment">// ...</span>
+  }],
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+<p>Now becomes:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">keySystems</span>: [{
+    <span class="hljs-attr">persistentState</span>: <span class="hljs-string">"required"</span>,
+    <span class="hljs-comment">// ...</span>
+  }],
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+<p><a name="%60keysystems%5B%5D.distinctiveidentifierrequired%60"></a></p>
+<h3><code>keySystems[].distinctiveIdentifierRequired</code></h3>
+<p>The <code>distinctiveIdentifierRequired</code> boolean property of the <code>keySystems</code> option
+has been updated to a <a href="../../api/Decryption_Options.html#distinctiveidentifier"><code>distinctiveIdentifier</code></a>
+property accepting instead the <a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeysrequirement"><code>MediaKeysRequirement</code></a>
+the RxPlayer should set the <a href="https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-distinctiveidentifier"><code>distinctiveIdentifier</code> property of the wanted
+<code>MediaKeySystemConfiguration</code></a>.</p>
+<p>This means that what was previously written as:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">keySystems</span>: [{
+    <span class="hljs-attr">distinctiveIdentifierRequired</span>: <span class="hljs-literal">true</span>,
+    <span class="hljs-comment">// ...</span>
+  }],
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+<p>Now becomes:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">keySystems</span>: [{
+    <span class="hljs-attr">distinctiveIdentifier</span>: <span class="hljs-string">"required"</span>,
+    <span class="hljs-comment">// ...</span>
+  }],
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+<p><a name="%60keysystems%5B%5D.audiorobustnesses%60_/_%60keysystems%5B%5D.videorobustnesses%60"></a></p>
+<h3><code>keySystems[].audioRobustnesses</code> / <code>keySystems[].videoRobustnesses</code></h3>
+<p>Both undocumented, the <code>audioRobustnesses</code> and <code>videoRobustnesses</code> properties of
+the <code>keySystems</code> <code>loadVideo</code> options allowed to configure the wanted robustnes
+levels of encrypted content.</p>
+<p>They have now been replaced by the much more powerful
+<a href="../../api/Decryption_Options.html#audiocapabilitiesconfig"><code>audioCapabilitiesConfig</code></a>
+and <a href="../../api/Decryption_Options.html#videocapabilitiesconfig"><code>videoCapabilitiesConfig</code></a>
+respectively.</p>
+<p>What was previously written:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">keySystems</span>: [{
+    <span class="hljs-attr">audioRobustnesses</span>: [<span class="hljs-string">"2000"</span>],
+    <span class="hljs-attr">videoRobustnesses</span>: [<span class="hljs-string">"3000"</span>, <span class="hljs-string">"2000"</span>],
+    <span class="hljs-comment">// ...</span>
+  }],
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+<p>Can now be written as:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">keySystems</span>: [{
+    <span class="hljs-attr">audioCapabilitiesConfig</span>: {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">"robustness"</span>,
+      <span class="hljs-attr">value</span>: [<span class="hljs-string">"2000"</span>],
+    },
+    <span class="hljs-attr">videoCapabilitiesConfig</span>: {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">"robustness"</span>,
+      <span class="hljs-attr">value</span>: [<span class="hljs-string">"3000"</span>, <span class="hljs-string">"2000"</span>],
+    },
+    <span class="hljs-comment">// ...</span>
+  }],
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+<p><a name="%60transportoptions%60"></a></p>
+<h3><code>transportOptions</code></h3>
+<p>The <code>transportOptions</code> option of <code>loadVideo</code> has been removed. Instead, you
+should now put what it contained directly on the <code>loadVideo</code> call.</p>
+<p>For example:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">transportOptions</span>: {
+    <span class="hljs-attr">segmentLoader</span>: <span class="hljs-function">(<span class="hljs-params">args, callbacks</span>) =&gt;</span> {
+      <span class="hljs-comment">// ...</span>
+    },
+    <span class="hljs-attr">minimumManifestUpdateInterval</span>: <span class="hljs-number">5000</span>,
+  },
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+<p>Should now become:</p>
+<pre><code class="language-js">rxPlayer.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">segmentLoader</span>: <span class="hljs-function">(<span class="hljs-params">args, callbacks</span>) =&gt;</span> {
+    <span class="hljs-comment">// ...</span>
+  },
+  <span class="hljs-attr">minimumManifestUpdateInterval</span>: <span class="hljs-number">5000</span>,
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+<p>Note however that multiple properties previously found inside the
+<code>transportOptions</code> option has now been removed and updated (they are all
+documented here).</p>
+<p>The removed options are:</p>
+<ul>
+<li><code>aggressiveMode</code></li>
+<li><code>supplementaryTextTracks</code></li>
+<li><code>supplementaryImageTracks</code></li>
+</ul>
+<p>Updated options are:</p>
+<ul>
+<li><code>manifestLoader</code></li>
+<li><code>segmentLoader</code></li>
+</ul>
+<p>Change will be documented below.</p>
+<p><a name="%60transportoptions.manifestloader%60"></a></p>
+<h3><code>transportOptions.manifestLoader</code></h3>
+<p>The <code>transportOptions.manifestLoader</code> option, which is now just <code>manifestLoader</code>
+(at the root of <code>loadVideo</code> options) now only received two arguments:</p>
+<ul>
+<li>
+<p>The first argument - which was previously just the Manifest’s URL - is now
+an object with two properties:</p>
+<ul>
+<li>
+<p><strong>url</strong> (<code>string|undefined</code>): The same URL that was previously
+communicated directly.</p>
+</li>
+<li>
+<p><em>timeout</em> (<code>number|undefined</code>): Timeout in milliseconds after which a
+request should preferably be aborted, according to current
+configuration.</p>
+<p>This property is mainly indicative, you may or may not want to exploit
+this information depending on your use cases.</p>
+<p>Previously, this property was communicated through a third argument.</p>
+</li>
+</ul>
+</li>
+<li>
+<p>The second argument didn’t change, it is still its callbacks</p>
+</li>
+<li>
+<p>The third argument has been removed and integrated in the first one.</p>
+</li>
+</ul>
+<p>The <a href="../../api/Miscellaneous/plugins.html#manifestloader"><code>manifestLoader</code>
+documentation</a> has been
+updated if you wish to have an example and more documentation.</p>
+<p><a name="%60transportoptions.segmentloader%60"></a></p>
+<h3><code>transportOptions.segmentLoader</code></h3>
+<p>The <code>transportOptions.segmentLoader</code> option, which is now just <code>segmentLoader</code>
+(at the root of <code>loadVideo</code> options) has seen its first argument updated:</p>
+<ul>
+<li>
+<p>Its <code>url</code> property, before always a string, can now be set to <code>undefined</code> if
+unknown.</p>
+</li>
+<li>
+<p>The <code>manifest</code>, <code>period</code>, <code>adaptation</code>, <code>representation</code> and <code>segment</code>
+properties have been removed as it exposed the RxPlayer’s internals too
+much.</p>
+</li>
+<li>
+<p>An <code>isInit</code> boolean (or set to <code>undefined</code>) property has been added to
+indicate whether this is an initialization segment.</p>
+</li>
+<li>
+<p>a <code>trackType</code> string has been added to signal which track’s type this
+segment is part of.</p>
+</li>
+<li>
+<p>A <code>byteRanges</code> array (or set to <code>undefined</code>) property has been added to
+announce the byte-range(s) for which the resource should be requested.
+More information on its format <a href="../../api/Miscellaneous/plugins.html#segmentloader">in the <code>segmentLoader</code>
+documentation</a>.</p>
+</li>
+</ul>
+<p>The <a href="../../api/Miscellaneous/plugins.html#segmentloader"><code>segmentLoader</code>
+documentation</a> has been
+updated if you wish to have an example and more documentation.</p>
+<p><a name="%60transportoptions.representationfilter%60"></a></p>
+<h3><code>transportOptions.representationFilter</code></h3>
+<p>The <code>transportOptions.representationFilter</code> option, which is now just
+<code>representationFilter</code> (at the root of <code>loadVideo</code> options) has seen its first
+argument updated:</p>
+<ul>
+<li><code>frameRate</code> is now either a number - in terms of frame per seconds - or
+<code>undefined</code>, instead of a string.</li>
+<li><code>bitrate</code> can now be <code>undefined</code> or just not be defined as a property at
+all.</li>
+<li>The <code>decipherable</code> property has been removed.</li>
+<li>The <code>index</code> property has been removed.</li>
+<li>A new <code>contentProtections</code> property has been added, describing protections
+associated to the corresponding Representation.</li>
+</ul>
+<p>The <code>bufferType</code> property of its second argument also has been renamed
+<code>trackType</code> to align with other APIs.</p>
+<p>The <a href="../../api/Miscellaneous/plugins.html#representationfilter"><code>representationFilter</code>
+documentation</a> has been
+updated if you wish to have an example and more documentation.</p>
+</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="./Constructor_Options.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">Constructor Options</div></a></div><div class="next-or-previous-page next-page"><a class="next-or-previous-page-link" href="./Player_Events.html"><div class="next-or-previous-page-link-label">Next</div><div class="next-or-previous-page-link-name">Player Events</div></a></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#%60loadvideo%60_options"><code>loadVideo</code> Options</a></p>
+<ul>
+<li><a href="#removed_options">Removed options</a>
+<ul>
+<li><a href="#%60manualbitrateswitchingmode%60"><code>manualBitrateSwitchingMode</code></a></li>
+<li><a href="#%60defaultaudiotrack%60_/_%60defaulttexttrack%60"><code>defaultAudioTrack</code> / <code>defaultTextTrack</code></a></li>
+<li><a href="#%60hidenativesubtitles%60"><code>hideNativeSubtitles</code></a></li>
+<li><a href="#%60transportoptions.aggressivemode%60"><code>transportOptions.aggressiveMode</code></a></li>
+<li><a href="#%60transportoptions.supplementarytexttracks%60"><code>transportOptions.supplementaryTextTracks</code></a></li>
+<li><a href="#%60transportoptions.supplementaryimagetracks%60"><code>transportOptions.supplementaryImageTracks</code></a></li>
+<li><a href="#%60keysystems%5B%5D.persistentlicense%60"><code>keySystems[].persistentLicense</code></a></li>
+<li><a href="#%60keysystems%5B%5D.fallbackon%60"><code>keySystems[].fallbackOn</code></a></li>
+<li><a href="#%60keysystems%5B%5D.onkeystatuseschange%60"><code>keySystems[].onKeyStatusesChange</code></a></li>
+<li><a href="#%60keysystems%5B%5D.throwonlicenseexpiration%60"><code>keySystems[].throwOnLicenseExpiration</code></a></li>
+</ul>
+</li>
+<li><a href="#renamed_and_updated_options">Renamed and updated options</a>
+<ul>
+<li><a href="#%60url%60"><code>url</code></a></li>
+<li><a href="#%60networkconfig%60"><code>networkConfig</code></a></li>
+<li><a href="#%60audiotrackswitchingmode%60"><code>audioTrackSwitchingMode</code></a></li>
+<li><a href="#%60keysystems%5B%5D.licensestorage%60"><code>keySystems[].licenseStorage</code></a></li>
+<li><a href="#%60keysystems%5B%5D.persistentstaterequired%60"><code>keySystems[].persistentStateRequired</code></a></li>
+<li><a href="#%60keysystems%5B%5D.distinctiveidentifierrequired%60"><code>keySystems[].distinctiveIdentifierRequired</code></a></li>
+<li><a href="#%60keysystems%5B%5D.audiorobustnesses%60_/_%60keysystems%5B%5D.videorobustnesses%60"><code>keySystems[].audioRobustnesses</code> / <code>keySystems[].videoRobustnesses</code></a></li>
+<li><a href="#%60transportoptions%60"><code>transportOptions</code></a></li>
+<li><a href="#%60transportoptions.manifestloader%60"><code>transportOptions.manifestLoader</code></a></li>
+<li><a href="#%60transportoptions.segmentloader%60"><code>transportOptions.segmentLoader</code></a></li>
+<li><a href="#%60transportoptions.representationfilter%60"><code>transportOptions.representationFilter</code></a></li>
+</ul>
+</li>
+</ul>
+</div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group opened active">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../Welcome.html">Welcome</a></li>
+<li><div class="page-list-item page-list-group">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Tutorials/Quick_Start.html">Quick Start</a></li>
+<li class="page-list-item"><a href="../Tutorials/Content_with_DRM.html">Contents with DRM</a></li>
+<li class="page-list-item"><a href="../Tutorials/Selecting_a_Track.html">Selecting a Track</a></li>
+<li class="page-list-item"><a href="../Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li>
+<li><div class="page-list-item page-list-group opened active">Migration from RxPlayer v3</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="./Preferences.html">Track Preferences</a></li>
+<li class="page-list-item"><a href="./Bitrate_Selection.html">Bitrate Selection</a></li>
+<li class="page-list-item"><a href="./Constructor_Options.html">Constructor Options</a></li>
+<li class="page-list-item active"><a href="./loadVideo_Options.html">loadVideo Options</a></li>
+<li class="page-list-item"><a href="./Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="./Player_Errors.html">Player Errors</a></li>
+<li class="page-list-item"><a href="./Player_Methods.html">Player Methods</a></li>
+<li class="page-list-item"><a href="./Player_Types.html">Player Types</a></li></ul></li>
+<li class="page-list-item"><a href="../Minimal_Player.html">Importing a minimal RxPlayer</a></li>
+<li class="page-list-item"><a href="../Glossary.html">Glossary</a></li>
+<li class="page-list-item"><a href="../Troubleshooting.html">Troubleshooting</a></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">API</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../api/Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../../api/Creating_a_Player.html">Creating a Player</a></li>
+<li class="page-list-item"><a href="../../api/Loading_a_Content.html">Loading a Content</a></li>
+<li class="page-list-item"><a href="../../api/Decryption_Options.html">Decryption Options</a></li>
+<li><div class="page-list-item page-list-group">Basic Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Basic_Methods/getPlayerState.html">getPlayerState</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/addEventListener.html">addEventListener</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/removeEventListener.html">removeEventListener</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/play.html">play</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/pause.html">pause</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/stop.html">stop</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getPosition.html">getPosition</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getWallClockTime.html">getWallClockTime</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/seekTo.html">seekTo</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getMediaDuration.html">getMediaDuration</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getError.html">getError</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getVideoElement.html">getVideoElement</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getAvailablePeriods.html">getAvailablePeriods</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/getCurrentPeriod.html">getCurrentPeriod</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/dispose.html">dispose</a></li>
+<li class="page-list-item"><a href="../../api/Basic_Methods/reload.html">reload</a></li></ul></li>
+<li class="page-list-item"><a href="../../api/Player_States.html">Player States</a></li>
+<li class="page-list-item"><a href="../../api/Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../../api/Player_Errors.html">Player Errors</a></li>
+<li><div class="page-list-item page-list-group">Track Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Track_Selection/getAudioTrack.html">getAudioTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getTextTrack.html">getTextTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getVideoTrack.html">getVideoTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/setAudioTrack.html">setAudioTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/setTextTrack.html">setTextTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/setVideoTrack.html">setVideoTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/disableTextTrack.html">disableTextTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li>
+<li class="page-list-item"><a href="../../api/Track_Selection/isTrickModeEnabled.html">isTrickModeEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Representation Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Representation_Selection/getVideoRepresentation.html">getVideoRepresentation</a></li>
+<li class="page-list-item"><a href="../../api/Representation_Selection/getAudioRepresentation.html">getAudioRepresentation</a></li>
+<li class="page-list-item"><a href="../../api/Representation_Selection/lockAudioVideoRepresentations.html">lockVideoRepresentations / lockAudioRepresentations</a></li>
+<li class="page-list-item"><a href="../../api/Representation_Selection/getLockedVideoRepresentations.html">getLockedVideoRepresentations</a></li>
+<li class="page-list-item"><a href="../../api/Representation_Selection/getLockedAudioRepresentations.html">getLockedAudioRepresentations</a></li>
+<li class="page-list-item"><a href="../../api/Representation_Selection/unlockAudioVideoRepresentations.html">unlockVideoRepresentations / unlockAudioRepresentations</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Speed Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li>
+<li class="page-list-item"><a href="../../api/Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li>
+<li class="page-list-item"><a href="../../api/Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Volume Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Volume_Control/setVolume.html">setVolume</a></li>
+<li class="page-list-item"><a href="../../api/Volume_Control/getVolume.html">getVolume</a></li>
+<li class="page-list-item"><a href="../../api/Volume_Control/mute.html">mute</a></li>
+<li class="page-list-item"><a href="../../api/Volume_Control/isMute.html">isMute</a></li>
+<li class="page-list-item"><a href="../../api/Volume_Control/unMute.html">unMute</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li>
+<li class="page-list-item"><a href="../../api/Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Buffer_Information/getCurrentBufferGap.html">getCurrentBufferGap</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Content Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Content_Information/getContentUrls.html">getContentUrls</a></li>
+<li class="page-list-item"><a href="../../api/Content_Information/updateContentUrls.html">updateContentUrls</a></li>
+<li class="page-list-item"><a href="../../api/Content_Information/isLive.html">isLive</a></li>
+<li class="page-list-item"><a href="../../api/Content_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li>
+<li class="page-list-item"><a href="../../api/Content_Information/createDebugElement.html">createDebugElement</a></li></ul></li>
+<li class="page-list-item"><a href="../../api/Static_Properties.html">RxPlayer Static Properties</a></li>
+<li class="page-list-item"><a href="../../api/Typescript_Types.html">Typescript Types</a></li>
+<li><div class="page-list-item page-list-group">Tools</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Tools/TextTrackRenderer.html">TextTrackRenderer</a></li>
+<li class="page-list-item"><a href="../../api/Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li>
+<li class="page-list-item"><a href="../../api/Tools/StringUtils.html">StringUtils</a></li>
+<li class="page-list-item"><a href="../../api/Tools/parseBifThumbnails.html">parseBifThumbnails</a></li>
+<li class="page-list-item"><a href="../../api/Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li>
+<li class="page-list-item"><a href="../../api/Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Miscellaneous</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../../api/Miscellaneous/plugins.html">Plugins</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Low_Latency.html">Low Latency</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/hdr.html">HDR</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Debug_Element.html">Debug Element</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Local_Contents.html">Local Contents</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Text_Tracks.html">Text Tracks</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/Initial_Position.html">Initial Position</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li>
+<li class="page-list-item"><a href="../../api/Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">Reference</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../../reference/API_Reference.html">API Reference</a></li></ul></li>
+<li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
+
+<li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
+</ul></div><script type="text/javascript" src="../../scripts/lunr.js" charset="utf-8"></script><script type="text/javascript" src="../../scripts/script.js" charset="utf-8"></script></body></html>
