@@ -60,7 +60,7 @@ function generateFullDemo(options) {
 
   const webpackDemoConfig = {
     mode: isDevMode ? "development" : "production",
-    entry: path.join(__dirname, "../demo/full/scripts/index.jsx"),
+    entry: path.join(__dirname, "../demo/full/scripts/index.tsx"),
     resolve: {
       extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
     },
