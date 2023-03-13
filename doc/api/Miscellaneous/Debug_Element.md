@@ -76,7 +76,7 @@ reflect exactly what's going on at a particular point in time.
     - **rs**: _Ready State_. Reflects the  HTMLMediaElement property `readyState`
     - **pr**: _Playback Rate_. Reflects the  HTMLMediaElement property `playbackRate`
     - **sp**: _Speed_. The playback rate configurated through the `setPlaybackRate` method
-    - **pr**: _Paused_. Reflects the  HTMLMediaElement property `paused`. `0` for `false` and `1` for `true`.
+    - **pa**: _Paused_. Reflects the  HTMLMediaElement property `paused`. `0` for `false` and `1` for `true`.
     - **en**: _Ended_. Reflects the  HTMLMediaElement property `ended`. `0` for `false` and `1` for `true`.
     - **li**: _Live_. If `1`, the current content can be considered a live content.
     - **wba**: _WantedBufferAhead_. The configured `wantedBufferAhead`, which is the amount of buffer ahead of the current position that is pre-buffered, in seconds.
