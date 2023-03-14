@@ -787,10 +787,10 @@ function updateDeciperability(
         const result = isDecipherable(representation);
         if (result !== representation.decipherable) {
           updates.push({ manifest, period, adaptation, representation });
+          representation.decipherable = result;
           log.debug(`Decipherability changed for "${representation.id}"`,
                     `(${representation.bitrate})`,
                     String(representation.decipherable));
-          representation.decipherable = result;
         }
       }
     }
