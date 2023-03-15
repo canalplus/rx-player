@@ -17,9 +17,15 @@ module.exports = {
     "react"
   ],
 
-  "extends": "eslint:recommended",
+  "extends": [
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-requiring-type-checking"
+  ],
 
+  "parser": "@typescript-eslint/parser",
   "parserOptions": {
+    "tsconfigRootDir": __dirname,
+    "project": "./tsconfig.json",
     "ecmaVersion": 2017,
     "ecmaFeatures": {
       "jsx": true

@@ -77,7 +77,7 @@ function fastDemoBuild(options) {
 
   // Create a context for incremental builds
   esbuild.context({
-    entryPoints: [path.join(__dirname, "../demo/full/scripts/index.jsx")],
+    entryPoints: [path.join(__dirname, "../demo/full/scripts/index.tsx")],
     bundle: true,
     minify,
     outfile: path.join(__dirname, "../demo/full/bundle.js"),
