@@ -525,8 +525,8 @@ const DEFAULT_CONFIG = {
      * @type {Object}
      */
   ABR_REGULAR_FACTOR: {
-    DEFAULT: 0.8,
-    LOW_LATENCY: 0.8,
+    DEFAULT: 0.72,
+    LOW_LATENCY: 0.72,
   },
 
     /**
