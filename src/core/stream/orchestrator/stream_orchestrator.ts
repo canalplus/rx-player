@@ -199,7 +199,13 @@ export default function StreamOrchestrator(
     }, { clearSignal: orchestratorCancelSignal, includeLastObservation: true });
 
     manifest.addEventListener("decipherabilityUpdate", (evt) => {
+      if (orchestratorCancelSignal.isCancelled()) {
+        return;
+      }
       onDecipherabilityUpdates(evt).catch(err => {
+        if (orchestratorCancelSignal.isCancelled()) {
+          return;
+        }
         currentCanceller.cancel();
         callbacks.error(err);
       });
