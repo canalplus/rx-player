@@ -1,4 +1,3 @@
-import { MediaError } from "../../../errors";
 import Manifest, {
   Adaptation,
   Representation,
@@ -64,36 +63,55 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
   private _canceller : TaskCanceller;
 
   /**
+   * Boolean set to `true` when a track-updating method is called and to `false`
+   * just before it performs the actual track change to allow checking for
+   * re-entrancy: if the token is already reset to `false` before the
+   * track change is officialized, then another track update has already been
+   * performed in the meantime.
+   */
+  private _updateToken: boolean;
+
+  /**
    * Create a new `TrackDispatcher` by giving its Reference and an initial track
    * setting.
    * This constructor will update the Reference with the right preferences
    * synchronously.
    * @param {Object} manifest
    * @param {Object} adaptationRef
-   * @param {Object|null} initialTrackInfo
    */
   constructor(
     manifest : Manifest,
-    adaptationRef : SharedReference<IAdaptationChoice | null | undefined>,
-    initialTrackInfo : ITrackSetting | null
+    adaptationRef : SharedReference<IAdaptationChoice | null | undefined>
   ) {
     super();
     this._canceller = new TaskCanceller();
     this._manifest = manifest;
     this._adaptationRef = adaptationRef;
+    this._updateToken = false;
+  }
 
+  /**
+   * @param {Object|null} initialTrackInfo
+   */
+  public start(initialTrackInfo : ITrackSetting | null) : void {
+    this._updateToken = true;
     if (initialTrackInfo === null) {
-      this._lastEmitted = initialTrackInfo;
-      adaptationRef.setValue(null);
+      this._lastEmitted = null;
+      this._updateToken = false;
+      this._adaptationRef.setValue(null);
       return;
     }
     const reference = this._constructLockedRepresentationsReference(initialTrackInfo);
+    if (!this._updateToken) {
+      return;
+    }
     this._lastEmitted = { adaptation: initialTrackInfo.adaptation,
                           switchingMode: initialTrackInfo.switchingMode,
                           lockedRepresentations: null };
-    adaptationRef.setValue({ adaptation: initialTrackInfo.adaptation,
-                             switchingMode: initialTrackInfo.switchingMode,
-                             representations: reference });
+    this._updateToken = false;
+    this._adaptationRef.setValue({ adaptation: initialTrackInfo.adaptation,
+                                   switchingMode: initialTrackInfo.switchingMode,
+                                   representations: reference });
   }
 
   /**
@@ -101,10 +119,12 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
    * @param {Object|null} newTrackInfo
    */
   public updateTrack(newTrackInfo : ITrackSetting | null) : void {
+    this._updateToken = true;
     if (newTrackInfo === null) {
       if (this._lastEmitted === null) {
         return;
       }
+      this._updateToken = false;
       this._canceller.cancel();
 
       // has no point but let's still create one for simplicity sake
@@ -117,7 +137,11 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
     this._canceller.cancel();
     this._canceller = new TaskCanceller();
     const reference = this._constructLockedRepresentationsReference(newTrackInfo);
+    if (!this._updateToken) {
+      return;
+    }
     this._lastEmitted = { adaptation, switchingMode, lockedRepresentations: null };
+    this._updateToken = false;
     this._adaptationRef.setValue({ adaptation,
                                    switchingMode,
                                    representations: reference });
@@ -176,12 +200,9 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
         }
       }
       if (playableRepresentations.length <= 0) {
-        const adaptationType = trackInfo.adaptation.type;
-        const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION",
-                                        "No Representation in the chosen " +
-                                        adaptationType + " Adaptation can be played",
-                                        { adaptation: trackInfo.adaptation });
-        throw noRepErr;
+        trackInfo.adaptation.isSupported = false;
+        self.trigger("noPlayableRepresentation", null);
+        return;
       }
 
       // Check if Locked Representations have changed
@@ -222,6 +243,7 @@ export interface ITrackDispatcherEvent {
    * none of them are currently "playable".
    */
   noPlayableLockedRepresentation : null;
+  noPlayableRepresentation: null;
 }
 
 /** Define a new Track preference given to the `TrackDispatcher`. */
