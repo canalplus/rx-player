@@ -660,6 +660,10 @@ The payload for this event is an object with the following properties:
       - `"missing"` the previously-chosen track was missing from the content's
         refreshed Manifest.
 
+      - `"no-playable-representation"`: the previously-chosen track had none of
+        its `Representation` playable, most likely because of decipherability
+        issues and thus the RxPlayer decided to switch to a new track.
+
     Though other reasons may be added in the future (for future reasons not
     covered by those values), so you should expect this possibility in your
     application's logic.
