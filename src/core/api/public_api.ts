@@ -1581,6 +1581,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (positionWanted === undefined) {
       throw new Error("invalid time given");
     }
+    log.info("API: API Seek to", positionWanted);
     this.videoElement.currentTime = positionWanted;
     return positionWanted;
   }

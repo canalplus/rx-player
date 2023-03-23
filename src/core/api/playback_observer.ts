@@ -167,6 +167,7 @@ export default class PlaybackObserver {
    */
   public setCurrentTime(time: number) : void {
     this._internalSeeksIncoming.push(time);
+    log.info("API: Seeking internally", time);
     this._mediaElement.currentTime = time;
   }
 
