@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../../log";
 import LoadedSessionsStore from "./loaded_sessions_store";
 
 /**
@@ -32,7 +33,7 @@ export default async function cleanOldLoadedSessions(
   if (limit < 0 || limit >= loadedSessionsStore.getLength()) {
     return ;
   }
-
+  log.info("DRM: LSS cache limit exceeded", limit, loadedSessionsStore.getLength());
   const proms : Array<Promise<unknown>> = [];
   const entries = loadedSessionsStore.getAll().slice(); // clone
   const toDelete = entries.length - limit;
