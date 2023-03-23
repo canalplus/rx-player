@@ -664,7 +664,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       this.trigger("activePeriodChanged", { period });
     });
     contentTimeBoundariesObserver.addEventListener("durationUpdate", (newDuration) => {
-      log.debug("Init: Duration has to be updated.", newDuration);
       mediaDurationUpdater.updateKnownDuration(newDuration);
     });
     contentTimeBoundariesObserver.addEventListener("endOfStream", () => {
