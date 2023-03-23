@@ -229,6 +229,9 @@ As described in the corresponding code's documentation, A aupplementary
 `trackInfo` property may be set on `MEDIA_ERROR` depending on its `code`
 property.
 
+Note that even if the code may be linked to a `trackInfo` property, that
+property may well also be unset.
+
 That `trackInfo` describes, when it makes sense, the characteristics of the track
 linked to an error. For example, you may want to know which video track led to a
 `BUFFER_APPEND_ERROR` and thus might be linked to corrupted segments.
