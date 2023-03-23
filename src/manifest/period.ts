@@ -103,7 +103,8 @@ export default class Period {
             (type === "video" || type === "audio")
         ) {
           throw new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-                               "No supported " + type + " adaptations");
+                               "No supported " + type + " adaptations",
+                               { adaptation: undefined });
         }
 
         if (filteredAdaptations.length > 0) {
