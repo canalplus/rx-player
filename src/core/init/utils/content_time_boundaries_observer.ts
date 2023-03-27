@@ -118,10 +118,13 @@ export default class ContentTimeBoundariesObserver
       this._checkEndOfStream();
     }, cancelSignal);
 
-    function getManifestDuration() : number | undefined {
-      return manifest.isDynamic ?
-        maximumPositionCalculator.getMaximumAvailablePosition() :
-        maximumPositionCalculator.getEndingPosition();
+    function getManifestDuration() : IDurationItem {
+      const endingPosition = maximumPositionCalculator.getEndingPosition();
+      return endingPosition !== undefined ?
+        { isEnd: true,
+          duration: endingPosition } :
+        { isEnd: false,
+          duration: maximumPositionCalculator.getMaximumAvailablePosition() };
     }
   }
 
@@ -154,9 +157,12 @@ export default class ContentTimeBoundariesObserver
             this._maximumPositionCalculator
               .updateLastVideoAdaptation(adaptation);
           }
-          const newDuration = this._manifest.isDynamic ?
-            this._maximumPositionCalculator.getMaximumAvailablePosition() :
-            this._maximumPositionCalculator.getEndingPosition();
+          const endingPosition = this._maximumPositionCalculator.getEndingPosition();
+          const newDuration = endingPosition !== undefined ?
+            { isEnd: true,
+              duration: endingPosition } :
+            { isEnd: false,
+              duration: this._maximumPositionCalculator.getMaximumAvailablePosition() };
           this.trigger("durationUpdate", newDuration);
         }
       }
@@ -334,6 +340,28 @@ export default class ContentTimeBoundariesObserver
   }
 }
 
+export interface IDurationItem {
+  /**
+   * The new maximum known position (note that this is the ending position
+   * currently known of the current content, it might be superior to the last
+   * position at which segments are available and it might also evolve over
+   * time), in seconds.
+   */
+  duration : number;
+  /**
+   * If `true`, the communicated `duration` is the actual end of the content.
+   * It may still be updated due to a track change or to add precizion, but it
+   * is still a (rough) estimate of the maximum position that content should
+   * have.
+   *
+   * If `false`, this is the currently known maximum position associated to
+   * the content, but the content is still evolving (typically, new media
+   * segments are still being generated) and as such it can still have a
+   * longer duration in the future.
+   */
+  isEnd : boolean;
+}
+
 /**
  * Events triggered by a `ContentTimeBoundariesObserver` where the keys are the
  * event names and the value is the payload of those events.
@@ -347,7 +375,7 @@ export interface IContentTimeBoundariesObserverEvent {
    * Triggered when the duration of the currently-playing content became known
    * or changed.
    */
-  durationUpdate : number | undefined;
+  durationUpdate : IDurationItem;
   /**
    * Triggered when the last possible chronological segment for all types of
    * buffers has either been pushed or is being pushed to the corresponding

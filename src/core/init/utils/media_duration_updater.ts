@@ -28,6 +28,7 @@ import createSharedReference, {
 import TaskCanceller, {
   CancellationSignal,
 } from "../../../utils/task_canceller";
+import { IDurationItem } from "./content_time_boundaries_observer";
 
 /** Number of seconds in a regular year. */
 const YEAR_IN_SECONDS = 365 * 24 * 3600;
@@ -45,7 +46,7 @@ export default class MediaDurationUpdater {
    * `undefined` if the audio track for the last Period has never been known yet.
    * `null` if there are no chosen audio Adaptation.
    */
-  private _currentKnownDuration : ISharedReference<number | undefined>;
+  private _currentKnownDuration : ISharedReference<IDurationItem | undefined>;
 
   /**
    * Create a new `MediaDurationUpdater` that will keep the given MediaSource's
@@ -98,10 +99,6 @@ export default class MediaDurationUpdater {
                                     { emitCurrentValue: false,
                                       clearSignal: msUpdateCanceller.signal });
 
-      manifest.addEventListener("manifestUpdate",
-                                reSetDuration,
-                                msUpdateCanceller.signal);
-
       onDurationMayHaveChanged(durationChangeCanceller.signal);
     }
 
@@ -139,7 +136,7 @@ export default class MediaDurationUpdater {
    * @param {number | undefined} newDuration
    */
   public updateKnownDuration(
-    newDuration : number | undefined
+    newDuration : IDurationItem | undefined
   ) : void {
     this._currentKnownDuration.setValueIfChanged(newDuration);
   }
@@ -169,28 +166,35 @@ export default class MediaDurationUpdater {
 function setMediaSourceDuration(
   mediaSource: MediaSource,
   manifest: Manifest,
-  knownDuration : number | undefined
+  knownDuration : IDurationItem | undefined
 ) : MediaSourceDurationUpdateStatus {
-  let newDuration  = knownDuration;
+  let newDurationObj = knownDuration;
 
-  if (newDuration === undefined) {
+  if (newDurationObj === undefined) {
     if (manifest.isDynamic) {
-      newDuration = manifest.getLivePosition() ??
-                    manifest.getMaximumSafePosition();
+      const duration = manifest.getLivePosition() ??
+                          manifest.getMaximumSafePosition();
+      newDurationObj = { duration, isEnd: false };
     } else {
-      newDuration = manifest.getMaximumSafePosition();
+      const duration = manifest.getMaximumSafePosition();
+      newDurationObj = { duration, isEnd: true };
     }
   }
 
-  if (manifest.isDynamic) {
+  if (!newDurationObj.isEnd) {
     // Some targets poorly support setting a very high number for durations.
-    // Yet, in dynamic contents, we would prefer setting a value as high as possible
-    // to still be able to seek anywhere we want to (even ahead of the Manifest if
-    // we want to). As such, we put it at a safe default value of 2^32 excepted
-    // when the maximum position is already relatively close to that value, where
-    // we authorize exceptionally going over it.
-    newDuration =  Math.max(Math.pow(2, 32), newDuration + YEAR_IN_SECONDS);
+    // Yet, in contents whose end is not yet known (e.g. live contents), we
+    // would prefer setting a value as high as possible to still be able to
+    // seek anywhere we want to (even ahead of the Manifest if we want to).
+    // As such, we put it at a safe default value of 2^32 excepted when the
+    // maximum position is already relatively close to that value, where we
+    // authorize exceptionally going over it.
+    const duration = Math.max(Math.pow(2, 32),
+                              newDurationObj.duration + YEAR_IN_SECONDS);
+    newDurationObj.duration = duration;
   }
+
+  const newDuration = newDurationObj.duration;
 
   let maxBufferedEnd : number = 0;
   for  (let i = 0; i < mediaSource.sourceBuffers.length; i++) {
@@ -340,7 +344,7 @@ function createMediaSourceOpenReference(
 function recursivelyForceDurationUpdate(
   mediaSource : MediaSource,
   manifest : Manifest,
-  duration : number | undefined,
+  duration : IDurationItem | undefined,
   cancelSignal : CancellationSignal
 ) : void {
   const res = setMediaSourceDuration(mediaSource, manifest, duration);
