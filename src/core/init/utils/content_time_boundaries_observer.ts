@@ -111,21 +111,20 @@ export default class ContentTimeBoundariesObserver
     }, { includeLastObservation: true, clearSignal: cancelSignal });
 
     manifest.addEventListener("manifestUpdate", () => {
-      this.trigger("durationUpdate", getManifestDuration());
+      this.trigger("durationUpdate", this._getManifestDuration());
       if (cancelSignal.isCancelled()) {
         return;
       }
       this._checkEndOfStream();
     }, cancelSignal);
+  }
 
-    function getManifestDuration() : IDurationItem {
-      const endingPosition = maximumPositionCalculator.getEndingPosition();
-      return endingPosition !== undefined ?
-        { isEnd: true,
-          duration: endingPosition } :
-        { isEnd: false,
-          duration: maximumPositionCalculator.getMaximumAvailablePosition() };
-    }
+  /**
+   * Returns an estimate of the current duration of the content.
+   * @returns {Object}
+   */
+  public getCurrentDuration() : IDurationItem  {
+    return this._getManifestDuration();
   }
 
   /**
@@ -312,6 +311,15 @@ export default class ContentTimeBoundariesObserver
     }
   }
 
+  private _getManifestDuration() : IDurationItem {
+    const endingPosition = this._maximumPositionCalculator.getEndingPosition();
+    return endingPosition !== undefined ?
+      { isEnd: true,
+        duration: endingPosition } :
+      { isEnd: false,
+        duration: this._maximumPositionCalculator.getMaximumAvailablePosition() };
+  }
+
   private _lazilyCreateActiveStreamInfo(bufferType : IBufferType) : IActiveStreamsInfo {
     let streamInfo = this._activeStreams.get(bufferType);
     if (streamInfo === undefined) {
@@ -350,7 +358,7 @@ export interface IDurationItem {
   duration : number;
   /**
    * If `true`, the communicated `duration` is the actual end of the content.
-   * It may still be updated due to a track change or to add precizion, but it
+   * It may still be updated due to a track change or to add precision, but it
    * is still a (rough) estimate of the maximum position that content should
    * have.
    *
