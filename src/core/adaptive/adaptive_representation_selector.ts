@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../../config";
 import log from "../../log";
 import Manifest, {
   Adaptation,
@@ -362,11 +363,14 @@ function getEstimateReference(
                                           lastPlaybackObservation.speed :
                                           1);
 
-      if (allowBufferBasedEstimates && bufferGap <= 8) {
+      const { ABR_ENTER_BUFFER_BASED_ALGO,
+              ABR_EXIT_BUFFER_BASED_ALGO } = config.getCurrent();
+
+      if (allowBufferBasedEstimates && bufferGap <= ABR_EXIT_BUFFER_BASED_ALGO) {
         allowBufferBasedEstimates = false;
       } else if (!allowBufferBasedEstimates &&
                  isFinite(bufferGap) &&
-                  bufferGap > 15)
+                  bufferGap >= ABR_ENTER_BUFFER_BASED_ALGO)
       {
         allowBufferBasedEstimates = true;
       }

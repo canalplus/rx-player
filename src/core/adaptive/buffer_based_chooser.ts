@@ -66,11 +66,11 @@ export default class BufferBasedChooser {
     }
 
     let scaledScore : number|undefined;
-    if (currentScore != null) {
+    if (currentScore !== undefined) {
       scaledScore = speed === 0 ? currentScore : (currentScore / speed);
     }
 
-    if (scaledScore != null && scaledScore > 1) {
+    if (scaledScore !== undefined && scaledScore > 1) {
       const currentBufferLevel = bufferLevels[currentBitrateIndex];
       const nextIndex = (() => {
         for (let i = currentBitrateIndex + 1; i < bufferLevels.length; i++) {
@@ -79,7 +79,7 @@ export default class BufferBasedChooser {
           }
         }
       })();
-      if (nextIndex != null) {
+      if (nextIndex !== undefined) {
         const nextBufferLevel = bufferLevels[nextIndex];
         if (bufferGap >= nextBufferLevel) {
           return bitrates[nextIndex];
@@ -87,7 +87,7 @@ export default class BufferBasedChooser {
       }
     }
 
-    if (scaledScore == null || scaledScore < 1.15) {
+    if (scaledScore === undefined || scaledScore < 1.15) {
       const currentBufferLevel = bufferLevels[currentBitrateIndex];
       if (bufferGap < currentBufferLevel) {
         for (let i = currentBitrateIndex - 1; i >= 0; i--) {
