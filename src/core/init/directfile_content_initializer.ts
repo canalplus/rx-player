@@ -122,6 +122,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
      */
     const rebufferingController = new RebufferingController(playbackObserver,
                                                             null,
+                                                            null,
                                                             speed);
     rebufferingController.addEventListener("stalled", (evt) =>
       this.trigger("stalled", evt));
