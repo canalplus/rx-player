@@ -30,7 +30,7 @@ import {
   IPlaybackObservation,
   PlaybackObserver,
 } from "../../api";
-import { IBufferType } from "../../segment_buffers";
+import SegmentBuffersStore, { IBufferType } from "../../segment_buffers";
 import { IStallingSituation } from "../types";
 
 
@@ -54,6 +54,7 @@ export default class RebufferingController
   /** Emit the current playback conditions */
   private _playbackObserver : PlaybackObserver;
   private _manifest : Manifest | null;
+  private _segmentBuffersStore : SegmentBuffersStore | null;
   private _speed : IReadOnlySharedReference<number>;
   private _isStarted : boolean;
 
@@ -72,12 +73,14 @@ export default class RebufferingController
    */
   constructor(
     playbackObserver : PlaybackObserver,
-    manifest: Manifest | null,
+    manifest : Manifest | null,
+    segmentBuffersStore : SegmentBuffersStore | null,
     speed : IReadOnlySharedReference<number>
   ) {
     super();
     this._playbackObserver = playbackObserver;
     this._manifest = manifest;
+    this._segmentBuffersStore = segmentBuffersStore;
     this._speed = speed;
     this._discontinuitiesStore = [];
     this._isStarted = false;
@@ -154,6 +157,10 @@ export default class RebufferingController
         Math.max(observation.pendingInternalSeek ?? 0, observation.position) :
         null;
 
+      if (this._checkDecipherabilityFreeze(observation)) {
+        return ;
+      }
+
       if (freezing !== null) {
         const now = performance.now();
 
@@ -215,7 +222,7 @@ export default class RebufferingController
           this.trigger("stalled", stalledReason);
           return ;
         } else {
-          log.warn("Init: ignored stall for too long, checking discontinuity",
+          log.warn("Init: ignored stall for too long, considering it",
                    now - ignoredStallTimeStamp);
         }
       }
@@ -357,6 +364,87 @@ export default class RebufferingController
    */
   public destroy() : void {
     this._canceller.cancel();
+  }
+
+  /**
+   * Support of contents with DRM on all the platforms out there is a pain
+   * considering all the DRM-related bugs there are.
+   *
+   * We found out a frequent issue which is to be unable to play despite having
+   * all the decryption keys to play what is currently buffered.
+   * When this happens, re-creating the buffers from scratch, with a reload, is
+   * usually sufficient to unlock the situation.
+   *
+   * Although we prefer providing more targeted fixes or telling to platform
+   * developpers to fix their implementation, it's not always possible.
+   * We thus resorted to developping an heuristic which detects such situation
+   * and reload in that case.
+   *
+   * @param {Object} observation - The last playback observation produced, it
+   * has to be recent (just triggered for example).
+   * @returns {boolean} - Returns `true` if it seems to be such kind of
+   * decipherability freeze, in which case this method already performed the
+   * right handling steps.
+   */
+  private _checkDecipherabilityFreeze(
+    observation : IPlaybackObservation
+  ): boolean {
+    const { readyState,
+            rebuffering,
+            freezing } = observation;
+    const bufferGap = observation.bufferGap !== undefined &&
+      isFinite(observation.bufferGap) ? observation.bufferGap :
+      0;
+    if (
+      this._segmentBuffersStore === null ||
+      bufferGap < 6 ||
+      (rebuffering === null && freezing === null) ||
+      readyState > 1
+    ) {
+      return false;
+    }
+
+    const now = performance.now();
+    const rebufferingForTooLong =
+      rebuffering !== null && now - rebuffering.timestamp > 4000;
+    const frozenForTooLong =
+      freezing !== null && now - freezing.timestamp > 4000;
+
+    if (rebufferingForTooLong || frozenForTooLong) {
+      const statusAudio = this._segmentBuffersStore.getStatus("audio");
+      const statusVideo = this._segmentBuffersStore.getStatus("video");
+      let hasOnlyDecipherableSegments = true;
+      let isClear = true;
+      for (const status of [statusAudio, statusVideo]) {
+        if (status.type === "initialized") {
+          for (const segment of status.value.getInventory()) {
+            const { representation } = segment.infos;
+            if (representation.decipherable === false) {
+              log.warn(
+                "Init: we have undecipherable segments left in the buffer, reloading"
+              );
+              this.trigger("needsReload", null);
+              return true;
+            } else if (representation.contentProtections !== undefined) {
+              isClear = false;
+              if (representation.decipherable !== true) {
+                hasOnlyDecipherableSegments = false;
+              }
+            }
+          }
+        }
+      }
+
+      if (!isClear && hasOnlyDecipherableSegments) {
+        log.warn(
+          "Init: we are frozen despite only having decipherable " +
+          "segments left in the buffer, reloading"
+        );
+        this.trigger("needsReload", null);
+        return true;
+      }
+    }
+    return false;
   }
 }
 
@@ -581,6 +669,7 @@ class PlaybackRateUpdater {
 export interface IRebufferingControllerEvent {
   stalled : IStallingSituation;
   unstalled : null;
+  needsReload : null;
   warning : IPlayerError;
 }
 
