@@ -17,7 +17,10 @@
 import log from "../../log";
 import arrayFindIndex from "../../utils/array_find_index";
 import getBufferLevels from "./utils/get_buffer_levels";
-import { ScoreConfidenceLevel } from "./utils/representation_score_calculator";
+import {
+  IRepresentationMaintainabilityScore,
+  ScoreConfidenceLevel,
+} from "./utils/representation_score_calculator";
 
 /**
  * Minimum amount of time, in milliseconds, during which we are blocked from
@@ -146,7 +149,7 @@ export default class BufferBasedChooser {
 
     let scaledScore : number|undefined;
     if (currentScore !== undefined) {
-      scaledScore = speed === 0 ? currentScore[0] : (currentScore[0] / speed);
+      scaledScore = speed === 0 ? currentScore.score : (currentScore.score / speed);
     }
 
     const actualBufferGap = isFinite(bufferGap) ?
@@ -159,7 +162,7 @@ export default class BufferBasedChooser {
       actualBufferGap < bufferLevels[currentBitrateIndex] ||
       (
         scaledScore !== undefined && scaledScore < 1 &&
-        currentScore?.[1] === ScoreConfidenceLevel.HIGH
+        currentScore?.confidenceLevel === ScoreConfidenceLevel.HIGH
       )
     ) {
       const timeSincePrev = this._lastUnsuitableQualityTimestamp === undefined ?
@@ -193,7 +196,7 @@ export default class BufferBasedChooser {
         now - this._lastUnsuitableQualityTimestamp < this._blockRaiseDelay
       ) ||
       scaledScore === undefined || scaledScore < 1.15 ||
-      currentScore?.[1] !== ScoreConfidenceLevel.HIGH
+      currentScore?.confidenceLevel !== ScoreConfidenceLevel.HIGH
     ) {
       return currentBitrate;
     }
@@ -228,7 +231,7 @@ export interface IBufferBasedChooserPlaybackObservation {
   /** The bitrate of the currently downloaded segments, in bps. */
   currentBitrate? : number | undefined;
   /** The "maintainability score" of the currently downloaded segments. */
-  currentScore? : [number, ScoreConfidenceLevel] | undefined;
+  currentScore? : IRepresentationMaintainabilityScore | undefined;
   /** Playback rate wanted (e.g. `1` is regular playback, `2` is double speed etc.). */
   speed : number;
 }

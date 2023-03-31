@@ -49,25 +49,25 @@ describe("BufferBasedChooser", () => {
       bufferGap: 0,
       speed: 1,
       currentBitrate: undefined,
-      currentScore: [4, ScoreConfidenceLevel.LOW],
+      currentScore: { score: 4, confidenceLevel: ScoreConfidenceLevel.LOW },
     })).toEqual(1);
     expect(new BufferBasedChooser([1, 2, 3]).getEstimate({
       bufferGap: 0,
       speed: 1,
       currentBitrate: undefined,
-      currentScore: [4, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 4, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(1);
     expect(new BufferBasedChooser([1, 2, 3]).getEstimate({
       bufferGap: 0,
       speed: 1,
       currentBitrate: undefined,
-      currentScore: [1, ScoreConfidenceLevel.LOW],
+      currentScore: { score: 1, confidenceLevel: ScoreConfidenceLevel.LOW },
     })).toEqual(1);
     expect(new BufferBasedChooser([1, 2, 3]).getEstimate({
       bufferGap: 0,
       speed: 1,
       currentBitrate: undefined,
-      currentScore: [1, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 1, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(1);
   });
 
@@ -101,37 +101,37 @@ describe("BufferBasedChooser", () => {
       bufferGap: 16,
       speed: 1,
       currentBitrate: 10,
-      currentScore: [1.15, ScoreConfidenceLevel.LOW],
+      currentScore: { score: 1.15, confidenceLevel: ScoreConfidenceLevel.LOW },
     })).toEqual(10);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 30,
       speed: 1,
       currentBitrate: 20,
-      currentScore: [1.15, ScoreConfidenceLevel.LOW],
+      currentScore: { score: 1.15, confidenceLevel: ScoreConfidenceLevel.LOW },
     })).toEqual(20);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 30,
       speed: 1,
       currentBitrate: 20,
-      currentScore: [100, ScoreConfidenceLevel.LOW],
+      currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.LOW },
     })).toEqual(20);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 30,
       speed: 2,
       currentBitrate: 20,
-      currentScore: [2.30, ScoreConfidenceLevel.LOW],
+      currentScore: { score: 2.30, confidenceLevel: ScoreConfidenceLevel.LOW },
     })).toEqual(20);
     expect(new BufferBasedChooser([10, 20, 20, 40]).getEstimate({
       bufferGap: 30,
       speed: 2,
       currentBitrate: 20,
-      currentScore: [2.30, ScoreConfidenceLevel.LOW],
+      currentScore: { score: 2.30, confidenceLevel: ScoreConfidenceLevel.LOW },
     })).toEqual(20);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 30,
       speed: 0, // 0 is a special case
       currentBitrate: 20,
-      currentScore: [100, ScoreConfidenceLevel.LOW],
+      currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.LOW },
     })).toEqual(20);
   });
 
@@ -146,37 +146,37 @@ describe("BufferBasedChooser", () => {
       bufferGap: 16,
       speed: 1,
       currentBitrate: 10,
-      currentScore: [1.15, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 1.15, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(20);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 30,
       speed: 1,
       currentBitrate: 20,
-      currentScore: [1.15, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 1.15, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(40);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 30,
       speed: 1,
       currentBitrate: 20,
-      currentScore: [100, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(40);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 30,
       speed: 2,
       currentBitrate: 20,
-      currentScore: [2.30, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 2.30, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(40);
     expect(new BufferBasedChooser([10, 20, 20, 40]).getEstimate({
       bufferGap: 30,
       speed: 2,
       currentBitrate: 20,
-      currentScore: [2.30, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 2.30, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(40);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 30,
       speed: 0, // 0 is a special case
       currentBitrate: 20,
-      currentScore: [100, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(40);
   });
 
@@ -191,31 +191,31 @@ describe("BufferBasedChooser", () => {
       bufferGap: 6,
       speed: 1,
       currentBitrate: 10,
-      currentScore: [1.15, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 1.15, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(10);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 13,
       speed: 1,
       currentBitrate: 20,
-      currentScore: [1.15, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 1.15, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(20);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 13,
       speed: 1,
       currentBitrate: 20,
-      currentScore: [100, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(20);
     expect(new BufferBasedChooser([10, 20, 20, 40]).getEstimate({
       bufferGap: 13,
       speed: 1,
       currentBitrate: 20,
-      currentScore: [100, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(20);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 13,
       speed: 2,
       currentBitrate: 20,
-      currentScore: [2.30, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 2.30, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(20);
   });
 
@@ -231,13 +231,13 @@ describe("BufferBasedChooser", () => {
       bufferGap: 100000000000,
       speed: 1,
       currentBitrate: 40,
-      currentScore: [1000000, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 1000000, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(40);
     expect(new BufferBasedChooser([10, 20, 40, 40]).getEstimate({
       bufferGap: 100000000000,
       speed: 1,
       currentBitrate: 40,
-      currentScore: [1000000, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 1000000, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(40);
   });
 
@@ -252,31 +252,31 @@ describe("BufferBasedChooser", () => {
       bufferGap: 15,
       speed: 2,
       currentBitrate: 10,
-      currentScore: [2, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 2, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(10);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 22,
       speed: 2,
       currentBitrate: 20,
-      currentScore: [2, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 2, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(20);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 22,
       speed: 100,
       currentBitrate: 20,
-      currentScore: [100, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(20);
     expect(new BufferBasedChooser([10, 20, 20, 40]).getEstimate({
       bufferGap: 22,
       speed: 100,
       currentBitrate: 20,
-      currentScore: [100, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(20);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 22,
       speed: 3,
       currentBitrate: 20,
-      currentScore: [3, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 3, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(20);
   });
 
@@ -291,31 +291,31 @@ describe("BufferBasedChooser", () => {
       bufferGap: 15,
       speed: 2,
       currentBitrate: 10,
-      currentScore: [1.9, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 1.9, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(10);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 22,
       speed: 2,
       currentBitrate: 20,
-      currentScore: [1.9, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 1.9, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(10);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 22,
       speed: 100,
       currentBitrate: 20,
-      currentScore: [99, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 99, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(10);
     expect(new BufferBasedChooser([10, 20, 20, 40]).getEstimate({
       bufferGap: 22,
       speed: 100,
       currentBitrate: 20,
-      currentScore: [99, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 99, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(10);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 22,
       speed: 3,
       currentBitrate: 20,
-      currentScore: [2.5, ScoreConfidenceLevel.HIGH],
+      currentScore: { score: 2.5, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(10);
   });
 
@@ -330,7 +330,7 @@ describe("BufferBasedChooser", () => {
       bufferGap: 15,
       speed: 2,
       currentBitrate: 10,
-      currentScore: [1.9, ScoreConfidenceLevel.LOW],
+      currentScore: { score: 1.9, confidenceLevel: ScoreConfidenceLevel.LOW },
     })).toEqual(10);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 22,
@@ -342,25 +342,25 @@ describe("BufferBasedChooser", () => {
       bufferGap: 22,
       speed: 2,
       currentBitrate: 20,
-      currentScore: [1.9, ScoreConfidenceLevel.LOW],
+      currentScore: { score: 1.9, confidenceLevel: ScoreConfidenceLevel.LOW },
     })).toEqual(20);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 22,
       speed: 100,
       currentBitrate: 20,
-      currentScore: [99, ScoreConfidenceLevel.LOW],
+      currentScore: { score: 99, confidenceLevel: ScoreConfidenceLevel.LOW },
     })).toEqual(20);
     expect(new BufferBasedChooser([10, 20, 20, 40]).getEstimate({
       bufferGap: 22,
       speed: 100,
       currentBitrate: 20,
-      currentScore: [99, ScoreConfidenceLevel.LOW],
+      currentScore: { score: 99, confidenceLevel: ScoreConfidenceLevel.LOW },
     })).toEqual(20);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 22,
       speed: 3,
       currentBitrate: 20,
-      currentScore: [2.5, ScoreConfidenceLevel.LOW],
+      currentScore: { score: 2.5, confidenceLevel: ScoreConfidenceLevel.LOW },
     })).toEqual(20);
   });
 
