@@ -32,7 +32,7 @@ import {
 
 /**
  * Parse MPD through the JS parser, on a `Document` instance.
- * @param {Document} manifest - Original manifest as returned by the server
+ * @param {Document} document - Original manifest as returned by the server
  * @param {Object} args - Various parsing options and information.
  * @returns {Object} - Response returned by the DASH-JS parser.
  */
