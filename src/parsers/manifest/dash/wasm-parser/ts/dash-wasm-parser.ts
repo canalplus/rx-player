@@ -199,6 +199,7 @@ export default class DashWasmParser {
                                                "Unknown error";
         log.warn("DW: Could not create DASH-WASM parser:", message);
         this.status = "failure";
+        throw err;
       });
 
     return this._initProm;
