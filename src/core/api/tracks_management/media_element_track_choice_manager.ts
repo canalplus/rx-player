@@ -120,10 +120,7 @@ function createAudioTracks(
  */
 function createTextTracks(
   textTracks: ICompatTextTrackList
-): Array<{ track: { id: string;
-                    normalized: string;
-                    language: string;
-                    closedCaption: boolean; };
+): Array<{ track: ITextTrack;
            nativeTrack: TextTrack; }> {
   const newTextTracks = [];
   const languagesOccurences: Partial<Record<string, number>> = {};
@@ -137,10 +134,20 @@ function createTextTracks(
                "_" +
                occurences.toString();
     languagesOccurences[language] = occurences + 1;
-    const track =  { language: textTrack.language,
-                     id,
-                     normalized: normalizeLanguage(textTrack.language),
-                     closedCaption: textTrack.kind === "captions" };
+
+    // Safari seems to be indicating that the subtitles track is a forced
+    // subtitles track by setting the `kind` attribute to `"forced"`.
+    // As of now (2023-04-04), this is not standard.
+    // @see https://github.com/whatwg/html/issues/4472
+    const forced = (textTrack.kind as string) === "forced" ?
+      true :
+      undefined;
+    const track = { language: textTrack.language,
+                    forced,
+                    label: textTrack.label,
+                    id,
+                    normalized: normalizeLanguage(textTrack.language),
+                    closedCaption: textTrack.kind === "captions" };
     newTextTracks.push({ track,
                          nativeTrack: textTrack });
   }
@@ -471,6 +478,8 @@ export default class MediaElementTrackChoiceManager
   public getAvailableTextTracks(): IAvailableTextTrack[] {
     return this._textTracks.map(({ track, nativeTrack }) => {
       return { id: track.id,
+               label: track.label,
+               forced: track.forced,
                language: track.language,
                normalized: track.normalized,
                closedCaption: track.closedCaption,

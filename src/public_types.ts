@@ -765,8 +765,8 @@ export interface IAudioTrack { language : string;
 export interface ITextTrack { language : string;
                               normalized : string;
                               closedCaption : boolean;
-                              forced? : boolean | undefined;
-                              label? : string | undefined;
+                              forced : boolean | undefined;
+                              label : string | undefined;
                               id : number|string; }
 
 /**
