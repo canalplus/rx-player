@@ -466,7 +466,7 @@ export default function StreamOrchestrator(
           const nextPeriod = manifest.getPeriodAfter(basePeriod);
           if (nextPeriod !== null) {
             // current Stream is full, create the next one if not
-            createNextPeriodStream(nextPeriod);
+            checkOrCreateNextPeriodStream(nextPeriod);
           }
         } else if (nextStreamInfo !== null) {
           // current Stream is active, destroy next Stream if created
@@ -495,9 +495,13 @@ export default function StreamOrchestrator(
      * Create `PeriodStream` for the next Period, specified under `nextPeriod`.
      * @param {Object} nextPeriod
      */
-    function createNextPeriodStream(nextPeriod : Period) : void {
+    function checkOrCreateNextPeriodStream(nextPeriod : Period) : void {
       if (nextStreamInfo !== null) {
-        log.warn("Stream: Creating next `PeriodStream` while it was already created.");
+        if (nextStreamInfo.period.id === nextPeriod.id) {
+          return;
+        }
+        log.warn("Stream: Creating next `PeriodStream` while one was already created.",
+                 bufferType, nextPeriod.id, nextStreamInfo.period.id);
         consecutivePeriodStreamCb.periodStreamCleared({ type: bufferType,
                                                         period: nextStreamInfo.period });
         nextStreamInfo.canceller.cancel();
