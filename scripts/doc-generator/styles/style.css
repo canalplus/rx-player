@@ -161,6 +161,30 @@ table tr td {
   max-width: 1650px;
 }
 
+.loading-wrapper {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.spinner-svg {
+  margin: 30px 0px;
+  transform-origin: center;
+  animation: spinner_anim 1.3s infinite linear;
+  height: 100%;
+  fill: #000;
+  width: 50px;
+  margin-left: -25px;
+}
+.spinner {
+  transform-origin: center;
+  animation: spinner_anim 1.3s infinite linear;
+}
+@keyframes spinner_anim{
+  100%{
+    transform:rotate(360deg)
+  }
+}
+
 /* ========= Search ======== */
 
 .no-js .search-icon {
