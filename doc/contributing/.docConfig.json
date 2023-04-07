@@ -7,6 +7,10 @@
     {
       "path": "./FILES.md",
       "displayName": "File architecture"
+    },
+    {
+      "path": "./releases.md",
+      "displayName": "Releases"
     }
   ]
 }
