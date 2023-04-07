@@ -95,7 +95,7 @@ export default function parseTTMLString(
 
   if (xml !== null && xml !== undefined) {
     const tts = xml.getElementsByTagName("tt");
-    let tt = tts[0];
+    let tt: Element = tts[0];
     if (tt === undefined) {
       // EBU-TT sometimes namespaces tt, by "tt:"
       // Just catch all namespaces to play it safe

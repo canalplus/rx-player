@@ -20,25 +20,25 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
 declare const __FEATURES__ : {
-  IS_ENABLED : number;
-  IS_DISABLED : number;
+  IS_DISABLED : 0;
+  IS_ENABLED : 1;
 
-  BIF_PARSER : number;
-  DASH : number;
-  DIRECTFILE : number;
-  EME : number;
-  HTML_SAMI : number;
-  HTML_SRT : number;
-  HTML_TTML : number;
-  HTML_VTT : number;
-  LOCAL_MANIFEST : number;
-  METAPLAYLIST : number;
-  DEBUG_ELEMENT : number;
-  NATIVE_SAMI : number;
-  NATIVE_SRT : number;
-  NATIVE_TTML : number;
-  NATIVE_VTT : number;
-  SMOOTH : number;
+  BIF_PARSER : 0 | 1;
+  DASH : 0 | 1;
+  DIRECTFILE : 0 | 1;
+  EME : 0 | 1;
+  HTML_SAMI : 0 | 1;
+  HTML_SRT : 0 | 1;
+  HTML_TTML : 0 | 1;
+  HTML_VTT : 0 | 1;
+  LOCAL_MANIFEST : 0 | 1;
+  METAPLAYLIST : 0 | 1;
+  DEBUG_ELEMENT : 0 | 1;
+  NATIVE_SAMI : 0 | 1;
+  NATIVE_SRT : 0 | 1;
+  NATIVE_TTML : 0 | 1;
+  NATIVE_VTT : 0 | 1;
+  SMOOTH : 0 | 1;
 } | typeof FEATURES_ENUM;
 
 declare const enum FEATURES_ENUM {
@@ -64,9 +64,9 @@ declare const enum FEATURES_ENUM {
 }
 
 declare const __ENVIRONMENT__ : {
-  CURRENT_ENV : number;
-  DEV : number;
-  PRODUCTION : number;
+  CURRENT_ENV : 0 | 1;
+  DEV : 0;
+  PRODUCTION : 1;
 } | typeof ENVIRONMENT_ENUM;
 
 declare const enum ENVIRONMENT_ENUM {
