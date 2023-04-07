@@ -1,0 +1,12 @@
+{
+  "pages": [
+    {
+      "path": "./CONTRIBUTING.md",
+      "displayName": "Overview"
+    },
+    {
+      "path": "./FILES.md",
+      "displayName": "File architecture"
+    }
+  ]
+}

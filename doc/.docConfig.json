@@ -24,15 +24,20 @@
       "displayName": "Reference"
     },
     {
+      "type": "search"
+    }
+  ],
+  "linksRight": [
+    {
       "type": "link",
       "link": "https://developers.canal-plus.com/rx-player/",
       "displayName": "Demo"
     },
     {
-      "type": "search"
-    }
-  ],
-  "linksRight": [
+      "type": "local-doc",
+      "path": "./contributing",
+      "displayName": "Contributing"
+    },
     {
       "type": "github-link",
       "link": "https://github.com/canalplus/rx-player"

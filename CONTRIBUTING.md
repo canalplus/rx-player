@@ -1,30 +1,5 @@
 # Contributing to the RxPlayer
 
-## Table of contents
-
-- [Issues and new features](#issues)
-- [Reading the current code](#reading)
-- [Code style](#code)
-    - [Linting](#code-lint)
-    - [Types](#code-types)
-    - [Forbidden functions and classes](#code-forbidden)
-- [Starting the demo page](#demo)
-  - [Building the demo and serving it](#demo-running)
-  - [Using HTTPS](#demo-https)
-- [Creating a commit](#commit)
-  - [Checks](#commit-checks)
-  - [Convention](#commit-name)
-- [The test suite](#testing)
-  - [Unit tests](#testing-unit)
-  - [Integration tests](#testing-integration)
-  - [Memory tests](#testing-memory)
-- [Documentation](#doc)
-- [Opening a pull request](#pr)
-  - [Checks](#pr-checks)
-  - [Which branch to merge to](#pr-branch)
-
-
-<a name="issues"></a>
 ## Issues and new features
 
 If you detect a problem with the RxPlayer, or if you desire a new feature,
@@ -37,7 +12,6 @@ Those have to follow the conventions defined below.
 
 
 
-<a name="reading"></a>
 ## Reading the current code
 
 Even if we hope the current code is straightforward, readable and commented
@@ -58,10 +32,8 @@ the whole documentation to be ready, only the parts you want to update
 
 
 
-<a name="code"></a>
 ## Code style
 
-<a name="code-lint"></a>
 ### Linting
 
 The code style in `src` is automatically checked by a "linter", `eslint`.
@@ -79,7 +51,6 @@ calling `npm run lint:demo`, or the style of the test files (in the `tests`
 directory) by calling `npm run lint:tests`.
 
 
-<a name="code-types"></a>
 ### Types
 
 #### General TypeScript rules
@@ -125,7 +96,6 @@ const enum MyConstEnum {
 \*We know that this rule is a controversial subject amongst TypeScript
 developpers, yet we still decide to enforce it for now.
 
-<a name="code-forbidden"></a>
 ### Forbidden functions and classes
 
 Some native functions, methods or classes should never be used to ensure
@@ -147,10 +117,8 @@ And the following methods:
     Promise's methods instead.
 
 
-<a name="demo"></a>
 ## The demo page
 
-<a name="demo-running"></a>
 ### Building the demo and serving it
 
 You might want to quickly test your code modification(s) on a real use case.
@@ -190,7 +158,6 @@ and perform a new build when that's the case. In that way, the server will
 always serve the last local version of the code. Note however that hot-reload is
 not enabled currently, you'll have to refresh the page yourself.
 
-<a name="demo-https"></a>
 ### Serving the demo page through HTTPS
 
 You might want to serve the demo via HTTPS. This is for example needed to be
@@ -213,10 +180,8 @@ when going to one of the demo pages in HTTPS. In most browsers, you can however
 safely ignore that warning.
 
 
-<a name="commit"></a>
 ## Creating a commit
 
-<a name="commit-checks"></a>
 ### Checks
 
 Every commits in a PR should pass our quick checks (linter and TypeScript
@@ -224,34 +189,8 @@ check). To check if that's the case, you can run locally the `check`
 script by calling `npm run check`.
 
 
-<a name="commit-name"></a>
-### Convention
-
-When creating a new commit it is advised (though not enforced) to add a message
-containing multiple paragraphs.
-
-The first paragraph should be a short summary of what the commit does, short
-enough so it can usually be displayed on one line - probably like the usual
-commit messages you are used to.
-The following paragraphs can be as long as you want (note that relying on a
-[maximum column width of around 72 is a sensible
-default](https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html)
-even if we do not enforce that either).
-
-The goal here is to help understand your changes at a later time, in case things
-go wrong in the future.
-
-_You can create a commit with multiple paragraphs either through the command
-line either by setting multiple `-m` options to git-commit, or just by calling
-`git commit` with no `-m` option and editing the message manually in the opened
-editor._
-
-
-
-<a name="testing"></a>
 ## The test suite
 
-<a name="testing-unit"></a>
 ### Unit tests
 
 Unit tests test function implementations. Mostly to check if they give a sane
@@ -269,7 +208,6 @@ To understand how to create a new test file, you can take inspiration from
 the current unit tests.
 
 
-<a name="testing-integration"></a>
 ### Integration tests
 
 What we call integration tests are tests testing the entire API of the RxPlayer.
@@ -287,7 +225,6 @@ If you want to know how it works, we invite you to rely on the already created
 tests and to read the corresponding files.
 
 
-<a name="testing-memory"></a>
 ### Memory tests
 
 Memory tests replicate simple scenarios and try to detect memory leaks.
@@ -297,7 +234,6 @@ You can also help us improving our memory tests. Those are written in
 
 
 
-<a name="doc"></a>
 ## Documentation
 
 The documentation is written in the `doc` directory, at the root of the project.
@@ -308,10 +244,8 @@ calling the `doc` script through `npm run doc`.
 
 
 
-<a name="pr"></a>
 ## Opening a pull request
 
-<a name="pr-branch"></a>
 ### Which branch to merge to
 
 Pull requests for bug fixes, new tests or documentation should be done on the
