@@ -1,6 +1,6 @@
-# Contributing to the RxPlayer #################################################
+# Contributing to the RxPlayer
 
-## Table of contents ###########################################################
+## Table of contents
 
 - [Issues and new features](#issues)
 - [Reading the current code](#reading)
@@ -24,9 +24,8 @@
   - [Which branch to merge to](#pr-branch)
 
 
-
 <a name="issues"></a>
-## Issues and new features #####################################################
+## Issues and new features
 
 If you detect a problem with the RxPlayer, or if you desire a new feature,
 please first [open an issue on the github's
@@ -39,11 +38,11 @@ Those have to follow the conventions defined below.
 
 
 <a name="reading"></a>
-## Reading the current code ####################################################
+## Reading the current code
 
 Even if we hope the current code is straightforward, readable and commented
 enough we can still admit that going blind into the codebase can be hard at
-first (as it would be for any non-small codebase).
+first as this is a pretty big technical project on a specific matter.
 
 We thus encourage you to rely on the architecture documentation you can usually
 find alongside the code, in `README.md` files.
@@ -51,7 +50,7 @@ You can for example start by reading `src/README.md`, to have a clearer idea
 of the general code architecture of the player.
 
 Also, for a more exhaustive approach to the documentation of the project's file
-organization, you can look at `FILES.md` at the root of this repository.
+organization, you can look at [`FILES.md`](./FILES.md).
 
 The code of the RxPlayer being heavily modularized, you should not need to read
 the whole documentation to be ready, only the parts you want to update
@@ -60,17 +59,18 @@ the whole documentation to be ready, only the parts you want to update
 
 
 <a name="code"></a>
-## Code style ##################################################################
+## Code style
 
 <a name="code-lint"></a>
-### Linting ####################################################################
+### Linting
 
 The code style in `src` is automatically checked by a "linter", `eslint`.
 
 It basically follows those principles:
   - 2 spaces indentation
   - 90 columns maximum
-  - optimize your code for readability
+  - readability and being explicit is generally better than performance and
+    being smart
 
 You can easily check if you followed our style rules by calling `npm run lint`.
 
@@ -80,9 +80,9 @@ directory) by calling `npm run lint:tests`.
 
 
 <a name="code-types"></a>
-### Types ######################################################################
+### Types
 
-#### General TypeScript rules ##################################################
+#### General TypeScript rules
 
 We try to be as strict as possible with types:
 
@@ -91,9 +91,6 @@ We try to be as strict as possible with types:
   - the `as` TypeScript keyword, used for type casting, should also be avoided
     as much as possible.
 
-  - the `is` keyword is fine in some situations, but simpler solutions should be
-    preferred.
-
 This is to be sure we can detect as much as possible type errors automatically
 with TypeScript.
 
@@ -101,7 +98,7 @@ with TypeScript.
 
 TypeScript's `type` and `interface` should all be named beginning with the
 letter `I`, for easier identification purposes\*:
-```
+```ts
 interface IMyObject {
   someKey: string;
 }
@@ -110,88 +107,51 @@ type IStringOrNumber = string |
                        number;
 ```
 
+`enum`s and `const enum`s, which have the particularity in TypeScript of
+actually having an influence on the outputed code, do not follow this rule
+however (because those are not just types erased during transpilation):
+```ts
+enum MyEnum {
+  ValueA = 1,
+  ValueB = 2,
+}
+
+const enum MyConstEnum {
+  Value1 = 1,
+  Value2 = 2,
+}
+```
+
 \*We know that this rule is a controversial subject amongst TypeScript
 developpers, yet we still decide to enforce it for now.
 
-#### Generic parameters typing #################################################
-
-Generic parameters are usually named in order `T` (for the first generic
-parameter), then `U` (if there's two), then `V` (if there's three):
-
-Examples:
-```
-type IMyGenericType<T> = Array<T>;
-
-type IMyGenericType2<T, U> = Promise<T> |
-                             U;
-
-function mergeThree<T, U, V>(
-  arg1: T,
-  arg2: U,
-  arg3: V
-) : T & U & V {
-  return Object.assign({}, arg1, arg2, arg3);
-}
-```
-
-Some exceptions exist like for things like key-values couples, which can be named
-respectively `K` and `V`:
-```
-type IMyMap<K, V> = Map<K, V>;
-```
-
-This is a general convention for generic parameters inherited from Java, and
-re-used by TypeScript, and it helps identifying which type is a generic
-parameter vs which type is a real type (no prefix) vs which type is a type
-definition (prefixed by `I`).
-
-If what they correspond to is not obvious (and if there's more than one, it
-might well be), you're encouraged to add a more verbose and clear name, that you
-should prefix by `T`:
-```
-function loadResource<TResourceFormat>(
-  url : string
-) : Promise<TResourceFormat> {
-  // ...
-}
-```
-
-However note that typing rules for generic parameters is a very minor
-consideration and may not always need to be respected depending on the code it
-is applied on.
-In the end, it will be up to the RxPlayer's maintainers to decide that those
-rules should be enforced or not on a given code.
-
-
 <a name="code-forbidden"></a>
-### Forbidden functions and classes ############################################
+### Forbidden functions and classes
 
 Some native functions, methods or classes should never be used to ensure
-compatibility with every browsers. To work around those, we usually rely on
+compatibility with most browsers. To work around those, we usually rely on
 "ponyfills" which are JavaScript re-implementations.
 
 This concerns the following static methods:
   - `Object.assign`: use `src/utils/object_assign.ts` instead
   - `Object.values`: use `src/utils/object_values.ts` instead
 
-The following methods:
+And the following methods:
   - `Array.prototype.includes`: use `src/utils/array_includes.ts` instead
   - `Array.prototype.find`: use `src/utils/array_find.ts` instead
   - `Array.prototype.findIndex`: use `src/utils/array_find_index.ts` instead
   - `String.prototype.startsWith`: use `src/utils/starts_with.ts` instead
   - `String.prototype.substr`: use `String.prototype.substring` instead
   - `NodeList.prototype.forEach`: use a regular for loop instead
-
-The following class:
-  - `Promise`: use `src/utils/promise.ts` instead
-
+  - `Promise.prototype.finally`: Use `then` or both `then` and `catch` of that
+    Promise's methods instead.
 
 
 <a name="demo"></a>
-## Starting the demo page ######################################################
+## The demo page
 
 <a name="demo-running"></a>
-### Building the demo and serving it ###########################################
+### Building the demo and serving it
 
 You might want to quickly test your code modification(s) on a real use case.
 
@@ -227,10 +187,11 @@ npm run standalone
 
 Both will detect when the RxPlayer's files (or even the demo files) are updated
 and perform a new build when that's the case. In that way, the server will
-always serve the last local version of the code.
+always serve the last local version of the code. Note however that hot-reload is
+not enabled currently, you'll have to refresh the page yourself.
 
 <a name="demo-https"></a>
-### Serving the demo page through HTTPS ########################################
+### Serving the demo page through HTTPS
 
 You might want to serve the demo via HTTPS. This is for example needed to be
 able to play encrypted contents in Chrome.
@@ -253,24 +214,18 @@ safely ignore that warning.
 
 
 <a name="commit"></a>
-## Creating a commit ###########################################################
+## Creating a commit
 
 <a name="commit-checks"></a>
-### Checks #####################################################################
+### Checks
 
-Every commits in a PR should pass our quick checks (linter, typescript check
-and unit tests). To check if that's the case, you can run locally the `check`
+Every commits in a PR should pass our quick checks (linter and TypeScript
+check). To check if that's the case, you can run locally the `check`
 script by calling `npm run check`.
-
-Those checks give us some guarantees that every merged commit in the `master`
-branch is stable enough.
-
-This gives us more confidence on our code and also allows  more advanced
-debugging if we detect a regression by the usage of tools such as git-bisect.
 
 
 <a name="commit-name"></a>
-### Convention #################################################################
+### Convention
 
 When creating a new commit it is advised (though not enforced) to add a message
 containing multiple paragraphs.
@@ -294,10 +249,10 @@ editor._
 
 
 <a name="testing"></a>
-## The test suite ##############################################################
+## The test suite
 
 <a name="testing-unit"></a>
-### Unit tests #################################################################
+### Unit tests
 
 Unit tests test function implementations. Mostly to check if they give a sane
 output for every input given.
@@ -307,15 +262,15 @@ Writing unit tests for new code is encouraged.
 Unit tests are written in a \_\_tests\_\_ directory, itself created in the same
 directory that the code it tests.
 
-They are written with the help of the Jest library and are named the following
-way: `filename_containing_the_function_tested.test.ts`.
+They are written and run with the help of the Jest library and are named the
+following way: `filename_containing_the_function_tested.test.ts`.
 
 To understand how to create a new test file, you can take inspiration from
 the current unit tests.
 
 
 <a name="testing-integration"></a>
-### Integration tests ##########################################################
+### Integration tests
 
 What we call integration tests are tests testing the entire API of the RxPlayer.
 
@@ -333,7 +288,7 @@ tests and to read the corresponding files.
 
 
 <a name="testing-memory"></a>
-### Memory tests ###############################################################
+### Memory tests
 
 Memory tests replicate simple scenarios and try to detect memory leaks.
 
@@ -343,7 +298,7 @@ You can also help us improving our memory tests. Those are written in
 
 
 <a name="doc"></a>
-## Documentation ###############################################################
+## Documentation
 
 The documentation is written in the `doc` directory, at the root of the project.
 
@@ -354,19 +309,10 @@ calling the `doc` script through `npm run doc`.
 
 
 <a name="pr"></a>
-## Opening a pull request ######################################################
-
-<a name="pr-checks"></a>
-### Checks #####################################################################
-
-Before doing a Pull Request, please ensure that all integration tests pass by
-calling `npm run test:integration`.
-
-Then, please call `npm run test:memory`, which tests for memory leaks.
-
+## Opening a pull request
 
 <a name="pr-branch"></a>
-### Which branch to merge to ###################################################
+### Which branch to merge to
 
 Pull requests for bug fixes, new tests or documentation should be done on the
 `master` branch.
