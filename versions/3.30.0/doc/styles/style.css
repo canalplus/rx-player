@@ -306,6 +306,11 @@ table tr td {
   font-size: 1.00rem;
 }
 
+.navbar-item.search-icon {
+  height: 24px;
+  width: 24px;
+}
+
 .navbar-item svg {
   height: 24px;
   width: 24px;
