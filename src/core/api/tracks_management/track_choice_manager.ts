@@ -662,10 +662,8 @@ export default class TrackChoiceManager {
       closedCaption: chosenTextAdaptation.isClosedCaption === true,
       id: chosenTextAdaptation.id,
       label: chosenTextAdaptation.label,
+      forced: chosenTextAdaptation.isForcedSubtitles,
     };
-    if (chosenTextAdaptation.isForcedSubtitles !== undefined) {
-      formatted.forced = chosenTextAdaptation.isForcedSubtitles;
-    }
     return formatted;
   }
 
@@ -792,10 +790,8 @@ export default class TrackChoiceManager {
           active: currentId === null ? false :
                                        currentId === adaptation.id,
           label: adaptation.label,
+          forced: adaptation.isForcedSubtitles,
         };
-        if (adaptation.isForcedSubtitles !== undefined) {
-          formatted.forced = adaptation.isForcedSubtitles;
-        }
         return formatted;
       });
   }
