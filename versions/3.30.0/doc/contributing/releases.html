@@ -1,268 +1,215 @@
-<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../styles/style.css"/><link rel="stylesheet" href="../styles/code.css"/><title>File architecture - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../static/img/logo.png" /></a><a class="navbar-item hideable"href="../Getting_Started/Welcome.html">Getting Started</a>
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../styles/style.css"/><link rel="stylesheet" href="../styles/code.css"/><title>Releases - RxPlayer Documentation</title><link rel="icon" type="image/png" href="../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../static/img/logo.png" /></a><a class="navbar-item hideable"href="../Getting_Started/Welcome.html">Getting Started</a>
 <a class="navbar-item hideable"href="../api/Overview.html">API</a>
 <a class="navbar-item hideable"href="../reference/API_Reference.html">Reference</a>
 <span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
 <a class="navbar-item first-right hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
 <a class="navbar-item navbar-active hideable"href="./CONTRIBUTING.html">Contributing</a>
 <a aria-label="Link to repository" class="navbar-item hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
-<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 3.30.0</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="./CONTRIBUTING.html">Overview</a></li><li class="sidebar-item"><a class="sidebar-link active" href="./FILES.html">File architecture</a></li><li class="sidebar-item"><a class="sidebar-link" href="./releases.html">Releases</a></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="file_architecture"></a></p>
-<h1>File architecture</h1>
-<p>This page describes how the player files are organized. Each chapter go through
-a single directory or subdirectory, in alphabetical order.</p>
-<p><a name="%60demo/%60:_demo_applications"></a></p>
-<h2><code>demo/</code>: Demo applications</h2>
-<p>The <code>demo/</code> directory contains demos of application using the RxPlayer.</p>
-<p>At the time of writing, there are two distinct demos:</p>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 3.30.0</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="./CONTRIBUTING.html">Overview</a></li><li class="sidebar-item"><a class="sidebar-link" href="./FILES.html">File architecture</a></li><li class="sidebar-item"><a class="sidebar-link active" href="./releases.html">Releases</a></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><p><a name="rxplayer_releases"></a></p>
+<h1>RxPlayer Releases</h1>
+<p><a name="types_of_releases"></a></p>
+<h2>Types of releases</h2>
+<p>The RxPlayer has several types of releases:</p>
 <ul>
 <li>
-<p><em>full</em>: Demo with a graphic interface, written with the React library, to
-showcase what the player can do</p>
+<p>Official releases, which are the main releases published on <code>npm</code> and
+whose releases notes are <a href="https://github.com/canalplus/rx-player/releases">published on GitHub</a>.</p>
+<p>Those releases have been thoroughly tested, and in most cases even ran in
+production for some time with no discovered issue.</p>
+<p>Official releases are named following <a href="https://semver.org/">semantic versionning</a>
+under a very simple <code>MAJOR.MINOR.PATCH</code> name.</p>
+<p>Examples:</p>
+<pre><code>3.30.1
+1.2.1
+4.0.0
+</code></pre>
+<p>When published on <code>npm</code>, we do not specify any specific tag, like we do for
+other types of releases. This lead official releases to be branded under the
+default <code>latest</code> tag by <code>npm</code>.</p>
 </li>
 <li>
-<p><em>standalone</em>: Just expose the rx-player in <code>window</code>, to allow scripted
-interactions with it in the console. The player is linked to a video tag in
-the displayed page.</p>
-</li>
-</ul>
-<p><a name="%60dist/%60:_builds"></a></p>
-<h2><code>dist/</code>: Builds</h2>
-<p>The <code>demo/</code> directory stores the player builds of the last version released.</p>
-<p>Contains the minified (<code>rx-player.min.js</code>) and the non-minified files
-(<code>rx-player.js</code>). Both are automatically generated with scripts at every new
-release.</p>
-<p>Two directories, namely <code>_esm5.raw</code> and <code>_esm5.processed</code> can also be
-generated in here if the right scripts are called.
-These allow to publish more modular codebases to npm.</p>
-<p><a name="%60doc/%60:_documentation"></a></p>
-<h2><code>doc/</code>: Documentation</h2>
-<p>The <code>doc/</code> directory contains the RxPlayer’s documentation, mostly written in
-markdown, on various subjects related to the rx-player:</p>
-<ul>
-<li>API documentation</li>
-<li>tutorials</li>
-<li>list of deprecated APIs…</li>
-<li>how to transition between RxPlayer versions</li>
-<li>how to contribute</li>
-<li>etc.</li>
-</ul>
-<p><a name="%60scripts/%60:_project-managing_scripts"></a></p>
-<h2><code>scripts/</code>: Project-managing scripts</h2>
-<p>The <code>scripts/</code> directory contains various scripts used to help the test and the
-management of the player code.</p>
-<p>For example:</p>
-<ul>
-<li>generating one of the demo and starting the server to run it</li>
-<li>deploying the demo or doc to github pages</li>
-<li>updating the player version</li>
-<li>generating the rx-player build before publishing on npm</li>
-</ul>
-<p><a name="%60src/%60:_the_source_code"></a></p>
-<h2><code>src/</code>: The source code</h2>
-<p>The <code>src</code> directory contains the entire source code of the rx-player.</p>
-<p>It is subdivized into subdirectories which are defined here.</p>
-<p><a name="%60src/compat/%60:_compatibility_files"></a></p>
-<h3><code>src/compat/</code>: Compatibility files</h3>
-<p><code>src/compat</code> contains functions allowing to use browser APIs in a
-cross-browser manner.</p>
-<p>For example, if an event does not have the same name depending on the browser,
-the compat files will expose a simple function allowing to make sure the event
-is catched, taking the task of registering the right event on the callback
-given.</p>
-<p>Every functions needed in the rest of the code are exported in
-<code>compat/index.js</code>, making it easier to import (e.g. by just doing
-<code>import { whatINeed } from "../compat";</code>)</p>
-<p><a name="%60src/core/%60:_core_logic"></a></p>
-<h3><code>src/core/</code>: Core logic</h3>
-<p>Defines the logic and behavior of the player, regardless of the browser and of
-the streaming technology used.</p>
-<p>That’s where:</p>
-<ul>
-<li>the api is defined</li>
-<li>the MSE and EME APIs are called and managed</li>
-<li>the segments are downloaded and pushed to then be decoded by the browser</li>
-<li>adaptive bitrate strategies are set</li>
-</ul>
-<p>This directory contains other subdirectories which are listed in the next
-chapter.</p>
-<p><a name="%60src/errors/%60:_error_definitions"></a></p>
-<h3><code>src/errors/</code>: Error definitions</h3>
-<p>Contains the definition of the error classes used in the rx-player and
-accessible through the API.</p>
-<p><a name="%60src/experimental/%60:_experimental_features"></a></p>
-<h3><code>src/experimental/</code>: Experimental features</h3>
-<p>You will find here experimental features. Those are tested features who might
-completely change their API in new player versions.</p>
-<p><a name="%60src/features/%60:_feature_switching"></a></p>
-<h3><code>src/features/</code>: Feature switching</h3>
-<p>This manage activated or deactivated features (e.g. DASH, TTML subtitles
-parsing).</p>
-<p>It exports an object defining the different activated features and provide utils
-to initialize and update them.</p>
-<p><a name="%60src/manifest/%60:_manifest_object_definition"></a></p>
-<h3><code>src/manifest/</code>: Manifest Object definition</h3>
-<p>Defines a common <code>Manifest</code> class, regardless of the streaming technology (DASH,
-HSS…). This class is then used by the rest of the RxPlayer, to allow
-interaction with it without considering the underlying technology used.</p>
-<p><a name="%60src/transports/%60:_streaming_protocols_implementation"></a></p>
-<h3><code>src/transports/</code>: Streaming protocols implementation</h3>
-<p>Defines a common interface for multiple streaming technologies (DASH, HSS).</p>
-<p>What is exported there are functions to load:</p>
-<ul>
-<li>Manifests/MPDs</li>
-<li>video/audio segments</li>
-<li>subtitles tracks</li>
-<li>image tracks</li>
-</ul>
-<p>For different streaming technologies.</p>
-<p>As in most of the code of the rx-player, everything used in the other parts of
-the code is exported in the index.js file at the root of this directory.</p>
-<p><a name="%60src/parsers/%60:_the_parsers"></a></p>
-<h3><code>src/parsers/</code>: The parsers</h3>
-<p>Functions to parse various formats into the same interface.</p>
-<p>The parsed data being either:</p>
-<ul>
-<li>Manifest documents: DASH’s MPD, HSS’s Manifest…</li>
-<li>containers: ISOBMFF (CMAF, fMP4, MP4), Matroska (MKV, WEBM)</li>
-<li>text tracks: TTML, SAMI, SRT, WebVTT</li>
-<li>image containers: BIF</li>
-</ul>
-<p><a name="%60src/typings/%60:_typescript_typings"></a></p>
-<h3><code>src/typings/</code>: Typescript typings</h3>
-<p>This directory contains only declaration files for TypeScript. It is
-automatically added as a <code>typeRoots</code> when the TypeScript code is transpiled.</p>
-<p><a name="%60src/utils/%60:_util_functions"></a></p>
-<h3><code>src/utils/</code>: Util functions</h3>
-<p>This directory contains general helpers which are used in different parts of the
-rx-player code.</p>
-<p><a name="inside_%60src/core/%60"></a></p>
-<h2>Inside <code>src/core/</code></h2>
-<p>As written in the previous chapter, this is the “core” of the player, where the
-logic is defined.</p>
-<p>As this directory is versatile and complicated, it also deserves its own chapter.</p>
-<p><a name="%60src/core/adaptive/%60:_adaptive_bitrate_logic"></a></p>
-<h3><code>src/core/adaptive/</code>: Adaptive BitRate logic</h3>
-<p>Defines functions which manages the adaptive streaming part of the player.</p>
-<p>This manager takes various observables/options as inputs to record the current
-situation of the player, give an opinion about the best media tracks to choose,
-and provide methods allowing to get/set various adaptive-related options.</p>
-<p>Despite containing several files and using several classes, only the
-<code>AdaptiveRepresentationSelector</code> exported in <code>adaptive/index.js</code> should be
-needed by the rest of the core.
-This allows to isolate this complex part and facilitate future refactoring and
-improvements.</p>
-<p><a name="%60src/core/api/%60:_api_definition"></a></p>
-<h3><code>src/core/api/</code>: API definition</h3>
-<p>Defines the rx-player API. This is the part the library user will directly
-interact with.</p>
-<p><a name="%60src/core/stream/%60:_segment-picking_logic"></a></p>
-<h3><code>src/core/stream/</code>: Segment-picking logic</h3>
-<p>The code there calculate which segments should be downloaded, ask for their
-download and push the segments into the <code>SegmentBuffers</code>.</p>
-<p><a name="%60src/core/decrypt/%60:_decryption_handling"></a></p>
-<h3><code>src/core/decrypt/</code>: Decryption handling</h3>
-<p>Defines functions allowing to handle encrypted contents through the EME browser
-APIs.</p>
-<p><a name="%60src/core/fetchers/%60:_load_resources"></a></p>
-<h3><code>src/core/fetchers/</code>: Load resources</h3>
-<p>Handle the segments and Manifest downloading pipelines (load and parse) as
-defined in the <code>src/transports/</code> directory.</p>
-<p>This is the layer directly interacting with the transport part (HSS, DASH).
-It facilitates the role of loading the Manifest and new segments for the rest of
-the core.</p>
-<p><a name="%60src/core/segment_buffers/%60:_media_buffers"></a></p>
-<h3><code>src/core/segment_buffers/</code>: Media buffers</h3>
-<p>Code allowing to interact with the media buffers called <code>SegmentBuffers</code>.</p>
-<p>Those are the Objects to which segments are pushed so they can be decoded at the
-right time.</p>
-<p>For Audio and Video, <code>SegmentBuffers</code> rely on a native <code>SourceBuffer</code> object,
-already provided by the browser,
-for other type of contents (like subtitles), we rely on completely custom media
-buffers implementations.</p>
-<p><a name="%60src/core/init/%60:_content_initialization_and_orchestration"></a></p>
-<h3><code>src/core/init/</code>: Content initialization and orchestration</h3>
-<p>This is the central part which download manifests, initialize MSE and EME APIs,
-instanciate the central <code>StreamOrchestrator</code> (which will allow to download and
-push segments so the content can play) and link together many subparts of the
-player.</p>
-<p><a name="%60src/**/__tests__%60:_unit_tests"></a></p>
-<h2><code>src/**/__tests__</code>: Unit tests</h2>
-<p>You will find multiple directories named <code>__tests__</code> in the RxPlayer.
-Those contain unit tests and are put in the same directory than the code it
-tests.</p>
-<p>Most unit tests files contain only tests for a single source file. Those will
-be put directly at the root of <code>__tests__</code> under the name
-<code>&lt;ORIGINAL_SRC_FILE&gt;.test.ts</code> (where <code>&lt;ORIGINAL_SRC_FILE&gt;</code> is the filename of
-the tested file).</p>
-<p><code>__tests__</code> directories can also contain files defining tests for multiple files
-contained in the tested directory.
-Those can be quicker to write and easier to maintain at the expense of being
-less thorough.</p>
-<p>Those type of “global” unit tests are put in a special <code>__global__</code> directory,
-itself directly at the root of the corresponding <code>__tests__</code> directory.
-Their filename don’t follow the same convention than single-source unit tests
-but should still be suffixed by <code>.test.ts</code>.</p>
-<p><a name="%60tests/%60:_the_rxplayer's_general_tests"></a></p>
-<h2><code>tests/</code>: The RxPlayer’s general tests</h2>
-<p>This directory contains most testing code for the RxPlayer.</p>
-<p>The rx-player contains multiple type of tests:</p>
-<ul>
-<li>
-<p>integration tests: test the whole player API and its behavior when playing
-different contents. The main goal of those tests is to quickly detect
-regressions.</p>
-<p>Those are entirely written in the <code>tests/integration</code> sub-directory.</p>
+<p><code>dev</code> releases, which are pre-releases made with the latest features, bug
+fixes and improvements. Those can be made very quickly and as such are ideal
+when wanting to perform tests before including the corresponding
+developments in an official release.</p>
+<p>However, we have less stability guarantees than for official releases.</p>
+<p><code>dev</code> releases are also named following <a href="https://semver.org/">semantic versionning</a>
+beginning with the version of the next official releases it could be
+released as (for example, if it only include patches on top of the previous
+official release, only the <code>PATCH</code> part of that release should be
+incremented).</p>
+<p>Then we add to it the <code>-dev.</code> string, followed by the date in a YYYYMMDD
+format (e.g. <code>20230425</code> for April 25, 2023) followed by a number on two
+digits, starting at <code>00</code>, which is incremented each time a <code>dev</code> release
+is made that day.</p>
+<p>Examples:</p>
+<pre><code>// Patches on top of an official `3.30.1` release, done the 2023-04-25
+3.30.2-dev.2023042500
+
+// 2nd release adding another patch on top of the previous one the same day
+3.30.2-dev.2023042501
+
+// New features added on top of a `3.35.2` release
+3.36.0-dev.2023060100
+</code></pre>
+<p>When published on <code>npm</code>, they have the <code>dev</code> tag.</p>
 </li>
 <li>
-<p>conformance tests: Provide standalone page which allows to quickly test the
-support of various media-related API on a given device and/or browser.</p>
-<p>The html documents you will find here are basic templates that can be easily
-modified and deployed for quick testing.</p>
+<p><code>alpha</code>, <code>beta</code>, <code>rc</code> releases. Those are pre-releases specifically made
+before a very important official release (such as a new major version).</p>
+<p><code>alpha</code> releases are generally only communicated to Canal+'s applications
+developers and have an API that may change completely from one release to
+another.</p>
+<p><code>beta</code> releases generally have a much more stable API and is used to find
+out the last bugs and friction points for applications. Those are generally
+also documented through release notes on GitHub.</p>
+<p><code>rc</code> (for “release candidate”): are releases that may become the
+corresponding official release if no issue is detected in a sufficiently
+long time.
+Like for <code>beta</code> releases, those are documented through release notes on
+GitHub.</p>
+<p>All those kinds of releases are named following semantic versionning of the
+final official release, followed by <code>-alpha</code>, <code>-beta</code> or <code>-rc</code> respectively
+for an <code>alpha</code>, <code>beta</code> and <code>rc</code> release, then followed by a dot (<code>.</code>) and
+then by a number starting at <code>0</code> then incrementing at each new release of
+that type.</p>
+<p>Examples:</p>
+<pre><code>// first alpha release for a future v5.0.0
+v5.0.0-alpha.0
+
+// Third alpha release for a future v5.0.0
+v5.0.0-alpha.2
+
+// Second beta release for a future v5.0.0
+v5.0.0-beta.1
+
+// First rc release for a future v5.0.0
+v5.0.0-rc.1
+</code></pre>
+<p>When published on <code>npm</code>, they all have the <code>next</code> tag.</p>
 </li>
 <li>
-<p>unit tests: test specific parts of the code. The main goal here is to check
-the implementation of smaller units of code.</p>
-<p>They are written alongside the code, in <code>__tests__</code>
-directories. All its configuration can be found at the root of the project,
-in <code>jest.config.js</code> (we use the jest library for unit tests).</p>
+<p><code>canal</code> releases are similar to <code>dev</code> releases, with added work-arounds and
+features that are intended for Canal+ internal usage only. Either because
+they work-around very specific Canal+ bugs (for example, known specific
+badly-packaged contents) or because we’re currently testing features we’re
+not sure about adding to a future release yet (such as for features which
+are “risky” in terms of stability and compatibility).</p>
+<p>They are created both when a project at Canal+ (or one of its partners)
+demands it, and after each official releases.</p>
+<p>They are named exactly the same way than <code>dev</code> releases, excepted with
+<code>-canal</code> instead of <code>-dev</code> in their name.</p>
+<p>When published on <code>npm</code>, they have the <code>canal</code> tag.</p>
+</li>
+</ul>
+<p><a name="workflow_for_an_official_release"></a></p>
+<h2>Workflow for an official release</h2>
+<p>Before each official releases, a list of steps are performed by its maintainers:</p>
+<ol>
+<li>
+<p>Checkout the branch that will be the base of the next release: generally it
+is either <code>master</code> (for patch releases) or <code>next</code> (for minor versions).</p>
 </li>
 <li>
-<p>memory tests: test the memory usage of the player.</p>
-<p>They are entirely written in the <code>tests/memory</code> subdirectory.</p>
+<p>Rebase that branch on the <code>master</code> branch if it is a different branch
+(e.g.: <code>git rebase master --rebase-merges</code>).</p>
 </li>
-</ul>
-</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="./CONTRIBUTING.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">Overview</div></a></div><div class="next-or-previous-page next-page"><a class="next-or-previous-page-link" href="./releases.html"><div class="next-or-previous-page-link-label">Next</div><div class="next-or-previous-page-link-name">Releases</div></a></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#file_architecture">File architecture</a></p>
-<ul>
-<li><a href="#%60demo/%60:_demo_applications"><code>demo/</code>: Demo applications</a></li>
-<li><a href="#%60dist/%60:_builds"><code>dist/</code>: Builds</a></li>
-<li><a href="#%60doc/%60:_documentation"><code>doc/</code>: Documentation</a></li>
-<li><a href="#%60scripts/%60:_project-managing_scripts"><code>scripts/</code>: Project-managing scripts</a></li>
-<li><a href="#%60src/%60:_the_source_code"><code>src/</code>: The source code</a>
-<ul>
-<li><a href="#%60src/compat/%60:_compatibility_files"><code>src/compat/</code>: Compatibility files</a></li>
-<li><a href="#%60src/core/%60:_core_logic"><code>src/core/</code>: Core logic</a></li>
-<li><a href="#%60src/errors/%60:_error_definitions"><code>src/errors/</code>: Error definitions</a></li>
-<li><a href="#%60src/experimental/%60:_experimental_features"><code>src/experimental/</code>: Experimental features</a></li>
-<li><a href="#%60src/features/%60:_feature_switching"><code>src/features/</code>: Feature switching</a></li>
-<li><a href="#%60src/manifest/%60:_manifest_object_definition"><code>src/manifest/</code>: Manifest Object definition</a></li>
-<li><a href="#%60src/transports/%60:_streaming_protocols_implementation"><code>src/transports/</code>: Streaming protocols implementation</a></li>
-<li><a href="#%60src/parsers/%60:_the_parsers"><code>src/parsers/</code>: The parsers</a></li>
-<li><a href="#%60src/typings/%60:_typescript_typings"><code>src/typings/</code>: Typescript typings</a></li>
-<li><a href="#%60src/utils/%60:_util_functions"><code>src/utils/</code>: Util functions</a></li>
-</ul>
+<li>
+<p>From there, create a branch named <code>release/vXX.XX.XX</code>, where XX.XX.XX is the
+semver of the wanted new version.</p>
 </li>
-<li><a href="#inside_%60src/core/%60">Inside <code>src/core/</code></a>
-<ul>
-<li><a href="#%60src/core/adaptive/%60:_adaptive_bitrate_logic"><code>src/core/adaptive/</code>: Adaptive BitRate logic</a></li>
-<li><a href="#%60src/core/api/%60:_api_definition"><code>src/core/api/</code>: API definition</a></li>
-<li><a href="#%60src/core/stream/%60:_segment-picking_logic"><code>src/core/stream/</code>: Segment-picking logic</a></li>
-<li><a href="#%60src/core/decrypt/%60:_decryption_handling"><code>src/core/decrypt/</code>: Decryption handling</a></li>
-<li><a href="#%60src/core/fetchers/%60:_load_resources"><code>src/core/fetchers/</code>: Load resources</a></li>
-<li><a href="#%60src/core/segment_buffers/%60:_media_buffers"><code>src/core/segment_buffers/</code>: Media buffers</a></li>
-<li><a href="#%60src/core/init/%60:_content_initialization_and_orchestration"><code>src/core/init/</code>: Content initialization and orchestration</a></li>
-</ul>
+<li>
+<p>Update <a href="http://CHANGELOG.md">CHANGELOG.md</a> file to add this new version’s changelog and commit it.</p>
 </li>
-<li><a href="#%60src/**/__tests__%60:_unit_tests"><code>src/**/__tests__</code>: Unit tests</a></li>
-<li><a href="#%60tests/%60:_the_rxplayer's_general_tests"><code>tests/</code>: The RxPlayer’s general tests</a></li>
+<li>
+<p>Call the npm script <code>update-version</code> for that release (<code>npm run update-version XX.XX.XX</code>,
+where XX.XX.XX is the wanted new version SEMVER).</p>
+</li>
+<li>
+<p>Check that the modifications it did make sense and create a signed commit
+(<code>-S</code> option when commiting with git) updating the staged built files in step
+<code>8</code>.</p>
+</li>
+<li>
+<p>Open a Pull Request on Github, named after the branch, putting the release’s
+changelog in the Pull Request’s comment, and optional additional comments.</p>
+</li>
+<li>
+<p>Check that sonarcloud validated that branch. Resolve every bug and code
+smells it finds.</p>
+</li>
+<li>
+<p>Ensure that the CI doesn’t detect any issue and fix them if that’s the case.</p>
+</li>
+<li>
+<p>Run sanity checks on myCanal’s repository, by using this new version instead
+as a dependency.</p>
+</li>
+<li>
+<p>If and only if no problem was seen perform a signed merge without
+fast-forward of the release branch into master (<code>git merge -S --no-ff release/vXX.XX.XX master</code>)</p>
+</li>
+<li>
+<p>Launch script to update the gh-pages demo (<code>./scripts/update_gh-pages_demo</code>)</p>
+</li>
+<li>
+<p>Launch script to update the gh-pages doc (<code>./scripts/update_gh-pages_doc</code>)</p>
+</li>
+<li>
+<p>Check that both of those worked, perform manual updates and update the
+concerned scripts in other cases.</p>
+</li>
+<li>
+<p>Check that the new demo and the new doc work as expected</p>
+</li>
+<li>
+<p>If all seems good, push to origin/master your local master branch.</p>
+</li>
+<li>
+<p>run <code>npm publish</code> to publish the new version on npm’s registry.</p>
+</li>
+<li>
+<p>Test that importing this new version doesn’t cause bundling issues (you
+may do so through a ad-hoc package, or just myCanal for example).</p>
+</li>
+<li>
+<p>Create the new release through github’s interface - don’t forget to include
+the built files on it.</p>
+</li>
+</ol>
+<p>If any of the testing steps failed (after step <code>3</code>), run the following steps:</p>
+<ol>
+<li>
+<p>Fix the problem (!)</p>
+</li>
+<li>
+<p>Create a commit for the fix with a meaningful message.</p>
+</li>
+<li>
+<p>If (and only if) it make sense, update the changelog and create a commit for
+it.</p>
+</li>
+<li>
+<p>Call the npm script <code>update-version</code> for that release (<code>npm run update-version XX.XX.XX</code>,
+where XX.XX.XX is the wanted new version SEMVER).</p>
+</li>
+<li>
+<p>Check that the modifications of that last step made sense and create a signed
+commit (<code>-S</code> option when commiting with git) updating the staged built files.</p>
+</li>
+<li>
+<p>Depending on the nature of the fix, either create a new branch and add a Pull
+Request to merge it in the release branch or push it to the release branch
+directly.</p>
+</li>
+<li>
+<p>Go back to step <code>8</code> (sonarcloud + CI) of the previous workflow</p>
+</li>
+</ol>
+</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="./FILES.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">File architecture</div></a></div><div class="next-or-previous-page next-page"></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#rxplayer_releases">RxPlayer Releases</a></p>
+<ul>
+<li><a href="#types_of_releases">Types of releases</a></li>
+<li><a href="#workflow_for_an_official_release">Workflow for an official release</a></li>
 </ul>
 </div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../Getting_Started/Welcome.html">Welcome</a></li>
 <li><div class="page-list-item page-list-group">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Getting_Started/Tutorials/Quick_Start.html">Quick Start</a></li>
@@ -389,7 +336,7 @@ in <code>jest.config.js</code> (we use the jest library for unit tests).</p>
 
 <li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
 <li class="page-list-item"><div class="page-list-group opened active">Contributing</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="./CONTRIBUTING.html">Overview</a></li>
-<li class="page-list-item active"><a href="./FILES.html">File architecture</a></li>
-<li class="page-list-item"><a href="./releases.html">Releases</a></li></ul></li>
+<li class="page-list-item"><a href="./FILES.html">File architecture</a></li>
+<li class="page-list-item active"><a href="./releases.html">Releases</a></li></ul></li>
 <li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
 </ul></div><script type="text/javascript" src="../scripts/lunr.js" charset="utf-8"></script><script type="text/javascript" src="../scripts/script.js" charset="utf-8"></script></body></html>
