@@ -68,7 +68,7 @@ import getInitialTime, {
 import getLoadedReference from "./utils/get_loaded_reference";
 import performInitialSeekAndPlay from "./utils/initial_seek_and_play";
 import initializeContentDecryption from "./utils/initialize_content_decryption";
-import MediaDurationUpdater from "./utils/media_duration_updater";
+import MediaSourceDurationUpdater from "./utils/media_source_duration_updater";
 import RebufferingController from "./utils/rebuffering_controller";
 import streamEventsEmitter from "./utils/stream_events_emitter";
 import listenToMediaError from "./utils/throw_on_media_error";
@@ -644,9 +644,9 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     cancelSignal : CancellationSignal
   ) : ContentTimeBoundariesObserver {
     /** Maintains the MediaSource's duration up-to-date with the Manifest */
-    const mediaDurationUpdater = new MediaDurationUpdater(manifest, mediaSource);
+    const mediaSourceDurationUpdater = new MediaSourceDurationUpdater(mediaSource);
     cancelSignal.register(() => {
-      mediaDurationUpdater.stop();
+      mediaSourceDurationUpdater.stopUpdating();
     });
     /** Allows to cancel a pending `end-of-stream` operation. */
     let endOfStreamCanceller : TaskCanceller | null = null;
@@ -664,7 +664,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       this.trigger("activePeriodChanged", { period });
     });
     contentTimeBoundariesObserver.addEventListener("durationUpdate", (newDuration) => {
-      mediaDurationUpdater.updateKnownDuration(newDuration);
+      mediaSourceDurationUpdater.updateDuration(newDuration.duration, !newDuration.isEnd);
     });
     contentTimeBoundariesObserver.addEventListener("endOfStream", () => {
       if (endOfStreamCanceller === null) {
@@ -681,6 +681,9 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         endOfStreamCanceller = null;
       }
     });
+    const currentDuration = contentTimeBoundariesObserver.getCurrentDuration();
+    mediaSourceDurationUpdater.updateDuration(currentDuration.duration,
+                                              !currentDuration.isEnd);
     return contentTimeBoundariesObserver;
   }
 

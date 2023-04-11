@@ -47,7 +47,13 @@ function linkPlayerEventsToState(
     stopPositionUpdates();
 
     // use an interval for current position
-    positionUpdatesInterval = window.setInterval(() => {
+    positionUpdatesInterval = window.setInterval(
+      updatePositionInfo,
+      POSITION_UPDATES_INTERVAL);
+
+    updatePositionInfo();
+
+    function updatePositionInfo() {
       const position = player.getPosition();
       const duration = player.getVideoDuration();
       const videoTrack = player.getVideoTrack();
@@ -68,7 +74,7 @@ function linkPlayerEventsToState(
           videoTrack.trickModeTracks !== undefined &&
           videoTrack.trickModeTracks.length > 0,
       });
-    }, POSITION_UPDATES_INTERVAL);
+    }
   }
 
   function stopPositionUpdates() {
