@@ -926,6 +926,13 @@ export interface ITrackUpdateEventPayload {
            string;
 }
 
+export interface IRepresentationListUpdateContext {
+  period : IPeriod;
+  trackType : ITrackType;
+  reason : "decipherability-update" |
+           string;
+}
+
 export interface ILockedVideoRepresentationsSettings {
   representations : string[];
   periodId? : string | undefined;
