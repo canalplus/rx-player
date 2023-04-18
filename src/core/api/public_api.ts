@@ -57,6 +57,7 @@ import {
   ILockedAudioRepresentationsSettings,
   ILockedVideoRepresentationsSettings,
   ITrackUpdateEventPayload,
+  IRepresentationListUpdateContext,
   IPeriod,
   IPeriodChangeEvent,
   IPlayerError,
@@ -70,7 +71,9 @@ import {
   IVideoTrack,
   IVideoTrackSetting,
   IVideoTrackSwitchingMode,
+  ITrackType,
 } from "../../public_types";
+import arrayFind from "../../utils/array_find";
 import assert from "../../utils/assert";
 import assertUnreachable from "../../utils/assert_unreachable";
 import EventEmitter, {
@@ -2058,6 +2061,60 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         return;
       }
     }, contentInfos.currentContentCanceller.signal);
+
+    manifest.addEventListener("decipherabilityUpdate", (elts) => {
+      /**
+       * Array of tuples only including once the Period/Track combination, and
+       * only when it concerns the currently-selected track.
+       */
+      const periodsAndTrackTypes = elts.reduce(
+        (acc: Array<[Period, ITrackType]>, elt) => {
+          const isFound = arrayFind(
+            acc,
+            (x) => x[0].id === elt.period.id &&
+                   x[1] === elt.adaptation.type
+          ) === undefined;
+
+          if (!isFound) {
+            // Only consider the currently-selected tracks.
+            // NOTE: Maybe there's room for optimizations? Unclear.
+            const { tracksStore } = contentInfos;
+            if (tracksStore === null) {
+              return acc;
+            }
+            let isCurrent = false;
+            const periodRef = tracksStore.getPeriodObjectFromPeriod(elt.period);
+            if (periodRef === undefined) {
+              return acc;
+            }
+            switch (elt.adaptation.type) {
+              case "audio":
+                isCurrent = tracksStore
+                  .getChosenAudioTrack(periodRef)?.id === elt.adaptation.id;
+                break;
+              case "video":
+                isCurrent = tracksStore
+                  .getChosenVideoTrack(periodRef)?.id === elt.adaptation.id;
+                break;
+              case "text":
+                isCurrent = tracksStore
+                  .getChosenTextTrack(periodRef)?.id === elt.adaptation.id;
+                break;
+            }
+            if (isCurrent) {
+              acc.push([elt.period, elt.adaptation.type]);
+            }
+          }
+          return acc;
+        }, []);
+      for (const [period, trackType] of periodsAndTrackTypes) {
+        this._priv_triggerEventIfNotStopped(
+          "representationListUpdate",
+          { period, trackType, reason: "decipherability-update" },
+          contentInfos.currentContentCanceller.signal
+        );
+      }
+    }, contentInfos.currentContentCanceller.signal);
   }
 
   /**
@@ -2548,6 +2605,7 @@ interface IPublicAPIEvent {
   newAvailablePeriods : IPeriod[];
   brokenRepresentationsLock : IBrokenRepresentationsLockContext;
   trackUpdate : ITrackUpdateEventPayload;
+  representationListUpdate : IRepresentationListUpdateContext;
   seeking : null;
   seeked : null;
   streamEvent : IStreamEvent;
