@@ -670,6 +670,67 @@ This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
 
+### representationListUpdate
+
+_payload type_: `Object`
+
+Event triggered if the list of available [`Representation`](../Getting_Started/Glossary.md#representation)
+linked to the currently-chosen video, audio or text track for any
+[Period](../Getting_Started/Glossary.md#period)  (for example inspectable
+through the `representations` property of audio and video track objects) may
+have changed compared to what it was before.
+
+Note that you won't receive a `representationListUpdate` event the initial time
+the corresponding track is selected, it is only sent when its linked list of
+available `Representation`s might have dynamically changed during playback.
+For now, this may only happen if at least one of the Representation in the
+chosen track became undecipherable (in which case it is not available anymore)
+or decipherable (in which case it becomes available again).
+
+The main point of this event is to let you adjust your tracks and
+Representations choice when they depend on the list of available Representation.
+
+The payload for this event is an object with the following properties:
+
+  - `trackType` (`string`): The type of track concerned. Can for example be
+    `audio` for an audio track, `video` for a video track or `text` for a text
+    track.
+
+  - `period` (`Object`): Information about the concerned
+    [Period](../Getting_Started/Glossary.md#period). This object contains as
+    properties:
+
+    - `start` (`number`): The starting position at which the Period starts, in
+      seconds.
+
+    - `end` (`number|undefined`): The position at which the Period ends, in
+      seconds.
+
+      `undefined` either if not known or if the Period has no end yet (e.g. for
+      live contents, the end might not be known for now).
+
+    - `id` (`string`): `id` of the Period, allowing to call track and
+      Representation selection APIs (such as `setAudioTrack` and
+      `lockVideoRepresentations` for example) even when the Period changes.
+
+  - `reason` (`string`): The reason for the update.
+    For now, it can be set to:
+
+      - `"decipherability-update"`: The list of available `Representation`s is
+        being updated either because at least one of that track's
+        `Representation` became undecipherable or because it became decipherable
+        again.
+
+    Though other reasons may be added in the future (for future reasons not
+    covered by those values), so you should expect this possibility in your
+    application's logic.
+
+
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.md#transport">transport option</a>)
+</div>
+
 ### brokenRepresentationsLock
 
 _payload type_: `Object`
