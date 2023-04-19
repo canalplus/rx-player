@@ -104,6 +104,7 @@ function initializePage() {
   const deInitSearchBar = initializeSearchBar();
   const deInitPageGroups = initializePageGroups();
   const deInitHamburgerMenu = initializeHamburgerMenu();
+  initializeHeaderLinks();
   const deInitSidebarLinks = initializeSideBarLinks();
   const deInitContentLinks = initializeContentLinks();
   performSearchInUrlIfOne();
@@ -303,7 +304,6 @@ function initializePageGroups() {
     groupElts.push(pageListGroupElts[i]);
   }
 
-
   for (let groupElt of groupElts) {
     const wrapper = groupElt.parentElement;
     const ulElt = wrapper.getElementsByTagName("ul")[0];
@@ -312,7 +312,8 @@ function initializePageGroups() {
     let openingTimeout;
     let closingTimeout;
 
-    const sidebarLinkElements = groupElt.parentElement.getElementsByClassName("sidebar-link");
+    const sidebarLinkElements =
+      groupElt.parentElement.getElementsByClassName("sidebar-link");
     for (const sidebarLinkElement of sidebarLinkElements) {
       if (sidebarLinkElement.classList.contains("active")) {
         pageGroupElt.classList.add("opened");
@@ -674,6 +675,21 @@ function initializeHamburgerMenu() {
 }
 
 /**
+ * Links in the navigation bar usually are relative URL.
+ *
+ * Because we may navigate through paths here, we force them to be absolute URLs
+ * only.
+ */
+function initializeHeaderLinks() {
+  const headerElt = document.getElementsByClassName("navbar-parent");
+  const headerLinks = headerElt?.getElementsByTagName("a") ?? [];
+  for (const link of headerLinks) {
+    // Transform from relative to absolute URL
+    link.href = link.href;
+  }
+}
+
+/**
  * Initialize the "soft navigation" of pages when clicking on one of the links in
  * the sidebar.
  * @returns {Function} - Function to remove all event listeners registered in
@@ -814,8 +830,7 @@ function prepareNextPage(link) {
     parentElement = parentElement.parentElement;
   }
 
-  const pageListGroupElts =
-    document.getElementsByClassName("page-list-group");
+  const pageListGroupElts = document.getElementsByClassName("page-list-group");
   const groupElts = [];
   for (let i = 0; i < sidebarGroupElts.length; i++) {
     groupElts.push(sidebarGroupElts[i]);
@@ -855,7 +870,8 @@ function setCurrentDisplayTimeout(url) {
     const pageTextUrl = document.createElement("a");
     const spinnerDiv = document.createElement("div");
     spinnerDiv.innerHTML = spinnerSvg;
-    pageTextSpan.textContent = "Loading the next documentation page takes time," +
+    pageTextSpan.textContent =
+      "Loading the next documentation page takes time," +
       "you can also try to force browser navigation by going to the following link: ";
     pageTextUrl.href = url;
     pageTextUrl.textContent = url;
@@ -863,7 +879,8 @@ function setCurrentDisplayTimeout(url) {
     loadingWrapperDiv.appendChild(pageTextSpan);
     loadingWrapperDiv.appendChild(pageTextUrl);
     loadingParentDiv.appendChild(loadingWrapperDiv);
-    document.getElementsByClassName("content-wrapper")[0].innerHTML = loadingParentDiv.innerHTML;
+    document.getElementsByClassName("content-wrapper")[0].innerHTML =
+      loadingParentDiv.innerHTML;
   }, 1300);
 }
 
