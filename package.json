@@ -98,7 +98,7 @@
     "babel-loader": "9.1.2",
     "chai": "4.3.7",
     "core-js": "3.30.0",
-    "docgen.ico": "0.1.2",
+    "docgen.ico": "^0.2.2",
     "esbuild": "0.17.15",
     "eslint": "8.37.0",
     "eslint-plugin-ban": "1.6.0",
