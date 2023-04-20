@@ -681,7 +681,7 @@ function initializeHamburgerMenu() {
  * only.
  */
 function initializeHeaderLinks() {
-  const headerElt = document.getElementsByClassName("navbar-parent");
+  const headerElt = document.getElementsByClassName("navbar-parent")[0];
   const headerLinks = headerElt?.getElementsByTagName("a") ?? [];
   for (const link of headerLinks) {
     // Transform from relative to absolute URL
