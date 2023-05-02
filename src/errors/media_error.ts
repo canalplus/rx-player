@@ -16,7 +16,6 @@
 
 import {
   Adaptation,
-  IAdaptationType,
   toAudioTrack,
   toTextTrack,
   toVideoTrack,
@@ -79,7 +78,6 @@ export default class MediaError extends Error {
     code : ICodeWithAdaptationType,
     reason : string,
     context: {
-      adaptationType : IAdaptationType;
       adaptation : Adaptation;
     }
   );
@@ -91,7 +89,6 @@ export default class MediaError extends Error {
     code : IMediaErrorCode,
     reason : string,
     context? : {
-      adaptationType? : IAdaptationType | undefined;
       adaptation? : Adaptation | undefined;
     } | undefined
   ) {
