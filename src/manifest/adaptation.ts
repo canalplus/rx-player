@@ -16,12 +16,20 @@
 
 import log from "../log";
 import { IParsedAdaptation } from "../parsers/manifest";
-import { IRepresentationFilter } from "../public_types";
+import {
+  IAudioTrack,
+  IRepresentationFilter,
+  ITextTrack,
+  IVideoTrack,
+} from "../public_types";
 import arrayFind from "../utils/array_find";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import normalizeLanguage from "../utils/languages";
 import uniq from "../utils/uniq";
-import Representation from "./representation";
+import Representation, {
+  parseAudioRepresentation,
+  parseVideoRepresentation,
+} from "./representation";
 import { IAdaptationType } from "./types";
 
 /** List in an array every possible value for the Adaptation's `type` property. */
@@ -32,7 +40,7 @@ export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] = [ "audio",
 
 /**
  * Normalized Adaptation structure.
- * An Adaptation describes a single `Track`. For example a specific audio
+ * An `Adaptation` describes a single `Track`. For example a specific audio
  * track (in a given language) or a specific video track.
  * It istelf can be represented in different qualities, which we call here
  * `Representation`.
@@ -216,4 +224,83 @@ export default class Adaptation {
   getRepresentation(wantedId : number|string) : Representation|undefined {
     return arrayFind(this.representations, ({ id }) => wantedId === id);
   }
+}
+
+/**
+ * Format an `Adaptation`, generally of type `"audio"`, as an `IAudioTrack`.
+ * @param {Object} audioAdaptation
+ * @returns {Object}
+ */
+export function toAudioTrack(
+  audioAdaptation: Adaptation
+) : IAudioTrack {
+  const formatted : IAudioTrack = {
+    language: audioAdaptation.language ?? "",
+    normalized: audioAdaptation.normalizedLanguage ?? "",
+    audioDescription: audioAdaptation.isAudioDescription === true,
+    id: audioAdaptation.id,
+    representations: audioAdaptation.representations.map(parseAudioRepresentation),
+    label: audioAdaptation.label,
+  };
+  if (audioAdaptation.isDub === true) {
+    formatted.dub = true;
+  }
+  return formatted;
+}
+
+/**
+ * Format an `Adaptation`, generally of type `"audio"`, as an `IAudioTrack`.
+ * @param {Object} textAdaptation
+ * @returns {Object}
+ */
+export function toTextTrack(
+  textAdaptation: Adaptation
+) : ITextTrack {
+  return {
+    language: textAdaptation.language ?? "",
+    normalized: textAdaptation.normalizedLanguage ?? "",
+    closedCaption: textAdaptation.isClosedCaption === true,
+    id: textAdaptation.id,
+    label: textAdaptation.label,
+    forced: textAdaptation.isForcedSubtitles,
+  };
+}
+
+/**
+ * Format an `Adaptation`, generally of type `"video"`, as an `IAudioTrack`.
+ * @param {Object} videoAdaptation
+ * @returns {Object}
+ */
+export function toVideoTrack(
+  videoAdaptation: Adaptation
+) : IVideoTrack {
+  const trickModeTracks = videoAdaptation.trickModeTracks !== undefined ?
+    videoAdaptation.trickModeTracks.map((trickModeAdaptation) => {
+      const representations = trickModeAdaptation.representations
+        .map(parseVideoRepresentation);
+      const trickMode : IVideoTrack = { id: trickModeAdaptation.id,
+                                        representations,
+                                        isTrickModeTrack: true };
+      if (trickModeAdaptation.isSignInterpreted === true) {
+        trickMode.signInterpreted = true;
+      }
+      return trickMode;
+    }) :
+    undefined;
+
+  const videoTrack: IVideoTrack = {
+    id: videoAdaptation.id,
+    representations: videoAdaptation.representations.map(parseVideoRepresentation),
+    label: videoAdaptation.label,
+  };
+  if (videoAdaptation.isSignInterpreted === true) {
+    videoTrack.signInterpreted = true;
+  }
+  if (videoAdaptation.isTrickModeTrack === true) {
+    videoTrack.isTrickModeTrack = true;
+  }
+  if (trickModeTracks !== undefined) {
+    videoTrack.trickModeTracks = trickModeTracks;
+  }
+  return videoTrack;
 }
