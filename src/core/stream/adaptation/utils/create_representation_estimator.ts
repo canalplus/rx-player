@@ -87,8 +87,7 @@ export default function getRepresentationEstimate(
       const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION",
                                       "No Representation in the chosen " +
                                       adaptation.type + " Adaptation can be played",
-                                      { adaptationType: adaptation.type,
-                                        adaptation });
+                                      { adaptation });
       cleanUp();
       onFatalError(noRepErr);
       return;

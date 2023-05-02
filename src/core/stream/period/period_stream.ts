@@ -381,8 +381,7 @@ function getFirstDeclaredMimeType(adaptation : Adaptation) : string {
     const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION",
                                     "No Representation in the chosen " +
                                     adaptation.type + " Adaptation can be played",
-                                    { adaptationType: adaptation.type,
-                                      adaptation });
+                                    { adaptation });
     throw noRepErr;
   }
   return representations[0].getMimeTypeString();
