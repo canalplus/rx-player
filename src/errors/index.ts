@@ -26,7 +26,9 @@ import {
 } from "./error_codes";
 import formatError from "./format_error";
 import isKnownError from "./is_known_error";
-import MediaError from "./media_error";
+import MediaError, {
+  IMediaErrorTrackContext,
+} from "./media_error";
 import NetworkError from "./network_error";
 import OtherError from "./other_error";
 import RequestError from "./request_error";
@@ -39,6 +41,7 @@ export {
   ErrorTypes,
   IErrorCode,
   IErrorType,
+  IMediaErrorTrackContext,
   formatError,
   MediaError as MediaError,
   NetworkError,

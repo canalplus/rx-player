@@ -16,6 +16,9 @@
 
 import Adaptation, {
   SUPPORTED_ADAPTATIONS_TYPE,
+  toAudioTrack,
+  toTextTrack,
+  toVideoTrack,
 } from "./adaptation";
 import Manifest, {
   IDecipherabilityUpdateElement,
@@ -46,6 +49,9 @@ export {
   areSameContent,
   getLoggableSegmentId,
   IBufferedChunkInfos,
+  toAudioTrack,
+  toTextTrack,
+  toVideoTrack,
 
   // classes
   Period,
