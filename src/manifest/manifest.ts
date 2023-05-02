@@ -633,8 +633,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
         const error =
           new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
                          "An Adaptation contains only incompatible codecs.",
-                         { adaptationType: "image",
-                           adaptation: newAdaptation });
+                         { adaptation: newAdaptation });
         this.contentWarnings.push(error);
       }
       return newAdaptation;
@@ -697,8 +696,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
           const error =
             new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
                            "An Adaptation contains only incompatible codecs.",
-                           { adaptationType: "text",
-                             adaptation: newAdaptation });
+                           { adaptation: newAdaptation });
           this.contentWarnings.push(error);
         }
         return newAdaptation;
@@ -715,7 +713,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
 
   /**
    * @param {Object} newManifest
-   * @param {number} type
+   * @param {number} updateType
    */
   private _performUpdate(
     newManifest : Manifest,
