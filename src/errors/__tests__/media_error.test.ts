@@ -19,7 +19,7 @@ import MediaError from "../media_error";
 describe("errors - MediaError", () => {
   it("should format a MediaError", () => {
     const reason = "test";
-    const mediaError = new MediaError("BUFFER_FULL_ERROR", reason);
+    const mediaError = new MediaError("MEDIA_TIME_BEFORE_MANIFEST", reason);
     expect(mediaError).toBeInstanceOf(Error);
     expect(mediaError.name).toBe("MediaError");
     expect(mediaError.type).toBe("MEDIA_ERROR");
@@ -30,13 +30,14 @@ describe("errors - MediaError", () => {
 
   it("should be able to set it as fatal", () => {
     const reason = "test";
-    const mediaError = new MediaError("BUFFER_APPEND_ERROR", reason);
+    const mediaError = new MediaError("MEDIA_TIME_AFTER_MANIFEST", reason);
     mediaError.fatal = true;
     expect(mediaError).toBeInstanceOf(Error);
     expect(mediaError.name).toBe("MediaError");
     expect(mediaError.type).toBe("MEDIA_ERROR");
     expect(mediaError.code).toBe("BUFFER_APPEND_ERROR");
     expect(mediaError.fatal).toBe(true);
+    expect(mediaError.trackInfo?.type).toBe("video");
     expect(mediaError.message).toBe("MediaError (BUFFER_APPEND_ERROR) test");
   });
 

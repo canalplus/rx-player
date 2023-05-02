@@ -15,10 +15,46 @@
  */
 
 import {
+  Adaptation,
+  IAdaptationType,
+  toAudioTrack,
+  toTextTrack,
+  toVideoTrack,
+} from "../manifest";
+import {
+  IAudioTrack,
+  ITextTrack,
+  IVideoTrack,
+} from "../public_types";
+import {
   ErrorTypes,
   IMediaErrorCode,
 } from "./error_codes";
 import errorMessage from "./error_message";
+
+interface IAudioTrackMediaErrorContext {
+  type : "audio";
+  track : IAudioTrack;
+}
+
+interface IVideoTrackMediaErrorContext {
+  type : "video";
+  track : IVideoTrack;
+}
+
+interface ITextTrackMediaErrorContext {
+  type : "text";
+  track : ITextTrack;
+}
+
+export type IMediaErrorTrackContext = IAudioTrackMediaErrorContext |
+                                      IVideoTrackMediaErrorContext |
+                                      ITextTrackMediaErrorContext;
+
+type ICodeWithAdaptationType = "BUFFER_APPEND_ERROR" |
+                               "BUFFER_FULL_ERROR" |
+                               "NO_PLAYABLE_REPRESENTATION" |
+                               "MANIFEST_INCOMPATIBLE_CODECS_ERROR";
 
 /**
  * Error linked to the media Playback.
@@ -31,13 +67,34 @@ export default class MediaError extends Error {
   public readonly type : "MEDIA_ERROR";
   public readonly message : string;
   public readonly code : IMediaErrorCode;
+  public readonly trackInfo : IMediaErrorTrackContext | undefined;
   public fatal : boolean;
 
   /**
    * @param {string} code
    * @param {string} reason
+   * @param {Object|undefined} [context]
    */
-  constructor(code : IMediaErrorCode, reason : string) {
+  constructor(
+    code : ICodeWithAdaptationType,
+    reason : string,
+    context: {
+      adaptationType : IAdaptationType;
+      adaptation : Adaptation;
+    }
+  );
+  constructor(
+    code : Exclude<IMediaErrorCode, ICodeWithAdaptationType>,
+    reason : string,
+  );
+  constructor(
+    code : IMediaErrorCode,
+    reason : string,
+    context? : {
+      adaptationType? : IAdaptationType | undefined;
+      adaptation? : Adaptation | undefined;
+    } | undefined
+  ) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, MediaError.prototype);
@@ -48,5 +105,22 @@ export default class MediaError extends Error {
     this.code = code;
     this.message = errorMessage(this.name, this.code, reason);
     this.fatal = false;
+    const adaptation = context?.adaptation;
+    if (adaptation !== undefined) {
+      switch (adaptation.type) {
+        case "audio":
+          this.trackInfo = { type: "audio",
+                             track: toAudioTrack(adaptation) };
+          break;
+        case "video":
+          this.trackInfo = { type: "video",
+                             track: toVideoTrack(adaptation) };
+          break;
+        case "text":
+          this.trackInfo = { type: "text",
+                             track: toTextTrack(adaptation) };
+          break;
+      }
+    }
   }
 }

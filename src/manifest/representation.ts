@@ -21,7 +21,11 @@ import {
   IContentProtections,
   IParsedRepresentation,
 } from "../parsers/manifest";
-import { IHDRInformation } from "../public_types";
+import {
+  IAudioRepresentation,
+  IHDRInformation,
+  IVideoRepresentation,
+} from "../public_types";
 import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
 import { IRepresentationIndex } from "./representation_index";
 import {
@@ -371,3 +375,25 @@ export interface IRepresentationProtectionData {
 }
 
 export default Representation;
+
+/**
+ * Parse audio Representation into a `IAudioRepresentation`.
+ * @param {Object} representation
+ * @returns {Object}
+ */
+export function parseAudioRepresentation(
+  { id, bitrate, codec } : Representation
+)  : IAudioRepresentation {
+  return { id, bitrate, codec };
+}
+
+/**
+ * Parse video Representation into a IVideoRepresentation.
+ * @param {Object} representation
+ * @returns {Object}
+ */
+export function parseVideoRepresentation(
+  { id, bitrate, frameRate, width, height, codec, hdrInfo } : Representation
+) : IVideoRepresentation {
+  return { id, bitrate, frameRate, width, height, codec, hdrInfo };
+}
