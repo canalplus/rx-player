@@ -338,6 +338,24 @@ class Representation {
                                             values: data });
     return true;
   }
+
+  /**
+   * Format Representation as an `IAudioRepresentation`.
+   * @returns {Object}
+   */
+  public toAudioRepresentation(): IAudioRepresentation {
+    const { id, bitrate, codec } = this;
+    return { id, bitrate, codec };
+  }
+
+  /**
+   * Format Representation as an `IVideoRepresentation`.
+   * @returns {Object}
+   */
+  public toVideoRepresentation(): IVideoRepresentation {
+    const { id, bitrate, frameRate, width, height, codec, hdrInfo } = this;
+    return { id, bitrate, frameRate, width, height, codec, hdrInfo };
+  }
 }
 
 /** Protection data as returned by a Representation. */
@@ -375,25 +393,3 @@ export interface IRepresentationProtectionData {
 }
 
 export default Representation;
-
-/**
- * Parse audio Representation into a `IAudioRepresentation`.
- * @param {Object} representation
- * @returns {Object}
- */
-export function parseAudioRepresentation(
-  { id, bitrate, codec } : Representation
-)  : IAudioRepresentation {
-  return { id, bitrate, codec };
-}
-
-/**
- * Parse video Representation into a IVideoRepresentation.
- * @param {Object} representation
- * @returns {Object}
- */
-export function parseVideoRepresentation(
-  { id, bitrate, frameRate, width, height, codec, hdrInfo } : Representation
-) : IVideoRepresentation {
-  return { id, bitrate, frameRate, width, height, codec, hdrInfo };
-}
