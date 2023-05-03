@@ -14,12 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  Adaptation,
-  toAudioTrack,
-  toTextTrack,
-  toVideoTrack,
-} from "../manifest";
+import { Adaptation } from "../manifest";
 import {
   IAudioTrack,
   ITextTrack,
@@ -107,15 +102,15 @@ export default class MediaError extends Error {
       switch (adaptation.type) {
         case "audio":
           this.trackInfo = { type: "audio",
-                             track: toAudioTrack(adaptation) };
+                             track: adaptation.toAudioTrack() };
           break;
         case "video":
           this.trackInfo = { type: "video",
-                             track: toVideoTrack(adaptation) };
+                             track: adaptation.toVideoTrack() };
           break;
         case "text":
           this.trackInfo = { type: "text",
-                             track: toTextTrack(adaptation) };
+                             track: adaptation.toTextTrack() };
           break;
       }
     }

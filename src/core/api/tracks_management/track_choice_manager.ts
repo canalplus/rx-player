@@ -24,9 +24,6 @@ import {
   Adaptation,
   Period,
   Representation,
-  toAudioTrack,
-  toTextTrack,
-  toVideoTrack,
 } from "../../../manifest";
 import {
   IAudioTrack,
@@ -620,7 +617,7 @@ export default class TrackChoiceManager {
     if (isNullOrUndefined(chosenTrack)) {
       return null;
     }
-    return toAudioTrack(chosenTrack);
+    return chosenTrack.toAudioTrack();
   }
 
   /**
@@ -645,7 +642,7 @@ export default class TrackChoiceManager {
     if (isNullOrUndefined(chosenTextAdaptation)) {
       return null;
     }
-    return toTextTrack(chosenTextAdaptation);
+    return chosenTextAdaptation.toTextTrack();
   }
 
   /**
@@ -671,7 +668,7 @@ export default class TrackChoiceManager {
       return null;
     }
     const currAdaptation = chosenVideoAdaptation.adaptation;
-    return toVideoTrack(currAdaptation);
+    return currAdaptation.toVideoTrack();
   }
 
   /**
@@ -697,7 +694,7 @@ export default class TrackChoiceManager {
       .map((adaptation) => {
         const active = currentId === null ? false :
                                             currentId === adaptation.id;
-        return objectAssign(toAudioTrack(adaptation), { active });
+        return objectAssign(adaptation.toAudioTrack(), { active });
       });
   }
 
@@ -725,7 +722,7 @@ export default class TrackChoiceManager {
       .map((adaptation) => {
         const active = currentId === null ? false :
                                             currentId === adaptation.id;
-        return objectAssign(toTextTrack(adaptation), { active });
+        return objectAssign(adaptation.toTextTrack(), { active });
       });
   }
 
@@ -752,7 +749,7 @@ export default class TrackChoiceManager {
       .map((adaptation) => {
         const active = currentId === null ? false :
                                             currentId === adaptation.id;
-        const track = toVideoTrack(adaptation);
+        const track = adaptation.toVideoTrack();
         const trickModeTracks = track.trickModeTracks !== undefined ?
           track.trickModeTracks.map((trickModeAdaptation) => {
             const isActive = currentId === null ? false :
