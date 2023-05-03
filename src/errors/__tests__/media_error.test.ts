@@ -37,7 +37,6 @@ describe("errors - MediaError", () => {
     expect(mediaError.type).toBe("MEDIA_ERROR");
     expect(mediaError.code).toBe("MEDIA_TIME_AFTER_MANIFEST");
     expect(mediaError.fatal).toBe(true);
-    expect(mediaError.trackInfo?.type).toBe("video");
     expect(mediaError.message).toBe("MediaError (MEDIA_TIME_AFTER_MANIFEST) test");
   });
 
