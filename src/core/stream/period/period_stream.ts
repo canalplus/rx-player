@@ -134,7 +134,7 @@ export default function PeriodStream(
         if (segmentBufferStatus.type === "initialized") {
           log.info(`Stream: Clearing previous ${bufferType} SegmentBuffer`);
           if (SegmentBuffersStore.isNative(bufferType)) {
-            return askForMediaSourceReload(0, streamCanceller.signal);
+            return askForMediaSourceReload(0, true, streamCanceller.signal);
           } else {
             const periodEnd = period.end ?? Infinity;
             if (period.start > periodEnd) {
@@ -186,7 +186,9 @@ export default function PeriodStream(
       if (SegmentBuffersStore.isNative(bufferType) &&
           segmentBuffersStore.getStatus(bufferType).type === "disabled")
       {
-        return askForMediaSourceReload(relativePosAfterSwitch, streamCanceller.signal);
+        return askForMediaSourceReload(relativePosAfterSwitch,
+                                       true,
+                                       streamCanceller.signal);
       }
 
       log.info(`Stream: Updating ${bufferType} adaptation`,
@@ -211,7 +213,9 @@ export default function PeriodStream(
                                                    playbackInfos,
                                                    options);
       if (strategy.type === "needs-reload") {
-        return askForMediaSourceReload(relativePosAfterSwitch, streamCanceller.signal);
+        return askForMediaSourceReload(relativePosAfterSwitch,
+                                       true,
+                                       streamCanceller.signal);
       }
 
       await segmentBuffersStore.waitForUsableBuffers(streamCanceller.signal);
@@ -304,22 +308,23 @@ export default function PeriodStream(
    * Regularly ask to reload the MediaSource on each playback observation
    * performed by the playback observer.
    *
-   * If and only if the Period currently played corresponds to the concerned
-   * Period, applies an offset to the reloaded position corresponding to
-   * `deltaPos`.
-   * This can be useful for example when switching the audio/video tracks, where
-   * you might want to give back some context if that was the currently played
-   * track.
+   * @param {number} timeOffset - Relative position, compared to the current
+   * playhead, at which we should restart playback after reloading.
+   * For example `-2` will reload 2 seconds before the current position.
+   * @param {boolean} stayInPeriod - If `true`, we will control that the position
+   * we reload at, after applying `timeOffset`, is still part of the Period
+   * `period`.
    *
-   * @param {number} deltaPos - If the concerned Period is playing at the time
-   * this function is called, we will add this value, in seconds, to the current
-   * position to indicate the position we should reload at.
-   * This value allows to give back context (by replaying some media data) after
-   * a switch.
+   * If it isn't we will re-calculate that reloaded position to be:
+   *   - either the Period's start if the calculated position is before the
+   *     Period's start.
+   *   - either the Period'end start if the calculated position is after the
+   *     Period's end.
    * @param {Object} cancelSignal
    */
   function askForMediaSourceReload(
-    deltaPos : number,
+    timeOffset : number,
+    stayInPeriod: boolean,
     cancelSignal : CancellationSignal
   ) : void {
     // We begin by scheduling a micro-task to reduce the possibility of race
@@ -329,18 +334,11 @@ export default function PeriodStream(
     // It can happen when `askForMediaSourceReload` is called as a side-effect of
     // the same event that triggers the playback observation to be emitted.
     nextTick(() => {
-      playbackObserver.listen((observation) => {
-        const currentTime = playbackObserver.getCurrentTime();
-        const pos = currentTime + deltaPos;
-
-        // Bind to Period start and end
-        const position = Math.min(Math.max(period.start, pos),
-                                  period.end ?? Infinity);
-        const autoPlay = !(observation.paused.pending ?? playbackObserver.getIsPaused());
+      playbackObserver.listen(() => {
         callbacks.waitingMediaSourceReload({ bufferType,
                                              period,
-                                             position,
-                                             autoPlay });
+                                             timeOffset,
+                                             stayInPeriod });
       }, { includeLastObservation: true, clearSignal: cancelSignal });
     });
   }
