@@ -502,8 +502,36 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
      */
     function handleStreamOrchestratorCallbacks() : IStreamOrchestratorCallbacks {
       return {
-        needsBufferFlush: () =>
-          playbackObserver.setCurrentTime(mediaElement.currentTime + 0.001),
+        needsBufferFlush: () => {
+          const seekedTime = mediaElement.currentTime + 0.001;
+          playbackObserver.setCurrentTime(seekedTime);
+
+          // Seek again once data begins to be buffered.
+          // This is sadly necessary on some browsers to avoid decoding
+          // issues after a flush.
+          //
+          // NOTE: there's in theory a potential race condition in the following
+          // logic as the callback could be called when media data is still
+          // being removed by the browser - which is an asynchronous process.
+          // The following condition checking for buffered data could thus lead
+          // to a false positive where we're actually checking previous data.
+          // For now, such scenario is avoided by setting the
+          // `includeLastObservation` option to `false` and calling
+          // `needsBufferFlush` once MSE media removal operations have been
+          // explicitely validated by the browser, but that's a complex and easy
+          // to break system.
+          playbackObserver.listen((obs, stopListening) => {
+            if (
+              // Data is buffered around the current position
+              obs.currentRange !== null ||
+              // Or, for whatever reason, playback is already advancing
+              obs.position > seekedTime + 0.1
+            ) {
+              stopListening();
+              playbackObserver.setCurrentTime(obs.position + 0.001);
+            }
+          }, { includeLastObservation: false, clearSignal: cancelSignal });
+        },
 
         streamStatusUpdate(value) {
           // Announce discontinuities if found
