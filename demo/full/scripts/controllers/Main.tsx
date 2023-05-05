@@ -1,5 +1,6 @@
 import RxPlayer from "../../../../src/minimal";
 import * as React from "react";
+import GitHubButton from "../components/GitHubButton";
 import Player from "./Player";
 
 function MainComponent(): JSX.Element {
@@ -20,22 +21,19 @@ function MainComponent(): JSX.Element {
           <a aria-label="Go to Canal+ website" href="https://canalplus.com">
             <img className="title-logo" alt="CANAL+" src="./assets/canalp.svg"/>
           </a>
-          <span className="button-gh"><a
-            className="github-button"
+          <GitHubButton
             href="https://github.com/canalplus/rx-player"
-            data-size="large"
-            data-icon="octicon-star"
-            data-show-count="true"
-            aria-label="Star the RxPlayer on GitHub">
-            Star
-          </a></span>
-          <span className="button-gh"><a
-            className="github-button"
+            ariaLabel="Star the RxPlayer on GitHub"
+            dataIcon="octicon-star"
+            dataShowCount="true"
+            dataText="Star"
+          />
+          <GitHubButton
             href="https://github.com/canalplus/rx-player/fork"
-            data-size="large"
-            aria-label="Fork the RxPlayer on GitHub">
-            Fork
-          </a></span>
+            ariaLabel="Fork the RxPlayer on GitHub"
+            dataIcon="octicon-repo-forked"
+            dataText="Fork"
+          />
         </div>
       </div>
       <Player />
