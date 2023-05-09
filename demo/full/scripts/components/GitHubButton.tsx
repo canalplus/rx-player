@@ -9,7 +9,7 @@ const {
 const GitHubButton = ({
   href,
   ariaLabel,
-  dataColorScheme = "no-preference: dark_high_contrast; light: dark_high_contrast; dark: dark_high_contrast;",
+  dataColorScheme = "dark_high_contrast",
   dataIcon,
   dataShowCount,
   dataSize = "large",
@@ -27,32 +27,20 @@ const GitHubButton = ({
   title?: string;
   children?: React.ReactNode;
 }): JSX.Element => {
-  const spanRef = useRef<HTMLSpanElement>(null);
   const aRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
-    // Apply github-buttons's render on a new span
-    if (spanRef.current && aRef.current) {
-      const newSpan = spanRef.current.appendChild(document.createElement("span"));
+    const aElement = aRef.current;
+    if (aElement !== null) {
       render(
-        newSpan.appendChild(aRef.current),
-        el => newSpan.parentNode?.replaceChild(el, newSpan),
+        aElement,
+        newA => aElement?.parentNode?.replaceChild(newA, aElement),
       );
     }
-
-    return () => {
-      // Reset
-      if (aRef.current && spanRef.current?.lastChild) {
-        spanRef.current.replaceChild(aRef.current, spanRef.current.lastChild);
-      }
-    };
   });
 
   return (
-    <span
-      ref={spanRef}
-      className="button-gh"
-    >
+    <span className="button-gh">
       <a
         ref={aRef}
         href={href}
