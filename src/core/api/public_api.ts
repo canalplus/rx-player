@@ -69,6 +69,7 @@ import {
   IVideoTrackPreference,
 } from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
+import arrayIncludes from "../../utils/array_includes";
 import assert from "../../utils/assert";
 import EventEmitter, {
   IEventPayload,
@@ -1110,6 +1111,30 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Returns true if a content is loaded.
+   * @returns {Boolean} - `true` if a content is loaded, `false` otherwise.
+   */
+  isContentLoaded() : boolean {
+    return !arrayIncludes(["LOADING", "RELOADING", "STOPPED"], this.state);
+  }
+
+  /**
+   * Returns true if the player is rebuffering.
+   * @returns {Boolean} - `true` if the player is rebuffering, `false` otherwise.
+   */
+  isRebuffering() : boolean {
+    return arrayIncludes(["BUFFERING", "SEEKING", "LOADING", "RELOADING"], this.state);
+  }
+
+  /**
+   * Returns true if the content is not currently playing.
+   * @returns {Boolean} - `true` if the media is paused, `false` otherwise.
+   */
+  isPaused() : boolean {
+    return !arrayIncludes(["PLAYING", "STOPPED"], this.state);
+  }
+
+  /**
    * Returns true if both:
    *   - a content is loaded
    *   - the content loaded is a live content
@@ -1286,6 +1311,19 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       throw new Error("Disposed player");
     }
     return this.videoElement.currentTime;
+  }
+
+  /**
+   * Get the last stored content position, in seconds.
+   *
+   * @returns {Number}
+   */
+  getLastStoredContentPosition() : number {
+    const reloadPosition = this._priv_reloadingMetadata.reloadPosition;
+    if (reloadPosition === undefined) {
+      throw new Error("No previously loaded content.");
+    }
+    return reloadPosition;
   }
 
   /**
