@@ -13,7 +13,6 @@ const GitHubButton = ({
   dataIcon,
   dataShowCount,
   dataSize = "large",
-  dataText,
   title,
   children,
 }: {
@@ -23,7 +22,6 @@ const GitHubButton = ({
   dataIcon?: string;
   dataShowCount?: boolean | string;
   dataSize?: string;
-  dataText?: string;
   title?: string;
   children?: React.ReactNode;
 }): JSX.Element => {
@@ -49,7 +47,6 @@ const GitHubButton = ({
         data-color-scheme={dataColorScheme}
         data-show-count={dataShowCount}
         data-size={dataSize}
-        data-text={dataText}
         title={title}
       >
         {children}

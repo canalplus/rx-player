@@ -26,14 +26,16 @@ function MainComponent(): JSX.Element {
             ariaLabel="Star the RxPlayer on GitHub"
             dataIcon="octicon-star"
             dataShowCount="true"
-            dataText="Star"
-          />
+          >
+            Star
+          </GitHubButton>
           <GitHubButton
             href="https://github.com/canalplus/rx-player/fork"
             ariaLabel="Fork the RxPlayer on GitHub"
             dataIcon="octicon-repo-forked"
-            dataText="Fork"
-          />
+          >
+            Fork
+          </GitHubButton>
         </div>
       </div>
       <Player />
