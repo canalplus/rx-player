@@ -19,6 +19,8 @@ import {
   onSourceEnded,
   onSourceClose,
 } from "../../../compat/event_listeners";
+/* eslint-disable-next-line max-len */
+import hasIssuesWithHighMediaSourceDuration from "../../../compat/has_issues_with_high_media_source_duration";
 import log from "../../../log";
 import createSharedReference, {
   IReadOnlySharedReference,
@@ -157,7 +159,9 @@ function setMediaSourceDuration(
   let newDuration = duration;
 
   if (!isRealEndKnown) {
-    newDuration = Infinity;
+    newDuration = hasIssuesWithHighMediaSourceDuration() ?
+      Infinity :
+      getMaximumLiveSeekablePosition(duration);
   }
 
   let maxBufferedEnd : number = 0;
@@ -191,16 +195,8 @@ function setMediaSourceDuration(
       log.info("Init: Updating duration", newDuration);
       mediaSource.duration = newDuration;
       if (mediaSource.readyState === "open" && !isFinite(newDuration)) {
-        // Some targets poorly support setting a very high number for seekable
-        // ranges.
-        // Yet, in contents whose end is not yet known (e.g. live contents), we
-        // would prefer setting a value as high as possible to still be able to
-        // seek anywhere we want to (even ahead of the Manifest if we want to).
-        // As such, we put it at a safe default value of 2^32 excepted when the
-        // maximum position is already relatively close to that value, where we
-        // authorize exceptionally going over it.
-        const maxSeekableRange = Math.max(Math.pow(2, 32), duration + YEAR_IN_SECONDS);
-        mediaSource.setLiveSeekableRange(0, maxSeekableRange);
+        mediaSource.setLiveSeekableRange(0,
+                                         getMaximumLiveSeekablePosition(duration));
       }
     } catch (err) {
       log.warn("Duration Updater: Can't update duration on the MediaSource.",
@@ -334,4 +330,16 @@ function recursivelyForceDurationUpdate(
   const unregisterClear = cancelSignal.register(() => {
     clearTimeout(timeoutId);
   });
+}
+
+function getMaximumLiveSeekablePosition(contentLastPosition : number) : number {
+  // Some targets poorly support setting a very high number for seekable
+  // ranges.
+  // Yet, in contents whose end is not yet known (e.g. live contents), we
+  // would prefer setting a value as high as possible to still be able to
+  // seek anywhere we want to (even ahead of the Manifest if we want to).
+  // As such, we put it at a safe default value of 2^32 excepted when the
+  // maximum position is already relatively close to that value, where we
+  // authorize exceptionally going over it.
+  return Math.max(Math.pow(2, 32), contentLastPosition + YEAR_IN_SECONDS);
 }
