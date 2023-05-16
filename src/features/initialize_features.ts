@@ -22,15 +22,13 @@ import features from "./features_object";
 
 /**
  * Selects the features to include based on environment variables.
- *
- * @param {Object} features
  */
 export default function initializeFeaturesObject() : void {
-  if (__FEATURES__.EME === __FEATURES__.IS_ENABLED as number) {
-    features.ContentDecryptor = require("../core/decrypt/index.ts").default;
+  if (__FEATURES__.EME as number === __FEATURES__.IS_ENABLED as number) {
+    features.decrypt = require("../core/decrypt/index.ts").default;
   }
 
-  if (__FEATURES__.BIF_PARSER === __FEATURES__.IS_ENABLED as number) {
+  if (__FEATURES__.BIF_PARSER as number === __FEATURES__.IS_ENABLED as number) {
     features.imageBuffer =
       require("../core/segment_buffers/implementations/image/index.ts").default;
     features.imageParser = require("../parsers/images/bif.ts").default;
@@ -38,49 +36,49 @@ export default function initializeFeaturesObject() : void {
 
   // Feature switching the Native TextTrack implementation
   const HAS_NATIVE_MODE =
-    __FEATURES__.NATIVE_VTT === __FEATURES__.IS_ENABLED as number ||
-    __FEATURES__.NATIVE_SAMI === __FEATURES__.IS_ENABLED as number ||
-    __FEATURES__.NATIVE_TTML === __FEATURES__.IS_ENABLED as number ||
-    __FEATURES__.NATIVE_SRT === __FEATURES__.IS_ENABLED as number;
+    __FEATURES__.NATIVE_VTT as number === __FEATURES__.IS_ENABLED as number ||
+    __FEATURES__.NATIVE_SAMI as number === __FEATURES__.IS_ENABLED as number ||
+    __FEATURES__.NATIVE_TTML as number === __FEATURES__.IS_ENABLED as number ||
+    __FEATURES__.NATIVE_SRT as number === __FEATURES__.IS_ENABLED as number;
 
-  if (__FEATURES__.SMOOTH === __FEATURES__.IS_ENABLED as number) {
+  if (__FEATURES__.SMOOTH as number === __FEATURES__.IS_ENABLED as number) {
     features.transports.smooth = require("../transports/smooth/index.ts").default;
   }
-  if (__FEATURES__.DASH === __FEATURES__.IS_ENABLED as number) {
+  if (__FEATURES__.DASH as number === __FEATURES__.IS_ENABLED as number) {
     features.transports.dash = require("../transports/dash/index.ts").default;
     features.dashParsers.js =
       require("../parsers/manifest/dash/js-parser/index.ts").default;
   }
-  if (__FEATURES__.LOCAL_MANIFEST === __FEATURES__.IS_ENABLED as number) {
+  if (__FEATURES__.LOCAL_MANIFEST as number === __FEATURES__.IS_ENABLED as number) {
     features.transports.local = require("../transports/local/index.ts").default;
   }
-  if (__FEATURES__.METAPLAYLIST === __FEATURES__.IS_ENABLED as number) {
+  if (__FEATURES__.METAPLAYLIST as number === __FEATURES__.IS_ENABLED as number) {
     features.transports.metaplaylist =
       require("../transports/metaplaylist/index.ts").default;
   }
-  if (__FEATURES__.DEBUG_ELEMENT === __FEATURES__.IS_ENABLED as number) {
+  if (__FEATURES__.DEBUG_ELEMENT as number === __FEATURES__.IS_ENABLED as number) {
     features.createDebugElement = require("../core/api/debug/index.ts").default;
   }
 
   if (HAS_NATIVE_MODE) {
     features.nativeTextTracksBuffer =
       require("../core/segment_buffers/implementations/text/native/index.ts").default;
-    if (__FEATURES__.NATIVE_VTT === __FEATURES__.IS_ENABLED as number) {
+    if (__FEATURES__.NATIVE_VTT as number === __FEATURES__.IS_ENABLED as number) {
       features.nativeTextTracksParsers.vtt =
         require("../parsers/texttracks/webvtt/native/index.ts").default;
     }
 
-    if (__FEATURES__.NATIVE_TTML === __FEATURES__.IS_ENABLED as number) {
+    if (__FEATURES__.NATIVE_TTML as number === __FEATURES__.IS_ENABLED as number) {
       features.nativeTextTracksParsers.ttml =
         require("../parsers/texttracks/ttml/native/index.ts").default;
     }
 
-    if (__FEATURES__.NATIVE_SAMI === __FEATURES__.IS_ENABLED as number) {
+    if (__FEATURES__.NATIVE_SAMI as number === __FEATURES__.IS_ENABLED as number) {
       features.nativeTextTracksParsers.sami =
         require("../parsers/texttracks/sami/native.ts").default;
     }
 
-    if (__FEATURES__.NATIVE_SRT === __FEATURES__.IS_ENABLED as number) {
+    if (__FEATURES__.NATIVE_SRT as number === __FEATURES__.IS_ENABLED as number) {
       features.nativeTextTracksParsers.srt =
         require("../parsers/texttracks/srt/native.ts").default;
     }
@@ -88,36 +86,36 @@ export default function initializeFeaturesObject() : void {
 
   // Feature switching the HTML TextTrack implementation
   const HAS_HTML_MODE =
-    __FEATURES__.HTML_VTT === __FEATURES__.IS_ENABLED as number ||
-    __FEATURES__.HTML_SAMI === __FEATURES__.IS_ENABLED as number ||
-    __FEATURES__.HTML_TTML === __FEATURES__.IS_ENABLED as number ||
-    __FEATURES__.HTML_SRT === __FEATURES__.IS_ENABLED as number;
+    __FEATURES__.HTML_VTT as number === __FEATURES__.IS_ENABLED as number ||
+    __FEATURES__.HTML_SAMI as number === __FEATURES__.IS_ENABLED as number ||
+    __FEATURES__.HTML_TTML as number === __FEATURES__.IS_ENABLED as number ||
+    __FEATURES__.HTML_SRT as number === __FEATURES__.IS_ENABLED as number;
 
   if (HAS_HTML_MODE) {
     features.htmlTextTracksBuffer =
       require("../core/segment_buffers/implementations/text/html/index.ts").default;
-    if (__FEATURES__.HTML_SAMI === __FEATURES__.IS_ENABLED as number) {
+    if (__FEATURES__.HTML_SAMI as number === __FEATURES__.IS_ENABLED as number) {
       features.htmlTextTracksParsers.sami =
         require("../parsers/texttracks/sami/html.ts").default;
     }
 
-    if (__FEATURES__.HTML_TTML === __FEATURES__.IS_ENABLED as number) {
+    if (__FEATURES__.HTML_TTML as number === __FEATURES__.IS_ENABLED as number) {
       features.htmlTextTracksParsers.ttml =
         require("../parsers/texttracks/ttml/html/index.ts").default;
     }
 
-    if (__FEATURES__.HTML_SRT === __FEATURES__.IS_ENABLED as number) {
+    if (__FEATURES__.HTML_SRT as number === __FEATURES__.IS_ENABLED as number) {
       features.htmlTextTracksParsers.srt =
         require("../parsers/texttracks/srt/html.ts").default;
     }
 
-    if (__FEATURES__.HTML_VTT === __FEATURES__.IS_ENABLED as number) {
+    if (__FEATURES__.HTML_VTT as number === __FEATURES__.IS_ENABLED as number) {
       features.htmlTextTracksParsers.vtt =
         require("../parsers/texttracks/webvtt/html/index.ts").default;
     }
   }
 
-  if (__FEATURES__.DIRECTFILE === __FEATURES__.IS_ENABLED as number) {
+  if (__FEATURES__.DIRECTFILE as number === __FEATURES__.IS_ENABLED as number) {
     const initDirectFile =
       require("../core/init/directfile_content_initializer.ts").default;
     const mediaElementTrackChoiceManager =

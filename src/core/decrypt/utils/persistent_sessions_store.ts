@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { ICustomMediaKeySession } from "../../../compat";
+import { ICustomMediaKeySession } from "../../../compat/eme";
 import log from "../../../log";
 import {
   IPersistentSessionInfo,
