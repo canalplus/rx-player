@@ -3,7 +3,7 @@ import Manifest, {
   Period,
 } from "../../../manifest";
 import { IAudioTrackSwitchingMode } from "../../../public_types";
-import { IReadOnlySharedReference, ISharedReference } from "../../../utils/reference";
+import SharedReference, { IReadOnlySharedReference } from "../../../utils/reference";
 import { CancellationSignal } from "../../../utils/task_canceller";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import { IRepresentationEstimator } from "../../adaptive";
@@ -76,7 +76,7 @@ export interface IPeriodStreamReadyPayload {
    * It is set to `undefined` by default, you SHOULD NOT set it to `undefined`
    * yourself.
    */
-  adaptationRef : ISharedReference<Adaptation|null|undefined>;
+  adaptationRef : SharedReference<Adaptation|null|undefined>;
 }
 
 /** Playback observation required by the `PeriodStream`. */

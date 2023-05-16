@@ -1,0 +1,316 @@
+diff --git a/src/core/init/directfile_content_initializer.ts b/src/core/init/directfile_content_initializer.ts
+index 68a24d897..80f05baf7 100644
+--- a/src/core/init/directfile_content_initializer.ts
++++ b/src/core/init/directfile_content_initializer.ts
+@@ -122,6 +122,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
+      * events when it cannot, as well as "unstalled" events when it get out of one.
+      */
+     const rebufferingController = new RebufferingController(playbackObserver,
++                                                            null,
+                                                             null,
+                                                             speed);
+     rebufferingController.addEventListener("stalled", (evt) =>
+diff --git a/src/core/init/media_source_content_initializer.ts b/src/core/init/media_source_content_initializer.ts
+index 1cc84a4d5..ce3522ef0 100644
+--- a/src/core/init/media_source_content_initializer.ts
++++ b/src/core/init/media_source_content_initializer.ts
+@@ -462,9 +462,20 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
+ 
+     const rebufferingController = this._createRebufferingController(playbackObserver,
+                                                                     manifest,
++                                                                    segmentBuffersStore,
+                                                                     speed,
+                                                                     cancelSignal);
+-
++    rebufferingController.addEventListener("needsReload", () => {
++      // NOTE couldn't both be always calculated at event destination?
++      // Maybe there are exceptions?
++      const position = initialSeekPerformed.getValue() ?
++        playbackObserver.getCurrentTime() :
++        initialTime;
++      const autoplay = initialPlayPerformed.getValue() ?
++        !playbackObserver.getIsPaused() :
++        autoPlay;
++      onReloadOrder({ position, autoPlay: autoplay });
++    }, cancelSignal);
+     const contentTimeBoundariesObserver = this
+       ._createContentTimeBoundariesObserver(manifest,
+                                             mediaSource,
+@@ -768,11 +779,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
+   private _createRebufferingController(
+     playbackObserver : PlaybackObserver,
+     manifest : Manifest,
++    segmentBuffersStore : SegmentBuffersStore,
+     speed : IReadOnlySharedReference<number>,
+     cancelSignal : CancellationSignal
+   ) : RebufferingController {
+     const rebufferingController = new RebufferingController(playbackObserver,
+                                                             manifest,
++                                                            segmentBuffersStore,
+                                                             speed);
+     // Bubble-up events
+     rebufferingController.addEventListener("stalled",
+diff --git a/src/core/init/utils/rebuffering_controller.ts b/src/core/init/utils/rebuffering_controller.ts
+index f1753b8c2..93471ccaf 100644
+--- a/src/core/init/utils/rebuffering_controller.ts
++++ b/src/core/init/utils/rebuffering_controller.ts
+@@ -30,7 +30,7 @@ import {
+   IPlaybackObservation,
+   PlaybackObserver,
+ } from "../../api";
+-import { IBufferType } from "../../segment_buffers";
++import SegmentBuffersStore, { IBufferType } from "../../segment_buffers";
+ import { IStallingSituation } from "../types";
+ 
+ 
+@@ -54,6 +54,7 @@ export default class RebufferingController
+   /** Emit the current playback conditions */
+   private _playbackObserver : PlaybackObserver;
+   private _manifest : Manifest | null;
++  private _segmentBuffersStore : SegmentBuffersStore | null;
+   private _speed : IReadOnlySharedReference<number>;
+   private _isStarted : boolean;
+ 
+@@ -65,6 +66,18 @@ export default class RebufferingController
+ 
+   private _canceller : TaskCanceller;
+ 
++  /**
++   * If set to something else than `null`, this is the DOMHighResTimestamp as
++   * outputed by `performance.now()` when playback begin to seem to not start
++   * despite having decipherable data in the buffer(s).
++   *
++   * If enough time in that condition is spent, special considerations are
++   * taken at which point `_currentFreezeTimestamp` is reset to `null`.
++   *
++   * It is also reset to `null` when and if there is no such issue anymore.
++   */
++  private _currentFreezeTimestamp : number | null;
++
+   /**
+    * @param {object} playbackObserver - emit the current playback conditions.
+    * @param {Object} manifest - The Manifest of the currently-played content.
+@@ -72,16 +85,19 @@ export default class RebufferingController
+    */
+   constructor(
+     playbackObserver : PlaybackObserver,
+-    manifest: Manifest | null,
++    manifest : Manifest | null,
++    segmentBuffersStore : SegmentBuffersStore | null,
+     speed : IReadOnlySharedReference<number>
+   ) {
+     super();
+     this._playbackObserver = playbackObserver;
+     this._manifest = manifest;
++    this._segmentBuffersStore = segmentBuffersStore;
+     this._speed = speed;
+     this._discontinuitiesStore = [];
+     this._isStarted = false;
+     this._canceller = new TaskCanceller();
++    this._currentFreezeTimestamp = null;
+   }
+ 
+   public start() : void {
+@@ -154,6 +170,10 @@ export default class RebufferingController
+         Math.max(observation.pendingInternalSeek ?? 0, observation.position) :
+         null;
+ 
++      if (this._checkDecipherabilityFreeze(observation)) {
++        return ;
++      }
++
+       if (freezing !== null) {
+         const now = performance.now();
+ 
+@@ -215,7 +235,7 @@ export default class RebufferingController
+           this.trigger("stalled", stalledReason);
+           return ;
+         } else {
+-          log.warn("Init: ignored stall for too long, checking discontinuity",
++          log.warn("Init: ignored stall for too long, considering it",
+                    now - ignoredStallTimeStamp);
+         }
+       }
+@@ -358,6 +378,96 @@ export default class RebufferingController
+   public destroy() : void {
+     this._canceller.cancel();
+   }
++
++  /**
++   * Support of contents with DRM on all the platforms out there is a pain in
++   * the *ss considering all the DRM-related bugs there are.
++   *
++   * We found out a frequent issue which is to be unable to play despite having
++   * all the decryption keys to play what is currently buffered.
++   * When this happens, re-creating the buffers from scratch, with a reload, is
++   * usually sufficient to unlock the situation.
++   *
++   * Although we prefer providing more targeted fixes or telling to platform
++   * developpers to fix their implementation, it's not always possible.
++   * We thus resorted to developping an heuristic which detects such situation
++   * and reload in that case.
++   *
++   * @param {Object} observation - The last playback observation produced, it
++   * has to be recent (just triggered for example).
++   * @returns {boolean} - Returns `true` if it seems to be such kind of
++   * decipherability freeze, in which case this method already performed the
++   * right handling steps.
++   */
++  private _checkDecipherabilityFreeze(
++    observation : IPlaybackObservation
++  ): boolean {
++    const { readyState,
++            rebuffering,
++            freezing } = observation;
++    const bufferGap = observation.bufferGap !== undefined &&
++      isFinite(observation.bufferGap) ? observation.bufferGap :
++      0;
++    if (
++      this._segmentBuffersStore === null ||
++      bufferGap < 6 ||
++      (rebuffering === null && freezing === null) ||
++      readyState > 1
++    ) {
++      this._currentFreezeTimestamp = null;
++      return false;
++    }
++
++    const now = performance.now();
++    if (this._currentFreezeTimestamp === null) {
++      this._currentFreezeTimestamp = now;
++    }
++    const rebufferingForTooLong =
++      rebuffering !== null && now - rebuffering.timestamp > 4000;
++    const frozenForTooLong =
++      freezing !== null && now - freezing.timestamp > 4000;
++
++    if (
++      (rebufferingForTooLong || frozenForTooLong) &&
++      this._currentFreezeTimestamp > 4000
++    ) {
++      const statusAudio = this._segmentBuffersStore.getStatus("audio");
++      const statusVideo = this._segmentBuffersStore.getStatus("video");
++      let hasOnlyDecipherableSegments = true;
++      let isClear = true;
++      for (const status of [statusAudio, statusVideo]) {
++        if (status.type === "initialized") {
++          for (const segment of status.value.getInventory()) {
++            const { representation } = segment.infos;
++            if (representation.decipherable === false) {
++              log.warn(
++                "Init: we have undecipherable segments left in the buffer, reloading"
++              );
++              this._currentFreezeTimestamp = null;
++              this.trigger("needsReload", null);
++              return true;
++            } else if (representation.contentProtections !== undefined) {
++              isClear = false;
++              if (representation.decipherable !== true) {
++                hasOnlyDecipherableSegments = false;
++              }
++            }
++          }
++        }
++      }
++
++      if (!isClear && hasOnlyDecipherableSegments) {
++        log.warn(
++          "Init: we are frozen despite only having decipherable " +
++          "segments left in the buffer, reloading"
++        );
++        this._currentFreezeTimestamp = null;
++        this.trigger("needsReload", null);
++        return true;
++      }
++    }
++    return false;
++  }
+ }
+ 
+ /**
+@@ -581,6 +691,7 @@ class PlaybackRateUpdater {
+ export interface IRebufferingControllerEvent {
+   stalled : IStallingSituation;
+   unstalled : null;
++  needsReload : null;
+   warning : IPlayerError;
+ }
+ 
+diff --git a/src/parsers/texttracks/ttml/html/apply_extent.ts b/src/parsers/texttracks/ttml/html/apply_extent.ts
+index 5772fa8fb..eb3a051e4 100644
+--- a/src/parsers/texttracks/ttml/html/apply_extent.ts
++++ b/src/parsers/texttracks/ttml/html/apply_extent.ts
+@@ -54,7 +54,14 @@ export default function applyExtent(
+         secondExtent[2] === "%" ||
+         secondExtent[2] === "em")
+     {
+-      element.style.height = secondExtent[1] + secondExtent[2];
++      const toNum = Number(secondExtent[1]);
++      if (secondExtent[2] === "%" && !isNaN(toNum) &&
++          (toNum < 0 || toNum > 100))
++      {
++        element.style.width = "80%";
++      } else {
++        element.style.height = secondExtent[1] + secondExtent[2];
++      }
+     } else if (secondExtent[2] === "c") {
+       addClassName(element, "proportional-style");
+       element.setAttribute("data-proportional-height", secondExtent[1]);
+diff --git a/src/parsers/texttracks/ttml/html/apply_line_height.ts b/src/parsers/texttracks/ttml/html/apply_line_height.ts
+index 4f727229a..253aa1a72 100644
+--- a/src/parsers/texttracks/ttml/html/apply_line_height.ts
++++ b/src/parsers/texttracks/ttml/html/apply_line_height.ts
+@@ -14,16 +14,15 @@
+  * limitations under the License.
+  */
+ 
+-import { addClassName } from "../../../../compat";
+ import log from "../../../../log";
+ import { REGXP_LENGTH } from "../regexps";
+ 
+ /**
+- * @param {HTMLElement} element
++ * @param {HTMLElement} _element
+  * @param {string} lineHeight
+  */
+ export default function applyLineHeight(
+-  element : HTMLElement,
++  _element : HTMLElement,
+   lineHeight : string
+ ) : void {
+   const trimmedLineHeight = lineHeight.trim();
+@@ -40,10 +39,10 @@ export default function applyLineHeight(
+       firstLineHeight[2] === "%" ||
+       firstLineHeight[2] === "em")
+   {
+-    element.style.lineHeight = firstLineHeight[1] + firstLineHeight[2];
++    // element.style.lineHeight = firstLineHeight[1] + firstLineHeight[2];
+   } else if (firstLineHeight[2] === "c") {
+-    addClassName(element, "proportional-style");
+-    element.setAttribute("data-proportional-line-height", firstLineHeight[1]);
++    // addClassName(element, "proportional-style");
++    // element.setAttribute("data-proportional-line-height", firstLineHeight[1]);
+   } else {
+     log.warn("TTML Parser: unhandled lineHeight unit:", firstLineHeight[2]);
+   }
+diff --git a/src/parsers/texttracks/ttml/html/apply_origin.ts b/src/parsers/texttracks/ttml/html/apply_origin.ts
+index 01a205aad..91d69fa3c 100644
+--- a/src/parsers/texttracks/ttml/html/apply_origin.ts
++++ b/src/parsers/texttracks/ttml/html/apply_origin.ts
+@@ -53,7 +53,15 @@ export default function applyOrigin(
+         secondOrigin[2] === "%" ||
+         secondOrigin[2] === "em")
+     {
+-      element.style.top = secondOrigin[1] + secondOrigin[2];
++      const toNum = Number(secondOrigin[1]);
++      if (secondOrigin[2] === "%" && !isNaN(toNum) &&
++          (toNum < 0 || toNum > 100))
++      {
++        element.style.bottom = "5%";
++        element.style.left = "10%";
++      } else {
++        element.style.top = secondOrigin[1] + secondOrigin[2];
++      }
+     } else if (secondOrigin[2] === "c") {
+       addClassName(element, "proportional-style");
+       element.setAttribute("data-proportional-top", secondOrigin[1]);

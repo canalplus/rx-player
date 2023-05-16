@@ -26,7 +26,9 @@ import {
   IKeySystemOption,
   IPlayerError,
 } from "../../public_types";
-import createSharedReference, {
+import assert from "../../utils/assert";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import SharedReference, {
   IReadOnlySharedReference,
 } from "../../utils/reference";
 import TaskCanceller from "../../utils/task_canceller";
@@ -39,40 +41,76 @@ import initializeContentDecryption from "./utils/initialize_content_decryption";
 import RebufferingController from "./utils/rebuffering_controller";
 import listenToMediaError from "./utils/throw_on_media_error";
 
+/**
+ * `ContentIntializer` which will load contents by putting their URL in the
+ * `src` attribute of the given HTMLMediaElement.
+ *
+ * Because such contents are mainly loaded by the browser, those (called
+ * "directfile" contents in the RxPlayer) needs a simpler logic in-JS when
+ * compared to a content that relies on the MSE API.
+ *
+ * @class DirectFileContentInitializer
+ */
 export default class DirectFileContentInitializer extends ContentInitializer {
+  /**
+   * Initial options given to the `DirectFileContentInitializer`.
+   */
   private _settings : IDirectFileOptions;
+  /**
+   * Allows to abort and clean everything the `DirectFileContentInitializer` is
+   * doing.
+   */
   private _initCanceller : TaskCanceller;
 
+  /**
+   * Creates a new `DirectFileContentInitializer` linked to the given settings.
+   * @param {Object} settings
+   */
   constructor(settings : IDirectFileOptions) {
     super();
     this._settings = settings;
     this._initCanceller = new TaskCanceller();
   }
 
-  public prepare(): void {
+  /**
+   * "Prepare" content so it can later be played by calling `start`.
+   */
+  public prepare() : void {
     return; // Directfile contents do not have any preparation
   }
 
+  /**
+   * Start playback of the content linked to this `DirectFileContentInitializer`
+   * on the given `HTMLMediaElement` and its associated `PlaybackObserver`.
+   * @param {HTMLMediaElement} mediaElement - HTMLMediaElement on which the
+   * content will be played.
+   * @param {Object} playbackObserver - Object regularly emitting playback
+   * information.
+   */
   public start(
     mediaElement : HTMLMediaElement,
     playbackObserver : PlaybackObserver
-  ): void {
+  ) : void {
     const cancelSignal = this._initCanceller.signal;
     const { keySystems, speed, url } = this._settings;
 
     clearElementSrc(mediaElement);
 
-    if (url == null) {
-      throw new Error("No URL for a DirectFile content");
-    }
-
-    const decryptionRef = createSharedReference(null);
+    /**
+     * Create dummy encryption data emitter, as those are not sent from the
+     * RxPlayer for directfile contents.
+     */
+    const decryptionRef = new SharedReference(null);
     decryptionRef.finish();
+
     const drmInitRef =
-      initializeContentDecryption(mediaElement, keySystems, decryptionRef, {
-        onError: (err) =>  this._onFatalError(err),
-        onWarning: (err : IPlayerError) => this.trigger("warning", err),
-      }, cancelSignal);
+      initializeContentDecryption(
+        mediaElement,
+        keySystems,
+        decryptionRef,
+        { onError: (err) =>  this._onFatalError(err),
+          onWarning: (err : IPlayerError) => this.trigger("warning", err) },
+        cancelSignal);
 
     /** Translate errors coming from the media element into RxPlayer errors. */
     listenToMediaError(mediaElement,
@@ -99,7 +137,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
 
     drmInitRef.onUpdate((evt, stopListeningToDrmUpdates) => {
       if (evt.initializationState.type === "uninitialized") {
-        return;
+        return; // nothing done yet
       }
       stopListeningToDrmUpdates();
 
@@ -107,41 +145,60 @@ export default class DirectFileContentInitializer extends ContentInitializer {
       log.info("Setting URL to HTMLMediaElement", url);
       mediaElement.src = url;
       cancelSignal.register(() => {
+        log.info("Init: Removing directfile src from media element", mediaElement.src);
         clearElementSrc(mediaElement);
       });
+
       if (evt.initializationState.type === "awaiting-media-link") {
         evt.initializationState.value.isMediaLinked.setValue(true);
         drmInitRef.onUpdate((newDrmStatus, stopListeningToDrmUpdatesAgain) => {
           if (newDrmStatus.initializationState.type === "initialized") {
             stopListeningToDrmUpdatesAgain();
             this._seekAndPlay(mediaElement, playbackObserver);
-            return;
           }
         }, { emitCurrentValue: true, clearSignal: cancelSignal });
       } else {
+        assert(evt.initializationState.type === "initialized");
         this._seekAndPlay(mediaElement, playbackObserver);
-        return;
       }
     }, { emitCurrentValue: true, clearSignal: cancelSignal });
   }
 
+  /**
+   * Update URL this `ContentIntializer` depends on.
+   * @param {Array.<string>|undefined} _urls
+   * @param {boolean} _refreshNow
+   */
   public updateContentUrls(_urls : string[] | undefined, _refreshNow : boolean) : void {
     throw new Error("Cannot update content URL of directfile contents");
   }
 
-  public dispose(): void {
+  /**
+   * Stop content and free all resources linked to this `ContentIntializer`.
+   */
+  public dispose() : void {
     this._initCanceller.cancel();
   }
 
-  private _onFatalError(err : unknown) {
+  /**
+   * Logic performed when a fatal error was triggered.
+   * @param {*} err - The fatal error in question.
+   */
+  private _onFatalError(err : unknown) : void {
     this._initCanceller.cancel();
     this.trigger("error", err);
   }
 
+  /**
+   * Perform the initial seek (to begin playback at an initially-calculated
+   * position based on settings) and auto-play if needed when loaded.
+   * @param {HTMLMediaElement} mediaElement
+   * @param {Object} playbackObserver
+   */
   private _seekAndPlay(
     mediaElement : HTMLMediaElement,
     playbackObserver : PlaybackObserver
-  ) {
+  ) : void {
     const cancelSignal = this._initCanceller.signal;
     const { autoPlay, startAt } = this._settings;
     const initialTime = () => {
@@ -156,6 +213,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
       initialTime,
       autoPlay,
       (err) => this.trigger("warning", err),
+      true,
       cancelSignal
     ).autoPlayResult
       .then(() =>
@@ -177,18 +235,18 @@ export default class DirectFileContentInitializer extends ContentInitializer {
 /**
  * calculate initial time as a position in seconds.
  * @param {HTMLMediaElement} mediaElement
- * @param {Object|undefined} startAt
+ * @param {Object|undefined} [startAt]
  * @returns {number}
  */
 function getDirectFileInitialTime(
   mediaElement : HTMLMediaElement,
   startAt? : IInitialTimeOptions
 ) : number {
-  if (startAt == null) {
+  if (isNullOrUndefined(startAt)) {
     return 0;
   }
 
-  if (startAt.position != null) {
+  if (!isNullOrUndefined(startAt.position)) {
     return startAt.position;
   } else if (startAt.wallClockTime != null) {
     return startAt.wallClockTime;
@@ -197,15 +255,30 @@ function getDirectFileInitialTime(
   }
 
   const duration = mediaElement.duration;
-  if (duration == null || !isFinite(duration)) {
-    log.warn("startAt.fromLastPosition set but no known duration, " +
-             "beginning at 0.");
-    return 0;
-  }
 
   if (typeof startAt.fromLastPosition === "number") {
+    if (isNullOrUndefined(duration) || !isFinite(duration)) {
+      log.warn("startAt.fromLastPosition set but no known duration, " +
+               "beginning at 0.");
+      return 0;
+    }
     return Math.max(0, duration + startAt.fromLastPosition);
+  } else if (typeof startAt.fromLivePosition === "number") {
+    const livePosition = mediaElement.seekable.length > 0 ?
+      mediaElement.seekable.end(0) :
+      duration;
+    if (isNullOrUndefined(livePosition)) {
+      log.warn("startAt.fromLivePosition set but no known live position, " +
+               "beginning at 0.");
+      return 0;
+    }
+    return Math.max(0, livePosition + startAt.fromLivePosition);
   } else if (startAt.percentage != null) {
+    if (isNullOrUndefined(duration) || !isFinite(duration)) {
+      log.warn("startAt.percentage set but no known duration, " +
+               "beginning at 0.");
+      return 0;
+    }
     const { percentage } = startAt;
     if (percentage >= 100) {
       return duration;
@@ -219,11 +292,19 @@ function getDirectFileInitialTime(
   return 0;
 }
 
-// Argument used by `initializeDirectfileContent`
+/** Options used by the `DirectFileContentInitializer` */
 export interface IDirectFileOptions {
+  /** If `true` we will play right after the content is considered "loaded". */
   autoPlay : boolean;
+  /**
+   * Encryption-related settings. Can be left as an empty array if the content
+   * isn't encrypted.
+   */
   keySystems : IKeySystemOption[];
+  /** Communicate the playback rate wanted by the user. */
   speed : IReadOnlySharedReference<number>;
+  /** Optional initial position to start at. */
   startAt? : IInitialTimeOptions | undefined;
-  url? : string | undefined;
+  /** URL that should be played. */
+  url : string;
 }

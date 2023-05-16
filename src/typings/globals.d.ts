@@ -79,4 +79,5 @@ declare const __LOGGER_LEVEL__ : {
   CURRENT_LEVEL : string;
 };
 
-declare const __RX_PLAYER_DEBUG_MODE__ : boolean | undefined;
+// eslint-disable-next-line
+declare const require: (path: string) => any;

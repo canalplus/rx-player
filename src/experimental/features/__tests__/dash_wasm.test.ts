@@ -14,17 +14,10 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-
+import { IFeaturesObject } from "../../../features/types";
 import DashWasmParser from "../../../parsers/manifest/dash/wasm-parser";
 import DASHFeature from "../../../transports/dash";
 import dashWasmFeature from "../dash_wasm";
-
-jest.mock("../../../transports/dash", () => ({
-  __esModule: true as const,
-  default: jest.fn(),
-}));
 
 describe("Features list - DASH WASM Parser", () => {
   it("should add DASH WASM parser in the current features", () => {
@@ -40,10 +33,9 @@ describe("Features list - DASH WASM Parser", () => {
 
     expect(mockInitialize).toHaveBeenCalledTimes(1);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const featureObject : any = { transports: {},
-                                  dashParsers: { js: null,
-                                                 wasm: null } };
+    const featureObject = { transports: {},
+                            dashParsers: { js: null,
+                                           wasm: null } } as unknown as IFeaturesObject;
     DASH_WASM._addFeature(featureObject);
     expect(featureObject.transports).toEqual({ dash: DASHFeature });
     expect(featureObject.dashParsers.js).toEqual(null);

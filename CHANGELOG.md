@@ -1,5 +1,94 @@
 # Changelog
 
+## Unreleased
+
+### Features
+
+  - Add `getLivePosition` RxPlayer method [#1300]
+  - Add `startAt.fromLivePosition` `loadVideo` option [#1300]
+  - Add the possibility to set a new `keySystems` option on the `reload` API [#1308]
+
+### Bug fixes
+
+  - Fix subtitles "blinking" in some specific conditions, especially with some DASH low-latency contents [#1314]
+  - DASH: Fix Period overlap resolution logic for when the first Period is removed [#1311]
+  - TTML: Fix handling of the `tts:lineHeight` attribute [#1320]
+  - Fix import of the `LOCAL_MANIFEST` experimental feature
+  - Avoid very rarely skipping segments which initially were too big to be pushed due to memory limitations [#1323]
+  - Fix issue arising when using track APIs at the exact last possible position of a Period with no consecutive Period [#1337]
+  - Starting at the end (through a `startAt` `loadVideo` option) or reloading at the end led to the restart of the content [#1338]
+  - DRM/Safari: also perform Safari DRM work-arounds when the page is launched from the dock [#1351, #1356]
+
+### Other improvements
+
+  - DASH: rely on SCTE214 `supplementalCodecs` instead of `codecs` if it's supported to better support backward compatible Dolby Vision contents [#1307]
+  - DASH: Provide better support of the `availabilityTimeOffset` attribute [#1300]
+  - DEBUG_ELEMENT: Add unsupported and undecipherable bitrates to the debug element [#1321]
+  - DEBUG_ELEMENT: update buffer graph maximum size so it becomes more readable for lengthy contents [#1316]
+  - DEBUG_ELEMENT: always synchronize inventory of segments before rendering it [#1317]
+  - Remove remaining RxPlayer dependency removing possibility of some application-side bundling errors [#1312]
+  - Add exception to text Garbage collection logic to avoid unnecessarily reload text segments frequently [#1325]
+  - Avoid logging too much the buffer's content when our debugging UI or the demo is used [#1341]
+  - Demo: Fix reporting of live position in demo page [#1313]
+
+
+## v3.32.1 (2023-10-19)
+
+### Features
+
+  - DASH: add optional `isSpatialAudio` boolean property to Representation returned by `getAvailableAudioTracks`, `getAudioTrack`, corresponding events, and `trackInfo` optional property of `MediaError` objects to signal Dolby Atmos techology [#1275]
+  - `LOCAL`: add `isSpatialAudio` property to Representation of the experiment `"local"` transport (used for offline playback) [#1275]
+  - `addFeatures` static method is now available on all RxPlayer builds. It was previously only in the minimal (`rx-player/minimal` import path) [#1287]
+  - The `NATIVE_TEXT_BUFFER`, `HTML_TEXT_BUFFER` and `IMAGE_BUFFER` features are now totally optional [#1287, #1293]
+
+### Bug fixes
+
+  - Fix `setVideoBitrate` and `setAudioBitrate` API which may have led to a higher quality than wanted in the default `"seamless"` `manualBitrateSwitchingMode` if our buffer-based adaptive logic decided to  [#1267, #1271]
+  - On the PlayStation 5, only switch to the `"LOADED"` state once the HTMLMediaElement's `readyState` of `4` has been reached, as it seems to switch to `3` too soon there [#1257]
+  - DASH: Fix potential track duplication if more than two `AdaptationSet` have an `adaptation-set-switching` `<SupplementalProperty>` between one another [#1279]
+  - DASH-WASM: availabilityTimeOffset is actually a floating number [#1278]
+
+### Other improvements
+
+  - Do not load the last text segment if the current position goes after it as it is unnecessary [#1256]
+  - Implement better `NetworkError` messages [#1274]
+  - Set a better error message for when no `keySystems` option is set when playing an encrypted content
+  - Fix very small memory leak when reloading a content [#1286]
+  - Re-check for segments to load immediately after the manifest has been refreshed [#1282]
+  - When "fallbacking" an undecipherable Representation, now empty the whole buffer if we can't make out where content was in the buffer [#1283]
+  - Improve segment start detection in buffer when there's unknown data buffered before it [#1284]
+  - DRM: Selection of alternative EME API like those used on IE11 or Safari has been refactored to facilitate future developments [#1261]
+
+### Deprecated
+
+  - Deprecate the `manifestUpdateUrl` `loadVideo` option as it doesn't seem used anymore [#1288]
+  - Deprecate the `NATIVE_TEXT_BUFFER`, `HTML_TEXT_BUFFER` and `IMAGE_BUFFER` features as they are now unneeded [#1287, #1293]
+
+
+## v3.31.0 (2023-06-14)
+
+### Features
+
+  - Add `isContentLoaded`, `isBuffering`, `isPaused`, and `getLastStoredContentPosition` methods [#1248]
+  - Add `play` and `paused` events [#1253]
+  - Add `trackInfo` property to some `MediaError` to expose information on the track that caused the error [#1241]
+
+### Bug fixes
+
+  - DASH: Fix issue which could lead to infinite rebuffering when switching between multiple Periods [#1232]
+  - Return actual ending duration through the `getVideoDuration` method when playing dynamic contents whose future end is already known [#1235]
+  - DASH/WASM: actually reject the `DASH_WASM.initialize`'s Promise if it fails [#1238]
+  - On the PlayStation 5, set `Infinity` MediaSource duration for live contents to prevent playback issues [#1250]
+
+### Other improvements
+
+  - adaptive: Perform various adaptive tweaks to avoid switching too much between qualities in some conditions [#1237]
+  - Directfile: Detect "forced" subtitles on Safari when playing directfile contents (such as HLS) [#1239]
+  - Improve `"direct"` `audioTrackSwitchingMode` compatibility by re-seeking [#1246]
+  - The `DEBUG_ELEMENT` feature now uses the `monospace` fallback font as a default for a better rendering on apple devices
+  - doc: externalize documentation-generator code
+
+
 ## v3.30.0 (2023-03-07)
 
 ### Features
