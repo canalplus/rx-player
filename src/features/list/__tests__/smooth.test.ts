@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-
+/* eslint-disable-next-line max-len */
+import MediaSourceContentInitializer from "../../../core/init/media_source_content_initializer";
 import SmoothFeature from "../../../transports/smooth";
+import { IFeaturesObject } from "../../types";
 import addSmoothFeature from "../smooth";
-
-jest.mock("../../../transports/smooth", () => ({
-  __esModule: true as const,
-  default: jest.fn(),
-}));
 
 describe("Features list - Smooth", () => {
   it("should add Smooth in the current features", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const featureObject : any = { transports: {} };
+    const featureObject = { transports: {} } as unknown as IFeaturesObject;
     addSmoothFeature(featureObject);
-    expect(featureObject).toEqual({ transports: { smooth: SmoothFeature } });
+    expect(featureObject).toEqual({
+      transports: { smooth: SmoothFeature },
+      mediaSourceInit: MediaSourceContentInitializer,
+    });
     expect(featureObject.transports.smooth).toBe(SmoothFeature);
+    expect(featureObject.mediaSourceInit)
+      .toBe(MediaSourceContentInitializer);
   });
 });

@@ -186,6 +186,23 @@ describe("loadVideo Options", () => {
         expect(player.getPosition()).to.equal(initialPosition);
       });
 
+      it("should seek at the right position if startAt.fromLivePosition is set", async function () {
+        const startAt = 10;
+        player.loadVideo({
+          transport: manifestInfos.transport,
+          url: manifestInfos.url,
+          autoPlay: false,
+          startAt: { fromLivePosition: - startAt },
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPlayerState()).to.equal("LOADED");
+        const initialPosition = player.getPosition();
+        expect(initialPosition).to.be
+          .closeTo(player.getMaximumPosition() - startAt, 0.5);
+        await sleep(500);
+        expect(player.getPosition()).to.equal(initialPosition);
+      });
+
       it("should seek at the right position if startAt.percentage is set", async function () {
         player.loadVideo({
           transport: manifestInfos.transport,
@@ -258,6 +275,23 @@ describe("loadVideo Options", () => {
           url: manifestInfos.url,
           autoPlay: true,
           startAt: { fromLastPosition: - startAt },
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPlayerState()).to.equal("PLAYING");
+        const initialPosition = player.getPosition();
+        expect(initialPosition).to.be
+          .closeTo(player.getMaximumPosition() - startAt, 0.5);
+        await sleep(500);
+        expect(player.getPosition()).to.be.above(initialPosition);
+      });
+
+      it("should seek at the right position then play if startAt.fromLivePosition and autoPlay is set", async function () {
+        const startAt = 10;
+        player.loadVideo({
+          transport: manifestInfos.transport,
+          url: manifestInfos.url,
+          autoPlay: true,
+          startAt: { fromLivePosition: - startAt },
         });
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.getPlayerState()).to.equal("PLAYING");

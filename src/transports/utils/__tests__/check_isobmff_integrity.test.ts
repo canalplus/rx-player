@@ -61,7 +61,7 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     const checkISOBMFFIntegrity =
       jest.requireActual("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
-    let error : unknown | null = null;
+    let error : unknown = null;
     try {
       checkISOBMFFIntegrity(myUint8Array, true);
     } catch (e : unknown) {
@@ -84,7 +84,7 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     const checkISOBMFFIntegrity =
       jest.requireActual("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
-    let error : unknown | null = null;
+    let error : unknown = null;
     try {
       checkISOBMFFIntegrity(myUint8Array, true);
     } catch (e : unknown) {
@@ -108,7 +108,7 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     const checkISOBMFFIntegrity =
       jest.requireActual("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
-    let error : unknown | null = null;
+    let error : unknown = null;
     try {
       checkISOBMFFIntegrity(myUint8Array, false);
     } catch (e : unknown) {
@@ -132,7 +132,7 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     const checkISOBMFFIntegrity =
       jest.requireActual("../check_isobmff_integrity").default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
-    let error : unknown | null = null;
+    let error : unknown = null;
     try {
       checkISOBMFFIntegrity(myUint8Array, false);
     } catch (e : unknown) {
