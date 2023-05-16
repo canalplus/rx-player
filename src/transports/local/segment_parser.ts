@@ -20,7 +20,6 @@ import {
 } from "../../parsers/containers/isobmff";
 import { getKeyIdFromInitSegment } from "../../parsers/containers/isobmff/utils";
 import { getTimeCodeScale } from "../../parsers/containers/matroska";
-import takeFirstSet from "../../utils/take_first_set";
 import {
   ISegmentContext,
   ISegmentParserParsedInitChunk,
@@ -91,7 +90,7 @@ export default function segmentParser(
                                                           segment,
                                                           initTimescale) :
                                     null; // TODO extract time info from webm
-  const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
+  const chunkOffset = segment.timestampOffset ?? 0;
   return { segmentType: "media",
            chunkData,
            chunkSize: chunkData.length,

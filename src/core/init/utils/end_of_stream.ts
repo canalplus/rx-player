@@ -98,6 +98,7 @@ export function maintainEndOfStream(
   let endOfStreamCanceller = new TaskCanceller();
   endOfStreamCanceller.linkToSignal(cancelSignal);
   onSourceOpen(mediaSource, () => {
+    log.debug("Init: MediaSource re-opened while end-of-stream is active");
     endOfStreamCanceller.cancel();
     endOfStreamCanceller = new TaskCanceller();
     endOfStreamCanceller.linkToSignal(cancelSignal);
