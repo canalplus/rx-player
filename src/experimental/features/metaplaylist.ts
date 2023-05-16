@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
+// eslint-disable-next-line max-len
+import MediaSourceContentInitializer from "../../core/init/media_source_content_initializer";
 import { IFeaturesObject } from "../../features/types";
 import metaplaylist from "../../transports/metaplaylist";
 
 function addMetaPlaylistFeature(features: IFeaturesObject) : void {
   features.transports.metaplaylist = metaplaylist;
+  features.mediaSourceInit = MediaSourceContentInitializer;
 }
 
 export { addMetaPlaylistFeature as METAPLAYLIST };

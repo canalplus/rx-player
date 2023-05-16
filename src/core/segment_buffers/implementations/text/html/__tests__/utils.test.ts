@@ -261,6 +261,21 @@ describe("HTML Text buffer utils - areNearlyEqual", () => {
   it("should return true if input number are equals", () => {
     expect(areNearlyEqual(5, 5)).toBe(true);
   });
+  it(
+    "should return false if input number are not nearly equals with delta parameter",
+    () => {
+      expect(areNearlyEqual(5, 5.1, 0.02)).toBe(false);
+    });
+  it(
+    "should return true if input number are nearly equals with delta parameter",
+    () => {
+      expect(areNearlyEqual(5, 5.01, 0.02)).toBe(true);
+    });
+  it(
+    "should return true if input number are equals with delta parameter",
+    () => {
+      expect(areNearlyEqual(5, 5, 0.02)).toBe(true);
+    });
 });
 
 describe("HTML Text buffer utils - removeCuesInfosBetween", () => {
