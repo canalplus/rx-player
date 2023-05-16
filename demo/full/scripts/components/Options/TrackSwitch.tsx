@@ -6,37 +6,37 @@ import Select from "../Select";
  * @param {Object} props
  * @returns {Object}
  */
-function NetworkConfig({
-  audioTrackSwitchingMode,
+function TrackSwitchConfig({
   enableFastSwitching,
-  onAudioTrackSwitchingModeChange,
+  defaultAudioTrackSwitchingMode,
   onCodecSwitch,
+  onDefaultAudioTrackSwitchingModeChange,
   onCodecSwitchChange,
   onEnableFastSwitchingChange,
 }: {
-  audioTrackSwitchingMode: string;
+  defaultAudioTrackSwitchingMode: string;
+  onDefaultAudioTrackSwitchingModeChange: (newVal: string) => void;
   enableFastSwitching: boolean;
-  onAudioTrackSwitchingModeChange: (val: string) => void;
   onCodecSwitch: string;
   onCodecSwitchChange: (val: string) => void;
   onEnableFastSwitchingChange: (val: boolean) => void;
 }): JSX.Element {
-  let audioTrackSwitchingModeDescMsg;
-  switch (audioTrackSwitchingMode) {
+  let defaultAudioTrackSwitchingModeDescMsg;
+  switch (defaultAudioTrackSwitchingMode) {
     case "reload":
-      audioTrackSwitchingModeDescMsg =
-        "Reloading when the audio track is changed";
+      defaultAudioTrackSwitchingModeDescMsg =
+        "Reloading by default when the audio track is changed";
       break;
     case "direct":
-      audioTrackSwitchingModeDescMsg =
+      defaultAudioTrackSwitchingModeDescMsg =
         "Directly audible transition when the audio track is changed";
       break;
     case "seamless":
-      audioTrackSwitchingModeDescMsg =
+      defaultAudioTrackSwitchingModeDescMsg =
         "Smooth transition when the audio track is changed";
       break;
     default:
-      audioTrackSwitchingModeDescMsg =
+      defaultAudioTrackSwitchingModeDescMsg =
         "Unknown value";
       break;
   }
@@ -56,16 +56,16 @@ function NetworkConfig({
       break;
   }
 
-  const onAudioTrackSwitchingModeSelection = React.useCallback(
-    ({ value }: { value: string }) =>
-      onAudioTrackSwitchingModeChange(value),
-    [onAudioTrackSwitchingModeChange]
-  );
-
   const onCodecSwitchSelection = React.useCallback(
     ({ value }: { value: string }) =>
       onCodecSwitchChange(value),
     [onCodecSwitchChange]
+  );
+
+  const onDefaultAudioTrackSwitchingModeSelection = React.useCallback(
+    ({ value }: { value: string }) =>
+      onDefaultAudioTrackSwitchingModeChange(value),
+    [onDefaultAudioTrackSwitchingModeChange]
   );
 
   return (
@@ -88,18 +88,18 @@ function NetworkConfig({
       </li>
       <li className="featureWrapperWithSelectMode">
         <Select
-          ariaLabel="Selecting the Audio Track Switching Mode"
+          ariaLabel="Selecting the defaultAudioTrackSwitchingMode attribute"
           disabled={false}
           className="playerOptionInput"
-          name="audioTrackSwitchingMode"
-          onChange={onAudioTrackSwitchingModeSelection}
-          selected={{ value: audioTrackSwitchingMode, index: undefined }}
+          name="defaultAudioTrackSwitchingMode"
+          onChange={onDefaultAudioTrackSwitchingModeSelection}
+          selected={{ value: defaultAudioTrackSwitchingMode, index: undefined }}
           options={["seamless", "direct", "reload"]}
         >
-          Audio track switching mode
+            Audio track switching mode
         </Select>
         <span className="option-desc">
-          {audioTrackSwitchingModeDescMsg}
+          {defaultAudioTrackSwitchingModeDescMsg}
         </span>
       </li>
       <li className="featureWrapperWithSelectMode">
@@ -122,4 +122,4 @@ function NetworkConfig({
   );
 }
 
-export default React.memo(NetworkConfig);
+export default React.memo(TrackSwitchConfig);

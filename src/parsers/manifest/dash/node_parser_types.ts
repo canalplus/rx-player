@@ -210,20 +210,20 @@ export interface IAdaptationSetAttributes {
   codecs? : string;
   codingDependency? : boolean;
   contentType? : string;
-  frameRate? : string;
+  frameRate? : number;
   group? : number;
   height? : number;
   id? : string;
   language? : string;
   maxBitrate? : number;
-  maxFrameRate? : string;
+  maxFrameRate? : number;
   maxHeight? : number;
   maxPlayoutRate? : number;
   maxWidth? : number;
   maximumSAPPeriod? : number;
   mimeType? : string;
   minBitrate? : number;
-  minFrameRate? : string;
+  minFrameRate? : number;
   minHeight? : number;
   minWidth? : number;
   par? : string;
@@ -232,6 +232,7 @@ export interface IAdaptationSetAttributes {
   segmentAlignment? : number|boolean;
   segmentProfiles? : string;
   subsegmentAlignment? : number|boolean;
+  supplementalCodecs?: string;
   width? : number;
   availabilityTimeComplete?: boolean;
   availabilityTimeOffset?: number;
@@ -253,6 +254,7 @@ export interface IRepresentationChildren {
   segmentBase? : ISegmentBaseIntermediateRepresentation;
   segmentList? : ISegmentListIntermediateRepresentation;
   segmentTemplate? : ISegmentTemplateIntermediateRepresentation;
+  supplementalProperties? : IScheme[] | undefined;
 }
 
 /* Intermediate representation for A Representation node's attributes. */
@@ -261,7 +263,7 @@ export interface IRepresentationAttributes {
   bitrate? : number;
   codecs? : string;
   codingDependency? : boolean;
-  frameRate? : string;
+  frameRate? : number;
   height? : number;
   id? : string;
   maxPlayoutRate? : number;
@@ -270,6 +272,7 @@ export interface IRepresentationAttributes {
   profiles? : string;
   qualityRanking? : number;
   segmentProfiles? : string;
+  supplementalCodecs?: string;
   width? : number;
   availabilityTimeComplete?: boolean;
   availabilityTimeOffset?: number;

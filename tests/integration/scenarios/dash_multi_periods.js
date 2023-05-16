@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import RxPlayer from "../../../src";
+import RxPlayer from "../../../dist/es2017";
 import {
   manifestInfos,
 } from "../../contents/DASH_static_SegmentTemplate_Multi_Periods";
@@ -12,6 +12,7 @@ import waitForPlayerState, {
   waitForLoadedStateAfterLoadVideo,
 } from "../../utils/waitForPlayerState.js";
 import sleep from "../../utils/sleep.js";
+import {lockHighestBitrates} from "../../utils/bitrates";
 
 describe("DASH non-linear multi-periods content (SegmentTemplate)", function () {
   launchTestsForContent(manifestInfos);
@@ -30,7 +31,7 @@ describe("DASH multi-Period with different choices", function () {
     player.seekTo(5);
     await sleep(500);
     if (player.getPlayerState() !== "PAUSED") {
-      await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
+      await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING", "FREEZING"]);
     }
     expect(player.getPosition()).to.be.within(0, 10);
   }
@@ -39,7 +40,7 @@ describe("DASH multi-Period with different choices", function () {
     player.seekTo(120);
     await sleep(500);
     if (player.getPlayerState() !== "PAUSED") {
-      await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
+      await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING", "FREEZING"]);
     }
     expect(player.getPosition()).to.be.within(118, 122);
   }
@@ -58,10 +59,6 @@ describe("DASH multi-Period with different choices", function () {
     const availableVideoTracksChange = [];
     const videoTrackChangeEvents = [];
     const audioTrackChangeEvents = [];
-    const availableAudioBitratesChange = [];
-    const availableVideoBitratesChange = [];
-    const videoBitrateChangeEvents = [];
-    const audioBitrateChangeEvents = [];
     const periodChangeEvents = [];
 
     player.addEventListener("availableAudioTracksChange", (payload) => {
@@ -76,24 +73,11 @@ describe("DASH multi-Period with different choices", function () {
     player.addEventListener("videoTrackChange", (payload) => {
       videoTrackChangeEvents.push(payload);
     });
-    player.addEventListener("availableAudioBitratesChange", (payload) => {
-      availableAudioBitratesChange.push(payload);
-    });
-    player.addEventListener("availableVideoBitratesChange", (payload) => {
-      availableVideoBitratesChange.push(payload);
-    });
-    player.addEventListener("audioBitrateChange", (payload) => {
-      audioBitrateChangeEvents.push(payload);
-    });
-    player.addEventListener("videoBitrateChange", (payload) => {
-      videoBitrateChangeEvents.push(payload);
-    });
     player.addEventListener("periodChange", (payload) => {
       periodChangeEvents.push(payload);
     });
 
-    player.setAudioBitrate(Infinity);
-    player.setVideoBitrate(Infinity);
+    lockHighestBitrates(player);
 
 
     await loadContent();
@@ -110,20 +94,7 @@ describe("DASH multi-Period with different choices", function () {
     expect(videoTrackChangeEvents).to.have.length(1);
     expect(videoTrackChangeEvents[0].id).to.equal("video-video-video/mp4");
 
-    expect(availableAudioBitratesChange).to.have.length(1);
-    expect(availableAudioBitratesChange[0]).to.deep.equal([128000, 256000]);
-
-    expect(availableVideoBitratesChange).to.have.length(1);
-    expect(availableVideoBitratesChange[0]).to.deep.equal([400000, 1996000]);
-
-    expect(audioBitrateChangeEvents).to.have.length(1);
-    expect(audioBitrateChangeEvents[0]).to.equal(256000);
-
-    expect(videoBitrateChangeEvents).to.have.length(1);
-    expect(videoBitrateChangeEvents[0]).to.equal(1996000);
-
     expect(periodChangeEvents).to.have.length(1);
-    expect(periodChangeEvents[0].id).to.equal("1");
 
     await goToSecondPeriod();
 
@@ -139,20 +110,7 @@ describe("DASH multi-Period with different choices", function () {
     expect(videoTrackChangeEvents).to.have.length(2);
     expect(videoTrackChangeEvents[1].id).to.equal("video-si-video-video/mp4");
 
-    expect(availableAudioBitratesChange).to.have.length(2);
-    expect(availableAudioBitratesChange[1]).to.deep.equal([128001, 256001]);
-
-    expect(availableVideoBitratesChange).to.have.length(2);
-    expect(availableVideoBitratesChange[1]).to.deep.equal([400001, 795001]);
-
-    expect(audioBitrateChangeEvents).to.have.length(2);
-    expect(audioBitrateChangeEvents[1]).to.equal(256001);
-
-    expect(videoBitrateChangeEvents).to.have.length(2);
-    expect(videoBitrateChangeEvents[1]).to.equal(795001);
-
     expect(periodChangeEvents).to.have.length(2);
-    expect(periodChangeEvents[1].id).to.equal("2");
 
 
     await goToFirstPeriod();
@@ -169,20 +127,7 @@ describe("DASH multi-Period with different choices", function () {
     expect(videoTrackChangeEvents).to.have.length(3);
     expect(videoTrackChangeEvents[2].id).to.equal("video-video-video/mp4");
 
-    expect(availableAudioBitratesChange).to.have.length(3);
-    expect(availableAudioBitratesChange[2]).to.deep.equal([128000, 256000]);
-
-    expect(availableVideoBitratesChange).to.have.length(3);
-    expect(availableVideoBitratesChange[2]).to.deep.equal([400000, 1996000]);
-
-    expect(audioBitrateChangeEvents).to.have.length(3);
-    expect(audioBitrateChangeEvents[2]).to.equal(256000);
-
-    expect(videoBitrateChangeEvents).to.have.length(3);
-    expect(videoBitrateChangeEvents[2]).to.equal(1996000);
-
     expect(periodChangeEvents).to.have.length(3);
-    expect(periodChangeEvents[2].id).to.equal("1");
   });
 
   it("should send the right events when playing into a new Period", async function () {
@@ -191,10 +136,6 @@ describe("DASH multi-Period with different choices", function () {
     const availableVideoTracksChange = [];
     const videoTrackChangeEvents = [];
     const audioTrackChangeEvents = [];
-    const availableAudioBitratesChange = [];
-    const availableVideoBitratesChange = [];
-    const videoBitrateChangeEvents = [];
-    const audioBitrateChangeEvents = [];
     const periodChangeEvents = [];
 
     player.addEventListener("availableAudioTracksChange", (payload) => {
@@ -209,25 +150,12 @@ describe("DASH multi-Period with different choices", function () {
     player.addEventListener("videoTrackChange", (payload) => {
       videoTrackChangeEvents.push(payload);
     });
-    player.addEventListener("availableAudioBitratesChange", (payload) => {
-      availableAudioBitratesChange.push(payload);
-    });
-    player.addEventListener("availableVideoBitratesChange", (payload) => {
-      availableVideoBitratesChange.push(payload);
-    });
-    player.addEventListener("audioBitrateChange", (payload) => {
-      audioBitrateChangeEvents.push(payload);
-    });
-    player.addEventListener("videoBitrateChange", (payload) => {
-      videoBitrateChangeEvents.push(payload);
-    });
     player.addEventListener("periodChange", (payload) => {
       periodChangeEvents.push(payload);
     });
 
     player.setPlaybackRate(3);
-    player.setAudioBitrate(Infinity);
-    player.setVideoBitrate(Infinity);
+    lockHighestBitrates(player);
 
 
     await loadContent();
@@ -244,20 +172,7 @@ describe("DASH multi-Period with different choices", function () {
     expect(videoTrackChangeEvents).to.have.length(1);
     expect(videoTrackChangeEvents[0].id).to.equal("video-video-video/mp4");
 
-    expect(availableAudioBitratesChange).to.have.length(1);
-    expect(availableAudioBitratesChange[0]).to.deep.equal([128000, 256000]);
-
-    expect(availableVideoBitratesChange).to.have.length(1);
-    expect(availableVideoBitratesChange[0]).to.deep.equal([400000, 1996000]);
-
-    expect(audioBitrateChangeEvents).to.have.length(1);
-    expect(audioBitrateChangeEvents[0]).to.equal(256000);
-
-    expect(videoBitrateChangeEvents).to.have.length(1);
-    expect(videoBitrateChangeEvents[0]).to.equal(1996000);
-
     expect(periodChangeEvents).to.have.length(1);
-    expect(periodChangeEvents[0].id).to.equal("1");
 
 
     // still first Period
@@ -273,10 +188,6 @@ describe("DASH multi-Period with different choices", function () {
     expect(availableVideoTracksChange).to.have.length(1);
     expect(audioTrackChangeEvents).to.have.length(1);
     expect(videoTrackChangeEvents).to.have.length(1);
-    expect(availableAudioBitratesChange).to.have.length(1);
-    expect(availableVideoBitratesChange).to.have.length(1);
-    expect(audioBitrateChangeEvents).to.have.length(1);
-    expect(videoBitrateChangeEvents).to.have.length(1);
     expect(periodChangeEvents).to.have.length(1);
 
     await sleep(4000);
@@ -294,20 +205,7 @@ describe("DASH multi-Period with different choices", function () {
     expect(videoTrackChangeEvents).to.have.length(2);
     expect(videoTrackChangeEvents[1].id).to.equal("video-si-video-video/mp4");
 
-    expect(availableAudioBitratesChange).to.have.length(2);
-    expect(availableAudioBitratesChange[1]).to.deep.equal([128001, 256001]);
-
-    expect(availableVideoBitratesChange).to.have.length(2);
-    expect(availableVideoBitratesChange[1]).to.deep.equal([400001, 795001]);
-
-    expect(audioBitrateChangeEvents).to.have.length(2);
-    expect(audioBitrateChangeEvents[1]).to.equal(256001);
-
-    expect(videoBitrateChangeEvents).to.have.length(2);
-    expect(videoBitrateChangeEvents[1]).to.equal(795001);
-
     expect(periodChangeEvents).to.have.length(2);
-    expect(periodChangeEvents[1].id).to.equal("2");
   });
 });
 
@@ -352,10 +250,6 @@ describe("DASH multi-Period with same choices", function () {
     const availableVideoTracksChange = [];
     const videoTrackChangeEvents = [];
     const audioTrackChangeEvents = [];
-    const availableAudioBitratesChange = [];
-    const availableVideoBitratesChange = [];
-    const videoBitrateChangeEvents = [];
-    const audioBitrateChangeEvents = [];
     const periodChangeEvents = [];
 
     player.addEventListener("availableAudioTracksChange", (payload) => {
@@ -370,25 +264,11 @@ describe("DASH multi-Period with same choices", function () {
     player.addEventListener("videoTrackChange", (payload) => {
       videoTrackChangeEvents.push(payload);
     });
-    player.addEventListener("availableAudioBitratesChange", (payload) => {
-      availableAudioBitratesChange.push(payload);
-    });
-    player.addEventListener("availableVideoBitratesChange", (payload) => {
-      availableVideoBitratesChange.push(payload);
-    });
-    player.addEventListener("audioBitrateChange", (payload) => {
-      audioBitrateChangeEvents.push(payload);
-    });
-    player.addEventListener("videoBitrateChange", (payload) => {
-      videoBitrateChangeEvents.push(payload);
-    });
     player.addEventListener("periodChange", (payload) => {
       periodChangeEvents.push(payload);
     });
 
-    player.setAudioBitrate(Infinity);
-    player.setVideoBitrate(Infinity);
-
+    lockHighestBitrates(player);
 
     await loadContent();
 
@@ -404,20 +284,7 @@ describe("DASH multi-Period with same choices", function () {
     expect(videoTrackChangeEvents).to.have.length(1);
     expect(videoTrackChangeEvents[0].id).to.equal("video-video-video/mp4-dup");
 
-    expect(availableAudioBitratesChange).to.have.length(1);
-    expect(availableAudioBitratesChange[0]).to.deep.equal([128000]);
-
-    expect(availableVideoBitratesChange).to.have.length(1);
-    expect(availableVideoBitratesChange[0]).to.deep.equal([400000, 1996000]);
-
-    expect(audioBitrateChangeEvents).to.have.length(1);
-    expect(audioBitrateChangeEvents[0]).to.equal(128000);
-
-    expect(videoBitrateChangeEvents).to.have.length(1);
-    expect(videoBitrateChangeEvents[0]).to.equal(1996000);
-
     expect(periodChangeEvents).to.have.length(1);
-    expect(periodChangeEvents[0].id).to.equal("1");
 
 
     await goToSecondPeriod();
@@ -434,13 +301,7 @@ describe("DASH multi-Period with same choices", function () {
     expect(videoTrackChangeEvents).to.have.length(2);
     expect(videoTrackChangeEvents[1].id).to.equal("video-video-video/mp4-dup");
 
-    expect(availableAudioBitratesChange).to.have.length(1);
-    expect(availableVideoBitratesChange).to.have.length(1);
-    expect(audioBitrateChangeEvents).to.have.length(1);
-    expect(videoBitrateChangeEvents).to.have.length(1);
-
     expect(periodChangeEvents).to.have.length(2);
-    expect(periodChangeEvents[1].id).to.equal("2");
 
 
     await goToFirstPeriod();
@@ -457,13 +318,7 @@ describe("DASH multi-Period with same choices", function () {
     expect(videoTrackChangeEvents).to.have.length(3);
     expect(videoTrackChangeEvents[2].id).to.equal("video-video-video/mp4-dup");
 
-    expect(availableAudioBitratesChange).to.have.length(1);
-    expect(availableVideoBitratesChange).to.have.length(1);
-    expect(audioBitrateChangeEvents).to.have.length(1);
-    expect(videoBitrateChangeEvents).to.have.length(1);
-
     expect(periodChangeEvents).to.have.length(3);
-    expect(periodChangeEvents[2].id).to.equal("1");
   });
 
   it("should send the right events when playing into a new Period", async function () {
@@ -472,10 +327,6 @@ describe("DASH multi-Period with same choices", function () {
     const availableVideoTracksChange = [];
     const videoTrackChangeEvents = [];
     const audioTrackChangeEvents = [];
-    const availableAudioBitratesChange = [];
-    const availableVideoBitratesChange = [];
-    const videoBitrateChangeEvents = [];
-    const audioBitrateChangeEvents = [];
     const periodChangeEvents = [];
 
     player.addEventListener("availableAudioTracksChange", (payload) => {
@@ -490,26 +341,12 @@ describe("DASH multi-Period with same choices", function () {
     player.addEventListener("videoTrackChange", (payload) => {
       videoTrackChangeEvents.push(payload);
     });
-    player.addEventListener("availableAudioBitratesChange", (payload) => {
-      availableAudioBitratesChange.push(payload);
-    });
-    player.addEventListener("availableVideoBitratesChange", (payload) => {
-      availableVideoBitratesChange.push(payload);
-    });
-    player.addEventListener("audioBitrateChange", (payload) => {
-      audioBitrateChangeEvents.push(payload);
-    });
-    player.addEventListener("videoBitrateChange", (payload) => {
-      videoBitrateChangeEvents.push(payload);
-    });
     player.addEventListener("periodChange", (payload) => {
       periodChangeEvents.push(payload);
     });
 
     player.setPlaybackRate(3);
-    player.setAudioBitrate(Infinity);
-    player.setVideoBitrate(Infinity);
-
+    lockHighestBitrates(player);
 
     await loadContent();
 
@@ -525,20 +362,7 @@ describe("DASH multi-Period with same choices", function () {
     expect(videoTrackChangeEvents).to.have.length(1);
     expect(videoTrackChangeEvents[0].id).to.equal("video-video-video/mp4-dup");
 
-    expect(availableAudioBitratesChange).to.have.length(1);
-    expect(availableAudioBitratesChange[0]).to.deep.equal([128000]);
-
-    expect(availableVideoBitratesChange).to.have.length(1);
-    expect(availableVideoBitratesChange[0]).to.deep.equal([400000, 1996000]);
-
-    expect(audioBitrateChangeEvents).to.have.length(1);
-    expect(audioBitrateChangeEvents[0]).to.equal(128000);
-
-    expect(videoBitrateChangeEvents).to.have.length(1);
-    expect(videoBitrateChangeEvents[0]).to.equal(1996000);
-
     expect(periodChangeEvents).to.have.length(1);
-    expect(periodChangeEvents[0].id).to.equal("1");
 
 
     // still first Period
@@ -554,10 +378,6 @@ describe("DASH multi-Period with same choices", function () {
     expect(availableVideoTracksChange).to.have.length(1);
     expect(audioTrackChangeEvents).to.have.length(1);
     expect(videoTrackChangeEvents).to.have.length(1);
-    expect(availableAudioBitratesChange).to.have.length(1);
-    expect(availableVideoBitratesChange).to.have.length(1);
-    expect(audioBitrateChangeEvents).to.have.length(1);
-    expect(videoBitrateChangeEvents).to.have.length(1);
     expect(periodChangeEvents).to.have.length(1);
 
     await sleep(4000);
@@ -575,12 +395,6 @@ describe("DASH multi-Period with same choices", function () {
     expect(videoTrackChangeEvents).to.have.length(2);
     expect(videoTrackChangeEvents[1].id).to.equal("video-video-video/mp4-dup");
 
-    expect(availableAudioBitratesChange).to.have.length(1);
-    expect(availableVideoBitratesChange).to.have.length(1);
-    expect(audioBitrateChangeEvents).to.have.length(1);
-    expect(videoBitrateChangeEvents).to.have.length(1);
-
     expect(periodChangeEvents).to.have.length(2);
-    expect(periodChangeEvents[1].id).to.equal("2");
   });
 });

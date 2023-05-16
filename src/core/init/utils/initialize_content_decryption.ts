@@ -1,18 +1,17 @@
-import { hasEMEAPIs } from "../../../compat";
 import { EncryptedMediaError } from "../../../errors";
+import features from "../../../features";
 import log from "../../../log";
 import {
   IKeySystemOption,
   IPlayerError,
 } from "../../../public_types";
-import createSharedReference, {
+import SharedReference, {
   IReadOnlySharedReference,
-  ISharedReference,
 } from "../../../utils/reference";
 import TaskCanceller, {
   CancellationSignal,
 } from "../../../utils/task_canceller";
-import ContentDecryptor, {
+import {
   ContentDecryptorState,
   IContentProtection,
 } from "../../decrypt";
@@ -49,45 +48,23 @@ export default function initializeContentDecryption(
   cancelSignal : CancellationSignal
 ) : IReadOnlySharedReference<IDrmInitializationStatus> {
   if (keySystems.length === 0) {
-    protectionRef.onUpdate((data, stopListening) => {
-      if (data === null) { // initial value
-        return;
-      }
-      stopListening();
-      log.error("Init: Encrypted event but EME feature not activated");
-      const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
-                                          "EME feature not activated.");
-      callbacks.onError(err);
-    }, { clearSignal: cancelSignal });
-    const ref = createSharedReference({
-      initializationState: { type: "initialized" as const, value: null },
-      drmSystemId: undefined });
-    ref.finish(); // We know that no new value will be triggered
-    return ref;
-  } else if (!hasEMEAPIs()) {
-    protectionRef.onUpdate((data, stopListening) => {
-      if (data === null) { // initial value
-        return;
-      }
-      stopListening();
-      log.error("Init: Encrypted event but no EME API available");
-      const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
-                                          "Encryption APIs not found.");
-      callbacks.onError(err);
-    }, { clearSignal: cancelSignal });
-    const ref = createSharedReference({
-      initializationState: { type: "initialized" as const, value: null },
-      drmSystemId: undefined });
-    ref.finish(); // We know that no new value will be triggered
-    return ref;
+    return createEmeDisabledReference("No `keySystems` option given.");
+  } else if (features.decrypt === null) {
+    return createEmeDisabledReference("EME feature not activated.");
   }
 
   const decryptorCanceller = new TaskCanceller();
   decryptorCanceller.linkToSignal(cancelSignal);
-  const drmStatusRef = createSharedReference<IDrmInitializationStatus>({
+  const drmStatusRef = new SharedReference<IDrmInitializationStatus>({
     initializationState: { type: "uninitialized", value: null },
     drmSystemId: undefined,
   }, cancelSignal);
+
+  const ContentDecryptor = features.decrypt;
+
+  if (!ContentDecryptor.hasEmeApis()) {
+    return createEmeDisabledReference("EME API not available on the current page.");
+  }
 
   log.debug("Init: Creating ContentDecryptor");
   const contentDecryptor = new ContentDecryptor(mediaElement, keySystems);
@@ -95,7 +72,7 @@ export default function initializeContentDecryption(
   contentDecryptor.addEventListener("stateChange", (state) => {
     if (state === ContentDecryptorState.WaitingForAttachment) {
 
-      const isMediaLinked = createSharedReference(false);
+      const isMediaLinked = new SharedReference(false);
       isMediaLinked.onUpdate((isAttached, stopListening) => {
         if (isAttached) {
           stopListening();
@@ -136,6 +113,22 @@ export default function initializeContentDecryption(
   });
 
   return drmStatusRef;
+
+  function createEmeDisabledReference(errMsg : string) {
+    protectionRef.onUpdate((data, stopListening) => {
+      if (data === null) { // initial value
+        return;
+      }
+      stopListening();
+      const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", errMsg);
+      callbacks.onError(err);
+    }, { clearSignal: cancelSignal });
+    const ref = new SharedReference({
+      initializationState: { type: "initialized" as const, value: null },
+      drmSystemId: undefined });
+    ref.finish(); // We know that no new value will be triggered
+    return ref;
+  }
 }
 
 /** Status of content decryption initialization. */
@@ -162,7 +155,7 @@ type IDecryptionInitializationState =
    * The `MediaSource` or media url has to be linked to the `HTMLMediaElement`
    * before continuing.
    * Once it has been linked with success (e.g. the `MediaSource` has "opened"),
-   * the `isMediaLinked` `ISharedReference` should be set to `true`.
+   * the `isMediaLinked` `SharedReference` should be set to `true`.
    *
    * In the `MediaSource` case, you should wait until the `"initialized"`
    * state before pushing segment.
@@ -171,7 +164,7 @@ type IDecryptionInitializationState =
    * skipped to directly `"initialized"` instead.
    */
   { type: "awaiting-media-link";
-    value: { isMediaLinked : ISharedReference<boolean> }; } |
+    value: { isMediaLinked : SharedReference<boolean> }; } |
   /**
    * The `MediaSource` or media url can be linked AND segments can be pushed to
    * the `HTMLMediaElement` on which decryption capabilities were wanted.
