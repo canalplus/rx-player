@@ -61,6 +61,8 @@ header .left {
 .title {
   display: flex;
   line-height: 1.05;
+  margin: 20px 0;
+  padding-bottom: 3px;
 }
 
 .title .logo {
