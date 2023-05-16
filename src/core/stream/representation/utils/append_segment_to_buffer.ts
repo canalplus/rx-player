@@ -22,6 +22,7 @@ import { MediaError } from "../../../../errors";
 import { CancellationError, CancellationSignal } from "../../../../utils/task_canceller";
 import { IReadOnlyPlaybackObserver } from "../../../api";
 import {
+  IInsertedChunkInfos,
   IPushChunkInfos,
   SegmentBuffer,
 } from "../../../segment_buffers";
@@ -41,7 +42,7 @@ import forceGarbageCollection from "./force_garbage_collection";
 export default async function appendSegmentToBuffer<T>(
   playbackObserver : IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
   segmentBuffer : SegmentBuffer,
-  dataInfos : IPushChunkInfos<T>,
+  dataInfos : IPushChunkInfos<T> & { inventoryInfos: IInsertedChunkInfos },
   cancellationSignal : CancellationSignal
 ) : Promise<void> {
   try {
@@ -55,7 +56,9 @@ export default async function appendSegmentToBuffer<T>(
       const reason = appendError instanceof Error ?
         appendError.toString() :
         "An unknown error happened when pushing content";
-      throw new MediaError("BUFFER_APPEND_ERROR", reason);
+      throw new MediaError("BUFFER_APPEND_ERROR",
+                           reason,
+                           { adaptation: dataInfos.inventoryInfos.adaptation });
     }
     const { position } = playbackObserver.getReference().getValue();
     const currentPos = position.pending ?? position.last;
@@ -66,7 +69,9 @@ export default async function appendSegmentToBuffer<T>(
       const reason = err2 instanceof Error ? err2.toString() :
                                              "Could not clean the buffer";
 
-      throw new MediaError("BUFFER_FULL_ERROR", reason);
+      throw new MediaError("BUFFER_FULL_ERROR",
+                           reason,
+                           { adaptation: dataInfos.inventoryInfos.adaptation });
     }
   }
 }

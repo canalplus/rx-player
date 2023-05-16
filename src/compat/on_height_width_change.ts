@@ -15,7 +15,7 @@
  */
 
 import log from "../log";
-import createSharedReference, {
+import SharedReference, {
   IReadOnlySharedReference,
 } from "../utils/reference";
 import { CancellationSignal } from "../utils/task_canceller";
@@ -74,7 +74,7 @@ export default function onHeightWidthChange(
   cancellationSignal : CancellationSignal
 ) : IReadOnlySharedReference<IResolution> {
   const { height: initHeight, width: initWidth } = element.getBoundingClientRect();
-  const ref = createSharedReference<IResolution>({
+  const ref = new SharedReference<IResolution>({
     height: initHeight,
     width: initWidth,
   }, cancellationSignal);

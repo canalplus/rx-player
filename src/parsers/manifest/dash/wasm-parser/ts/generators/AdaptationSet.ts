@@ -289,6 +289,10 @@ export function generateAdaptationSetAttrParser(
         adaptationAttrs.codecs =
           parseString(textDecoder, linearMemory.buffer, ptr, len);
         break;
+      case AttributeName.SupplementalCodecs:
+        adaptationAttrs.supplementalCodecs =
+          parseString(textDecoder, linearMemory.buffer, ptr, len);
+        break;
       case AttributeName.Profiles:
         adaptationAttrs.profiles =
           parseString(textDecoder, linearMemory.buffer, ptr, len);
