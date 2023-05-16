@@ -20,6 +20,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../../manifest";
+import objectAssign from "../../../../utils/object_assign";
 import { CancellationSignal } from "../../../../utils/task_canceller";
 import { IReadOnlyPlaybackObserver } from "../../../api";
 import {
@@ -42,6 +43,7 @@ export default async function pushInitSegment<T>(
   {
     playbackObserver,
     content,
+    initSegmentUniqueId,
     segment,
     segmentData,
     segmentBuffer,
@@ -53,27 +55,30 @@ export default async function pushInitSegment<T>(
                manifest : Manifest;
                period : Period;
                representation : Representation; };
-    segmentData : T | null;
+    initSegmentUniqueId : string;
+    segmentData : T;
     segment : ISegment;
     segmentBuffer : SegmentBuffer;
   },
   cancelSignal : CancellationSignal
 ) : Promise< IStreamEventAddedSegmentPayload<T> | null > {
-  if (segmentData === null) {
-    return null;
-  }
   if (cancelSignal.cancellationError !== null) {
     throw cancelSignal.cancellationError;
   }
   const codec = content.representation.getMimeTypeString();
-  const data : IPushedChunkData<T> = { initSegment: segmentData,
+  const data : IPushedChunkData<T> = { initSegmentUniqueId,
                                        chunk: null,
                                        timestampOffset: 0,
                                        appendWindow: [ undefined, undefined ],
                                        codec };
+  const inventoryInfos = objectAssign({ segment,
+                                        chunkSize: undefined,
+                                        start: 0,
+                                        end: 0 },
+                                      content);
   await appendSegmentToBuffer(playbackObserver,
                               segmentBuffer,
-                              { data, inventoryInfos: null },
+                              { data, inventoryInfos },
                               cancelSignal);
   const buffered = segmentBuffer.getBufferedRanges();
   return { content, segment, buffered, segmentData };
