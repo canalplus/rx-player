@@ -6,19 +6,18 @@ Disable the current video track, if one.
 
 Might enter in `RELOADING` state for a short period after calling this API.
 
-Note for multi-Period contents:
+You can also disable the video track for another Period by calling
+`disableVideoTrack` with the corresponding Period's id in argument. Such id can
+be obtained through the `getAvailablePeriods` method, the `newAvailablePeriods`
+event or the `periodChange` event.
 
-This method will only have an effect on the [Period](../../Getting_Started/Glossary.md#period) that is
-currently playing.
-
-If you want to disable the video track for other Periods as well, you might want
-to call [setPreferredVideoTracks](./setPreferredVideoTracks.md) instead. With
-this method, you can globally apply a `null` video track preference - which means
-that you would prefer having no video track - by setting its second argument to
-`true`.
-
-More information can be found on that API's documentation.
-
+```js
+// example: disabling the video track for all Periods
+const periods = rxPlayer.getAvailablePeriods();
+for (const period of periods) {
+  rxPlayer.disableVideoTrack(period.id);
+}
+```
 
 <div class="warning">
 This option may have no effect in <i>DirectFile</i> mode (see <a
@@ -45,5 +44,15 @@ payload) while the video track is still actually active.
 ## Syntax
 
 ```js
+// Disable the current video track
 player.disableVideoTrack();
+
+// Disable the video track for a specific Period
+player.disableVideoTrack(periodId);
 ```
+
+ - **arguments**:
+
+   1. _periodId_ `string|undefined`: The `id` of the Period for which you want
+      to disable the video track. If not defined, the video track of the
+      currently-playing Period will be disabled.

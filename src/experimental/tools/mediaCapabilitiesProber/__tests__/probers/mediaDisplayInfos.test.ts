@@ -23,29 +23,30 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 
+import globalScope from "../../../../../compat/global_scope";
 import { ProberStatus } from "../../types";
 
 describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
   it("should throw if matchMedia is undefined", () => {
     /* eslint-disable @typescript-eslint/unbound-method */
-    const origWindowMatchMedia = window.matchMedia;
+    const origMatchMedia = globalScope.matchMedia;
     /* eslint-enable @typescript-eslint/unbound-method */
-    (window as any).matchMedia = undefined;
+    (globalScope as any).matchMedia = undefined;
     const probeMediaDisplayInfos =
       jest.requireActual("../../probers/mediaDisplayInfos").default;
     /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeMediaDisplayInfos({})).rejects.toThrowError(
       "MediaCapabilitiesProber >>> API_CALL: matchMedia not available");
     /* eslint-enable @typescript-eslint/no-floating-promises */
-    (window as any).matchMedia  = origWindowMatchMedia;
+    (globalScope as any).matchMedia  = origMatchMedia;
   });
 
   it("should throw if no colorSpace in display configuration", (done) => {
     /* eslint-disable @typescript-eslint/unbound-method */
-    const origWindowMatchMedia = window.matchMedia;
+    const origMatchMedia = globalScope.matchMedia;
     /* eslint-enable @typescript-eslint/unbound-method */
     const mockMatchMedia = jest.fn(() => true);
-    (window as any).matchMedia = mockMatchMedia;
+    (globalScope as any).matchMedia = mockMatchMedia;
     const config = {
       display: {},
     };
@@ -56,23 +57,23 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
     expect.assertions(1);
     probeMediaDisplayInfos(config)
       .then(() => {
-        (window as any).matchMedia = origWindowMatchMedia;
+        (globalScope as any).matchMedia = origMatchMedia;
         done();
       })
       .catch(({ message }: { message: string }) => {
         expect(message).toBe("MediaCapabilitiesProber >>> API_CALL: " +
           "Not enough arguments for calling matchMedia.");
-        (window as any).matchMedia = origWindowMatchMedia;
+        (globalScope as any).matchMedia = origMatchMedia;
         done();
       });
   });
 
   it("should throw if no display in configuration", (done) => {
     /* eslint-disable @typescript-eslint/unbound-method */
-    const origWindowMatchMedia = window.matchMedia;
+    const origMatchMedia = globalScope.matchMedia;
     /* eslint-enable @typescript-eslint/unbound-method */
     const mockMatchMedia = jest.fn(() => true);
-    (window as any).matchMedia = mockMatchMedia;
+    (globalScope as any).matchMedia = mockMatchMedia;
     const config = {};
 
     const probeMediaDisplayInfos =
@@ -81,25 +82,25 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
     expect.assertions(1);
     probeMediaDisplayInfos(config)
       .then(() => {
-        (window as any).matchMedia = origWindowMatchMedia;
+        (globalScope as any).matchMedia = origMatchMedia;
         done();
       })
       .catch(({ message }: { message: string }) => {
         expect(message).toBe("MediaCapabilitiesProber >>> API_CALL: " +
           "Not enough arguments for calling matchMedia.");
-        (window as any).matchMedia = origWindowMatchMedia;
+        (globalScope as any).matchMedia = origMatchMedia;
         done();
       });
   });
 
   it("should throw if mediaMatch called with bad arguments", (done) => {
     /* eslint-disable @typescript-eslint/unbound-method */
-    const origWindowMatchMedia = window.matchMedia;
+    const origMatchMedia = globalScope.matchMedia;
     /* eslint-enable @typescript-eslint/unbound-method */
     const mockMatchMedia = jest.fn(() => ({
       media: "not all",
     }));
-    (window as any).matchMedia = mockMatchMedia;
+    (globalScope as any).matchMedia = mockMatchMedia;
     const config = {
       display: {
         colorSpace: "srgb",
@@ -112,26 +113,26 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
     expect.assertions(2);
     probeMediaDisplayInfos(config)
       .then(() => {
-        (window as any).matchMedia = origWindowMatchMedia;
+        (globalScope as any).matchMedia = origMatchMedia;
         done();
       })
       .catch(({ message }: { message: string }) => {
         expect(message).toBe("MediaCapabilitiesProber >>> API_CALL: " +
           "Bad arguments for calling matchMedia.");
         expect(mockMatchMedia).toHaveBeenCalledTimes(1);
-        (window as any).matchMedia = origWindowMatchMedia;
+        (globalScope as any).matchMedia = origMatchMedia;
         done();
       });
   });
 
   it("should resolves with `Supported` if color space is supported", (done) => {
     /* eslint-disable @typescript-eslint/unbound-method */
-    const origWindowMatchMedia = window.matchMedia;
+    const origMatchMedia = globalScope.matchMedia;
     /* eslint-enable @typescript-eslint/unbound-method */
     const mockMatchMedia = jest.fn(() => ({
       matches: true,
     }));
-    (window as any).matchMedia = mockMatchMedia;
+    (globalScope as any).matchMedia = mockMatchMedia;
     const config = {
       display: {
         colorSpace: "srgb",
@@ -146,23 +147,23 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
       .then(([res]: [any]) => {
         expect(res).toEqual(ProberStatus.Supported);
         expect(mockMatchMedia).toHaveBeenCalledTimes(1);
-        (window as any).matchMedia = origWindowMatchMedia;
+        (globalScope as any).matchMedia = origMatchMedia;
         done();
       })
       .catch(() => {
-        (window as any).matchMedia = origWindowMatchMedia;
+        (globalScope as any).matchMedia = origMatchMedia;
         done();
       });
   });
 
   it("should resolves with `NotSupported` if color space is not supported", (done) => {
     /* eslint-disable @typescript-eslint/unbound-method */
-    const origWindowMatchMedia = window.matchMedia;
+    const origMatchMedia = globalScope.matchMedia;
     /* eslint-enable @typescript-eslint/unbound-method */
     const mockMatchMedia = jest.fn(() => ({
       matches: false,
     }));
-    (window as any).matchMedia = mockMatchMedia;
+    (globalScope as any).matchMedia = mockMatchMedia;
     const config = {
       display: {
         colorSpace: "p5",
@@ -177,11 +178,11 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
       .then(([res]: [any]) => {
         expect(res).toEqual(ProberStatus.NotSupported);
         expect(mockMatchMedia).toHaveBeenCalledTimes(1);
-        (window as any).matchMedia = origWindowMatchMedia;
+        (globalScope as any).matchMedia = origMatchMedia;
         done();
       })
       .catch(() => {
-        (window as any).matchMedia = origWindowMatchMedia;
+        (globalScope as any).matchMedia = origMatchMedia;
         done();
       });
   });

@@ -16,10 +16,10 @@
 
 import log from "../../../../log";
 import {
-  IAdaptationType,
   Period,
   SUPPORTED_ADAPTATIONS_TYPE,
 } from "../../../../manifest";
+import { ITrackType } from "../../../../public_types";
 import arrayFind from "../../../../utils/array_find";
 import arrayFindIndex from "../../../../utils/array_find_index";
 import arrayIncludes from "../../../../utils/array_includes";
@@ -213,8 +213,8 @@ function getAdaptationID(
   if (isNonEmptyString(adaptation.attributes.mimeType)) {
     idString += `-${adaptation.attributes.mimeType}`;
   }
-  if (isNonEmptyString(adaptation.attributes.frameRate)) {
-    idString += `-${adaptation.attributes.frameRate}`;
+  if (adaptation.attributes.frameRate !== undefined) {
+    idString += `-${String(adaptation.attributes.frameRate)}`;
   }
   return idString;
 }
@@ -258,13 +258,12 @@ export default function parseAdaptationSets(
   context : IAdaptationSetContext
 ): IParsedAdaptations {
   const parsedAdaptations : Record<
-    IAdaptationType,
+    ITrackType,
     Array<[ IParsedAdaptation,
             IAdaptationSetOrderingData ]>
   > = { video: [],
         audio: [],
-        text: [],
-        image: [] };
+        text: [] };
   const trickModeAdaptations: Array<{ adaptation: IParsedAdaptation;
                                       trickModeAttachedAdaptationIds: string[]; }> = [];
   const adaptationSwitchingInfos : IAdaptationSwitchingInfos = {};
@@ -317,7 +316,6 @@ export default function parseAdaptationSets(
     }
 
     const reprCtxt : IRepresentationContext = {
-      aggressiveMode: context.aggressiveMode,
       availabilityTimeComplete,
       availabilityTimeOffset,
       baseURLs: resolveBaseURLs(context.baseURLs, adaptationChildren.baseURLs),
@@ -467,6 +465,7 @@ export default function parseAdaptationSets(
                                 mergedInto[1].isMainAdaptation,
               indexInMpd: Math.min(adaptationIdx, mergedInto[1].indexInMpd),
             };
+            break;
           }
         }
       }
@@ -486,7 +485,7 @@ export default function parseAdaptationSets(
   }
 
   const adaptationsPerType = SUPPORTED_ADAPTATIONS_TYPE
-    .reduce((acc : IParsedAdaptations, adaptationType : IAdaptationType) => {
+    .reduce((acc : IParsedAdaptations, adaptationType : ITrackType) => {
       const adaptationsParsedForType = parsedAdaptations[adaptationType];
       if (adaptationsParsedForType.length > 0) {
         adaptationsParsedForType.sort(compareAdaptations);
