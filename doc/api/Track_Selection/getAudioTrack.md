@@ -51,6 +51,9 @@ return an object with the following properties:
   - `codec` (`string|undefined`): The audio codec the Representation is
     in, as announced in the corresponding Manifest.
 
+  - `isSpatialAudio` (`Boolean|undefined`): If set to `true`, this Representation
+    has spatial audio.
+
 `undefined` if no audio content has been loaded yet or if its information is
 unknown.
 

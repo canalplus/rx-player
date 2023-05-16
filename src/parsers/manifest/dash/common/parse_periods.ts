@@ -18,6 +18,7 @@ import log from "../../../../log";
 import Manifest from "../../../../manifest";
 import flatMap from "../../../../utils/flat_map";
 import idGenerator from "../../../../utils/id_generator";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import objectValues from "../../../../utils/object_values";
 import { utf8ToStr } from "../../../../utils/string_parsing";
 import {
@@ -33,7 +34,6 @@ import {
 // eslint-disable-next-line max-len
 import flattenOverlappingPeriods from "./flatten_overlapping_periods";
 import getPeriodsTimeInformation from "./get_periods_time_infos";
-import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import parseAdaptationSets, {
   IAdaptationSetContext,
 } from "./parse_adaptation_sets";
@@ -67,12 +67,9 @@ export default function parsePeriods(
     throw new Error("MPD parsing error: the time information are incoherent.");
   }
 
-  const { isDynamic,
-          timeShiftBufferDepth } = context;
-  const manifestBoundsCalculator = new ManifestBoundsCalculator({ isDynamic,
-                                                                  timeShiftBufferDepth });
+  const { isDynamic, manifestBoundsCalculator } = context;
 
-  if (!isDynamic && context.duration != null) {
+  if (!isDynamic && !isNullOrUndefined(context.duration)) {
     manifestBoundsCalculator.setLastPosition(context.duration);
   }
 
@@ -90,7 +87,7 @@ export default function parsePeriods(
             periodEnd } = periodsTimeInformation[i];
 
     let periodID : string;
-    if (periodIR.attributes.id == null) {
+    if (isNullOrUndefined(periodIR.attributes.id)) {
       log.warn("DASH: No usable id found in the Period. Generating one.");
       periodID = "gen-dash-period-" + generatePeriodID();
     } else {
@@ -108,12 +105,11 @@ export default function parsePeriods(
     const unsafelyBaseOnPreviousPeriod = context
       .unsafelyBaseOnPreviousManifest?.getPeriod(periodID) ?? null;
 
-    const availabilityTimeComplete = periodIR.attributes.availabilityTimeComplete ?? true;
-    const availabilityTimeOffset = periodIR.attributes.availabilityTimeOffset ?? 0;
-    const { aggressiveMode, manifestProfiles } = context;
+    const availabilityTimeComplete = periodIR.attributes.availabilityTimeComplete;
+    const availabilityTimeOffset = periodIR.attributes.availabilityTimeOffset;
+    const { manifestProfiles } = context;
     const { segmentTemplate } = periodIR.children;
-    const adapCtxt : IAdaptationSetContext = { aggressiveMode,
-                                               availabilityTimeComplete,
+    const adapCtxt : IAdaptationSetContext = { availabilityTimeComplete,
                                                availabilityTimeOffset,
                                                baseURLs: periodBaseURLs,
                                                manifestBoundsCalculator,
@@ -124,7 +120,6 @@ export default function parsePeriods(
                                                receivedTime,
                                                segmentTemplate,
                                                start: periodStart,
-                                               timeShiftBufferDepth,
                                                unsafelyBaseOnPreviousPeriod };
     const adaptations = parseAdaptationSets(periodIR.children.adaptations, adapCtxt);
 
@@ -207,7 +202,7 @@ function guessLastPositionFromClock(
   context : IPeriodContext,
   minimumTime : number
 ) : [number, number] | undefined {
-  if (context.clockOffset != null) {
+  if (!isNullOrUndefined(context.clockOffset)) {
     const lastPosition = context.clockOffset / 1000 -
       context.availabilityStartTime;
     const positionTime = performance.now() / 1000;
@@ -244,7 +239,7 @@ function getMaximumLastPosition(
   let maxEncounteredPosition : number | null = null;
   let allIndexAreEmpty = true;
   const adaptationsVal = objectValues(adaptationsPerType)
-    .filter((ada) : ada is IParsedAdaptation[] => ada != null);
+    .filter((ada) : ada is IParsedAdaptation[] => !isNullOrUndefined(ada));
   const allAdaptations = flatMap(adaptationsVal,
                                  (adaptationsForType) => adaptationsForType);
   for (const adaptation of allAdaptations) {
@@ -255,15 +250,15 @@ function getMaximumLastPosition(
         allIndexAreEmpty = false;
         if (typeof position === "number") {
           maxEncounteredPosition =
-            maxEncounteredPosition == null ? position :
-                                             Math.max(maxEncounteredPosition,
-                                                      position);
+            isNullOrUndefined(maxEncounteredPosition) ? position :
+                                                        Math.max(maxEncounteredPosition,
+                                                                 position);
         }
       }
     }
   }
 
-  if (maxEncounteredPosition != null) {
+  if (!isNullOrUndefined(maxEncounteredPosition)) {
     return maxEncounteredPosition;
   } else if (allIndexAreEmpty) {
     return null;
@@ -364,6 +359,5 @@ type IInheritedAdaptationContext = Omit<IAdaptationSetContext,
                                         "availabilityTimeOffset" |
                                         "duration" |
                                         "isLastPeriod" |
-                                        "manifestBoundsCalculator" |
                                         "start" |
                                         "unsafelyBaseOnPreviousPeriod">;

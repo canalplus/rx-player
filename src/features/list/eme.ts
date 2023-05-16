@@ -22,7 +22,7 @@ import { IFeaturesObject } from "../types";
  * @param {Object} features
  */
 function addEMEFeature(features : IFeaturesObject) : void {
-  features.ContentDecryptor = ContentDecryptor;
+  features.decrypt = ContentDecryptor;
 }
 
 export { addEMEFeature as EME };

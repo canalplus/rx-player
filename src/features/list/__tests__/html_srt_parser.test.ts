@@ -14,24 +14,19 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-
+// eslint-disable-next-line max-len
+import HTMLTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/html";
 import srtParser from "../../../parsers/texttracks/srt/html";
+import { IFeaturesObject } from "../../types";
 import addHTMLsrtFeature from "../html_srt_parser";
-
-jest.mock("../../../parsers/texttracks/srt/html", () => ({
-  __esModule: true as const,
-  default: jest.fn(),
-}));
 
 describe("Features list - HTML srt Parser", () => {
   it("should add an HTML srt Parser in the current features", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const featureObject : any = { htmlTextTracksParsers: {} };
+    const featureObject = { htmlTextTracksParsers: {} } as unknown as IFeaturesObject;
     addHTMLsrtFeature(featureObject);
     expect(featureObject).toEqual({
       htmlTextTracksParsers: { srt: srtParser },
+      htmlTextTracksBuffer: HTMLTextSegmentBuffer,
     });
     expect(featureObject.htmlTextTracksParsers.srt).toBe(srtParser);
   });

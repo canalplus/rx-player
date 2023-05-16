@@ -18,6 +18,7 @@ import { base64ToBytes } from "../../../utils/base64";
 import EventEmitter from "../../../utils/event_emitter";
 import noop from "../../../utils/noop";
 import { utf8ToStr } from "../../../utils/string_parsing";
+import wrapInPromise from "../../../utils/wrapInPromise";
 import {
   ICustomMediaKeys,
   ICustomMediaKeySession,
@@ -166,11 +167,13 @@ class OldWebKitCustomMediaKeys implements ICustomMediaKeys {
     this._keySystem = keySystem;
   }
 
-  _setVideo(videoElement: IOldWebkitHTMLMediaElement|HTMLMediaElement): void {
-    if (!isOldWebkitMediaElement(videoElement)) {
-      throw new Error("Video not attached to the MediaKeys");
-    }
-    this._videoElement = videoElement;
+  _setVideo(videoElement: IOldWebkitHTMLMediaElement|HTMLMediaElement): Promise<unknown> {
+    return wrapInPromise(() => {
+      if (!isOldWebkitMediaElement(videoElement)) {
+        throw new Error("Video not attached to the MediaKeys");
+      }
+      this._videoElement = videoElement;
+    });
   }
 
   createSession(/* sessionType */): ICustomMediaKeySession {
@@ -191,7 +194,7 @@ export default function getOldWebKitMediaKeysCallbacks() : {
   setMediaKeys: (
     elt: HTMLMediaElement,
     mediaKeys: MediaKeys|ICustomMediaKeys|null
-  ) => void;
+  ) => Promise<unknown>;
 } {
   const isTypeSupported = function (keyType: string): boolean {
     // get any <video> element from the DOM or create one
@@ -214,9 +217,9 @@ export default function getOldWebKitMediaKeysCallbacks() : {
   const setMediaKeys = (
     elt: HTMLMediaElement,
     mediaKeys: MediaKeys|ICustomMediaKeys|null
-  ): void => {
+  ): Promise<unknown> => {
     if (mediaKeys === null) {
-      return;
+      return Promise.resolve(undefined);
     }
     if (!(mediaKeys instanceof OldWebKitCustomMediaKeys)) {
       throw new Error("Custom setMediaKeys is supposed to be called " +

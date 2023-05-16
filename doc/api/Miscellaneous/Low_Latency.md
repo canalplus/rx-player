@@ -70,7 +70,7 @@ rxPlayer.loadVideo({
   url: "https://www.example.com/content.mpd",
   transport: "dash",
   lowLatencyMode: true,
-  startAt: { fromLastPosition: 2 }, // Play 2 seconds from the live edge instead
+  startAt: { fromLivePosition: 2 }, // Play 2 seconds from the live edge instead
   // (beware of much more frequent rebuffering
   // risks)
 });

@@ -282,12 +282,19 @@ export default function parseAdaptationSets(
       roles.some((role) => role.schemeIdUri === "urn:mpeg:dash:role:2011");
 
     const representationsIR = adaptation.children.representations;
+
     const availabilityTimeComplete =
       adaptation.attributes.availabilityTimeComplete ??
       context.availabilityTimeComplete;
-    const availabilityTimeOffset =
-      (adaptation.attributes.availabilityTimeOffset ?? 0) +
-      context.availabilityTimeOffset;
+
+    let availabilityTimeOffset;
+    if (
+      adaptation.attributes.availabilityTimeOffset !== undefined ||
+      context.availabilityTimeOffset !== undefined
+    ) {
+      availabilityTimeOffset = (adaptation.attributes.availabilityTimeOffset ?? 0) +
+                               (context.availabilityTimeOffset ?? 0);
+    }
 
     const adaptationMimeType = adaptation.attributes.mimeType;
     const adaptationCodecs = adaptation.attributes.codecs;
@@ -317,7 +324,6 @@ export default function parseAdaptationSets(
     }
 
     const reprCtxt : IRepresentationContext = {
-      aggressiveMode: context.aggressiveMode,
       availabilityTimeComplete,
       availabilityTimeOffset,
       baseURLs: resolveBaseURLs(context.baseURLs, adaptationChildren.baseURLs),
@@ -329,7 +335,6 @@ export default function parseAdaptationSets(
       parentSegmentTemplates,
       receivedTime: context.receivedTime,
       start: context.start,
-      timeShiftBufferDepth: context.timeShiftBufferDepth,
       unsafelyBaseOnPreviousAdaptation: null,
     };
 
@@ -467,6 +472,7 @@ export default function parseAdaptationSets(
                                 mergedInto[1].isMainAdaptation,
               indexInMpd: Math.min(adaptationIdx, mergedInto[1].indexInMpd),
             };
+            break;
           }
         }
       }

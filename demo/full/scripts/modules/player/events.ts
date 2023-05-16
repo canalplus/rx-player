@@ -57,16 +57,24 @@ function linkPlayerEventsToState(
       const position = player.getPosition();
       const duration = player.getVideoDuration();
       const videoTrack = player.getVideoTrack();
+      const livePosition = player.getLivePosition();
       const maximumPosition = player.getMaximumPosition();
+      let bufferGap = player.getVideoBufferGap();
+      bufferGap = !isFinite(bufferGap) || isNaN(bufferGap) ?
+        0 :
+        bufferGap;
+
+      const livePos = livePosition ?? maximumPosition;
       state.updateBulk({
         currentTime: player.getPosition(),
         wallClockDiff: player.getWallClockTime() - position,
-        bufferGap: player.getVideoBufferGap(),
+        bufferGap,
         duration: Number.isNaN(duration) ? undefined : duration,
+        livePosition,
         minimumPosition: player.getMinimumPosition(),
-        maximumPosition: player.getMaximumPosition(),
-        liveGap: typeof maximumPosition === "number" ?
-          maximumPosition - player.getPosition() :
+        maximumPosition,
+        liveGap: typeof livePos === "number" ?
+          livePos - player.getPosition() :
           undefined,
         playbackRate: player.getPlaybackRate(),
         videoTrackHasTrickMode: videoTrack !== null &&
@@ -206,6 +214,7 @@ function linkPlayerEventsToState(
         stateUpdates.duration = undefined;
         stateUpdates.minimumPosition = undefined;
         stateUpdates.maximumPosition = undefined;
+        stateUpdates.livePosition = undefined;
         break;
     }
 
