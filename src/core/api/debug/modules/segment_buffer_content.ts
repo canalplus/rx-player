@@ -1,8 +1,8 @@
 import {
-  IAdaptation,
-  IPeriod,
-  IRepresentation,
-} from "../../../../public_types";
+  Adaptation,
+  Period,
+  Representation,
+} from "../../../../manifest";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import { CancellationSignal } from "../../../../utils/task_canceller";
 import { IBufferType } from "../../../segment_buffers";
@@ -90,9 +90,9 @@ export default function createSegmentBufferGraph(
       }
 
       loadingRangeRepInfoElt.innerHTML = "";
-      const rep = instance.getCurrentRepresentations()?.[bufferType];
-      const adap = instance.getCurrentAdaptations()?.[bufferType];
-      const manifest = instance.getManifest();
+      const rep = instance.__priv_getCurrentRepresentations()?.[bufferType];
+      const adap = instance.__priv_getCurrentAdaptation()?.[bufferType];
+      const manifest = instance.__priv_getManifest();
       if (manifest !== null && !isNullOrUndefined(rep) && !isNullOrUndefined(adap)) {
         const period = manifest.getPeriodForTime(currentTime);
         if (period !== undefined) {
@@ -112,9 +112,9 @@ export default function createSegmentBufferGraph(
 
 function constructRepresentationInfo(
   content : {
-    period : IPeriod;
-    adaptation : IAdaptation;
-    representation : IRepresentation;
+    period : Period;
+    adaptation : Adaptation;
+    representation : Representation;
   }
 ) : string {
   const period = content.period;

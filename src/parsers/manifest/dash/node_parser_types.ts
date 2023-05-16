@@ -210,20 +210,20 @@ export interface IAdaptationSetAttributes {
   codecs? : string;
   codingDependency? : boolean;
   contentType? : string;
-  frameRate? : string;
+  frameRate? : number;
   group? : number;
   height? : number;
   id? : string;
   language? : string;
   maxBitrate? : number;
-  maxFrameRate? : string;
+  maxFrameRate? : number;
   maxHeight? : number;
   maxPlayoutRate? : number;
   maxWidth? : number;
   maximumSAPPeriod? : number;
   mimeType? : string;
   minBitrate? : number;
-  minFrameRate? : string;
+  minFrameRate? : number;
   minHeight? : number;
   minWidth? : number;
   par? : string;
@@ -253,6 +253,7 @@ export interface IRepresentationChildren {
   segmentBase? : ISegmentBaseIntermediateRepresentation;
   segmentList? : ISegmentListIntermediateRepresentation;
   segmentTemplate? : ISegmentTemplateIntermediateRepresentation;
+  supplementalProperties? : IScheme[] | undefined;
 }
 
 /* Intermediate representation for A Representation node's attributes. */
@@ -261,7 +262,7 @@ export interface IRepresentationAttributes {
   bitrate? : number;
   codecs? : string;
   codingDependency? : boolean;
-  frameRate? : string;
+  frameRate? : number;
   height? : number;
   id? : string;
   maxPlayoutRate? : number;

@@ -53,30 +53,6 @@ describe("initial idle state", () => {
       });
     });
 
-    describe("getManifest", () => {
-      it("should return null in getManifest by default", () => {
-        expect(player.getManifest()).to.equal(null);
-      });
-    });
-
-    describe("getCurrentAdaptations", () => {
-      it("should return null in getCurrentAdaptations by default", () => {
-        expect(player.getCurrentAdaptations()).to.equal(null);
-      });
-    });
-
-    describe("getCurrentRepresentations", () => {
-      it("should return null in getCurrentRepresentations by default", () => {
-        expect(player.getCurrentRepresentations()).to.equal(null);
-      });
-    });
-
-    describe("getNativeTextTrack", () => {
-      it("should return null in getNativeTextTrack by default", () => {
-        expect(player.getNativeTextTrack()).to.equal(null);
-      });
-    });
-
     describe("getPlayerState", () => {
       it("should return \"STOPPED\" in getPlayerState by default", () => {
         expect(player.getPlayerState()).to.equal("STOPPED");
@@ -89,37 +65,25 @@ describe("initial idle state", () => {
       });
     });
 
-    describe("getUrl", () => {
-      it("should return undefined in getUrl by default", () => {
-        expect(player.getUrl()).to.equal(undefined);
+    describe("getContentUrls", () => {
+      it("should return undefined in getContentUrls by default", () => {
+        expect(player.getContentUrls()).to.equal(undefined);
       });
     });
 
-    describe("getVideoDuration", () => {
-      it("should return the video element initial duration in getVideoDuration by default", () => {
+    describe("getMediaDuration", () => {
+      it("should return the video element initial duration in getMediaDuration by default", () => {
 
         // ! HAHA ! NaN is not === to NaN
-        expect(player.getVideoDuration()).to.eql(
+        expect(player.getMediaDuration()).to.eql(
           player.getVideoElement().duration
         );
       });
     });
 
-    describe("getVideoBufferGap", () => {
-      it("should return Infinity in getVideoBufferGap by default", () => {
-        expect(player.getVideoBufferGap()).to.equal(Infinity);
-      });
-    });
-
-    describe("getVideoLoadedTime", () => {
-      it("should return 0 in getVideoLoadedTime by default", () => {
-        expect(player.getVideoLoadedTime()).to.equal(0);
-      });
-    });
-
-    describe("getVideoPlayedTime", () => {
-      it("should return 0 in getVideoPlayedTime by default", () => {
-        expect(player.getVideoPlayedTime()).to.equal(0);
+    describe("getCurrentBufferGap", () => {
+      it("should return 0 in getCurrentBufferGap by default", () => {
+        expect(player.getCurrentBufferGap()).to.equal(0);
       });
     });
 
@@ -147,45 +111,15 @@ describe("initial idle state", () => {
       });
     });
 
-    describe("isFullscreen", () => {
-      it("should return false in isFullscreen by default", () => {
-        expect(player.isFullscreen()).to.equal(false);
+    describe("getVideoRepresentation", () => {
+      it("should return undefined in getVideoRepresentation by default", () => {
+        expect(player.getVideoRepresentation()).to.equal(undefined);
       });
     });
 
-    describe("getAvailableVideoBitrates", () => {
-      it("should return [] in getAvailableVideoBitrates by default", () => {
-        expect(player.getAvailableVideoBitrates()).to.eql([]);
-      });
-    });
-
-    describe("getAvailableAudioBitrates", () => {
-      it("should return [] in getAvailableAudioBitrates by default", () => {
-        expect(player.getAvailableAudioBitrates()).to.eql([]);
-      });
-    });
-
-    describe("getVideoBitrate", () => {
-      it("should return undefined in getVideoBitrate by default", () => {
-        expect(player.getVideoBitrate()).to.equal(undefined);
-      });
-    });
-
-    describe("getAudioBitrate", () => {
-      it("should return undefined in getAudioBitrate by default", () => {
-        expect(player.getVideoBitrate()).to.equal(undefined);
-      });
-    });
-
-    describe("getMaxVideoBitrate", () => {
-      it("should return Infinity in getMaxVideoBitrate by default", () => {
-        expect(player.getMaxVideoBitrate()).to.equal(Infinity);
-      });
-    });
-
-    describe("getMaxAudioBitrate", () => {
-      it("should return Infinity in getMaxAudioBitrate by default", () => {
-        expect(player.getMaxAudioBitrate()).to.equal(Infinity);
+    describe("getAudioRepresentation", () => {
+      it("should return undefined in getAudioRepresentation by default", () => {
+        expect(player.getAudioRepresentation()).to.equal(undefined);
       });
     });
 
@@ -236,21 +170,6 @@ describe("initial idle state", () => {
         expect(() => player.seekTo({ relative: 5 })).to.throw();
         expect(() => player.seekTo({ position: 5 })).to.throw();
         expect(() => player.seekTo({ wallClockTime: 5 })).to.throw();
-      });
-    });
-
-    describe("exitFullscreen", () => {
-      it("should allow exitFullscreen by default", () => {
-        expect(player.exitFullscreen()).to.equal(undefined);
-      });
-    });
-
-    describe("setFullscreen", () => {
-      it("should allow setFullscreen by default", () => {
-        expect(player.setFullscreen()).to.equal(undefined);
-
-        // TODO remove for v3.0.0
-        expect(player.setFullscreen(false)).to.equal(undefined);
       });
     });
 
@@ -343,300 +262,6 @@ describe("initial idle state", () => {
       });
     });
 
-    describe("setMinAudioBitrate/getMinAudioBitrate", () => {
-      const defaultMin = player.getMinAudioBitrate();
-      const defaultMax = player.getMaxAudioBitrate();
-
-      beforeEach(() => {
-        player.setMinAudioBitrate(defaultMin);
-        player.setMaxAudioBitrate(defaultMax);
-      });
-
-      it("should have a 0 minimum audio bitrate by default", () => {
-        expect(player.getMinAudioBitrate()).to.equal(0);
-      });
-
-      it("should update minimum audio bitrate when calling setMinAudioBitrate", () => {
-        player.setMinAudioBitrate(84);
-        expect(player.getMinAudioBitrate()).to.equal(84);
-
-        player.setMinAudioBitrate(-1);
-        expect(player.getMinAudioBitrate()).to.equal(-1);
-
-        player.setMinAudioBitrate(0);
-        expect(player.getMinAudioBitrate()).to.equal(0);
-
-        player.setMinAudioBitrate(defaultMin);
-        expect(player.getMinAudioBitrate()).to.equal(defaultMin);
-      });
-
-      it("should throw when setting a min audio bitrate superior to the max audio bitrate", () => {
-        let err;
-
-        try {
-          player.setMaxAudioBitrate(9);
-          player.setMinAudioBitrate(1000);
-        } catch (e) {
-          err = e;
-        }
-
-        expect(player.getMinAudioBitrate()).to.equal(defaultMin);
-        expect(err).to.be.an.instanceOf(Error);
-        expect(err.message).to
-          .equal("Invalid minimum audio bitrate given. Its value, \"1000\" is superior the current maximum audio birate, \"9\".");
-      });
-
-      it("should allow setting different or equal max and min audio bitrate in that order", () => {
-        player.setMaxAudioBitrate(84);
-        player.setMinAudioBitrate(84);
-        expect(player.getMinAudioBitrate()).to.equal(84);
-
-        player.setMinAudioBitrate(-1);
-        expect(player.getMinAudioBitrate()).to.equal(-1);
-
-        player.setMinAudioBitrate(0);
-        expect(player.getMinAudioBitrate()).to.equal(0);
-
-        player.setMaxVideoBitrate(defaultMax);
-        player.setMinAudioBitrate(defaultMin);
-        expect(player.getMinAudioBitrate()).to.equal(defaultMin);
-      });
-    });
-
-    describe("setMinVideoBitrate/getMinVideoBitrate", () => {
-      const defaultMin = player.getMinVideoBitrate();
-      const defaultMax = player.getMaxVideoBitrate();
-      beforeEach(() => {
-        player.setMinVideoBitrate(defaultMin);
-        player.setMaxVideoBitrate(defaultMax);
-      });
-      it("should have a 0 minimum video bitrate by default", () => {
-        expect(player.getMinVideoBitrate()).to.equal(0);
-      });
-
-      it("should update minimum video bitrate when calling setMinVideoBitrate", () => {
-        player.setMinVideoBitrate(84);
-        expect(player.getMinVideoBitrate()).to.equal(84);
-
-        player.setMinVideoBitrate(-1);
-        expect(player.getMinVideoBitrate()).to.equal(-1);
-
-        player.setMinVideoBitrate(0);
-        expect(player.getMinVideoBitrate()).to.equal(0);
-
-        player.setMinVideoBitrate(defaultMin);
-        expect(player.getMinVideoBitrate()).to.equal(defaultMin);
-      });
-
-      it("should throw when setting a min video bitrate superior to the max video bitrate", () => {
-        let err;
-
-        try {
-          player.setMaxVideoBitrate(9);
-          player.setMinVideoBitrate(1000);
-        } catch (e) {
-          err = e;
-        }
-
-        expect(player.getMinVideoBitrate()).to.equal(defaultMin);
-        expect(err).to.be.an.instanceOf(Error);
-        expect(err.message).to
-          .equal("Invalid minimum video bitrate given. Its value, \"1000\" is superior the current maximum video birate, \"9\".");
-      });
-
-      it("should allow setting different or equal max and min video bitrate in that order", () => {
-        player.setMaxVideoBitrate(84);
-        player.setMinVideoBitrate(84);
-        expect(player.getMinVideoBitrate()).to.equal(84);
-
-        player.setMinVideoBitrate(-1);
-        expect(player.getMinVideoBitrate()).to.equal(-1);
-
-        player.setMinVideoBitrate(0);
-        expect(player.getMinVideoBitrate()).to.equal(0);
-
-        player.setMaxVideoBitrate(defaultMax);
-        player.setMinVideoBitrate(defaultMin);
-        expect(player.getMinVideoBitrate()).to.equal(defaultMin);
-      });
-    });
-
-    describe("setMaxAudioBitrate/getMaxAudioBitrate", () => {
-      const defaultMin = player.getMinAudioBitrate();
-      const defaultMax = player.getMaxAudioBitrate();
-      beforeEach(() => {
-        player.setMinAudioBitrate(defaultMin);
-        player.setMaxAudioBitrate(defaultMax);
-      });
-      it("should have a Infinity maximum audio bitrate by default", () => {
-        expect(player.getMaxAudioBitrate()).to.equal(Infinity);
-      });
-
-      it("should update maximum audio bitrate when calling setMaxAudioBitrate", () => {
-        player.setMaxAudioBitrate(84);
-        expect(player.getMaxAudioBitrate()).to.equal(84);
-
-        player.setMaxAudioBitrate(0);
-        expect(player.getMaxAudioBitrate()).to.equal(0);
-
-        player.setMaxAudioBitrate(defaultMax);
-        expect(player.getMaxAudioBitrate()).to.equal(defaultMax);
-      });
-
-      it("should throw when setting a max audio bitrate inferior to the min audio bitrate", () => {
-        let err1;
-        let err2;
-
-        try {
-          player.setMaxAudioBitrate(-1);
-        } catch (e) {
-          err1 = e;
-        }
-
-        expect(player.getMaxAudioBitrate()).to.equal(defaultMax);
-
-        try {
-          player.setMinAudioBitrate(1000);
-          player.setMaxAudioBitrate(9);
-        } catch (e) {
-          err2 = e;
-        }
-
-        expect(player.getMaxAudioBitrate()).to.equal(defaultMax);
-        expect(err1).to.be.an.instanceOf(Error);
-        expect(err1.message).to
-          .equal("Invalid maximum audio bitrate given. Its value, \"-1\" is inferior the current minimum audio birate, \"0\".");
-        expect(err2).to.be.an.instanceOf(Error);
-        expect(err2.message).to
-          .equal("Invalid maximum audio bitrate given. Its value, \"9\" is inferior the current minimum audio birate, \"1000\".");
-      });
-
-      it("should allow setting different or equal min and max audio bitrate in that order", () => {
-        player.setMinAudioBitrate(84);
-        player.setMaxAudioBitrate(84);
-        expect(player.getMaxAudioBitrate()).to.equal(84);
-
-        player.setMaxAudioBitrate(Infinity);
-        expect(player.getMaxAudioBitrate()).to.equal(Infinity);
-
-        player.setMaxAudioBitrate(100);
-        expect(player.getMaxAudioBitrate()).to.equal(100);
-
-        player.setMinAudioBitrate(defaultMin);
-        player.setMaxAudioBitrate(defaultMax);
-        expect(player.getMaxAudioBitrate()).to.equal(defaultMax);
-      });
-    });
-
-    describe("setMaxVideoBitrate/getMaxVideoBitrate", () => {
-      const defaultMin = player.getMinVideoBitrate();
-      const defaultMax = player.getMaxVideoBitrate();
-      beforeEach(() => {
-        player.setMinVideoBitrate(defaultMin);
-        player.setMaxVideoBitrate(defaultMax);
-      });
-      it("should have a Infinity maximum video bitrate by default", () => {
-        expect(player.getMaxVideoBitrate()).to.equal(Infinity);
-      });
-
-      it("should update maximum video bitrate when calling setMaxVideoBitrate", () => {
-
-        player.setMaxVideoBitrate(84);
-        expect(player.getMaxVideoBitrate()).to.equal(84);
-
-        player.setMaxVideoBitrate(0);
-        expect(player.getMaxVideoBitrate()).to.equal(0);
-
-        player.setMaxVideoBitrate(defaultMax);
-        expect(player.getMaxVideoBitrate()).to.equal(defaultMax);
-      });
-
-      it("should throw when setting a max video bitrate inferior to the min video bitrate", () => {
-        let err1;
-        let err2;
-
-        try {
-          player.setMaxVideoBitrate(-1);
-        } catch (e) {
-          err1 = e;
-        }
-
-        expect(player.getMaxVideoBitrate()).to.equal(defaultMax);
-
-        try {
-          player.setMinVideoBitrate(1000);
-          player.setMaxVideoBitrate(9);
-        } catch (e) {
-          err2 = e;
-        }
-
-        expect(player.getMaxVideoBitrate()).to.equal(defaultMax);
-        expect(err1).to.be.an.instanceOf(Error);
-        expect(err1.message).to
-          .equal("Invalid maximum video bitrate given. Its value, \"-1\" is inferior the current minimum video birate, \"0\".");
-        expect(err2).to.be.an.instanceOf(Error);
-        expect(err2.message).to
-          .equal("Invalid maximum video bitrate given. Its value, \"9\" is inferior the current minimum video birate, \"1000\".");
-      });
-
-      it("should allow setting different or equal min and max video bitrate in that order", () => {
-        player.setMinVideoBitrate(84);
-        player.setMaxVideoBitrate(84);
-        expect(player.getMaxVideoBitrate()).to.equal(84);
-
-        player.setMaxVideoBitrate(Infinity);
-        expect(player.getMaxVideoBitrate()).to.equal(Infinity);
-
-        player.setMaxVideoBitrate(100);
-        expect(player.getMaxVideoBitrate()).to.equal(100);
-
-        player.setMinVideoBitrate(defaultMin);
-        player.setMaxVideoBitrate(defaultMax);
-        expect(player.getMaxVideoBitrate()).to.equal(defaultMax);
-      });
-    });
-
-    describe("setAudioBitrate/getManualAudioBitrate", () => {
-      it("should have a -1 manual audio bitrate by default", () => {
-        expect(player.getManualAudioBitrate()).to.equal(-1);
-      });
-
-      it("should update manual audio bitrate when calling setAudioBitrate", () => {
-        const oldManual = player.getManualAudioBitrate();
-
-        player.setAudioBitrate(84);
-        expect(player.getManualAudioBitrate()).to.equal(84);
-        player.setAudioBitrate(-1);
-        expect(player.getManualAudioBitrate()).to.equal(-1);
-        player.setAudioBitrate(0);
-        expect(player.getManualAudioBitrate()).to.equal(0);
-
-        player.setAudioBitrate(oldManual);
-        expect(player.getManualAudioBitrate()).to.equal(oldManual);
-      });
-    });
-
-    describe("setVideoBitrate/getManualVideoBitrate", () => {
-      it("should have a -1 manual video bitrate by default", () => {
-        expect(player.getManualVideoBitrate()).to.equal(-1);
-      });
-
-      it("should update manual video bitrate when calling setVideoBitrate", () => {
-        const oldManual = player.getManualVideoBitrate();
-
-        player.setVideoBitrate(84);
-        expect(player.getManualVideoBitrate()).to.equal(84);
-
-        player.setVideoBitrate(-1);
-        expect(player.getManualVideoBitrate()).to.equal(-1);
-
-        player.setVideoBitrate(0);
-        expect(player.getManualVideoBitrate()).to.equal(0);
-
-        player.setVideoBitrate(oldManual);
-        expect(player.getManualVideoBitrate()).to.equal(oldManual);
-      });
-    });
 
     describe("getMaxBufferBehind/setMaxBufferBehind", () => {
       it("should update the max buffer behind through setMaxBufferBehind by default", () => {
@@ -729,60 +354,6 @@ describe("initial idle state", () => {
       it("should disable text tracks in disableTextTrack by default", () => {
         expect(player.disableTextTrack()).to.equal(undefined);
         expect(player.getTextTrack()).to.equal(undefined);
-      });
-    });
-
-    describe("getPreferredAudioTracks", () => {
-      it("should return an empty array through getPreferredAudioTracks by default", () => {
-        expect(player.getPreferredAudioTracks()).to.eql([]);
-      });
-    });
-
-    describe("getPreferredTextTracks", () => {
-      it("should return an empty array through getPreferredTextTracks by default", () => {
-        expect(player.getPreferredTextTracks()).to.eql([]);
-      });
-    });
-
-    describe("setPreferredAudioTracks", () => {
-      it("should allow setting preferred audio tracks by default", () => {
-        expect(player.getPreferredAudioTracks()).to.eql([]);
-        player.setPreferredAudioTracks(["fr", "en"]);
-        expect(player.getPreferredAudioTracks()).to.eql(["fr", "en"]);
-        player.setPreferredAudioTracks([
-          { language: "it", audioDescription: true },
-          { language: "pt", audioDescription: false },
-          { language: "pt", audioDescription: true },
-        ]);
-        expect(player.getPreferredAudioTracks()).to.eql([
-          { language: "it", audioDescription: true },
-          { language: "pt", audioDescription: false },
-          { language: "pt", audioDescription: true },
-        ]);
-      });
-    });
-
-    describe("setPreferredTextTracks", () => {
-      it("should return an empty array through getPreferredTextTracks by default", () => {
-        expect(player.getPreferredTextTracks()).to.eql([]);
-        player.setPreferredTextTracks(["fr", "en"]);
-        expect(player.getPreferredTextTracks()).to.eql(["fr", "en"]);
-        player.setPreferredTextTracks([
-          { language: "it", closedCaption: true },
-          { language: "pt", closedCaption: false },
-          { language: "pt", closedCaption: true },
-        ]);
-        expect(player.getPreferredTextTracks()).to.eql([
-          { language: "it", closedCaption: true },
-          { language: "pt", closedCaption: false },
-          { language: "pt", closedCaption: true },
-        ]);
-      });
-    });
-
-    describe("getImageTrackData", () => {
-      it("should return null in getImageTrackData by default", () => {
-        expect(player.getImageTrackData()).to.equal(null);
       });
     });
 

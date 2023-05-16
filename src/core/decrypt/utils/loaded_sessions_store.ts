@@ -20,7 +20,7 @@ import {
   ICustomMediaKeys,
   ICustomMediaKeySession,
   loadSession,
-} from "../../../compat";
+} from "../../../compat/eme";
 import log from "../../../log";
 import assert from "../../../utils/assert";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
@@ -47,7 +47,7 @@ export default class LoadedSessionsStore {
    * loaded MediaKeySessions on the given MediaKeys instance.
    * @param {MediaKeys} mediaKeys
    */
-  constructor(mediaKeys : MediaKeys|ICustomMediaKeys) {
+  constructor(mediaKeys : MediaKeys | ICustomMediaKeys) {
     this._mediaKeys = mediaKeys;
     this._storage = [];
   }

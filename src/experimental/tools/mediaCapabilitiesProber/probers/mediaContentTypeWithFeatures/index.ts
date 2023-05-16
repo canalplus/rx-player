@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import globalScope from "../../../../../compat/global_scope";
 import {
   IMediaConfiguration,
   ProberStatus,
@@ -33,13 +34,13 @@ export type ISupportWithFeatures = ""|"Maybe"|"Not Supported"|"Probably";
  */
 function isTypeSupportedWithFeaturesAPIAvailable(): Promise<void> {
   return new Promise((resolve) => {
-    if (!("MSMediaKeys" in window)) {
+    if (!("MSMediaKeys" in globalScope)) {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "MSMediaKeys API not available");
     }
     /* eslint-disable @typescript-eslint/no-explicit-any */
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    if (!("isTypeSupportedWithFeatures" in (window as any).MSMediaKeys)) {
+    if (!("isTypeSupportedWithFeatures" in (globalScope as any).MSMediaKeys)) {
     /* eslint-enable @typescript-eslint/no-explicit-any */
     /* eslint-enable @typescript-eslint/no-unsafe-member-access */
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
@@ -76,7 +77,7 @@ export default function probeTypeWithFeatures(
     /* eslint-disable @typescript-eslint/no-unsafe-call */
     /* eslint-disable @typescript-eslint/no-explicit-any */
     const result: ISupportWithFeatures =
-      (window as any).MSMediaKeys.isTypeSupportedWithFeatures(type, features);
+      (globalScope as any).MSMediaKeys.isTypeSupportedWithFeatures(type, features);
     /* eslint-enable @typescript-eslint/no-explicit-any */
     /* eslint-enable @typescript-eslint/no-unsafe-assignment */
     /* eslint-enable @typescript-eslint/no-unsafe-member-access */
