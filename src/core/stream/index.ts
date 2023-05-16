@@ -15,21 +15,25 @@
  */
 
 import StreamOrchestrator, {
+  INeedsMediaSourceReloadPayload,
   IStreamOrchestratorOptions,
   IStreamOrchestratorPlaybackObservation,
   IStreamOrchestratorCallbacks,
 } from "./orchestrator";
-export { IAudioTrackSwitchingMode } from "./period";
 export {
+  IRepresentationsChoice,
   IInbandEvent,
   IStreamStatusPayload,
 } from "./representation";
 export {
+  IAdaptationChoice,
+  ITrackSwitchingMode,
   IWaitingMediaSourceReloadPayload,
 } from "./adaptation";
 
 export default StreamOrchestrator;
 export {
+  INeedsMediaSourceReloadPayload,
   IStreamOrchestratorPlaybackObservation,
   IStreamOrchestratorOptions,
   IStreamOrchestratorCallbacks,

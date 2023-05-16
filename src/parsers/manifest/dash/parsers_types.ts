@@ -73,14 +73,14 @@ export interface ILoadedResource<T extends string | ArrayBuffer> {
    */
   url? : string | undefined;
   /**
-   * The time, in terms of `performance.now()`, at which the resource was
-   * starting to be fetched.
+   * The time at which the resource was starting to be fetched, in the unit of
+   * the monotonically-raising timestamp used by the RxPlayer.
    * `undefined` if unknown or not applicable.
    */
   sendingTime? : number | undefined;
   /**
-   * The time, in terms of `performance.now()`, at which the resource was
-   * fully-fetched.
+   * The time at which the resource was completely fetched, in the unit of
+   * the monotonically-raising timestamp used by the RxPlayer.
    * `undefined` if unknown or not applicable.
    */
   receivedTime? : number | undefined;

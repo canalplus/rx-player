@@ -18,6 +18,7 @@ import config from "../../../config";
 import log from "../../../log";
 import Manifest from "../../../manifest";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 
 /**
  * All possible initial time options that can be set.
@@ -42,11 +43,25 @@ export interface IInitialTimeOptions {
    */
   fromFirstPosition? : number | null | undefined;
   /**
-   * If set, we should begin at this position relative to the content's end,
-   * in seconds.
+   * If set, we should begin at this position relative to the content's maximum
+   * seekable position, in seconds.
+   *
+   * It should consequently in most cases be a negative value.
    */
   fromLastPosition? : number | null | undefined;
-  /** If set, we should begin at this position relative to the whole duration of
+  /**
+   * If set, we should begin at this position relative to the content's live
+   * edge if it makes sense, in seconds.
+   *
+   * It should consequently in most cases be a negative value.
+   *
+   * If the live edge is unknown or if it does not make sense for the current
+   * content, that position is relative to the content's maximum position
+   * instead.
+   */
+  fromLivePosition? : number | null | undefined;
+  /**
+   * If set, we should begin at this position relative to the whole duration of
    * the content, in percentage.
    */
   percentage? : number | null | undefined;
@@ -72,13 +87,7 @@ export default function getInitialTime(
 ) : number {
   if (!isNullOrUndefined(startAt)) {
     const min = manifest.getMinimumSafePosition();
-    let max;
-    if (manifest.isLive) {
-      max = manifest.getLivePosition();
-    }
-    if (max === undefined) {
-      max = manifest.getMaximumSafePosition();
-    }
+    const max = manifest.getMaximumSafePosition();
     if (!isNullOrUndefined(startAt.position)) {
       log.debug("Init: using startAt.minimumPosition");
       return Math.max(Math.min(startAt.position, max), min);
@@ -96,12 +105,17 @@ export default function getInitialTime(
       const { fromFirstPosition } = startAt;
       return fromFirstPosition <= 0 ? min :
                                       Math.min(max, min + fromFirstPosition);
-    }
-    else if (!isNullOrUndefined(startAt.fromLastPosition)) {
+    } else if (!isNullOrUndefined(startAt.fromLastPosition)) {
       log.debug("Init: using startAt.fromLastPosition");
       const { fromLastPosition } = startAt;
       return fromLastPosition >= 0 ? max :
                                      Math.max(min, max + fromLastPosition);
+    } else if (!isNullOrUndefined(startAt.fromLivePosition)) {
+      log.debug("Init: using startAt.fromLivePosition");
+      const livePosition = manifest.getLivePosition() ?? max;
+      const { fromLivePosition } = startAt;
+      return fromLivePosition >= 0 ? livePosition :
+                                     Math.max(min, livePosition + fromLivePosition);
     } else if (!isNullOrUndefined(startAt.percentage)) {
       log.debug("Init: using startAt.percentage");
       const { percentage } = startAt;
@@ -134,7 +148,8 @@ export default function getInitialTime(
       const ast = manifest.availabilityStartTime === undefined ?
         0 :
         manifest.availabilityStartTime;
-      const clockRelativeLiveTime = (performance.now() + clockOffset) / 1000 - ast;
+      const clockRelativeLiveTime =
+        (getMonotonicTimeStamp() + clockOffset) / 1000 - ast;
       liveTime = Math.min(maximumPosition,
                           clockRelativeLiveTime);
     }

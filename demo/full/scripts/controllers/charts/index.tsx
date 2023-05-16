@@ -17,10 +17,14 @@ const MAX_BUFFER_SIZE_LENGTH = 2000;
 function ChartsManager({ player }: { player: IPlayerModule | null }) {
   const [displayBufferContentChart,
          setDisplayBufferContentChart] = useState(false);
+
   const [displayBufferSizeChart,
          setDisplayBufferSizeChart] = useState(false);
   const [bufferSizeChart,
          setBufferSizeChart] = useState<IChartModule | null>(null);
+
+  const [displayDebugElement,
+         setDisplayDebugElement] = useState(false);
 
   useEffect(() => {
     if (!player) {
@@ -40,6 +44,19 @@ function ChartsManager({ player }: { player: IPlayerModule | null }) {
     };
   }, [player]);
 
+  useEffect(() => {
+    if (!player) {
+      return;
+    }
+    if (displayDebugElement) {
+      if (!player.actions.isDebugElementShown()) {
+        player.actions.showDebugElement();
+      }
+    } else if (player.actions.isDebugElementShown()) {
+      player.actions.hideDebugElement();
+    }
+  }, [player, displayDebugElement]);
+
   const onBufferContentCheckBoxChange =
     React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
       const target = e.target;
@@ -54,6 +71,13 @@ function ChartsManager({ player }: { player: IPlayerModule | null }) {
         target.checked : target.value;
       setDisplayBufferSizeChart(!!value);
     }, []);
+  const onDebugElementCheckBoxChange =
+    React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+      const target = e.target;
+      const value = target.type === "checkbox" ?
+        target.checked : target.value;
+      setDisplayDebugElement(!!value);
+    }, [player]);
 
   return (
     <div className="player-charts">
@@ -94,6 +118,21 @@ function ChartsManager({ player }: { player: IPlayerModule | null }) {
           <BufferSizeChart
             module={bufferSizeChart}
           /> : null }
+      </div>
+      <div className="player-box">
+        <div className="chart-checkbox" >
+          Display debug element (on top of the player)
+          <label className="switch">
+            <input
+              aria-label="Display/Hide debug element on top of the video"
+              name="displayDebugElement"
+              type="checkbox"
+              checked={displayDebugElement}
+              onChange={onDebugElementCheckBoxChange}
+            />
+            <span className="slider round"></span>
+          </label>
+        </div>
       </div>
     </div>
   );

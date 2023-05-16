@@ -19,44 +19,37 @@ import RequestError from "../request_error";
 
 describe("errors - NetworkError", () => {
   it("should be able to use a RequestError", () => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", "http://www.example.com");
-    const requestError = new RequestError("foo", 12, "TIMEOUT", xhr);
+    const requestError = new RequestError("foo", 0, "TIMEOUT");
     const networkError = new NetworkError("PIPELINE_LOAD_ERROR", requestError);
     expect(networkError).toBeInstanceOf(Error);
     expect(networkError.name).toBe("NetworkError");
     expect(networkError.type).toBe("NETWORK_ERROR");
-    expect(networkError.xhr).toBe(requestError.xhr);
-    expect(networkError.status).toBe(12);
+    expect(networkError.status).toBe(0);
     expect(networkError.errorType).toBe(requestError.type);
     expect(networkError.code).toBe("PIPELINE_LOAD_ERROR");
     expect(networkError.fatal).toBe(false);
     expect(networkError.message)
-      .toBe("NetworkError (PIPELINE_LOAD_ERROR) TIMEOUT");
+      .toBe("PIPELINE_LOAD_ERROR: The request timed out");
   });
 
   it("should filter in a valid error code", () => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", "http://www.example.com");
-    const requestError = new RequestError("foo", 13, "ERROR_HTTP_CODE", xhr);
+    const requestError = new RequestError("foo", 403, "ERROR_HTTP_CODE");
     const networkError = new NetworkError("PIPELINE_LOAD_ERROR", requestError);
     networkError.fatal = true;
     expect(networkError).toBeInstanceOf(Error);
     expect(networkError.name).toBe("NetworkError");
     expect(networkError.type).toBe("NETWORK_ERROR");
-    expect(networkError.xhr).toBe(requestError.xhr);
-    expect(networkError.status).toBe(13);
+    expect(networkError.status).toBe(403);
     expect(networkError.errorType).toBe(requestError.type);
     expect(networkError.code).toBe("PIPELINE_LOAD_ERROR");
     expect(networkError.fatal).toBe(true);
     expect(networkError.message)
-      .toBe("NetworkError (PIPELINE_LOAD_ERROR) ERROR_HTTP_CODE");
+      .toBe("PIPELINE_LOAD_ERROR: An HTTP status code " +
+            "indicating failure was received: 403");
   });
 
   it("should return false in isHttpError if not an HTTP error", () => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", "http://www.example.com");
-    const requestError = new RequestError("foo", 500, "TIMEOUT", xhr);
+    const requestError = new RequestError("foo", 500, "TIMEOUT");
     const networkError = new NetworkError("PIPELINE_LOAD_ERROR", requestError);
     expect(networkError.isHttpError(0)).toBe(false);
   });
@@ -64,9 +57,7 @@ describe("errors - NetworkError", () => {
   /* eslint-disable max-len */
   it("should return false in isHttpError if it is an HTTP error with a different code", () => {
   /* eslint-enable max-len */
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", "http://www.example.com");
-    const requestError = new RequestError("foo", 44, "ERROR_HTTP_CODE", xhr);
+    const requestError = new RequestError("foo", 500, "ERROR_HTTP_CODE");
     const networkError = new NetworkError("PIPELINE_LOAD_ERROR", requestError);
     expect(networkError.isHttpError(1)).toBe(false);
   });
@@ -74,10 +65,8 @@ describe("errors - NetworkError", () => {
   /* eslint-disable max-len */
   it("should return true in isHttpError if it is an HTTP error with the same code", () => {
   /* eslint-enable max-len */
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", "http://www.example.com");
-    const requestError = new RequestError("foo", 33, "ERROR_HTTP_CODE", xhr);
+    const requestError = new RequestError("foo", 418, "ERROR_HTTP_CODE");
     const networkError = new NetworkError("PIPELINE_LOAD_ERROR", requestError);
-    expect(networkError.isHttpError(33)).toBe(true);
+    expect(networkError.isHttpError(418)).toBe(true);
   });
 });

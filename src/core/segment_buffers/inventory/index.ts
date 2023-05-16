@@ -15,14 +15,20 @@
  */
 
 import SegmentInventory, {
+  ChunkStatus,
   IBufferedChunk,
   IInsertedChunkInfos,
 } from "./segment_inventory";
 
 export default SegmentInventory;
 export {
+  ChunkStatus,
   IBufferedChunk,
   IInsertedChunkInfos,
 };
 export { IBufferedHistoryEntry } from "./buffered_history";
 export { IChunkContext } from "./types";
+export {
+  getFirstSegmentAfterPeriod,
+  getLastSegmentBeforePeriod,
+} from "./utils";
