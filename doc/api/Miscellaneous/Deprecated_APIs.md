@@ -229,7 +229,7 @@ You can replace this API by using the
 ### getCurrentKeySystem
 
 `getCurrentKeySystem` has been deprecated in profit of the similar
-[`getKeySystemConfiguration`](../Content_Information/getKeySystemConfiguration.md)
+[`getKeySystemConfiguration`](../Playback_Information/getKeySystemConfiguration.md)
 method.
 
 Note however that the key system string optionally returned as a `keySystem`
