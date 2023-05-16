@@ -406,9 +406,6 @@ properties, methods, events and so on.
   - [`isMute`](../api/Volume_Control/isMute.md):
     Return `true` if the audio volume is set to `0`.
 
-  - [`isMute`](../api/Volume_Control/isMute.md):
-    Return `true` if the audio volume is set to `0`.
-
   - [`unMute`](../api/Volume_Control/unMute.md):
     Restore the volume as it was before it was muted.
 
@@ -438,9 +435,34 @@ properties, methods, events and so on.
     Get the maximum memory the video buffer can take up in the memory, in
     kilobytes.
 
-  - [`getVideoBufferGap`](../api/Buffer_Information/getVideoBufferGap.md):
+  - [`getUrl`](../api/Playback_Information/getUrl.md):
+    Get URL of the currently-played content.
+
+  - [`updateContentUrls`](../api/Playback_Information/updateContentUrls.md):
+    Update URL(s) of the content currently being played.
+
+  - [`isLive`](../api/Playback_Information/isLive.md):
+    Returns `true` if the content is a "live" content.
+
+  - [`getKeySystemConfiguration`](../api/Playback_Information/getKeySystemConfiguration.md):
+    Returns information on the key system currently attached to the
+    HTMLMediaElement linked to the RxPlayer.
+
+  - [`getVideoBufferGap`](../api/Playback_Information/getVideoBufferGap.md):
     Returns in seconds the difference between the current position and the end
     of the current media time range.
+
+  - [`isContentLoaded`](../api/Playback_Information/isContentLoaded.md):
+    Returns `true` if a content is loaded.
+  
+  - [`isBuffering`](../api/Playback_Information/isBuffering.md):
+    Returns `true` if the player is buffering.
+  
+  - [`isPaused`](../api/Playback_Information/isPaused.md):
+    Returns `true` if the `<video>` element is paused.
+
+  - [`getLastStoredContentPosition`](../api/Playback_Information/getLastStoredContentPosition.md):
+    Returns the last stored content position, in seconds. 
 
   - [`getVideoLoadedTime`](../api/Deprecated/getVideoLoadedTime.md):
     [Deprecated] Returns in seconds the difference between the start and the end
@@ -449,19 +471,6 @@ properties, methods, events and so on.
   - [`getVideoPlayedTime`](../api/Deprecated/getVideoPlayedTime.md):
     [Deprecated] Returns in seconds the difference between the start of the
     current media time range and the current position.
-
-  - [`getUrl`](../api/Content_Information/getUrl.md):
-    Get URL of the currently-played content.
-
-  - [`updateContentUrls`](../api/Content_Information/updateContentUrls.md):
-    Update URL(s) of the content currently being played.
-
-  - [`isLive`](../api/Content_Information/isLive.md):
-    Returns `true` if the content is a "live" content.
-
-  - [`getKeySystemConfiguration`](../api/Content_Information/getKeySystemConfiguration.md):
-    Returns information on the key system currently attached to the
-    HTMLMediaElement linked to the RxPlayer.
 
   - [`getCurrentKeySystem`](../api/Deprecated/getCurrentKeySystem.md):
     [Deprecated] Returns the name of the current key system.

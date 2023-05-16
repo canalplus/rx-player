@@ -45,9 +45,10 @@ export function resetMediaSource(
       const sourceBuffer = sourceBuffers[i];
       try {
         if (readyState === "open") {
-          log.info("Init: Removing SourceBuffer from mediaSource");
+          log.info("Init: Aborting SourceBuffer before removing");
           sourceBuffer.abort();
         }
+        log.info("Init: Removing SourceBuffer from mediaSource");
         mediaSource.removeSourceBuffer(sourceBuffer);
       }
       catch (e) {
@@ -60,6 +61,7 @@ export function resetMediaSource(
     }
   }
 
+  log.info("Init: Clearing HTMLMediaElement's src");
   clearElementSrc(mediaElement);
 
   if (mediaSourceURL !== null) {
@@ -130,6 +132,7 @@ export default function openMediaSource(
   return createCancellablePromise(unlinkSignal, (resolve) => {
     const mediaSource = createMediaSource(mediaElement, unlinkSignal);
     events.onSourceOpen(mediaSource, () => {
+      log.info("Init: MediaSource opened");
       resolve(mediaSource);
     }, unlinkSignal);
   });

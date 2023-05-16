@@ -24,15 +24,19 @@
 
 import { ProberStatus } from "../../types";
 
+// TODO for whatever reason about which I spent too much time already,
+// `jest.mock` with `_esModule` set to `true` does not work as expected here
+// like it does on every other RxPlayer test file on the planet.
+// I chose to scrap that default import syntax in `jest.mock` just in this
+// file and make it as if compat/eme exported an object instead.
 
 describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
-  beforeEach(() => {
+  afterEach(() => {
     jest.resetModules();
   });
 
   it("should throw if no requestMediaKeySystemAccess", () => {
-    jest.mock("../../../../../compat", () => ({
-      requestMediaKeySystemAccess: null,
+    jest.mock("../../../../../compat/eme", () => ({
     }));
     const probeHDCPPolicy = jest.requireActual("../../probers/HDCPPolicy").default;
     /* eslint-disable @typescript-eslint/no-floating-promises */
@@ -42,8 +46,13 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
   });
 
   it("should throw if no hdcp attribute in config", () => {
-    jest.mock("../../../../../compat", () => ({
-      requestMediaKeySystemAccess: {},
+    const mockRequestMediaKeySystemAccess = jest.fn(() => {
+      return Promise.resolve({
+        getConfiguration: () => ({}),
+      });
+    });
+    jest.mock("../../../../../compat/eme", () => ({
+      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     }));
     const probeHDCPPolicy = jest.requireActual("../../probers/HDCPPolicy").default;
     /* eslint-disable @typescript-eslint/no-floating-promises */
@@ -63,13 +72,12 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
         createMediaKeys: mockCreateMediaKeys,
       });
     });
-    jest.mock("../../../../../compat", () => ({
+    jest.mock("../../../../../compat/eme", () => ({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAcces,
     }));
 
     const probeHDCPPolicy = jest.requireActual("../../probers/HDCPPolicy").default;
 
-    expect.assertions(3);
     probeHDCPPolicy({ hdcp: "1.1" })
       .then(([res]: [unknown]) => {
         expect(res).toEqual(ProberStatus.Unknown);
@@ -77,8 +85,9 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
         expect(mockRequestMediaKeySystemAcces).toHaveBeenCalledTimes(1);
         done();
       })
-      .catch(() => {
-        done();
+      .catch((err: unknown) => {
+        // eslint-disable-next-line no-console
+        console.error(err);
       });
   });
 
@@ -93,13 +102,12 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
         createMediaKeys: mockCreateMediaKeys,
       });
     });
-    jest.mock("../../../../../compat", () => ({
+    jest.mock("../../../../../compat/eme", () => ({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAcces,
     }));
 
     const probeHDCPPolicy = jest.requireActual("../../probers/HDCPPolicy").default;
 
-    expect.assertions(3);
     probeHDCPPolicy({ hdcp: "1.1" })
       .then(([res]: [unknown]) => {
         expect(res).toEqual(ProberStatus.Supported);
@@ -107,8 +115,9 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
         expect(mockRequestMediaKeySystemAcces).toHaveBeenCalledTimes(1);
         done();
       })
-      .catch(() => {
-        done();
+      .catch((err: unknown) => {
+        // eslint-disable-next-line no-console
+        console.error(err);
       });
   });
 
@@ -123,13 +132,11 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
         createMediaKeys: mockCreateMediaKeys,
       });
     });
-    jest.mock("../../../../../compat", () => ({
+    jest.mock("../../../../../compat/eme", () => ({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAcces,
     }));
 
     const probeHDCPPolicy = jest.requireActual("../../probers/HDCPPolicy").default;
-
-    expect.assertions(3);
     probeHDCPPolicy({ hdcp: "1.1" })
       .then(([res]: [unknown]) => {
         expect(res).toEqual(ProberStatus.NotSupported);
@@ -137,8 +144,9 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
         expect(mockRequestMediaKeySystemAcces).toHaveBeenCalledTimes(1);
         done();
       })
-      .catch(() => {
-        done();
+      .catch((err: unknown) => {
+        // eslint-disable-next-line no-console
+        console.error(err);
       });
   });
 });

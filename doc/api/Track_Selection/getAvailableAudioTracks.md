@@ -47,6 +47,9 @@ Each of the objects in the returned array have the following properties:
   - `codec` (`string|undefined`): The audio codec the Representation is
     in, as announced in the corresponding Manifest.
 
+  - `isSpatialAudio` (`Boolean|undefined`): If set to `true`, this Representation
+    has spatial audio.
+
 <div class="note">
 Note for multi-Period contents:
 <br>
