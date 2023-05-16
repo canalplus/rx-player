@@ -14,24 +14,19 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-
+// eslint-disable-next-line max-len
+import NativeTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/native";
 import ttmlParser from "../../../parsers/texttracks/ttml/native";
+import { IFeaturesObject } from "../../types";
 import addNativettmlFeature from "../native_ttml_parser";
-
-jest.mock("../../../parsers/texttracks/ttml/native", () => ({
-  __esModule: true as const,
-  default: jest.fn(),
-}));
 
 describe("Features list - native ttml Parser", () => {
   it("should add an native ttml Parser in the current features", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const featureObject : any = { nativeTextTracksParsers: {} };
+    const featureObject = { nativeTextTracksParsers: {} } as unknown as IFeaturesObject;
     addNativettmlFeature(featureObject);
     expect(featureObject).toEqual({
       nativeTextTracksParsers: { ttml: ttmlParser },
+      nativeTextTracksBuffer: NativeTextSegmentBuffer,
     });
     expect(featureObject.nativeTextTracksParsers.ttml).toBe(ttmlParser);
   });

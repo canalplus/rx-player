@@ -217,7 +217,7 @@ export default function request<T>(
  * @param {string} data
  * @returns {Object|null}
  */
-function toJSONForIE(data : string) : unknown|null {
+function toJSONForIE(data : string) : unknown {
   try {
     return JSON.parse(data);
   } catch (e) {

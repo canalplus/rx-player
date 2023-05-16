@@ -56,6 +56,7 @@ export type IParsedStartAtOption = { position : number } |
                                    { wallClockTime : number } |
                                    { percentage : number } |
                                    { fromLastPosition : number } |
+                                   { fromLivePosition : number } |
                                    { fromFirstPosition : number };
 
 export interface IParsedTransportOptions {
@@ -63,12 +64,12 @@ export interface IParsedTransportOptions {
   checkMediaSegmentIntegrity? : boolean | undefined;
   lowLatencyMode : boolean;
   manifestLoader?: IManifestLoader | undefined;
-  manifestUpdateUrl? : string | undefined;
   referenceDateTime? : number | undefined;
   representationFilter? : IRepresentationFilter | undefined;
   segmentLoader? : ISegmentLoader | undefined;
   serverSyncInfos? : IServerSyncInfos | undefined;
   /* eslint-disable import/no-deprecated */
+  manifestUpdateUrl? : string | undefined;
   supplementaryImageTracks? : ISupplementaryImageTrack[] | undefined;
   supplementaryTextTracks? : ISupplementaryTextTrack[] | undefined;
   /* eslint-enable import/no-deprecated */
@@ -397,6 +398,8 @@ function parseConstructorOptions(
  */
 function checkReloadOptions(options?: {
   reloadAt?: { position?: number; relative?: number };
+  keySystems?: IKeySystemOption[];
+  autoPlay?: boolean;
 }): void {
   if (options === null ||
       (typeof options !== "object" && options !== undefined)) {
@@ -413,6 +416,12 @@ function checkReloadOptions(options?: {
   if (typeof options?.reloadAt?.relative !== "number" &&
       options?.reloadAt?.relative !== undefined) {
     throw new Error("API: reload - Invalid 'reloadAt.relative' option format.");
+  }
+  if (!Array.isArray(options?.keySystems) && options?.keySystems !== undefined) {
+    throw new Error("API: reload - Invalid 'keySystems' option format.");
+  }
+  if (options?.autoPlay !== undefined && typeof options.autoPlay !== "boolean") {
+    throw new Error("API: reload - Invalid 'autoPlay' option format.");
   }
 }
 
@@ -589,6 +598,11 @@ function parseLoadVideoOptions(
     transportOptions.supplementaryImageTracks = supplementaryImageTracks;
   }
 
+  if (!isNullOrUndefined(options.transportOptions?.manifestUpdateUrl)) {
+    warnOnce("`manifestUpdateUrl` API is deprecated, please open an issue if you" +
+             " still rely on this.");
+  }
+
   if (isNullOrUndefined(options.textTrackMode)) {
     textTrackMode = DEFAULT_TEXT_TRACK_MODE;
   } else {
@@ -640,9 +654,8 @@ function parseLoadVideoOptions(
   }
 
   if (!isNullOrUndefined(options.startAt)) {
-    // TODO Better way to express that in TypeScript?
-    if ((options.startAt as { wallClockTime? : Date|number }).wallClockTime
-           instanceof Date
+    if ("wallClockTime" in options.startAt
+    && options.startAt.wallClockTime instanceof Date
     ) {
       const wallClockTime = (options.startAt as { wallClockTime : Date })
         .wallClockTime.getTime() / 1000;

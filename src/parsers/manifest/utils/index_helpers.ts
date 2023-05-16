@@ -136,7 +136,7 @@ export function getTimescaledRange(
  * timescaled time.
  * Returns -1 if the given time is lower than the start of the first available
  * segment.
- * @param {Object} index
+ * @param {Object} timeline
  * @param {Number} timeTScaled
  * @returns {Number}
  */

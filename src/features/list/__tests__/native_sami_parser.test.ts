@@ -14,24 +14,19 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-
+// eslint-disable-next-line max-len
+import NativeTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/native";
 import samiParser from "../../../parsers/texttracks/sami/native";
-import addNativeSAMIFeature from "../native_sami_parser";
+import { IFeaturesObject } from "../../types";
+import addNativesamiFeature from "../native_sami_parser";
 
-jest.mock("../../../parsers/texttracks/sami/native", () => ({
-  __esModule: true as const,
-  default: jest.fn(),
-}));
-
-describe("Features list - native SAMI Parser", () => {
-  it("should add an native SAMI Parser in the current features", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const featureObject : any = { nativeTextTracksParsers: {} };
-    addNativeSAMIFeature(featureObject);
+describe("Features list - native sami Parser", () => {
+  it("should add an native sami Parser in the current features", () => {
+    const featureObject = { nativeTextTracksParsers: {} } as unknown as IFeaturesObject;
+    addNativesamiFeature(featureObject);
     expect(featureObject).toEqual({
       nativeTextTracksParsers: { sami: samiParser },
+      nativeTextTracksBuffer: NativeTextSegmentBuffer,
     });
     expect(featureObject.nativeTextTracksParsers.sami).toBe(samiParser);
   });
