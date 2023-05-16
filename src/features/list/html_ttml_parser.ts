@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import HTMLTextSegmentBuffer from "../../core/segment_buffers/implementations/text/html";
 import ttmlParser from "../../parsers/texttracks/ttml/html";
 import { IFeaturesObject } from "../types";
 
@@ -23,6 +24,7 @@ import { IFeaturesObject } from "../types";
  */
 function addHTMLTTMLFeature(features : IFeaturesObject) : void {
   features.htmlTextTracksParsers.ttml = ttmlParser;
+  features.htmlTextTracksBuffer = HTMLTextSegmentBuffer;
 }
 
 export { addHTMLTTMLFeature as HTML_TTML_PARSER };

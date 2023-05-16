@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import globalScope from "../../compat/global_scope";
 import {
   NetworkErrorTypes,
   RequestError,
@@ -144,9 +145,9 @@ export default function fetchRequest(
     abortController.abort();
   }
 
-  let timeout : number | undefined;
+  let timeout : number | NodeJS.Timeout | undefined;
   if (options.timeout !== undefined) {
-    timeout = window.setTimeout(() => {
+    timeout = setTimeout(() => {
       timeouted = true;
       abortFetch();
     }, options.timeout);
@@ -244,7 +245,7 @@ export default function fetchRequest(
  * @return {boolean}
  */
 export function fetchIsSupported() : boolean {
-  return (typeof window.fetch === "function" &&
+  return (typeof globalScope.fetch === "function" &&
           !isNullOrUndefined(_AbortController) &&
           !isNullOrUndefined(_Headers));
 }

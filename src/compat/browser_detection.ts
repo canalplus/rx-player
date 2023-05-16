@@ -14,14 +14,21 @@
  * limitations under the License.
  */
 
+import globalScope from "./global_scope";
 import isNode from "./is_node";
 
-interface IIE11WindowObject extends Window {
+type GlobalScope = typeof globalScope;
+
+interface IIE11WindowObject extends GlobalScope {
   MSInputMethodContext? : unknown;
 }
 
 interface IIE11Document extends Document {
   documentMode? : unknown;
+}
+
+interface ISafariWindowObject extends GlobalScope {
+  safari? : { pushNotification? : { toString() : string } };
 }
 
 /** Edge Chromium, regardless of the device */
@@ -60,6 +67,9 @@ let isWebOs2022 = false;
 /** `true` for Panasonic devices. */
 let isPanasonic = false;
 
+/** `true` for the PlayStation 5 game console. */
+let isPlayStation5 = false;
+
 ((function findCurrentBrowser() : void {
   if (isNode) {
     return ;
@@ -67,7 +77,7 @@ let isPanasonic = false;
 
   // 1 - Find out browser between IE/Edge Legacy/Edge Chromium/Firefox/Safari
 
-  if (typeof (window as IIE11WindowObject).MSInputMethodContext !== "undefined" &&
+  if (typeof (globalScope as IIE11WindowObject).MSInputMethodContext !== "undefined" &&
       typeof (document as IIE11Document).documentMode !== "undefined")
   {
     isIE11 = true;
@@ -87,8 +97,8 @@ let isPanasonic = false;
   {
     isSafariMobile = true;
   } else if (
-    Object.prototype.toString.call(window.HTMLElement).indexOf("Constructor") >= 0 ||
-    (window as ISafariWindowObject).safari?.pushNotification?.toString() ===
+    Object.prototype.toString.call(globalScope.HTMLElement).indexOf("Constructor") >= 0 ||
+    (globalScope as ISafariWindowObject).safari?.pushNotification?.toString() ===
       "[object SafariRemoteNotification]"
   ) {
     isSafariDesktop = true;
@@ -101,7 +111,9 @@ let isPanasonic = false;
     isSamsungBrowser = true;
   }
 
-  if (/Tizen/.test(navigator.userAgent)) {
+  if (navigator.userAgent.indexOf("PlayStation 5") !== -1) {
+    isPlayStation5 = true;
+  } else if (/Tizen/.test(navigator.userAgent)) {
     isTizen = true;
 
   // Inspired form: http://webostv.developer.lge.com/discover/specifications/web-engine/
@@ -126,16 +138,13 @@ let isPanasonic = false;
   }
 })());
 
-interface ISafariWindowObject extends Window {
-  safari? : { pushNotification? : { toString() : string } };
-}
-
 export {
   isEdgeChromium,
   isIE11,
   isIEOrEdge,
   isFirefox,
   isPanasonic,
+  isPlayStation5,
   isSafariDesktop,
   isSafariMobile,
   isSamsungBrowser,

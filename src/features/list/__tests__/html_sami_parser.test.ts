@@ -14,24 +14,19 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-
+// eslint-disable-next-line max-len
+import HTMLTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/html";
 import samiParser from "../../../parsers/texttracks/sami/html";
-import addHTMLSAMIFeature from "../html_sami_parser";
+import { IFeaturesObject } from "../../types";
+import addHTMLsamiFeature from "../html_sami_parser";
 
-jest.mock("../../../parsers/texttracks/sami/html", () => ({
-  __esModule: true as const,
-  default: jest.fn(),
-}));
-
-describe("Features list - HTML SAMI Parser", () => {
-  it("should add an HTML SAMI Parser in the current features", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const featureObject : any = { htmlTextTracksParsers: {} };
-    addHTMLSAMIFeature(featureObject);
+describe("Features list - HTML sami Parser", () => {
+  it("should add an HTML sami Parser in the current features", () => {
+    const featureObject = { htmlTextTracksParsers: {} } as unknown as IFeaturesObject;
+    addHTMLsamiFeature(featureObject);
     expect(featureObject).toEqual({
       htmlTextTracksParsers: { sami: samiParser },
+      htmlTextTracksBuffer: HTMLTextSegmentBuffer,
     });
     expect(featureObject.htmlTextTracksParsers.sami).toBe(samiParser);
   });

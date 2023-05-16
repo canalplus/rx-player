@@ -921,6 +921,7 @@ function guessBufferedStartFromRangeStart(
   } else if (rangeStart < firstSegmentInRange.start) {
     log.debug("SI: range start too far from expected start",
               bufferType, rangeStart, firstSegmentInRange.start);
+    firstSegmentInRange.bufferedStart = firstSegmentInRange.start;
   } else {
     log.debug("SI: Segment appears immediately garbage collected at the start",
               bufferType, firstSegmentInRange.bufferedStart, rangeStart);
