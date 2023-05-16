@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import HTMLTextSegmentBuffer from "../../core/segment_buffers/implementations/text/html";
 import srtParser from "../../parsers/texttracks/srt/html";
 import { IFeaturesObject } from "../types";
 
@@ -23,6 +24,7 @@ import { IFeaturesObject } from "../types";
  */
 function addHTMLSRTFeature(features : IFeaturesObject) : void {
   features.htmlTextTracksParsers.srt = srtParser;
+  features.htmlTextTracksBuffer = HTMLTextSegmentBuffer;
 }
 
 export { addHTMLSRTFeature as HTML_SRT_PARSER };

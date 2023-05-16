@@ -20,19 +20,15 @@ import Adaptation, {
 import Manifest, {
   IDecipherabilityUpdateElement,
   IManifestParsingOptions,
-  ISupplementaryImageTrack,
-  ISupplementaryTextTrack,
 } from "./manifest";
 import Period from "./period";
 import Representation from "./representation";
 import {
-  IBaseContentInfos,
   IMetaPlaylistPrivateInfos,
   IRepresentationIndex,
   ISegment,
   StaticRepresentationIndex,
 } from "./representation_index";
-import { IAdaptationType } from "./types";
 import {
   areSameContent,
   getLoggableSegmentId,
@@ -53,15 +49,11 @@ export {
   Representation,
 
   // types
-  IAdaptationType,
-  IBaseContentInfos,
   IDecipherabilityUpdateElement,
   IManifestParsingOptions,
   IMetaPlaylistPrivateInfos,
   IRepresentationIndex,
   ISegment,
-  ISupplementaryImageTrack,
-  ISupplementaryTextTrack,
   StaticRepresentationIndex,
   SUPPORTED_ADAPTATIONS_TYPE,
 };

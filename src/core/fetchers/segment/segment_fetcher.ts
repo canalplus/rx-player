@@ -117,6 +117,8 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
     fetcherCallbacks : ISegmentFetcherCallbacks<TSegmentDataType>,
     cancellationSignal : CancellationSignal
   ) : Promise<void> {
+    const { segment, adaptation, representation, manifest, period } = content;
+
     // used by logs
     const segmentIdString = getLoggableSegmentId(content);
     const requestId = generateRequestID();
@@ -151,6 +153,17 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
 
     /** Set to `true` once network metrics have been sent. */
     let metricsSent = false;
+
+    /** Segment context given to the transport pipelines. */
+    const context = { segment,
+                      type: adaptation.type,
+                      language: adaptation.language,
+                      isLive: manifest.isLive,
+                      periodStart: period.start,
+                      periodEnd: period.end,
+                      mimeType: representation.mimeType,
+                      codecs: representation.codec,
+                      manifestPublishTime: manifest.publishTime };
 
     const loaderCallbacks = {
       /**
@@ -262,7 +275,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
       cdnMetadata : ICdnMetadata | null
     ) : ReturnType<ISegmentLoader<TLoadedFormat>> {
       return loadSegment(cdnMetadata,
-                         content,
+                         context,
                          requestOptions,
                          cancellationSignal,
                          loaderCallbacks);
@@ -289,7 +302,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
         const loaded = { data, isChunked };
 
         try {
-          const parsed = parseSegment(loaded, content, initTimescale);
+          const parsed = parseSegment(loaded, context, initTimescale);
 
           if (!parsedChunks[parsedChunkId]) {
             segmentDurationAcc = segmentDurationAcc !== undefined &&
@@ -436,12 +449,7 @@ export interface ISegmentFetcherOptions {
    * Maximum number of retries to perform on "regular" errors (e.g. due to HTTP
    * status, integrity errors, timeouts...).
    */
-  maxRetryRegular : number;
-  /**
-   * Maximum number of retries to perform when it appears that the user is
-   * currently offline.
-   */
-  maxRetryOffline : number;
+  maxRetry : number;
   /**
    * Timeout after which request are aborted and, depending on other options,
    * retried.
@@ -456,23 +464,17 @@ export interface ISegmentFetcherOptions {
  * @returns {Object}
  */
 export function getSegmentFetcherOptions(
-  bufferType : string,
-  { maxRetryRegular,
-    maxRetryOffline,
+  { maxRetry,
     lowLatencyMode,
-    requestTimeout } : { maxRetryRegular? : number | undefined;
-                         maxRetryOffline? : number | undefined;
+    requestTimeout } : { maxRetry? : number | undefined;
                          requestTimeout? : number | undefined;
                          lowLatencyMode : boolean; }
 ) : ISegmentFetcherOptions {
   const { DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
           DEFAULT_REQUEST_TIMEOUT,
-          DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
           INITIAL_BACKOFF_DELAY_BASE,
           MAX_BACKOFF_DELAY_BASE } = config.getCurrent();
-  return { maxRetryRegular: bufferType === "image" ? 0 :
-                            maxRetryRegular ?? DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
-           maxRetryOffline: maxRetryOffline ?? DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
+  return { maxRetry: maxRetry ?? DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
            baseDelay: lowLatencyMode ? INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY :
                                        INITIAL_BACKOFF_DELAY_BASE.REGULAR,
            maxDelay: lowLatencyMode ? MAX_BACKOFF_DELAY_BASE.LOW_LATENCY :

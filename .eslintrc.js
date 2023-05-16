@@ -329,6 +329,10 @@ module.exports = {
     "no-restricted-properties": [
       "error",
       {
+        "object": "window",
+        "message": "`window` doesn't work in Node.JS and only works when JavaScript is running in the main thread. Please import `globalScope` instead.",
+      },
+      {
         "object": "Object",
         "property": "assign",
         "message": "Not available in IE11, use `objectAssign` utils instead.",

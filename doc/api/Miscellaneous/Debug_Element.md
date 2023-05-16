@@ -27,13 +27,17 @@ Using one directly defined in the RxPlayer API instead allows to:
 This feature is not present in default builds to prevent adding unnecessary code
 to codebases that don't need it.
 
-As such, to add it, you will need to rely on the [minimal](../../Getting_Started/Minimal_Player.md)
-build of the RxPlayer and you will need to add the
-`DEBUG_ELEMENT` experimental feature:
+As such, to add it, you will need  to add the `DEBUG_ELEMENT` experimental
+feature:
 ```js
+// Import the RxPlayer
+// (here through the "minimal" build, though it doesn't change for other builds)
 import RxPlayer from "rx-player/minimal";
+
+// Import the feature
 import { DEBUG_ELEMENT } from "rx-player/experimental/features";
 
+// Attach the feature to imported RxPlayer
 RxPlayer.addFeatures([DEBUG_ELEMENT]);
 ```
 
@@ -84,12 +88,6 @@ reflect exactly what's going on at a particular point in time.
     - **ks**: _Key System_. If set, the current key system used to decrypt contents.
     - **mbb**: _Max Buffer Behind_. If set, the configured `maxBufferBehind` (amount of buffer to keep in memory behind the current position, in seconds).
     - **mba**: _Max Buffer Ahead_. If set, the configured `maxBufferAhead` (amount of buffer to keep in memory ahead of the current position, in seconds).
-    - **mia**: _Min Audio Bitrate_. If set, the configured `minAudioBitrate` (minimum audio bitrate reachable through adaptive streaming).
-    - **miv**: _Min video Bitrate_. If set, the configured `minVideoBitrate` (minimum video bitrate reachable through adaptive streaming).
-    - **maa**: _Max Audio Bitrate_. If set, the configured `maxAudioBitrate` (maximum audio bitrate reachable through adaptive streaming).
-    - **mav**: _Max video Bitrate_. If set, the configured `maxVideoBitrate` (maximum video bitrate reachable through adaptive streaming).
-    - **fab**: _Forced Audio bitrate_. If set, the forced audio bitrate, set by example through `setAudioBitrate`
-    - **fvb**: _Forced Video bitrate_. If set, the forced video bitrate, set by example through `setVideoBitrate`
     - **mbs**: _Max video Buffer Size_. If set, the configured `maxVideoBufferSize` (maximum amount of video data kept in the video buffer, in kilobytes)
     - **mip**: _Minimum Position_. The minimum position, obtainable through the `getMinimumPosition` API, at which the content is reachable
     - **dmi**: _Distance to Minimum Position_. The difference between the current position and the minimum position, in seconds

@@ -15,6 +15,7 @@
  */
 
 import parseTTMLToDiv from "../../";
+import globalScope from "../../../../../../compat/global_scope";
 
 const testingText = `<?xml version="1.0" encoding="UTF-8"?>
 <tt xmlns="http://www.w3.org/ns/ttml">
@@ -181,7 +182,7 @@ describe("Global TTML HTML parsing tests", () => {
     for (let i = 0; i < textNodes.length; i++) {
       const parentElement = textNodes[i].parentElement;
       if (parentElement !== null) {
-        expect(window.getComputedStyle(parentElement).color).toEqual("yellow");
+        expect(globalScope.getComputedStyle(parentElement).color).toEqual("yellow");
         nbTextNodes++;
       }
     }
