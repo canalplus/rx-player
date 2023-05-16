@@ -141,7 +141,7 @@ const generateSegmentLoader = ({
         break;
       }
       default:
-        if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
+        if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
           assert(false, "responseData should have been set");
         }
         responseData = new Uint8Array(0);

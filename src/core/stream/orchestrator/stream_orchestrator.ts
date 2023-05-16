@@ -108,7 +108,8 @@ export default function StreamOrchestrator(
           wantedBufferAhead,
           maxVideoBufferSize } = options;
 
-  const { MAXIMUM_MAX_BUFFER_AHEAD,
+  const { MINIMUM_MAX_BUFFER_AHEAD,
+          MAXIMUM_MAX_BUFFER_AHEAD,
           MAXIMUM_MAX_BUFFER_BEHIND } = config.getCurrent();
 
   // Keep track of a unique BufferGarbageCollector created per
@@ -116,12 +117,8 @@ export default function StreamOrchestrator(
   const garbageCollectors =
     new WeakMapMemory((segmentBuffer : SegmentBuffer) => {
       const { bufferType } = segmentBuffer;
-      const defaultMaxBehind = MAXIMUM_MAX_BUFFER_BEHIND[bufferType] != null ?
-                                 MAXIMUM_MAX_BUFFER_BEHIND[bufferType] as number :
-                                 Infinity;
-      const defaultMaxAhead = MAXIMUM_MAX_BUFFER_AHEAD[bufferType] != null ?
-                                MAXIMUM_MAX_BUFFER_AHEAD[bufferType] as number :
-                                Infinity;
+      const defaultMaxBehind = MAXIMUM_MAX_BUFFER_BEHIND[bufferType] ?? Infinity;
+      const maxAheadHigherBound = MAXIMUM_MAX_BUFFER_AHEAD[bufferType] ?? Infinity;
       return (gcCancelSignal : CancellationSignal) => {
         BufferGarbageCollector(
           { segmentBuffer,
@@ -130,10 +127,11 @@ export default function StreamOrchestrator(
                                                    (val) =>
                                                      Math.min(val, defaultMaxBehind),
                                                    gcCancelSignal),
-            maxBufferAhead: createMappedReference(maxBufferAhead,
-                                                  (val) =>
-                                                    Math.min(val, defaultMaxAhead),
-                                                  gcCancelSignal) },
+            maxBufferAhead: createMappedReference(maxBufferAhead, (val) => {
+              const lowerBound = Math.max(val,
+                                          MINIMUM_MAX_BUFFER_AHEAD[bufferType] ?? 0);
+              return Math.min(lowerBound, maxAheadHigherBound);
+            }, gcCancelSignal) },
           gcCancelSignal
         );
       };
@@ -194,6 +192,7 @@ export default function StreamOrchestrator(
                          manifest.getNextPeriod(time);
       if (nextPeriod === undefined) {
         log.warn("Stream: The wanted position is not found in the Manifest.");
+        enableOutOfBoundsCheck = true;
         return;
       }
       launchConsecutiveStreamsForPeriod(nextPeriod);
@@ -224,8 +223,11 @@ export default function StreamOrchestrator(
             callbacks.lockedStream({ bufferType: payload.bufferType,
                                      period: payload.period });
           } else {
-            const { position, autoPlay } = payload;
-            callbacks.needsMediaSourceReload({ position, autoPlay });
+            callbacks.needsMediaSourceReload({
+              timeOffset: payload.timeOffset,
+              minimumPosition: payload.stayInPeriod ? payload.period.start : undefined,
+              maximumPosition: payload.stayInPeriod ? payload.period.end : undefined,
+            });
           }
         },
         periodStreamReady(payload : IPeriodStreamReadyPayload) : void {
@@ -268,7 +270,7 @@ export default function StreamOrchestrator(
 
     /**
      * React to a Manifest's decipherability updates.
-     * @param {Array.<Object>}
+     * @param {Array.<Object>} updates
      * @returns {Promise}
      */
     async function onDecipherabilityUpdates(
@@ -332,6 +334,9 @@ export default function StreamOrchestrator(
       /** Remove from the `SegmentBuffer` all the concerned time ranges. */
       for (const { start, end } of [...undecipherableRanges, ...rangesToRemove]) {
         if (start < end) {
+          if (orchestratorCancelSignal.isCancelled()) {
+            return;
+          }
           await segmentBuffer.removeBuffer(start, end, orchestratorCancelSignal);
         }
       }
@@ -345,11 +350,9 @@ export default function StreamOrchestrator(
         }
         const observation = playbackObserver.getReference().getValue();
         if (needsFlushingAfterClean(observation, undecipherableRanges)) {
-          const shouldAutoPlay = !(observation.paused.pending ??
-                                   playbackObserver.getIsPaused());
-          callbacks.needsDecipherabilityFlush({ position: observation.position.last,
-                                                autoPlay: shouldAutoPlay,
-                                                duration: observation.duration });
+
+          // Bind to Period start and end
+          callbacks.needsDecipherabilityFlush();
           if (orchestratorCancelSignal.isCancelled()) {
             return ;
           }
@@ -434,9 +437,14 @@ export default function StreamOrchestrator(
     // Stop current PeriodStream when the current position goes over the end of
     // that Period.
     playbackObserver.listen(({ position }, stopListeningObservations) => {
-      if (basePeriod.end !== undefined &&
-          (position.pending ?? position.last) >= basePeriod.end)
-      {
+      const wantedPosition = position.pending ?? position.last;
+      if (basePeriod.end !== undefined && wantedPosition >= basePeriod.end) {
+        const nextPeriod = manifest.getPeriodAfter(basePeriod);
+
+        // Handle special wantedPosition === basePeriod.end cases
+        if (basePeriod.containsTime(wantedPosition, nextPeriod)) {
+          return;
+        }
         log.info("Stream: Destroying PeriodStream as the current playhead moved above it",
                  bufferType,
                  basePeriod.start,
@@ -578,7 +586,7 @@ export interface IStreamOrchestratorCallbacks
    * worst cases completely removed and re-created through the "reload" mechanism,
    * depending on the platform.
    */
-  needsDecipherabilityFlush(payload : INeedsDecipherabilityFlushPayload) : void;
+  needsDecipherabilityFlush() : void;
 }
 
 /** Payload for the `periodStreamCleared` callback. */
@@ -602,16 +610,23 @@ export interface IPeriodStreamClearedPayload {
 /** Payload for the `needsMediaSourceReload` callback. */
 export interface INeedsMediaSourceReloadPayload {
   /**
-   * The position in seconds and the time at which the MediaSource should be
-   * reset once it has been reloaded.
+   * Relative position, compared to the current one, at which we should
+   * restart playback after reloading. For example `-2` will reload 2 seconds
+   * before the current position.
    */
-  position : number;
+  timeOffset : number;
   /**
-   * If `true`, we want the HTMLMediaElement to play right after the reload is
-   * done.
-   * If `false`, we want to stay in a paused state at that point.
+   * If defined and if the new position obtained after relying on
+   * `timeOffset` is before `minimumPosition`, then we will reload at
+   * `minimumPosition`  instead.
    */
-  autoPlay : boolean;
+  minimumPosition : number | undefined;
+  /**
+   * If defined and if the new position obtained after relying on
+   * `timeOffset` is after `maximumPosition`, then we will reload at
+   * `maximumPosition`  instead.
+   */
+  maximumPosition : number | undefined;
 }
 
 /** Payload for the `lockedStream` callback. */
@@ -620,28 +635,6 @@ export interface ILockedStreamPayload {
   period : Period;
   /** Buffer type concerned. */
   bufferType : IBufferType;
-}
-
-/** Payload for the `needsDecipherabilityFlush` callback. */
-export interface INeedsDecipherabilityFlushPayload {
-  /**
-   * Indicated in the case where the MediaSource has to be reloaded,
-   * in which case the time of the HTMLMediaElement should be reset to that
-   * position, in seconds, once reloaded.
-   */
-  position : number;
-  /**
-   * If `true`, we want the HTMLMediaElement to play right after the flush is
-   * done.
-   * If `false`, we want to stay in a paused state at that point.
-   */
-  autoPlay : boolean;
-  /**
-   * The duration (maximum seekable position) of the content.
-   * This is indicated in the case where a seek has to be performed, to avoid
-   * seeking too far in the content.
-   */
-  duration : number;
 }
 
 /**

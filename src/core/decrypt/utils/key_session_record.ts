@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
+import areArraysOfNumbersEqual from "../../../utils/are_arrays_of_numbers_equal";
 import { IProcessedProtectionData } from "../types";
-import {
-  areKeyIdsEqual,
-  areAllKeyIdsContainedIn,
-} from "./key_id_comparison";
+import { areAllKeyIdsContainedIn } from "./key_id_comparison";
 
 /**
  * Class storing key-related information linked to a created `MediaKeySession`.
@@ -107,7 +105,7 @@ export default class KeySessionRecord {
       return false;
     }
     for (const storedKeyId of this._keyIds) {
-      if (areKeyIdsEqual(storedKeyId, keyId)) {
+      if (areArraysOfNumbersEqual(storedKeyId, keyId)) {
         return true;
       }
     }
