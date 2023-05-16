@@ -14,24 +14,19 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-
+// eslint-disable-next-line max-len
+import NativeTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/native";
 import srtParser from "../../../parsers/texttracks/srt/native";
+import { IFeaturesObject } from "../../types";
 import addNativesrtFeature from "../native_srt_parser";
-
-jest.mock("../../../parsers/texttracks/srt/native", () => ({
-  __esModule: true as const,
-  default: jest.fn(),
-}));
 
 describe("Features list - native srt Parser", () => {
   it("should add an native srt Parser in the current features", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const featureObject : any = { nativeTextTracksParsers: {} };
+    const featureObject = { nativeTextTracksParsers: {} } as unknown as IFeaturesObject;
     addNativesrtFeature(featureObject);
     expect(featureObject).toEqual({
       nativeTextTracksParsers: { srt: srtParser },
+      nativeTextTracksBuffer: NativeTextSegmentBuffer,
     });
     expect(featureObject.nativeTextTracksParsers.srt).toBe(srtParser);
   });
