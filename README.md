@@ -179,21 +179,11 @@ Demo pages for our previous versions are also available
 
 
 
-## Your questions ##############################################################
-
-You can ask directly your questions about the project on [our
-gitter](https://gitter.im/canalplus/rx-player).
-We will try our best to answer them as quickly as possible.
-
-
-
 ## Contribute ##################################################################
 
 Details on how to contribute is written in the [CONTRIBUTING.md
 file](./CONTRIBUTING.md) at the root of this repository.
 
-If you need more information, you can contact us via our [gitter
-room](https://gitter.im/canalplus/rx-player).
 
 
 ### Dependencies ###############################################################
@@ -205,31 +195,6 @@ npm install
 ```
 
 
-### Build ######################################################################
-
-We use npm scripts to bundle, lint and test the player. Here are some examples:
-```sh
-# build the player in dist/rx-player.js
-npm run build
-
-# lint the code in src/ with eslint
-npm run lint
-
-# launch the demo on a local server (http://127.0.0.1:8000)
-npm run start
-
-# launch our test suite on various browsers
-npm run test
-
-# list all available npm scripts
-npm run list
-```
-
-Builds are included in the ``dist/`` directory (builds based on the last version
-are already included there).
-
-
-
 ## Why a new player? ###########################################################
 
 ### A need for an advanced media player ########################################
@@ -238,7 +203,7 @@ Canal+ Group is a media company with many advanced needs when it comes to media
 playback: it provides both live and VoD stream with multiple encryption
 requirements, supports a very large panel of devices and has many other
 specificities (like adult content restrictions, ad-insertion, Peer-To-Peer
-integration...).
+integration, low-latency live streaming...).
 
 When the time came to switch from a plugin-based web player approach to an HTML5
 one back in 2015, no media player had the key features we wanted, and including
@@ -249,7 +214,7 @@ The R&D department of Canal+ Group thus started to work on a new featureful
 media-player: the RxPlayer. To both help and profit from the community, it also
 decided to share it to everyone under a permissive open-source licence.
 
-Now, more than 6 years later, the RxPlayer continues to evolve at the same fast
+Now, more than 8 years later, the RxPlayer continues to evolve at the same fast
 pace to include a lot of features and improvements you may not find in other
 media players.
 You can look at our
@@ -296,24 +261,3 @@ them. Amongst those:
     risks always low.
 
 \* In "directfile" mode, on compatible browsers
-
-
-## Target support ##############################################################
-
-Here is a basic list of supported platforms:
-
-|             | Chrome  |  IE [1] |  Edge  |  Firefox  |  Safari  |  Opera  |
-|-------------|:-------:|:-------:|:------:|:---------:|:--------:|:-------:|
-| Windows     |  >= 30  |  >= 11  |  >= 12 |   >= 42   |   >= 8   |  >= 25  |
-| OSX         |  >= 30  |    -    |    -   |   >= 42   |   >= 8   |  >= 25  |
-| Linux       |  >= 37  |    -    |    -   |   >= 42   |    -     |  >= 25  |
-| Android [2] |  >= 30  |    -    |    -   |   >= 42   |    -     |  >= 15  |
-| iOS         |   No    |    -    |    -   |    No     |    No    |    No   |
-
-[1] Only on Windows >= 8.
-
-[2] Android version >= 4.2
-
-And more. A good way to know if the browser should be supported by our player is
-to go on the page https://www.youtube.com/html5 and check for "Media Source
-Extensions" support.

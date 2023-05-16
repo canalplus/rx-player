@@ -19,16 +19,15 @@ import {
   IParsedPeriod,
 } from "../parsers/manifest";
 import {
-  IPlayerError,
+  ITrackType,
   IRepresentationFilter,
 } from "../public_types";
 import arrayFind from "../utils/array_find";
 import objectValues from "../utils/object_values";
 import Adaptation from "./adaptation";
-import { IAdaptationType } from "./types";
 
 /** Structure listing every `Adaptation` in a Period. */
-export type IManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
+export type IManifestAdaptations = Partial<Record<ITrackType, Adaptation[]>>;
 
 /**
  * Class representing the tracks and qualities available from a given time
@@ -57,12 +56,6 @@ export default class Period {
    */
   public end : number | undefined;
 
-  /**
-   * Array containing every errors that happened when the Period has been
-   * created, in the order they have happened.
-   */
-  public readonly contentWarnings : IPlayerError[];
-
   /** Array containing every stream event happening on the period */
   public streamEvents : IManifestStreamEvent[];
 
@@ -73,11 +66,11 @@ export default class Period {
    */
   constructor(
     args : IParsedPeriod,
+    unsupportedAdaptations: Adaptation[],
     representationFilter? : IRepresentationFilter | undefined
   ) {
-    this.contentWarnings = [];
     this.id = args.id;
-    this.adaptations = (Object.keys(args.adaptations) as IAdaptationType[])
+    this.adaptations = (Object.keys(args.adaptations) as ITrackType[])
       .reduce<IManifestAdaptations>((acc, type) => {
         const adaptationsForType = args.adaptations[type];
         if (adaptationsForType == null) {
@@ -87,10 +80,7 @@ export default class Period {
           .map((adaptation) : Adaptation => {
             const newAdaptation = new Adaptation(adaptation, { representationFilter });
             if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
-              const error =
-                new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-                               "An Adaptation contains only incompatible codecs.");
-              this.contentWarnings.push(error);
+              unsupportedAdaptations.push(newAdaptation);
             }
             return newAdaptation;
           })
@@ -101,8 +91,9 @@ export default class Period {
             adaptationsForType.length > 0 &&
             (type === "video" || type === "audio")
         ) {
-          throw new MediaError("MANIFEST_PARSE_ERROR",
-                               "No supported " + type + " adaptations");
+          throw new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
+                               "No supported " + type + " adaptations",
+                               { adaptations: undefined });
         }
 
         if (filteredAdaptations.length > 0) {
@@ -149,7 +140,7 @@ export default class Period {
    * @param {string} adaptationType
    * @returns {Array.<Object>}
    */
-  getAdaptationsForType(adaptationType : IAdaptationType) : Adaptation[] {
+  getAdaptationsForType(adaptationType : ITrackType) : Adaptation[] {
     const adaptationsForType = this.adaptations[adaptationType];
     return adaptationsForType == null ? [] :
                                         adaptationsForType;
@@ -170,7 +161,7 @@ export default class Period {
    * type. Will return for all types if `undefined`.
    * @returns {Array.<Adaptation>}
    */
-  getSupportedAdaptations(type? : IAdaptationType) : Adaptation[] {
+  getSupportedAdaptations(type? : ITrackType) : Adaptation[] {
     if (type === undefined) {
       return this.getAdaptations().filter(ada => {
         return ada.isSupported;
@@ -188,10 +179,23 @@ export default class Period {
   /**
    * Returns true if the give time is in the time boundaries of this `Period`.
    * @param {number} time
+   * @param {object|null} nextPeriod - Period coming chronologically just
+   * after in the same Manifest. `null` if this instance is the last `Period`.
    * @returns {boolean}
    */
-  containsTime(time : number) : boolean {
-    return time >= this.start && (this.end === undefined ||
-                                  time < this.end);
+  containsTime(time : number, nextPeriod : Period | null) : boolean {
+    if (time >= this.start && (this.end === undefined || time < this.end)) {
+      return true;
+    } else if (time === this.end && (nextPeriod === null ||
+                                     nextPeriod.start > this.end))
+    {
+      // The last possible timed position of a Period is ambiguous as it is
+      // frequently in common with the start of the next one: is it part of
+      // the current or of the next Period?
+      // Here we only consider it part of the current Period if it is the
+      // only one with that position.
+      return true;
+    }
+    return false;
   }
 }

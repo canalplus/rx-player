@@ -26,7 +26,10 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable no-restricted-properties */
 
-import { IEncryptedEventData } from "../../../../compat/eme";
+import {
+  IEmeApiImplementation,
+  IEncryptedEventData,
+} from "../../../../compat/eme";
 import {
   base64ToBytes,
   bytesToBase64,
@@ -319,24 +322,24 @@ class MockedDecryptorEventEmitter extends EventEmitter<{
  * Mock functions coming from the compat directory.
  */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function mockCompat(exportedFunctions = {}) {
+export function mockCompat(exportedFunctions : Record<string, jest.Mock | null> = {}) {
   const ee = new MockedDecryptorEventEmitter();
+  const onEncrypted = exportedFunctions.onEncrypted ?? jest.fn((
+    elt : HTMLMediaElement,
+    fn : (x : unknown) => void,
+    signal : CancellationSignal
+  ) => {
+    elt.addEventListener("encrypted", fn);
+    signal.register(() => {
+      elt.removeEventListener("encrypted", fn);
+    });
+    ee.addEventListener("encrypted", (evt) => {
+      if (evt.elt === elt) {
+        fn(evt.value);
+      }
+    }, signal);
+  });
   const mockEvents : Record<string, jest.Mock> = {
-    onEncrypted: jest.fn((
-      elt : HTMLMediaElement,
-      fn : (x : unknown) => void,
-      signal : CancellationSignal
-    ) => {
-      elt.addEventListener("encrypted", fn);
-      signal.register(() => {
-        elt.removeEventListener("encrypted", fn);
-      });
-      ee.addEventListener("encrypted", (evt) => {
-        if (evt.elt === elt) {
-          fn(evt.value);
-        }
-      }, signal);
-    }),
     onKeyMessage: jest.fn((
       elt : MediaKeySessionImpl,
       fn : (x : unknown) => void,
@@ -375,9 +378,11 @@ export function mockCompat(exportedFunctions = {}) {
     }),
   };
 
-  const mockRmksa = jest.fn(requestMediaKeySystemAccessImpl);
-  const mockSetMediaKeys = jest.fn();
-  const mockGenerateKeyRequest = jest.fn((
+  const mockRmksa = exportedFunctions.requestMediaKeySystemAccess ??
+                    jest.fn(requestMediaKeySystemAccessImpl);
+  const mockSetMediaKeys = exportedFunctions.setMediaKeys ??
+                           jest.fn(() => Promise.resolve());
+  const mockGenerateKeyRequest =  jest.fn((
     mks : MediaKeySessionImpl,
     initializationDataType,
     initializationData
@@ -392,12 +397,22 @@ export function mockCompat(exportedFunctions = {}) {
 
   jest.mock("../../../../compat", () => (
     { events: mockEvents,
-      requestMediaKeySystemAccess: mockRmksa,
-      setMediaKeys: mockSetMediaKeys,
+      shouldRenewMediaKeySystemAccess: jest.fn(() => false),
+      shouldWaitForEncryptedBeforeAttachment: jest.fn(() => false),
+      canReuseMediaKeys: jest.fn(() => true),
+      ...exportedFunctions }));
+
+  const emeImplementation = {
+    onEncrypted,
+    requestMediaKeySystemAccess: mockRmksa,
+    setMediaKeys: mockSetMediaKeys,
+  } as unknown as IEmeApiImplementation;
+
+  jest.mock("../../../../compat/eme", () => (
+    { __esModule: true as const,
+      default: emeImplementation,
       getInitData: mockGetInitData,
       generateKeyRequest: mockGenerateKeyRequest,
-      shouldRenewMediaKeySystemAccess: jest.fn(() => false),
-      canReuseMediaKeys: jest.fn(() => true),
       ...exportedFunctions }));
 
   return { mockEvents,

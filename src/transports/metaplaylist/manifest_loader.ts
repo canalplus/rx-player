@@ -40,6 +40,7 @@ function regularManifestLoader(
   return request({ url,
                    responseType: "text",
                    timeout: loaderOptions.timeout,
+                   connectionTimeout: loaderOptions.connectionTimeout,
                    cancelSignal });
 }
 

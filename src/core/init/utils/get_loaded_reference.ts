@@ -18,8 +18,9 @@
 import {
   shouldValidateMetadata,
   shouldWaitForDataBeforeLoaded,
+  shouldWaitForHaveEnoughData,
 } from "../../../compat";
-import createSharedReference, {
+import SharedReference, {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
 import TaskCanceller, { CancellationSignal } from "../../../utils/task_canceller";
@@ -45,7 +46,7 @@ export default function getLoadedReference(
 ) : IReadOnlySharedReference<boolean> {
   const listenCanceller = new TaskCanceller();
   listenCanceller.linkToSignal(cancelSignal);
-  const isLoaded = createSharedReference(false, listenCanceller.signal);
+  const isLoaded = new SharedReference(false, listenCanceller.signal);
   playbackObserver.listen((observation) => {
     if (observation.rebuffering !== null ||
         observation.freezing !== null ||
@@ -64,11 +65,15 @@ export default function getLoadedReference(
       }
     }
 
-    if (observation.readyState >= 3 && observation.currentRange !== null) {
-      if (!shouldValidateMetadata() || mediaElement.duration > 0) {
-        isLoaded.setValue(true);
-        listenCanceller.cancel();
-        return;
+    const minReadyState = shouldWaitForHaveEnoughData() ? 4 :
+                                                          3;
+    if (observation.readyState >= minReadyState) {
+      if (observation.currentRange !== null || observation.ended) {
+        if (!shouldValidateMetadata() || mediaElement.duration > 0) {
+          isLoaded.setValue(true);
+          listenCanceller.cancel();
+          return;
+        }
       }
     }
   }, { includeLastObservation: true, clearSignal: listenCanceller.signal });

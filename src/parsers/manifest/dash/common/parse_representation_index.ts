@@ -31,6 +31,10 @@ import {
   ListRepresentationIndex,
   TemplateRepresentationIndex,
   TimelineRepresentationIndex,
+  IBaseIndexContextArgument,
+  IListIndexContextArgument,
+  ITemplateIndexContextArgument,
+  ITimelineIndexContextArgument,
 } from "./indexes";
 import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import { IResolvedBaseUrl } from "./resolve_base_urls";
@@ -46,14 +50,12 @@ export default function parseRepresentationIndex(
   representation : IRepresentationIntermediateRepresentation,
   context : IRepresentationIndexContext
 ) : IRepresentationIndex {
-  const { aggressiveMode,
-          availabilityTimeOffset,
+  const { availabilityTimeOffset,
           manifestBoundsCalculator,
           isDynamic,
           end: periodEnd,
           start: periodStart,
           receivedTime,
-          timeShiftBufferDepth,
           unsafelyBaseOnPreviousRepresentation,
           inbandEventStreams,
           isLastPeriod } = context;
@@ -65,20 +67,24 @@ export default function parseRepresentationIndex(
     return inbandEventStreams
       .some(({ schemeIdUri }) => schemeIdUri === inbandEvent.schemeIdUri);
   };
-  const reprIndexCtxt = { aggressiveMode,
-                          availabilityTimeComplete: true,
-                          availabilityTimeOffset,
-                          unsafelyBaseOnPreviousRepresentation,
-                          isEMSGWhitelisted,
-                          isLastPeriod,
-                          manifestBoundsCalculator,
-                          isDynamic,
-                          periodEnd,
-                          periodStart,
-                          receivedTime,
-                          representationBitrate: representation.attributes.bitrate,
-                          representationId: representation.attributes.id,
-                          timeShiftBufferDepth };
+  const reprIndexCtxt: ITimelineIndexContextArgument |
+                       ITemplateIndexContextArgument |
+                       IListIndexContextArgument |
+                       IBaseIndexContextArgument =
+    {
+      availabilityTimeComplete: undefined,
+      availabilityTimeOffset,
+      unsafelyBaseOnPreviousRepresentation,
+      isEMSGWhitelisted,
+      isLastPeriod,
+      manifestBoundsCalculator,
+      isDynamic,
+      periodEnd,
+      periodStart,
+      receivedTime,
+      representationBitrate: representation.attributes.bitrate,
+      representationId: representation.attributes.id,
+    };
   let representationIndex : IRepresentationIndex;
   if (representation.children.segmentBase !== undefined) {
     const { segmentBase } = representation.children;
@@ -99,12 +105,15 @@ export default function parseRepresentationIndex(
                    ...segmentTemplates as [
                      ISegmentTemplateIntermediateRepresentation
                    ] /* Ugly TS Hack */);
-    reprIndexCtxt.availabilityTimeComplete =
-      segmentTemplate.availabilityTimeComplete ??
-      context.availabilityTimeComplete;
-    reprIndexCtxt.availabilityTimeOffset =
-      (segmentTemplate.availabilityTimeOffset ?? 0) +
-      context.availabilityTimeOffset;
+    if (
+      segmentTemplate.availabilityTimeOffset !== undefined ||
+      context.availabilityTimeOffset !== undefined
+    ) {
+      reprIndexCtxt.availabilityTimeOffset =
+        (segmentTemplate.availabilityTimeOffset ?? 0) +
+        (context.availabilityTimeOffset ?? 0);
+    }
+
     representationIndex = TimelineRepresentationIndex
       .isTimelineIndexArgument(segmentTemplate) ?
         new TimelineRepresentationIndex(segmentTemplate, reprIndexCtxt) :
@@ -133,12 +142,25 @@ export default function parseRepresentationIndex(
 export interface IRepresentationIndexContext {
   /** Parsed AdaptationSet which contains the Representation. */
   adaptation : IAdaptationSetIntermediateRepresentation;
-  /** Whether we should request new segments even if they are not yet finished. */
-  aggressiveMode : boolean;
-  /** If false, declared segments in the MPD might still be not completely generated. */
-  availabilityTimeComplete : boolean;
-  /** availability time offset of the concerned Adaptation. */
-  availabilityTimeOffset : number;
+  /**
+   * If `false`, declared segments in the MPD might still be not completely generated.
+   * If `true`, they are completely generated.
+   *
+   * If `undefined`, the corresponding property was not set in the MPD and it is
+   * thus assumed that they are all generated.
+   * It might however be semantically different than `true` in the RxPlayer as it
+   * means that the packager didn't include that information in the MPD.
+   */
+  availabilityTimeComplete : boolean | undefined;
+  /**
+   * availability time offset of the concerned Adaptation.
+   *
+   * If `undefined`, the corresponding property was not set in the MPD and it is
+   * thus assumed to be equal to `0`.
+   * It might however be semantically different than `0` in the RxPlayer as it
+   * means that the packager didn't include that information in the MPD.
+   */
+  availabilityTimeOffset : number | undefined;
   /** Eventual URLs from which every relative URL will be based on. */
   baseURLs : IResolvedBaseUrl[];
   /** End time of the current Period, in seconds. */
@@ -161,14 +183,12 @@ export interface IRepresentationIndexContext {
    */
   parentSegmentTemplates : ISegmentTemplateIntermediateRepresentation[];
   /**
-   * Time (in terms of `performance.now`) at which the XML file containing this
-   * Representation was received.
+   * Time (as the monotonically-raising timestamp used by the RxPlayer) at which
+   * the XML file containing this Representation was received.
    */
   receivedTime? : number | undefined;
   /** Start time of the current period, in seconds. */
   start : number;
-  /** Depth of the buffer for the whole content, in seconds. */
-  timeShiftBufferDepth? : number | undefined;
   /**
    * The parser should take this Representation - which is the same as this one
    * parsed at an earlier time - as a base to speed-up the parsing process.

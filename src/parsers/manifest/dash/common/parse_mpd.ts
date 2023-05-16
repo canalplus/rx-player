@@ -18,6 +18,7 @@ import config from "../../../../config";
 import log from "../../../../log";
 import Manifest from "../../../../manifest";
 import arrayFind from "../../../../utils/array_find";
+import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
 import { getFilenameIndexInUrl } from "../../../../utils/resolve_url";
 import { IParsedManifest } from "../../types";
 import {
@@ -29,6 +30,7 @@ import { IResponseData } from "../parsers_types";
 import getClockOffset from "./get_clock_offset";
 import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
 import getMinimumAndMaximumPositions from "./get_minimum_and_maximum_positions";
+import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import parseAvailabilityStartTime from "./parse_availability_start_time";
 import parsePeriods, {
   IXLinkInfos,
@@ -40,14 +42,15 @@ import resolveBaseURLs, {
 
 /** Possible options for `parseMPD`.  */
 export interface IMPDParserArguments {
-  /** Whether we should request new segments even if they are not yet finished. */
-  aggressiveMode : boolean;
   /**
-   * If set, offset to add to `performance.now()` to obtain the current server's
-   * time.
+   * If set, offset to add to the monotonically-raising timestamp used by the
+   * RxPlayer to obtain the current server's time.
    */
   externalClockOffset? : number | undefined;
-  /** Time, in terms of `performance.now` at which this MPD was received. */
+  /**
+   * Time at which this MPD was received.
+   * The unit is the monotonically-raising timestamp used by the RxPlayer.
+   */
   manifestReceivedTime? : number | undefined;
   /** Default base time, in seconds. */
   referenceDateTime? : number | undefined;
@@ -250,12 +253,19 @@ function parseCompleteIntermediateRepresentation(
   const { externalClockOffset: clockOffset,
           unsafelyBaseOnPreviousManifest } = args;
 
-  const manifestInfos = { aggressiveMode: args.aggressiveMode,
-                          availabilityStartTime,
+  const { externalClockOffset } = args;
+  const manifestBoundsCalculator = new ManifestBoundsCalculator({
+    availabilityStartTime,
+    isDynamic,
+    timeShiftBufferDepth,
+    serverTimestampOffset: externalClockOffset,
+  });
+  const manifestInfos = { availabilityStartTime,
                           baseURLs: mpdBaseUrls,
                           clockOffset,
                           duration: rootAttributes.duration,
                           isDynamic,
+                          manifestBoundsCalculator,
                           manifestProfiles: mpdIR.attributes.profiles,
                           receivedTime: args.manifestReceivedTime,
                           timeShiftBufferDepth,
@@ -284,7 +294,7 @@ function parseCompleteIntermediateRepresentation(
   const { minimumSafePosition,
           maximumSafePosition,
           maximumUnsafePosition } = getMinimumAndMaximumPositions(parsedPeriods);
-  const now = performance.now();
+  const now = getMonotonicTimeStamp();
 
   if (!isDynamic) {
     minimumTime = minimumSafePosition !== undefined     ? minimumSafePosition :
@@ -312,31 +322,33 @@ function parseCompleteIntermediateRepresentation(
                         livePosition: undefined,
                         time: now };
   } else {
-    minimumTime = minimumSafePosition;
-    timeshiftDepth = timeShiftBufferDepth ?? null;
+    // Determine the maximum seekable position
     let finalMaximumSafePosition : number;
-    let livePosition;
-
-    if (maximumUnsafePosition !== undefined) {
-      livePosition = maximumUnsafePosition;
-    }
-
     if (maximumSafePosition !== undefined) {
       finalMaximumSafePosition = maximumSafePosition;
     } else {
-      const ast = availabilityStartTime ?? 0;
-      const { externalClockOffset } = args;
       if (externalClockOffset === undefined) {
         log.warn("DASH Parser: use system clock to define maximum position");
-        finalMaximumSafePosition = (Date.now() / 1000) - ast;
+        finalMaximumSafePosition = (Date.now() / 1000) - availabilityStartTime;
       } else {
-        const serverTime = performance.now() + externalClockOffset;
-        finalMaximumSafePosition = (serverTime / 1000) - ast;
+        const serverTime = getMonotonicTimeStamp() + externalClockOffset;
+        finalMaximumSafePosition = (serverTime / 1000) - availabilityStartTime;
       }
     }
+
+    // Determine live edge (what position corresponds to live content, can be
+    // inferior or superior to the maximum anounced position in some specific
+    // scenarios). However, the `timeShiftBufferDepth` should be based on it.
+    let livePosition = manifestBoundsCalculator.getEstimatedLiveEdge();
     if (livePosition === undefined) {
-      livePosition = finalMaximumSafePosition;
+      if (maximumUnsafePosition !== undefined) {
+        livePosition = maximumUnsafePosition;
+      } else {
+        livePosition = finalMaximumSafePosition;
+      }
+      // manifestBoundsCalculator.forceLiveEdge(livePosition);
     }
+
     maximumTimeData = { isLinear: true,
                         maximumSafePosition: finalMaximumSafePosition,
                         livePosition,
@@ -344,10 +356,12 @@ function parseCompleteIntermediateRepresentation(
 
     // if the minimum calculated time is even below the buffer depth, perhaps we
     // can go even lower in terms of depth
+    minimumTime = minimumSafePosition;
+    timeshiftDepth = timeShiftBufferDepth ?? null;
     if (timeshiftDepth !== null && minimumTime !== undefined &&
-        finalMaximumSafePosition - minimumTime > timeshiftDepth)
+        livePosition - minimumTime > timeshiftDepth)
     {
-      timeshiftDepth = finalMaximumSafePosition - minimumTime;
+      timeshiftDepth = livePosition - minimumTime;
     }
   }
 

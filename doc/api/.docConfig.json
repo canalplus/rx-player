@@ -9,6 +9,10 @@
       "displayName": "Creating a Player"
     },
     {
+      "path": "./RxPlayer_Features.md",
+      "displayName": "Feature switching"
+    },
+    {
       "path": "./Loading_a_Content.md",
       "displayName": "Loading a Content"
     },
@@ -37,8 +41,8 @@
       "displayName": "Track Selection"
     },
     {
-      "path": "./Bitrate_Selection",
-      "displayName": "Bitrate Selection"
+      "path": "./Representation_Selection",
+      "displayName": "Representation Selection"
     },
     {
       "path": "./Speed_Control",
@@ -53,12 +57,8 @@
       "displayName": "Buffer Control"
     },
     {
-      "path": "./Buffer_Information",
-      "displayName": "Buffer Information"
-    },
-    {
-      "path": "./Content_Information",
-      "displayName": "Content Information"
+      "path": "./Playback_Information",
+      "displayName": "Playback Information"
     },
     {
       "path": "./Static_Properties.md",
@@ -75,10 +75,6 @@
     {
       "path": "./Miscellaneous",
       "displayName": "Miscellaneous"
-    },
-    {
-      "path": "./Deprecated",
-      "displayName": "Deprecated Methods"
     }
   ]
 }
