@@ -20,7 +20,7 @@ import { IEventEmitter } from "../utils/event_emitter";
 import isNonEmptyString from "../utils/is_non_empty_string";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import noop from "../utils/noop";
-import createSharedReference, {
+import SharedReference, {
   IReadOnlySharedReference,
 } from "../utils/reference";
 import { CancellationSignal } from "../utils/task_canceller";
@@ -30,7 +30,6 @@ import {
   ICompatPictureInPictureWindow,
 } from "./browser_compatibility_types";
 import isNode from "./is_node";
-import shouldFavourCustomSafariEME from "./should_favour_custom_safari_EME";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
@@ -144,7 +143,7 @@ function createCompatibleEventListener(
           }
         });
       } else {
-        if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
+        if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
           log.warn(`compat: element ${element.tagName}` +
                    " does not support any of these events: " +
                    prefixedEvents.join(", "));
@@ -210,7 +209,7 @@ function getDocumentVisibilityRef(
                                                            "visibilitychange";
 
   const isHidden = document[hidden as "hidden"];
-  const ref = createSharedReference(!isHidden, stopListening);
+  const ref = new SharedReference(!isHidden, stopListening);
 
   addEventListener(document, visibilityChangeEvent, () => {
     const isVisible = !(document[hidden as "hidden"]);
@@ -233,7 +232,7 @@ function getPageActivityRef(
 ) : IReadOnlySharedReference<boolean> {
   const isDocVisibleRef = getDocumentVisibilityRef(stopListening);
   let currentTimeout : number | undefined;
-  const ref = createSharedReference(true, stopListening);
+  const ref = new SharedReference(true, stopListening);
   stopListening.register(() => {
     clearTimeout(currentTimeout);
     currentTimeout = undefined;
@@ -291,7 +290,7 @@ function getPictureOnPictureStateRef(
   {
     const isWebKitPIPEnabled =
       mediaElement.webkitPresentationMode === "picture-in-picture";
-    const ref = createSharedReference<IPictureInPictureEvent>({
+    const ref = new SharedReference<IPictureInPictureEvent>({
       isEnabled: isWebKitPIPEnabled,
       pipWindow: null,
     }, stopListening);
@@ -305,9 +304,9 @@ function getPictureOnPictureStateRef(
   const isPIPEnabled = (
     (document as ICompatDocument).pictureInPictureElement === mediaElement
   );
-  const ref = createSharedReference<IPictureInPictureEvent>({ isEnabled: isPIPEnabled,
-                                                              pipWindow: null },
-                                                            stopListening);
+  const ref = new SharedReference<IPictureInPictureEvent>({ isEnabled: isPIPEnabled,
+                                                            pipWindow: null },
+                                                          stopListening);
   addEventListener(mediaElement, "enterpictureinpicture", (evt) => {
     ref.setValue({
       isEnabled: true,
@@ -338,7 +337,7 @@ function getVideoVisibilityRef(
 ) : IReadOnlySharedReference<boolean> {
   const isDocVisibleRef = getDocumentVisibilityRef(stopListening);
   let currentTimeout : number | undefined;
-  const ref = createSharedReference(true, stopListening);
+  const ref = new SharedReference(true, stopListening);
   stopListening.register(() => {
     clearTimeout(currentTimeout);
     currentTimeout = undefined;
@@ -378,8 +377,8 @@ function getVideoWidthRef(
   pipStatusRef : IReadOnlySharedReference<IPictureInPictureEvent>,
   stopListening : CancellationSignal
 ) : IReadOnlySharedReference<number> {
-  const ref = createSharedReference<number>(mediaElement.clientWidth * pixelRatio,
-                                            stopListening);
+  const ref = new SharedReference<number>(mediaElement.clientWidth * pixelRatio,
+                                          stopListening);
   let clearPreviousEventListener = noop;
   pipStatusRef.onUpdate(checkVideoWidth, { clearSignal: stopListening });
   addEventListener(window, "resize", checkVideoWidth, stopListening);
@@ -484,13 +483,6 @@ const onSourceBufferUpdate = createCompatibleEventListener(["update"]);
 const onRemoveSourceBuffers = createCompatibleEventListener(["removesourcebuffer"]);
 
 /**
- * @param {HTMLMediaElement} mediaElement
- */
-const onEncrypted = createCompatibleEventListener(
-  shouldFavourCustomSafariEME() ? ["needkey"] :
-                                  ["encrypted", "needkey"]);
-
-/**
  * @param {MediaKeySession} mediaKeySession
  */
 const onKeyMessage = createCompatibleEventListener(["keymessage", "message"]);
@@ -549,11 +541,11 @@ function addEventListener(
 
 export {
   addEventListener,
+  createCompatibleEventListener,
   getPageActivityRef,
   getPictureOnPictureStateRef,
   getVideoVisibilityRef,
   getVideoWidthRef,
-  onEncrypted,
   onEnded,
   onFullscreenChange,
   onKeyAdded,

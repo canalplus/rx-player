@@ -302,7 +302,7 @@ function createSmoothStreamingParser(
     const UrlAttr = root.getAttribute("Url");
     const UrlPathWithTokens = UrlAttr === null ? "" :
                                                  UrlAttr;
-    if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
+    if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
       assert(UrlPathWithTokens !== "");
     }
 
