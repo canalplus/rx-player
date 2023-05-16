@@ -149,7 +149,7 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
    * @returns {boolean|undefined}
    */
   awaitSegmentBetween(start: number, end: number): boolean | undefined {
-    if (this.isFinished()) {
+    if (this.isStillAwaitingFutureSegments()) {
       return false;
     }
     if (this._index.incomingRanges === undefined) {
@@ -173,8 +173,8 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
     return true;
   }
 
-  isFinished() : boolean {
-    return this._index.isFinished;
+  isStillAwaitingFutureSegments() : boolean {
+    return !this._index.isFinished;
   }
 
   /**

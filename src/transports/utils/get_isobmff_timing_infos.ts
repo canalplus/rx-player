@@ -30,9 +30,6 @@ import { IChunkTimeInfo } from "../types";
  * multiple parts and buffer is one of them. If false, buffer is the whole
  * segment.
  * @param {Object} segment
- * @param {Array.<Object>|undefined} sidxSegments - Segments from sidx. Here
- * pre-parsed for performance reasons as it is usually available when
- * this function is called.
  * @param {number|undefined} initTimescale
  * @returns {Object}
  */

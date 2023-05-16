@@ -28,8 +28,10 @@ import {
   SegmentBufferOperation,
 } from "./implementations";
 import {
+  ChunkStatus,
   IBufferedChunk,
   IChunkContext,
+  IInsertedChunkInfos,
 } from "./inventory";
 import SegmentBuffersStore, {
   ISegmentBufferOptions,
@@ -39,6 +41,7 @@ import SegmentBuffersStore, {
 export default SegmentBuffersStore;
 export {
   BufferGarbageCollector,
+  ChunkStatus,
 
   ISegmentBufferOptions,
   ITextTrackSegmentBufferOptions,
@@ -49,6 +52,7 @@ export {
 
   IBufferedChunk,
   IChunkContext,
+  IInsertedChunkInfos,
 
   IPushChunkInfos,
   IPushedChunkData,

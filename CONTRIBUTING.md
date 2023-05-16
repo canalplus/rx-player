@@ -12,23 +12,39 @@ Those have to follow the conventions defined below.
 
 
 
-## Reading the current code
+## Important code concepts
 
-Even if we hope the current code is straightforward, readable and commented
-enough we can still admit that going blind into the codebase can be hard at
-first as this is a pretty big technical project on a specific matter.
+### Code documentation
 
-We thus encourage you to rely on the architecture documentation you can usually
-find alongside the code, in `README.md` files.
-You can for example start by reading `src/README.md`, to have a clearer idea
-of the general code architecture of the player.
+We try to put `README.md` files inside every significant directories inside
+`/src` to provide a global architecture documentation of that directory
+specifically.
+
+You can try to start understanding a piece of RxPlayer code by navigating
+to that file. Understand that the documented behavior may be out of date
+(in which case you're welcome to update it or open an issue) though even in
+that case, it is a good starting point to understand the directory's role.
+Likewise, don't forget to update it if a change you made to the code
+necessitates a documentation change.
 
 Also, for a more exhaustive approach to the documentation of the project's file
 organization, you can look at [`FILES.md`](./FILES.md).
 
-The code of the RxPlayer being heavily modularized, you should not need to read
-the whole documentation to be ready, only the parts you want to update
-(hopefully!).
+### When renaming or deleting functions, classes or variables
+
+When Refactoring/Renaming, make sure to grep any of the renamed class / function
+/ variable's name as they may also be referenced in documentation and code
+comments. Same thing for a directory or file name.
+
+If the name is hard to grep (e.g. the name is too generic and thus has too many
+false positives), you can generally reduce the area to comments in the same file
+and documentation files in the same directory.
+
+### `features` object
+
+Some files should not be imported directly but only be accessed by going through
+the `features` object exported at `/src/features`. This is to reduce bundle size
+when an application doesn't need all of the RxPlayer's features.
 
 
 
@@ -52,8 +68,6 @@ directory) by calling `npm run lint:tests`.
 
 
 ### Types
-
-#### General TypeScript rules
 
 We try to be as strict as possible with types:
 

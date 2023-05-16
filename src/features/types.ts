@@ -19,6 +19,7 @@ import RxPlayer from "../core/api";
 import MediaElementTrackChoiceManager from "../core/api/tracks_management/media_element_track_choice_manager";
 import type ContentDecryptor from "../core/decrypt";
 import DirectFileContentInitializer from "../core/init/directfile_content_initializer";
+import MediaSourceContentInitializer from "../core/init/media_source_content_initializer";
 import { SegmentBuffer } from "../core/segment_buffers";
 import {
   IDashParserResponse,
@@ -32,14 +33,29 @@ import {
 import { ITransportFunction } from "../transports";
 import { CancellationSignal } from "../utils/task_canceller";
 
-export type IDirectFileInit = typeof DirectFileContentInitializer;
-
-export type IContentDecryptorClass = typeof ContentDecryptor;
-
+/**
+ * Function allowing to implement a text track rendered by displaying them
+ * through "regular" (e.g. div, span etc.) HTML elements.
+ * @param {HTMLMediaElement} mediaElement - The `HTMLMediaElement` the text
+ * tracks should be synced to.
+ * @param {HTMLElement} textTrackElement - The parent `HTMLElement` where all
+ * text tracks-related `HTMLElement` should be put.
+ * @returns {Object} - `SegmentBuffer` implementation.
+ */
 export type IHTMLTextTracksBuffer =
   new(mediaElement : HTMLMediaElement,
       textTrackElement : HTMLElement) => SegmentBuffer;
 
+/**
+ * Function allowing to implement a text track rendered by displaying them
+ * through a native `<track>` `HTMLElement` associated to the given
+ * `mediaElement`.
+ * @param {HTMLMediaElement} mediaElement - The `HTMLMediaElement` the text
+ * tracks should be synced to. The `<track>` `HTMLElement` on which the text
+ * tracks will be displayed will also be linked to this `HTMLMediaElement`.
+ * @param {boolean} hideNativeSubtitle
+ * @returns {Object} - `SegmentBuffer` implementation.
+ */
 export type INativeTextTracksBuffer =
   new(mediaElement : HTMLMediaElement,
       hideNativeSubtitle : boolean) => SegmentBuffer;
@@ -73,38 +89,95 @@ export type IDashJsParser = (
   args : IMPDParserArguments
 ) => IDashParserResponse<string>;
 
-// interface of the global `features` object through which features are
-// accessed.
+/**
+ * Function implementing the optional RxPlayer debug UI element.
+ * @param {HTMLElement} parentElt - `HTMLElement` in which the debug UI
+ * element will be displayed.
+ * @param {Object} RxPlayer - RxPlayer instance concerned
+ * @param {Object} cancelSignal - CancellationSignal allowing to free
+ * up the resources taken to keep the debug UI element up-to-date.
+ */
+export type IDebugElementFn = (
+  parentElt : HTMLElement,
+  instance : RxPlayer,
+  cancelSignal : CancellationSignal
+) => void;
+
+/**
+ * Interface of the global `features` object through which features are
+ * accessed.
+ *
+ * Allows for feature-switching with the goal of reducing the bundle size for
+ * an application.
+ */
 export interface IFeaturesObject {
-  directfile : { initDirectFile: IDirectFileInit;
+  /**
+   * Feature allowing to load so-called "directfile" contents, which are
+   * contents natively decodable by the browser.
+   */
+  directfile : { initDirectFile: typeof DirectFileContentInitializer;
                  mediaElementTrackChoiceManager : IMediaElementTrackChoiceManager; } |
                null;
-  ContentDecryptor : IContentDecryptorClass|null;
-  createDebugElement : (
-    (
-      parentElt : HTMLElement,
-      instance : RxPlayer,
-      cancelSignal : CancellationSignal
-    ) => void
-  ) | null;
+  /** Handle content decryption. */
+  decrypt : typeof ContentDecryptor | null;
+  /** Optional debug element function (@see `IDebugElementFn`) */
+  createDebugElement : IDebugElementFn | null;
+  /** Implement text track rendering in the DOM. */
   htmlTextTracksBuffer : IHTMLTextTracksBuffer|null;
+  /**
+   * Parsers for various text track formats, by their name as set by the
+   * RxPlayer.
+   * Those parsers are specifically destined to be displayed in DOM elements.
+   */
   htmlTextTracksParsers : Partial<Record<string, IHTMLTextTracksParserFn>>;
   imageBuffer : IImageBuffer|null;
   imageParser : IImageParser|null;
+  /** Feature allowing to load contents through MediaSource API. */
+  mediaSourceInit: typeof MediaSourceContentInitializer | null;
+  /**
+   * Function for loading and parsing contents through various protocols, by
+   * their name as set by the RxPlayer.
+   */
   transports : Partial<Record<string, ITransportFunction>>;
+  /**
+   * Manifest parsers specific to the "DASH" transport.
+   */
   dashParsers : {
+    /**
+     * WebAssembly-based Manifest DASH parser.
+     */
     wasm : DashWasmParser | null;
+    /**
+     * JavaScript-based Manifest DASH parser.
+     */
     js : IDashJsParser | null;
   };
   nativeTextTracksBuffer : INativeTextTracksBuffer|null;
+  /**
+   * Parsers for various text track formats, by their name as set by the
+   * RxPlayer.
+   * Those parsers are specifically destined to be displayed in `<track>` HTML
+   * elements.
+   */
   nativeTextTracksParsers : Partial<Record<string, INativeTextTracksParserFn>>;
 }
 
+/**
+ * Variant of an add-able feature (as exported by the RxPlayer) when in an
+ * Object format.
+ */
 export interface IFeatureObject {
   _addFeature(features : IFeaturesObject) : void;
 }
 
+/**
+ * Variant of an add-able feature (as exported by the RxPlayer) when in an
+ * Function format.
+ */
 export type IFeatureFunction = (features : IFeaturesObject) => void;
 
+/**
+ * How features are actually exported by the RxPlayer.
+ */
 export type IFeature = IFeatureObject |
                        IFeatureFunction;
