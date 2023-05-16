@@ -2,15 +2,15 @@ use crate::errors::{ParsingError, Result};
 
 /// Try to parse the given array of bytes into an f64, by first converting
 /// it to the corresponding ASCII (or even here, UTF-8) values.
-pub fn parse_f64(value : &[u8]) -> Result<f64> {
+pub fn parse_f64(value: &[u8]) -> Result<f64> {
     let res = std::str::from_utf8(value)?;
     let res_f64 = res.parse::<f64>()?;
-    Ok(res_f64 as f64)
+    Ok(res_f64)
 }
 
 /// Try to parse the given array of bytes into an i64, by first converting
 /// it to the corresponding ASCII (or even here, UTF-8) values.
-pub fn parse_i64(value : &[u8]) -> Result<i64> {
+pub fn parse_i64(value: &[u8]) -> Result<i64> {
     let res = std::str::from_utf8(value)?;
     let res_u64 = res.parse::<i64>()?;
     Ok(res_u64)
@@ -18,7 +18,7 @@ pub fn parse_i64(value : &[u8]) -> Result<i64> {
 
 /// Try to parse the given array of bytes into an u64, by first converting
 /// it to the corresponding ASCII (or even here, UTF-8) values.
-pub fn parse_u64(value : &[u8]) -> Result<u64> {
+pub fn parse_u64(value: &[u8]) -> Result<u64> {
     let res = std::str::from_utf8(value)?;
     let res_u64 = res.parse::<u64>()?;
     Ok(res_u64)
@@ -31,7 +31,7 @@ pub fn parse_u64(value : &[u8]) -> Result<u64> {
 ///     f64 form.
 ///
 /// Return an error in any other case.
-pub fn parse_u64_or_bool(value : &[u8]) -> Result<f64> {
+pub fn parse_u64_or_bool(value: &[u8]) -> Result<f64> {
     match value {
         b"true" => Ok(f64::INFINITY),
         b"false" => Ok(f64::NEG_INFINITY),
@@ -47,7 +47,7 @@ pub fn parse_u64_or_bool(value : &[u8]) -> Result<f64> {
 ///   - `false` if it represents `"false"` in ASCII
 ///
 /// Return an error in any other case.
-pub fn parse_bool(value : &[u8]) -> Result<bool> {
+pub fn parse_bool(value: &[u8]) -> Result<bool> {
     match value {
         b"true" => Ok(true),
         b"false" => Ok(false),
@@ -63,7 +63,7 @@ pub fn parse_bool(value : &[u8]) -> Result<bool> {
 // TODO Is something like 5- also valid here?
 // It seems to be but it's not yet handled here
 // (We could use e.g. the `INFINITY` float value)
-pub fn parse_byte_range(value : &[u8]) -> Result<(f64, f64)> {
+pub fn parse_byte_range(value: &[u8]) -> Result<(f64, f64)> {
     let mut cursor = 0usize;
     let start;
     loop {
@@ -87,7 +87,7 @@ pub fn parse_byte_range(value : &[u8]) -> Result<(f64, f64)> {
 /// This code could be much simpler if it was RegExp-based but I preferred not
 /// to, mainly because I didn't want to incur the size cost of importing regex
 /// code in here
-pub fn parse_iso_8601_duration(value : &[u8]) -> Result<f64> {
+pub fn parse_iso_8601_duration(value: &[u8]) -> Result<f64> {
     if value.is_empty() || value[0] != b'P' {
         let err = ParsingError("Unexpected duration. Should start with \"P\"".to_owned());
         return Err(err);
@@ -98,7 +98,8 @@ pub fn parse_iso_8601_duration(value : &[u8]) -> Result<f64> {
         loop {
             let (number, i) = read_next_float(value, base)?;
             if i == value.len() {
-                let e = ParsingError("Invalid ISO 8601 duration: end encountered too soon".to_owned());
+                let e =
+                    ParsingError("Invalid ISO 8601 duration: end encountered too soon".to_owned());
                 return Err(e);
             }
             let factor = match value[i] {
@@ -113,7 +114,7 @@ pub fn parse_iso_8601_duration(value : &[u8]) -> Result<f64> {
             result += number * (factor as f64);
             base = i + 1;
             if base == value.len() {
-                return Ok(result as f64);
+                return Ok(result);
             }
             if value[base] == b'T' {
                 break;
@@ -139,7 +140,7 @@ pub fn parse_iso_8601_duration(value : &[u8]) -> Result<f64> {
         result += number * (factor as f64);
         base = i + 1;
         if base == value.len() {
-            return Ok(result as f64);
+            return Ok(result);
         }
     }
 }
@@ -151,19 +152,14 @@ pub fn parse_iso_8601_duration(value : &[u8]) -> Result<f64> {
 /// If it succeeds, returns both the floating point number as an f64 and the
 /// offset coming just after that float in `value` (or the length of `value` if
 /// it ended with a float).
-fn read_next_float(
-    value : &[u8],
-    base_offset : usize
-) -> Result<(f64, usize)> {
+fn read_next_float(value: &[u8], base_offset: usize) -> Result<(f64, usize)> {
     let mut i = base_offset;
     while i < value.len() && value[i] >= b'0' && value[i] <= b'9' {
         i += 1;
     }
     if i == value.len() || (value[i] != b'.' && value[i] != b',') {
         // UNSAFE: We already checked that this string represents a valid integer
-        let val_str = unsafe {
-            std::str::from_utf8_unchecked(&value[base_offset..i])
-        };
+        let val_str = unsafe { std::str::from_utf8_unchecked(&value[base_offset..i]) };
         let val_u64 = val_str.parse::<u64>()?;
         return Ok((val_u64 as f64, i));
     }
@@ -173,19 +169,17 @@ fn read_next_float(
         i += 1;
     }
     // UNSAFE: We already checked that this string represents a valid float
-    let val_str = unsafe {
-        std::str::from_utf8_unchecked(&value[base_offset..i])
-    };
+    let val_str = unsafe { std::str::from_utf8_unchecked(&value[base_offset..i]) };
     let val_f64 = val_str.parse::<f64>()?;
     Ok((val_f64, i))
 }
 
-pub fn u32_to_u8_slice_be(x:u32) -> [u8;4] {
-    let b1 : u8 = ((x >> 24) & 0xff) as u8;
-    let b2 : u8 = ((x >> 16) & 0xff) as u8;
-    let b3 : u8 = ((x >> 8) & 0xff) as u8;
-    let b4 : u8 = (x & 0xff) as u8;
-    return [b1, b2, b3, b4]
+pub fn u32_to_u8_slice_be(x: u32) -> [u8; 4] {
+    let b1: u8 = ((x >> 24) & 0xff) as u8;
+    let b2: u8 = ((x >> 16) & 0xff) as u8;
+    let b3: u8 = ((x >> 8) & 0xff) as u8;
+    let b4: u8 = (x & 0xff) as u8;
+    [b1, b2, b3, b4]
 }
 
 #[cfg(test)]
@@ -194,8 +188,14 @@ mod tests {
 
     #[test]
     fn test_parse_8601_duration() {
-        assert_eq!(parse_iso_8601_duration(b"P1Y10M43DT22H8M3S").unwrap(), 61250883.);
-        assert_eq!(parse_iso_8601_duration(b"P1Y10M43DT22H8M3S").unwrap(), 61250883.);
+        assert_eq!(
+            parse_iso_8601_duration(b"P1Y10M43DT22H8M3S").unwrap(),
+            61250883.
+        );
+        assert_eq!(
+            parse_iso_8601_duration(b"P1Y10M43DT22H8M3S").unwrap(),
+            61250883.
+        );
         assert_eq!(parse_iso_8601_duration(b"PT3S").unwrap(), 3.);
         assert_eq!(parse_iso_8601_duration(b"PT1M3.4S").unwrap(), 63.4);
 

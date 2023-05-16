@@ -45,21 +45,24 @@ function refreshScheduledEventsList(
         }
       }
 
+      const element = data.value.element;
+      const actualData = { type: data.type,
+                           value: { ...data.value, element } };
       if (end === undefined) {
         const newScheduledEvent = { start,
                                     id,
-                                    data,
+                                    data: actualData,
                                     publicEvent: { start,
-                                                   data } };
+                                                   data: actualData } };
         scheduledEvents.push(newScheduledEvent);
       } else {
         const newScheduledEvent = { start,
                                     end,
                                     id,
-                                    data,
+                                    data: actualData,
                                     publicEvent: { start,
                                                    end,
-                                                   data } };
+                                                   data: actualData } };
         scheduledEvents.push(newScheduledEvent);
       }
 
