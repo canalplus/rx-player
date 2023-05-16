@@ -17,12 +17,14 @@
 import log from "../../log";
 import { Representation } from "../../manifest";
 import arrayFindIndex from "../../utils/array_find_index";
+import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import { estimateRequestBandwidth } from "./network_analyzer";
 import LastEstimateStorage, {
   ABRAlgorithmType,
 } from "./utils/last_estimate_storage";
 import { IRequestInfo } from "./utils/pending_requests_store";
 import RepresentationScoreCalculator, {
+  IRepresentationMaintainabilityScore,
   ScoreConfidenceLevel,
 } from "./utils/representation_score_calculator";
 
@@ -150,7 +152,7 @@ export default class GuessBasedChooser {
     if (shouldStopGuess) {
       // Block guesses for a time
       this._consecutiveWrongGuesses++;
-      this._blockGuessesUntil = performance.now() +
+      this._blockGuessesUntil = getMonotonicTimeStamp() +
         Math.min(this._consecutiveWrongGuesses * 15000, 120000);
       return getPreviousRepresentation(representations, currentRepresentation);
     } else if (scoreData === undefined) {
@@ -178,11 +180,11 @@ export default class GuessBasedChooser {
   private _canGuessHigher(
     bufferGap : number,
     speed : number,
-    [score, scoreConfidenceLevel] : [number, ScoreConfidenceLevel]
+    { score, confidenceLevel } : IRepresentationMaintainabilityScore
   ) : boolean {
     return isFinite(bufferGap) && bufferGap >= 2.5 &&
-           performance.now() > this._blockGuessesUntil &&
-           scoreConfidenceLevel === ScoreConfidenceLevel.HIGH &&
+           getMonotonicTimeStamp() > this._blockGuessesUntil &&
+           confidenceLevel === ScoreConfidenceLevel.HIGH &&
            score / speed > 1.01;
   }
 
@@ -197,13 +199,13 @@ export default class GuessBasedChooser {
    */
   private _shouldStopGuess(
     lastGuess : Representation,
-    scoreData : [number, ScoreConfidenceLevel] | undefined,
+    scoreData : IRepresentationMaintainabilityScore | undefined,
     bufferGap : number,
     requests : IRequestInfo[]
   ) : boolean {
-    if (scoreData !== undefined && scoreData[0] < 1.01) {
+    if (scoreData !== undefined && scoreData.score < 1.01) {
       return true;
-    } else if ((scoreData === undefined || scoreData[0] < 1.2) && bufferGap < 0.6) {
+    } else if ((scoreData === undefined || scoreData.score < 1.2) && bufferGap < 0.6) {
       return true;
     }
 
@@ -211,7 +213,7 @@ export default class GuessBasedChooser {
       return req.content.representation.id === lastGuess.id;
     });
 
-    const now = performance.now();
+    const now = getMonotonicTimeStamp();
     for (const req of guessedRepresentationRequests) {
       const requestElapsedTime = now - req.requestTimestamp;
       if (req.content.segment.isInit) {
@@ -233,11 +235,11 @@ export default class GuessBasedChooser {
   private _isLastGuessValidated(
     lastGuess : Representation,
     incomingBestBitrate : number,
-    scoreData : [number, ScoreConfidenceLevel] | undefined
+    scoreData : IRepresentationMaintainabilityScore | undefined
   ) : boolean {
     if (scoreData !== undefined &&
-        scoreData[1] === ScoreConfidenceLevel.HIGH &&
-        scoreData[0] > 1.5)
+        scoreData.confidenceLevel === ScoreConfidenceLevel.HIGH &&
+        scoreData.score > 1.5)
     {
       return true;
     }

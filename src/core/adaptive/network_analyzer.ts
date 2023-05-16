@@ -18,6 +18,8 @@ import config from "../../config";
 import log from "../../log";
 import { Representation } from "../../manifest";
 import arrayFind from "../../utils/array_find";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import {
   IRepresentationEstimatorPlaybackObservation,
 } from "./adaptive_representation_selector";
@@ -152,7 +154,7 @@ function estimateStarvationModeBitrate(
   const { bufferGap, speed, position } = playbackInfo;
   const realBufferGap = isFinite(bufferGap) ? bufferGap :
                                               0;
-  const nextNeededPosition = position.last + realBufferGap;
+  const nextNeededPosition = position.getWanted() + realBufferGap;
   const concernedRequests = getConcernedRequests(pendingRequests, nextNeededPosition);
 
   if (concernedRequests.length !== 1) { // 0  == no request
@@ -161,7 +163,14 @@ function estimateStarvationModeBitrate(
   }
 
   const concernedRequest = concernedRequests[0];
-  const now = performance.now();
+  const now = getMonotonicTimeStamp();
+
+  let minimumRequestTime = concernedRequest.content.segment.duration * 1.5;
+  minimumRequestTime = Math.min(minimumRequestTime, 3000);
+  minimumRequestTime = Math.max(minimumRequestTime, 12000);
+  if (now - concernedRequest.requestTimestamp < minimumRequestTime) {
+    return undefined;
+  }
   const lastProgressEvent = concernedRequest.progress.length > 0 ?
     concernedRequest.progress[concernedRequest.progress.length - 1] :
     undefined;
@@ -178,7 +187,7 @@ function estimateStarvationModeBitrate(
       // Calculate estimated time spent rebuffering if we continue doing that request.
       const expectedRebufferingTime = remainingTime -
         (realBufferGap / speed);
-      if (expectedRebufferingTime > 2000) {
+      if (expectedRebufferingTime > 2500) {
         return bandwidthEstimate;
       }
     }
@@ -229,7 +238,7 @@ function shouldDirectlySwitchToLowBitrate(
   }
   const realBufferGap = isFinite(playbackInfo.bufferGap) ? playbackInfo.bufferGap :
                                                            0;
-  const nextNeededPosition = playbackInfo.position.last + realBufferGap;
+  const nextNeededPosition = playbackInfo.position.getWanted() + realBufferGap;
   const nextRequest = arrayFind(requests, ({ content }) =>
     content.segment.duration > 0 &&
     (content.segment.time + content.segment.duration) > nextNeededPosition);
@@ -238,7 +247,7 @@ function shouldDirectlySwitchToLowBitrate(
     return true;
   }
 
-  const now = performance.now();
+  const now = getMonotonicTimeStamp();
   const lastProgressEvent = nextRequest.progress.length > 0 ?
     nextRequest.progress[nextRequest.progress.length - 1] :
     undefined;
@@ -325,7 +334,7 @@ export default class NetworkAnalyzer {
     const { ABR_STARVATION_DURATION_DELTA } = config.getCurrent();
     // check if should get in/out of starvation mode
     if (isNaN(duration) ||
-        realBufferGap + position.last < duration - ABR_STARVATION_DURATION_DELTA)
+        realBufferGap + position.getWanted() < duration - ABR_STARVATION_DURATION_DELTA)
     {
       if (!this._inStarvationMode && realBufferGap <= localConf.starvationGap) {
         log.info("ABR: enter starvation mode.");
@@ -351,10 +360,10 @@ export default class NetworkAnalyzer {
                                                         this._lowLatencyMode,
                                                         lastEstimatedBitrate);
 
-      if (bandwidthEstimate != null) {
+      if (bandwidthEstimate !== undefined) {
         log.info("ABR: starvation mode emergency estimate:", bandwidthEstimate);
         bandwidthEstimator.reset();
-        newBitrateCeil = currentRepresentation == null ?
+        newBitrateCeil = isNullOrUndefined(currentRepresentation) ?
           bandwidthEstimate :
           Math.min(bandwidthEstimate, currentRepresentation.bitrate);
       }
@@ -364,11 +373,11 @@ export default class NetworkAnalyzer {
     if (newBitrateCeil == null) {
       bandwidthEstimate = bandwidthEstimator.getEstimate();
 
-      if (bandwidthEstimate != null) {
+      if (bandwidthEstimate !== undefined) {
         newBitrateCeil = bandwidthEstimate *
           (this._inStarvationMode ? localConf.starvationBitrateFactor :
                                     localConf.regularBitrateFactor);
-      } else if (lastEstimatedBitrate != null) {
+      } else if (lastEstimatedBitrate !== undefined) {
         newBitrateCeil = lastEstimatedBitrate *
           (this._inStarvationMode ? localConf.starvationBitrateFactor :
                                     localConf.regularBitrateFactor);
@@ -402,10 +411,8 @@ export default class NetworkAnalyzer {
   ) : boolean {
     if (currentRepresentation === null) {
       return true;
-    } else if (bitrate === currentRepresentation.bitrate) {
+    } else if (bitrate >= currentRepresentation.bitrate) {
       return false;
-    } else if (bitrate > currentRepresentation.bitrate) {
-      return !this._inStarvationMode;
     }
     return shouldDirectlySwitchToLowBitrate(playbackInfo,
                                             currentRequests,

@@ -1,5 +1,5 @@
-use crate::onCustomEvent;
 use crate::events::CustomEventType;
+use crate::onCustomEvent;
 
 pub type Result<T> = std::result::Result<T, ParsingError>;
 
@@ -21,8 +21,8 @@ impl ParsingError {
     }
 }
 
-impl<T : std::error::Error> From<T> for ParsingError {
-    fn from(err : T) -> ParsingError {
+impl<T: std::error::Error> From<T> for ParsingError {
+    fn from(err: T) -> ParsingError {
         ParsingError(err.to_string())
     }
 }

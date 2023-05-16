@@ -13,6 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import StringUtils from "../__BUILD_DIR__/tools/string_utils";
-export * from "../__BUILD_DIR__/tools/string_utils";
+import StringUtils from "../__BUILD_DIR__/tools/string_utils/index";
+export * from "../__BUILD_DIR__/tools/string_utils/index";
 export default StringUtils;

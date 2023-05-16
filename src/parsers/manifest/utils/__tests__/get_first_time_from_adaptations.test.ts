@@ -30,9 +30,11 @@ function generateRepresentationIndex(
     awaitSegmentBetween() : undefined { return ; },
     checkDiscontinuity() : number | null { return null; },
     isSegmentStillAvailable() : undefined { return ; },
-    isFinished() { return false; },
+    isStillAwaitingFutureSegments() { return true; },
     canBeOutOfSyncError() : true { return true; },
     isInitialized() : true { return true; },
+    initialize() : void { return ; },
+    addPredictedSegments() : void { return ; },
     _replace() { /* noop */ },
     _update() { /* noop */ },
   };

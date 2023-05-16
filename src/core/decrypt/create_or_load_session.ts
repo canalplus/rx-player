@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { ICustomMediaKeySession } from "../../compat";
+import { ICustomMediaKeySession } from "../../compat/eme";
 import log from "../../log";
 import { CancellationSignal } from "../../utils/task_canceller";
 import createSession from "./create_session";
