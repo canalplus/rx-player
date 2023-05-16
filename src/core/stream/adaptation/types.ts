@@ -66,16 +66,22 @@ export interface IWaitingMediaSourceReloadPayload {
   /** Buffer type concerned. */
   bufferType : IBufferType;
   /**
-   * The position in seconds and the time at which the MediaSource should be
-   * reset once it has been reloaded.
+   * Relative position, compared to the current position, at which we should
+   * restart playback after reloading. For example `-2` will reload 2 seconds
+   * before the current position.
    */
-  position : number;
+  timeOffset : number;
   /**
-   * If `true`, we want the HTMLMediaElement to play right after the reload is
-   * done.
-   * If `false`, we want to stay in a paused state at that point.
+   * If `true`, we will control that the position we reload at, after applying
+   * `timeOffset`, is still part of the Period `period`.
+   *
+   * If it isn't we will re-calculate that reloaded position to be:
+   *   - either the Period's start if the calculated position is before the
+   *     Period's start.
+   *   - either the Period'end start if the calculated position is after the
+   *     Period's end.
    */
-  autoPlay : boolean;
+  stayInPeriod : boolean;
 }
 
 /** Regular playback information needed by the AdaptationStream. */

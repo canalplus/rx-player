@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import HTMLTextSegmentBuffer from "../../core/segment_buffers/implementations/text/html";
 import samiParser from "../../parsers/texttracks/sami/html";
 import { IFeaturesObject } from "../types";
 
@@ -23,6 +24,7 @@ import { IFeaturesObject } from "../types";
  */
 function addHTMLSAMIFeature(features : IFeaturesObject) : void {
   features.htmlTextTracksParsers.sami = samiParser;
+  features.htmlTextTracksBuffer = HTMLTextSegmentBuffer;
 }
 
 export { addHTMLSAMIFeature as HTML_SAMI_PARSER };

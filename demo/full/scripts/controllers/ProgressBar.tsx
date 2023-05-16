@@ -57,7 +57,7 @@ function ProgressBar({
     setTimeIndicatorVisible(true);
     setTimeIndicatorPosition(clientX);
     setTimeIndicatorText(currentReadableTime);
-  }, []);
+  }, [isLive]);
 
   const hideTimeIndicator = React.useCallback((): void => {
     setTimeIndicatorVisible(false);

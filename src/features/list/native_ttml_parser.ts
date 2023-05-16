@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// eslint-disable-next-line max-len
+import NativeTextSegmentBuffer from "../../core/segment_buffers/implementations/text/native";
 import ttmlParser from "../../parsers/texttracks/ttml/native";
 import { IFeaturesObject } from "../types";
 
@@ -23,6 +25,7 @@ import { IFeaturesObject } from "../types";
  */
 function addNativeTTMLFeature(features : IFeaturesObject) : void {
   features.nativeTextTracksParsers.ttml = ttmlParser;
+  features.nativeTextTracksBuffer = NativeTextSegmentBuffer;
 }
 
 export { addNativeTTMLFeature as NATIVE_TTML_PARSER };
