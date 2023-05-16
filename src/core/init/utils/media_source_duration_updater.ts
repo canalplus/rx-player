@@ -19,8 +19,10 @@ import {
   onSourceEnded,
   onSourceClose,
 } from "../../../compat/event_listeners";
+/* eslint-disable-next-line max-len */
+import hasIssuesWithHighMediaSourceDuration from "../../../compat/has_issues_with_high_media_source_duration";
 import log from "../../../log";
-import createSharedReference, {
+import SharedReference, {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
 import TaskCanceller, {
@@ -65,7 +67,7 @@ export default class MediaSourceDurationUpdater {
    * which `duration` attribute should be set on the `MediaSource` associated
    *
    * @param {number} newDuration
-   * @param {boolean} addTimeMargin - If set to `true`, the current content is
+   * @param {boolean} isRealEndKnown - If set to `false`, the current content is
    * a dynamic content (it might evolve in the future) and the `newDuration`
    * communicated might be greater still. In effect the
    * `MediaSourceDurationUpdater` will actually set a much higher value to the
@@ -75,7 +77,7 @@ export default class MediaSourceDurationUpdater {
    */
   public updateDuration(
     newDuration : number,
-    addTimeMargin : boolean
+    isRealEndKnown : boolean
   ) : void {
     if (this._currentMediaSourceDurationUpdateCanceller !== null) {
       this._currentMediaSourceDurationUpdateCanceller.cancel();
@@ -119,7 +121,7 @@ export default class MediaSourceDurationUpdater {
 
         recursivelyForceDurationUpdate(mediaSource,
                                        newDuration,
-                                       addTimeMargin,
+                                       isRealEndKnown,
                                        sourceBuffersUpdatingCanceller.signal);
       }, { clearSignal: msOpenStatusCanceller.signal, emitCurrentValue: true });
     }
@@ -146,26 +148,20 @@ export default class MediaSourceDurationUpdater {
  *
  * @param {MediaSource} mediaSource
  * @param {number} duration
- * @param {boolean} addTimeMargin
+ * @param {boolean} isRealEndKnown
  * @returns {string}
  */
 function setMediaSourceDuration(
   mediaSource: MediaSource,
   duration : number,
-  addTimeMargin : boolean
+  isRealEndKnown : boolean
 ) : MediaSourceDurationUpdateStatus {
   let newDuration = duration;
 
-  if (addTimeMargin) {
-    // Some targets poorly support setting a very high number for durations.
-    // Yet, in contents whose end is not yet known (e.g. live contents), we
-    // would prefer setting a value as high as possible to still be able to
-    // seek anywhere we want to (even ahead of the Manifest if we want to).
-    // As such, we put it at a safe default value of 2^32 excepted when the
-    // maximum position is already relatively close to that value, where we
-    // authorize exceptionally going over it.
-    newDuration = Math.max(Math.pow(2, 32),
-                           newDuration + YEAR_IN_SECONDS);
+  if (!isRealEndKnown) {
+    newDuration = hasIssuesWithHighMediaSourceDuration() ?
+      Infinity :
+      getMaximumLiveSeekablePosition(duration);
   }
 
   let maxBufferedEnd : number = 0;
@@ -198,6 +194,11 @@ function setMediaSourceDuration(
     try {
       log.info("Init: Updating duration", newDuration);
       mediaSource.duration = newDuration;
+      if (mediaSource.readyState === "open" && !isFinite(newDuration)) {
+        const maxSeekable = getMaximumLiveSeekablePosition(duration);
+        log.info("Init: calling `mediaSource.setLiveSeekableRange`", maxSeekable);
+        mediaSource.setLiveSeekableRange(0, maxSeekable);
+      }
     } catch (err) {
       log.warn("Duration Updater: Can't update duration on the MediaSource.",
                err instanceof Error ? err : "");
@@ -234,7 +235,7 @@ const enum MediaSourceDurationUpdateStatus {
 }
 
 /**
- * Returns an `ISharedReference` wrapping a boolean that tells if all the
+ * Returns a `SharedReference` wrapping a boolean that tells if all the
  * SourceBuffers ended all pending updates.
  * @param {SourceBufferList} sourceBuffers
  * @param {Object} cancelSignal
@@ -245,12 +246,12 @@ function createSourceBuffersUpdatingReference(
   cancelSignal : CancellationSignal
 ) : IReadOnlySharedReference<boolean> {
   if (sourceBuffers.length === 0) {
-    const notOpenedRef = createSharedReference(false);
+    const notOpenedRef = new SharedReference(false);
     notOpenedRef.finish();
     return notOpenedRef;
   }
 
-  const areUpdatingRef = createSharedReference(false, cancelSignal);
+  const areUpdatingRef = new SharedReference(false, cancelSignal);
   reCheck();
 
   for (let i = 0; i < sourceBuffers.length; i++) {
@@ -278,7 +279,7 @@ function createSourceBuffersUpdatingReference(
 }
 
 /**
- * Returns an `ISharedReference` wrapping a boolean that tells if the media
+ * Returns a `SharedReference` wrapping a boolean that tells if the media
  * source is opened or not.
  * @param {MediaSource} mediaSource
  * @param {Object} cancelSignal
@@ -288,15 +289,18 @@ function createMediaSourceOpenReference(
   mediaSource : MediaSource,
   cancelSignal : CancellationSignal
 ): IReadOnlySharedReference<boolean> {
-  const isMediaSourceOpen = createSharedReference(mediaSource.readyState === "open",
-                                                  cancelSignal);
+  const isMediaSourceOpen = new SharedReference(mediaSource.readyState === "open",
+                                                cancelSignal);
   onSourceOpen(mediaSource, () => {
+    log.debug("Init: Reacting to MediaSource open in duration updater");
     isMediaSourceOpen.setValueIfChanged(true);
   }, cancelSignal);
   onSourceEnded(mediaSource, () => {
+    log.debug("Init: Reacting to MediaSource ended in duration updater");
     isMediaSourceOpen.setValueIfChanged(false);
   }, cancelSignal);
   onSourceClose(mediaSource, () => {
+    log.debug("Init: Reacting to MediaSource close in duration updater");
     isMediaSourceOpen.setValueIfChanged(false);
   }, cancelSignal);
   return isMediaSourceOpen;
@@ -310,24 +314,36 @@ function createMediaSourceOpenReference(
  *
  * @param {MediaSource} mediaSource
  * @param {number} duration
- * @param {boolean} addTimeMargin
+ * @param {boolean} isRealEndKnown
  * @param {Object} cancelSignal
  */
 function recursivelyForceDurationUpdate(
   mediaSource : MediaSource,
   duration : number,
-  addTimeMargin : boolean,
+  isRealEndKnown : boolean,
   cancelSignal : CancellationSignal
 ) : void {
-  const res = setMediaSourceDuration(mediaSource, duration, addTimeMargin);
+  const res = setMediaSourceDuration(mediaSource, duration, isRealEndKnown);
   if (res === MediaSourceDurationUpdateStatus.Success) {
     return ;
   }
   const timeoutId = setTimeout(() => {
     unregisterClear();
-    recursivelyForceDurationUpdate(mediaSource, duration, addTimeMargin, cancelSignal);
+    recursivelyForceDurationUpdate(mediaSource, duration, isRealEndKnown, cancelSignal);
   }, 2000);
   const unregisterClear = cancelSignal.register(() => {
     clearTimeout(timeoutId);
   });
+}
+
+function getMaximumLiveSeekablePosition(contentLastPosition : number) : number {
+  // Some targets poorly support setting a very high number for seekable
+  // ranges.
+  // Yet, in contents whose end is not yet known (e.g. live contents), we
+  // would prefer setting a value as high as possible to still be able to
+  // seek anywhere we want to (even ahead of the Manifest if we want to).
+  // As such, we put it at a safe default value of 2^32 excepted when the
+  // maximum position is already relatively close to that value, where we
+  // authorize exceptionally going over it.
+  return Math.max(Math.pow(2, 32), contentLastPosition + YEAR_IN_SECONDS);
 }

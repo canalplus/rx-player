@@ -21,6 +21,7 @@ function ProgressBar({
   const isContentLoaded = useModuleState(player, "isContentLoaded");
   const isLive = useModuleState(player, "isLive");
   const minimumPosition = useModuleState(player, "minimumPosition");
+  const livePosition = useModuleState(player, "livePosition");
   const maximumPosition = useModuleState(player, "maximumPosition");
 
   const [timeIndicatorVisible, setTimeIndicatorVisible] = React.useState(false);
@@ -57,7 +58,7 @@ function ProgressBar({
     setTimeIndicatorVisible(true);
     setTimeIndicatorPosition(clientX);
     setTimeIndicatorText(currentReadableTime);
-  }, []);
+  }, [isLive]);
 
   const hideTimeIndicator = React.useCallback((): void => {
     setTimeIndicatorVisible(false);
@@ -189,7 +190,7 @@ function ProgressBar({
             onMouseMove={onMouseMove}
             position={currentTime}
             minimumPosition={minimumPosition}
-            maximumPosition={maximumPosition}
+            maximumPosition={livePosition ?? maximumPosition}
             bufferGap={bufferGap}
           />
       }

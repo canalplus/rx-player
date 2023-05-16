@@ -14,24 +14,19 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-
+// eslint-disable-next-line max-len
+import HTMLTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/html";
 import vttParser from "../../../parsers/texttracks/webvtt/html";
+import { IFeaturesObject } from "../../types";
 import addHTMLVTTFeature from "../html_vtt_parser";
-
-jest.mock("../../../parsers/texttracks/webvtt/html", () => ({
-  __esModule: true as const,
-  default: jest.fn(),
-}));
 
 describe("Features list - HTML VTT Parser", () => {
   it("should add an HTML VTT Parser in the current features", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const featureObject : any = { htmlTextTracksParsers: {} };
+    const featureObject = { htmlTextTracksParsers: {} } as unknown as IFeaturesObject;
     addHTMLVTTFeature(featureObject);
     expect(featureObject).toEqual({
       htmlTextTracksParsers: { vtt: vttParser },
+      htmlTextTracksBuffer: HTMLTextSegmentBuffer,
     });
     expect(featureObject.htmlTextTracksParsers.vtt).toBe(vttParser);
   });

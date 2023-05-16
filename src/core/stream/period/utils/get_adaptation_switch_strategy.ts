@@ -34,11 +34,20 @@ import {
   SegmentBuffer,
 } from "../../../segment_buffers";
 
-
 export type IAdaptationSwitchStrategy =
+  /** Do nothing special. */
   { type: "continue"; value: undefined } |
+  /**
+   * Clean the given ranges of time from the buffer, preferably avoiding time
+   * around the current position to continue playback smoothly.
+   */
   { type: "clean-buffer"; value: Array<{ start: number; end: number }> } |
+  /**
+   * Clean the given ranges of time from the buffer and try to flush the buffer
+   * so that it is taken in account directly.
+   */
   { type: "flush-buffer"; value: Array<{ start: number; end: number }> } |
+  /** Reload completely the media buffers. */
   { type: "needs-reload"; value: undefined };
 
 export interface IAdaptationSwitchOptions {
