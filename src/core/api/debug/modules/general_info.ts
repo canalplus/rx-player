@@ -40,7 +40,7 @@ export default function constructDebugGeneralInfo(
       return;
     } else {
       const currentTime = instance.getPosition();
-      const bufferGap = instance.getVideoBufferGap();
+      const bufferGap = instance.getCurrentBufferGap();
       const bufferGapStr = bufferGap === Infinity ? "0" : bufferGap.toFixed(2);
       const valuesLine1 : Array<[string, string]> = [
         ["ct", currentTime.toFixed(2)],
@@ -67,30 +67,6 @@ export default function constructDebugGeneralInfo(
       const mba = instance.getMaxBufferAhead();
       if (mba !== Infinity) {
         valuesLine2.push(["mba", String(mba)]);
-      }
-      const mia = instance.getMinAudioBitrate();
-      if (mia !== 0) {
-        valuesLine2.push(["mia", String(mia)]);
-      }
-      const miv = instance.getMinVideoBitrate();
-      if (miv !== 0) {
-        valuesLine2.push(["miv", String(miv)]);
-      }
-      const maa = instance.getMaxAudioBitrate();
-      if (maa !== Infinity) {
-        valuesLine2.push(["maa", String(maa)]);
-      }
-      const mav = instance.getMaxVideoBitrate();
-      if (mav !== Infinity) {
-        valuesLine2.push(["mav", String(mav)]);
-      }
-      const fab = instance.getManualAudioBitrate();
-      if (fab >= 0) {
-        valuesLine2.push(["fab", String(fab)]);
-      }
-      const fvb = instance.getManualVideoBitrate();
-      if (fvb >= 0) {
-        valuesLine2.push(["fvb", String(fvb)]);
       }
       const mbs = instance.getMaxVideoBufferSize();
       if (mbs !== Infinity) {
@@ -125,7 +101,7 @@ export default function constructDebugGeneralInfo(
         }
       }
       if (isExtendedMode(parentElt)) {
-        const url = instance.getUrl();
+        const url = instance.getContentUrls()?.[0];
         if (url !== undefined) {
           const reducedUrl = url.length > 100 ?
             url.substring(0, 99) + "…" :
@@ -181,8 +157,12 @@ export default function constructDebugGeneralInfo(
         ]);
         adaptationsElt.appendChild(textAdaps);
       }
-      const videoBitrates = instance.getAvailableVideoBitrates();
-      const audioBitrates = instance.getAvailableAudioBitrates();
+      const videoBitrates = instance.getVideoTrack()?.representations.map(r => {
+        return r.bitrate;
+      }).filter(bitrate => bitrate !== undefined) ?? [];
+      const audioBitrates = instance.getAudioTrack()?.representations.map(r => {
+        return r.bitrate;
+      }).filter(bitrate => bitrate !== undefined) ?? [];
       representationsElt.innerHTML = "";
       if (videoBitrates.length > 0) {
         representationsElt.appendChild(createMetricTitle("vb"));

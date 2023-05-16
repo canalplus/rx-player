@@ -1,8 +1,8 @@
 extern crate core;
 extern crate quick_xml;
 
-mod events;
 mod errors;
+mod events;
 mod processor;
 mod reader;
 mod reportable;
@@ -10,10 +10,10 @@ mod utils;
 
 pub use errors::{ParsingError, Result};
 
-use std::io::BufReader;
 use events::*;
 use processor::MPDProcessor;
 use reader::MPDReader;
+use std::io::BufReader;
 
 extern "C" {
     /// JS callback called each time a new known tag is encountered in the MPD.
@@ -24,7 +24,7 @@ extern "C" {
     /// # Arguments
     ///
     /// * `tag_name` - u8 describing the name of the tag encountered.
-    fn onTagOpen(tag_name : TagName);
+    fn onTagOpen(tag_name: TagName);
 
     /// JS callback called each time a previously-opened known tag is encountered in
     /// the MPD now closed.
@@ -32,7 +32,7 @@ extern "C" {
     /// # Arguments
     ///
     /// * `tag_name` - u8 describing the name of the tag which just closed.
-    fn onTagClose(tag_name : TagName);
+    fn onTagClose(tag_name: TagName);
 
     /// JS Callback called when a new attribute has been parsed in the last
     /// encountered element.
@@ -46,7 +46,7 @@ extern "C" {
     /// WebAssembly's linear memory.
     ///
     /// * `len` - Length of the data - starting at `ptr` - in bytes.
-    fn onAttribute(attr_name : AttributeName, ptr : *const u8, len : usize);
+    fn onAttribute(attr_name: AttributeName, ptr: *const u8, len: usize);
 
     /// JS callback for other specific operations, for example logging and warnings.
     ///
@@ -58,7 +58,7 @@ extern "C" {
     /// WebAssembly's linear memory.
     ///
     /// * `len` - Length of the data - starting at `ptr` - in bytes.
-    fn onCustomEvent(evt_type : CustomEventType, ptr: *const u8, len : usize);
+    fn onCustomEvent(evt_type: CustomEventType, ptr: *const u8, len: usize);
 
     /// JS callback allowing to read data from the MPD, which is stored in the
     /// JS-side.
@@ -74,7 +74,7 @@ extern "C" {
     /// * `size` - Optimal length of data that is wanted, in bytes.
     /// Less data (but not more) can be read. The true read length is returned
     /// by this function.
-    fn readNext(ptr : *const u8,  size : usize) -> usize;
+    fn readNext(ptr: *const u8, size: usize) -> usize;
 }
 
 #[no_mangle]

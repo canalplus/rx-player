@@ -54,10 +54,11 @@ export default class TextTrackRenderer {
   private _segmentBuffer : HTMLTextSegmentBuffer;
 
   /**
-   * @param {HTMLMediaElement} videoElement - The media element the text track
-   * has to be synchronized to.
-   * @param {HTMLElement} textTrackElement - The HTML element which will contain
-   * the text tracks.
+   * @param {Object} opts
+   * @param {HTMLMediaElement} opts.videoElement - The media element the text
+   * track has to be synchronized to.
+   * @param {HTMLElement} opt.textTrackElement - The HTML element which will
+   * contain the text tracks.
    */
   constructor(
     { videoElement,
@@ -78,7 +79,7 @@ export default class TextTrackRenderer {
       args.timeOffset :
       0;
     this._segmentBuffer.pushChunkSync({ inventoryInfos: null,
-                                        data: { initSegment: null,
+                                        data: { initSegmentUniqueId: null,
                                                 codec: args.type,
                                                 timestampOffset,
                                                 appendWindow: [0, Infinity],
