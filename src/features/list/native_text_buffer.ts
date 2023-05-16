@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import nativeTextBuffer from "../../core/segment_buffers/implementations/text/native";
+// eslint-disable-next-line max-len
+import NativeTextSegmentBuffer from "../../core/segment_buffers/implementations/text/native";
 import { IFeaturesObject } from "../types";
 
 /**
@@ -22,7 +23,7 @@ import { IFeaturesObject } from "../types";
  * @param {Object} features
  */
 function addNativeTextBuffer(features : IFeaturesObject) : void {
-  features.nativeTextTracksBuffer = nativeTextBuffer;
+  features.nativeTextTracksBuffer = NativeTextSegmentBuffer;
 }
 
 export { addNativeTextBuffer as NATIVE_TEXT_BUFFER };

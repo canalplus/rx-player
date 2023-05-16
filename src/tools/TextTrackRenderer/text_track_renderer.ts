@@ -78,7 +78,7 @@ export default class TextTrackRenderer {
       args.timeOffset :
       0;
     this._segmentBuffer.pushChunkSync({ inventoryInfos: null,
-                                        data: { initSegment: null,
+                                        data: { initSegmentUniqueId: null,
                                                 codec: args.type,
                                                 timestampOffset,
                                                 appendWindow: [0, Infinity],
