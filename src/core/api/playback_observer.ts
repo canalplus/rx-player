@@ -19,7 +19,7 @@ import log from "../../log";
 import noop from "../../utils/noop";
 import objectAssign from "../../utils/object_assign";
 import { getRange } from "../../utils/ranges";
-import createSharedReference, {
+import SharedReference, {
   IReadOnlySharedReference,
 } from "../../utils/reference";
 import TaskCanceller, {
@@ -315,8 +315,8 @@ export default class PlaybackObserver {
       return timings;
     };
 
-    const returnedSharedReference = createSharedReference(getCurrentObservation("init"),
-                                                          this._canceller.signal);
+    const returnedSharedReference = new SharedReference(getCurrentObservation("init"),
+                                                        this._canceller.signal);
 
     const generateObservationForEvent = (event : IPlaybackObserverEventType) => {
       const newObservation = getCurrentObservation(event);

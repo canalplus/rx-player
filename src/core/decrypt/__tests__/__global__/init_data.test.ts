@@ -63,7 +63,7 @@ describe("core - decrypt - global tests - init data", () => {
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
-      const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+      const { ContentDecryptorState } = jest.requireActual("../../types");
       const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
@@ -109,7 +109,7 @@ describe("core - decrypt - global tests - init data", () => {
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
-      const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+      const { ContentDecryptorState } = jest.requireActual("../../types");
       const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
@@ -173,7 +173,7 @@ describe("core - decrypt - global tests - init data", () => {
                           new Uint8Array([87, 77]) ];
 
       // == test ==
-      const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+      const { ContentDecryptorState } = jest.requireActual("../../types");
       const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
@@ -260,7 +260,7 @@ describe("core - decrypt - global tests - init data", () => {
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
-      const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+      const { ContentDecryptorState } = jest.requireActual("../../types");
       const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
@@ -312,7 +312,9 @@ describe("core - decrypt - global tests - init data", () => {
   /* eslint-enable max-len */
     return new Promise<void>((res, rej) => {
       // == mocks ==
-      const { mockGenerateKeyRequest, eventTriggers, mockGetInitData } = mockCompat();
+      const { mockGenerateKeyRequest,
+              eventTriggers,
+              mockGetInitData } = mockCompat();
       const mediaKeySession = new MediaKeySessionImpl();
       const mockCreateSession = jest.spyOn(MediaKeysImpl.prototype, "createSession")
         .mockReturnValue(mediaKeySession);
@@ -321,7 +323,7 @@ describe("core - decrypt - global tests - init data", () => {
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
-      const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+      const { ContentDecryptorState } = jest.requireActual("../../types");
       const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
@@ -361,7 +363,9 @@ describe("core - decrypt - global tests - init data", () => {
   it("should ignore init data already received through the browser", () => {
     return new Promise<void>((res, rej) => {
       // == mocks ==
-      const { mockGenerateKeyRequest, eventTriggers, mockGetInitData } = mockCompat();
+      const { mockGenerateKeyRequest,
+              eventTriggers,
+              mockGetInitData } = mockCompat();
       const mediaKeySession = new MediaKeySessionImpl();
       const mockCreateSession = jest.spyOn(MediaKeysImpl.prototype, "createSession")
         .mockReturnValue(mediaKeySession);
@@ -370,7 +374,7 @@ describe("core - decrypt - global tests - init data", () => {
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
-      const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+      const { ContentDecryptorState } = jest.requireActual("../../types");
       const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
@@ -421,7 +425,9 @@ describe("core - decrypt - global tests - init data", () => {
   /* eslint-enable max-len */
     return new Promise<void>((res, rej) => {
       // == mocks ==
-      const { mockGenerateKeyRequest, eventTriggers, mockGetInitData } = mockCompat();
+      const { mockGenerateKeyRequest,
+              eventTriggers,
+              mockGetInitData } = mockCompat();
       const mediaKeySessions = [ new MediaKeySessionImpl(),
                                  new MediaKeySessionImpl(),
                                  new MediaKeySessionImpl() ];
@@ -443,7 +449,7 @@ describe("core - decrypt - global tests - init data", () => {
                                  values: [ { systemId: "15", data: initDatas[2] } ] } ];
 
       // == test ==
-      const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+      const { ContentDecryptorState } = jest.requireActual("../../types");
       const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
@@ -515,7 +521,9 @@ describe("core - decrypt - global tests - init data", () => {
   /* eslint-enable max-len */
     return new Promise<void>((res, rej) => {
       // == mocks ==
-      const { mockGenerateKeyRequest, eventTriggers, mockGetInitData } = mockCompat();
+      const { mockGenerateKeyRequest,
+              eventTriggers,
+              mockGetInitData } = mockCompat();
       const mediaKeySessions = [ new MediaKeySessionImpl(),
                                  new MediaKeySessionImpl() ];
       let createSessionCallIdx = 0;
@@ -531,7 +539,7 @@ describe("core - decrypt - global tests - init data", () => {
                                  values: [ { systemId: "15", data: initData } ] } ];
 
       // == test ==
-      const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+      const { ContentDecryptorState } = jest.requireActual("../../types");
       const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
@@ -579,7 +587,9 @@ describe("core - decrypt - global tests - init data", () => {
   it("should consider sent event through arguments and received events through the browser the same way", () => {
     return new Promise<void>((res, rej) => {
       // == mocks ==
-      const { mockGenerateKeyRequest, eventTriggers, mockGetInitData } = mockCompat();
+      const { mockGenerateKeyRequest,
+              eventTriggers,
+              mockGetInitData } = mockCompat();
       const mediaKeySessions = [ new MediaKeySessionImpl(),
                                  new MediaKeySessionImpl(),
                                  new MediaKeySessionImpl() ];
@@ -601,7 +611,7 @@ describe("core - decrypt - global tests - init data", () => {
                                  values: [ { systemId: "15", data: initDatas[2] } ] } ];
 
       // == test ==
-      const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+      const { ContentDecryptorState } = jest.requireActual("../../types");
       const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {

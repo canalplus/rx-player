@@ -332,7 +332,7 @@ export interface IRepresentationIndex {
 
   /**
    * Returns the ending time, in seconds, of the Representation once it is
-   * "finished" (@see isFinished).
+   * "finished" (@see isStillAwaitingFutureSegments).
    * Should thus be equivalent to `getLastAvailablePosition` once finished.
    *
    * Returns `null` if nothing is in the index
@@ -384,13 +384,13 @@ export interface IRepresentationIndex {
   checkDiscontinuity(time : number) : number | null;
 
   /**
-   * Returns `true` if the last segments in this index have already been
+   * Returns `false` if the last segments in this index have already been
    * generated so that we can freely go to the next period.
-   * Returns `false` if the index is still waiting on future segments to be
+   * Returns `true` if the index is still waiting on future segments to be
    * generated.
    * @returns {boolean}
    */
-  isFinished() : boolean;
+  isStillAwaitingFutureSegments() : boolean;
 
   /**
    * Returns `true` if this index has all the data it needs to give the list
