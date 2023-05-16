@@ -2,7 +2,7 @@ import { expect } from "chai";
 import sleep from "../../utils/sleep.js";
 import sinon from "sinon";
 
-import RxPlayer from "../../../src";
+import RxPlayer from "../../../dist/es2017";
 
 import { manifestInfos } from "../../contents/DASH_dynamic_SegmentTimeline";
 
@@ -91,7 +91,6 @@ describe("manifest error management", function () {
     clock.restore();
 
     await sleep(5);
-    expect(player.getManifest()).to.equal(null);
     const error = player.getError();
     expect(error).not.to.equal(null);
     expect(error.type).to.equal(RxPlayer.ErrorTypes.NETWORK_ERROR);
@@ -124,12 +123,11 @@ describe("manifest error management", function () {
     clock.restore();
 
     await sleep(50);
-    expect(player.getManifest()).not.to.equal(null);
-    expect(typeof player.getManifest()).to.equal("object");
     expect(player.getError()).to.equal(null);
   });
 
   it("should parse the manifest if it works the third time", async () => {
+    this.timeout(10000);
     const clock = sinon.useFakeTimers();
     fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, (xhr) => {
       return xhr.respond(500);
@@ -161,8 +159,6 @@ describe("manifest error management", function () {
     clock.restore();
 
     await sleep(1000);
-    expect(player.getManifest()).not.to.equal(null);
-    expect(typeof player.getManifest()).to.equal("object");
     expect(player.getError()).to.equal(null);
   });
 
@@ -205,8 +201,6 @@ describe("manifest error management", function () {
     clock.restore();
 
     await sleep(5);
-    expect(player.getManifest()).not.to.equal(null);
-    expect(typeof player.getManifest()).to.equal("object");
     expect(player.getError()).to.equal(null);
   });
 
@@ -254,8 +248,6 @@ describe("manifest error management", function () {
     clock.restore();
 
     await sleep(5);
-    expect(player.getManifest()).not.to.equal(null);
-    expect(typeof player.getManifest()).to.equal("object");
     expect(player.getError()).to.equal(null);
   });
 });

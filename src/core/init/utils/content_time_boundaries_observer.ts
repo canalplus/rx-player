@@ -32,8 +32,8 @@ import { IStreamOrchestratorPlaybackObservation } from "../../stream";
 /**
  * Observes what's being played and take care of media events relating to time
  * boundaries:
- *   - Emits a `durationUpdate` when the duration of the current content is
- *     known and every time it changes.
+ *   - Emits a `endingPositionChange` when the known maximum playable position
+ *     of the current content is known and every time it changes.
  *   - Emits `endOfStream` API once segments have been pushed until the end and
  *     `resumeStream` if downloads starts back.
  *   - Emits a `periodChange` event when the currently-playing Period seemed to
@@ -94,7 +94,7 @@ export default class ContentTimeBoundariesObserver
 
     const cancelSignal = this._canceller.signal;
     playbackObserver.listen(({ position }) => {
-      const wantedPosition = position.pending ?? position.last;
+      const wantedPosition = position.getWanted();
       if (wantedPosition < manifest.getMinimumSafePosition()) {
         const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST",
                                        "The current position is behind the " +
@@ -111,7 +111,7 @@ export default class ContentTimeBoundariesObserver
     }, { includeLastObservation: true, clearSignal: cancelSignal });
 
     manifest.addEventListener("manifestUpdate", () => {
-      this.trigger("durationUpdate", this._getManifestDuration());
+      this.trigger("endingPositionChange", this._getManifestEndTime());
       if (cancelSignal.isCancelled()) {
         return;
       }
@@ -120,11 +120,12 @@ export default class ContentTimeBoundariesObserver
   }
 
   /**
-   * Returns an estimate of the current duration of the content.
+   * Returns an estimate of the current last position which may be played in
+   * the content at the moment.
    * @returns {Object}
    */
-  public getCurrentDuration() : IDurationItem  {
-    return this._getManifestDuration();
+  public getCurrentEndingTime() : IEndingPositionInformation  {
+    return this._getManifestEndTime();
   }
 
   /**
@@ -157,12 +158,13 @@ export default class ContentTimeBoundariesObserver
               .updateLastVideoAdaptation(adaptation);
           }
           const endingPosition = this._maximumPositionCalculator.getEndingPosition();
-          const newDuration = endingPosition !== undefined ?
+          const newEndingPosition = endingPosition !== undefined ?
             { isEnd: true,
-              duration: endingPosition } :
+              endingPosition } :
             { isEnd: false,
-              duration: this._maximumPositionCalculator.getMaximumAvailablePosition() };
-          this.trigger("durationUpdate", newDuration);
+              endingPosition: this._maximumPositionCalculator
+                .getMaximumAvailablePosition() };
+          this.trigger("endingPositionChange", newEndingPosition);
         }
       }
     }
@@ -311,13 +313,13 @@ export default class ContentTimeBoundariesObserver
     }
   }
 
-  private _getManifestDuration() : IDurationItem {
+  private _getManifestEndTime() : IEndingPositionInformation {
     const endingPosition = this._maximumPositionCalculator.getEndingPosition();
     return endingPosition !== undefined ?
       { isEnd: true,
-        duration: endingPosition } :
+        endingPosition } :
       { isEnd: false,
-        duration: this._maximumPositionCalculator.getMaximumAvailablePosition() };
+        endingPosition: this._maximumPositionCalculator.getMaximumAvailablePosition() };
   }
 
   private _lazilyCreateActiveStreamInfo(bufferType : IBufferType) : IActiveStreamsInfo {
@@ -348,16 +350,16 @@ export default class ContentTimeBoundariesObserver
   }
 }
 
-export interface IDurationItem {
+export interface IEndingPositionInformation {
   /**
    * The new maximum known position (note that this is the ending position
    * currently known of the current content, it might be superior to the last
    * position at which segments are available and it might also evolve over
    * time), in seconds.
    */
-  duration : number;
+  endingPosition : number;
   /**
-   * If `true`, the communicated `duration` is the actual end of the content.
+   * If `true`, the communicated `endingPosition` is the actual end of the content.
    * It may still be updated due to a track change or to add precision, but it
    * is still a (rough) estimate of the maximum position that content should
    * have.
@@ -365,7 +367,7 @@ export interface IDurationItem {
    * If `false`, this is the currently known maximum position associated to
    * the content, but the content is still evolving (typically, new media
    * segments are still being generated) and as such it can still have a
-   * longer duration in the future.
+   * longer `endingPosition` in the future.
    */
   isEnd : boolean;
 }
@@ -380,10 +382,10 @@ export interface IContentTimeBoundariesObserverEvent {
   /** Triggered when a new `Period` is currently playing. */
   periodChange : Period;
   /**
-   * Triggered when the duration of the currently-playing content became known
-   * or changed.
+   * Triggered when the ending position of the currently-playing content became
+   * known or changed.
    */
-  durationUpdate : IDurationItem;
+  endingPositionChange : IEndingPositionInformation;
   /**
    * Triggered when the last possible chronological segment for all types of
    * buffers has either been pushed or is being pushed to the corresponding
@@ -460,8 +462,7 @@ class MaximumPositionCalculator {
  */
   public getMaximumAvailablePosition() : number {
     if (this._manifest.isDynamic) {
-      return this._manifest.getLivePosition() ??
-             this._manifest.getMaximumSafePosition();
+      return this._manifest.getMaximumSafePosition();
     }
     if (this._lastVideoAdaptation === undefined ||
         this._lastAudioAdaptation === undefined)

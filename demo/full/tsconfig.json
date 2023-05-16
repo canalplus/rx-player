@@ -12,7 +12,7 @@
     "strictPropertyInitialization": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true,
-    "types": ["node"],
+    "types": [],
     "moduleResolution": "node",
     "jsx": "react",
     "typeRoots": [
@@ -21,6 +21,7 @@
     ]
   },
   "include": [
+    "../../src/globals.prod.d.ts",
     "./scripts/**/*"
   ]
 }

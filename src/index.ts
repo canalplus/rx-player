@@ -15,22 +15,45 @@
  */
 
 /**
- * This file exports a Player class with a default feature set (depends on the
- * environment variables set at build).
- *
+ * This file exports a Player class with a default feature set.
  * This is the class used from a regular build.
  */
 
+import isDebugModeEnabled from "./compat/is_debug_mode_enabled";
 import Player from "./core/api";
-import initializeFeatures from "./features/initialize_features";
+import {
+  DASH,
+  DIRECTFILE,
+  EME,
+  HTML_SAMI_PARSER,
+  HTML_SRT_PARSER,
+  HTML_TTML_PARSER,
+  HTML_VTT_PARSER,
+  NATIVE_SAMI_PARSER,
+  NATIVE_SRT_PARSER,
+  NATIVE_TTML_PARSER,
+  NATIVE_VTT_PARSER,
+  SMOOTH,
+} from "./features/list";
 import logger from "./log";
 
-// set initial features according to environment variables
-initializeFeatures();
-
-if (typeof __RX_PLAYER_DEBUG_MODE__ === "boolean" && __RX_PLAYER_DEBUG_MODE__) {
+Player.addFeatures([
+  SMOOTH,
+  DASH,
+  DIRECTFILE,
+  EME,
+  NATIVE_TTML_PARSER,
+  NATIVE_SAMI_PARSER,
+  NATIVE_VTT_PARSER,
+  NATIVE_SRT_PARSER,
+  HTML_TTML_PARSER,
+  HTML_SAMI_PARSER,
+  HTML_VTT_PARSER,
+  HTML_SRT_PARSER,
+]);
+if (isDebugModeEnabled()) {
   logger.setLevel("DEBUG");
-} else if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
+} else if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
   logger.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL);
 }
 

@@ -1,8 +1,7 @@
 # Displaying the RxPlayer's debugging element
 
-The `DEBUG_ELEMENT` feature is an experimental (meaning its API can still evolve
-from version to version) feature allowing to render an HTML element displaying
-debug information that might be interesting while debugging playback.
+The `DEBUG_ELEMENT` feature allows to render an HTML element displaying debug
+information that might be interesting while debugging playback.
 
 ![Example of a debug element](../../static/img/debug_elt.png)
 
@@ -16,7 +15,7 @@ displaying debug information.
 Using one directly defined in the RxPlayer API instead allows to:
 
   1. Use a default and complete debugging element, if you don't want to have to
-     create one from scratch
+     create one from scratch.
 
   2. Display debugging information that is not even available through the API,
      like a representation of the content in the various buffers.
@@ -27,13 +26,16 @@ Using one directly defined in the RxPlayer API instead allows to:
 This feature is not present in default builds to prevent adding unnecessary code
 to codebases that don't need it.
 
-As such, to add it, you will need to rely on the [minimal](../../Getting_Started/Minimal_Player.md)
-build of the RxPlayer and you will need to add the
-`DEBUG_ELEMENT` experimental feature:
+As such, to add it, you will need  to add the `DEBUG_ELEMENT` feature:
 ```js
+// Import the RxPlayer
+// (here through the "minimal" build, though it doesn't change for other builds)
 import RxPlayer from "rx-player/minimal";
-import { DEBUG_ELEMENT } from "rx-player/experimental/features";
 
+// Import the feature
+import { DEBUG_ELEMENT } from "rx-player/features";
+
+// Attach the feature to imported RxPlayer
 RxPlayer.addFeatures([DEBUG_ELEMENT]);
 ```
 
@@ -84,12 +86,6 @@ reflect exactly what's going on at a particular point in time.
     - **ks**: _Key System_. If set, the current key system used to decrypt contents.
     - **mbb**: _Max Buffer Behind_. If set, the configured `maxBufferBehind` (amount of buffer to keep in memory behind the current position, in seconds).
     - **mba**: _Max Buffer Ahead_. If set, the configured `maxBufferAhead` (amount of buffer to keep in memory ahead of the current position, in seconds).
-    - **mia**: _Min Audio Bitrate_. If set, the configured `minAudioBitrate` (minimum audio bitrate reachable through adaptive streaming).
-    - **miv**: _Min video Bitrate_. If set, the configured `minVideoBitrate` (minimum video bitrate reachable through adaptive streaming).
-    - **maa**: _Max Audio Bitrate_. If set, the configured `maxAudioBitrate` (maximum audio bitrate reachable through adaptive streaming).
-    - **mav**: _Max video Bitrate_. If set, the configured `maxVideoBitrate` (maximum video bitrate reachable through adaptive streaming).
-    - **fab**: _Forced Audio bitrate_. If set, the forced audio bitrate, set by example through `setAudioBitrate`
-    - **fvb**: _Forced Video bitrate_. If set, the forced video bitrate, set by example through `setVideoBitrate`
     - **mbs**: _Max video Buffer Size_. If set, the configured `maxVideoBufferSize` (maximum amount of video data kept in the video buffer, in kilobytes)
     - **mip**: _Minimum Position_. The minimum position, obtainable through the `getMinimumPosition` API, at which the content is reachable
     - **dmi**: _Distance to Minimum Position_. The difference between the current position and the minimum position, in seconds
@@ -100,8 +96,20 @@ reflect exactly what's going on at a particular point in time.
     - **vt**: _Video tracks_. List of the video tracks' `id` property. The line begins with a number indicating the number of available video tracks, followed by `:`, followed by each video track's id separated by a space. The current video track is prepended by a `*` character.
     - **at**: _Audio tracks_. List of the audio tracks' `id` property. The line begins with a number indicating the number of available audio tracks, followed by `:`, followed by each audio track's id separated by a space. The current audio track is prepended by a `*` character.
     - **tt**: _Text tracks_. List of the text tracks' `id` property. The line begins with a number indicating the number of available text tracks, followed by `:`, followed by each text track's id separated by a space. The current text track is prepended by a `*` character.
-    - **vb**: _Video Bitrates_. The available video bitrates in the current video track, separated by a space.
-    - **ab**: _Audio Bitrates_. The available audio bitrates in the current audio track, separated by a space.
+    - **vb**: _Video Bitrates_. The available video bitrates in the current
+      video track, separated by a space.
+      Each bitrate value can optionally be followed by an "`U!`", in which case
+      the codec of the corresponding Representation is unsupported, and/or be
+      followed by an "`E!`", in which case it is undecipherable currently.
+      In both of those cases the corresponding video Representation won't be
+      played by the RxPlayer.
+    - **ab**: _Audio Bitrates_. The available audio bitrates in the current
+      audio track, separated by a space.
+      Each bitrate value can optionally be followed by an "`U!`", in which case
+      the codec of the corresponding Representation is unsupported, and/or be
+      followed by an "`E!`", in which case it is undecipherable currently.
+      In both of those cases the corresponding audio Representation won't be
+      played by the RxPlayer.
 
   - Buffer information
     - **vbuf**: _Graphical representation of the video buffer_. The red rectangle indicates the current position, the different colors indicate different video qualities in the buffer.

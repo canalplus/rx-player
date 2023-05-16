@@ -1,7 +1,7 @@
 /**
  * Copyright 2015 CANAL+ Group
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");publicapi
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -21,14 +21,10 @@
 
 import {
   events,
-  exitFullscreen,
   getStartDate,
-  isFullscreen,
-  requestFullscreen,
 } from "../../compat";
 /* eslint-disable-next-line max-len */
 import canRelyOnVideoVisibilityAndSize from "../../compat/can_rely_on_video_visibility_and_size";
-import config from "../../config";
 import {
   ErrorCodes,
   ErrorTypes,
@@ -37,7 +33,10 @@ import {
   IErrorType,
   MediaError,
 } from "../../errors";
-import features from "../../features";
+import features, {
+  addFeatures,
+  IFeature,
+} from "../../features";
 import log from "../../log";
 import Manifest, {
   Adaptation,
@@ -45,31 +44,42 @@ import Manifest, {
   Representation,
 } from "../../manifest";
 import {
-  IAdaptation,
+  IAudioRepresentation,
+  IAudioRepresentationsSwitchingMode,
   IAudioTrack,
-  IAudioTrackPreference,
+  IAudioTrackSetting,
+  IAudioTrackSwitchingMode,
   IAvailableAudioTrack,
   IAvailableTextTrack,
   IAvailableVideoTrack,
-  IBifThumbnail,
-  IBitrateEstimate,
+  IBrokenRepresentationsLockContext,
   IConstructorOptions,
-  IDecipherabilityUpdateContent,
   IKeySystemConfigurationOutput,
+  IKeySystemOption,
   ILoadVideoOptions,
+  ILockedAudioRepresentationsSettings,
+  ILockedVideoRepresentationsSettings,
+  ITrackUpdateEventPayload,
+  IRepresentationListUpdateContext,
   IPeriod,
+  IPeriodChangeEvent,
   IPlayerError,
   IPlayerState,
   IPositionUpdate,
-  IRepresentation,
   IStreamEvent,
   ITextTrack,
-  ITextTrackPreference,
+  IVideoRepresentation,
+  ITextTrackSetting,
+  IVideoRepresentationsSwitchingMode,
   IVideoTrack,
-  IVideoTrackPreference,
+  IVideoTrackSetting,
+  IVideoTrackSwitchingMode,
+  ITrackType,
 } from "../../public_types";
-import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
+import arrayFind from "../../utils/array_find";
+import arrayIncludes from "../../utils/array_includes";
 import assert from "../../utils/assert";
+import assertUnreachable from "../../utils/assert_unreachable";
 import EventEmitter, {
   IEventPayload,
   IListener,
@@ -78,34 +88,29 @@ import idGenerator from "../../utils/id_generator";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import Logger from "../../utils/logger";
 import objectAssign from "../../utils/object_assign";
-import {
-  getLeftSizeOfRange,
-  getPlayedSizeOfRange,
-  getSizeOfRange,
-} from "../../utils/ranges";
-import createSharedReference, {
+import { getLeftSizeOfBufferedTimeRange } from "../../utils/ranges";
+import SharedReference, {
   createMappedReference,
   IReadOnlySharedReference,
-  ISharedReference,
 } from "../../utils/reference";
 import TaskCanceller, {
   CancellationSignal,
 } from "../../utils/task_canceller";
-import warnOnce from "../../utils/warn_once";
 import { IABRThrottlers } from "../adaptive";
 import {
   clearOnStop,
   disposeDecryptionResources,
   getKeySystemConfiguration,
-  getCurrentKeySystem,
 } from "../decrypt";
 import { ContentInitializer } from "../init";
-import MediaSourceContentInitializer from "../init/media_source_content_initializer";
 import SegmentBuffersStore, {
   IBufferedChunk,
   IBufferType,
 } from "../segment_buffers";
-import { IInbandEvent } from "../stream";
+import {
+  IAdaptationChoice,
+  IInbandEvent,
+} from "../stream";
 import {
   checkReloadOptions,
   IParsedLoadVideoOptions,
@@ -117,13 +122,15 @@ import PlaybackObserver, {
   IPlaybackObservation,
 } from "./playback_observer";
 /* eslint-disable-next-line max-len */
-import MediaElementTrackChoiceManager from "./tracks_management/media_element_track_choice_manager";
-import TrackChoiceManager from "./tracks_management/track_choice_manager";
+import MediaElementTracksStore from "./track_management/media_element_tracks_store";
+import TracksStore, {
+  ITSPeriodObject,
+} from "./track_management/tracks_store";
 import {
   constructPlayerStateReference,
+  emitPlayPauseEvents,
   emitSeekEvents,
   isLoadedState,
-  // emitSeekEvents,
   PLAYER_STATES,
 } from "./utils";
 
@@ -131,13 +138,10 @@ import {
 
 const generateContentId = idGenerator();
 
-const { getPageActivityRef,
-        getPictureOnPictureStateRef,
+const { getPictureOnPictureStateRef,
         getVideoVisibilityRef,
-        getVideoWidthRef,
-        onFullscreenChange,
-        onTextTrackAdded,
-        onTextTrackRemoved } = events;
+        getElementResolutionRef,
+        getScreenResolutionRef } = events;
 
 /**
  * @class Player
@@ -178,24 +182,24 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * done.
    * A new content cannot be launched until it stores `false`.
    */
-  private readonly _priv_contentLock : ISharedReference<boolean>;
+  private readonly _priv_contentLock : SharedReference<boolean>;
 
   /**
    * The speed that should be applied to playback.
    * Used instead of videoElement.playbackRate to allow more flexibility.
    */
-  private readonly _priv_speed : ISharedReference<number>;
+  private readonly _priv_speed : SharedReference<number>;
 
   /** Store buffer-related options used needed when initializing a content. */
   private readonly _priv_bufferOptions : {
     /** Last wanted buffer goal. */
-    wantedBufferAhead : ISharedReference<number>;
+    wantedBufferAhead : SharedReference<number>;
     /** Maximum kept buffer ahead in the current position, in seconds. */
-    maxBufferAhead : ISharedReference<number>;
+    maxBufferAhead : SharedReference<number>;
     /** Maximum kept buffer behind in the current position, in seconds. */
-    maxBufferBehind : ISharedReference<number>;
+    maxBufferBehind : SharedReference<number>;
     /** Maximum size of video buffer , in kiloBytes */
-    maxVideoBufferSize : ISharedReference<number>;
+    maxVideoBufferSize : SharedReference<number>;
   };
 
   /** Information on the current bitrate settings. */
@@ -206,20 +210,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      */
     lastBitrates : { audio? : number;
                      video? : number;
-                     text? : number;
-                     image? : number; };
-
-    /** Store last wanted minAutoBitrates for the adaptive logic. */
-    minAutoBitrates : { audio : ISharedReference<number>;
-                        video : ISharedReference<number>; };
-
-    /** Store last wanted maxAutoBitrates for the adaptive logic. */
-    maxAutoBitrates : { audio : ISharedReference<number>;
-                        video : ISharedReference<number>; };
-
-    /** Store last wanted manual bitrates for the adaptive logic. */
-    manualBitrates : { audio : ISharedReference<number>;
-                       video : ISharedReference<number>; };
+                     text? : number; };
   };
 
   /**
@@ -234,15 +225,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_contentInfos : IPublicApiContentInfos | null;
 
-  /** List of favorite audio tracks, in preference order.  */
-  private _priv_preferredAudioTracks : IAudioTrackPreference[];
-
-  /** List of favorite text tracks, in preference order.  */
-  private _priv_preferredTextTracks : ITextTrackPreference[];
-
-  /** List of favorite video tracks, in preference order. */
-  private _priv_preferredVideoTracks : IVideoTrackPreference[];
-
   /** If `true` trickMode video tracks will be chosen if available. */
   private _priv_preferTrickModeTracks : boolean;
 
@@ -251,17 +233,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     events.IPictureInPictureEvent
   >;
 
-  /** Store wanted configuration for the `limitVideoWidth` option. */
-  private readonly _priv_limitVideoWidth : boolean;
-
-  /** Store wanted configuration for the `throttleWhenHidden` option. */
-  private readonly _priv_throttleWhenHidden : boolean;
+  /** Store wanted configuration for the `videoResolutionLimit` option. */
+  private readonly _priv_videoResolutionLimit : "videoElement" |
+                                                "screen" |
+                                                "none";
 
   /** Store wanted configuration for the `throttleVideoBitrateWhenHidden` option. */
   private readonly _priv_throttleVideoBitrateWhenHidden : boolean;
-
-  /** Store volume when mute is called, to restore it on unmute. */
-  private _priv_mutedMemory : number;
 
   /**
    * Store last state of various values sent as events, to avoid re-triggering
@@ -273,9 +251,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private _priv_contentEventsMemory : {
     [P in keyof IPublicAPIEvent]? : IPublicAPIEvent[P];
   };
-
-  /** Determines whether or not the player should stop at the end of video playback. */
-  private readonly _priv_stopAtEnd : boolean;
 
   /**
    * Information that can be relied on once `reload` is called.
@@ -307,6 +282,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     reloadPosition?: number;
   };
 
+  /**
+   * Store last value of autoPlay, from the last load or reload.
+   */
+  private _priv_lastAutoPlay: boolean;
+
   /** All possible Error types emitted by the RxPlayer. */
   static get ErrorTypes() : Record<IErrorType, IErrorType> {
     return ErrorTypes;
@@ -336,35 +316,32 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Add feature(s) to the RxPlayer.
+   * @param {Array.<Object>} featureList - Features wanted.
+   */
+  static addFeatures(featureList : IFeature[]) : void {
+    addFeatures(featureList);
+  }
+
+  /**
    * @constructor
    * @param {Object} options
    */
   constructor(options : IConstructorOptions = {}) {
     super();
-    const { initialAudioBitrate,
-            initialVideoBitrate,
-            limitVideoWidth,
-            minAudioBitrate,
-            minVideoBitrate,
-            maxAudioBitrate,
+    const { baseBandwidth,
+            videoResolutionLimit,
             maxBufferAhead,
             maxBufferBehind,
-            maxVideoBitrate,
-            preferredAudioTracks,
-            preferredTextTracks,
-            preferredVideoTracks,
-            throttleWhenHidden,
             throttleVideoBitrateWhenHidden,
             videoElement,
             wantedBufferAhead,
-            maxVideoBufferSize,
-            stopAtEnd } = parseConstructorOptions(options);
-    const { DEFAULT_UNMUTED_VOLUME } = config.getCurrent();
+            maxVideoBufferSize } = parseConstructorOptions(options);
     // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /* PLAYER_VERSION */"3.30.0";
+    this.version = /* PLAYER_VERSION */"4.0.0-beta.3";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -374,113 +351,53 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_pictureInPictureRef = getPictureOnPictureStateRef(videoElement,
                                                                  destroyCanceller.signal);
-
-    /** @deprecated */
-    onFullscreenChange(videoElement, () => {
-      /* eslint-disable import/no-deprecated */
-      this.trigger("fullscreenChange", this.isFullscreen());
-      /* eslint-enable import/no-deprecated */
-    }, destroyCanceller.signal);
-
-    /** Store last known TextTrack array linked to the media element. */
-    let prevTextTracks : TextTrack[] = [] ;
-    for (let i = 0; i < videoElement.textTracks?.length; i++) {
-      const textTrack = videoElement.textTracks?.[i];
-      if (!isNullOrUndefined(textTrack)) {
-        prevTextTracks.push(textTrack);
-      }
-    }
-
-    /** Callback called when a TextTrack element is added or removed. */
-    const onTextTrackChanges = (_evt : unknown) => {
-      const evt = _evt as Event;
-      const target = evt.target as TextTrackList;
-      const textTrackArr : TextTrack[] = [];
-      for (let i = 0; i < target.length; i++) {
-        const textTrack = target[i];
-        textTrackArr.push(textTrack);
-      }
-
-      const oldTextTracks = prevTextTracks;
-      prevTextTracks = textTrackArr;
-
-      // We can have two consecutive textTrackChanges with the exact same
-      // payload when we perform multiple texttrack operations before the event
-      // loop is freed.
-      if (oldTextTracks.length !== textTrackArr.length) {
-        this._priv_onNativeTextTracksNext(textTrackArr);
-        return;
-      }
-      for (let i = 0; i < oldTextTracks.length; i++) {
-        if (oldTextTracks[i] !== textTrackArr[i]) {
-          this._priv_onNativeTextTracksNext(textTrackArr);
-          return ;
-        }
-      }
-      return ;
-    };
-
-    if (!isNullOrUndefined(videoElement.textTracks)) {
-      onTextTrackAdded(videoElement.textTracks,
-                       onTextTrackChanges,
-                       destroyCanceller.signal);
-      onTextTrackRemoved(videoElement.textTracks,
-                         onTextTrackChanges,
-                         destroyCanceller.signal);
-    }
-
-    this._priv_speed = createSharedReference(videoElement.playbackRate,
-                                             this._destroyCanceller.signal);
+    this._priv_speed = new SharedReference(videoElement.playbackRate,
+                                           this._destroyCanceller.signal);
     this._priv_preferTrickModeTracks = false;
-    this._priv_contentLock = createSharedReference<boolean>(
+    this._priv_contentLock = new SharedReference<boolean>(
       false,
       this._destroyCanceller.signal);
 
     this._priv_bufferOptions = {
-      wantedBufferAhead: createSharedReference(wantedBufferAhead,
-                                               this._destroyCanceller.signal),
-      maxBufferAhead: createSharedReference(maxBufferAhead,
-                                            this._destroyCanceller.signal),
-      maxBufferBehind: createSharedReference(maxBufferBehind,
+      wantedBufferAhead: new SharedReference(wantedBufferAhead,
                                              this._destroyCanceller.signal),
-      maxVideoBufferSize: createSharedReference(maxVideoBufferSize,
-                                                this._destroyCanceller.signal),
+      maxBufferAhead: new SharedReference(maxBufferAhead,
+                                          this._destroyCanceller.signal),
+      maxBufferBehind: new SharedReference(maxBufferBehind,
+                                           this._destroyCanceller.signal),
+      maxVideoBufferSize: new SharedReference(maxVideoBufferSize,
+                                              this._destroyCanceller.signal),
     };
 
     this._priv_bitrateInfos = {
-      lastBitrates: { audio: initialAudioBitrate,
-                      video: initialVideoBitrate },
-      minAutoBitrates: { audio: createSharedReference(minAudioBitrate,
-                                                      this._destroyCanceller.signal),
-                         video: createSharedReference(minVideoBitrate,
-                                                      this._destroyCanceller.signal) },
-      maxAutoBitrates: { audio: createSharedReference(maxAudioBitrate,
-                                                      this._destroyCanceller.signal),
-                         video: createSharedReference(maxVideoBitrate,
-                                                      this._destroyCanceller.signal) },
-      manualBitrates: { audio: createSharedReference(-1, this._destroyCanceller.signal),
-                        video: createSharedReference(-1, this._destroyCanceller.signal) },
+      lastBitrates: { audio: baseBandwidth,
+                      video: baseBandwidth },
     };
 
-    this._priv_throttleWhenHidden = throttleWhenHidden;
     this._priv_throttleVideoBitrateWhenHidden = throttleVideoBitrateWhenHidden;
-    this._priv_limitVideoWidth = limitVideoWidth;
-    this._priv_mutedMemory = DEFAULT_UNMUTED_VOLUME;
+    this._priv_videoResolutionLimit = videoResolutionLimit;
 
     this._priv_currentError = null;
     this._priv_contentInfos = null;
 
     this._priv_contentEventsMemory = {};
 
-    this._priv_stopAtEnd = stopAtEnd;
-
-    this._priv_setPlayerState(PLAYER_STATES.STOPPED);
-
-    this._priv_preferredAudioTracks = preferredAudioTracks;
-    this._priv_preferredTextTracks = preferredTextTracks;
-    this._priv_preferredVideoTracks = preferredVideoTracks;
-
     this._priv_reloadingMetadata = {};
+
+    this._priv_lastAutoPlay = false;
+
+    this.state = PLAYER_STATES.STOPPED;
+
+    const onVolumeChange = () => {
+      this.trigger("volumeChange", {
+        volume: videoElement.volume,
+        muted: videoElement.muted,
+      });
+    };
+    videoElement.addEventListener("volumechange", onVolumeChange);
+    destroyCanceller.signal.register(() => {
+      videoElement.removeEventListener("volumechange", onVolumeChange);
+    });
   }
 
   /**
@@ -551,6 +468,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     log.info("API: Calling loadvideo", options.url, options.transport);
     this._priv_reloadingMetadata = { options };
     this._priv_initializeContentPlayback(options);
+    this._priv_lastAutoPlay = options.autoPlay;
   }
 
   /**
@@ -559,6 +477,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   reload(reloadOpts?: {
     reloadAt?: { position?: number; relative?: number };
+    keySystems?: IKeySystemOption[];
     autoPlay?: boolean;
   }): void {
     const { options,
@@ -591,6 +510,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       autoPlay = !reloadInPause;
     }
 
+    let keySystems : IKeySystemOption[] | undefined;
+    if (reloadOpts?.keySystems !== undefined) {
+      keySystems = reloadOpts.keySystems;
+    } else if (this._priv_reloadingMetadata.options?.keySystems !== undefined) {
+      keySystems = this._priv_reloadingMetadata.options.keySystems;
+    }
+
     const newOptions = { ...options,
                          initialManifest: manifest };
     if (startAt !== undefined) {
@@ -598,6 +524,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     if (autoPlay !== undefined) {
       newOptions.autoPlay = autoPlay;
+    }
+    if (keySystems !== undefined) {
+      newOptions.keySystems = keySystems;
     }
     this._priv_initializeContentPlayback(newOptions);
   }
@@ -608,7 +537,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (features.createDebugElement === null) {
       throw new Error("Feature `DEBUG_ELEMENT` not added to the RxPlayer");
     }
-    const canceller = new TaskCanceller() ;
+    const canceller = new TaskCanceller();
     features.createDebugElement(element, this, canceller.signal);
     return {
       dispose() {
@@ -623,20 +552,24 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_initializeContentPlayback(options : IParsedLoadVideoOptions) : void {
     const { autoPlay,
-            audioTrackSwitchingMode,
-            defaultAudioTrack,
-            defaultTextTrack,
+            defaultAudioTrackSwitchingMode,
             enableFastSwitching,
             initialManifest,
             keySystems,
             lowLatencyMode,
-            manualBitrateSwitchingMode,
             minimumManifestUpdateInterval,
-            networkConfig,
+            requestConfig,
             onCodecSwitch,
             startAt,
             transport,
-            transportOptions,
+            checkMediaSegmentIntegrity,
+            manifestLoader,
+            referenceDateTime,
+            representationFilter,
+            segmentLoader,
+            serverSyncInfos,
+            __priv_manifestUpdateUrl,
+            __priv_patchLastSegmentInSidx,
             url } = options;
 
     // Perform multiple checks on the given options
@@ -653,7 +586,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     let initializer : ContentInitializer;
 
-    let mediaElementTrackChoiceManager : MediaElementTrackChoiceManager | null =
+    let mediaElementTracksStore : MediaElementTracksStore | null =
       null;
     if (!isDirectFile) {
       const transportFn = features.transports[transport];
@@ -664,40 +597,33 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         throw new Error(`transport "${transport}" not supported`);
       }
 
-      const transportPipelines = transportFn(transportOptions);
+      if (features.mediaSourceInit === null) {
+        throw new Error("MediaSource streaming not supported");
+      }
 
-      const { offlineRetry,
-              segmentRetry,
-              manifestRetry,
-              manifestRequestTimeout,
-              segmentRequestTimeout } = networkConfig;
+      const transportPipelines = transportFn({ lowLatencyMode,
+                                               checkMediaSegmentIntegrity,
+                                               manifestLoader,
+                                               referenceDateTime,
+                                               representationFilter,
+                                               segmentLoader,
+                                               serverSyncInfos,
+                                               __priv_manifestUpdateUrl,
+                                               __priv_patchLastSegmentInSidx });
 
       /** Interface used to load and refresh the Manifest. */
       const manifestRequestSettings = { lowLatencyMode,
-                                        maxRetryRegular: manifestRetry,
-                                        maxRetryOffline: offlineRetry,
-                                        requestTimeout:  manifestRequestTimeout,
+                                        maxRetry : requestConfig.manifest?.maxRetry,
+                                        requestTimeout:  requestConfig.manifest?.timeout,
+                                        connectionTimeout:
+                                          requestConfig.manifest?.connectionTimeout,
                                         minimumManifestUpdateInterval,
                                         initialManifest };
 
       const relyOnVideoVisibilityAndSize = canRelyOnVideoVisibilityAndSize();
-      const throttlers : IABRThrottlers = { throttle: {},
-                                            throttleBitrate: {},
-                                            limitWidth: {} };
+      const throttlers : IABRThrottlers = { throttleBitrate: {},
+                                            limitResolution: {} };
 
-      if (this._priv_throttleWhenHidden) {
-        if (!relyOnVideoVisibilityAndSize) {
-          log.warn("API: Can't apply throttleWhenHidden because " +
-                   "browser can't be trusted for visibility.");
-        } else {
-          throttlers.throttle = {
-            video: createMappedReference(
-              getPageActivityRef(currentContentCanceller.signal),
-              isActive => isActive ? Infinity : 0,
-              currentContentCanceller.signal),
-          };
-        }
-      }
       if (this._priv_throttleVideoBitrateWhenHidden) {
         if (!relyOnVideoVisibilityAndSize) {
           log.warn("API: Can't apply throttleVideoBitrateWhenHidden because " +
@@ -712,48 +638,46 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           };
         }
       }
-      if (this._priv_limitVideoWidth) {
+      if (this._priv_videoResolutionLimit === "videoElement") {
         if (!relyOnVideoVisibilityAndSize) {
-          log.warn("API: Can't apply limitVideoWidth because browser can't be " +
+          log.warn("API: Can't apply videoResolutionLimit because browser can't be " +
                    "trusted for video size.");
         } else {
-          throttlers.limitWidth = {
-            video: getVideoWidthRef(videoElement,
-                                    this._priv_pictureInPictureRef,
-                                    currentContentCanceller.signal),
+          throttlers.limitResolution = {
+            video: getElementResolutionRef(videoElement,
+                                           this._priv_pictureInPictureRef,
+                                           currentContentCanceller.signal),
           };
         }
+      } else if (this._priv_videoResolutionLimit === "screen") {
+        throttlers.limitResolution = {
+          video: getScreenResolutionRef(currentContentCanceller.signal),
+        };
       }
 
       /** Options used by the adaptive logic. */
       const adaptiveOptions = {
         initialBitrates: this._priv_bitrateInfos.lastBitrates,
         lowLatencyMode,
-        manualBitrates: this._priv_bitrateInfos.manualBitrates,
-        minAutoBitrates: this._priv_bitrateInfos.minAutoBitrates,
-        maxAutoBitrates: this._priv_bitrateInfos.maxAutoBitrates,
         throttlers,
       };
 
       /** Options used by the TextTrack SegmentBuffer. */
       const textTrackOptions = options.textTrackMode === "native" ?
-        { textTrackMode: "native" as const,
-          hideNativeSubtitle: options.hideNativeSubtitle } :
+        { textTrackMode: "native" as const } :
         { textTrackMode: "html" as const,
           textTrackElement: options.textTrackElement };
 
-      const bufferOptions = objectAssign({ audioTrackSwitchingMode,
-                                           enableFastSwitching,
-                                           manualBitrateSwitchingMode,
+      const bufferOptions = objectAssign({ enableFastSwitching,
                                            onCodecSwitch },
                                          this._priv_bufferOptions);
 
       const segmentRequestOptions = { lowLatencyMode,
-                                      maxRetryRegular: segmentRetry,
-                                      requestTimeout: segmentRequestTimeout,
-                                      maxRetryOffline: offlineRetry };
-
-      initializer = new MediaSourceContentInitializer({
+                                      maxRetry: requestConfig.segment?.maxRetry,
+                                      requestTimeout: requestConfig.segment?.timeout,
+                                      connectionTimeout:
+                                        requestConfig.segment?.connectionTimeout };
+      initializer = new features.mediaSourceInit({
         adaptiveOptions,
         autoPlay,
         bufferOptions,
@@ -772,13 +696,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         this.stop();
         this._priv_currentError = null;
         throw new Error("DirectFile feature not activated in your build.");
+      } else if (isNullOrUndefined(url)) {
+        throw new Error("No URL for a DirectFile content");
       }
-      mediaElementTrackChoiceManager =
-        this._priv_initializeMediaElementTrackChoiceManager(
-          defaultAudioTrack,
-          defaultTextTrack,
-          currentContentCanceller.signal
-        );
+      mediaElementTracksStore =
+        this._priv_initializeMediaElementTracksStore(currentContentCanceller.signal);
       if (currentContentCanceller.isUsed()) {
         return;
       }
@@ -794,42 +716,21 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       contentId: generateContentId(),
       originalUrl: url,
       currentContentCanceller,
+      defaultAudioTrackSwitchingMode,
       initializer,
       isDirectFile,
       segmentBuffersStore: null,
-      thumbnails: null,
       manifest: null,
       currentPeriod: null,
       activeAdaptations: null,
       activeRepresentations: null,
-      initialAudioTrack: defaultAudioTrack,
-      initialTextTrack: defaultTextTrack,
-      trackChoiceManager: null,
-      mediaElementTrackChoiceManager,
+      tracksStore: null,
+      mediaElementTracksStore,
     };
 
     // Bind events
     initializer.addEventListener("error", (error) => {
-      const formattedError = formatError(error, {
-        defaultCode: "NONE",
-        defaultReason: "An unknown error stopped content playback.",
-      });
-      formattedError.fatal = true;
-
-      contentInfos.currentContentCanceller.cancel();
-      this._priv_cleanUpCurrentContentState();
-      this._priv_currentError = formattedError;
-      log.error("API: The player stopped because of an error",
-                error instanceof Error ? error : "");
-      this._priv_setPlayerState(PLAYER_STATES.STOPPED);
-
-      // TODO This condition is here because the eventual callback called when the
-      // player state is updated can launch a new content, thus the error will not
-      // be here anymore, in which case triggering the "error" event is unwanted.
-      // This is very ugly though, and we should probable have a better solution
-      if (this._priv_currentError === formattedError) {
-        this.trigger("error", formattedError);
-      }
+      this._priv_onFatalError(error, contentInfos);
     });
     initializer.addEventListener("warning", (error) => {
       const formattedError = formatError(error, {
@@ -839,11 +740,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       log.warn("API: Sending warning:", formattedError);
       this.trigger("warning", formattedError);
     });
-    initializer.addEventListener("reloadingMediaSource", () => {
+    initializer.addEventListener("reloadingMediaSource", (payload) => {
       contentInfos.segmentBuffersStore = null;
-      if (contentInfos.trackChoiceManager !== null) {
-        contentInfos.trackChoiceManager.resetPeriods();
+      if (contentInfos.tracksStore !== null) {
+        contentInfos.tracksStore.resetPeriodObjects();
       }
+      this._priv_lastAutoPlay = payload.autoPlay;
     });
     initializer.addEventListener("inbandEvents", (inbandEvents) =>
       this.trigger("inbandEvents", inbandEvents));
@@ -851,8 +753,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this.trigger("streamEvent", streamEvent));
     initializer.addEventListener("streamEventSkip", (streamEventSkip) =>
       this.trigger("streamEventSkip", streamEventSkip));
-    initializer.addEventListener("decipherabilityUpdate", (decipherabilityUpdate) =>
-      this.trigger("decipherabilityUpdate", decipherabilityUpdate));
     initializer.addEventListener("activePeriodChanged", (periodInfo) =>
       this._priv_onActivePeriodChanged(contentInfos, periodInfo));
     initializer.addEventListener("periodStreamReady", (periodReadyInfo) =>
@@ -863,29 +763,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_onRepresentationChange(contentInfos, representationInfo));
     initializer.addEventListener("adaptationChange", (adaptationInfo) =>
       this._priv_onAdaptationChange(contentInfos, adaptationInfo));
-    initializer.addEventListener("bitrateEstimationChange", (bitrateEstimationInfo) =>
-      this._priv_onBitrateEstimationChange(bitrateEstimationInfo));
+    initializer.addEventListener("bitrateEstimateChange", (bitrateEstimateInfo) =>
+      this._priv_onBitrateEstimateChange(bitrateEstimateInfo));
     initializer.addEventListener("manifestReady", (manifest) =>
       this._priv_onManifestReady(contentInfos, manifest));
     initializer.addEventListener("loaded", (evt) => {
       contentInfos.segmentBuffersStore = evt.segmentBuffersStore;
-    });
-    initializer.addEventListener("addedSegment", (evt) => {
-      // Manage image tracks
-      // @deprecated
-      const { content, segmentData } = evt;
-      if (content.adaptation.type === "image") {
-        if (!isNullOrUndefined(segmentData) &&
-            (segmentData as { type : string }).type === "bif")
-        {
-          const imageData = (segmentData as { data : IBifThumbnail[] }).data;
-          /* eslint-disable import/no-deprecated */
-          contentInfos.thumbnails = imageData;
-          this.trigger("imageTrackUpdate",
-                       { data: contentInfos.thumbnails });
-          /* eslint-enable import/no-deprecated */
-        }
-      }
     });
 
     // Now, that most events are linked, prepare the next content.
@@ -936,15 +819,62 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         case "ENDED":
           this._priv_reloadingMetadata.reloadInPause = true;
           this._priv_reloadingMetadata.reloadPosition =
-            playbackObserver.getReference().getValue().position;
+            playbackObserver.getReference().getValue().position.getPolled();
           break;
         default:
           const o = playbackObserver.getReference().getValue();
           this._priv_reloadingMetadata.reloadInPause = o.paused;
-          this._priv_reloadingMetadata.reloadPosition = o.position;
+          this._priv_reloadingMetadata.reloadPosition = o.position.getWanted();
           break;
       }
     };
+
+    /**
+     * `TaskCanceller` allowing to stop emitting `"play"` and `"pause"`
+     * events.
+     * `null` when such events are not emitted currently.
+     */
+    let playPauseEventsCanceller : TaskCanceller | null = null;
+
+    /**
+     * Callback emitting `"play"` and `"pause`" events once the content is
+     * loaded, starting from the state indicated in argument.
+     * @param {boolean} willAutoPlay - If `false`, we're currently paused.
+     */
+    const triggerPlayPauseEventsWhenReady = (willAutoPlay: boolean) => {
+      if (playPauseEventsCanceller !== null) {
+        playPauseEventsCanceller.cancel(); // cancel previous logic
+        playPauseEventsCanceller = null;
+      }
+      playerStateRef.onUpdate((val, stopListeningToStateUpdates) => {
+        if (!isLoadedState(val)) {
+          return; // content not loaded yet: no event
+        }
+        stopListeningToStateUpdates();
+        if (playPauseEventsCanceller !== null) {
+          playPauseEventsCanceller.cancel();
+        }
+        playPauseEventsCanceller = new TaskCanceller();
+        playPauseEventsCanceller.linkToSignal(currentContentCanceller.signal);
+        if (willAutoPlay !== !videoElement.paused) {
+          // paused status is not at the expected value on load: emit event
+          if (videoElement.paused) {
+            this.trigger("pause", null);
+          } else {
+            this.trigger("play", null);
+          }
+        }
+        emitPlayPauseEvents(videoElement,
+                            () => this.trigger("play", null),
+                            () => this.trigger("pause", null),
+                            currentContentCanceller.signal);
+      }, { emitCurrentValue: false, clearSignal: currentContentCanceller.signal });
+    };
+
+    triggerPlayPauseEventsWhenReady(autoPlay);
+    initializer.addEventListener("reloadingMediaSource", (payload) => {
+      triggerPlayPauseEventsWhenReady(payload.autoPlay);
+    });
 
     /**
      * `TaskCanceller` allowing to stop emitting `"seeking"` and `"seeked"`
@@ -975,12 +905,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                        () => this.trigger("seeking", null),
                        () => this.trigger("seeked", null),
                        seekEventsCanceller.signal);
-      }
-
-      // Previous call could have performed all kind of side-effects, thus,
-      // we re-check the current state associated to the RxPlayer
-      if (this.state === PLAYER_STATES.ENDED && this._priv_stopAtEnd) {
-        this.stop();
       }
     }, { emitCurrentValue: true, clearSignal: currentContentCanceller.signal });
 
@@ -1018,59 +942,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Returns manifest/playlist object.
-   * null if the player is STOPPED.
-   * @deprecated
-   * @returns {Manifest|null} - The current Manifest (`null` when not known).
-   */
-  getManifest() : Manifest|null {
-    warnOnce("getManifest is deprecated." +
-             " Please open an issue if you used this API.");
-    if (this._priv_contentInfos === null) {
-      return null;
-    }
-    return this._priv_contentInfos.manifest;
-  }
-
-  /**
-   * Returns Adaptations (tracks) for every currently playing type
-   * (audio/video/text...).
-   * @deprecated
-   * @returns {Object|null} - The current Adaptation objects, per type (`null`
-   * when none is known for now.
-   */
-  getCurrentAdaptations(
-  ) : Partial<Record<IBufferType, IAdaptation|null>> | null {
-    warnOnce("getCurrentAdaptations is deprecated." +
-             " Please open an issue if you used this API.");
-    if (this._priv_contentInfos === null) {
-      return null;
-    }
-    const { currentPeriod, activeAdaptations } = this._priv_contentInfos;
-    if (currentPeriod === null ||
-        activeAdaptations === null ||
-        isNullOrUndefined(activeAdaptations[currentPeriod.id]))
-    {
-      return null;
-    }
-    return activeAdaptations[currentPeriod.id];
-  }
-
-  /**
-   * Returns representations (qualities) for every currently playing type
-   * (audio/video/text...).
-   * @deprecated
-   * @returns {Object|null} - The current Representation objects, per type
-   * (`null` when none is known for now.
-   */
-  getCurrentRepresentations(
-  ) : Partial<Record<IBufferType, IRepresentation|null>> | null {
-    warnOnce("getCurrentRepresentations is deprecated." +
-             " Please open an issue if you used this API.");
-    return this._priv_getCurrentRepresentations();
-  }
-
-  /**
    * Returns the media DOM element used by the player.
    * You should not its HTML5 API directly and use the player's method instead,
    * to ensure a well-behaved player.
@@ -1082,31 +953,47 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * If one returns the first native text-track element attached to the media element.
-   * @deprecated
-   * @returns {TextTrack} - The native TextTrack attached (`null` when none)
-   */
-  getNativeTextTrack() : TextTrack|null {
-    warnOnce("getNativeTextTrack is deprecated." +
-             " Please open an issue if you used this API.");
-    if (this.videoElement === null) {
-      throw new Error("Disposed player");
-    }
-    const videoElement = this.videoElement;
-    const textTracks = videoElement.textTracks;
-    if (textTracks.length > 0) {
-      return videoElement.textTracks[0];
-    } else {
-      return null;
-    }
-  }
-
-  /**
    * Returns the player's current state.
    * @returns {string} - The current Player's state
    */
   getPlayerState() : string {
     return this.state;
+  }
+
+  /**
+   * Returns true if a content is loaded.
+   * @returns {Boolean} - `true` if a content is loaded, `false` otherwise.
+   */
+  isContentLoaded() : boolean {
+    return !arrayIncludes(["LOADING", "RELOADING", "STOPPED"], this.state);
+  }
+
+  /**
+   * Returns true if the player is buffering.
+   * @returns {Boolean} - `true` if the player is buffering, `false` otherwise.
+   */
+  isBuffering() : boolean {
+    return arrayIncludes(["BUFFERING", "SEEKING", "LOADING", "RELOADING"], this.state);
+  }
+
+  /**
+   * Returns the play/pause status of the player :
+   *   - when `LOADING` or `RELOADING`, returns the scheduled play/pause condition
+   *     for when loading is over,
+   *   - in other states, returns the `<video>` element .paused value,
+   *   - if the player is disposed, returns `true`.
+   * @returns {Boolean} - `true` if the player is paused or will be after loading,
+   * `false` otherwise.
+   */
+  isPaused() : boolean {
+    if (this.videoElement) {
+      if (arrayIncludes(["LOADING", "RELOADING"], this.state)) {
+        return !this._priv_lastAutoPlay;
+      } else {
+        return this.videoElement.paused;
+      }
+    }
+    return true;
   }
 
   /**
@@ -1137,21 +1024,22 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Returns the url of the currently considered Manifest, or of the content for
+   * Returns the URL(s) of the currently considered Manifest, or of the content for
    * directfile content.
-   * @returns {string|undefined} - Current URL. `undefined` if not known or no
-   * URL yet.
+   * @returns {Array.<string>|undefined} - Current URL. `undefined` if not known
+   * or no URL yet.
    */
-  getUrl() : string|undefined {
+  getContentUrls() : string[]|undefined {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
     const { isDirectFile, manifest, originalUrl } = this._priv_contentInfos;
     if (isDirectFile) {
-      return originalUrl;
+      return originalUrl === undefined ? undefined :
+                                         [originalUrl];
     }
     if (manifest !== null) {
-      return manifest.getUrl();
+      return manifest.getUrls();
     }
     return undefined;
   }
@@ -1180,7 +1068,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * NaN if no video is playing.
    * @returns {Number}
    */
-  getVideoDuration() : number {
+  getMediaDuration() : number {
     if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
@@ -1193,44 +1081,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    *   - the current time
    * @returns {Number}
    */
-  getVideoBufferGap() : number {
+  getCurrentBufferGap() : number {
     if (this.videoElement === null) {
       throw new Error("Disposed player");
     }
     const videoElement = this.videoElement;
-    return getLeftSizeOfRange(videoElement.buffered, videoElement.currentTime);
-  }
-
-  /**
-   * Returns in seconds the difference between:
-   *   - the end of the current contiguous loaded range.
-   *   - the start of the current contiguous loaded range.
-   * @returns {Number}
-   */
-  getVideoLoadedTime() : number {
-    warnOnce("`getVideoLoadedTime` is deprecated and won't be present in the " +
-             "next major version");
-    if (this.videoElement === null) {
-      throw new Error("Disposed player");
+    const bufferGap = getLeftSizeOfBufferedTimeRange(videoElement.buffered,
+                                                     videoElement.currentTime);
+    if (bufferGap === Infinity) {
+      return 0;
     }
-    const videoElement = this.videoElement;
-    return getSizeOfRange(videoElement.buffered, videoElement.currentTime);
-  }
-
-  /**
-   * Returns in seconds the difference between:
-   *   - the current time.
-   *   - the start of the current contiguous loaded range.
-   * @returns {Number}
-   */
-  getVideoPlayedTime() : number {
-    warnOnce("`getVideoPlayedTime` is deprecated and won't be present in the " +
-             "next major version");
-    if (this.videoElement === null) {
-      throw new Error("Disposed player");
-    }
-    const videoElement = this.videoElement;
-    return getPlayedSizeOfRange(videoElement.buffered, videoElement.currentTime);
+    return bufferGap;
   }
 
   /**
@@ -1286,6 +1147,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       throw new Error("Disposed player");
     }
     return this.videoElement.currentTime;
+  }
+
+  /**
+   * Returns the last stored content position, in seconds.
+   *
+   * @returns {number|undefined}
+   */
+  getLastStoredContentPosition() : number|undefined {
+    return this._priv_reloadingMetadata.reloadPosition;
   }
 
   /**
@@ -1365,126 +1235,48 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return;
     }
     this._priv_preferTrickModeTracks = preferTrickModeTracks;
-    const trackChoiceManager = this._priv_contentInfos?.trackChoiceManager;
-    if (!isNullOrUndefined(trackChoiceManager)) {
-      if (preferTrickModeTracks && !trackChoiceManager.isTrickModeEnabled()) {
-        trackChoiceManager.enableVideoTrickModeTracks();
-      } else if (!preferTrickModeTracks && trackChoiceManager.isTrickModeEnabled()) {
-        trackChoiceManager.disableVideoTrickModeTracks();
+    const tracksStore = this._priv_contentInfos?.tracksStore;
+    if (!isNullOrUndefined(tracksStore)) {
+      if (preferTrickModeTracks && !tracksStore.isTrickModeEnabled()) {
+        tracksStore.enableVideoTrickModeTracks();
+      } else if (!preferTrickModeTracks && tracksStore.isTrickModeEnabled()) {
+        tracksStore.disableVideoTrickModeTracks();
       }
     }
   }
 
   /**
-   * Returns all available bitrates for the current video Adaptation.
-   * @returns {Array.<Number>}
+   * Returns video Representation currently considered for the current Period.
+   *
+   * Returns `null` if no video track is playing for the current Period.
+   *
+   * Returns `undefined` either when are not currently playing any Period or
+   * when we don't know which Representation is playing.
+   * @returns {Object|null|undefined}
    */
-  getAvailableVideoBitrates() : number[] {
-    if (this._priv_contentInfos === null) {
-      return [];
-    }
-    const { currentPeriod, activeAdaptations } = this._priv_contentInfos;
-    if (currentPeriod === null || activeAdaptations === null) {
-      return [];
-    }
-    const adaptations = activeAdaptations[currentPeriod.id];
-    if (adaptations === undefined || isNullOrUndefined(adaptations.video)) {
-      return [];
-    }
-
-    return adaptations.video.getAvailableBitrates();
-  }
-
-  /**
-   * Returns all available bitrates for the current audio Adaptation.
-   * @returns {Array.<Number>}
-   */
-  getAvailableAudioBitrates() : number[] {
-    if (this._priv_contentInfos === null) {
-      return [];
-    }
-    const { currentPeriod, activeAdaptations } = this._priv_contentInfos;
-    if (currentPeriod === null || activeAdaptations === null) {
-      return [];
-    }
-    const adaptations = activeAdaptations[currentPeriod.id];
-    if (adaptations === undefined || isNullOrUndefined(adaptations.audio)) {
-      return [];
-    }
-
-    return adaptations.audio.getAvailableBitrates();
-  }
-
-  /**
-   * Returns the manual audio bitrate set. -1 if in AUTO mode.
-   * @returns {Number}
-   */
-  getManualAudioBitrate() : number {
-    return this._priv_bitrateInfos.manualBitrates.audio.getValue();
-  }
-
-  /**
-   * Returns the manual video bitrate set. -1 if in AUTO mode.
-   * @returns {Number}
-   */
-  getManualVideoBitrate() : number {
-    return this._priv_bitrateInfos.manualBitrates.video.getValue();
-  }
-
-  /**
-   * Returns currently considered bitrate for video segments.
-   * @returns {Number|undefined}
-   */
-  getVideoBitrate() : number|undefined {
-    const representations = this._priv_getCurrentRepresentations();
-    if (representations === null || isNullOrUndefined(representations.video)) {
+  getVideoRepresentation() : IVideoRepresentation | null | undefined {
+    const representations = this.__priv_getCurrentRepresentations();
+    if (representations === null) {
       return undefined;
     }
-    return representations.video.bitrate;
+    return representations.video;
   }
 
   /**
-   * Returns currently considered bitrate for audio segments.
-   * @returns {Number|undefined}
+   * Returns audio Representation currently considered for the current Period.
+   *
+   * Returns `null` if no audio track is playing for the current Period.
+   *
+   * Returns `undefined` either when are not currently playing any Period or
+   * when we don't know which Representation is playing.
+   * @returns {Object|null|undefined}
    */
-  getAudioBitrate() : number|undefined {
-    const representations = this._priv_getCurrentRepresentations();
-    if (representations === null || isNullOrUndefined(representations.audio)) {
+  getAudioRepresentation() : IAudioRepresentation | null | undefined {
+    const representations = this.__priv_getCurrentRepresentations();
+    if (representations === null) {
       return undefined;
     }
-    return representations.audio.bitrate;
-  }
-
-  /**
-   * Returns minimum wanted video bitrate currently set.
-   * @returns {Number}
-   */
-  getMinVideoBitrate() : number {
-    return this._priv_bitrateInfos.minAutoBitrates.video.getValue();
-  }
-
-  /**
-   * Returns minimum wanted audio bitrate currently set.
-   * @returns {Number}
-   */
-  getMinAudioBitrate() : number {
-    return this._priv_bitrateInfos.minAutoBitrates.audio.getValue();
-  }
-
-  /**
-   * Returns maximum wanted video bitrate currently set.
-   * @returns {Number}
-   */
-  getMaxVideoBitrate() : number {
-    return this._priv_bitrateInfos.maxAutoBitrates.video.getValue();
-  }
-
-  /**
-   * Returns maximum wanted audio bitrate currently set.
-   * @returns {Number}
-   */
-  getMaxAudioBitrate() : number {
-    return this._priv_bitrateInfos.maxAutoBitrates.audio.getValue();
+    return representations.audio;
   }
 
   /**
@@ -1587,46 +1379,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Returns true if the media element is full screen.
-   * @deprecated
-   * @returns {Boolean}
-   */
-  isFullscreen() : boolean {
-    warnOnce("isFullscreen is deprecated." +
-             " Fullscreen management should now be managed by the application");
-    return isFullscreen();
-  }
-
-  /**
-   * Set/exit fullScreen.
-   * @deprecated
-   * @param {Boolean} [goFull=true] - if false, exit full screen.
-   */
-  setFullscreen(goFull : boolean = true) : void {
-    warnOnce("setFullscreen is deprecated." +
-             " Fullscreen management should now be managed by the application");
-    if (this.videoElement === null) {
-      throw new Error("Disposed player");
-    }
-
-    if (goFull) {
-      requestFullscreen(this.videoElement);
-    } else {
-      exitFullscreen();
-    }
-  }
-
-  /**
-   * Exit from full screen mode.
-   * @deprecated
-   */
-  exitFullscreen() : void {
-    warnOnce("exitFullscreen is deprecated." +
-             " Fullscreen management should now be managed by the application");
-    exitFullscreen();
-  }
-
-  /**
    * Returns the current player's audio volume on the media element.
    * From 0 (no audio) to 1 (maximum volume).
    * @returns {Number}
@@ -1650,111 +1402,39 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const videoElement = this.videoElement;
     if (volume !== videoElement.volume) {
       videoElement.volume = volume;
-      this.trigger("volumeChange", volume);
     }
   }
 
   /**
-   * Returns true if the volume is set to 0. false otherwise.
+   * Returns `true` if audio is currently muted.
    * @returns {Boolean}
    */
   isMute() : boolean {
-    return this.getVolume() === 0;
+    return this.videoElement?.muted === true;
   }
 
   /**
-   * Set the volume to 0 and save current one for when unmuted.
+   * Mute audio.
    */
   mute() : void {
-    this._priv_mutedMemory = this.getVolume();
-    this.setVolume(0);
+    if (this.videoElement === null) {
+      throw new Error("Disposed player");
+    }
+    if (!this.videoElement.muted) {
+      this.videoElement.muted = true;
+    }
   }
 
   /**
-   * Set the volume back to when it was when mute was last called.
-   * If the volume was set to 0, set a default volume instead (see config).
+   * Unmute audio.
    */
   unMute() : void {
-    const { DEFAULT_UNMUTED_VOLUME } = config.getCurrent();
-    const vol = this.getVolume();
-    if (vol === 0) {
-      this.setVolume(this._priv_mutedMemory === 0 ? DEFAULT_UNMUTED_VOLUME :
-                                                    this._priv_mutedMemory);
+    if (this.videoElement === null) {
+      throw new Error("Disposed player");
     }
-  }
-
-  /**
-   * Force the video bitrate to a given value. Act as a ceil.
-   * -1 to set it on AUTO Mode
-   * @param {Number} btr
-   */
-  setVideoBitrate(btr : number) : void {
-    this._priv_bitrateInfos.manualBitrates.video.setValue(btr);
-  }
-
-  /**
-   * Force the audio bitrate to a given value. Act as a ceil.
-   * -1 to set it on AUTO Mode
-   * @param {Number} btr
-   */
-  setAudioBitrate(btr : number) : void {
-    this._priv_bitrateInfos.manualBitrates.audio.setValue(btr);
-  }
-
-  /**
-   * Update the minimum video bitrate the user can switch to.
-   * @param {Number} btr
-   */
-  setMinVideoBitrate(btr : number) : void {
-    const maxVideoBitrate = this._priv_bitrateInfos.maxAutoBitrates.video.getValue();
-    if (btr > maxVideoBitrate) {
-      throw new Error("Invalid minimum video bitrate given. " +
-                      `Its value, "${btr}" is superior the current maximum ` +
-                      `video birate, "${maxVideoBitrate}".`);
+    if (this.videoElement.muted) {
+      this.videoElement.muted = false;
     }
-    this._priv_bitrateInfos.minAutoBitrates.video.setValue(btr);
-  }
-
-  /**
-   * Update the minimum audio bitrate the user can switch to.
-   * @param {Number} btr
-   */
-  setMinAudioBitrate(btr : number) : void {
-    const maxAudioBitrate = this._priv_bitrateInfos.maxAutoBitrates.audio.getValue();
-    if (btr > maxAudioBitrate) {
-      throw new Error("Invalid minimum audio bitrate given. " +
-                      `Its value, "${btr}" is superior the current maximum ` +
-                      `audio birate, "${maxAudioBitrate}".`);
-    }
-    this._priv_bitrateInfos.minAutoBitrates.audio.setValue(btr);
-  }
-
-  /**
-   * Update the maximum video bitrate the user can switch to.
-   * @param {Number} btr
-   */
-  setMaxVideoBitrate(btr : number) : void {
-    const minVideoBitrate = this._priv_bitrateInfos.minAutoBitrates.video.getValue();
-    if (btr < minVideoBitrate) {
-      throw new Error("Invalid maximum video bitrate given. " +
-                      `Its value, "${btr}" is inferior the current minimum ` +
-                      `video birate, "${minVideoBitrate}".`);
-    }
-    this._priv_bitrateInfos.maxAutoBitrates.video.setValue(btr);
-  }
-
-  /**
-   * Update the maximum audio bitrate the user can switch to.
-   * @param {Number} btr
-   */
-  setMaxAudioBitrate(btr : number) : void {
-    const minAudioBitrate = this._priv_bitrateInfos.minAutoBitrates.audio.getValue();
-    if (btr < minAudioBitrate) {
-      throw new Error("Invalid maximum audio bitrate given. " +
-                      `Its value, "${btr}" is inferior the current minimum ` +
-                      `audio birate, "${minAudioBitrate}".`);
-    }
-    this._priv_bitrateInfos.maxAutoBitrates.audio.setValue(btr);
   }
 
   /**
@@ -1825,19 +1505,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return this._priv_bufferOptions.maxVideoBufferSize.getValue();
   }
 
-  /**
-   * Returns type of current keysystem (e.g. playready, widevine) if the content
-   * is encrypted. null otherwise.
-   * @deprecated
-   * @returns {string|null}
-   */
-  getCurrentKeySystem() : string|null {
-    warnOnce("`getCurrentKeySystem` is deprecated." +
-             "Please use the `getKeySystemConfiguration` method instead.");
-    if (this.videoElement === null) {
-      throw new Error("Disposed player");
+  getCurrentPeriod() : IPeriod | null {
+    const currentPeriod = this._priv_contentInfos?.currentPeriod;
+    if (isNullOrUndefined(currentPeriod)) {
+      return null;
     }
-    return getCurrentKeySystem(this.videoElement);
+    return { id: currentPeriod.id, start: currentPeriod.start, end: currentPeriod.end };
   }
 
   /**
@@ -1860,393 +1533,436 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Returns every available audio tracks for the current Period.
-   * @returns {Array.<Object>|null}
+   * Returns the list of available Periods for which the current audio, video or
+   * text track can now be changed.
+   * @returns {Array.<Object>}
    */
-  getAvailableAudioTracks() : IAvailableAudioTrack[] {
+  getAvailablePeriods() : IPeriod[] {
     if (this._priv_contentInfos === null) {
       return [];
     }
-    const { currentPeriod,
-            isDirectFile,
-            trackChoiceManager,
-            mediaElementTrackChoiceManager } = this._priv_contentInfos;
+    const { isDirectFile, tracksStore } = this._priv_contentInfos;
     if (isDirectFile) {
-      return mediaElementTrackChoiceManager?.getAvailableAudioTracks() ?? [];
-    }
-    if (trackChoiceManager === null || currentPeriod === null) {
       return [];
     }
-    return trackChoiceManager.getAvailableAudioTracks(currentPeriod);
+    if (tracksStore === null) {
+      return [];
+    }
+    return tracksStore.getAvailablePeriods().slice();
   }
 
   /**
-   * Returns every available text tracks for the current Period.
-   * @returns {Array.<Object>|null}
+   * Returns every available audio tracks for a given Period - or the current
+   * one if no `periodId` is given.
+   * @param {string|undefined} [periodId]
+   * @returns {Array.<Object>}
    */
-  getAvailableTextTracks() : IAvailableTextTrack[] {
+  getAvailableAudioTracks(periodId? : string | undefined) : IAvailableAudioTrack[] {
     if (this._priv_contentInfos === null) {
       return [];
     }
-    const { currentPeriod,
-            isDirectFile,
-            trackChoiceManager,
-            mediaElementTrackChoiceManager } = this._priv_contentInfos;
+    const { isDirectFile, mediaElementTracksStore } = this._priv_contentInfos;
     if (isDirectFile) {
-      return mediaElementTrackChoiceManager?.getAvailableTextTracks() ?? [];
+      return mediaElementTracksStore?.getAvailableAudioTracks() ?? [];
     }
-    if (trackChoiceManager === null || currentPeriod === null) {
+    return this._priv_callTracksStoreGetterSetter(
+      periodId,
+      [],
+      (tcm, periodRef) => tcm.getAvailableAudioTracks(periodRef) ?? []);
+  }
+
+  /**
+   * Returns every available text tracks for a given Period - or the current
+   * one if no `periodId` is given.
+   * @param {string|undefined} [periodId]
+   * @returns {Array.<Object>}
+   */
+  getAvailableTextTracks(periodId? : string | undefined) : IAvailableTextTrack[] {
+    if (this._priv_contentInfos === null) {
       return [];
     }
-    return trackChoiceManager.getAvailableTextTracks(currentPeriod);
+    const { isDirectFile, mediaElementTracksStore } = this._priv_contentInfos;
+    if (isDirectFile) {
+      return mediaElementTracksStore?.getAvailableTextTracks() ?? [];
+    }
+    return this._priv_callTracksStoreGetterSetter(
+      periodId,
+      [],
+      (tcm, periodRef) => tcm.getAvailableTextTracks(periodRef) ?? []);
   }
 
   /**
    * Returns every available video tracks for the current Period.
-   * @returns {Array.<Object>|null}
+   * @param {string|undefined} [periodId]
+   * @returns {Array.<Object>}
    */
-  getAvailableVideoTracks() : IAvailableVideoTrack[] {
+  getAvailableVideoTracks(periodId? : string | undefined) : IAvailableVideoTrack[] {
     if (this._priv_contentInfos === null) {
       return [];
     }
-    const { currentPeriod,
-            isDirectFile,
-            trackChoiceManager,
-            mediaElementTrackChoiceManager } = this._priv_contentInfos;
+    const { isDirectFile, mediaElementTracksStore } = this._priv_contentInfos;
     if (isDirectFile) {
-      return mediaElementTrackChoiceManager?.getAvailableVideoTracks() ?? [];
+      return mediaElementTracksStore?.getAvailableVideoTracks() ?? [];
     }
-    if (trackChoiceManager === null || currentPeriod === null) {
-      return [];
-    }
-    return trackChoiceManager.getAvailableVideoTracks(currentPeriod);
+    return this._priv_callTracksStoreGetterSetter(
+      periodId,
+      [],
+      (tcm, periodRef) => tcm.getAvailableVideoTracks(periodRef) ?? []);
   }
 
   /**
    * Returns currently chosen audio language for the current Period.
-   * @returns {string}
+   * @param {string|undefined} [periodId]
+   * @returns {Object|null|undefined}
    */
-  getAudioTrack() : IAudioTrack|null|undefined {
+  getAudioTrack(periodId? : string | undefined) : IAudioTrack|null|undefined {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
-    const { currentPeriod,
-            isDirectFile,
-            trackChoiceManager,
-            mediaElementTrackChoiceManager } = this._priv_contentInfos;
+    const { isDirectFile, mediaElementTracksStore } = this._priv_contentInfos;
     if (isDirectFile) {
-      if (mediaElementTrackChoiceManager === null) {
+      if (mediaElementTracksStore === null) {
         return undefined;
       }
-      return mediaElementTrackChoiceManager.getChosenAudioTrack();
+      return mediaElementTracksStore.getChosenAudioTrack();
     }
-    if (trackChoiceManager === null || currentPeriod === null) {
-      return undefined;
-    }
-    return trackChoiceManager.getChosenAudioTrack(currentPeriod);
+    return this._priv_callTracksStoreGetterSetter(
+      periodId,
+      undefined,
+      (tcm, periodRef) => tcm.getChosenAudioTrack(periodRef));
   }
 
   /**
    * Returns currently chosen subtitle for the current Period.
-   * @returns {string}
+   * @param {string|undefined} [periodId]
+   * @returns {Object|null|undefined}
    */
-  getTextTrack() : ITextTrack|null|undefined {
+  getTextTrack(periodId? : string | undefined) : ITextTrack|null|undefined {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
-    const { currentPeriod,
-            isDirectFile,
-            trackChoiceManager,
-            mediaElementTrackChoiceManager } = this._priv_contentInfos;
+    const { isDirectFile, mediaElementTracksStore } = this._priv_contentInfos;
     if (isDirectFile) {
-      if (mediaElementTrackChoiceManager === null) {
+      if (mediaElementTracksStore === null) {
         return undefined;
       }
-      return mediaElementTrackChoiceManager.getChosenTextTrack();
+      return mediaElementTracksStore.getChosenTextTrack();
     }
-    if (trackChoiceManager === null || currentPeriod === null) {
-      return undefined;
-    }
-    return trackChoiceManager.getChosenTextTrack(currentPeriod);
+    return this._priv_callTracksStoreGetterSetter(
+      periodId,
+      undefined,
+      (tcm, periodRef) => tcm.getChosenTextTrack(periodRef));
   }
 
   /**
    * Returns currently chosen video track for the current Period.
-   * @returns {string}
+   * @param {string|undefined} [periodId]
+   * @returns {Object|null|undefined}
    */
-  getVideoTrack() : IVideoTrack|null|undefined {
+  getVideoTrack(periodId? : string | undefined) : IVideoTrack|null|undefined {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
-    const { currentPeriod,
-            isDirectFile,
-            trackChoiceManager,
-            mediaElementTrackChoiceManager } = this._priv_contentInfos;
+    const { isDirectFile, mediaElementTracksStore } = this._priv_contentInfos;
     if (isDirectFile) {
-      if (mediaElementTrackChoiceManager === null) {
+      if (mediaElementTracksStore === null) {
         return undefined;
       }
-      return mediaElementTrackChoiceManager.getChosenVideoTrack();
+      return mediaElementTracksStore.getChosenVideoTrack();
     }
-    if (trackChoiceManager === null || currentPeriod === null) {
-      return undefined;
-    }
-    return trackChoiceManager.getChosenVideoTrack(currentPeriod);
+    return this._priv_callTracksStoreGetterSetter(
+      periodId,
+      undefined,
+      (tcm, periodRef) => tcm.getChosenVideoTrack(periodRef));
   }
 
   /**
    * Update the audio language for the current Period.
-   * @param {string} audioId
-   * @throws Error - the current content has no TrackChoiceManager.
+   * @param {string | object} arg
+   * @throws Error - the current content has no TracksStore.
    * @throws Error - the given id is linked to no audio track.
    */
-  setAudioTrack(audioId : string) : void {
+  setAudioTrack(arg : string | IAudioTrackSetting) : void {
     if (this._priv_contentInfos === null) {
       throw new Error("No content loaded");
     }
-    const { currentPeriod,
-            isDirectFile,
-            trackChoiceManager,
-            mediaElementTrackChoiceManager } = this._priv_contentInfos;
+    const { isDirectFile, mediaElementTracksStore } = this._priv_contentInfos;
     if (isDirectFile) {
       try {
-        mediaElementTrackChoiceManager?.setAudioTrackById(audioId);
+        const audioId = typeof arg === "string" ? arg :
+                                                  arg.trackId;
+        mediaElementTracksStore?.setAudioTrackById(audioId);
         return;
       } catch (e) {
         throw new Error("player: unknown audio track");
       }
     }
-    if (trackChoiceManager === null || currentPeriod === null) {
-      throw new Error("No compatible content launched.");
+
+    let periodId : string | undefined;
+    let trackId : string;
+    let switchingMode : IAudioTrackSwitchingMode | undefined;
+    let lockedRepresentations : string[] | null = null;
+    let relativeResumingPosition : number | undefined;
+    if (typeof arg === "string") {
+      trackId = arg;
+    } else {
+      trackId = arg.trackId;
+      periodId = arg.periodId;
+      switchingMode = arg.switchingMode;
+      lockedRepresentations = arg.lockedRepresentations ?? null;
+      relativeResumingPosition = arg.relativeResumingPosition;
     }
-    try {
-      trackChoiceManager.setAudioTrackByID(currentPeriod, audioId);
-    }
-    catch (e) {
-      throw new Error("player: unknown audio track");
-    }
+    return this._priv_callTracksStoreGetterSetter(
+      periodId,
+      undefined,
+      (tcm, periodRef) =>
+        tcm.setAudioTrack({
+          periodRef,
+          trackId,
+          switchingMode,
+          lockedRepresentations,
+          relativeResumingPosition,
+        })
+    );
   }
 
   /**
    * Update the text language for the current Period.
-   * @param {string} sub
-   * @throws Error - the current content has no TrackChoiceManager.
+   * @param {string | Object} arg
+   * @throws Error - the current content has no TracksStore.
    * @throws Error - the given id is linked to no text track.
    */
-  setTextTrack(textId : string) : void {
+  setTextTrack(arg : string | ITextTrackSetting) : void {
     if (this._priv_contentInfos === null) {
       throw new Error("No content loaded");
     }
-    const { currentPeriod,
-            isDirectFile,
-            trackChoiceManager,
-            mediaElementTrackChoiceManager } = this._priv_contentInfos;
+    const { isDirectFile, mediaElementTracksStore } = this._priv_contentInfos;
     if (isDirectFile) {
       try {
-        mediaElementTrackChoiceManager?.setTextTrackById(textId);
+        const textId = typeof arg === "string" ? arg :
+                                                 arg.trackId;
+        mediaElementTracksStore?.setTextTrackById(textId);
         return;
       } catch (e) {
         throw new Error("player: unknown text track");
       }
     }
-    if (trackChoiceManager === null || currentPeriod === null) {
-      throw new Error("No compatible content launched.");
+
+    let periodId : string | undefined;
+    let trackId : string;
+    if (typeof arg === "string") {
+      trackId = arg;
+    } else {
+      trackId = arg.trackId;
+      periodId = arg.periodId;
     }
-    try {
-      trackChoiceManager.setTextTrackByID(currentPeriod, textId);
-    }
-    catch (e) {
-      throw new Error("player: unknown text track");
-    }
+    return this._priv_callTracksStoreGetterSetter(
+      periodId,
+      undefined,
+      (tcm, periodRef) => tcm.setTextTrack(periodRef, trackId));
   }
 
   /**
    * Disable subtitles for the current content.
+   * @param {string|undefined} [periodId]
    */
-  disableTextTrack() : void {
+  disableTextTrack(periodId? : string | undefined) : void {
     if (this._priv_contentInfos === null) {
       return;
     }
-    const { currentPeriod,
-            isDirectFile,
-            trackChoiceManager,
-            mediaElementTrackChoiceManager } = this._priv_contentInfos;
+    const { isDirectFile, mediaElementTracksStore } = this._priv_contentInfos;
     if (isDirectFile) {
-      mediaElementTrackChoiceManager?.disableTextTrack();
+      mediaElementTracksStore?.disableTextTrack();
       return;
     }
-    if (trackChoiceManager === null || currentPeriod === null) {
-      return;
-    }
-    return trackChoiceManager.disableTextTrack(currentPeriod);
+    return this._priv_callTracksStoreGetterSetter(
+      periodId,
+      undefined,
+      (tcm, periodRef) => tcm.disableTrack(periodRef, "text"));
   }
 
   /**
    * Update the video track for the current Period.
-   * @param {string} videoId
-   * @throws Error - the current content has no TrackChoiceManager.
+   * @param {string | Object} arg
+   * @throws Error - the current content has no TracksStore.
    * @throws Error - the given id is linked to no video track.
    */
-  setVideoTrack(videoId : string) : void {
+  setVideoTrack(arg : string | IVideoTrackSetting) : void {
     if (this._priv_contentInfos === null) {
       throw new Error("No content loaded");
     }
-    const { currentPeriod,
-            isDirectFile,
-            trackChoiceManager,
-            mediaElementTrackChoiceManager } = this._priv_contentInfos;
+    const { isDirectFile, mediaElementTracksStore } = this._priv_contentInfos;
     if (isDirectFile) {
       try {
-        mediaElementTrackChoiceManager?.setVideoTrackById(videoId);
+        const videoId = typeof arg === "string" ? arg :
+                                                  arg.trackId;
+        mediaElementTracksStore?.setVideoTrackById(videoId);
         return;
       } catch (e) {
         throw new Error("player: unknown video track");
       }
     }
-    if (trackChoiceManager === null || currentPeriod === null) {
-      throw new Error("No compatible content launched.");
+
+    let periodId : string | undefined;
+    let trackId : string;
+    let switchingMode : IVideoTrackSwitchingMode | undefined;
+    let lockedRepresentations : string[] | null = null;
+    let relativeResumingPosition : number | undefined;
+    if (typeof arg === "string") {
+      trackId = arg;
+    } else {
+      trackId = arg.trackId;
+      periodId = arg.periodId;
+      switchingMode = arg.switchingMode;
+      lockedRepresentations = arg.lockedRepresentations ?? null;
+      relativeResumingPosition = arg.relativeResumingPosition;
     }
-    try {
-      trackChoiceManager.setVideoTrackByID(currentPeriod, videoId);
-    }
-    catch (e) {
-      throw new Error("player: unknown video track");
-    }
+    return this._priv_callTracksStoreGetterSetter(
+      periodId,
+      undefined,
+      (tcm, periodRef) =>
+        tcm.setVideoTrack({
+          periodRef,
+          trackId,
+          switchingMode,
+          lockedRepresentations,
+          relativeResumingPosition,
+        }));
   }
 
   /**
    * Disable video track for the current content.
+   * @param {string|undefined} [periodId]
    */
-  disableVideoTrack() : void {
+  disableVideoTrack(periodId? : string | undefined) : void {
     if (this._priv_contentInfos === null) {
       return;
     }
-    const { currentPeriod,
-            isDirectFile,
-            trackChoiceManager,
-            mediaElementTrackChoiceManager } = this._priv_contentInfos;
-    if (isDirectFile && mediaElementTrackChoiceManager !== null) {
-      return mediaElementTrackChoiceManager.disableVideoTrack();
+    const { isDirectFile, mediaElementTracksStore } = this._priv_contentInfos;
+    if (isDirectFile && mediaElementTracksStore !== null) {
+      return mediaElementTracksStore.disableVideoTrack();
     }
-    if (trackChoiceManager === null || currentPeriod === null) {
-      return;
-    }
-    return trackChoiceManager.disableVideoTrack(currentPeriod);
+    return this._priv_callTracksStoreGetterSetter(
+      periodId,
+      undefined,
+      (tcm, periodRef) => tcm.disableTrack(periodRef, "video"));
   }
 
-  /**
-   * Returns the current list of preferred audio tracks, in preference order.
-   * @returns {Array.<Object>}
-   */
-  getPreferredAudioTracks() : IAudioTrackPreference[] {
-    return this._priv_preferredAudioTracks;
-  }
-
-  /**
-   * Returns the current list of preferred text tracks, in preference order.
-   * @returns {Array.<Object>}
-   */
-  getPreferredTextTracks() : ITextTrackPreference[] {
-    return this._priv_preferredTextTracks;
-  }
-
-  /**
-   * Returns the current list of preferred text tracks, in preference order.
-   * @returns {Array.<Object>}
-   */
-  getPreferredVideoTracks() : IVideoTrackPreference[] {
-    return this._priv_preferredVideoTracks;
-  }
-
-  /**
-   * Set the list of preferred audio tracks, in preference order.
-   * @param {Array.<Object>} tracks
-   * @param {boolean} shouldApply - `true` if those preferences should be
-   * applied on the currently loaded Period. `false` if it should only
-   * be applied to new content.
-   */
-  setPreferredAudioTracks(
-    tracks : IAudioTrackPreference[],
-    shouldApply : boolean = false
+  lockVideoRepresentations(
+    arg : string[] | ILockedVideoRepresentationsSettings
   ) : void {
-    if (!Array.isArray(tracks)) {
-      throw new Error("Invalid `setPreferredAudioTracks` argument. " +
-                      "Should have been an Array.");
+    if (this._priv_contentInfos === null) {
+      throw new Error("No content loaded");
     }
-    this._priv_preferredAudioTracks = tracks;
-    const contentInfos = this._priv_contentInfos;
-    if (!isNullOrUndefined(contentInfos?.trackChoiceManager)) {
-      contentInfos?.trackChoiceManager.setPreferredAudioTracks(tracks, shouldApply);
-    } else if (!isNullOrUndefined(contentInfos?.mediaElementTrackChoiceManager)) {
-      contentInfos?.mediaElementTrackChoiceManager.setPreferredAudioTracks(tracks,
-                                                                           shouldApply);
+    const { isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      throw new Error("Cannot lock video Representations in directfile mode.");
     }
+
+    let repsId : string[];
+    let periodId : string | undefined;
+    let switchingMode : IVideoRepresentationsSwitchingMode | undefined;
+    if (Array.isArray(arg)) {
+      repsId = arg;
+      periodId = undefined;
+    } else {
+      repsId = arg.representations;
+      periodId = arg.periodId;
+      switchingMode = arg.switchingMode;
+    }
+    return this._priv_callTracksStoreGetterSetter(
+      periodId,
+      undefined,
+      (tcm, periodRef) =>
+        tcm.lockVideoRepresentations(periodRef, { representations: repsId,
+                                                  switchingMode }));
   }
 
-  /**
-   * Set the list of preferred text tracks, in preference order.
-   * @param {Array.<Object>} tracks
-   * @param {boolean} shouldApply - `true` if those preferences should be
-   * applied on the currently loaded Periods. `false` if it should only
-   * be applied to new content.
-   */
-  setPreferredTextTracks(
-    tracks : ITextTrackPreference[],
-    shouldApply : boolean = false
+  lockAudioRepresentations(
+    arg : string[] | ILockedAudioRepresentationsSettings
   ) : void {
-    if (!Array.isArray(tracks)) {
-      throw new Error("Invalid `setPreferredTextTracks` argument. " +
-                      "Should have been an Array.");
+    if (this._priv_contentInfos === null) {
+      throw new Error("No content loaded");
     }
-    this._priv_preferredTextTracks = tracks;
-    const contentInfos = this._priv_contentInfos;
-    if (!isNullOrUndefined(contentInfos?.trackChoiceManager)) {
-      contentInfos?.trackChoiceManager.setPreferredTextTracks(tracks, shouldApply);
-    } else if (!isNullOrUndefined(contentInfos?.mediaElementTrackChoiceManager)) {
-      contentInfos?.mediaElementTrackChoiceManager.setPreferredTextTracks(tracks,
-                                                                          shouldApply);
+    const { isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      throw new Error("Cannot lock audio Representations in directfile mode.");
     }
+
+
+    let repsId : string[];
+    let periodId : string | undefined;
+    let switchingMode : IAudioRepresentationsSwitchingMode | undefined;
+    if (Array.isArray(arg)) {
+      repsId = arg;
+      periodId = undefined;
+    } else {
+      repsId = arg.representations;
+      periodId = arg.periodId;
+      switchingMode = arg.switchingMode;
+    }
+    return this._priv_callTracksStoreGetterSetter(
+      periodId,
+      undefined,
+      (tcm, periodRef) =>
+        tcm.lockAudioRepresentations(periodRef, { representations: repsId,
+                                                  switchingMode }));
   }
 
-  /**
-   * Set the list of preferred text tracks, in preference order.
-   * @param {Array.<Object>} tracks
-   * @param {boolean} shouldApply - `true` if those preferences should be
-   * applied on the currently loaded Period. `false` if it should only
-   * be applied to new content.
-   */
-  setPreferredVideoTracks(
-    tracks : IVideoTrackPreference[],
-    shouldApply : boolean =  false
-  ) : void {
-    if (!Array.isArray(tracks)) {
-      throw new Error("Invalid `setPreferredVideoTracks` argument. " +
-                      "Should have been an Array.");
-    }
-    this._priv_preferredVideoTracks = tracks;
-    const contentInfos = this._priv_contentInfos;
-    if (!isNullOrUndefined(contentInfos?.trackChoiceManager)) {
-      contentInfos?.trackChoiceManager.setPreferredVideoTracks(tracks, shouldApply);
-    } else if (!isNullOrUndefined(contentInfos?.mediaElementTrackChoiceManager)) {
-      contentInfos?.mediaElementTrackChoiceManager.setPreferredVideoTracks(tracks,
-                                                                           shouldApply);
-    }
-  }
-
-
-  /**
-   * @returns {Array.<Object>|null}
-   * @deprecated
-   */
-  getImageTrackData() : IBifThumbnail[] | null {
-    warnOnce("`getImageTrackData` is deprecated." +
-             "Please use the `parseBifThumbnails` tool instead.");
+  getLockedVideoRepresentations(periodId? : string | undefined) : string[] | null {
     if (this._priv_contentInfos === null) {
       return null;
     }
-    /* eslint-disable import/no-deprecated */
-    return this._priv_contentInfos.thumbnails;
-    /* eslint-enable import/no-deprecated */
+    const { isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      return null;
+    }
+    return this._priv_callTracksStoreGetterSetter(
+      periodId,
+      null,
+      (tcm, periodRef) => tcm.getLockedVideoRepresentations(periodRef));
+  }
+
+  getLockedAudioRepresentations(periodId? : string | undefined) : string[] | null {
+    if (this._priv_contentInfos === null) {
+      return null;
+    }
+    const { isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      return null;
+    }
+    return this._priv_callTracksStoreGetterSetter(
+      periodId,
+      null,
+      (tcm, periodRef) => tcm.getLockedAudioRepresentations(periodRef));
+  }
+
+  unlockVideoRepresentations(periodId? : string | undefined) : void {
+    if (this._priv_contentInfos === null) {
+      return;
+    }
+    const { isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      return;
+    }
+    return this._priv_callTracksStoreGetterSetter(
+      periodId,
+      undefined,
+      (tcm, periodRef) => tcm.unlockVideoRepresentations(periodRef));
+  }
+
+  unlockAudioRepresentations(periodId? : string | undefined) : void {
+    if (this._priv_contentInfos === null) {
+      return;
+    }
+    const { isDirectFile } = this._priv_contentInfos;
+    if (isDirectFile) {
+      return;
+    }
+    return this._priv_callTracksStoreGetterSetter(
+      periodId,
+      undefined,
+      (tcm, periodRef) => tcm.unlockAudioRepresentations(periodRef));
   }
 
   /**
@@ -2267,6 +1983,29 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return manifest.getMinimumSafePosition();
     }
     return null;
+  }
+
+  /**
+   * Returns the current position for live contents.
+   *
+   * Returns `null` if no content is loaded or if the current loaded content is
+   * not considered as a live content.
+   * Returns `undefined` if that live position is currently unknown.
+   * @returns {number}
+   */
+  getLivePosition() : number | undefined |null {
+    if (this._priv_contentInfos === null) {
+      return null;
+    }
+
+    const { isDirectFile, manifest } = this._priv_contentInfos;
+    if (isDirectFile) {
+      return undefined;
+    }
+    if (manifest?.isLive !== true) {
+      return null;
+    }
+    return manifest.getLivePosition();
   }
 
   /**
@@ -2296,6 +2035,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return null;
   }
 
+  // ---- Undocumented Private methods. ----
+  //
+  // Those methods are just here either to allow some tools relying on the
+  // RxPlayer instance to work or to improve the RxPlayer's demo.
+  //
+  // They should not be used by any external code.
+
   /**
    * /!\ For demo use only! Do not touch!
    *
@@ -2312,10 +2058,61 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     const segmentBufferStatus = this._priv_contentInfos
       .segmentBuffersStore.getStatus(bufferType);
-    return segmentBufferStatus.type === "initialized" ?
-      segmentBufferStatus.value.getInventory() :
-      null;
+    if (segmentBufferStatus.type === "initialized") {
+      segmentBufferStatus.value.synchronizeInventory(true);
+      return segmentBufferStatus.value.getInventory();
+    }
+    return null;
   }
+
+  /**
+   * /!\ For tools use only! Do not touch!
+   *
+   * Returns manifest/playlist object.
+   * null if the player is STOPPED.
+   * @returns {Manifest|null} - The current Manifest (`null` when not known).
+   */
+  // TODO remove the need for that public method
+  __priv_getManifest() : Manifest|null {
+    if (this._priv_contentInfos === null) {
+      return null;
+    }
+    return this._priv_contentInfos.manifest;
+  }
+
+  // TODO remove the need for that public method
+  __priv_getCurrentAdaptation(
+  ) : Partial<Record<IBufferType, Adaptation|null>> | null {
+    if (this._priv_contentInfos === null) {
+      return null;
+    }
+    const { currentPeriod, activeAdaptations } = this._priv_contentInfos;
+    if (currentPeriod === null ||
+        activeAdaptations === null ||
+        isNullOrUndefined(activeAdaptations[currentPeriod.id]))
+    {
+      return null;
+    }
+    return activeAdaptations[currentPeriod.id];
+  }
+
+  // TODO remove the need for that public method
+  __priv_getCurrentRepresentations(
+  ) : Partial<Record<IBufferType, Representation|null>> | null {
+    if (this._priv_contentInfos === null) {
+      return null;
+    }
+    const { currentPeriod, activeRepresentations } = this._priv_contentInfos;
+    if (currentPeriod === null ||
+        activeRepresentations === null ||
+        isNullOrUndefined(activeRepresentations[currentPeriod.id]))
+    {
+      return null;
+    }
+    return activeRepresentations[currentPeriod.id];
+  }
+
+  // ---- Private methods ----
 
   /**
    * Reset all state properties relative to a playing content.
@@ -2326,7 +2123,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // lock playback of new contents while cleaning up is pending
     this._priv_contentLock.setValue(true);
 
-    this._priv_contentInfos?.mediaElementTrackChoiceManager?.dispose();
+    this._priv_contentInfos?.tracksStore?.dispose();
+    this._priv_contentInfos?.mediaElementTracksStore?.dispose();
     this._priv_contentInfos = null;
 
     this._priv_contentEventsMemory = {};
@@ -2370,35 +2168,46 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return; // Event for another content
     }
     contentInfos.manifest = manifest;
-    const cancelSignal = contentInfos.currentContentCanceller.signal;
     this._priv_reloadingMetadata.manifest = manifest;
 
-    const { initialAudioTrack, initialTextTrack } = contentInfos;
-    contentInfos.trackChoiceManager = new TrackChoiceManager({
+    const tracksStore = new TracksStore({
       preferTrickModeTracks: this._priv_preferTrickModeTracks,
+      defaultAudioTrackSwitchingMode: contentInfos.defaultAudioTrackSwitchingMode,
+    });
+    contentInfos.tracksStore = tracksStore;
+    tracksStore.addEventListener("newAvailablePeriods", (p) => {
+      this.trigger("newAvailablePeriods", p);
+    });
+    tracksStore.addEventListener("brokenRepresentationsLock", (e) => {
+      this.trigger("brokenRepresentationsLock", e);
+    });
+    tracksStore.addEventListener("trackUpdate", (e) => {
+      this.trigger("trackUpdate", e);
+
+      const currentPeriod = this._priv_contentInfos?.currentPeriod ?? undefined;
+      if (e.reason === "no-playable-representation" &&
+          e.period.id === currentPeriod?.id)
+      {
+        this._priv_onAvailableTracksMayHaveChanged(e.trackType);
+      }
+    });
+    contentInfos.tracksStore.addEventListener("warning", (err) => {
+      this.trigger("warning", err);
+    });
+    contentInfos.tracksStore.addEventListener("error", (err) => {
+      this._priv_onFatalError(err, contentInfos);
     });
 
-    const preferredAudioTracks = initialAudioTrack === undefined ?
-      this._priv_preferredAudioTracks :
-      [initialAudioTrack];
-    contentInfos.trackChoiceManager.setPreferredAudioTracks(preferredAudioTracks, true);
+    contentInfos.tracksStore.updatePeriodList(manifest);
 
-    const preferredTextTracks = initialTextTrack === undefined ?
-      this._priv_preferredTextTracks :
-      [initialTextTrack];
-    contentInfos.trackChoiceManager.setPreferredTextTracks(preferredTextTracks, true);
-
-    contentInfos.trackChoiceManager
-      .setPreferredVideoTracks(this._priv_preferredVideoTracks,
-                               true);
     manifest.addEventListener("manifestUpdate", (updates) => {
       // Update the tracks chosen if it changed
-      if (contentInfos.trackChoiceManager !== null) {
-        contentInfos.trackChoiceManager.update();
+      if (!isNullOrUndefined(contentInfos?.tracksStore)) {
+        contentInfos.tracksStore.updatePeriodList(manifest);
       }
       const currentPeriod = this._priv_contentInfos?.currentPeriod ?? undefined;
-      const trackChoiceManager = this._priv_contentInfos?.trackChoiceManager;
-      if (currentPeriod === undefined || isNullOrUndefined(trackChoiceManager)) {
+      const currTracksStore = this._priv_contentInfos?.tracksStore;
+      if (currentPeriod === undefined || isNullOrUndefined(currTracksStore)) {
         return;
       }
       for (const update of updates.updatedPeriods) {
@@ -2407,21 +2216,70 @@ class Player extends EventEmitter<IPublicAPIEvent> {
               update.result.removedAdaptations.length > 0)
           {
             // We might have new (or less) tracks, send events just to be sure
-            const audioTracks = trackChoiceManager.getAvailableAudioTracks(currentPeriod);
-            this._priv_triggerEventIfNotStopped("availableAudioTracksChange",
-                                                audioTracks ?? [],
-                                                cancelSignal);
-            const textTracks = trackChoiceManager.getAvailableTextTracks(currentPeriod);
-            this._priv_triggerEventIfNotStopped("availableTextTracksChange",
-                                                textTracks ?? [],
-                                                cancelSignal);
-            const videoTracks = trackChoiceManager.getAvailableVideoTracks(currentPeriod);
-            this._priv_triggerEventIfNotStopped("availableVideoTracksChange",
-                                                videoTracks ?? [],
-                                                cancelSignal);
+            const periodRef = currTracksStore.getPeriodObjectFromPeriod(currentPeriod);
+            if (periodRef === undefined) {
+              return;
+            }
+            this._priv_onAvailableTracksMayHaveChanged("audio");
+            this._priv_onAvailableTracksMayHaveChanged("text");
+            this._priv_onAvailableTracksMayHaveChanged("video");
           }
         }
         return;
+      }
+    }, contentInfos.currentContentCanceller.signal);
+
+    manifest.addEventListener("decipherabilityUpdate", (elts) => {
+      /**
+       * Array of tuples only including once the Period/Track combination, and
+       * only when it concerns the currently-selected track.
+       */
+      const periodsAndTrackTypes = elts.reduce(
+        (acc: Array<[Period, ITrackType]>, elt) => {
+          const isFound = arrayFind(
+            acc,
+            (x) => x[0].id === elt.period.id &&
+                   x[1] === elt.adaptation.type
+          ) === undefined;
+
+          if (!isFound) {
+            // Only consider the currently-selected tracks.
+            // NOTE: Maybe there's room for optimizations? Unclear.
+            const tStore = contentInfos.tracksStore;
+            if (tStore === null) {
+              return acc;
+            }
+            let isCurrent = false;
+            const periodRef = tStore.getPeriodObjectFromPeriod(elt.period);
+            if (periodRef === undefined) {
+              return acc;
+            }
+            switch (elt.adaptation.type) {
+              case "audio":
+                isCurrent = tStore
+                  .getChosenAudioTrack(periodRef)?.id === elt.adaptation.id;
+                break;
+              case "video":
+                isCurrent = tStore
+                  .getChosenVideoTrack(periodRef)?.id === elt.adaptation.id;
+                break;
+              case "text":
+                isCurrent = tStore
+                  .getChosenTextTrack(periodRef)?.id === elt.adaptation.id;
+                break;
+            }
+            if (isCurrent) {
+              acc.push([elt.period, elt.adaptation.type]);
+            }
+          }
+          return acc;
+        }, []);
+      for (const [period, trackType] of periodsAndTrackTypes) {
+        this._priv_triggerEventIfNotStopped(
+          "representationListUpdate",
+          { period, trackType, reason: "decipherability-update" },
+          contentInfos.currentContentCanceller.signal
+        );
       }
     }, contentInfos.currentContentCanceller.signal);
   }
@@ -2445,7 +2303,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const cancelSignal = contentInfos.currentContentCanceller.signal;
     if (this._priv_contentEventsMemory.periodChange !== period) {
       this._priv_contentEventsMemory.periodChange = period;
-      this._priv_triggerEventIfNotStopped("periodChange", period, cancelSignal);
+      this._priv_triggerEventIfNotStopped("periodChange",
+                                          { start: period.start,
+                                            end: period.end,
+                                            id: period.id },
+                                          cancelSignal);
     }
 
     this._priv_triggerEventIfNotStopped("availableAudioTracksChange",
@@ -2458,52 +2320,39 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                         this.getAvailableVideoTracks(),
                                         cancelSignal);
 
-    const trackChoiceManager = this._priv_contentInfos?.trackChoiceManager;
+    const tracksStore = this._priv_contentInfos?.tracksStore;
 
-    // Emit intial events for the Period
-    if (!isNullOrUndefined(trackChoiceManager)) {
-      const audioTrack = trackChoiceManager.getChosenAudioTrack(period);
-      this._priv_triggerEventIfNotStopped("audioTrackChange",
-                                          audioTrack,
-                                          cancelSignal);
-      const textTrack = trackChoiceManager.getChosenTextTrack(period);
-      this._priv_triggerEventIfNotStopped("textTrackChange",
-                                          textTrack,
-                                          cancelSignal);
-      const videoTrack = trackChoiceManager.getChosenVideoTrack(period);
-      this._priv_triggerEventIfNotStopped("videoTrackChange",
-                                          videoTrack,
-                                          cancelSignal);
+    // Emit initial events for the Period
+    if (!isNullOrUndefined(tracksStore)) {
+      const periodRef = tracksStore.getPeriodObjectFromPeriod(period);
+      if (periodRef) {
+        const audioTrack = tracksStore.getChosenAudioTrack(periodRef);
+        this._priv_triggerEventIfNotStopped("audioTrackChange",
+                                            audioTrack,
+                                            cancelSignal);
+        const textTrack = tracksStore.getChosenTextTrack(periodRef);
+        this._priv_triggerEventIfNotStopped("textTrackChange",
+                                            textTrack,
+                                            cancelSignal);
+        const videoTrack = tracksStore.getChosenVideoTrack(periodRef);
+        this._priv_triggerEventIfNotStopped("videoTrackChange",
+                                            videoTrack,
+                                            cancelSignal);
+      }
     } else {
       this._priv_triggerEventIfNotStopped("audioTrackChange", null, cancelSignal);
       this._priv_triggerEventIfNotStopped("textTrackChange", null, cancelSignal);
       this._priv_triggerEventIfNotStopped("videoTrackChange", null, cancelSignal);
     }
 
-    this._priv_triggerAvailableBitratesChangeEvent("availableAudioBitratesChange",
-                                                   this.getAvailableAudioBitrates(),
-                                                   cancelSignal);
-    if (contentInfos.currentContentCanceller.isUsed()) {
-      return;
-    }
-    this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange",
-                                                   this.getAvailableVideoBitrates(),
-                                                   cancelSignal);
-    if (contentInfos.currentContentCanceller.isUsed()) {
-      return;
-    }
-    const audioBitrate = this._priv_getCurrentRepresentations()?.audio?.bitrate ?? -1;
-    this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange",
-                                                audioBitrate,
-                                                cancelSignal);
-    if (contentInfos.currentContentCanceller.isUsed()) {
-      return;
-    }
-
-    const videoBitrate = this._priv_getCurrentRepresentations()?.video?.bitrate ?? -1;
-    this._priv_triggerCurrentBitrateChangeEvent("videoBitrateChange",
-                                                videoBitrate,
-                                                cancelSignal);
+    const audioRepresentation = this.__priv_getCurrentRepresentations()?.audio ?? null;
+    this._priv_triggerEventIfNotStopped("audioRepresentationChange",
+                                        audioRepresentation,
+                                        cancelSignal);
+    const videoRepresentation = this.__priv_getCurrentRepresentations()?.video ?? null;
+    this._priv_triggerEventIfNotStopped("videoRepresentationChange",
+                                        videoRepresentation,
+                                        cancelSignal);
   }
 
   /**
@@ -2516,56 +2365,31 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     contentInfos : IPublicApiContentInfos,
     value : {
       type : IBufferType;
+      manifest : Manifest;
       period : Period;
-      adaptationRef : ISharedReference<Adaptation|null|undefined>;
+      adaptationRef : SharedReference<IAdaptationChoice|null|undefined>;
     }
   ) : void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
     }
-    const { type, period, adaptationRef } = value;
-    const trackChoiceManager = contentInfos.trackChoiceManager;
+    const { type, manifest, period, adaptationRef } = value;
+    const tracksStore = contentInfos.tracksStore;
 
     switch (type) {
 
       case "video":
-        if (isNullOrUndefined(trackChoiceManager)) {
-          log.error("API: TrackChoiceManager not instanciated for a new video period");
-          adaptationRef.setValue(null);
-        } else {
-          trackChoiceManager.addPeriod(type, period, adaptationRef);
-          trackChoiceManager.setInitialVideoTrack(period);
-        }
-        break;
-
       case "audio":
-        if (isNullOrUndefined(trackChoiceManager)) {
-          log.error(`API: TrackChoiceManager not instanciated for a new ${type} period`);
-          adaptationRef.setValue(null);
-        } else {
-          trackChoiceManager.addPeriod(type, period, adaptationRef);
-          trackChoiceManager.setInitialAudioTrack(period);
-        }
-        break;
-
       case "text":
-        if (isNullOrUndefined(trackChoiceManager)) {
-          log.error(`API: TrackChoiceManager not instanciated for a new ${type} period`);
+        if (isNullOrUndefined(tracksStore)) {
+          log.error(`API: TracksStore not instanciated for a new ${type} period`);
           adaptationRef.setValue(null);
         } else {
-          trackChoiceManager.addPeriod(type, period, adaptationRef);
-          trackChoiceManager.setInitialTextTrack(period);
+          tracksStore.addTrackReference(type, manifest, period, adaptationRef);
         }
         break;
-
       default:
-        const adaptations = period.adaptations[type];
-        if (!isNullOrUndefined(adaptations) && adaptations.length > 0) {
-          adaptationRef.setValue(adaptations[0]);
-        } else {
-          adaptationRef.setValue(null);
-        }
-        break;
+        assertUnreachable(type);
     }
   }
 
@@ -2582,15 +2406,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return; // Event for another content
     }
     const { type, period } = value;
-    const trackChoiceManager = contentInfos.trackChoiceManager;
+    const tracksStore = contentInfos.tracksStore;
 
-    // Clean-up track choice from TrackChoiceManager
+    // Clean-up track choices from TracksStore
     switch (type) {
       case "audio":
       case "text":
       case "video":
-        if (!isNullOrUndefined(trackChoiceManager)) {
-          trackChoiceManager.removePeriod(type, period);
+        if (!isNullOrUndefined(tracksStore)) {
+          tracksStore.removeTrackReference(type, period);
         }
         break;
     }
@@ -2648,38 +2472,34 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       activePeriodAdaptations[type] = adaptation;
     }
 
-    const { trackChoiceManager } = contentInfos;
+    const { tracksStore } = contentInfos;
     const cancelSignal = contentInfos.currentContentCanceller.signal;
-    if (trackChoiceManager !== null &&
+    if (tracksStore !== null &&
         currentPeriod !== null && !isNullOrUndefined(period) &&
         period.id === currentPeriod.id)
     {
+      const periodRef = tracksStore.getPeriodObjectFromPeriod(period);
+      if (periodRef === undefined) {
+        return;
+      }
       switch (type) {
         case "audio":
-          const audioTrack = trackChoiceManager.getChosenAudioTrack(currentPeriod);
+          const audioTrack = tracksStore.getChosenAudioTrack(periodRef);
           this._priv_triggerEventIfNotStopped("audioTrackChange",
                                               audioTrack,
                                               cancelSignal);
-
-          const availableAudioBitrates = this.getAvailableAudioBitrates();
-          this._priv_triggerAvailableBitratesChangeEvent("availableAudioBitratesChange",
-                                                         availableAudioBitrates,
-                                                         cancelSignal);
           break;
         case "text":
-          const textTrack = trackChoiceManager.getChosenTextTrack(currentPeriod);
-          this._priv_triggerEventIfNotStopped("textTrackChange", textTrack, cancelSignal);
+          const textTrack = tracksStore.getChosenTextTrack(periodRef);
+          this._priv_triggerEventIfNotStopped("textTrackChange",
+                                              textTrack,
+                                              cancelSignal);
           break;
         case "video":
-          const videoTrack = trackChoiceManager.getChosenVideoTrack(currentPeriod);
+          const videoTrack = tracksStore.getChosenVideoTrack(periodRef);
           this._priv_triggerEventIfNotStopped("videoTrackChange",
                                               videoTrack,
                                               cancelSignal);
-
-          const availableVideoBitrates = this.getAvailableVideoBitrates();
-          this._priv_triggerAvailableBitratesChangeEvent("availableVideoBitratesChange",
-                                                         availableVideoBitrates,
-                                                         cancelSignal);
           break;
       }
     }
@@ -2717,20 +2537,19 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       activePeriodRepresentations[type] = representation;
     }
 
-    const bitrate = representation?.bitrate ?? -1;
     if (!isNullOrUndefined(period) &&
         currentPeriod !== null &&
         currentPeriod.id === period.id)
     {
       const cancelSignal = this._priv_contentInfos.currentContentCanceller.signal;
       if (type === "video") {
-        this._priv_triggerCurrentBitrateChangeEvent("videoBitrateChange",
-                                                    bitrate,
-                                                    cancelSignal);
+        this._priv_triggerEventIfNotStopped("videoRepresentationChange",
+                                            representation,
+                                            cancelSignal);
       } else if (type === "audio") {
-        this._priv_triggerCurrentBitrateChangeEvent("audioBitrateChange",
-                                                    bitrate,
-                                                    cancelSignal);
+        this._priv_triggerEventIfNotStopped("audioRepresentationChange",
+                                            representation,
+                                            cancelSignal);
       }
     }
   }
@@ -2742,7 +2561,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    *
    * @param {Object} value
    */
-  private _priv_onBitrateEstimationChange({
+  private _priv_onBitrateEstimateChange({
     type,
     bitrate,
   } : { type : IBufferType;
@@ -2751,18 +2570,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (bitrate !== undefined) {
       this._priv_bitrateInfos.lastBitrates[type] = bitrate;
     }
-    this.trigger("bitrateEstimationChange", { type, bitrate });
-  }
-
-  /**
-   * Triggered each time a textTrack is added to the video DOM Element.
-   *
-   * Trigger the right Player Event.
-   *
-   * @param {Array.<TextTrackElement>} tracks
-   */
-  private _priv_onNativeTextTracksNext(tracks : TextTrack[]) : void {
-    this.trigger("nativeTextTracksChange", tracks);
+    // !!! undocumented API :O !!!
+    /* eslint-disable-next-line */
+    this.trigger("__priv_bitrateEstimateChange" as any, { type, bitrate } as any);
   }
 
   /**
@@ -2804,10 +2614,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const maximumPosition = manifest !== null ? manifest.getMaximumSafePosition() :
                                                 undefined;
     const positionData : IPositionUpdate = {
-      position: observation.position,
+      position: observation.position.getPolled(),
       duration: observation.duration,
       playbackRate: observation.playbackRate,
-      maximumBufferTime: maximumPosition,
+      maximumPosition,
 
       // TODO bufferGap may be undefined
       bufferGap: observation.bufferGap === undefined ||
@@ -2818,77 +2628,21 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     if (manifest !== null &&
         manifest.isLive &&
-        observation.position > 0
+        observation.position.getPolled() > 0
     ) {
       const ast = manifest.availabilityStartTime ?? 0;
-      positionData.wallClockTime = observation.position + ast;
+      positionData.wallClockTime = observation.position.getPolled() + ast;
       const livePosition = manifest.getLivePosition();
       if (livePosition !== undefined) {
-        positionData.liveGap = livePosition - observation.position;
+        positionData.liveGap = livePosition - observation.position.getPolled();
       }
     } else if (isDirectFile && this.videoElement !== null) {
       const startDate = getStartDate(this.videoElement);
       if (startDate !== undefined) {
-        positionData.wallClockTime = startDate + observation.position;
+        positionData.wallClockTime = startDate + observation.position.getPolled();
       }
     }
     this.trigger("positionUpdate", positionData);
-  }
-
-  /**
-   * Trigger one of the "availableBitratesChange" event only if it changed from
-   * the previously stored value.
-   * @param {string} event
-   * @param {Array.<number>} newVal
-   * @param {Object} currentContentCancelSignal
-   */
-  private _priv_triggerAvailableBitratesChangeEvent(
-    event : "availableAudioBitratesChange" | "availableVideoBitratesChange",
-    newVal : number[],
-    currentContentCancelSignal  : CancellationSignal
-  ) : void {
-    const prevVal = this._priv_contentEventsMemory[event];
-    if (!currentContentCancelSignal.isCancelled() &&
-        (prevVal === undefined || !areArraysOfNumbersEqual(newVal, prevVal)))
-    {
-      this._priv_contentEventsMemory[event] = newVal;
-      this.trigger(event, newVal);
-    }
-  }
-
-  /**
-   * Trigger one of the "bitrateChange" event only if it changed from the
-   * previously stored value.
-   * @param {string} event
-   * @param {number} newVal
-   * @param {Object} currentContentCancelSignal
-   */
-  private _priv_triggerCurrentBitrateChangeEvent(
-    event : "audioBitrateChange" | "videoBitrateChange",
-    newVal : number,
-    currentContentCancelSignal  : CancellationSignal
-  ) : void {
-    if (!currentContentCancelSignal.isCancelled() &&
-        newVal !== this._priv_contentEventsMemory[event])
-    {
-      this._priv_contentEventsMemory[event] = newVal;
-      this.trigger(event, newVal);
-    }
-  }
-
-  private _priv_getCurrentRepresentations(
-  ) : Partial<Record<IBufferType, Representation|null>> | null {
-    if (this._priv_contentInfos === null) {
-      return null;
-    }
-    const { currentPeriod, activeRepresentations } = this._priv_contentInfos;
-    if (currentPeriod === null ||
-        activeRepresentations === null ||
-        isNullOrUndefined(activeRepresentations[currentPeriod.id]))
-    {
-      return null;
-    }
-    return activeRepresentations[currentPeriod.id];
   }
 
   /**
@@ -2907,86 +2661,182 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * @param {Object} defaultAudioTrack
-   * @param {Object} defaultTextTrack
    * @param {Object} cancelSignal
    * @returns {Object}
    */
-  private _priv_initializeMediaElementTrackChoiceManager(
-    defaultAudioTrack : IAudioTrackPreference | null | undefined,
-    defaultTextTrack : ITextTrackPreference | null | undefined,
+  private _priv_initializeMediaElementTracksStore(
     cancelSignal : CancellationSignal
-  ) : MediaElementTrackChoiceManager {
+  ) : MediaElementTracksStore {
     assert(features.directfile !== null,
-           "Initializing `MediaElementTrackChoiceManager` without Directfile feature");
+           "Initializing `MediaElementTracksStore` without Directfile feature");
     assert(this.videoElement !== null,
-           "Initializing `MediaElementTrackChoiceManager` on a disposed RxPlayer");
+           "Initializing `MediaElementTracksStore` on a disposed RxPlayer");
 
-    const mediaElementTrackChoiceManager =
-      new features.directfile.mediaElementTrackChoiceManager(this.videoElement);
-
-    const preferredAudioTracks = defaultAudioTrack === undefined ?
-      this._priv_preferredAudioTracks :
-      [defaultAudioTrack];
-    mediaElementTrackChoiceManager.setPreferredAudioTracks(preferredAudioTracks, true);
-
-    const preferredTextTracks = defaultTextTrack === undefined ?
-      this._priv_preferredTextTracks :
-      [defaultTextTrack];
-    mediaElementTrackChoiceManager.setPreferredTextTracks(preferredTextTracks, true);
-
-    mediaElementTrackChoiceManager
-      .setPreferredVideoTracks(this._priv_preferredVideoTracks, true);
+    const mediaElementTracksStore =
+      new features.directfile.mediaElementTracksStore(this.videoElement);
 
     this._priv_triggerEventIfNotStopped(
       "availableAudioTracksChange",
-      mediaElementTrackChoiceManager.getAvailableAudioTracks(),
+      mediaElementTracksStore.getAvailableAudioTracks(),
       cancelSignal);
     this._priv_triggerEventIfNotStopped(
       "availableVideoTracksChange",
-      mediaElementTrackChoiceManager.getAvailableVideoTracks(),
+      mediaElementTracksStore.getAvailableVideoTracks(),
       cancelSignal);
     this._priv_triggerEventIfNotStopped(
       "availableTextTracksChange",
-      mediaElementTrackChoiceManager.getAvailableTextTracks(),
+      mediaElementTracksStore.getAvailableTextTracks(),
       cancelSignal);
+
     this._priv_triggerEventIfNotStopped(
       "audioTrackChange",
-      mediaElementTrackChoiceManager.getChosenAudioTrack() ?? null,
+      mediaElementTracksStore.getChosenAudioTrack() ?? null,
       cancelSignal);
     this._priv_triggerEventIfNotStopped(
       "textTrackChange",
-      mediaElementTrackChoiceManager.getChosenTextTrack() ?? null,
+      mediaElementTracksStore.getChosenTextTrack() ?? null,
       cancelSignal);
     this._priv_triggerEventIfNotStopped(
       "videoTrackChange",
-      mediaElementTrackChoiceManager.getChosenVideoTrack() ?? null,
+      mediaElementTracksStore.getChosenVideoTrack() ?? null,
       cancelSignal);
 
-    mediaElementTrackChoiceManager
+    mediaElementTracksStore
       .addEventListener("availableVideoTracksChange", (val) =>
         this.trigger("availableVideoTracksChange", val));
-    mediaElementTrackChoiceManager
+    mediaElementTracksStore
       .addEventListener("availableAudioTracksChange", (val) =>
         this.trigger("availableAudioTracksChange", val));
-    mediaElementTrackChoiceManager
+    mediaElementTracksStore
       .addEventListener("availableTextTracksChange", (val) =>
         this.trigger("availableTextTracksChange", val));
 
-    mediaElementTrackChoiceManager
+    mediaElementTracksStore
       .addEventListener("audioTrackChange", (val) =>
         this.trigger("audioTrackChange", val));
-    mediaElementTrackChoiceManager
+    mediaElementTracksStore
       .addEventListener("videoTrackChange", (val) =>
         this.trigger("videoTrackChange", val));
-    mediaElementTrackChoiceManager
+    mediaElementTracksStore
       .addEventListener("textTrackChange", (val) =>
         this.trigger("textTrackChange", val));
 
-    return mediaElementTrackChoiceManager;
+    return mediaElementTracksStore;
+  }
+
+  private _priv_callTracksStoreGetterSetter<T, U>(
+    periodId : string | undefined,
+    defaultValue : U,
+    cb : (tcm : TracksStore, periodRef : ITSPeriodObject) => T
+  ) : T | U {
+    if (this._priv_contentInfos === null ||
+        this._priv_contentInfos.tracksStore === null)
+    {
+      log.warn("API: Trying to call track API too soon");
+      return defaultValue;
+    }
+    const { tracksStore } = this._priv_contentInfos;
+    const currentPeriod = this._priv_contentInfos?.currentPeriod ?? undefined;
+    const wantedPeriodId = periodId ?? currentPeriod?.id;
+    if (wantedPeriodId === undefined) {
+      return defaultValue;
+    }
+    const periodRef = wantedPeriodId === currentPeriod?.id ?
+      tracksStore.getPeriodObjectFromPeriod(currentPeriod) :
+      tracksStore.getPeriodObjectFromId(wantedPeriodId);
+
+    if (periodRef === undefined) {
+      return defaultValue;
+    }
+    return cb(tracksStore, periodRef);
+  }
+
+  /**
+   * Method to call when some event lead to a high for possibility that the
+   * available tracks for the given type have changed.
+   * Send the corresponding `available*Tracks` change event with the last
+   * available tracks.
+   *
+   * @param {string} trackType
+   * @param {Object|undefined} [oPeriodRef] - optional period object used by the
+   * `tracksStore` API, allows to optimize the method by bypassing this step.
+   */
+  private _priv_onAvailableTracksMayHaveChanged(
+    trackType : IBufferType,
+    oPeriodRef? : ITSPeriodObject
+  ): void {
+    const contentInfos = this._priv_contentInfos;
+    if (contentInfos === null) {
+      return;
+    }
+    const { currentPeriod,
+            tracksStore,
+            currentContentCanceller } = contentInfos;
+    const cancelSignal = currentContentCanceller.signal;
+    if (isNullOrUndefined(currentPeriod) || tracksStore === null) {
+      return;
+    }
+    const periodRef = oPeriodRef ?? tracksStore.getPeriodObjectFromPeriod(currentPeriod);
+    if (periodRef === undefined) {
+      return;
+    }
+    switch (trackType) {
+      case "video":
+        const videoTracks = tracksStore.getAvailableVideoTracks(periodRef);
+        this._priv_triggerEventIfNotStopped("availableVideoTracksChange",
+                                            videoTracks ?? [],
+                                            cancelSignal);
+        break;
+      case "audio":
+        const audioTracks = tracksStore.getAvailableAudioTracks(periodRef);
+        this._priv_triggerEventIfNotStopped("availableAudioTracksChange",
+                                            audioTracks ?? [],
+                                            cancelSignal);
+        break;
+      case "text":
+        const textTracks = tracksStore.getAvailableTextTracks(periodRef);
+        this._priv_triggerEventIfNotStopped("availableTextTracksChange",
+                                            textTracks ?? [],
+                                            cancelSignal);
+        break;
+      default:
+        assertUnreachable(trackType);
+    }
+  }
+
+  /**
+   * Method to call when a fatal error lead to the stopping of the current
+   * content.
+   *
+   * @param {*} err - The error encountered.
+   * @param {Object} contentInfos - The `IPublicApiContentInfos` object linked
+   * to the content for which the error was received.
+   */
+  private _priv_onFatalError(
+    err : unknown,
+    contentInfos : IPublicApiContentInfos
+  ): void {
+    const formattedError = formatError(err, {
+      defaultCode: "NONE",
+      defaultReason: "An unknown error stopped content playback.",
+    });
+    formattedError.fatal = true;
+    contentInfos.currentContentCanceller.cancel();
+    this._priv_cleanUpCurrentContentState();
+    this._priv_currentError = formattedError;
+    log.error("API: The player stopped because of an error", formattedError);
+    this._priv_setPlayerState(PLAYER_STATES.STOPPED);
+
+    // TODO This condition is here because the eventual callback called when the
+    // player state is updated can launch a new content, thus the error will not
+    // be here anymore, in which case triggering the "error" event is unwanted.
+    // This is very ugly though, and we should probable have a better solution
+    if (this._priv_currentError === formattedError) {
+      this.trigger("error", formattedError);
+    }
   }
 }
-Player.version = /* PLAYER_VERSION */"3.30.0";
+Player.version = /* PLAYER_VERSION */"4.0.0-beta.3";
 
 /** Every events sent by the RxPlayer's public API. */
 interface IPublicAPIEvent {
@@ -2995,22 +2845,24 @@ interface IPublicAPIEvent {
   audioTrackChange : IAudioTrack | null;
   textTrackChange : ITextTrack | null;
   videoTrackChange : IVideoTrack | null;
-  audioBitrateChange : number;
-  videoBitrateChange : number;
-  imageTrackUpdate : { data: IBifThumbnail[] };
-  fullscreenChange : boolean;
-  bitrateEstimationChange : IBitrateEstimate;
-  volumeChange : number;
+  audioRepresentationChange : IVideoRepresentation | null;
+  videoRepresentationChange : IAudioRepresentation | null;
+  volumeChange : {
+    volume: number;
+    muted: boolean;
+  };
   error : IPlayerError | Error;
   warning : IPlayerError | Error;
-  nativeTextTracksChange : TextTrack[];
-  periodChange : IPeriod;
-  availableAudioBitratesChange : number[];
-  availableVideoBitratesChange : number[];
+  periodChange : IPeriodChangeEvent;
   availableAudioTracksChange : IAvailableAudioTrack[];
   availableTextTracksChange : IAvailableTextTrack[];
   availableVideoTracksChange : IAvailableVideoTrack[];
-  decipherabilityUpdate : IDecipherabilityUpdateContent[];
+  play: null;
+  pause: null;
+  newAvailablePeriods : IPeriod[];
+  brokenRepresentationsLock : IBrokenRepresentationsLockContext;
+  trackUpdate : ITrackUpdateEventPayload;
+  representationListUpdate : IRepresentationListUpdateContext;
   seeking : null;
   seeked : null;
   streamEvent : IStreamEvent;
@@ -3032,17 +2884,13 @@ interface IPublicApiContentInfos {
   initializer : ContentInitializer;
   /** TaskCanceller triggered when it's time to stop the current content. */
   currentContentCanceller : TaskCanceller;
+  /** The default behavior to adopt when switching the audio track. */
+  defaultAudioTrackSwitchingMode : IAudioTrackSwitchingMode | undefined;
   /**
    * `true` if the current content is in DirectFile mode.
    * `false` is the current content has a transport protocol (Smooth/DASH...).
    */
   isDirectFile : boolean;
-  /**
-   * Current Image Track Data associated to the content.
-   * `null` if the current content has no image playlist linked to it.
-   * @deprecated
-   */
-  thumbnails : IBifThumbnail[]|null;
   /**
    * Manifest linked to the current content.
    * `null` if the current content loaded has no manifest or if the content is
@@ -3068,24 +2916,20 @@ interface IPublicApiContentInfos {
   activeRepresentations : {
     [periodId : string] : Partial<Record<IBufferType, Representation|null>>;
   } | null;
-  /** Store starting audio track if one. */
-  initialAudioTrack : undefined|IAudioTrackPreference;
-  /** Store starting text track if one. */
-  initialTextTrack : undefined|ITextTrackPreference;
   /** Keep information on the active SegmentBuffers. */
   segmentBuffersStore : SegmentBuffersStore | null;
   /**
-   * TrackChoiceManager instance linked to the current content.
+   * TracksStore instance linked to the current content.
    * `null` if no content has been loaded or if the current content loaded
-   * has no TrackChoiceManager.
+   * has no TracksStore.
    */
-  trackChoiceManager : TrackChoiceManager|null;
+  tracksStore : TracksStore|null;
   /**
-   * MediaElementTrackChoiceManager instance linked to the current content.
+   * MediaElementTracksStore instance linked to the current content.
    * `null` if no content has been loaded or if the current content loaded
-   * has no MediaElementTrackChoiceManager.
+   * has no MediaElementTracksStore.
    */
-  mediaElementTrackChoiceManager : MediaElementTrackChoiceManager|null;
+  mediaElementTracksStore : MediaElementTracksStore|null;
 }
 
 export default Player;

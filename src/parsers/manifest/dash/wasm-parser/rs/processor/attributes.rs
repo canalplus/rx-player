@@ -1,30 +1,33 @@
 use crate::errors::ParsingError;
 use crate::events::AttributeName::*;
 
-pub fn report_mpd_attrs(e : &quick_xml::events::BytesStart) {
+pub fn report_mpd_attrs(e: &quick_xml::events::BytesStart) {
     for res_attr in e.attributes() {
         match res_attr {
-            Ok(attr) => match attr.key {
+            Ok(attr) => match attr.key.as_ref() {
                 b"id" => Id.try_report_as_string(&attr),
                 b"profiles" => Profiles.try_report_as_string(&attr),
                 b"type" => Type.try_report_as_string(&attr),
                 b"availabilityStartTime" => AvailabilityStartTime.try_report_as_string(&attr),
                 b"availabilityEndTime" => AvailabilityEndTime.try_report_as_string(&attr),
                 b"publishTime" => PublishTime.try_report_as_string(&attr),
-                b"mediaPresentationDuration" =>
-                    MediaPresentationDuration.try_report_as_iso_8601_duration(&attr),
-                b"minimumUpdatePeriod" =>
-                    MinimumUpdatePeriod.try_report_as_iso_8601_duration(&attr),
-                b"minBufferTime" =>
-                    MinBufferTime.try_report_as_iso_8601_duration(&attr),
-                b"timeShiftBufferDepth" =>
-                    TimeShiftBufferDepth.try_report_as_iso_8601_duration(&attr),
-                b"suggestedPresentationDelay" =>
-                    SuggestedPresentationDelay.try_report_as_iso_8601_duration(&attr),
-                b"maxSegmentDuration" =>
-                    MaxSegmentDuration.try_report_as_iso_8601_duration(&attr),
-                b"maxSubsegmentDuration" =>
-                    MaxSubsegmentDuration.try_report_as_iso_8601_duration(&attr),
+                b"mediaPresentationDuration" => {
+                    MediaPresentationDuration.try_report_as_iso_8601_duration(&attr)
+                }
+                b"minimumUpdatePeriod" => {
+                    MinimumUpdatePeriod.try_report_as_iso_8601_duration(&attr)
+                }
+                b"minBufferTime" => MinBufferTime.try_report_as_iso_8601_duration(&attr),
+                b"timeShiftBufferDepth" => {
+                    TimeShiftBufferDepth.try_report_as_iso_8601_duration(&attr)
+                }
+                b"suggestedPresentationDelay" => {
+                    SuggestedPresentationDelay.try_report_as_iso_8601_duration(&attr)
+                }
+                b"maxSegmentDuration" => MaxSegmentDuration.try_report_as_iso_8601_duration(&attr),
+                b"maxSubsegmentDuration" => {
+                    MaxSubsegmentDuration.try_report_as_iso_8601_duration(&attr)
+                }
                 x => {
                     if x.len() > 6 && &x[..6] == b"xmlns:" {
                         Namespace.try_report_as_key_value(&x[6..], &attr);
@@ -33,20 +36,20 @@ pub fn report_mpd_attrs(e : &quick_xml::events::BytesStart) {
             },
             Err(err) => ParsingError::from(err).report_err(),
         };
-    };
+    }
 }
 
-pub fn report_period_attrs(tag_bs : &quick_xml::events::BytesStart) {
+pub fn report_period_attrs(tag_bs: &quick_xml::events::BytesStart) {
     for res_attr in tag_bs.attributes() {
         match res_attr {
-            Ok(attr) => match attr.key {
+            Ok(attr) => match attr.key.as_ref() {
                 b"id" => Id.try_report_as_string(&attr),
                 b"start" => Start.try_report_as_iso_8601_duration(&attr),
                 b"duration" => Duration.try_report_as_iso_8601_duration(&attr),
                 b"bitstreamSwitching" => BitstreamSwitching.try_report_as_bool(&attr),
                 b"availabilityTimeOffset" => match attr.value.as_ref() {
                     b"INF" => AvailabilityTimeOffset.report(f64::INFINITY),
-                    _ => AvailabilityTimeOffset.try_report_as_u64(&attr),
+                    _ => AvailabilityTimeOffset.try_report_as_f64(&attr),
                 },
                 b"xlink:href" => XLinkHref.try_report_as_string(&attr),
                 b"xlink:actuate" => XLinkActuate.try_report_as_string(&attr),
@@ -58,13 +61,13 @@ pub fn report_period_attrs(tag_bs : &quick_xml::events::BytesStart) {
             },
             Err(err) => ParsingError::from(err).report_err(),
         };
-    };
+    }
 }
 
-pub fn report_adaptation_set_attrs(e : &quick_xml::events::BytesStart) {
+pub fn report_adaptation_set_attrs(e: &quick_xml::events::BytesStart) {
     for res_attr in e.attributes() {
         match res_attr {
-            Ok(attr) => match attr.key {
+            Ok(attr) => match attr.key.as_ref() {
                 b"id" => Id.try_report_as_string(&attr),
                 b"group" => Group.try_report_as_u64(&attr),
                 b"lang" => Language.try_report_as_string(&attr),
@@ -76,47 +79,47 @@ pub fn report_adaptation_set_attrs(e : &quick_xml::events::BytesStart) {
                 b"maxWidth" => MaxWidth.try_report_as_u64(&attr),
                 b"minHeight" => MinHeight.try_report_as_u64(&attr),
                 b"maxHeight" => MaxHeight.try_report_as_u64(&attr),
-                b"minFrameRate" => MinFrameRate.try_report_as_string(&attr),
-                b"maxFrameRate" => MaxFrameRate.try_report_as_string(&attr),
+                b"minFrameRate" => MinFrameRate.try_report_as_maybe_division(&attr),
+                b"maxFrameRate" => MaxFrameRate.try_report_as_maybe_division(&attr),
                 b"selectionPriority" => SelectionPriority.try_report_as_u64(&attr),
                 b"segmentAlignment" => SegmentAlignment.try_report_as_u64_or_bool(&attr),
-                b"subsegmentAlignment" =>
-                    SubsegmentAlignment.try_report_as_u64_or_bool(&attr),
+                b"subsegmentAlignment" => SubsegmentAlignment.try_report_as_u64_or_bool(&attr),
                 b"bitstreamSwitching" => BitstreamSwitching.try_report_as_bool(&attr),
                 b"audioSamplingRate" => AudioSamplingRate.try_report_as_string(&attr),
                 b"codecs" => Codecs.try_report_as_string(&attr),
+                b"scte214:supplementalCodecs" => SupplementalCodecs.try_report_as_string(&attr),
                 b"profiles" => Profiles.try_report_as_string(&attr),
                 b"segmentProfiles" => SegmentProfiles.try_report_as_string(&attr),
                 b"mimeType" => MimeType.try_report_as_string(&attr),
                 b"codingDependency" => CodingDependency.try_report_as_bool(&attr),
-                b"frameRate" => FrameRate.try_report_as_string(&attr),
+                b"frameRate" => FrameRate.try_report_as_maybe_division(&attr),
                 b"height" => Height.try_report_as_u64(&attr),
                 b"width" => Width.try_report_as_u64(&attr),
                 b"maxPlayoutRate" => MaxPlayoutRate.try_report_as_f64(&attr),
                 b"maxSAPPeriod" => MaxSAPPeriod.try_report_as_f64(&attr),
                 b"availabilityTimeOffset" => match attr.value.as_ref() {
                     b"INF" => AvailabilityTimeOffset.report(f64::INFINITY),
-                    _ => AvailabilityTimeOffset.try_report_as_u64(&attr),
+                    _ => AvailabilityTimeOffset.try_report_as_f64(&attr),
                 },
-                b"availabilityTimeComplete" =>
-                    AvailabilityTimeComplete.try_report_as_bool(&attr),
-                _ => {},
+                b"availabilityTimeComplete" => AvailabilityTimeComplete.try_report_as_bool(&attr),
+                _ => {}
             },
             Err(err) => ParsingError::from(err).report_err(),
         };
-    };
+    }
 }
 
-pub fn report_representation_attrs(tag_bs : &quick_xml::events::BytesStart) {
+pub fn report_representation_attrs(tag_bs: &quick_xml::events::BytesStart) {
     for res_attr in tag_bs.attributes() {
         match res_attr {
-            Ok(attr) => match attr.key {
+            Ok(attr) => match attr.key.as_ref() {
                 b"id" => Id.try_report_as_string(&attr),
                 b"audioSamplingRate" => AudioSamplingRate.try_report_as_string(&attr),
                 b"bandwidth" => Bitrate.try_report_as_u64(&attr),
                 b"codecs" => Codecs.try_report_as_string(&attr),
+                b"scte214:supplementalCodecs" => SupplementalCodecs.try_report_as_string(&attr),
                 b"codingDependency" => CodingDependency.try_report_as_bool(&attr),
-                b"frameRate" => FrameRate.try_report_as_string(&attr),
+                b"frameRate" => FrameRate.try_report_as_maybe_division(&attr),
                 b"height" => Height.try_report_as_u64(&attr),
                 b"width" => Width.try_report_as_u64(&attr),
                 b"maxPlayoutRate" => MaxPlayoutRate.try_report_as_f64(&attr),
@@ -127,134 +130,122 @@ pub fn report_representation_attrs(tag_bs : &quick_xml::events::BytesStart) {
                 b"segmentProfiles" => SegmentProfiles.try_report_as_string(&attr),
                 b"availabilityTimeOffset" => match attr.value.as_ref() {
                     b"INF" => AvailabilityTimeOffset.report(f64::INFINITY),
-                    _ => AvailabilityTimeOffset.try_report_as_u64(&attr),
+                    _ => AvailabilityTimeOffset.try_report_as_f64(&attr),
                 },
-                b"availabilityTimeComplete" =>
-                    AvailabilityTimeComplete.try_report_as_bool(&attr),
-                _ => {},
+                b"availabilityTimeComplete" => AvailabilityTimeComplete.try_report_as_bool(&attr),
+                _ => {}
             },
             Err(err) => ParsingError::from(err).report_err(),
         };
-    };
+    }
 }
 
-pub fn report_base_url_attrs(tag_bs : &quick_xml::events::BytesStart) {
+pub fn report_base_url_attrs(tag_bs: &quick_xml::events::BytesStart) {
     for res_attr in tag_bs.attributes() {
         match res_attr {
-            Ok(attr) => match attr.key {
-                b"serviceLocation" => ServiceLocation.try_report_as_string(&attr),
-                _ => {},
-            },
+            Ok(attr) => {
+                if let b"serviceLocation" = attr.key.as_ref() {
+                    ServiceLocation.try_report_as_string(&attr)
+                }
+            }
             Err(err) => ParsingError::from(err).report_err(),
         };
-    };
+    }
 }
 
-pub fn report_segment_template_attrs(tag_bs : &quick_xml::events::BytesStart) {
+pub fn report_segment_template_attrs(tag_bs: &quick_xml::events::BytesStart) {
     for res_attr in tag_bs.attributes() {
         match res_attr {
-            Ok(attr) => match attr.key {
+            Ok(attr) => match attr.key.as_ref() {
                 b"initialization" => InitializationMedia.try_report_as_string(&attr),
                 b"index" => Index.try_report_as_string(&attr),
                 b"timescale" => TimeScale.try_report_as_u64(&attr),
-                b"presentationTimeOffset" =>
-                    PresentationTimeOffset.try_report_as_f64(&attr),
-                b"indexRange" =>
-                    IndexRange.try_report_as_range(&attr),
-                b"IndexRangeExact" =>
-                    IndexRangeExact.try_report_as_bool(&attr),
+                b"presentationTimeOffset" => PresentationTimeOffset.try_report_as_f64(&attr),
+                b"indexRange" => IndexRange.try_report_as_range(&attr),
+                b"IndexRangeExact" => IndexRangeExact.try_report_as_bool(&attr),
                 b"availabilityTimeOffset" => match attr.value.as_ref() {
                     b"INF" => AvailabilityTimeOffset.report(f64::INFINITY),
-                    _ => AvailabilityTimeOffset.try_report_as_u64(&attr),
+                    _ => AvailabilityTimeOffset.try_report_as_f64(&attr),
                 },
-                b"availabilityTimeComplete" =>
-                    AvailabilityTimeComplete.try_report_as_bool(&attr),
-                b"duration" =>
-                    Duration.try_report_as_u64(&attr),
-                b"startNumber" =>
-                    StartNumber.try_report_as_u64(&attr),
-                b"endNumber" =>
-                    EndNumber.try_report_as_u64(&attr),
+                b"availabilityTimeComplete" => AvailabilityTimeComplete.try_report_as_bool(&attr),
+                b"duration" => Duration.try_report_as_u64(&attr),
+                b"startNumber" => StartNumber.try_report_as_u64(&attr),
+                b"endNumber" => EndNumber.try_report_as_u64(&attr),
                 b"media" => Media.try_report_as_string(&attr),
                 b"bitstreamSwitching" => BitstreamSwitching.try_report_as_bool(&attr),
-                _ => {},
+                _ => {}
             },
             Err(err) => ParsingError::from(err).report_err(),
         };
-    };
+    }
 }
 
-pub fn report_segment_base_attrs(tag_bs : &quick_xml::events::BytesStart) {
+pub fn report_segment_base_attrs(tag_bs: &quick_xml::events::BytesStart) {
     for res_attr in tag_bs.attributes() {
         match res_attr {
-            Ok(attr) => match attr.key {
+            Ok(attr) => match attr.key.as_ref() {
                 b"timescale" => TimeScale.try_report_as_u64(&attr),
-                b"presentationTimeOffset" =>
-                    PresentationTimeOffset.try_report_as_f64(&attr),
+                b"presentationTimeOffset" => PresentationTimeOffset.try_report_as_f64(&attr),
                 b"indexRange" => IndexRange.try_report_as_range(&attr),
                 b"indexRangeExact" => IndexRangeExact.try_report_as_bool(&attr),
                 b"availabilityTimeOffset" => match attr.value.as_ref() {
                     b"INF" => AvailabilityTimeOffset.report(f64::INFINITY),
-                    _ => AvailabilityTimeOffset.try_report_as_u64(&attr),
+                    _ => AvailabilityTimeOffset.try_report_as_f64(&attr),
                 },
-                b"availabilityTimeComplete" =>
-                    AvailabilityTimeComplete.try_report_as_bool(&attr),
-                b"duration" =>
-                    Duration.try_report_as_u64(&attr),
-                b"startNumber" =>
-                    StartNumber.try_report_as_u64(&attr),
-                b"endNumber" =>
-                    EndNumber.try_report_as_u64(&attr),
-                _ => {},
+                b"availabilityTimeComplete" => AvailabilityTimeComplete.try_report_as_bool(&attr),
+                b"duration" => Duration.try_report_as_u64(&attr),
+                b"startNumber" => StartNumber.try_report_as_u64(&attr),
+                b"endNumber" => EndNumber.try_report_as_u64(&attr),
+                _ => {}
             },
             Err(err) => ParsingError::from(err).report_err(),
         };
-    };
+    }
 }
 
-pub fn report_content_component_attrs(tag_bs : &quick_xml::events::BytesStart) {
+pub fn report_content_component_attrs(tag_bs: &quick_xml::events::BytesStart) {
     for res_attr in tag_bs.attributes() {
         match res_attr {
-            Ok(attr) => match attr.key {
+            Ok(attr) => match attr.key.as_ref() {
                 b"id" => Id.try_report_as_string(&attr),
                 b"lang" => Language.try_report_as_string(&attr),
                 b"contentType" => ContentType.try_report_as_string(&attr),
                 b"par" => Par.try_report_as_string(&attr),
-                _ => {},
+                _ => {}
             },
             Err(err) => ParsingError::from(err).report_err(),
         };
-    };
+    }
 }
 
-pub fn report_content_protection_attrs(tag_bs : &quick_xml::events::BytesStart) {
+pub fn report_content_protection_attrs(tag_bs: &quick_xml::events::BytesStart) {
     for res_attr in tag_bs.attributes() {
         match res_attr {
-            Ok(attr) => match attr.key {
+            Ok(attr) => match attr.key.as_ref() {
                 b"schemeIdUri" => SchemeIdUri.try_report_as_string(&attr),
                 b"value" => ContentProtectionValue.try_report_as_string(&attr),
 
                 // TODO convert hex to bytes here?
                 b"cenc:default_KID" => ContentProtectionKeyId.try_report_as_string(&attr),
-                _ => {},
+                _ => {}
             },
             Err(err) => ParsingError::from(err).report_err(),
         };
-    };
+    }
 }
 
 /// Report attributes encountered in an `<Initialization>` element.
-pub fn report_initialization_attrs(tag_bs : &quick_xml::events::BytesStart) {
+pub fn report_initialization_attrs(tag_bs: &quick_xml::events::BytesStart) {
     for res_attr in tag_bs.attributes() {
         match res_attr {
-            Ok(attr) => match attr.key {
+            Ok(attr) => match attr.key.as_ref() {
                 b"range" => InitializationRange.try_report_as_range(&attr),
                 b"sourceURL" => InitializationMedia.try_report_as_string(&attr),
-                _ => {},
+                _ => {}
             },
             Err(err) => ParsingError::from(err).report_err(),
         };
-    };
+    }
 }
 
 /// Report attributes encountered in "Scheme-like" element.
@@ -263,38 +254,38 @@ pub fn report_initialization_attrs(tag_bs : &quick_xml::events::BytesStart) {
 /// a string form:
 ///   - "schemeIdUri"
 ///   - "value"
-pub fn report_scheme_attrs(tag_bs : &quick_xml::events::BytesStart) {
+pub fn report_scheme_attrs(tag_bs: &quick_xml::events::BytesStart) {
     for res_attr in tag_bs.attributes() {
         match res_attr {
-            Ok(attr) => match attr.key {
+            Ok(attr) => match attr.key.as_ref() {
                 b"schemeIdUri" => SchemeIdUri.try_report_as_string(&attr),
                 b"value" => SchemeValue.try_report_as_string(&attr),
-                _ => {},
+                _ => {}
             },
             Err(err) => ParsingError::from(err).report_err(),
         };
-    };
+    }
 }
 
-pub fn report_segment_url_attrs(tag_bs : &quick_xml::events::BytesStart) {
+pub fn report_segment_url_attrs(tag_bs: &quick_xml::events::BytesStart) {
     for res_attr in tag_bs.attributes() {
         match res_attr {
-            Ok(attr) => match attr.key {
+            Ok(attr) => match attr.key.as_ref() {
                 b"index" => Index.try_report_as_string(&attr),
                 b"indexRange" => IndexRange.try_report_as_range(&attr),
                 b"media" => Media.try_report_as_string(&attr),
                 b"mediaRange" => MediaRange.try_report_as_range(&attr),
-                _ => {},
+                _ => {}
             },
             Err(err) => ParsingError::from(err).report_err(),
         };
-    };
+    }
 }
 
-pub fn report_event_stream_attrs(tag_bs : &quick_xml::events::BytesStart) {
+pub fn report_event_stream_attrs(tag_bs: &quick_xml::events::BytesStart) {
     for res_attr in tag_bs.attributes() {
         match res_attr {
-            Ok(attr) => match attr.key {
+            Ok(attr) => match attr.key.as_ref() {
                 b"schemeIdUri" => SchemeIdUri.try_report_as_string(&attr),
                 b"value" => SchemeValue.try_report_as_string(&attr),
                 b"timescale" => TimeScale.try_report_as_u64(&attr),
@@ -306,21 +297,21 @@ pub fn report_event_stream_attrs(tag_bs : &quick_xml::events::BytesStart) {
             },
             Err(err) => ParsingError::from(err).report_err(),
         };
-    };
+    }
 }
 
-pub fn report_event_stream_event_attrs(tag_bs : &quick_xml::events::BytesStart) {
+pub fn report_event_stream_event_attrs(tag_bs: &quick_xml::events::BytesStart) {
     for res_attr in tag_bs.attributes() {
         match res_attr {
-            Ok(attr) => match attr.key {
+            Ok(attr) => match attr.key.as_ref() {
                 b"presentationTime" => EventPresentationTime.try_report_as_u64(&attr),
                 b"duration" => Duration.try_report_as_u64(&attr),
                 b"id" => Id.try_report_as_string(&attr),
-                _ => {},
+                _ => {}
             },
             Err(err) => ParsingError::from(err).report_err(),
         };
-    };
+    }
 }
 
 //use std::ffi::CString;
@@ -377,7 +368,7 @@ pub fn report_event_stream_event_attrs(tag_bs : &quick_xml::events::BytesStart) 
 //    let mut mpd_attrs = MpdAttributes::default();
 //    for res_attr in e.attributes() {
 //        match res_attr {
-//            Ok(attr) => match attr.key {
+//            Ok(attr) => match attr.key.as_ref() {
 //                b"id" => { mpd_attrs.id = extract_string_attr(&attr); },
 //                b"profiles" => { mpd_attrs.profiles = extract_string_attr(&attr); }
 //                b"type" => { mpd_attrs.mpd_type = extract_string_attr(&attr); }

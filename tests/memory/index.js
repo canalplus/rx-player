@@ -7,8 +7,6 @@ import {
   manifestInfos,
   trickModeInfos,
 } from "../contents/DASH_static_SegmentTimeline";
-import textTrackInfos from "../contents/texttracks";
-import imageInfos from "../contents/imagetracks";
 import sleep from "../utils/sleep.js";
 import waitForPlayerState, {
   waitForLoadedStateAfterLoadVideo,
@@ -34,21 +32,13 @@ describe("Memory tests", () => {
     }
     this.timeout(5 * 60 * 1000);
     player = new RxPlayer({ initialVideoBitrate: Infinity,
-                            initialAudioBitrate: Infinity,
-                            preferredTextTracks: [{ language: "fra",
-                                                    closedCaption: true }] });
+                            initialAudioBitrate: Infinity });
     window.gc();
     await sleep(1000);
     const initialMemory = window.performance.memory;
 
     player.loadVideo({ url: manifestInfos.url,
                        transport: manifestInfos.transport,
-                       supplementaryTextTracks: [{ url: textTrackInfos.url,
-                                                   language: "fra",
-                                                   mimeType: "application/ttml+xml",
-                                                   closedCaption: true }],
-                       supplementaryImageTracks: [{ mimeType: "application/bif",
-                                                    url: imageInfos.url }],
                        autoPlay: true });
     player.setPlaybackRate(4);
     await waitForPlayerState(player, "ENDED");
@@ -82,9 +72,7 @@ describe("Memory tests", () => {
     }
     this.timeout(5 * 60 * 1000);
     player = new RxPlayer({ initialVideoBitrate: Infinity,
-                            initialAudiobitrate: Infinity,
-                            preferredtexttracks: [{ language: "fra",
-                                                    closedcaption: true }] });
+                            initialAudiobitrate: Infinity });
     window.gc();
     await sleep(1000);
     const initialMemory = window.performance.memory;
@@ -92,12 +80,6 @@ describe("Memory tests", () => {
     for (let i = 0; i < 1000; i++) {
       player.loadVideo({ url: manifestInfos.url,
                          transport: manifestInfos.transport,
-                         supplementaryTextTracks: [{ url: textTrackInfos.url,
-                                                     language: "fra",
-                                                     mimeType: "application/ttml+xml",
-                                                     closedCaption: true }],
-                         supplementaryImageTracks: [{ mimeType: "application/bif",
-                                                      url: imageInfos.url }],
                          autoPlay: true });
       await waitForLoadedStateAfterLoadVideo(player);
     }
@@ -140,12 +122,6 @@ describe("Memory tests", () => {
                                                       closedcaption: true }] });
       player.loadVideo({ url: manifestInfos.url,
                          transport: manifestInfos.transport,
-                         supplementaryTextTracks: [{ url: textTrackInfos.url,
-                                                     language: "fra",
-                                                     mimeType: "application/ttml+xml",
-                                                     closedCaption: true }],
-                         supplementaryImageTracks: [{ mimeType: "application/bif",
-                                                      url: imageInfos.url }],
                          autoPlay: true });
       await waitForLoadedStateAfterLoadVideo(player);
       player.dispose();
@@ -187,18 +163,12 @@ describe("Memory tests", () => {
     player.setMaxBufferAhead(15);
     player.loadVideo({ url: manifestInfos.url,
                        transport: manifestInfos.transport,
-                       supplementaryTextTracks: [{ url: textTrackInfos.url,
-                                                   language: "fra",
-                                                   mimeType: "application/ttml+xml",
-                                                   closedCaption: true }],
-                       supplementaryImageTracks: [{ mimeType: "application/bif",
-                                                    url: imageInfos.url }],
                        autoPlay: false });
     await waitForLoadedStateAfterLoadVideo(player);
-    const videoBitrates = player.getAvailableVideoBitrates();
-    if (videoBitrates.length <= 1) {
+    const videoTrack = player.getVideoTrack();
+    if (videoTrack.representations.length <= 1) {
       throw new Error(
-        "Not enough video bitrates to perform sufficiently pertinent tests"
+        "Not enough video Representations to perform sufficiently pertinent tests"
       );
     }
     await sleep(1000);
@@ -219,8 +189,8 @@ describe("Memory tests", () => {
         player.seekTo(20);
         seekToBeginning = true;
       }
-      const bitrateIdx = iterationIdx % videoBitrates.length;
-      player.setVideoBitrate(videoBitrates[bitrateIdx]);
+      const repIdx = iterationIdx % videoTrack.representations.length;
+      player.lockVideoRepresentations([videoTrack.representations[repIdx].id]);
       await sleep(1000);
     }
     window.gc();
@@ -250,9 +220,7 @@ describe("Memory tests", () => {
     }
     this.timeout(5 * 60 * 1000);
     player = new RxPlayer({ initialVideoBitrate: Infinity,
-                            initialAudiobitrate: Infinity,
-                            preferredtexttracks: [{ language: "fra",
-                                                    closedcaption: true }] });
+                            initialAudiobitrate: Infinity });
     const vtlVideoElement = document.createElement("video");
     VideoThumbnailLoader.addLoader(DASH_LOADER);
     const videoThumbnailLoader =
