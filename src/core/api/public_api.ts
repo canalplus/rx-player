@@ -695,26 +695,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     // Bind events
     initializer.addEventListener("error", (error) => {
-      const formattedError = formatError(error, {
-        defaultCode: "NONE",
-        defaultReason: "An unknown error stopped content playback.",
-      });
-      formattedError.fatal = true;
-
-      contentInfos.currentContentCanceller.cancel();
-      this._priv_cleanUpCurrentContentState();
-      this._priv_currentError = formattedError;
-      log.error("API: The player stopped because of an error",
-                error instanceof Error ? error : "");
-      this._priv_setPlayerState(PLAYER_STATES.STOPPED);
-
-      // TODO This condition is here because the eventual callback called when the
-      // player state is updated can launch a new content, thus the error will not
-      // be here anymore, in which case triggering the "error" event is unwanted.
-      // This is very ugly though, and we should probable have a better solution
-      if (this._priv_currentError === formattedError) {
-        this.trigger("error", formattedError);
-      }
+      this._priv_onFatalError(error, contentInfos);
     });
     initializer.addEventListener("warning", (error) => {
       const formattedError = formatError(error, {
@@ -2107,21 +2088,34 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return; // Event for another content
     }
     contentInfos.manifest = manifest;
-    const cancelSignal = contentInfos.currentContentCanceller.signal;
     this._priv_reloadingMetadata.manifest = manifest;
 
-    contentInfos.tracksStore = new TracksStore({
+    const tracksStore = new TracksStore({
       preferTrickModeTracks: this._priv_preferTrickModeTracks,
       defaultAudioTrackSwitchingMode: contentInfos.defaultAudioTrackSwitchingMode,
     });
-    contentInfos.tracksStore.addEventListener("newAvailablePeriods", (p) => {
+    contentInfos.tracksStore = tracksStore;
+    tracksStore.addEventListener("newAvailablePeriods", (p) => {
       this.trigger("newAvailablePeriods", p);
     });
-    contentInfos.tracksStore.addEventListener("brokenRepresentationsLock", (e) => {
+    tracksStore.addEventListener("brokenRepresentationsLock", (e) => {
       this.trigger("brokenRepresentationsLock", e);
     });
-    contentInfos.tracksStore.addEventListener("trackUpdate", (e) => {
+    tracksStore.addEventListener("trackUpdate", (e) => {
       this.trigger("trackUpdate", e);
+
+      const currentPeriod = this._priv_contentInfos?.currentPeriod ?? undefined;
+      if (e.reason === "no-playable-representation" &&
+          e.period.id === currentPeriod?.id)
+      {
+        this._priv_onAvailableTracksMayHaveChanged(e.trackType);
+      }
+    });
+    contentInfos.tracksStore.addEventListener("warning", (err) => {
+      this.trigger("warning", err);
+    });
+    contentInfos.tracksStore.addEventListener("error", (err) => {
+      this._priv_onFatalError(err, contentInfos);
     });
 
     contentInfos.tracksStore.updatePeriodList(manifest);
@@ -2132,8 +2126,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         contentInfos.tracksStore.updatePeriodList(manifest);
       }
       const currentPeriod = this._priv_contentInfos?.currentPeriod ?? undefined;
-      const tracksStore = this._priv_contentInfos?.tracksStore;
-      if (currentPeriod === undefined || isNullOrUndefined(tracksStore)) {
+      const currTracksStore = this._priv_contentInfos?.tracksStore;
+      if (currentPeriod === undefined || isNullOrUndefined(currTracksStore)) {
         return;
       }
       for (const update of updates.updatedPeriods) {
@@ -2142,22 +2136,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
               update.result.removedAdaptations.length > 0)
           {
             // We might have new (or less) tracks, send events just to be sure
-            const periodRef = tracksStore.getPeriodObjectFromPeriod(currentPeriod);
+            const periodRef = currTracksStore.getPeriodObjectFromPeriod(currentPeriod);
             if (periodRef === undefined) {
               return;
             }
-            const audioTracks = tracksStore.getAvailableAudioTracks(periodRef);
-            this._priv_triggerEventIfNotStopped("availableAudioTracksChange",
-                                                audioTracks ?? [],
-                                                cancelSignal);
-            const textTracks = tracksStore.getAvailableTextTracks(periodRef);
-            this._priv_triggerEventIfNotStopped("availableTextTracksChange",
-                                                textTracks ?? [],
-                                                cancelSignal);
-            const videoTracks = tracksStore.getAvailableVideoTracks(periodRef);
-            this._priv_triggerEventIfNotStopped("availableVideoTracksChange",
-                                                videoTracks ?? [],
-                                                cancelSignal);
+            this._priv_onAvailableTracksMayHaveChanged("audio");
+            this._priv_onAvailableTracksMayHaveChanged("text");
+            this._priv_onAvailableTracksMayHaveChanged("video");
           }
         }
         return;
@@ -2684,6 +2669,91 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return defaultValue;
     }
     return cb(tracksStore, periodRef);
+  }
+
+  /**
+   * Method to call when some event lead to a high for possibility that the
+   * available tracks for the given type have changed.
+   * Send the corresponding `available*Tracks` change event with the last
+   * available tracks.
+   *
+   * @param {string} trackType
+   * @param {Object|undefined} [oPeriodRef] - optional period object used by the
+   * `tracksStore` API, allows to optimize the method by bypassing this step.
+   */
+  private _priv_onAvailableTracksMayHaveChanged(
+    trackType : IBufferType,
+    oPeriodRef? : ITMPeriodObject
+  ): void {
+    const contentInfos = this._priv_contentInfos;
+    if (contentInfos === null) {
+      return;
+    }
+    const { currentPeriod,
+            tracksStore,
+            currentContentCanceller } = contentInfos;
+    const cancelSignal = currentContentCanceller.signal;
+    if (isNullOrUndefined(currentPeriod) || tracksStore === null) {
+      return;
+    }
+    const periodRef = oPeriodRef ?? tracksStore.getPeriodObjectFromPeriod(currentPeriod);
+    if (periodRef === undefined) {
+      return;
+    }
+    switch (trackType) {
+      case "video":
+        const videoTracks = tracksStore.getAvailableVideoTracks(periodRef);
+        this._priv_triggerEventIfNotStopped("availableVideoTracksChange",
+                                            videoTracks ?? [],
+                                            cancelSignal);
+        break;
+      case "audio":
+        const audioTracks = tracksStore.getAvailableAudioTracks(periodRef);
+        this._priv_triggerEventIfNotStopped("availableAudioTracksChange",
+                                            audioTracks ?? [],
+                                            cancelSignal);
+        break;
+      case "text":
+        const textTracks = tracksStore.getAvailableTextTracks(periodRef);
+        this._priv_triggerEventIfNotStopped("availableTextTracksChange",
+                                            textTracks ?? [],
+                                            cancelSignal);
+        break;
+      default:
+        assertUnreachable(trackType);
+    }
+  }
+
+  /**
+   * Method to call when a fatal error lead to the stopping of the current
+   * content.
+   *
+   * @param {*} err - The error encountered.
+   * @param {Object} contentInfos - The `IPublicApiContentInfos` object linked
+   * to the content for which the error was received.
+   */
+  private _priv_onFatalError(
+    err : unknown,
+    contentInfos : IPublicApiContentInfos
+  ): void {
+    const formattedError = formatError(err, {
+      defaultCode: "NONE",
+      defaultReason: "An unknown error stopped content playback.",
+    });
+    formattedError.fatal = true;
+    contentInfos.currentContentCanceller.cancel();
+    this._priv_cleanUpCurrentContentState();
+    this._priv_currentError = formattedError;
+    log.error("API: The player stopped because of an error", formattedError);
+    this._priv_setPlayerState(PLAYER_STATES.STOPPED);
+
+    // TODO This condition is here because the eventual callback called when the
+    // player state is updated can launch a new content, thus the error will not
+    // be here anymore, in which case triggering the "error" event is unwanted.
+    // This is very ugly though, and we should probable have a better solution
+    if (this._priv_currentError === formattedError) {
+      this.trigger("error", formattedError);
+    }
   }
 }
 Player.version = /* PLAYER_VERSION */"3.31.0";
