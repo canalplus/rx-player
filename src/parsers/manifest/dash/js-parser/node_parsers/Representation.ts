@@ -27,6 +27,7 @@ import parseSegmentTemplate from "./SegmentTemplate";
 import {
   MPDError,
   parseBoolean,
+  parseMaybeDividedNumber,
   parseMPDFloat,
   parseMPDInteger,
   parseScheme,
@@ -93,6 +94,13 @@ function parseRepresentationChildren(
             contentProtections.push(contentProtection);
           }
           break;
+        case "SupplementalProperty":
+          if (children.supplementalProperties == null) {
+            children.supplementalProperties = [parseScheme(currentElement)];
+          } else {
+            children.supplementalProperties.push(parseScheme(currentElement));
+          }
+          break;
       }
     }
   }
@@ -138,7 +146,9 @@ function parseRepresentationAttributes(
         break;
 
       case "frameRate":
-        attributes.frameRate = attr.value;
+        parseValue(attr.value, { asKey: "frameRate",
+                                 parser: parseMaybeDividedNumber,
+                                 dashName: "frameRate" });
         break;
 
       case "height":

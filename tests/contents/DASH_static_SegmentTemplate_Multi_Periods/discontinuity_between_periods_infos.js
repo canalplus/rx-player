@@ -61,7 +61,7 @@ export default {
                 bitrate: 50842,
                 height: 180,
                 width: 320,
-                frameRate: "25",
+                frameRate: 25,
                 codec: "avc1.42c00d",
                 mimeType: "video/mp4",
                 index: {
@@ -90,7 +90,7 @@ export default {
                 bitrate: 194834,
                 height: 360,
                 width: 640,
-                frameRate: "25",
+                frameRate: 25,
                 codec: "avc1.42c01e",
                 mimeType: "video/mp4",
                 index: {
@@ -119,7 +119,7 @@ export default {
                 bitrate: 514793,
                 height: 720,
                 width: 1280,
-                frameRate: "25",
+                frameRate: 25,
                 codec: "avc1.42c01f",
                 mimeType: "video/mp4",
                 index: {
@@ -148,7 +148,7 @@ export default {
                 bitrate: 770663,
                 height: 1080,
                 width: 1920,
-                frameRate: "25",
+                frameRate: 25,
                 codec: "avc1.42c028",
                 mimeType: "video/mp4",
                 index: {
@@ -223,7 +223,7 @@ export default {
                 bitrate: 50842,
                 height: 180,
                 width: 320,
-                frameRate: "25",
+                frameRate: 25,
                 codec: "avc1.42c00d",
                 mimeType: "video/mp4",
                 index: {
@@ -252,7 +252,7 @@ export default {
                 bitrate: 194834,
                 height: 360,
                 width: 640,
-                frameRate: "25",
+                frameRate: 25,
                 codec: "avc1.42c01e",
                 mimeType: "video/mp4",
                 index: {
@@ -281,7 +281,7 @@ export default {
                 bitrate: 514793,
                 height: 720,
                 width: 1280,
-                frameRate: "25",
+                frameRate: 25,
                 codec: "avc1.42c01f",
                 mimeType: "video/mp4",
                 index: {
@@ -310,7 +310,7 @@ export default {
                 bitrate: 770663,
                 height: 1080,
                 width: 1920,
-                frameRate: "25",
+                frameRate: 25,
                 codec: "avc1.42c028",
                 mimeType: "video/mp4",
                 index: {

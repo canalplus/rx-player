@@ -84,6 +84,18 @@ export function generateRepresentationChildrenParser(
         break;
       }
 
+      case TagName.SupplementalProperty: {
+        const supplementalProperty = {};
+        if (childrenObj.supplementalProperties === undefined) {
+          childrenObj.supplementalProperties = [];
+        }
+        childrenObj.supplementalProperties.push(supplementalProperty);
+        const attributeParser = generateSchemeAttrParser(supplementalProperty,
+                                                         linearMemory);
+        parsersStack.pushParsers(nodeId, noop, attributeParser);
+        break;
+      }
+
       case TagName.SegmentBase: {
         const segmentBaseObj = {};
         childrenObj.segmentBase = segmentBaseObj;
@@ -158,8 +170,7 @@ export function generateRepresentationAttrParser(
           new DataView(linearMemory.buffer).getUint8(0) === 0;
         break;
       case AttributeName.FrameRate:
-        representationAttrs.frameRate =
-          parseString(textDecoder, linearMemory.buffer, ptr, len);
+        representationAttrs.frameRate = dataView.getFloat64(ptr, true);
         break;
       case AttributeName.Height:
         representationAttrs.height = dataView.getFloat64(ptr, true);

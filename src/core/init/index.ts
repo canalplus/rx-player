@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-import MediaSourceContentInitializer, {
-  IInitializeArguments,
-} from "./media_source_content_initializer";
-export * from "./types";
-
-export default MediaSourceContentInitializer;
-export { IInitializeArguments };
+export {
+  ContentInitializer,
+  IContentInitializerEvents,
+  IAdaptationChangeEventPayload,
+  IStallingSituation,
+} from "./types";

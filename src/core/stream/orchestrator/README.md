@@ -28,7 +28,7 @@ Manifest and as such, have to be downloaded and decoded separately.
 
 Each type has its own media buffer. For "audio"/"video" contents, we use
 regular browser-defined _MSE_ SourceBuffers.
-For any other types, such as "text" and "image", those buffers are entirely
+For any other types, such as "text", those buffers are entirely
 defined in the code of the RxPlayer.
 
 We then create a different Stream for each type. Each will progressively
@@ -44,9 +44,6 @@ media buffer:
 
 - TEXT STREAM -
 |========================  |
-
-- IMAGE STREAM -
-|====================      |
 ```
 _(the ``|`` sign delimits the temporal start and end of the buffer linked to a
 given Stream, the ``=`` sign represent a pushed segment in the corresponding

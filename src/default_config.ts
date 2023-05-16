@@ -33,18 +33,6 @@ const DEFAULT_CONFIG = {
   DEFAULT_TEXT_TRACK_MODE: "native" as "native" |
                                          "html",
 
-    /**
-     * Strategy to adopt when manually setting the current bitrate.
-     * Can be either:
-     *   - "seamless": transitions are very smooth but not immediate.
-     *   - "direct": the quality switch happens immediately but to achieve that,
-     *     the player will need to set a new MediaSource on the media element in
-     *     some cases. This often leads to a black screen + unavailable APIs
-     *     during a short moment.
-     * @type {string}
-     */
-  DEFAULT_MANUAL_BITRATE_SWITCHING_MODE: "seamless" as "seamless" |
-                                                         "direct",
 
     /**
      * Default behavior for the `enableFastSwitching` loadVideo options.
@@ -59,18 +47,6 @@ const DEFAULT_CONFIG = {
      * When disabled, segments of a lower-quality will not be replaced.
      */
   DEFAULT_ENABLE_FAST_SWITCHING: true,
-
-    /**
-     * Strategy to adopt when manually switching of audio adaptation.
-     * Can be either:
-     *    - "seamless": transitions are smooth but could be not immediate.
-     *    - "direct": that strategy will perform a very small seek that result
-     *    most of the time by a flush of the current buffered data, by doing
-     *    that we allow quicker transition between audio track, but we could
-     *    see appear a RELOADING or a SEEKING state.
-     */
-  DEFAULT_AUDIO_TRACK_SWITCHING_MODE: "seamless" as "seamless" |
-                                                      "direct",
 
     /**
      * In some cases after switching the current track or bitrate, the RxPlayer
@@ -137,25 +113,6 @@ const DEFAULT_CONFIG = {
   DEFAULT_AUTO_PLAY: false,
 
     /**
-     * If set to false, "native" subtitles (in a <track> element) will be hidden
-     * by default.
-     * @type {Boolean}
-     */
-  DEFAULT_SHOW_NATIVE_SUBTITLE: true,
-
-    /**
-     * If set to true, the player will by default stop immediately and unload the
-     * content on reaching the end of the media.
-     *
-     * If set to false, it will not unload nor stop by default, leaving the user
-     * free to seek in the already-loaded content.
-     *
-     * Set to `true` for legacy reasons.
-     * @type {Boolean}
-     */
-  DEFAULT_STOP_AT_END: true,
-
-    /**
      * Default buffer goal in seconds.
      * Once enough content has been downloaded to fill the buffer up to
      * ``current position + DEFAULT_WANTED_BUFFER_AHEAD", we will stop downloading
@@ -198,7 +155,7 @@ const DEFAULT_CONFIG = {
      */
   MAXIMUM_MAX_BUFFER_AHEAD: {
     text: 5 * 60 * 60,
-  } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
+  } as Partial<Record<"audio"|"video"|"text", number>>,
     /* eslint-enable @typescript-eslint/consistent-type-assertions */
 
     /* eslint-disable @typescript-eslint/consistent-type-assertions */
@@ -210,7 +167,7 @@ const DEFAULT_CONFIG = {
      */
   MAXIMUM_MAX_BUFFER_BEHIND: {
     text: 5 * 60 * 60,
-  } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
+  } as Partial<Record<"audio"|"video"|"text", number>>,
     /* eslint-enable @typescript-eslint/consistent-type-assertions */
 
     /**
@@ -225,53 +182,7 @@ const DEFAULT_CONFIG = {
      * play will always take the last set one.
      * @type {Object}
      */
-  DEFAULT_INITIAL_BITRATES: {
-    audio: 0, // only "audio" segments
-    video: 0, // only "video" segments
-    other: 0, // tracks which are not audio/video (text images).
-                // Though those are generally at a single bitrate, so no adaptive
-                // mechanism is triggered for them.
-  },
-
-    /* eslint-disable @typescript-eslint/consistent-type-assertions */
-    /**
-     * Default bitrate floor initially set to dictate the minimum bitrate the
-     * adaptive logic can automatically switch to.
-     *
-     * If no track is found with a quality superior or equal to the
-     * bitrate there, the lowest bitrate will be taken instead.
-     *
-     * Set to Infinity to discard any limit in the ABR strategy.
-     * @type {Object}
-     */
-  DEFAULT_MIN_BITRATES: {
-    audio: 0, // only "audio" segments
-    video: 0, // only "video" segments
-    other: 0, // tracks which are not audio/video
-                       // Though those are generally at a single bitrate, so no
-                       // adaptive mechanism is triggered for them.
-  } as Record<"audio"|"video"|"other", number>,
-    /* eslint-enable @typescript-eslint/consistent-type-assertions */
-
-    /* eslint-disable @typescript-eslint/consistent-type-assertions */
-    /**
-     * Default bitrate ceil initially set to dictate the maximum bitrate the
-     * adaptive logic can automatically switch to.
-     *
-     * If no track is found with a quality inferior or equal to the
-     * bitrate there, the lowest bitrate will be taken instead.
-     *
-     * Set to Infinity to discard any limit in the ABR strategy.
-     * @type {Object}
-     */
-  DEFAULT_MAX_BITRATES: {
-    audio: Infinity, // only "audio" segments
-    video: Infinity, // only "video" segments
-    other: Infinity, // tracks which are not audio/video
-                       // Though those are generally at a single bitrate, so no
-                       // adaptive mechanism is triggered for them.
-  } as Record<"audio"|"video"|"other", number>,
-    /* eslint-enable @typescript-eslint/consistent-type-assertions */
+  DEFAULT_BASE_BANDWIDTH: 0,
 
     /**
      * Delay after which, if the page is hidden, the user is considered inactive
@@ -284,14 +195,6 @@ const DEFAULT_CONFIG = {
   INACTIVITY_DELAY: 60 * 1000,
 
     /**
-     * If true, if the player is in a "hidden" state for a delay specified by the
-     * INACTIVITY DELAY config property, we throttle automatically to the video
-     * representation with the lowest bitrate.
-     * @type {Boolean}
-     */
-  DEFAULT_THROTTLE_WHEN_HIDDEN: false,
-
-    /**
      * If true, if the video is considered in a "hidden" state for a delay specified by
      * the INACTIVITY DELAY config property, we throttle automatically to the video
      * representation with the lowest bitrate.
@@ -300,14 +203,15 @@ const DEFAULT_CONFIG = {
   DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN: false,
 
     /**
-     * If true, the video representations you can switch to in adaptive mode
-     * are limited by the video element's width.
+     * Default video resolution limit behavior.
      *
-     * Basically in that case, we won't switch to a video Representation with
-     * a width higher than the current width of the video HTMLElement.
+     * This option allows for example to throttle the video resolution so it
+     * does not exceed the screen resolution.
+     *
+     * Here set to "none" by default to disable throttling.
      * @type {Boolean}
      */
-  DEFAULT_LIMIT_VIDEO_WIDTH: false,
+  DEFAULT_VIDEO_RESOLUTION_LIMIT: "none" as const,
 
     /**
      * Default initial live gap considered if no presentation delay has been
@@ -389,8 +293,6 @@ const DEFAULT_CONFIG = {
      *   - if the error is not due to the xhr, no retry will be peformed
      *   - if the error is an HTTP error code, but not a 500-smthg or a 404, no
      *     retry will be performed.
-     *   - if it has a high chance of being due to the user being offline, a
-     *     separate counter is used (see DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE).
      * @type Number
      */
   DEFAULT_MAX_MANIFEST_REQUEST_RETRY: 4,
@@ -415,24 +317,9 @@ const DEFAULT_CONFIG = {
      *   - if the error is not due to the xhr, no retry will be peformed
      *   - if the error is an HTTP error code, but not a 500-smthg or a 404, no
      *     retry will be performed.
-     *   - if it has a high chance of being due to the user being offline, a
-     *     separate counter is used (see DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE).
      * @type Number
      */
   DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR: 4,
-
-    /**
-     * Under some circonstances, we're able to tell that the user is offline (see
-     * the compat files).
-     * When this happens, and xhr requests fails due to an error event (you might
-     * still be able to perform xhr offline, e.g. on localhost), you might want to
-     * retry indefinitely or with a higher number of retry than if the error is
-     * due to a CDN problem.
-     *
-     * A capped exponential backoff will still be used (like for an error code).
-     * @type {Number}
-     */
-  DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE: Infinity,
 
     /**
      * Initial backoff delay when a segment / manifest download fails, in
@@ -487,6 +374,33 @@ const DEFAULT_CONFIG = {
      */
   SAMPLING_INTERVAL_NO_MEDIASOURCE: 500,
 
+  /**
+   * Amount of buffer to have ahead of the current position before we may
+   * consider buffer-based adaptive estimates, in seconds.
+   *
+   * For example setting it to `10` means that we need to have ten seconds of
+   * buffer ahead of the current position before relying on buffer-based
+   * adaptive estimates.
+   *
+   * To avoid getting in-and-out of the buffer-based logic all the time, it
+   * should be set higher than `ABR_EXIT_BUFFER_BASED_ALGO`.
+   */
+  ABR_ENTER_BUFFER_BASED_ALGO: 10,
+
+  /**
+   * Below this amount of buffer ahead of the current position, in seconds, we
+   * will stop using buffer-based estimate in our adaptive logic to select a
+   * quality.
+   *
+   * For example setting it to `5` means that if we have less than 5 seconds of
+   * buffer ahead of the current position, we should stop relying on
+   * buffer-based estimates to choose a quality.
+   *
+   * To avoid getting in-and-out of the buffer-based logic all the time, it
+   * should be set lower than `ABR_ENTER_BUFFER_BASED_ALGO`.
+   */
+  ABR_EXIT_BUFFER_BASED_ALGO: 5,
+
     /**
      * Minimum number of bytes sampled before we trust the estimate.
      * If we have not sampled much data, our estimate may not be accurate
@@ -525,8 +439,8 @@ const DEFAULT_CONFIG = {
      * @type {Object}
      */
   ABR_REGULAR_FACTOR: {
-    DEFAULT: 0.8,
-    LOW_LATENCY: 0.8,
+    DEFAULT: 0.72,
+    LOW_LATENCY: 0.72,
   },
 
     /**
@@ -822,7 +736,7 @@ const DEFAULT_CONFIG = {
   BUFFER_PADDING: {
     audio: 1, // only "audio" segments
     video: 3, // only "video" segments
-    other: 1, // tracks which are not audio/video (text images).
+    other: 1, // tracks which are not audio/video (like text).
   },
 
     /**
@@ -959,16 +873,17 @@ const DEFAULT_CONFIG = {
                                        "SW_SECURE_DECODE",
                                        "SW_SECURE_CRYPTO" ],
 
-  /**
-   * Robustnesses used in the {audio,video}Capabilities of the
-   * MediaKeySystemConfiguration (DRM).
-   *
-   * Only used for "com.microsoft.playready.recommendation" key system.
-   *
-   * Defined in order of importance (first will be tested first etc.)
-   * @type {Array.<string>}
-   */
-  EME_DEFAULT_PLAYREADY_ROBUSTNESSES: [ "3000", "2000" ],
+    /**
+     * Robustnesses used in the {audio,video}Capabilities of the
+     * MediaKeySystemConfiguration (DRM).
+     *
+     * Only used for "com.microsoft.playready.recommendation" keysystems.
+     *
+     * Defined in order of importance (first will be tested first etc.)
+     * @type {Array.<string>}
+     */
+  EME_DEFAULT_PLAYREADY_RECOMMENDATION_ROBUSTNESSES: [ "3000",
+                                                       "2000" ],
 
     /**
      * Link canonical key systems names to their respective reverse domain name,
@@ -1138,7 +1053,7 @@ const DEFAULT_CONFIG = {
 
     /**
      * Maximum duration from the current position we will let in the buffer when
-     * switching an Adaptation of a given type.
+     * switching an Adaptation/Representations of a given type.
      *
      * For example, if we have ``text: { before: 1, after: 4 }``, it means that
      * when switching subtitles, we will let 1 second before and 4 second after
@@ -1148,11 +1063,10 @@ const DEFAULT_CONFIG = {
      * can happen when removing the content being decoded.
      * @type {Object}
      */
-  ADAPTATION_SWITCH_BUFFER_PADDINGS: {
+  ADAP_REP_SWITCH_BUFFER_PADDINGS: {
     video: { before: 5, after: 5 },
     audio: { before: 2, after: 2.5 },
     text: { before: 0, after: 0 }, // not managed natively, so no problem here
-    image: { before: 0, after: 0 }, // not managed natively, so no problem here
   },
 
     /**
@@ -1243,6 +1157,38 @@ const DEFAULT_CONFIG = {
    * It is set to avoid playback issues
    */
   UPTO_CURRENT_POSITION_CLEANUP : 5,
+
+  /**
+   * Default "switching mode" used when locking video Representations.
+   * That is, which behavior the RxPlayer should have by default when
+   * explicitely and manually switching from a previous set of video
+   * Representations to a new one.
+   */
+  DEFAULT_VIDEO_REPRESENTATIONS_SWITCHING_MODE: "seamless" as const,
+
+  /**
+   * Default "switching mode" used when locking audio Representations.
+   * That is, which behavior the RxPlayer should have by default when
+   * explicitely and manually switching from a previous set of audio
+   * Representations to a new one.
+   */
+  DEFAULT_AUDIO_REPRESENTATIONS_SWITCHING_MODE: "seamless" as const,
+
+  /**
+   * Default "switching mode" used when switching between video tracks.
+   * That is, which behavior the RxPlayer should have by default when
+   * explicitely and manually switching from a previous video track to a new
+   * one.
+   */
+  DEFAULT_VIDEO_TRACK_SWITCHING_MODE: "reload" as const,
+
+  /**
+   * Default "switching mode" used when switching between audio tracks.
+   * That is, which behavior the RxPlayer should have by default when
+   * explicitely and manually switching from a previous audio track to a new
+   * one.
+   */
+  DEFAULT_AUDIO_TRACK_SWITCHING_MODE: "seamless" as const,
 };
 
 export type IDefaultConfig = typeof DEFAULT_CONFIG;

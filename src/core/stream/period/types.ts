@@ -2,8 +2,9 @@ import Manifest, {
   Adaptation,
   Period,
 } from "../../../manifest";
-import { IAudioTrackSwitchingMode } from "../../../public_types";
-import { IReadOnlySharedReference, ISharedReference } from "../../../utils/reference";
+import SharedReference, {
+  IReadOnlySharedReference,
+} from "../../../utils/reference";
 import { CancellationSignal } from "../../../utils/task_canceller";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import { IRepresentationEstimator } from "../../adaptive";
@@ -15,6 +16,7 @@ import SegmentBuffersStore, {
   SegmentBuffer,
 } from "../../segment_buffers";
 import {
+  IAdaptationChoice,
   IAdaptationStreamCallbacks,
   IAdaptationStreamOptions,
   IPausedPlaybackObservation,
@@ -23,7 +25,7 @@ import { IPositionPlaybackObservation } from "../representation";
 
 /** Callbacks called by the `AdaptationStream` on various events. */
 export interface IPeriodStreamCallbacks extends
-  IAdaptationStreamCallbacks<unknown>
+  IAdaptationStreamCallbacks
 {
   /**
    * Called when a new `PeriodStream` is ready to start but needs an Adaptation
@@ -35,14 +37,6 @@ export interface IPeriodStreamCallbacks extends
    * `Adaptation`.
    */
   adaptationChange(payload : IAdaptationChangePayload) : void;
-  /**
-   * Some situations might require the browser's buffers to be refreshed.
-   * This callback is called when such situation arised.
-   *
-   * Generally flushing/refreshing low-level buffers can be performed simply by
-   * performing a very small seek.
-   */
-  needsBufferFlush() : void;
 }
 
 /** Payload for the `adaptationChange` callback. */
@@ -63,6 +57,8 @@ export interface IAdaptationChangePayload {
 export interface IPeriodStreamReadyPayload {
   /** The type of buffer linked to the `PeriodStream` we want to create. */
   type : IBufferType;
+  /** The `Manifest` linked to the `PeriodStream` we have created. */
+  manifest : Manifest;
   /** The `Period` linked to the `PeriodStream` we have created. */
   period : Period;
   /**
@@ -72,11 +68,11 @@ export interface IPeriodStreamReadyPayload {
    * The `PeriodStream` will not do anything until this Reference has emitted
    * at least one to give its initial choice.
    * You can send `null` through it to tell this `PeriodStream` that you don't
-   * want any `Adaptation`.
+   * want any `Adaptation` for now.
    * It is set to `undefined` by default, you SHOULD NOT set it to `undefined`
    * yourself.
    */
-  adaptationRef : ISharedReference<Adaptation|null|undefined>;
+  adaptationRef : SharedReference<IAdaptationChoice|null|undefined>;
 }
 
 /** Playback observation required by the `PeriodStream`. */
@@ -121,8 +117,6 @@ export interface IPeriodStreamArguments {
 export type IPeriodStreamOptions =
   IAdaptationStreamOptions &
   {
-    /** RxPlayer's behavior when switching the audio track. */
-    audioTrackSwitchingMode : IAudioTrackSwitchingMode;
     /** Behavior when a new video and/or audio codec is encountered. */
     onCodecSwitch : "continue" | "reload";
     /** Options specific to the text SegmentBuffer. */
