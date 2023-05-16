@@ -296,6 +296,10 @@ function parseAdaptationSetAttributes(
         parsedAdaptation.codecs = attribute.value;
         break;
 
+      case "scte214:supplementalCodecs":
+        parsedAdaptation.supplementalCodecs = attribute.value;
+        break;
+
       case "codingDependency":
         parseValue(attribute.value, { asKey: "codingDependency",
                                       parser: parseBoolean,

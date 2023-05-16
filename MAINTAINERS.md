@@ -16,6 +16,7 @@ RxPlayer-related question or to propose new features.
 Here is the list of current maintainers:
 
 - Paul Berberian <paul.berberian@canal-plus.com>
+- Florent Bouisset <florent.bouisset@canal-plus.com>
 
 
 ## Previous maintainers ########################################################

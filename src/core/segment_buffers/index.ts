@@ -30,6 +30,7 @@ import {
 import {
   IBufferedChunk,
   IChunkContext,
+  IInsertedChunkInfos,
 } from "./inventory";
 import SegmentBuffersStore, {
   ISegmentBufferOptions,
@@ -49,6 +50,7 @@ export {
 
   IBufferedChunk,
   IChunkContext,
+  IInsertedChunkInfos,
 
   IPushChunkInfos,
   IPushedChunkData,

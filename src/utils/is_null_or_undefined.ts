@@ -20,7 +20,7 @@
  * not always understood by newcomers to the code, and which can be overused when
  * only one of the possibility can arise.
  * @param {*} x
- * @returns {*}
+ * @returns {boolean}
  */
 export default function isNullOrUndefined(x : unknown) : x is null | undefined | void {
   return x === null || x === undefined;
