@@ -664,7 +664,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       this.trigger("activePeriodChanged", { period });
     });
     contentTimeBoundariesObserver.addEventListener("durationUpdate", (newDuration) => {
-      mediaSourceDurationUpdater.updateDuration(newDuration.duration, !newDuration.isEnd);
+      mediaSourceDurationUpdater.updateDuration(newDuration.duration, newDuration.isEnd);
     });
     contentTimeBoundariesObserver.addEventListener("endOfStream", () => {
       if (endOfStreamCanceller === null) {
@@ -683,7 +683,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     });
     const currentDuration = contentTimeBoundariesObserver.getCurrentDuration();
     mediaSourceDurationUpdater.updateDuration(currentDuration.duration,
-                                              !currentDuration.isEnd);
+                                              currentDuration.isEnd);
     return contentTimeBoundariesObserver;
   }
 
