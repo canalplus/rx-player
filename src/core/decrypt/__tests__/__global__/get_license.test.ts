@@ -38,7 +38,7 @@ const videoElt = document.createElement("video");
 /* eslint-disable max-len */
 describe("core - decrypt - global tests - getLicense", () => {
 
-  beforeEach(() => {
+  afterEach(() => {
     jest.resetModules();
     jest.restoreAllMocks();
   });
@@ -133,7 +133,7 @@ describe("core - decrypt - global tests - getLicense", () => {
                             ignoreLicenseRequests: true });
   });
 
-  it("should be able to retry one time and succeed after a time with a resolved license", async () => {
+  it("should be able to retry two times and succeed after a time with a resolved license", async () => {
     await checkGetLicense({ isGetLicensePromiseBased: true,
                             configuredRetries: undefined,
                             configuredTimeout: undefined,
@@ -142,7 +142,7 @@ describe("core - decrypt - global tests - getLicense", () => {
                             ignoreLicenseRequests: false });
   });
 
-  it("should be able to retry one time and succeed after a time with a returned license", async () => {
+  it("should be able to retry two times and succeed after a time with a returned license", async () => {
     await checkGetLicense({ isGetLicensePromiseBased: false,
                             configuredRetries: undefined,
                             configuredTimeout: undefined,
@@ -212,7 +212,7 @@ describe("core - decrypt - global tests - getLicense", () => {
                             getTimeout: () => undefined,
                             nbRetries: 6,
                             ignoreLicenseRequests: false });
-  }, 15000);
+  }, 25000);
 
   it("should fail after 7 failures when getLicenseConfig.retry is set to `6`", async () => {
     await checkGetLicense({ isGetLicensePromiseBased: true,
@@ -344,7 +344,7 @@ function checkGetLicense(
     }
 
     // == test ==
-    const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+    const { ContentDecryptorState } = jest.requireActual("../../types");
     const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
 

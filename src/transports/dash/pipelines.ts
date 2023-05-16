@@ -20,10 +20,6 @@ import {
   ITransportPipelines,
 } from "../types";
 import generateManifestLoader from "../utils/generate_manifest_loader";
-import {
-  imageLoader,
-  imageParser,
-} from "./image_pipelines";
 import generateManifestParser from "./manifest_parser";
 import generateSegmentLoader from "./segment_loader";
 import generateAudioVideoSegmentParser from "./segment_parser";
@@ -55,9 +51,7 @@ export default function(options : ITransportOptions) : ITransportPipelines {
            video: { loadSegment: segmentLoader,
                     parseSegment: audioVideoSegmentParser },
            text: { loadSegment: textTrackLoader,
-                   parseSegment: textTrackParser },
-           image: { loadSegment: imageLoader,
-                    parseSegment: imageParser } };
+                   parseSegment: textTrackParser } };
 }
 
 /**

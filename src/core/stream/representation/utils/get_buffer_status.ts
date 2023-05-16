@@ -22,7 +22,8 @@ import Manifest, {
 } from "../../../../manifest";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import { IReadOnlyPlaybackObserver } from "../../../api";
-import {
+import SegmentBuffersStore, {
+  ChunkStatus,
   IBufferedChunk,
   IEndOfSegmentOperation,
   SegmentBuffer,
@@ -153,7 +154,7 @@ export default function getBufferStatus(
    * needed segments for this Representation until the end of the Period.
    */
   const hasFinishedLoading = representation.index.isInitialized() &&
-                             representation.index.isFinished() &&
+                             !representation.index.isStillAwaitingFutureSegments() &&
                              neededRange.hasReachedPeriodEnd &&
                              prioritizedNeededSegments.length === 0 &&
                              segmentsOnHold.length === 0;
@@ -218,9 +219,10 @@ function getRangeOfNeededSegments(
   // avoid ending the last Period - and by extension the content - with a
   // segment which isn't the last one.
   if (!isNullOrUndefined(lastIndexPosition) &&
+      SegmentBuffersStore.isNative(content.adaptation.type) &&
       initialWantedTime >= lastIndexPosition &&
       representationIndex.isInitialized() &&
-      representationIndex.isFinished() &&
+      !representationIndex.isStillAwaitingFutureSegments() &&
       isPeriodTheCurrentAndLastOne(manifest, period, initialWantedTime))
   {
     wantedStartPosition = lastIndexPosition - 1;
@@ -232,7 +234,7 @@ function getRangeOfNeededSegments(
 
   let hasReachedPeriodEnd;
   if (!representation.index.isInitialized() ||
-      !representation.index.isFinished() ||
+      representation.index.isStillAwaitingFutureSegments() ||
       period.end === undefined)
   {
     hasReachedPeriodEnd = false;
@@ -271,7 +273,8 @@ function isPeriodTheCurrentAndLastOne(
   period : Period,
   time : number
 ) : boolean {
-  return period.containsTime(time) &&
+  const nextPeriod = manifest.getPeriodAfter(period);
+  return period.containsTime(time, nextPeriod) &&
          manifest.isLastPeriodKnown &&
          period.id === manifest.periods[manifest.periods.length - 1]?.id;
 }
@@ -298,7 +301,7 @@ function getPlayableBufferedSegments(
     const eltInventory = segmentInventory[i];
 
     const { representation } = eltInventory.infos;
-    if (!eltInventory.partiallyPushed &&
+    if (eltInventory.status === ChunkStatus.Complete &&
         representation.decipherable !== false &&
         representation.isSupported)
     {

@@ -43,7 +43,7 @@ describe("errors - formatError", () => {
     const formattedError = formatError(error1, { defaultCode: "toto",
                                                  defaultReason: "a" });
     expect(formattedError).toBeInstanceOf(OtherError);
-    expect(formattedError.message).toBe("OtherError (toto) Error: Abcdef");
+    expect(formattedError.message).toBe("toto: Error: Abcdef");
     expect(formattedError.code).toBe("toto");
   });
 
@@ -56,7 +56,7 @@ describe("errors - formatError", () => {
     const formattedError = formatError(error1, { defaultCode: "toto",
                                                  defaultReason: "a" });
     expect(formattedError).toBeInstanceOf(OtherError);
-    expect(formattedError.message).toBe("OtherError (toto) a");
+    expect(formattedError.message).toBe("toto: a");
     expect(formattedError.code).toBe("toto");
   });
 });

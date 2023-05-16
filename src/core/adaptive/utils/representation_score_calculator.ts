@@ -19,6 +19,26 @@ import { Representation } from "../../../manifest";
 import EWMA from "./ewma";
 
 /**
+ * Object representing a maintainability score as calculated by the
+ * `RepresentationScoreCalculator`.
+ */
+export interface IRepresentationMaintainabilityScore {
+  /**
+   * Weighted mean of dividing the loaded segment's duration by the time to make
+   * their request.
+   */
+  score : number;
+
+  /**
+   * The confidence we have on the calculated `score` in reflecting a useful
+   * maintainability hint for the concerned Representation.
+   *
+   * Basically, the more segments have been loaded, the higher the confidence.
+   */
+  confidenceLevel: ScoreConfidenceLevel;
+}
+
+/**
  * Calculate the "maintainability score" of a given Representation:
  *   - A score higher than 1 means that the Representation can theorically
  *     be downloaded faster than the duration of the media it represents.
@@ -107,7 +127,7 @@ export default class RepresentationScoreCalculator {
    */
   public getEstimate(
     representation : Representation
-  ) : [number, ScoreConfidenceLevel] | undefined {
+  ) : IRepresentationMaintainabilityScore | undefined {
     if (this._currentRepresentationData === null ||
         this._currentRepresentationData.representation.id !== representation.id)
     {
@@ -119,7 +139,7 @@ export default class RepresentationScoreCalculator {
                             loadedDuration >= 10 ? ScoreConfidenceLevel.HIGH :
                                                    ScoreConfidenceLevel.LOW;
 
-    return [estimate, confidenceLevel];
+    return { score: estimate, confidenceLevel };
   }
 
   /**

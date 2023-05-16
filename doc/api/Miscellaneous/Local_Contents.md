@@ -33,20 +33,18 @@ You will just need to:
    in `loadVideo` to `"local"`
 2. As the generated Manifest object most likely won't be available through an
    URL but directly as a JavaScript object, you will need to communicate it
-   through the `manifestLoader` property in the `transportOptions` `loadVideo`
-   option.
+   through the `manifestLoader` option of `loadVideo`.
 
 Here is an example:
 
 ```js
 rxPlayer.loadVideo({
   transport: "local",
-  transportOptions: {
-    // Note: `_url` here will be `undefined`
-    manifestLoader(_url, callbacks) {
-      // where `localManifest` is the local Manifest in object form
-      callbacks.resolve({ data: localManifest });
-    },
+
+  // Note: `_url` here will be `undefined`
+  manifestLoader(_url, callbacks) {
+    // where `localManifest` is the local Manifest in object form
+    callbacks.resolve({ data: localManifest });
   },
   // ...
 });
@@ -59,37 +57,20 @@ More infos on the `manifestLoader` can be found
 
 The `"LOCAL_MANIFEST"` feature is not included in the default RxPlayer build.
 
-There's two way you can import it, depending on if you're relying on the minimal
-version or if you prefer to make use of environment variables and build the
-player manually.
-
-#### Through the minimal version of the RxPlayer
-
-If you're using the "minimal" version of the RxPlayer (through the
-`"rx-player/minimal"` import), you will need to import the `LOCAL_MANIFEST`
-experimental feature:
-
+You will need to import the `LOCAL_MANIFEST` experimental feature:
 ```js
+// Import the RxPlayer
+// (here through the "minimal" build, though it doesn't change for other builds)
 import RxPlayer from "rx-player/minimal";
+
+// Import the `LOCAL_MANIFEST` feature
 import { LOCAL_MANIFEST } from "rx-player/experimental/features";
 
 RxPlayer.addFeatures([LOCAL_MANIFEST]);
 ```
 
-#### Through environment variables
-
-If you don't want to go the minimal version's route and you have no problem with
-building yourself a new version of the RxPlayer, you can make use of environment
-variables to activate it.
-
-This can be done through the `RXP_LOCAL_MANIFEST` environment variable, which
-you have to set to `true`:
-
-```sh
-RXP_LOCAL_MANIFEST=true npm run build:min
-```
-
-More information about any of that can be found in the [minimal player documentation](../../Getting_Started/Minimal_Player.md).
+More information on features [in the corresponding documentation
+page](../RxPlayer_Features.md).
 
 ## The Manifest format
 
@@ -419,6 +400,7 @@ For audio tracks, it can looks like:
   bitrate: 200000,
   mimeType: "audio/mp4",
   codecs: "mp4a.40.5",
+  isSpatialAudio: false,
   index: {
     loadInitSegment(callbacks) { /* ... */  },
     loadSegment(segment, callbacks) { /* ... */,
@@ -469,6 +451,16 @@ We'll now explain what each property is for, before going deeper into the
 
 - height (`number|undefined`): When relevant (mostly video contents), the
   height of the media, in pixels
+
+- isSpatialAudio (`boolean|undefined`): When relevant (mostly audio contents),
+  it can be set to `true` if the corresponding media is linked to a spatial
+  audio technology, for example a content relying on Dolby Atmos technology.
+
+  If set to `false`, it means that it is known that this media does not contain
+  any spatial audio.
+
+  For cases where you don't know and for cases where no audio is contained, this
+  can just be left undefined.
 
 - index (`object`): Object allowing the RxPlayer to know the list of segments
   as well as to fetch them. Described in the next chapter.

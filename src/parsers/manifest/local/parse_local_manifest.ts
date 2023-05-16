@@ -15,6 +15,7 @@
  */
 
 import idGenerator from "../../../utils/id_generator";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import {
   IContentProtections,
   IContentProtectionInitData,
@@ -65,7 +66,7 @@ export default function parseLocalManifest(
                          maximumTimeData: { isLinear: false,
                                             maximumSafePosition: maximumPosition,
                                             livePosition: undefined,
-                                            time: performance.now() } },
+                                            time: getMonotonicTimeStamp() } },
            periods: parsedPeriods };
 }
 
@@ -138,6 +139,7 @@ function parseRepresentation(
            height: representation.height,
            width: representation.width,
            codecs: representation.codecs,
+           isSpatialAudio: representation.isSpatialAudio,
            mimeType: representation.mimeType,
            index: new LocalRepresentationIndex(representation.index, id),
            contentProtections };

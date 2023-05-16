@@ -34,7 +34,6 @@ export default class NetworkError extends Error {
   public readonly type : "NETWORK_ERROR";
   public readonly message : string;
   public readonly code : INetworkErrorCode;
-  public readonly xhr : XMLHttpRequest | null;
   public readonly url : string;
   public readonly status : number;
   public readonly errorType : INetworkErrorType;
@@ -52,13 +51,12 @@ export default class NetworkError extends Error {
     this.name = "NetworkError";
     this.type = ErrorTypes.NETWORK_ERROR;
 
-    this.xhr = baseError.xhr === undefined ? null : baseError.xhr;
     this.url = baseError.url;
     this.status = baseError.status;
     this.errorType = baseError.type;
 
     this.code = code;
-    this.message = errorMessage(this.name, this.code, baseError.message);
+    this.message = errorMessage(this.code, baseError.message);
     this.fatal = false;
   }
 
