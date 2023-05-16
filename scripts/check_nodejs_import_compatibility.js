@@ -12,7 +12,7 @@
  *
  * To be able to run this script:
  *
- *   1. You need first to produce the modular "minimal" build of the RxPlayer
+ *   1. You need first to produce build the RxPlayer through the usual scripts
  *
  *   2. You need to make sure that `import` statements can be used in the
  *      node.js runtime you've ran. This possibility might depends on the

@@ -44,7 +44,7 @@ export default class OtherError extends Error {
     this.type = ErrorTypes.OTHER_ERROR;
 
     this.code = code;
-    this.message = errorMessage(this.name, this.code, reason);
+    this.message = errorMessage(this.code, reason);
     this.fatal = false;
   }
 }

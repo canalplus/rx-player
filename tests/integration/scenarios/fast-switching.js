@@ -1,36 +1,38 @@
 import { expect } from "chai";
 import { manifestInfos } from "../../contents/DASH_static_SegmentTimeline";
-import RxPlayer from "../../../src";
-import XHRMock from "../../utils/request_mock";
+import RxPlayer from "../../../dist/es2017";
 import sleep from "../../utils/sleep.js";
 import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
+import {
+  lockHighestBitrates,
+  lockLowestBitrates,
+} from "../../utils/bitrates";
 
 let player;
-let xhrMock;
 
 describe("Fast-switching", function () {
   beforeEach(() => {
     player = new RxPlayer();
-    xhrMock = new XHRMock();
   });
 
   afterEach(() => {
     player.dispose();
-    xhrMock.restore();
   });
 
   const { url, transport } = manifestInfos;
 
   it("should enable fast-switching by default", async function () {
     this.timeout(3000);
-    player.setVideoBitrate(0);
-    player.setWantedBufferAhead(15);
+    lockLowestBitrates(player);
+    player.setWantedBufferAhead(10);
     player.loadVideo({ url,
                        transport,
                        autoPlay: false });
     await waitForLoadedStateAfterLoadVideo(player);
     await sleep(1000);
-    player.setVideoBitrate(Infinity);
+
+    player.setWantedBufferAhead(30);
+    lockHighestBitrates(player, "lazy");
     await sleep(1000);
     const videoSegmentBuffered = player.__priv_getSegmentBufferContent("video")
       .map(({ infos }) => {
@@ -45,15 +47,16 @@ describe("Fast-switching", function () {
 
   it("should enable fast-switching if explicitely enabled", async function () {
     this.timeout(3000);
-    player.setVideoBitrate(0);
-    player.setWantedBufferAhead(15);
+    lockLowestBitrates(player);
+    player.setWantedBufferAhead(10);
     player.loadVideo({ url,
                        transport,
                        autoPlay: false,
                        enableFastSwitching: true });
     await waitForLoadedStateAfterLoadVideo(player);
     await sleep(1000);
-    player.setVideoBitrate(Infinity);
+    player.setWantedBufferAhead(30);
+    lockHighestBitrates(player, "lazy");
     await sleep(1000);
     const videoSegmentBuffered = player.__priv_getSegmentBufferContent("video")
       .map(({ infos }) => {
@@ -68,15 +71,16 @@ describe("Fast-switching", function () {
 
   it("should disable fast-switching if explicitely disabled", async function () {
     this.timeout(3000);
-    player.setVideoBitrate(0);
-    player.setWantedBufferAhead(15);
+    lockLowestBitrates(player);
+    player.setWantedBufferAhead(10);
     player.loadVideo({ url,
                        transport,
                        autoPlay: false,
                        enableFastSwitching: false });
     await waitForLoadedStateAfterLoadVideo(player);
     await sleep(1000);
-    player.setVideoBitrate(Infinity);
+    player.setWantedBufferAhead(30);
+    lockHighestBitrates(player, "lazy");
     await sleep(1000);
     const videoSegmentBuffered = player.__priv_getSegmentBufferContent("video")
       .map(({ infos }) => {

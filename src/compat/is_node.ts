@@ -14,5 +14,8 @@
  * limitations under the License.
  */
 
-const isNode = typeof window === "undefined";
+import isWorker from "./is_worker";
+
+/** `true` if we're currently in a Node.JS environment. */
+const isNode = typeof window === "undefined" && !isWorker;
 export default isNode;

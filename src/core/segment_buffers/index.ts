@@ -28,8 +28,12 @@ import {
   SegmentBufferOperation,
 } from "./implementations";
 import {
+  ChunkStatus,
   IBufferedChunk,
   IChunkContext,
+  IInsertedChunkInfos,
+  getFirstSegmentAfterPeriod,
+  getLastSegmentBeforePeriod,
 } from "./inventory";
 import SegmentBuffersStore, {
   ISegmentBufferOptions,
@@ -39,6 +43,7 @@ import SegmentBuffersStore, {
 export default SegmentBuffersStore;
 export {
   BufferGarbageCollector,
+  ChunkStatus,
 
   ISegmentBufferOptions,
   ITextTrackSegmentBufferOptions,
@@ -49,6 +54,7 @@ export {
 
   IBufferedChunk,
   IChunkContext,
+  IInsertedChunkInfos,
 
   IPushChunkInfos,
   IPushedChunkData,
@@ -60,4 +66,7 @@ export {
   IEndOfSegmentOperation,
   IPushOperation,
   IRemoveOperation,
+
+  getFirstSegmentAfterPeriod,
+  getLastSegmentBeforePeriod,
 };

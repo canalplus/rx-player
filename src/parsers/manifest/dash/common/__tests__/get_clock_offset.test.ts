@@ -26,7 +26,8 @@ describe("DASH Parser - getClockOffset", () => {
     jest.resetModules();
   });
 
-  it("should calculate a millisecond offset relatively to performance.now", () => {
+  /* eslint-disable-next-line max-len */
+  it("should calculate a millisecond offset relatively to the monotonically-raising timestamp", () => {
     const mockWarn = jest.fn();
     jest.mock("../../../../../log", () => ({
       __esModule: true,

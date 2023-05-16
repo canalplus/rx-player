@@ -54,7 +54,7 @@ export default class PendingRequestsStore {
   public addProgress(progress : IPendingRequestStoreProgress) : void {
     const request = this._currentRequests[progress.id];
     if (request == null) {
-      if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
+      if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
         throw new Error("ABR: progress for a request not added");
       }
       log.warn("ABR: progress for a request not added");
@@ -69,7 +69,7 @@ export default class PendingRequestsStore {
    */
   public remove(id : string) : void {
     if (this._currentRequests[id] == null) {
-      if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
+      if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
         throw new Error("ABR: can't remove unknown request");
       }
       log.warn("ABR: can't remove unknown request");
@@ -103,7 +103,11 @@ export interface IPendingRequestStoreProgress {
   id: string;
   /** Current downloaded size, in bytes. */
   size : number;
-  /** Value of `performance.now` at the time this progression report was available. */
+  /**
+  /**
+   * Monotonically-raising timestamp (common to the RxPlayer) corresponding to
+   * the time at which this progress report was processed.
+   */
   timestamp : number;
   /**
    * Total size of the segment to download (including already-loaded data),
@@ -121,7 +125,10 @@ export interface IPendingRequestStoreBegin {
    * should have this `id` at the same time.
    */
   id: string;
-  /** Value of `performance.now` at the time the request began.  */
+  /**
+   * Value of the monotonically-raising timestamp used by the RxPlayer at the
+   * time the request began.
+   */
   requestTimestamp: number;
   /** Context associated to the segment. */
   content: IRequestInfoContent;
@@ -131,7 +138,10 @@ export interface IPendingRequestStoreBegin {
 export interface IRequestInfo {
   /** Information on the current progress made by this request. */
   progress: IPendingRequestStoreProgress[];
-  /** `Performance.now()` corresponding to the time at which the request began. */
+  /**
+   * Value of the monotonically-raising timestamp used by the RxPlayer at the
+   * time the request began.
+   */
   requestTimestamp: number;
   /** Context associated to the segment. */
   content: IRequestInfoContent;

@@ -16,14 +16,15 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
+import globalScope from "../../compat/global_scope";
 import idGenerator from "../id_generator";
 
-const oldNumberDef = window.Number;
+const oldNumberDef = globalScope.Number;
 
 describe("utils - idGenerator", () => {
   afterEach(() => {
     // There's an ugly test in here that changes the Number object
-    window.Number = oldNumberDef;
+    globalScope.Number = oldNumberDef;
   });
 
   it("should increment an ID", () => {
@@ -54,8 +55,10 @@ describe("utils - idGenerator", () => {
   });
   it ("should preprend a 0 after A LOT of ID generation", () => {
     // Ugly but I don't care
-    window.Number = { MAX_SAFE_INTEGER: 3,
-                      isSafeInteger: (x : number) => x <= 3 } as typeof window.Number;
+    globalScope.Number = {
+      MAX_SAFE_INTEGER: 3,
+      isSafeInteger: (x : number) => x <= 3,
+    } as typeof globalScope.Number;
     const generateNewID1 = idGenerator();
     const generateNewID2 = idGenerator();
     const generateNewID3 = idGenerator();
