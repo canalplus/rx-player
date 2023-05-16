@@ -14,29 +14,22 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable-next-line max-len */
+import MediaSourceContentInitializer from "../../../core/init/media_source_content_initializer";
+import { IFeaturesObject } from "../../../features/types";
+import metaplaylist from "../../../transports/metaplaylist";
+import addLocalManifestFeature from "../metaplaylist";
 
 describe("Features list - METAPLAYLIST", () => {
-  beforeEach(() => {
-    jest.resetModules();
-  });
-
   it("should add METAPLAYLIST in the current features", () => {
-    const feat = {};
-    jest.mock("../../../transports/metaplaylist", () => ({ __esModule: true as const,
-                                                           default: feat }));
-    const addDASHFeature = jest.requireActual("../metaplaylist").default;
-
-    const featureObject : {
-      transports : { [featureName : string] : unknown };
-    } = { transports: {} };
-    addDASHFeature(featureObject);
-    expect(featureObject).toEqual({ transports: { metaplaylist: {} } });
-    expect(featureObject.transports.metaplaylist).toBe(feat);
+    const featureObject = { transports: {} } as unknown as IFeaturesObject;
+    addLocalManifestFeature(featureObject);
+    expect(featureObject).toEqual({
+      transports: { metaplaylist },
+      mediaSourceInit: MediaSourceContentInitializer,
+    });
+    expect(featureObject.transports.metaplaylist).toBe(metaplaylist);
+    expect(featureObject.mediaSourceInit)
+      .toBe(MediaSourceContentInitializer);
   });
 });

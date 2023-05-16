@@ -149,25 +149,30 @@ describe("Manifest - Period", () => {
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "56",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const videoAda3 = { type: "video",
                         id: "57",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda3; } };
     const video = [videoAda1, videoAda2, videoAda3];
 
     const audioAda1 = { type: "audio",
                         id: "58",
                         isSupported: true,
-                        representations: [] };
+                        representations: [],
+                        toAudioTrack() { return audioAda1; } };
     const audioAda2 = { type: "audio",
                         id: "59",
                         isSupported: true,
-                        representations: [] };
+                        representations: [],
+                        toAudioTrack() { return audioAda2; } };
     const audio = [audioAda1, audioAda2];
     const args = { id: "12", adaptations: { video, audio }, start: 0 };
     let period = null;
@@ -204,25 +209,30 @@ describe("Manifest - Period", () => {
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const videoAda3 = { type: "video",
                         id: "56",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda3; } };
     const video = [videoAda1, videoAda2, videoAda3];
 
     const audioAda1 = { type: "audio",
                         id: "57",
                         isSupported: false,
-                        representations: [{}] };
+                        representations: [{}],
+                        toAudioTrack() { return audioAda1; } };
     const audioAda2 = { type: "audio",
                         id: "58",
                         isSupported: false,
-                        representations: [{}] };
+                        representations: [{}],
+                        toAudioTrack() { return audioAda1; } };
     const audio = [audioAda1, audioAda2];
     const args = { id: "12", adaptations: { video, audio }, start: 0 };
     let period = null;
@@ -259,25 +269,30 @@ describe("Manifest - Period", () => {
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [] };
+                        representations: [],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [] };
+                        representations: [],
+                        toVideoTrack() { return videoAda2; } };
     const videoAda3 = { type: "video",
                         id: "56",
                         isSupported: true,
-                        representations: [] };
+                        representations: [],
+                        toVideoTrack() { return videoAda3; } };
     const video = [videoAda1, videoAda2, videoAda3];
 
     const audioAda1 = { type: "audio",
                         id: "58",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toAudioTrack() { return audioAda1; } };
     const audioAda2 = { type: "audio",
                         id: "59",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toAudioTrack() { return audioAda2; } };
     const audio = [audioAda1, audioAda2];
     const args = { id: "12", adaptations: { video, audio }, start: 0 };
     let period = null;
@@ -314,25 +329,30 @@ describe("Manifest - Period", () => {
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: false,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: false,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const videoAda3 = { type: "video",
                         id: "56",
                         isSupported: false,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda3; } };
     const video = [videoAda1, videoAda2, videoAda3];
 
     const audioAda1 = { type: "audio",
                         id: "58",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toAudioTrack() { return audioAda1; } };
     const audioAda2 = { type: "audio",
                         id: "59",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toAudioTrack() { return audioAda2; } };
     const audio = [audioAda1, audioAda2];
     const args = { id: "12", adaptations: { video, audio }, start: 0 };
     let period = null;
@@ -372,12 +392,14 @@ describe("Manifest - Period", () => {
     const videoAda1 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const video = [videoAda1];
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: false,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const video2 = [videoAda2];
     const args = { id: "12", adaptations: { video, video2 }, start: 0 };
     const period = new Period(args);
@@ -408,7 +430,8 @@ describe("Manifest - Period", () => {
     const videoAda1 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const video = [videoAda1];
     const bar = undefined;
     const args = { id: "12", adaptations: { bar, video }, start: 0 };
@@ -435,11 +458,13 @@ describe("Manifest - Period", () => {
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 0 };
     const period = new Period(args, representationFilter);
@@ -467,11 +492,13 @@ describe("Manifest - Period", () => {
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: false,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const fooAda1 = { type: "foo",
                       id: "12",
                       isSupported: false,
@@ -503,11 +530,13 @@ describe("Manifest - Period", () => {
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: false,
-                        representations: [] };
+                        representations: [],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const fooAda1 = { type: "foo",
                       id: "12",
                       isSupported: false,
@@ -532,11 +561,13 @@ describe("Manifest - Period", () => {
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 72 };
     const period = new Period(args);
@@ -557,11 +588,13 @@ describe("Manifest - Period", () => {
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 0, duration: 12 };
     const period = new Period(args);
@@ -582,11 +615,13 @@ describe("Manifest - Period", () => {
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 50, duration: 12 };
     const period = new Period(args);
@@ -607,17 +642,20 @@ describe("Manifest - Period", () => {
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const video = [videoAda1, videoAda2];
 
     const audioAda1 = { type: "audio",
                         id: "56",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toAudioTrack() { return audioAda1; } };
     const audio = [audioAda1];
 
     const args = { id: "12", adaptations: { video, audio }, start: 50, duration: 12 };
@@ -643,17 +681,20 @@ describe("Manifest - Period", () => {
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const video = [videoAda1, videoAda2];
 
     const audioAda1 = { type: "audio",
                         id: "56",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toAudioTrack() { return audioAda1; } };
     const audio = [audioAda1];
 
     const args = { id: "12", adaptations: { video, audio }, start: 50, duration: 12 };
@@ -686,21 +727,25 @@ describe("Manifest - Period", () => {
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const videoAda3 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda3; } };
     const video = [videoAda1, videoAda2, videoAda3];
 
     const audioAda1 = { type: "audio",
                         id: "56",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toAudioTrack() { return audioAda1; } };
     const audio = [audioAda1];
 
     const args = { id: "12", adaptations: { video, audio }, start: 50, duration: 12 };
