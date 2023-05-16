@@ -9,8 +9,8 @@ As [documented in the API](./Basic_Methods/addEventListener.md), you can call
 `addEventListener` to register a callback for a particular event, like:
 
 ```js
-player.addEventListener("videoBitrateChange", (newVideoBitrate) => {
-  console.log("the video bitrate changed to:", newVideoBitrate);
+player.addEventListener("playerStateChange", (newState) => {
+  console.log("the RxPlayer's state changed to:", newState);
 });
 ```
 
@@ -80,7 +80,7 @@ The object emitted as the following properties:
   the current position and the "live edge".
   Might not be set for `directfile` contents.
 
-- `maximumBufferTime` (`Number|undefined`): The maximum time until which
+- `maximumPosition` (`Number|undefined`): The maximum time until which
   the buffer can currently be filled. That is:
 
   - for static contents (like VoD), the duration.
@@ -93,6 +93,34 @@ The object emitted as the following properties:
   current time converted to wall-clock time in seconds.
   That is the real live position (and not the position as announced by the
   video element).
+
+### play
+
+Emitted when the `RxPlayer`'s `videoElement` is no longer considered paused.
+
+This event is generally triggered when and if the
+[`play`](./Basic_Methods/play.md) method has succeeded.
+
+Note that this event can be sent even if the [player's state](./Player_States.md)
+doesn't currently allow playback, for example when in the `"LOADING"` or
+`"BUFFERING"` states, among other.
+It shouldn't be sent however when the player's state is `"STOPPED"` which is
+when no content is loading nor loaded.
+
+### pause
+
+Emitted when the `RxPlayer`'s `videoElement` is now considered paused.
+
+This event is triggered when and if the [`pause`](./Basic_Methods/play.md) method
+has succeeded, when the content has ended or due to other rare occurences: for
+example if we could not automatically play after a `"LOADING"` or `"RELOADING"`
+state due to [the browser's autoplay policies](https://developer.mozilla.org/en-US/docs/Web/Media/Autoplay_guide).
+
+Note that this event can be sent even if the [player's state](./Player_States.md)
+doesn't currently allow playback, for example when in the `"LOADING"` or
+`"BUFFERING"` states, among other.
+It shouldn't be sent however when the player's state is `"STOPPED"` which is
+when no content is loading nor loaded.
 
 ### seeking
 
@@ -151,7 +179,24 @@ The array emitted contains object describing each available audio track:
 
   This information is usually set only if the current Manifest contains one.
 
-This event only concerns the currently-playing Period.
+- `representations` (`Array.<Object>`):
+  [Representations](../Getting_Started/Glossary.md#representation) of this video track, with
+  attributes:
+
+  - `id` (`string`): The id used to identify this Representation.
+    No other Representation from this track will have the same `id`.
+
+  - `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits
+    per seconds.
+
+  - `codec` (`string|undefined`): The audio codec the Representation is
+    in, as announced in the corresponding Manifest.
+
+  - `isSpatialAudio` (`Boolean|undefined`): If set to `true`, this Representation
+    has spatial audio.
+
+This event only concerns the currently-playing
+[Period](../Getting_Started/Glossary.md).
 
 ### availableVideoTracksChange
 
@@ -184,8 +229,10 @@ The array emitted contains object describing each available video track:
 
   - `id` (`string`): The id used to identify this Representation.
 
-  - `bitrate` (`Number`): The bitrate of this Representation, in bits per
-    seconds.
+  - `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits
+    per seconds.
+
+    `undefined` if unknown.
 
   - `width` (`Number|undefined`): The width of video, in pixels.
 
@@ -194,9 +241,12 @@ The array emitted contains object describing each available video track:
   - `codec` (`string|undefined`): The codec given in standard MIME type
     format.
 
-  - `frameRate` (`string|undefined`): The video framerate.
+  - `frameRate` (`number|undefined`): The video framerate.
 
-This event only concerns the currently-playing Period.
+- `signInterpreted` (`Boolean`): Whether the track contains sign interpretation.
+
+This event only concerns the currently-playing
+[Period](../Getting_Started/Glossary.md).
 
 ### availableTextTracksChange
 
@@ -241,20 +291,26 @@ The array emitted contains object describing each available text track:
 - `active` (`Boolean`): Whether the track is the one currently active or
   not.
 
-This event only concerns the currently-playing Period.
+This event only concerns the currently-playing
+[Period](../Getting_Started/Glossary.md).
 
 ### audioTrackChange
 
 _payload type_: `Object|null`
 
-Information about the current audio track, each time it changes (the last
-received segment got a new one).
+Information about the current audio track, each time it changes for the
+currently-playing [Period](../Getting_Started/Glossary.md).
 
 The payload is an object describing the new track, with the following
 properties:
 
-- `id` (`Number|string`): The id used to identify the track.
+- `id` (`string`): The id used to identify the track.
 - `language` (`string`): The language the audio track is in.
+- `normalized` (`string`): An attempt to translate the `language`
+  property into an ISO 639-3 language code (for now only support translations
+  from ISO 639-1 and ISO 639-2 language codes). If the translation attempt
+  fails (no corresponding ISO 639-3 language code is found), it will equal the
+  value of `language`
 - `audioDescription` (`Boolean`): Whether the track is an audio
   description of what is happening at the screen.
 - `dub` (`Boolean|undefined`): If set to `true`, this audio track is a
@@ -267,21 +323,41 @@ properties:
 
   This information is usually set only if the current Manifest contains one.
 
+- `representations` (`Array.<Object>`):
+  [Representations](../Getting_Started/Glossary.md#representation) of this video track, with
+  attributes:
+  - `id` (`string`): The id used to identify this Representation.
+    No other Representation from this track will have the same `id`.
+  - `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits
+    per seconds.
+  - `codec` (`string|undefined`): The audio codec the Representation is
+    in, as announced in the corresponding Manifest.
+  - `isSpatialAudio` (`Boolean|undefined`): If set to `true`, this Representation
+    has spatial audio.
+
 This event only concerns the currently-playing Period.
+This event only concerns the currently-playing
+[Period](../Getting_Started/Glossary.md).
 
 ### textTrackChange
 
 _payload type_: `Object|null`
 
-Information about the current text track, each time it changes (the last
-received segment got a new one).
+Information about the current audio track, each time it changes for the
+currently-playing [Period](../Getting_Started/Glossary.md).
 
 The payload is an object describing the new track, with the following
 properties:
 
-- `id` (`Number|string`): The id used to identify the track.
+- `id` (`string`): The id used to identify the track.
 
 - `language` (`string`): The language the text track is in.
+
+- `normalized` (`string`): An attempt to translate the `language`
+  property into an ISO 639-3 language code (for now only support translations
+  from ISO 639-1 and ISO 639-2 language codes). If the translation attempt
+  fails (no corresponding ISO 639-3 language code is found), it will equal the
+  value of `language`
 
 - `closedCaption` (`Boolean`): Whether the track is specially adapted for
   the hard of hearing or not.
@@ -297,11 +373,15 @@ properties:
 
   This information is usually set only if the current Manifest contains one.
 
-This event only concerns the currently-playing Period.
+This event only concerns the currently-playing
+[Period](../Getting_Started/Glossary.md).
 
 ### videoTrackChange
 
 _payload type_: `Object|null`
+
+Information about the current audio track, each time it changes for the
+currently-playing [Period](../Getting_Started/Glossary.md).
 
 Information about the current video track, each time it changes (the last
 received segment got a new one).
@@ -323,8 +403,10 @@ properties:
 
   - `id` (`string`): The id used to identify this Representation.
 
-  - `bitrate` (`Number`): The bitrate of this Representation, in bits per
-    seconds.
+  - `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits
+    per seconds.
+
+    `undefined` if unknown.
 
   - `width` (`Number|undefined`): The width of video, in pixels.
 
@@ -333,7 +415,7 @@ properties:
   - `codec` (`string|undefined`): The codec given in standard MIME type
     format.
 
-  - `frameRate` (`string|undefined`): The video framerate.
+  - `frameRate` (`number|undefined`): The video framerate.
 
 - `isTrickModeTrack` (`Boolean|undefined`): If set to `true`, this track
   is a trick mode track. This type of tracks proposes video content that is
@@ -352,9 +434,12 @@ properties:
   It this property is either `undefined` or not set, then this track has no
   linked trickmode video track.
 
+- `signInterpreted` (`Boolean`): Whether the track contains sign interpretation.
+
 A `null` payload means that video track has been disabled.
 
-This event only concerns the currently-playing Period.
+This event only concerns the currently-playing
+[Period](../Getting_Started/Glossary.md).
 
 <div class="warning">
 In <i>DirectFile</i> mode (see
@@ -366,97 +451,64 @@ video track when in directfile mode to avoid that case (this is documented
 in the corresponding APIs).
 </div>
 
-## Bitrate selection events
 
-This chapter describes events linked to audio and/or video bitrates and quality.
+## Representation selection events
 
-### availableAudioBitratesChange
+This chapter describes events linked to the current audio, video or
+Representation / quality.
 
-_payload type_: `Array.<Number>`
+### videoRepresentationChange
 
-Triggered when the currently available audio bitrates change (e.g.: at the
-beginning of the content, when switching the current audio track, when period
-changes...).
+_payload type_: `Object|null`
 
-The payload is an array of the different bitrates available, in bits per
-seconds.
+Emitted when the current video Representation being considered by the RxPlayer
+changes.
 
-This event only concerns the currently-playing Period.
+The payload is an object describing this new Representation, with the following
+properties:
+  - `id` (`string`): The id used to identify this Representation.
 
-<div class="warning">
-This event is not sent in <i>DirectFile</i> mode (see
-<a href="./Loading_a_Content.md#transport">transport option</a>)
-</div>
+  - `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits
+    per seconds.
 
-### availableVideoBitratesChange
+    `undefined` if unknown.
 
-_payload type_: `Array.<Number>`
+  - `width` (`Number|undefined`): The width of video, in pixels.
 
-Triggered when the currently available video bitrates change (e.g.: at the
-beginning of the content, when switching the current video track, when period
-changes...).
+  - `height` (`Number|undefined`): The height of video, in pixels.
 
-The payload is an array of the different bitrates available, in bits per
-seconds.
+  - `codec` (`string|undefined`): The codec of the Representation.
 
-This event only concerns the currently-playing Period.
+  - `frameRate` (`number|undefined`): The video framerate.
 
-<div class="warning">
-This event is not sent in <i>DirectFile</i> mode (see
-<a href="./Loading_a_Content.md#transport">transport option</a>)
-</div>
+A `null` payload means that no video track is available now.
 
-### audioBitrateChange
-
-_payload type_: `Number`
-
-The payload is the new audio bitrate, in bits per seconds. It is emitted every
-time it changes (based on the last received segment).
-
-`-1` when the bitrate is not known.
-
-This event only concerns the currently-playing Period.
+This event only concerns the currently-playing
+[Period](../Getting_Started/Glossary.md).
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
 
-### videoBitrateChange
+### audioRepresentationChange
 
-_payload type_: `Number`
+_payload type_: `Object|null`
 
-The payload is the new video bitrate, in bits per seconds. It is emitted every
-time it changes (based on the last received segment).
+Emitted when the current audio Representation being considered by the RxPlayer
+changes.
 
-`-1` when the bitrate is not known.
+The payload is an object describing the new Representation, with the following
+properties:
+  - `id` (`string`): The id used to identify this Representation.
 
-This event only concerns the currently-playing Period.
+  - `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits
+    per seconds.
 
-<div class="warning">
-This event is not sent in <i>DirectFile</i> mode (see
-<a href="./Loading_a_Content.md#transport">transport option</a>)
-</div>
+  - `codec` (`string|undefined`): The codec of the representation
 
-### bitrateEstimationChange
-
-_payload type_: `Object`
-
-Information about the last bitrate estimation performed, by type of buffer
-(`audio`, `video` etc.).
-
-Note that this event is sent only if the corresponding buffer type has multiple
-[Representations](../Getting_Started/Glossary.md#representation) for the given content (as bitrate
-estimations are only useful in that case).
-
-The payload is an object with the following properties:
-
-- `type` (`string`): The buffer type
-
-- `bitrate` (`Number`): The last estimated bandwidth for this buffer type,
-  in bits per seconds.
-  This bitrate is smoothed by doing a (complex) mean on an extended period of
-  time, so it often does not link directly to the current calculated bitrate.
+This event only concerns the currently-playing
+[Period](../Getting_Started/Glossary.md).
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
@@ -474,57 +526,251 @@ _payload type_: `Object`
 
 Triggered when the current [Period](../Getting_Started/Glossary.md#period) being seen changes.
 
-The payload is the corresponding Period. See [the Manifest
-documentation](./Miscellaneous/Manifest_Object.md#structure_of_a_period_object)
-for more information.
+The payload of this event is an object containing the following properties:
+
+  - `start` (`number`): The starting position at which the Period starts, in
+    seconds.
+
+  - `end` (`number|undefined`): The position at which the Period ends, in
+    seconds.
+
+    `undefined` either if not known or if the Period has no end yet (e.g. for
+    live contents, the end might not be known for now).
+
+  - `id` (`string`): `id` of the Period, allowing to call track and
+    Representation selection APIs (such as `setAudioTrack` and
+    `lockVideoRepresentations` for example) even when the Period changes.
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
 
-### decipherabilityUpdate
+### newAvailablePeriods
 
 _payload type_: `Array.<Object>`
 
-Triggered when a or multiple Representation's decipherability status were
-updated. Which means either:
+This event is triggered when one or multiple new
+[Periods](../Getting_Started/Glossary.md#period) start to be considered by the
+RxPlayer in the current content.
 
-- A Representation is found to be undecipherable (e.g. the key or license
-  request is refused)
-- A Representation is found to be decipherable
-- A Representation's decipherability becomes undefined
+This event mainly allows to choose the text, audio and/or video tracks as well
+as the audio and/or video Representations to select for those Period(s).
 
-At this time, this event is only triggered if:
+This event is first sent once the content is first loaded and then may be
+triggered gain everytime the RxPlayer is considering another `Period` of the
+content.
 
-- the current content is an encrypted content
-- Either the `fallbackOnLastTry` property was set to `true` on a rejected
-  `getLicense` call or one of the `fallbackOn` properties was set to true in
-  the `keySystems` loadVideo option.
+The payload of this event is an array of object, each describing a single Period
+in chronological order.
+Those objects all contain the following properties:
 
-Following this event, the RxPlayer might remove from the current buffers any
-data linked to undecipherable Representation(s) (the video might twitch a little
-or reload) and update the list of available bitrates.
+  - `start` (`number`): The starting position at which the Period starts, in
+    seconds.
 
-The payload of this event is an Array of objects, each representating a
-Representation whose decipherability's status has been updated.
+  - `end` (`number|undefined`): The position at which the Period ends, in
+    seconds.
 
-Each of those objects have the following properties:
+    `undefined` either if not known or if the Period has no end yet (e.g. for
+    live contents, the end might not be known for now).
 
-- `representation`: The Representation concerned (more information on its
-  structure [in the Manifest
-  documentation](./Miscellaneous/Manifest_Object.md#structure_of_a_representation_object)).
-- `adaptation`: The Adaptation linked to that Representation (more information
-  on its structure [in the Manifest
-  documentation](./Miscellaneous/Manifest_Object.md#structure_of_an_adaptation_object)).
-- `period`: The Period linked to that Representation (more information on its
-  structure [in the Manifest
-  documentation](./Miscellaneous/Manifest_Object.md#structure_of_a_period_object)).
-- `manifest`: The current Manifest (more information on its structure [in the
-  Manifest documentation](./Miscellaneous/Manifest_Object.md#structure_of_a_manifest_object)).
+  - `id` (`string`): `id` for this Period, allowing to call track and
+    Representation selection APIs (such as `setAudioTrack` and
+    `lockVideoRepresentations` for example) even if that Period is not currently
+    playing.
 
-You can then know if any of those Representations are becoming decipherable or
-not through their `decipherable` property.
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.md#transport">transport option</a>)
+</div>
+
+### trackUpdate
+
+_payload type_: `Object`
+
+Event triggered if a video, audio or text track chosen for any
+[Period](../Getting_Started/Glossary.md#period) is changed by the RxPlayer.
+
+This event is triggered just after the track is updated but before any of the
+corresponding data is actually loaded, thus allowing you to edit track or
+Representations settings before the RxPlayer can continue.
+
+However keep in mind that this event is not triggered for the initial default
+track choice made by the RxPlayer. If you want to react to this event instead,
+you can rely on the `newAvailablePeriods` event.
+
+Cases where the track changes include:
+
+  - when the application updates a track manually (for example through a
+    `setAudioTrack` call)
+
+  - when it had to be done as a side-effect of another API (for example after
+    enabling trickmode video tracks through a `setPlaybackRate` call)
+
+  - or in the extremely rare situation where the RxPlayer had to do it by itself
+    automatically (one situation would be when a refreshed content's Manifest
+    removes the previously-chosen track. There, the RxPlayer will send the
+    `trackUpdate` event and - if no new track is chosen since - will
+    automatically switch to that track so playback can continue).
+
+The payload for this event is an object with the following properties:
+
+  - `trackType` (`string`): The type of track concerned. Can for example be
+    `audio` for an audio track, `video` for a video track or `text` for a text
+    track.
+
+  - `period` (`Object`): Information about the concerned
+    [Period](../Getting_Started/Glossary.md#period). This object contains as
+    properties:
+
+    - `start` (`number`): The starting position at which the Period starts, in
+      seconds.
+
+    - `end` (`number|undefined`): The position at which the Period ends, in
+      seconds.
+
+      `undefined` either if not known or if the Period has no end yet (e.g. for
+      live contents, the end might not be known for now).
+
+    - `id` (`string`): `id` of the Period, allowing to call track and
+      Representation selection APIs (such as `setAudioTrack` and
+      `lockVideoRepresentations` for example) even when the Period changes.
+
+  - `reason` (`string`): The reason for the track update.
+    For now, it can be set to:
+
+      - `"manual"`: the track was updated because the application called a
+        method to directly update it.
+
+        This event is the direct consequence of calling `setAudioTrack`,
+        `setTextTrack`, `setVideoTrack`, `disableTextTrack` or
+        `disableVideoTrack`, so it corresponds to track updates you should
+        already be aware of.
+
+      - `"trickmode-enabled"`: The track is being updated because the
+        application wanted to enable video trickmode tracks (usually by setting
+        the `preferTrickModeTracks` option of the `setPlaybackRate` method to
+        `true`).
+
+      - `"trickmode-disabled"`: The track is being updated because the
+        application wanted to disable video trickmode tracks (usually by setting
+        the `preferTrickModeTracks` option of the `setPlaybackRate` method to
+        `false`).
+
+      - `"missing"` the previously-chosen track was missing from the content's
+        refreshed Manifest.
+
+      - `"no-playable-representation"`: the previously-chosen track had none of
+        its `Representation` playable, most likely because of decipherability
+        issues and thus the RxPlayer decided to switch to a new track.
+
+    Though other reasons may be added in the future (for future reasons not
+    covered by those values), so you should expect this possibility in your
+    application's logic.
+
+
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.md#transport">transport option</a>)
+</div>
+
+### representationListUpdate
+
+_payload type_: `Object`
+
+Event triggered if the list of available [`Representation`](../Getting_Started/Glossary.md#representation)
+linked to the currently-chosen video, audio or text track for any
+[Period](../Getting_Started/Glossary.md#period)  (for example inspectable
+through the `representations` property of audio and video track objects) may
+have changed compared to what it was before.
+
+Note that you won't receive a `representationListUpdate` event the initial time
+the corresponding track is selected, it is only sent when its linked list of
+available `Representation`s might have dynamically changed during playback.
+For now, this may only happen if at least one of the Representation in the
+chosen track became undecipherable (in which case it is not available anymore)
+or decipherable (in which case it becomes available again).
+
+The main point of this event is to let you adjust your tracks and
+Representations choice when they depend on the list of available Representation.
+
+The payload for this event is an object with the following properties:
+
+  - `trackType` (`string`): The type of track concerned. Can for example be
+    `audio` for an audio track, `video` for a video track or `text` for a text
+    track.
+
+  - `period` (`Object`): Information about the concerned
+    [Period](../Getting_Started/Glossary.md#period). This object contains as
+    properties:
+
+    - `start` (`number`): The starting position at which the Period starts, in
+      seconds.
+
+    - `end` (`number|undefined`): The position at which the Period ends, in
+      seconds.
+
+      `undefined` either if not known or if the Period has no end yet (e.g. for
+      live contents, the end might not be known for now).
+
+    - `id` (`string`): `id` of the Period, allowing to call track and
+      Representation selection APIs (such as `setAudioTrack` and
+      `lockVideoRepresentations` for example) even when the Period changes.
+
+  - `reason` (`string`): The reason for the update.
+    For now, it can be set to:
+
+      - `"decipherability-update"`: The list of available `Representation`s is
+        being updated either because at least one of that track's
+        `Representation` became undecipherable or because it became decipherable
+        again.
+
+    Though other reasons may be added in the future (for future reasons not
+    covered by those values), so you should expect this possibility in your
+    application's logic.
+
+
+<div class="warning">
+This event is not sent in <i>DirectFile</i> mode (see
+<a href="./Loading_a_Content.md#transport">transport option</a>)
+</div>
+
+### brokenRepresentationsLock
+
+_payload type_: `Object`
+
+Fairly rare event triggered if representations locked through Representations
+selection API such as `lockVideoRepresentations` or `lockAudioRepresentations`
+all became unplayable (most likely linked to encryption reasons), in which case,
+the RxPlayer "broke" that lock, i.e. it decided to remove that lock and play all
+Representations instead.
+
+This event is sent strictly before the RxPlayer had the chance to actually load
+those other Representations. You can thus profit from this event by
+synchronously locking Representations you wish to play and thus avoid playing
+the others.
+
+The payload for this event is an object with the following properties:
+  - `period` (`Object`): Information about the concerned
+    [Period](../Getting_Started/Glossary.md#period). This object contains as
+    properties:
+
+    - `start` (`number`): The starting position at which the Period starts, in
+      seconds.
+
+    - `end` (`number|undefined`): The position at which the Period ends, in
+      seconds.
+
+      `undefined` either if not known or if the Period has no end yet (e.g. for
+      live contents, the end might not be known for now).
+
+    - `id` (`string`): `id` of the Period, allowing to call track and
+      Representation selection APIs (such as `setAudioTrack` and
+      `lockVideoRepresentations` for example) even when the Period changes.
+
+  - `trackType` (`string`): The type of track concerned. Can for example be
+    `audio` for audio Representations or `video` for video Representations.
+
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
@@ -640,70 +886,6 @@ tutorial](../Getting_Started/Tutorials/EventStream_Handling.md).
 Note that unlike `streamEvent` events, there's no point to define an `onExit`
 callback on the payload of a `streamEventSkip` event. This is because this event
 was not entered, and will thus not be exited.
-
-<div class="warning">
-This event is not sent in <i>DirectFile</i> mode (see
-<a href="./Loading_a_Content.md#transport">transport option</a>)
-</div>
-
-## Deprecated
-
-The following events are deprecated. They are still supported but we advise
-users to not use those as they might become not supported in the future.
-
-### imageTrackUpdate
-
-<div class="warning">
-This option is deprecated, it will disappear in the next major release
-`v4.0.0` (see <a href="./Miscellaneous/Deprecated_APIs.md">Deprecated
-APIs</a>).
-</div>
-
-_payload type_: `Object`
-
-Triggered each time the current image playlist changes (has new images).
-
-Has the following property in its payload:
-_data_ (`Array.<Object>`): Every image data.
-
-Each image has a structure as defined in the [Images structure
-page](./Miscellaneous/images.md).
-
-<div class="warning">
-This event is not sent in <i>DirectFile</i> mode (see
-<a href="./Loading_a_Content.md#transport">transport option</a>)
-</div>
-
-### fullscreenChange
-
-<div class="warning">
-This option is deprecated, it will disappear in the next major release
-`v4.0.0` (see <a href="./Miscellaneous/Deprecated_APIs.md">Deprecated
-APIs</a>).
-</div>
-
-_payload type_: `Boolean`
-
-Triggered each time the video player goes/exits fullscreen mode.
-
-The payload is `true` if the player entered fullscreen, `false` if it exited
-it.
-
-### nativeTextTracksChange
-
-<div class="warning">
-This option is deprecated, it will disappear in the next major release
-`v4.0.0` (see <a href="./Miscellaneous/Deprecated_APIs.md">Deprecated
-APIs</a>).
-</div>
-
-_payload type_: `Array.<TextTrackElement>`
-
-Triggered each times a new `<track>` element is removed or added to the media
-element.
-
-The payload is the array of `TextTrack` elements. The RxPlayer will only set
-a single `<track>` when a text track is set.
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see

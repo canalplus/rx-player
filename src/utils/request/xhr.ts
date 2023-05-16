@@ -80,7 +80,7 @@ export default function request<T>(
     const xhr = new XMLHttpRequest();
     xhr.open("GET", url, true);
 
-    let timeoutId : undefined | number;
+    let timeoutId : undefined | number | NodeJS.Timeout;
     if (timeout !== undefined) {
       xhr.timeout = timeout;
 
@@ -90,9 +90,9 @@ export default function request<T>(
       // That's why we also start a manual timeout. We do this a little later
       // than the "native one" performed on the xhr assuming that the latter
       // is more precise, it might also be more efficient.
-      timeoutId = window.setTimeout(() => {
+      timeoutId = setTimeout(() => {
         clearCancellingProcess();
-        reject(new RequestError(url, xhr.status, "TIMEOUT", xhr));
+        reject(new RequestError(url, xhr.status, "TIMEOUT"));
       }, timeout + 3000);
     }
 
@@ -132,12 +132,12 @@ export default function request<T>(
 
     xhr.onerror = function onXHRError() {
       clearCancellingProcess();
-      reject(new RequestError(url, xhr.status, "ERROR_EVENT", xhr));
+      reject(new RequestError(url, xhr.status, "ERROR_EVENT"));
     };
 
     xhr.ontimeout = function onXHRTimeout() {
       clearCancellingProcess();
-      reject(new RequestError(url, xhr.status, "TIMEOUT", xhr));
+      reject(new RequestError(url, xhr.status, "TIMEOUT"));
     };
 
     if (onProgress !== undefined) {
@@ -178,7 +178,7 @@ export default function request<T>(
           }
 
           if (isNullOrUndefined(responseData)) {
-            reject(new RequestError(url, xhr.status, "PARSE_ERROR", xhr));
+            reject(new RequestError(url, xhr.status, "PARSE_ERROR"));
             return;
           }
 
@@ -192,7 +192,7 @@ export default function request<T>(
                     responseData });
 
         } else {
-          reject(new RequestError(url, xhr.status, "ERROR_HTTP_CODE", xhr));
+          reject(new RequestError(url, xhr.status, "ERROR_HTTP_CODE"));
         }
       }
     };
@@ -217,7 +217,7 @@ export default function request<T>(
  * @param {string} data
  * @returns {Object|null}
  */
-function toJSONForIE(data : string) : unknown|null {
+function toJSONForIE(data : string) : unknown {
   try {
     return JSON.parse(data);
   } catch (e) {

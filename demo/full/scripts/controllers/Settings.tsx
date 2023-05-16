@@ -3,22 +3,31 @@ import Option from "../components/Options/Option";
 import Playback from "../components/Options/Playback";
 import AudioAdaptiveSettings from "../components/Options/AudioAdaptiveSettings";
 import VideoAdaptiveSettings from "../components/Options/VideoAdaptiveSettings";
-import NetworkConfig from "../components/Options/NetworkConfig";
+import RequestConfig from "../components/Options/RequestConfig";
 import TrackSwitch from "../components/Options/TrackSwitch";
 import BufferOptions from "../components/Options/BufferOptions";
 import type {
   IConstructorSettings,
   ILoadVideoSettings,
 } from "../lib/defaultOptionsValues";
+import {
+  IAudioRepresentationsSwitchingMode,
+  IVideoRepresentationsSwitchingMode,
+} from "../../../../src/public_types";
 
 const { useCallback } = React;
 
 function Settings({
+  // TODO add to RxPlayer API?
+  defaultAudioRepresentationsSwitchingMode,
+  defaultVideoRepresentationsSwitchingMode,
   playerOptions,
   updatePlayerOptions,
   loadVideoOptions,
   updateLoadVideoOptions,
   showOptions,
+  updateDefaultAudioRepresentationsSwitchingMode,
+  updateDefaultVideoRepresentationsSwitchingMode,
 }: {
   playerOptions: IConstructorSettings;
   updatePlayerOptions: (
@@ -28,38 +37,43 @@ function Settings({
   updateLoadVideoOptions: (
     cb: (previousOpts: ILoadVideoSettings) => ILoadVideoSettings
   ) => void;
+  defaultAudioRepresentationsSwitchingMode: IAudioRepresentationsSwitchingMode;
+  defaultVideoRepresentationsSwitchingMode: IVideoRepresentationsSwitchingMode;
+  updateDefaultAudioRepresentationsSwitchingMode: (
+    mode: IAudioRepresentationsSwitchingMode
+  ) => void;
+  updateDefaultVideoRepresentationsSwitchingMode: (
+    mode: IVideoRepresentationsSwitchingMode
+  ) => void;
   showOptions: boolean;
 }): JSX.Element | null {
   const {
-    initialAudioBitrate,
-    initialVideoBitrate,
     limitVideoWidth,
-    maxAudioBitrate,
     maxBufferAhead,
     maxBufferBehind,
-    maxVideoBitrate,
     maxVideoBufferSize,
-    minAudioBitrate,
-    minVideoBitrate,
-    stopAtEnd,
     throttleVideoBitrateWhenHidden,
     wantedBufferAhead,
   } = playerOptions;
   const {
-    audioTrackSwitchingMode,
     autoPlay,
+    defaultAudioTrackSwitchingMode,
     enableFastSwitching,
-    manualBitrateSwitchingMode,
-    networkConfig,
+    requestConfig,
     onCodecSwitch,
   } = loadVideoOptions;
   const {
-    segmentRetry,
-    segmentRequestTimeout,
-    manifestRetry,
-    manifestRequestTimeout,
-    offlineRetry,
-  } = networkConfig;
+    manifest: manifestRequestConfig,
+    segment: segmentRequestConfig,
+  } = requestConfig;
+  const {
+    maxRetry: segmentRetry,
+    timeout: segmentRequestTimeout,
+  } = segmentRequestConfig;
+  const {
+    maxRetry: manifestRetry,
+    timeout: manifestRequestTimeout,
+  } = manifestRequestConfig;
 
   const onAutoPlayChange = useCallback((autoPlay: boolean) => {
     updateLoadVideoOptions((prevOptions) => {
@@ -69,88 +83,6 @@ function Settings({
       return Object.assign({}, prevOptions, { autoPlay });
     });
   }, [updateLoadVideoOptions]);
-
-  const onManualBitrateSwitchingModeChange = useCallback((value: string) => {
-    updateLoadVideoOptions((prevOptions) => {
-      if (value === prevOptions.manualBitrateSwitchingMode) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, {
-        manualBitrateSwitchingMode: value,
-      });
-    });
-  }, [updateLoadVideoOptions]);
-
-  const onStopAtEndChange = useCallback((stopAtEnd: boolean) => {
-    updatePlayerOptions((prevOptions) => {
-      if (stopAtEnd === prevOptions.stopAtEnd) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, { stopAtEnd });
-    });
-  }, [updatePlayerOptions]);
-
-  const onInitialVideoBitrateChange = useCallback((
-    initialVideoBitrate: number
-  )  => {
-    updatePlayerOptions((prevOptions) => {
-      if (initialVideoBitrate === prevOptions.initialVideoBitrate) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, { initialVideoBitrate });
-    });
-  }, [updatePlayerOptions]);
-
-  const onInitialAudioBitrateChange = useCallback((
-    initialAudioBitrate: number
-  ) => {
-    updatePlayerOptions((prevOptions) => {
-      if (initialAudioBitrate === prevOptions.initialAudioBitrate) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, { initialAudioBitrate });
-    });
-  }, [updatePlayerOptions]);
-
-  const onMinVideoBitrateChange = useCallback((
-    minVideoBitrate: number
-  ) => {
-    updatePlayerOptions((prevOptions) => {
-      if (minVideoBitrate === prevOptions.minVideoBitrate) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, { minVideoBitrate });
-    });
-  }, [updatePlayerOptions]);
-
-  const onMinAudioBitrateChange = useCallback((
-    minAudioBitrate: number
-  ) => {
-    updatePlayerOptions((prevOptions) => {
-      if (minAudioBitrate === prevOptions.minAudioBitrate) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, { minAudioBitrate });
-    });
-  }, [updatePlayerOptions]);
-
-  const onMaxVideoBitrateChange = useCallback((maxVideoBitrate: number) => {
-    updatePlayerOptions((prevOptions) => {
-      if (maxVideoBitrate === prevOptions.maxVideoBitrate) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, { maxVideoBitrate });
-    });
-  }, [updatePlayerOptions]);
-
-  const onMaxAudioBitrateChange = useCallback((maxAudioBitrate: number) => {
-    updatePlayerOptions((prevOptions) => {
-      if (maxAudioBitrate === prevOptions.maxAudioBitrate) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, { maxAudioBitrate });
-    });
-  }, [updatePlayerOptions]);
 
   const onLimitVideoWidthChange = useCallback((limitVideoWidth: boolean) => {
     updatePlayerOptions((prevOptions) => {
@@ -176,12 +108,14 @@ function Settings({
 
   const onSegmentRetryChange = useCallback((segmentRetry: number) => {
     updateLoadVideoOptions((prevOptions) => {
-      if (segmentRetry === prevOptions.networkConfig.segmentRetry) {
+      if (segmentRetry === prevOptions.requestConfig.segment.maxRetry) {
         return prevOptions;
       }
       return Object.assign({}, prevOptions, {
-        networkConfig: Object.assign({}, prevOptions.networkConfig, {
-          segmentRetry,
+        requestConfig: Object.assign({}, prevOptions.requestConfig, {
+          segment: Object.assign({}, prevOptions.requestConfig.segment, {
+            maxRetry: segmentRetry,
+          }),
         }),
       });
     });
@@ -192,14 +126,15 @@ function Settings({
   ) => {
     updateLoadVideoOptions((prevOptions) => {
       if (
-        segmentRequestTimeout ===
-          prevOptions.networkConfig.segmentRequestTimeout
+        segmentRequestTimeout === prevOptions.requestConfig.segment.timeout
       ) {
         return prevOptions;
       }
       return Object.assign({}, prevOptions, {
-        networkConfig: Object.assign({}, prevOptions.networkConfig, {
-          segmentRequestTimeout,
+        requestConfig: Object.assign({}, prevOptions.requestConfig, {
+          segment: Object.assign({}, prevOptions.requestConfig.segment, {
+            timeout: segmentRequestTimeout,
+          }),
         }),
       });
     });
@@ -207,25 +142,14 @@ function Settings({
 
   const onManifestRetryChange = useCallback((manifestRetry: number) => {
     updateLoadVideoOptions((prevOptions) => {
-      if (manifestRetry === prevOptions.networkConfig.manifestRetry) {
+      if (manifestRetry === prevOptions.requestConfig.manifest.maxRetry) {
         return prevOptions;
       }
       return Object.assign({}, prevOptions, {
-        networkConfig: Object.assign({}, prevOptions.networkConfig, {
-          manifestRetry,
-        }),
-      });
-    });
-  }, [updateLoadVideoOptions]);
-
-  const onOfflineRetryChange = useCallback((offlineRetry: number) => {
-    updateLoadVideoOptions((prevOptions) => {
-      if (offlineRetry === prevOptions.networkConfig.offlineRetry) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, {
-        networkConfig: Object.assign({}, prevOptions.networkConfig, {
-          offlineRetry,
+        requestConfig: Object.assign({}, prevOptions.requestConfig, {
+          manifest: Object.assign({}, prevOptions.requestConfig.manifest, {
+            maxRetry: manifestRetry,
+          }),
         }),
       });
     });
@@ -235,14 +159,15 @@ function Settings({
     (manifestRequestTimeout: number) => {
       updateLoadVideoOptions((prevOptions) => {
         if (
-          manifestRequestTimeout ===
-            prevOptions.networkConfig.manifestRequestTimeout
+          manifestRequestTimeout === prevOptions.requestConfig.manifest.timeout
         ) {
           return prevOptions;
         }
         return Object.assign({}, prevOptions, {
-          networkConfig: Object.assign({}, prevOptions.networkConfig, {
-            manifestRequestTimeout,
+          requestConfig: Object.assign({}, prevOptions.requestConfig, {
+            manifest: Object.assign({}, prevOptions.requestConfig.manifest, {
+              timeout: manifestRequestTimeout,
+            }),
           }),
         });
       });
@@ -261,16 +186,30 @@ function Settings({
     });
   }, [updateLoadVideoOptions]);
 
-  const onAudioTrackSwitchingModeChange = useCallback((value: string) => {
-    updateLoadVideoOptions((prevOptions) => {
-      if (value === prevOptions.audioTrackSwitchingMode) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, {
-        audioTrackSwitchingMode: value,
+  const onDefaultAudioTrackSwitchingModeChange = useCallback(
+    (value: string) => {
+      updateLoadVideoOptions((prevOptions) => {
+        if (value === prevOptions.defaultAudioTrackSwitchingMode) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, {
+          defaultAudioTrackSwitchingMode: value,
+        });
       });
-    });
-  }, [updateLoadVideoOptions]);
+    },
+    [updateLoadVideoOptions]
+  );
+
+  const onDefaultVideoRepresentationsSwitchingModeChange =
+    useCallback((value: IVideoRepresentationsSwitchingMode) => {
+      updateDefaultVideoRepresentationsSwitchingMode(value);
+    }, [updateLoadVideoOptions]);
+
+  const onDefaultAudioRepresentationsSwitchingModeChange =
+    useCallback((value: IAudioRepresentationsSwitchingMode) => {
+      updateDefaultAudioRepresentationsSwitchingMode(value);
+    }, [updateLoadVideoOptions]);
+
 
   const onCodecSwitchChange = useCallback((value: string) => {
     updateLoadVideoOptions((prevOptions) => {
@@ -338,25 +277,19 @@ function Settings({
         <Option title="Playback">
           <Playback
             autoPlay={autoPlay}
-            manualBitrateSwitchingMode={manualBitrateSwitchingMode}
             onAutoPlayChange={onAutoPlayChange}
-            onManualBitrateSwitchingModeChange={
-              onManualBitrateSwitchingModeChange
-            }
-            stopAtEnd={stopAtEnd}
-            onStopAtEndChange={onStopAtEndChange}
           />
         </Option>
         <Option title="Video adaptive settings">
           <VideoAdaptiveSettings
-            initialVideoBitrate={initialVideoBitrate}
-            minVideoBitrate={minVideoBitrate}
-            maxVideoBitrate={maxVideoBitrate}
-            onInitialVideoBitrateChange={onInitialVideoBitrateChange}
-            onMinVideoBitrateChange={onMinVideoBitrateChange}
-            onMaxVideoBitrateChange={onMaxVideoBitrateChange}
+            defaultVideoRepresentationsSwitchingMode={
+              defaultVideoRepresentationsSwitchingMode
+            }
             limitVideoWidth={limitVideoWidth}
             throttleVideoBitrateWhenHidden={throttleVideoBitrateWhenHidden}
+            onDefaultVideoRepresentationsSwitchingModeChange={
+              onDefaultVideoRepresentationsSwitchingModeChange
+            }
             onLimitVideoWidthChange={onLimitVideoWidthChange}
             onThrottleVideoBitrateWhenHiddenChange={
               onThrottleVideoBitrateWhenHiddenChange
@@ -365,37 +298,37 @@ function Settings({
         </Option>
         <Option title="Audio adaptive settings">
           <AudioAdaptiveSettings
-            initialAudioBitrate={initialAudioBitrate}
-            minAudioBitrate={minAudioBitrate}
-            maxAudioBitrate={maxAudioBitrate}
-            onInitialAudioBitrateChange={onInitialAudioBitrateChange}
-            onMinAudioBitrateChange={onMinAudioBitrateChange}
-            onMaxAudioBitrateChange={onMaxAudioBitrateChange}
+            defaultAudioRepresentationsSwitchingMode={
+              defaultAudioRepresentationsSwitchingMode
+            }
+            onDefaultAudioRepresentationsSwitchingModeChange={
+              onDefaultAudioRepresentationsSwitchingModeChange
+            }
           />
         </Option>
       </div>
       <div style={{ display: "flex" }}>
-        <Option title="Network Config">
-          <NetworkConfig
+        <Option title="Request Configuration">
+          <RequestConfig
             manifestRequestTimeout={manifestRequestTimeout}
             segmentRetry={segmentRetry}
             segmentRequestTimeout={segmentRequestTimeout}
             manifestRetry={manifestRetry}
-            offlineRetry={offlineRetry}
             onSegmentRetryChange={onSegmentRetryChange}
             onSegmentRequestTimeoutChange={onSegmentRequestTimeoutChange}
             onManifestRetryChange={onManifestRetryChange}
             onManifestRequestTimeoutChange={onManifestRequestTimeoutChange}
-            onOfflineRetryChange={onOfflineRetryChange}
           />
         </Option>
         <Option title="Track Switch Mode">
           <TrackSwitch
+            defaultAudioTrackSwitchingMode={defaultAudioTrackSwitchingMode}
             enableFastSwitching={enableFastSwitching}
-            audioTrackSwitchingMode={audioTrackSwitchingMode}
             onCodecSwitch={onCodecSwitch}
+            onDefaultAudioTrackSwitchingModeChange={
+              onDefaultAudioTrackSwitchingModeChange
+            }
             onEnableFastSwitchingChange={onEnableFastSwitchingChange}
-            onAudioTrackSwitchingModeChange={onAudioTrackSwitchingModeChange}
             onCodecSwitchChange={onCodecSwitchChange}
           />
         </Option>

@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-import {
-  events,
-  ICustomMediaKeySession,
-} from "../../compat";
+import { events } from "../../compat";
+import { ICustomMediaKeySession } from "../../compat/eme";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import {
@@ -78,8 +76,10 @@ export default function SessionEventsListener(
     callbacks.onError(new EncryptedMediaError("KEY_ERROR", (evt as Event).type));
   }, manualCanceller.signal);
 
-  onKeyStatusesChange(session, (keyStatusesEvent) => {
-    handleKeyStatusesChangeEvent(keyStatusesEvent as Event).catch(error => {
+  onKeyStatusesChange(session, () => {
+    try {
+      checkAndHandleCurrentKeyStatuses();
+    } catch (error) {
       if (cancelSignal.isCancelled() ||
           (manualCanceller.isUsed() && error instanceof CancellationSignal))
       {
@@ -87,7 +87,7 @@ export default function SessionEventsListener(
       }
       manualCanceller.cancel();
       callbacks.onError(error);
-    });
+    }
   }, manualCanceller.signal);
 
   onKeyMessage(session, (evt) => {
@@ -111,7 +111,12 @@ export default function SessionEventsListener(
         if (isNullOrUndefined(licenseObject)) {
           log.info("DRM: No license given, skipping session.update");
         } else {
-          return updateSessionWithMessage(session, licenseObject);
+          try {
+            return updateSessionWithMessage(session, licenseObject);
+          } catch (err) {
+            manualCanceller.cancel();
+            callbacks.onError(err);
+          }
         }
       })
       .catch((err : unknown) => {
@@ -137,59 +142,14 @@ export default function SessionEventsListener(
   checkAndHandleCurrentKeyStatuses();
   return;
   /**
-   * @param {Event} keyStatusesEvent
-   * @returns {Promise}
-   */
-  async function handleKeyStatusesChangeEvent(
-    keyStatusesEvent : Event
-  ) : Promise<void> {
-    log.info("DRM: keystatuseschange event received", session.sessionId);
-
-    await Promise.all([
-      runOnKeyStatusesChangeCallback(),
-      Promise.resolve(checkAndHandleCurrentKeyStatuses()),
-    ]);
-
-    async function runOnKeyStatusesChangeCallback() {
-      if (manualCanceller.isUsed()) {
-        return;
-      }
-      if (typeof keySystemOptions.onKeyStatusesChange === "function") {
-        let ret;
-        try {
-          ret = await keySystemOptions.onKeyStatusesChange(keyStatusesEvent, session);
-          if (manualCanceller.isUsed()) {
-            return;
-          }
-        } catch (error) {
-          if (cancelSignal.isCancelled()) {
-            return;
-          }
-          const err = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
-                                              "Unknown `onKeyStatusesChange` error");
-          if  (!isNullOrUndefined(error) &&
-               isNonEmptyString((error as { message? : unknown }).message))
-          {
-            err.message = (error as { message : string }).message;
-          }
-          throw err;
-        }
-        if (isNullOrUndefined(ret)) {
-          log.info("DRM: No license given, skipping session.update");
-        } else {
-          await updateSessionWithMessage(session, ret);
-        }
-      }
-    }
-  }
-
-  /**
    * Check current MediaKeyStatus for each key in the given MediaKeySession and:
    *   - throw if at least one status is a non-recoverable error
    *   - call warning callback for recoverable errors
    *   - call onKeyUpdate callback when the MediaKeyStatus of any key is updated
    */
   function checkAndHandleCurrentKeyStatuses() : void {
+    log.info("DRM: keystatuseschange event received", session.sessionId);
+
     if (manualCanceller.isUsed() || session.keyStatuses.size === 0) {
       return ;
     }
@@ -274,6 +234,7 @@ export interface ISessionEventListenerCallbacks {
    */
   onKeyUpdate : (val : IKeyUpdateValue) => void;
   onWarning : (val : IPlayerError) => void;
+  /* eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents */
   onError : (val : unknown | BlacklistedSessionError) => void;
 }
 

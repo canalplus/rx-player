@@ -12,7 +12,11 @@ import type {
   ILoadVideoSettings,
   IConstructorSettings,
 } from "../lib/defaultOptionsValues";
-import type { ILoadVideoOptions } from "../../../../src/public_types";
+import type {
+  IAudioRepresentationsSwitchingMode,
+  ILoadVideoOptions,
+  IVideoRepresentationsSwitchingMode,
+} from "../../../../src/public_types";
 
 const {
   useCallback,
@@ -25,6 +29,14 @@ const {
 const SPINNER_TIMEOUT = 300;
 
 function Player(): JSX.Element {
+  const [
+    defaultAudioRepresentationsSwitchingMode,
+    setDefaultAudioRepresentationsSwitchingMode
+  ] = useState<IAudioRepresentationsSwitchingMode>("reload");
+  const [
+    defaultVideoRepresentationsSwitchingMode,
+    setDefaultVideoRepresentationsSwitchingMode
+  ] = useState<IVideoRepresentationsSwitchingMode>("reload");
   const [playerModule, setPlayerModule] = useState<IPlayerModule | null>(null);
   const [autoPlayBlocked, setAutoPlayBlocked] = useState(false);
   const [displaySpinner, setDisplaySpinner] = useState(false);
@@ -68,6 +80,12 @@ function Player(): JSX.Element {
         setDisplaySpinner(false);
         return;
       }
+      playerModule.actions.setDefaultAudioRepresentationSwitchingMode(
+        defaultAudioRepresentationsSwitchingMode
+      );
+      playerModule.actions.setDefaultVideoRepresentationSwitchingMode(
+        defaultVideoRepresentationsSwitchingMode
+      );
       const isSeeking = playerModule.getState("isSeeking");
       const isBuffering = playerModule.getState("isBuffering");
       const isLoading = playerModule.getState("isLoading");
@@ -95,6 +113,16 @@ function Player(): JSX.Element {
       }
     }
 
+    playerModule.listenToState(
+      "defaultAudioRepresentationsSwitchingMode",
+      (newVal: IAudioRepresentationsSwitchingMode) =>
+        setDefaultAudioRepresentationsSwitchingMode(newVal)
+    );
+    playerModule.listenToState(
+      "defaultVideoRepresentationsSwitchingMode",
+      (newVal: IVideoRepresentationsSwitchingMode) =>
+        setDefaultVideoRepresentationsSwitchingMode(newVal)
+    );
     playerModule.listenToState("autoPlayBlocked", (newAutoPlayBlocked) => {
       setAutoPlayBlocked(newAutoPlayBlocked);
     });
@@ -189,6 +217,28 @@ function Player(): JSX.Element {
     setPlayerOpts(cb);
   }, []);
 
+  const updateDefaultAudioRepresentationsSwitchingMode = React.useCallback(
+    (mod: IAudioRepresentationsSwitchingMode) => {
+      if (playerModule === null) {
+        setDefaultAudioRepresentationsSwitchingMode(mod);
+        return;
+      }
+      playerModule.actions.setDefaultAudioRepresentationSwitchingMode(mod);
+    },
+    [playerModule]
+  );
+
+  const updateDefaultVideoRepresentationsSwitchingMode = React.useCallback(
+    (mod: IVideoRepresentationsSwitchingMode) => {
+      if (playerModule === null) {
+        setDefaultVideoRepresentationsSwitchingMode(mod);
+        return;
+      }
+      playerModule.actions.setDefaultVideoRepresentationSwitchingMode(mod);
+    },
+    [playerModule]
+  );
+
   return (
     <section className="video-player-section">
       <div className="video-player-content">
@@ -203,6 +253,18 @@ function Player(): JSX.Element {
           loadVideoOptions={loadVideoOpts}
           updateLoadVideoOptions={setLoadVideoOpts}
           showOptions={showOptions}
+          defaultAudioRepresentationsSwitchingMode={
+            defaultAudioRepresentationsSwitchingMode
+          }
+          updateDefaultAudioRepresentationsSwitchingMode={
+            updateDefaultAudioRepresentationsSwitchingMode
+          }
+          defaultVideoRepresentationsSwitchingMode={
+            defaultVideoRepresentationsSwitchingMode
+          }
+          updateDefaultVideoRepresentationsSwitchingMode={
+            updateDefaultVideoRepresentationsSwitchingMode
+          }
         />
         <div
           className="video-player-wrapper"
