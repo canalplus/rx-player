@@ -39,6 +39,22 @@ export default class ImageSegmentBuffer extends SegmentBuffer {
   }
 
   /**
+   * @param {string} uniqueId
+   */
+  public declareInitSegment(uniqueId : string): void {
+    log.warn("ISB: Declaring initialization segment for image SegmentBuffer",
+             uniqueId);
+  }
+
+  /**
+   * @param {string} uniqueId
+   */
+  public freeInitSegment(uniqueId : string): void {
+    log.warn("ISB: Freeing initialization segment for image SegmentBuffer",
+             uniqueId);
+  }
+
+  /**
    * @param {Object} data
    * @returns {Promise}
    */

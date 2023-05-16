@@ -17,7 +17,7 @@
 import config from "../../config";
 import { IPlayerState } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
-import createSharedReference, {
+import SharedReference, {
   IReadOnlySharedReference,
 } from "../../utils/reference";
 import { CancellationSignal } from "../../utils/task_canceller";
@@ -70,6 +70,32 @@ export function emitSeekEvents(
   }, { includeLastObservation: true, clearSignal: cancelSignal });
 }
 
+/**
+ * @param {HTMLMediaElement} mediaElement
+ * @param {function} onPlay - Callback called when a play operation has started
+ * on `mediaElement`.
+ * @param {function} onPause - Callback called when a pause operation has
+ * started on `mediaElement`.
+ * @param {Object} cancelSignal - When triggered, stop calling callbacks and
+ * remove all listeners this function has registered.
+ */
+export function emitPlayPauseEvents(
+  mediaElement : HTMLMediaElement | null,
+  onPlay: () => void,
+  onPause: () => void,
+  cancelSignal : CancellationSignal
+) : void {
+  if (cancelSignal.isCancelled() || mediaElement === null) {
+    return ;
+  }
+  mediaElement.addEventListener("play", onPlay);
+  mediaElement.addEventListener("pause", onPause);
+  cancelSignal.register(() => {
+    mediaElement.removeEventListener("play", onPlay);
+    mediaElement.removeEventListener("pause", onPause);
+  });
+}
+
 /** Player state dictionnary. */
 export const enum PLAYER_STATES {
   STOPPED = "STOPPED",
@@ -89,8 +115,8 @@ export function constructPlayerStateReference(
   playbackObserver : IReadOnlyPlaybackObserver<IPlaybackObservation>,
   cancelSignal : CancellationSignal
 ) : IReadOnlySharedReference<IPlayerState> {
-  const playerStateRef = createSharedReference<IPlayerState>(PLAYER_STATES.LOADING,
-                                                             cancelSignal);
+  const playerStateRef = new SharedReference<IPlayerState>(PLAYER_STATES.LOADING,
+                                                           cancelSignal);
   initializer.addEventListener("loaded", () => {
     if (playerStateRef.getValue() === PLAYER_STATES.LOADING) {
       playerStateRef.setValue(PLAYER_STATES.LOADED);

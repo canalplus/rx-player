@@ -16,7 +16,7 @@ type IDeepPartial<T> = {
   [P in keyof T]?: IDeepPartial<T[P]> ;
 };
 
-type ISourcesArgument<T> = Array<IDeepPartial<T>|unknown>;
+type ISourcesArgument = unknown[];
 
 /**
  * Deeply merge nested objects
@@ -26,7 +26,7 @@ type ISourcesArgument<T> = Array<IDeepPartial<T>|unknown>;
  */
 export default function deepMerge<
   T extends Record<string | number | symbol, unknown>
->(target: T, ...sources: ISourcesArgument<T>): T {
+>(target: T, ...sources: ISourcesArgument): T {
   if (sources.length === 0) {
     return target;
   }

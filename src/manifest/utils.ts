@@ -37,9 +37,7 @@ export function areSameContent(
   content2: IBufferedChunkInfos
 ): boolean {
   return (content1.segment.id === content2.segment.id &&
-          content1.representation.id === content2.representation.id &&
-          content1.adaptation.id === content2.adaptation.id &&
-          content1.period.id === content2.period.id);
+          content1.representation.uniqueId === content2.representation.uniqueId);
 }
 
 /**
