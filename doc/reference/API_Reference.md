@@ -104,6 +104,9 @@ properties, methods, events and so on.
     - [`keySystems[].licenseStorage`](../api/Decryption_Options.md#licensestorage):
       Allows to ask for the DRM session to persist the license.
 
+    - [`keySystems[].onKeyExpiration`](../api/Decryption_Options.md#onkeyexpiration):
+      Behavior when a key has an `"expired"` status.
+
     - [`keySystems[].fallbackOn`](../api/Decryption_Options.md#fallbackon):
       Allows to fallback to another quality when a key is refused.
 
@@ -234,6 +237,11 @@ properties, methods, events and so on.
 
   - [`defaultTextTrack`](../api/Loading_a_Content.md#defaulttexttrack):
     [Deprecated] Default characteristics wanted for the text track.
+
+## Static methods
+
+  - [`addFeatures`](../api/RxPlayer_Features.md):
+    Add features to the RxPlayer (e.g.: multithreading, offline playback etc.).
 
 ## Methods
 
@@ -406,9 +414,6 @@ properties, methods, events and so on.
   - [`isMute`](../api/Volume_Control/isMute.md):
     Return `true` if the audio volume is set to `0`.
 
-  - [`isMute`](../api/Volume_Control/isMute.md):
-    Return `true` if the audio volume is set to `0`.
-
   - [`unMute`](../api/Volume_Control/unMute.md):
     Restore the volume as it was before it was muted.
 
@@ -438,9 +443,37 @@ properties, methods, events and so on.
     Get the maximum memory the video buffer can take up in the memory, in
     kilobytes.
 
-  - [`getVideoBufferGap`](../api/Buffer_Information/getVideoBufferGap.md):
+  - [`getUrl`](../api/Playback_Information/getUrl.md):
+    Get URL of the currently-played content.
+
+  - [`updateContentUrls`](../api/Playback_Information/updateContentUrls.md):
+    Update URL(s) of the content currently being played.
+
+  - [`isLive`](../api/Playback_Information/isLive.md):
+    Returns `true` if the content is a "live" content.
+
+  - [`getKeySystemConfiguration`](../api/Playback_Information/getKeySystemConfiguration.md):
+    Returns information on the key system currently attached to the
+    HTMLMediaElement linked to the RxPlayer.
+
+  - [`getVideoBufferGap`](../api/Playback_Information/getVideoBufferGap.md):
     Returns in seconds the difference between the current position and the end
     of the current media time range.
+
+  - [`isContentLoaded`](../api/Playback_Information/isContentLoaded.md):
+    Returns `true` if a content is loaded.
+
+  - [`isBuffering`](../api/Playback_Information/isBuffering.md):
+    Returns `true` if the player is buffering.
+
+  - [`isPaused`](../api/Playback_Information/isPaused.md):
+    Returns `true` if the `<video>` element is paused.
+
+  - [`isContentLoaded`](../api/Playback_Information/isContentLoaded.md):
+    Returns `true` if a content is loaded.
+
+  - [`getLastStoredContentPosition`](../api/Playback_Information/getLastStoredContentPosition.md):
+    Returns the last stored content position, in seconds.
 
   - [`getVideoLoadedTime`](../api/Deprecated/getVideoLoadedTime.md):
     [Deprecated] Returns in seconds the difference between the start and the end
@@ -449,19 +482,6 @@ properties, methods, events and so on.
   - [`getVideoPlayedTime`](../api/Deprecated/getVideoPlayedTime.md):
     [Deprecated] Returns in seconds the difference between the start of the
     current media time range and the current position.
-
-  - [`getUrl`](../api/Content_Information/getUrl.md):
-    Get URL of the currently-played content.
-
-  - [`updateContentUrls`](../api/Content_Information/updateContentUrls.md):
-    Update URL(s) of the content currently being played.
-
-  - [`isLive`](../api/Content_Information/isLive.md):
-    Returns `true` if the content is a "live" content.
-
-  - [`getKeySystemConfiguration`](../api/Content_Information/getKeySystemConfiguration.md):
-    Returns information on the key system currently attached to the
-    HTMLMediaElement linked to the RxPlayer.
 
   - [`getCurrentKeySystem`](../api/Deprecated/getCurrentKeySystem.md):
     [Deprecated] Returns the name of the current key system.
@@ -491,6 +511,9 @@ properties, methods, events and so on.
   - [`getNativeTextTrack`](../api/Deprecated/getNativeTextTrack.md):
     [Deprecated] Returns the first `<track>` element attached to the media
     element.
+
+  - [`createDebugElement`](../api/Miscellaneous/Debug_Element.md):
+    Display a RxPlayer-specialized debugging element.
 
 ## Static Properties
 
@@ -559,11 +582,20 @@ properties, methods, events and so on.
   - [`bitrateEstimationChange`](../api/Player_Events.md#bitrateestimationchange):
     A new bitrate estimate is available.
 
+  - [`volumeChange`](../api/Player_Events.md#volumechange):
+    Characteristics of the currently set volume changed.
+
   - [`periodChange`](../api/Player_Events.md#periodchange):
     A new Period begins.
 
   - [`decipherabilityUpdate`](../api/Player_Events.md#decipherabilityupdate):
     A Representation's decipherability status has been updated.
+
+  - [`play`](../api/Player_Events.md#play):
+    Emitted when playback is no longer consider paused.
+
+  - [`pause`](../api/Player_Events.md#pause):
+    Emitted when playback is now consider paused.
 
   - [`inbandEvents`](../api/Player_Events.md#inbandevents):
     Events in the media have been encountered.

@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import {
+import eme, {
   ICustomMediaKeys,
   ICustomMediaKeySystemAccess,
-  setMediaKeys,
-} from "../../compat";
+  IEmeApiImplementation,
+} from "../../compat/eme";
 import log from "../../log";
 import { IKeySystemOption } from "../../public_types";
 import { CancellationSignal } from "../../utils/task_canceller";
@@ -29,10 +29,22 @@ import MediaKeysInfosStore from "./utils/media_keys_infos_store";
  * Dispose of the MediaKeys instance attached to the given media element, if
  * one.
  * @param {Object} mediaElement
+ * @returns {Promise}
  */
-export function disableMediaKeys(mediaElement : HTMLMediaElement): void {
+export function disableMediaKeys(
+  mediaElement : HTMLMediaElement
+): Promise<unknown> {
   MediaKeysInfosStore.setState(mediaElement, null);
-  setMediaKeys(mediaElement, null);
+  return eme.setMediaKeys(mediaElement, null)
+    .then(() => {
+      log.info("DRM: MediaKeys disabled with success");
+    })
+    .catch((err) => {
+      log.error(
+        "DRM: Could not disable MediaKeys",
+        err instanceof Error ? err : "Unknown Error"
+      );
+    });
 }
 
 /**
@@ -46,7 +58,8 @@ export function disableMediaKeys(mediaElement : HTMLMediaElement): void {
  */
 export default async function attachMediaKeys(
   mediaElement : HTMLMediaElement,
-  { keySystemOptions,
+  { emeImplementation,
+    keySystemOptions,
     loadedSessionsStore,
     mediaKeySystemAccess,
     mediaKeys } : IMediaKeysState,
@@ -66,7 +79,8 @@ export default async function attachMediaKeys(
     throw cancelSignal.cancellationError;
   }
 
-  MediaKeysInfosStore.setState(mediaElement, { keySystemOptions,
+  MediaKeysInfosStore.setState(mediaElement, { emeImplementation,
+                                               keySystemOptions,
                                                mediaKeySystemAccess,
                                                mediaKeys,
                                                loadedSessionsStore });
@@ -74,8 +88,16 @@ export default async function attachMediaKeys(
     return ;
   }
   log.info("DRM: Attaching MediaKeys to the media element");
-  setMediaKeys(mediaElement, mediaKeys);
-  log.info("DRM: MediaKeys attached with success");
+  emeImplementation.setMediaKeys(mediaElement, mediaKeys)
+    .then(() => {
+      log.info("DRM: MediaKeys attached with success");
+    })
+    .catch((err) => {
+      log.error(
+        "DRM: Could not set MediaKeys",
+        err instanceof Error ? err : "Unknown Error"
+      );
+    });
 }
 
 /** MediaKeys and associated state attached to a media element. */
@@ -90,4 +112,10 @@ export interface IMediaKeysState {
   /** The MediaKeys instance to attach to the media element. */
   mediaKeys : MediaKeys |
               ICustomMediaKeys;
+  /**
+   * The chosen EME implementation abstraction linked to `mediaKeys`.
+   * Different EME implementation might for example be used while debugging or
+   * work-arounding EME-linked device issues.
+   */
+  emeImplementation : IEmeApiImplementation;
 }

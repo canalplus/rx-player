@@ -16,11 +16,13 @@
 
 import { shouldValidateMetadata } from "../../../compat";
 import { READY_STATES } from "../../../compat/browser_compatibility_types";
+import { isSafariMobile } from "../../../compat/browser_detection";
+/* eslint-disable-next-line max-len */
+import shouldPreventSeekingAt0Initially from "../../../compat/should_prevent_seeking_at_0_initially";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
 import { IPlayerError } from "../../../public_types";
-import {
-  createSharedReference,
+import SharedReference, {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
 import { CancellationError, CancellationSignal } from "../../../utils/task_canceller";
@@ -64,6 +66,7 @@ export interface IInitialSeekAndPlayObject {
  * @param {number|Function} startTime
  * @param {boolean} mustAutoPlay
  * @param {Function} onWarning
+ * @param {boolean} isDirectfile
  * @param {Object} cancelSignal
  * @returns {Object}
  */
@@ -73,6 +76,7 @@ export default function performInitialSeekAndPlay(
   startTime : number|(() => number),
   mustAutoPlay : boolean,
   onWarning : (err : IPlayerError) => void,
+  isDirectfile : boolean,
   cancelSignal : CancellationSignal
 ) : IInitialSeekAndPlayObject {
   let resolveAutoPlay : (x : IInitialPlayEvent) => void;
@@ -82,29 +86,58 @@ export default function performInitialSeekAndPlay(
     rejectAutoPlay = rej;
   });
 
-  const initialSeekPerformed = createSharedReference(false, cancelSignal);
-  const initialPlayPerformed = createSharedReference(false, cancelSignal);
+  const initialSeekPerformed = new SharedReference(false, cancelSignal);
+  const initialPlayPerformed = new SharedReference(false, cancelSignal);
 
   mediaElement.addEventListener("loadedmetadata", onLoadedMetadata);
-  if (mediaElement.readyState >= READY_STATES.HAVE_METADATA) {
-    onLoadedMetadata();
-  }
 
   const deregisterCancellation = cancelSignal.register((err : CancellationError) => {
     mediaElement.removeEventListener("loadedmetadata", onLoadedMetadata);
     rejectAutoPlay(err);
   });
 
+  if (mediaElement.readyState >= READY_STATES.HAVE_METADATA) {
+    onLoadedMetadata();
+  }
+
   return { autoPlayResult, initialPlayPerformed, initialSeekPerformed };
 
   function onLoadedMetadata() {
     mediaElement.removeEventListener("loadedmetadata", onLoadedMetadata);
+
+    /** `true` if we asked the `PlaybackObserver` to perform an initial seek. */
+    let hasAskedForInitialSeek = false;
+
+    const performInitialSeek = (initialSeekTime: number) => {
+      log.info("Init: Set initial time", initialSeekTime);
+      playbackObserver.setCurrentTime(initialSeekTime);
+      hasAskedForInitialSeek = true;
+      initialSeekPerformed.setValue(true);
+      initialSeekPerformed.finish();
+    };
+
+    // `startTime` defined as a function might depend on metadata to make its
+    // choice, such as the content duration, minimum and/or maximum position.
+    //
+    // The RxPlayer might already know those through the Manifest file for
+    // non-Directfile contents, yet only through the `HTMLMediaElement` once a
+    // a sufficient `readyState` has been reached for directfile contents.
+    // So let's divide the two possibilities here.
     const initialTime = typeof startTime === "function" ? startTime() :
                                                           startTime;
-    log.info("Init: Set initial time", initialTime);
-    playbackObserver.setCurrentTime(initialTime);
-    initialSeekPerformed.setValue(true);
-    initialSeekPerformed.finish();
+    if (shouldPreventSeekingAt0Initially() && initialTime === 0) {
+      initialSeekPerformed.setValue(true);
+      initialSeekPerformed.finish();
+    } else if (isDirectfile && isSafariMobile) {
+      // On safari mobile (version 17.1.2) seeking too early cause the video
+      // to never buffer media data. Using setTimeout 0 defers the seek
+      // to a moment at which safari should be more able to handle a seek.
+      setTimeout(() => {
+        performInitialSeek(initialTime);
+      }, 0);
+    } else {
+      performInitialSeek(initialTime);
+    }
 
     if (shouldValidateMetadata() && mediaElement.duration === 0) {
       const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA",
@@ -116,8 +149,19 @@ export default function performInitialSeekAndPlay(
       return ;
     }
 
+    /**
+     * We only want to continue to `play` when a `seek` has actually been
+     * performed (if it has been asked). This boolean keep track of if the
+     * seek arised.
+     */
+    let isAwaitingSeek = hasAskedForInitialSeek;
     playbackObserver.listen((observation, stopListening) => {
-      if (!observation.seeking &&
+      if (hasAskedForInitialSeek && observation.seeking) {
+        isAwaitingSeek = false;
+        return;
+      }
+      if (!isAwaitingSeek &&
+          !observation.seeking &&
           observation.rebuffering === null &&
           observation.readyState >= 1)
       {
@@ -134,6 +178,16 @@ export default function performInitialSeekAndPlay(
         log.warn("Init: autoplay is enabled on HTML media element. " +
                  "Media will play as soon as possible.");
       }
+      initialPlayPerformed.setValue(true);
+      initialPlayPerformed.finish();
+      deregisterCancellation();
+      return resolveAutoPlay({ type: "skipped" as const });
+    } else if (mediaElement.ended) {
+      // the video has ended state to true, executing VideoElement.play() will
+      // restart the video from the start, which is not wanted in most cases.
+      // returning "skipped" prevents the call to play() and fix the issue
+      log.warn("Init: autoplay is enabled but the video is ended. " +
+        "Skipping autoplay to prevent video to start again");
       initialPlayPerformed.setValue(true);
       initialPlayPerformed.finish();
       deregisterCancellation();
