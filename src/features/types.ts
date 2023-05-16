@@ -16,7 +16,7 @@
 
 import RxPlayer from "../core/api";
 // eslint-disable-next-line max-len
-import MediaElementTrackChoiceManager from "../core/api/tracks_management/media_element_track_choice_manager";
+import MediaElementTracksStore from "../core/api/track_management/media_element_tracks_store";
 import type ContentDecryptor from "../core/decrypt";
 import DirectFileContentInitializer from "../core/init/directfile_content_initializer";
 import { SegmentBuffer } from "../core/segment_buffers";
@@ -41,32 +41,9 @@ export type IHTMLTextTracksBuffer =
       textTrackElement : HTMLElement) => SegmentBuffer;
 
 export type INativeTextTracksBuffer =
-  new(mediaElement : HTMLMediaElement,
-      hideNativeSubtitle : boolean) => SegmentBuffer;
+  new(mediaElement : HTMLMediaElement) => SegmentBuffer;
 
-export type IMediaElementTrackChoiceManager = typeof MediaElementTrackChoiceManager;
-
-interface IBifThumbnail { index : number;
-                          duration : number;
-                          ts : number;
-                          data : Uint8Array; }
-
-interface IBifObject { fileFormat : string;
-                       version : string;
-                       imageCount : number;
-                       timescale : number;
-                       format : string;
-                       width : number;
-                       height : number;
-                       aspectRatio : string;
-                       isVod : boolean;
-                       thumbs : IBifThumbnail[]; }
-
-export type IImageBuffer =
-  new() => SegmentBuffer;
-
-export type IImageParser =
-  ((buffer : Uint8Array) => IBifObject);
+export type IMediaElementTracksStore = typeof MediaElementTracksStore;
 
 export type IDashJsParser = (
   document: Document,
@@ -77,9 +54,9 @@ export type IDashJsParser = (
 // accessed.
 export interface IFeaturesObject {
   directfile : { initDirectFile: IDirectFileInit;
-                 mediaElementTrackChoiceManager : IMediaElementTrackChoiceManager; } |
+                 mediaElementTracksStore : IMediaElementTracksStore; } |
                null;
-  ContentDecryptor : IContentDecryptorClass|null;
+  decrypt : IContentDecryptorClass | null;
   createDebugElement : (
     (
       parentElt : HTMLElement,
@@ -89,8 +66,6 @@ export interface IFeaturesObject {
   ) | null;
   htmlTextTracksBuffer : IHTMLTextTracksBuffer|null;
   htmlTextTracksParsers : Partial<Record<string, IHTMLTextTracksParserFn>>;
-  imageBuffer : IImageBuffer|null;
-  imageParser : IImageParser|null;
   transports : Partial<Record<string, ITransportFunction>>;
   dashParsers : {
     wasm : DashWasmParser | null;

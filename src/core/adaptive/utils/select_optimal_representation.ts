@@ -23,25 +23,14 @@ import arrayFindIndex from "../../../utils/array_find_index";
  * bitrates.
  * @param {Array.<Representation>} representations - The representations array,
  * sorted in bitrate ascending order.
- * @param {Number} optimalBitrate - The optimal bitrate the Representation
+ * @param {Number} wantedBitrate - The optimal bitrate the Representation
  * should have under the current condition.
- * @param {Number} minBitrate - The minimum bitrate the chosen Representation
- * should have. We will take the Representation with the maximum bitrate if none
- * is found.
- * @param {Number} maxBitrate - The maximum bitrate the chosen Representation
- * should have. We will take the Representation with the minimum bitrate if none
- * is found.
  * @returns {Representation|undefined}
  */
 export default function selectOptimalRepresentation(
   representations : Representation[],
-  optimalBitrate : number,
-  minBitrate : number,
-  maxBitrate : number
+  wantedBitrate : number
 ) : Representation {
-  const wantedBitrate = optimalBitrate <= minBitrate ? minBitrate :
-                        optimalBitrate >= maxBitrate ? maxBitrate :
-                                                       optimalBitrate;
   const firstIndexTooHigh = arrayFindIndex(
     representations,
     (representation) => representation.bitrate > wantedBitrate);

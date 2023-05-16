@@ -54,7 +54,7 @@ export default class PendingRequestsStore {
   public addProgress(progress : IPendingRequestStoreProgress) : void {
     const request = this._currentRequests[progress.id];
     if (request == null) {
-      if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
+      if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
         throw new Error("ABR: progress for a request not added");
       }
       log.warn("ABR: progress for a request not added");
@@ -69,7 +69,7 @@ export default class PendingRequestsStore {
    */
   public remove(id : string) : void {
     if (this._currentRequests[id] == null) {
-      if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
+      if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
         throw new Error("ABR: can't remove unknown request");
       }
       log.warn("ABR: can't remove unknown request");

@@ -1,20 +1,20 @@
-use std::io::BufReader;
-use quick_xml::Reader;
 use quick_xml::events::Event;
+use quick_xml::Reader;
+use std::io::BufReader;
 
 mod attributes;
 mod s_element;
 
-use crate::events::*;
 use crate::errors::ParsingError;
+use crate::events::*;
 use crate::reader::MPDReader;
 
 pub use s_element::SegmentObject;
 
 pub struct MPDProcessor {
-    reader : quick_xml::Reader<BufReader<MPDReader>>,
-    reader_buf : Vec<u8>,
-    segment_objs_buf : Vec<SegmentObject>,
+    reader: quick_xml::Reader<BufReader<MPDReader>>,
+    reader_buf: Vec<u8>,
+    segment_objs_buf: Vec<SegmentObject>,
 }
 
 impl MPDProcessor {
@@ -23,7 +23,7 @@ impl MPDProcessor {
     /// # Arguments
     ///
     /// * `reader` - A BufReader allowing to read the MPD document
-    pub fn new(reader : BufReader<MPDReader>) -> Self {
+    pub fn new(reader: BufReader<MPDReader>) -> Self {
         let mut reader = Reader::from_reader(reader);
         reader.expand_empty_elements(true);
         reader.trim_text(true);
@@ -38,95 +38,94 @@ impl MPDProcessor {
     pub fn process_tags(&mut self) {
         loop {
             match self.read_next_event() {
-                Ok(Event::Start(tag)) => match tag.name() {
+                Ok(Event::Start(tag)) => match tag.name().as_ref() {
                     b"MPD" => {
                         TagName::MPD.report_tag_open();
                         attributes::report_mpd_attrs(&tag);
-                    },
+                    }
                     b"Period" => {
                         TagName::Period.report_tag_open();
                         attributes::report_period_attrs(&tag);
-                    },
+                    }
                     b"AdaptationSet" => {
                         TagName::AdaptationSet.report_tag_open();
                         attributes::report_adaptation_set_attrs(&tag);
-                    },
+                    }
                     b"Representation" => {
                         TagName::Representation.report_tag_open();
                         attributes::report_representation_attrs(&tag);
-                    },
+                    }
                     b"Accessibility" => {
                         TagName::Accessibility.report_tag_open();
                         attributes::report_scheme_attrs(&tag);
-                    },
+                    }
                     b"ContentComponent" => {
                         TagName::ContentComponent.report_tag_open();
                         attributes::report_content_component_attrs(&tag);
-                    },
+                    }
                     b"ContentProtection" => {
                         TagName::ContentProtection.report_tag_open();
                         attributes::report_content_protection_attrs(&tag);
-                    },
+                    }
                     b"EssentialProperty" => {
                         TagName::EssentialProperty.report_tag_open();
                         attributes::report_scheme_attrs(&tag);
-                    },
+                    }
                     b"InbandEventStream" => {
                         TagName::InbandEventStream.report_tag_open();
                         attributes::report_scheme_attrs(&tag);
-                    },
+                    }
                     b"Role" => {
                         TagName::Role.report_tag_open();
                         attributes::report_scheme_attrs(&tag);
-                    },
+                    }
                     b"SupplementalProperty" => {
                         TagName::SupplementalProperty.report_tag_open();
                         attributes::report_scheme_attrs(&tag);
-                    },
+                    }
                     b"SegmentBase" => {
                         TagName::SegmentBase.report_tag_open();
-                        attributes::report_segment_base_attrs(&&tag);
-                    },
+                        attributes::report_segment_base_attrs(&tag);
+                    }
                     b"Initialization" => attributes::report_initialization_attrs(&tag),
                     b"SegmentTemplate" => {
                         TagName::SegmentTemplate.report_tag_open();
-                        attributes::report_segment_template_attrs(&&tag);
-                    },
+                        attributes::report_segment_template_attrs(&tag);
+                    }
                     b"SegmentList" => {
                         TagName::SegmentList.report_tag_open();
 
                         // Re-use SegmentBase-one as it should not be different
-                        attributes::report_segment_base_attrs(&&tag);
-                    },
+                        attributes::report_segment_base_attrs(&tag);
+                    }
                     b"SegmentURL" => {
                         TagName::SegmentUrl.report_tag_open();
                         attributes::report_segment_url_attrs(&tag);
-                    },
+                    }
                     b"UTCTiming" => {
                         TagName::UtcTiming.report_tag_open();
                         attributes::report_scheme_attrs(&tag);
-                    },
+                    }
 
                     b"BaseURL" => {
                         TagName::BaseURL.report_tag_open();
                         attributes::report_base_url_attrs(&tag);
                         self.process_base_url_element();
-                    },
+                    }
                     b"cenc:pssh" => self.process_cenc_element(),
                     b"Location" => self.process_location_element(),
                     b"Label" => self.process_label_element(),
-                    b"SegmentTimeline" =>
-                        self.process_segment_timeline_element(),
+                    b"SegmentTimeline" => self.process_segment_timeline_element(),
 
                     b"EventStream" => {
                         TagName::EventStream.report_tag_open();
                         attributes::report_event_stream_attrs(&tag);
                         self.process_event_stream_element();
-                    },
+                    }
 
                     _ => {}
                 },
-                Ok(Event::End(tag)) => match tag.name() {
+                Ok(Event::End(tag)) => match tag.name().as_ref() {
                     b"MPD" => TagName::MPD.report_tag_close(),
                     b"Period" => TagName::Period.report_tag_close(),
                     b"AdaptationSet" => TagName::AdaptationSet.report_tag_close(),
@@ -137,14 +136,13 @@ impl MPDProcessor {
                     b"EssentialProperty" => TagName::EssentialProperty.report_tag_close(),
                     b"InbandEventStream" => TagName::InbandEventStream.report_tag_close(),
                     b"Role" => TagName::Role.report_tag_close(),
-                    b"SupplementalProperty" =>
-                        TagName::SupplementalProperty.report_tag_close(),
+                    b"SupplementalProperty" => TagName::SupplementalProperty.report_tag_close(),
                     b"SegmentBase" => TagName::SegmentBase.report_tag_close(),
                     b"SegmentList" => TagName::SegmentList.report_tag_close(),
                     b"SegmentURL" => TagName::SegmentUrl.report_tag_close(),
                     b"SegmentTemplate" => TagName::SegmentTemplate.report_tag_close(),
                     b"UTCTiming" => TagName::UtcTiming.report_tag_close(),
-                    _ => {},
+                    _ => {}
                 },
                 Ok(Event::Eof) => {
                     break;
@@ -165,7 +163,7 @@ impl MPDProcessor {
         if !self.reader_buf.is_empty() {
             self.reader_buf.clear();
         }
-        self.reader.read_event(&mut self.reader_buf)
+        self.reader.read_event_into(&mut self.reader_buf)
     }
 
     /// Loop over a SegmentTimeline's children (to call when a <SegmentTimeline>
@@ -176,41 +174,43 @@ impl MPDProcessor {
     fn process_segment_timeline_element(&mut self) {
         // Count inner SegmentTimeline tags if it exists.
         // Allowing to not close the current node when it is an inner that is closed
-        let mut inner_tag : u32 = 0;
+        let mut inner_tag: u32 = 0;
 
         // Will store the ending timestamp of the previous <S> element, starting
         // at `0`.
         // Most subsequent <S> elements won't explicitly indicate a starting
         // timestamp which indicates that they start at the end of the previous
         // <S> element (its starting timestamp + its duration).
-        let mut curr_time_base : f64 = 0.;
+        let mut curr_time_base: f64 = 0.;
 
         loop {
             match self.read_next_event() {
-                Ok(Event::Start(tag)) | Ok(Event::Empty(tag)) if tag.name() == b"S" => {
+                Ok(Event::Start(tag)) | Ok(Event::Empty(tag)) if tag.name().as_ref() == b"S" => {
                     match SegmentObject::from_s_element(&tag, curr_time_base) {
                         Ok(segment_obj) => {
                             if segment_obj.repeat_count == 0. {
                                 curr_time_base = segment_obj.start + segment_obj.duration;
                             } else {
-                                let duration = segment_obj.duration * (segment_obj.repeat_count + 1.);
+                                let duration =
+                                    segment_obj.duration * (segment_obj.repeat_count + 1.);
                                 curr_time_base = segment_obj.start + duration;
                             }
                             self.segment_objs_buf.push(segment_obj);
-                        },
+                        }
                         Err(err) => err.report_err(),
                     }
-                },
-                Ok(Event::Start(tag)) if tag.name() == b"SegmentTimeline" =>
-                    inner_tag += 1,
-                Ok(Event::End(tag)) if tag.name() == b"SegmentTimeline" => {
+                }
+                Ok(Event::Start(tag)) if tag.name().as_ref() == b"SegmentTimeline" => {
+                    inner_tag += 1
+                }
+                Ok(Event::End(tag)) if tag.name().as_ref() == b"SegmentTimeline" => {
                     if inner_tag > 0 {
                         inner_tag -= 1;
                     } else {
                         AttributeName::SegmentTimeline.report(self.segment_objs_buf.as_slice());
                         break;
                     }
-                },
+                }
                 Ok(Event::Eof) => {
                     ParsingError("Unexpected end of file in a SegmentTimeline.".to_owned())
                         .report_err();
@@ -219,7 +219,7 @@ impl MPDProcessor {
                 Err(e) => {
                     ParsingError::from(e).report_err();
                     break;
-                },
+                }
                 _ => (),
             }
         }
@@ -229,24 +229,26 @@ impl MPDProcessor {
     fn process_location_element(&mut self) {
         // Count inner Location tags if it exists.
         // Allowing to not close the current node when it is an inner that is closed
-        let mut inner_tag : u32 = 0;
+        let mut inner_tag: u32 = 0;
 
         loop {
             match self.read_next_event() {
-                Ok(Event::Text(t)) => if t.len() > 0 {
-                    match t.unescaped() {
-                        Ok(unescaped) => AttributeName::Location.report(unescaped),
-                        Err(err) => ParsingError::from(err).report_err(),
+                Ok(Event::Text(t)) => {
+                    if t.len() > 0 {
+                        match t.unescape() {
+                            Ok(unescaped) => AttributeName::Location.report(unescaped),
+                            Err(err) => ParsingError::from(err).report_err(),
+                        }
                     }
-                },
-                Ok(Event::Start(tag)) if tag.name() == b"Location" => inner_tag += 1,
-                Ok(Event::End(tag)) if tag.name() == b"Location" => {
+                }
+                Ok(Event::Start(tag)) if tag.name().as_ref() == b"Location" => inner_tag += 1,
+                Ok(Event::End(tag)) if tag.name().as_ref() == b"Location" => {
                     if inner_tag > 0 {
                         inner_tag -= 1;
                     } else {
                         break;
                     }
-                },
+                }
                 Ok(Event::Eof) => {
                     ParsingError("Unexpected end of file in a Location tag.".to_owned())
                         .report_err();
@@ -255,7 +257,7 @@ impl MPDProcessor {
                 Err(e) => {
                     ParsingError::from(e).report_err();
                     break;
-                },
+                }
                 _ => (),
             }
             self.reader_buf.clear();
@@ -265,33 +267,34 @@ impl MPDProcessor {
     fn process_label_element(&mut self) {
         // Count inner Label tags if it exists.
         // Allowing to not close the current node when it is an inner that is closed
-        let mut inner_tag : u32 = 0;
+        let mut inner_tag: u32 = 0;
 
         loop {
             match self.read_next_event() {
-                Ok(Event::Text(t)) => if t.len() > 0 {
-                    match t.unescaped() {
-                        Ok(unescaped) => AttributeName::Label.report(unescaped),
-                        Err(err) => ParsingError::from(err).report_err(),
+                Ok(Event::Text(t)) => {
+                    if t.len() > 0 {
+                        match t.unescape() {
+                            Ok(unescaped) => AttributeName::Label.report(unescaped),
+                            Err(err) => ParsingError::from(err).report_err(),
+                        }
                     }
-                },
-                Ok(Event::Start(tag)) if tag.name() == b"Label" => inner_tag += 1,
-                Ok(Event::End(tag)) if tag.name() == b"Label" => {
+                }
+                Ok(Event::Start(tag)) if tag.name().as_ref() == b"Label" => inner_tag += 1,
+                Ok(Event::End(tag)) if tag.name().as_ref() == b"Label" => {
                     if inner_tag > 0 {
                         inner_tag -= 1;
                     } else {
                         break;
                     }
-                },
+                }
                 Ok(Event::Eof) => {
-                    ParsingError("Unexpected end of file in a Label tag.".to_owned())
-                        .report_err();
+                    ParsingError("Unexpected end of file in a Label tag.".to_owned()).report_err();
                     break;
                 }
                 Err(e) => {
                     ParsingError::from(e).report_err();
                     break;
-                },
+                }
                 _ => (),
             }
             self.reader_buf.clear();
@@ -301,34 +304,35 @@ impl MPDProcessor {
     fn process_base_url_element(&mut self) {
         // Count inner BaseURL tags if it exists.
         // Allowing to not close the current node when it is an inner that is closed
-        let mut inner_tag : u32 = 0;
+        let mut inner_tag: u32 = 0;
 
         loop {
             match self.read_next_event() {
-                Ok(Event::Text(t)) => if t.len() > 0 {
-                    match t.unescaped() {
-                        Ok(unescaped) => AttributeName::Text.report(unescaped),
-                        Err(err) => ParsingError::from(err).report_err(),
+                Ok(Event::Text(t)) => {
+                    if t.len() > 0 {
+                        match t.unescape() {
+                            Ok(unescaped) => AttributeName::Text.report(unescaped),
+                            Err(err) => ParsingError::from(err).report_err(),
+                        }
                     }
-                },
-                Ok(Event::Start(tag)) if tag.name() == b"BaseURL" => inner_tag += 1,
-                Ok(Event::End(tag)) if tag.name() == b"BaseURL" => {
+                }
+                Ok(Event::Start(tag)) if tag.name().as_ref() == b"BaseURL" => inner_tag += 1,
+                Ok(Event::End(tag)) if tag.name().as_ref() == b"BaseURL" => {
                     if inner_tag > 0 {
                         inner_tag -= 1;
                     } else {
                         TagName::BaseURL.report_tag_close();
                         break;
                     }
-                },
+                }
                 Ok(Event::Eof) => {
-                    ParsingError("Unexpected end of file in a BaseURL.".to_owned())
-                        .report_err();
+                    ParsingError("Unexpected end of file in a BaseURL.".to_owned()).report_err();
                     break;
                 }
                 Err(e) => {
                     ParsingError::from(e).report_err();
                     break;
-                },
+                }
                 _ => (),
             }
             self.reader_buf.clear();
@@ -338,26 +342,30 @@ impl MPDProcessor {
     fn process_cenc_element(&mut self) {
         // Count inner cenc:pssh tags if it exists.
         // Allowing to not close the current node when it is an inner that is closed
-        let mut inner_tag : u32 = 0;
+        let mut inner_tag: u32 = 0;
 
         loop {
             match self.read_next_event() {
-                Ok(Event::Text(t)) => if t.len() > 0 {
-                    match t.unescaped() {
-                        Ok(unescaped) =>
+                Ok(Event::Text(t)) => {
+                    if t.len() > 0 {
+                        match t.unescape() {
+                            Ok(unescaped) =>
                             // TODO parse from base64 here?
-                            AttributeName::ContentProtectionCencPSSH.report(unescaped),
-                        Err(err) => ParsingError::from(err).report_err(),
+                            {
+                                AttributeName::ContentProtectionCencPSSH.report(unescaped)
+                            }
+                            Err(err) => ParsingError::from(err).report_err(),
+                        }
                     }
-                },
-                Ok(Event::Start(tag)) if tag.name() == b"cenc:pssh" => inner_tag += 1,
-                Ok(Event::End(tag)) if tag.name() == b"cenc:pssh" => {
+                }
+                Ok(Event::Start(tag)) if tag.name().as_ref() == b"cenc:pssh" => inner_tag += 1,
+                Ok(Event::End(tag)) if tag.name().as_ref() == b"cenc:pssh" => {
                     if inner_tag > 0 {
                         inner_tag -= 1;
                     } else {
                         break;
                     }
-                },
+                }
                 Ok(Event::Eof) => {
                     ParsingError("Unexpected end of file in a cenc:pssh tag.".to_owned())
                         .report_err();
@@ -366,7 +374,7 @@ impl MPDProcessor {
                 Err(e) => {
                     ParsingError::from(e).report_err();
                     break;
-                },
+                }
                 _ => (),
             }
             self.reader_buf.clear();
@@ -377,7 +385,6 @@ impl MPDProcessor {
         // Count inner EventStream tags if it exists.
         // Allowing to not close the current node when it is an inner that is closed
         let mut inner_tag = 0u32;
-
 
         loop {
             // We need to keep the XML as-is in the JS-side when it comes to
@@ -395,34 +402,35 @@ impl MPDProcessor {
 
             let evt = self.read_next_event();
             match evt {
-                Ok(Event::Start(tag)) if tag.name() == b"Event" => {
+                Ok(Event::Start(tag)) if tag.name().as_ref() == b"Event" => {
                     TagName::EventStreamElt.report_tag_open();
                     attributes::report_event_stream_event_attrs(&tag);
                     match self.get_event_stream_event_ending_position() {
                         Ok(ending_pos) => {
                             AttributeName::EventStreamEltRange
                                 .report((initial_buffer_pos as f64, ending_pos as f64));
-                        },
-                        Err (e) => e.report_err(),
+                        }
+                        Err(e) => e.report_err(),
                     }
                     TagName::EventStreamElt.report_tag_close();
-                },
-                Ok(Event::Empty(tag)) if tag.name() == b"Event" => {
+                }
+                Ok(Event::Empty(tag)) if tag.name().as_ref() == b"Event" => {
                     TagName::EventStreamElt.report_tag_open();
                     attributes::report_event_stream_event_attrs(&tag);
                     let curr_pos = self.reader.buffer_position();
                     AttributeName::EventStreamEltRange
                         .report((initial_buffer_pos as f64, curr_pos as f64));
                     TagName::EventStreamElt.report_tag_close();
-                },
-                Ok(Event::Start(tag)) if tag.name() == b"EventStream" => inner_tag += 1,
-                Ok(Event::End(tag)) if tag.name() == b"EventStream" => {
-                    if inner_tag > 0 { inner_tag -= 1; }
-                    else {
+                }
+                Ok(Event::Start(tag)) if tag.name().as_ref() == b"EventStream" => inner_tag += 1,
+                Ok(Event::End(tag)) if tag.name().as_ref() == b"EventStream" => {
+                    if inner_tag > 0 {
+                        inner_tag -= 1;
+                    } else {
                         TagName::EventStream.report_tag_close();
                         break;
                     }
-                },
+                }
                 Ok(Event::Eof) => {
                     ParsingError("Unexpected end of file in a EventStream.".to_owned())
                         .report_err();
@@ -431,7 +439,7 @@ impl MPDProcessor {
                 Err(e) => {
                     ParsingError::from(e).report_err();
                     break;
-                },
+                }
                 _ => (),
             }
             self.reader_buf.clear();
@@ -444,8 +452,8 @@ impl MPDProcessor {
         let mut inner_event_tag = 0u32;
         loop {
             match self.read_next_event()? {
-                Event::Start(tag) if tag.name() == b"Event" => inner_event_tag += 1,
-                Event::End(tag) if tag.name() == b"Event" => {
+                Event::Start(tag) if tag.name().as_ref() == b"Event" => inner_event_tag += 1,
+                Event::End(tag) if tag.name().as_ref() == b"Event" => {
                     if inner_event_tag > 0 {
                         inner_event_tag -= 1;
                     } else {
@@ -453,9 +461,11 @@ impl MPDProcessor {
                     }
                 }
                 Event::Eof => {
-                    return Err(ParsingError("Unexpected end of file in an Event element.".to_owned()));
+                    return Err(ParsingError(
+                        "Unexpected end of file in an Event element.".to_owned(),
+                    ));
                 }
-                _ => {},
+                _ => {}
             }
         }
     }

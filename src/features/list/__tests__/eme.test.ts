@@ -30,7 +30,7 @@ describe("Features list - EME", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject : any = {};
     addEMEFeature(featureObject);
-    expect(featureObject).toEqual({ ContentDecryptor });
-    expect(featureObject.ContentDecryptor).toBe(ContentDecryptor);
+    expect(featureObject).toEqual({ decrypt: ContentDecryptor });
+    expect(featureObject.decrypt).toBe(ContentDecryptor);
   });
 });

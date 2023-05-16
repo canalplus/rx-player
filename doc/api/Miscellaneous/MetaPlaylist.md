@@ -225,17 +225,10 @@ should be the same value than the `startTime` of the following one).
 
 The `"METAPLAYLIST"` feature is not included in the default RxPlayer build.
 
-There's two way you can import it, depending on if you're relying on the minimal
-version or if you prefer to make use of environment variables and build the
-player manually.
-
-#### Through the minimal version of the RxPlayer
-
-If you're using the "minimal" version of the RxPlayer (through the
-`"rx-player/minimal"` import), you will need to import:
-
-- the `METAPLAYLIST` experimental feature
-- every transport protocol you might want to use.
+To import it, you first need to rely on the "minimal" version of the RxPlayer
+(through the `"rx-player/minimal"` import), you will need to import the
+`METAPLAYLIST` experimental feature and every transport protocol you might want
+to use.
 
 For example if you need to use MetaPlaylist with both Smooth and DASH contents,
 you have to import at least all three as such:
@@ -248,21 +241,8 @@ import { DASH, SMOOTH } from "rx-player/features";
 RxPlayer.addFeatures([METAPLAYLIST, DASH, SMOOTH]);
 ```
 
-#### Through environment variables
-
-If you don't want to go the minimal version's route and you have no problem with
-building yourself a new version of the RxPlayer, you can make use of environment
-variables to activate it.
-
-This can be done through the `RXP_METAPLAYLIST` environment variable, which you
-have to set to `true`:
-
-```sh
-RXP_METAPLAYLIST=true npm run build:min
-```
-
-More information about any of that can be found in the [minimal player
-documentation](../../Getting_Started/Minimal_Player.md).
+More information about the minimal version of the RxPlayer can be found in the
+[minimal player documentation](../../Getting_Started/Minimal_Player.md).
 
 ### Loading a MetaPlaylist content
 
@@ -282,13 +262,12 @@ it, you can serve directly the file through the use of a Manifest Loader:
 ```js
 player.loadVideo({
   transport: "metaplaylist",
-  transportOptions: {
-    // Note: `_url` here will be `undefined`
-    manifestLoader(_url, callbacks) {
-      // where `myMetaPlaylistObject` is the MetaPlaylist in either Object or
-      // String form
-      callbacks.resolve({ data: myMetaPlaylistObject });
-    },
+
+  // Note: `_url` here will be `undefined`
+  manifestLoader(_url, callbacks) {
+    // where `myMetaPlaylistObject` is the MetaPlaylist in either Object or
+    // String form
+    callbacks.resolve({ data: myMetaPlaylistObject });
   },
 });
 ```
@@ -310,8 +289,8 @@ In those cases, you can make usage of the `serverSyncInfos` transport options
 when calling `loadVideo` to indicate the current time and construct the
 MetaPlaylist by using unix time for each content's `startTime` and `endTime`.
 
-The `serverSyncInfos` option is explained [in the `transportOptions`
-documentation](../Loading_a_Content.md#transportoptions).
+The `serverSyncInfos` option is explained [in the `loadVideo` options
+documentation](../Loading_a_Content.md#serversyncinfos).
 
 For example, if you trust the user's system clock to indicate the current live
 time (in most cases this is risky however), you can use the `Date.now()` api:
@@ -325,6 +304,6 @@ const serverSyncInfos = {
 player.loadVideo({
   transport: "metaplaylist",
   url: "https://www.example.com/metaplaylist",
-  transportOptions: { serverSyncInfos },
+  serverSyncInfos,
 });
 ```

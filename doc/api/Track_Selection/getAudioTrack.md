@@ -45,22 +45,44 @@ return an object with the following properties:
   - `id` (`string`): The id used to identify this Representation.
     No other Representation from this track will have the same `id`.
 
-  - `bitrate` (`Number`): The bitrate of this Representation, in bits per
-    seconds.
+  - `bitrate` (`Number|undefined`): The bitrate of this Representation, in
+    bits per seconds.
+
+    `undefined` if unknown.
 
   - `codec` (`string|undefined`): The audio codec the Representation is
     in, as announced in the corresponding Manifest.
 
+  - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that
+    Representation is supported by the current platform.
+
+    Note that because elements of the `representations` array only contains
+    playable Representation, this value here cannot be set to `false` when
+    in this array.
+
+    `undefined` (or not set) if support of that Representation is unknown or
+    if does not make sense here.
+
+  - `decipherable` (`Boolean|undefined`): If `true` the Representation can be
+     deciphered (in the eventuality it had DRM-related protection).
+
+    Note that because elements of the `representations` array only contains
+    playable Representation, this value here cannot be set to `false` when
+    in this array.
+
 `undefined` if no audio content has been loaded yet or if its information is
 unknown.
 
-<div class="note">
-Note for multi-Period contents:
-<br>
-This method will only return the chosen video track for the
-<a href="../../Getting_Started/Glossary.md#period">Period</a> that is currently
-playing.
-</div>
+You can also get the information on the chosen audio track for another Period by
+calling `getAudioTrack` with the corresponding Period's id in argument. Such id
+can be obtained through the `getAvailablePeriods` method, the
+`newAvailablePeriods` event or the `periodChange` event.
+
+```js
+// example: getting track information for the first Period
+const periods = rxPlayer.getAvailablePeriods();
+console.log(rxPlayer.getAudioTrack(periods[0].id);
+```
 
 <div class="warning">
 In <i>DirectFile</i> mode (see <a
@@ -71,7 +93,18 @@ audio tracks API in the browser, this method returns "undefined".
 ## Syntax
 
 ```js
+// Get information about the currently-playing audio track
 const audioTrack = player.getAudioTrack();
+
+// Get information about the audio track for a specific Period
+const audioTrack = player.getAudioTrack(periodId);
 ```
+
+ - **arguments**:
+
+   1. _periodId_ `string|undefined`: The `id` of the Period for which you want
+      to get information about its current audio track.
+      If not defined, the information associated to the currently-playing Period
+      will be returned.
 
  - **return value** `Object|null|undefined`
