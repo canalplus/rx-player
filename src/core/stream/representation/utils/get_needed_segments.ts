@@ -493,8 +493,8 @@ function doesEndSeemGarbageCollected(
       currentSeg.end - currentSeg.bufferedEnd > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT)
   {
     log.info("Stream: The end of the wanted segment has been garbage collected",
-             currentSeg.start,
-             currentSeg.bufferedStart);
+             currentSeg.end,
+             currentSeg.bufferedEnd);
     return true;
   }
 

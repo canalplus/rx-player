@@ -93,6 +93,13 @@ function parseRepresentationChildren(
             contentProtections.push(contentProtection);
           }
           break;
+        case "SupplementalProperty":
+          if (children.supplementalProperties == null) {
+            children.supplementalProperties = [parseScheme(currentElement)];
+          } else {
+            children.supplementalProperties.push(parseScheme(currentElement));
+          }
+          break;
       }
     }
   }
@@ -175,6 +182,10 @@ function parseRepresentationAttributes(
         parseValue(attr.value, { asKey: "qualityRanking",
                                  parser: parseMPDInteger,
                                  dashName: "qualityRanking" });
+        break;
+
+      case "scte214:supplementalCodecs":
+        attributes.supplementalCodecs = attr.value;
         break;
 
       case "segmentProfiles":
