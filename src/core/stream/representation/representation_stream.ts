@@ -109,11 +109,17 @@ export default function RepresentationStream<TSegmentDataType>(
   segmentsLoadingCanceller.linkToSignal(globalCanceller.signal);
 
   /** Saved initialization segment state for this representation. */
-  const initSegmentState : IInitSegmentState<TSegmentDataType> = {
+  const initSegmentState : IInitSegmentState = {
     segment: representation.index.getInitSegment(),
-    segmentData: null,
+    uniqueId: null,
     isLoaded: false,
   };
+  globalCanceller.signal.register(() => {
+    // Free initialization segment if one has been declared
+    if (initSegmentState.uniqueId !== null) {
+      segmentBuffer.freeInitSegment(initSegmentState.uniqueId);
+    }
+  });
 
   /** Emit the last scheduled downloading queue for segments. */
   const lastSegmentQueue = createSharedReference<IDownloadQueueItem>({
@@ -125,7 +131,6 @@ export default function RepresentationStream<TSegmentDataType>(
   const hasInitSegment = initSegmentState.segment !== null;
 
   if (!hasInitSegment) {
-    initSegmentState.segmentData = null;
     initSegmentState.isLoaded = true;
   }
 
@@ -338,7 +343,6 @@ export default function RepresentationStream<TSegmentDataType>(
       return ;
     }
     if (evt.segmentType === "init") {
-      initSegmentState.segmentData = evt.initializationData;
       initSegmentState.isLoaded = true;
 
       // Now that the initialization segment has been parsed - which may have
@@ -350,21 +354,31 @@ export default function RepresentationStream<TSegmentDataType>(
           callbacks.encryptionDataEncountered(
             allEncryptionData.map(p => objectAssign({ content }, p))
           );
+          if (globalCanceller.isUsed()) {
+            return ; // previous callback has stopped everything by side-effect
+          }
         }
       }
 
-      pushInitSegment({ playbackObserver,
-                        content,
-                        segment: evt.segment,
-                        segmentData: evt.initializationData,
-                        segmentBuffer },
-                      globalCanceller.signal)
-        .then((result) => {
-          if (result !== null) {
-            callbacks.addedSegment(result);
-          }
-        })
-        .catch(onFatalBufferError);
+      if (evt.initializationData !== null) {
+        const initSegmentUniqueId = representation.uniqueId;
+        initSegmentState.uniqueId = initSegmentUniqueId;
+        segmentBuffer.declareInitSegment(initSegmentUniqueId,
+                                         evt.initializationData);
+        pushInitSegment({ playbackObserver,
+                          content,
+                          initSegmentUniqueId,
+                          segment: evt.segment,
+                          segmentData: evt.initializationData,
+                          segmentBuffer },
+                        globalCanceller.signal)
+          .then((result) => {
+            if (result !== null) {
+              callbacks.addedSegment(result);
+            }
+          })
+          .catch(onFatalBufferError);
+      }
 
       // Sometimes the segment list is only known once the initialization segment
       // is parsed. Thus we immediately re-check if there's new segments to load.
@@ -401,10 +415,10 @@ export default function RepresentationStream<TSegmentDataType>(
         }
       }
 
-      const initSegmentData = initSegmentState.segmentData;
+      const initSegmentUniqueId = initSegmentState.uniqueId;
       pushMediaSegment({ playbackObserver,
                          content,
-                         initSegmentData,
+                         initSegmentUniqueId,
                          parsedSegment: evt,
                          segment: evt.segment,
                          segmentBuffer },
@@ -440,17 +454,18 @@ export default function RepresentationStream<TSegmentDataType>(
  * Information about the initialization segment linked to the Representation
  * which the RepresentationStream try to download segments for.
  */
-interface IInitSegmentState<T> {
+interface IInitSegmentState {
   /**
    * Segment Object describing that initialization segment.
    * `null` if there's no initialization segment for that Representation.
    */
   segment : ISegment | null;
   /**
-   * Initialization segment data.
-   * `null` either when it doesn't exist or when it has not been loaded yet.
+   * Unique identifier used to identify the initialization segment data, used by
+   * the `SegmentBuffer`.
+   * `null` either when it doesn't exist or when it has not been declared yet.
    */
-  segmentData : T | null;
+  uniqueId : string | null;
   /** `true` if the initialization segment has been loaded and parsed. */
   isLoaded : boolean;
 }

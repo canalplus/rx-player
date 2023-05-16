@@ -138,6 +138,22 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
   }
 
   /**
+   * @param {string} uniqueId
+   */
+  public declareInitSegment(uniqueId : string): void {
+    log.warn("ISB: Declaring initialization segment for image SegmentBuffer",
+             uniqueId);
+  }
+
+  /**
+   * @param {string} uniqueId
+   */
+  public freeInitSegment(uniqueId : string): void {
+    log.warn("ISB: Freeing initialization segment for image SegmentBuffer",
+             uniqueId);
+  }
+
+  /**
    * Push text segment to the HTMLTextSegmentBuffer.
    * @param {Object} infos
    * @returns {Promise}
