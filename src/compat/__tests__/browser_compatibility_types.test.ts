@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import globalScope from "../global_scope";
+
 // Needed for calling require (which itself is needed to mock properly) because
 // it is not type-checked:
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
@@ -30,123 +32,100 @@ describe("compat - browser compatibility types", () => {
     WebKitMediaSource? : unknown;
     MSMediaSource? : unknown;
   }
-  const win = window as IFakeWindow;
+  const gs = globalScope as IFakeWindow;
   beforeEach(() => {
     jest.resetModules();
-  });
-
-  it("should set the MediaSource to `undefined` when running nodejs", () => {
-    jest.mock("../is_node", () => ({ __esModule: true as const,
-                                     default: true }));
-
-    const origMediaSource = win.MediaSource;
-    const origMozMediaSource = win.MozMediaSource;
-    const origWebKitMediaSource = win.WebKitMediaSource;
-    const origMSMediaSource = win.MSMediaSource;
-
-    win.MediaSource = { a: 1 };
-    win.MozMediaSource = { a: 2 };
-    win.WebKitMediaSource = { a: 3 };
-    win.MSMediaSource = { a: 4 };
-
-    const { MediaSource_ } = jest.requireActual("../browser_compatibility_types");
-    expect(MediaSource_).toEqual(undefined);
-
-    win.MediaSource = origMediaSource;
-    win.MozMediaSource = origMozMediaSource;
-    win.WebKitMediaSource = origWebKitMediaSource;
-    win.MSMediaSource = origMSMediaSource;
   });
 
   it("should use the native MediaSource if defined", () => {
     jest.mock("../is_node", () => ({ __esModule: true as const,
                                      default: false }));
 
-    const origMediaSource = win.MediaSource;
-    const origMozMediaSource = win.MozMediaSource;
-    const origWebKitMediaSource = win.WebKitMediaSource;
-    const origMSMediaSource = win.MSMediaSource;
+    const origMediaSource = gs.MediaSource;
+    const origMozMediaSource = gs.MozMediaSource;
+    const origWebKitMediaSource = gs.WebKitMediaSource;
+    const origMSMediaSource = gs.MSMediaSource;
 
-    win.MediaSource = { a: 1 };
-    win.MozMediaSource = { a: 2 };
-    win.WebKitMediaSource = { a: 3 };
-    win.MSMediaSource = { a: 4 };
+    gs.MediaSource = { a: 1 };
+    gs.MozMediaSource = { a: 2 };
+    gs.WebKitMediaSource = { a: 3 };
+    gs.MSMediaSource = { a: 4 };
 
     const { MediaSource_ } = jest.requireActual("../browser_compatibility_types");
     expect(MediaSource_).toEqual({ a: 1 });
 
-    win.MediaSource = origMediaSource;
-    win.MozMediaSource = origMozMediaSource;
-    win.WebKitMediaSource = origWebKitMediaSource;
-    win.MSMediaSource = origMSMediaSource;
+    gs.MediaSource = origMediaSource;
+    gs.MozMediaSource = origMozMediaSource;
+    gs.WebKitMediaSource = origWebKitMediaSource;
+    gs.MSMediaSource = origMSMediaSource;
   });
 
   it("should use MozMediaSource if defined and MediaSource is not", () => {
     jest.mock("../is_node", () => ({ __esModule: true as const,
                                      default: false }));
 
-    const origMediaSource = win.MediaSource;
-    const origMozMediaSource = win.MozMediaSource;
-    const origWebKitMediaSource = win.WebKitMediaSource;
-    const origMSMediaSource = win.MSMediaSource;
+    const origMediaSource = gs.MediaSource;
+    const origMozMediaSource = gs.MozMediaSource;
+    const origWebKitMediaSource = gs.WebKitMediaSource;
+    const origMSMediaSource = gs.MSMediaSource;
 
-    win.MediaSource = undefined;
-    win.MozMediaSource = { a: 2 };
-    win.WebKitMediaSource = undefined;
-    win.MSMediaSource = undefined;
+    gs.MediaSource = undefined;
+    gs.MozMediaSource = { a: 2 };
+    gs.WebKitMediaSource = undefined;
+    gs.MSMediaSource = undefined;
 
     const { MediaSource_ } = jest.requireActual("../browser_compatibility_types");
     expect(MediaSource_).toEqual({ a: 2 });
 
-    win.MediaSource = origMediaSource;
-    win.MozMediaSource = origMozMediaSource;
-    win.WebKitMediaSource = origWebKitMediaSource;
-    win.MSMediaSource = origMSMediaSource;
+    gs.MediaSource = origMediaSource;
+    gs.MozMediaSource = origMozMediaSource;
+    gs.WebKitMediaSource = origWebKitMediaSource;
+    gs.MSMediaSource = origMSMediaSource;
   });
 
   it("should use WebKitMediaSource if defined and MediaSource is not", () => {
     jest.mock("../is_node", () => ({ __esModule: true as const,
                                      default: false }));
 
-    const origMediaSource = win.MediaSource;
-    const origMozMediaSource = win.MozMediaSource;
-    const origWebKitMediaSource = win.WebKitMediaSource;
-    const origMSMediaSource = win.MSMediaSource;
+    const origMediaSource = gs.MediaSource;
+    const origMozMediaSource = gs.MozMediaSource;
+    const origWebKitMediaSource = gs.WebKitMediaSource;
+    const origMSMediaSource = gs.MSMediaSource;
 
-    win.MediaSource = undefined;
-    win.MozMediaSource = undefined;
-    win.WebKitMediaSource = { a: 3 };
-    win.MSMediaSource = undefined;
+    gs.MediaSource = undefined;
+    gs.MozMediaSource = undefined;
+    gs.WebKitMediaSource = { a: 3 };
+    gs.MSMediaSource = undefined;
 
     const { MediaSource_ } = jest.requireActual("../browser_compatibility_types");
     expect(MediaSource_).toEqual({ a: 3 });
 
-    win.MediaSource = origMediaSource;
-    win.MozMediaSource = origMozMediaSource;
-    win.WebKitMediaSource = origWebKitMediaSource;
-    win.MSMediaSource = origMSMediaSource;
+    gs.MediaSource = origMediaSource;
+    gs.MozMediaSource = origMozMediaSource;
+    gs.WebKitMediaSource = origWebKitMediaSource;
+    gs.MSMediaSource = origMSMediaSource;
   });
 
   it("should use MSMediaSource if defined and MediaSource is not", () => {
     jest.mock("../is_node", () => ({ __esModule: true as const,
                                      default: false }));
 
-    const origMediaSource = win.MediaSource;
-    const origMozMediaSource = win.MozMediaSource;
-    const origWebKitMediaSource = win.WebKitMediaSource;
-    const origMSMediaSource = win.MSMediaSource;
+    const origMediaSource = gs.MediaSource;
+    const origMozMediaSource = gs.MozMediaSource;
+    const origWebKitMediaSource = gs.WebKitMediaSource;
+    const origMSMediaSource = gs.MSMediaSource;
 
-    win.MediaSource = undefined;
-    win.MozMediaSource = undefined;
-    win.WebKitMediaSource = undefined;
-    win.MSMediaSource = { a: 4 };
+    gs.MediaSource = undefined;
+    gs.MozMediaSource = undefined;
+    gs.WebKitMediaSource = undefined;
+    gs.MSMediaSource = { a: 4 };
 
     const { MediaSource_ } = jest.requireActual("../browser_compatibility_types");
     expect(MediaSource_).toEqual({ a: 4 });
 
-    win.MediaSource = origMediaSource;
-    win.MozMediaSource = origMozMediaSource;
-    win.WebKitMediaSource = origWebKitMediaSource;
-    win.MSMediaSource = origMSMediaSource;
+    gs.MediaSource = origMediaSource;
+    gs.MozMediaSource = origMozMediaSource;
+    gs.WebKitMediaSource = origWebKitMediaSource;
+    gs.MSMediaSource = origMSMediaSource;
   });
 });

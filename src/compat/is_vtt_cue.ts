@@ -15,6 +15,7 @@
  */
 
 import { ICompatVTTCue } from "./browser_compatibility_types";
+import globalScope from "./global_scope";
 
 /**
  * Returns true if the given cue is an instance of a VTTCue.
@@ -25,6 +26,6 @@ export default function isVTTCue(
   cue : ICompatVTTCue|TextTrackCue
 ) : cue is ICompatVTTCue {
   /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-  return typeof window.VTTCue === "function" && cue instanceof window.VTTCue;
+  return typeof globalScope.VTTCue === "function" && cue instanceof globalScope.VTTCue;
   /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 }

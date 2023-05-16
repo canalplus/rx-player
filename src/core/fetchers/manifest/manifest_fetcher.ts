@@ -28,9 +28,8 @@ import {
   ITransportManifestPipeline,
   ITransportPipelines,
 } from "../../../transports";
-import assert from "../../../utils/assert";
 import EventEmitter from "../../../utils/event_emitter";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import noop from "../../../utils/noop";
 import TaskCanceller from "../../../utils/task_canceller";
 import errorSelector from "../utils/error_selector";
@@ -206,12 +205,8 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       this.trigger("warning", errorSelector(err));
     });
 
-    const loadingPromise = pipelines.resolveManifestUrl === undefined ?
-      callLoaderWithRetries(requestUrl) :
-      callResolverWithRetries(requestUrl).then(callLoaderWithRetries);
-
     try {
-      const response = await loadingPromise;
+      const response = await callLoaderWithRetries(requestUrl);
       return {
         parse: (parserOptions : IManifestFetcherParserOptions) => {
           return this._parseLoadedManifest(response,
@@ -221,23 +216,6 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       };
     } catch (err) {
       throw errorSelector(err);
-    }
-
-    /**
-     * Call the resolver part of the pipeline, retrying if it fails according
-     * to the current settings.
-     * Returns the Promise of the last attempt.
-     * /!\ This pipeline should have a `resolveManifestUrl` function defined.
-     * @param {string | undefined}  resolverUrl
-     * @returns {Promise}
-     */
-    function callResolverWithRetries(
-      resolverUrl : string | undefined
-    ) : Promise<string | undefined> {
-      const { resolveManifestUrl } = pipelines;
-      assert(resolveManifestUrl !== undefined);
-      const callResolver = () => resolveManifestUrl(resolverUrl, cancelSignal);
-      return scheduleRequestPromise(callResolver, backoffSettings, cancelSignal);
     }
 
     /**
@@ -252,14 +230,27 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     ) : Promise<IRequestedData<ILoadedManifestFormat>> {
       const { loadManifest } = pipelines;
       let requestTimeout : number | undefined =
-        isNullOrUndefined(settings.requestTimeout) ?
+        (settings.requestTimeout === undefined) ?
           config.getCurrent().DEFAULT_REQUEST_TIMEOUT :
           settings.requestTimeout;
+
+      let connectionTimeout: number | undefined =
+      (settings.connectionTimeout === undefined) ?
+        config.getCurrent().DEFAULT_CONNECTION_TIMEOUT :
+        settings.connectionTimeout;
+
       if (requestTimeout < 0) {
         requestTimeout = undefined;
       }
+
+      if (connectionTimeout < 0) {
+        connectionTimeout = undefined;
+      }
       const callLoader = () => loadManifest(manifestUrl,
-                                            { timeout: requestTimeout },
+                                            {
+                                              timeout: requestTimeout,
+                                              connectionTimeout,
+                                            },
                                             cancelSignal);
       return scheduleRequestPromise(callLoader, backoffSettings, cancelSignal);
     }
@@ -304,7 +295,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     parserOptions : IManifestFetcherParserOptions,
     requestUrl : string | undefined
   ) : Promise<IManifestFetcherParsedResult> {
-    const parsingTimeStart = performance.now();
+    const parsingTimeStart = getMonotonicTimeStamp();
     const cancelSignal = this._canceller.signal;
     const trigger = this.trigger.bind(this);
     const { sendingTime, receivedTime } = loaded;
@@ -324,10 +315,10 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
                                                 cancelSignal,
                                                 scheduleRequest);
       if (!isPromise(res)) {
-        return finish(res.manifest);
+        return finish(res.manifest, res.warnings);
       } else {
-        const { manifest } = await res;
-        return finish(manifest);
+        const { manifest, warnings } = await res;
+        return finish(manifest, warnings);
       }
     } catch (err) {
       const formattedError = formatError(err, {
@@ -378,9 +369,12 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
      * To call once the Manifest has been parsed.
      * @param {Object} manifest
      */
-    function finish(manifest : Manifest) : IManifestFetcherParsedResult {
-      onWarnings(manifest.contentWarnings);
-      const parsingTime = performance.now() - parsingTimeStart;
+    function finish(
+      manifest : Manifest,
+      warnings: IPlayerError[]
+    ) : IManifestFetcherParsedResult {
+      onWarnings(warnings);
+      const parsingTime = getMonotonicTimeStamp() - parsingTimeStart;
       log.info(`MF: Manifest parsed in ${parsingTime}ms`);
 
       return { manifest,
@@ -398,23 +392,19 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
    */
   private _getBackoffSetting(onRetry : (err : unknown) => void) : IBackoffSettings {
     const { DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
-            DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
             INITIAL_BACKOFF_DELAY_BASE,
             MAX_BACKOFF_DELAY_BASE } = config.getCurrent();
     const { lowLatencyMode,
-            maxRetryRegular : ogRegular,
-            maxRetryOffline : ogOffline } = this._settings;
+            maxRetry : ogRegular } = this._settings;
     const baseDelay = lowLatencyMode ? INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY :
                                        INITIAL_BACKOFF_DELAY_BASE.REGULAR;
     const maxDelay = lowLatencyMode ? MAX_BACKOFF_DELAY_BASE.LOW_LATENCY :
                                       MAX_BACKOFF_DELAY_BASE.REGULAR;
-    const maxRetryRegular = ogRegular ?? DEFAULT_MAX_MANIFEST_REQUEST_RETRY;
-    const maxRetryOffline = ogOffline ?? DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE;
+    const maxRetry = ogRegular ?? DEFAULT_MAX_MANIFEST_REQUEST_RETRY;
     return { onRetry,
              baseDelay,
              maxDelay,
-             maxRetryRegular,
-             maxRetryOffline };
+             maxRetry };
   }
 
   /**
@@ -458,7 +448,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     /** Time elapsed since the beginning of the Manifest request, in milliseconds. */
     const timeSinceRequest = sendingTime === undefined ?
       0 :
-      performance.now() - sendingTime;
+      getMonotonicTimeStamp() - sendingTime;
 
     /** Minimum update delay we should not go below, in milliseconds. */
     const minInterval = Math.max(this._settings.minimumManifestUpdateInterval -
@@ -481,7 +471,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       // (to avoid asking for it too often).
       const timeSinceLastRefresh = sendingTime === undefined ?
                                      0 :
-                                     performance.now() - sendingTime;
+                                     getMonotonicTimeStamp() - sendingTime;
       const _minInterval = Math.max(this._settings.minimumManifestUpdateInterval -
                                       timeSinceLastRefresh,
                                     0);
@@ -593,7 +583,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       this._prioritizedContentUrl = null;
     } else {
       fullRefresh = !enablePartialRefresh || manifestUpdateUrl === undefined;
-      refreshURL = fullRefresh ? manifest.getUrl() :
+      refreshURL = fullRefresh ? manifest.getUrls()[0] :
                                  manifestUpdateUrl;
     }
     const externalClockOffset = manifest.clockOffset;
@@ -621,7 +611,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
         const { manifest: newManifest,
                 sendingTime: newSendingTime,
                 parsingTime } = res;
-        const updateTimeStart = performance.now();
+        const updateTimeStart = getMonotonicTimeStamp();
 
         if (fullRefresh) {
           manifest.replace(newManifest);
@@ -638,8 +628,8 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
             // The value allows to set a delay relatively to the last Manifest refresh
             // (to avoid asking for it too often).
             const timeSinceLastRefresh = newSendingTime === undefined ?
-                                           0 :
-                                           performance.now() - newSendingTime;
+              0 :
+              getMonotonicTimeStamp() - newSendingTime;
             const _minInterval = Math.max(this._settings.minimumManifestUpdateInterval -
                                             timeSinceLastRefresh,
                                           0);
@@ -658,7 +648,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
             return;
           }
         }
-        const updatingTime = performance.now() - updateTimeStart;
+        const updatingTime = getMonotonicTimeStamp() - updateTimeStart;
         this._recursivelyRefreshManifest(manifest, { sendingTime: newSendingTime,
                                                      parsingTime,
                                                      updatingTime });
@@ -693,11 +683,11 @@ interface IManifestFetcherParsedResult {
   /** The resulting Manifest */
   manifest : Manifest;
   /**
-   * The time (`performance.now()`) at which the request was started (at which
-   * the JavaScript call was done).
+   * Monotonically-raising timestamp (common one used by the RxPlayer's logic)
+   * at which the request was started (at which the JavaScript call was done).
    */
   sendingTime? : number | undefined;
-  /** The time (`performance.now()`) at which the request was fully received. */
+  /** Monotonically-raising timestamp at which the request was fully received. */
   receivedTime? : number | undefined;
   /* The time taken to parse the Manifest through the corresponding parse function. */
   parsingTime? : number | undefined;
@@ -712,8 +702,8 @@ interface IManifestFetcherResponse {
 
 interface IManifestFetcherParserOptions {
   /**
-   * If set, offset to add to `performance.now()` to obtain the current
-   * server's time.
+   * If set, offset to add to the monotonically-raising timestamp used by the
+   * RxPlayer to obtain the current server's time.
    */
   externalClockOffset? : number | undefined;
   /** The previous value of the Manifest (when updating). */
@@ -736,9 +726,7 @@ export interface IManifestFetcherSettings {
    */
   lowLatencyMode : boolean;
   /** Maximum number of time a request on error will be retried. */
-  maxRetryRegular : number | undefined;
-  /** Maximum number of time a request be retried when the user is offline. */
-  maxRetryOffline : number | undefined;
+  maxRetry : number | undefined;
   /**
    * Timeout after which request are aborted and, depending on other options,
    * retried.
@@ -746,6 +734,12 @@ export interface IManifestFetcherSettings {
    * `undefined` will lead to a default, large, timeout being used.
    */
   requestTimeout : number | undefined;
+  /**
+   * Connection timeout, in milliseconds, after which the request is canceled
+   * if the responses headers has not being received.
+   * Do not set or set to "undefined" to disable it.
+   */
+  connectionTimeout: number | undefined;
   /** Limit the frequency of Manifest updates. */
   minimumManifestUpdateInterval : number;
   /**
