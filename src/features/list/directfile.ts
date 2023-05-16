@@ -15,7 +15,7 @@
  */
 
 // eslint-disable-next-line max-len
-import mediaElementTrackChoiceManager from "../../core/api/tracks_management/media_element_track_choice_manager";
+import MediaElementTrackChoiceManager from "../../core/api/tracks_management/media_element_track_choice_manager";
 import directfile from "../../core/init/directfile_content_initializer";
 import { IFeaturesObject } from "../types";
 
@@ -25,8 +25,10 @@ import { IFeaturesObject } from "../types";
  * @param {Object} features
  */
 function addDirectfileFeature(features : IFeaturesObject) : void {
-  features.directfile = { initDirectFile: directfile,
-                          mediaElementTrackChoiceManager };
+  features.directfile = {
+    initDirectFile: directfile,
+    mediaElementTrackChoiceManager: MediaElementTrackChoiceManager,
+  };
 }
 
 export { addDirectfileFeature as DIRECTFILE };

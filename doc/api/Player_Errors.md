@@ -64,7 +64,7 @@ all have a `type` property equal to `"NETWORK_ERROR"`.
 
 #### codes
 
-A NetworkError can only have the following code (`code` property):
+An error of `type` `NETWORK_ERROR` can only have the following code (`code` property):
 
 - `"PIPELINE_LOAD_ERROR"`: the
   [Manifest](../Getting_Started/Glossary.md#manifest) or
@@ -107,15 +107,29 @@ parsing) or from the browser itself (content playback).
 
 They all have a `type` property equal to `"MEDIA_ERROR"`.
 
+Depending on its `code` property (listed below), a `MEDIA_ERROR` may also have
+a supplementary `trackInfo` property, describing the track related to the issue.
+The format of that property is decribed in the chapter below listed codes, and
+the codes for which it is set are indicated in the corresponding code's
+description below.
+
 #### codes
 
-A MediaError can have the following codes (`code` property):
+An error of `type` `MEDIA_ERROR` can have the following codes (`code` property):
 
 - `"BUFFER_APPEND_ERROR"`: A media segment could not have been added to the
   corresponding media buffer. This often happens with malformed segments.
 
+  For those errors, you may be able to know the characteristics of the track
+  linked to that segment by inspecting the error's `trackInfo` property,
+  described below.
+
 - `"BUFFER_FULL_ERROR"`: The needed segment could not have been added
   because the corresponding media buffer was full.
+
+  For those errors, you may be able to know the characteristics of the track
+  linked to that segment by inspecting the error's `trackInfo` property,
+  described below.
 
 - `"BUFFER_TYPE_UNKNOWN"`: The type of buffer considered (e.g. "audio" /
   "video" / "text") has no media buffer implementation in your build.
@@ -124,6 +138,9 @@ A MediaError can have the following codes (`code` property):
   [Adaptation](../Getting_Started/Glossary.md#adaptation) (or track) has none of its
   [Representations](../Getting_Started/Glossary.md#representation) (read quality) in a supported
   codec.
+
+  For those errors, you may be able to know the characteristics of the track
+  linked to that codec by inspecting the error's `trackInfo` property, described below.
 
 - `"MANIFEST_PARSE_ERROR"`: Generic error to signal than the
   [Manifest](../Getting_Started/Glossary.md#structure_of_a_manifest_object) could not be parsed.
@@ -193,9 +210,13 @@ A MediaError can have the following codes (`code` property):
   This is rarely a problem and may be encountered at a very start of a content
   when the initial segment's start is much later than expected.
 
-- `"NO_PLAYABLE_REPRESENTATION"`: The currently chosen Adaptation does not
+- `"NO_PLAYABLE_REPRESENTATION"`: One of the currently chosen track does not
   contain any playable Representation. This usually happens when every
   Representation has been blacklisted due to encryption limitations.
+
+  For those errors, you may be able to know the characteristics of the
+  corresponding track by inspecting the error's `trackInfo` property, described
+  below.
 
 - `"MANIFEST_UPDATE_ERROR"`: This error should never be emitted as it is
   handled internally by the RxPlayer. Please open an issue if you encounter
@@ -211,16 +232,177 @@ A MediaError can have the following codes (`code` property):
   It is triggered when a time we initially thought to be in the bounds of the
   Manifest actually does not link to any "Period" of the Manifest.
 
+#### `trackInfo` property
+
+As described in the corresponding code's documentation, A aupplementary
+`trackInfo` property may be set on `MEDIA_ERROR` depending on its `code`
+property.
+
+That `trackInfo` describes, when it makes sense, the characteristics of the track
+linked to an error. For example, you may want to know which video track led to a
+`BUFFER_APPEND_ERROR` and thus might be linked to corrupted segments.
+
+The `trackInfo` property has itself two sub-properties:
+
+  - `type`: The type of track: `"audio"` for an audio track, `"text"` for a text
+    track, or `"video"` for a video track.
+
+  - `track`: Characteristics of the track. Its format depends on the
+    `trackInfo`'s `type` property and is described below.
+
+##### For video tracks
+
+When `trackInfo.type` is set to `"video"`, `track` describes a video track. It
+contains the following properties:
+
+  - `id` (`string`): The id used to identify this track. No other
+    video track for the same [Period](../Getting_Started/Glossary.md#period)
+    will have the same `id`.
+
+  - `label` (`string|undefined`): A human readable label that may be displayed in
+    the user interface providing a choice between video tracks.
+
+    This information is usually set only if the current Manifest contains one.
+
+  - `representations` (`Array.<Object>`):
+    [Representations](../Getting_Started/Glossary.md#representation) of this
+    video track, with attributes:
+
+    - `id` (`string`): The id used to identify this Representation.
+      No other Representation from this track will have the same `id`.
+
+    - `bitrate` (`Number`): The bitrate of this Representation, in bits per
+      seconds.
+
+    - `width` (`Number|undefined`): The width of video, in pixels.
+
+    - `height` (`Number|undefined`): The height of video, in pixels.
+
+    - `codec` (`string|undefined`): The video codec the Representation is
+      in, as announced in the corresponding Manifest.
+
+    - `frameRate` (`string|undefined`): The video frame rate.
+
+    - `hdrInfo` (`Object|undefined`) Information about the hdr
+      characteristics of the track.
+      (see [HDR support documentation](./Miscellaneous/hdr.md#hdrinfo))
+
+  - `signInterpreted` (`Boolean|undefined`): If set to `true`, this track is
+    known to contain an interpretation in sign language.
+    If set to `false`, the track is known to not contain that type of content.
+    If not set or set to undefined we don't know whether that video track
+    contains an interpretation in sign language.
+
+  - `isTrickModeTrack` (`Boolean|undefined`): If set to `true`, this track
+    is a trick mode track. This type of tracks proposes video content that is
+    often encoded with a very low framerate with the purpose to be played more
+    efficiently at a much higher speed.
+
+  - `trickModeTracks` (`Array.<Object> | undefined`): Trick mode video tracks
+    attached to this video track.
+
+    Each of those objects contain the same properties that a regular video track
+    (same properties than what is documented here).
+
+    It this property is either `undefined` or not set, then this track has no
+    linked trickmode video track.
+
+##### For audio tracks
+
+When `trackInfo.type` is set to `"audio"`, `track` describes an audio track. It
+contains the following properties:
+
+- `id` (`Number|string`): The id used to identify this track. No other
+  audio track for the same [Period](../Getting_Started/Glossary.md#period)
+  will have the same `id`.
+
+- `language` (`string`): The language the audio track is in, as set in the
+  [Manifest](../Getting_Started/Glossary.md#manifest).
+
+- `normalized` (`string`): An attempt to translate the `language`
+  property into an ISO 639-3 language code (for now only support translations
+  from ISO 639-1 and ISO 639-3 language codes). If the translation attempt
+  fails (no corresponding ISO 639-3 language code is found), it will equal the
+  value of `language`
+
+- `audioDescription` (`Boolean`): Whether the track is an audio
+  description of what is happening at the screen.
+
+- `dub` (`Boolean|undefined`): If set to `true`, this audio track is a
+  "dub", meaning it was recorded in another language than the original.
+  If set to `false`, we know that this audio track is in an original language.
+  This property is `undefined` if we do not known whether it is in an original
+  language.
+
+- `label` (`string|undefined`): A human readable label that may be displayed in
+  the user interface providing a choice between audio tracks.
+
+  This information is usually set only if the current Manifest contains one.
+
+- `representations` (`Array.<Object>`):
+  [Representations](../Getting_Started/Glossary.md#representation) of this video track, with
+  attributes:
+
+  - `id` (`string`): The id used to identify this Representation.
+    No other Representation from this track will have the same `id`.
+
+  - `bitrate` (`Number`): The bitrate of this Representation, in bits per
+    seconds.
+
+  - `codec` (`string|undefined`): The audio codec the Representation is
+    in, as announced in the corresponding Manifest.
+
+  - `isSpatialAudio` (`Boolean|undefined`): If set to `true`, this Representation
+    has spatial audio.
+
+##### For text tracks
+
+When `trackInfo.type` is set to `"text"`, `track` describes a text track. It
+contains the following properties:
+
+- `id` (`string`): The id used to identify this track. No other
+  text track for the same [Period](../Getting_Started/Glossary.md#period)
+  will have the same `id`.
+
+- `language` (`string`): The language the text trac./../Basic_Methods/loadVideo.md#transport set in the
+  [Manifest](../Getting_Started/Glossary.md#manifest).
+
+- `normalized` (`string`): An attempt to translate the `language`
+  property into an ISO 639-3 language code (for now only support translations
+  from ISO 639-1 and ISO 639-3 language codes). If the translation attempt
+  fails (no corresponding ISO./../Basic_Methods/loadVideo.md#transport found), it will equal the
+  value of `language`
+
+- `label` (`string|undefined`): A human readable label that may be displayed in
+  the user interface providing a choice between text tracks.
+
+  This information is usually set only if the current Manifest contains one.
+
+- `closedCaption` (`Boolean`): Whether the track is specially adapted for
+  the hard of hearing or not.
+
+- `forced` (`Boolean`): If `true` this text track is meant to be displayed by
+  default if no other text track is selected.
+
+  It is often used to clarify dialogue, alternate languages, texted graphics or
+  location and person identification.
+
+
 ### ENCRYPTED_MEDIA_ERROR
 
-Those errors are linked to the Encrypted Media Extensions. They concern various
-DRM-related problems.
+Those errors are linked to the "Encrypted Media Extensions" API.
+They concern various DRM-related problems.
 
 They all have a `type` property equal to `"ENCRYPTED_MEDIA_ERROR"`.
 
+When its code is set to `KEY_STATUS_CHANGE_ERROR`, an ENCRYPTED_MEDIA_ERROR
+generally also have a `keyStatuses` property, which is documented in the
+corresponding `KEY_STATUS_CHANGE_ERROR` code explanation below.
+
 #### codes
 
-An EncryptedMediaError can have the following codes (`code` property):
+An error of `type` `ENCRYPTED_MEDIA_ERROR` can have the following codes (`code`
+property):
 
 - `"INCOMPATIBLE_KEYSYSTEMS"`: None of the provided key systems was
   compatible with the current browser.
@@ -295,7 +477,7 @@ They all have a `type` property equal to `"OTHER_ERROR"`.
 
 #### codes
 
-An OtherError can have the following codes (`code` property):
+An error of `type` `OTHER_ERROR` can have the following codes (`code` property):
 
 - `"PIPELINE_LOAD_ERROR"`: The
   [Manifest](../Getting_Started/Glossary.md#structure_of_a_manifest_object) or segment

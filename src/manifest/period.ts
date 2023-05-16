@@ -89,7 +89,8 @@ export default class Period {
             if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
               const error =
                 new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-                               "An Adaptation contains only incompatible codecs.");
+                               "An Adaptation contains only incompatible codecs.",
+                               { adaptation: newAdaptation });
               this.contentWarnings.push(error);
             }
             return newAdaptation;

@@ -33,7 +33,7 @@ import {
  * @param {Number} height
  * @param {Number} hRes - horizontal resolution, eg 72
  * @param {Number} vRes - vertical resolution, eg 72
- * @param {string} encDepth
+ * @param {string} encName
  * @param {Number} colorDepth - eg 24
  * @param {Uint8Array} avcc - Uint8Array representing the avcC atom
  * @returns {Uint8Array}
@@ -68,7 +68,7 @@ function createAVC1Box(
  * @param {Number} height
  * @param {Number} hRes - horizontal resolution, eg 72
  * @param {Number} vRes - vertical resolution, eg 72
- * @param {string} encDepth
+ * @param {string} encName
  * @param {Number} colorDepth - eg 24
  * @param {Uint8Array} avcc - Uint8Array representing the avcC atom
  * @param {Uint8Array} sinf - Uint8Array representing the sinf atom
@@ -108,8 +108,6 @@ function createENCVBox(
  * @param {Number} packetSize
  * @param {Number} sampleRate
  * @param {Uint8Array} esds - Uint8Array representing the esds atom
- * @param {Uint8Array} [sinf] - Uint8Array representing the sinf atom,
- * only if name == "enca"
  * @returns {Uint8Array}
  */
 function createMP4ABox(
@@ -164,7 +162,7 @@ function createENCABox(
 }
 
 /**
- * @param {url} Uint8Array
+ * @param {Uint8Array} url
  * @returns {Uint8Array}
  */
 function createDREFBox(url : Uint8Array) : Uint8Array {
@@ -415,7 +413,7 @@ function createSMHDBox() : Uint8Array {
 }
 
 /**
- * @param {Array.<Uint8Array>} representations - arrays of Uint8Array,
+ * @param {Array.<Uint8Array>} reps - arrays of Uint8Array,
  * typically [avc1] or [encv, avc1]
  * @returns {Uint8Array}
  */
