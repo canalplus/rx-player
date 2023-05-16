@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import imageBuffer from "../../core/segment_buffers/implementations/image";
 import bifParser from "../../parsers/images/bif";
 import { IFeaturesObject } from "../types";
 
@@ -23,6 +24,7 @@ import { IFeaturesObject } from "../types";
  */
 function addBIFParserFeature(features : IFeaturesObject) : void {
   features.imageParser = bifParser;
+  features.imageBuffer = imageBuffer;
 }
 
 export { addBIFParserFeature as BIF_PARSER };

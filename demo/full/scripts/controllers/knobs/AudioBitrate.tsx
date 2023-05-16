@@ -41,6 +41,8 @@ function AudioBitrateKnob({
       if (index > 0) {
         const bitrate = availableAudioBitrates[index - 1];
         player.actions.setAudioBitrate(bitrate);
+      } else if (index === 0) {
+        player.actions.setAudioBitrate(-1);
       } else {
         /* eslint-disable-next-line no-console */
         console.error("Error: audio bitrate not found");
