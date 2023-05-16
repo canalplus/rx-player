@@ -37,7 +37,10 @@ import {
   IErrorType,
   MediaError,
 } from "../../errors";
-import features from "../../features";
+import features, {
+  addFeatures,
+  IFeature,
+} from "../../features";
 import log from "../../log";
 import Manifest, {
   Adaptation,
@@ -56,6 +59,7 @@ import {
   IConstructorOptions,
   IDecipherabilityUpdateContent,
   IKeySystemConfigurationOutput,
+  IKeySystemOption,
   ILoadVideoOptions,
   IPeriod,
   IPlayerError,
@@ -69,6 +73,7 @@ import {
   IVideoTrackPreference,
 } from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
+import arrayIncludes from "../../utils/array_includes";
 import assert from "../../utils/assert";
 import EventEmitter, {
   IEventPayload,
@@ -83,10 +88,9 @@ import {
   getPlayedSizeOfRange,
   getSizeOfRange,
 } from "../../utils/ranges";
-import createSharedReference, {
+import SharedReference, {
   createMappedReference,
   IReadOnlySharedReference,
-  ISharedReference,
 } from "../../utils/reference";
 import TaskCanceller, {
   CancellationSignal,
@@ -100,7 +104,6 @@ import {
   getCurrentKeySystem,
 } from "../decrypt";
 import { ContentInitializer } from "../init";
-import MediaSourceContentInitializer from "../init/media_source_content_initializer";
 import SegmentBuffersStore, {
   IBufferedChunk,
   IBufferType,
@@ -121,9 +124,9 @@ import MediaElementTrackChoiceManager from "./tracks_management/media_element_tr
 import TrackChoiceManager from "./tracks_management/track_choice_manager";
 import {
   constructPlayerStateReference,
+  emitPlayPauseEvents,
   emitSeekEvents,
   isLoadedState,
-  // emitSeekEvents,
   PLAYER_STATES,
 } from "./utils";
 
@@ -178,24 +181,24 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * done.
    * A new content cannot be launched until it stores `false`.
    */
-  private readonly _priv_contentLock : ISharedReference<boolean>;
+  private readonly _priv_contentLock : SharedReference<boolean>;
 
   /**
    * The speed that should be applied to playback.
    * Used instead of videoElement.playbackRate to allow more flexibility.
    */
-  private readonly _priv_speed : ISharedReference<number>;
+  private readonly _priv_speed : SharedReference<number>;
 
   /** Store buffer-related options used needed when initializing a content. */
   private readonly _priv_bufferOptions : {
     /** Last wanted buffer goal. */
-    wantedBufferAhead : ISharedReference<number>;
+    wantedBufferAhead : SharedReference<number>;
     /** Maximum kept buffer ahead in the current position, in seconds. */
-    maxBufferAhead : ISharedReference<number>;
+    maxBufferAhead : SharedReference<number>;
     /** Maximum kept buffer behind in the current position, in seconds. */
-    maxBufferBehind : ISharedReference<number>;
+    maxBufferBehind : SharedReference<number>;
     /** Maximum size of video buffer , in kiloBytes */
-    maxVideoBufferSize : ISharedReference<number>;
+    maxVideoBufferSize : SharedReference<number>;
   };
 
   /** Information on the current bitrate settings. */
@@ -210,16 +213,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                      image? : number; };
 
     /** Store last wanted minAutoBitrates for the adaptive logic. */
-    minAutoBitrates : { audio : ISharedReference<number>;
-                        video : ISharedReference<number>; };
+    minAutoBitrates : { audio : SharedReference<number>;
+                        video : SharedReference<number>; };
 
     /** Store last wanted maxAutoBitrates for the adaptive logic. */
-    maxAutoBitrates : { audio : ISharedReference<number>;
-                        video : ISharedReference<number>; };
+    maxAutoBitrates : { audio : SharedReference<number>;
+                        video : SharedReference<number>; };
 
     /** Store last wanted manual bitrates for the adaptive logic. */
-    manualBitrates : { audio : ISharedReference<number>;
-                       video : ISharedReference<number>; };
+    manualBitrates : { audio : SharedReference<number>;
+                       video : SharedReference<number>; };
   };
 
   /**
@@ -307,6 +310,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     reloadPosition?: number;
   };
 
+  /**
+   * Store last value of autoPlay, from the last load or reload.
+   */
+  private _priv_lastAutoPlay: boolean;
+
   /** All possible Error types emitted by the RxPlayer. */
   static get ErrorTypes() : Record<IErrorType, IErrorType> {
     return ErrorTypes;
@@ -333,6 +341,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
   static set LogLevel(logLevel : string) {
     log.setLevel(logLevel);
+  }
+
+  /**
+   * Add feature(s) to the RxPlayer.
+   * @param {Array.<Object>} featureList - Features wanted.
+   */
+  static addFeatures(featureList : IFeature[]) : void {
+    addFeatures(featureList);
   }
 
   /**
@@ -364,7 +380,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /* PLAYER_VERSION */"3.30.0";
+    this.version = /* PLAYER_VERSION */"3.32.1";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -429,37 +445,37 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                          destroyCanceller.signal);
     }
 
-    this._priv_speed = createSharedReference(videoElement.playbackRate,
-                                             this._destroyCanceller.signal);
+    this._priv_speed = new SharedReference(videoElement.playbackRate,
+                                           this._destroyCanceller.signal);
     this._priv_preferTrickModeTracks = false;
-    this._priv_contentLock = createSharedReference<boolean>(
+    this._priv_contentLock = new SharedReference<boolean>(
       false,
       this._destroyCanceller.signal);
 
     this._priv_bufferOptions = {
-      wantedBufferAhead: createSharedReference(wantedBufferAhead,
-                                               this._destroyCanceller.signal),
-      maxBufferAhead: createSharedReference(maxBufferAhead,
-                                            this._destroyCanceller.signal),
-      maxBufferBehind: createSharedReference(maxBufferBehind,
+      wantedBufferAhead: new SharedReference(wantedBufferAhead,
                                              this._destroyCanceller.signal),
-      maxVideoBufferSize: createSharedReference(maxVideoBufferSize,
-                                                this._destroyCanceller.signal),
+      maxBufferAhead: new SharedReference(maxBufferAhead,
+                                          this._destroyCanceller.signal),
+      maxBufferBehind: new SharedReference(maxBufferBehind,
+                                           this._destroyCanceller.signal),
+      maxVideoBufferSize: new SharedReference(maxVideoBufferSize,
+                                              this._destroyCanceller.signal),
     };
 
     this._priv_bitrateInfos = {
       lastBitrates: { audio: initialAudioBitrate,
                       video: initialVideoBitrate },
-      minAutoBitrates: { audio: createSharedReference(minAudioBitrate,
-                                                      this._destroyCanceller.signal),
-                         video: createSharedReference(minVideoBitrate,
-                                                      this._destroyCanceller.signal) },
-      maxAutoBitrates: { audio: createSharedReference(maxAudioBitrate,
-                                                      this._destroyCanceller.signal),
-                         video: createSharedReference(maxVideoBitrate,
-                                                      this._destroyCanceller.signal) },
-      manualBitrates: { audio: createSharedReference(-1, this._destroyCanceller.signal),
-                        video: createSharedReference(-1, this._destroyCanceller.signal) },
+      minAutoBitrates: { audio: new SharedReference(minAudioBitrate,
+                                                    this._destroyCanceller.signal),
+                         video: new SharedReference(minVideoBitrate,
+                                                    this._destroyCanceller.signal) },
+      maxAutoBitrates: { audio: new SharedReference(maxAudioBitrate,
+                                                    this._destroyCanceller.signal),
+                         video: new SharedReference(maxVideoBitrate,
+                                                    this._destroyCanceller.signal) },
+      manualBitrates: { audio: new SharedReference(-1, this._destroyCanceller.signal),
+                        video: new SharedReference(-1, this._destroyCanceller.signal) },
     };
 
     this._priv_throttleWhenHidden = throttleWhenHidden;
@@ -481,6 +497,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_preferredVideoTracks = preferredVideoTracks;
 
     this._priv_reloadingMetadata = {};
+
+    this._priv_lastAutoPlay = false;
   }
 
   /**
@@ -551,6 +569,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     log.info("API: Calling loadvideo", options.url, options.transport);
     this._priv_reloadingMetadata = { options };
     this._priv_initializeContentPlayback(options);
+    this._priv_lastAutoPlay = options.autoPlay;
   }
 
   /**
@@ -559,6 +578,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   reload(reloadOpts?: {
     reloadAt?: { position?: number; relative?: number };
+    keySystems?: IKeySystemOption[];
     autoPlay?: boolean;
   }): void {
     const { options,
@@ -591,6 +611,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       autoPlay = !reloadInPause;
     }
 
+    let keySystems : IKeySystemOption[] | undefined;
+    if (reloadOpts?.keySystems !== undefined) {
+      keySystems = reloadOpts.keySystems;
+    } else if (this._priv_reloadingMetadata.options?.keySystems !== undefined) {
+      keySystems = this._priv_reloadingMetadata.options.keySystems;
+    }
+
     const newOptions = { ...options,
                          initialManifest: manifest };
     if (startAt !== undefined) {
@@ -598,6 +625,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     if (autoPlay !== undefined) {
       newOptions.autoPlay = autoPlay;
+    }
+    if (keySystems !== undefined) {
+      newOptions.keySystems = keySystems;
     }
     this._priv_initializeContentPlayback(newOptions);
   }
@@ -608,7 +638,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (features.createDebugElement === null) {
       throw new Error("Feature `DEBUG_ELEMENT` not added to the RxPlayer");
     }
-    const canceller = new TaskCanceller() ;
+    const canceller = new TaskCanceller();
     features.createDebugElement(element, this, canceller.signal);
     return {
       dispose() {
@@ -662,6 +692,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         this.stop();
         this._priv_currentError = null;
         throw new Error(`transport "${transport}" not supported`);
+      }
+
+      if (features.mediaSourceInit === null) {
+        throw new Error("MediaSource streaming not supported");
       }
 
       const transportPipelines = transportFn(transportOptions);
@@ -753,7 +787,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                       requestTimeout: segmentRequestTimeout,
                                       maxRetryOffline: offlineRetry };
 
-      initializer = new MediaSourceContentInitializer({
+      initializer = new features.mediaSourceInit({
         adaptiveOptions,
         autoPlay,
         bufferOptions,
@@ -772,6 +806,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         this.stop();
         this._priv_currentError = null;
         throw new Error("DirectFile feature not activated in your build.");
+      } else if (isNullOrUndefined(url)) {
+        throw new Error("No URL for a DirectFile content");
       }
       mediaElementTrackChoiceManager =
         this._priv_initializeMediaElementTrackChoiceManager(
@@ -839,11 +875,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       log.warn("API: Sending warning:", formattedError);
       this.trigger("warning", formattedError);
     });
-    initializer.addEventListener("reloadingMediaSource", () => {
+    initializer.addEventListener("reloadingMediaSource", (payload) => {
       contentInfos.segmentBuffersStore = null;
       if (contentInfos.trackChoiceManager !== null) {
         contentInfos.trackChoiceManager.resetPeriods();
       }
+      this._priv_lastAutoPlay = payload.autoPlay;
     });
     initializer.addEventListener("inbandEvents", (inbandEvents) =>
       this.trigger("inbandEvents", inbandEvents));
@@ -945,6 +982,53 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           break;
       }
     };
+
+    /**
+     * `TaskCanceller` allowing to stop emitting `"play"` and `"pause"`
+     * events.
+     * `null` when such events are not emitted currently.
+     */
+    let playPauseEventsCanceller : TaskCanceller | null = null;
+
+    /**
+     * Callback emitting `"play"` and `"pause`" events once the content is
+     * loaded, starting from the state indicated in argument.
+     * @param {boolean} willAutoPlay - If `false`, we're currently paused.
+     */
+    const triggerPlayPauseEventsWhenReady = (willAutoPlay: boolean) => {
+      if (playPauseEventsCanceller !== null) {
+        playPauseEventsCanceller.cancel(); // cancel previous logic
+        playPauseEventsCanceller = null;
+      }
+      playerStateRef.onUpdate((val, stopListeningToStateUpdates) => {
+        if (!isLoadedState(val)) {
+          return; // content not loaded yet: no event
+        }
+        stopListeningToStateUpdates();
+        if (playPauseEventsCanceller !== null) {
+          playPauseEventsCanceller.cancel();
+        }
+        playPauseEventsCanceller = new TaskCanceller();
+        playPauseEventsCanceller.linkToSignal(currentContentCanceller.signal);
+        if (willAutoPlay !== !videoElement.paused) {
+          // paused status is not at the expected value on load: emit event
+          if (videoElement.paused) {
+            this.trigger("pause", null);
+          } else {
+            this.trigger("play", null);
+          }
+        }
+        emitPlayPauseEvents(videoElement,
+                            () => this.trigger("play", null),
+                            () => this.trigger("pause", null),
+                            currentContentCanceller.signal);
+      }, { emitCurrentValue: false, clearSignal: currentContentCanceller.signal });
+    };
+
+    triggerPlayPauseEventsWhenReady(autoPlay);
+    initializer.addEventListener("reloadingMediaSource", (payload) => {
+      triggerPlayPauseEventsWhenReady(payload.autoPlay);
+    });
 
     /**
      * `TaskCanceller` allowing to stop emitting `"seeking"` and `"seeked"`
@@ -1107,6 +1191,42 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   getPlayerState() : string {
     return this.state;
+  }
+
+  /**
+   * Returns true if a content is loaded.
+   * @returns {Boolean} - `true` if a content is loaded, `false` otherwise.
+   */
+  isContentLoaded() : boolean {
+    return !arrayIncludes(["LOADING", "RELOADING", "STOPPED"], this.state);
+  }
+
+  /**
+   * Returns true if the player is buffering.
+   * @returns {Boolean} - `true` if the player is buffering, `false` otherwise.
+   */
+  isBuffering() : boolean {
+    return arrayIncludes(["BUFFERING", "SEEKING", "LOADING", "RELOADING"], this.state);
+  }
+
+  /**
+   * Returns the play/pause status of the player :
+   *   - when `LOADING` or `RELOADING`, returns the scheduled play/pause condition
+   *     for when loading is over,
+   *   - in other states, returns the `<video>` element .paused value,
+   *   - if the player is disposed, returns `true`.
+   * @returns {Boolean} - `true` if the player is paused or will be after loading,
+   * `false` otherwise.
+   */
+  isPaused() : boolean {
+    if (this.videoElement) {
+      if (arrayIncludes(["LOADING", "RELOADING"], this.state)) {
+        return !this._priv_lastAutoPlay;
+      } else {
+        return this.videoElement.paused;
+      }
+    }
+    return true;
   }
 
   /**
@@ -1286,6 +1406,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       throw new Error("Disposed player");
     }
     return this.videoElement.currentTime;
+  }
+
+  /**
+   * Returns the last stored content position, in seconds.
+   *
+   * @returns {number|undefined}
+   */
+  getLastStoredContentPosition() : number|undefined {
+    return this._priv_reloadingMetadata.reloadPosition;
   }
 
   /**
@@ -2270,6 +2399,29 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Returns the current position for live contents.
+   *
+   * Returns `null` if no content is loaded or if the current loaded content is
+   * not considered as a live content.
+   * Returns `undefined` if that live position is currently unknown.
+   * @returns {number}
+   */
+  getLivePosition() : number | undefined |null {
+    if (this._priv_contentInfos === null) {
+      return null;
+    }
+
+    const { isDirectFile, manifest } = this._priv_contentInfos;
+    if (isDirectFile) {
+      return undefined;
+    }
+    if (manifest?.isLive !== true) {
+      return null;
+    }
+    return manifest.getLivePosition();
+  }
+
+  /**
    * Get maximum seek-able position.
    * @returns {number}
    */
@@ -2312,9 +2464,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     const segmentBufferStatus = this._priv_contentInfos
       .segmentBuffersStore.getStatus(bufferType);
-    return segmentBufferStatus.type === "initialized" ?
-      segmentBufferStatus.value.getInventory() :
-      null;
+    if (segmentBufferStatus.type === "initialized") {
+      segmentBufferStatus.value.synchronizeInventory(true);
+      return segmentBufferStatus.value.getInventory();
+    }
+    return null;
   }
 
   /**
@@ -2517,7 +2671,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     value : {
       type : IBufferType;
       period : Period;
-      adaptationRef : ISharedReference<Adaptation|null|undefined>;
+      adaptationRef : SharedReference<Adaptation|null|undefined>;
     }
   ) : void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
@@ -2986,7 +3140,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return mediaElementTrackChoiceManager;
   }
 }
-Player.version = /* PLAYER_VERSION */"3.30.0";
+Player.version = /* PLAYER_VERSION */"3.32.1";
 
 /** Every events sent by the RxPlayer's public API. */
 interface IPublicAPIEvent {
@@ -3011,6 +3165,8 @@ interface IPublicAPIEvent {
   availableTextTracksChange : IAvailableTextTrack[];
   availableVideoTracksChange : IAvailableVideoTrack[];
   decipherabilityUpdate : IDecipherabilityUpdateContent[];
+  play: null;
+  pause: null;
   seeking : null;
   seeked : null;
   streamEvent : IStreamEvent;

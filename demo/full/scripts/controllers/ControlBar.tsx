@@ -39,6 +39,7 @@ function ControlBar({
   const isStopped = useModuleState(player, "isStopped");
   const liveGap = useModuleState(player, "liveGap");
   const lowLatencyMode = useModuleState(player, "lowLatencyMode");
+  const livePosition = useModuleState(player, "livePosition");
   const maximumPosition = useModuleState(player, "maximumPosition");
   const playbackRate = useModuleState(player, "playbackRate");
 
@@ -79,15 +80,16 @@ function ControlBar({
   const isAtLiveEdge = isLive && isCloseToLive && !isCatchingUp;
 
   const onLiveDotClick = React.useCallback(() => {
-    if (maximumPosition == null) {
+    const livePos = livePosition ?? maximumPosition;
+    if (livePos == null) {
       /* eslint-disable-next-line no-console */
       console.error("Cannot go back to live: live position not found");
       return;
     }
     if (!isAtLiveEdge) {
-      player.actions.seek(maximumPosition - (lowLatencyMode ? 4 : 10));
+      player.actions.seek(livePos - (lowLatencyMode ? 4 : 10));
     }
-  }, [isAtLiveEdge, player, maximumPosition, lowLatencyMode]);
+  }, [isAtLiveEdge, player, livePosition, maximumPosition, lowLatencyMode]);
 
   return (
     <div className="controls-bar-container">

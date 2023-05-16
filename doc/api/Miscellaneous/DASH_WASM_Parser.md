@@ -6,12 +6,11 @@ the "MPD":
 1. A JavaScript parser.
 
    Provided in the default "bundled" builds and through the `DASH` feature in
-   the minimal build.
+   [the minimal build](../../Getting_Started/Minimal_Player.md).
 
 2. A generally-faster WebAssembly parser.
 
-   Only provided through the `DASH_WASM` experimental feature in the minimal
-   build.
+   Only provided through the `DASH_WASM` experimental feature.
 
 This page is the API documentation page for the second parser.
 
@@ -46,12 +45,12 @@ The "experimental" notion has more to do with the fact that its API can evolve
 without impacting too much RxPlayer's semantic versioning.
 For example, a new minor RxPlayer version could bring with it a complete API
 change regarding this feature.
-Still, potential changes would be fully documented and at least a link will be
-added both to that release's release note and changelog file.
+Still, potential changes would be fully documented on that release's release
+note and changelog file.
 
 The choice of labeling this feature as experimental has been made so we can
 have more freedom if we find ways to provide sensible improvements to it in the
-future, in case they necessitate some incompatible API change.
+future.
 
 ## How to use it?
 
@@ -75,7 +74,8 @@ It might be a lot to grasp now, we will focus on what has been done here step
 by step in the next chapters.
 
 ```js
-// Import the minimal RxPlayer
+// Import the RxPlayer
+// (here through the "minimal" build, though it doesn't change for other builds)
 import RxPlayer from "rx-player/minimal";
 
 // Import the function allowing to create the DASH-WASM parser
@@ -120,30 +120,12 @@ You can find it at any of the following places:
   loaded in your project, for example in the node_modules directory (most
   probably in `node_modules/rx-player/dist/mpd-parser.wasm` depending on
   your project).
-  `
 
 Once you've retrieved the right WebAssembly file linked to your RxPlayer
 version, you will need to store it and give its URL to the RxPlayer so it will
 be able to load it.
 
-### Step 2: using the minimal build of the RxPlayer
-
-The `DASH_WASM` feature is only available when using the "minimal" version of
-the RxPlayer. That is, when the player is imported through the
-`"rx-player/minimal"` path:
-
-```js
-import RxPlayer from "rx-player/minimal";
-```
-
-If you weren't using the minimal RxPlayer before, note that it necessitates that
-you add the features you want to it.
-More information about any of that can be found in the [minimal player documentation](../../Getting_Started/Minimal_Player.md).
-
-This documentation will especially dive into the `DASH_WASM` feature, which is
-the WebAssembly parser for MPDs.
-
-### Step 3: importing the `DASH_WASM` feature
+### Step 2: importing the `DASH_WASM` feature
 
 As indicated before, the `DASH-WASM` feature is an "experimental" feature.
 
@@ -158,7 +140,7 @@ As any experimental features, it needs to be imported through the
 import { DASH_WASM } from "rx-player/experimental/features";
 ```
 
-### Step 4: Initializing the feature
+### Step 3: Initializing the feature
 
 --
 
@@ -201,7 +183,7 @@ In the case where initialization fails, the RxPlayer will try to use the regular
 `DASH` js parser instead, if that feature has been added. If it has not, an
 error will be thrown when playing DASH contents.
 
-### Step 4bis: Adding the feature to the RxPlayer
+### Step 3bis: Adding the feature to the RxPlayer
 
 --
 
@@ -211,7 +193,7 @@ _This step can be done before or after "initializing" the `DASH_WASM` feature
 --
 
 To "link" the RxPlayer to the parser, you will need to call the `addFeatures`
-static function on the minimal RxPlayer build, like every other features.
+static function on the RxPlayer build, like any other feature.
 
 ```js
 import RxPlayer from "rx-player/minimal";
