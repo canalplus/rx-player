@@ -27,7 +27,6 @@ import { getLeftSizeOfRange } from "../../utils/ranges";
 import SharedReference, {
   IReadOnlySharedReference,
 } from "../../utils/reference";
-import takeFirstSet from "../../utils/take_first_set";
 import TaskCanceller, {
   CancellationSignal,
 } from "../../utils/task_canceller";
@@ -53,7 +52,7 @@ import selectOptimalRepresentation from "./utils/select_optimal_representation";
 
 // Create default shared references
 
-const limitWidthDefaultRef = new SharedReference<number | undefined>(undefined);
+const limitWidthDefaultRef = new SharedReference<IResolutionInfo | undefined>(undefined);
 limitWidthDefaultRef.finish();
 
 const throttleBitrateDefaultRef = new SharedReference(Infinity);
@@ -104,14 +103,10 @@ export default function createAdaptiveRepresentationSelector(
   ) : IRepresentationEstimatorResponse {
     const { type } = context.adaptation;
     const bandwidthEstimator = _getBandwidthEstimator(type);
-    const initialBitrate = takeFirstSet<number>(initialBitrates[type], 0);
+    const initialBitrate = initialBitrates[type] ?? 0;
     const filters = {
-      limitResolution: takeFirstSet<
-        IReadOnlySharedReference<IResolutionInfo | undefined>
-      >(throttlers.limitResolution[type], limitWidthDefaultRef),
-      throttleBitrate: takeFirstSet<IReadOnlySharedReference<number>>(
-        throttlers.throttleBitrate[type],
-        throttleBitrateDefaultRef),
+      limitResolution: throttlers.limitResolution[type] ?? limitWidthDefaultRef,
+      throttleBitrate: throttlers.throttleBitrate[type] ?? throttleBitrateDefaultRef,
     };
     return getEstimateReference({ bandwidthEstimator,
                                   context,
