@@ -14,24 +14,19 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-
+// eslint-disable-next-line max-len
+import HTMLTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/html";
 import ttmlParser from "../../../parsers/texttracks/ttml/html";
+import { IFeaturesObject } from "../../types";
 import addHTMLttmlFeature from "../html_ttml_parser";
-
-jest.mock("../../../parsers/texttracks/ttml/html", () => ({
-  __esModule: true as const,
-  default: jest.fn(),
-}));
 
 describe("Features list - HTML ttml Parser", () => {
   it("should add an HTML ttml Parser in the current features", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const featureObject : any = { htmlTextTracksParsers: {} };
+    const featureObject = { htmlTextTracksParsers: {} } as unknown as IFeaturesObject;
     addHTMLttmlFeature(featureObject);
     expect(featureObject).toEqual({
       htmlTextTracksParsers: { ttml: ttmlParser },
+      htmlTextTracksBuffer: HTMLTextSegmentBuffer,
     });
     expect(featureObject.htmlTextTracksParsers.ttml).toBe(ttmlParser);
   });

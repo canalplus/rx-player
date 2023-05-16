@@ -25,10 +25,6 @@
 
 import config from "../../../config";
 import log from "../../../log";
-import {
-  normalizeAudioTrack,
-  normalizeTextTrack,
-} from "../../../utils/languages";
 import warnOnce from "../../../utils/warn_once";
 import {
   checkReloadOptions,
@@ -40,10 +36,6 @@ jest.mock("../../../log");
 jest.mock("../../../utils/languages");
 jest.mock("../../../utils/warn_once");
 const warnOnceMock = warnOnce as jest.Mock<ReturnType<typeof warnOnce>>;
-const normalizeAudioTrackMock = normalizeAudioTrack as
-  jest.Mock<ReturnType<typeof normalizeAudioTrack>>;
-const normalizeTextTrackMock = normalizeTextTrack as
-  jest.Mock<ReturnType<typeof normalizeTextTrack>>;
 const logWarnMock = log.warn as jest.Mock<ReturnType<typeof log.warn>>;
 
 describe("API - parseConstructorOptions", () => {
@@ -53,25 +45,19 @@ describe("API - parseConstructorOptions", () => {
 
   afterEach(() => {
     warnOnceMock.mockReset();
-    normalizeAudioTrackMock.mockReset();
-    normalizeTextTrackMock.mockReset();
     logWarnMock.mockReset();
   });
 
   const videoElement = document.createElement("video");
   const {
     // DEFAULT_AUTO_PLAY,
-    DEFAULT_INITIAL_BITRATES,
-    DEFAULT_LIMIT_VIDEO_WIDTH,
+    DEFAULT_BASE_BANDWIDTH,
+    DEFAULT_VIDEO_RESOLUTION_LIMIT,
     // DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
-    DEFAULT_MIN_BITRATES,
-    DEFAULT_MAX_BITRATES,
     DEFAULT_MAX_BUFFER_AHEAD,
     DEFAULT_MAX_BUFFER_BEHIND,
     DEFAULT_MAX_VIDEO_BUFFER_SIZE,
-    // DEFAULT_SHOW_NATIVE_SUBTITLE,
     // DEFAULT_TEXT_TRACK_MODE,
-    DEFAULT_THROTTLE_WHEN_HIDDEN,
     DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
     DEFAULT_WANTED_BUFFER_AHEAD,
   } = config.getCurrent();
@@ -80,20 +66,10 @@ describe("API - parseConstructorOptions", () => {
     maxBufferAhead: DEFAULT_MAX_BUFFER_AHEAD,
     maxBufferBehind: DEFAULT_MAX_BUFFER_BEHIND,
     wantedBufferAhead: DEFAULT_WANTED_BUFFER_AHEAD,
-    limitVideoWidth: DEFAULT_LIMIT_VIDEO_WIDTH,
-    throttleWhenHidden: DEFAULT_THROTTLE_WHEN_HIDDEN,
+    videoResolutionLimit: DEFAULT_VIDEO_RESOLUTION_LIMIT,
     throttleVideoBitrateWhenHidden: DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
     videoElement,
-    initialVideoBitrate: DEFAULT_INITIAL_BITRATES.video,
-    initialAudioBitrate: DEFAULT_INITIAL_BITRATES.audio,
-    minAudioBitrate: DEFAULT_MIN_BITRATES.audio,
-    minVideoBitrate: DEFAULT_MIN_BITRATES.video,
-    maxAudioBitrate: DEFAULT_MAX_BITRATES.audio,
-    maxVideoBitrate: DEFAULT_MAX_BITRATES.video,
-    stopAtEnd: true,
-    preferredAudioTracks: [],
-    preferredTextTracks: [],
-    preferredVideoTracks: [],
+    baseBandwidth: DEFAULT_BASE_BANDWIDTH,
   };
 
   it("should create default values if no option is given", () => {
@@ -145,69 +121,19 @@ describe("API - parseConstructorOptions", () => {
     });
   });
 
-  it("should authorize setting a limitVideoWidth option", () => {
-    expect(parseConstructorOptions({ limitVideoWidth: false })).toEqual({
+  it("should authorize setting a videoResolutionLimit option", () => {
+    expect(parseConstructorOptions({ videoResolutionLimit: "screen" })).toEqual({
       ...defaultConstructorOptions,
-      limitVideoWidth: false,
+      videoResolutionLimit: "screen",
     });
-    expect(parseConstructorOptions({ limitVideoWidth: true })).toEqual({
+    expect(parseConstructorOptions({ videoResolutionLimit: "videoElement" })).toEqual({
       ...defaultConstructorOptions,
-      limitVideoWidth: true,
+      videoResolutionLimit: "videoElement",
     });
-  });
-
-  it("should authorize setting a throttleWhenHidden option", () => {
-    warnOnceMock.mockReturnValue(undefined);
-    expect(parseConstructorOptions({ throttleWhenHidden: false })).toEqual({
+    expect(parseConstructorOptions({ videoResolutionLimit: "none" })).toEqual({
       ...defaultConstructorOptions,
-      throttleWhenHidden: false,
+      videoResolutionLimit: "none",
     });
-    expect(warnOnceMock).toHaveBeenCalledTimes(1);
-    expect(warnOnceMock)
-      .toHaveBeenCalledWith("`throttleWhenHidden` API is deprecated. Consider using " +
-                            "`throttleVideoBitrateWhenHidden` instead.");
-    warnOnceMock.mockReset();
-
-    expect(parseConstructorOptions({ throttleWhenHidden: true })).toEqual({
-      ...defaultConstructorOptions,
-      throttleWhenHidden: true,
-    });
-    expect(warnOnceMock).toHaveBeenCalledTimes(1);
-    expect(warnOnceMock)
-      .toHaveBeenCalledWith("`throttleWhenHidden` API is deprecated. Consider using " +
-                            "`throttleVideoBitrateWhenHidden` instead.");
-  });
-
-  /* eslint-disable max-len */
-  it("should not set `throttleVideoBitrateWhenHidden` if `throttleWhenHidden` is set", () => {
-  /* eslint-enable max-len */
-    warnOnceMock.mockReturnValue(undefined);
-    expect(parseConstructorOptions({
-      throttleWhenHidden: false,
-      throttleVideoBitrateWhenHidden: true,
-    })).toEqual({
-      ...defaultConstructorOptions,
-      throttleWhenHidden: false,
-      throttleVideoBitrateWhenHidden: true,
-    });
-    expect(warnOnceMock).toHaveBeenCalledTimes(1);
-    expect(warnOnceMock)
-      .toHaveBeenCalledWith("`throttleWhenHidden` API is deprecated. Consider using " +
-                            "`throttleVideoBitrateWhenHidden` instead.");
-    warnOnceMock.mockReset();
-
-    expect(parseConstructorOptions({
-      throttleWhenHidden: true,
-      throttleVideoBitrateWhenHidden: true,
-    })).toEqual({
-      ...defaultConstructorOptions,
-      throttleWhenHidden: true,
-      throttleVideoBitrateWhenHidden: false,
-    });
-    expect(warnOnceMock).toHaveBeenCalledTimes(1);
-    expect(warnOnceMock)
-      .toHaveBeenCalledWith("`throttleWhenHidden` API is deprecated. Consider using " +
-                            "`throttleVideoBitrateWhenHidden` instead.");
   });
 
   it("should authorize setting a throttleVideoBitrateWhenHidden option", () => {
@@ -241,187 +167,22 @@ describe("API - parseConstructorOptions", () => {
     expect(parsed2.videoElement).toBe(audioElement);
   });
 
-  it("should authorize setting an initialVideoBitrate", () => {
-    expect(parseConstructorOptions({ initialVideoBitrate: -1 })).toEqual({
+  it("should authorize setting an baseBandwidth", () => {
+    expect(parseConstructorOptions({ baseBandwidth: -1 })).toEqual({
       ...defaultConstructorOptions,
-      initialVideoBitrate: -1,
+      baseBandwidth: -1,
     });
-    expect(parseConstructorOptions({ initialVideoBitrate: 0 })).toEqual({
+    expect(parseConstructorOptions({ baseBandwidth: 0 })).toEqual({
       ...defaultConstructorOptions,
-      initialVideoBitrate: 0,
+      baseBandwidth: 0,
     });
-    expect(parseConstructorOptions({ initialVideoBitrate: 10 })).toEqual({
+    expect(parseConstructorOptions({ baseBandwidth: 10 })).toEqual({
       ...defaultConstructorOptions,
-      initialVideoBitrate: 10,
+      baseBandwidth: 10,
     });
-    expect(parseConstructorOptions({ initialVideoBitrate: Infinity })).toEqual({
+    expect(parseConstructorOptions({ baseBandwidth: Infinity })).toEqual({
       ...defaultConstructorOptions,
-      initialVideoBitrate: Infinity,
-    });
-  });
-
-  it("should authorize setting an initialAudioBitrate", () => {
-    expect(parseConstructorOptions({ initialAudioBitrate: -1 })).toEqual({
-      ...defaultConstructorOptions,
-      initialAudioBitrate: -1,
-    });
-    expect(parseConstructorOptions({ initialAudioBitrate: 0 })).toEqual({
-      ...defaultConstructorOptions,
-      initialAudioBitrate: 0,
-    });
-    expect(parseConstructorOptions({ initialAudioBitrate: 10 })).toEqual({
-      ...defaultConstructorOptions,
-      initialAudioBitrate: 10,
-    });
-    expect(parseConstructorOptions({ initialAudioBitrate: Infinity })).toEqual({
-      ...defaultConstructorOptions,
-      initialAudioBitrate: Infinity,
-    });
-  });
-
-  it("should authorize setting a minVideoBitrate", () => {
-    expect(parseConstructorOptions({ minVideoBitrate: -1 })).toEqual({
-      ...defaultConstructorOptions,
-      minVideoBitrate: -1,
-    });
-    expect(parseConstructorOptions({ minVideoBitrate: 0 })).toEqual({
-      ...defaultConstructorOptions,
-      minVideoBitrate: 0,
-    });
-    expect(parseConstructorOptions({ minVideoBitrate: 10 })).toEqual({
-      ...defaultConstructorOptions,
-      minVideoBitrate: 10,
-    });
-    expect(parseConstructorOptions({ minVideoBitrate: Infinity })).toEqual({
-      ...defaultConstructorOptions,
-      minVideoBitrate: Infinity,
-    });
-  });
-
-  it("should authorize setting a minAudioBitrate", () => {
-    expect(parseConstructorOptions({ minAudioBitrate: -1 })).toEqual({
-      ...defaultConstructorOptions,
-      minAudioBitrate: -1,
-    });
-    expect(parseConstructorOptions({ minAudioBitrate: 0 })).toEqual({
-      ...defaultConstructorOptions,
-      minAudioBitrate: 0,
-    });
-    expect(parseConstructorOptions({ minAudioBitrate: 10 })).toEqual({
-      ...defaultConstructorOptions,
-      minAudioBitrate: 10,
-    });
-    expect(parseConstructorOptions({ minAudioBitrate: Infinity })).toEqual({
-      ...defaultConstructorOptions,
-      minAudioBitrate: Infinity,
-    });
-  });
-
-  it("should authorize setting a maxVideoBitrate", () => {
-    expect(parseConstructorOptions({ maxVideoBitrate: 0 })).toEqual({
-      ...defaultConstructorOptions,
-      maxVideoBitrate: 0,
-    });
-    expect(parseConstructorOptions({ maxVideoBitrate: 10 })).toEqual({
-      ...defaultConstructorOptions,
-      maxVideoBitrate: 10,
-    });
-    expect(parseConstructorOptions({ maxVideoBitrate: Infinity })).toEqual({
-      ...defaultConstructorOptions,
-      maxVideoBitrate: Infinity,
-    });
-  });
-
-  it("should throw when setting a maxVideoBitrate inferior to minVideoBitrate", () => {
-    expect(() => parseConstructorOptions({ maxVideoBitrate: -1 }))
-      .toThrow(new Error("Invalid maxVideoBitrate parameter. " +
-                         "Its value, \"-1\", is inferior to the set " +
-                         "minVideoBitrate, \"0\""));
-    expect(() => parseConstructorOptions({ minVideoBitrate: 100,
-                                           maxVideoBitrate: 0 }))
-      .toThrow(new Error("Invalid maxVideoBitrate parameter. " +
-                         "Its value, \"0\", is inferior to the set " +
-                         "minVideoBitrate, \"100\""));
-    expect(() => parseConstructorOptions({ minVideoBitrate: 10000,
-                                           maxVideoBitrate: 9999 }))
-      .toThrow(new Error("Invalid maxVideoBitrate parameter. " +
-                         "Its value, \"9999\", is inferior to the set " +
-                         "minVideoBitrate, \"10000\""));
-  });
-
-  it("should authorize setting a maxAudioBitrate", () => {
-    expect(parseConstructorOptions({ maxAudioBitrate: 0 })).toEqual({
-      ...defaultConstructorOptions,
-      maxAudioBitrate: 0,
-    });
-    expect(parseConstructorOptions({ maxAudioBitrate: 10 })).toEqual({
-      ...defaultConstructorOptions,
-      maxAudioBitrate: 10,
-    });
-    expect(parseConstructorOptions({ maxAudioBitrate: Infinity })).toEqual({
-      ...defaultConstructorOptions,
-      maxAudioBitrate: Infinity,
-    });
-  });
-
-  it("should throw when setting a maxAudioBitrate inferior to minAudioBitrate", () => {
-    expect(() => parseConstructorOptions({ maxAudioBitrate: -1 }))
-      .toThrow(new Error("Invalid maxAudioBitrate parameter. " +
-                         "Its value, \"-1\", is inferior to the set " +
-                         "minAudioBitrate, \"0\""));
-    expect(() => parseConstructorOptions({ minAudioBitrate: 100,
-                                           maxAudioBitrate: 0 }))
-      .toThrow(new Error("Invalid maxAudioBitrate parameter. " +
-                         "Its value, \"0\", is inferior to the set " +
-                         "minAudioBitrate, \"100\""));
-    expect(() => parseConstructorOptions({ minAudioBitrate: 10000,
-                                           maxAudioBitrate: 9999 }))
-      .toThrow(new Error("Invalid maxAudioBitrate parameter. " +
-                         "Its value, \"9999\", is inferior to the set " +
-                         "minAudioBitrate, \"10000\""));
-  });
-
-  it("should authorize setting a stopAtEnd option", () => {
-    expect(parseConstructorOptions({ stopAtEnd: false })).toEqual({
-      ...defaultConstructorOptions,
-      stopAtEnd: false,
-    });
-    expect(parseConstructorOptions({ stopAtEnd: true })).toEqual({
-      ...defaultConstructorOptions,
-      stopAtEnd: true,
-    });
-  });
-
-  it("should authorize setting a preferredAudioTracks option", () => {
-    const preferredAudioTracks = [
-      { language: "fra", audioDescription: false },
-      null,
-    ];
-    expect(parseConstructorOptions({ preferredAudioTracks })).toEqual({
-      ...defaultConstructorOptions,
-      preferredAudioTracks,
-    });
-  });
-
-  it("should authorize setting a preferredTextTracks option", () => {
-    const preferredTextTracks = [
-      { language: "fra", closedCaption: false },
-      null,
-    ];
-    expect(parseConstructorOptions({ preferredTextTracks })).toEqual({
-      ...defaultConstructorOptions,
-      preferredTextTracks,
-    });
-  });
-
-  it("should authorize setting a preferredVideoTracks option", () => {
-    const preferredVideoTracks = [
-      { codec: { all: true, test: /hvc/ } },
-      null,
-    ];
-    expect(parseConstructorOptions({ preferredVideoTracks })).toEqual({
-      ...defaultConstructorOptions,
-      preferredVideoTracks,
+      baseBandwidth: Infinity,
     });
   });
 
@@ -454,40 +215,10 @@ describe("API - parseConstructorOptions", () => {
     })).toThrow();
   });
 
-  it("should throw if the initialVideoBitrate given is not a number", () => {
-    expect(() => parseConstructorOptions({ initialVideoBitrate: "a" as any })).toThrow();
-    expect(() => parseConstructorOptions({ initialVideoBitrate: /a/ as any })).toThrow();
-    expect(() => parseConstructorOptions({ initialVideoBitrate: {} as any })).toThrow();
-  });
-
-  it("should throw if the initialAudioBitrate given is not a number", () => {
-    expect(() => parseConstructorOptions({ initialAudioBitrate: "a" as any })).toThrow();
-    expect(() => parseConstructorOptions({ initialAudioBitrate: /a/ as any })).toThrow();
-    expect(() => parseConstructorOptions({ initialAudioBitrate: {} as any })).toThrow();
-  });
-
-  it("should throw if the minVideoBitrate given is not a number", () => {
-    expect(() => parseConstructorOptions({ minVideoBitrate: "a" as any })).toThrow();
-    expect(() => parseConstructorOptions({ minVideoBitrate: /a/ as any })).toThrow();
-    expect(() => parseConstructorOptions({ minVideoBitrate: {} as any })).toThrow();
-  });
-
-  it("should throw if the minAudioBitrate given is not a number", () => {
-    expect(() => parseConstructorOptions({ minAudioBitrate: "a" as any })).toThrow();
-    expect(() => parseConstructorOptions({ minAudioBitrate: /a/ as any })).toThrow();
-    expect(() => parseConstructorOptions({ minAudioBitrate: {} as any })).toThrow();
-  });
-
-  it("should throw if the maxVideoBitrate given is not a number", () => {
-    expect(() => parseConstructorOptions({ maxVideoBitrate: "a" as any })).toThrow();
-    expect(() => parseConstructorOptions({ maxVideoBitrate: /a/ as any })).toThrow();
-    expect(() => parseConstructorOptions({ maxVideoBitrate: {} as any })).toThrow();
-  });
-
-  it("should throw if the maxAudioBitrate given is not a number", () => {
-    expect(() => parseConstructorOptions({ maxAudioBitrate: "a" as any })).toThrow();
-    expect(() => parseConstructorOptions({ maxAudioBitrate: /a/ as any })).toThrow();
-    expect(() => parseConstructorOptions({ maxAudioBitrate: {} as any })).toThrow();
+  it("should throw if the baseBandwidth given is not a number", () => {
+    expect(() => parseConstructorOptions({ baseBandwidth: "a" as any })).toThrow();
+    expect(() => parseConstructorOptions({ baseBandwidth: /a/ as any })).toThrow();
+    expect(() => parseConstructorOptions({ baseBandwidth: {} as any })).toThrow();
   });
 });
 
@@ -498,32 +229,21 @@ describe("API - parseLoadVideoOptions", () => {
 
   afterEach(() => {
     warnOnceMock.mockReset();
-    normalizeAudioTrackMock.mockReset();
-    normalizeTextTrackMock.mockReset();
   });
 
   const defaultLoadVideoOptions = {
-    audioTrackSwitchingMode: "seamless",
+    defaultAudioTrackSwitchingMode: undefined,
     autoPlay: false,
-    defaultAudioTrack: undefined,
-    defaultTextTrack: undefined,
     enableFastSwitching: true,
-    hideNativeSubtitle: false,
     initialManifest: undefined,
     keySystems: [],
     lowLatencyMode: false,
-    manualBitrateSwitchingMode: "seamless",
     minimumManifestUpdateInterval: 0,
     onCodecSwitch: "continue",
-    networkConfig: {},
+    requestConfig: {},
     startAt: undefined,
     textTrackElement: undefined,
     textTrackMode: "native",
-    transportOptions: {
-      lowLatencyMode: false,
-      supplementaryTextTracks: [],
-      supplementaryImageTracks: [],
-    },
     url: undefined,
   };
 
@@ -570,8 +290,8 @@ describe("API - parseLoadVideoOptions", () => {
     expect(err1.message).toEqual(
       "Unable to load a content: no url set on loadVideo.\n" +
       "Please provide at least either an `url` argument, a " +
-      "`transportOptions.initialManifest` option or a " +
-      "`transportOptions.manifestLoader` option so the RxPlayer can load the content."
+      "`initialManifest` option or a " +
+      "`manifestLoader` option so the RxPlayer can load the content."
     );
     expect(opt2).not.toBeDefined();
     expect(err2).toBeInstanceOf(Error);
@@ -583,8 +303,8 @@ describe("API - parseLoadVideoOptions", () => {
     expect(err2.message).toEqual(
       "Unable to load a content: no url set on loadVideo.\n" +
       "Please provide at least either an `url` argument, a " +
-      "`transportOptions.initialManifest` option or a " +
-      "`transportOptions.manifestLoader` option so the RxPlayer can load the content."
+      "`initialManifest` option or a " +
+      "`manifestLoader` option so the RxPlayer can load the content."
     );
   });
 
@@ -625,14 +345,12 @@ describe("API - parseLoadVideoOptions", () => {
     };
     expect(parseLoadVideoOptions({
       transport: "bar",
-      transportOptions: { manifestLoader },
+      manifestLoader,
     })).toEqual({
       ...defaultLoadVideoOptions,
       transport: "bar",
-      transportOptions: { lowLatencyMode: false,
-                          manifestLoader,
-                          supplementaryImageTracks: [],
-                          supplementaryTextTracks: [] },
+      lowLatencyMode: false,
+      manifestLoader,
     });
   });
 
@@ -641,7 +359,7 @@ describe("API - parseLoadVideoOptions", () => {
   /* eslint-enable max-len */
     expect(parseLoadVideoOptions({
       transport: "bar",
-      transportOptions: { initialManifest: "test" },
+      initialManifest: "test",
     })).toEqual({
       ...defaultLoadVideoOptions,
       transport: "bar",
@@ -651,7 +369,7 @@ describe("API - parseLoadVideoOptions", () => {
 
   it("should authorize setting an initialManifest option", () => {
     expect(parseLoadVideoOptions({
-      transportOptions: { initialManifest: "baz" },
+      initialManifest: "baz",
       url: "foo",
       transport: "bar",
     })).toEqual({
@@ -663,7 +381,7 @@ describe("API - parseLoadVideoOptions", () => {
     expect(parseLoadVideoOptions({
       url: "foo",
       transport: "bar",
-      transportOptions: { initialManifest: "" },
+      initialManifest: "",
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
@@ -692,82 +410,6 @@ describe("API - parseLoadVideoOptions", () => {
       url: "foo",
       transport: "bar",
       autoPlay: true,
-    });
-  });
-
-  it("should normalize a defaultAudioTrack given but announce its deprecation", () => {
-    const track = { normalized: "fra", audioDescription: true, language: "fr" };
-    warnOnceMock.mockReturnValue(undefined);
-    normalizeAudioTrackMock.mockReturnValue(track);
-    normalizeTextTrackMock.mockReturnValue(undefined);
-
-    expect(parseLoadVideoOptions({
-      url: "foo",
-      transport: "bar",
-      defaultAudioTrack: "Kankyō Ongaku" as any,
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      defaultAudioTrack: track,
-    });
-    expect(normalizeAudioTrackMock).toHaveBeenCalledTimes(1);
-    expect(normalizeAudioTrackMock).toHaveBeenCalledWith("Kankyō Ongaku");
-    expect(normalizeTextTrackMock).toHaveBeenCalledTimes(1);
-    expect(normalizeTextTrackMock).toHaveBeenCalledWith(undefined);
-    expect(warnOnceMock).toHaveBeenCalledTimes(1);
-    expect(warnOnceMock).toHaveBeenCalledWith("The `defaultAudioTrack` loadVideo " +
-      "option is deprecated.\n" +
-      "Please use the `preferredAudioTracks` constructor option or the" +
-      "`setPreferredAudioTracks` method instead");
-  });
-
-  it("should normalize a defaultTextTrack given but announce its deprecation", () => {
-    const track = { normalized: "fra", closedCaption: true, language: "fr" };
-    warnOnceMock.mockReturnValue(undefined);
-    normalizeAudioTrackMock.mockReturnValue(undefined);
-    normalizeTextTrackMock.mockReturnValue(track);
-    expect(parseLoadVideoOptions({
-      url: "foo",
-      transport: "bar",
-      defaultTextTrack: "Laurie Spiegel" as any,
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      defaultTextTrack: track,
-    });
-    expect(normalizeTextTrackMock).toHaveBeenCalledTimes(1);
-    expect(normalizeTextTrackMock).toHaveBeenCalledWith("Laurie Spiegel");
-    expect(normalizeAudioTrackMock).toHaveBeenCalledTimes(1);
-    expect(normalizeAudioTrackMock).toHaveBeenCalledWith(undefined);
-    expect(warnOnceMock).toHaveBeenCalledTimes(1);
-    expect(warnOnceMock).toHaveBeenCalledWith("The `defaultTextTrack` loadVideo " +
-      "option is deprecated.\n" +
-      "Please use the `preferredTextTracks` constructor option or the" +
-      "`setPreferredTextTracks` method instead");
-  });
-
-  it("should authorize setting a hideNativeSubtitle option", () => {
-    expect(parseLoadVideoOptions({
-      hideNativeSubtitle: false,
-      url: "foo",
-      transport: "bar",
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      hideNativeSubtitle: false,
-    });
-    expect(parseLoadVideoOptions({
-      hideNativeSubtitle: true,
-      url: "foo",
-      transport: "bar",
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      hideNativeSubtitle: true,
     });
   });
 
@@ -891,9 +533,6 @@ describe("API - parseLoadVideoOptions", () => {
       lowLatencyMode: true,
       transport: "bar",
       url: "foo",
-      transportOptions: { lowLatencyMode: true,
-                          supplementaryImageTracks: [],
-                          supplementaryTextTracks: [] },
     });
   });
 
@@ -901,103 +540,72 @@ describe("API - parseLoadVideoOptions", () => {
     expect(parseLoadVideoOptions({
       url: "foo",
       transport: "bar",
-      transportOptions: {
-        minimumManifestUpdateInterval: 5400,
-      },
+      minimumManifestUpdateInterval: 5400,
     })).toEqual({
       ...defaultLoadVideoOptions,
       minimumManifestUpdateInterval: 5400,
       url: "foo",
       transport: "bar",
-      transportOptions: {
-        lowLatencyMode: false,
-        supplementaryImageTracks: [],
-        supplementaryTextTracks: [],
-      },
+      lowLatencyMode: false,
     });
   });
 
-  it("should authorize setting a valid manualBitrateSwitchingMode option", () => {
+  it("should authorize setting a valid defaultAudioTrackSwitchingMode option", () => {
     expect(parseLoadVideoOptions({
-      manualBitrateSwitchingMode: "direct",
+      defaultAudioTrackSwitchingMode: "direct",
       url: "foo",
       transport: "bar",
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      manualBitrateSwitchingMode: "direct",
+      defaultAudioTrackSwitchingMode: "direct",
     });
 
     expect(parseLoadVideoOptions({
-      manualBitrateSwitchingMode: "seamless",
+      defaultAudioTrackSwitchingMode: "reload",
       url: "foo",
       transport: "bar",
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      manualBitrateSwitchingMode: "seamless",
-    });
-  });
-
-  it("should authorize setting a valid audioTrackSwitchingMode option", () => {
-    expect(parseLoadVideoOptions({
-      audioTrackSwitchingMode: "direct",
-      url: "foo",
-      transport: "bar",
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      audioTrackSwitchingMode: "direct",
+      defaultAudioTrackSwitchingMode: "reload",
     });
 
     expect(parseLoadVideoOptions({
-      audioTrackSwitchingMode: "reload",
+      defaultAudioTrackSwitchingMode: "seamless",
       url: "foo",
       transport: "bar",
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      audioTrackSwitchingMode: "reload",
-    });
-
-    expect(parseLoadVideoOptions({
-      audioTrackSwitchingMode: "seamless",
-      url: "foo",
-      transport: "bar",
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      audioTrackSwitchingMode: "seamless",
+      defaultAudioTrackSwitchingMode: "seamless",
     });
   });
 
   // eslint-disable-next-line max-len
-  it("should set a 'seamless' audioTrackSwitching mode when the parameter is invalid or not specified", () => {
+  it("should set an 'undefined' defaultAudioTrackSwitchingMode mode when the parameter is invalid or not specified", () => {
     logWarnMock.mockReturnValue(undefined);
     expect(parseLoadVideoOptions({
-      audioTrackSwitchingMode: "foo-bar" as any,
+      defaultAudioTrackSwitchingMode: "foo-bar" as any,
       url: "foo",
       transport: "bar",
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      audioTrackSwitchingMode: "seamless",
+      defaultAudioTrackSwitchingMode: undefined,
     });
     expect(logWarnMock).toHaveBeenCalledTimes(1);
     expect(logWarnMock)
       .toHaveBeenCalledWith(
-        "The `audioTrackSwitchingMode` loadVideo option must match one of " +
+        "The `defaultAudioTrackSwitchingMode` loadVideo option must match one of " +
         `the following strategy name:
 - \`seamless\`
 - \`direct\`
-- \`reload\`
-If badly set, seamless strategy will be used as default`);
+- \`reload\``);
     logWarnMock.mockReset();
     logWarnMock.mockReturnValue(undefined);
 
@@ -1008,7 +616,7 @@ If badly set, seamless strategy will be used as default`);
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      audioTrackSwitchingMode: "seamless",
+      defaultAudioTrackSwitchingMode: undefined,
     });
     expect(logWarnMock).not.toHaveBeenCalled();
   });
@@ -1096,63 +704,51 @@ If badly set, continue will be used as default`);
     });
   });
 
-  it("should authorize setting a networkConfig", () => {
+  it("should authorize setting a requestConfig", () => {
     expect(parseLoadVideoOptions({
       url: "foo",
       transport: "bar",
-      networkConfig: {},
+      requestConfig: {},
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      networkConfig: {},
+      requestConfig: {},
     });
     expect(parseLoadVideoOptions({
       url: "foo",
       transport: "bar",
-      networkConfig: { manifestRetry: 4 },
+      requestConfig: { manifest: { maxRetry: 4 } },
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      networkConfig: { manifestRetry: 4 },
+      requestConfig: { manifest: { maxRetry: 4 } },
     });
     expect(parseLoadVideoOptions({
       url: "foo",
       transport: "bar",
-      networkConfig: { offlineRetry: 7 },
+      requestConfig: { segment: { maxRetry: 3 } },
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      networkConfig: { offlineRetry: 7 },
+      requestConfig: { segment: { maxRetry: 3 } },
     });
     expect(parseLoadVideoOptions({
       url: "foo",
       transport: "bar",
-      networkConfig: { segmentRetry: 3 },
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      networkConfig: { segmentRetry: 3 },
-    });
-    expect(parseLoadVideoOptions({
-      url: "foo",
-      transport: "bar",
-      networkConfig: {
-        offlineRetry: 10,
-        segmentRetry: 3,
-        manifestRetry: 5,
+      requestConfig: {
+        segment: { maxRetry: 3 },
+        manifest: { maxRetry: 5 },
       },
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      networkConfig: {
-        offlineRetry: 10,
-        segmentRetry: 3,
-        manifestRetry: 5,
+      requestConfig: {
+        segment: { maxRetry: 3 },
+        manifest: { maxRetry: 5 },
       },
     });
   });
@@ -1201,268 +797,18 @@ If badly set, continue will be used as default`);
     });
   });
 
-  it("should authorize setting a supplementaryImageTracks option", () => {
-    const supplementaryImageTracks1 = {
-      url: "foo",
-      mimeType: "bar/baz",
-    };
-    const supplementaryImageTracks2 = {
-      url: "bar",
-      mimeType: "toto",
-    };
-    expect(parseLoadVideoOptions({
-      supplementaryImageTracks: supplementaryImageTracks1 as any,
-      url: "foo",
-      transport: "bar",
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      transportOptions: {
-        lowLatencyMode: false,
-        supplementaryImageTracks: [supplementaryImageTracks1],
-        supplementaryTextTracks: [],
-      },
-    });
-    expect(parseLoadVideoOptions({
-      supplementaryImageTracks: [supplementaryImageTracks1, supplementaryImageTracks2],
-      url: "foo",
-      transport: "bar",
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      transportOptions: {
-        lowLatencyMode: false,
-        supplementaryImageTracks: [ supplementaryImageTracks1,
-                                    supplementaryImageTracks2 ],
-        supplementaryTextTracks: [],
-      },
-    });
-  });
-
-  it("should throw when setting an invalid supplementaryImageTracks option", () => {
-    {
-      let err;
-      let opt;
-      try {
-        opt = parseLoadVideoOptions({
-          url: "foo",
-          transport: "bar",
-          supplementaryImageTracks: {} as any,
-        });
-      } catch (e) {
-        err = e;
-      }
-      expect(opt).not.toBeDefined();
-      expect(err).toBeInstanceOf(Error);
-
-      // Impossible check to shut-up TypeScript
-      if (!(err instanceof Error)) {
-        throw new Error("Impossible: already checked it was an Error instance");
-      }
-      expect(err.message).toEqual(
-        "Invalid supplementary image track given. Missing either mimetype or url");
-    }
-    {
-      let err;
-      let opt;
-      try {
-        opt = parseLoadVideoOptions({
-          url: "foo",
-          transport: "bar",
-          supplementaryImageTracks: { url: "test" } as any,
-        });
-      } catch (e) {
-        err = e;
-      }
-      expect(opt).not.toBeDefined();
-      expect(err).toBeInstanceOf(Error);
-
-      // Impossible check to shut-up TypeScript
-      if (!(err instanceof Error)) {
-        throw new Error("Impossible: already checked it was an Error instance");
-      }
-      expect(err.message).toEqual(
-        "Invalid supplementary image track given. Missing either mimetype or url");
-    }
-    {
-      let err;
-      let opt;
-      try {
-        opt = parseLoadVideoOptions({
-          url: "foo",
-          transport: "bar",
-          supplementaryImageTracks: { mimeType: "test" } as any,
-        });
-      } catch (e) {
-        err = e;
-      }
-      expect(opt).not.toBeDefined();
-      expect(err).toBeInstanceOf(Error);
-
-      // Impossible check to shut-up TypeScript
-      if (!(err instanceof Error)) {
-        throw new Error("Impossible: already checked it was an Error instance");
-      }
-      expect(err.message).toEqual(
-        "Invalid supplementary image track given. Missing either mimetype or url");
-    }
-  });
-
-  it("should authorize setting a supplementaryTextTracks option", () => {
-    const supplementaryTextTracks1 = {
-      url: "foo",
-      mimeType: "bar/baz",
-      language: "fr",
-    };
-    const supplementaryTextTracks2 = {
-      url: "bar",
-      mimeType: "toto",
-      language: "en",
-    };
-    expect(parseLoadVideoOptions({
-      supplementaryTextTracks: supplementaryTextTracks1 as any,
-      url: "foo",
-      transport: "bar",
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      transportOptions: {
-        lowLatencyMode: false,
-        supplementaryImageTracks: [],
-        supplementaryTextTracks: [supplementaryTextTracks1],
-      },
-    });
-    expect(parseLoadVideoOptions({
-      supplementaryTextTracks: [
-        supplementaryTextTracks1,
-        supplementaryTextTracks2,
-      ] as any,
-      url: "foo",
-      transport: "bar",
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      transportOptions: {
-        lowLatencyMode: false,
-        supplementaryImageTracks: [],
-        supplementaryTextTracks: [supplementaryTextTracks1, supplementaryTextTracks2],
-      },
-    });
-  });
-
-  it("should throw when setting an invalid supplementaryTextTracks option", () => {
-    {
-      let err;
-      let opt;
-      try {
-        opt = parseLoadVideoOptions({
-          url: "foo",
-          transport: "bar",
-          supplementaryTextTracks: {} as any,
-        });
-      } catch (e) {
-        err = e;
-      }
-      expect(opt).not.toBeDefined();
-      expect(err).toBeInstanceOf(Error);
-
-      // Impossible check to shut-up TypeScript
-      if (!(err instanceof Error)) {
-        throw new Error("Impossible: already checked it was an Error instance");
-      }
-      expect(err.message).toEqual(
-        "Invalid supplementary text track given." +
-        " Missing either language, mimetype or url");
-    }
-    {
-      let err;
-      let opt;
-      try {
-        opt = parseLoadVideoOptions({
-          url: "foo",
-          transport: "bar",
-          supplementaryTextTracks: { url: "test", language: "toto" } as any,
-        });
-      } catch (e) {
-        err = e;
-      }
-      expect(opt).not.toBeDefined();
-      expect(err).toBeInstanceOf(Error);
-
-      // Impossible check to shut-up TypeScript
-      if (!(err instanceof Error)) {
-        throw new Error("Impossible: already checked it was an Error instance");
-      }
-      expect(err.message).toEqual(
-        "Invalid supplementary text track given." +
-        " Missing either language, mimetype or url");
-    }
-    {
-      let err;
-      let opt;
-      try {
-        opt = parseLoadVideoOptions({
-          url: "foo",
-          transport: "bar",
-          supplementaryTextTracks: { mimeType: "test", language: "toto" } as any,
-        });
-      } catch (e) {
-        err = e;
-      }
-      expect(opt).not.toBeDefined();
-      expect(err).toBeInstanceOf(Error);
-
-      // Impossible check to shut-up TypeScript
-      if (!(err instanceof Error)) {
-        throw new Error("Impossible: already checked it was an Error instance");
-      }
-      expect(err.message).toEqual(
-        "Invalid supplementary text track given." +
-        " Missing either language, mimetype or url");
-    }
-    {
-      let err;
-      let opt;
-      try {
-        opt = parseLoadVideoOptions({
-          url: "foo",
-          transport: "bar",
-          supplementaryTextTracks: { url: "test", mimeType: "toto" } as any,
-        });
-      } catch (e) {
-        err = e;
-      }
-      expect(opt).not.toBeDefined();
-      expect(err).toBeInstanceOf(Error);
-
-      // Impossible check to shut-up TypeScript
-      if (!(err instanceof Error)) {
-        throw new Error("Impossible: already checked it was an Error instance");
-      }
-      expect(err.message).toEqual(
-        "Invalid supplementary text track given." +
-        " Missing either language, mimetype or url");
-    }
-  });
-
-  it("should authorize setting a transportOptions option", () => {
+  it("should authorize setting a `segmentLoader` option", () => {
     const func = jest.fn();
     expect(parseLoadVideoOptions({
-      transportOptions: { segmentLoader: func },
+      segmentLoader: func,
       url: "foo",
       transport: "bar",
     })).toEqual({
       ...defaultLoadVideoOptions,
       url: "foo",
       transport: "bar",
-      transportOptions: { lowLatencyMode: false,
-                          supplementaryImageTracks: [],
-                          supplementaryTextTracks: [],
-                          segmentLoader: func },
+      lowLatencyMode: false,
+      segmentLoader: func,
     });
   });
 
@@ -1589,24 +935,6 @@ If badly set, continue will be used as default`);
     expect(logWarnMock).toHaveBeenCalledTimes(1);
     expect(logWarnMock).toHaveBeenCalledWith("API: You have set a textTrackElement " +
       "without being in an \"html\" textTrackMode. It will be ignored.");
-  });
-
-  /* eslint-disable max-len */
-  it("should set non-documented variables in `transportOptions`", () => {
-  /* eslint-enable max-len */
-    expect(parseLoadVideoOptions({
-      url: "foo",
-      transport: "bar",
-      transportOptions: { __priv_toto: 4 } as any,
-    })).toEqual({
-      ...defaultLoadVideoOptions,
-      url: "foo",
-      transport: "bar",
-      transportOptions: { lowLatencyMode: false,
-                          __priv_toto: 4,
-                          supplementaryImageTracks: [],
-                          supplementaryTextTracks: [] },
-    });
   });
 });
 

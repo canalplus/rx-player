@@ -9,8 +9,8 @@ Those plugins are often under the form of functions passed as an argument to the
 
 ## segmentLoader
 
-The `segmentLoader` is a function that can be included in the `transportOptions`
-of the `loadVideo` API call.
+The `segmentLoader` is a function that can be included as an option of the
+`loadVideo` API call.
 
 A `segmentLoader` allows to define a custom audio/video segment loader (it might
 on the future work for other types of segments, so always check the type if you
@@ -24,7 +24,7 @@ an XMLHttpRequest (it has no use, as our implementation does the same thing and
 more):
 ```js
 /**
- * @param {Object} infos - infos about the segment to download
+ * @param {Object} segmentInfo - Information about the segment to download
  * @param {Object} callbacks - Object containing several callbacks to indicate
  * that the segment has been loaded, the loading operation has failed or to
  * fallback to our default implementation. More information on this object below
@@ -32,10 +32,11 @@ more):
  * @returns {Function|undefined} - If a function is defined in the return value,
  * it will be called if and when the request is canceled.
  */
-const customSegmentLoader = (infos, callbacks) => {
+const customSegmentLoader = (segmentInfo, callbacks) => {
 
   // we will only use this custom loader for videos segments.
-  if (infos.adaptation.type !== "video") {
+  // we will also ignore edge cases where the URL is undefined.
+  if (segmentInfo.trackType !== "video" || segmentInfo.url === undefined) {
     callbacks.fallback();
     return;
   }
@@ -51,30 +52,32 @@ const customSegmentLoader = (infos, callbacks) => {
       callbacks.resolve({ duration, size, data });
     } else {
       const err = new Error("didn't work");
-      err.xhr = xhr;
       callbacks.reject(err);
     }
   };
 
   xhr.onprogress = function onXHRProgress(event) {
     const currentTime = performance.now();
-    callbacks.progress({ type: "progress",
-                         value: { duration: currentTime - sendingTime,
-                                  size: event.loaded,
-                                  totalSize: event.total } });
+    callbacks.progress({ duration: currentTime - sendingTime,
+                         size: event.loaded,
+                         totalSize: event.total });
   };
 
   xhr.onerror = function onXHRError() {
     const err = new Error("didn't work");
-    err.xhr = xhr;
     callbacks.reject(err);
   };
 
-  xhr.open("GET", infos.url);
+  xhr.open("GET", segmentInfo.url);
   xhr.responseType = "arraybuffer";
 
-  const range = infos.segment.range;
-  if (range) {
+  const ranges = segmentInfo.byteRanges;
+  if (ranges) {
+    // Theoretically, we could have multiple non-contiguous byte ranges, which
+    // would imply several requests.
+    // In reality, this is extremely rare so we just create a global byte-range
+    // encompassing all in this example.
+    const range = [ranges[0][0], ranges[ranges.length - 1][1]];
     if (range[1] && range[1] !== Infinity) {
       xhr.setRequestHeader("Range", `bytes=${range[0]}-${range[1]}`);
     } else {
@@ -92,11 +95,14 @@ const customSegmentLoader = (infos, callbacks) => {
 
 As you can see, this function takes two arguments:
 
-  1. **infos**: An Object giving information about the wanted segments.
-     This object contains the following properties:
+  1. **segmentInfo** (`object`): An Object giving information about the wanted
+     segments.  This object contains the following properties:
 
-       - *url* (`string`): The URL the segment request should normally be
-         performed at.
+       - **url** (`string|undefined`): The URL the segment request should
+         normally be performed at.
+
+         This property can be `undefined` in a condition where the segment URL
+         either doesn't exist or has not been communicated by the Manifest.
 
        - *timeout* (`number|undefined`: Timeout in milliseconds after which a
          request should preferably be aborted, according to current
@@ -105,36 +111,35 @@ As you can see, this function takes two arguments:
          This property is mainly indicative, you may or may not want to exploit
          this information depending on your use cases.
 
-       - *manifest* (`Object`) - the Manifest object containing the segment.
-         More information on its structure can be found on the documentation
-         linked below [1].
+       - *isInit* (`boolean|undefined`): If true this segment is an
+         initialization segment which contains no decodable data.
 
-       - *period* (`Object`) - the Period object containing the segment.
-         More information on its structure can be found on the documentation
-         linked below [2].
+         Those types of segment are mainly there for initialization
+         purposes, such as giving initial infos to the decoder on
+         subsequent media segments that will be pushed.
 
-       - *adaptation* (`Object`) - the Adaptation object containing the segment.
-         More information on its structure can be found on the documentation
-         linked below [3].
+         Note that if `isInit` is false, it only means that the segment
+         contains decodable media, it can also contain important
+         initialization information.
 
-       - *representation* (`Object`) - the Representation object containing the
-         segment.
-         More information on its structure can be found on the documentation
-         linked below [4].
+         If `undefined`, we could not determine whether this segment was an
+         initialization segment.
+         This case is not currently possible but may be in future versions.
 
-       - *segment* (`Object`) - the segment object related to this segment.
-         More information on its structure can be found on the documentation
-         linked below [5].
+       - *byteRanges* (`Array.<[number, number]>|undefined`): If defined, only
+         the corresponding byte-ranges, which are subsets in bytes of the full
+         data concerned, should be loaded.
 
-     [1] [Manifest structure](./Manifest_Object.md#manifest)
+         If multiple non-contiguous byte-ranges are given, the result should be
+         the concatenation of those byte-ranges, in the same order.
 
-     [2] [Period structure](./Manifest_Object.md#period)
+         For example `[[0, 100], [150, 180]]` means that the bytes of both 0 to 100
+         (included) and from 150 to 180 (included) should be requested.
+         The communicated result should then be a concatenation of both in the same
+         order.
 
-     [3] [Adaptation structure](./Manifest_Object.md#adaptation)
-
-     [4] [Representation structure](./Manifest_Object.md#representation)
-
-     [5] [Segment structure](./Manifest_Object.md#segment)
+       - *trackType* (`string`): The concerned type of track. Can be
+        `"video"`, `"audio"`, `"text"` (for subtitles)
 
   2. **callbacks**: An object containing multiple callbacks to allow this
      `segmentLoader` to communicate various events to the RxPlayer.
@@ -153,9 +158,10 @@ As you can see, this function takes two arguments:
 
              This value may be used to estimate the ideal user bandwidth.
 
-
            - *size* (`Number|undefined`) size, in bytes, of the total downloaded
              response.
+
+             This value may be used to estimate the ideal user bandwidth.
 
        - **progress** - Callback to call when progress information is available
          on the current request. This callback allows to improve our adaptive
@@ -188,26 +194,6 @@ As you can see, this function takes two arguments:
               If not set or set to `undefined`, the RxPlayer might retry or fail
               depending on other factors.
 
-            - *xhr* (`XMLHttpRequest|undefined`): If an `XMLHttpRequest` was
-              used to perform this request, this should be the corresponding
-              instance.
-
-              This can be used for example by the RxPlayer to know whether
-              retrying should be done when the `canRetry` property is not set.
-
-            - *isOfflineError* (`boolean|undefined`): If set to `true`, this
-              indicates that this error is due to the user being offline
-              (disconnected from the needed network).
-
-              If set to `false`, this indicates that it wasn't.
-
-              If not known or not applicable, you can just set it to undefined
-              or not define it at all.
-
-              The RxPlayer might retry a segment request due to the user being
-              offline a different amount of time than when the error is due to
-              another issue, depending on its configuration.
-
        - **fallback**: Callback to call if you want to call our default
          implementation instead for loading this segment. No argument is needed.
 
@@ -216,8 +202,8 @@ the request is aborted. You can define one to clean-up or dispose all resources.
 
 ## manifestLoader
 
-The `manifestLoader` is a function that can be included in the
-`transportOptions` of the `loadVideo` API call.
+The `manifestLoader` is a function that can be included as an option of the
+`loadVideo` API call.
 
 A manifestLoader allows to define a custom [Manifest](../../Getting_Started/Glossary.md#manifest)
 loader.
@@ -227,11 +213,7 @@ an XMLHttpRequest (it has no use, as our implementation does the same thing and
 more):
 ```js
 /**
- * @param {string|undefined} url - the url the Manifest request should normally
- * be on.
- * Can be undefined in very specific conditions, like in cases when the
- * `loadVideo` call had no defined URL (e.g. "local" manifest, playing a locally
- * crafted "Metaplaylist" content).
+ * @param {Object} manifestInfo - Information about the Manifest to download
  * @param {Object} callbacks - Object containing several callbacks to indicate
  * that the manifest has been loaded, the loading operation has failed or to
  * fallback to our default implementation. More information on this object below
@@ -239,7 +221,8 @@ more):
  * @returns {Function|undefined} - If a function is defined in the return value,
  * it will be called if and when the request is canceled.
  */
-const customManifestLoader = (url, callbacks) => {
+const customManifestLoader = (manifestInfo, callbacks) => {
+  const { url } = manifestInfo;
   const xhr = new XMLHttpRequest();
   const baseTime = performance.now();
 
@@ -299,11 +282,22 @@ const customManifestLoader = (url, callbacks) => {
 
 As you can see, this function takes three arguments:
 
-  1. **url**: The URL the Manifest request should normally be performed at.
+  1. **manifestInfo** (`object`): An Object giving information about the wanted
+     Manifest. This object contains the following properties:
 
-     This argument can be `undefined` in very rare and specific conditions where
-     the Manifest URL doesn't exist or has not been communicated by the
-     application.
+     - **url** (`string|undefined`): The URL the Manifest request should
+       normally be performed at.
+
+       This argument can be `undefined` in very rare and specific conditions
+       where the Manifest URL doesn't exist or has not been communicated by the
+       application.
+
+     - *timeout* (`number|undefined`): Timeout in milliseconds after which a
+       request should preferably be aborted, according to current
+       configuration.
+
+       This property is mainly indicative, you may or may not want to exploit
+       this information depending on your use cases.
 
   2. **callbacks**: An object containing multiple callbacks to allow this
      `manifestLoader` to communicate the loaded Manifest or an encountered error
@@ -351,38 +345,8 @@ As you can see, this function takes three arguments:
               If not set or set to `undefined`, the RxPlayer might retry or fail
               depending on other factors.
 
-            - *xhr* (`XMLHttpRequest|undefined`): If an `XMLHttpRequest` was
-              used to perform this request, this should be the corresponding
-              instance.
-
-              This can be used for example by the RxPlayer to know whether
-              retrying should be done when the `canRetry` property is not set.
-
-            - *isOfflineError* (`boolean|undefined`): If set to `true`, this
-              indicates that this error is due to the user being offline
-              (disconnected from the needed network).
-
-              If set to `false`, this indicates that it wasn't.
-
-              If not known or not applicable, you can just set it to undefined
-              or not define it at all.
-
-              The RxPlayer might retry a Manifest request due to the user being
-              offline a different amount of time than when the error is due to
-              another issue, depending on its configuration.
-
        - **fallback**: Callback to call if you want to call our default
          implementation instead for this Manifest. No argument is needed.
-
-  3. **options**: Various other options. For the moment, it's an object with
-     only the following property:
-
-       - *timeout* (`number|undefined`): Timeout in milliseconds after which a
-         request should preferably be aborted, according to current
-         configuration.
-
-         This property is mainly indicative, you may or may not want to exploit
-         this information depending on your use cases.
 
 
 The `manifestLoader` can also return a function, which will be called if/when
@@ -390,8 +354,8 @@ the request is aborted. You can define one to clean-up or dispose all resources.
 
 ## representationFilter
 
-The representationFilter is a function that can be included in the
-`transportOptions` of the `loadVideo` API call.
+The representationFilter is a function that can be included as an option of the
+`loadVideo` API call.
 
 A representationFilter allows you to filter out
 [Representations](../../Getting_Started/Glossary.md#representation) (i.e. media qualities) based on
@@ -400,16 +364,76 @@ its attributes.
 The representationFilter will be called each time we load a
 [Manifest](../../Getting_Started/Glossary.md#manifest) with two arguments:
 
-- representation `{Representation}`: The concerned `Representation`.
-  A `Representation` structure's is described [in the Manifest structure
-  documentation](./Manifest_Object.md#representation).
+- representation `{Object}`: An object describing the `Representation`.
 
-- representationInfos `{Object}`: Basic information about this
-  `Representation`. Contains the following keys:
+  This object contains the following properties:
 
-  - bufferType `{string}`: The concerned type of buffer. Can be
-    `"video"`, `"audio"`, `"text"` (for subtitles) or `"image"`
-    (for thumbnail).
+   - `id` (`string`): The id used to identify this Representation.
+
+   - `bitrate` (`Number|undefined`): The bitrate of this Representation, in
+      bits per seconds.
+
+      `undefined` if unknown.
+
+   - `width` (`Number|undefined`): If the `Representation` is from a video
+     track and if its width is known, this is the width of video, in pixels.
+
+   - `height` (`Number|undefined`): If the `Representation` is from a video
+     track and if its height is known, this is the height of video, in pixels.
+
+   - `codecs` (`Array.<string>|undefined`): Codec(s) relied on by the media
+     segments of that Representation.
+
+     For the great majority of cases, this value will be set to either
+     `undefined` (meaning the codec is unknown) or to an array with a
+     single element which will be the actual codec relied on when the
+     corresponding Representation will be played.
+
+     However in some very rare scenarios, this value might be set to an array
+     with multiple codecs, itself being a list of its candidate codecs from the
+     most wanted to the most compatible.
+     The conditions for this more complex format are very specific:
+
+       - It can only happen if the `representationFilter` callback is called in
+         an environment where it hasn't yet been possible for the RxPlayer to
+         check for codec support (mainly when running through the RxPlayer's
+         `MULTI_THREAD` feature in a browser without MSE-in-worker
+         capabilities).
+
+       - The corresponding Representation is compatible to a restrictive codec
+         yet also retro-compatible to a less restrictive one.
+
+         The main example being Dolby Vision Representations which are
+         retro-compatible to HDR10 HEVC codecs.
+         In that very specific case, we could have an array with two elements:
+           1. The Dolby Vision codec
+           2. The base HDR10 codec
+
+   - `frameRate` (`Number|undefined`): If the `Representation` is from a video
+     track and if its frame rate is known, this is the frame rate of video, in
+     image per seconds.
+
+   - `hdrInfo` (`Object|undefined`): If the `Representation` is from a video
+     track and if it has HDR information associated to it, this is set to an
+     object describing the hdr characteristics of the track.
+     (see [HDR support documentation](../Miscellaneous/hdr.md#hdrinfo))
+
+   - `contentProtections` (`Object|undefined`): Encryption information linked
+     to this content.
+
+     If set to an Object, the Representation is known to be encrypted.
+     If unset or set to `undefined` the Representation is either unencrypted or
+     we don't know if it is.
+
+     When set to an object, it may contain the following properties:
+       - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
+         Representation.
+
+- context `{Object}`: Basic context about this `Representation`.
+  Contains the following keys:
+
+  - trackType `{string}`: The concerned type of track. Can be
+    `"video"`, `"audio"`, `"text"` (for subtitles)
 
   - language `{string|undefined}`: The language the `Representation`
     is in, as announced by the Manifest.
@@ -419,19 +443,25 @@ The representationFilter will be called each time we load a
     If the translation attempt fails (no corresponding ISO 639-3 language
     code is found), it will equal the value of `language`
 
-  - isClosedCaption `{Boolean|undefined}`: If true, the `Representation`
-    links to subtitles with added hints for the hard of hearing.
+  - isClosedCaption `{Boolean|undefined}`: If set to `true` and if this is a
+    text track, the `Representation` links to subtitles with added hints for
+    the hard of hearing.
 
-  - isAudioDescription `{Boolean|undefined}`: If true, the
-    `Representation` links to an audio track with added commentary for
-    the visually impaired.
+  - isAudioDescription `{Boolean|undefined}`: If set to `true` and if this is an
+    audio track, the `Representation` links to an audio track with added
+    commentary for the visually impaired.
 
-  - isDub `{Boolean|undefined}`): If set to `true`, this audio track is a
-    "dub", meaning it was recorded in another language than the original.
+  - isDub `{Boolean|undefined}`): If set to `true` and if this is an audio
+    track, then this audio track is a "dub", meaning it was recorded in
+    another language than the original.
     If set to `false`, we know that this audio track is in an original
     language.
+
     This property is `undefined` if we do not known whether it is in an
-    original language.
+    original language or if does not apply for the track type.
+
+  - isSignInterpreted `{Boolean|undefined}`): If set to `true` and if this is a
+    video track, then it contains visual sign interpretation.
 
 This function should then returns `true` if the `Representation` should be
 kept or `false` if it should be removed.
@@ -441,17 +471,16 @@ For example, here is a `representationFilter` that removes video
 
 ```js
 /**
- * @param {Object} representation - The Representation object, as defined in
- * the documentation linked bellow [1]
+ * @param {Object} representationInfo
  * @param {Object} infos - supplementary information about the given
  * Representation.
  * @returns {boolean}
  */
-function representationFilter(representation, infos) {
-  if (infos.bufferType === "video") {
+function representationFilter(representationInfo, infos) {
+  if (infos.trackType === "video") {
     // If video representation, allows only those for which the height and width
     // is known to be below our 1920x1080 limit
-    const { width, height } = representation;
+    const { width, height } = representationInfo;
     return width != null && height != null && width <= 1920 && height <= 1080;
   }
 
@@ -459,5 +488,3 @@ function representationFilter(representation, infos) {
   return true;
 }
 ```
-
-[1] [Representation structure](./Manifest_Object.md#representation)

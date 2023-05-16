@@ -193,6 +193,8 @@ export interface ILocalRepresentation {
   height? : number;
   /** Interface allowing to retrieve media segments for this quality. */
   index : ILocalIndex;
+  /** `true` if audio has Dolby Atmos. */
+  isSpatialAudio? : boolean;
 }
 
 /** A "track"" of a "local" Manifest. */

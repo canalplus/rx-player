@@ -50,6 +50,7 @@ export default function initSegmentLoader(
     return request({ url,
                      responseType: "arraybuffer",
                      timeout: options.timeout,
+                     connectionTimeout: options.connectionTimeout,
                      cancelSignal,
                      onProgress: callbacks.onProgress })
       .then(data => ({ resultType: "segment-loaded",
@@ -61,6 +62,7 @@ export default function initSegmentLoader(
                      headers: { Range: byteRange(segment.range) },
                      responseType: "arraybuffer",
                      timeout: options.timeout,
+                     connectionTimeout: options.connectionTimeout,
                      cancelSignal,
                      onProgress: callbacks.onProgress })
       .then(data => ({ resultType: "segment-loaded",
@@ -74,6 +76,7 @@ export default function initSegmentLoader(
                                                   segment.indexRange[1] ]) },
                      responseType: "arraybuffer",
                      timeout: options.timeout,
+                     connectionTimeout: options.connectionTimeout,
                      cancelSignal,
                      onProgress: callbacks.onProgress })
       .then(data => ({ resultType: "segment-loaded",
@@ -84,12 +87,14 @@ export default function initSegmentLoader(
                                   headers: { Range: byteRange(segment.range) },
                                   responseType: "arraybuffer",
                                   timeout: options.timeout,
+                                  connectionTimeout: options.connectionTimeout,
                                   cancelSignal,
                                   onProgress: callbacks.onProgress });
   const indexRequest$ = request({ url,
                                   headers: { Range: byteRange(segment.indexRange) },
                                   responseType: "arraybuffer",
                                   timeout: options.timeout,
+                                  connectionTimeout: options.connectionTimeout,
                                   cancelSignal,
                                   onProgress: callbacks.onProgress });
 

@@ -27,7 +27,7 @@ import config from "../../../config";
 import log from "../../../log";
 import { ISegment } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
-import { createSharedReference } from "../../../utils/reference";
+import SharedReference from "../../../utils/reference";
 import TaskCanceller, {
   CancellationError,
   CancellationSignal,
@@ -89,7 +89,7 @@ export default function RepresentationStream<TSegmentDataType>(
     segmentBuffer,
     segmentFetcher,
     terminate } : IRepresentationStreamArguments<TSegmentDataType>,
-  callbacks : IRepresentationStreamCallbacks<TSegmentDataType>,
+  callbacks : IRepresentationStreamCallbacks,
   parentCancelSignal : CancellationSignal
 ) : void {
   const { period, adaptation, representation } = content;
@@ -109,14 +109,20 @@ export default function RepresentationStream<TSegmentDataType>(
   segmentsLoadingCanceller.linkToSignal(globalCanceller.signal);
 
   /** Saved initialization segment state for this representation. */
-  const initSegmentState : IInitSegmentState<TSegmentDataType> = {
+  const initSegmentState : IInitSegmentState = {
     segment: representation.index.getInitSegment(),
-    segmentData: null,
+    uniqueId: null,
     isLoaded: false,
   };
+  globalCanceller.signal.register(() => {
+    // Free initialization segment if one has been declared
+    if (initSegmentState.uniqueId !== null) {
+      segmentBuffer.freeInitSegment(initSegmentState.uniqueId);
+    }
+  });
 
   /** Emit the last scheduled downloading queue for segments. */
-  const lastSegmentQueue = createSharedReference<IDownloadQueueItem>({
+  const lastSegmentQueue = new SharedReference<IDownloadQueueItem>({
     initSegment: null,
     segmentQueue: [],
   }, segmentsLoadingCanceller.signal);
@@ -125,7 +131,6 @@ export default function RepresentationStream<TSegmentDataType>(
   const hasInitSegment = initSegmentState.segment !== null;
 
   if (!hasInitSegment) {
-    initSegmentState.segmentData = null;
     initSegmentState.isLoaded = true;
   }
 
@@ -197,6 +202,9 @@ export default function RepresentationStream<TSegmentDataType>(
     includeLastObservation: false,
     clearSignal: segmentsLoadingCanceller.signal,
   });
+  content.manifest.addEventListener("manifestUpdate",
+                                    checkStatus,
+                                    segmentsLoadingCanceller.signal);
   bufferGoal.onUpdate(checkStatus, {
     emitCurrentValue: false,
     clearSignal: segmentsLoadingCanceller.signal ,
@@ -222,8 +230,7 @@ export default function RepresentationStream<TSegmentDataType>(
       return ; // Stop all buffer status checking if load operations are stopped
     }
     const observation = playbackObserver.getReference().getValue();
-    const initialWantedTime = observation.position.pending ??
-                              observation.position.last;
+    const initialWantedTime = observation.position.getWanted();
     const status = getBufferStatus(content,
                                    initialWantedTime,
                                    playbackObserver,
@@ -243,8 +250,7 @@ export default function RepresentationStream<TSegmentDataType>(
         log.warn("Stream: Uninitialized index with an already loaded " +
                  "initialization segment");
       } else {
-        const wantedStart = observation.position.pending ??
-                            observation.position.last;
+        const wantedStart = observation.position.getWanted();
         neededInitSegment = { segment: initSegmentState.segment,
                               priority: getSegmentPriority(period.start,
                                                            wantedStart) };
@@ -299,7 +305,7 @@ export default function RepresentationStream<TSegmentDataType>(
     }
 
     callbacks.streamStatusUpdate({ period,
-                                   position: observation.position.last,
+                                   position: observation.position.getWanted(),
                                    bufferType,
                                    imminentDiscontinuity: status.imminentDiscontinuity,
                                    isEmptyStream: false,
@@ -337,55 +343,72 @@ export default function RepresentationStream<TSegmentDataType>(
       // is not running anymore.
       return ;
     }
-    if (evt.segmentType === "init") {
-      initSegmentState.segmentData = evt.initializationData;
-      initSegmentState.isLoaded = true;
 
-      // Now that the initialization segment has been parsed - which may have
-      // included encryption information - take care of the encryption event
-      // if not already done.
-      if (!hasSentEncryptionData) {
-        const allEncryptionData = representation.getAllEncryptionData();
-        if (allEncryptionData.length > 0) {
-          callbacks.encryptionDataEncountered(
-            allEncryptionData.map(p => objectAssign({ content }, p))
-          );
+    // Supplementary encryption information might have been parsed.
+    for (const protInfo of evt.protectionData) {
+      // TODO better handle use cases like key rotation by not always grouping
+      // every protection data together? To check.
+      representation.addProtectionData(protInfo.initDataType,
+                                       protInfo.keyId,
+                                       protInfo.initData);
+    }
+
+    // Now that the initialization segment has been parsed - which may have
+    // included encryption information - take care of the encryption event
+    // if not already done.
+    if (!hasSentEncryptionData) {
+      const allEncryptionData = representation.getAllEncryptionData();
+      if (allEncryptionData.length > 0) {
+        callbacks.encryptionDataEncountered(
+          allEncryptionData.map(p => objectAssign({ content }, p))
+        );
+        hasSentEncryptionData = true;
+
+        // previous callback could have lead to cancellation
+        if (globalCanceller.isUsed()) {
+          return ;
         }
       }
+    }
 
-      pushInitSegment({ playbackObserver,
-                        content,
-                        segment: evt.segment,
-                        segmentData: evt.initializationData,
-                        segmentBuffer },
-                      globalCanceller.signal)
-        .then((result) => {
-          if (result !== null) {
-            callbacks.addedSegment(result);
-          }
-        })
-        .catch(onFatalBufferError);
+    if (evt.segmentType === "init") {
+      if (!representation.index.isInitialized() &&
+          evt.segmentList !== undefined)
+      {
+        representation.index.initialize(evt.segmentList);
+      }
+      initSegmentState.isLoaded = true;
+
+      if (evt.initializationData !== null) {
+        const initSegmentUniqueId = representation.uniqueId;
+        initSegmentState.uniqueId = initSegmentUniqueId;
+        segmentBuffer.declareInitSegment(initSegmentUniqueId,
+                                         evt.initializationData);
+        pushInitSegment({ playbackObserver,
+                          content,
+                          initSegmentUniqueId,
+                          segment: evt.segment,
+                          segmentData: evt.initializationData,
+                          segmentBuffer },
+                        globalCanceller.signal)
+          .then((result) => {
+            if (result !== null) {
+              callbacks.addedSegment(result);
+            }
+          })
+          .catch(onFatalBufferError);
+      }
 
       // Sometimes the segment list is only known once the initialization segment
       // is parsed. Thus we immediately re-check if there's new segments to load.
       checkStatus();
+      return;
     } else {
       const { inbandEvents,
-              needsManifestRefresh,
-              protectionDataUpdate } = evt;
-
-      // TODO better handle use cases like key rotation by not always grouping
-      // every protection data together? To check.
-      if (!hasSentEncryptionData && protectionDataUpdate) {
-        const allEncryptionData = representation.getAllEncryptionData();
-        if (allEncryptionData.length > 0) {
-          callbacks.encryptionDataEncountered(
-            allEncryptionData.map(p => objectAssign({ content }, p))
-          );
-          if (globalCanceller.isUsed()) {
-            return ; // previous callback has stopped everything by side-effect
-          }
-        }
+              predictedSegments,
+              needsManifestRefresh } = evt;
+      if (predictedSegments !== undefined) {
+        representation.index.addPredictedSegments(predictedSegments, evt.segment);
       }
 
       if (needsManifestRefresh === true) {
@@ -401,10 +424,10 @@ export default function RepresentationStream<TSegmentDataType>(
         }
       }
 
-      const initSegmentData = initSegmentState.segmentData;
+      const initSegmentUniqueId = initSegmentState.uniqueId;
       pushMediaSegment({ playbackObserver,
                          content,
-                         initSegmentData,
+                         initSegmentUniqueId,
                          parsedSegment: evt,
                          segment: evt.segment,
                          segmentBuffer },
@@ -440,17 +463,18 @@ export default function RepresentationStream<TSegmentDataType>(
  * Information about the initialization segment linked to the Representation
  * which the RepresentationStream try to download segments for.
  */
-interface IInitSegmentState<T> {
+interface IInitSegmentState {
   /**
    * Segment Object describing that initialization segment.
    * `null` if there's no initialization segment for that Representation.
    */
   segment : ISegment | null;
   /**
-   * Initialization segment data.
-   * `null` either when it doesn't exist or when it has not been loaded yet.
+   * Unique identifier used to identify the initialization segment data, used by
+   * the `SegmentBuffer`.
+   * `null` either when it doesn't exist or when it has not been declared yet.
    */
-  segmentData : T | null;
+  uniqueId : string | null;
   /** `true` if the initialization segment has been loaded and parsed. */
   isLoaded : boolean;
 }

@@ -16,10 +16,10 @@
 
 import log from "../../../../log";
 import {
-  IAdaptationType,
   Period,
   SUPPORTED_ADAPTATIONS_TYPE,
 } from "../../../../manifest";
+import { ITrackType } from "../../../../public_types";
 import arrayFind from "../../../../utils/array_find";
 import arrayFindIndex from "../../../../utils/array_find_index";
 import arrayIncludes from "../../../../utils/array_includes";
@@ -213,8 +213,8 @@ function getAdaptationID(
   if (isNonEmptyString(adaptation.attributes.mimeType)) {
     idString += `-${adaptation.attributes.mimeType}`;
   }
-  if (isNonEmptyString(adaptation.attributes.frameRate)) {
-    idString += `-${adaptation.attributes.frameRate}`;
+  if (adaptation.attributes.frameRate !== undefined) {
+    idString += `-${String(adaptation.attributes.frameRate)}`;
   }
   return idString;
 }
@@ -258,13 +258,12 @@ export default function parseAdaptationSets(
   context : IAdaptationSetContext
 ): IParsedAdaptations {
   const parsedAdaptations : Record<
-    IAdaptationType,
+    ITrackType,
     Array<[ IParsedAdaptation,
             IAdaptationSetOrderingData ]>
   > = { video: [],
         audio: [],
-        text: [],
-        image: [] };
+        text: [] };
   const trickModeAdaptations: Array<{ adaptation: IParsedAdaptation;
                                       trickModeAttachedAdaptationIds: string[]; }> = [];
   const adaptationSwitchingInfos : IAdaptationSwitchingInfos = {};
@@ -282,12 +281,19 @@ export default function parseAdaptationSets(
       roles.some((role) => role.schemeIdUri === "urn:mpeg:dash:role:2011");
 
     const representationsIR = adaptation.children.representations;
+
     const availabilityTimeComplete =
       adaptation.attributes.availabilityTimeComplete ??
       context.availabilityTimeComplete;
-    const availabilityTimeOffset =
-      (adaptation.attributes.availabilityTimeOffset ?? 0) +
-      context.availabilityTimeOffset;
+
+    let availabilityTimeOffset;
+    if (
+      adaptation.attributes.availabilityTimeOffset !== undefined ||
+      context.availabilityTimeOffset !== undefined
+    ) {
+      availabilityTimeOffset = (adaptation.attributes.availabilityTimeOffset ?? 0) +
+                               (context.availabilityTimeOffset ?? 0);
+    }
 
     const adaptationMimeType = adaptation.attributes.mimeType;
     const adaptationCodecs = adaptation.attributes.codecs;
@@ -317,7 +323,6 @@ export default function parseAdaptationSets(
     }
 
     const reprCtxt : IRepresentationContext = {
-      aggressiveMode: context.aggressiveMode,
       availabilityTimeComplete,
       availabilityTimeOffset,
       baseURLs: resolveBaseURLs(context.baseURLs, adaptationChildren.baseURLs),
@@ -329,7 +334,6 @@ export default function parseAdaptationSets(
       parentSegmentTemplates,
       receivedTime: context.receivedTime,
       start: context.start,
-      timeShiftBufferDepth: context.timeShiftBufferDepth,
       unsafelyBaseOnPreviousAdaptation: null,
     };
 
@@ -467,6 +471,7 @@ export default function parseAdaptationSets(
                                 mergedInto[1].isMainAdaptation,
               indexInMpd: Math.min(adaptationIdx, mergedInto[1].indexInMpd),
             };
+            break;
           }
         }
       }
@@ -486,7 +491,7 @@ export default function parseAdaptationSets(
   }
 
   const adaptationsPerType = SUPPORTED_ADAPTATIONS_TYPE
-    .reduce((acc : IParsedAdaptations, adaptationType : IAdaptationType) => {
+    .reduce((acc : IParsedAdaptations, adaptationType : ITrackType) => {
       const adaptationsParsedForType = parsedAdaptations[adaptationType];
       if (adaptationsParsedForType.length > 0) {
         adaptationsParsedForType.sort(compareAdaptations);

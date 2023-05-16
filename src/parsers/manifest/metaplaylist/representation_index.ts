@@ -15,12 +15,19 @@
  */
 
 import {
-  IBaseContentInfos,
   IRepresentationIndex,
   ISegment,
 } from "../../../manifest";
 import { IPlayerError } from "../../../public_types";
+import { ISegmentInformation } from "../../../transports";
 import objectAssign from "../../../utils/object_assign";
+
+export interface IBaseContentMetadata {
+  isLive : boolean;
+  manifestPublishTime? : number | undefined;
+  periodEnd? : number | undefined;
+  periodStart : number;
+}
 
 /**
  * The MetaRepresentationIndex is wrapper for all kind of RepresentationIndex (from
@@ -44,7 +51,7 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
   /** Underlying transport for the Representation (e.g. "dash" or "smooth"). */
   private _transport : string;
   /** Various information about the real underlying Representation. */
-  private _baseContentInfos : IBaseContentInfos;
+  private _baseContentMetadata : IBaseContentMetadata;
 
   /**
    * Create a new `MetaRepresentationIndex`.
@@ -61,13 +68,13 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
     wrappedIndex: IRepresentationIndex,
     contentBounds: [number, number|undefined],
     transport: string,
-    baseContentInfos: IBaseContentInfos
+    baseContentInfos: IBaseContentMetadata
   ) {
     this._wrappedIndex = wrappedIndex;
     this._timeOffset = contentBounds[0];
     this._contentEnd = contentBounds[1];
     this._transport = transport;
-    this._baseContentInfos = baseContentInfos;
+    this._baseContentMetadata = baseContentInfos;
   }
 
   /**
@@ -196,8 +203,8 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
   /**
    * @returns {Boolean}
    */
-  public isFinished() : boolean {
-    return this._wrappedIndex.isFinished();
+  public isStillAwaitingFutureSegments() : boolean {
+    return this._wrappedIndex.isStillAwaitingFutureSegments();
   }
 
   /**
@@ -205,6 +212,17 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    */
   public isInitialized() : boolean {
     return this._wrappedIndex.isInitialized();
+  }
+
+  public initialize(indexSegments : ISegmentInformation[]) : void {
+    return this._wrappedIndex.initialize(indexSegments);
+  }
+
+  public addPredictedSegments(
+    nextSegments : ISegmentInformation[],
+    currentSegment : ISegment
+  ) : void {
+    return this._wrappedIndex.addPredictedSegments(nextSegments, currentSegment);
   }
 
   /**
@@ -241,10 +259,13 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
     }
     clonedSegment.privateInfos.metaplaylistInfos = {
       transportType: this._transport,
-      baseContent: this._baseContentInfos,
       contentStart: this._timeOffset,
       contentEnd: this._contentEnd,
       originalSegment: segment,
+      isLive: this._baseContentMetadata.isLive,
+      manifestPublishTime: this._baseContentMetadata.manifestPublishTime,
+      periodStart: this._baseContentMetadata.periodStart,
+      periodEnd: this._baseContentMetadata.periodEnd,
     };
     return clonedSegment;
   }

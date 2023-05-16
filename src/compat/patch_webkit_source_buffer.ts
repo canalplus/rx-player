@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import nextTick from "next-tick";
 import EventEmitter from "../utils/event_emitter";
+import queueMicrotask from "../utils/queue_microtask";
+import globalScope from "./global_scope";
 import isNode from "./is_node";
 
 type IWebKitSourceBufferConstructor = new() => IWebKitSourceBuffer;
@@ -32,14 +33,14 @@ export default function patchWebkitSourceBuffer() : void {
   // old WebKit SourceBuffer implementation,
   // where a synchronous append is used instead of appendBuffer
   if (
-    !isNode && (window as any).WebKitSourceBuffer != null &&
-    (window as any).WebKitSourceBuffer.prototype.addEventListener === undefined)
+    !isNode && (globalScope as any).WebKitSourceBuffer != null &&
+    (globalScope as any).WebKitSourceBuffer.prototype.addEventListener === undefined)
   {
   /* eslint-enable @typescript-eslint/no-explicit-any */
 
     /* eslint-disable @typescript-eslint/no-unsafe-assignment */
     const sourceBufferWebkitRef : IWebKitSourceBufferConstructor =
-      (window as unknown as {
+      (globalScope as unknown as {
         WebKitSourceBuffer : IWebKitSourceBufferConstructor;
       }).WebKitSourceBuffer;
     const sourceBufferWebkitProto = sourceBufferWebkitRef.prototype;
@@ -56,7 +57,7 @@ export default function patchWebkitSourceBuffer() : void {
 
     sourceBufferWebkitProto._emitUpdate =
       function(eventName : string, val : unknown) {
-        nextTick(() => {
+        queueMicrotask(() => {
           /* eslint-disable no-invalid-this */
           this.trigger(eventName, val);
           this.updating = false;

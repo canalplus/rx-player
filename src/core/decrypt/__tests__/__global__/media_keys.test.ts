@@ -60,15 +60,18 @@ describe("core - decrypt - global tests - media key system access", () => {
                                getConfiguration() { return conf; },
                                createMediaKeys() { throw new Error("No non no"); } });
     }
-    mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessBadMediaKeys });
+    mockCompat({
+      requestMediaKeySystemAccess: jest.fn(requestMediaKeySystemAccessBadMediaKeys),
+    });
 
     // == test ==
     const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
-    const error : any =
-      await testContentDecryptorError(ContentDecryptor, videoElt, ksConfig);
+    const error : any = await testContentDecryptorError(ContentDecryptor,
+                                                        videoElt,
+                                                        ksConfig);
     expect(error).toBeInstanceOf(Error);
     expect(error.message).toEqual(
-      "EncryptedMediaError (CREATE_MEDIA_KEYS_ERROR) No non no"
+      "CREATE_MEDIA_KEYS_ERROR: No non no"
     );
     expect(error.name).toEqual("EncryptedMediaError");
     expect(error.code).toEqual("CREATE_MEDIA_KEYS_ERROR");
@@ -86,15 +89,18 @@ describe("core - decrypt - global tests - media key system access", () => {
         createMediaKeys: () => Promise.reject(new Error("No non no")),
       });
     }
-    mockCompat({ requestMediaKeySystemAccess: requestMediaKeySystemAccessRejMediaKeys });
+    mockCompat({
+      requestMediaKeySystemAccess: jest.fn(requestMediaKeySystemAccessRejMediaKeys),
+    });
 
     // == test ==
     const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
-    const error : any =
-      await testContentDecryptorError(ContentDecryptor, videoElt, ksConfig);
+    const error : any = await testContentDecryptorError(ContentDecryptor,
+                                                        videoElt,
+                                                        ksConfig);
     expect(error).toBeInstanceOf(Error);
     expect(error.message).toEqual(
-      "EncryptedMediaError (CREATE_MEDIA_KEYS_ERROR) No non no"
+      "CREATE_MEDIA_KEYS_ERROR: No non no"
     );
     expect(error.name).toEqual("EncryptedMediaError");
     expect(error.code).toEqual("CREATE_MEDIA_KEYS_ERROR");
@@ -104,10 +110,10 @@ describe("core - decrypt - global tests - media key system access", () => {
   it("should go into the WaitingForAttachment state if createMediaKeys resolves", () => {
   /* eslint-enable max-len */
     return new Promise<void>((res, rej) => {
-      mockCompat({});
+      mockCompat();
       const mockCreateMediaKeys = jest.spyOn(MediaKeySystemAccessImpl.prototype,
                                              "createMediaKeys");
-      const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+      const { ContentDecryptorState } = jest.requireActual("../../types");
       const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       let receivedStateChange = 0;
@@ -134,10 +140,10 @@ describe("core - decrypt - global tests - media key system access", () => {
   it("should not call createMediaKeys again if previous one is compatible", () => {
   /* eslint-enable max-len */
     return new Promise<void>((res, rej) => {
-      mockCompat({});
+      mockCompat();
       const mockCreateMediaKeys = jest.spyOn(MediaKeySystemAccessImpl.prototype,
                                              "createMediaKeys");
-      const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+      const { ContentDecryptorState } = jest.requireActual("../../types");
       const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
 
       const contentDecryptor1 = new ContentDecryptor(videoElt, ksConfig);
@@ -197,7 +203,7 @@ describe("core - decrypt - global tests - media key system access", () => {
       });
       const mockCreateMediaKeys = jest.spyOn(MediaKeySystemAccessImpl.prototype,
                                              "createMediaKeys");
-      const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+      const { ContentDecryptorState } = jest.requireActual("../../types");
       const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
 
       const contentDecryptor1 = new ContentDecryptor(videoElt, ksConfig);
@@ -257,7 +263,7 @@ describe("core - decrypt - global tests - media key system access", () => {
       });
       const mockCreateMediaKeys = jest.spyOn(MediaKeySystemAccessImpl.prototype,
                                              "createMediaKeys");
-      const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+      const { ContentDecryptorState } = jest.requireActual("../../types");
       const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
 
       const contentDecryptor1 = new ContentDecryptor(videoElt, ksConfig);
@@ -318,7 +324,7 @@ describe("core - decrypt - global tests - media key system access", () => {
     const mockCreateSession = jest.spyOn(MediaKeysImpl.prototype, "createSession");
 
     // == test ==
-    const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+    const { ContentDecryptorState } = jest.requireActual("../../types");
     const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
     contentDecryptor.addEventListener("stateChange", (newState: any) => {
