@@ -1,5 +1,29 @@
 # Changelog
 
+## v3.31.0 (2023-06-14)
+
+### Features
+
+  - Add `isContentLoaded`, `isBuffering`, `isPaused`, and `getLastStoredContentPosition` methods [#1248]
+  - Add `play` and `paused` events [#1253]
+  - Add `trackInfo` property to some `MediaError` to expose information on the track that caused the error [#1241]
+
+### Bug fixes
+
+  - DASH: Fix issue which could lead to infinite rebuffering when switching between multiple Periods [#1232]
+  - Return actual ending duration through the `getVideoDuration` method when playing dynamic contents whose future end is already known [#1235]
+  - DASH/WASM: actually reject the `DASH_WASM.initialize`'s Promise if it fails [#1238]
+  - On the PlayStation 5, set `Infinity` MediaSource duration for live contents to prevent playback issues [#1250]
+
+### Other improvements
+
+  - adaptive: Perform various adaptive tweaks to avoid switching too much between qualities in some conditions [#1237]
+  - Directfile: Detect "forced" subtitles on Safari when playing directfile contents (such as HLS) [#1239]
+  - Improve `"direct"` `audioTrackSwitchingMode` compatibility by re-seeking [#1246]
+  - The `DEBUG_ELEMENT` feature now uses the `monospace` fallback font as a default for a better rendering on apple devices
+  - doc: externalize documentation-generator code
+
+
 ## v3.30.0 (2023-03-07)
 
 ### Features
