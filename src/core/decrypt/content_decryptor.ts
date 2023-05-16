@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-import {
-  events,
+import eme, {
   getInitData,
   ICustomMediaKeys,
   ICustomMediaKeySystemAccess,
-} from "../../compat/";
+} from "../../compat/eme";
 import config from "../../config";
 import {
   EncryptedMediaError,
@@ -53,6 +52,8 @@ import {
   IMediaKeySessionStores,
   MediaKeySessionLoadingType,
   IProcessedProtectionData,
+  ContentDecryptorState,
+  IContentDecryptorEvent,
 } from "./types";
 import { DecommissionedSessionError } from "./utils/check_key_statuses";
 import cleanOldStoredPersistentInfo from "./utils/clean_old_stored_persistent_info";
@@ -65,8 +66,6 @@ import {
   isKeyIdContainedIn,
 } from "./utils/key_id_comparison";
 import KeySessionRecord from "./utils/key_session_record";
-
-const { onEncrypted } = events;
 
 /**
  * Module communicating with the Content Decryption Module (or CDM) to be able
@@ -127,12 +126,6 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
   private _canceller : TaskCanceller;
 
   /**
-   * `true` once the `attach` method has been called`.
-   * Allows to avoid calling multiple times that function.
-   */
-  private _wasAttachCalled : boolean;
-
-  /**
    * This queue stores initialization data which hasn't been processed yet,
    * probably because the "queue is locked" for now. (@see _stateData private
    * property).
@@ -141,6 +134,16 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    * initializing so it can be processed when the initialization is done.
    */
   private _initDataQueue : IProtectionData[];
+
+  /**
+   * `true` if the EME API are available on the current platform according to
+   * the default EME implementation used.
+   * `false` otherwise.
+   * @returns {boolean}
+   */
+  public static hasEmeApis() : boolean {
+    return !isNullOrUndefined(eme.requestMediaKeySystemAccess);
+  }
 
   /**
    * Create a new `ContentDecryptor`, and initialize its decryption capabilities
@@ -156,7 +159,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    * configurations. It will choose the appropriate one depending on user
    * settings and browser support.
    */
-  constructor(mediaElement : HTMLMediaElement, ksOptions: IKeySystemOption[]) {
+  constructor(mediaElement : HTMLMediaElement, ksOptions : IKeySystemOption[]) {
     super();
 
     log.debug("DRM: Starting ContentDecryptor logic.");
@@ -164,15 +167,14 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     const canceller = new TaskCanceller();
     this._currentSessions = [];
     this._canceller = canceller;
-    this._wasAttachCalled = false;
     this._initDataQueue = [];
     this._stateData = { state: ContentDecryptorState.Initializing,
-                        isMediaKeysAttached: false,
+                        isMediaKeysAttached: MediaKeyAttachmentStatus.NotAttached,
                         isInitDataQueueLocked: true,
                         data: null };
     this.error = null;
 
-    onEncrypted(mediaElement, evt => {
+    eme.onEncrypted(mediaElement, evt => {
       log.debug("DRM: Encrypted event received from media element.");
       const initData = getInitData(evt as MediaEncryptedEvent);
       if (initData !== null) {
@@ -194,8 +196,8 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
          * MediaKeySessions persisted in older RxPlayer's versions.
          */
         let systemId : string | undefined;
-        if (isNullOrUndefined(options.licenseStorage) ||
-            options.licenseStorage.disableRetroCompatibility === true)
+        if (isNullOrUndefined(options.persistentLicenseConfig) ||
+            options.persistentLicenseConfig.disableRetroCompatibility === true)
         {
           systemId = getDrmSystemId(mediaKeySystemAccess.keySystem);
         }
@@ -204,7 +206,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
         if (this._stateData.state === ContentDecryptorState.Initializing) {
           this._stateData = { state: ContentDecryptorState.WaitingForAttachment,
                               isInitDataQueueLocked: true,
-                              isMediaKeysAttached: false,
+                              isMediaKeysAttached: MediaKeyAttachmentStatus.NotAttached,
                               data: { mediaKeysInfo,
                                       mediaElement } };
 
@@ -239,36 +241,43 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     if (this._stateData.state !== ContentDecryptorState.WaitingForAttachment) {
       throw new Error("`attach` should only be called when " +
                       "in the WaitingForAttachment state");
-    } else if (this._wasAttachCalled) {
+    } else if (
+      this._stateData.isMediaKeysAttached !== MediaKeyAttachmentStatus.NotAttached
+    ) {
       log.warn("DRM: ContentDecryptor's `attach` method called more than once.");
       return;
     }
-    this._wasAttachCalled = true;
 
     const { mediaElement, mediaKeysInfo } = this._stateData.data;
     const { options, mediaKeys, mediaKeySystemAccess, stores } = mediaKeysInfo;
-    const stateToAttatch = { loadedSessionsStore: stores.loadedSessionsStore,
-                             mediaKeySystemAccess,
-                             mediaKeys,
-                             keySystemOptions: options };
-
     const shouldDisableLock = options.disableMediaKeysAttachmentLock === true;
+
     if (shouldDisableLock) {
       this._stateData = { state: ContentDecryptorState.ReadyForContent,
                           isInitDataQueueLocked: true,
-                          isMediaKeysAttached: false,
-                          data: null };
+                          isMediaKeysAttached: MediaKeyAttachmentStatus.Pending,
+                          data: { mediaKeysInfo, mediaElement } };
       this.trigger("stateChange", this._stateData.state);
-      if (this._isStopped()) { // previous trigger might have lead to disposal
+
+      // previous trigger might have lead to disposal
+      if (this._isStopped()) {
         return ;
       }
     }
 
-    log.debug("DRM: Attaching current MediaKeys");
-    attachMediaKeys(mediaElement, stateToAttatch, this._canceller.signal)
-      .then(async () => {
-        const { serverCertificate } = options;
+    this._stateData.isMediaKeysAttached = MediaKeyAttachmentStatus.Pending;
+    const stateToAttach = { emeImplementation: eme,
+                            loadedSessionsStore: stores.loadedSessionsStore,
+                            mediaKeySystemAccess,
+                            mediaKeys,
+                            keySystemOptions: options };
 
+    log.debug("DRM: Attaching current MediaKeys");
+    attachMediaKeys(mediaElement, stateToAttach, this._canceller.signal)
+      .then(async () => {
+        this._stateData.isMediaKeysAttached = MediaKeyAttachmentStatus.Attached;
+
+        const { serverCertificate } = options;
         if (!isNullOrUndefined(serverCertificate)) {
           const resSsc = await setServerCertificate(mediaKeys, serverCertificate);
           if (resSsc.type === "error") {
@@ -282,7 +291,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
 
         const prevState = this._stateData.state;
         this._stateData = { state: ContentDecryptorState.ReadyForContent,
-                            isMediaKeysAttached: true,
+                            isMediaKeysAttached: MediaKeyAttachmentStatus.Attached,
                             isInitDataQueueLocked: false,
                             data: { mediaKeysData: mediaKeysInfo } };
         if (prevState !== ContentDecryptorState.ReadyForContent) {
@@ -436,7 +445,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     this._lockInitDataQueue();
 
     let wantedSessionType : MediaKeySessionType;
-    if (options.persistentLicense !== true) {
+    if (isNullOrUndefined(options.persistentLicenseConfig)) {
       wantedSessionType = "temporary";
     } else if (!canCreatePersistentSession(mediaKeySystemAccess)) {
       log.warn("DRM: Cannot create \"persistent-license\" session: not supported");
@@ -791,7 +800,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    * Should have no effect if the `_initDataQueue` was not locked.
    */
   private _unlockInitDataQueue() : void {
-    if (this._stateData.isMediaKeysAttached !== true) {
+    if (this._stateData.isMediaKeysAttached !== MediaKeyAttachmentStatus.Attached) {
       log.error("DRM: Trying to unlock in the wrong state");
       return;
     }
@@ -901,226 +910,6 @@ function blackListProtectionData(
     }
     return representation.decipherable;
   });
-}
-
-/** Events sent by the `ContentDecryptor`, in a `{ event: payload }` format. */
-export interface IContentDecryptorEvent {
-  /**
-   * Event emitted when a major error occured which made the ContentDecryptor
-   * stopped.
-   * When that event is sent, the `ContentDecryptor` is in the `Error` state and
-   * cannot be used anymore.
-   */
-  error : Error;
-
-  /**
-   * Event emitted when a minor error occured which the ContentDecryptor can
-   * recover from.
-   */
-  warning : IPlayerError;
-
-  /**
-   * Event emitted when the `ContentDecryptor`'s state changed.
-   * States are a central aspect of the `ContentDecryptor`, be sure to check the
-   * ContentDecryptorState type.
-   */
-  stateChange: ContentDecryptorState;
-}
-
-/** Enumeration of the various "state" the `ContentDecryptor` can be in. */
-export enum ContentDecryptorState {
-  /**
-   * The `ContentDecryptor` is not yet ready to create key sessions and request
-   * licenses.
-   * This is is the initial state of the ContentDecryptor.
-   */
-  Initializing,
-
-  /**
-   * The `ContentDecryptor` has been initialized.
-   * You should now called the `attach` method when you want to add decryption
-   * capabilities to the HTMLMediaElement. The ContentDecryptor won't go to the
-   * `ReadyForContent` state until `attach` is called.
-   *
-   * For compatibility reasons, this should be done after the HTMLMediaElement's
-   * src attribute is set.
-   *
-   * It is also from when this state is reached that the `ContentDecryptor`'s
-   * `systemId` property may be known.
-   *
-   * This state is always coming after the `Initializing` state.
-   */
-  WaitingForAttachment,
-
-  /**
-   * Content (encrypted or not) can begin to be pushed on the HTMLMediaElement
-   * (this state was needed because some browser quirks sometimes forces us to
-   * call EME API before this can be done).
-   *
-   * This state is always coming after the `WaitingForAttachment` state.
-   */
-  ReadyForContent,
-
-  /**
-   * The `ContentDecryptor` has encountered a fatal error and has been stopped.
-   * It is now unusable.
-   */
-  Error,
-
-  /** The `ContentDecryptor` has been disposed of and is now unusable. */
-  Disposed,
-}
-
-/** Possible states the ContentDecryptor is in and associated data for each one. */
-type IContentDecryptorStateData = IInitializingStateData |
-                                  IWaitingForAttachmentStateData |
-                                  IReadyForContentStateDataUnattached |
-                                  IReadyForContentStateDataAttached |
-                                  IDisposeStateData |
-                                  IErrorStateData;
-
-/** Skeleton that all variants of `IContentDecryptorStateData` use. */
-interface IContentDecryptorStateBase<
-  TStateName extends ContentDecryptorState,
-  TIsQueueLocked extends boolean | undefined,
-  TIsMediaKeyAttached extends boolean | undefined,
-  TData
-> {
-  /** Identify the ContentDecryptor's state. */
-  state: TStateName;
-  /**
-   * If `true`, the `ContentDecryptor` will wait before processing
-   * newly-received initialization data.
-   * If `false`, it will process them right away.
-   * Set to undefined when it won't ever process them like for example in a
-   * disposed or errored state.
-   */
-  isInitDataQueueLocked: TIsQueueLocked;
-  /**
-   * If `true`, the `MediaKeys` instance has been attached to the HTMLMediaElement.
-   * If `false`, it hasn't happened yet.
-   * If uncertain or unimportant (for example if the `ContentDecryptor` is an
-   * disposed/errored state, set to `undefined`).
-   */
-  isMediaKeysAttached: TIsMediaKeyAttached;
-  /** Data stored relative to that state. */
-  data: TData;
-}
-
-/** ContentDecryptor's internal data when in the `Initializing` state. */
-type IInitializingStateData = IContentDecryptorStateBase<
-  ContentDecryptorState.Initializing,
-  true, // isInitDataQueueLocked
-  false, // isMediaKeysAttached
-  null // data
->;
-
-/** ContentDecryptor's internal data when in the `WaitingForAttachment` state. */
-type IWaitingForAttachmentStateData = IContentDecryptorStateBase<
-  ContentDecryptorState.WaitingForAttachment,
-  true, // isInitDataQueueLocked
-  false, // isMediaKeysAttached
-  // data
-  { mediaKeysInfo : IMediaKeysInfos;
-    mediaElement : HTMLMediaElement; }
->;
-
-/**
- * ContentDecryptor's internal data when in the `ReadyForContent` state before
- * it has attached the `MediaKeys` to the media element.
- */
-type IReadyForContentStateDataUnattached = IContentDecryptorStateBase<
-  ContentDecryptorState.ReadyForContent,
-  true, // isInitDataQueueLocked
-  false, // isMediaKeysAttached
-  null // data
->;
-
-/**
- * ContentDecryptor's internal data when in the `ReadyForContent` state once
- * it has attached the `MediaKeys` to the media element.
- */
-type IReadyForContentStateDataAttached = IContentDecryptorStateBase<
-  ContentDecryptorState.ReadyForContent,
-  boolean, // isInitDataQueueLocked
-  true, // isMediaKeysAttached
-  {
-    /**
-     * MediaKeys-related information linked to this instance of the
-     * `ContentDecryptor`.
-     * Set to `null` until it is known.
-     * Should be always set when the `ContentDecryptor` has reached the
-     * Initialized state (@see ContentDecryptorState).
-     */
-    mediaKeysData : IAttachedMediaKeysData;
-  }
->;
-
-/** ContentDecryptor's internal data when in the `Disposed` state. */
-type IDisposeStateData = IContentDecryptorStateBase<
-  ContentDecryptorState.Disposed,
-  undefined, // isInitDataQueueLocked
-  undefined, // isMediaKeysAttached
-  null // data
->;
-
-/** ContentDecryptor's internal data when in the `Error` state. */
-type IErrorStateData = IContentDecryptorStateBase<
-  ContentDecryptorState.Error,
-  undefined, // isInitDataQueueLocked
-  undefined, // isMediaKeysAttached
-  null // data
->;
-
-/** Information linked to a session created by the `ContentDecryptor`. */
-interface IActiveSessionInfo {
-  /**
-   * Record associated to the session.
-   * Most notably, it allows both to identify the session as well as to
-   * anounce and find out which key ids are already handled.
-   */
-  record : KeySessionRecord;
-
-  /** Current keys' statuses linked that session. */
-  keyStatuses : {
-    /** Key ids linked to keys that are "usable". */
-    whitelisted : Uint8Array[];
-    /**
-     * Key ids linked to keys that are not considered "usable".
-     * Content linked to those keys are not decipherable and may thus be
-     * fallbacked from.
-     */
-    blacklisted : Uint8Array[];
-  };
-
-  /** Source of the MediaKeySession linked to that record. */
-  source : MediaKeySessionLoadingType;
-
-  /**
-   * If different than `null`, all initialization data compatible with this
-   * processed initialization data has been blacklisted with this corresponding
-   * error.
-   */
-  blacklistedSessionError : BlacklistedSessionError | null;
-}
-
-/**
- * Sent when the created (or already created) MediaKeys is attached to the
- * current HTMLMediaElement element.
- * On some peculiar devices, we have to wait for that step before the first
- * media segments are to be pushed to avoid issues.
- * Because this event is sent after a MediaKeys is created, you will always have
- * a "created-media-keys" event before an "attached-media-keys" event.
- */
-interface IAttachedMediaKeysData {
-  /** The MediaKeySystemAccess which allowed to create the MediaKeys instance. */
-  mediaKeySystemAccess: MediaKeySystemAccess |
-                        ICustomMediaKeySystemAccess;
-  /** The MediaKeys instance. */
-  mediaKeys : MediaKeys |
-              ICustomMediaKeys;
-  stores : IMediaKeySessionStores;
-  options : IKeySystemOption;
 }
 
 /**
@@ -1293,3 +1082,164 @@ function addKeyIdsFromPeriod(
     }
   }
 }
+
+/** Possible states the ContentDecryptor is in and associated data for each one. */
+type IContentDecryptorStateData = IInitializingStateData |
+                                  IWaitingForAttachmentStateData |
+                                  IReadyForContentStateDataUnattached |
+                                  IReadyForContentStateDataAttached |
+                                  IDisposeStateData |
+                                  IErrorStateData;
+
+/** Skeleton that all variants of `IContentDecryptorStateData` use. */
+interface IContentDecryptorStateBase<
+  TStateName extends ContentDecryptorState,
+  TIsQueueLocked extends boolean | undefined,
+  TIsMediaKeyAttached extends MediaKeyAttachmentStatus | undefined,
+  TData
+> {
+  /** Identify the ContentDecryptor's state. */
+  state: TStateName;
+  /**
+   * If `true`, the `ContentDecryptor` will wait before processing
+   * newly-received initialization data.
+   * If `false`, it will process them right away.
+   * Set to undefined when it won't ever process them like for example in a
+   * disposed or errored state.
+   */
+  isInitDataQueueLocked: TIsQueueLocked;
+  /**
+   * If `true`, the `MediaKeys` instance has been attached to the HTMLMediaElement.
+   * If `false`, it hasn't happened yet.
+   * If uncertain or unimportant (for example if the `ContentDecryptor` is an
+   * disposed/errored state, set to `undefined`).
+   */
+  isMediaKeysAttached: TIsMediaKeyAttached;
+  /** Data stored relative to that state. */
+  data: TData;
+}
+
+const enum MediaKeyAttachmentStatus {
+  NotAttached,
+  Pending,
+  Attached,
+}
+
+/** ContentDecryptor's internal data when in the `Initializing` state. */
+type IInitializingStateData = IContentDecryptorStateBase<
+  ContentDecryptorState.Initializing,
+  true, // isInitDataQueueLocked
+  MediaKeyAttachmentStatus.NotAttached, // isMediaKeysAttached
+  null // data
+>;
+
+/** ContentDecryptor's internal data when in the `WaitingForAttachment` state. */
+type IWaitingForAttachmentStateData = IContentDecryptorStateBase<
+  ContentDecryptorState.WaitingForAttachment,
+  true, // isInitDataQueueLocked
+  MediaKeyAttachmentStatus.NotAttached, // isMediaKeysAttached
+  // data
+  { mediaKeysInfo : IMediaKeysInfos;
+    mediaElement : HTMLMediaElement; }
+>;
+
+/**
+ * ContentDecryptor's internal data when in the `ReadyForContent` state before
+ * it has attached the `MediaKeys` to the media element.
+ */
+type IReadyForContentStateDataUnattached = IContentDecryptorStateBase<
+  ContentDecryptorState.ReadyForContent,
+  true, // isInitDataQueueLocked
+  MediaKeyAttachmentStatus.NotAttached |
+  MediaKeyAttachmentStatus.Pending, // isMediaKeysAttached
+  { mediaKeysInfo : IMediaKeysInfos;
+    mediaElement : HTMLMediaElement; } // data
+>;
+
+/**
+ * ContentDecryptor's internal data when in the `ReadyForContent` state once
+ * it has attached the `MediaKeys` to the media element.
+ */
+type IReadyForContentStateDataAttached = IContentDecryptorStateBase<
+  ContentDecryptorState.ReadyForContent,
+  boolean, // isInitDataQueueLocked
+  MediaKeyAttachmentStatus.Attached, // isMediaKeysAttached
+  {
+    /**
+     * MediaKeys-related information linked to this instance of the
+     * `ContentDecryptor`.
+     * Set to `null` until it is known.
+     * Should be always set when the `ContentDecryptor` has reached the
+     * Initialized state (@see ContentDecryptorState).
+     */
+    mediaKeysData : IAttachedMediaKeysData;
+  }
+>;
+
+/** ContentDecryptor's internal data when in the `Disposed` state. */
+type IDisposeStateData = IContentDecryptorStateBase<
+  ContentDecryptorState.Disposed,
+  undefined, // isInitDataQueueLocked
+  undefined, // isMediaKeysAttached
+  null // data
+>;
+
+/** ContentDecryptor's internal data when in the `Error` state. */
+type IErrorStateData = IContentDecryptorStateBase<
+  ContentDecryptorState.Error,
+  undefined, // isInitDataQueueLocked
+  undefined, // isMediaKeysAttached
+  null // data
+>;
+
+/** Information linked to a session created by the `ContentDecryptor`. */
+interface IActiveSessionInfo {
+  /**
+   * Record associated to the session.
+   * Most notably, it allows both to identify the session as well as to
+   * anounce and find out which key ids are already handled.
+   */
+  record : KeySessionRecord;
+
+  /** Current keys' statuses linked that session. */
+  keyStatuses : {
+    /** Key ids linked to keys that are "usable". */
+    whitelisted : Uint8Array[];
+    /**
+     * Key ids linked to keys that are not considered "usable".
+     * Content linked to those keys are not decipherable and may thus be
+     * fallbacked from.
+     */
+    blacklisted : Uint8Array[];
+  };
+
+  /** Source of the MediaKeySession linked to that record. */
+  source : MediaKeySessionLoadingType;
+
+  /**
+   * If different than `null`, all initialization data compatible with this
+   * processed initialization data has been blacklisted with this corresponding
+   * error.
+   */
+  blacklistedSessionError : BlacklistedSessionError | null;
+}
+
+/**
+ * Sent when the created (or already created) MediaKeys is attached to the
+ * current HTMLMediaElement element.
+ * On some peculiar devices, we have to wait for that step before the first
+ * media segments are to be pushed to avoid issues.
+ * Because this event is sent after a MediaKeys is created, you will always have
+ * a "created-media-keys" event before an "attached-media-keys" event.
+ */
+interface IAttachedMediaKeysData {
+  /** The MediaKeySystemAccess which allowed to create the MediaKeys instance. */
+  mediaKeySystemAccess: MediaKeySystemAccess |
+                        ICustomMediaKeySystemAccess;
+  /** The MediaKeys instance. */
+  mediaKeys : MediaKeys |
+              ICustomMediaKeys;
+  stores : IMediaKeySessionStores;
+  options : IKeySystemOption;
+}
+

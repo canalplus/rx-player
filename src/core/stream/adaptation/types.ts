@@ -3,6 +3,10 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../manifest";
+import {
+  IAudioTrackSwitchingMode,
+  IVideoTrackSwitchingMode,
+} from "../../../public_types";
 import { IReadOnlySharedReference } from "../../../utils/reference";
 import { IRepresentationEstimator } from "../../adaptive";
 import { IReadOnlyPlaybackObserver } from "../../api";
@@ -12,16 +16,17 @@ import {
   SegmentBuffer,
 } from "../../segment_buffers";
 import {
+  IRepresentationsChoice,
   IRepresentationStreamCallbacks,
   IRepresentationStreamPlaybackObservation,
 } from "../representation";
 
 /** Callbacks called by the `AdaptationStream` on various events. */
-export interface IAdaptationStreamCallbacks<T>
-  extends Omit<IRepresentationStreamCallbacks<T>, "terminating">
+export interface IAdaptationStreamCallbacks
+  extends Omit<IRepresentationStreamCallbacks, "terminating">
 {
   /** Called as new bitrate estimates are done. */
-  bitrateEstimationChange(payload : IBitrateEstimationChangePayload) : void;
+  bitrateEstimateChange(payload : IBitrateEstimateChangePayload) : void;
   /**
    * Called when a new `RepresentationStream` is created to load segments from a
    * `Representation`.
@@ -30,12 +35,23 @@ export interface IAdaptationStreamCallbacks<T>
   /**
    * Callback called when a stream cannot go forward loading segments because it
    * needs the `MediaSource` to be reloaded first.
+   *
+   * The MediaSource will only be reloaded once the communicated Period is the
+   * current one.
    */
   waitingMediaSourceReload(payload : IWaitingMediaSourceReloadPayload) : void;
+  /**
+   * Some situations might require the browser's buffers to be refreshed.
+   * This callback is called when such situation arised.
+   *
+   * Generally flushing/refreshing low-level buffers can be performed simply by
+   * performing a very small seek.
+   */
+  needsBufferFlush() : void;
 }
 
-/** Payload for the `bitrateEstimationChange` callback. */
-export interface IBitrateEstimationChangePayload {
+/** Payload for the `bitrateEstimateChange` callback. */
+export interface IBitrateEstimateChangePayload {
   /** The type of buffer for which the estimation is done. */
   type : IBufferType;
   /**
@@ -61,21 +77,32 @@ export interface IRepresentationChangePayload {
 
 /** Payload for the `waitingMediaSourceReload` callback. */
 export interface IWaitingMediaSourceReloadPayload {
-  /** Period concerned. */
+  /**
+   * Period asking for the reload.
+   *
+   * The MediaSource will only be reloaded if that Period becomes the current
+   * one.
+   */
   period : Period;
   /** Buffer type concerned. */
   bufferType : IBufferType;
   /**
-   * The position in seconds and the time at which the MediaSource should be
-   * reset once it has been reloaded.
+   * Relative position, compared to the current position, at which we should
+   * restart playback after reloading. For example `-2` will reload 2 seconds
+   * before the current position.
    */
-  position : number;
+  timeOffset : number;
   /**
-   * If `true`, we want the HTMLMediaElement to play right after the reload is
-   * done.
-   * If `false`, we want to stay in a paused state at that point.
+   * If `true`, we will control that the position we reload at, after applying
+   * `timeOffset`, is still part of the Period `period`.
+   *
+   * If it isn't we will re-calculate that reloaded position to be:
+   *   - either the Period's start if the calculated position is before the
+   *     Period's start.
+   *   - either the Period'end start if the calculated position is after the
+   *     Period's end.
    */
-  autoPlay : boolean;
+  stayInPeriod : boolean;
 }
 
 /** Regular playback information needed by the AdaptationStream. */
@@ -126,7 +153,8 @@ export interface IAdaptationStreamArguments {
   /** Content you want to create this Stream for. */
   content : { manifest : Manifest;
               period : Period;
-              adaptation : Adaptation; };
+              adaptation : Adaptation;
+              representations : IReadOnlySharedReference<IRepresentationsChoice>; };
   options: IAdaptationStreamOptions;
   /** Estimate the right Representation to play. */
   representationEstimator : IRepresentationEstimator;
@@ -167,15 +195,6 @@ export interface IAdaptationStreamOptions {
    */
   drmSystemId : string | undefined;
   /**
-   * Strategy taken when the user switch manually the current Representation:
-   *   - "seamless": the switch will happen smoothly, with the Representation
-   *     with the new bitrate progressively being pushed alongside the old
-   *     Representation.
-   *   - "direct": hard switch. The Representation switch will be directly
-   *     visible but may necessitate the current MediaSource to be reloaded.
-   */
-  manualBitrateSwitchingMode : "seamless" | "direct";
-  /**
    * If `true`, the AdaptationStream might replace segments of a lower-quality
    * (with a lower bitrate) with segments of a higher quality (with a higher
    * bitrate). This allows to have a fast transition when network conditions
@@ -191,3 +210,20 @@ export interface IAdaptationStreamOptions {
   enableFastSwitching : boolean;
 }
 
+/** Object indicating a choice of Adaptation made by the user. */
+export interface IAdaptationChoice {
+  /** The Adaptation choosen. */
+  adaptation : Adaptation;
+
+  /** "Switching mode" in which the track switch should happen. */
+  switchingMode : ITrackSwitchingMode;
+
+  /**
+   * Shared reference allowing to indicate which Representations from
+   * that Adaptation are allowed.
+   */
+  representations : IReadOnlySharedReference<IRepresentationsChoice>;
+}
+
+export type ITrackSwitchingMode = IAudioTrackSwitchingMode |
+                                  IVideoTrackSwitchingMode;

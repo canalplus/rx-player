@@ -18,6 +18,7 @@
 import {
   shouldValidateMetadata,
   shouldWaitForDataBeforeLoaded,
+  shouldWaitForHaveEnoughData,
 } from "../../../compat";
 import createSharedReference, {
   IReadOnlySharedReference,
@@ -64,7 +65,9 @@ export default function getLoadedReference(
       }
     }
 
-    if (observation.readyState >= 3 && observation.currentRange !== null) {
+    const minReadyState = shouldWaitForHaveEnoughData() ? 4 :
+                                                          3;
+    if (observation.readyState >= minReadyState && observation.currentRange !== null) {
       if (!shouldValidateMetadata() || mediaElement.duration > 0) {
         isLoaded.setValue(true);
         listenCanceller.cancel();

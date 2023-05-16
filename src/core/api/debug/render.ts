@@ -29,7 +29,7 @@ export default function renderDebugElement(
   debugWrapperElt.style.backgroundColor = "#00000099";
   debugWrapperElt.style.padding = "7px";
   debugWrapperElt.style.fontSize = "13px";
-  debugWrapperElt.style.fontFamily = "mono";
+  debugWrapperElt.style.fontFamily = "mono, monospace";
   debugWrapperElt.style.color = "white";
   debugWrapperElt.style.display = "inline-block";
   debugWrapperElt.style.bottom = "0px";

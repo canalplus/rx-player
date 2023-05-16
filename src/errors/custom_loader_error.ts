@@ -27,19 +27,16 @@ export default class CustomLoaderError extends Error {
   public readonly name : "CustomLoaderError";
   public readonly message : string;
   public readonly canRetry : boolean;
-  public readonly isOfflineError : boolean;
   public readonly xhr : XMLHttpRequest | undefined;
 
   /**
    * @param {string} message
    * @param {boolean} canRetry
-   * @param {boolean} isOfflineError
    * @param {XMLHttpRequest} xhr
    */
   constructor(
     message : string,
     canRetry : boolean,
-    isOfflineError : boolean,
     xhr : XMLHttpRequest | undefined
   ) {
     super();
@@ -50,7 +47,6 @@ export default class CustomLoaderError extends Error {
 
     this.message = message;
     this.canRetry = canRetry;
-    this.isOfflineError = isOfflineError;
     this.xhr = xhr;
   }
 }

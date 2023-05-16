@@ -15,6 +15,7 @@
  */
 
 import config from "../../../../../config";
+import log from "../../../../../log";
 import {
   IRepresentationIndex,
   ISegment,
@@ -118,7 +119,6 @@ export interface ITemplateIndexIndexArgument {
 
 /** Aditional context needed by a SegmentTemplate RepresentationIndex. */
 export interface ITemplateIndexContextArgument {
-  aggressiveMode : boolean;
   /** Minimum availabilityTimeOffset concerning the segments of this Representation. */
   availabilityTimeOffset : number;
   /** Allows to obtain the minimum and maximum positions of a content. */
@@ -145,11 +145,6 @@ export interface ITemplateIndexContextArgument {
 export default class TemplateRepresentationIndex implements IRepresentationIndex {
   /** Underlying structure to retrieve segment information. */
   private _index : ITemplateIndex;
-  /**
-   * Whether the "aggressiveMode" is enabled. If enabled, segments can be
-   * requested in advance.
-   */
-  private _aggressiveMode : boolean;
   /** Retrieve the maximum and minimum position of the whole content. */
   private _manifestBoundsCalculator : ManifestBoundsCalculator;
   /** Absolute start of the Period, in seconds. */
@@ -171,8 +166,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     index : ITemplateIndexIndexArgument,
     context : ITemplateIndexContextArgument
   ) {
-    const { aggressiveMode,
-            availabilityTimeOffset,
+    const { availabilityTimeOffset,
             manifestBoundsCalculator,
             isDynamic,
             periodEnd,
@@ -185,7 +179,6 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     this._availabilityTimeOffset = availabilityTimeOffset;
 
     this._manifestBoundsCalculator = manifestBoundsCalculator;
-    this._aggressiveMode = aggressiveMode;
     const presentationTimeOffset = index.presentationTimeOffset != null ?
                                      index.presentationTimeOffset :
                                      0;
@@ -482,12 +475,19 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     return true;
   }
 
+  initialize() : void {
+    log.error("A `TemplateRepresentationIndex` does not need to be initialized");
+  }
+
+  addPredictedSegments() : void {
+    log.warn("Cannot add predicted segments to a `TemplateRepresentationIndex`");
+  }
+
   /**
    * @param {Object} newIndex
    */
   _replace(newIndex : TemplateRepresentationIndex) : void {
     this._index = newIndex._index;
-    this._aggressiveMode = newIndex._aggressiveMode;
     this._isDynamic = newIndex._isDynamic;
     this._periodStart = newIndex._periodStart;
     this._scaledRelativePeriodEnd = newIndex._scaledRelativePeriodEnd;
@@ -555,11 +555,9 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       if (lastPos === undefined) {
         return undefined;
       }
-      const agressiveModeOffset = this._aggressiveMode ? (duration / timescale) :
-                                                         0;
       if (this._scaledRelativePeriodEnd !== undefined &&
           this._scaledRelativePeriodEnd <
-            (lastPos + agressiveModeOffset - this._periodStart) * this._index.timescale) {
+            (lastPos - this._periodStart) * this._index.timescale) {
 
         let numberOfSegments = Math.ceil(this._scaledRelativePeriodEnd / duration);
         if (endNumber !== undefined && (endNumber - startNumber + 1) < numberOfSegments) {
@@ -579,8 +577,8 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       }
 
       const availabilityTimeOffset =
-        ((this._availabilityTimeOffset !== undefined ? this._availabilityTimeOffset : 0) +
-          agressiveModeOffset) * timescale;
+        ((this._availabilityTimeOffset !== undefined ? this._availabilityTimeOffset : 0))
+        * timescale;
 
       let numberOfSegmentsAvailable =
         Math.floor((scaledLastPosition + availabilityTimeOffset) / duration);
