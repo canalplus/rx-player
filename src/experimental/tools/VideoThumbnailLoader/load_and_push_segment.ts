@@ -33,30 +33,33 @@ export default function loadAndPushSegment(
   segmentInfo : ISegmentLoaderContent,
   segmentBuffer: AudioVideoSegmentBuffer,
   segmentFetcher: ISegmentFetcher<ArrayBuffer | Uint8Array>,
+  initSegmentUniqueId : string | null,
   cancelSignal: CancellationSignal
 ): Promise<unknown> {
   const pushOperations : Array<Promise<unknown>> = [];
   return segmentFetcher(segmentInfo, {
     onChunk(parseChunk) {
       const parsed = parseChunk(undefined);
-      let isIsInitSegment : boolean;
+      let isInitSegment : boolean;
       let data : BufferSource | null;
       let timestampOffset : number;
       const codec = segmentInfo.representation.getMimeTypeString();
       if (parsed.segmentType === "init") {
-        isIsInitSegment = true;
+        isInitSegment = true;
         data = parsed.initializationData;
         timestampOffset = 0;
+        if (initSegmentUniqueId !== null) {
+          segmentBuffer.declareInitSegment(initSegmentUniqueId, data);
+        }
       } else {
-        isIsInitSegment = false;
+        isInitSegment = false;
         data = parsed.chunkData;
         timestampOffset = parsed.chunkOffset;
       }
       const pushOperation = segmentBuffer.pushChunk({
-        data: { initSegment: isIsInitSegment ? data :
-                                               null,
-                chunk: isIsInitSegment ? null :
-                                         data,
+        data: { initSegmentUniqueId,
+                chunk: isInitSegment ? null :
+                                       data,
                 appendWindow: [segmentInfo.period.start, segmentInfo.period.end],
                 timestampOffset,
                 codec },

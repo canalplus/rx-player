@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { ICustomMediaKeySession } from "./compat";
+import {
+  IPreferredEmeApiType ,
+  ICustomMediaKeySession,
+} from "./compat/eme";
 import {
   IPersistentSessionInfoV0,
   IPersistentSessionInfoV1,
@@ -24,6 +27,7 @@ import {
 } from "./core/decrypt";
 import { IBufferType } from "./core/segment_buffers";
 import {
+  IMediaErrorTrackContext,
   EncryptedMediaError,
   MediaError,
   NetworkError,
@@ -32,6 +36,10 @@ import {
 import Manifest from "./manifest";
 import { ILocalManifest } from "./parsers/manifest/local";
 import { IMetaPlaylist } from "./parsers/manifest/metaplaylist/metaplaylist_parser";
+
+export { IMediaErrorTrackContext };
+
+export { IPreferredEmeApiType };
 
 /**
  * This file defines and exports types we want to expose to library users.
@@ -235,11 +243,13 @@ export interface IPeriod {
                   image? : IAdaptation[]; };
 }
 
+export type IAdaptationType = "video" | "audio" | "text" | "image";
+
 /** Adaptation (represents a track), as documented in the API documentation. */
 export interface IAdaptation {
   /** String identifying the Adaptation, unique per Period. */
   id : string;
-  type : "video" | "audio" | "text" | "image";
+  type : IAdaptationType;
   language? : string | undefined;
   normalizedLanguage? : string | undefined;
   isAudioDescription? : boolean | undefined;
@@ -749,6 +759,7 @@ export interface IBifObject { fileFormat : string;
  * RxPlayer.
  */
 export interface IAudioRepresentation { id : string|number;
+                                        isSpatialAudio? : boolean | undefined;
                                         bitrate : number;
                                         codec? : string | undefined; }
 

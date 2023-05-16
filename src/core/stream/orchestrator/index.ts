@@ -15,6 +15,7 @@
  */
 
 import StreamOrchestrator, {
+  INeedsMediaSourceReloadPayload,
   IStreamOrchestratorCallbacks,
   IStreamOrchestratorOptions,
   IStreamOrchestratorPlaybackObservation,
@@ -22,6 +23,7 @@ import StreamOrchestrator, {
 
 export default StreamOrchestrator;
 export {
+  INeedsMediaSourceReloadPayload,
   IStreamOrchestratorCallbacks,
   IStreamOrchestratorOptions,
   IStreamOrchestratorPlaybackObservation,
