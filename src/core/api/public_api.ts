@@ -1119,19 +1119,19 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Returns true if the player is rebuffering.
-   * @returns {Boolean} - `true` if the player is rebuffering, `false` otherwise.
+   * Returns true if the player is buffering.
+   * @returns {Boolean} - `true` if the player is buffering, `false` otherwise.
    */
-  isRebuffering() : boolean {
+  isBuffering() : boolean {
     return arrayIncludes(["BUFFERING", "SEEKING", "LOADING", "RELOADING"], this.state);
   }
 
   /**
-   * Returns true if the content is not currently playing.
-   * @returns {Boolean} - `true` if the media is paused, `false` otherwise.
+   * Returns true if the `<video>` element is paused.
+   * @returns {Boolean} - `true` if the `<video>` element is paused, `false` otherwise.
    */
   isPaused() : boolean {
-    return !arrayIncludes(["PLAYING", "STOPPED"], this.state);
+    return this.videoElement ? this.videoElement.paused : true;
   }
 
   /**
@@ -1316,14 +1316,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * Get the last stored content position, in seconds.
    *
-   * @returns {Number}
+   * @returns {number|undefined}
    */
-  getLastStoredContentPosition() : number {
-    const reloadPosition = this._priv_reloadingMetadata.reloadPosition;
-    if (reloadPosition === undefined) {
-      throw new Error("No previously loaded content.");
-    }
-    return reloadPosition;
+  getLastStoredContentPosition() : number|undefined {
+    return this._priv_reloadingMetadata.reloadPosition;
   }
 
   /**
