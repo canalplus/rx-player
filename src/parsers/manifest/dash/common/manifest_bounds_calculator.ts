@@ -18,16 +18,6 @@
  * This class allows to easily calculate the first and last available positions
  * in a content at any time.
  *
- * That task can be an hard for dynamic DASH contents: it depends on a
- * `timeShiftBufferDepth` defined in the MPD and on the maximum possible
- * position.
- *
- * The latter can come from either a clock synchronization mechanism or the
- * indexing schemes (e.g. SegmentTemplate, SegmentTimeline etc.) of the last
- * Periods.
- * As such, it might only be known once a large chunk of the MPD has already
- * been parsed.
- *
  * By centralizing the manifest bounds calculation in this class and by giving
  * an instance of it to each parsed elements which might depend on it, we
  * ensure that we can provide it once it is known to every one of those
@@ -35,26 +25,46 @@
  * @class ManifestBoundsCalculator
  */
 export default class ManifestBoundsCalculator {
-  /** Value of MPD@timeShiftBufferDepth. */
+  /**
+   * Value of MPD@timeShiftBufferDepth.
+   * `null` if not defined.
+   */
   private _timeShiftBufferDepth : number | null;
+  /**
+   * Value of MPD@availabilityStartTime as an unix timestamp in seconds.
+   * `0` if it wasn't defined.
+   */
+  private _availabilityStartTime : number;
+  /** `true` if MPD@type is equal to "dynamic". */
+  private _isDynamic : boolean;
   /** Value of `performance.now` at the time `lastPosition` was calculated. */
   private _positionTime : number | undefined;
   /** Last position calculated at a given moment (itself indicated by `_positionTime`. */
   private _lastPosition : number | undefined;
-  /** `true` if MPD@type is equal to "dynamic". */
-  private _isDynamic : boolean;
+  /**
+   * Offset to add to `performance.now` to obtain a good estimation of the
+   * server-side unix timestamp.
+   *
+   * `undefined` if unknown.
+   */
+  private _serverTimestampOffset : number | undefined;
 
   /**
    * @param {Object} args
    */
-  constructor(args : { timeShiftBufferDepth : number | undefined;
-                       isDynamic : boolean; }
-  ) {
+  constructor(args : {
+    availabilityStartTime : number;
+    timeShiftBufferDepth : number | undefined;
+    isDynamic : boolean;
+    serverTimestampOffset: number | undefined;
+  }) {
     this._isDynamic = args.isDynamic;
     this._timeShiftBufferDepth = !args.isDynamic ||
                                  args.timeShiftBufferDepth === undefined ?
                                    null :
                                    args.timeShiftBufferDepth;
+    this._serverTimestampOffset = args.serverTimestampOffset;
+    this._availabilityStartTime = args.availabilityStartTime;
   }
 
   /**
@@ -96,11 +106,12 @@ export default class ManifestBoundsCalculator {
    * Consider that it is only an estimation, not the real value.
    * @return {number|undefined}
    */
-  estimateMinimumBound(): number | undefined {
+  getEstimatedMinimumSegmentTime(): number | undefined {
     if (!this._isDynamic || this._timeShiftBufferDepth === null) {
       return 0;
     }
-    const maximumBound = this.estimateMaximumBound();
+    const maximumBound = this.getEstimatedLiveEdge() ??
+                         this.getEstimatedMaximumPosition(0);
     if (maximumBound === undefined) {
       return undefined;
     }
@@ -109,15 +120,42 @@ export default class ManifestBoundsCalculator {
   }
 
   /**
-   * Estimate a maximum bound for the content from the last set segment time.
-   * Consider that it is only an estimation, not the real value.
+   * Estimate the segment time in seconds that corresponds to what could be
+   * considered the live edge (or `undefined` for non-live contents).
+   *
+   * Note that for some contents which just anounce segments in advance, this
+   * value might be very different than the maximum position that is
+   * requestable.
    * @return {number|undefined}
    */
-  estimateMaximumBound() : number | undefined {
-    if (this._isDynamic &&
-        this._positionTime != null &&
-        this._lastPosition != null)
-    {
+  getEstimatedLiveEdge() : number | undefined {
+    if (!this._isDynamic || this._serverTimestampOffset === undefined) {
+      return undefined;
+    }
+    return (performance.now() + this._serverTimestampOffset) / 1000 -
+      this._availabilityStartTime;
+  }
+
+  /**
+   * Produce a rough estimate of the ending time of the last requestable segment
+   * in that content.
+   *
+   * This value is only an estimate and may be far from reality.
+   *
+   * The `availabilityTimeOffset` in argument is the corresponding
+   * `availabilityTimeOffset` that applies to the current wanted segment, or `0`
+   * if none exist. It will be applied on live content to deduce the maximum
+   * segment time available.
+   */
+  getEstimatedMaximumPosition(availabilityTimeOffset: number) : number | undefined {
+    if (!this._isDynamic) {
+      return this._lastPosition;
+    }
+
+    const liveEdge = this.getEstimatedLiveEdge();
+    if (liveEdge !== undefined && availabilityTimeOffset !== Infinity) {
+      return liveEdge + availabilityTimeOffset;
+    } else if (this._positionTime !== undefined && this._lastPosition !== undefined) {
       return Math.max((this._lastPosition - this._positionTime) +
                         (performance.now() / 1000),
                       0);

@@ -21,10 +21,14 @@
  * @returns {Boolean}
  */
 export default function areArraysOfNumbersEqual(
-  arr1 : Uint8Array|number[], arr2 : Uint8Array|number[]
+  arr1 : Uint8Array|number[],
+  arr2 : Uint8Array|number[]
 ) : boolean {
   if (arr1.length !== arr2.length) {
     return false;
+  }
+  if (arr1 === arr2) {
+    return true;
   }
   for (let i = arr1.length - 1; i >= 0; i--) {
     if (arr1[i] !== arr2[i]) {

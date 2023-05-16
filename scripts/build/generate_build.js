@@ -22,7 +22,7 @@ const { spawn } = require("child_process");
 const fs = require("fs/promises");
 const os = require("os");
 const path = require("path");
-const rimraf = require("rimraf");
+const { rimraf } = require("rimraf");
 
 const BUILD_DIR_FROM_ROOT = "dist/_esm5.processed";
 

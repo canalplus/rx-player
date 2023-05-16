@@ -410,10 +410,14 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @returns {Object|undefined}
    */
   public getPeriodForTime(time : number) : Period | undefined {
-    return arrayFind(this.periods, (period) => {
-      return time >= period.start &&
-             (period.end === undefined || period.end > time);
-    });
+    let nextPeriod = null;
+    for (let i = this.periods.length - 1; i >= 0; i--) {
+      const period = this.periods[i];
+      if (period.containsTime(time, nextPeriod)) {
+        return period;
+      }
+      nextPeriod = period;
+    }
   }
 
   /**
@@ -632,7 +636,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
         const error =
           new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-                         "An Adaptation contains only incompatible codecs.");
+                         "An Adaptation contains only incompatible codecs.",
+                         { adaptation: newAdaptation });
         this.contentWarnings.push(error);
       }
       return newAdaptation;
@@ -694,7 +699,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
         if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
           const error =
             new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-                           "An Adaptation contains only incompatible codecs.");
+                           "An Adaptation contains only incompatible codecs.",
+                           { adaptation: newAdaptation });
           this.contentWarnings.push(error);
         }
         return newAdaptation;
@@ -711,7 +717,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
 
   /**
    * @param {Object} newManifest
-   * @param {number} type
+   * @param {number} updateType
    */
   private _performUpdate(
     newManifest : Manifest,
