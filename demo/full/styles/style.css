@@ -1062,7 +1062,7 @@ input:checked + .slider:before {
 
 .header-links-buttons {
   display: flex;
-  align-items: baseline;
+  align-items: center;
 }
 
 .header-links-buttons > * {
