@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { ScoreConfidenceLevel } from "../utils/representation_score_calculator";
+
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
@@ -47,12 +49,25 @@ describe("BufferBasedChooser", () => {
       bufferGap: 0,
       speed: 1,
       currentBitrate: undefined,
-      currentScore: 4,
+      currentScore: { score: 4, confidenceLevel: ScoreConfidenceLevel.LOW },
     })).toEqual(1);
     expect(new BufferBasedChooser([1, 2, 3]).getEstimate({
       bufferGap: 0,
       speed: 1,
-      currentScore: 1,
+      currentBitrate: undefined,
+      currentScore: { score: 4, confidenceLevel: ScoreConfidenceLevel.HIGH },
+    })).toEqual(1);
+    expect(new BufferBasedChooser([1, 2, 3]).getEstimate({
+      bufferGap: 0,
+      speed: 1,
+      currentBitrate: undefined,
+      currentScore: { score: 1, confidenceLevel: ScoreConfidenceLevel.LOW },
+    })).toEqual(1);
+    expect(new BufferBasedChooser([1, 2, 3]).getEstimate({
+      bufferGap: 0,
+      speed: 1,
+      currentBitrate: undefined,
+      currentScore: { score: 1, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(1);
   });
 
@@ -76,6 +91,51 @@ describe("BufferBasedChooser", () => {
   });
 
   /* eslint-disable max-len */
+  it("should not go to the next bitrate if we don't have a high enough maintainability score", () => {
+  /* eslint-enable max-len */
+    const logger = { debug: jest.fn() };
+    jest.mock("../../../log", () => ({ __esModule: true as const,
+                                       default: logger }));
+    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
+    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+      bufferGap: 16,
+      speed: 1,
+      currentBitrate: 10,
+      currentScore: { score: 1.15, confidenceLevel: ScoreConfidenceLevel.LOW },
+    })).toEqual(10);
+    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+      bufferGap: 30,
+      speed: 1,
+      currentBitrate: 20,
+      currentScore: { score: 1.15, confidenceLevel: ScoreConfidenceLevel.LOW },
+    })).toEqual(20);
+    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+      bufferGap: 30,
+      speed: 1,
+      currentBitrate: 20,
+      currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.LOW },
+    })).toEqual(20);
+    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+      bufferGap: 30,
+      speed: 2,
+      currentBitrate: 20,
+      currentScore: { score: 2.30, confidenceLevel: ScoreConfidenceLevel.LOW },
+    })).toEqual(20);
+    expect(new BufferBasedChooser([10, 20, 20, 40]).getEstimate({
+      bufferGap: 30,
+      speed: 2,
+      currentBitrate: 20,
+      currentScore: { score: 2.30, confidenceLevel: ScoreConfidenceLevel.LOW },
+    })).toEqual(20);
+    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+      bufferGap: 30,
+      speed: 0, // 0 is a special case
+      currentBitrate: 20,
+      currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.LOW },
+    })).toEqual(20);
+  });
+
+  /* eslint-disable max-len */
   it("should go to the next bitrate if the current one is maintainable and we have more buffer than the next level", () => {
   /* eslint-enable max-len */
     const logger = { debug: jest.fn() };
@@ -86,82 +146,37 @@ describe("BufferBasedChooser", () => {
       bufferGap: 16,
       speed: 1,
       currentBitrate: 10,
-      currentScore: 1.01,
+      currentScore: { score: 1.15, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(20);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 30,
       speed: 1,
       currentBitrate: 20,
-      currentScore: 1.01,
+      currentScore: { score: 1.15, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(40);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 30,
       speed: 1,
       currentBitrate: 20,
-      currentScore: 100,
+      currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(40);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 30,
       speed: 2,
       currentBitrate: 20,
-      currentScore: 2.1,
+      currentScore: { score: 2.30, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(40);
     expect(new BufferBasedChooser([10, 20, 20, 40]).getEstimate({
       bufferGap: 30,
       speed: 2,
       currentBitrate: 20,
-      currentScore: 2.1,
+      currentScore: { score: 2.30, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(40);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
       bufferGap: 30,
       speed: 0, // 0 is a special case
       currentBitrate: 20,
-      currentScore: 100,
-    })).toEqual(40);
-  });
-
-  /* eslint-disable max-len */
-  it("should go to the next bitrate if the current one is maintainable and we have the buffer corresponding to the next level", () => {
-  /* eslint-enable max-len */
-    const logger = { debug: jest.fn() };
-    jest.mock("../../../log", () => ({ __esModule: true as const,
-                                       default: logger }));
-    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
-      bufferGap: 15,
-      speed: 1,
-      currentBitrate: 10,
-      currentScore: 1.01,
-    })).toEqual(20);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
-      bufferGap: 20,
-      speed: 1,
-      currentBitrate: 20,
-      currentScore: 1.01,
-    })).toEqual(40);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
-      bufferGap: 20,
-      speed: 1,
-      currentBitrate: 20,
-      currentScore: 100,
-    })).toEqual(40);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
-      bufferGap: 20,
-      speed: 2,
-      currentBitrate: 20,
-      currentScore: 2.1,
-    })).toEqual(40);
-    expect(new BufferBasedChooser([10, 20, 20, 40]).getEstimate({
-      bufferGap: 20,
-      speed: 2,
-      currentBitrate: 20,
-      currentScore: 2.1,
-    })).toEqual(40);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
-      bufferGap: 20,
-      speed: 0, // 0 is a special case
-      currentBitrate: 20,
-      currentScore: 100,
+      currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(40);
   });
 
@@ -176,31 +191,31 @@ describe("BufferBasedChooser", () => {
       bufferGap: 6,
       speed: 1,
       currentBitrate: 10,
-      currentScore: 1.01,
+      currentScore: { score: 1.15, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(10);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
-      bufferGap: 10,
+      bufferGap: 13,
       speed: 1,
       currentBitrate: 20,
-      currentScore: 1.01,
+      currentScore: { score: 1.15, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(20);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
-      bufferGap: 10,
+      bufferGap: 13,
       speed: 1,
       currentBitrate: 20,
-      currentScore: 100,
+      currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(20);
     expect(new BufferBasedChooser([10, 20, 20, 40]).getEstimate({
-      bufferGap: 10,
+      bufferGap: 13,
       speed: 1,
       currentBitrate: 20,
-      currentScore: 100,
+      currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(20);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
-      bufferGap: 10,
+      bufferGap: 13,
       speed: 2,
       currentBitrate: 20,
-      currentScore: 2.1,
+      currentScore: { score: 2.30, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(20);
   });
 
@@ -216,13 +231,13 @@ describe("BufferBasedChooser", () => {
       bufferGap: 100000000000,
       speed: 1,
       currentBitrate: 40,
-      currentScore: 1000000,
+      currentScore: { score: 1000000, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(40);
     expect(new BufferBasedChooser([10, 20, 40, 40]).getEstimate({
       bufferGap: 100000000000,
       speed: 1,
       currentBitrate: 40,
-      currentScore: 1000000,
+      currentScore: { score: 1000000, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(40);
   });
 
@@ -237,31 +252,115 @@ describe("BufferBasedChooser", () => {
       bufferGap: 15,
       speed: 2,
       currentBitrate: 10,
-      currentScore: 1.01,
+      currentScore: { score: 2, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(10);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
-      bufferGap: 20,
+      bufferGap: 22,
       speed: 2,
       currentBitrate: 20,
-      currentScore: 1.01,
+      currentScore: { score: 2, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(20);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
-      bufferGap: 20,
+      bufferGap: 22,
       speed: 100,
       currentBitrate: 20,
-      currentScore: 100,
+      currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(20);
     expect(new BufferBasedChooser([10, 20, 20, 40]).getEstimate({
-      bufferGap: 20,
+      bufferGap: 22,
       speed: 100,
       currentBitrate: 20,
-      currentScore: 100,
+      currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.HIGH },
     })).toEqual(20);
     expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
-      bufferGap: 20,
+      bufferGap: 22,
       speed: 3,
       currentBitrate: 20,
-      currentScore: 2.1,
+      currentScore: { score: 3, confidenceLevel: ScoreConfidenceLevel.HIGH },
+    })).toEqual(20);
+  });
+
+  /* eslint-disable max-len */
+  it("should lower bitrate if the current one is not maintainable due to the speed", () => {
+  /* eslint-enable max-len */
+    const logger = { debug: jest.fn() };
+    jest.mock("../../../log", () => ({ __esModule: true as const,
+                                       default: logger }));
+    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
+    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+      bufferGap: 15,
+      speed: 2,
+      currentBitrate: 10,
+      currentScore: { score: 1.9, confidenceLevel: ScoreConfidenceLevel.HIGH },
+    })).toEqual(10);
+    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+      bufferGap: 22,
+      speed: 2,
+      currentBitrate: 20,
+      currentScore: { score: 1.9, confidenceLevel: ScoreConfidenceLevel.HIGH },
+    })).toEqual(10);
+    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+      bufferGap: 22,
+      speed: 100,
+      currentBitrate: 20,
+      currentScore: { score: 99, confidenceLevel: ScoreConfidenceLevel.HIGH },
+    })).toEqual(10);
+    expect(new BufferBasedChooser([10, 20, 20, 40]).getEstimate({
+      bufferGap: 22,
+      speed: 100,
+      currentBitrate: 20,
+      currentScore: { score: 99, confidenceLevel: ScoreConfidenceLevel.HIGH },
+    })).toEqual(10);
+    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+      bufferGap: 22,
+      speed: 3,
+      currentBitrate: 20,
+      currentScore: { score: 2.5, confidenceLevel: ScoreConfidenceLevel.HIGH },
+    })).toEqual(10);
+  });
+
+  /* eslint-disable max-len */
+  it("should not lower bitrate if the current one is not maintainable due to the speed but confidence on the score is low", () => {
+  /* eslint-enable max-len */
+    const logger = { debug: jest.fn() };
+    jest.mock("../../../log", () => ({ __esModule: true as const,
+                                       default: logger }));
+    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
+    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+      bufferGap: 15,
+      speed: 2,
+      currentBitrate: 10,
+      currentScore: { score: 1.9, confidenceLevel: ScoreConfidenceLevel.LOW },
+    })).toEqual(10);
+    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+      bufferGap: 22,
+      speed: 2,
+      currentBitrate: 20,
+      currentScore: undefined,
+    })).toEqual(20);
+    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+      bufferGap: 22,
+      speed: 2,
+      currentBitrate: 20,
+      currentScore: { score: 1.9, confidenceLevel: ScoreConfidenceLevel.LOW },
+    })).toEqual(20);
+    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+      bufferGap: 22,
+      speed: 100,
+      currentBitrate: 20,
+      currentScore: { score: 99, confidenceLevel: ScoreConfidenceLevel.LOW },
+    })).toEqual(20);
+    expect(new BufferBasedChooser([10, 20, 20, 40]).getEstimate({
+      bufferGap: 22,
+      speed: 100,
+      currentBitrate: 20,
+      currentScore: { score: 99, confidenceLevel: ScoreConfidenceLevel.LOW },
+    })).toEqual(20);
+    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+      bufferGap: 22,
+      speed: 3,
+      currentBitrate: 20,
+      currentScore: { score: 2.5, confidenceLevel: ScoreConfidenceLevel.LOW },
     })).toEqual(20);
   });
 

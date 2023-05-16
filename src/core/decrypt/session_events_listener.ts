@@ -111,7 +111,12 @@ export default function SessionEventsListener(
         if (isNullOrUndefined(licenseObject)) {
           log.info("DRM: No license given, skipping session.update");
         } else {
-          return updateSessionWithMessage(session, licenseObject);
+          try {
+            return updateSessionWithMessage(session, licenseObject);
+          } catch (err) {
+            manualCanceller.cancel();
+            callbacks.onError(err);
+          }
         }
       })
       .catch((err : unknown) => {
