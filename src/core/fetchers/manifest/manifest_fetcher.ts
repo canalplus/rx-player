@@ -28,7 +28,6 @@ import {
   ITransportManifestPipeline,
   ITransportPipelines,
 } from "../../../transports";
-import assert from "../../../utils/assert";
 import EventEmitter from "../../../utils/event_emitter";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import noop from "../../../utils/noop";
@@ -206,12 +205,8 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       this.trigger("warning", errorSelector(err));
     });
 
-    const loadingPromise = pipelines.resolveManifestUrl === undefined ?
-      callLoaderWithRetries(requestUrl) :
-      callResolverWithRetries(requestUrl).then(callLoaderWithRetries);
-
     try {
-      const response = await loadingPromise;
+      const response = await callLoaderWithRetries(requestUrl);
       return {
         parse: (parserOptions : IManifestFetcherParserOptions) => {
           return this._parseLoadedManifest(response,
@@ -221,23 +216,6 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       };
     } catch (err) {
       throw errorSelector(err);
-    }
-
-    /**
-     * Call the resolver part of the pipeline, retrying if it fails according
-     * to the current settings.
-     * Returns the Promise of the last attempt.
-     * /!\ This pipeline should have a `resolveManifestUrl` function defined.
-     * @param {string | undefined}  resolverUrl
-     * @returns {Promise}
-     */
-    function callResolverWithRetries(
-      resolverUrl : string | undefined
-    ) : Promise<string | undefined> {
-      const { resolveManifestUrl } = pipelines;
-      assert(resolveManifestUrl !== undefined);
-      const callResolver = () => resolveManifestUrl(resolverUrl, cancelSignal);
-      return scheduleRequestPromise(callResolver, backoffSettings, cancelSignal);
     }
 
     /**
@@ -324,10 +302,10 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
                                                 cancelSignal,
                                                 scheduleRequest);
       if (!isPromise(res)) {
-        return finish(res.manifest);
+        return finish(res.manifest, res.warnings);
       } else {
-        const { manifest } = await res;
-        return finish(manifest);
+        const { manifest, warnings } = await res;
+        return finish(manifest, warnings);
       }
     } catch (err) {
       const formattedError = formatError(err, {
@@ -378,8 +356,11 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
      * To call once the Manifest has been parsed.
      * @param {Object} manifest
      */
-    function finish(manifest : Manifest) : IManifestFetcherParsedResult {
-      onWarnings(manifest.contentWarnings);
+    function finish(
+      manifest : Manifest,
+      warnings: IPlayerError[]
+    ) : IManifestFetcherParsedResult {
+      onWarnings(warnings);
       const parsingTime = performance.now() - parsingTimeStart;
       log.info(`MF: Manifest parsed in ${parsingTime}ms`);
 
@@ -398,23 +379,19 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
    */
   private _getBackoffSetting(onRetry : (err : unknown) => void) : IBackoffSettings {
     const { DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
-            DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
             INITIAL_BACKOFF_DELAY_BASE,
             MAX_BACKOFF_DELAY_BASE } = config.getCurrent();
     const { lowLatencyMode,
-            maxRetryRegular : ogRegular,
-            maxRetryOffline : ogOffline } = this._settings;
+            maxRetry : ogRegular } = this._settings;
     const baseDelay = lowLatencyMode ? INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY :
                                        INITIAL_BACKOFF_DELAY_BASE.REGULAR;
     const maxDelay = lowLatencyMode ? MAX_BACKOFF_DELAY_BASE.LOW_LATENCY :
                                       MAX_BACKOFF_DELAY_BASE.REGULAR;
-    const maxRetryRegular = ogRegular ?? DEFAULT_MAX_MANIFEST_REQUEST_RETRY;
-    const maxRetryOffline = ogOffline ?? DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE;
+    const maxRetry = ogRegular ?? DEFAULT_MAX_MANIFEST_REQUEST_RETRY;
     return { onRetry,
              baseDelay,
              maxDelay,
-             maxRetryRegular,
-             maxRetryOffline };
+             maxRetry };
   }
 
   /**
@@ -593,7 +570,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       this._prioritizedContentUrl = null;
     } else {
       fullRefresh = !enablePartialRefresh || manifestUpdateUrl === undefined;
-      refreshURL = fullRefresh ? manifest.getUrl() :
+      refreshURL = fullRefresh ? manifest.getUrls()[0] :
                                  manifestUpdateUrl;
     }
     const externalClockOffset = manifest.clockOffset;
@@ -736,9 +713,7 @@ export interface IManifestFetcherSettings {
    */
   lowLatencyMode : boolean;
   /** Maximum number of time a request on error will be retried. */
-  maxRetryRegular : number | undefined;
-  /** Maximum number of time a request be retried when the user is offline. */
-  maxRetryOffline : number | undefined;
+  maxRetry : number | undefined;
   /**
    * Timeout after which request are aborted and, depending on other options,
    * retried.

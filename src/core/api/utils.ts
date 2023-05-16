@@ -70,6 +70,32 @@ export function emitSeekEvents(
   }, { includeLastObservation: true, clearSignal: cancelSignal });
 }
 
+/**
+ * @param {HTMLMediaElement} mediaElement
+ * @param {function} onPlay - Callback called when a play operation has started
+ * on `mediaElement`.
+ * @param {function} onPause - Callback called when a pause operation has
+ * started on `mediaElement`.
+ * @param {Object} cancelSignal - When triggered, stop calling callbacks and
+ * remove all listeners this function has registered.
+ */
+export function emitPlayPauseEvents(
+  mediaElement : HTMLMediaElement | null,
+  onPlay: () => void,
+  onPause: () => void,
+  cancelSignal : CancellationSignal
+) : void {
+  if (cancelSignal.isCancelled() || mediaElement === null) {
+    return ;
+  }
+  mediaElement.addEventListener("play", onPlay);
+  mediaElement.addEventListener("pause", onPause);
+  cancelSignal.register(() => {
+    mediaElement.removeEventListener("play", onPlay);
+    mediaElement.removeEventListener("pause", onPause);
+  });
+}
+
 /** Player state dictionnary. */
 export const enum PLAYER_STATES {
   STOPPED = "STOPPED",
@@ -80,6 +106,7 @@ export const enum PLAYER_STATES {
   ENDED = "ENDED",
   BUFFERING = "BUFFERING",
   SEEKING = "SEEKING",
+  FREEZING = "FREEZING",
   RELOADING = "RELOADING",
 }
 
@@ -100,8 +127,10 @@ export function constructPlayerStateReference(
           playerStateRef.setValue(newState);
         }
       }
+    } else if (playerStateRef.getValue() === PLAYER_STATES.RELOADING) {
+      playerStateRef.setValue(getLoadedContentState(mediaElement, null));
     } else {
-      playerStateRef.setValueIfChanged(getLoadedContentState(mediaElement, null));
+      updateStateIfLoaded(null);
     }
   }, cancelSignal);
 
@@ -118,31 +147,37 @@ export function constructPlayerStateReference(
   let prevStallReason : IStallingSituation | null = null;
   initializer.addEventListener("stalled", (s) => {
     if (s !== prevStallReason) {
-      if (isLoadedState(playerStateRef.getValue())) {
-        playerStateRef.setValueIfChanged(getLoadedContentState(mediaElement, s));
-      }
+      updateStateIfLoaded(s);
       prevStallReason = s;
     }
   }, cancelSignal);
   initializer.addEventListener("unstalled", () => {
     if (prevStallReason !== null) {
-      if (isLoadedState(playerStateRef.getValue())) {
-        playerStateRef.setValueIfChanged(getLoadedContentState(mediaElement, null));
-      }
+      updateStateIfLoaded(null);
       prevStallReason = null;
     }
   }, cancelSignal);
 
   playbackObserver.listen((observation) => {
-    if (isLoadedState(playerStateRef.getValue()) &&
-        arrayIncludes(["seeking", "ended", "play", "pause"], observation.event))
-    {
-      playerStateRef.setValueIfChanged(
-        getLoadedContentState(mediaElement, prevStallReason)
-      );
+    if (arrayIncludes(["seeking", "ended", "play", "pause"], observation.event)) {
+      updateStateIfLoaded(prevStallReason);
     }
   }, { clearSignal: cancelSignal });
   return playerStateRef;
+
+  function updateStateIfLoaded(stallRes : IStallingSituation | null) : void {
+    if (!isLoadedState(playerStateRef.getValue())) {
+      return;
+    }
+    const newState = getLoadedContentState(mediaElement, stallRes);
+    const prevState = playerStateRef.getValue();
+
+    // Some safety checks to avoid having nonsense state switches
+    if (prevState === PLAYER_STATES.LOADED && newState === PLAYER_STATES.PAUSED) {
+      return;
+    }
+    playerStateRef.setValueIfChanged(newState);
+  }
 }
 
 /**
@@ -176,8 +211,9 @@ export function getLoadedContentState(
       return PLAYER_STATES.ENDED;
     }
 
-    return stalledStatus === "seeking" ? PLAYER_STATES.SEEKING :
-                                         PLAYER_STATES.BUFFERING;
+    return stalledStatus === "seeking"  ? PLAYER_STATES.SEEKING :
+           stalledStatus === "freezing" ? PLAYER_STATES.FREEZING :
+                                          PLAYER_STATES.BUFFERING;
   }
   return mediaElement.paused ? PLAYER_STATES.PAUSED :
                                PLAYER_STATES.PLAYING;

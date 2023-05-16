@@ -223,7 +223,7 @@ export default function createSharedReference<T>(
      */
     setValue(newVal : T) : void {
       if (isFinished) {
-        if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
+        if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
           /* eslint-disable-next-line no-console */
           console.error("Finished shared references cannot be updated");
         }

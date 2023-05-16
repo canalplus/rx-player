@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import Adaptation from "../adaptation";
+
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
@@ -27,23 +29,25 @@ describe("Manifest - Period", () => {
   });
 
   it("should throw if no adaptation is given", () => {
-    const mockAdaptation = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const mockAdaptation = jest.fn(arg => ({ ...arg }));
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
     const Period = jest.requireActual("../period").default;
     const args = { id: "12", adaptations: {}, start: 0 };
     let period = null;
     let errorReceived = null;
+    const unsupportedAdaptations: Adaptation[] = [];
     try {
-      period = new Period(args);
+      period = new Period(args, unsupportedAdaptations);
     } catch (e) {
       errorReceived = e;
     }
 
+    expect(unsupportedAdaptations).toHaveLength(0);
     expect(period).toBe(null);
     expect(errorReceived).not.toBe(null);
     expect(errorReceived).toBeInstanceOf(Error);
@@ -59,11 +63,11 @@ describe("Manifest - Period", () => {
   });
 
   it("should throw if no audio nor video adaptation is given", () => {
-    const mockAdaptation = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const mockAdaptation = jest.fn(arg => ({ ...arg }));
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
     const Period = jest.requireActual("../period").default;
@@ -79,12 +83,14 @@ describe("Manifest - Period", () => {
     const args = { id: "12", adaptations: { foo }, start: 0 };
     let period = null;
     let errorReceived = null;
+    const unsupportedAdaptations: Adaptation[] = [];
     try {
-      period = new Period(args);
+      period = new Period(args, unsupportedAdaptations);
     } catch (e) {
       errorReceived = e;
     }
 
+    expect(unsupportedAdaptations).toHaveLength(0);
     expect(period).toBe(null);
     expect(errorReceived).not.toBe(null);
     expect(errorReceived).toBeInstanceOf(Error);
@@ -104,23 +110,25 @@ describe("Manifest - Period", () => {
   });
 
   it("should throw if only empty audio and/or video adaptations is given", () => {
-    const mockAdaptation = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const mockAdaptation = jest.fn(arg => ({ ...arg }));
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
     const Period = jest.requireActual("../period").default;
     const args = { id: "12", adaptations: { video: [], audio: [] }, start: 0 };
     let period = null;
     let errorReceived = null;
+    const unsupportedAdaptations: Adaptation[] = [];
     try {
-      period = new Period(args);
+      period = new Period(args, unsupportedAdaptations);
     } catch (e) {
       errorReceived = e;
     }
 
+    expect(unsupportedAdaptations).toHaveLength(0);
     expect(period).toBe(null);
     expect(errorReceived).not.toBe(null);
     expect(errorReceived).toBeInstanceOf(Error);
@@ -138,46 +146,53 @@ describe("Manifest - Period", () => {
   });
 
   it("should throw if we are left with no audio representation", () => {
-    const mockAdaptation = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const mockAdaptation = jest.fn(arg => ({ ...arg }));
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
     const Period = jest.requireActual("../period").default;
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "56",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const videoAda3 = { type: "video",
                         id: "57",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda3; } };
     const video = [videoAda1, videoAda2, videoAda3];
 
     const audioAda1 = { type: "audio",
                         id: "58",
                         isSupported: true,
-                        representations: [] };
+                        representations: [],
+                        toAudioTrack() { return audioAda1; } };
     const audioAda2 = { type: "audio",
                         id: "59",
                         isSupported: true,
-                        representations: [] };
+                        representations: [],
+                        toAudioTrack() { return audioAda2; } };
     const audio = [audioAda1, audioAda2];
     const args = { id: "12", adaptations: { video, audio }, start: 0 };
     let period = null;
     let errorReceived = null;
+    const unsupportedAdaptations: Adaptation[] = [];
     try {
-      period = new Period(args);
+      period = new Period(args, unsupportedAdaptations);
     } catch (e) {
       errorReceived = e;
     }
 
+    expect(unsupportedAdaptations).toHaveLength(0);
     expect(period).toBe(null);
     expect(errorReceived).not.toBe(null);
     expect(errorReceived).toBeInstanceOf(Error);
@@ -187,48 +202,55 @@ describe("Manifest - Period", () => {
       throw new Error("Impossible: already checked it was an Error instance");
     }
 
-    expect((errorReceived as { code? : string }).code).toBe("MANIFEST_PARSE_ERROR");
+    expect((errorReceived as { code? : string }).code)
+      .toBe("MANIFEST_INCOMPATIBLE_CODECS_ERROR");
     expect((errorReceived as { type? : string }).type).toBe("MEDIA_ERROR");
     expect(errorReceived.message).toContain("No supported audio adaptations");
   });
 
   it("should throw if no audio Adaptation is supported", () => {
-    const mockAdaptation = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const mockAdaptation = jest.fn(arg => ({ ...arg }));
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
     const Period = jest.requireActual("../period").default;
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const videoAda3 = { type: "video",
                         id: "56",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda3; } };
     const video = [videoAda1, videoAda2, videoAda3];
 
     const audioAda1 = { type: "audio",
                         id: "57",
                         isSupported: false,
-                        representations: [{}] };
+                        representations: [{}],
+                        toAudioTrack() { return audioAda1; } };
     const audioAda2 = { type: "audio",
                         id: "58",
                         isSupported: false,
-                        representations: [{}] };
+                        representations: [{}],
+                        toAudioTrack() { return audioAda1; } };
     const audio = [audioAda1, audioAda2];
     const args = { id: "12", adaptations: { video, audio }, start: 0 };
     let period = null;
     let errorReceived = null;
+    const unsupportedAdaptations: Adaptation[] = [];
     try {
-      period = new Period(args);
+      period = new Period(args, unsupportedAdaptations);
     } catch (e) {
       errorReceived = e;
     }
@@ -236,58 +258,69 @@ describe("Manifest - Period", () => {
     expect(period).toBe(null);
     expect(errorReceived).not.toBe(null);
     expect(errorReceived).toBeInstanceOf(Error);
+    expect(unsupportedAdaptations).toHaveLength(2);
+    expect(unsupportedAdaptations[0].id).toEqual("57");
+    expect(unsupportedAdaptations[1].id).toEqual("58");
 
     // Impossible check to shut-up TypeScript
     if (!(errorReceived instanceof Error)) {
       throw new Error("Impossible: already checked it was an Error instance");
     }
 
-    expect((errorReceived as { code? : string }).code).toBe("MANIFEST_PARSE_ERROR");
+    expect((errorReceived as { code? : string }).code)
+      .toBe("MANIFEST_INCOMPATIBLE_CODECS_ERROR");
     expect((errorReceived as { type? : string }).type).toBe("MEDIA_ERROR");
     expect(errorReceived.message).toContain("No supported audio adaptations");
   });
 
   it("should throw if we are left with no video representation", () => {
-    const mockAdaptation = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const mockAdaptation = jest.fn(arg => ({ ...arg }));
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
     const Period = jest.requireActual("../period").default;
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [] };
+                        representations: [],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [] };
+                        representations: [],
+                        toVideoTrack() { return videoAda2; } };
     const videoAda3 = { type: "video",
                         id: "56",
                         isSupported: true,
-                        representations: [] };
+                        representations: [],
+                        toVideoTrack() { return videoAda3; } };
     const video = [videoAda1, videoAda2, videoAda3];
 
     const audioAda1 = { type: "audio",
                         id: "58",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toAudioTrack() { return audioAda1; } };
     const audioAda2 = { type: "audio",
                         id: "59",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toAudioTrack() { return audioAda2; } };
     const audio = [audioAda1, audioAda2];
     const args = { id: "12", adaptations: { video, audio }, start: 0 };
     let period = null;
     let errorReceived = null;
+    const unsupportedAdaptations: Adaptation[] = [];
     try {
-      period = new Period(args);
+      period = new Period(args, unsupportedAdaptations);
     } catch (e) {
       errorReceived = e;
     }
 
+    expect(unsupportedAdaptations).toHaveLength(0);
     expect(period).toBe(null);
     expect(errorReceived).not.toBe(null);
     expect(errorReceived).toBeInstanceOf(Error);
@@ -297,48 +330,55 @@ describe("Manifest - Period", () => {
       throw new Error("Impossible: already checked it was an Error instance");
     }
 
-    expect((errorReceived as { code? : string }).code).toBe("MANIFEST_PARSE_ERROR");
+    expect((errorReceived as { code? : string }).code)
+      .toBe("MANIFEST_INCOMPATIBLE_CODECS_ERROR");
     expect((errorReceived as { type? : string }).type).toBe("MEDIA_ERROR");
     expect(errorReceived.message).toContain("No supported video adaptation");
   });
 
   it("should throw if no video adaptation is supported", () => {
-    const mockAdaptation = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const mockAdaptation = jest.fn(arg => ({ ...arg }));
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
     const Period = jest.requireActual("../period").default;
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: false,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: false,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const videoAda3 = { type: "video",
                         id: "56",
                         isSupported: false,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda3; } };
     const video = [videoAda1, videoAda2, videoAda3];
 
     const audioAda1 = { type: "audio",
                         id: "58",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toAudioTrack() { return audioAda1; } };
     const audioAda2 = { type: "audio",
                         id: "59",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toAudioTrack() { return audioAda2; } };
     const audio = [audioAda1, audioAda2];
     const args = { id: "12", adaptations: { video, audio }, start: 0 };
     let period = null;
     let errorReceived = null;
+    const unsupportedAdaptations: Adaptation[] = [];
     try {
-      period = new Period(args);
+      period = new Period(args, unsupportedAdaptations);
     } catch (e) {
       errorReceived = e;
     }
@@ -346,13 +386,15 @@ describe("Manifest - Period", () => {
     expect(period).toBe(null);
     expect(errorReceived).not.toBe(null);
     expect(errorReceived).toBeInstanceOf(Error);
+    expect(unsupportedAdaptations).toHaveLength(3);
 
     // Impossible check to shut-up TypeScript
     if (!(errorReceived instanceof Error)) {
       throw new Error("Impossible: already checked it was an Error instance");
     }
 
-    expect((errorReceived as { code? : string }).code).toBe("MANIFEST_PARSE_ERROR");
+    expect((errorReceived as { code? : string }).code)
+      .toBe("MANIFEST_INCOMPATIBLE_CODECS_ERROR");
     expect((errorReceived as { type? : string }).type).toBe("MEDIA_ERROR");
     expect(errorReceived.message).toContain("No supported video adaptation");
   });
@@ -364,7 +406,7 @@ describe("Manifest - Period", () => {
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
     const Period = jest.requireActual("../period").default;
@@ -372,16 +414,19 @@ describe("Manifest - Period", () => {
     const videoAda1 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const video = [videoAda1];
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: false,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const video2 = [videoAda2];
     const args = { id: "12", adaptations: { video, video2 }, start: 0 };
-    const period = new Period(args);
-    expect(period.contentWarnings).toHaveLength(1);
+    const unsupportedAdaptations: Adaptation[] = [];
+    const period = new Period(args, unsupportedAdaptations);
+    expect(unsupportedAdaptations).toHaveLength(1);
 
     expect(mockAdaptation).toHaveBeenCalledTimes(2);
     expect(mockAdaptation).toHaveReturnedTimes(2);
@@ -389,18 +434,17 @@ describe("Manifest - Period", () => {
     expect(mockAdaptation).toHaveBeenCalledWith(videoAda2, {});
     expect(mockAdaptation).toHaveReturnedWith(period.adaptations.video[0]);
 
-    const [error] = period.contentWarnings;
-    expect(error).toBeInstanceOf(Error);
-    expect(error.code).toBe("MANIFEST_INCOMPATIBLE_CODECS_ERROR");
-    expect(error.type).toBe("MEDIA_ERROR");
+    const [adap] = unsupportedAdaptations;
+    expect((adap as { id: string }).id).toBe("55");
+    expect((adap as { isSupported: boolean }).isSupported).toBe(false);
   });
 
   it("should not set a parsing error if an empty unsupported adaptation is given", () => {
-    const mockAdaptation = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const mockAdaptation = jest.fn(arg => ({ ...arg }));
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image", "foo"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
     const Period = jest.requireActual("../period").default;
@@ -408,43 +452,48 @@ describe("Manifest - Period", () => {
     const videoAda1 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const video = [videoAda1];
     const bar = undefined;
     const args = { id: "12", adaptations: { bar, video }, start: 0 };
-    const period = new Period(args);
+    const unsupportedAdaptations: Adaptation[] = [];
+    const period = new Period(args, unsupportedAdaptations);
     expect(period.adaptations).toEqual({
-      video: video.map(v => ({ ...v, contentWarnings: [] })),
+      video: video.map(v => ({ ...v })),
     });
-    expect(period.contentWarnings).toHaveLength(0);
+    expect(unsupportedAdaptations).toHaveLength(0);
 
     expect(mockAdaptation).toHaveBeenCalledTimes(1);
     expect(mockAdaptation).toHaveBeenCalledWith(videoAda1, {});
   });
 
   it("should give a representationFilter to the adaptation", () => {
-    const mockAdaptation = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const mockAdaptation = jest.fn(arg => ({ ...arg }));
     const representationFilter = jest.fn();
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
     const Period = jest.requireActual("../period").default;
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 0 };
-    const period = new Period(args, representationFilter);
+    const unsupportedAdaptations: Adaptation[] = [];
+    const period = new Period(args, unsupportedAdaptations, representationFilter);
 
-    expect(period.contentWarnings).toHaveLength(0);
+    expect(unsupportedAdaptations).toHaveLength(0);
     expect(period.adaptations.video).toHaveLength(2);
 
     expect(mockAdaptation).toHaveBeenCalledTimes(2);
@@ -455,23 +504,25 @@ describe("Manifest - Period", () => {
     expect(representationFilter).not.toHaveBeenCalled();
   });
 
-  it("should add contentWarnings if Adaptations are not supported", () => {
+  it("should report if Adaptations are not supported", () => {
     const mockAdaptation = jest.fn(arg => ({ ...arg }));
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
     const Period = jest.requireActual("../period").default;
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: false,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const fooAda1 = { type: "foo",
                       id: "12",
                       isSupported: false,
@@ -479,35 +530,34 @@ describe("Manifest - Period", () => {
     const video = [videoAda1, videoAda2];
     const foo = [fooAda1];
     const args = { id: "12", adaptations: { video, foo }, start: 0 };
-    const period = new Period(args);
+    const unsupportedAdaptations: Adaptation[] = [];
+    new Period(args, unsupportedAdaptations);
 
-    expect(period.contentWarnings).toHaveLength(2);
-    const error = period.contentWarnings[0];
-    expect(error.code).toEqual("MANIFEST_INCOMPATIBLE_CODECS_ERROR");
-    expect(error.type).toEqual("MEDIA_ERROR");
-
-    const error2 = period.contentWarnings[1];
-    expect(error2.code).toEqual("MANIFEST_INCOMPATIBLE_CODECS_ERROR");
-    expect(error2.type).toEqual("MEDIA_ERROR");
+    expect(unsupportedAdaptations).toHaveLength(2);
+    const [adap1, adap2] = unsupportedAdaptations;
+    expect((adap1 as { id: string }).id).toBe("54");
+    expect((adap2 as { id: string }).id).toBe("12");
   });
 
-  it("should not add contentWarnings if an Adaptation has no Representation", () => {
+  it("should not report if an Adaptation has no Representation", () => {
     const mockAdaptation = jest.fn(arg => ({ ...arg }));
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
     const Period = jest.requireActual("../period").default;
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: false,
-                        representations: [] };
+                        representations: [],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const fooAda1 = { type: "foo",
                       id: "12",
                       isSupported: false,
@@ -515,114 +565,130 @@ describe("Manifest - Period", () => {
     const video = [videoAda1, videoAda2];
     const foo = [fooAda1];
     const args = { id: "12", adaptations: { video, foo }, start: 0 };
-    const period = new Period(args);
-
-    expect(period.contentWarnings).toHaveLength(0);
+    const unsupportedAdaptations: Adaptation[] = [];
+    new Period(args, unsupportedAdaptations);
+    expect(unsupportedAdaptations).toHaveLength(0);
   });
 
   it("should set the given start", () => {
-    const mockAdaptation = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const mockAdaptation = jest.fn(arg => ({ ...arg }));
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
     const Period = jest.requireActual("../period").default;
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 72 };
-    const period = new Period(args);
+    const unsupportedAdaptations: Adaptation[] = [];
+    const period = new Period(args, unsupportedAdaptations);
+    expect(unsupportedAdaptations).toHaveLength(0);
     expect(period.start).toEqual(72);
     expect(period.duration).toEqual(undefined);
     expect(period.end).toEqual(undefined);
   });
 
   it("should set a given duration", () => {
-    const mockAdaptation = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const mockAdaptation = jest.fn(arg => ({ ...arg }));
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
     const Period = jest.requireActual("../period").default;
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 0, duration: 12 };
-    const period = new Period(args);
+    const unsupportedAdaptations: Adaptation[] = [];
+    const period = new Period(args, unsupportedAdaptations);
+    expect(unsupportedAdaptations).toHaveLength(0);
     expect(period.start).toEqual(0);
     expect(period.duration).toEqual(12);
     expect(period.end).toEqual(12);
   });
 
   it("should infer the end from the start and the duration", () => {
-    const mockAdaptation = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const mockAdaptation = jest.fn(arg => ({ ...arg }));
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
     const Period = jest.requireActual("../period").default;
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const video = [videoAda1, videoAda2];
     const args = { id: "12", adaptations: { video }, start: 50, duration: 12 };
-    const period = new Period(args);
+    const unsupportedAdaptations: Adaptation[] = [];
+    const period = new Period(args, unsupportedAdaptations);
+    expect(unsupportedAdaptations).toHaveLength(0);
     expect(period.start).toEqual(50);
     expect(period.duration).toEqual(12);
     expect(period.end).toEqual(62);
   });
 
   it("should return every Adaptations combined with `getAdaptations`", () => {
-    const mockAdaptation = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const mockAdaptation = jest.fn(arg => ({ ...arg }));
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
     const Period = jest.requireActual("../period").default;
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const video = [videoAda1, videoAda2];
 
     const audioAda1 = { type: "audio",
                         id: "56",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toAudioTrack() { return audioAda1; } };
     const audio = [audioAda1];
 
     const args = { id: "12", adaptations: { video, audio }, start: 50, duration: 12 };
-    const period = new Period(args);
-
+    const unsupportedAdaptations: Adaptation[] = [];
+    const period = new Period(args, unsupportedAdaptations);
+    expect(unsupportedAdaptations).toHaveLength(0);
     expect(period.getAdaptations()).toHaveLength(3);
     expect(period.getAdaptations()).toContain(period.adaptations.video[0]);
     expect(period.getAdaptations()).toContain(period.adaptations.video[1]);
@@ -632,32 +698,37 @@ describe("Manifest - Period", () => {
   /* eslint-disable max-len */
   it("should return every Adaptations from a given type with `getAdaptationsForType`", () => {
   /* eslint-enable max-len */
-    const mockAdaptation = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const mockAdaptation = jest.fn(arg => ({ ...arg }));
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
     const Period = jest.requireActual("../period").default;
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const video = [videoAda1, videoAda2];
 
     const audioAda1 = { type: "audio",
                         id: "56",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toAudioTrack() { return audioAda1; } };
     const audio = [audioAda1];
 
     const args = { id: "12", adaptations: { video, audio }, start: 50, duration: 12 };
-    const period = new Period(args);
+    const unsupportedAdaptations: Adaptation[] = [];
+    const period = new Period(args, unsupportedAdaptations);
+    expect(unsupportedAdaptations).toHaveLength(0);
 
     expect(period.getAdaptationsForType("video")).toHaveLength(2);
     expect(period.getAdaptationsForType("video"))
@@ -668,44 +739,48 @@ describe("Manifest - Period", () => {
       period.adaptations.audio[0],
     ]);
 
-    expect(period.getAdaptationsForType("image")).toHaveLength(0);
     expect(period.getAdaptationsForType("text")).toHaveLength(0);
   });
 
   /* eslint-disable max-len */
   it("should return the first Adaptations with a given Id when calling `getAdaptation`", () => {
   /* eslint-enable max-len */
-    const mockAdaptation = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const mockAdaptation = jest.fn(arg => ({ ...arg }));
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
     const Period = jest.requireActual("../period").default;
     const videoAda1 = { type: "video",
                         id: "54",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda1; } };
     const videoAda2 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda2; } };
     const videoAda3 = { type: "video",
                         id: "55",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toVideoTrack() { return videoAda3; } };
     const video = [videoAda1, videoAda2, videoAda3];
 
     const audioAda1 = { type: "audio",
                         id: "56",
                         isSupported: true,
-                        representations: [{}] };
+                        representations: [{}],
+                        toAudioTrack() { return audioAda1; } };
     const audio = [audioAda1];
 
     const args = { id: "12", adaptations: { video, audio }, start: 50, duration: 12 };
+    const unsupportedAdaptations: Adaptation[] = [];
     const period = new Period(args);
-
+    expect(unsupportedAdaptations).toHaveLength(0);
     expect(period.getAdaptation("54")).toEqual(period.adaptations.video[0]);
     expect(period.getAdaptation("55")).toEqual(period.adaptations.video[1]);
     expect(period.getAdaptation("56")).toEqual(period.adaptations.audio[0]);
@@ -714,11 +789,11 @@ describe("Manifest - Period", () => {
   /* eslint-disable max-len */
   it("should return undefind if no adaptation has the given Id when calling `getAdaptation`", () => {
   /* eslint-enable max-len */
-    const mockAdaptation = jest.fn(arg => ({ ...arg, contentWarnings: [] }));
+    const mockAdaptation = jest.fn(arg => ({ ...arg }));
     jest.mock("../adaptation", () => ({
       __esModule: true as const,
       default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "image"],
+      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
   });
 });
