@@ -58,10 +58,14 @@ function linkPlayerEventsToState(
       const duration = player.getVideoDuration();
       const videoTrack = player.getVideoTrack();
       const maximumPosition = player.getMaximumPosition();
+      let bufferGap = player.getVideoBufferGap();
+      bufferGap = !isFinite(bufferGap) || isNaN(bufferGap) ?
+        0 :
+        bufferGap;
       state.updateBulk({
         currentTime: player.getPosition(),
         wallClockDiff: player.getWallClockTime() - position,
-        bufferGap: player.getVideoBufferGap(),
+        bufferGap,
         duration: Number.isNaN(duration) ? undefined : duration,
         minimumPosition: player.getMinimumPosition(),
         maximumPosition: player.getMaximumPosition(),

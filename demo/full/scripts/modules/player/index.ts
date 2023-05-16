@@ -60,6 +60,10 @@ RxPlayer.addFeatures([
   DEBUG_ELEMENT,
 ]);
 
+/* eslint-disable */
+(window as any).RxPlayer = RxPlayer;
+/* eslint-enable */
+
 declare const __INCLUDE_WASM_PARSER__: boolean;
 
 /* eslint-disable no-undef */
@@ -204,7 +208,6 @@ const PlayerModule = declareModule(
 
     // facilitate DEV mode
     /* eslint-disable */
-    (window as any).RxPlayer = RxPlayer;
     (window as any).player = (window as any).rxPlayer = player;
     /* eslint-enable */
 
@@ -295,13 +298,15 @@ const PlayerModule = declareModule(
       },
 
       setAudioBitrate(bitrate: number | undefined) {
-        player.setAudioBitrate(bitrate || -1);
-        state.update("audioBitrateAuto", bitrate === undefined);
+        const bitrateSet = bitrate ?? 1;
+        player.setAudioBitrate(bitrateSet);
+        state.update("audioBitrateAuto", bitrateSet === -1);
       },
 
       setVideoBitrate(bitrate: number | undefined) {
-        player.setVideoBitrate(bitrate || -1);
-        state.update("videoBitrateAuto", bitrate === undefined);
+        const bitrateSet = bitrate ?? 1;
+        player.setVideoBitrate(bitrateSet);
+        state.update("videoBitrateAuto", bitrateSet === -1);
       },
 
       setAudioTrack(track: IAudioTrack) {

@@ -507,7 +507,9 @@ function ContentList({
   const isLocalContent = !!(chosenContent &&
                             chosenContent.isLocalContent);
 
-  const onTransportChange = React.useCallback((newTransport: string) => {
+  const onTransportChange = React.useCallback((
+    { value } : { value : string; index: number; }
+  ) => {
     setContentChoiceIndex(0);
     setContentNameField("");
     setChosenDRMType(DRM_TYPES[0]);
@@ -521,9 +523,9 @@ function ContentList({
     setLicenseServerUrl("");
     setIsLowLatencyChecked(false);
     setServerCertificateUrl("");
-    setTransportType(transportType);
+    setTransportType(value);
 
-    const contents = contentsPerType[newTransport] ?? [];
+    const contents = contentsPerType[value] ?? [];
     const firstEnabledContentIndex = getIndexOfFirstEnabledContent(contents);
     changeSelectedContent(
       firstEnabledContentIndex,
@@ -737,7 +739,7 @@ function ContentList({
             className="choice-input transport-type-choice white-select"
             ariaLabel="Select a transport"
             name="transport"
-            onChange={({ value }) => onTransportChange(value)}
+            onChange={onTransportChange}
             options={TRANSPORT_TYPES}
             selected={{ index: undefined, value: transportType }}
             disabled={false}

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { ICustomMediaKeys } from "../../../compat";
+import { ICustomMediaKeys } from "../../../compat/eme";
 import hashBuffer from "../../../utils/hash_buffer";
 
 /**
