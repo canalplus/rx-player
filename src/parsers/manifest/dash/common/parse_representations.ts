@@ -192,6 +192,16 @@ export default function parseRepresentations(
         index: representationIndex,
         id: representationID };
 
+    if (
+      representation.children.supplementalProperties !== undefined &&
+      arrayFind(representation.children.supplementalProperties, r =>
+        r.schemeIdUri === "tag:dolby.com,2018:dash:EC3_ExtensionType:2018" &&
+        r.value === "JOC"
+      )
+    ) {
+      parsedRepresentation.isSpatialAudio = true;
+    }
+
     // Add optional attributes
     let codecs : string|undefined;
     if (representation.attributes.codecs != null) {

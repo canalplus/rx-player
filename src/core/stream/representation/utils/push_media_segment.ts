@@ -41,7 +41,7 @@ import appendSegmentToBuffer from "./append_segment_to_buffer";
 export default async function pushMediaSegment<T>(
   { playbackObserver,
     content,
-    initSegmentData,
+    initSegmentUniqueId,
     parsedSegment,
     segment,
     segmentBuffer } :
@@ -52,12 +52,12 @@ export default async function pushMediaSegment<T>(
                manifest : Manifest;
                period : Period;
                representation : Representation; };
-    initSegmentData : T | null;
+    initSegmentUniqueId : string | null;
     parsedSegment : ISegmentParserParsedMediaChunk<T>;
     segment : ISegment;
     segmentBuffer : SegmentBuffer; },
   cancelSignal : CancellationSignal
-) : Promise< IStreamEventAddedSegmentPayload<T> | null > {
+) : Promise< IStreamEventAddedSegmentPayload | null > {
   if (parsedSegment.chunkData === null) {
     return null;
   }
@@ -83,7 +83,7 @@ export default async function pushMediaSegment<T>(
       undefined,
   ];
 
-  const data = { initSegment: initSegmentData,
+  const data = { initSegmentUniqueId,
                  chunk: chunkData,
                  timestampOffset: chunkOffset,
                  appendWindow: safeAppendWindow,
@@ -109,5 +109,5 @@ export default async function pushMediaSegment<T>(
                               { data, inventoryInfos },
                               cancelSignal);
   const buffered = segmentBuffer.getBufferedRanges();
-  return { content, segment, buffered, segmentData: chunkData };
+  return { content, segment, buffered };
 }

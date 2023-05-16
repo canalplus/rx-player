@@ -55,6 +55,7 @@ describe("core - decrypt - global tests - server certificate", () => {
     mockSetMediaKeys.mockImplementation(() => {
       expect(mockCreateSession).not.toHaveBeenCalled();
       expect(mockSetServerCertificate).not.toHaveBeenCalled();
+      return Promise.resolve();
     });
     const mockCreateSession = jest.spyOn(MediaKeysImpl.prototype, "createSession");
     const mockSetServerCertificate =
@@ -65,7 +66,7 @@ describe("core - decrypt - global tests - server certificate", () => {
           return Promise.resolve(true);
         });
 
-    const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+    const { ContentDecryptorState } = jest.requireActual("../../types");
     const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
@@ -78,15 +79,15 @@ describe("core - decrypt - global tests - server certificate", () => {
           expect(mockSetServerCertificate).not.toHaveBeenCalled();
           contentDecryptor.attach();
         }, 5);
+        setTimeout(() => {
+          contentDecryptor.dispose();
+          expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
+          expect(mockSetServerCertificate).toHaveBeenCalledTimes(1);
+          expect(mockCreateSession).not.toHaveBeenCalled();
+          done();
+        }, 10);
       }
     });
-    setTimeout(() => {
-      contentDecryptor.dispose();
-      expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
-      expect(mockSetServerCertificate).toHaveBeenCalledTimes(1);
-      expect(mockCreateSession).not.toHaveBeenCalled();
-      done();
-    }, 10);
   });
 
   it("should not call serverCertificate multiple times on init data", (done) => {
@@ -94,6 +95,7 @@ describe("core - decrypt - global tests - server certificate", () => {
     mockSetMediaKeys.mockImplementation(() => {
       expect(mockCreateSession).not.toHaveBeenCalled();
       expect(mockSetServerCertificate).not.toHaveBeenCalled();
+      return Promise.resolve();
     });
     const mockCreateSession = jest.spyOn(MediaKeysImpl.prototype, "createSession");
     const mockSetServerCertificate =
@@ -104,7 +106,7 @@ describe("core - decrypt - global tests - server certificate", () => {
           return Promise.resolve(true);
         });
 
-    const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+    const { ContentDecryptorState } = jest.requireActual("../../types");
     const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
@@ -145,7 +147,7 @@ describe("core - decrypt - global tests - server certificate", () => {
           throw new Error("some error");
         });
 
-    const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+    const { ContentDecryptorState } = jest.requireActual("../../types");
     const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
@@ -184,7 +186,7 @@ describe("core - decrypt - global tests - server certificate", () => {
           return Promise.reject(new Error("some error"));
         });
 
-    const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+    const { ContentDecryptorState } = jest.requireActual("../../types");
     const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
@@ -225,11 +227,12 @@ describe("core - decrypt - global tests - server certificate", () => {
     mockSetMediaKeys.mockImplementation(() => {
       expect(mockCreateSession).not.toHaveBeenCalled();
       expect(mockSetServerCertificate).not.toHaveBeenCalled();
+      return Promise.resolve();
     });
     const mockCreateSession = jest.spyOn(MediaKeysImpl.prototype, "createSession");
     const mockSetServerCertificate = jest.spyOn(MediaKeysImpl.prototype,
                                                 "setServerCertificate");
-    const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+    const { ContentDecryptorState } = jest.requireActual("../../types");
     const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
