@@ -1,3 +1,3 @@
 
-import RxPlayer from "./_esm5.processed/index";
+import RxPlayer from "./_esm5.processed/core/api/index";
 export default RxPlayer;

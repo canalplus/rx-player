@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { setMediaKeys } from "../../compat";
 import log from "../../log";
+import sleep from "../../utils/sleep";
 import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 
 /**
@@ -25,15 +25,30 @@ import MediaKeysInfosStore from "./utils/media_keys_infos_store";
  */
 export default async function disposeDecryptionResources(
   mediaElement : HTMLMediaElement
-) : Promise<void> {
+) : Promise<unknown> {
   const currentState = MediaKeysInfosStore.getState(mediaElement);
   if (currentState === null) {
-    return ;
+    return undefined;
   }
 
   log.info("DRM: Disposing of the current MediaKeys");
   const { loadedSessionsStore } = currentState;
   MediaKeysInfosStore.clearState(mediaElement);
   await loadedSessionsStore.closeAllSessions();
-  setMediaKeys(mediaElement, null);
+
+  return Promise.race(
+    [
+      currentState.emeImplementation.setMediaKeys(mediaElement, null)
+        .catch(err => {
+          log.error(
+            "DRM: Could not reset MediaKeys",
+            err instanceof Error ? err : "Unknown Error"
+          );
+        }),
+
+      // Because we know how much EME has implementation issues, let's not block
+      // everything because that API hangs
+      sleep(1000),
+    ]
+  );
 }

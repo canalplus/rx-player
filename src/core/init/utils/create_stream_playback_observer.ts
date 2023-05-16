@@ -15,10 +15,12 @@
  */
 
 import Manifest from "../../../manifest";
-import createSharedReference, {
+import SharedReference, {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
-import { CancellationSignal } from "../../../utils/task_canceller";
+import TaskCanceller, {
+  CancellationSignal,
+} from "../../../utils/task_canceller";
 import {
   IPlaybackObservation,
   IReadOnlyPlaybackObserver,
@@ -30,6 +32,8 @@ import { IStreamOrchestratorPlaybackObservation } from "../../stream";
 export interface IStreamPlaybackObserverArguments {
   /** If true, the player will auto-play when `initialPlayPerformed` becomes `true`. */
   autoPlay : boolean;
+  /** Manifest of the content being played */
+  manifest : Manifest;
   /** Becomes `true` after the initial play has been taken care of. */
   initialPlayPerformed : IReadOnlySharedReference<boolean>;
   /** Becomes `true` after the initial seek has been taken care of. */
@@ -42,34 +46,40 @@ export interface IStreamPlaybackObserverArguments {
 
 /**
  * Create PlaybackObserver for the `Stream` part of the code.
- * @param {Object} manifest
- * @param {Object} playbackObserver
- * @param {Object} args
+ * @param {Object} srcPlaybackObserver - Base `PlaybackObserver` from which we
+ * will derive information.
+ * @param {Object} context - Various information linked to the current content
+ * being played.
+ * @param {Object} fnCancelSignal - Abort the created PlaybackObserver.
  * @returns {Object}
  */
 export default function createStreamPlaybackObserver(
-  manifest : Manifest,
-  playbackObserver : PlaybackObserver,
+  srcPlaybackObserver : PlaybackObserver,
   { autoPlay,
     initialPlayPerformed,
     initialSeekPerformed,
+    manifest,
     speed,
-    startTime } : IStreamPlaybackObserverArguments
+    startTime } : IStreamPlaybackObserverArguments,
+  fnCancelSignal : CancellationSignal
 ) : IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation> {
-  return playbackObserver.deriveReadOnlyObserver(function transform(
+  return srcPlaybackObserver.deriveReadOnlyObserver(function transform(
     observationRef : IReadOnlySharedReference<IPlaybackObservation>,
-    cancellationSignal : CancellationSignal
+    parentObserverCancelSignal : CancellationSignal
   ) : IReadOnlySharedReference<IStreamOrchestratorPlaybackObservation> {
-    const newRef = createSharedReference(constructStreamPlaybackObservation(),
-                                         cancellationSignal);
+    const canceller = new TaskCanceller();
+    canceller.linkToSignal(parentObserverCancelSignal);
+    canceller.linkToSignal(fnCancelSignal);
+    const newRef = new SharedReference(constructStreamPlaybackObservation(),
+                                       canceller.signal);
 
     speed.onUpdate(emitStreamPlaybackObservation, {
-      clearSignal: cancellationSignal,
+      clearSignal: canceller.signal,
       emitCurrentValue: false,
     });
 
     observationRef.onUpdate(emitStreamPlaybackObservation, {
-      clearSignal: cancellationSignal,
+      clearSignal: canceller.signal,
       emitCurrentValue: false,
     });
     return newRef;

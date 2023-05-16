@@ -117,7 +117,8 @@ export default function generateManifestParser(
      * If it is not defined, throws.
      * @returns {Object|Promise.<Object>}
      */
-    function runDefaultJsParser() {
+    function runDefaultJsParser(
+    ) : IManifestParserResult | Promise<IManifestParserResult> {
       if (parsers.js === null) {
         throw new Error("No MPD parser is imported");
       }
@@ -219,7 +220,7 @@ export default function generateManifestParser(
 function assertLoadedResourcesFormatString(
   loadedResources : Array<ILoadedResource<string | ArrayBuffer>>
 ) : asserts loadedResources is Array<ILoadedResource<string>> {
-  if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.PRODUCTION as number) {
+  if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.PRODUCTION as number) {
     return;
   }
   loadedResources.forEach((loadedResource) => {
@@ -244,7 +245,7 @@ function assertLoadedResourcesFormatString(
 function assertLoadedResourcesFormatArrayBuffer(
   loadedResources : Array<ILoadedResource<string | ArrayBuffer>>
 ) : asserts loadedResources is Array<ILoadedResource<ArrayBuffer>> {
-  if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.PRODUCTION as number) {
+  if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.PRODUCTION as number) {
     return;
   }
 

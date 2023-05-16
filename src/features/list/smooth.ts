@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// eslint-disable-next-line max-len
+import MediaSourceContentInitializer from "../../core/init/media_source_content_initializer";
 import smooth from "../../transports/smooth";
 import { IFeaturesObject } from "../types";
 
@@ -23,6 +25,7 @@ import { IFeaturesObject } from "../types";
  */
 function addSmoothFeature(features : IFeaturesObject) : void {
   features.transports.smooth = smooth;
+  features.mediaSourceInit = MediaSourceContentInitializer;
 }
 
 export { addSmoothFeature as SMOOTH };

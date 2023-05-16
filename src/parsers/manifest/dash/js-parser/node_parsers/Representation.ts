@@ -93,6 +93,13 @@ function parseRepresentationChildren(
             contentProtections.push(contentProtection);
           }
           break;
+        case "SupplementalProperty":
+          if (children.supplementalProperties == null) {
+            children.supplementalProperties = [parseScheme(currentElement)];
+          } else {
+            children.supplementalProperties.push(parseScheme(currentElement));
+          }
+          break;
       }
     }
   }

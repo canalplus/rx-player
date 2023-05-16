@@ -467,6 +467,7 @@ export default function parseAdaptationSets(
                                 mergedInto[1].isMainAdaptation,
               indexInMpd: Math.min(adaptationIdx, mergedInto[1].indexInMpd),
             };
+            break;
           }
         }
       }
