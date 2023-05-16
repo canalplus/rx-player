@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { IFeaturesObject } from "../types";
+
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
@@ -86,8 +88,9 @@ describe("Features - initializeFeaturesObject", () => {
       NATIVE_VTT: 1,
       SMOOTH: 1,
     };
-    const feat = {
+    const feat : IFeaturesObject = {
       transports: {},
+      mediaSourceInit: null,
       dashParsers: { js: null, wasm: null },
       imageBuffer: null,
       imageParser: null,
@@ -95,8 +98,9 @@ describe("Features - initializeFeaturesObject", () => {
       nativeTextTracksParsers: {},
       htmlTextTracksBuffer: null,
       htmlTextTracksParsers: {},
-      ContentDecryptor: null,
+      decrypt: null,
       directfile: null,
+      createDebugElement: null,
     };
     jest.mock("../features_object", () => ({
       __esModule: true as const,
@@ -115,7 +119,9 @@ describe("Features - initializeFeaturesObject", () => {
         js: jest.requireActual("../../parsers/manifest/dash/js-parser").default,
         wasm: null,
       },
-      ContentDecryptor: jest.requireActual("../../core/decrypt/index").default,
+      decrypt: jest.requireActual("../../core/decrypt/index").default,
+      mediaSourceInit: jest.requireActual("../../core/init/media_source_content_initializer")
+        .default,
       createDebugElement: jest.requireActual("../../core/api/debug").default,
       directfile: {
         initDirectFile: jest.requireActual("../../core/init/directfile_content_initializer").default,
@@ -143,6 +149,179 @@ describe("Features - initializeFeaturesObject", () => {
         ttml: jest.requireActual("../../parsers/texttracks/ttml/html/index").default,
         sami: jest.requireActual("../../parsers/texttracks/sami/html").default,
         srt: jest.requireActual("../../parsers/texttracks/srt/html").default,
+      },
+    });
+
+    delete win.__FEATURES__;
+  });
+
+  it("should add MediaSource-specific features if DASH is added", () => {
+    win.__FEATURES__ = {
+      IS_DISABLED: 0,
+      IS_ENABLED: 1,
+
+      BIF_PARSER: 0,
+      DASH: 1,
+      DIRECTFILE: 0,
+      EME: 0,
+      HTML_SAMI: 0,
+      HTML_SRT: 0,
+      HTML_TTML: 0,
+      HTML_VTT: 0,
+      LOCAL_MANIFEST: 0,
+      METAPLAYLIST: 0,
+      DEBUG_ELEMENT: 0,
+      NATIVE_SAMI: 0,
+      NATIVE_SRT: 0,
+      NATIVE_TTML: 0,
+      NATIVE_VTT: 0,
+      SMOOTH: 0,
+    };
+    const feat = {
+      transports: {},
+      dashParsers: { js: null, wasm: null },
+    };
+    jest.mock("../features_object", () => ({
+      __esModule: true as const,
+      default: feat,
+    }));
+    const initializeFeaturesObject = jest.requireActual("../initialize_features").default;
+    initializeFeaturesObject();
+    expect(feat).toEqual({
+      mediaSourceInit: jest.requireActual("../../core/init/media_source_content_initializer")
+        .default,
+      transports: {
+        dash: jest.requireActual("../../transports/dash/index").default,
+      },
+      dashParsers: {
+        js: jest.requireActual("../../parsers/manifest/dash/js-parser").default,
+        wasm: null,
+      },
+    });
+
+    delete win.__FEATURES__;
+  });
+
+  it("should add MediaSource-specific features if SMOOTH is added", () => {
+    win.__FEATURES__ = {
+      IS_DISABLED: 0,
+      IS_ENABLED: 1,
+
+      BIF_PARSER: 0,
+      DASH: 0,
+      DIRECTFILE: 0,
+      EME: 0,
+      HTML_SAMI: 0,
+      HTML_SRT: 0,
+      HTML_TTML: 0,
+      HTML_VTT: 0,
+      LOCAL_MANIFEST: 0,
+      METAPLAYLIST: 0,
+      DEBUG_ELEMENT: 0,
+      NATIVE_SAMI: 0,
+      NATIVE_SRT: 0,
+      NATIVE_TTML: 0,
+      NATIVE_VTT: 0,
+      SMOOTH: 1,
+    };
+    const feat = {
+      transports: {},
+    };
+    jest.mock("../features_object", () => ({
+      __esModule: true as const,
+      default: feat,
+    }));
+    const initializeFeaturesObject = jest.requireActual("../initialize_features").default;
+    initializeFeaturesObject();
+    expect(feat).toEqual({
+      mediaSourceInit: jest.requireActual("../../core/init/media_source_content_initializer")
+        .default,
+      transports: {
+        smooth: jest.requireActual("../../transports/smooth/index").default,
+      },
+    });
+
+    delete win.__FEATURES__;
+  });
+
+  it("should add MediaSource-specific features if LOCAL_MANIFEST is added", () => {
+    win.__FEATURES__ = {
+      IS_DISABLED: 0,
+      IS_ENABLED: 1,
+
+      BIF_PARSER: 0,
+      DASH: 0,
+      DIRECTFILE: 0,
+      EME: 0,
+      HTML_SAMI: 0,
+      HTML_SRT: 0,
+      HTML_TTML: 0,
+      HTML_VTT: 0,
+      LOCAL_MANIFEST: 1,
+      METAPLAYLIST: 0,
+      DEBUG_ELEMENT: 0,
+      NATIVE_SAMI: 0,
+      NATIVE_SRT: 0,
+      NATIVE_TTML: 0,
+      NATIVE_VTT: 0,
+      SMOOTH: 0,
+    };
+    const feat = {
+      transports: {},
+    };
+    jest.mock("../features_object", () => ({
+      __esModule: true as const,
+      default: feat,
+    }));
+    const initializeFeaturesObject = jest.requireActual("../initialize_features").default;
+    initializeFeaturesObject();
+    expect(feat).toEqual({
+      mediaSourceInit: jest.requireActual("../../core/init/media_source_content_initializer")
+        .default,
+      transports: {
+        local: jest.requireActual("../../transports/local/index").default,
+      },
+    });
+
+    delete win.__FEATURES__;
+  });
+
+  it("should add MediaSource-specific features if METAPLAYLIST is added", () => {
+    win.__FEATURES__ = {
+      IS_DISABLED: 0,
+      IS_ENABLED: 1,
+
+      BIF_PARSER: 0,
+      DASH: 0,
+      DIRECTFILE: 0,
+      EME: 0,
+      HTML_SAMI: 0,
+      HTML_SRT: 0,
+      HTML_TTML: 0,
+      HTML_VTT: 0,
+      LOCAL_MANIFEST: 0,
+      METAPLAYLIST: 1,
+      DEBUG_ELEMENT: 0,
+      NATIVE_SAMI: 0,
+      NATIVE_SRT: 0,
+      NATIVE_TTML: 0,
+      NATIVE_VTT: 0,
+      SMOOTH: 0,
+    };
+    const feat = {
+      transports: {},
+    };
+    jest.mock("../features_object", () => ({
+      __esModule: true as const,
+      default: feat,
+    }));
+    const initializeFeaturesObject = jest.requireActual("../initialize_features").default;
+    initializeFeaturesObject();
+    expect(feat).toEqual({
+      mediaSourceInit: jest.requireActual("../../core/init/media_source_content_initializer")
+        .default,
+      transports: {
+        metaplaylist: jest.requireActual("../../transports/metaplaylist/index").default,
       },
     });
 

@@ -232,6 +232,7 @@ export interface IAdaptationSetAttributes {
   segmentAlignment? : number|boolean;
   segmentProfiles? : string;
   subsegmentAlignment? : number|boolean;
+  supplementalCodecs?: string;
   width? : number;
   availabilityTimeComplete?: boolean;
   availabilityTimeOffset?: number;
@@ -253,6 +254,7 @@ export interface IRepresentationChildren {
   segmentBase? : ISegmentBaseIntermediateRepresentation;
   segmentList? : ISegmentListIntermediateRepresentation;
   segmentTemplate? : ISegmentTemplateIntermediateRepresentation;
+  supplementalProperties? : IScheme[] | undefined;
 }
 
 /* Intermediate representation for A Representation node's attributes. */
@@ -270,6 +272,7 @@ export interface IRepresentationAttributes {
   profiles? : string;
   qualityRanking? : number;
   segmentProfiles? : string;
+  supplementalCodecs?: string;
   width? : number;
   availabilityTimeComplete?: boolean;
   availabilityTimeOffset?: number;

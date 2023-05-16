@@ -138,6 +138,7 @@ function parseRepresentation(
            height: representation.height,
            width: representation.width,
            codecs: representation.codecs,
+           isSpatialAudio: representation.isSpatialAudio,
            mimeType: representation.mimeType,
            index: new LocalRepresentationIndex(representation.index, id),
            contentProtections };

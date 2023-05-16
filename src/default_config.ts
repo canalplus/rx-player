@@ -201,6 +201,23 @@ const DEFAULT_CONFIG = {
   } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
     /* eslint-enable @typescript-eslint/consistent-type-assertions */
 
+  /* eslint-disable @typescript-eslint/consistent-type-assertions */
+  /**
+   * Minimum possible buffer ahead for each type of buffer, to avoid Garbage
+   * Collecting too much data when it would have adverse effects.
+   * Equal to `0` if not defined here.
+   * @type {Object}
+   */
+  MINIMUM_MAX_BUFFER_AHEAD: {
+    // Text segments are both much lighter on resources and might
+    // actually be much larger than other types of segments in terms
+    // of duration. Let's make an exception here by authorizing a
+    // larger text buffer ahead, to avoid unnecesarily reloading the
+    // same text track.
+    text: 2 * 60,
+  } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
+  /* eslint-enable @typescript-eslint/consistent-type-assertions */
+
     /* eslint-disable @typescript-eslint/consistent-type-assertions */
     /**
      * Maximum possible buffer behind for each type of buffer, to avoid too much
@@ -487,6 +504,33 @@ const DEFAULT_CONFIG = {
      */
   SAMPLING_INTERVAL_NO_MEDIASOURCE: 500,
 
+  /**
+   * Amount of buffer to have ahead of the current position before we may
+   * consider buffer-based adaptive estimates, in seconds.
+   *
+   * For example setting it to `10` means that we need to have ten seconds of
+   * buffer ahead of the current position before relying on buffer-based
+   * adaptive estimates.
+   *
+   * To avoid getting in-and-out of the buffer-based logic all the time, it
+   * should be set higher than `ABR_EXIT_BUFFER_BASED_ALGO`.
+   */
+  ABR_ENTER_BUFFER_BASED_ALGO: 10,
+
+  /**
+   * Below this amount of buffer ahead of the current position, in seconds, we
+   * will stop using buffer-based estimate in our adaptive logic to select a
+   * quality.
+   *
+   * For example setting it to `5` means that if we have less than 5 seconds of
+   * buffer ahead of the current position, we should stop relying on
+   * buffer-based estimates to choose a quality.
+   *
+   * To avoid getting in-and-out of the buffer-based logic all the time, it
+   * should be set lower than `ABR_ENTER_BUFFER_BASED_ALGO`.
+   */
+  ABR_EXIT_BUFFER_BASED_ALGO: 5,
+
     /**
      * Minimum number of bytes sampled before we trust the estimate.
      * If we have not sampled much data, our estimate may not be accurate
@@ -525,8 +569,8 @@ const DEFAULT_CONFIG = {
      * @type {Object}
      */
   ABR_REGULAR_FACTOR: {
-    DEFAULT: 0.8,
-    LOW_LATENCY: 0.8,
+    DEFAULT: 0.72,
+    LOW_LATENCY: 0.72,
   },
 
     /**

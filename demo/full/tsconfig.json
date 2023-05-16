@@ -12,7 +12,7 @@
     "strictPropertyInitialization": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true,
-    "types": ["node"],
+    "types": [],
     "moduleResolution": "node",
     "jsx": "react",
     "typeRoots": [

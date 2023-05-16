@@ -17,7 +17,6 @@
 import features from "../../features";
 import { ICdnMetadata } from "../../parsers/manifest";
 import request from "../../utils/request";
-import takeFirstSet from "../../utils/take_first_set";
 import { CancellationSignal } from "../../utils/task_canceller";
 import {
   IImageTrackSegmentData,
@@ -92,7 +91,7 @@ export function imageParser(
     throw new Error("Image data should not be downloaded in chunks");
   }
 
-  const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
+  const chunkOffset = segment.timestampOffset ?? 0;
 
   // TODO image Parsing should be more on the buffer side, no?
   if (data === null || features.imageParser === null) {
