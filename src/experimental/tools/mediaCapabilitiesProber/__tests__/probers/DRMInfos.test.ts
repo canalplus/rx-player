@@ -26,7 +26,7 @@ import { ProberStatus } from "../../types";
 
 
 describe("MediaCapabilitiesProber probers - DRMInfos", () => {
-  beforeEach(() => {
+  afterEach(() => {
     jest.resetModules();
   });
 
@@ -60,8 +60,9 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
         type: "clearkick",
       },
     };
-    jest.mock("../../../../../compat", () => ({
-      requestMediaKeySystemAccess: null,
+    jest.mock("../../../../../compat/eme", () => ({
+      _esModule: true,
+      default: {},
     }));
     const probeDRMInfos = jest.requireActual("../../probers/DRMInfos").default;
     /* eslint-disable @typescript-eslint/no-floating-promises */
@@ -82,11 +83,11 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
         getConfiguration: () => ({}),
       });
     });
-    jest.mock("../../../../../compat", () => ({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
+    jest.mock("../../../../../compat/eme", () => ({
+      _esModule: true,
+      default: { requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess },
     }));
     const probeDRMInfos = jest.requireActual("../../probers/DRMInfos").default;
-    expect.assertions(2);
     probeDRMInfos(configuration)
       .then((res: unknown) => {
         expect(res).toEqual(
@@ -114,12 +115,12 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
         return Promise.reject(new Error());
       }
     );
-    jest.mock("../../../../../compat", () => ({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
+    jest.mock("../../../../../compat/eme", () => ({
+      _esModule: true,
+      default: { requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess },
     }));
 
     const probeDRMInfos = jest.requireActual("../../probers/DRMInfos").default;
-    expect.assertions(2);
     probeDRMInfos(configuration)
       .then((res: unknown) => {
         expect(res).toEqual(

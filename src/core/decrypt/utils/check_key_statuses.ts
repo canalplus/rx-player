@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { ICustomMediaKeySession } from "../../../compat";
+import { ICustomMediaKeySession } from "../../../compat/eme";
 /* eslint-disable-next-line max-len */
 import getUUIDKidFromKeyStatusKID from "../../../compat/eme/get_uuid_kid_from_keystatus_kid";
 import { EncryptedMediaError } from "../../../errors";

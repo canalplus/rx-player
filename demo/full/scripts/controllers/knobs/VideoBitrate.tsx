@@ -41,6 +41,8 @@ function VideoBitrateKnob({
       if (index > 0) {
         const bitrate = availableVideoBitrates[index - 1];
         player.actions.setVideoBitrate(bitrate);
+      } else if (index === 0) {
+        player.actions.setVideoBitrate(-1);
       } else {
         /* eslint-disable-next-line no-console */
         console.error("Error: video bitrate not found");

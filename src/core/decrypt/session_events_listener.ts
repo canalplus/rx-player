@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-import {
-  events,
-  ICustomMediaKeySession,
-} from "../../compat";
+import { events } from "../../compat";
+import { ICustomMediaKeySession } from "../../compat/eme";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import {
@@ -111,7 +109,12 @@ export default function SessionEventsListener(
         if (isNullOrUndefined(licenseObject)) {
           log.info("DRM: No license given, skipping session.update");
         } else {
-          return updateSessionWithMessage(session, licenseObject);
+          try {
+            return updateSessionWithMessage(session, licenseObject);
+          } catch (err) {
+            manualCanceller.cancel();
+            callbacks.onError(err);
+          }
         }
       })
       .catch((err : unknown) => {
