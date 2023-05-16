@@ -22,7 +22,7 @@ import Manifest, {
 } from "../../manifest";
 import { IPlayerError } from "../../public_types";
 import EventEmitter from "../../utils/event_emitter";
-import { ISharedReference } from "../../utils/reference";
+import SharedReference from "../../utils/reference";
 import { PlaybackObserver } from "../api";
 import SegmentBuffersStore, {
   IBufferType,
@@ -117,7 +117,15 @@ export interface IContentInitializerEvents {
    * Event sent when we're starting attach a new MediaSource to the media element
    * (after removing the previous one).
    */
-  reloadingMediaSource: null;
+  reloadingMediaSource: {
+    /** The position we're reloading at, in seconds. */
+    position: number;
+    /**
+     * If `true`, we'll play directly after finishing the reloading operation.
+     * If `false`, we'll be paused after it.
+     */
+    autoPlay: boolean;
+  };
   /** Event sent after the player stalled. */
   stalled : IStallingSituation;
   /** Event sent when the player goes out of a stalling situation. */
@@ -167,7 +175,7 @@ export interface IContentInitializerEvents {
      * It is set to `undefined` by default, you SHOULD NOT set it to `undefined`
      * yourself.
      */
-    adaptationRef : ISharedReference<Adaptation|null|undefined>;
+    adaptationRef : SharedReference<Adaptation|null|undefined>;
   };
   /**
    * A `PeriodStream` has been removed.
