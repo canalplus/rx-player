@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import wrapInPromise from "../../../utils/wrapInPromise";
 import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
 import isNode from "../../is_node";
 import { ICustomMediaKeys } from "./types";
@@ -47,7 +48,7 @@ export default function getMozMediaKeysCallbacks() : {
   setMediaKeys: (
     elt: HTMLMediaElement,
     mediaKeys: MediaKeys|ICustomMediaKeys|null
-  ) => void;
+  ) => Promise<unknown>;
 } {
   const isTypeSupported = (keySystem: string, type?: string|null) => {
     if (MozMediaKeysConstructor === undefined) {
@@ -67,12 +68,17 @@ export default function getMozMediaKeysCallbacks() : {
   const setMediaKeys = (
     mediaElement: HTMLMediaElement,
     mediaKeys: MediaKeys|ICustomMediaKeys|null
-  ): void => {
-    const elt : ICompatHTMLMediaElement = mediaElement;
-    if (elt.mozSetMediaKeys === undefined || typeof elt.mozSetMediaKeys !== "function") {
-      throw new Error("Can't set video on MozMediaKeys.");
-    }
-    return elt.mozSetMediaKeys(mediaKeys);
+  ): Promise<unknown> => {
+    return wrapInPromise(() => {
+      const elt : ICompatHTMLMediaElement = mediaElement;
+      if (
+        elt.mozSetMediaKeys === undefined ||
+        typeof elt.mozSetMediaKeys !== "function"
+      ) {
+        throw new Error("Can't set video on MozMediaKeys.");
+      }
+      return elt.mozSetMediaKeys(mediaKeys);
+    });
   };
   return {
     isTypeSupported,
