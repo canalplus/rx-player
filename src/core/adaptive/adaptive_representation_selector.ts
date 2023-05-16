@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../../config";
 import log from "../../log";
 import Manifest, {
   Adaptation,
@@ -316,8 +317,7 @@ function getEstimateReference(
       const timeRanges = val.buffered;
       const bufferGap = getLeftSizeOfRange(timeRanges, position.last);
       const { representation } = val.content;
-      const scoreData = scoreCalculator.getEstimate(representation);
-      const currentScore = scoreData?.[0];
+      const currentScore = scoreCalculator.getEstimate(representation);
       const currentBitrate = representation.bitrate;
       const observation = { bufferGap, currentBitrate, currentScore, speed };
       currentBufferBasedEstimate = bufferBasedChooser.getEstimate(observation);
@@ -362,11 +362,14 @@ function getEstimateReference(
                                           lastPlaybackObservation.speed :
                                           1);
 
-      if (allowBufferBasedEstimates && bufferGap <= 5) {
+      const { ABR_ENTER_BUFFER_BASED_ALGO,
+              ABR_EXIT_BUFFER_BASED_ALGO } = config.getCurrent();
+
+      if (allowBufferBasedEstimates && bufferGap <= ABR_EXIT_BUFFER_BASED_ALGO) {
         allowBufferBasedEstimates = false;
       } else if (!allowBufferBasedEstimates &&
                  isFinite(bufferGap) &&
-                  bufferGap > 10)
+                  bufferGap >= ABR_ENTER_BUFFER_BASED_ALGO)
       {
         allowBufferBasedEstimates = true;
       }
