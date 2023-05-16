@@ -5,7 +5,7 @@ import {
   manifestURL3,
   manifestURL4,
 } from "../../contents/static_manifests_for_metaplaylist";
-import createMetaplaylist from "../../../src/experimental/tools/createMetaplaylist";
+import createMetaplaylist from "../../../dist/es2017/experimental/tools/createMetaplaylist";
 
 describe("createMetaplaylist", () => {
   it("Should correclty create the metaplaylist without offset", async () => {

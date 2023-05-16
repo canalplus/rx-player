@@ -16,6 +16,7 @@
 
 import EventEmitter from "../../../utils/event_emitter";
 import TaskCanceller from "../../../utils/task_canceller";
+import wrapInPromise from "../../../utils/wrapInPromise";
 import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
 import * as events from "../../event_listeners";
 import {
@@ -119,11 +120,13 @@ class IE11CustomMediaKeys implements ICustomMediaKeys {
     this._mediaKeys = new MSMediaKeysConstructor(keyType);
   }
 
-  _setVideo(videoElement: HTMLMediaElement): void {
-    this._videoElement = videoElement as ICompatHTMLMediaElement;
-    if (this._videoElement.msSetMediaKeys !== undefined) {
-      return this._videoElement.msSetMediaKeys(this._mediaKeys);
-    }
+  _setVideo(videoElement: HTMLMediaElement): Promise<unknown> {
+    return wrapInPromise(() => {
+      this._videoElement = videoElement as ICompatHTMLMediaElement;
+      if (this._videoElement.msSetMediaKeys !== undefined) {
+        this._videoElement.msSetMediaKeys(this._mediaKeys);
+      }
+    });
   }
 
   createSession(/* sessionType */): ICustomMediaKeySession {
@@ -144,7 +147,7 @@ export default function getIE11MediaKeysCallbacks() : {
   setMediaKeys: (
     elt: HTMLMediaElement,
     mediaKeys: MediaKeys|ICustomMediaKeys|null
-  ) => void;
+  ) => Promise<unknown>;
 } {
   const isTypeSupported = (keySystem: string, type?: string|null) => {
     if (MSMediaKeysConstructor === undefined) {
@@ -160,12 +163,12 @@ export default function getIE11MediaKeysCallbacks() : {
   const setMediaKeys = (
     elt: HTMLMediaElement,
     mediaKeys: MediaKeys|ICustomMediaKeys|null
-  ): void => {
+  ): Promise<unknown> => {
     if (mediaKeys === null) {
       // msSetMediaKeys only accepts native MSMediaKeys as argument.
       // Calling it with null or undefined will raise an exception.
       // There is no way to unset the mediakeys in that case, so return here.
-      return;
+      return Promise.resolve(undefined);
     }
     if (!(mediaKeys instanceof IE11CustomMediaKeys)) {
       throw new Error("Custom setMediaKeys is supposed to be called " +

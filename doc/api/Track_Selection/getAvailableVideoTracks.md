@@ -23,8 +23,10 @@ Each of the objects in the returned array have the following properties:
 
     - `id` (`string`): The id used to identify this Representation.
 
-    - `bitrate` (`Number`): The bitrate of this Representation, in bits per
-      seconds.
+    - `bitrate` (`Number|undefined`): The bitrate of this Representation, in
+      bits per seconds.
+
+      `undefined` if unknown.
 
     - `width` (`Number|undefined`): The width of video, in pixels.
 
@@ -33,11 +35,28 @@ Each of the objects in the returned array have the following properties:
     - `codec` (`string|undefined`): The video codec the Representation is
       in, as announced in the corresponding Manifest.
 
-    - `frameRate` (`string|undefined`): The video framerate.
+    - `frameRate` (`number|undefined`): The video framerate.
 
     - `hdrInfo` (`Object|undefined`) Information about the hdr
       characteristics of the track.
       (see [HDR support documentation](../Miscellaneous/hdr.md#hdrinfo))
+
+    - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that
+      Representation is supported by the current platform.
+
+      Note that because elements of the `representations` array only contains
+      playable Representation, this value here cannot be set to `false` when
+      in this array.
+
+      `undefined` (or not set) if support of that Representation is unknown or
+      if does not make sense here.
+
+    - `decipherable` (`Boolean|undefined`): If `true` the Representation can be
+       deciphered (in the eventuality it had DRM-related protection).
+
+      Note that because elements of the `representations` array only contains
+      playable Representation, this value here cannot be set to `false` when
+      in this array.
 
   - `signInterpreted` (`Boolean|undefined`): If set to `true`, the track is
     known to contain an interpretation in sign language.
@@ -55,14 +74,17 @@ Each of the objects in the returned array have the following properties:
     It this property is either `undefined` or not set, then this track has no
     linked trickmode video track.
 
+You can also get the list of available video tracks for a specific Period by
+calling `getAvailableVideoTracks` with the corresponding Period's id in
+argument.
+Such id can be obtained through the `getAvailablePeriods` method, the
+`newAvailablePeriods` event or the `periodChange` event.
 
-<div class="note">
-Note for multi-Period contents:
-<br>
-This method will only return the available tracks of the
-<a href="../../Getting_Started/Glossary.md#period">Period</a> that is currently
-playing.
-</div>
+```js
+// example: getting the video track list for the first Period
+const periods = rxPlayer.getAvailablePeriods();
+console.log(rxPlayer.getAvailableVideoTracks(periods[0].id);
+```
 
 <div class="warning">
 In <i>DirectFile</i> mode (see <a
@@ -74,7 +96,18 @@ method will return an empty Array.
 ## Syntax
 
 ```js
+// Get list of available video tracks for the currently-playing Period
 const videoTracks = player.getAvailableVideoTracks();
+
+// Get list of available video tracks for a specific Period
+const videoTrack = player.getAvailableVideoTracks(periodId);
 ```
+
+ - **arguments**:
+
+   1. _periodId_ `string|undefined`: The `id` of the Period for which you want
+      to get the list of available video tracks.
+      If not defined, this method will return the list of video tracks for the
+      currently-playing Period.
 
  - **return value** `Array.<Object>`

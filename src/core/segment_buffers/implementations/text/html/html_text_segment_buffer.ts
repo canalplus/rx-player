@@ -138,6 +138,22 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
   }
 
   /**
+   * @param {string} uniqueId
+   */
+  public declareInitSegment(uniqueId : string): void {
+    log.warn("ISB: Declaring initialization segment for image SegmentBuffer",
+             uniqueId);
+  }
+
+  /**
+   * @param {string} uniqueId
+   */
+  public freeInitSegment(uniqueId : string): void {
+    log.warn("ISB: Freeing initialization segment for image SegmentBuffer",
+             uniqueId);
+  }
+
+  /**
    * Push text segment to the HTMLTextSegmentBuffer.
    * @param {Object} infos
    * @returns {Promise}
@@ -286,7 +302,7 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
     }
 
     if (infos.inventoryInfos !== null) {
-      this._segmentInventory.insertChunk(infos.inventoryInfos);
+      this._segmentInventory.insertChunk(infos.inventoryInfos, true);
     }
     this._buffer.insert(cues, start, end);
     this._buffered.insert(start, end);
@@ -433,8 +449,8 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
   }
 }
 
-/** Data of chunks that should be pushed to the NativeTextSegmentBuffer. */
-export interface INativeTextTracksBufferSegmentData {
+/** Data of chunks that should be pushed to the HTMLTextSegmentBuffer. */
+export interface IHTMLTextTracksBufferSegmentData {
   /** The text track data, in the format indicated in `type`. */
   data : string;
   /** The format of `data` (examples: "ttml", "srt" or "vtt") */
@@ -459,49 +475,49 @@ export interface INativeTextTracksBufferSegmentData {
  */
 function assertChunkIsTextTrackSegmentData(
   chunk : unknown
-) : asserts chunk is INativeTextTracksBufferSegmentData {
-  if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.PRODUCTION as number) {
+) : asserts chunk is IHTMLTextTracksBufferSegmentData {
+  if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.PRODUCTION as number) {
     return;
   }
   if (
     typeof chunk !== "object" ||
     chunk === null ||
-    typeof (chunk as INativeTextTracksBufferSegmentData).data !== "string" ||
-    typeof (chunk as INativeTextTracksBufferSegmentData).type !== "string" ||
+    typeof (chunk as IHTMLTextTracksBufferSegmentData).data !== "string" ||
+    typeof (chunk as IHTMLTextTracksBufferSegmentData).type !== "string" ||
     (
-      (chunk as INativeTextTracksBufferSegmentData).language !== undefined &&
-      typeof (chunk as INativeTextTracksBufferSegmentData).language !== "string"
+      (chunk as IHTMLTextTracksBufferSegmentData).language !== undefined &&
+      typeof (chunk as IHTMLTextTracksBufferSegmentData).language !== "string"
     ) ||
     (
-      (chunk as INativeTextTracksBufferSegmentData).start !== undefined &&
-      typeof (chunk as INativeTextTracksBufferSegmentData).start !== "number"
+      (chunk as IHTMLTextTracksBufferSegmentData).start !== undefined &&
+      typeof (chunk as IHTMLTextTracksBufferSegmentData).start !== "number"
     ) ||
     (
-      (chunk as INativeTextTracksBufferSegmentData).end !== undefined &&
-      typeof (chunk as INativeTextTracksBufferSegmentData).end !== "number"
+      (chunk as IHTMLTextTracksBufferSegmentData).end !== undefined &&
+      typeof (chunk as IHTMLTextTracksBufferSegmentData).end !== "number"
     )
   ) {
-    throw new Error("Invalid format given to a NativeTextSegmentBuffer");
+    throw new Error("Invalid format given to a HTMLTextSegmentBuffer");
   }
 }
 
 /*
  * The following ugly code is here to provide a compile-time check that an
- * `INativeTextTracksBufferSegmentData` (type of data pushed to a
- * `NativeTextSegmentBuffer`) can be derived from a `ITextTrackSegmentData`
+ * `IHTMLTextTracksBufferSegmentData` (type of data pushed to a
+ * `HTMLTextSegmentBuffer`) can be derived from a `ITextTrackSegmentData`
  * (text track data parsed from a segment).
  *
  * It doesn't correspond at all to real code that will be called. This is just
  * a hack to tell TypeScript to perform that check.
  */
-if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
+if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
   /* eslint-disable @typescript-eslint/no-unused-vars */
   /* eslint-disable @typescript-eslint/ban-ts-comment */
   // @ts-ignore
   function _checkType(
     input : ITextTrackSegmentData
   ) : void {
-    function checkEqual(_arg : INativeTextTracksBufferSegmentData) : void {
+    function checkEqual(_arg : IHTMLTextTracksBufferSegmentData) : void {
       /* nothing */
     }
     checkEqual(input);

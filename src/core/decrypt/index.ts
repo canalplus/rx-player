@@ -20,22 +20,14 @@
  */
 
 import clearOnStop from "./clear_on_stop";
-import ContentDecryptor, {
-  ContentDecryptorState,
-  IContentDecryptorEvent,
-} from "./content_decryptor";
+import ContentDecryptor from "./content_decryptor";
 import disposeDecryptionResources from "./dispose_decryption_resources";
-import getKeySystemConfiguration, {
-  getCurrentKeySystem,
-} from "./get_key_system_configuration";
+import getKeySystemConfiguration from "./get_key_system_configuration";
 export * from "./types";
 
 export default ContentDecryptor;
 export {
   clearOnStop,
-  ContentDecryptorState,
   disposeDecryptionResources,
   getKeySystemConfiguration,
-  getCurrentKeySystem,
-  IContentDecryptorEvent,
 };
