@@ -15,10 +15,11 @@
  */
 
 import {
-  ICustomMediaKeySystemAccess,
-  requestMediaKeySystemAccess,
   shouldRenewMediaKeySystemAccess,
 } from "../../compat";
+import eme, {
+  ICustomMediaKeySystemAccess,
+} from "../../compat/eme";
 import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
@@ -257,7 +258,7 @@ function buildKeySystemConfigurations(
  *   - reject if no compatible key system has been found.
  *
  * @param {HTMLMediaElement} mediaElement
- * @param {Array.<Object>} keySystems - The keySystems you want to test.
+ * @param {Array.<Object>} keySystemsConfigs - The keySystems you want to test.
  * @param {Object} cancelSignal
  * @returns {Promise.<Object>}
  */
@@ -268,20 +269,22 @@ export default function getMediaKeySystemAccess(
 ) : Promise<IFoundMediaKeySystemAccessEvent> {
   log.info("DRM: Searching for compatible MediaKeySystemAccess");
   const currentState = MediaKeysInfosStore.getState(mediaElement);
-  if (currentState != null) {
-    // Fast way to find a compatible keySystem if the currently loaded
-    // one as exactly the same compatibility options.
-    const cachedKeySystemAccess =
-      checkCachedMediaKeySystemAccess(keySystemsConfigs,
-                                      currentState.mediaKeySystemAccess,
-                                      currentState.keySystemOptions);
-    if (cachedKeySystemAccess !== null) {
-      log.info("DRM: Found cached compatible keySystem");
-      return Promise.resolve({
-        type: "reuse-media-key-system-access" as const,
-        value: { mediaKeySystemAccess: cachedKeySystemAccess.keySystemAccess,
-                 options: cachedKeySystemAccess.keySystemOptions },
-      });
+  if (currentState !== null) {
+    if (eme.implementation === currentState.emeImplementation.implementation) {
+      // Fast way to find a compatible keySystem if the currently loaded
+      // one as exactly the same compatibility options.
+      const cachedKeySystemAccess =
+        checkCachedMediaKeySystemAccess(keySystemsConfigs,
+                                        currentState.mediaKeySystemAccess,
+                                        currentState.keySystemOptions);
+      if (cachedKeySystemAccess !== null) {
+        log.info("DRM: Found cached compatible keySystem");
+        return Promise.resolve({
+          type: "reuse-media-key-system-access" as const,
+          value: { mediaKeySystemAccess: cachedKeySystemAccess.keySystemAccess,
+                   options: cachedKeySystemAccess.keySystemOptions },
+        });
+      }
     }
   }
 
@@ -340,7 +343,7 @@ export default function getMediaKeySystemAccess(
 
     }
 
-    if (requestMediaKeySystemAccess == null) {
+    if (eme.requestMediaKeySystemAccess == null) {
       throw new Error("requestMediaKeySystemAccess is not implemented in your browser.");
     }
 
@@ -354,8 +357,10 @@ export default function getMediaKeySystemAccess(
               `${index + 1} of ${keySystemsType.length}`);
 
     try {
-      const keySystemAccess = await requestMediaKeySystemAccess(keyType,
-                                                                keySystemConfigurations);
+      const keySystemAccess = await eme.requestMediaKeySystemAccess(
+        keyType,
+        keySystemConfigurations
+      );
       log.info("DRM: Found compatible keysystem", keyType, index + 1);
       return { type: "create-media-key-system-access" as const,
                value: { options: keySystemOptions,

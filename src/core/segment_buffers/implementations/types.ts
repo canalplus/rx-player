@@ -87,6 +87,13 @@ export abstract class SegmentBuffer {
     this._segmentInventory = new SegmentInventory();
   }
 
+  public abstract declareInitSegment(
+    uniqueId : string,
+    initSegmentData : unknown
+  ) : void;
+
+  public abstract freeInitSegment(uniqueId : string) : void;
+
   /**
    * Push a chunk of the media segment given to the attached buffer, in a
    * FIFO queue.
@@ -96,7 +103,8 @@ export abstract class SegmentBuffer {
    * pushed.
    *
    * Depending on the type of data appended, the pushed chunk might rely on an
-   * initialization segment, given through the `data.initSegment` property.
+   * initialization segment, which had to be previously declared through the
+   * `declareInitSegment` method.
    *
    * Such initialization segment will be first pushed to the buffer if the
    * last pushed segment was associated to another initialization segment.
@@ -106,7 +114,7 @@ export abstract class SegmentBuffer {
    * reference).
    *
    * If you don't need any initialization segment to push the wanted chunk, you
-   * can just set `data.initSegment` to `null`.
+   * can just set the corresponding property to `null`.
    *
    * You can also only push an initialization segment by setting the
    * `data.chunk` argument to null.
@@ -230,12 +238,16 @@ export type IBufferType = "audio" |
  */
 export interface IPushedChunkData<T> {
   /**
-   * The whole initialization segment's data related to the chunk you want to
+   * The `uniqueId` of the initialization segment linked to the data you want to
    * push.
+   *
+   * That identifier should previously have been declared through the
+   * `declareInitSegment` method and not freed.
+   *
    * To set to `null` either if no initialization data is needed, or if you are
    * confident that the last pushed one is compatible.
    */
-  initSegment: T | null;
+  initSegmentUniqueId : string | null;
   /**
    * Chunk you want to push.
    * This can be the whole decodable segment's data or just a decodable sub-part

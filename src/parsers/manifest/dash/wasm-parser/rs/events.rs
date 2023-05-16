@@ -1,4 +1,4 @@
-use crate::{ParsingError, onTagClose, onTagOpen};
+use crate::{onTagClose, onTagOpen, ParsingError};
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -21,13 +21,13 @@ pub enum CustomEventType {
 /// the parser's implementation.
 #[derive(PartialEq, Clone, Copy)]
 #[repr(C)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum TagName {
     /// Indicate an <MPD> node
     /// These nodes are usually contained at the root of an MPD.
     MPD = 1,
 
     // -- Inside an <MPD> --
-
     /// Indicate a <Period> node
     Period = 2,
 
@@ -35,7 +35,6 @@ pub enum TagName {
     UtcTiming = 3,
 
     // -- Inside a <Period> --
-
     /// Indicate an <AdaptationSet> node
     AdaptationSet = 4,
 
@@ -47,7 +46,6 @@ pub enum TagName {
     EventStreamElt = 6,
 
     // -- Inside an <AdaptationSet> --
-
     /// Indicate a <Representation> node
     Representation = 7,
 
@@ -70,7 +68,6 @@ pub enum TagName {
     SupplementalProperty = 13,
 
     // -- Inside various elements --
-
     /// Indicate a <BaseURL> node
     BaseURL = 15,
 
@@ -87,7 +84,6 @@ pub enum TagName {
     InbandEventStream = 19,
 
     // -- Inside a <SegmentList> --
-
     /// Indicate a <SegmentURL> node
     SegmentUrl = 20,
 }
@@ -134,15 +130,15 @@ pub enum AttributeName {
     CodingDependency = 5,
     FrameRate = 6,
     Height = 7, // f64
-    Width = 8, // f64
+    Width = 8,  // f64
     MaxPlayoutRate = 9,
     MaxSAPPeriod = 10,
     MimeType = 11, // f64
     SegmentProfiles = 12,
 
     // ContentProtection
-    ContentProtectionValue = 13, // String
-    ContentProtectionKeyId = 14, // ArrayBuffer
+    ContentProtectionValue = 13,    // String
+    ContentProtectionKeyId = 14,    // ArrayBuffer
     ContentProtectionCencPSSH = 15, // ArrayBuffer
 
     // Various schemes (Accessibility) + EventStream + ContentProtection
@@ -162,8 +158,8 @@ pub enum AttributeName {
 
     // SegmentTemplate + SegmentBase
     AvailabilityTimeComplete = 22, // u8 (bool)
-    IndexRangeExact = 23, // u8 (bool)
-    PresentationTimeOffset = 24, // f64
+    IndexRangeExact = 23,          // u8 (bool)
+    PresentationTimeOffset = 24,   // f64
 
     // EventStream
     EventPresentationTime = 25, // f64
@@ -178,49 +174,48 @@ pub enum AttributeName {
     InitializationRange = 29, // [f64, f64]
 
     // SegmentURL + SegmentTemplate + SegmentBase + Initialization
-    Media = 30, // String
+    Media = 30,      // String
     IndexRange = 31, // [f64, f64]
 
     // Period + AdaptationSet + SegmentTemplate
     BitstreamSwitching = 32, // u8 (bool)
 
-
     // MPD
-    Type = 33, // String
-    AvailabilityStartTime = 34, // f64
-    AvailabilityEndTime = 35, // f64
-    PublishTime = 36, // f64
-    MinimumUpdatePeriod = 37, // f64
-    MinBufferTime = 38, // f64
-    TimeShiftBufferDepth = 39, // f64
+    Type = 33,                       // String
+    AvailabilityStartTime = 34,      // f64
+    AvailabilityEndTime = 35,        // f64
+    PublishTime = 36,                // f64
+    MinimumUpdatePeriod = 37,        // f64
+    MinBufferTime = 38,              // f64
+    TimeShiftBufferDepth = 39,       // f64
     SuggestedPresentationDelay = 40, // f64
-    MaxSegmentDuration = 41, // f64
-    MaxSubsegmentDuration = 42, // f64
+    MaxSegmentDuration = 41,         // f64
+    MaxSubsegmentDuration = 42,      // f64
 
     // BaseURL + SegmentTemplate
     AvailabilityTimeOffset = 43, // f64
 
     // Period
-    Start = 45, // f64
-    XLinkHref = 46, // String
+    Start = 45,        // f64
+    XLinkHref = 46,    // String
     XLinkActuate = 47, // String
 
     // AdaptationSet
     Group = 48,
     MaxBandwidth = 49, // f64
     MaxFrameRate = 50, // f64
-    MaxHeight = 51, // f64
-    MaxWidth = 52, // f64
+    MaxHeight = 51,    // f64
+    MaxWidth = 52,     // f64
     MinBandwidth = 53, // f64
     MinFrameRate = 54, // f64
-    MinHeight = 55, // f64
-    MinWidth = 56, // f64
+    MinHeight = 55,    // f64
+    MinWidth = 56,     // f64
     SelectionPriority = 57,
     SegmentAlignment = 58,
     SubsegmentAlignment = 59,
 
     // AdaptationSet + ContentComponent
-    Language = 60, // String
+    Language = 60,    // String
     ContentType = 61, // String
     Par = 62,
 
@@ -314,72 +309,49 @@ impl AttributeName {
         val.report_as_attr(self)
     }
 
-    pub fn try_report_as_string(
-        self,
-        attr : &quick_xml::events::attributes::Attribute
-    ) {
-        match attr.unescaped_value() {
+    pub fn try_report_as_string(self, attr: &quick_xml::events::attributes::Attribute) {
+        match attr.unescape_value() {
             Ok(val) => self.report(val),
-            Err(_) =>
-                ParsingError("Could not escape original value".to_owned())
-                    .report_err(),
+            Err(_) => ParsingError("Could not escape original value".to_owned()).report_err(),
         }
     }
 
-    pub fn try_report_as_f64(
-        self,
-        attr : &quick_xml::events::attributes::Attribute
-    ) {
+    pub fn try_report_as_f64(self, attr: &quick_xml::events::attributes::Attribute) {
         match utils::parse_f64(&attr.value) {
             Ok(val) => self.report(val),
             Err(error) => error.report_err(),
         }
     }
 
-    pub fn try_report_as_iso_8601_duration(
-        self,
-        attr : &quick_xml::events::attributes::Attribute
-    ) {
+    pub fn try_report_as_iso_8601_duration(self, attr: &quick_xml::events::attributes::Attribute) {
         match utils::parse_iso_8601_duration(&attr.value) {
             Ok(val) => self.report(val),
             Err(error) => error.report_err(),
         }
     }
 
-    pub fn try_report_as_u64(
-        self,
-        attr : &quick_xml::events::attributes::Attribute
-    ) {
+    pub fn try_report_as_u64(self, attr: &quick_xml::events::attributes::Attribute) {
         match utils::parse_u64(&attr.value) {
             Ok(val) => self.report(val as f64),
             Err(error) => error.report_err(),
         }
     }
 
-    pub fn try_report_as_u64_or_bool(
-        self,
-        attr : &quick_xml::events::attributes::Attribute
-    ) {
+    pub fn try_report_as_u64_or_bool(self, attr: &quick_xml::events::attributes::Attribute) {
         match utils::parse_u64_or_bool(&attr.value) {
             Ok(val) => self.report(val),
             Err(error) => error.report_err(),
         }
     }
 
-    pub fn try_report_as_bool(
-        self,
-        attr : &quick_xml::events::attributes::Attribute
-    ) {
+    pub fn try_report_as_bool(self, attr: &quick_xml::events::attributes::Attribute) {
         match utils::parse_bool(&attr.value) {
             Ok(val) => self.report(val),
             Err(error) => error.report_err(),
         }
     }
 
-    pub fn try_report_as_range(
-        self,
-        attr : &quick_xml::events::attributes::Attribute
-    ) {
+    pub fn try_report_as_range(self, attr: &quick_xml::events::attributes::Attribute) {
         match utils::parse_byte_range(&attr.value) {
             Ok(val) => self.report(val),
             Err(error) => error.report_err(),
@@ -388,14 +360,12 @@ impl AttributeName {
 
     pub fn try_report_as_key_value(
         self,
-        key : &[u8],
-        value: &quick_xml::events::attributes::Attribute
+        key: &[u8],
+        value: &quick_xml::events::attributes::Attribute,
     ) {
-        match value.unescaped_value() {
+        match value.unescape_value() {
             Ok(val) => self.report((key, val)),
-            Err(_) =>
-                ParsingError("Could not escape original value".to_owned())
-                    .report_err(),
+            Err(_) => ParsingError("Could not escape original value".to_owned()).report_err(),
         }
     }
 }
