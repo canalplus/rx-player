@@ -1,0 +1,44 @@
+{
+  "pages": [
+    {
+      "path": "./getContentUrls.md",
+      "displayName": "getContentUrls"
+    },
+    {
+      "path": "./updateContentUrls.md",
+      "displayName": "updateContentUrls"
+    },
+    {
+      "path": "./isLive.md",
+      "displayName": "isLive"
+    },
+    {
+      "path": "./getKeySystemConfiguration.md",
+      "displayName": "getKeySystemConfiguration"
+    },
+    {
+      "path": "./createDebugElement.md",
+      "displayName": "createDebugElement"
+    },
+    {
+      "path": "./getCurrentBufferGap.md",
+      "displayName": "getCurrentBufferGap"
+    },
+    {
+      "path": "./isContentLoaded.md",
+      "displayName": "isContentLoaded"
+    },
+    {
+      "path": "./isBuffering.md",
+      "displayName": "isBuffering"
+    },
+    {
+      "path": "./isPaused.md",
+      "displayName": "isPaused"
+    },
+    {
+      "path": "./getLastStoredContentPosition.md",
+      "displayName": "getLastStoredContentPosition"
+    }
+  ]
+}

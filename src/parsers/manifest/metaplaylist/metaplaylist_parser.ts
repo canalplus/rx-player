@@ -15,11 +15,12 @@
  */
 
 import Manifest, {
-  IAdaptationType,
   StaticRepresentationIndex,
   SUPPORTED_ADAPTATIONS_TYPE,
 } from "../../../manifest";
+import { ITrackType } from "../../../public_types";
 import idGenerator from "../../../utils/id_generator";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import { getFilenameIndexInUrl } from "../../../utils/resolve_url";
 import {
   IParsedAdaptation,
@@ -186,7 +187,7 @@ function createManifest(
     for (let iPer = 0; iPer < currentManifest.periods.length; iPer++) {
       const currentPeriod = currentManifest.periods[iPer];
       const adaptations = SUPPORTED_ADAPTATIONS_TYPE
-        .reduce<IParsedAdaptations>((acc, type : IAdaptationType) => {
+        .reduce<IParsedAdaptations>((acc, type : ITrackType) => {
           const currentAdaptations = currentPeriod.adaptations[type];
           if (currentAdaptations == null) {
             return acc;
@@ -200,17 +201,17 @@ function createManifest(
             for (let iRep = 0; iRep < currentAdaptation.representations.length; iRep++) {
               const currentRepresentation = currentAdaptation.representations[iRep];
 
-              const contentInfos = {
-                manifest: currentManifest,
-                period: currentPeriod,
-                adaptation: currentAdaptation,
-                representation: currentRepresentation,
+              const baseContentMetadata = {
+                isLive: currentManifest.isLive,
+                manifestPublishTime: currentManifest.publishTime,
+                periodStart: currentPeriod.start,
+                periodEnd: currentPeriod.end,
               };
 
               const newIndex = new MetaRepresentationIndex(currentRepresentation.index,
                                                            [contentOffset, contentEnd],
                                                            content.transport,
-                                                           contentInfos);
+                                                           baseContentMetadata);
               representations.push({
                 bitrate: currentRepresentation.bitrate,
                 index: newIndex,
@@ -221,6 +222,7 @@ function createManifest(
                 mimeType: currentRepresentation.mimeType,
                 frameRate: currentRepresentation.frameRate,
                 codecs: currentRepresentation.codec,
+                isSpatialAudio: currentRepresentation.isSpatialAudio,
                 contentProtections: currentRepresentation.contentProtections,
               });
             }
@@ -299,7 +301,7 @@ function createManifest(
     periods.push(...manifestPeriods);
   }
 
-  const time = performance.now();
+  const time = getMonotonicTimeStamp();
   const isLastPeriodKnown = !isDynamic ||
                             mplData.pollInterval === undefined &&
                             (manifests.length <= 0 ||

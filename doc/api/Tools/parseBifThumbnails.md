@@ -16,14 +16,10 @@ concatenated.
 
 ## How to import it
 
-`parseBifThumbnails` is for now considered an "experimental" tool. This means
-that its API could change at any new version of the RxPlayer (don't worry, we
-would still document all changes made to it in the corresponding release note).
-
-As an experimental tool, it is imported as such:
+As an RxPlayer tool, `parseBifThumbnails` can be imported as such:
 
 ```ts
-import { parseBifThumbnails } from "rx-player/experimental/tools";
+import { parseBifThumbnails } from "rx-player/tools";
 ```
 
 You can then begin to use it right away.
@@ -34,7 +30,7 @@ As a simple parser, `parseBifThumbnails` takes the downloaded BIF file in an
 ArrayBuffer form and returns its content under an object format, like this:
 
 ```js
-import { parseBifThumbnails } from "rx-player/experimental/tools";
+import { parseBifThumbnails } from "rx-player/tools";
 
 // optionally, fetch the BIF resource through the usual APIs
 fetch("http://www.example.com/thumbnails.bif").then(function(response) {

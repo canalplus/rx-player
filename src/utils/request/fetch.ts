@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
+import globalScope from "../../compat/global_scope";
 import {
   NetworkErrorTypes,
   RequestError,
 } from "../../errors";
 import log from "../../log";
 import isNullOrUndefined from "../is_null_or_undefined";
+import getMonotonicTimeStamp from "../monotonic_timestamp";
 import {
   CancellationError,
   CancellationSignal,
@@ -29,9 +31,9 @@ import {
 export interface IFetchedStreamComplete {
   /** Duration of the whole request, in milliseconds. */
   requestDuration : number;
-  /** Result of `performance.now()` at the time the request was received. */
+  /** Monotonically-raising timestamp at the time the request was received. */
   receivedTime : number;
-  /** Result of `performance.now()` at the time the request was started. */
+  /** Monotonically-raising timestamp at the time the request was started. */
   sendingTime : number;
   /** Size of the entire emitted data, in bytes. */
   size : number;
@@ -43,7 +45,7 @@ export interface IFetchedStreamComplete {
 
 /** Object emitted by `fetchRequest` when a new chunk of the data is available. */
 export interface IFetchedDataObject {
-  /** Result of `performance.now()` at the time this data was recuperated. */
+  /** Monotonically-raising timestamp at the time this data was recuperated. */
   currentTime : number;
   /** Duration of the request until `currentTime`, in milliseconds. */
   duration : number;
@@ -51,7 +53,7 @@ export interface IFetchedDataObject {
   chunkSize : number;
   /** Cumulated size of the received data by the request until now. */
   size : number;
-  /** Result of `performance.now()` at the time the request began. */
+  /** Monotonically-raising timestamp at the time the request began. */
   sendingTime : number;
   /** URL of the recuperated data (post-redirection if one). */
   url : string;
@@ -93,6 +95,12 @@ export interface IFetchOptions {
    * if not all data has been received yet.
    */
   timeout? : number | undefined;
+  /**
+   * Optional connection timeout, in milliseconds, after which the request is canceled
+   * if the responses headers has not being received.
+   * Do not set or set to "undefined" to disable it.
+   */
+  connectionTimeout? : number | undefined;
 }
 
 
@@ -126,8 +134,9 @@ export default function fetchRequest(
 
   log.debug("Fetch: Called with URL", options.url);
   let cancellation : CancellationError | null = null;
-  let timeouted = false;
-  const sendingTime = performance.now();
+  let isTimedOut = false;
+  let isConnectionTimedOut = false;
+  const sendingTime = getMonotonicTimeStamp();
   const abortController: AbortController | null =
     !isNullOrUndefined(_AbortController) ? new _AbortController() :
                                            null;
@@ -144,12 +153,26 @@ export default function fetchRequest(
     abortController.abort();
   }
 
-  let timeout : number | undefined;
+  let timeoutId : number | undefined;
   if (options.timeout !== undefined) {
-    timeout = window.setTimeout(() => {
-      timeouted = true;
+    timeoutId = setTimeout(() => {
+      isTimedOut = true;
+      if (connectionTimeoutId !== undefined) {
+        clearTimeout(connectionTimeoutId);
+      }
       abortFetch();
     }, options.timeout);
+  }
+
+  let connectionTimeoutId: number | undefined;
+  if (options.connectionTimeout !== undefined) {
+    connectionTimeoutId = setTimeout(() => {
+      isConnectionTimedOut = true;
+      if (timeoutId !== undefined) {
+        clearTimeout(timeoutId);
+      }
+      abortFetch();
+    }, options.connectionTimeout);
   }
 
   const deregisterCancelLstnr = options.cancelSignal
@@ -168,8 +191,8 @@ export default function fetchRequest(
     options.url,
     fetchOpts
   ).then((response : Response) : Promise<IFetchedStreamComplete> => {
-    if (!isNullOrUndefined(timeout)) {
-      clearTimeout(timeout);
+    if (connectionTimeoutId !== undefined) {
+      clearTimeout(connectionTimeoutId);
     }
     if (response.status >= 300) {
       log.warn("Fetch: Request HTTP Error", response.status, response.url);
@@ -198,7 +221,7 @@ export default function fetchRequest(
 
       if (!data.done && !isNullOrUndefined(data.value)) {
         size += data.value.byteLength;
-        const currentTime = performance.now();
+        const currentTime = getMonotonicTimeStamp();
         const dataInfo = { url: response.url,
                            currentTime,
                            duration: currentTime - sendingTime,
@@ -210,8 +233,11 @@ export default function fetchRequest(
         options.onData(dataInfo);
         return readBufferAndSendEvents();
       } else if (data.done) {
+        if (timeoutId !== undefined) {
+          clearTimeout(timeoutId);
+        }
         deregisterCancelLstnr();
-        const receivedTime = performance.now();
+        const receivedTime = getMonotonicTimeStamp();
         const requestDuration = receivedTime - sendingTime;
         return { requestDuration,
                  receivedTime,
@@ -227,8 +253,11 @@ export default function fetchRequest(
       throw cancellation;
     }
     deregisterCancelLstnr();
-    if (timeouted) {
-      log.warn("Fetch: Request timeouted.");
+    if (isTimedOut) {
+      log.warn("Fetch: Request timed out.");
+      throw new RequestError(options.url, 0, NetworkErrorTypes.TIMEOUT);
+    } else if (isConnectionTimedOut) {
+      log.warn("Fetch: Request connection timed out.");
       throw new RequestError(options.url, 0, NetworkErrorTypes.TIMEOUT);
     } else if (err instanceof RequestError) {
       throw err;
@@ -244,7 +273,7 @@ export default function fetchRequest(
  * @return {boolean}
  */
 export function fetchIsSupported() : boolean {
-  return (typeof window.fetch === "function" &&
+  return (typeof globalScope.fetch === "function" &&
           !isNullOrUndefined(_AbortController) &&
           !isNullOrUndefined(_Headers));
 }

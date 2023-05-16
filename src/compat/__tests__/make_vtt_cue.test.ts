@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import globalScope from "../global_scope";
+
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
@@ -33,23 +35,23 @@ describe("Compat - makeVTTCue", () => {
     }
   }
 
-  const win = window as {
+  const gs = globalScope as {
     VTTCue? : unknown;
     TextTrackCue? : unknown;
   };
 
-  const ogVTTuCue = win.VTTCue;
-  const ogTextTrackCue = win.TextTrackCue;
+  const ogVTTuCue = gs.VTTCue;
+  const ogTextTrackCue = gs.TextTrackCue;
   beforeEach(() => {
     jest.resetModules();
-    win.VTTCue = ogVTTuCue;
-    win.TextTrackCue = ogTextTrackCue;
+    gs.VTTCue = ogVTTuCue;
+    gs.TextTrackCue = ogTextTrackCue;
   });
 
   it("should throw if nor VTTCue nor TextTrackCue is available", () => {
     const mockLog = { warn: jest.fn() };
-    win.VTTCue = undefined;
-    win.TextTrackCue = undefined;
+    gs.VTTCue = undefined;
+    gs.TextTrackCue = undefined;
     jest.mock("../../log", () => ({
       __esModule: true as const,
       default: mockLog,
@@ -70,7 +72,7 @@ describe("Compat - makeVTTCue", () => {
 
   it("should warn and not create anything if start time is after end time", () => {
     const mockLog = { warn: jest.fn() };
-    win.VTTCue = MockVTTCue;
+    gs.VTTCue = MockVTTCue;
     jest.mock("../../log", () => ({
       __esModule: true as const,
       default: mockLog,
@@ -84,7 +86,7 @@ describe("Compat - makeVTTCue", () => {
 
   it("should create a new VTT Cue in other cases", () => {
     const mockLog = { warn: jest.fn() };
-    win.VTTCue = MockVTTCue;
+    gs.VTTCue = MockVTTCue;
     jest.mock("../../log", () => ({
       __esModule: true as const,
       default: mockLog,

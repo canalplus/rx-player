@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { mediaCapabilitiesProber } from "../../../../src/experimental/tools";
+import { mediaCapabilitiesProber } from "../../../../dist/es2017/experimental/tools";
 
 /**
  * Mock requestMediaKeySystemAccess delivering mediaKeySystemAccess.

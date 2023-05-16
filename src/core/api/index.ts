@@ -18,6 +18,7 @@ import PlaybackObserver from "./playback_observer";
 import Player from "./public_api";
 export { PlaybackObserver };
 export {
+  IObservationPosition,
   IPlaybackObservation,
   IPlaybackObserverEventType,
   IReadOnlyPlaybackObserver,

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// eslint-disable-next-line max-len
+import MediaSourceContentInitializer from "../../core/init/media_source_content_initializer";
 import dashJsParser from "../../parsers/manifest/dash/js-parser";
 import dash from "../../transports/dash";
 import { IFeaturesObject } from "../types";
@@ -27,6 +29,7 @@ function addDASHFeature(features : IFeaturesObject) : void {
     features.transports.dash = dash;
   }
   features.dashParsers.js = dashJsParser;
+  features.mediaSourceInit = MediaSourceContentInitializer;
 }
 
 export { addDASHFeature as DASH };

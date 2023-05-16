@@ -1,6 +1,10 @@
-import type { IBifThumbnail, IPlayerModuleState } from ".";
+import type { IPlayerModuleState } from ".";
 import type RxPlayer from "../../../../../src";
-import type { IPlayerError } from "../../../../../src/public_types";
+import type {
+  IBrokenRepresentationsLockContext,
+  IPlayerError,
+  IVideoTrack,
+} from "../../../../../src/public_types";
 import type { IStateUpdater } from "../../lib/declareModule";
 
 const POSITION_UPDATES_INTERVAL = 100;
@@ -21,25 +25,15 @@ function linkPlayerEventsToState(
 ): void {
 
   linkPlayerEventToState("textTrackChange", "subtitle");
-  linkPlayerEventToState("audioTrackChange", "language");
-  linkPlayerEventToState("videoTrackChange", "videoTrack");
-  linkPlayerEventToState("videoBitrateChange", "videoBitrate");
-  linkPlayerEventToState("audioBitrateChange", "audioBitrate");
+  linkPlayerEventToState("videoRepresentationChange", "videoRepresentation");
+  linkPlayerEventToState("audioRepresentationChange", "audioRepresentation");
   linkPlayerEventToState("error", "error");
-  linkPlayerEventToState("volumeChange", "volume");
-  linkPlayerEventToState("availableAudioTracksChange", "availableLanguages");
+  linkPlayerEventToState("volumeChange", "volumeInfo");
+  linkPlayerEventToState("audioTrackChange", "audioTrack");
+  linkPlayerEventToState("videoTrackChange", "videoTrack");
+  linkPlayerEventToState("availableAudioTracksChange", "availableAudioTracks");
   linkPlayerEventToState("availableVideoTracksChange", "availableVideoTracks");
   linkPlayerEventToState("availableTextTracksChange", "availableSubtitles");
-  linkPlayerEventToState("availableAudioBitratesChange", "availableAudioBitrates");
-  linkPlayerEventToState("availableVideoBitratesChange", "availableVideoBitrates");
-
-  player.addEventListener("imageTrackUpdate", onImageTrackUpdate);
-  abortSignal.addEventListener("abort", () => {
-    player.removeEventListener("imageTrackUpdate", onImageTrackUpdate);
-  });
-  function onImageTrackUpdate({ data }: { data: IBifThumbnail[] }) {
-    state.update("images", data);
-  }
 
   let positionUpdatesInterval: number | null = null;
 
@@ -55,18 +49,26 @@ function linkPlayerEventsToState(
 
     function updatePositionInfo() {
       const position = player.getPosition();
-      const duration = player.getVideoDuration();
+      const duration = player.getMediaDuration();
       const videoTrack = player.getVideoTrack();
+      const livePosition = player.getLivePosition();
       const maximumPosition = player.getMaximumPosition();
+      let bufferGap = player.getCurrentBufferGap();
+      bufferGap = !isFinite(bufferGap) || isNaN(bufferGap) ?
+        0 :
+        bufferGap;
+
+      const livePos = livePosition ?? maximumPosition;
       state.updateBulk({
         currentTime: player.getPosition(),
         wallClockDiff: player.getWallClockTime() - position,
-        bufferGap: player.getVideoBufferGap(),
+        bufferGap,
         duration: Number.isNaN(duration) ? undefined : duration,
+        livePosition,
         minimumPosition: player.getMinimumPosition(),
-        maximumPosition: player.getMaximumPosition(),
-        liveGap: typeof maximumPosition === "number" ?
-          maximumPosition - player.getPosition() :
+        maximumPosition,
+        liveGap: typeof livePos === "number" ?
+          livePos - player.getPosition() :
           undefined,
         playbackRate: player.getPlaybackRate(),
         videoTrackHasTrickMode: videoTrack !== null &&
@@ -128,6 +130,59 @@ function linkPlayerEventsToState(
     player.removeEventListener("warning", onWarning);
   });
 
+  player.addEventListener(
+    "brokenRepresentationsLock",
+    onBrokenRepresentationsLock
+  );
+  abortSignal.addEventListener("abort", () => {
+    player.removeEventListener(
+      "brokenRepresentationsLock",
+      onBrokenRepresentationsLock
+    );
+  });
+
+  player.addEventListener("videoTrackChange", onVideoTrackChange);
+  abortSignal.addEventListener("abort", () => {
+    player.removeEventListener("videoTrackChange", onVideoTrackChange);
+  });
+
+  player.addEventListener("audioTrackChange", onAudioTrackChange);
+  abortSignal.addEventListener("abort", () => {
+    player.removeEventListener("audioTrackChange", onAudioTrackChange);
+  });
+
+  function onBrokenRepresentationsLock(
+    evt: IBrokenRepresentationsLockContext
+  ): void {
+    const currentPeriod = player.getCurrentPeriod();
+    if (evt.period.id !== currentPeriod?.id) {
+      return;
+    }
+    if (evt.trackType === "video") {
+      state.update("videoRepresentationsLocked", false);
+    } else if (evt.trackType === "audio") {
+      state.update("audioRepresentationsLocked", false);
+    }
+  }
+
+  function onVideoTrackChange(videoTrack: IVideoTrack | null): void {
+    const videoRepresentationsLocked =
+      player.getLockedVideoRepresentations() !== null;
+    state.updateBulk({
+      videoRepresentationsLocked,
+      videoTrackHasTrickMode: videoTrack !== null &&
+        videoTrack !== undefined &&
+        videoTrack.trickModeTracks !== undefined &&
+        videoTrack.trickModeTracks.length > 0,
+    });
+  }
+
+  function onAudioTrackChange(): void {
+    const audioRepresentationsLocked =
+      player.getLockedAudioRepresentations() !== null;
+    state.update("audioRepresentationsLocked", audioRepresentationsLocked);
+  }
+
   function onWarning(warning: IPlayerError | Error) {
     if ("code" in warning) {
       switch (warning.code) {
@@ -160,7 +215,7 @@ function linkPlayerEventsToState(
       hasEnded: playerState === "ENDED",
       hasCurrentContent: !["STOPPED", "LOADING"].includes(playerState),
       isContentLoaded: !["STOPPED", "LOADING", "RELOADING"].includes(playerState),
-      isBuffering: playerState === "BUFFERING",
+      isBuffering: playerState === "BUFFERING" || playerState === "FREEZING",
       isLoading: playerState === "LOADING",
       isReloading: playerState === "RELOADING",
       isSeeking: playerState === "SEEKING",
@@ -186,18 +241,15 @@ function linkPlayerEventsToState(
         break;
       case "STOPPED":
         stopPositionUpdates();
-        stateUpdates.audioBitrate = undefined;
+        stateUpdates.audioRepresentation = undefined;
         stateUpdates.autoPlayBlocked = false;
-        stateUpdates.videoBitrate = undefined;
-        stateUpdates.availableAudioBitrates = [];
-        stateUpdates.availableVideoBitrates = [];
+        stateUpdates.videoRepresentation = undefined;
         stateUpdates.availableVideoTracks = [];
-        stateUpdates.availableLanguages = [];
+        stateUpdates.availableAudioTracks = [];
         stateUpdates.availableSubtitles = [];
         stateUpdates.lowLatencyMode = false;
-        stateUpdates.images = [];
         stateUpdates.subtitle = null;
-        stateUpdates.language = null;
+        stateUpdates.audioTrack = null;
         stateUpdates.videoTrack = null;
         stateUpdates.currentTime = undefined;
         stateUpdates.wallClockDiff = undefined;
@@ -206,6 +258,7 @@ function linkPlayerEventsToState(
         stateUpdates.duration = undefined;
         stateUpdates.minimumPosition = undefined;
         stateUpdates.maximumPosition = undefined;
+        stateUpdates.livePosition = undefined;
         break;
     }
 
