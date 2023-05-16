@@ -926,6 +926,7 @@ export interface ITrackUpdateEventPayload {
            "manual" | // Manually and explicitely updated
            "trickmode-enabled" | // Video trickmode tracks being enabled
            "trickmode-disabled" | // Video trickmode tracks being disabled
+           "no-playable-representation" | // Previous track had no playable Representation
            string;
 }
 
