@@ -18,75 +18,30 @@ import { MediaError } from "../errors";
 import log from "../log";
 import { IParsedManifest } from "../parsers/manifest";
 import {
-  IPlayerError,
+  ITrackType,
   IRepresentationFilter,
+  IPlayerError,
 } from "../public_types";
 import arrayFind from "../utils/array_find";
 import EventEmitter from "../utils/event_emitter";
 import idGenerator from "../utils/id_generator";
-import { getFilenameIndexInUrl } from "../utils/resolve_url";
 import warnOnce from "../utils/warn_once";
 import Adaptation from "./adaptation";
 import Period, {
   IManifestAdaptations,
 } from "./period";
 import Representation from "./representation";
-import { StaticRepresentationIndex } from "./representation_index";
-import {
-  IAdaptationType,
-  MANIFEST_UPDATE_TYPE,
-} from "./types";
+import { MANIFEST_UPDATE_TYPE } from "./types";
 import {
   IPeriodsUpdateResult,
   replacePeriods,
   updatePeriods,
 } from "./update_periods";
 
-const generateSupplementaryTrackID = idGenerator();
 const generateNewManifestId = idGenerator();
-
-/**
- * Interface a manually-added supplementary image track should respect.
- * @deprecated
- */
-interface ISupplementaryImageTrack {
-  /** mime-type identifying the type of container for the track. */
-  mimeType : string;
-  /** URL to the thumbnails file */
-  url : string;
-}
-
-/**
- * Interface a manually-added supplementary text track should respect.
- * @deprecated
- */
-interface ISupplementaryTextTrack {
-  /** mime-type identifying the type of container for the track. */
-  mimeType : string;
-  /** codecs in the container (mimeType can be enough) */
-  codecs? : string;
-  /** URL to the text track file */
-  url : string;
-  /** ISO639-{1,2,3} code for the language of the track */
-  language? : string;
-  /**
-   * Same as `language`, but in an Array.
-   * Kept for compatibility with old API.
-   * @deprecated
-   */
-  languages? : string[];
-  /** If true, the track are closed captions. */
-  closedCaption : boolean;
-}
 
 /** Options given to the `Manifest` constructor. */
 interface IManifestParsingOptions {
-  /* eslint-disable import/no-deprecated */
-  /** Text tracks to add manually to the Manifest instance. */
-  supplementaryTextTracks? : ISupplementaryTextTrack[] | undefined;
-  /** Image tracks to add manually to the Manifest instance. */
-  supplementaryImageTracks? : ISupplementaryImageTrack[] | undefined;
-  /* eslint-enable import/no-deprecated */
   /** External callback peforming an automatic filtering of wanted Representations. */
   representationFilter? : IRepresentationFilter | undefined;
   /** Optional URL that points to a shorter version of the Manifest used
@@ -230,12 +185,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    */
   public publishTime: number | undefined;
 
-  /**
-   * Array containing every minor errors that happened when the Manifest has
-   * been created, in the order they have happened.
-   */
-  public contentWarnings : IPlayerError[];
-
   /*
    * Difference between the server's clock in milliseconds and the return of the
    * JS function `performance.now`.
@@ -343,24 +292,37 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * will contain all such errors, in the order they have been encountered.
    * @param {Object} parsedManifest
    * @param {Object} options
+   * @param {Array.<Object>} warnings - After construction, will be optionally
+   * filled by errors expressing minor issues seen while parsing the Manifest.
    */
-  constructor(parsedManifest : IParsedManifest, options : IManifestParsingOptions) {
+  constructor(
+    parsedManifest : IParsedManifest,
+    options : IManifestParsingOptions,
+    warnings : IPlayerError[]
+  ) {
     super();
-    const { supplementaryTextTracks = [],
-            supplementaryImageTracks = [],
-            representationFilter,
+    const { representationFilter,
             manifestUpdateUrl } = options;
-    this.contentWarnings = [];
     this.id = generateNewManifestId();
     this.expired = parsedManifest.expired ?? null;
     this.transport = parsedManifest.transportType;
     this.clockOffset = parsedManifest.clockOffset;
 
+    const unsupportedAdaptations: Adaptation[] = [];
     this.periods = parsedManifest.periods.map((parsedPeriod) => {
-      const period = new Period(parsedPeriod, representationFilter);
-      this.contentWarnings.push(...period.contentWarnings);
+      const period = new Period(parsedPeriod,
+                                unsupportedAdaptations,
+                                representationFilter);
       return period;
     }).sort((a, b) => a.start - b.start);
+
+    if (unsupportedAdaptations.length > 0) {
+      const error =
+        new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
+                       "An Adaptation contains only incompatible codecs.",
+                       { adaptations: unsupportedAdaptations });
+      warnings.push(error);
+    }
 
     /**
      * @deprecated It is here to ensure compatibility with the way the
@@ -383,12 +345,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.suggestedPresentationDelay = parsedManifest.suggestedPresentationDelay;
     this.availabilityStartTime = parsedManifest.availabilityStartTime;
     this.publishTime = parsedManifest.publishTime;
-    if (supplementaryImageTracks.length > 0) {
-      this._addSupplementaryImageAdaptations(supplementaryImageTracks);
-    }
-    if (supplementaryTextTracks.length > 0) {
-      this._addSupplementaryTextAdaptations(supplementaryTextTracks);
-    }
   }
 
   /**
@@ -451,10 +407,10 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   /**
    * Returns the most important URL from which the Manifest can be refreshed.
    * `undefined` if no URL is found.
-   * @returns {string|undefined}
+   * @returns {Array.<string>}
    */
-  public getUrl() : string|undefined {
-    return this.uris[0];
+  public getUrls() : string[] {
+    return this.uris;
   }
 
   /**
@@ -567,7 +523,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     for (const adaptationType in adaptationsByType) {
       if (adaptationsByType.hasOwnProperty(adaptationType)) {
         const adaptations =
-          adaptationsByType[adaptationType as IAdaptationType] as Adaptation[];
+          adaptationsByType[adaptationType as ITrackType] as Adaptation[];
         adaptationsList.push(...adaptations);
       }
     }
@@ -578,7 +534,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @deprecated only returns adaptations for the first period
    * @returns {Array.<Object>}
    */
-  public getAdaptationsForType(adaptationType : IAdaptationType) : Adaptation[] {
+  public getAdaptationsForType(adaptationType : ITrackType) : Adaptation[] {
     warnOnce("manifest.getAdaptationsForType(type) is deprecated." +
              " Please use manifest.period[].getAdaptationsForType(type) instead");
     const firstPeriod = this.periods[0];
@@ -603,115 +559,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   }
 
   /**
-   * Add supplementary image Adaptation(s) to the manifest.
-   * @private
-   * @param {Object|Array.<Object>} imageTracks
-   */
-  private _addSupplementaryImageAdaptations(
-    /* eslint-disable import/no-deprecated */
-    imageTracks : ISupplementaryImageTrack | ISupplementaryImageTrack[]
-  ) : void {
-    const _imageTracks = Array.isArray(imageTracks) ? imageTracks : [imageTracks];
-    const newImageTracks = _imageTracks.map(({ mimeType, url }) => {
-      const adaptationID = "gen-image-ada-" + generateSupplementaryTrackID();
-      const representationID = "gen-image-rep-" + generateSupplementaryTrackID();
-      const indexOfFilename = getFilenameIndexInUrl(url);
-      const cdnUrl = url.substring(0, indexOfFilename);
-      const filename = url.substring(indexOfFilename);
-      const newAdaptation = new Adaptation({ id: adaptationID,
-                                             type: "image",
-                                             representations: [{
-                                               bitrate: 0,
-                                               cdnMetadata: [ { baseUrl: cdnUrl } ],
-                                               id: representationID,
-                                               mimeType,
-                                               index: new StaticRepresentationIndex({
-                                                 media: filename,
-                                               }) }] },
-                                           { isManuallyAdded: true });
-      if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
-        const error =
-          new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-                         "An Adaptation contains only incompatible codecs.");
-        this.contentWarnings.push(error);
-      }
-      return newAdaptation;
-    });
-
-    if (newImageTracks.length > 0 && this.periods.length > 0) {
-      const { adaptations } = this.periods[0];
-      adaptations.image =
-        adaptations.image != null ? adaptations.image.concat(newImageTracks) :
-                                    newImageTracks;
-    }
-  }
-
-  /**
-   * Add supplementary text Adaptation(s) to the manifest.
-   * @private
-   * @param {Object|Array.<Object>} textTracks
-   */
-  private _addSupplementaryTextAdaptations(
-    /* eslint-disable import/no-deprecated */
-    textTracks : ISupplementaryTextTrack|ISupplementaryTextTrack[]
-    /* eslint-enable import/no-deprecated */
-  ) : void {
-    const _textTracks = Array.isArray(textTracks) ? textTracks : [textTracks];
-    const newTextAdaptations = _textTracks.reduce((allSubs : Adaptation[], {
-      mimeType,
-      codecs,
-      url,
-      language,
-      /* eslint-disable import/no-deprecated */
-      languages,
-      /* eslint-enable import/no-deprecated */
-      closedCaption,
-    }) => {
-      const langsToMapOn : string[] = language != null ? [language] :
-                                      languages != null ? languages :
-                                                          [];
-
-      const indexOfFilename = getFilenameIndexInUrl(url);
-      const cdnUrl = url.substring(0, indexOfFilename);
-      const filename = url.substring(indexOfFilename);
-      return allSubs.concat(langsToMapOn.map((_language) => {
-        const adaptationID = "gen-text-ada-" + generateSupplementaryTrackID();
-        const representationID = "gen-text-rep-" + generateSupplementaryTrackID();
-        const newAdaptation = new Adaptation({ id: adaptationID,
-                                               type: "text",
-                                               language: _language,
-                                               closedCaption,
-                                               representations: [{
-                                                 bitrate: 0,
-                                                 cdnMetadata: [{ baseUrl: cdnUrl }],
-                                                 id: representationID,
-                                                 mimeType,
-                                                 codecs,
-                                                 index: new StaticRepresentationIndex({
-                                                   media: filename,
-                                                 }) }] },
-                                             { isManuallyAdded: true });
-        if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
-          const error =
-            new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-                           "An Adaptation contains only incompatible codecs.");
-          this.contentWarnings.push(error);
-        }
-        return newAdaptation;
-      }));
-    }, []);
-
-    if (newTextAdaptations.length > 0 && this.periods.length > 0) {
-      const { adaptations } = this.periods[0];
-      adaptations.text =
-        adaptations.text != null ? adaptations.text.concat(newTextAdaptations) :
-                                   newTextAdaptations;
-    }
-  }
-
-  /**
    * @param {Object} newManifest
-   * @param {number} type
+   * @param {number} updateType
    */
   private _performUpdate(
     newManifest : Manifest,
@@ -723,7 +572,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.isLive = newManifest.isLive;
     this.isLastPeriodKnown = newManifest.isLastPeriodKnown;
     this.lifetime = newManifest.lifetime;
-    this.contentWarnings = newManifest.contentWarnings;
     this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
     this.transport = newManifest.transport;
     this.publishTime = newManifest.publishTime;
@@ -798,8 +646,4 @@ function updateDeciperability(
   return updates;
 }
 
-export {
-  IManifestParsingOptions,
-  ISupplementaryImageTrack,
-  ISupplementaryTextTrack,
-};
+export { IManifestParsingOptions };

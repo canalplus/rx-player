@@ -46,16 +46,11 @@ export default class NativeTextSegmentBuffer extends SegmentBuffer {
 
   /**
    * @param {HTMLMediaElement} videoElement
-   * @param {Boolean} hideNativeSubtitle
    */
-  constructor(
-    videoElement : HTMLMediaElement,
-    hideNativeSubtitle : boolean
-  ) {
+  constructor(videoElement : HTMLMediaElement) {
     log.debug("NTSB: Creating NativeTextSegmentBuffer");
     super();
-    const { track,
-            trackElement } = addTextTrack(videoElement, hideNativeSubtitle);
+    const { track, trackElement } = addTextTrack(videoElement);
 
     this.bufferType = "text";
 
@@ -64,6 +59,22 @@ export default class NativeTextSegmentBuffer extends SegmentBuffer {
     this._videoElement = videoElement;
     this._track = track;
     this._trackElement = trackElement;
+  }
+
+  /**
+   * @param {string} uniqueId
+   */
+  public declareInitSegment(uniqueId : string): void {
+    log.warn("ISB: Declaring initialization segment for image SegmentBuffer",
+             uniqueId);
+  }
+
+  /**
+   * @param {string} uniqueId
+   */
+  public freeInitSegment(uniqueId : string): void {
+    log.warn("ISB: Freeing initialization segment for image SegmentBuffer",
+             uniqueId);
   }
 
   /**
@@ -273,7 +284,7 @@ export interface INativeTextTracksBufferSegmentData {
 function assertChunkIsTextTrackSegmentData(
   chunk : unknown
 ) : asserts chunk is INativeTextTracksBufferSegmentData {
-  if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.PRODUCTION as number) {
+  if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.PRODUCTION as number) {
     return;
   }
   if (
@@ -307,7 +318,7 @@ function assertChunkIsTextTrackSegmentData(
  * It doesn't correspond at all to real code that will be called. This is just
  * a hack to tell TypeScript to perform that check.
  */
-if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
+if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
   /* eslint-disable @typescript-eslint/no-unused-vars */
   /* eslint-disable @typescript-eslint/ban-ts-comment */
   // @ts-ignore

@@ -348,7 +348,7 @@ export default {
                 bitrate: 99529,
                 height: 144,
                 width: 192,
-                frameRate: "12800/512",
+                frameRate: 25,
                 codec: "avc1.42c01e",
                 mimeType: "video/mp4",
                 index: {
@@ -364,7 +364,7 @@ export default {
                 bitrate: 397494,
                 height: 240,
                 width: 320,
-                frameRate: "12800/512",
+                frameRate: 25,
                 codec: "avc1.4d401f",
                 mimeType: "video/mp4",
                 index: {
@@ -380,7 +380,7 @@ export default {
                 bitrate: 752174,
                 height: 360,
                 width: 480,
-                frameRate: "12800/512",
+                frameRate: 25,
                 codec: "avc1.4d401f",
                 mimeType: "video/mp4",
                 index: {
@@ -396,7 +396,7 @@ export default {
                 bitrate: 1005796,
                 height: 480,
                 width: 640,
-                frameRate: "12800/512",
+                frameRate: 25,
                 codec: "avc1.4d401f",
                 mimeType: "video/mp4",
                 index: {
@@ -412,7 +412,7 @@ export default {
                 bitrate: 1408303,
                 height: 576,
                 width: 768,
-                frameRate: "12800/512",
+                frameRate: 25,
                 codec: "avc1.4d401f",
                 mimeType: "video/mp4",
                 index: {
@@ -433,7 +433,7 @@ export default {
                 bitrate: 81505,
                 height: 144,
                 width: 192,
-                frameRate: "1000000/40000",
+                frameRate: 25,
                 codec: "vp9",
                 mimeType: "video/webm",
                 index: {
@@ -449,7 +449,7 @@ export default {
                 bitrate: 203461,
                 height: 240,
                 width: 320,
-                frameRate: "1000000/40000",
+                frameRate: 25,
                 codec: "vp9",
                 mimeType: "video/webm",
                 index: {
@@ -465,7 +465,7 @@ export default {
                 bitrate: 362665,
                 height: 360,
                 width: 480,
-                frameRate: "1000000/40000",
+                frameRate: 25,
                 codec: "vp9",
                 mimeType: "video/webm",
                 index: {
@@ -481,7 +481,7 @@ export default {
                 bitrate: 485260,
                 height: 480,
                 width: 640,
-                frameRate: "1000000/40000",
+                frameRate: 25,
                 codec: "vp9",
                 mimeType: "video/webm",
                 index: {
@@ -497,7 +497,7 @@ export default {
                 bitrate: 620659,
                 height: 576,
                 width: 768,
-                frameRate: "1000000/40000",
+                frameRate: 25,
                 codec: "vp9",
                 mimeType: "video/webm",
                 index: {

@@ -23,6 +23,7 @@ import {
   IDashParserResponse,
   ILoadedResource,
 } from "../../parsers/manifest/dash/parsers_types";
+import { IPlayerError } from "../../public_types";
 import objectAssign from "../../utils/object_assign";
 import request from "../../utils/request";
 import {
@@ -48,8 +49,7 @@ export default function generateManifestParser(
     scheduleRequest : IManifestParserRequestScheduler
   ) => IManifestParserResult | Promise<IManifestParserResult>
 {
-  const { aggressiveMode,
-          referenceDateTime } = options;
+  const { referenceDateTime } = options;
   const serverTimeOffset = options.serverSyncInfos !== undefined ?
     options.serverSyncInfos.serverTimestamp - options.serverSyncInfos.clientTime :
     undefined;
@@ -64,13 +64,11 @@ export default function generateManifestParser(
     const argClockOffset = parserOptions.externalClockOffset;
     const url = manifestData.url ?? parserOptions.originalUrl;
 
-    const optAggressiveMode = aggressiveMode === true;
     const externalClockOffset = serverTimeOffset ?? argClockOffset;
     const unsafelyBaseOnPreviousManifest = parserOptions.unsafeMode ?
       parserOptions.previousManifest :
       null;
-    const dashParserOpts = { aggressiveMode: optAggressiveMode,
-                             unsafelyBaseOnPreviousManifest,
+    const dashParserOpts = { unsafelyBaseOnPreviousManifest,
                              url,
                              referenceDateTime,
                              externalClockOffset };
@@ -117,7 +115,8 @@ export default function generateManifestParser(
      * If it is not defined, throws.
      * @returns {Object|Promise.<Object>}
      */
-    function runDefaultJsParser() {
+    function runDefaultJsParser(
+    ) : IManifestParserResult | Promise<IManifestParserResult> {
       if (parsers.js === null) {
         throw new Error("No MPD parser is imported");
       }
@@ -142,8 +141,9 @@ export default function generateManifestParser(
         if (cancelSignal.isCancelled()) {
           return Promise.reject(cancelSignal.cancellationError);
         }
-        const manifest = new Manifest(parserResponse.value.parsed, options);
-        return { manifest, url };
+        const warnings : IPlayerError[] = [];
+        const manifest = new Manifest(parserResponse.value.parsed, options, warnings);
+        return { manifest, url, warnings };
       }
 
       const { value } = parserResponse;
@@ -219,7 +219,7 @@ export default function generateManifestParser(
 function assertLoadedResourcesFormatString(
   loadedResources : Array<ILoadedResource<string | ArrayBuffer>>
 ) : asserts loadedResources is Array<ILoadedResource<string>> {
-  if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.PRODUCTION as number) {
+  if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.PRODUCTION as number) {
     return;
   }
   loadedResources.forEach((loadedResource) => {
@@ -244,7 +244,7 @@ function assertLoadedResourcesFormatString(
 function assertLoadedResourcesFormatArrayBuffer(
   loadedResources : Array<ILoadedResource<string | ArrayBuffer>>
 ) : asserts loadedResources is Array<ILoadedResource<ArrayBuffer>> {
-  if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.PRODUCTION as number) {
+  if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.PRODUCTION as number) {
     return;
   }
 

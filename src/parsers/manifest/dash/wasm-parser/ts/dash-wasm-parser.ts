@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import globalScope from "../../../../../compat/global_scope";
 import log from "../../../../../log";
 import assertUnreachable from "../../../../../utils/assert_unreachable";
 import noop from "../../../../../utils/noop";
@@ -318,7 +319,7 @@ export default class DashWasmParser {
   public isCompatible() : boolean {
     return typeof WebAssembly === "object" &&
            typeof WebAssembly.instantiate === "function" &&
-           typeof window.TextDecoder === "function";
+           typeof globalScope.TextDecoder === "function";
   }
 
   private _parseMpd(
