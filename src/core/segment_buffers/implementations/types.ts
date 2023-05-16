@@ -66,7 +66,7 @@ import SegmentInventory, {
  * array.
  */
 export abstract class SegmentBuffer {
-  /** "Type" of the buffer (e.g. "audio", "video", "text", "image"). */
+  /** "Type" of the buffer (e.g. "audio", "video", "text"). */
   public readonly abstract bufferType : IBufferType;
 
   /** Default implementation of an inventory of segment metadata. */
@@ -87,6 +87,13 @@ export abstract class SegmentBuffer {
     this._segmentInventory = new SegmentInventory();
   }
 
+  public abstract declareInitSegment(
+    uniqueId : string,
+    initSegmentData : unknown
+  ) : void;
+
+  public abstract freeInitSegment(uniqueId : string) : void;
+
   /**
    * Push a chunk of the media segment given to the attached buffer, in a
    * FIFO queue.
@@ -96,7 +103,8 @@ export abstract class SegmentBuffer {
    * pushed.
    *
    * Depending on the type of data appended, the pushed chunk might rely on an
-   * initialization segment, given through the `data.initSegment` property.
+   * initialization segment, which had to be previously declared through the
+   * `declareInitSegment` method.
    *
    * Such initialization segment will be first pushed to the buffer if the
    * last pushed segment was associated to another initialization segment.
@@ -106,7 +114,7 @@ export abstract class SegmentBuffer {
    * reference).
    *
    * If you don't need any initialization segment to push the wanted chunk, you
-   * can just set `data.initSegment` to `null`.
+   * can just set the corresponding property to `null`.
    *
    * You can also only push an initialization segment by setting the
    * `data.chunk` argument to null.
@@ -161,10 +169,15 @@ export abstract class SegmentBuffer {
    * This methods allow to manually trigger a synchronization. It should be
    * called before retrieving Segment information from it (e.g. with
    * `getInventory`).
+   * @param {boolean} [skipLog] - This method may trigger a voluminous debug
+   * log once synchronization is finished if debug logs are enabled.
+   * As this method might be called very often in some specific debugging
+   * situations, setting this value to `true` allows to prevent the call from
+   * triggering a log.
    */
-  public synchronizeInventory() : void {
+  public synchronizeInventory(skipLog? : boolean) : void {
     // The default implementation just use the SegmentInventory
-    this._segmentInventory.synchronizeBuffered(this.getBufferedRanges());
+    this._segmentInventory.synchronizeBuffered(this.getBufferedRanges(), skipLog);
   }
 
   /**
@@ -219,8 +232,7 @@ export abstract class SegmentBuffer {
 /** Every SegmentBuffer types. */
 export type IBufferType = "audio" |
                           "video" |
-                          "text" |
-                          "image";
+                          "text";
 
 /**
  * Content of the `data` property when pushing a new chunk.
@@ -230,12 +242,16 @@ export type IBufferType = "audio" |
  */
 export interface IPushedChunkData<T> {
   /**
-   * The whole initialization segment's data related to the chunk you want to
+   * The `uniqueId` of the initialization segment linked to the data you want to
    * push.
+   *
+   * That identifier should previously have been declared through the
+   * `declareInitSegment` method and not freed.
+   *
    * To set to `null` either if no initialization data is needed, or if you are
    * confident that the last pushed one is compatible.
    */
-  initSegment: T | null;
+  initSegmentUniqueId : string | null;
   /**
    * Chunk you want to push.
    * This can be the whole decodable segment's data or just a decodable sub-part

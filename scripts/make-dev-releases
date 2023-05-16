@@ -1,0 +1,90 @@
+#!/bin/bash
+
+# make-dev-releases
+# =================
+#
+# This script produces pre-releases on top of the current branch for the
+# `dev-v4` and `canal-v4` versions (as per their npm tags).
+#
+# To use it:
+#
+#   1. Be sure that you're on the branch corresponding to the pre-release you
+#      want to publish, at the repository's root directory.
+#
+#   2. Call this script.
+#
+#      You may optionally provide two arguments:
+#
+#        - the version number (e.g. 5.124.13)
+#
+#        - the "increment number", set to `00` by default (as is wanted for the
+#          first and hopefully only release in a given day).
+#
+#          This is for cases where you're doing multiple releases in a single
+#          day, allowing you to increment that value for each of these releases
+#          and avoid release naming conflicts.
+#
+#      If you forget one of those arguments or both, the script will ask you
+#      to enter those instead.
+#
+#   3. When the script asks you to confirm, check that the preceding commands
+#      did not output any issue and if it didn't you can confirm.
+#
+#   4. That's it!
+
+set -e
+
+if [ $# -eq 0 ]; then
+  read -r -p "Please enter the wanted version number (example: 4.12.1): " version
+  if [ -z "${version}" ]; then
+    echo "Please enter a valid version number"
+    exit 1
+  fi
+fi
+
+if [ $# -lt 2 ]; then
+  read -r -p "Please enter the increment number [by default: 00]: " incr
+  if [ -z "${incr}" ]; then
+    incr="00"
+  fi
+fi
+
+current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
+date=$(date "+%Y%m%d")
+dev_branch="release/v${version}-dev.${date}${incr}"
+canal_branch="release/v${version}-canal.${date}${incr}"
+
+git checkout -b ${dev_branch}
+./scripts/update-version $version-dev.${date}${incr}
+git add --all
+git commit -m "update version"
+while true; do
+  read -n1 -p "Do you wish to push and publish the dev build? [y/n] " yn
+  echo ""
+  case $yn in
+    [Yy]* ) break;;
+    [Nn]* ) exit;;
+    * ) echo "Please answer y or n.";;
+  esac
+done
+git push origin ${dev_branch}
+npm publish --tag dev-v4
+
+git checkout $current_branch
+
+git checkout -b ${canal_branch}
+git apply ./scripts/canal-release.patch
+./scripts/update-version $version-canal.${date}${incr}
+git add --all
+git commit -m "update version"
+git push origin ${canal_branch}
+while true; do
+  read -n1 -p "Do you wish to push and publish the canal build? [y/n] " yn
+  echo ""
+  case $yn in
+    [Yy]* ) break;;
+    [Nn]* ) exit;;
+    * ) echo "Please answer y or n.";;
+  esac
+done
+npm publish --tag canal-v4

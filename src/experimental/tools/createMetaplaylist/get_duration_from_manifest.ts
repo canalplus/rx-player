@@ -83,6 +83,7 @@ async function getDurationFromManifest(
       url,
       responseType: "document",
       timeout: config.getCurrent().DEFAULT_REQUEST_TIMEOUT,
+      connectionTimeout: config.getCurrent().DEFAULT_CONNECTION_TIMEOUT,
       // We won't cancel
       cancelSignal: new TaskCanceller().signal,
     });
@@ -122,6 +123,7 @@ async function getDurationFromManifest(
     url,
     responseType: "text",
     timeout: config.getCurrent().DEFAULT_REQUEST_TIMEOUT,
+    connectionTimeout: config.getCurrent().DEFAULT_CONNECTION_TIMEOUT,
     // We won't cancel
     cancelSignal: new TaskCanceller().signal,
   });

@@ -19,9 +19,78 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
+import { IPlayerError } from "../../public_types";
 import InitDataValuesContainer from "./utils/init_data_values_container";
 import LoadedSessionsStore from "./utils/loaded_sessions_store";
 import PersistentSessionsStore from "./utils/persistent_sessions_store";
+
+/** Events sent by the `ContentDecryptor`, in a `{ event: payload }` format. */
+export interface IContentDecryptorEvent {
+  /**
+   * Event emitted when a major error occured which made the ContentDecryptor
+   * stopped.
+   * When that event is sent, the `ContentDecryptor` is in the `Error` state and
+   * cannot be used anymore.
+   */
+  error : Error;
+
+  /**
+   * Event emitted when a minor error occured which the ContentDecryptor can
+   * recover from.
+   */
+  warning : IPlayerError;
+
+  /**
+   * Event emitted when the `ContentDecryptor`'s state changed.
+   * States are a central aspect of the `ContentDecryptor`, be sure to check the
+   * ContentDecryptorState type.
+   */
+  stateChange: ContentDecryptorState;
+}
+
+/** Enumeration of the various "state" the `ContentDecryptor` can be in. */
+export enum ContentDecryptorState {
+  /**
+   * The `ContentDecryptor` is not yet ready to create key sessions and request
+   * licenses.
+   * This is is the initial state of the ContentDecryptor.
+   */
+  Initializing,
+
+  /**
+   * The `ContentDecryptor` has been initialized.
+   * You should now called the `attach` method when you want to add decryption
+   * capabilities to the HTMLMediaElement. The ContentDecryptor won't go to the
+   * `ReadyForContent` state until `attach` is called.
+   *
+   * For compatibility reasons, this should be done after the HTMLMediaElement's
+   * src attribute is set.
+   *
+   * It is also from when this state is reached that the `ContentDecryptor`'s
+   * `systemId` property may be known.
+   *
+   * This state is always coming after the `Initializing` state.
+   */
+  WaitingForAttachment,
+
+  /**
+   * Content (encrypted or not) can begin to be pushed on the HTMLMediaElement
+   * (this state was needed because some browser quirks sometimes forces us to
+   * call EME API before this can be done).
+   *
+   * This state is always coming after the `WaitingForAttachment` state.
+   */
+  ReadyForContent,
+
+  /**
+   * The `ContentDecryptor` has encountered a fatal error and has been stopped.
+   * It is now unusable.
+   */
+  Error,
+
+  /** The `ContentDecryptor` has been disposed of and is now unusable. */
+  Disposed,
+}
 
 /** Information about the encryption initialization data. */
 export interface IProtectionData {
