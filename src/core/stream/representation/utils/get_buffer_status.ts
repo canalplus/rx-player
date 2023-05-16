@@ -22,7 +22,7 @@ import Manifest, {
 } from "../../../../manifest";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import { IReadOnlyPlaybackObserver } from "../../../api";
-import {
+import SegmentBuffersStore, {
   IBufferedChunk,
   IEndOfSegmentOperation,
   SegmentBuffer,
@@ -218,6 +218,7 @@ function getRangeOfNeededSegments(
   // avoid ending the last Period - and by extension the content - with a
   // segment which isn't the last one.
   if (!isNullOrUndefined(lastIndexPosition) &&
+      SegmentBuffersStore.isNative(content.adaptation.type) &&
       initialWantedTime >= lastIndexPosition &&
       representationIndex.isInitialized() &&
       representationIndex.isFinished() &&
