@@ -27,7 +27,7 @@ module.exports = {
           strictPropertyInitialization: true,
           noUnusedParameters: true,
           noUnusedLocals: true,
-          types: ["node", "jest"],
+          types: ["jest"],
           module: "es2015",
           moduleResolution: "node",
           esModuleInterop: true,

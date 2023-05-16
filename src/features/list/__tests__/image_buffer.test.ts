@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-
 import imageBuffer from "../../../core/segment_buffers/implementations/image";
+import { IFeaturesObject } from "../../types";
 import addImageBufferFeature from "../image_buffer";
 
 describe("Features list - HTML Text Buffer", () => {
-  beforeEach(() => {
-    jest.resetModules();
-  });
-
   it("should add an Image Buffer in the current features", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const featureObject : any = {};
+    const featureObject = {} as unknown as IFeaturesObject;
     addImageBufferFeature(featureObject);
     expect(featureObject).toEqual({ imageBuffer });
     expect(featureObject.imageBuffer).toBe(imageBuffer);

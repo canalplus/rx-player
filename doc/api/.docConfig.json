@@ -9,6 +9,10 @@
       "displayName": "Creating a Player"
     },
     {
+      "path": "./RxPlayer_Features.md",
+      "displayName": "Feature switching"
+    },
+    {
       "path": "./Loading_a_Content.md",
       "displayName": "Loading a Content"
     },
@@ -53,12 +57,8 @@
       "displayName": "Buffer Control"
     },
     {
-      "path": "./Buffer_Information",
-      "displayName": "Buffer Information"
-    },
-    {
-      "path": "./Content_Information",
-      "displayName": "Content Information"
+      "path": "./Playback_Information",
+      "displayName": "Playback Information"
     },
     {
       "path": "./Static_Properties.md",

@@ -67,6 +67,22 @@ export default class NativeTextSegmentBuffer extends SegmentBuffer {
   }
 
   /**
+   * @param {string} uniqueId
+   */
+  public declareInitSegment(uniqueId : string): void {
+    log.warn("ISB: Declaring initialization segment for image SegmentBuffer",
+             uniqueId);
+  }
+
+  /**
+   * @param {string} uniqueId
+   */
+  public freeInitSegment(uniqueId : string): void {
+    log.warn("ISB: Freeing initialization segment for image SegmentBuffer",
+             uniqueId);
+  }
+
+  /**
    * @param {Object} infos
    * @returns {Promise}
    */
@@ -171,7 +187,7 @@ export default class NativeTextSegmentBuffer extends SegmentBuffer {
       }
       this._buffered.insert(start, end);
       if (infos.inventoryInfos !== null) {
-        this._segmentInventory.insertChunk(infos.inventoryInfos);
+        this._segmentInventory.insertChunk(infos.inventoryInfos, true);
       }
     } catch (err) {
       return Promise.reject(err);
@@ -273,7 +289,7 @@ export interface INativeTextTracksBufferSegmentData {
 function assertChunkIsTextTrackSegmentData(
   chunk : unknown
 ) : asserts chunk is INativeTextTracksBufferSegmentData {
-  if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.PRODUCTION as number) {
+  if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.PRODUCTION as number) {
     return;
   }
   if (
@@ -307,7 +323,7 @@ function assertChunkIsTextTrackSegmentData(
  * It doesn't correspond at all to real code that will be called. This is just
  * a hack to tell TypeScript to perform that check.
  */
-if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
+if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
   /* eslint-disable @typescript-eslint/no-unused-vars */
   /* eslint-disable @typescript-eslint/ban-ts-comment */
   // @ts-ignore

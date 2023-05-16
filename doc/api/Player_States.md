@@ -119,6 +119,9 @@ This can happen for different reasons:
   (Only if you set the `manualBitrateSwitchingMode` loadVideo option to
   `"direct"`).
 
+- When the current audio or video codec changes and you had set the
+  `onCodecSwitch` `loadVideo` option to `"reload"`.
+
 In those cases, we need to stop and reload the content on the browser-side, due
 to browser limitation.
 
@@ -135,4 +138,4 @@ This is why we sometime recommend to manage this state as if it was the
 
 However, the player won't go to the `LOADED` state after `RELOADING`, you will
 instead know that it had finished reloading simply when it goes out of this
-state (see the "Possible state transitions" chapter for more information).
+state.
