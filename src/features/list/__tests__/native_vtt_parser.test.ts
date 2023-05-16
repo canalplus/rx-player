@@ -14,24 +14,19 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-
+// eslint-disable-next-line max-len
+import NativeTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/native";
 import vttParser from "../../../parsers/texttracks/webvtt/native";
+import { IFeaturesObject } from "../../types";
 import addNativevttFeature from "../native_vtt_parser";
-
-jest.mock("../../../parsers/texttracks/webvtt/native", () => ({
-  __esModule: true as const,
-  default: jest.fn(),
-}));
 
 describe("Features list - native vtt Parser", () => {
   it("should add an native vtt Parser in the current features", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const featureObject : any = { nativeTextTracksParsers: {} };
+    const featureObject = { nativeTextTracksParsers: {} } as unknown as IFeaturesObject;
     addNativevttFeature(featureObject);
     expect(featureObject).toEqual({
       nativeTextTracksParsers: { vtt: vttParser },
+      nativeTextTracksBuffer: NativeTextSegmentBuffer,
     });
     expect(featureObject.nativeTextTracksParsers.vtt).toBe(vttParser);
   });

@@ -1,4 +1,4 @@
-use std::io::{ self, Read };
+use std::io::{self, Read};
 
 pub struct MPDReader {}
 
@@ -12,6 +12,6 @@ impl Read for MPDReader {
         unsafe {
             actual_size = super::readNext((*buf).as_ptr(), buf.len());
         }
-        Ok(actual_size as usize)
+        Ok(actual_size)
     }
 }

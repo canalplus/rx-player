@@ -73,7 +73,7 @@ const mediaCapabilitiesProber = {
   /**
    * Get HDCP status. Evaluates if current equipement support given
    * HDCP revision.
-   * @param {string}
+   * @param {string} hdcp
    * @returns {Promise}
    */
   getStatusForHDCP(hdcp: string) : Promise<string> {
@@ -171,9 +171,7 @@ const mediaCapabilitiesProber = {
    * @param {Object} displayConfig
    * @returns {Promise}
    */
-  getDisplayCapabilities(
-    displayConfig: IDisplayConfiguration
-  ) : Promise<string> {
+  getDisplayCapabilities(displayConfig: IDisplayConfiguration) : Promise<string> {
     const config = { display: displayConfig };
     const browserAPIS: IBrowserAPIS[] = [
       "matchMedia",

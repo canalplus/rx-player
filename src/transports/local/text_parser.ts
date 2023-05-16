@@ -19,7 +19,6 @@ import {
   strToUtf8,
   utf8ToStr,
 } from "../../utils/string_parsing";
-import takeFirstSet from "../../utils/take_first_set";
 import {
   ILoadedTextSegmentFormat,
   ISegmentContext,
@@ -78,7 +77,7 @@ function parseISOBMFFEmbeddedTextTrack(
                                                     chunkBytes,
                                                     chunkInfos,
                                                     isChunked);
-  const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
+  const chunkOffset = segment.timestampOffset ?? 0;
   return { segmentType: "media",
            chunkData,
            chunkSize: chunkBytes.length,
@@ -125,7 +124,7 @@ function parsePlainTextTrack(
     textTrackData = data;
   }
   const chunkData = getPlainTextTrackData(content, textTrackData, isChunked);
-  const chunkOffset = takeFirstSet<number>(segment.timestampOffset, 0);
+  const chunkOffset = segment.timestampOffset ?? 0;
   return { segmentType: "media",
            chunkData,
            chunkSize,

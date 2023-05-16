@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
+import { canReuseMediaKeys } from "../../compat";
 import {
-  canReuseMediaKeys,
   ICustomMediaKeys,
   ICustomMediaKeySystemAccess,
-} from "../../compat";
+} from "../../compat/eme";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import { IKeySystemOption } from "../../public_types";
