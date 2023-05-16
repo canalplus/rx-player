@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
+import { canReuseMediaKeys } from "../../compat";
 import {
-  canReuseMediaKeys,
   ICustomMediaKeys,
   ICustomMediaKeySystemAccess,
-} from "../../compat";
+} from "../../compat/eme";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import { IKeySystemOption } from "../../public_types";
@@ -39,18 +39,13 @@ import ServerCertificateStore from "./utils/server_certificate_store";
 function createPersistentSessionsStorage(
   keySystemOptions : IKeySystemOption
 ) : PersistentSessionsStore|null {
-  if (keySystemOptions.persistentLicense !== true) {
+  const { persistentLicenseConfig } = keySystemOptions;
+  if (isNullOrUndefined(persistentLicenseConfig)) {
     return null;
   }
 
-  const { licenseStorage } = keySystemOptions;
-  if (licenseStorage == null) {
-    throw new EncryptedMediaError("INVALID_KEY_SYSTEM",
-                                  "No license storage found for persistent license.");
-  }
-
   log.debug("DRM: Set the given license storage");
-  return new PersistentSessionsStore(licenseStorage);
+  return new PersistentSessionsStore(persistentLicenseConfig);
 }
 
 /** Object returned by `getMediaKeysInfos`. */

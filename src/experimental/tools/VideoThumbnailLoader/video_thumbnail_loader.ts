@@ -81,7 +81,8 @@ export default class VideoThumbnailLoader {
    * @returns {Promise}
    */
   setTime(time: number): Promise<number> {
-    const manifest = this._player.getManifest();
+    // TODO cleaner way to interop than an undocumented method?
+    const manifest = this._player.__priv_getManifest();
     if (manifest === null) {
       if (this._lastRepresentationInfo !== null) {
         this._lastRepresentationInfo.cleaner.cancel();
@@ -166,7 +167,7 @@ export default class VideoThumbnailLoader {
 
     let lastRepInfo : IVideoThumbnailLoaderRepresentationInfo;
     if (this._lastRepresentationInfo === null) {
-      const cleaner = new TaskCanceller();
+      const lastRepInfoCleaner = new TaskCanceller();
       const segmentFetcher = createSegmentFetcher(
         "video",
         loader.video,
@@ -175,17 +176,22 @@ export default class VideoThumbnailLoader {
         {},
         { baseDelay: 0,
           maxDelay: 0,
-          maxRetryOffline: 0,
-          maxRetryRegular: 0,
-          requestTimeout: config.getCurrent().DEFAULT_REQUEST_TIMEOUT }
+          maxRetry: 0,
+          requestTimeout: config.getCurrent().DEFAULT_REQUEST_TIMEOUT,
+          connectionTimeout: config.getCurrent().DEFAULT_CONNECTION_TIMEOUT,
+        }
       ) as ISegmentFetcher<ArrayBuffer | Uint8Array>;
+      const initSegment = content.representation.index.getInitSegment();
+      const initSegmentUniqueId = initSegment !== null ?
+        content.representation.uniqueId :
+        null;
       const segmentBufferProm = prepareSourceBuffer(
         this._videoElement,
         content.representation.getMimeTypeString(),
-        cleaner.signal
+        lastRepInfoCleaner.signal
       ).then(async (segmentBuffer) => {
-        const initSegment = content.representation.index.getInitSegment();
-        if (initSegment === null) {
+        if (initSegment === null || initSegmentUniqueId === null) {
+          lastRepInfo.initSegmentUniqueId = null;
           return segmentBuffer;
         }
         const segmentInfo = objectAssign({ segment: initSegment },
@@ -193,13 +199,18 @@ export default class VideoThumbnailLoader {
         await loadAndPushSegment(segmentInfo,
                                  segmentBuffer,
                                  lastRepInfo.segmentFetcher,
-                                 cleaner.signal);
+                                 initSegmentUniqueId,
+                                 lastRepInfoCleaner.signal);
+        lastRepInfoCleaner.signal.register(() => {
+          segmentBuffer.freeInitSegment(initSegmentUniqueId);
+        });
         return segmentBuffer;
       });
       lastRepInfo = {
-        cleaner,
+        cleaner: lastRepInfoCleaner,
         segmentBuffer: segmentBufferProm,
         content,
+        initSegmentUniqueId,
         segmentFetcher,
         pendingRequests: [],
       };
@@ -251,6 +262,7 @@ export default class VideoThumbnailLoader {
             const prom = loadAndPushSegment(segmentInfo,
                                             segmentBuffer,
                                             lastRepInfo.segmentFetcher,
+                                            lastRepInfo.initSegmentUniqueId,
                                             requestCanceller.signal)
               .then(unlinkSignal, (err) => {
                 unlinkSignal();
@@ -390,6 +402,7 @@ interface IVideoThumbnailLoaderRepresentationInfo {
    * `pendingRequests`.
    */
   pendingRequests : IPendingRequestInfo[];
+  initSegmentUniqueId : string |  null;
 }
 
 interface IPendingRequestInfo {

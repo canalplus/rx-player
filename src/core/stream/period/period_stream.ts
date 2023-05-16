@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import nextTick from "next-tick";
 import config from "../../../config";
 import {
   formatError,
@@ -26,8 +25,9 @@ import {
   Period,
 } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
-import { getLeftSizeOfRange } from "../../../utils/ranges";
-import createSharedReference, {
+import queueMicrotask from "../../../utils/queue_microtask";
+import { getLeftSizeOfBufferedTimeRange } from "../../../utils/ranges";
+import SharedReference, {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
 import TaskCanceller, {
@@ -41,9 +41,11 @@ import SegmentBuffersStore, {
   SegmentBuffer,
 } from "../../segment_buffers";
 import AdaptationStream, {
+  IAdaptationChoice,
   IAdaptationStreamCallbacks,
   IAdaptationStreamPlaybackObservation,
 } from "../adaptation";
+import { IRepresentationsChoice } from "../representation";
 import {
   IPeriodStreamArguments,
   IPeriodStreamCallbacks,
@@ -96,19 +98,19 @@ export default function PeriodStream(
   callbacks : IPeriodStreamCallbacks,
   parentCancelSignal : CancellationSignal
 ) : void {
-  const { period } = content;
+  const { manifest, period } = content;
 
   /**
-   * Emits the chosen Adaptation for the current type.
+   * Emits the chosen Adaptation and Representations for the current type.
    * `null` when no Adaptation is chosen (e.g. no subtitles)
    * `undefined` at the beginning (it can be ignored.).
    */
-  const adaptationRef = createSharedReference<Adaptation|null|undefined>(
+  const adaptationRef = new SharedReference<IAdaptationChoice|null|undefined>(
     undefined,
     parentCancelSignal
   );
 
-  callbacks.periodStreamReady({ type: bufferType, period, adaptationRef });
+  callbacks.periodStreamReady({ type: bufferType, manifest, period, adaptationRef });
   if (parentCancelSignal.isCancelled()) {
     return;
   }
@@ -116,10 +118,10 @@ export default function PeriodStream(
   let currentStreamCanceller : TaskCanceller | undefined;
   let isFirstAdaptationSwitch = true;
 
-  adaptationRef.onUpdate((adaptation : Adaptation | null | undefined) => {
+  adaptationRef.onUpdate((choice : IAdaptationChoice | null | undefined) => {
     // As an IIFE to profit from async/await while respecting onUpdate's signature
     (async () : Promise<void> => {
-      if (adaptation === undefined) {
+      if (choice === undefined) {
         return;
       }
       const streamCanceller = new TaskCanceller();
@@ -127,14 +129,14 @@ export default function PeriodStream(
       currentStreamCanceller?.cancel(); // Cancel oreviously created stream if one
       currentStreamCanceller = streamCanceller;
 
-      if (adaptation === null) { // Current type is disabled for that Period
+      if (choice === null) { // Current type is disabled for that Period
         log.info(`Stream: Set no ${bufferType} Adaptation. P:`, period.start);
         const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
 
         if (segmentBufferStatus.type === "initialized") {
           log.info(`Stream: Clearing previous ${bufferType} SegmentBuffer`);
           if (SegmentBuffersStore.isNative(bufferType)) {
-            return askForMediaSourceReload(0, streamCanceller.signal);
+            return askForMediaSourceReload(0, true, streamCanceller.signal);
           } else {
             const periodEnd = period.end ?? Infinity;
             if (period.start > periodEnd) {
@@ -173,22 +175,58 @@ export default function PeriodStream(
        * delta to the current position so we can re-play back some media in the
        * new Adaptation to give some context back.
        * This value contains this relative position, in seconds.
-       * @see askForMediaSourceReload
+       * @see createMediaSourceReloadRequester
        */
       const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
-      const relativePosAfterSwitch =
-        isFirstAdaptationSwitch ? 0 :
-        bufferType === "audio"  ? DELTA_POSITION_AFTER_RELOAD.trackSwitch.audio :
-        bufferType === "video"  ? DELTA_POSITION_AFTER_RELOAD.trackSwitch.video :
-                                  DELTA_POSITION_AFTER_RELOAD.trackSwitch.other;
+      let relativePosHasBeenDefaulted : boolean = false;
+      let relativePosAfterSwitch : number;
+      if (isFirstAdaptationSwitch) {
+        relativePosAfterSwitch = 0;
+      } else if (choice.relativeResumingPosition !== undefined) {
+        relativePosAfterSwitch = choice.relativeResumingPosition;
+      } else {
+        relativePosHasBeenDefaulted = true;
+        switch (bufferType) {
+          case "audio":
+            relativePosAfterSwitch = DELTA_POSITION_AFTER_RELOAD.trackSwitch.audio;
+            break;
+          case "video":
+            relativePosAfterSwitch = DELTA_POSITION_AFTER_RELOAD.trackSwitch.video;
+            break;
+          default:
+            relativePosAfterSwitch = DELTA_POSITION_AFTER_RELOAD.trackSwitch.other;
+            break;
+        }
+      }
       isFirstAdaptationSwitch = false;
 
       if (SegmentBuffersStore.isNative(bufferType) &&
           segmentBuffersStore.getStatus(bufferType).type === "disabled")
       {
-        return askForMediaSourceReload(relativePosAfterSwitch, streamCanceller.signal);
+        return askForMediaSourceReload(relativePosAfterSwitch,
+                                       true,
+                                       streamCanceller.signal);
       }
 
+      // Reload if the Adaptation disappears from the manifest
+      manifest.addEventListener("manifestUpdate", updates => {
+        // If current period has been unexpectedly removed, ask to reload
+        for (const element of updates.updatedPeriods) {
+          if (element.period.id === period.id) {
+            for (const adap of element.result.removedAdaptations) {
+              if (adap.id === adaptation.id) {
+                return askForMediaSourceReload(relativePosAfterSwitch,
+                                               true,
+                                               streamCanceller.signal);
+              }
+            }
+          } else if (element.period.start > period.start) {
+            break;
+          }
+        }
+      }, currentStreamCanceller.signal);
+
+      const { adaptation, representations } = choice;
       log.info(`Stream: Updating ${bufferType} adaptation`,
                `A: ${adaptation.id}`,
                `P: ${period.start}`);
@@ -198,22 +236,21 @@ export default function PeriodStream(
         return; // Previous call has provoken cancellation by side-effect
       }
 
-      const readyState = playbackObserver.getReadyState();
       const segmentBuffer = createOrReuseSegmentBuffer(segmentBuffersStore,
                                                        bufferType,
                                                        adaptation,
                                                        options);
-      const playbackInfos = { currentTime: playbackObserver.getCurrentTime(),
-                              readyState };
       const strategy = getAdaptationSwitchStrategy(segmentBuffer,
                                                    period,
                                                    adaptation,
-                                                   playbackInfos,
+                                                   choice.switchingMode,
+                                                   playbackObserver,
                                                    options);
       if (strategy.type === "needs-reload") {
-        return askForMediaSourceReload(relativePosAfterSwitch, streamCanceller.signal);
+        return askForMediaSourceReload(relativePosAfterSwitch,
+                                       true,
+                                       streamCanceller.signal);
       }
-
       await segmentBuffersStore.waitForUsableBuffers(streamCanceller.signal);
       if (streamCanceller.isUsed()) {
         return; // The Stream has since been cancelled
@@ -226,7 +263,11 @@ export default function PeriodStream(
           }
         }
         if (strategy.type === "flush-buffer") {
-          callbacks.needsBufferFlush();
+          // The seek to `relativePosAfterSwitch` is only performed if strategy.type
+          // is "flush-buffer" because there should be no interuption when playing in
+          // with `clean-buffer` strategy
+          callbacks.needsBufferFlush({ relativeResumingPosition: relativePosAfterSwitch,
+                                       relativePosHasBeenDefaulted });
           if (streamCanceller.isUsed()) {
             return ; // Previous callback cancelled the Stream by side-effect
           }
@@ -234,7 +275,10 @@ export default function PeriodStream(
       }
 
       garbageCollectors.get(segmentBuffer)(streamCanceller.signal);
-      createAdaptationStream(adaptation, segmentBuffer, streamCanceller.signal);
+      createAdaptationStream(adaptation,
+                             representations,
+                             segmentBuffer,
+                             streamCanceller.signal);
     })().catch((err) => {
       if (err instanceof CancellationError) {
         return;
@@ -246,19 +290,23 @@ export default function PeriodStream(
 
   /**
    * @param {Object} adaptation
+   * @param {Object} representations
    * @param {Object} segmentBuffer
    * @param {Object} cancelSignal
    */
   function createAdaptationStream(
     adaptation : Adaptation,
+    representations : IReadOnlySharedReference<IRepresentationsChoice>,
     segmentBuffer : SegmentBuffer,
     cancelSignal : CancellationSignal
   ) : void {
-    const { manifest } = content;
     const adaptationPlaybackObserver =
       createAdaptationStreamPlaybackObserver(playbackObserver, segmentBuffer);
 
-    AdaptationStream({ content: { manifest, period, adaptation },
+    AdaptationStream({ content: { manifest,
+                                  period,
+                                  adaptation,
+                                  representations },
                        options,
                        playbackObserver: adaptationPlaybackObserver,
                        representationEstimator,
@@ -304,22 +352,23 @@ export default function PeriodStream(
    * Regularly ask to reload the MediaSource on each playback observation
    * performed by the playback observer.
    *
-   * If and only if the Period currently played corresponds to the concerned
-   * Period, applies an offset to the reloaded position corresponding to
-   * `deltaPos`.
-   * This can be useful for example when switching the audio/video tracks, where
-   * you might want to give back some context if that was the currently played
-   * track.
+   * @param {number} timeOffset - Relative position, compared to the current
+   * playhead, at which we should restart playback after reloading.
+   * For example `-2` will reload 2 seconds before the current position.
+   * @param {boolean} stayInPeriod - If `true`, we will control that the position
+   * we reload at, after applying `timeOffset`, is still part of the Period
+   * `period`.
    *
-   * @param {number} deltaPos - If the concerned Period is playing at the time
-   * this function is called, we will add this value, in seconds, to the current
-   * position to indicate the position we should reload at.
-   * This value allows to give back context (by replaying some media data) after
-   * a switch.
+   * If it isn't we will re-calculate that reloaded position to be:
+   *   - either the Period's start if the calculated position is before the
+   *     Period's start.
+   *   - either the Period'end start if the calculated position is after the
+   *     Period's end.
    * @param {Object} cancelSignal
    */
   function askForMediaSourceReload(
-    deltaPos : number,
+    timeOffset : number,
+    stayInPeriod: boolean,
     cancelSignal : CancellationSignal
   ) : void {
     // We begin by scheduling a micro-task to reduce the possibility of race
@@ -328,19 +377,15 @@ export default function PeriodStream(
     // is actually received.
     // It can happen when `askForMediaSourceReload` is called as a side-effect of
     // the same event that triggers the playback observation to be emitted.
-    nextTick(() => {
-      playbackObserver.listen((observation) => {
-        const currentTime = playbackObserver.getCurrentTime();
-        const pos = currentTime + deltaPos;
-
-        // Bind to Period start and end
-        const position = Math.min(Math.max(period.start, pos),
-                                  period.end ?? Infinity);
-        const autoPlay = !(observation.paused.pending ?? playbackObserver.getIsPaused());
+    queueMicrotask(() => {
+      playbackObserver.listen(() => {
+        if (cancelSignal.isCancelled()) {
+          return;
+        }
         callbacks.waitingMediaSourceReload({ bufferType,
                                              period,
-                                             position,
-                                             autoPlay });
+                                             timeOffset,
+                                             stayInPeriod });
       }, { includeLastObservation: true, clearSignal: cancelSignal });
     });
   }
@@ -380,7 +425,8 @@ function getFirstDeclaredMimeType(adaptation : Adaptation) : string {
   if (representations.length === 0) {
     const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION",
                                     "No Representation in the chosen " +
-                                    adaptation.type + " Adaptation can be played");
+                                    adaptation.type + " Adaptation can be played",
+                                    { adaptations: [adaptation] });
     throw noRepErr;
   }
   return representations[0].getMimeTypeString();
@@ -400,8 +446,8 @@ function createAdaptationStreamPlaybackObserver(
     observationRef : IReadOnlySharedReference<IPeriodStreamPlaybackObservation>,
     cancellationSignal : CancellationSignal
   ) : IReadOnlySharedReference<IAdaptationStreamPlaybackObservation> {
-    const newRef = createSharedReference(constructAdaptationStreamPlaybackObservation(),
-                                         cancellationSignal);
+    const newRef = new SharedReference(constructAdaptationStreamPlaybackObservation(),
+                                       cancellationSignal);
 
     observationRef.onUpdate(emitAdaptationStreamPlaybackObservation, {
       clearSignal: cancellationSignal,
@@ -413,7 +459,10 @@ function createAdaptationStreamPlaybackObserver(
     ) : IAdaptationStreamPlaybackObservation {
       const baseObservation = observationRef.getValue();
       const buffered = segmentBuffer.getBufferedRanges();
-      const bufferGap = getLeftSizeOfRange(buffered, baseObservation.position.last);
+      const bufferGap = getLeftSizeOfBufferedTimeRange(
+        buffered,
+        baseObservation.position.getWanted()
+      );
       return objectAssign({}, baseObservation, { bufferGap });
     }
 
@@ -440,7 +489,7 @@ function createEmptyAdaptationStream(
   wantedBufferAhead : IReadOnlySharedReference<number>,
   bufferType : IBufferType,
   content : { period : Period },
-  callbacks : Pick<IAdaptationStreamCallbacks<unknown>, "streamStatusUpdate">,
+  callbacks : Pick<IAdaptationStreamCallbacks, "streamStatusUpdate">,
   cancelSignal : CancellationSignal
 ) : void {
   const { period } = content;
@@ -454,15 +503,15 @@ function createEmptyAdaptationStream(
   function sendStatus() : void {
     const observation = playbackObserver.getReference().getValue();
     const wba = wantedBufferAhead.getValue();
-    const position = observation.position.last;
+    const position = observation.position.getWanted();
     if (period.end !== undefined && position + wba >= period.end) {
       log.debug("Stream: full \"empty\" AdaptationStream", bufferType);
       hasFinishedLoading = true;
     }
     callbacks.streamStatusUpdate({ period,
                                    bufferType,
-                                   position,
                                    imminentDiscontinuity: null,
+                                   position,
                                    isEmptyStream: true,
                                    hasFinishedLoading,
                                    neededSegments: [] });

@@ -1,6 +1,5 @@
 import { expect } from "chai";
-import RxPlayer from "../../../src";
-import XHRMock from "../../utils/request_mock";
+import RxPlayer from "../../../dist/es2017";
 import sleep from "../../utils/sleep.js";
 import {
   waitForLoadedStateAfterLoadVideo,
@@ -15,17 +14,14 @@ import {
 } from "../../contents/DASH_static_SegmentTimeline";
 
 let player;
-let xhrMock;
 
 describe("discontinuities handling", () => {
   beforeEach(() => {
     player = new RxPlayer();
-    xhrMock = new XHRMock();
   });
 
   afterEach(() => {
     player.dispose();
-    xhrMock.restore();
   });
 
   describe("discontinuities between periods", () => {
