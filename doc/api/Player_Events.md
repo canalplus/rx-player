@@ -94,6 +94,34 @@ The object emitted as the following properties:
   That is the real live position (and not the position as announced by the
   video element).
 
+### play
+
+Emitted when the `RxPlayer`'s `videoElement` is no longer considered paused.
+
+This event is generally triggered when and if the
+[`play`](./Basic_Methods/play.md) method has succeeded.
+
+Note that this event can be sent even if the [player's state](./Player_States.md)
+doesn't currently allow playback, for example when in the `"LOADING"` or
+`"BUFFERING"` states, among other.
+It shouldn't be sent however when the player's state is `"STOPPED"` which is
+when no content is loading nor loaded.
+
+### pause
+
+Emitted when the `RxPlayer`'s `videoElement` is now considered paused.
+
+This event is triggered when and if the [`pause`](./Basic_Methods/play.md) method
+has succeeded, when the content has ended or due to other rare occurences: for
+example if we could not automatically play after a `"LOADING"` or `"RELOADING"`
+state due to [the browser's autoplay policies](https://developer.mozilla.org/en-US/docs/Web/Media/Autoplay_guide).
+
+Note that this event can be sent even if the [player's state](./Player_States.md)
+doesn't currently allow playback, for example when in the `"LOADING"` or
+`"BUFFERING"` states, among other.
+It shouldn't be sent however when the player's state is `"STOPPED"` which is
+when no content is loading nor loaded.
+
 ### seeking
 
 Emitted when a "seek" operation (to "move"/"skip" to another position) begins
@@ -150,6 +178,22 @@ The array emitted contains object describing each available audio track:
   the user interface providing a choice between audio tracks.
 
   This information is usually set only if the current Manifest contains one.
+
+- `representations` (`Array.<Object>`):
+  [Representations](../Getting_Started/Glossary.md#representation) of this video track, with
+  attributes:
+
+  - `id` (`string`): The id used to identify this Representation.
+    No other Representation from this track will have the same `id`.
+
+  - `bitrate` (`Number`): The bitrate of this Representation, in bits per
+    seconds.
+
+  - `codec` (`string|undefined`): The audio codec the Representation is
+    in, as announced in the corresponding Manifest.
+
+  - `isSpatialAudio` (`Boolean|undefined`): If set to `true`, this Representation
+    has spatial audio.
 
 This event only concerns the currently-playing Period.
 
@@ -266,6 +310,18 @@ properties:
   the user interface providing a choice between audio tracks.
 
   This information is usually set only if the current Manifest contains one.
+
+- `representations` (`Array.<Object>`):
+  [Representations](../Getting_Started/Glossary.md#representation) of this video track, with
+  attributes:
+  - `id` (`string`): The id used to identify this Representation.
+    No other Representation from this track will have the same `id`.
+  - `bitrate` (`Number`): The bitrate of this Representation, in bits per
+    seconds.
+  - `codec` (`string|undefined`): The audio codec the Representation is
+    in, as announced in the corresponding Manifest.
+  - `isSpatialAudio` (`Boolean|undefined`): If set to `true`, this Representation
+    has spatial audio.
 
 This event only concerns the currently-playing Period.
 

@@ -158,6 +158,10 @@ export interface IParsedRepresentation {
    * Information about the HDR characteristic of a content.
    */
   hdrInfo?: IHDRInformation | undefined;
+  /** `true` if audio has Dolby Atmos. */
+  isSpatialAudio?: boolean | undefined;
+
+  supplementalCodecs? : string | undefined;
 }
 
 /** Every possible types an Adaptation can have. */
