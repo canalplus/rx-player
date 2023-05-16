@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// eslint-disable-next-line max-len
+import MediaSourceContentInitializer from "../../core/init/media_source_content_initializer";
 import { IFeaturesObject } from "../../features/types";
 import DashWasmParser, {
   IDashWasmParserOptions,
@@ -27,6 +29,7 @@ const dashWasmFeature = {
       features.transports.dash = dash;
     }
     features.dashParsers.wasm = dashWasmParser;
+    features.mediaSourceInit = MediaSourceContentInitializer;
   },
 
   initialize(opts : IDashWasmParserOptions) : Promise<void> {

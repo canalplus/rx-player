@@ -14,28 +14,28 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-
+/* eslint-disable-next-line max-len */
+import MediaSourceContentInitializer from "../../../core/init/media_source_content_initializer";
 import dashJsParser from "../../../parsers/manifest/dash/js-parser";
 import DASHFeature from "../../../transports/dash";
+import { IFeaturesObject } from "../../types";
 import addDASHFeature from "../dash";
-
-jest.mock("../../../transports/dash", () => ({
-  __esModule: true as const,
-  default: jest.fn(),
-}));
 
 describe("Features list - DASH", () => {
   it("should add DASH in the current features", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const featureObject : any = { transports: {},
-                                  dashParsers: { js: null,
-                                                 wasm: null } };
+    const featureObject = {
+      transports: {},
+      dashParsers: { js: null, wasm: null },
+      mediaSourceInit: null,
+    } as unknown as IFeaturesObject;
     addDASHFeature(featureObject);
-    expect(featureObject).toEqual({ transports: { dash: DASHFeature },
-                                    dashParsers: { js: dashJsParser,
-                                                   wasm: null } });
+    expect(featureObject).toEqual({
+      transports: { dash: DASHFeature },
+      dashParsers: { js: dashJsParser, wasm: null },
+      mediaSourceInit: MediaSourceContentInitializer,
+    });
     expect(featureObject.transports.dash).toBe(DASHFeature);
+    expect(featureObject.mediaSourceInit)
+      .toBe(MediaSourceContentInitializer);
   });
 });
