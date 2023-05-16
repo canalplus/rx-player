@@ -14,31 +14,22 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable-next-line max-len */
+import MediaSourceContentInitializer from "../../../core/init/media_source_content_initializer";
+import { IFeaturesObject } from "../../../features/types";
+import local from "../../../transports/local";
+import addLocalManifestFeature from "../local";
 
 describe("Features list - LOCAL_MANIFEST", () => {
-  beforeEach(() => {
-    jest.resetModules();
-  });
-
   it("should add LOCAL_MANIFEST in the current features", () => {
-    const feat = {};
-    jest.mock("../../../transports/local", () => ({ __esModule: true as const,
-                                                    default: feat }));
-    const addDASHFeature = jest.requireActual("../local").default;
-
-    const featureObject : {
-      transports : { [featureName : string] : unknown };
-    } = { transports: {} };
-
-    addDASHFeature(featureObject);
-
-    expect(featureObject).toEqual({ transports: { local: {} } });
-    expect(featureObject.transports.local).toBe(feat);
+    const featureObject = { transports: {} } as unknown as IFeaturesObject;
+    addLocalManifestFeature(featureObject);
+    expect(featureObject).toEqual({
+      transports: { local },
+      mediaSourceInit: MediaSourceContentInitializer,
+    });
+    expect(featureObject.transports.local).toBe(local);
+    expect(featureObject.mediaSourceInit)
+      .toBe(MediaSourceContentInitializer);
   });
 });

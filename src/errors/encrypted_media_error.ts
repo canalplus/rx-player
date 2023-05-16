@@ -51,7 +51,9 @@ export default class EncryptedMediaError extends Error {
   constructor(
     code : IEncryptedMediaErrorCode,
     reason : string,
-    supplementaryInfos? : { keyStatuses? : IEncryptedMediaErrorKeyStatusObject[] }
+    supplementaryInfos? : { keyStatuses? : IEncryptedMediaErrorKeyStatusObject[] |
+                                           undefined; } |
+                          undefined
   ) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
@@ -61,7 +63,7 @@ export default class EncryptedMediaError extends Error {
     this.type = ErrorTypes.ENCRYPTED_MEDIA_ERROR;
 
     this.code = code;
-    this.message = errorMessage(this.name, this.code, reason);
+    this.message = errorMessage(this.code, reason);
     this.fatal = false;
 
     if (typeof supplementaryInfos?.keyStatuses === "string") {

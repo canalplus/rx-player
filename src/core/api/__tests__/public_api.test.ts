@@ -50,38 +50,6 @@ describe("API - Public API", () => {
       });
     });
 
-    describe("getManifest", () => {
-      it("should return null in getManifest by default", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getManifest()).toBe(null);
-      });
-    });
-
-    describe("getCurrentAdaptations", () => {
-      it("should return null in getCurrentAdaptations by default", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getCurrentAdaptations()).toBe(null);
-      });
-    });
-
-    describe("getCurrentRepresentations", () => {
-      it("should return null in getCurrentRepresentations by default", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getCurrentRepresentations()).toBe(null);
-      });
-    });
-
-//     describe("getNativeTextTrack", () => {
-//       it("should return null in getNativeTextTrack by default", () => {
-// eslint-disable import/no-deprecated
-//         expect(player.getNativeTextTrack()).toBe(null);
-// eslint-enable import/no-deprecated
-//       });
-//     });
-
     describe("getPlayerState", () => {
       it("should return \"STOPPED\" in getPlayerState by default", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
@@ -98,17 +66,17 @@ describe("API - Public API", () => {
       });
     });
 
-    describe("getUrl", () => {
-      it("should return undefined in getUrl by default", () => {
+    describe("getContentUrls", () => {
+      it("should return undefined in getContentUrls by default", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
-        expect(player.getUrl()).toBe(undefined);
+        expect(player.getContentUrls()).toBe(undefined);
       });
     });
 
-    describe("getVideoDuration", () => {
+    describe("getMediaDuration", () => {
       /* eslint-disable max-len */
-      it("should return the video element initial duration in getVideoDuration by default", () => {
+      it("should return the video element initial duration in getMediaDuration by default", () => {
       /* eslint-enable max-len */
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
@@ -118,33 +86,17 @@ describe("API - Public API", () => {
         if (videoElement == null) {
           throw new Error("The API is disposed");
         }
-        expect(player.getVideoDuration()).toEqual(
+        expect(player.getMediaDuration()).toEqual(
           videoElement.duration
         );
       });
     });
 
-    describe("getVideoBufferGap", () => {
-      it("should return Infinity in getVideoBufferGap by default", () => {
+    describe("getCurrentBufferGap", () => {
+      it("should return 0 in getCurrentBufferGap by default", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
-        expect(player.getVideoBufferGap()).toBe(Infinity);
-      });
-    });
-
-    describe("getVideoLoadedTime", () => {
-      it("should return 0 in getVideoLoadedTime by default", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getVideoLoadedTime()).toBe(0);
-      });
-    });
-
-    describe("getVideoPlayedTime", () => {
-      it("should return 0 in getVideoPlayedTime by default", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getVideoPlayedTime()).toBe(0);
+        expect(player.getCurrentBufferGap()).toBe(0);
       });
     });
 
@@ -180,59 +132,19 @@ describe("API - Public API", () => {
       });
     });
 
-    // describe("isFullscreen", () => {
-    //   it("should return false in isFullscreen by default", () => {
-    // eslint-disable import/no-deprecated
-    //     expect(player.isFullscreen()).toBe(false);
-    // eslint-enable import/no-deprecated
-    //   });
-    // });
-
-    describe("getAvailableVideoBitrates", () => {
-      it("should return [] in getAvailableVideoBitrates by default", () => {
+    describe("getVideoRepresentation", () => {
+      it("should return undefined in getVideoRepresentation by default", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
-        expect(player.getAvailableVideoBitrates()).toEqual([]);
+        expect(player.getVideoRepresentation()).toBe(undefined);
       });
     });
 
-    describe("getAvailableAudioBitrates", () => {
-      it("should return [] in getAvailableAudioBitrates by default", () => {
+    describe("getAudioRepresentation", () => {
+      it("should return undefined in getAudioRepresentation by default", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
-        expect(player.getAvailableAudioBitrates()).toEqual([]);
-      });
-    });
-
-    describe("getVideoBitrate", () => {
-      it("should return undefined in getVideoBitrate by default", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getVideoBitrate()).toBe(undefined);
-      });
-    });
-
-    describe("getAudioBitrate", () => {
-      it("should return undefined in getAudioBitrate by default", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getVideoBitrate()).toBe(undefined);
-      });
-    });
-
-    describe("getMaxVideoBitrate", () => {
-      it("should return Infinity in getMaxVideoBitrate by default", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getMaxVideoBitrate()).toBe(Infinity);
-      });
-    });
-
-    describe("getMaxAudioBitrate", () => {
-      it("should return Infinity in getMaxAudioBitrate by default", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getMaxAudioBitrate()).toBe(Infinity);
+        expect(player.getAudioRepresentation()).toBe(undefined);
       });
     });
 
@@ -296,27 +208,6 @@ describe("API - Public API", () => {
       });
     });
 
-    // describe("exitFullscreen", () => {
-    //   it("should allow exitFullscreen by default", () => {
-    // eslint-disable import/no-deprecated
-    //     player.exitFullscreen();
-    // eslint-enable import/no-deprecated
-    //   });
-    // });
-
-    // describe("setFullscreen", () => {
-    //   it("should allow setFullscreen by default", () => {
-    // eslint-disable import/no-deprecated
-    //     player.setFullscreen();
-    // eslint-enable import/no-deprecated
-
-    //     // TODO remove for v3.0.0
-    // eslint-disable import/no-deprecated
-    //     player.setFullscreen(false);
-    // eslint-enable import/no-deprecated
-    //   });
-    // });
-
     describe("getVolume/setVolume", () => {
       it("should throw in setVolume by default if no volume has been given", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
@@ -345,7 +236,7 @@ describe("API - Public API", () => {
     });
 
     describe("mute/unMute/isMute", () => {
-      it("should set the volume to 0 in mute by default", () => {
+      it("should keep the volume yet mute the media element in mute by default", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
         const videoElement = player.getVideoElement();
@@ -359,15 +250,18 @@ describe("API - Public API", () => {
         player.setVolume(1);
 
         player.mute();
-        expect(player.getVolume()).toBe(0);
-        expect(videoElement.volume).toBe(0);
-        expect(videoElement.muted).toBe(false);
+        expect(player.getVolume()).toBe(1);
+        expect(videoElement.volume).toBe(1);
+        expect(videoElement.muted).toBe(true);
         expect(player.isMute()).toBe(true);
         player.unMute();
         expect(player.isMute()).toBe(false);
+        expect(player.getVolume()).toBe(1);
+        expect(videoElement.volume).toBe(1);
+        expect(videoElement.muted).toBe(false);
       });
 
-      it("should unmute the volume at the previous value in unMute by default", () => {
+      it("should unmute without changing the volume in unMute by default", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
         // back to a "normal" state.
@@ -389,13 +283,15 @@ describe("API - Public API", () => {
 
         player.mute();
         expect(player.isMute()).toBe(true);
-        expect(player.getVolume()).toBe(0);
-        expect(videoElement.volume).toBe(0);
+        expect(player.getVolume()).toBe(0.8);
+        expect(videoElement.volume).toBe(0.8);
+        expect(videoElement.muted).toBe(true);
 
         player.unMute();
         expect(player.isMute()).toBe(false);
         expect(player.getVolume()).toBe(0.8);
         expect(videoElement.volume).toBe(0.8);
+        expect(videoElement.muted).toBe(false);
       });
 
       it("should return false in isMute by default", () => {
@@ -404,301 +300,14 @@ describe("API - Public API", () => {
         expect(player.isMute()).toBe(false);
       });
 
-      it("should return true in isMute if the volume is equal to 0", () => {
+      it("should not return true in isMute if just the volume is equal to 0", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
-        const oldVolume = player.getVolume();
 
         expect(player.isMute()).toBe(false);
 
         player.setVolume(0);
-        expect(player.isMute()).toBe(true);
-        player.setVolume(oldVolume);
         expect(player.isMute()).toBe(false);
-
-        player.mute();
-        expect(player.isMute()).toBe(true);
-        player.unMute();
-        expect(player.isMute()).toBe(false);
-
-        player.mute();
-        expect(player.isMute()).toBe(true);
-        player.setVolume(oldVolume);
-        expect(player.isMute()).toBe(false);
-        player.unMute();
-        expect(player.isMute()).toBe(false);
-
-        player.setVolume(oldVolume);
-      });
-    });
-
-    describe("setAudioBitrate/getManualAudioBitrate", () => {
-      it("should have a -1 manual audio bitrate by default", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getManualAudioBitrate()).toBe(-1);
-      });
-
-      it("should update manual audio bitrate when calling setAudioBitrate", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        const oldManual = player.getManualAudioBitrate();
-
-        player.setAudioBitrate(84);
-        expect(player.getManualAudioBitrate()).toBe(84);
-        player.setAudioBitrate(-1);
-        expect(player.getManualAudioBitrate()).toBe(-1);
-        player.setAudioBitrate(0);
-        expect(player.getManualAudioBitrate()).toBe(0);
-
-        player.setAudioBitrate(oldManual);
-        expect(player.getManualAudioBitrate()).toBe(oldManual);
-      });
-    });
-
-    describe("setVideoBitrate/getManualVideoBitrate", () => {
-      it("should have a -1 manual video bitrate by default", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getManualVideoBitrate()).toBe(-1);
-      });
-
-      it("should update manual video bitrate when calling setVideoBitrate", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        const oldManual = player.getManualVideoBitrate();
-
-        player.setVideoBitrate(84);
-        expect(player.getManualVideoBitrate()).toBe(84);
-
-        player.setVideoBitrate(-1);
-        expect(player.getManualVideoBitrate()).toBe(-1);
-
-        player.setVideoBitrate(0);
-        expect(player.getManualVideoBitrate()).toBe(0);
-
-        player.setVideoBitrate(oldManual);
-        expect(player.getManualVideoBitrate()).toBe(oldManual);
-      });
-    });
-
-    describe("setMaxVideoBitrate/getMaxVideoBitrate", () => {
-      /* eslint-disable max-len */
-      it("should update the maximum video bitrate when calling setMaxVideoBitrate by default", () => {
-      /* eslint-enable max-len */
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        const oldMax = player.getMaxVideoBitrate();
-
-        player.setMaxVideoBitrate(Infinity);
-        expect(player.getMaxVideoBitrate()).toBe(Infinity);
-
-        player.setMaxVideoBitrate(500);
-        expect(player.getMaxVideoBitrate()).toBe(500);
-
-        player.setMaxVideoBitrate(3);
-        expect(player.getMaxVideoBitrate()).toBe(3);
-
-        player.setMaxVideoBitrate(0);
-        expect(player.getMaxVideoBitrate()).toBe(0);
-
-        player.setMaxVideoBitrate(Infinity);
-        player.getMaxVideoBitrate();
-
-        player.setMaxVideoBitrate(oldMax);
-        expect(player.getMaxVideoBitrate()).toBe(oldMax);
-      });
-
-      it("should throw when setting a negative maximum video bitrate", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        const oldMax = player.getMaxVideoBitrate();
-
-        expect(() => player.setMaxVideoBitrate(-1))
-          .toThrow(new Error("Invalid maximum video bitrate given. " +
-                             "Its value, \"-1\" is inferior the current " +
-                              "minimum video birate, \"0\"."));
-        expect(player.getMaxVideoBitrate()).toBe(oldMax);
-
-        expect(() => player.setMaxVideoBitrate(-Infinity))
-          .toThrow(new Error("Invalid maximum video bitrate given. " +
-                             "Its value, \"-Infinity\" is inferior the current " +
-                              "minimum video birate, \"0\"."));
-        expect(player.getMaxVideoBitrate()).toBe(oldMax);
-
-        expect(() => player.setMaxVideoBitrate(-100))
-          .toThrow(new Error("Invalid maximum video bitrate given. " +
-                             "Its value, \"-100\" is inferior the current " +
-                              "minimum video birate, \"0\"."));
-        expect(player.getMaxVideoBitrate()).toBe(oldMax);
-      });
-
-      // eslint-disable-next-line max-len
-      it("should throw when setting a maximum video bitrate inferior to the minimum", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        const oldMin = player.getMinVideoBitrate();
-        const oldMax = player.getMaxVideoBitrate();
-
-        player.setMinVideoBitrate(50);
-        expect(() => player.setMaxVideoBitrate(49))
-          .toThrow(new Error("Invalid maximum video bitrate given. " +
-                             "Its value, \"49\" is inferior the current " +
-                              "minimum video birate, \"50\"."));
-        expect(player.getMaxVideoBitrate()).toBe(oldMax);
-        player.setMinVideoBitrate(oldMin);
-      });
-
-      // eslint-disable-next-line max-len
-      it("should not throw when setting a maximum video bitrate equal to the minimum", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        const oldMin = player.getMinVideoBitrate();
-        const oldMax = player.getMaxVideoBitrate();
-
-        player.setMinVideoBitrate(50);
-        player.setMaxVideoBitrate(50);
-        expect(player.getMaxVideoBitrate()).toBe(50);
-        player.setMinVideoBitrate(oldMin);
-        player.setMaxVideoBitrate(oldMax);
-      });
-    });
-
-    describe("setMinAudioBitrate/getMinAudioBitrate", () => {
-      /* eslint-disable max-len */
-      it("should update the minimum audio bitrate when calling setMinAudioBitrate by default", () => {
-      /* eslint-enable max-len */
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        const oldMin = player.getMinAudioBitrate();
-
-        player.setMinAudioBitrate(0);
-        expect(player.getMinAudioBitrate()).toBe(0);
-
-        player.setMinAudioBitrate(500);
-        expect(player.getMinAudioBitrate()).toBe(500);
-
-        player.setMinAudioBitrate(3);
-        expect(player.getMinAudioBitrate()).toBe(3);
-
-        player.setMinAudioBitrate(0);
-        expect(player.getMinAudioBitrate()).toBe(0);
-
-        player.setMinAudioBitrate(oldMin);
-        expect(player.getMinAudioBitrate()).toBe(oldMin);
-      });
-
-      // eslint-disable-next-line max-len
-      it("should throw when setting a minimum audio bitrate superior to the maximum", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        const oldMax = player.getMaxAudioBitrate();
-        const oldMin = player.getMinAudioBitrate();
-
-        player.setMaxAudioBitrate(49);
-        expect(() => player.setMinAudioBitrate(50))
-          .toThrow(new Error("Invalid minimum audio bitrate given. " +
-                             "Its value, \"50\" is superior the current " +
-                              "maximum audio birate, \"49\"."));
-        expect(player.getMinAudioBitrate()).toBe(oldMin);
-        player.setMaxAudioBitrate(oldMax);
-      });
-
-      // eslint-disable-next-line max-len
-      it("should not throw when setting a minimum audio bitrate equal to the maximum", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        const oldMax = player.getMaxAudioBitrate();
-        const oldMin = player.getMinAudioBitrate();
-
-        player.setMaxAudioBitrate(50);
-        player.setMinAudioBitrate(50);
-        expect(player.getMinAudioBitrate()).toBe(50);
-        player.setMaxAudioBitrate(oldMax);
-        player.setMinAudioBitrate(oldMin);
-      });
-    });
-
-
-    describe("setMaxAudioBitrate/getMaxAudioBitrate", () => {
-      /* eslint-disable max-len */
-      it("should update the maximum audio bitrate when calling setMaxAudioBitrate by default", () => {
-      /* eslint-enable max-len */
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        const oldMax = player.getMaxAudioBitrate();
-
-        player.setMaxAudioBitrate(Infinity);
-        expect(player.getMaxAudioBitrate()).toBe(Infinity);
-
-        player.setMaxAudioBitrate(500);
-        expect(player.getMaxAudioBitrate()).toBe(500);
-
-        player.setMaxAudioBitrate(3);
-        expect(player.getMaxAudioBitrate()).toBe(3);
-
-        player.setMaxAudioBitrate(0);
-        expect(player.getMaxAudioBitrate()).toBe(0);
-
-        player.setMaxAudioBitrate(Infinity);
-        player.getMaxAudioBitrate();
-
-        player.setMaxAudioBitrate(oldMax);
-        expect(player.getMaxAudioBitrate()).toBe(oldMax);
-      });
-
-      it("should throw when setting a negative maximum audio bitrate", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        const oldMax = player.getMaxAudioBitrate();
-
-        expect(() => player.setMaxAudioBitrate(-1))
-          .toThrow(new Error("Invalid maximum audio bitrate given. " +
-                             "Its value, \"-1\" is inferior the current " +
-                              "minimum audio birate, \"0\"."));
-        expect(player.getMaxAudioBitrate()).toBe(oldMax);
-
-        expect(() => player.setMaxAudioBitrate(-Infinity))
-          .toThrow(new Error("Invalid maximum audio bitrate given. " +
-                             "Its value, \"-Infinity\" is inferior the current " +
-                              "minimum audio birate, \"0\"."));
-        expect(player.getMaxAudioBitrate()).toBe(oldMax);
-
-        expect(() => player.setMaxAudioBitrate(-100))
-          .toThrow(new Error("Invalid maximum audio bitrate given. " +
-                             "Its value, \"-100\" is inferior the current " +
-                              "minimum audio birate, \"0\"."));
-        expect(player.getMaxAudioBitrate()).toBe(oldMax);
-      });
-
-      // eslint-disable-next-line max-len
-      it("should throw when setting a maximum audio bitrate inferior to the minimum", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        const oldMin = player.getMinAudioBitrate();
-        const oldMax = player.getMaxAudioBitrate();
-
-        player.setMinAudioBitrate(50);
-        expect(() => player.setMaxAudioBitrate(49))
-          .toThrow(new Error("Invalid maximum audio bitrate given. " +
-                             "Its value, \"49\" is inferior the current " +
-                              "minimum audio birate, \"50\"."));
-        expect(player.getMaxAudioBitrate()).toBe(oldMax);
-        player.setMinAudioBitrate(oldMin);
-      });
-
-      // eslint-disable-next-line max-len
-      it("should not throw when setting a maximum audio bitrate equal to the minimum", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        const oldMin = player.getMinAudioBitrate();
-        const oldMax = player.getMaxAudioBitrate();
-
-        player.setMinAudioBitrate(50);
-        player.setMaxAudioBitrate(50);
-        expect(player.getMaxAudioBitrate()).toBe(50);
-        player.setMinAudioBitrate(oldMin);
-        player.setMaxAudioBitrate(oldMax);
       });
     });
 
@@ -827,14 +436,6 @@ describe("API - Public API", () => {
         const player = new PublicAPI();
         player.disableTextTrack();
         expect(player.getTextTrack()).toBe(undefined);
-      });
-    });
-
-    describe("getImageTrackData", () => {
-      it("should return null in getImageTrackData by default", () => {
-        const PublicAPI = jest.requireActual("../public_api").default;
-        const player = new PublicAPI();
-        expect(player.getImageTrackData()).toBe(null);
       });
     });
 

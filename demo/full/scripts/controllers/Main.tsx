@@ -1,45 +1,51 @@
 import RxPlayer from "../../../../src/minimal";
 import * as React from "react";
+import GitHubButton from "../components/GitHubButton";
 import Player from "./Player";
 
 function MainComponent(): JSX.Element {
   return (
-    <div>
-      <div className="nav-header">
-        <section className="title-wrapper">
+    <React.Fragment>
+      <header>
+        <div className="left">
           <h1 className="title">
             <a href="https://github.com/canalplus/rx-player">
-              <img className="rxplayer-logo" alt="RxPlayer" src="./assets/logo_white.png"/>
+              <img className="logo" alt="RxPlayer" src="./assets/logo_white.png"/>
             </a>
-            <a href="https://github.com/canalplus/rx-player/releases">
-              <span className="version">{" v" + RxPlayer.version}</span>
+            <a href="https://github.com/canalplus/rx-player/releases" className="version">
+              {" v" + RxPlayer.version}
             </a>
           </h1>
-        </section>
-        <div className="header-links-buttons">
-          <a aria-label="Go to Canal+ website" href="https://canalplus.com">
-            <img className="title-logo" alt="CANAL+" src="./assets/canalp.svg"/>
-          </a>
-          <span className="button-gh"><a
-            className="github-button"
-            href="https://github.com/canalplus/rx-player"
-            data-size="large"
-            data-icon="octicon-star"
-            data-show-count="true"
-            aria-label="Star the RxPlayer on GitHub">
-            Star
-          </a></span>
-          <span className="button-gh"><a
-            className="github-button"
-            href="https://github.com/canalplus/rx-player/fork"
-            data-size="large"
-            aria-label="Fork the RxPlayer on GitHub">
-            Fork
-          </a></span>
+          <nav>
+            <a href="https://developers.canal-plus.com/rx-player/doc/Getting_Started/Welcome.html">
+              Getting Started
+            </a>
+            <a href="https://developers.canal-plus.com/rx-player/doc/api/Overview.html">
+              API Docs
+            </a>
+          </nav>
         </div>
-      </div>
+        <div className="right">
+          <a aria-label="Go to Canal+ website" href="https://canalplus.com">
+            <img className="canal-logo" alt="CANAL+" src="./assets/canalp.svg"/>
+          </a>
+          <GitHubButton
+            href="https://github.com/canalplus/rx-player"
+            ariaLabel="Star the RxPlayer on GitHub"
+            dataIcon="octicon-star"
+            dataShowCount="true"
+            dataText="Star"
+          />
+          <GitHubButton
+            href="https://github.com/canalplus/rx-player/fork"
+            ariaLabel="Fork the RxPlayer on GitHub"
+            dataIcon="octicon-repo-forked"
+            dataText="Fork"
+          />
+        </div>
+      </header>
       <Player />
-    </div>
+    </React.Fragment>
   );
 }
 

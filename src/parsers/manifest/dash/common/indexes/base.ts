@@ -19,6 +19,7 @@ import {
   IRepresentationIndex,
   ISegment,
 } from "../../../../../manifest";
+import { ISegmentInformation } from "../../../../../transports";
 import { IEMSG } from "../../../../containers/isobmff";
 import {
   fromIndexTime,
@@ -26,6 +27,7 @@ import {
   IIndexSegment,
   toIndexTime,
 } from "../../../utils/index_helpers";
+import ManifestBoundsCalculator from "../manifest_bounds_calculator";
 import getInitSegment from "./get_init_segment";
 import getSegmentsFromTimeline from "./get_segments_from_timeline";
 import { constructRepresentationUrl } from "./tokens";
@@ -120,6 +122,8 @@ export interface IBaseIndexContextArgument {
   representationId? : string | undefined;
   /** Bitrate of the Representation concerned. */
   representationBitrate? : number | undefined;
+  /** Allows to obtain the minimum and maximum positions of a content. */
+  manifestBoundsCalculator : ManifestBoundsCalculator;
   /* Function that tells if an EMSG is whitelisted by the manifest */
   isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 }
@@ -179,6 +183,9 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   /** Absolute end of the period, timescaled and converted to index time. */
   private _scaledPeriodEnd : number | undefined;
 
+  /** Allows to obtain the minimum and maximum positions of a content. */
+  private _manifestBoundsCalculator : ManifestBoundsCalculator;
+
   /* Function that tells if an EMSG is whitelisted by the manifest */
   private _isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 
@@ -228,6 +235,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
                     endNumber: index.endNumber,
                     timeline: index.timeline ?? [],
                     timescale };
+    this._manifestBoundsCalculator = context.manifestBoundsCalculator;
     this._scaledPeriodStart = toIndexTime(periodStart, this._index);
     this._scaledPeriodEnd = periodEnd == null ? undefined :
                                                 toIndexTime(periodEnd, this._index);
@@ -261,8 +269,9 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     return getSegmentsFromTimeline(this._index,
                                    from,
                                    dur,
-                                   this._isEMSGWhitelisted,
-                                   this._scaledPeriodEnd);
+                                   this._manifestBoundsCalculator,
+                                   this._scaledPeriodEnd,
+                                   this._isEMSGWhitelisted);
   }
 
   /**
@@ -346,26 +355,6 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * No segment in a `BaseRepresentationIndex` are known initially.
-   * It is only defined generally in an "index segment" that will thus need to
-   * be first loaded and parsed.
-   * Until then, this `BaseRepresentationIndex` is considered as `uninitialized`
-   * (@see isInitialized).
-   *
-   * Once that those information are available, the present
-   * `BaseRepresentationIndex` can be "initialized" by adding that parsed
-   * segment information through this method.
-   * @param {Array.<Object>} indexSegments
-   * @returns {Array.<Object>}
-   */
-  initializeIndex(indexSegments : IAddedIndexSegment[]) : void {
-    for (let i = 0; i < indexSegments.length; i++) {
-      _addSegmentInfos(this._index, indexSegments[i]);
-    }
-    this._isInitialized = true;
-  }
-
-  /**
    * Returns `false` as a `BaseRepresentationIndex` should not be dynamic and as
    * such segments should never fall out-of-sync.
    * @returns {Boolean}
@@ -379,8 +368,8 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * should become available in the future.
    * @returns {Boolean}
    */
-  isFinished() : true {
-    return true;
+  isStillAwaitingFutureSegments() : false {
+    return false;
   }
 
   /**
@@ -401,6 +390,34 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * No segment in a `BaseRepresentationIndex` are known initially.
+   *
+   * It is only defined generally in an "index segment" that will thus need to
+   * be first loaded and parsed.
+   * Until then, this `BaseRepresentationIndex` is considered as `uninitialized`
+   * (@see isInitialized).
+   *
+   * Once that those information are available, the present
+   * `BaseRepresentationIndex` can be "initialized" by adding that parsed
+   * segment information through this method.
+   * @param {Array.<Object>} indexSegments
+   * @returns {Array.<Object>}
+   */
+  initialize(indexSegments : ISegmentInformation[]) : void {
+    if (this._isInitialized) {
+      return ;
+    }
+    for (let i = 0; i < indexSegments.length; i++) {
+      _addSegmentInfos(this._index, indexSegments[i]);
+    }
+    this._isInitialized = true;
+  }
+
+  addPredictedSegments() : void {
+    log.warn("Cannot add predicted segments to a `BaseRepresentationIndex`");
+  }
+
+  /**
    * Replace in-place this `BaseRepresentationIndex` information by the
    * information from another one.
    * @param {Object} newIndex
@@ -415,22 +432,4 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   _update() : void {
     log.error("Base RepresentationIndex: Cannot update a SegmentList");
   }
-}
-
-/**
- * Format of a segment received through the `initialize` method, allowing  to
- * add segments to a BaseRepresentationIndex.
- */
-export interface IAddedIndexSegment {
-  /** This segment start time, timescaled. */
-  time : number;
-  /** This segment difference between its end and start time, timescaled. */
-  duration : number;
-  /** Dividing `time` or `duration` with this value allows to obtain seconds. */
-  timescale : number;
-  /**
-   * Start and ending bytes (included) for the segment in the whole ISOBMFF
-   * buffer.
-   */
-  range : [number, number];
 }
