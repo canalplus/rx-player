@@ -30,9 +30,8 @@ import assert from "../../../../utils/assert";
 import EventEmitter from "../../../../utils/event_emitter";
 import noop from "../../../../utils/noop";
 import objectAssign from "../../../../utils/object_assign";
-import createSharedReference, {
+import SharedReference, {
   IReadOnlySharedReference,
-  ISharedReference,
 } from "../../../../utils/reference";
 import TaskCanceller from "../../../../utils/task_canceller";
 import { IPrioritizedSegmentFetcher } from "../../../fetchers";
@@ -80,7 +79,7 @@ export default class DownloadingQueue<T>
    * `undefined` when this is not yet known.
    * `null` when no initialization segment or timescale exists.
    */
-  private _initSegmentInfoRef : ISharedReference<number | undefined | null>;
+  private _initSegmentInfoRef : SharedReference<number | undefined | null>;
   /**
    * Some media segment might have been loaded and are only awaiting for the
    * initialization segment to be parsed before being parsed themselves.
@@ -123,7 +122,7 @@ export default class DownloadingQueue<T>
     this._initSegmentRequest = null;
     this._mediaSegmentRequest = null;
     this._segmentFetcher = segmentFetcher;
-    this._initSegmentInfoRef = createSharedReference(undefined);
+    this._initSegmentInfoRef = new SharedReference<number | undefined | null>(undefined);
     this._mediaSegmentAwaitingInitMetadata = null;
     if (!hasInitSegment) {
       this._initSegmentInfoRef.setValue(null);
@@ -509,7 +508,7 @@ export interface IDownloadingQueueEvent<T> {
    * multiple `IParsedSegmentEvent` for a single segment, if that segment is
    * divided into multiple decodable chunks.
    * You will know that all `IParsedSegmentEvent` have been loaded for a given
-   * segment once you received the `IEndOfSegmentEvent` for that segment.
+   * segment once you received the corresponding event.
    */
   parsedMediaSegment : IParsedSegmentPayload<T>;
   /** Notify that a media or initialization segment has been fully-loaded. */

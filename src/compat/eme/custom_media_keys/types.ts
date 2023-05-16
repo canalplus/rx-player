@@ -40,7 +40,7 @@ export interface ICustomMediaKeySession extends IEventEmitter<IMediaKeySessionEv
 }
 
 export interface ICustomMediaKeys {
-  _setVideo : (vid : HTMLMediaElement) => void;
+  _setVideo : (vid : HTMLMediaElement) => Promise<unknown>;
   createSession(sessionType? : MediaKeySessionType) : ICustomMediaKeySession;
   setServerCertificate(setServerCertificate : BufferSource) : Promise<void>;
 }

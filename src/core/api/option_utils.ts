@@ -63,12 +63,12 @@ export interface IParsedTransportOptions {
   checkMediaSegmentIntegrity? : boolean | undefined;
   lowLatencyMode : boolean;
   manifestLoader?: IManifestLoader | undefined;
-  manifestUpdateUrl? : string | undefined;
   referenceDateTime? : number | undefined;
   representationFilter? : IRepresentationFilter | undefined;
   segmentLoader? : ISegmentLoader | undefined;
   serverSyncInfos? : IServerSyncInfos | undefined;
   /* eslint-disable import/no-deprecated */
+  manifestUpdateUrl? : string | undefined;
   supplementaryImageTracks? : ISupplementaryImageTrack[] | undefined;
   supplementaryTextTracks? : ISupplementaryTextTrack[] | undefined;
   /* eslint-enable import/no-deprecated */
@@ -587,6 +587,11 @@ function parseLoadVideoOptions(
       }
     }
     transportOptions.supplementaryImageTracks = supplementaryImageTracks;
+  }
+
+  if (!isNullOrUndefined(options.transportOptions?.manifestUpdateUrl)) {
+    warnOnce("`manifestUpdateUrl` API is deprecated, please open an issue if you" +
+             " still rely on this.");
   }
 
   if (isNullOrUndefined(options.textTrackMode)) {

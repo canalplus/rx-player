@@ -78,5 +78,3 @@ declare const enum ENVIRONMENT_ENUM {
 declare const __LOGGER_LEVEL__ : {
   CURRENT_LEVEL : string;
 };
-
-declare const __RX_PLAYER_DEBUG_MODE__ : boolean | undefined;

@@ -56,6 +56,21 @@ export default class RequestError extends Error {
     }
     this.status = status;
     this.type = type;
-    this.message = type;
+
+    switch (type) {
+      case "TIMEOUT":
+        this.message = "The request timed out";
+        break;
+      case "ERROR_EVENT":
+        this.message = "An error prevented the request to be performed successfully";
+        break;
+      case "PARSE_ERROR":
+        this.message = "An error happened while formatting the response data";
+        break;
+      case "ERROR_HTTP_CODE":
+        this.message = "An HTTP status code indicating failure was received: " +
+          String(this.status);
+        break;
+    }
   }
 }
