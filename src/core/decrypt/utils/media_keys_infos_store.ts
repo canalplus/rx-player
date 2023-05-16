@@ -17,12 +17,15 @@
 import {
   ICustomMediaKeys,
   ICustomMediaKeySystemAccess,
-} from "../../../compat";
+  IEmeApiImplementation,
+} from "../../../compat/eme";
 import { IKeySystemOption } from "../../../public_types";
 import LoadedSessionsStore from "./loaded_sessions_store";
 
 /** DRM-related state that can be associated to a single HTMLMediaElement. */
 export interface IMediaElementMediaKeysInfos {
+  emeImplementation : IEmeApiImplementation;
+
   /** Last keySystemOptions used with that HTMLMediaElement. */
   keySystemOptions : IKeySystemOption;
 
