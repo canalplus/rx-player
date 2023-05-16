@@ -27,13 +27,17 @@ Using one directly defined in the RxPlayer API instead allows to:
 This feature is not present in default builds to prevent adding unnecessary code
 to codebases that don't need it.
 
-As such, to add it, you will need to rely on the [minimal](../../Getting_Started/Minimal_Player.md)
-build of the RxPlayer and you will need to add the
-`DEBUG_ELEMENT` experimental feature:
+As such, to add it, you will need  to add the `DEBUG_ELEMENT` experimental
+feature:
 ```js
+// Import the RxPlayer
+// (here through the "minimal" build, though it doesn't change for other builds)
 import RxPlayer from "rx-player/minimal";
+
+// Import the feature
 import { DEBUG_ELEMENT } from "rx-player/experimental/features";
 
+// Attach the feature to imported RxPlayer
 RxPlayer.addFeatures([DEBUG_ELEMENT]);
 ```
 
@@ -100,8 +104,20 @@ reflect exactly what's going on at a particular point in time.
     - **vt**: _Video tracks_. List of the video tracks' `id` property. The line begins with a number indicating the number of available video tracks, followed by `:`, followed by each video track's id separated by a space. The current video track is prepended by a `*` character.
     - **at**: _Audio tracks_. List of the audio tracks' `id` property. The line begins with a number indicating the number of available audio tracks, followed by `:`, followed by each audio track's id separated by a space. The current audio track is prepended by a `*` character.
     - **tt**: _Text tracks_. List of the text tracks' `id` property. The line begins with a number indicating the number of available text tracks, followed by `:`, followed by each text track's id separated by a space. The current text track is prepended by a `*` character.
-    - **vb**: _Video Bitrates_. The available video bitrates in the current video track, separated by a space.
-    - **ab**: _Audio Bitrates_. The available audio bitrates in the current audio track, separated by a space.
+    - **vb**: _Video Bitrates_. The available video bitrates in the current
+      video track, separated by a space.
+      Each bitrate value can optionally be followed by an "`U!`", in which case
+      the codec of the corresponding Representation is unsupported, and/or be
+      followed by an "`E!`", in which case it is undecipherable currently.
+      In both of those cases the corresponding video Representation won't be
+      played by the RxPlayer.
+    - **ab**: _Audio Bitrates_. The available audio bitrates in the current
+      audio track, separated by a space.
+      Each bitrate value can optionally be followed by an "`U!`", in which case
+      the codec of the corresponding Representation is unsupported, and/or be
+      followed by an "`E!`", in which case it is undecipherable currently.
+      In both of those cases the corresponding audio Representation won't be
+      played by the RxPlayer.
 
   - Buffer information
     - **vbuf**: _Graphical representation of the video buffer_. The red rectangle indicates the current position, the different colors indicate different video qualities in the buffer.

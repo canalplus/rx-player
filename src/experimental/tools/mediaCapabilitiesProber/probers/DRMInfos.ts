@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import { requestMediaKeySystemAccess } from "../../../../compat";
+import eme from "../../../../compat/eme";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import log from "../log";
 import {
   ICompatibleKeySystem,
@@ -28,7 +29,7 @@ export interface IMediaKeySystemInfos {
 }
 
 /**
- * @param {Object} config
+ * @param {Object} mediaConfig
  * @returns {Promise}
  */
 export default function probeDRMInfos(
@@ -45,7 +46,7 @@ export default function probeDRMInfos(
                                                                 keySystem.configuration;
   const result: ICompatibleKeySystem = { type, configuration };
 
-  if (requestMediaKeySystemAccess == null) {
+  if (isNullOrUndefined(eme.requestMediaKeySystemAccess)) {
     log.debug("MediaCapabilitiesProber >>> API_CALL: " +
       "Your browser has no API to request a media key system access.");
     // In that case, the API lack means that no EME workflow may be started.
@@ -53,7 +54,7 @@ export default function probeDRMInfos(
     return Promise.resolve([ProberStatus.NotSupported, result]);
   }
 
-  return requestMediaKeySystemAccess(type, [configuration])
+  return eme.requestMediaKeySystemAccess(type, [configuration])
     .then((keySystemAccess) => {
       result.compatibleConfiguration = keySystemAccess.getConfiguration();
       const status : [ProberStatus, ICompatibleKeySystem?] =

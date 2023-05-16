@@ -196,8 +196,8 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
   /**
    * @returns {Boolean}
    */
-  public isFinished() : boolean {
-    return this._wrappedIndex.isFinished();
+  public isStillAwaitingFutureSegments() : boolean {
+    return this._wrappedIndex.isStillAwaitingFutureSegments();
   }
 
   /**

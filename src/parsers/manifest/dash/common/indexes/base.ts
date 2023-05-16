@@ -26,6 +26,7 @@ import {
   IIndexSegment,
   toIndexTime,
 } from "../../../utils/index_helpers";
+import ManifestBoundsCalculator from "../manifest_bounds_calculator";
 import getInitSegment from "./get_init_segment";
 import getSegmentsFromTimeline from "./get_segments_from_timeline";
 import { constructRepresentationUrl } from "./tokens";
@@ -120,6 +121,8 @@ export interface IBaseIndexContextArgument {
   representationId? : string | undefined;
   /** Bitrate of the Representation concerned. */
   representationBitrate? : number | undefined;
+  /** Allows to obtain the minimum and maximum positions of a content. */
+  manifestBoundsCalculator : ManifestBoundsCalculator;
   /* Function that tells if an EMSG is whitelisted by the manifest */
   isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 }
@@ -179,6 +182,9 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   /** Absolute end of the period, timescaled and converted to index time. */
   private _scaledPeriodEnd : number | undefined;
 
+  /** Allows to obtain the minimum and maximum positions of a content. */
+  private _manifestBoundsCalculator : ManifestBoundsCalculator;
+
   /* Function that tells if an EMSG is whitelisted by the manifest */
   private _isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 
@@ -228,6 +234,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
                     endNumber: index.endNumber,
                     timeline: index.timeline ?? [],
                     timescale };
+    this._manifestBoundsCalculator = context.manifestBoundsCalculator;
     this._scaledPeriodStart = toIndexTime(periodStart, this._index);
     this._scaledPeriodEnd = periodEnd == null ? undefined :
                                                 toIndexTime(periodEnd, this._index);
@@ -261,8 +268,9 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     return getSegmentsFromTimeline(this._index,
                                    from,
                                    dur,
-                                   this._isEMSGWhitelisted,
-                                   this._scaledPeriodEnd);
+                                   this._manifestBoundsCalculator,
+                                   this._scaledPeriodEnd,
+                                   this._isEMSGWhitelisted);
   }
 
   /**
@@ -379,8 +387,8 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * should become available in the future.
    * @returns {Boolean}
    */
-  isFinished() : true {
-    return true;
+  isStillAwaitingFutureSegments() : false {
+    return false;
   }
 
   /**
