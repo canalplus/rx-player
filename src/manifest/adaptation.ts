@@ -16,7 +16,12 @@
 
 import log from "../log";
 import { IParsedAdaptation } from "../parsers/manifest";
-import { IRepresentationFilter } from "../public_types";
+import {
+  IAudioTrack,
+  IRepresentationFilter,
+  ITextTrack,
+  IVideoTrack,
+} from "../public_types";
 import arrayFind from "../utils/array_find";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import normalizeLanguage from "../utils/languages";
@@ -32,7 +37,7 @@ export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] = [ "audio",
 
 /**
  * Normalized Adaptation structure.
- * An Adaptation describes a single `Track`. For example a specific audio
+ * An `Adaptation` describes a single `Track`. For example a specific audio
  * track (in a given language) or a specific video track.
  * It istelf can be represented in different qualities, which we call here
  * `Representation`.
@@ -215,5 +220,75 @@ export default class Adaptation {
    */
   getRepresentation(wantedId : number|string) : Representation|undefined {
     return arrayFind(this.representations, ({ id }) => wantedId === id);
+  }
+
+  /**
+   * Format an `Adaptation`, generally of type `"audio"`, as an `IAudioTrack`.
+   * @returns {Object}
+   */
+  public toAudioTrack() : IAudioTrack {
+    const formatted : IAudioTrack = {
+      language: this.language ?? "",
+      normalized: this.normalizedLanguage ?? "",
+      audioDescription: this.isAudioDescription === true,
+      id: this.id,
+      representations: this.representations.map(r => r.toAudioRepresentation()),
+      label: this.label,
+    };
+    if (this.isDub === true) {
+      formatted.dub = true;
+    }
+    return formatted;
+  }
+
+  /**
+   * Format an `Adaptation`, generally of type `"audio"`, as an `IAudioTrack`.
+   * @returns {Object}
+   */
+  public toTextTrack() : ITextTrack {
+    return {
+      language: this.language ?? "",
+      normalized: this.normalizedLanguage ?? "",
+      closedCaption: this.isClosedCaption === true,
+      id: this.id,
+      label: this.label,
+      forced: this.isForcedSubtitles,
+    };
+  }
+
+  /**
+   * Format an `Adaptation`, generally of type `"video"`, as an `IAudioTrack`.
+   * @returns {Object}
+   */
+  public toVideoTrack() : IVideoTrack {
+    const trickModeTracks = this.trickModeTracks !== undefined ?
+      this.trickModeTracks.map((trickModeAdaptation) => {
+        const representations = trickModeAdaptation.representations
+          .map(r => r.toVideoRepresentation());
+        const trickMode : IVideoTrack = { id: trickModeAdaptation.id,
+                                          representations,
+                                          isTrickModeTrack: true };
+        if (trickModeAdaptation.isSignInterpreted === true) {
+          trickMode.signInterpreted = true;
+        }
+        return trickMode;
+      }) :
+      undefined;
+
+    const videoTrack: IVideoTrack = {
+      id: this.id,
+      representations: this.representations.map(r => r.toVideoRepresentation()),
+      label: this.label,
+    };
+    if (this.isSignInterpreted === true) {
+      videoTrack.signInterpreted = true;
+    }
+    if (this.isTrickModeTrack === true) {
+      videoTrack.isTrickModeTrack = true;
+    }
+    if (trickModeTracks !== undefined) {
+      videoTrack.trickModeTracks = trickModeTracks;
+    }
+    return videoTrack;
   }
 }

@@ -16,5 +16,5 @@
 
 export { DASH_WASM } from "./dash_wasm";
 export { DEBUG_ELEMENT } from "./debug_element";
-export { LOCAL_MANIFEST } from "./local";
 export { METAPLAYLIST } from "./metaplaylist";
+export { LOCAL_MANIFEST } from "./local";
