@@ -21,6 +21,7 @@ import {
   IIndexSegment,
   toIndexTime,
 } from "../../../utils/index_helpers";
+import ManifestBoundsCalculator from "../manifest_bounds_calculator";
 import { createDashUrlDetokenizer } from "./tokens";
 
 /**
@@ -47,12 +48,14 @@ function getWantedRepeatIndex(
  * @param {Object} index - index object, constructed by parsing the manifest.
  * @param {number} from - starting timestamp wanted, in seconds
  * @param {number} durationWanted - duration wanted, in seconds
+ * @param {Object} manifestBoundsCalculator
+ * @param {number|undefined} scaledPeriodEnd
  * @param {function} isEMSGWhitelisted
- * @param {number|undefined} maximumTime
  * @returns {Array.<Object>}
  */
 export default function getSegmentsFromTimeline(
   index : { availabilityTimeComplete? : boolean | undefined;
+            availabilityTimeOffset? : number | undefined;
             segmentUrlTemplate : string | null;
             startNumber? : number | undefined;
             endNumber? : number | undefined;
@@ -61,11 +64,16 @@ export default function getSegmentsFromTimeline(
             indexTimeOffset : number; },
   from : number,
   durationWanted : number,
-  isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean,
-  maximumTime? : number
+  manifestBoundsCalculator : ManifestBoundsCalculator,
+  scaledPeriodEnd : number | undefined,
+  isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean
 ) : ISegment[] {
+  const maximumTime = manifestBoundsCalculator.getEstimatedMaximumPosition(
+    index.availabilityTimeOffset ?? 0
+  );
+  const wantedMaximum = Math.min(from + durationWanted, maximumTime ?? Infinity);
   const scaledUp = toIndexTime(from, index);
-  const scaledTo = toIndexTime(from + durationWanted, index);
+  const scaledTo = toIndexTime(wantedMaximum, index);
   const { timeline, timescale, segmentUrlTemplate, startNumber, endNumber } = index;
 
   let currentNumber = startNumber ?? 1;
@@ -77,7 +85,13 @@ export default function getSegmentsFromTimeline(
     const timelineItem = timeline[i];
     const { duration, start, range } = timelineItem;
 
-    const repeat = calculateRepeat(timelineItem, timeline[i + 1], maximumTime);
+    let maxRepeatTime;
+    if (maximumTime === undefined) {
+      maxRepeatTime = scaledPeriodEnd;
+    } else {
+      maxRepeatTime = Math.min(maximumTime * timescale, scaledPeriodEnd ?? Infinity);
+    }
+    const repeat = calculateRepeat(timelineItem, timeline[i + 1], maxRepeatTime);
     const complete = index.availabilityTimeComplete !== false ||
                      i !== timelineLength - 1 &&
                      repeat !== 0;

@@ -15,12 +15,14 @@
  */
 
 import SegmentInventory, {
+  ChunkStatus,
   IBufferedChunk,
   IInsertedChunkInfos,
 } from "./segment_inventory";
 
 export default SegmentInventory;
 export {
+  ChunkStatus,
   IBufferedChunk,
   IInsertedChunkInfos,
 };

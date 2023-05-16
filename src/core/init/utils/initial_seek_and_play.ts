@@ -19,8 +19,7 @@ import { READY_STATES } from "../../../compat/browser_compatibility_types";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
 import { IPlayerError } from "../../../public_types";
-import {
-  createSharedReference,
+import SharedReference, {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
 import { CancellationError, CancellationSignal } from "../../../utils/task_canceller";
@@ -82,18 +81,19 @@ export default function performInitialSeekAndPlay(
     rejectAutoPlay = rej;
   });
 
-  const initialSeekPerformed = createSharedReference(false, cancelSignal);
-  const initialPlayPerformed = createSharedReference(false, cancelSignal);
+  const initialSeekPerformed = new SharedReference(false, cancelSignal);
+  const initialPlayPerformed = new SharedReference(false, cancelSignal);
 
   mediaElement.addEventListener("loadedmetadata", onLoadedMetadata);
-  if (mediaElement.readyState >= READY_STATES.HAVE_METADATA) {
-    onLoadedMetadata();
-  }
 
   const deregisterCancellation = cancelSignal.register((err : CancellationError) => {
     mediaElement.removeEventListener("loadedmetadata", onLoadedMetadata);
     rejectAutoPlay(err);
   });
+
+  if (mediaElement.readyState >= READY_STATES.HAVE_METADATA) {
+    onLoadedMetadata();
+  }
 
   return { autoPlayResult, initialPlayPerformed, initialSeekPerformed };
 
@@ -134,6 +134,16 @@ export default function performInitialSeekAndPlay(
         log.warn("Init: autoplay is enabled on HTML media element. " +
                  "Media will play as soon as possible.");
       }
+      initialPlayPerformed.setValue(true);
+      initialPlayPerformed.finish();
+      deregisterCancellation();
+      return resolveAutoPlay({ type: "skipped" as const });
+    } else if (mediaElement.ended) {
+      // the video has ended state to true, executing VideoElement.play() will
+      // restart the video from the start, which is not wanted in most cases.
+      // returning "skipped" prevents the call to play() and fix the issue
+      log.warn("Init: autoplay is enabled but the video is ended. " +
+        "Skipping autoplay to prevent video to start again");
       initialPlayPerformed.setValue(true);
       initialPlayPerformed.finish();
       deregisterCancellation();

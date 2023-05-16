@@ -20,7 +20,7 @@ At the time of writing, there are two distinct demos:
 
 ## `dist/`: Builds
 
-The `demo/` directory stores the player builds of the last version released.
+The `dist/` directory stores the player builds of the last version released.
 
 Contains the minified (``rx-player.min.js``) and the non-minified files
 (``rx-player.js``). Both are automatically generated with scripts at every new
