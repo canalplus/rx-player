@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { ICustomMediaKeySession } from "./compat";
+import { IPreferredEmeApiType } from "./compat/eme";
 import {
   IPersistentSessionInfoV0,
   IPersistentSessionInfoV1,
@@ -22,8 +22,8 @@ import {
   IPersistentSessionInfoV3,
   IPersistentSessionInfoV4,
 } from "./core/decrypt";
-import { IBufferType } from "./core/segment_buffers";
 import {
+  IMediaErrorTrackContext,
   EncryptedMediaError,
   MediaError,
   NetworkError,
@@ -32,6 +32,10 @@ import {
 import Manifest from "./manifest";
 import { ILocalManifest } from "./parsers/manifest/local";
 import { IMetaPlaylist } from "./parsers/manifest/metaplaylist/metaplaylist_parser";
+
+export { IMediaErrorTrackContext };
+
+export { IPreferredEmeApiType };
 
 /**
  * This file defines and exports types we want to expose to library users.
@@ -44,145 +48,118 @@ export interface IConstructorOptions {
   maxBufferBehind? : number;
   wantedBufferAhead? : number;
   maxVideoBufferSize?: number;
-
-  limitVideoWidth? : boolean;
-  throttleWhenHidden? : boolean;
+  videoResolutionLimit? : "videoElement" |
+                          "screen" |
+                          "none";
   throttleVideoBitrateWhenHidden? : boolean;
 
-  preferredAudioTracks? : IAudioTrackPreference[];
-  preferredTextTracks? : ITextTrackPreference[];
-  preferredVideoTracks? : IVideoTrackPreference[];
-
   videoElement? : HTMLMediaElement;
-  initialVideoBitrate? : number;
-  initialAudioBitrate? : number;
-  minAudioBitrate? : number;
-  minVideoBitrate? : number;
-  maxAudioBitrate? : number;
-  maxVideoBitrate? : number;
-  stopAtEnd? : boolean;
+  baseBandwidth? : number;
 }
 
 /** Every options that can be given to the RxPlayer's `loadVideo` method. */
 export interface ILoadVideoOptions {
+  /**
+   * Streaming protocol used (e.g. "dash" or "smooth").
+   *
+   * It is a mandatory property.
+   */
   transport : string;
 
+  /** Main URL to the content (Manifest or video file for directfile contents. */
   url? : string;
+  /** If `true` the Content will automatically play once loaded. */
   autoPlay? : boolean;
+
+  /**
+   * Decryption-related options.
+   * Can be left to undefined if no decryption is wanted.
+   */
   keySystems? : IKeySystemOption[];
-  transportOptions? : ITransportOptions|undefined;
+
+  /**
+   * If set to `true`, and if the content is compatible, it will be played in a
+   * special mode where the latency is greatly reduced.
+   *
+   * Should only be set for known to be compatible contents.
+   */
   lowLatencyMode? : boolean;
-  networkConfig? : INetworkConfigOption;
+
+  requestConfig? : IRequestConfig;
+
+  /** Indicate the position the RxPlayer should start at on the loaded content. */
   startAt? : IStartAtOption;
+
+  /**
+   * The "mode" in which the text tracks will be displayed.
+   *
+   * The default `"native"` mode will use HTMLMediaElement's `track`elements and
+   * poor stylization capabilities.
+   *
+   * The `"html"` mode use the `textTrackElement` option to display subtitles
+   * with rich stylization capabilities inside that `HTMLElement`.
+   */
   textTrackMode? : "native"|"html";
-  hideNativeSubtitle? : boolean;
+
+  /**
+   * The HTMLElement in which text track will be pushed in a `"html"`
+   * `textTrackMode`.
+   *
+   * Mandatory if `textTrackMode` is set to `"html"`.
+   *
+   * Has no effect when `textTrackMode` is not set or set to `"native"`.
+   */
   textTrackElement? : HTMLElement;
-  manualBitrateSwitchingMode? : "seamless"|"direct";
+
+  /**
+   * `true` by default.
+   *
+   * If set to `false`, the RxPlayer won't use the "fast-switching" optimization
+   * that allows to see raise in qualities quicker.
+   *
+   * You might want to set to `false` when the current device does not support
+   * segment replacement well.
+   */
   enableFastSwitching? : boolean;
-  audioTrackSwitchingMode? : IAudioTrackSwitchingMode;
+
+  /** Default behavior when switching to a different audio track. */
+  defaultAudioTrackSwitchingMode? : IAudioTrackSwitchingMode;
+
+  /**
+   * Behavior when a audio or video codec just switched to another
+   * non-compatible one.
+   *
+   * This value might depend on the device's capabilities.
+   */
   onCodecSwitch? : "continue"|"reload";
 
-  /* eslint-disable import/no-deprecated */
-  supplementaryTextTracks? : ISupplementaryTextTrackOption[];
-  supplementaryImageTracks? : ISupplementaryImageTrackOption[];
-  defaultAudioTrack? : IDefaultAudioTrackOption|null|undefined;
-  defaultTextTrack? : IDefaultTextTrackOption|null|undefined;
-  /* eslint-enable import/no-deprecated */
-}
-
-/**
- * Value for the `defaultAudioTrack` option of the `loadVideo` method.
- * @deprecated
- */
-export interface IDefaultAudioTrackOption {
-  /** The language wanted for the audio track. */
-  language : string;
-  /** The language normalized into ISO639-3 */
-  normalized : string;
-  /** If `true`, this is an audio description for the visually impaired. */
-  audioDescription : boolean;
-}
-
-/**
- * Value for the `defaultTextTrack` option of the `loadVideo` method.
- * @deprecated
- */
-export interface IDefaultTextTrackOption {
-  /** The language wanted for the text track. */
-  language : string;
-  /** The language normalized into ISO639-3 */
-  normalized : string;
-  /** If `true`, this is closed captions for the hard of hearing. */
-  closedCaption : boolean;
-}
-
-/**
- * External text track we have to add to the Manifest once downloaded.
- * @deprecated
- */
-export interface ISupplementaryTextTrackOption {
-  /** URL the external text track can be found at. */
-  url : string;
-  /** Language the text track is in. */
-  language : string;
-  /** If `true` the text track contains closed captions. */
-  closedCaption : boolean;
-  /** Mime-type used to know the container and/or format of the text track. */
-  mimeType : string;
-  /** Codec used to know the format of the text track. */
-  codecs? : string;
-}
-
-/**
- * External image (".bif") track we have to add to the Manifest once downloaded.
- * @deprecated
- */
-export interface ISupplementaryImageTrackOption {
-  /** URL the external image track can be found at. */
-  url : string;
-  /** Mime-type used to know the format of the image track. */
-  mimeType : string;
-}
-
-/**
- * Strategy to adopt when manually switching of audio adaptation.
- * Can be either:
- *    - "seamless": transitions are smooth but could be not immediate.
- *    - "direct": strategy will be "smart", if the mimetype and the codec,
- *    change, we will perform a hard reload of the media source, however, if it
- *    doesn't change, we will just perform a small flush by removing buffered range
- *    and performing, a small seek on the media element.
- *    Transitions are faster, but, we could see appear a BUFFERING state.
- *    - "reload": completely reload the content. This allows a direct switch
- *    compatible with most device but may necessitate a RELOADING phase.
- */
-export type IAudioTrackSwitchingMode = "seamless" |
-                                       "direct" |
-                                       "reload";
-
-/** Value of the `transportOptions` option of the `loadVideo` method. */
-export interface ITransportOptions {
-  /** Whether we can perform request for segments in advance. */
-  aggressiveMode? : boolean;
   /**
    * Whether we should check that an obtain segment is truncated and retry the
    * request if that's the case.
    */
   checkMediaSegmentIntegrity? : boolean;
-  /** Manifest object that will be used initially. */
+
+  /** Manifest object that may be used initially. */
   initialManifest? : IInitialManifest;
+
   /** Custom implementation for performing Manifest requests. */
   manifestLoader? : IManifestLoader;
+
   /** Possible custom URL pointing to a shorter form of the Manifest. */
   manifestUpdateUrl? : string;
+
   /** Minimum bound for Manifest updates, in milliseconds. */
   minimumManifestUpdateInterval? : number;
+
   /** Custom implementation for performing segment requests. */
   segmentLoader? : ISegmentLoader;
+
   /** Custom logic to filter out unwanted qualities. */
   representationFilter? : IRepresentationFilter;
+
   /** Base time for the segments in case it is not found in the Manifest. */
   referenceDateTime? : number;
+
   /** Allows to synchronize the server's time with the client's. */
   serverSyncInfos? : IServerSyncInfos;
 }
@@ -207,83 +184,16 @@ export type IInitialManifest = Document |
                                Manifest;
 
 /** Type for the `representationFilter` API. */
-export type IRepresentationFilter = (representation: IRepresentation,
-                                     adaptationInfos: IRepresentationInfos) => boolean;
+export type IRepresentationFilter = (representation: IRepresentationFilterRepresentation,
+                                     context: IRepresentationContext) => boolean;
 
-/** Manifest, as documented in the API documentation. */
-export interface IManifest {
-  periods : IPeriod[];
-  /**
-   * @deprecated
-   */
-  adaptations : { audio? : IAdaptation[];
-                  video? : IAdaptation[];
-                  text? : IAdaptation[];
-                  image? : IAdaptation[]; };
-  isLive : boolean;
-  transport : string;
-}
-
-/** Period, as documented in the API documentation. */
-export interface IPeriod {
-  id : string;
-  start : number;
-  end? : number | undefined;
-  adaptations : { audio? : IAdaptation[];
-                  video? : IAdaptation[];
-                  text? : IAdaptation[];
-                  image? : IAdaptation[]; };
-}
-
-/** Adaptation (represents a track), as documented in the API documentation. */
-export interface IAdaptation {
-  /** String identifying the Adaptation, unique per Period. */
-  id : string;
-  type : "video" | "audio" | "text" | "image";
-  language? : string | undefined;
-  normalizedLanguage? : string | undefined;
-  isAudioDescription? : boolean | undefined;
-  isClosedCaption? : boolean | undefined;
-  isSignInterpreted? : boolean | undefined;
-  isTrickModeTrack? : boolean | undefined;
-  representations : IRepresentation[];
-
-  getAvailableBitrates() : number[];
-}
-
-interface IRepresentationIndex {
-  getSegments(up : number, duration : number) : IExposedSegment[];
-}
-
-/** Segment, as documented in the API documentation. */
-export interface IExposedSegment {
-  id : string;
-  timescale : number;
-  duration? : number | undefined;
-  time : number;
-  isInit? : boolean | undefined;
-  range? : number[] | null | undefined;
-  indexRange? : number[] | null | undefined;
-  number? : number | undefined;
-}
-
-/** Representation (represents a quality), as documented in the API documentation. */
-export interface IRepresentation {
+/** Representation object given to the `representationFilter` API. */
+export interface IRepresentationFilterRepresentation {
   /** String identifying the Representation, unique per Adaptation. */
   id : string;
-  bitrate : number;
-  /** Codec used by the segment in that Representation. */
+  bitrate? : number | undefined;
+  /** Codec used by the media segments of that Representation. */
   codec? : string | undefined;
-  /**
-   * Whether we are able to decrypt this Representation / unable to decrypt it or
-   * if we don't know yet:
-   *   - if `true`, it means that we know we were able to decrypt this
-   *     Representation in the current content.
-   *   - if `false`, it means that we know we were unable to decrypt this
-   *     Representation
-   *   - if `undefined` there is no certainty on this matter
-   */
-  decipherable? : boolean | undefined;
   /**
    * This property makes the most sense for video Representations.
    * It defines the height of the video, in pixels.
@@ -294,15 +204,20 @@ export interface IRepresentation {
    * It defines the height of the video, in pixels.
    */
   width? : number | undefined;
-  /**
-   * The represesentation frame rate for this Representation. It defines either
-   * the number of frames per second as an integer (24), or as a ratio
-   * (24000 / 1000).
-   */
-  frameRate? : string | undefined;
+  /** The frame rate for this Representation, in frame per seconds. */
+  frameRate? : number | undefined;
   /** If the track is HDR, gives the HDR characteristics of the content */
-  hdrInfo? : IHDRInformation;
-  index : IRepresentationIndex;
+  hdrInfo? : IHDRInformation | undefined;
+  /**
+   * Encryption information linked to this content.
+   * If set to an Object, the Representation is known to be encrypted.
+   * If unset or set to `undefined` the Representation is either unencrypted or
+   * we don't know if it is.
+   */
+  contentProtections? : {
+    /** Known key ids linked to that Representation. */
+    keyIds? : Uint8Array[] | undefined;
+  } | undefined;
 }
 
 export interface IHDRInformation {
@@ -358,56 +273,45 @@ export type IStartAtOption =
     fromFirstPosition : number;
   };
 
-/** Value for the `networkConfig` option of the `loadVideo` method. */
-export interface INetworkConfigOption {
-  /**
-   * The amount of time maximum we should retry a Manifest or Manifest-related
-   * request before failing on Error.
-   * Set to `Infinity` for an infinite number of requests.
-   */
-  manifestRetry? : number | undefined;
-
-  /**
-   * Amount of time, in milliseconds, after which a manifest request should be
-   * aborted and optionally retried, depending on the current configuration.
-   *
-   * Setting it to `-1` allows to disable any timeout.
-   * `undefined` means that a default, large, timeout will be used instead.
-   */
-  manifestRequestTimeout? : number | undefined;
-
-  /**
-   * The amount of time maximum we should retry a request in general when the
-   * user is offline.
-   * Set to `Infinity` for an infinite number of requests.
-   */
-  offlineRetry? : number | undefined;
-  /**
-   * The amount of time maximum we should retry a segment or segment-related
-   * request before failing on Error.
-   * Set to `Infinity` for an infinite number of requests.
-   */
-  segmentRetry? : number | undefined;
-
-  /**
-   * Amount of time, in milliseconds, after which a segment request should be
-   * aborted and optionally retried, depending on the current configuration.
-   *
-   * Setting it to `-1` allows to disable any timeout.
-   * `undefined` means that a default, large, timeout will be used instead.
-   */
-  segmentRequestTimeout? : number | undefined;
+/** Value for the `requestConfig` option of the `loadVideo` method. */
+export interface IRequestConfig {
+  manifest? : {
+    /**
+     * The amount of time maximum we should retry a Manifest or Manifest-related
+     * request before failing on Error.
+     * Set to `Infinity` for an infinite number of requests.
+     */
+    maxRetry? : number | undefined;
+    /**
+     * Amount of time, in milliseconds, after which a manifest request should be
+     * aborted and optionally retried, depending on the current configuration.
+     *
+     * Setting it to `-1` allows to disable any timeout.
+     * `undefined` means that a default, large, timeout will be used instead.
+     */
+    timeout? : number | undefined;
+  } | undefined;
+  segment? : {
+    /**
+     * The amount of time maximum we should retry a segment or segment-related
+     * request before failing on Error.
+     * Set to `Infinity` for an infinite number of requests.
+     */
+    maxRetry? : number | undefined;
+    /**
+     * Amount of time, in milliseconds, after which a segment request should be
+     * aborted and optionally retried, depending on the current configuration.
+     *
+     * Setting it to `-1` allows to disable any timeout.
+     * `undefined` means that a default, large, timeout will be used instead.
+     */
+    timeout? : number | undefined;
+  } | undefined;
 }
 
 export type ISegmentLoader = (
-  // first argument: infos on the segment
-  infos : { url : string;
-            timeout : number | undefined;
-            manifest : IManifest;
-            period : IPeriod;
-            adaptation : IAdaptation;
-            representation : IRepresentation;
-            segment : IExposedSegment; },
+  /** Information on the segment to request */
+  context : ISegmentLoaderContext,
 
   // second argument: callbacks
   callbacks : { resolve : (rArgs : { data : ArrayBuffer | Uint8Array;
@@ -428,11 +332,56 @@ export type ISegmentLoader = (
   // returns either the aborting callback or nothing
   (() => void)|void;
 
+/** Context given to a segment loader. */
+export interface ISegmentLoaderContext {
+  /** URL where the segment should be loaded. */
+  url : string | undefined;
+  /**
+   * Indicative request timeout as configured on the RxPlayer.
+   */
+  timeout : number | undefined;
+  /**
+   * If true, this segment is an initialization segment with no decodable data.
+   *
+   * Those types of segment contain no decodable data and are only there for
+   * initialization purposes, such as giving initial infos to the decoder on
+   * subsequent media segments that will be pushed.
+   *
+   * Note that if `isInit` is false, it only means that the segment contains
+   * decodable media, it can also contain important initialization information.
+   *
+   * Also, a segment which would contain both all initialization data and the
+   * decodable data would have `isInit` set to `false` as it is not purely an
+   * initialization segment.
+   *
+   * Segments which are not purely an initialization segment are called "media
+   * segments" in the RxPlayer.
+   */
+  isInit : boolean | undefined;
+  /**
+   * If set, only the corresponding byte-ranges, which are subsets in bytes of
+   * the loaded data, should be loaded.
+   * If multiple non-contiguous byte-ranges are given, the result should be
+   * the concatenation of those byte-ranges, in the same order.
+   *
+   * For example `[[0, 100], [150, 180]]` means that the bytes of both 0 to 100
+   * (included) and from 150 to 180 (included) should be requested.
+   * The communicated result should then be a concatenation of both in the same
+   * order.
+   */
+  byteRanges? : Array<[number, number]> | undefined;
+  /** Type of the corresponding track. */
+  trackType : ITrackType;
+}
+
+/** Every possible value for the Adaptation's `type` property. */
+export type ITrackType = "video" | "audio" | "text";
+
 export type ILoadedManifestFormat = IInitialManifest;
 
 export type IManifestLoader = (
-  // first argument: url of the manifest
-  url : string | undefined,
+  /** Information on the wanted Manifest. */
+  info : IManifestLoaderInfo,
 
   // second argument: callbacks
   callbacks : { resolve : (args : { data : ILoadedManifestFormat;
@@ -445,13 +394,14 @@ export type IManifestLoader = (
 
                  reject : (err? : Error) => void;
                  fallback : () => void; },
-
-  options : {
-    timeout : number | undefined;
-  }
 ) =>
   // returns either the aborting callback or nothing
   (() => void)|void;
+
+export interface IManifestLoaderInfo {
+  url : string | undefined;
+  timeout : number | undefined;
+}
 
 /** Options related to a single key system. */
 export interface IKeySystemOption {
@@ -477,23 +427,18 @@ export interface IKeySystemOption {
    * set.
    */
   serverCertificate? : BufferSource | null;
-  /**
-   * If `true`, we will try to persist the licenses obtained as well as try to
-   * load already-persisted licenses.
-   */
-  persistentLicense? : boolean;
   /** Storage mechanism used to store and retrieve information on stored licenses. */
-  licenseStorage? : IPersistentSessionStorage;
+  persistentLicenseConfig? : IPersistentLicenseConfig;
   /**
-   * If true, we will require that the CDM is able to persist state.
-   * See EME specification related to the `persistentState` configuration.
+   * Wanted value for the `persistentState` property of this
+   * `MediaKeySystemConfiguration` according to the EME API.
    */
-  persistentStateRequired? : boolean;
+  persistentState? : MediaKeysRequirement | undefined;
   /**
-   * If true, we will require that the CDM should use distinctive identyfiers.
-   * See EME specification related to the `distinctiveIdentifier` configuration.
+   * Wanted value for the `distinctiveIdentifier` property of this
+   * `MediaKeySystemConfiguration` according to the EME API.
    */
-  distinctiveIdentifierRequired? : boolean;
+  distinctiveIdentifier? : MediaKeysRequirement | undefined;
   /**
    * If true, all open MediaKeySession (used to decrypt the content) will be
    * closed when the current playback stops.
@@ -508,22 +453,8 @@ export interface IKeySystemOption {
    * MediaKeys.
    */
   maxSessionCacheSize? : number;
-  /** Callback called when one of the key's status change. */
-  onKeyStatusesChange? : (evt : Event, session : MediaKeySession |
-                                                 ICustomMediaKeySession)
-                           => Promise<BufferSource | null> |
-                              BufferSource |
-                              null;
-  /** Allows to define custom robustnesses value for the video data. */
-  videoRobustnesses?: Array<string|undefined>;
-  /** Allows to define custom robustnesses value for the audio data. */
-  audioRobustnesses?: Array<string|undefined>;
-  /**
-   * If explicitely set to `false`, we won't throw on error when a used license
-   * is expired.
-   * @deprecated
-   */
-  throwOnLicenseExpiration? : boolean;
+  videoCapabilitiesConfig?: IVideoCapabilitiesConfiguration;
+  audioCapabilitiesConfig?: IAudioCapabilitiesConfiguration;
   /**
    * If set to `true`, we will not wait until the MediaKeys instance is attached
    * to the media element before pushing segments to it.
@@ -533,24 +464,52 @@ export interface IKeySystemOption {
    * unencrypted data, most especially on Chromium and Chromium-derived browsers.
    */
   disableMediaKeysAttachmentLock? : boolean;
+
   /**
-   * Enable fallback logic, to switch to other Representations when a key linked
-   * to another one fails with an error.
-   * Configure only this if you have contents with multiple keys depending on
-   * the Representation (also known as qualities/profiles).
+   * Behavior the RxPlayer should have when one of the key has the
+   * `MediaKeyStatus` `"internal-error"`.
+   *
+   * `onKeyInternalError` can be set to a string, each describing a different
+   * behavior, the default one if not is defined being `"error"`:
+   *
+   *   - `"error"`: The RxPlayer will stop on an error.
+   *     This is the default behavior.
+   *
+   *   - `"continue"`: The RxPlayer will not do anything.
+   *     This may lead in many cases to infinite rebuffering.
+   *
+   *   - `"fallback"`: The Representation(s) linked to those key(s) will
+   *     be fallbacked from, meaning the RxPlayer will switch to other
+   *     representation.
+   *
+   *   - `"close-session"`: The RxPlayer will close and re-create a DRM session
+   *     (and thus re-download the corresponding license).
    */
-  fallbackOn? : {
-    /**
-     * If `true`, we will fallback when a key obtain the "internal-error" status.
-     * If `false`, we fill just throw a fatal error instead.
-     */
-    keyInternalError? : boolean;
-    /**
-     * If `true`, we will fallback when a key obtain the "internal-error" status.
-     * If `false`, we fill just throw a fatal error instead.
-     */
-    keyOutputRestricted? : boolean;
-  };
+  onKeyInternalError? : "error" |
+                        "continue" |
+                        "fallback" |
+                        "close-session";
+
+  /**
+   * Behavior the RxPlayer should have when one of the key has the
+   * `MediaKeyStatus` `"output-restricted"`.
+   *
+   * `onKeyOutputRestricted` can be set to a string, each describing a different
+   * behavior, the default one if not is defined being `"error"`:
+   *
+   *   - `"error"`: The RxPlayer will stop on an error.
+   *     This is the default behavior.
+   *
+   *   - `"continue"`: The RxPlayer will not do anything.
+   *     This may lead in many cases to infinite rebuffering.
+   *
+   *   - `"fallback"`: The Representation(s) linked to those key(s) will
+   *     be fallbacked from, meaning the RxPlayer will switch to other
+   *     representation.
+   */
+  onKeyOutputRestricted? : "error" |
+                           "continue" |
+                           "fallback";
 
   /**
    * Behavior the RxPlayer should have when one of the key is known to be
@@ -569,28 +528,65 @@ export interface IKeySystemOption {
    *     be fallbacked from, meaning the RxPlayer will switch to other
    *     representation without expired keys.
    *
-   *     If no Representation remain, a NO_PLAYABLE_REPRESENTATION error will
-   *     be thrown.
-   *
-   *     Note that when the "fallbacking" action is taken, the RxPlayer might
-   *     temporarily switch to the `"RELOADING"` state - which should thus be
-   *     properly handled.
-   *
    *   - `"close-session"`: The RxPlayer will close and re-create a DRM session
    *     (and thus re-download the corresponding license) if any of the key
    *     associated to this session expired.
-   *
-   *     It will try to do so in an efficient manner, only reloading the license
-   *     when the corresponding content plays.
-   *
-   *     The RxPlayer might go through the `"RELOADING"` state after an expired
-   *     key and/or light decoding glitches can arise, depending on the
-   *     platform, for some seconds, under that mode.
    */
   onKeyExpiration? : "error" |
                      "continue" |
                      "fallback" |
                      "close-session";
+}
+
+/** Values that can be given to the `videoCapabilitiesConfig` `keySystems`'s property. */
+export type IVideoCapabilitiesConfiguration = IRobustnessMediaKeySystemCapabilities |
+                                              IContentTypeMediaKeySystemCapabilities |
+                                              IFullMediaKeySystemCapabilities;
+
+/** Values that can be given to the `audioCapabilitiesConfig` `keySystems`'s property. */
+export type IAudioCapabilitiesConfiguration = IRobustnessMediaKeySystemCapabilities |
+                                              IContentTypeMediaKeySystemCapabilities |
+                                              IFullMediaKeySystemCapabilities;
+
+/**
+ * Value that can be given to either the `audioCapabilitiesConfig` or to the
+ * `videoCapabilitiesConfig` `keySystems`'s property when the application only
+ * wants to specify the "robustness" part of the `MediaKeySystemMediaCapability`
+ * sent through the corresponding `MediaKeySystemConfiguration` used to decrypt
+ * the content.
+ *
+ * In this case, the RxPlayer will define potentially default values for
+ * other capability-related properties (such as the "contentType").
+ */
+export interface IRobustnessMediaKeySystemCapabilities {
+  type: "robustness";
+  value : Array<string | undefined>;
+}
+
+/**
+ * Value that can be given to either the `audioCapabilitiesConfig` or to the
+ * `videoCapabilitiesConfig` `keySystems`'s property when the application only
+ * wants to specify the "contentType" part of the
+ * `MediaKeySystemMediaCapability` sent through the corresponding
+ * `MediaKeySystemConfiguration` used to decrypt the content.
+ *
+ * In this case, the RxPlayer will define potentially default values for
+ * other capability-related properties (such as the "robustness").
+ */
+export interface IContentTypeMediaKeySystemCapabilities {
+  type: "contentType";
+  value : string[];
+}
+
+/**
+ * Value that can be given to either the `audioCapabilitiesConfig` or to the
+ * `videoCapabilitiesConfig` `keySystems`'s property when the application wants
+ * to specify the full `MediaKeySystemMediaCapability` object sent through the
+ * corresponding `MediaKeySystemConfiguration` used to decrypt the content.
+ */
+export interface IFullMediaKeySystemCapabilities {
+  type: "full";
+  value : MediaKeySystemMediaCapability[];
 }
 
 /**
@@ -605,7 +601,7 @@ export type IPersistentSessionInfo = IPersistentSessionInfoV4 |
                                      IPersistentSessionInfoV0;
 
 /** Persistent MediaKeySession storage interface. */
-export interface IPersistentSessionStorage {
+export interface IPersistentLicenseConfig {
   /** Load persistent MediaKeySessions previously saved through the `save` callback. */
   load() : IPersistentSessionInfo[] | undefined | null;
   /**
@@ -627,45 +623,6 @@ export interface IPersistentSessionStorage {
   disableRetroCompatibility? : boolean;
 }
 
-/** Single preference for an audio track Adaptation. */
-export type IAudioTrackPreference = null |
-                                    { language? : string;
-                                      audioDescription? : boolean;
-                                      codec? : { all: boolean;
-                                                 test: RegExp; }; };
-
-/** Single preference for a text track Adaptation. */
-export type ITextTrackPreference = null |
-                                   { language : string;
-                                     forced? : boolean | undefined;
-                                     closedCaption : boolean; };
-
-/** Single preference for a video track Adaptation. */
-export type IVideoTrackPreference = null |
-                                    IVideoTrackPreferenceObject;
-
-/** Preference for a video track Adaptation for when it is not set to `null`. */
-interface IVideoTrackPreferenceObject {
-  codec? : { all: boolean;
-             test: RegExp; };
-  signInterpreted? : boolean;
-}
-
-/** Payload emitted with a `bitrateEstimationChange` event. */
-export interface IBitrateEstimate {
-  /** The type of buffer this estimate was done for (e.g. "audio). */
-  type : IBufferType;
-  /** The calculated bitrate, in bits per seconds. */
-  bitrate : number | undefined;
-}
-
-export interface IDecipherabilityUpdateContent {
-  manifest : IManifest;
-  period : IPeriod;
-  adaptation : IAdaptation;
-  representation : IRepresentation;
-}
-
 /** Payload emitted with a `positionUpdate` event. */
 export interface IPositionUpdate {
   /** current position the player is in, in seconds. */
@@ -677,7 +634,7 @@ export interface IPositionUpdate {
   /** Amount of buffer available for now in front of the current position, in seconds. */
   bufferGap : number;
   /** Current maximum seekable position. */
-  maximumBufferTime? : number | undefined;
+  maximumPosition? : number | undefined;
   wallClockTime? : number | undefined;
   /**
    * Only for live contents. Difference between the "live edge" and the current
@@ -693,8 +650,15 @@ export type IPlayerState = "STOPPED" |
                            "PAUSED" |
                            "ENDED" |
                            "BUFFERING" |
+                           "FREEZING" |
                            "SEEKING" |
                            "RELOADING";
+
+export interface IPeriodChangeEvent {
+  start : number;
+  id : string;
+  end? : number | undefined;
+}
 
 export type IStreamEvent = { data: IStreamEventData;
                              start: number;
@@ -719,75 +683,83 @@ export type IPlayerError = EncryptedMediaError |
  * Information describing a single Representation from an Adaptation, to be used
  * in the `representationFilter` API.
  */
-export interface IRepresentationInfos { bufferType: string;
-                                        language?: string | undefined;
-                                        isAudioDescription? : boolean | undefined;
-                                        isClosedCaption? : boolean | undefined;
-                                        isDub? : boolean | undefined;
-                                        isSignInterpreted?: boolean | undefined;
-                                        normalizedLanguage? : string | undefined; }
-
-export interface IBifThumbnail { index : number;
-                                 duration : number;
-                                 ts : number;
-                                 data : Uint8Array; }
-
-export interface IBifObject { fileFormat : string;
-                              version : string;
-                              imageCount : number;
-                              timescale : number;
-                              format : string;
-                              width : number;
-                              height : number;
-                              aspectRatio : string;
-                              isVod : boolean;
-                              thumbs : IBifThumbnail[];
-}
+export interface IRepresentationContext { trackType: string;
+                                          language?: string | undefined;
+                                          isAudioDescription? : boolean | undefined;
+                                          isClosedCaption? : boolean | undefined;
+                                          isDub? : boolean | undefined;
+                                          isSignInterpreted?: boolean | undefined;
+                                          normalizedLanguage? : string | undefined; }
 
 /**
  * Definition of a single audio Representation as represented by the
  * RxPlayer.
  */
-export interface IAudioRepresentation { id : string|number;
-                                        bitrate : number;
-                                        codec? : string | undefined; }
+export interface IAudioRepresentation {
+  id : string|number;
+  bitrate? : number | undefined;
+  codec? : string | undefined;
+  isSpatialAudio? : boolean | undefined;
+  isCodecSupported? : boolean | undefined;
+  decipherable? : boolean | undefined;
+}
 
 /** Audio track returned by the RxPlayer. */
-export interface IAudioTrack { language : string;
-                               normalized : string;
-                               audioDescription : boolean;
-                               dub? : boolean;
-                               id : number|string;
-                               label? : string | undefined;
-                               representations: IAudioRepresentation[]; }
+export interface IAudioTrack {
+  /** The language the audio track is in, as it is named in the Manifest. */
+  language : string;
+  /**
+   * An attempt to translate `language` into a valid ISO639-3 language code.
+   * Kept equal to `language` if the attempt failed.
+   */
+  normalized : string;
+  audioDescription : boolean;
+  dub? : boolean | undefined;
+  id : string;
+  label? : string | undefined;
+  representations: IAudioRepresentation[];
+}
 
 /** Text track returned by the RxPlayer. */
-export interface ITextTrack { language : string;
-                              normalized : string;
-                              closedCaption : boolean;
-                              forced : boolean | undefined;
-                              label : string | undefined;
-                              id : number|string; }
+export interface ITextTrack {
+  /** The language the text track is in, as it is named in the Manifest. */
+  language : string;
+  /**
+   * An attempt to translate `language` into a valid ISO639-3 language code.
+   * Kept equal to `language` if the attempt failed.
+   */
+  normalized : string;
+  forced : boolean | undefined;
+  closedCaption : boolean;
+  label? : string | undefined;
+  id : number|string;
+}
 
 /**
  * Definition of a single video Representation as represented by the
  * RxPlayer.
  */
-export interface IVideoRepresentation { id : string|number;
-                                        bitrate : number;
-                                        width? : number | undefined;
-                                        height? : number | undefined;
-                                        codec? : string | undefined;
-                                        frameRate? : string | undefined;
-                                        hdrInfo?: IHDRInformation | undefined; }
+export interface IVideoRepresentation {
+  id : string;
+  bitrate? : number | undefined;
+  width? : number | undefined;
+  height? : number | undefined;
+  codec? : string | undefined;
+  frameRate? : number | undefined;
+  hdrInfo?: IHDRInformation | undefined;
+  isCodecSupported? : boolean | undefined;
+  decipherable? : boolean | undefined;
+}
 
 /** Video track returned by the RxPlayer. */
-export interface IVideoTrack { id : number|string;
-                               signInterpreted?: boolean;
-                               isTrickModeTrack?: boolean;
-                               trickModeTracks?: IVideoTrack[];
-                               label? : string | undefined;
-                               representations: IVideoRepresentation[]; }
+export interface IVideoTrack {
+  id : string;
+  signInterpreted?: boolean | undefined;
+  isTrickModeTrack?: boolean | undefined;
+  trickModeTracks?: IVideoTrack[] | undefined;
+  label? : string | undefined;
+  representations: IVideoRepresentation[];
+}
 
 /** Output of the `getKeySystemConfiguration` method. */
 export interface IKeySystemConfigurationOutput {
@@ -795,6 +767,19 @@ export interface IKeySystemConfigurationOutput {
   keySystem : string;
   /** `MediaKeySystemConfiguration` actually used by the key system. */
   configuration : MediaKeySystemConfiguration;
+}
+
+/** Period from a list of Periods as returned by the RxPlayer. */
+export interface IPeriod {
+  /** Start time in seconds at which the Period starts. */
+  start : number;
+  /**
+   * End time in seconds at which the Period ends.
+   * `undefined` if that end is unknown for now.
+   */
+  end : number | undefined;
+  /** Identifier for this Period allowing to perform track modification for it. */
+  id : string;
 }
 
 /** Audio track from a list of audio tracks returned by the RxPlayer. */
@@ -819,4 +804,171 @@ export interface IEncryptedMediaErrorKeyStatusObject {
 
   /** Problematic MediaKeyStatus encountered. */
   keyStatus: MediaKeyStatus;
+}
+
+/**
+ * Behavior wanted when replacing an audio track / Adaptation by another:
+ *
+ *   - direct: Switch audio track immediately by removing all the previous
+ *     track's data.
+ *
+ *     This might interrupt playback while data for any of the new
+ *     track wanted is loaded.
+ *
+ *   - seamless: Switch audio track without interrupting playback by still
+ *     keeping data from the previous track around the current
+ *     position.
+ *
+ *     This could have the disadvantage of still playing the previous
+ *     track during a short time (not more than a few seconds in
+ *     most cases).
+ *
+ *   - reload: Reload content to provide an immediate interruption of the
+ *     previous audio track before switching to the new one.
+ *
+ *     Some targets might not handle "direct" mode properly. The "reload"
+ *     mode is kind of a more compatible attempt of immediately switching the
+ *     audio track.
+ */
+export type IAudioTrackSwitchingMode = "direct" |
+                                       "seamless" |
+                                       "reload";
+
+/**
+ * Behavior wanted when replacing a video track / Adaptation by another:
+ *
+ *   - direct: Switch video track immediately by removing all the previous
+ *     track's data.
+ *
+ *     This might interrupt playback while data for any of the new
+ *     track wanted is loaded.
+ *     Moreover, the previous video frame at the time of the switch will
+ *     probably still be on display while this is happening. If this is
+ *     not something you want, you might prefer the "reload" mode.
+ *
+ *   - seamless: Switch video track without interrupting playback by still
+ *     keeping data from the previous track around the current
+ *     position.
+ *     This could have the disadvantage of still playing the previous
+ *     track during a short time (not more than a few seconds in
+ *     most cases).
+ *
+ *   - reload: Reload content to provide an immediate interruption of the
+ *     previous video track before switching to the new one.
+ *
+ *     This can be seen like the "direct" mode with two differences:
+ *
+ *       - The "direct" mode might rebuffer for a time with the previous
+ *       frame displaying. With "reload" a black screen will probably be shown
+ *       instead.
+ *
+ *       - some targets might not handle "direct" mode properly. The "reload"
+ *       mode is kind of a more compatible attempt of immediately switching the
+ *       Adaptation.
+ */
+export type IVideoTrackSwitchingMode = "direct" |
+                                       "seamless" |
+                                       "reload";
+
+export type IVideoRepresentationsSwitchingMode = IRepresentationsSwitchingMode;
+export type IAudioRepresentationsSwitchingMode = IRepresentationsSwitchingMode;
+
+/**
+ * Behavior wanted when replacing active Representations by others:
+ *
+ *   - direct: Switch Representation immediately by removing all the previous
+ *     Representations's data.
+ *     This might interrupt playback while data for any of the new
+ *     Representations wanted is loaded.
+ *
+ *     If talking about video Representations, the previous video frame at the
+ *     time of the switch will probably still be on display while this is
+ *     happening.
+ *     If this is not something you want, you might prefer the "reload" mode.
+ *
+ *   - seamless: Switch Representation without interrupting playback by still
+ *     keeping data from the previous Representations around the current
+ *     position.
+ *     This could have the disadvantage of still playing the previous
+ *     Representations during a short time (not more than a few seconds in
+ *     most cases).
+ *
+ *   - reload: Reload `MediaSource` to provide an immediate interruption of the
+ *     previous interruption before switching to the new Representation.
+ *
+ *     This can be seen like the "direct" mode with two differences:
+ *
+ *       - in case of video contents, the "direct" mode might rebuffer for a
+ *       time with the previous frame displaying. With "reload" a black screen
+ *       will probably be shown instead.
+ *
+ *       - some targets might not handle "direct" mode properly. The "reload"
+ *       mode is kind of a more compatible attempt of immediately switching the
+ *       Representation.
+ *
+ *   - lazy: Keep data from the previous Representation in the buffer.
+ *     It still might eventually be replaced by Representation of a better
+ *     quality when depending on future playback condition.
+ */
+type IRepresentationsSwitchingMode = "direct" |
+                                     "seamless" |
+                                     "reload" |
+                                     "lazy";
+
+export interface IBrokenRepresentationsLockContext {
+  period : IPeriod;
+  trackType : ITrackType;
+}
+
+export interface ITrackUpdateEventPayload {
+  period : IPeriod;
+  trackType : ITrackType;
+  /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
+  reason : "missing" | // Missing from Manifest update
+           "manual" | // Manually and explicitely updated
+           "trickmode-enabled" | // Video trickmode tracks being enabled
+           "trickmode-disabled" | // Video trickmode tracks being disabled
+           "no-playable-representation" | // Previous track had no playable Representation
+           string;
+  /* eslint-enable @typescript-eslint/no-redundant-type-constituents */
+}
+
+export interface IRepresentationListUpdateContext {
+  period : IPeriod;
+  trackType : ITrackType;
+  /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
+  reason : "decipherability-update" |
+           string;
+  /* eslint-enable @typescript-eslint/no-redundant-type-constituents */
+}
+
+export interface ILockedVideoRepresentationsSettings {
+  representations : string[];
+  periodId? : string | undefined;
+  switchingMode? : IVideoRepresentationsSwitchingMode | undefined;
+}
+
+export interface ILockedAudioRepresentationsSettings {
+  representations : string[];
+  periodId? : string | undefined;
+  switchingMode? : IAudioRepresentationsSwitchingMode | undefined;
+}
+
+export interface IAudioTrackSetting {
+  trackId : string;
+  periodId? : string | undefined;
+  switchingMode? : IAudioTrackSwitchingMode | undefined;
+  lockedRepresentations? : string[] | undefined;
+}
+
+export interface IVideoTrackSetting {
+  trackId : string;
+  periodId? : string | undefined;
+  switchingMode? : IVideoTrackSwitchingMode | undefined;
+  lockedRepresentations? : string[] | undefined;
+}
+
+export interface ITextTrackSetting {
+  trackId : string;
+  periodId? : string | undefined;
 }

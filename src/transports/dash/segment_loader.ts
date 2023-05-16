@@ -45,7 +45,7 @@ import lowLatencySegmentLoader from "./low_latency_segment_loader";
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
  * @param {string} url
- * @param {Object} content
+ * @param {Object} context
  * @param {boolean} lowLatencyMode
  * @param {Object} options
  * @param {Object} callbacks
@@ -54,7 +54,7 @@ import lowLatencySegmentLoader from "./low_latency_segment_loader";
  */
 export function regularSegmentLoader(
   url : string,
-  content : ISegmentContext,
+  context : ISegmentContext,
   lowLatencyMode : boolean,
   options : ISegmentLoaderOptions,
   callbacks : ISegmentLoaderCallbacks<ILoadedAudioVideoSegmentFormat>,
@@ -63,22 +63,21 @@ export function regularSegmentLoader(
             ISegmentLoaderResultSegmentCreated<ILoadedAudioVideoSegmentFormat> |
             ISegmentLoaderResultChunkedComplete>
 {
-  if (content.segment.isInit) {
-    return initSegmentLoader(url, content.segment, options, cancelSignal, callbacks);
+  if (context.segment.isInit) {
+    return initSegmentLoader(url, context.segment, options, cancelSignal, callbacks);
   }
 
-  const containerType = inferSegmentContainer(content.adaptation.type,
-                                              content.representation);
+  const containerType = inferSegmentContainer(context.type, context.mimeType);
   if (lowLatencyMode && (containerType === "mp4" || containerType === undefined)) {
     if (fetchIsSupported()) {
-      return lowLatencySegmentLoader(url, content, options, callbacks, cancelSignal);
+      return lowLatencySegmentLoader(url, context, options, callbacks, cancelSignal);
     } else {
       warnOnce("DASH: Your browser does not have the fetch API. You will have " +
                "a higher chance of rebuffering when playing close to the live edge");
     }
   }
 
-  const { segment } = content;
+  const { segment } = context;
   return request({ url,
                    responseType: "arraybuffer",
                    headers: segment.range !== undefined ?
@@ -107,11 +106,15 @@ export default function generateSegmentLoader(
 
   /**
    * @param {Object|null} wantedCdn
+   * @param {Object} context
+   * @param {Object} options
+   * @param {Object} cancelSignal
+   * @param {Object} callbacks
    * @returns {Promise.<Object>}
    */
   function segmentLoader(
     wantedCdn : ICdnMetadata | null,
-    content : ISegmentContext,
+    context : ISegmentContext,
     options : ISegmentLoaderOptions,
     cancelSignal : CancellationSignal,
     callbacks : ISegmentLoaderCallbacks<Uint8Array | ArrayBuffer | null>
@@ -119,7 +122,7 @@ export default function generateSegmentLoader(
               ISegmentLoaderResultSegmentCreated<ILoadedAudioVideoSegmentFormat> |
               ISegmentLoaderResultChunkedComplete>
   {
-    const url = constructSegmentUrl(wantedCdn, content.segment);
+    const url = constructSegmentUrl(wantedCdn, context.segment);
     if (url == null) {
       return Promise.resolve({ resultType: "segment-created",
                                resultData: null });
@@ -127,21 +130,12 @@ export default function generateSegmentLoader(
 
     if (lowLatencyMode || customSegmentLoader === undefined) {
       return regularSegmentLoader(url,
-                                  content,
+                                  context,
                                   lowLatencyMode,
                                   options,
                                   callbacks,
                                   cancelSignal);
     }
-
-    const args = { adaptation: content.adaptation,
-                   manifest: content.manifest,
-                   period: content.period,
-                   representation: content.representation,
-                   segment: content.segment,
-                   transport: "dash",
-                   timeout: options.timeout,
-                   url };
 
     return new Promise((res, rej) => {
       /** `true` when the custom segmentLoader should not be active anymore. */
@@ -181,14 +175,12 @@ export default function generateSegmentLoader(
         // Format error and send it
         const castedErr = err as (null | undefined | { message? : string;
                                                        canRetry? : boolean;
-                                                       isOfflineError? : boolean;
                                                        xhr? : XMLHttpRequest; });
         const message = castedErr?.message ??
                         "Unknown error when fetching a DASH segment through a " +
                         "custom segmentLoader.";
         const emittedErr = new CustomLoaderError(message,
                                                  castedErr?.canRetry ?? false,
-                                                 castedErr?.isOfflineError ?? false,
                                                  castedErr?.xhr);
         rej(emittedErr);
       };
@@ -217,7 +209,7 @@ export default function generateSegmentLoader(
         hasFinished = true;
         cancelSignal.deregister(abortCustomLoader);
         regularSegmentLoader(url,
-                             content,
+                             context,
                              lowLatencyMode,
                              options,
                              callbacks,
@@ -226,6 +218,19 @@ export default function generateSegmentLoader(
       };
 
       const customCallbacks = { reject, resolve, progress, fallback };
+
+      let byteRanges : Array<[number, number]> | undefined;
+      if (context.segment.range !== undefined) {
+        byteRanges = [context.segment.range];
+        if (context.segment.indexRange !== undefined) {
+          byteRanges.push(context.segment.indexRange);
+        }
+      }
+      const args = { isInit: context.segment.isInit,
+                     timeout: options.timeout,
+                     byteRanges,
+                     trackType: context.type,
+                     url };
       const abort = customSegmentLoader(args, customCallbacks);
 
       cancelSignal.register(abortCustomLoader);

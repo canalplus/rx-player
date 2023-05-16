@@ -31,10 +31,8 @@ export default async function parseDRMConfigurations(
       getLicense: generateGetLicense(licenseServerUrl,
                                      type,
                                      !!fallbackLicenseRequest),
-      fallbackOn: {
-        keyInternalError: !!fallbackKeyError,
-        keyOutputRestricted: !!fallbackKeyError,
-      },
+      onKeyInternalError: fallbackKeyError ? "fallback" : "error",
+      onKeyOutputRestricted: fallbackKeyError ? "fallback" : "error",
     };
 
     if (!serverCertificateUrl) {
