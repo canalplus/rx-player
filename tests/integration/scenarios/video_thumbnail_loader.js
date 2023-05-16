@@ -1,31 +1,27 @@
 import { expect } from "chai";
-import RxPlayer from "../../../src";
+import RxPlayer from "../../../dist/es2017";
 import VideoThumbnailLoader, {
   DASH_LOADER,
-} from "../../../src/experimental/tools/VideoThumbnailLoader";
+} from "../../../dist/es2017/experimental/tools/VideoThumbnailLoader";
 import {
   manifestInfos,
   trickModeInfos,
 } from "../../contents/DASH_static_SegmentTimeline";
-import XHRMock from "../../utils/request_mock";
 import sleep from "../../utils/sleep";
 import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 
 describe("Video Thumbnail Loader", () => {
   let rxPlayer;
   let videoThumbnailLoader;
-  let xhrMock;
   const videoElement = document.createElement("video");
 
   beforeEach(() => {
     rxPlayer = new RxPlayer();
     videoThumbnailLoader = new VideoThumbnailLoader(videoElement, rxPlayer);
-    xhrMock = new XHRMock();
   });
   afterEach(() => {
     rxPlayer.dispose();
     videoThumbnailLoader.dispose();
-    xhrMock.restore();
   });
 
   it("should not work when no fetcher was imported", async function() {
@@ -67,7 +63,7 @@ describe("Video Thumbnail Loader", () => {
     rxPlayer.loadVideo({ url: trickModeInfos.url, transport: "dash" });
     await sleep(500);
 
-    const manifest = rxPlayer.getManifest();
+    const manifest = rxPlayer.__priv_getManifest();
 
     let time;
     let error;
@@ -154,14 +150,32 @@ describe("Video Thumbnail Loader", () => {
     VideoThumbnailLoader.addLoader(DASH_LOADER);
     const wantedThumbnail1 = { time: 1,
                                range: [0, 4] };
-    rxPlayer.loadVideo({ url: trickModeInfos.url, transport: "dash" });
+    const manifestLoader = (man, callbacks) => {
+      expect(trickModeInfos.url).to.equal(man.url);
+      callbacks.fallback();
+    };
+    const requestedSegments = [];
+    const segmentLoader = (info, callbacks) => {
+      requestedSegments.push(info.url);
+      callbacks.fallback();
+    };
+    rxPlayer.setWantedBufferAhead(1);
+    rxPlayer.loadVideo({
+      url: trickModeInfos.url,
+      transport: "dash",
+      manifestLoader,
+      segmentLoader,
+    });
     await waitForLoadedStateAfterLoadVideo(rxPlayer);
 
     let time;
     let error;
 
+    expect(requestedSegments).not.to.be.empty;
     try {
+      requestedSegments.length = 0;
       time = await videoThumbnailLoader.setTime(wantedThumbnail1.time);
+      expect(requestedSegments).to.be.empty;
     } catch (err) {
       error = err;
     }
@@ -175,10 +189,6 @@ describe("Video Thumbnail Loader", () => {
 
     time = undefined;
     error = undefined;
-
-    // Lock, because it should work without needing to load again the thumbnail,
-    // as the thumbnail is already buffered.
-    xhrMock.lock();
 
     try {
       time = await videoThumbnailLoader.setTime(wantedThumbnail1.time);
@@ -198,11 +208,23 @@ describe("Video Thumbnail Loader", () => {
     VideoThumbnailLoader.addLoader(DASH_LOADER);
     const wantedThumbnail1 = { time: 1,
                                range: [0, 4] };
-    rxPlayer.loadVideo({ url: trickModeInfos.url, transport: "dash" });
+    const manifestLoader = (man, callbacks) => {
+      expect(trickModeInfos.url).to.equal(man.url);
+      callbacks.fallback();
+    };
+    const requestedSegments = [];
+    const segmentLoader = (info, callbacks) => {
+      requestedSegments.push(info.url);
+      callbacks.fallback();
+    };
+    rxPlayer.setWantedBufferAhead(1);
+    rxPlayer.loadVideo({
+      url: trickModeInfos.url,
+      transport: "dash",
+      segmentLoader,
+      manifestLoader,
+    });
     await waitForLoadedStateAfterLoadVideo(rxPlayer);
-
-    rxPlayer.setWantedBufferAhead(0);
-    xhrMock.lock();
     videoThumbnailLoader.setTime(wantedThumbnail1.time);
     videoThumbnailLoader.setTime(wantedThumbnail1.time);
     videoThumbnailLoader.setTime(wantedThumbnail1.time);
@@ -210,22 +232,11 @@ describe("Video Thumbnail Loader", () => {
     videoThumbnailLoader.setTime(wantedThumbnail1.time);
 
     await sleep(75);
-    const xhrs = xhrMock.getLockedXHR();
-
-    expect(xhrs.length).to.equal(1);
-    expect(xhrs[0].url)
-      .to.equal("http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000.dash");
-
-    await xhrMock.flush(1);
-    await sleep(75);
-
-    const xhrs2 = xhrMock.getLockedXHR();
-    expect(xhrs2.length).to.equal(1);
-    expect(xhrs2[0].url)
-      .to.equal("http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000-0.dash");
-
-    xhrMock.unlock();
-    await sleep(75);
+    expect(requestedSegments).to.have.length(4);
+    expect(requestedSegments)
+      .to.include("http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000.dash");
+    expect(requestedSegments)
+      .to.include("http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000-0.dash");
     expect(videoElement.buffered.length).to.equal(1);
     expect(videoElement.buffered.start(0))
       .to.be.closeTo(wantedThumbnail1.range[0], 0.01);
@@ -237,28 +248,32 @@ describe("Video Thumbnail Loader", () => {
     VideoThumbnailLoader.addLoader(DASH_LOADER);
     const wantedThumbnail1 = { time: 1,
                                range: [0, 8] };
-    rxPlayer.loadVideo({ url: trickModeInfos.url, transport: "dash" });
+    const requestedVideoSegments = [];
+    const segmentLoader = (info, callbacks) => {
+      if (info.trackType === "video") {
+        requestedVideoSegments.push(info.url);
+      }
+      callbacks.fallback();
+    };
+    rxPlayer.loadVideo({
+      url: trickModeInfos.url,
+      transport: "dash",
+      segmentLoader,
+    });
     await waitForLoadedStateAfterLoadVideo(rxPlayer);
 
     rxPlayer.setWantedBufferAhead(0);
-    xhrMock.lock();
     videoThumbnailLoader.setTime(wantedThumbnail1.time);
-    await sleep(75);
-    await xhrMock.flush(1); // load and push init segment
-    await sleep(75);
+    await sleep(200);
+    const before = requestedVideoSegments.length;
+    expect(requestedVideoSegments)
+      .to.include("http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000-0.dash");
+    expect(requestedVideoSegments)
+      .to.include("http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000-4004.dash");
     videoThumbnailLoader.setTime(wantedThumbnail1.time + 2);
     await sleep(75);
+    expect(requestedVideoSegments.length).to.equal(before);
 
-    const xhrs = xhrMock.getLockedXHR();
-
-    expect(xhrs.length).to.equal(2);
-    expect(xhrs[0].url)
-      .to.equal("http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000-0.dash");
-    expect(xhrs[1].url)
-      .to.equal("http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000-4004.dash");
-
-    xhrMock.unlock();
-    await sleep(75);
     expect(videoElement.buffered.length).to.equal(1);
     expect(videoElement.buffered.start(0))
       .to.be.closeTo(wantedThumbnail1.range[0], 0.01);

@@ -12,7 +12,11 @@ import type {
   ILoadVideoSettings,
   IConstructorSettings,
 } from "../lib/defaultOptionsValues";
-import type { ILoadVideoOptions } from "../../../../src/public_types";
+import type {
+  IAudioRepresentationsSwitchingMode,
+  ILoadVideoOptions,
+  IVideoRepresentationsSwitchingMode,
+} from "../../../../src/public_types";
 
 const {
   useCallback,
@@ -25,6 +29,14 @@ const {
 const SPINNER_TIMEOUT = 300;
 
 function Player(): JSX.Element {
+  const [
+    defaultAudioRepresentationsSwitchingMode,
+    setDefaultAudioRepresentationsSwitchingMode
+  ] = useState<IAudioRepresentationsSwitchingMode>("reload");
+  const [
+    defaultVideoRepresentationsSwitchingMode,
+    setDefaultVideoRepresentationsSwitchingMode
+  ] = useState<IVideoRepresentationsSwitchingMode>("reload");
   const [playerModule, setPlayerModule] = useState<IPlayerModule | null>(null);
   const [autoPlayBlocked, setAutoPlayBlocked] = useState(false);
   const [displaySpinner, setDisplaySpinner] = useState(false);
@@ -41,6 +53,7 @@ function Player(): JSX.Element {
 
   const videoElementRef = useRef<HTMLVideoElement>(null);
   const textTrackElementRef = useRef<HTMLDivElement>(null);
+  const debugElementRef = useRef<HTMLDivElement>(null);
   const playerWrapperElementRef = useRef<HTMLDivElement>(null);
 
   const onOptionToggle = useCallback(() => {
@@ -68,6 +81,12 @@ function Player(): JSX.Element {
         setDisplaySpinner(false);
         return;
       }
+      playerModule.actions.setDefaultAudioRepresentationSwitchingMode(
+        defaultAudioRepresentationsSwitchingMode
+      );
+      playerModule.actions.setDefaultVideoRepresentationSwitchingMode(
+        defaultVideoRepresentationsSwitchingMode
+      );
       const isSeeking = playerModule.getState("isSeeking");
       const isBuffering = playerModule.getState("isBuffering");
       const isLoading = playerModule.getState("isLoading");
@@ -95,6 +114,16 @@ function Player(): JSX.Element {
       }
     }
 
+    playerModule.listenToState(
+      "defaultAudioRepresentationsSwitchingMode",
+      (newVal: IAudioRepresentationsSwitchingMode) =>
+        setDefaultAudioRepresentationsSwitchingMode(newVal)
+    );
+    playerModule.listenToState(
+      "defaultVideoRepresentationsSwitchingMode",
+      (newVal: IVideoRepresentationsSwitchingMode) =>
+        setDefaultVideoRepresentationsSwitchingMode(newVal)
+    );
     playerModule.listenToState("autoPlayBlocked", (newAutoPlayBlocked) => {
       setAutoPlayBlocked(newAutoPlayBlocked);
     });
@@ -115,7 +144,8 @@ function Player(): JSX.Element {
   const createNewPlayerModule = useCallback(() => {
     if (
       videoElementRef.current === null ||
-      textTrackElementRef.current === null
+      textTrackElementRef.current === null ||
+      debugElementRef.current === null
     ) {
       return;
     }
@@ -125,6 +155,7 @@ function Player(): JSX.Element {
         {
           videoElement: videoElementRef.current,
           textTrackElement: textTrackElementRef.current,
+          debugElement: debugElementRef.current,
         },
         playerOpts
       )
@@ -189,6 +220,30 @@ function Player(): JSX.Element {
     setPlayerOpts(cb);
   }, []);
 
+  const updateDefaultAudioRepresentationsSwitchingMode = useCallback(
+    (mod: IAudioRepresentationsSwitchingMode) => {
+      if (playerModule === null) {
+        setDefaultAudioRepresentationsSwitchingMode(mod);
+        setHasUpdatedPlayerOptions(true);
+        return;
+      }
+      playerModule.actions.setDefaultAudioRepresentationSwitchingMode(mod);
+    },
+    [playerModule]
+  );
+
+  const updateDefaultVideoRepresentationsSwitchingMode = useCallback(
+    (mod: IVideoRepresentationsSwitchingMode) => {
+      if (playerModule === null) {
+        setDefaultVideoRepresentationsSwitchingMode(mod);
+        setHasUpdatedPlayerOptions(true);
+        return;
+      }
+      playerModule.actions.setDefaultVideoRepresentationSwitchingMode(mod);
+    },
+    [playerModule]
+  );
+
   return (
     <section className="video-player-section">
       <div className="video-player-content">
@@ -203,6 +258,18 @@ function Player(): JSX.Element {
           loadVideoOptions={loadVideoOpts}
           updateLoadVideoOptions={setLoadVideoOpts}
           showOptions={showOptions}
+          defaultAudioRepresentationsSwitchingMode={
+            defaultAudioRepresentationsSwitchingMode
+          }
+          updateDefaultAudioRepresentationsSwitchingMode={
+            updateDefaultAudioRepresentationsSwitchingMode
+          }
+          defaultVideoRepresentationsSwitchingMode={
+            defaultVideoRepresentationsSwitchingMode
+          }
+          updateDefaultVideoRepresentationsSwitchingMode={
+            updateDefaultVideoRepresentationsSwitchingMode
+          }
         />
         <div
           className="video-player-wrapper"
@@ -235,6 +302,10 @@ function Player(): JSX.Element {
               <div
                 className="text-track"
                 ref={textTrackElementRef}
+              />
+              <div
+                className="debug-element"
+                ref={debugElementRef}
               />
               <video ref={videoElementRef} />
 

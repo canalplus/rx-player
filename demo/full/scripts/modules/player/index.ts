@@ -7,8 +7,9 @@
  */
 
 import {
-  BIF_PARSER,
   DASH,
+  DASH_WASM,
+  DEBUG_ELEMENT,
   DIRECTFILE,
   EME,
   HTML_SAMI_PARSER,
@@ -16,14 +17,9 @@ import {
   HTML_TEXT_BUFFER,
   HTML_TTML_PARSER,
   HTML_VTT_PARSER,
-  IMAGE_BUFFER,
   SMOOTH,
 } from "../../../../../src/features/list";
-import {
-  DASH_WASM,
-  METAPLAYLIST,
-  DEBUG_ELEMENT,
-} from "../../../../../src/experimental/features";
+import { METAPLAYLIST } from "../../../../../src/experimental/features";
 import RxPlayer from "../../../../../src/minimal";
 import { linkPlayerEventsToState } from "./events";
 import VideoThumbnailLoader, {
@@ -32,20 +28,21 @@ import VideoThumbnailLoader, {
 import CatchUpModeController from "./catchUp";
 import { declareModule } from "../../lib/declareModule";
 import type {
-  IAdaptation,
+  IAudioRepresentation,
   IAudioTrack,
   IAvailableAudioTrack,
   IAvailableTextTrack,
   IAvailableVideoTrack,
   IConstructorOptions,
   ILoadVideoOptions,
-  IRepresentation,
+  IAudioRepresentationsSwitchingMode,
+  IVideoRepresentationsSwitchingMode,
   ITextTrack,
+  IVideoRepresentation,
   IVideoTrack
 } from "../../../../../src/public_types";
 
 RxPlayer.addFeatures([
-  BIF_PARSER,
   DASH,
   DIRECTFILE,
   EME,
@@ -54,11 +51,14 @@ RxPlayer.addFeatures([
   HTML_TEXT_BUFFER,
   HTML_TTML_PARSER,
   HTML_VTT_PARSER,
-  IMAGE_BUFFER,
   SMOOTH,
   METAPLAYLIST,
   DEBUG_ELEMENT,
 ]);
+
+/* eslint-disable */
+(window as any).RxPlayer = RxPlayer;
+/* eslint-enable */
 
 declare const __INCLUDE_WASM_PARSER__: boolean;
 
@@ -89,33 +89,39 @@ export interface IBufferedData {
   bufferedStart: number|undefined;
   bufferedEnd: number|undefined;
   infos: {
-    adaptation: IAdaptation;
-    representation: IRepresentation;
+    adaptation: {
+      id: string;
+      type: string;
+      language?: string | undefined;
+      isAudioDescription?: boolean | undefined;
+      isClosedCaption?: boolean | undefined;
+    };
+    representation: IAudioRepresentation | IVideoRepresentation;
   };
 }
 
 export interface IPlayerModuleState {
-  audioBitrate: number | undefined;
-  audioBitrateAuto: boolean;
+  audioRepresentation: IAudioRepresentation | undefined | null;
+  audioRepresentationsLocked: boolean;
   autoPlayBlocked: boolean;
-  availableAudioBitrates: number[];
-  availableLanguages: IAvailableAudioTrack[];
+  availableAudioTracks: IAvailableAudioTrack[];
   availableSubtitles: IAvailableTextTrack[];
-  availableVideoBitrates: number[];
   availableVideoTracks: IAvailableVideoTrack[];
   bufferGap: number;
   bufferedData: null | {
+
     audio: IBufferedData[] | null;
     video: IBufferedData[] | null;
     text: IBufferedData[] | null;
   };
   cannotLoadMetadata: boolean;
   currentTime: number | undefined;
+  defaultAudioRepresentationsSwitchingMode: IAudioRepresentationsSwitchingMode;
+  defaultVideoRepresentationsSwitchingMode: IVideoRepresentationsSwitchingMode;
   duration: number | undefined;
   error: Error | null;
   hasCurrentContent: boolean;
   hasEnded: boolean;
-  images: IBifThumbnail[];
   isBuffering: boolean;
   isCatchUpEnabled: boolean;
   isCatchingUp: boolean;
@@ -126,18 +132,22 @@ export interface IPlayerModuleState {
   isReloading: boolean;
   isSeeking: boolean;
   isStopped: boolean;
-  language: IAudioTrack | undefined | null;
+  audioTrack: IAudioTrack | undefined | null;
   liveGap: number | undefined;
   loadedVideo: ILoadVideoOptions | null;
   lowLatencyMode: boolean;
+  livePosition: null | undefined | number;
   maximumPosition: null | undefined | number;
   minimumPosition: null | undefined | number;
   playbackRate: number;
   subtitle: ITextTrack | undefined | null;
-  videoBitrate: number | undefined;
-  videoBitrateAuto: boolean;
+  videoRepresentation: IVideoRepresentation | undefined | null;
+  videoRepresentationsLocked: boolean;
   videoTrack: IVideoTrack | undefined | null;
-  volume: number;
+  volumeInfo: {
+    volume: number;
+    muted: boolean;
+  };
   wallClockDiff: number | undefined;
   /**
    * If `true`, the currently set video track has a linked "trickmode" track.
@@ -150,23 +160,22 @@ export interface IPlayerModuleState {
 
 const PlayerModule = declareModule(
   (): IPlayerModuleState => ({
-    audioBitrate: undefined,
-    audioBitrateAuto: true,
+    audioRepresentation: undefined,
+    audioRepresentationsLocked: false,
     autoPlayBlocked: false,
-    availableAudioBitrates: [],
-    availableLanguages: [],
+    availableAudioTracks: [],
     availableSubtitles: [],
-    availableVideoBitrates: [],
     availableVideoTracks: [],
     bufferGap: 0,
     bufferedData: null,
     cannotLoadMetadata: false,
     currentTime: undefined,
+    defaultAudioRepresentationsSwitchingMode: "reload",
+    defaultVideoRepresentationsSwitchingMode: "reload",
     duration: undefined,
     error: null,
     hasCurrentContent: false,
     hasEnded: false,
-    images: [],
     isBuffering: false,
     isCatchUpEnabled: false,
     isCatchingUp: false,
@@ -177,34 +186,41 @@ const PlayerModule = declareModule(
     isReloading: false,
     isSeeking: false,
     isStopped: true,
-    language: undefined,
+    audioTrack: undefined,
     liveGap: undefined,
     loadedVideo: null,
     lowLatencyMode: false,
+    livePosition: undefined,
     maximumPosition: undefined,
     minimumPosition: undefined,
     playbackRate: 1,
     subtitle: undefined,
-    videoBitrate: undefined,
-    videoBitrateAuto: true,
+    videoRepresentation: undefined,
+    videoRepresentationsLocked: false,
     videoTrack: undefined,
-    volume: 1,
+    volumeInfo: {
+      volume: 1,
+      muted: false,
+    },
     wallClockDiff: undefined,
     videoTrackHasTrickMode: false,
     videoThumbnailsElement: null,
     videoThumbnailLoader: null,
   }),
   (
-    initOpts: IConstructorOptions & { textTrackElement? : HTMLElement },
+    initOpts: IConstructorOptions & {
+      textTrackElement? : HTMLElement,
+      debugElement : HTMLElement,
+    },
     state,
     abortSignal
   ) => {
-    const { textTrackElement, ...constructorOpts } = initOpts;
+    const { debugElement, textTrackElement, ...constructorOpts } = initOpts;
     const player = new RxPlayer(constructorOpts);
+    let debugEltInstance : { dispose(): void } | undefined;
 
     // facilitate DEV mode
     /* eslint-disable */
-    (window as any).RxPlayer = RxPlayer;
     (window as any).player = (window as any).rxPlayer = player;
     /* eslint-enable */
 
@@ -215,6 +231,9 @@ const PlayerModule = declareModule(
     // dispose of the RxPlayer when destroyed
     abortSignal.addEventListener("abort", () => {
       player.dispose();
+      if (debugEltInstance !== undefined) {
+        debugEltInstance.dispose();
+      }
     });
 
     return {
@@ -249,10 +268,11 @@ const PlayerModule = declareModule(
           textTrackElement,
           transportOptions: { checkMediaSegmentIntegrity: true },
         }, arg) as ILoadVideoOptions);
-        state.updateBulk({
+        const newState: Partial<IPlayerModuleState> = {
           loadedVideo: arg,
           lowLatencyMode: arg.lowLatencyMode === true,
-        });
+        };
+        state.updateBulk(newState);
       },
 
       play() {
@@ -294,22 +314,66 @@ const PlayerModule = declareModule(
         player.unMute();
       },
 
-      setAudioBitrate(bitrate: number | undefined) {
-        player.setAudioBitrate(bitrate || -1);
-        state.update("audioBitrateAuto", bitrate === undefined);
+      setDefaultVideoRepresentationSwitchingMode(
+        mode: IVideoRepresentationsSwitchingMode
+      ): void {
+        state.update("defaultVideoRepresentationsSwitchingMode", mode);
       },
 
-      setVideoBitrate(bitrate: number | undefined) {
-        player.setVideoBitrate(bitrate || -1);
-        state.update("videoBitrateAuto", bitrate === undefined);
+      setDefaultAudioRepresentationSwitchingMode(
+        mode: IAudioRepresentationsSwitchingMode
+      ): void {
+        state.update("defaultAudioRepresentationsSwitchingMode", mode);
+      },
+
+      lockVideoRepresentations(reps: IVideoRepresentation[]) {
+        player.lockVideoRepresentations({
+          representations: reps.map(r => r.id),
+          switchingMode: state.get(
+            "defaultVideoRepresentationsSwitchingMode"
+          ),
+        });
+        state.update(
+          "videoRepresentationsLocked",
+          player.getLockedVideoRepresentations() !== null
+        );
+      },
+
+      unlockVideoRepresentations: () => {
+        player.unlockVideoRepresentations();
+        state.update(
+          "videoRepresentationsLocked",
+          player.getLockedVideoRepresentations() !== null
+        );
+      },
+
+      lockAudioRepresentations(reps: IAudioRepresentation[]) {
+        player.lockAudioRepresentations({
+          representations: reps.map(r => String(r.id)),
+          switchingMode: state.get(
+            "defaultAudioRepresentationsSwitchingMode"
+          ),
+        });
+        state.update(
+          "audioRepresentationsLocked",
+          player.getLockedAudioRepresentations() !== null
+        );
+      },
+
+      unlockAudioRepresentations: () => {
+        player.unlockAudioRepresentations();
+        state.update(
+          "audioRepresentationsLocked",
+          player.getLockedAudioRepresentations() !== null
+        );
       },
 
       setAudioTrack(track: IAudioTrack) {
-        player.setAudioTrack(track.id as string);
+        player.setAudioTrack(track.id);
       },
 
       setVideoTrack(track: IVideoTrack) {
-        player.setVideoTrack(track.id as string);
+        player.setVideoTrack(track.id);
       },
 
       disableVideoTrack() {
@@ -336,6 +400,22 @@ const PlayerModule = declareModule(
       disableLiveCatchUp() {
         catchUpModeController.stopCatchUp();
       },
+
+      showDebugElement() {
+        if (debugEltInstance !== undefined) {
+          debugEltInstance.dispose();
+        }
+        debugEltInstance = player.createDebugElement(debugElement);
+      },
+      hideDebugElement() {
+        if (debugEltInstance !== undefined) {
+          debugEltInstance.dispose();
+          debugEltInstance = undefined;
+        }
+      },
+      isDebugElementShown() {
+        return debugEltInstance !== undefined;
+      }
     };
 
     function dettachVideoThumbnailLoader() {

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { isOffline } from "../../../compat";
 import {
   CustomLoaderError,
   isKnownError,
@@ -25,6 +24,7 @@ import log from "../../../log";
 import { ICdnMetadata } from "../../../parsers/manifest";
 import cancellableSleep from "../../../utils/cancellable_sleep";
 import getFuzzedDelay from "../../../utils/get_fuzzed_delay";
+import getTimestamp from "../../../utils/monotonic_timestamp";
 import noop from "../../../utils/noop";
 import TaskCanceller, {
   CancellationSignal,
@@ -72,22 +72,6 @@ function shouldRetry(error : unknown) : boolean {
   return isKnownError(error) && error.code === "INTEGRITY_ERROR";
 }
 
-/**
- * Returns true if we're pretty sure that the current error is due to the
- * user being offline.
- * @param {Error} error
- * @returns {Boolean}
- */
-function isOfflineRequestError(error : unknown) : boolean {
-  if (error instanceof RequestError) {
-    return error.type === NetworkErrorTypes.ERROR_EVENT &&
-           isOffline();
-  } else if (error instanceof CustomLoaderError) {
-    return error.isOfflineError;
-  }
-  return false; // under doubt, return false
-}
-
 /** Settings to give to the backoff functions to configure their behavior. */
 export interface IBackoffSettings {
   /**
@@ -104,28 +88,9 @@ export interface IBackoffSettings {
    * Maximum number of retries to perform on "regular" errors (e.g. due to HTTP
    * status, integrity errors, timeouts...).
    */
-  maxRetryRegular : number;
-  /**
-   * Maximum number of retries to perform when it appears that the user is
-   * currently offline.
-   */
-  maxRetryOffline : number;
+  maxRetry : number;
   /** Callback called when a request is retried. */
   onRetry : (err : unknown) => void;
-}
-
-const enum REQUEST_ERROR_TYPES { None,
-                                 Regular,
-                                 Offline }
-
-/**
- * Guess the type of error obtained.
- * @param {*} error
- * @returns {number}
- */
-function getRequestErrorType(error : unknown) : REQUEST_ERROR_TYPES {
-  return isOfflineRequestError(error) ? REQUEST_ERROR_TYPES.Offline :
-                                        REQUEST_ERROR_TYPES.Regular;
 }
 
 /**
@@ -195,8 +160,7 @@ export async function scheduleRequestWithCdns<T>(
 
   const { baseDelay,
           maxDelay,
-          maxRetryRegular,
-          maxRetryOffline,
+          maxRetry,
           onRetry } = options;
 
   if (cdns !== null && cdns.length === 0) {
@@ -261,22 +225,14 @@ export async function scheduleRequestWithCdns<T>(
         cdnPrioritizer.downgradeCdn(cdn);
       }
 
-      const currentErrorType = getRequestErrorType(error);
-
       let missedAttemptsObj = missedAttempts.get(cdn);
       if (missedAttemptsObj === undefined) {
         missedAttemptsObj = { errorCounter: 1,
-                              lastErrorType: currentErrorType,
                               blockedUntil: undefined,
                               isBlacklisted: false };
         missedAttempts.set(cdn, missedAttemptsObj);
       } else {
-        if (currentErrorType !== missedAttemptsObj.lastErrorType) {
-          missedAttemptsObj.errorCounter = 1;
-          missedAttemptsObj.lastErrorType = currentErrorType;
-        } else {
-          missedAttemptsObj.errorCounter++;
-        }
+        missedAttemptsObj.errorCounter++;
       }
 
       if (!shouldRetry(error)) {
@@ -284,10 +240,6 @@ export async function scheduleRequestWithCdns<T>(
         missedAttemptsObj.isBlacklisted = true;
         return retryWithNextCdn(error);
       }
-
-      const maxRetry = currentErrorType === REQUEST_ERROR_TYPES.Offline ?
-        maxRetryOffline :
-        maxRetryRegular;
 
       if (missedAttemptsObj.errorCounter > maxRetry) {
         missedAttemptsObj.blockedUntil = undefined;
@@ -297,7 +249,7 @@ export async function scheduleRequestWithCdns<T>(
         const delay = Math.min(baseDelay * Math.pow(2, errorCounter - 1),
                                maxDelay);
         const fuzzedDelay = getFuzzedDelay(delay);
-        missedAttemptsObj.blockedUntil = performance.now() + fuzzedDelay;
+        missedAttemptsObj.blockedUntil = getTimestamp() + fuzzedDelay;
       }
 
       return retryWithNextCdn(error);
@@ -352,7 +304,7 @@ export async function scheduleRequestWithCdns<T>(
       return requestCdn(nextWantedCdn);
     }
 
-    const now = performance.now();
+    const now = getTimestamp();
     const blockedFor = nextCdnAttemptObj.blockedUntil - now;
     if (blockedFor <= 0) {
       return requestCdn(nextWantedCdn);
@@ -400,7 +352,7 @@ export async function scheduleRequestWithCdns<T>(
    * attempts already done for that resource.
    *
    * Returns `undefined` if there's no Cdn left to request the resource.
-   * @param {Array.<Object>}
+   * @param {Array.<Object>} sortedCdns
    * @returns {Object|undefined}
    */
   function getPrioritaryRequestableCdnFromSortedList(
@@ -409,7 +361,7 @@ export async function scheduleRequestWithCdns<T>(
     if (missedAttempts.size === 0) {
       return sortedCdns[0];
     }
-    const now = performance.now();
+    const now = getTimestamp();
     return sortedCdns
       .filter(c =>  missedAttempts.get(c)?.isBlacklisted !== true)
       .reduce((
@@ -465,22 +417,19 @@ export function scheduleRequestPromise<T>(
  */
 interface ICdnAttemptMetadata {
   /**
-   * Count the amount of consecutive times an error of type `lastErrorType` has
-   * been encountered while requesting this resource though the concerned CDN.
+   * Count the amount of consecutive times an error has been encountered while
+   * requesting this resource though the concerned CDN.
    *
-   * For example `1` means that the request through this CDN either failed for
-   * the first consecutive time or that it already failed just before but for an
-   * error with a different `lastErrorType` value.
+   * For example `1` means that the request through this CDN failed for the
+   * first consecutive time.
    * `2` means that after requesting this CDN two consecutive times, the request
-   * failed with an error with the same `lastErrorType` value.
+   * still failed.
    * etc.
    */
   errorCounter : number;
-  /** The last type of error encountered when requesting through that CDN. */
-  lastErrorType : REQUEST_ERROR_TYPES;
   /**
-   * Timestamp, in terms of `performance.now()`, until which it should be
-   * forbidden to request this CDN.
+   * Monotonically-raising timestamp, until which it should be forbidden to
+   * request this CDN.
    * Enforcing this delay allows to prevent making too much requests to a given
    * CDN.
    *

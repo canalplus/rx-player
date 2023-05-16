@@ -16,7 +16,7 @@
 
 import config from "../../../../config";
 import log from "../../../../log";
-import { getInnerAndOuterTimeRanges } from "../../../../utils/ranges";
+import { getInnerAndOuterRangesFromBufferedTimeRanges } from "../../../../utils/ranges";
 import { CancellationSignal } from "../../../../utils/task_canceller";
 import { SegmentBuffer } from "../../../segment_buffers";
 
@@ -78,8 +78,8 @@ function selectGCedRanges(
   buffered : TimeRanges,
   gcGap : number
 ) : Array<{ start : number; end : number }> {
-  const { innerRange, outerRanges } = getInnerAndOuterTimeRanges(buffered,
-                                                                 position);
+  const { innerRange, outerRanges } =
+    getInnerAndOuterRangesFromBufferedTimeRanges(buffered, position);
   const cleanedupRanges : Array<{ start : number;
                                   end: number; }> = [];
 
