@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import globalScope from "../global_scope";
+
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
@@ -35,20 +37,20 @@ describe("Compat - isVTTCue", () => {
       this.text = text;
     }
   }
-  const win = window as IFakeWindow;
+  const gs = globalScope as IFakeWindow;
 
   it("should return true if the given cue is an instance of a vtt cue", () => {
-    const originalVTTCue = window.VTTCue;
-    win.VTTCue = MockVTTCue;
+    const originalVTTCue = globalScope.VTTCue;
+    gs.VTTCue = MockVTTCue;
     const cue = new VTTCue(0, 10, "");
     const isVTTCue = jest.requireActual("../is_vtt_cue").default;
     expect(isVTTCue(cue)).toEqual(true);
-    window.VTTCue = originalVTTCue;
+    globalScope.VTTCue = originalVTTCue;
   });
 
   it("should return false if the given cue is not an instance of a vtt cue", () => {
-    const originalVTTCue = window.VTTCue;
-    win.VTTCue = MockVTTCue;
+    const originalVTTCue = globalScope.VTTCue;
+    gs.VTTCue = MockVTTCue;
     const cue = {
       startTime: 0,
       endTime: 10,
@@ -56,16 +58,18 @@ describe("Compat - isVTTCue", () => {
     };
     const isVTTCue = jest.requireActual("../is_vtt_cue").default;
     expect(isVTTCue(cue)).toEqual(false);
-    window.VTTCue = originalVTTCue;
+    globalScope.VTTCue = originalVTTCue;
   });
 
-  it("should return false in any case if window does not define a VTTCue", () => {
-    const originalVTTCue = window.VTTCue;
-    win.VTTCue = MockVTTCue;
-    const cue = new VTTCue(0, 10, "");
-    delete win.VTTCue;
-    const isVTTCue = jest.requireActual("../is_vtt_cue").default;
-    expect(isVTTCue(cue)).toEqual(false);
-    window.VTTCue = originalVTTCue;
-  });
+  it(
+    "should return false in any case if the global scope does not define a VTTCue",
+    () => {
+      const originalVTTCue = globalScope.VTTCue;
+      gs.VTTCue = MockVTTCue;
+      const cue = new VTTCue(0, 10, "");
+      delete gs.VTTCue;
+      const isVTTCue = jest.requireActual("../is_vtt_cue").default;
+      expect(isVTTCue(cue)).toEqual(false);
+      globalScope.VTTCue = originalVTTCue;
+    });
 });

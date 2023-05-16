@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// eslint-disable-next-line max-len
+import NativeTextSegmentBuffer from "../../core/segment_buffers/implementations/text/native";
 import vttParser from "../../parsers/texttracks/webvtt/native";
 import { IFeaturesObject } from "../types";
 
@@ -23,6 +25,7 @@ import { IFeaturesObject } from "../types";
  */
 function addNativeVTTFeature(features : IFeaturesObject) : void {
   features.nativeTextTracksParsers.vtt = vttParser;
+  features.nativeTextTracksBuffer = NativeTextSegmentBuffer;
 }
 
 export { addNativeVTTFeature as NATIVE_VTT_PARSER };

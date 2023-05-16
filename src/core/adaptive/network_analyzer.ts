@@ -162,6 +162,13 @@ function estimateStarvationModeBitrate(
 
   const concernedRequest = concernedRequests[0];
   const now = performance.now();
+
+  let minimumRequestTime = concernedRequest.content.segment.duration * 1.5;
+  minimumRequestTime = Math.min(minimumRequestTime, 3000);
+  minimumRequestTime = Math.max(minimumRequestTime, 12000);
+  if (now - concernedRequest.requestTimestamp < minimumRequestTime) {
+    return undefined;
+  }
   const lastProgressEvent = concernedRequest.progress.length > 0 ?
     concernedRequest.progress[concernedRequest.progress.length - 1] :
     undefined;
@@ -178,7 +185,7 @@ function estimateStarvationModeBitrate(
       // Calculate estimated time spent rebuffering if we continue doing that request.
       const expectedRebufferingTime = remainingTime -
         (realBufferGap / speed);
-      if (expectedRebufferingTime > 2000) {
+      if (expectedRebufferingTime > 2500) {
         return bandwidthEstimate;
       }
     }
@@ -402,10 +409,8 @@ export default class NetworkAnalyzer {
   ) : boolean {
     if (currentRepresentation === null) {
       return true;
-    } else if (bitrate === currentRepresentation.bitrate) {
+    } else if (bitrate >= currentRepresentation.bitrate) {
       return false;
-    } else if (bitrate > currentRepresentation.bitrate) {
-      return !this._inStarvationMode;
     }
     return shouldDirectlySwitchToLowBitrate(playbackInfo,
                                             currentRequests,
