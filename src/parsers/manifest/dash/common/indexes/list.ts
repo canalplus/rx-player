@@ -314,8 +314,8 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   /**
    * @returns {Boolean}
    */
-  isFinished() : true {
-    return true;
+  isStillAwaitingFutureSegments() : false {
+    return false;
   }
 
   /**
@@ -323,6 +323,14 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    */
   isInitialized() : true {
     return true;
+  }
+
+  initialize() : void {
+    log.error("A `ListRepresentationIndex` does not need to be initialized");
+  }
+
+  addPredictedSegments() : void {
+    log.warn("Cannot add predicted segments to a `ListRepresentationIndex`");
   }
 
   /**
@@ -333,6 +341,6 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   }
 
   _update() : void {
-    log.error("List RepresentationIndex: Cannot update a SegmentList");
+    log.error("A `ListRepresentationIndex` cannot be updated");
   }
 }

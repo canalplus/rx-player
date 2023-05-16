@@ -137,8 +137,8 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
   /**
    * @returns {Boolean}
    */
-  isFinished() : true {
-    return true;
+  isStillAwaitingFutureSegments() : false {
+    return false;
   }
 
   /**
@@ -146,6 +146,14 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
    */
   isInitialized() : true {
     return true;
+  }
+
+  initialize() : void {
+    log.error("A `StaticRepresentationIndex` does not need to be initialized");
+  }
+
+  addPredictedSegments() : void {
+    log.warn("Cannot add predicted segments to a `StaticRepresentationIndex`");
   }
 
   _replace() : void {

@@ -33,20 +33,8 @@
       "displayName": "Text Tracks"
     },
     {
-      "path": "./images.md",
-      "displayName": "Images"
-    },
-    {
       "path": "./MetaPlaylist.md",
       "displayName": "MetaPlaylist"
-    },
-    {
-      "path": "./Manifest_Object.md",
-      "displayName": "Manifest Object"
-    },
-    {
-      "path": "./Deprecated_APIs.md",
-      "displayName": "Deprecated APIs"
     },
     {
       "path": "./Initial_Position.md",

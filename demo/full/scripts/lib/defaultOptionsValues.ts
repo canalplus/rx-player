@@ -1,34 +1,31 @@
+import type { IConstructorOptions, ILoadVideoOptions } from "../../../../src/public_types";
+
 const defaultOptionsValues = {
   player: {
-    initialAudioBitrate: 0,
-    initialVideoBitrate: 0,
-    limitVideoWidth: false,
-    maxAudioBitrate: Infinity,
+    videoResolutionLimit: "none",
     maxBufferAhead: Infinity,
     maxBufferBehind: Infinity,
-    maxVideoBitrate: Infinity,
     maxVideoBufferSize: Infinity,
-    minAudioBitrate: 0,
-    minVideoBitrate: 0,
-    stopAtEnd: false,
     throttleVideoBitrateWhenHidden: false,
     wantedBufferAhead: 30,
   },
   loadVideo: {
-    audioTrackSwitchingMode: "reload",
     autoPlay: true,
+    defaultAudioTrackSwitchingMode: "reload",
     enableFastSwitching: true,
-    manualBitrateSwitchingMode: "direct",
-    networkConfig: {
-      manifestRetry: 4,
-      manifestRequestTimeout: 30000,
-      offlineRetry: Infinity,
-      segmentRetry: 4,
-      segmentRequestTimeout: 30000,
+    requestConfig: {
+      segment: {
+        maxRetry: 4,
+        timeout: 30000,
+      },
+      manifest: {
+        maxRetry: 4,
+        timeout: 30000,
+      },
     },
     onCodecSwitch: "continue",
   },
-};
+} satisfies { player: IConstructorOptions, loadVideo: Omit<ILoadVideoOptions, "transport"> };
 
 export type IConstructorSettings = typeof defaultOptionsValues.player;
 export type ILoadVideoSettings = typeof defaultOptionsValues.loadVideo;

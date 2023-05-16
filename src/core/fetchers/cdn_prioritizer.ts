@@ -121,7 +121,7 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
     const { DEFAULT_CDN_DOWNGRADE_TIME } = config.getCurrent();
     const downgradeTime = DEFAULT_CDN_DOWNGRADE_TIME;
     this._downgradedCdnList.metadata.push(metadata);
-    const timeout = window.setTimeout(() => {
+    const timeout = setTimeout(() => {
       const newIndex = indexOfMetadata(this._downgradedCdnList.metadata, metadata);
       if (newIndex >= 0) {
         this._removeIndexFromDowngradeList(newIndex);
