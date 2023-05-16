@@ -95,7 +95,7 @@ describe("Features - initializeFeaturesObject", () => {
       nativeTextTracksParsers: {},
       htmlTextTracksBuffer: null,
       htmlTextTracksParsers: {},
-      ContentDecryptor: null,
+      decrypt: null,
       directfile: null,
     };
     jest.mock("../features_object", () => ({
@@ -115,7 +115,7 @@ describe("Features - initializeFeaturesObject", () => {
         js: jest.requireActual("../../parsers/manifest/dash/js-parser").default,
         wasm: null,
       },
-      ContentDecryptor: jest.requireActual("../../core/decrypt/index").default,
+      decrypt: jest.requireActual("../../core/decrypt/index").default,
       createDebugElement: jest.requireActual("../../core/api/debug").default,
       directfile: {
         initDirectFile: jest.requireActual("../../core/init/directfile_content_initializer").default,

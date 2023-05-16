@@ -69,6 +69,7 @@ import {
   IVideoTrackPreference,
 } from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
+import arrayIncludes from "../../utils/array_includes";
 import assert from "../../utils/assert";
 import EventEmitter, {
   IEventPayload,
@@ -121,9 +122,9 @@ import MediaElementTrackChoiceManager from "./tracks_management/media_element_tr
 import TrackChoiceManager from "./tracks_management/track_choice_manager";
 import {
   constructPlayerStateReference,
+  emitPlayPauseEvents,
   emitSeekEvents,
   isLoadedState,
-  // emitSeekEvents,
   PLAYER_STATES,
 } from "./utils";
 
@@ -307,6 +308,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     reloadPosition?: number;
   };
 
+  /**
+   * Store last value of autoPlay, from the last load or reload.
+   */
+  private _priv_lastAutoPlay: boolean;
+
   /** All possible Error types emitted by the RxPlayer. */
   static get ErrorTypes() : Record<IErrorType, IErrorType> {
     return ErrorTypes;
@@ -364,7 +370,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /* PLAYER_VERSION */"3.30.0";
+    this.version = /* PLAYER_VERSION */"3.31.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -481,6 +487,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_preferredVideoTracks = preferredVideoTracks;
 
     this._priv_reloadingMetadata = {};
+
+    this._priv_lastAutoPlay = false;
   }
 
   /**
@@ -551,6 +559,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     log.info("API: Calling loadvideo", options.url, options.transport);
     this._priv_reloadingMetadata = { options };
     this._priv_initializeContentPlayback(options);
+    this._priv_lastAutoPlay = options.autoPlay;
   }
 
   /**
@@ -772,6 +781,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         this.stop();
         this._priv_currentError = null;
         throw new Error("DirectFile feature not activated in your build.");
+      } else if (isNullOrUndefined(url)) {
+        throw new Error("No URL for a DirectFile content");
       }
       mediaElementTrackChoiceManager =
         this._priv_initializeMediaElementTrackChoiceManager(
@@ -839,11 +850,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       log.warn("API: Sending warning:", formattedError);
       this.trigger("warning", formattedError);
     });
-    initializer.addEventListener("reloadingMediaSource", () => {
+    initializer.addEventListener("reloadingMediaSource", (payload) => {
       contentInfos.segmentBuffersStore = null;
       if (contentInfos.trackChoiceManager !== null) {
         contentInfos.trackChoiceManager.resetPeriods();
       }
+      this._priv_lastAutoPlay = payload.autoPlay;
     });
     initializer.addEventListener("inbandEvents", (inbandEvents) =>
       this.trigger("inbandEvents", inbandEvents));
@@ -945,6 +957,53 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           break;
       }
     };
+
+    /**
+     * `TaskCanceller` allowing to stop emitting `"play"` and `"pause"`
+     * events.
+     * `null` when such events are not emitted currently.
+     */
+    let playPauseEventsCanceller : TaskCanceller | null = null;
+
+    /**
+     * Callback emitting `"play"` and `"pause`" events once the content is
+     * loaded, starting from the state indicated in argument.
+     * @param {boolean} willAutoPlay - If `false`, we're currently paused.
+     */
+    const triggerPlayPauseEventsWhenReady = (willAutoPlay: boolean) => {
+      if (playPauseEventsCanceller !== null) {
+        playPauseEventsCanceller.cancel(); // cancel previous logic
+        playPauseEventsCanceller = null;
+      }
+      playerStateRef.onUpdate((val, stopListeningToStateUpdates) => {
+        if (!isLoadedState(val)) {
+          return; // content not loaded yet: no event
+        }
+        stopListeningToStateUpdates();
+        if (playPauseEventsCanceller !== null) {
+          playPauseEventsCanceller.cancel();
+        }
+        playPauseEventsCanceller = new TaskCanceller();
+        playPauseEventsCanceller.linkToSignal(currentContentCanceller.signal);
+        if (willAutoPlay !== !videoElement.paused) {
+          // paused status is not at the expected value on load: emit event
+          if (videoElement.paused) {
+            this.trigger("pause", null);
+          } else {
+            this.trigger("play", null);
+          }
+        }
+        emitPlayPauseEvents(videoElement,
+                            () => this.trigger("play", null),
+                            () => this.trigger("pause", null),
+                            currentContentCanceller.signal);
+      }, { emitCurrentValue: false, clearSignal: currentContentCanceller.signal });
+    };
+
+    triggerPlayPauseEventsWhenReady(autoPlay);
+    initializer.addEventListener("reloadingMediaSource", (payload) => {
+      triggerPlayPauseEventsWhenReady(payload.autoPlay);
+    });
 
     /**
      * `TaskCanceller` allowing to stop emitting `"seeking"` and `"seeked"`
@@ -1107,6 +1166,42 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   getPlayerState() : string {
     return this.state;
+  }
+
+  /**
+   * Returns true if a content is loaded.
+   * @returns {Boolean} - `true` if a content is loaded, `false` otherwise.
+   */
+  isContentLoaded() : boolean {
+    return !arrayIncludes(["LOADING", "RELOADING", "STOPPED"], this.state);
+  }
+
+  /**
+   * Returns true if the player is buffering.
+   * @returns {Boolean} - `true` if the player is buffering, `false` otherwise.
+   */
+  isBuffering() : boolean {
+    return arrayIncludes(["BUFFERING", "SEEKING", "LOADING", "RELOADING"], this.state);
+  }
+
+  /**
+   * Returns the play/pause status of the player :
+   *   - when `LOADING` or `RELOADING`, returns the scheduled play/pause condition
+   *     for when loading is over,
+   *   - in other states, returns the `<video>` element .paused value,
+   *   - if the player is disposed, returns `true`.
+   * @returns {Boolean} - `true` if the player is paused or will be after loading,
+   * `false` otherwise.
+   */
+  isPaused() : boolean {
+    if (this.videoElement) {
+      if (arrayIncludes(["LOADING", "RELOADING"], this.state)) {
+        return !this._priv_lastAutoPlay;
+      } else {
+        return this.videoElement.paused;
+      }
+    }
+    return true;
   }
 
   /**
@@ -1286,6 +1381,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       throw new Error("Disposed player");
     }
     return this.videoElement.currentTime;
+  }
+
+  /**
+   * Returns the last stored content position, in seconds.
+   *
+   * @returns {number|undefined}
+   */
+  getLastStoredContentPosition() : number|undefined {
+    return this._priv_reloadingMetadata.reloadPosition;
   }
 
   /**
@@ -2986,7 +3090,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return mediaElementTrackChoiceManager;
   }
 }
-Player.version = /* PLAYER_VERSION */"3.30.0";
+Player.version = /* PLAYER_VERSION */"3.31.0";
 
 /** Every events sent by the RxPlayer's public API. */
 interface IPublicAPIEvent {
@@ -3011,6 +3115,8 @@ interface IPublicAPIEvent {
   availableTextTracksChange : IAvailableTextTrack[];
   availableVideoTracksChange : IAvailableVideoTrack[];
   decipherabilityUpdate : IDecipherabilityUpdateContent[];
+  play: null;
+  pause: null;
   seeking : null;
   seeked : null;
   streamEvent : IStreamEvent;
