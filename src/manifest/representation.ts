@@ -21,7 +21,11 @@ import {
   IContentProtections,
   IParsedRepresentation,
 } from "../parsers/manifest";
-import { IHDRInformation } from "../public_types";
+import {
+  IAudioRepresentation,
+  IHDRInformation,
+  IVideoRepresentation,
+} from "../public_types";
 import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
 import { IRepresentationIndex } from "./representation_index";
 import {
@@ -333,6 +337,24 @@ class Representation {
     this.contentProtections.initData.push({ type: initDataType,
                                             values: data });
     return true;
+  }
+
+  /**
+   * Format Representation as an `IAudioRepresentation`.
+   * @returns {Object}
+   */
+  public toAudioRepresentation(): IAudioRepresentation {
+    const { id, bitrate, codec } = this;
+    return { id, bitrate, codec };
+  }
+
+  /**
+   * Format Representation as an `IVideoRepresentation`.
+   * @returns {Object}
+   */
+  public toVideoRepresentation(): IVideoRepresentation {
+    const { id, bitrate, frameRate, width, height, codec, hdrInfo } = this;
+    return { id, bitrate, frameRate, width, height, codec, hdrInfo };
   }
 }
 
