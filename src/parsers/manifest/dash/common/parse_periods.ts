@@ -18,6 +18,8 @@ import log from "../../../../log";
 import Manifest from "../../../../manifest";
 import flatMap from "../../../../utils/flat_map";
 import idGenerator from "../../../../utils/id_generator";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
+import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
 import objectValues from "../../../../utils/object_values";
 import { utf8ToStr } from "../../../../utils/string_parsing";
 import {
@@ -33,7 +35,6 @@ import {
 // eslint-disable-next-line max-len
 import flattenOverlappingPeriods from "./flatten_overlapping_periods";
 import getPeriodsTimeInformation from "./get_periods_time_infos";
-import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import parseAdaptationSets, {
   IAdaptationSetContext,
 } from "./parse_adaptation_sets";
@@ -67,12 +68,9 @@ export default function parsePeriods(
     throw new Error("MPD parsing error: the time information are incoherent.");
   }
 
-  const { isDynamic,
-          timeShiftBufferDepth } = context;
-  const manifestBoundsCalculator = new ManifestBoundsCalculator({ isDynamic,
-                                                                  timeShiftBufferDepth });
+  const { isDynamic, manifestBoundsCalculator } = context;
 
-  if (!isDynamic && context.duration != null) {
+  if (!isDynamic && !isNullOrUndefined(context.duration)) {
     manifestBoundsCalculator.setLastPosition(context.duration);
   }
 
@@ -90,7 +88,7 @@ export default function parsePeriods(
             periodEnd } = periodsTimeInformation[i];
 
     let periodID : string;
-    if (periodIR.attributes.id == null) {
+    if (isNullOrUndefined(periodIR.attributes.id)) {
       log.warn("DASH: No usable id found in the Period. Generating one.");
       periodID = "gen-dash-period-" + generatePeriodID();
     } else {
@@ -108,12 +106,11 @@ export default function parsePeriods(
     const unsafelyBaseOnPreviousPeriod = context
       .unsafelyBaseOnPreviousManifest?.getPeriod(periodID) ?? null;
 
-    const availabilityTimeComplete = periodIR.attributes.availabilityTimeComplete ?? true;
-    const availabilityTimeOffset = periodIR.attributes.availabilityTimeOffset ?? 0;
-    const { aggressiveMode, manifestProfiles } = context;
+    const availabilityTimeComplete = periodIR.attributes.availabilityTimeComplete;
+    const availabilityTimeOffset = periodIR.attributes.availabilityTimeOffset;
+    const { manifestProfiles } = context;
     const { segmentTemplate } = periodIR.children;
-    const adapCtxt : IAdaptationSetContext = { aggressiveMode,
-                                               availabilityTimeComplete,
+    const adapCtxt : IAdaptationSetContext = { availabilityTimeComplete,
                                                availabilityTimeOffset,
                                                baseURLs: periodBaseURLs,
                                                manifestBoundsCalculator,
@@ -124,7 +121,6 @@ export default function parsePeriods(
                                                receivedTime,
                                                segmentTemplate,
                                                start: periodStart,
-                                               timeShiftBufferDepth,
                                                unsafelyBaseOnPreviousPeriod };
     const adaptations = parseAdaptationSets(periodIR.children.adaptations, adapCtxt);
 
@@ -149,7 +145,7 @@ export default function parsePeriods(
         }
       } else {
         if (typeof lastPosition === "number") {
-          const positionTime = performance.now() / 1000;
+          const positionTime = getMonotonicTimeStamp() / 1000;
           manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
         } else {
           const guessedLastPositionFromClock =
@@ -178,12 +174,13 @@ export default function parsePeriods(
 
 /**
  * Try to guess the "last position", which is the last position
- * available in the manifest in seconds, and the "position time", the time
- * (`performance.now()`) in which the last position was collected.
+ * available in the manifest in seconds, and the "position time", the
+ * monotonically-raising timestamp used by the RxPlayer, at which the
+ * last position was collected.
  *
  * These values allows to retrieve at any time in the future the new last
  * position, by substracting the position time to the last position, and
- * adding to it the new value returned by `performance.now`.
+ * adding to it the new monotonically-raising timestamp.
  *
  * The last position and position time are returned by this function if and only if
  * it would indicate a last position superior to the `minimumTime` given.
@@ -207,10 +204,10 @@ function guessLastPositionFromClock(
   context : IPeriodContext,
   minimumTime : number
 ) : [number, number] | undefined {
-  if (context.clockOffset != null) {
+  if (!isNullOrUndefined(context.clockOffset)) {
     const lastPosition = context.clockOffset / 1000 -
       context.availabilityStartTime;
-    const positionTime = performance.now() / 1000;
+    const positionTime = getMonotonicTimeStamp() / 1000;
     const timeInSec = positionTime + lastPosition;
     if (timeInSec >= minimumTime) {
       return [timeInSec, positionTime];
@@ -221,7 +218,7 @@ function guessLastPositionFromClock(
       log.warn("DASH Parser: no clock synchronization mechanism found." +
                " Using the system clock instead.");
       const lastPosition = now - context.availabilityStartTime;
-      const positionTime = performance.now() / 1000;
+      const positionTime = getMonotonicTimeStamp() / 1000;
       return [lastPosition, positionTime];
     }
   }
@@ -244,7 +241,7 @@ function getMaximumLastPosition(
   let maxEncounteredPosition : number | null = null;
   let allIndexAreEmpty = true;
   const adaptationsVal = objectValues(adaptationsPerType)
-    .filter((ada) : ada is IParsedAdaptation[] => ada != null);
+    .filter((ada) : ada is IParsedAdaptation[] => !isNullOrUndefined(ada));
   const allAdaptations = flatMap(adaptationsVal,
                                  (adaptationsForType) => adaptationsForType);
   for (const adaptation of allAdaptations) {
@@ -255,15 +252,15 @@ function getMaximumLastPosition(
         allIndexAreEmpty = false;
         if (typeof position === "number") {
           maxEncounteredPosition =
-            maxEncounteredPosition == null ? position :
-                                             Math.max(maxEncounteredPosition,
-                                                      position);
+            isNullOrUndefined(maxEncounteredPosition) ? position :
+                                                        Math.max(maxEncounteredPosition,
+                                                                 position);
         }
       }
     }
   }
 
-  if (maxEncounteredPosition != null) {
+  if (!isNullOrUndefined(maxEncounteredPosition)) {
     return maxEncounteredPosition;
   } else if (allIndexAreEmpty) {
     return null;
@@ -336,6 +333,10 @@ function generateStreamEvents(
 /** Context needed when calling `parsePeriods`. */
 export interface IPeriodContext extends IInheritedAdaptationContext {
   availabilityStartTime : number;
+  /**
+   * Difference between the server's clock, in milliseconds, and the
+   * monotonically-raising timestamp used by the RxPlayer.
+   */
   clockOffset? : number | undefined;
   /** Duration (mediaPresentationDuration) of the whole MPD, in seconds. */
   duration? : number | undefined;
@@ -364,6 +365,5 @@ type IInheritedAdaptationContext = Omit<IAdaptationSetContext,
                                         "availabilityTimeOffset" |
                                         "duration" |
                                         "isLastPeriod" |
-                                        "manifestBoundsCalculator" |
                                         "start" |
                                         "unsafelyBaseOnPreviousPeriod">;

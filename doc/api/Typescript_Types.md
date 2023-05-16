@@ -54,18 +54,6 @@ const player = new RxPlayer(options);
 export default player;
 ```
 
-Two constructor options have also their type definition exported, those are:
-
-  - `IAudioTrackPreference`: which is the type of a single element in the
-    `preferredAudioTracks` array.
-
-  - `ITextTrackPreference`: which is the type of a single element in the
-    `preferredTextTracks` array.
-
-  - `IVideoTrackPreference`: which is the type of a single element in the
-    `preferredVideoTracks` array.
-
-
 ### loadVideo
 
 The `ILoadVideoOptions` type corresponds to the argument to give to the
@@ -104,45 +92,43 @@ exported:
     To clarify, the `keySystems` property in a `loadVideo` call is an
     optional array of one or multiple `IKeySystemOption`.
 
-  - `IPersistentSessionStorage`: type of the `licenseStorage` property of the
-    `keySystems` option given to `loadVideo`.
+  - `IPersistentLicenseConfig`: type of the `persistentLicenseConfig` property
+    of the `keySystems` option given to `loadVideo`.
 
-  - `IPersistentSessionInfo`: type used by an `IPersistentSessionStorage`.
+  - `IPersistentSessionInfo`: type used by an `IPersistentSessionStorage`'s
+    storage.
 
-  - `ITransportOptions`: type for the `transportOptions` property
-    optionally given to `loadVideo`.
+  - `IManifestLoader`: type for the `manifestLoader` option of `loadVideo`.
 
-  - `IManifestLoader`: type for the `manifestLoader` function optionally set
-    on the `transportOptions` option of `loadVideo`.
+  - `IManifestLoaderInfo`: type for the first argument of the `manifestLoader`
+    function (defined by `IManifestLoader`.)
 
-  - `IRepresentationFilter`: type for the `representationFilter` function
-    optionally set on the `transportOptions` option of `loadVideo`.
+  - `ILoadedManifestFormat`: type for the accepted Manifest formats as returned
+     by a `IManifestLoader`.
 
-  - `IRepresentationInfos`: type for the second argument of the
+  - `IRepresentationFilter`: type for the `representationFilter` option of
+  - `loadVideo`.
+
+  - `IRepresentationFilterRepresentation`: type for the first argument of the
     `representationFilter` function (defined by `IRepresentationFilter`.)
 
-  - `IServerSyncInfos`: type for the `serverSyncInfos` property
-    optionally set on the `transportOptions` option of `loadVideo`.
+  - `IHDRInformation`: optional type of the `hdrInfo` property from a
+    `IRepresentationFilterRepresentation` object.
 
-  - `IInitialManifest`: type for the `initialManifest` property
-    optionally set on the `transportOptions` option of `loadVideo`.
+  - `IRepresentationContext`: type for the second argument of the
+    `representationFilter` function (defined by `IRepresentationFilter`.)
 
-  - `ISegmentLoader`: type for the `segmentLoader` function optionally set on
-    the `transportOptions` option of `loadVideo`.
+  - `IServerSyncInfos`: type for the `serverSyncInfos` option of `loadVideo`.
 
-  - `ISupplementaryTextTrackOption`: type for an element of the
-    `supplementaryTextTracks` array, which is an optional property given to
-    `loadVideo`.
+  - `IInitialManifest`: type for the `initialManifest` option of `loadVideo`.
 
-  - `ISupplementaryImageTrackOption`: type for an element of the
-    `supplementaryImageTracks` array, which is an optional property given to
-    `loadVideo`.
+  - `ISegmentLoader`: type for the `segmentLoader` option of `loadVideo`.
 
-  - `IDefaultAudioTrackOption`: type for the `defaultAudioTrack` property
-    optionally given to `loadVideo`.
+  - `ISegmentLoaderContext`: type for the first argument of the `segmentLoader`
+    function (defined by `ISegmentLoader`.)
 
-  - `IDefaultTextTrackOption`: type for the `defaultAudioTrack` property
-    optionally given to `loadVideo`.
+  - `ITrackType`: type for the `type` property of a `ISegmentLoaderContext`
+    object.
 
   - `INetworkConfigOption`: type for the `networkConfig` property
     optionally given to `loadVideo`.
@@ -151,17 +137,8 @@ exported:
     `loadVideo`.
 
   - `IAudioTrackSwitchingMode`: The various values accepted on the
-    `audioTrackSwitchingMode` property optionally given to `loadVideo`.
+    `defaultAudioTrackSwitchingMode` property optionally given to `loadVideo`.
 
-
-### Manifest structure
-
-Several `RxPlayer` methods rely on a `Manifest` structure and one of its
-"children": the `Period`, the `Adaptation`, the `Representation` or the
-`Segment`.
-
-All of those can be imported from `"rx-player/types"` respectively as
-`IManifest`, `IPeriod`, `IAdaptation`, `IRepresentation` and `ISegment`
 
 
 ### getPlayerState method / playerStateChange event
@@ -339,7 +316,99 @@ function getCurrentlyDownloadedVideoTrack() : IVideoTrack {
 }
 ```
 
-The `representations` property also has an exported type: `IAudioRepresentation`.
+### setAudioTrack method
+
+The `IAudioTrackSetting` type corresponds to the object that may be given to the
+RxPlayer's `setAudioTrack` method
+
+Example:
+
+```ts
+// the type(s) wanted
+import { IAudioTrackSetting } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+function setAudioTrack(track : IAudioTrackSetting) {
+  rxPlayer.setAudioTrack(track);
+}
+```
+
+The `IAudioTrackSwitchingMode` type list the various values accepted for the
+`switchingMode` property of the `IAudioTrackSetting` object.
+
+
+### setVideoTrack method
+
+The `IVideoTrackSetting` type corresponds to the object that may be given to the
+RxPlayer's `setVideoTrack` method
+
+Example:
+
+```ts
+// the type(s) wanted
+import { IVideoTrackSetting } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+function setVideoTrack(track : IVideoTrackSetting) {
+  rxPlayer.setVideoTrack(track);
+}
+```
+
+The `IVideoTrackSwitchingMode` type list the various values accepted for the
+`switchingMode` property of the `IVideoTrackSetting` object.
+
+
+### lockVideoRepresentations method
+
+The `ILockedVideoRepresentationsSettings` type corresponds to the object that
+may be given to the RxPlayer's `lockVideoRepresentations` method.
+
+Example:
+
+```ts
+// the type(s) wanted
+import { ILockedVideoRepresentationsSettings } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+function lockVideoRepresentations(toLock : ILockedVideoRepresentationsSettings) {
+  rxPlayer.lockVideoRepresentations(toLock);
+}
+```
+
+The `IVideoRepresentationsSwitchingMode` type list the various values accepted
+for the `switchingMode` property of the `ILockedVideoRepresentationsSettings`
+object.
+
+
+### lockAudioRepresentations method
+
+The `ILockedAudioRepresentationsSettings` type corresponds to the object that
+may be given to the RxPlayer's `lockAudioRepresentations` method.
+
+Example:
+
+```ts
+// the type(s) wanted
+import { ILockedAudioRepresentationsSettings } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+function lockAudioRepresentations(toLock : ILockedAudioRepresentationsSettings) {
+  rxPlayer.lockAudioRepresentations(toLock);
+}
+```
+
+The `IAudioRepresentationsSwitchingMode` type list the various values accepted
+for the `switchingMode` property of the `ILockedAudioRepresentationsSettings`
+object.
+
 
 ### positionUpdate event
 
@@ -356,6 +425,25 @@ import { IPositionUpdate } from "rx-player/types";
 import rxPlayer from "./player";
 
 rxPlayer.addEventListener("positionUpdate", (evt : IPositionUpdate) {
+  console.log(evt);
+});
+```
+
+### periodChange event
+
+The type `IPeriodChangeEvent` corresponds to the payload of a
+`periodChange` event.
+
+Example:
+
+```ts
+// the type(s) wanted
+import { IPeriodChangeEvent } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+rxPlayer.addEventListener("periodChange", (evt : IPeriodChangeEvent) {
   console.log(evt);
 });
 ```
@@ -387,43 +475,60 @@ rxPlayer.addEventListener("streamEvent", (evt : IStreamEvent) {
 });
 ```
 
-### bitrateEstimationChange event
 
-The type `IBitrateEstimate` corresponds to the payload of a
-`bitrateEstimationChange` event.
+### brokenRepresentationsLock event
 
-Example:
-
-```ts
-// the type(s) wanted
-import { IBitrateEstimate } from "rx-player/types";
-
-// hypothetical file exporting an RxPlayer instance
-import rxPlayer from "./player";
-
-rxPlayer.addEventListener("bitrateEstimationChange", (evt : IBitrateEstimate) {
-  console.log(evt);
-});
-```
-
-### decipherabilityUpdate event
-
-The type `IDecipherabilityUpdateContent` corresponds to the payload of a
-`decipherabilityUpdate` event.
+The type `IBrokenRepresentationsLockContext` corresponds to the payload of a
+`brokenRepresentationsLock` event.
 
 Example:
 
 ```ts
 // the type(s) wanted
-import { IDecipherabilityUpdateContent } from "rx-player/types";
+import { IBrokenRepresentationsLockContext } from "rx-player/types";
 
 // hypothetical file exporting an RxPlayer instance
 import rxPlayer from "./player";
 
-rxPlayer.addEventListener("decipherabilityUpdate", (evt : IDecipherabilityUpdateContent) {
+rxPlayer.addEventListener(
+  "brokenRepresentationsLock",
+  (evt : IBrokenRepresentationsLockContext) {
+    console.log(evt);
+  });
+```
+
+The `IPeriod` type corresponds to the value of the `period` property from this
+`IBrokenRepresentationsLockContext` object.
+
+The `ITrackType` type corresponds to the value of the `trackType` property
+from this `IBrokenRepresentationsLockContext` object.
+
+
+### autoTrackSwitch event
+
+The type `IAutoTrackSwitchEventPayload` corresponds to the payload of a
+`autoTrackSwitch` event.
+
+Example:
+
+```ts
+// the type(s) wanted
+import { IAutoTrackSwitchEventPayload } from "rx-player/types";
+
+// hypothetical file exporting an RxPlayer instance
+import rxPlayer from "./player";
+
+rxPlayer.addEventListener("autoTrackSwitch", (evt : IAutoTrackSwitchEventPayload) {
   console.log(evt);
 });
 ```
+
+The `IPeriod` type corresponds to the value of the `period` property from this
+`IAutoTrackSwitchEventPayload` object.
+
+The `ITrackType` type corresponds to the value of the `trackType` property
+from this `IAutoTrackSwitchEventPayload` object.
+
 
 ### RxPlayer errors and warnings
 

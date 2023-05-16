@@ -17,6 +17,17 @@
 import { MediaSource_ } from "./browser_compatibility_types";
 
 /**
+ * Setting this value limit the number of entries in the support map
+ * preventing important memory usage, value is arbitrary
+ */
+const MAX_SUPPORT_MAP_ENTRIES = 200;
+
+/**
+ * caching the codec support reduce the amount of call to `isTypeSupported`
+ * and help for performance especially on low-end devices.
+ */
+const supportMap: Map<string, boolean> = new Map();
+/**
  * Returns true if the given codec is supported by the browser's MediaSource
  * implementation.
  * @param {string} mimeType - The MIME media type that you want to test support
@@ -33,7 +44,18 @@ export default function isCodecSupported(mimeType : string) : boolean {
   /* eslint-disable @typescript-eslint/unbound-method */
   if (typeof MediaSource_.isTypeSupported === "function") {
   /* eslint-enable @typescript-eslint/unbound-method */
-    return MediaSource_.isTypeSupported(mimeType);
+    const cachedSupport = supportMap.get(mimeType);
+    if (cachedSupport !== undefined) {
+      return cachedSupport;
+    } else {
+      const isSupported = MediaSource_.isTypeSupported(mimeType);
+      if (supportMap.size >= MAX_SUPPORT_MAP_ENTRIES) {
+        supportMap.clear();
+      }
+      supportMap.set(mimeType, isSupported);
+      return isSupported;
+    }
+
   }
 
   return true;

@@ -73,6 +73,11 @@ export default function flattenOverlappingPeriods(
         // `lastFlattenedPeriod` has now a negative or `0` duration.
         // Remove it, consider the next Period in its place, and re-start the loop.
         flattenedPeriods.pop();
+        if (flattenedPeriods.length === 0) {
+          // There's no remaining Period to compare to `parsedPeriod`
+          break;
+        }
+        // Take the previous Period as reference and compare it now to `parsedPeriod`
         lastFlattenedPeriod = flattenedPeriods[flattenedPeriods.length - 1];
       }
     }
