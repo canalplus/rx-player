@@ -27,7 +27,7 @@ import MediaKeysInfosStore from "./utils/media_keys_infos_store";
  */
 export default function clearOnStop(
   mediaElement : HTMLMediaElement
-) : Promise<void> {
+) : Promise<unknown> {
   log.info("DRM: Clearing-up DRM session.");
   if (shouldUnsetMediaKeys()) {
     log.info("DRM: disposing current MediaKeys.");

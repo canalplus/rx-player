@@ -213,10 +213,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
       /** Initialize decryption capabilities. */
       const drmInitRef =
-        initializeContentDecryption(mediaElement, keySystems, protectionRef, {
-          onWarning: (err : IPlayerError) => this.trigger("warning", err),
-          onError: (err : Error) => this._onFatalError(err),
-        }, initCanceller.signal);
+        initializeContentDecryption(
+          mediaElement,
+          keySystems,
+          protectionRef,
+          { onWarning: (err : IPlayerError) => this.trigger("warning", err),
+            onError: (err : Error) => this._onFatalError(err) },
+          initCanceller.signal);
 
       drmInitRef.onUpdate((drmStatus, stopListeningToDrmUpdates) => {
         if (drmStatus.initializationState.type === "uninitialized") {
@@ -356,7 +359,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         if (initCanceller.isUsed()) {
           return;
         }
-        triggerEvent("reloadingMediaSource", null);
+        triggerEvent("reloadingMediaSource", reloadOrder);
         if (initCanceller.isUsed()) {
           return;
         }
@@ -502,8 +505,36 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
      */
     function handleStreamOrchestratorCallbacks() : IStreamOrchestratorCallbacks {
       return {
-        needsBufferFlush: () =>
-          playbackObserver.setCurrentTime(mediaElement.currentTime + 0.001),
+        needsBufferFlush: () => {
+          const seekedTime = mediaElement.currentTime + 0.001;
+          playbackObserver.setCurrentTime(seekedTime);
+
+          // Seek again once data begins to be buffered.
+          // This is sadly necessary on some browsers to avoid decoding
+          // issues after a flush.
+          //
+          // NOTE: there's in theory a potential race condition in the following
+          // logic as the callback could be called when media data is still
+          // being removed by the browser - which is an asynchronous process.
+          // The following condition checking for buffered data could thus lead
+          // to a false positive where we're actually checking previous data.
+          // For now, such scenario is avoided by setting the
+          // `includeLastObservation` option to `false` and calling
+          // `needsBufferFlush` once MSE media removal operations have been
+          // explicitely validated by the browser, but that's a complex and easy
+          // to break system.
+          playbackObserver.listen((obs, stopListening) => {
+            if (
+              // Data is buffered around the current position
+              obs.currentRange !== null ||
+              // Or, for whatever reason, playback is already advancing
+              obs.position > seekedTime + 0.1
+            ) {
+              stopListening();
+              playbackObserver.setCurrentTime(obs.position + 0.001);
+            }
+          }, { includeLastObservation: false, clearSignal: cancelSignal });
+        },
 
         streamStatusUpdate(value) {
           // Announce discontinuities if found
@@ -590,19 +621,41 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
         addedSegment: (value) => self.trigger("addedSegment", value),
 
-        needsMediaSourceReload: (value) => onReloadOrder(value),
+        needsMediaSourceReload: (payload) => {
+          const lastObservation = streamObserver.getReference().getValue();
+          const currentPosition = lastObservation.position.pending ??
+                                  streamObserver.getCurrentTime();
+          const isPaused = lastObservation.paused.pending ??
+                           streamObserver.getIsPaused();
+          let position = currentPosition + payload.timeOffset;
+          if (payload.minimumPosition !== undefined) {
+            position = Math.max(payload.minimumPosition, position);
+          }
+          if (payload.maximumPosition !== undefined) {
+            position = Math.min(payload.maximumPosition, position);
+          }
+          onReloadOrder({ position, autoPlay: !isPaused });
+        },
 
-        needsDecipherabilityFlush(value) {
+        needsDecipherabilityFlush() {
           const keySystem = getKeySystemConfiguration(mediaElement);
           if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem?.[0])) {
-            onReloadOrder(value);
+            const lastObservation = streamObserver.getReference().getValue();
+            const position = lastObservation.position.pending ??
+                             streamObserver.getCurrentTime();
+            const isPaused = lastObservation.paused.pending ??
+                             streamObserver.getIsPaused();
+            onReloadOrder({ position, autoPlay: !isPaused });
           } else {
+            const lastObservation = streamObserver.getReference().getValue();
+            const position = lastObservation.position.pending ??
+                             streamObserver.getCurrentTime();
             // simple seek close to the current position
             // to flush the buffers
-            if (value.position + 0.001 < value.duration) {
+            if (position + 0.001 < lastObservation.duration) {
               playbackObserver.setCurrentTime(mediaElement.currentTime + 0.001);
             } else {
-              playbackObserver.setCurrentTime(value.position);
+              playbackObserver.setCurrentTime(position);
             }
           }
         },
@@ -664,7 +717,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       this.trigger("activePeriodChanged", { period });
     });
     contentTimeBoundariesObserver.addEventListener("durationUpdate", (newDuration) => {
-      mediaSourceDurationUpdater.updateDuration(newDuration.duration, !newDuration.isEnd);
+      mediaSourceDurationUpdater.updateDuration(newDuration.duration, newDuration.isEnd);
     });
     contentTimeBoundariesObserver.addEventListener("endOfStream", () => {
       if (endOfStreamCanceller === null) {
@@ -683,7 +736,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     });
     const currentDuration = contentTimeBoundariesObserver.getCurrentDuration();
     mediaSourceDurationUpdater.updateDuration(currentDuration.duration,
-                                              !currentDuration.isEnd);
+                                              currentDuration.isEnd);
     return contentTimeBoundariesObserver;
   }
 

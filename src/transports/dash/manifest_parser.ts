@@ -219,7 +219,7 @@ export default function generateManifestParser(
 function assertLoadedResourcesFormatString(
   loadedResources : Array<ILoadedResource<string | ArrayBuffer>>
 ) : asserts loadedResources is Array<ILoadedResource<string>> {
-  if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.PRODUCTION as number) {
+  if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.PRODUCTION as number) {
     return;
   }
   loadedResources.forEach((loadedResource) => {
@@ -244,7 +244,7 @@ function assertLoadedResourcesFormatString(
 function assertLoadedResourcesFormatArrayBuffer(
   loadedResources : Array<ILoadedResource<string | ArrayBuffer>>
 ) : asserts loadedResources is Array<ILoadedResource<ArrayBuffer>> {
-  if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.PRODUCTION as number) {
+  if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.PRODUCTION as number) {
     return;
   }
 

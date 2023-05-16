@@ -182,25 +182,18 @@ export default function AdaptationStream<T>(
       // the next observation (which may reflect very different playback conditions)
       // is actually received.
       return nextTick(() => {
-        playbackObserver.listen((observation) => {
-          const { manual: newManual } = estimateRef.getValue();
-          if (!newManual) {
-            return;
-          }
-          const currentTime = playbackObserver.getCurrentTime();
-          const pos = currentTime + DELTA_POSITION_AFTER_RELOAD.bitrateSwitch;
-
-          // Bind to Period start and end
-          const position = Math.min(Math.max(period.start, pos),
-                                    period.end ?? Infinity);
-          const autoPlay = !(observation.paused.pending ??
-                             playbackObserver.getIsPaused());
-          return callbacks.waitingMediaSourceReload({ bufferType: adaptation.type,
-                                                      period,
-                                                      position,
-                                                      autoPlay });
-        }, { includeLastObservation: true,
-             clearSignal: repStreamTerminatingCanceller.signal });
+        if (repStreamTerminatingCanceller.isUsed()) {
+          return;
+        }
+        const { manual: newManual } = estimateRef.getValue();
+        if (!newManual) {
+          return;
+        }
+        const timeOffset = DELTA_POSITION_AFTER_RELOAD.bitrateSwitch;
+        return callbacks.waitingMediaSourceReload({ bufferType: adaptation.type,
+                                                    period,
+                                                    timeOffset,
+                                                    stayInPeriod: true });
       });
     }
 

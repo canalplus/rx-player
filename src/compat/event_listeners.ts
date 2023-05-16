@@ -30,7 +30,6 @@ import {
   ICompatPictureInPictureWindow,
 } from "./browser_compatibility_types";
 import isNode from "./is_node";
-import shouldFavourCustomSafariEME from "./should_favour_custom_safari_EME";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
@@ -144,7 +143,7 @@ function createCompatibleEventListener(
           }
         });
       } else {
-        if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
+        if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
           log.warn(`compat: element ${element.tagName}` +
                    " does not support any of these events: " +
                    prefixedEvents.join(", "));
@@ -484,13 +483,6 @@ const onSourceBufferUpdate = createCompatibleEventListener(["update"]);
 const onRemoveSourceBuffers = createCompatibleEventListener(["removesourcebuffer"]);
 
 /**
- * @param {HTMLMediaElement} mediaElement
- */
-const onEncrypted = createCompatibleEventListener(
-  shouldFavourCustomSafariEME() ? ["needkey"] :
-                                  ["encrypted", "needkey"]);
-
-/**
  * @param {MediaKeySession} mediaKeySession
  */
 const onKeyMessage = createCompatibleEventListener(["keymessage", "message"]);
@@ -549,11 +541,11 @@ function addEventListener(
 
 export {
   addEventListener,
+  createCompatibleEventListener,
   getPageActivityRef,
   getPictureOnPictureStateRef,
   getVideoVisibilityRef,
   getVideoWidthRef,
-  onEncrypted,
   onEnded,
   onFullscreenChange,
   onKeyAdded,
