@@ -15,10 +15,12 @@
  */
 
 import Manifest from "../../../manifest";
-import createSharedReference, {
+import SharedReference, {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
-import { CancellationSignal } from "../../../utils/task_canceller";
+import TaskCanceller, {
+  CancellationSignal,
+} from "../../../utils/task_canceller";
 import {
   IPlaybackObservation,
   IReadOnlyPlaybackObserver,
@@ -30,46 +32,48 @@ import { IStreamOrchestratorPlaybackObservation } from "../../stream";
 export interface IStreamPlaybackObserverArguments {
   /** If true, the player will auto-play when `initialPlayPerformed` becomes `true`. */
   autoPlay : boolean;
+  /** Manifest of the content being played */
+  manifest : Manifest;
   /** Becomes `true` after the initial play has been taken care of. */
   initialPlayPerformed : IReadOnlySharedReference<boolean>;
-  /** Becomes `true` after the initial seek has been taken care of. */
-  initialSeekPerformed : IReadOnlySharedReference<boolean>;
   /** The last speed requested by the user. */
   speed : IReadOnlySharedReference<number>;
-  /** The time the player will seek when `initialSeekPerformed` becomes `true`. */
-  startTime : number;
 }
 
 /**
  * Create PlaybackObserver for the `Stream` part of the code.
- * @param {Object} manifest
- * @param {Object} playbackObserver
- * @param {Object} args
+ * @param {Object} srcPlaybackObserver - Base `PlaybackObserver` from which we
+ * will derive information.
+ * @param {Object} context - Various information linked to the current content
+ * being played.
+ * @param {Object} fnCancelSignal - Abort the created PlaybackObserver.
  * @returns {Object}
  */
 export default function createStreamPlaybackObserver(
-  manifest : Manifest,
-  playbackObserver : PlaybackObserver,
+  srcPlaybackObserver : PlaybackObserver,
   { autoPlay,
     initialPlayPerformed,
-    initialSeekPerformed,
-    speed,
-    startTime } : IStreamPlaybackObserverArguments
+    manifest,
+    speed } : IStreamPlaybackObserverArguments,
+  fnCancelSignal : CancellationSignal
 ) : IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation> {
-  return playbackObserver.deriveReadOnlyObserver(function transform(
+  return srcPlaybackObserver.deriveReadOnlyObserver(function transform(
     observationRef : IReadOnlySharedReference<IPlaybackObservation>,
-    cancellationSignal : CancellationSignal
+    parentObserverCancelSignal : CancellationSignal
   ) : IReadOnlySharedReference<IStreamOrchestratorPlaybackObservation> {
-    const newRef = createSharedReference(constructStreamPlaybackObservation(),
-                                         cancellationSignal);
+    const canceller = new TaskCanceller();
+    canceller.linkToSignal(parentObserverCancelSignal);
+    canceller.linkToSignal(fnCancelSignal);
+    const newRef = new SharedReference(constructStreamPlaybackObservation(),
+                                       canceller.signal);
 
     speed.onUpdate(emitStreamPlaybackObservation, {
-      clearSignal: cancellationSignal,
+      clearSignal: canceller.signal,
       emitCurrentValue: false,
     });
 
     observationRef.onUpdate(emitStreamPlaybackObservation, {
-      clearSignal: cancellationSignal,
+      clearSignal: canceller.signal,
       emitCurrentValue: false,
     });
     return newRef;
@@ -77,10 +81,8 @@ export default function createStreamPlaybackObserver(
     function constructStreamPlaybackObservation() {
       const observation = observationRef.getValue();
       const lastSpeed = speed.getValue();
-      let pendingPosition : number | undefined;
-      if (!initialSeekPerformed.getValue()) {
-        pendingPosition = startTime;
-      } else if (!manifest.isDynamic || manifest.isLastPeriodKnown) {
+
+      if (!manifest.isDynamic || manifest.isLastPeriodKnown) {
         // HACK: When the position is actually further than the maximum
         // position for a finished content, we actually want to be loading
         // the last segment before ending.
@@ -88,21 +90,28 @@ export default function createStreamPlaybackObserver(
         // want to seek one second before the period's end (despite never
         // doing it).
         const lastPeriod = manifest.periods[manifest.periods.length - 1];
-        if (lastPeriod !== undefined &&
-            lastPeriod.end !== undefined &&
-            observation.position > lastPeriod.end)
-        {
-          pendingPosition = lastPeriod.end - 1;
+        if (lastPeriod !== undefined && lastPeriod.end !== undefined) {
+          const wantedPosition = observation.position.getWanted();
+          if (wantedPosition >= lastPeriod.start &&
+              wantedPosition >= lastPeriod.end - 1)
+          {
+            // We're after the end of the last Period, check if `buffered`
+            // indicates that the last segment is probably not loaded, in which
+            // case act as if we want to load one second before the end.
+            const buffered = observation.buffered;
+            if (buffered.length === 0 ||
+                buffered.end(buffered.length - 1) < observation.duration - 1)
+            {
+              observation.position.forceWantedPosition(lastPeriod.end - 1);
+            }
+          }
         }
       }
 
       return {
         // TODO more exact according to the current Adaptation chosen?
         maximumPosition: manifest.getMaximumSafePosition(),
-        position: {
-          last: observation.position,
-          pending: pendingPosition,
-        },
+        position: observation.position,
         duration: observation.duration,
         paused: {
           last: observation.paused,

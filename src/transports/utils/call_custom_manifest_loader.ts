@@ -19,6 +19,7 @@ import {
   IManifestLoader,
   ILoadedManifestFormat,
 } from "../../public_types";
+import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import {
   CancellationError,
   CancellationSignal,
@@ -47,7 +48,7 @@ export default function callCustomManifestLoader(
     cancelSignal : CancellationSignal
   ) : Promise< IRequestedData<ILoadedManifestFormat> > => {
     return new Promise((res, rej) => {
-      const timeAPIsDelta = Date.now() - performance.now();
+      const timeAPIsDelta = Date.now() - getMonotonicTimeStamp();
       /** `true` when the custom segmentLoader should not be active anymore. */
       let hasFinished = false;
 
@@ -96,14 +97,12 @@ export default function callCustomManifestLoader(
         // Format error and send it
         const castedErr = err as (null | undefined | { message? : string;
                                                        canRetry? : boolean;
-                                                       isOfflineError? : boolean;
                                                        xhr? : XMLHttpRequest; });
         const message = castedErr?.message ??
                         "Unknown error when fetching the Manifest through a " +
                         "custom manifestLoader.";
         const emittedErr = new CustomLoaderError(message,
                                                  castedErr?.canRetry ?? false,
-                                                 castedErr?.isOfflineError ?? false,
                                                  castedErr?.xhr);
         rej(emittedErr);
       };
@@ -122,9 +121,9 @@ export default function callCustomManifestLoader(
       };
 
       const callbacks = { reject, resolve, fallback };
-      const abort = customManifestLoader(url,
-                                         callbacks,
-                                         { timeout: loaderOptions.timeout });
+      const abort = customManifestLoader({ url,
+                                           timeout: loaderOptions.timeout },
+                                         callbacks);
 
       cancelSignal.register(abortCustomLoader);
 
