@@ -23,10 +23,16 @@ const DEFAULT_CONTENTS: IDefaultContent[] = [
     "live": false,
   },
   {
-    "name": "BBC - presentationTimeOffset on audio and video",
-    "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-pto_both-events.mpd",
+    "name": "Axinom CMAF multiple Audio and Text tracks Tears of steel",
+    "url": "https://media.axprod.net/TestVectors/Cmaf/clear_1080p_h264/manifest.mpd",
     "transport": "dash",
-    "live": false,
+    "live": false
+  },
+  {
+    "name": "Multiple audio language",
+    "url": "https://dash.akamaized.net/dash264/TestCasesIOP41/MultiTrack/alternative_content/6/manifest_alternative_lang.mpd",
+    "transport": "dash",
+    "live": false
   },
   {
     "name": "DASH-IF - Trickmode",
@@ -37,12 +43,6 @@ const DEFAULT_CONTENTS: IDefaultContent[] = [
   {
     "name": "DASH-IF - Multi-Subtitles",
     "url": "https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
-    "transport": "dash",
-    "live": false,
-  },
-  {
-    "name": "BBC - Testcard Audio-only",
-    "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-audio.mpd",
     "transport": "dash",
     "live": false,
   },
@@ -65,18 +65,6 @@ const DEFAULT_CONTENTS: IDefaultContent[] = [
     "live": true,
   },
   {
-    "name": "Envivio - DASH",
-    "url": "http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd",
-    "transport": "dash",
-    "live": false,
-  },
-  {
-    "name": "Unified Streaming - Timeline - A-Team",
-    "url": "https://demo.unified-streaming.com/video/ateam/ateam.ism/ateam.mpd",
-    "transport": "dash",
-    "live": false,
-  },
-  {
     "name": "Super SpeedWay",
     "url": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
     "transport": "smooth",
@@ -87,22 +75,6 @@ const DEFAULT_CONTENTS: IDefaultContent[] = [
     "url": "https://amssamples.streaming.mediaservices.windows.net/683f7e47-bd83-4427-b0a3-26a6c4547782/BigBuckBunny.ism/manifest",
     "transport": "smooth",
     "live": false,
-  },
-  // {
-  //   "name": "Microsoft: XBoxOne Ad",
-  //   "url": "https://profficialsite.origin.mediaservices.windows.net/9cc5e871-68ec-42c2-9fc7-fda95521f17d/dayoneplayready.ism/manifest",
-  //   "transport": "smooth",
-  //   "live": false,
-  //   "drmInfos": [{
-  //     "licenseServerUrl": "https://test.playready.microsoft.com/service/rightsmanager.asmx?PlayRight=1&UseSimpleNonPersistentLicense=1",
-  //     "drm": "Playready",
-  //   }],
-  // },
-  {
-    "name": "Smooth Ingest",
-    "url": "https://b028.wpc.azureedge.net/80B028/Samples/a38e6323-95e9-4f1f-9b38-75eba91704e4/5f2ce531-d508-49fb-8152-647eba422aec.ism/manifest",
-    "transport": "smooth",
-    "live": true,
   },
   {
     "name": "Taxi 3 SoundTrack (Audio-Only)",
@@ -142,7 +114,7 @@ const DEFAULT_CONTENTS: IDefaultContent[] = [
   },
   {
     "name": "Multi Video Tracks",
-    "url": "https://utils.ssl.cdn.cra.cz/dash/1/manifest.mpd",
+    "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd",
     "transport": "dash",
     "live": false,
   },
