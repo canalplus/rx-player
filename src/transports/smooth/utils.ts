@@ -16,65 +16,8 @@
 
 import { ISegment, Representation } from "../../manifest";
 import { ICdnMetadata } from "../../parsers/manifest";
-import isNonEmptyString from "../../utils/is_non_empty_string";
 import resolveURL from "../../utils/resolve_url";
-import warnOnce from "../../utils/warn_once";
 
-const ISM_REG = /(\.isml?)(\?token=\S+)?$/;
-const TOKEN_REG = /\?token=(\S+)/;
-
-/**
- * TODO Remove this logic completely from the player
- * @param {Document} doc
- * @returns {string|null}
- */
-function extractISML(doc : Document) : string|null {
-  return doc.getElementsByTagName("media")[0].getAttribute("src");
-}
-
-/**
- * Returns string corresponding to the token contained in the url's querystring.
- * Empty string if no token is found.
- * @param {string} url
- * @returns {string}
- */
-function extractToken(url : string) : string {
-  const tokenMatch = TOKEN_REG.exec(url);
-  if (tokenMatch !== null) {
-    const match = tokenMatch[1];
-    if (match !== undefined) {
-      return match;
-    }
-  }
-  return "";
-}
-
-/**
- * Replace/Remove token from the url's querystring
- * @param {string} url
- * @param {string} [token]
- * @returns {string}
- */
-function replaceToken(url : string, token? : string) : string {
-  if (isNonEmptyString(token)) {
-    return url.replace(TOKEN_REG, "?token=" + token);
-  } else {
-    return url.replace(TOKEN_REG, "");
-  }
-}
-
-/**
- * @param {string} url
- * @returns {string}
- */
-function resolveManifest(url : string) : string {
-  if (ISM_REG.test(url)) {
-    warnOnce("Giving a isml URL to loadVideo is deprecated." +
-      " Please give the Manifest URL directly");
-    return url.replace(ISM_REG, "$1/manifest$2");
-  }
-  return url;
-}
 
 /**
  * Returns `true` if the given Representation refers to segments in an MP4
@@ -98,9 +41,5 @@ function constructSegmentUrl(
 
 export {
   constructSegmentUrl,
-  extractISML,
-  extractToken,
   isMP4EmbeddedTrack,
-  replaceToken,
-  resolveManifest,
 };

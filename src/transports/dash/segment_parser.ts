@@ -27,10 +27,10 @@ import {
   getSegmentsFromCues,
   getTimeCodeScale,
 } from "../../parsers/containers/matroska";
-import { BaseRepresentationIndex } from "../../parsers/manifest/dash";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import takeFirstSet from "../../utils/take_first_set";
 import {
+  IProtectionDataInfo,
   ISegmentContext,
   ISegmentParser,
   ISegmentParserParsedInitChunk,
@@ -55,20 +55,20 @@ export default function generateAudioVideoSegmentParser(
   return function audioVideoSegmentParser(
     loadedSegment : { data : ArrayBuffer | Uint8Array | null;
                       isChunked : boolean; },
-    content : ISegmentContext,
+    context : ISegmentContext,
     initTimescale : number | undefined
   ) : ISegmentParserParsedMediaChunk< Uint8Array | ArrayBuffer | null > |
       ISegmentParserParsedInitChunk< Uint8Array | ArrayBuffer | null > {
-    const { period, adaptation, representation, segment, manifest } = content;
+    const { segment, periodStart, periodEnd } = context;
     const { data, isChunked } = loadedSegment;
-    const appendWindow : [number, number | undefined] = [ period.start, period.end ];
+    const appendWindow : [number, number | undefined] = [ periodStart, periodEnd ];
 
     if (data === null) {
       if (segment.isInit) {
         return { segmentType: "init",
                  initializationData: null,
                  initializationDataSize: 0,
-                 protectionDataUpdate: false,
+                 protectionData: [],
                  initTimescale: undefined };
       }
       return { segmentType: "media",
@@ -76,19 +76,19 @@ export default function generateAudioVideoSegmentParser(
                chunkSize: 0,
                chunkInfos: null,
                chunkOffset: 0,
-               protectionDataUpdate: false,
+               protectionData: [],
                appendWindow };
     }
 
     const chunkData = data instanceof Uint8Array ? data :
                                                    new Uint8Array(data);
 
-    const containerType = inferSegmentContainer(adaptation.type, representation);
+    const containerType = inferSegmentContainer(context.type, context.mimeType);
 
     // TODO take a look to check if this is an ISOBMFF/webm?
     const seemsToBeMP4 = containerType === "mp4" || containerType === undefined;
 
-    let protectionDataUpdate = false;
+    const protectionData : IProtectionDataInfo[] = [];
     if (seemsToBeMP4) {
       const psshInfo = takePSSHOut(chunkData);
       let keyId;
@@ -96,7 +96,7 @@ export default function generateAudioVideoSegmentParser(
         keyId = getKeyIdFromInitSegment(chunkData) ?? undefined;
       }
       if (psshInfo.length > 0 || keyId !== undefined) {
-        protectionDataUpdate = representation._addProtectionData("cenc", keyId, psshInfo);
+        protectionData.push({ initDataType: "cenc", keyId, initData: psshInfo });
       }
     }
 
@@ -119,7 +119,7 @@ export default function generateAudioVideoSegmentParser(
             return segment.privateInfos.isEMSGWhitelisted(evt);
           });
           const events = getEventsOutOfEMSGs(whitelistedEMSGs,
-                                             manifest.publishTime);
+                                             context.manifestPublishTime);
           if (events !== undefined) {
             const { needsManifestRefresh, inbandEvents } = events;
             return { segmentType: "media",
@@ -129,7 +129,7 @@ export default function generateAudioVideoSegmentParser(
                      chunkOffset,
                      appendWindow,
                      inbandEvents,
-                     protectionDataUpdate,
+                     protectionData,
                      needsManifestRefresh };
           }
         }
@@ -140,17 +140,17 @@ export default function generateAudioVideoSegmentParser(
                chunkSize: chunkData.length,
                chunkInfos,
                chunkOffset,
-               protectionDataUpdate,
+               protectionData,
                appendWindow };
     }
     // we're handling an initialization segment
     const { indexRange } = segment;
 
-    let nextSegments = null;
+    let segmentList;
     if (containerType === "webm") {
-      nextSegments = getSegmentsFromCues(chunkData, 0);
+      segmentList = getSegmentsFromCues(chunkData, 0);
     } else if (seemsToBeMP4) {
-      nextSegments = getSegmentsFromSidx(chunkData, Array.isArray(indexRange) ?
+      segmentList = getSegmentsFromSidx(chunkData, Array.isArray(indexRange) ?
                                                       indexRange[0] :
                                                       0);
 
@@ -162,21 +162,14 @@ export default function generateAudioVideoSegmentParser(
       // TODO Cleaner way? I tried to always check the obtained segment after
       // a byte-range request but it leads to a lot of code.
       if (__priv_patchLastSegmentInSidx === true &&
-          nextSegments !== null &&
-          nextSegments.length > 0)
+          segmentList !== null &&
+          segmentList.length > 0)
       {
-        const lastSegment = nextSegments[ nextSegments.length - 1 ];
+        const lastSegment = segmentList[ segmentList.length - 1 ];
         if (Array.isArray(lastSegment.range)) {
           lastSegment.range[1] = Infinity;
         }
       }
-    }
-
-    if (representation.index instanceof BaseRepresentationIndex &&
-        nextSegments !== null &&
-        nextSegments.length > 0)
-    {
-      representation.index.initializeIndex(nextSegments);
     }
 
     const timescale = seemsToBeMP4             ? getMDHDTimescale(chunkData) :
@@ -189,7 +182,8 @@ export default function generateAudioVideoSegmentParser(
     return { segmentType: "init",
              initializationData: chunkData,
              initializationDataSize: chunkData.length,
-             protectionDataUpdate,
-             initTimescale: parsedTimescale };
+             protectionData,
+             initTimescale: parsedTimescale,
+             segmentList: segmentList ?? undefined };
   };
 }

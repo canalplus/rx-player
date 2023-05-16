@@ -22,34 +22,20 @@
 import config from "../../config";
 import log from "../../log";
 import {
-  ISupplementaryImageTrack,
-  ISupplementaryTextTrack,
-} from "../../manifest";
-import {
-  IAudioTrackPreference,
   IAudioTrackSwitchingMode,
   IConstructorOptions,
   IKeySystemOption,
   ILoadedManifestFormat,
   ILoadVideoOptions,
   IManifestLoader,
-  INetworkConfigOption,
+  IRequestConfig,
   IRepresentationFilter,
   ISegmentLoader,
   IServerSyncInfos,
-  ISupplementaryImageTrackOption,
-  ISupplementaryTextTrackOption,
-  ITextTrackPreference,
-  IVideoTrackPreference,
 } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import {
-  normalizeAudioTrack,
-  normalizeTextTrack,
-} from "../../utils/languages";
 import objectAssign from "../../utils/object_assign";
-import warnOnce from "../../utils/warn_once";
 
 /** Value once parsed for the `startAt` option of the `loadVideo` method. */
 export type IParsedStartAtOption = { position : number } |
@@ -58,46 +44,19 @@ export type IParsedStartAtOption = { position : number } |
                                    { fromLastPosition : number } |
                                    { fromFirstPosition : number };
 
-export interface IParsedTransportOptions {
-  aggressiveMode? : boolean | undefined;
-  checkMediaSegmentIntegrity? : boolean | undefined;
-  lowLatencyMode : boolean;
-  manifestLoader?: IManifestLoader | undefined;
-  manifestUpdateUrl? : string | undefined;
-  referenceDateTime? : number | undefined;
-  representationFilter? : IRepresentationFilter | undefined;
-  segmentLoader? : ISegmentLoader | undefined;
-  serverSyncInfos? : IServerSyncInfos | undefined;
-  /* eslint-disable import/no-deprecated */
-  supplementaryImageTracks? : ISupplementaryImageTrack[] | undefined;
-  supplementaryTextTracks? : ISupplementaryTextTrack[] | undefined;
-  /* eslint-enable import/no-deprecated */
-
-  __priv_patchLastSegmentInSidx? : boolean | undefined;
-}
-
 /** Options of the RxPlayer's constructor once parsed. */
 export interface IParsedConstructorOptions {
   maxBufferAhead : number;
   maxBufferBehind : number;
   wantedBufferAhead : number;
   maxVideoBufferSize : number;
-  limitVideoWidth : boolean;
-  throttleWhenHidden : boolean;
+  videoResolutionLimit : "videoElement" |
+                         "screen" |
+                         "none";
   throttleVideoBitrateWhenHidden : boolean;
 
-  preferredAudioTracks : IAudioTrackPreference[];
-  preferredTextTracks : ITextTrackPreference[];
-  preferredVideoTracks : IVideoTrackPreference[];
-
   videoElement : HTMLMediaElement;
-  initialVideoBitrate : number;
-  initialAudioBitrate : number;
-  minAudioBitrate : number;
-  minVideoBitrate : number;
-  maxAudioBitrate : number;
-  maxVideoBitrate : number;
-  stopAtEnd : boolean;
+  baseBandwidth : number;
 }
 
 /**
@@ -112,15 +71,19 @@ interface IParsedLoadVideoOptionsBase {
   keySystems : IKeySystemOption[];
   lowLatencyMode : boolean;
   minimumManifestUpdateInterval : number;
-  networkConfig: INetworkConfigOption;
-  transportOptions : IParsedTransportOptions;
-  defaultAudioTrack : IAudioTrackPreference|null|undefined;
-  defaultTextTrack : ITextTrackPreference|null|undefined;
+  requestConfig: IRequestConfig;
   startAt : IParsedStartAtOption|undefined;
-  manualBitrateSwitchingMode : "seamless"|"direct";
   enableFastSwitching : boolean;
-  audioTrackSwitchingMode : IAudioTrackSwitchingMode;
+  defaultAudioTrackSwitchingMode : IAudioTrackSwitchingMode | undefined;
   onCodecSwitch : "continue"|"reload";
+  checkMediaSegmentIntegrity? : boolean | undefined;
+  manifestLoader?: IManifestLoader | undefined;
+  referenceDateTime? : number | undefined;
+  representationFilter? : IRepresentationFilter | undefined;
+  segmentLoader? : ISegmentLoader | undefined;
+  serverSyncInfos? : IServerSyncInfos | undefined;
+  manifestUpdateUrl? : string | undefined;
+  __priv_patchLastSegmentInSidx? : boolean | undefined;
 }
 
 /**
@@ -129,7 +92,6 @@ interface IParsedLoadVideoOptionsBase {
  */
 interface IParsedLoadVideoOptionsNative extends IParsedLoadVideoOptionsBase {
   textTrackMode : "native";
-  hideNativeSubtitle : boolean;
 }
 
 /**
@@ -166,30 +128,14 @@ function parseConstructorOptions(
   let wantedBufferAhead : number;
   let maxVideoBufferSize : number;
 
-  let throttleWhenHidden : boolean;
-  let throttleVideoBitrateWhenHidden : boolean;
-
-  let preferredAudioTracks : IAudioTrackPreference[];
-  let preferredTextTracks : ITextTrackPreference[];
-  let preferredVideoTracks : IVideoTrackPreference[];
-
   let videoElement : HTMLMediaElement;
-  let initialVideoBitrate : number;
-  let initialAudioBitrate : number;
-  let minAudioBitrate : number;
-  let minVideoBitrate : number;
-  let maxAudioBitrate : number;
-  let maxVideoBitrate : number;
+  let baseBandwidth : number;
 
-  const { DEFAULT_INITIAL_BITRATES,
-          DEFAULT_LIMIT_VIDEO_WIDTH,
-          DEFAULT_MIN_BITRATES,
-          DEFAULT_MAX_BITRATES,
+  const { DEFAULT_BASE_BANDWIDTH,
+          DEFAULT_VIDEO_RESOLUTION_LIMIT,
           DEFAULT_MAX_BUFFER_AHEAD,
           DEFAULT_MAX_BUFFER_BEHIND,
           DEFAULT_MAX_VIDEO_BUFFER_SIZE,
-          DEFAULT_STOP_AT_END,
-          DEFAULT_THROTTLE_WHEN_HIDDEN,
           DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
           DEFAULT_WANTED_BUFFER_AHEAD } = config.getCurrent();
 
@@ -233,63 +179,14 @@ function parseConstructorOptions(
     }
   }
 
+  const videoResolutionLimit = isNullOrUndefined(options.videoResolutionLimit) ?
+    DEFAULT_VIDEO_RESOLUTION_LIMIT :
+    options.videoResolutionLimit;
 
-  const limitVideoWidth = isNullOrUndefined(options.limitVideoWidth) ?
-    DEFAULT_LIMIT_VIDEO_WIDTH :
-    !!options.limitVideoWidth;
-
-  if (!isNullOrUndefined(options.throttleWhenHidden)) {
-    warnOnce("`throttleWhenHidden` API is deprecated. Consider using " +
-             "`throttleVideoBitrateWhenHidden` instead.");
-
-    throttleWhenHidden = !!options.throttleWhenHidden;
-  } else {
-    throttleWhenHidden = DEFAULT_THROTTLE_WHEN_HIDDEN;
-  }
-
-  // `throttleWhenHidden` and `throttleVideoBitrateWhenHidden` can be in conflict
-  // Do not activate the latter if the former is
-  if (throttleWhenHidden) {
-    throttleVideoBitrateWhenHidden = false;
-  } else {
-    throttleVideoBitrateWhenHidden =
-      isNullOrUndefined(options.throttleVideoBitrateWhenHidden) ?
-        DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN :
-        !!options.throttleVideoBitrateWhenHidden;
-  }
-
-  if (options.preferredTextTracks !== undefined) {
-    if (!Array.isArray(options.preferredTextTracks)) {
-      warnOnce("Invalid `preferredTextTracks` option, it should be an Array");
-      preferredTextTracks = [];
-    } else {
-      preferredTextTracks = options.preferredTextTracks;
-    }
-  } else {
-    preferredTextTracks = [];
-  }
-
-  if (options.preferredAudioTracks !== undefined) {
-    if (!Array.isArray(options.preferredAudioTracks)) {
-      warnOnce("Invalid `preferredAudioTracks` option, it should be an Array");
-      preferredAudioTracks = [];
-    } else {
-      preferredAudioTracks = options.preferredAudioTracks;
-    }
-  } else {
-    preferredAudioTracks = [];
-  }
-
-  if (options.preferredVideoTracks !== undefined) {
-    if (!Array.isArray(options.preferredVideoTracks)) {
-      warnOnce("Invalid `preferredVideoTracks` option, it should be an Array");
-      preferredVideoTracks = [];
-    } else {
-      preferredVideoTracks = options.preferredVideoTracks;
-    }
-  } else {
-    preferredVideoTracks = [];
-  }
+  const throttleVideoBitrateWhenHidden =
+    isNullOrUndefined(options.throttleVideoBitrateWhenHidden) ?
+      DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN :
+      !!options.throttleVideoBitrateWhenHidden;
 
   if (isNullOrUndefined(options.videoElement)) {
     videoElement = document.createElement("video");
@@ -301,93 +198,25 @@ function parseConstructorOptions(
     /* eslint-enable max-len */
   }
 
-  if (isNullOrUndefined(options.initialVideoBitrate)) {
-    initialVideoBitrate = DEFAULT_INITIAL_BITRATES.video;
+  if (isNullOrUndefined(options.baseBandwidth)) {
+    baseBandwidth = DEFAULT_BASE_BANDWIDTH;
   } else {
-    initialVideoBitrate = Number(options.initialVideoBitrate);
-    if (isNaN(initialVideoBitrate)) {
+    baseBandwidth = Number(options.baseBandwidth);
+    if (isNaN(baseBandwidth)) {
       /* eslint-disable max-len */
-      throw new Error("Invalid initialVideoBitrate parameter. Should be a number.");
+      throw new Error("Invalid baseBandwidth parameter. Should be a number.");
       /* eslint-enable max-len */
     }
   }
-
-  if (isNullOrUndefined(options.initialAudioBitrate)) {
-    initialAudioBitrate = DEFAULT_INITIAL_BITRATES.audio;
-  } else {
-    initialAudioBitrate = Number(options.initialAudioBitrate);
-    if (isNaN(initialAudioBitrate)) {
-      /* eslint-disable max-len */
-      throw new Error("Invalid initialAudioBitrate parameter. Should be a number.");
-      /* eslint-enable max-len */
-    }
-  }
-
-  if (isNullOrUndefined(options.minVideoBitrate)) {
-    minVideoBitrate = DEFAULT_MIN_BITRATES.video;
-  } else {
-    minVideoBitrate = Number(options.minVideoBitrate);
-    if (isNaN(minVideoBitrate)) {
-      throw new Error("Invalid maxVideoBitrate parameter. Should be a number.");
-    }
-  }
-
-  if (isNullOrUndefined(options.minAudioBitrate)) {
-    minAudioBitrate = DEFAULT_MIN_BITRATES.audio;
-  } else {
-    minAudioBitrate = Number(options.minAudioBitrate);
-    if (isNaN(minAudioBitrate)) {
-      throw new Error("Invalid minAudioBitrate parameter. Should be a number.");
-    }
-  }
-
-  if (isNullOrUndefined(options.maxVideoBitrate)) {
-    maxVideoBitrate = DEFAULT_MAX_BITRATES.video;
-  } else {
-    maxVideoBitrate = Number(options.maxVideoBitrate);
-    if (isNaN(maxVideoBitrate)) {
-      throw new Error("Invalid maxVideoBitrate parameter. Should be a number.");
-    } else if (minVideoBitrate > maxVideoBitrate) {
-      throw new Error("Invalid maxVideoBitrate parameter. Its value, \"" +
-                      `${maxVideoBitrate}", is inferior to the set minVideoBitrate, "` +
-                      `${minVideoBitrate}"`);
-    }
-  }
-
-  if (isNullOrUndefined(options.maxAudioBitrate)) {
-    maxAudioBitrate = DEFAULT_MAX_BITRATES.audio;
-  } else {
-    maxAudioBitrate = Number(options.maxAudioBitrate);
-    if (isNaN(maxAudioBitrate)) {
-      throw new Error("Invalid maxAudioBitrate parameter. Should be a number.");
-    } else if (minAudioBitrate > maxAudioBitrate) {
-      throw new Error("Invalid maxAudioBitrate parameter. Its value, \"" +
-                      `${maxAudioBitrate}", is inferior to the set minAudioBitrate, "` +
-                      `${minAudioBitrate}"`);
-    }
-  }
-
-  const stopAtEnd = isNullOrUndefined(options.stopAtEnd) ? DEFAULT_STOP_AT_END :
-                                                           !!options.stopAtEnd;
 
   return { maxBufferAhead,
            maxBufferBehind,
-           limitVideoWidth,
+           videoResolutionLimit,
            videoElement,
            wantedBufferAhead,
            maxVideoBufferSize,
-           throttleWhenHidden,
            throttleVideoBitrateWhenHidden,
-           preferredAudioTracks,
-           preferredTextTracks,
-           preferredVideoTracks,
-           initialAudioBitrate,
-           initialVideoBitrate,
-           minAudioBitrate,
-           minVideoBitrate,
-           maxAudioBitrate,
-           maxVideoBitrate,
-           stopAtEnd };
+           baseBandwidth };
 }
 
 /**
@@ -425,7 +254,6 @@ function checkReloadOptions(options?: {
  *
  * Throws if any mandatory option is not set.
  * @param {Object|undefined} options
- * @param {Object} ctx - The player context, needed for some default values.
  * @returns {Object}
  */
 function parseLoadVideoOptions(
@@ -438,12 +266,9 @@ function parseLoadVideoOptions(
   let textTrackElement : HTMLElement|undefined;
   let startAt : IParsedStartAtOption|undefined;
 
-  const { DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
-          DEFAULT_AUTO_PLAY,
+  const { DEFAULT_AUTO_PLAY,
           DEFAULT_CODEC_SWITCHING_BEHAVIOR,
           DEFAULT_ENABLE_FAST_SWITCHING,
-          DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
-          DEFAULT_SHOW_NATIVE_SUBTITLE,
           DEFAULT_TEXT_TRACK_MODE } = config.getCurrent();
 
   if (isNullOrUndefined(options)) {
@@ -453,13 +278,13 @@ function parseLoadVideoOptions(
   if (!isNullOrUndefined(options.url)) {
     url = String(options.url);
   } else if (
-    isNullOrUndefined(options.transportOptions?.initialManifest) &&
-    isNullOrUndefined(options.transportOptions?.manifestLoader)
+    isNullOrUndefined(options.initialManifest) &&
+    isNullOrUndefined(options.manifestLoader)
   ) {
     throw new Error("Unable to load a content: no url set on loadVideo.\n" +
                     "Please provide at least either an `url` argument, a " +
-                    "`transportOptions.initialManifest` option or a " +
-                    "`transportOptions.manifestLoader` option so the RxPlayer " +
+                    "`initialManifest` option or a " +
+                    "`manifestLoader` option so the RxPlayer " +
                     "can load the content.");
   }
 
@@ -467,12 +292,6 @@ function parseLoadVideoOptions(
     throw new Error("No transport set on loadVideo");
   } else {
     transport = String(options.transport);
-  }
-
-  if (!isNullOrUndefined(options.transportOptions?.aggressiveMode)) {
-    warnOnce("`transportOptions.aggressiveMode` is deprecated and won't " +
-             "be present in the next major version. " +
-             "Please open an issue if you still need this.");
   }
 
   const autoPlay = isNullOrUndefined(options.autoPlay) ? DEFAULT_AUTO_PLAY :
@@ -490,44 +309,29 @@ function parseLoadVideoOptions(
         throw new Error("Invalid key system given: Missing type string or " +
                         "getLicense callback");
       }
-      if (!isNullOrUndefined(keySystem.onKeyStatusesChange)) {
-        warnOnce("`keySystems[].onKeyStatusesChange` is deprecated and won't " +
-                 "be present in the next major version. " +
-                 "Please open an issue if you still need this.");
-      }
-      if (!isNullOrUndefined(keySystem.throwOnLicenseExpiration)) {
-        warnOnce("`keySystems[].throwOnLicenseExpiration` is deprecated and won't " +
-                 "be present in the next major version. " +
-                 "Please open an issue if you still need this.");
-      }
     }
   }
 
   const lowLatencyMode = options.lowLatencyMode === undefined ?
     false :
     !!options.lowLatencyMode;
-  const transportOptsArg = typeof options.transportOptions === "object" &&
-                                  options.transportOptions !== null ?
-    options.transportOptions :
-    {};
 
-  const initialManifest = options.transportOptions?.initialManifest;
-  const minimumManifestUpdateInterval =
-    options.transportOptions?.minimumManifestUpdateInterval ?? 0;
+  const initialManifest = options.initialManifest;
+  const minimumManifestUpdateInterval = options.minimumManifestUpdateInterval ?? 0;
 
-  let audioTrackSwitchingMode = isNullOrUndefined(options.audioTrackSwitchingMode)
-                                  ? DEFAULT_AUDIO_TRACK_SWITCHING_MODE
-                                  : options.audioTrackSwitchingMode;
-  if (!arrayIncludes(["seamless", "direct", "reload"], audioTrackSwitchingMode)) {
-    log.warn("The `audioTrackSwitchingMode` loadVideo option must match one of " +
+  let defaultAudioTrackSwitchingMode = options.defaultAudioTrackSwitchingMode ??
+                                       undefined;
+  if (defaultAudioTrackSwitchingMode !== undefined &&
+      !arrayIncludes(["seamless", "direct", "reload"], defaultAudioTrackSwitchingMode))
+  {
+    log.warn("The `defaultAudioTrackSwitchingMode` loadVideo option must match one of " +
              "the following strategy name:\n" +
              "- `seamless`\n" +
              "- `direct`\n" +
-             "- `reload`\n" +
-             "If badly set, " + DEFAULT_AUDIO_TRACK_SWITCHING_MODE +
-             " strategy will be used as default");
-    audioTrackSwitchingMode = DEFAULT_AUDIO_TRACK_SWITCHING_MODE;
+             "- `reload`");
+    defaultAudioTrackSwitchingMode = undefined;
   }
+
 
   let onCodecSwitch = isNullOrUndefined(options.onCodecSwitch)
                         ? DEFAULT_CODEC_SWITCHING_BEHAVIOR
@@ -542,51 +346,9 @@ function parseLoadVideoOptions(
     onCodecSwitch = DEFAULT_CODEC_SWITCHING_BEHAVIOR;
   }
 
-  const transportOptions = objectAssign({}, transportOptsArg, {
-    /* eslint-disable import/no-deprecated */
-    supplementaryImageTracks: [] as ISupplementaryImageTrackOption[],
-    supplementaryTextTracks: [] as ISupplementaryTextTrackOption[],
-    /* eslint-enable import/no-deprecated */
-    lowLatencyMode,
-  });
-
-  // remove already parsed data to simplify the `transportOptions` object
-  delete transportOptions.initialManifest;
-  delete transportOptions.minimumManifestUpdateInterval;
-
-  if (options.supplementaryTextTracks !== undefined) {
-    warnOnce("The `supplementaryTextTracks` loadVideo option is deprecated.\n" +
-             "Please use the `TextTrackRenderer` tool instead.");
-    const supplementaryTextTracks =
-      Array.isArray(options.supplementaryTextTracks) ?
-        options.supplementaryTextTracks : [options.supplementaryTextTracks];
-
-    for (const supplementaryTextTrack of supplementaryTextTracks) {
-      if (typeof supplementaryTextTrack.language !== "string" ||
-          typeof supplementaryTextTrack.mimeType !== "string" ||
-          typeof supplementaryTextTrack.url !== "string"
-      ) {
-        throw new Error("Invalid supplementary text track given. " +
-                        "Missing either language, mimetype or url");
-      }
-    }
-    transportOptions.supplementaryTextTracks = supplementaryTextTracks;
-  }
-  if (options.supplementaryImageTracks !== undefined) {
-    warnOnce("The `supplementaryImageTracks` loadVideo option is deprecated.\n" +
-             "Please use the `parseBifThumbnails` tool instead.");
-    const supplementaryImageTracks =
-      Array.isArray(options.supplementaryImageTracks) ?
-        options.supplementaryImageTracks : [options.supplementaryImageTracks];
-    for (const supplementaryImageTrack of supplementaryImageTracks) {
-      if (typeof supplementaryImageTrack.mimeType !== "string" ||
-          typeof supplementaryImageTrack.url !== "string"
-      ) {
-        throw new Error("Invalid supplementary image track given. " +
-                        "Missing either mimetype or url");
-      }
-    }
-    transportOptions.supplementaryImageTracks = supplementaryImageTracks;
+  if (!isNullOrUndefined(options.manifestUpdateUrl)) {
+    warnOnce("`manifestUpdateUrl` API is deprecated, please open an issue if you" +
+             " still rely on this.");
   }
 
   if (isNullOrUndefined(options.textTrackMode)) {
@@ -597,28 +359,6 @@ function parseLoadVideoOptions(
     }
     textTrackMode = options.textTrackMode;
   }
-
-  if (!isNullOrUndefined(options.defaultAudioTrack)) {
-    warnOnce("The `defaultAudioTrack` loadVideo option is deprecated.\n" +
-             "Please use the `preferredAudioTracks` constructor option or the" +
-             "`setPreferredAudioTracks` method instead");
-  }
-  const defaultAudioTrack = normalizeAudioTrack(options.defaultAudioTrack);
-
-  if (!isNullOrUndefined(options.defaultTextTrack)) {
-    warnOnce("The `defaultTextTrack` loadVideo option is deprecated.\n" +
-             "Please use the `preferredTextTracks` constructor option or the" +
-             "`setPreferredTextTracks` method instead");
-  }
-  const defaultTextTrack = normalizeTextTrack(options.defaultTextTrack);
-
-  let hideNativeSubtitle = !DEFAULT_SHOW_NATIVE_SUBTITLE;
-  if (!isNullOrUndefined(options.hideNativeSubtitle)) {
-    warnOnce("The `hideNativeSubtitle` loadVideo option is deprecated");
-    hideNativeSubtitle = !!options.hideNativeSubtitle;
-  }
-  const manualBitrateSwitchingMode = options.manualBitrateSwitchingMode ??
-                                     DEFAULT_MANUAL_BITRATE_SWITCHING_MODE;
 
   const enableFastSwitching = isNullOrUndefined(options.enableFastSwitching) ?
     DEFAULT_ENABLE_FAST_SWITCHING :
@@ -654,30 +394,38 @@ function parseLoadVideoOptions(
     }
   }
 
-  const networkConfig = options.networkConfig ?? {};
+  const requestConfig = options.requestConfig ?? {};
 
-  // TODO without cast
-  /* eslint-disable @typescript-eslint/consistent-type-assertions */
-  return { autoPlay,
-           defaultAudioTrack,
-           defaultTextTrack,
+  // All those eslint disable are needed because the option is voluntarily
+  // hidden from the base type to limit discovery of this hidden API.
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+  return { __priv_patchLastSegmentInSidx: (options as any).__priv_patchLastSegmentInSidx,
+  /* eslint-enable @typescript-eslint/no-explicit-any */
+  /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+           checkMediaSegmentIntegrity: options.checkMediaSegmentIntegrity,
+           autoPlay,
+           defaultAudioTrackSwitchingMode,
            enableFastSwitching,
-           hideNativeSubtitle,
-           keySystems,
            initialManifest,
+           keySystems,
            lowLatencyMode,
-           manualBitrateSwitchingMode,
-           audioTrackSwitchingMode,
+           manifestLoader: options.manifestLoader,
+           manifestUpdateUrl: options.manifestUpdateUrl,
            minimumManifestUpdateInterval,
-           networkConfig,
+           requestConfig,
            onCodecSwitch,
+           referenceDateTime: options.referenceDateTime,
+           representationFilter: options.representationFilter,
+           segmentLoader: options.segmentLoader,
+           serverSyncInfos: options.serverSyncInfos,
            startAt,
            textTrackElement,
            textTrackMode,
            transport,
-           transportOptions,
            url } as IParsedLoadVideoOptions;
-  /* eslint-enable @typescript-eslint/consistent-type-assertions */
 }
 
 export {

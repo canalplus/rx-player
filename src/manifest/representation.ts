@@ -21,20 +21,47 @@ import {
   IContentProtections,
   IParsedRepresentation,
 } from "../parsers/manifest";
-import { IHDRInformation } from "../public_types";
-import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
-import { IRepresentationIndex } from "./representation_index";
 import {
-  IAdaptationType,
-} from "./types";
+  IAudioRepresentation,
+  ITrackType,
+  IHDRInformation,
+  IVideoRepresentation,
+} from "../public_types";
+import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
+import idGenerator from "../utils/id_generator";
+import { IRepresentationIndex } from "./representation_index";
+
+const generateRepresentationUniqueId = idGenerator();
 
 /**
  * Normalized Representation structure.
  * @class Representation
  */
 class Representation {
-  /** ID uniquely identifying the Representation in the Adaptation. */
+  /**
+   * ID uniquely identifying the `Representation` in its parent `Adaptation`.
+   *
+   * This identifier might be linked to an identifier present in the original
+   * Manifest file, it is thus the identifier to use to determine if a
+   * `Representation` from a refreshed `Manifest` is actually the same one than
+   * one in the previously loaded Manifest (as long as the `Adaptation` and
+   * `Period` are also the same).
+   *
+   * For a globally unique identifier regardless of the `Adaptation`, `Period`
+   * or even `Manifest`, you can rely on `uniqueId` instead.
+   */
   public readonly id : string;
+
+  /**
+   * Globally unique identifier for this `Representation` object.
+   *
+   * This identifier is guaranteed to be unique for any `Representation`s of all
+   * `Manifest` objects created in the current JS Realm.
+   * As such, it can be used as an identifier for the JS object itself, whereas
+   * `id` is the identifier for the original Manifest's Representation in the
+   * scope of its parent `Adaptation`.
+   */
+  public readonly uniqueId : string;
 
   /**
    * Interface allowing to get information about segments available for this
@@ -61,7 +88,20 @@ class Representation {
    * Frame-rate, when it can be applied, of this Representation, in any textual
    * indication possible (often under a ratio form).
    */
-  public frameRate? : string;
+  public frameRate? : number;
+
+  /**
+   * `true` if this `Representation` is linked to a spatial audio technology.
+   * For example, it may be set to `true` if the Representation relies on the
+   * "Dolby Atmos". technology.
+   *
+   * `false` if it is known that this `Representation` does not contain any
+   * spatial audio.
+   *
+   * `undefined` if we do not know whether this `Representation` contains
+   * spatial audio or not.
+   */
+  public isSpatialAudio? : boolean | undefined;
 
   /**
    * A string describing the codec used for this Representation.
@@ -113,10 +153,15 @@ class Representation {
   /**
    * @param {Object} args
    */
-  constructor(args : IParsedRepresentation, opts : { type : IAdaptationType }) {
+  constructor(args : IParsedRepresentation, opts : { type : ITrackType }) {
     this.id = args.id;
+    this.uniqueId = generateRepresentationUniqueId();
     this.bitrate = args.bitrate;
     this.codec = args.codecs;
+
+    if (args.isSpatialAudio !== undefined) {
+      this.isSpatialAudio = args.isSpatialAudio;
+    }
 
     if (args.height !== undefined) {
       this.height = args.height;
@@ -266,7 +311,7 @@ class Representation {
    * @param {Uint8Array} data
    * @returns {boolean}
    */
-  public _addProtectionData(
+  public addProtectionData(
     initDataType : string,
     keyId: Uint8Array | undefined,
     data : Array<{
@@ -333,6 +378,54 @@ class Representation {
     this.contentProtections.initData.push({ type: initDataType,
                                             values: data });
     return true;
+  }
+
+  /**
+   * Format Representation as an `IAudioRepresentation`.
+   * @returns {Object}
+   */
+  public toAudioRepresentation(): IAudioRepresentation {
+    const { id, bitrate, codec, isSpatialAudio, isSupported, decipherable } = this;
+    return { id,
+             bitrate,
+             codec,
+             isSpatialAudio,
+             isCodecSupported: isSupported,
+             decipherable };
+  }
+
+  /**
+   * Format Representation as an `IVideoRepresentation`.
+   * @returns {Object}
+   */
+  public toVideoRepresentation(): IVideoRepresentation {
+    const { id,
+            bitrate,
+            frameRate,
+            width,
+            height,
+            codec,
+            hdrInfo,
+            isSupported,
+            decipherable } = this;
+    return { id,
+             bitrate,
+             frameRate,
+             width,
+             height,
+             codec,
+             hdrInfo,
+             isCodecSupported: isSupported,
+             decipherable };
+  }
+
+  /**
+   * Returns `true` if this Representation can be played (that is: not
+   * undecipherable and with a supported codec).
+   * @returns {Array.<Representation>}
+   */
+  public isPlayable() : boolean {
+    return this.isSupported && this.decipherable !== false;
   }
 }
 

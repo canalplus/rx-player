@@ -23,7 +23,6 @@ declare const __FEATURES__ : {
   IS_DISABLED : 0;
   IS_ENABLED : 1;
 
-  BIF_PARSER : 0 | 1;
   DASH : 0 | 1;
   DIRECTFILE : 0 | 1;
   EME : 0 | 1;
@@ -45,7 +44,6 @@ declare const enum FEATURES_ENUM {
   IS_DISABLED,
   IS_ENABLED,
 
-  BIF_PARSER,
   DASH,
   DIRECTFILE,
   EME,
@@ -79,4 +77,5 @@ declare const __LOGGER_LEVEL__ : {
   CURRENT_LEVEL : string;
 };
 
-declare const __RX_PLAYER_DEBUG_MODE__ : boolean | undefined;
+// eslint-disable-next-line
+declare const require: (path: string) => any;

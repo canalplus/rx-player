@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+import globalScope from "../../compat/global_scope";
+import { IFeaturesObject } from "../types";
+
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
@@ -28,17 +31,16 @@ describe("Features - initializeFeaturesObject", () => {
   });
 
   /* eslint-disable @typescript-eslint/naming-convention */
-  const win = window as unknown as {
+  const gs = globalScope as unknown as {
     __FEATURES__: unknown;
   };
   /* eslint-enable @typescript-eslint/naming-convention */
 
   it("should set no feature if nothing is enabled", () => {
-    win.__FEATURES__ = {
+    gs.__FEATURES__ = {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
-      BIF_PARSER: 0,
       DASH: 0,
       DIRECTFILE: 0,
       EME: 0,
@@ -61,15 +63,14 @@ describe("Features - initializeFeaturesObject", () => {
     const initializeFeaturesObject = jest.requireActual("../initialize_features").default;
     initializeFeaturesObject();
     expect<unknown>(feat).toEqual({});
-    delete win.__FEATURES__;
+    delete gs.__FEATURES__;
   });
 
   it("should set the right features when everything is enabled", () => {
-    win.__FEATURES__ = {
+    gs.__FEATURES__ = {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
-      BIF_PARSER: 1,
       DASH: 1,
       DIRECTFILE: 1,
       EME: 1,
@@ -86,17 +87,17 @@ describe("Features - initializeFeaturesObject", () => {
       NATIVE_VTT: 1,
       SMOOTH: 1,
     };
-    const feat = {
+    const feat : IFeaturesObject = {
       transports: {},
+      mediaSourceInit: null,
       dashParsers: { js: null, wasm: null },
-      imageBuffer: null,
-      imageParser: null,
       nativeTextTracksBuffer: null,
       nativeTextTracksParsers: {},
       htmlTextTracksBuffer: null,
       htmlTextTracksParsers: {},
-      ContentDecryptor: null,
+      decrypt: null,
       directfile: null,
+      createDebugElement: null,
     };
     jest.mock("../features_object", () => ({
       __esModule: true as const,
@@ -115,19 +116,15 @@ describe("Features - initializeFeaturesObject", () => {
         js: jest.requireActual("../../parsers/manifest/dash/js-parser").default,
         wasm: null,
       },
-      ContentDecryptor: jest.requireActual("../../core/decrypt/index").default,
+      decrypt: jest.requireActual("../../core/decrypt/index").default,
+      mediaSourceInit: jest.requireActual("../../core/init/media_source_content_initializer")
+        .default,
       createDebugElement: jest.requireActual("../../core/api/debug").default,
       directfile: {
         initDirectFile: jest.requireActual("../../core/init/directfile_content_initializer").default,
-        mediaElementTrackChoiceManager:
-          jest.requireActual(
-            "../../core/api/tracks_management/media_element_track_choice_manager"
-          ).default,
+        mediaElementTracksStore:
+          jest.requireActual("../../core/api/track_management/media_element_tracks_store").default,
       },
-      imageBuffer: jest.requireActual(
-        "../../core/segment_buffers/implementations/image/index"
-      ).default,
-      imageParser: jest.requireActual("../../parsers/images/bif").default,
       nativeTextTracksBuffer: jest.requireActual("../../core/segment_buffers/implementations/text/native/index")
         .default,
       nativeTextTracksParsers: {
@@ -146,15 +143,187 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete win.__FEATURES__;
+    delete gs.__FEATURES__;
   });
 
-  it("should add the html text buffer if the html vtt parser is added", () => {
-    win.__FEATURES__ = {
+  it("should add MediaSource-specific features if DASH is added", () => {
+    gs.__FEATURES__ = {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
       BIF_PARSER: 0,
+      DASH: 1,
+      DIRECTFILE: 0,
+      EME: 0,
+      HTML_SAMI: 0,
+      HTML_SRT: 0,
+      HTML_TTML: 0,
+      HTML_VTT: 0,
+      LOCAL_MANIFEST: 0,
+      METAPLAYLIST: 0,
+      DEBUG_ELEMENT: 0,
+      NATIVE_SAMI: 0,
+      NATIVE_SRT: 0,
+      NATIVE_TTML: 0,
+      NATIVE_VTT: 0,
+      SMOOTH: 0,
+    };
+    const feat = {
+      transports: {},
+      dashParsers: { js: null, wasm: null },
+    };
+    jest.mock("../features_object", () => ({
+      __esModule: true as const,
+      default: feat,
+    }));
+    const initializeFeaturesObject = jest.requireActual("../initialize_features").default;
+    initializeFeaturesObject();
+    expect(feat).toEqual({
+      mediaSourceInit: jest.requireActual("../../core/init/media_source_content_initializer")
+        .default,
+      transports: {
+        dash: jest.requireActual("../../transports/dash/index").default,
+      },
+      dashParsers: {
+        js: jest.requireActual("../../parsers/manifest/dash/js-parser").default,
+        wasm: null,
+      },
+    });
+
+    delete gs.__FEATURES__;
+  });
+
+  it("should add MediaSource-specific features if SMOOTH is added", () => {
+    gs.__FEATURES__ = {
+      IS_DISABLED: 0,
+      IS_ENABLED: 1,
+
+      BIF_PARSER: 0,
+      DASH: 0,
+      DIRECTFILE: 0,
+      EME: 0,
+      HTML_SAMI: 0,
+      HTML_SRT: 0,
+      HTML_TTML: 0,
+      HTML_VTT: 0,
+      LOCAL_MANIFEST: 0,
+      METAPLAYLIST: 0,
+      DEBUG_ELEMENT: 0,
+      NATIVE_SAMI: 0,
+      NATIVE_SRT: 0,
+      NATIVE_TTML: 0,
+      NATIVE_VTT: 0,
+      SMOOTH: 1,
+    };
+    const feat = {
+      transports: {},
+    };
+    jest.mock("../features_object", () => ({
+      __esModule: true as const,
+      default: feat,
+    }));
+    const initializeFeaturesObject = jest.requireActual("../initialize_features").default;
+    initializeFeaturesObject();
+    expect(feat).toEqual({
+      mediaSourceInit: jest.requireActual("../../core/init/media_source_content_initializer")
+        .default,
+      transports: {
+        smooth: jest.requireActual("../../transports/smooth/index").default,
+      },
+    });
+
+    delete gs.__FEATURES__;
+  });
+
+  it("should add MediaSource-specific features if LOCAL_MANIFEST is added", () => {
+    gs.__FEATURES__ = {
+      IS_DISABLED: 0,
+      IS_ENABLED: 1,
+
+      BIF_PARSER: 0,
+      DASH: 0,
+      DIRECTFILE: 0,
+      EME: 0,
+      HTML_SAMI: 0,
+      HTML_SRT: 0,
+      HTML_TTML: 0,
+      HTML_VTT: 0,
+      LOCAL_MANIFEST: 1,
+      METAPLAYLIST: 0,
+      DEBUG_ELEMENT: 0,
+      NATIVE_SAMI: 0,
+      NATIVE_SRT: 0,
+      NATIVE_TTML: 0,
+      NATIVE_VTT: 0,
+      SMOOTH: 0,
+    };
+    const feat = {
+      transports: {},
+    };
+    jest.mock("../features_object", () => ({
+      __esModule: true as const,
+      default: feat,
+    }));
+    const initializeFeaturesObject = jest.requireActual("../initialize_features").default;
+    initializeFeaturesObject();
+    expect(feat).toEqual({
+      mediaSourceInit: jest.requireActual("../../core/init/media_source_content_initializer")
+        .default,
+      transports: {
+        local: jest.requireActual("../../transports/local/index").default,
+      },
+    });
+
+    delete gs.__FEATURES__;
+  });
+
+  it("should add MediaSource-specific features if METAPLAYLIST is added", () => {
+    gs.__FEATURES__ = {
+      IS_DISABLED: 0,
+      IS_ENABLED: 1,
+
+      BIF_PARSER: 0,
+      DASH: 0,
+      DIRECTFILE: 0,
+      EME: 0,
+      HTML_SAMI: 0,
+      HTML_SRT: 0,
+      HTML_TTML: 0,
+      HTML_VTT: 0,
+      LOCAL_MANIFEST: 0,
+      METAPLAYLIST: 1,
+      DEBUG_ELEMENT: 0,
+      NATIVE_SAMI: 0,
+      NATIVE_SRT: 0,
+      NATIVE_TTML: 0,
+      NATIVE_VTT: 0,
+      SMOOTH: 0,
+    };
+    const feat = {
+      transports: {},
+    };
+    jest.mock("../features_object", () => ({
+      __esModule: true as const,
+      default: feat,
+    }));
+    const initializeFeaturesObject = jest.requireActual("../initialize_features").default;
+    initializeFeaturesObject();
+    expect(feat).toEqual({
+      mediaSourceInit: jest.requireActual("../../core/init/media_source_content_initializer")
+        .default,
+      transports: {
+        metaplaylist: jest.requireActual("../../transports/metaplaylist/index").default,
+      },
+    });
+
+    delete gs.__FEATURES__;
+  });
+
+  it("should add the html text buffer if the html vtt parser is added", () => {
+    gs.__FEATURES__ = {
+      IS_DISABLED: 0,
+      IS_ENABLED: 1,
+
       DASH: 0,
       DIRECTFILE: 0,
       EME: 0,
@@ -189,15 +358,14 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete win.__FEATURES__;
+    delete gs.__FEATURES__;
   });
 
   it("should add the html text buffer if the html sami parser is added", () => {
-    win.__FEATURES__ = {
+    gs.__FEATURES__ = {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
-      BIF_PARSER: 0,
       DASH: 0,
       DIRECTFILE: 0,
       EME: 0,
@@ -232,15 +400,14 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete win.__FEATURES__;
+    delete gs.__FEATURES__;
   });
 
   it("should add the html text buffer if the html ttml parser is added", () => {
-    win.__FEATURES__ = {
+    gs.__FEATURES__ = {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
-      BIF_PARSER: 0,
       DASH: 0,
       DIRECTFILE: 0,
       EME: 0,
@@ -275,15 +442,14 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete win.__FEATURES__;
+    delete gs.__FEATURES__;
   });
 
   it("should add the html text buffer if the html srt parser is added", () => {
-    win.__FEATURES__ = {
+    gs.__FEATURES__ = {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
-      BIF_PARSER: 0,
       DASH: 0,
       DIRECTFILE: 0,
       EME: 0,
@@ -318,15 +484,14 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete win.__FEATURES__;
+    delete gs.__FEATURES__;
   });
 
   it("should add the native text buffer if the native vtt parser is added", () => {
-    win.__FEATURES__ = {
+    gs.__FEATURES__ = {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
-      BIF_PARSER: 0,
       DASH: 0,
       DIRECTFILE: 0,
       EME: 0,
@@ -361,15 +526,14 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete win.__FEATURES__;
+    delete gs.__FEATURES__;
   });
 
   it("should add the native text buffer if the native sami parser is added", () => {
-    win.__FEATURES__ = {
+    gs.__FEATURES__ = {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
-      BIF_PARSER: 0,
       DASH: 0,
       DIRECTFILE: 0,
       EME: 0,
@@ -404,15 +568,14 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete win.__FEATURES__;
+    delete gs.__FEATURES__;
   });
 
   it("should add the native text buffer if the native ttml parser is added", () => {
-    win.__FEATURES__ = {
+    gs.__FEATURES__ = {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
-      BIF_PARSER: 0,
       DASH: 0,
       DIRECTFILE: 0,
       EME: 0,
@@ -447,15 +610,14 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete win.__FEATURES__;
+    delete gs.__FEATURES__;
   });
 
   it("should add the native text buffer if the native srt parser is added", () => {
-    win.__FEATURES__ = {
+    gs.__FEATURES__ = {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
-      BIF_PARSER: 0,
       DASH: 0,
       DIRECTFILE: 0,
       EME: 0,
@@ -490,6 +652,6 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete win.__FEATURES__;
+    delete gs.__FEATURES__;
   });
 });
