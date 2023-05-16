@@ -39,6 +39,22 @@ export default class ImageSegmentBuffer extends SegmentBuffer {
   }
 
   /**
+   * @param {string} uniqueId
+   */
+  public declareInitSegment(uniqueId : string): void {
+    log.warn("ISB: Declaring initialization segment for image SegmentBuffer",
+             uniqueId);
+  }
+
+  /**
+   * @param {string} uniqueId
+   */
+  public freeInitSegment(uniqueId : string): void {
+    log.warn("ISB: Freeing initialization segment for image SegmentBuffer",
+             uniqueId);
+  }
+
+  /**
    * @param {Object} data
    * @returns {Promise}
    */
@@ -67,7 +83,7 @@ export default class ImageSegmentBuffer extends SegmentBuffer {
     try {
       this._buffered.insert(startTime, endTime);
       if (infos.inventoryInfos !== null) {
-        this._segmentInventory.insertChunk(infos.inventoryInfos);
+        this._segmentInventory.insertChunk(infos.inventoryInfos, true);
       }
     } catch (err) {
       return Promise.reject(err);

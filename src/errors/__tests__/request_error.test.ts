@@ -27,17 +27,19 @@ describe("errors - RequestError", () => {
     expect(requestError.xhr).toBe(xhr);
     expect(requestError.status).toBe(355);
     expect(requestError.type).toBe("ERROR_EVENT");
-    expect(requestError.message).toBe("ERROR_EVENT");
+    expect(requestError.message).toBe(
+      "An error prevented the request to be performed successfully"
+    );
     xhr.abort();
   });
   it("should authorize no XHR", () => {
-    const requestError = new RequestError("foo", 355, "ERROR_EVENT");
+    const requestError = new RequestError("foo", 355, "TIMEOUT");
     expect(requestError).toBeInstanceOf(Error);
     expect(requestError.name).toBe("RequestError");
     expect(requestError.url).toBe("foo");
     expect(requestError.xhr).toBe(undefined);
     expect(requestError.status).toBe(355);
-    expect(requestError.type).toBe("ERROR_EVENT");
-    expect(requestError.message).toBe("ERROR_EVENT");
+    expect(requestError.type).toBe("TIMEOUT");
+    expect(requestError.message).toBe("The request timed out");
   });
 });

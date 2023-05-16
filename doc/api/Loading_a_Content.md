@@ -38,7 +38,8 @@ Can be either:
   player](../Getting_Started/Minimal_Player.md), you will need to add at least
   either one of the following features to be able to play DASH contents:
 
-   - the `DASH` feature (rely on a generally-sufficient JavaScript parser)
+   - the `DASH` [feature](./RxPlayer_Features.md) (rely on a generally-sufficient
+     JavaScript parser)
 
    - the `DASH_WASM` experimental feature (backed by a WebAssembly parser, more
      efficient when handling very large MPDs).
@@ -50,8 +51,8 @@ Can be either:
 - **`"smooth"` - for Microsoft Smooth Streaming contents**
 
   If you're using the [minimal build of the player](../Getting_Started/Minimal_Player.md), you
-  will need to add at least the `SMOOTH` feature to be able to play Smooth
-  contents.
+  will need to add at least the `SMOOTH` [feature](./RxPlayer_Features.md) to be
+  able to play Smooth contents.
 
 - **`"directfile"` - for loading a video in _DirectFile_ mode, which allows to
   directly play media files** (example: `.mp4` or `.webm` files) without
@@ -59,8 +60,8 @@ Can be either:
   contents on multiple browsers (mainly safari and iOS browsers).
 
   If you're using the [minimal build of the player](../Getting_Started/Minimal_Player.md), you
-  will need to add at least the `DIRECTFILE` feature to be able to play those
-  contents.
+  will need to add at least the `DIRECTFILE` [feature](./RxPlayer_Features.md)
+  to be able to play those contents.
 
 <div class="warning">
   In that mode, multiple APIs won't have any effect.
@@ -71,17 +72,15 @@ Can be either:
 - `"metaplaylist"` for [MetaPlaylist](./Miscellaneous/MetaPlaylist.md) streams,
   which are a concatenation of multiple smooth and DASH contents
 
-  If you're using the [minimal build of the player](../Getting_Started/Minimal_Player.md), you
-  will need to add at least the `METAPLAYLIST` experimental feature to be able
-  to play those contents.
+  You will need to add at least the `METAPLAYLIST` experimental [feature](./RxPlayer_Features.md)
+  to be able to play those contents.
 
 - `"local"` for [local manifests](./Miscellaneous/Local_Contents.md), which
   allows to play downloaded DASH, Smooth or MetaPlaylist contents (when offline
   for example).
 
-  If you're using the [minimal build of the player](../Getting_Started/Minimal_Player.md), you
-  will need to add at least the `LOCAL_MANIFEST` experimental feature to be able
-  to play those contents.
+  You will need to add at least the `LOCAL_MANIFEST` experimental [feature](./RxPlayer_Features.md)
+  to be able to play those contents.
 
 Example:
 
@@ -202,6 +201,16 @@ can be either:
     by the manifest.
   - for VoD contents, it is the difference between the starting position and
     the end position of the content.
+
+
+- **fromLivePosition** relative position relative to the content's live edge
+  (for live contents, it is the position that is intended to be broadcasted
+  at the current time) if it makes sense, in seconds. Should be a negative
+  number.
+
+  If the live edge is unknown or if it does not make sense for the current
+  content (for example, it won't make sense for a VoD content), that setting
+  repeats the same behavior than **fromLastPosition**.
 
 - **percentage** (`Number`): percentage of the wanted position. `0` being
   the minimum position possible (0 for static content, buffer depth for
@@ -367,45 +376,6 @@ considered stable:
   contents if its request was done immediately before the `loadVideo`
   call.
 
-- **manifestUpdateUrl** (`string|undefined`):
-
-  Set a custom Manifest URL for Manifest updates.
-  This URL can point to another version of the Manifest with a shorter
-  timeshift window, to lighten the CPU, memory and bandwidth impact of
-  Manifest updates.
-
-  Example:
-
-  ```js
-  rxPlayer.loadVideo({
-    transport: "dash",
-    url: "https://example.com/full-content.mpd",
-    transportOptions: {
-      manifestUpdateUrl: "https://example.com/content-with-shorter-window.mpd",
-    },
-  });
-  ```
-
-  When the RxPlayer plays a live content, it may have to refresh frequently
-  the Manifest to be aware of where to find new media segments.
-  It generally uses the regular Manifest URL when doing so, meaning that the
-  information about the whole content is downloaded again.
-
-  This is generally not a problem though: The Manifest is generally short
-  enough meaning that this process won't waste much bandwidth memory or
-  parsing time.
-  However, we found that for huge Manifests (multiple MB uncompressed), this
-  behavior could be a problem on some low-end devices (some set-top-boxes,
-  chromecasts) where slowdowns can be observed when Manifest refresh are
-  taking place.
-
-  The `manifestUpdateUrl` will thus allow an application to provide a second
-  URL, specifically used for Manifest updates, which can represent the same
-  content with a shorter timeshift window (e.g. using only 5 minutes of
-  timeshift window instead of 10 hours for the full Manifest). The content
-  will keep its original timeshift window and the RxPlayer will be able to get
-  information about new segments at a lower cost.
-
 - **representationFilter** (`Function|undefined`):
 
   Allows to filter out `Representation`s (i.e. media qualities) from the
@@ -531,6 +501,31 @@ considered stable:
   a complete explanation, you can look at the [corresponding chapter of the
   low-latency documentation](./Miscellaneous/Low_Latency.md#note-time-sync).
 
+- **referenceDateTime** (`number|undefined`):
+
+  Only useful for live contents. This is the default amount of time, in
+  seconds, to add as an offset to a given media content's time, to obtain the
+  real live time.
+
+  For example, if the media has it's `0` time corresponding to the 30th of
+  January 2010 at midnight, you can set the `referenceDateTime` to `new Date(2010-01-30) / 1000`. This value is useful to communicate back to you
+  the "live time", for example through the `getWallClockTime` method.
+
+  This will only be taken into account for live contents, and if the Manifest
+  / MPD does not already contain an offset (example: an
+  "availabilityStartTime" attribute in a DASH MPD).
+
+  Example:
+
+  ```js
+  rxPlayer.loadVideo({
+    // ...
+    transportOptions: {
+      referenceDateTime: new Date(2015 - 05 - 29) / 1000,
+    },
+  });
+  ```
+
 - **aggressiveMode** (`boolean|undefined`):
 
 <div class="warning">
@@ -563,30 +558,51 @@ APIs</a>).
   });
   ```
 
-- **referenceDateTime** (`number|undefined`):
+- **manifestUpdateUrl** (`string|undefined`):
 
-  Only useful for live contents. This is the default amount of time, in
-  seconds, to add as an offset to a given media content's time, to obtain the
-  real live time.
+<div class="warning">
+This option is deprecated, it will disappear in the next major release
+`v4.0.0` (see <a href="./Miscellaneous/Deprecated_APIs.md">Deprecated
+APIs</a>).
+</div>
 
-  For example, if the media has it's `0` time corresponding to the 30th of
-  January 2010 at midnight, you can set the `referenceDateTime` to `new Date(2010-01-30) / 1000`. This value is useful to communicate back to you
-  the "live time", for example through the `getWallClockTime` method.
-
-  This will only be taken into account for live contents, and if the Manifest
-  / MPD does not already contain an offset (example: an
-  "availabilityStartTime" attribute in a DASH MPD).
+  Set a custom Manifest URL for Manifest updates.
+  This URL can point to another version of the Manifest with a shorter
+  timeshift window, to lighten the CPU, memory and bandwidth impact of
+  Manifest updates.
 
   Example:
 
   ```js
   rxPlayer.loadVideo({
-    // ...
+    transport: "dash",
+    url: "https://example.com/full-content.mpd",
     transportOptions: {
-      referenceDateTime: new Date(2015 - 05 - 29) / 1000,
+      manifestUpdateUrl: "https://example.com/content-with-shorter-window.mpd",
     },
   });
   ```
+
+  When the RxPlayer plays a live content, it may have to refresh frequently
+  the Manifest to be aware of where to find new media segments.
+  It generally uses the regular Manifest URL when doing so, meaning that the
+  information about the whole content is downloaded again.
+
+  This is generally not a problem though: The Manifest is generally short
+  enough meaning that this process won't waste much bandwidth memory or
+  parsing time.
+  However, we found that for huge Manifests (multiple MB uncompressed), this
+  behavior could be a problem on some low-end devices (some set-top-boxes,
+  chromecasts) where slowdowns can be observed when Manifest refresh are
+  taking place.
+
+  The `manifestUpdateUrl` will thus allow an application to provide a second
+  URL, specifically used for Manifest updates, which can represent the same
+  content with a shorter timeshift window (e.g. using only 5 minutes of
+  timeshift window instead of 10 hours for the full Manifest). The content
+  will keep its original timeshift window and the RxPlayer will be able to get
+  information about new segments at a lower cost.
+
 
 ### textTrackMode
 
@@ -745,7 +761,7 @@ Behavior taken by the player when switching to either an audio or video track
 which has a codec "incompatible" with the previous one (for example going from
 avc, a.k.a h264 to hevc, a.k.a. h265).
 
-This switch can either after the user switches from one track to another or
+This switch comes either after the user switches from one track to another or
 after encountering a new Period in some transport technologies (concept existing
 for DASH, "local" and MetaPlaylist contents).
 

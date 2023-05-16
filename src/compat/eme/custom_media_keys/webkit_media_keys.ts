@@ -16,6 +16,8 @@
 
 import EventEmitter from "../../../utils/event_emitter";
 import noop from "../../../utils/noop";
+import startsWith from "../../../utils/starts_with";
+import wrapInPromise from "../../../utils/wrapInPromise";
 import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
 import getWebKitFairplayInitData from "../get_webkit_fairplay_initdata";
 import {
@@ -41,8 +43,7 @@ export interface ICustomWebKitMediaKeys {
  * @returns {boolean}
  */
 function isFairplayKeyType(keyType: string): boolean {
-  return keyType === "com.apple.fps.1_0" ||
-         keyType === "com.apple.fps.2_0";
+  return startsWith(keyType, "com.apple.fps");
 }
 
 /**
@@ -50,16 +51,19 @@ function isFairplayKeyType(keyType: string): boolean {
  * setMediaKeys from WebKit.
  * @param {HTMLMediaElement} videoElement
  * @param {Object|null} mediaKeys
+ * @returns {Promise}
  */
 function setWebKitMediaKeys(
   videoElement: HTMLMediaElement,
-  mediaKeys: IWebKitMediaKeys|null
-): void {
+  mediaKeys: unknown
+): Promise<unknown> {
   const elt : ICompatHTMLMediaElement = videoElement;
-  if (elt.webkitSetMediaKeys === undefined) {
-    throw new Error("No webKitMediaKeys API.");
-  }
-  return elt.webkitSetMediaKeys(mediaKeys);
+  return wrapInPromise(() => {
+    if (elt.webkitSetMediaKeys === undefined) {
+      throw new Error("No webKitMediaKeys API.");
+    }
+    elt.webkitSetMediaKeys(mediaKeys);
+  });
 }
 
 /**
@@ -245,7 +249,7 @@ class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
     this._mediaKeys = new WebKitMediaKeysConstructor(keyType);
   }
 
-  _setVideo(videoElement: HTMLMediaElement): void {
+  _setVideo(videoElement: HTMLMediaElement): Promise<unknown> {
     this._videoElement = videoElement;
     if (this._videoElement === undefined) {
       throw new Error("Video not attached to the MediaKeys");
@@ -275,7 +279,7 @@ export default function getWebKitMediaKeysCallbacks() : {
   setMediaKeys: (
     elt: HTMLMediaElement,
     mediaKeys: MediaKeys|ICustomMediaKeys|null
-  ) => void;
+  ) => Promise<unknown>;
 } {
   if (WebKitMediaKeysConstructor === undefined) {
     throw new Error("No WebKitMediaKeys API.");
@@ -286,7 +290,7 @@ export default function getWebKitMediaKeysCallbacks() : {
   const setMediaKeys = (
     elt: HTMLMediaElement,
     mediaKeys: MediaKeys|ICustomMediaKeys|null
-  ): void => {
+  ): Promise<unknown> => {
     if (mediaKeys === null) {
       return setWebKitMediaKeys(elt, mediaKeys);
     }

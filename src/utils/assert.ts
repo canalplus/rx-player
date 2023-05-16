@@ -27,7 +27,10 @@ export default function assert(
   assertion : boolean,
   message? : string
 ) : asserts assertion {
-  if (__ENVIRONMENT__.DEV === __ENVIRONMENT__.CURRENT_ENV as number && !assertion) {
+  if (
+    __ENVIRONMENT__.DEV as number === __ENVIRONMENT__.CURRENT_ENV as number
+    && !assertion
+  ) {
     throw new AssertionError(message === undefined ? "invalid assertion" :
                                                      message);
   }

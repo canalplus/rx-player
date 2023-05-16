@@ -1,8 +1,8 @@
+use crate::events::AttributeName;
+use crate::onAttribute;
+use crate::processor::SegmentObject;
 use core::mem;
 use std::borrow::Cow;
-use crate::events::AttributeName;
-use crate::processor::SegmentObject;
-use crate::onAttribute;
 
 /// Trait implemented for values that can be "reported" as an attribute to the
 /// JS-side.
@@ -37,10 +37,12 @@ impl ReportableAttribute for bool {
     fn report_as_attr(&self, attr_name: AttributeName) {
         debug_assert!(attr_name as u64 <= u8::MAX as u64);
 
-        let val : u8 = if *self { 1 } else { 0 };
+        let val: u8 = if *self { 1 } else { 0 };
         // UNSAFE: We're using FFI, so we don't know how the pointer is used.
         // Hopefully, the JavaScript-side should clone that value synchronously.
-        unsafe { onAttribute(attr_name, &val, 1); };
+        unsafe {
+            onAttribute(attr_name, &val, 1);
+        };
     }
 }
 
@@ -52,12 +54,14 @@ impl ReportableAttribute for f64 {
         // UNSAFE: We're using FFI, so we don't know how the pointer is used.
         // Hopefully, the JavaScript-side should clone that value synchronously.
         //
-        // Also, we're transmuting so that &f64 (reference to f64) is actually
-        // treated like a *const u8 (immutable raw pointer to an u8) as it's what
-        // the JS callback expects.
+        // Also, we're casting so that the f64 value is actually treated as if it
+        // was a *const u8 (immutable raw pointer to an u8) as it's what the JS
+        // callback expects.
         // This should not matter: Rust types are not communicated to
         // JavaScript anyway.
-        unsafe { onAttribute(attr_name, mem::transmute(self), 8); };
+        unsafe {
+            onAttribute(attr_name, self as *const f64 as *const u8, 8);
+        };
     }
 }
 
@@ -69,11 +73,14 @@ impl ReportableAttribute for (f64, f64) {
         // UNSAFE: We're using FFI, so we don't know how the pointer is used.
         // Hopefully, the JavaScript-side should clone that value synchronously.
         //
-        // Also, we're transmuting so that &(f64, f64) is actually treated like
-        // a *const u8 (immutable raw pointer to an u8) as it's what the JS
-        // callback expects.  This should not matter: Rust types are not
-        // communicated to JavaScript anyway.
-        unsafe { onAttribute(attr_name, mem::transmute(self), 16); };
+        // Also, we're transmuting so that &(f64, f64) is actually treated as if it
+        // was a *const u8 (immutable raw pointer to an u8) as it's what the JS
+        // callback expects.
+        // This should not matter: Rust types are not communicated to
+        // JavaScript anyway.
+        unsafe {
+            onAttribute(attr_name, self as *const (f64, f64) as *const u8, 16);
+        };
     }
 }
 
@@ -92,7 +99,7 @@ impl ReportableAttribute for &[SegmentObject] {
 }
 
 // For key-value couples (such as XML namespaces)
-impl<'a> ReportableAttribute for (&'a [u8], Cow<'a, [u8]>) {
+impl<'a> ReportableAttribute for (&'a [u8], Cow<'a, str>) {
     #[inline(always)]
     fn report_as_attr(&self, attr_name: AttributeName) {
         use crate::utils;
@@ -103,11 +110,13 @@ impl<'a> ReportableAttribute for (&'a [u8], Cow<'a, [u8]>) {
         msg.extend(utils::u32_to_u8_slice_be(len_key));
         msg.extend(self.0);
         msg.extend(utils::u32_to_u8_slice_be(len_val));
-        msg.extend(self.1.to_vec());
+        msg.extend(self.1.as_bytes());
 
         // UNSAFE: We're using FFI, so we don't know how the pointer is used.
         // Hopefully, the JavaScript-side should clone that value synchronously.
-        unsafe { onAttribute(attr_name, msg.as_ptr(), msg.len()); };
+        unsafe {
+            onAttribute(attr_name, msg.as_ptr(), msg.len());
+        };
     }
 }
 
@@ -118,6 +127,21 @@ impl<'a> ReportableAttribute for Cow<'a, [u8]> {
 
         // UNSAFE: We're using FFI, so we don't know how the pointer is used.
         // Hopefully, the JavaScript-side should clone that value synchronously.
-        unsafe { onAttribute(attr_name, self.as_ptr(), self.len()); };
+        unsafe {
+            onAttribute(attr_name, self.as_ptr(), self.len());
+        };
+    }
+}
+
+impl<'a> ReportableAttribute for Cow<'a, str> {
+    #[inline(always)]
+    fn report_as_attr(&self, attr_name: AttributeName) {
+        debug_assert!(attr_name as u64 <= u8::MAX as u64);
+
+        // UNSAFE: We're using FFI, so we don't know how the pointer is used.
+        // Hopefully, the JavaScript-side should clone that value synchronously.
+        unsafe {
+            onAttribute(attr_name, self.as_ptr(), self.len());
+        };
     }
 }
