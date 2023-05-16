@@ -79,7 +79,7 @@ export interface IFeaturesObject {
   directfile : { initDirectFile: IDirectFileInit;
                  mediaElementTrackChoiceManager : IMediaElementTrackChoiceManager; } |
                null;
-  ContentDecryptor : IContentDecryptorClass|null;
+  decrypt : IContentDecryptorClass | null;
   createDebugElement : (
     (
       parentElt : HTMLElement,

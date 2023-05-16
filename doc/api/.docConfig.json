@@ -53,12 +53,8 @@
       "displayName": "Buffer Control"
     },
     {
-      "path": "./Buffer_Information",
-      "displayName": "Buffer Information"
-    },
-    {
-      "path": "./Content_Information",
-      "displayName": "Content Information"
+      "path": "./Playback_Information",
+      "displayName": "Playback Information"
     },
     {
       "path": "./Static_Properties.md",

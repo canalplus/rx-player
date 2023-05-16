@@ -781,6 +781,66 @@ export default function launchTestsForContent(manifestInfos) {
       });
     });
 
+    describe("isContentLoaded", () => {
+      it("should go from false to true when loading a content", async () => {
+        expect(player.getPlayerState()).to.equal("STOPPED");
+        expect(player.isContentLoaded()).to.equal(false);
+
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          autoPlay: false,
+        });
+        expect(player.getPlayerState()).to.equal("LOADING");
+        expect(player.isContentLoaded()).to.equal(false);
+
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPlayerState()).to.equal("LOADED");
+        expect(player.isContentLoaded()).to.equal(true);
+      });
+    });
+
+    describe("isBuffering", () => {
+      it("should go to true when loading", async () => {
+        expect(player.getPlayerState()).to.equal("STOPPED");
+        expect(player.isBuffering()).to.equal(false);
+
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          autoPlay: false,
+        });
+        expect(player.getPlayerState()).to.equal("LOADING");
+        expect(player.isBuffering()).to.equal(true);
+
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPlayerState()).to.equal("LOADED");
+        expect(player.isBuffering()).to.equal(false);
+      });
+    });
+
+    describe("isPaused", () => {
+      it("should return true when paused", async () => {
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          autoPlay: false,
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getVideoElement()).to.not.be.null;
+        expect(player.isPaused()).to.equal(true);
+
+        player.play();
+        await sleep(100);
+        expect(player.isPaused()).to.equal(false);
+
+        player.dispose();
+        await sleep(100);
+        expect(player.getVideoElement()).to.be.null;
+        expect(player.isPaused()).to.equal(true);
+      });
+    });
+
     describe("isLive", () => {
       if (isLive) {
         it("should return true", async () => {
@@ -1032,6 +1092,26 @@ export default function launchTestsForContent(manifestInfos) {
         await waitForLoadedStateAfterLoadVideo(player);
         player.seekTo(12);
         expect(player.getPosition()).to.equal(12);
+      });
+    });
+
+    describe("getLastStoredContentPosition", () => {
+      it("should return the last stored position", async () => {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          startAt: { position: manifestInfos.minimumPosition }
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPosition())
+          .to.be.closeTo(manifestInfos.minimumPosition, 0.1);
+        player.seekTo({ position: manifestInfos.minimumPosition + 5 });
+        await sleep(0);
+        player.stop();
+        await sleep(100);
+        expect(player.getLastStoredContentPosition())
+          .to.be.closeTo(manifestInfos.minimumPosition + 5, 0.1);
       });
     });
 
@@ -1295,6 +1375,22 @@ export default function launchTestsForContent(manifestInfos) {
     });
 
     describe("play", () => {
+      let pauseEventsSent = 0;
+      let playEventsSent = 0;
+      beforeEach(() => {
+        player.addEventListener("pause", () => {
+          pauseEventsSent++;
+        });
+        player.addEventListener("play", () => {
+          playEventsSent++;
+        });
+      });
+
+      afterEach(() => {
+        pauseEventsSent = 0;
+        playEventsSent = 0;
+      });
+
       it("should begin to play if LOADED", async () => {
         player.loadVideo({
           url: manifestInfos.url,
@@ -1302,9 +1398,13 @@ export default function launchTestsForContent(manifestInfos) {
         });
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.getPlayerState()).to.equal("LOADED");
+        expect(pauseEventsSent).to.equal(0);
+        expect(playEventsSent).to.equal(0);
         player.play();
         await sleep(10);
         expect(player.getPlayerState()).to.equal("PLAYING");
+        expect(pauseEventsSent).to.equal(0);
+        expect(playEventsSent).to.equal(1);
       });
 
       it("should resume if paused", async () => {
@@ -1316,16 +1416,38 @@ export default function launchTestsForContent(manifestInfos) {
         await waitForLoadedStateAfterLoadVideo(player);
         await sleep(100);
         expect(player.getPlayerState()).to.equal("PLAYING");
+        expect(pauseEventsSent).to.equal(0);
+        expect(playEventsSent).to.equal(0);
         player.pause();
         await sleep(100);
         expect(player.getPlayerState()).to.equal("PAUSED");
+        expect(pauseEventsSent).to.equal(1);
+        expect(playEventsSent).to.equal(0);
         player.play();
         await sleep(100);
         expect(player.getPlayerState()).to.equal("PLAYING");
+        expect(pauseEventsSent).to.equal(1);
+        expect(playEventsSent).to.equal(1);
       });
     });
 
     describe("pause", () => {
+      let pauseEventsSent = 0;
+      let playEventsSent = 0;
+      beforeEach(() => {
+        player.addEventListener("pause", () => {
+          pauseEventsSent++;
+        });
+        player.addEventListener("play", () => {
+          playEventsSent++;
+        });
+      });
+
+      afterEach(() => {
+        pauseEventsSent = 0;
+        playEventsSent = 0;
+      });
+
       it("should have no effect when LOADED", async () => {
         await tryTestMultipleTimes(
           async function runTest(cancelTest) {
@@ -1352,6 +1474,8 @@ export default function launchTestsForContent(manifestInfos) {
             await sleep(10);
 
             expect(player.getPlayerState()).to.equal("LOADED");
+            expect(pauseEventsSent).to.equal(0);
+            expect(playEventsSent).to.equal(0);
           },
           3,
           function cleanUp() {
@@ -1368,9 +1492,12 @@ export default function launchTestsForContent(manifestInfos) {
         });
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.getPlayerState()).to.equal("PLAYING");
+        expect(pauseEventsSent).to.equal(0);
         player.pause();
         await sleep(100);
         expect(player.getPlayerState()).to.equal("PAUSED");
+        expect(pauseEventsSent).to.equal(1);
+        expect(playEventsSent).to.equal(0);
       });
 
       it("should do nothing if already paused", async () => {
@@ -1381,12 +1508,17 @@ export default function launchTestsForContent(manifestInfos) {
         });
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.getPlayerState()).to.equal("PLAYING");
+        expect(pauseEventsSent).to.equal(0);
         player.pause();
         await sleep(100);
         expect(player.getPlayerState()).to.equal("PAUSED");
+        expect(pauseEventsSent).to.equal(1);
+        expect(playEventsSent).to.equal(0);
         player.pause();
         await sleep(100);
         expect(player.getPlayerState()).to.equal("PAUSED");
+        expect(pauseEventsSent).to.equal(1);
+        expect(playEventsSent).to.equal(0);
       });
     });
 
@@ -1402,6 +1534,113 @@ export default function launchTestsForContent(manifestInfos) {
         expect(player.getPosition()).to.be.below(minimumPosition + 0.1);
         player.seekTo(minimumPosition + 50);
         expect(player.getPosition()).to.be.closeTo(minimumPosition + 50, 0.5);
+      });
+
+      it("should conserve pause if previously paused", async () => {
+        let pauseEventsSent = 0;
+        let playEventsSent = 0;
+        player.addEventListener("pause", () => {
+          pauseEventsSent++;
+        });
+        player.addEventListener("play", () => {
+          playEventsSent++;
+        });
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        player.seekTo(minimumPosition + 50);
+        await waitForState(player, "PAUSED");
+        expect(pauseEventsSent).to.equal(0);
+        expect(playEventsSent).to.equal(0);
+      });
+
+      it("should still play if previously playing", async () => {
+        let pauseEventsSent = 0;
+        let playEventsSent = 0;
+        let nbPausedStates = 0;
+        player.addEventListener("pause", () => {
+          pauseEventsSent++;
+        });
+        player.addEventListener("play", () => {
+          playEventsSent++;
+        });
+        player.addEventListener("playerStateChange", (state) => {
+          if (state === "PAUSED") {
+            nbPausedStates++;
+          }
+        });
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          autoPlay: true,
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        player.seekTo(minimumPosition + 50);
+        await waitForState(player, "PLAYING");
+        expect(pauseEventsSent).to.equal(0);
+        expect(playEventsSent).to.equal(0);
+        expect(nbPausedStates).to.equal(0);
+      });
+
+      it("should be able to pause while seeking", async () => {
+        let pauseEventsSent = 0;
+        let playEventsSent = 0;
+        let nbPausedStates = 0;
+        player.addEventListener("pause", () => {
+          pauseEventsSent++;
+        });
+        player.addEventListener("play", () => {
+          playEventsSent++;
+        });
+        player.addEventListener("playerStateChange", (state) => {
+          if (state === "PAUSED") {
+            nbPausedStates++;
+          }
+        });
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          autoPlay: true,
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        player.seekTo(minimumPosition + 50);
+        await sleep(0);
+        player.pause();
+        await waitForState(player, "PAUSED");
+        expect(pauseEventsSent).to.equal(1);
+        expect(playEventsSent).to.equal(0);
+        expect(nbPausedStates).to.equal(1);
+      });
+
+      it("should be able to play while seeking", async () => {
+        let pauseEventsSent = 0;
+        let playEventsSent = 0;
+        let nbPlayingStates = 0;
+        player.addEventListener("pause", () => {
+          pauseEventsSent++;
+        });
+        player.addEventListener("play", () => {
+          playEventsSent++;
+        });
+        player.addEventListener("playerStateChange", (state) => {
+          if (state === "PLAYING") {
+            nbPlayingStates++;
+          }
+        });
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        player.seekTo(minimumPosition + 50);
+        await sleep(0);
+        player.play();
+        await waitForState(player, "PLAYING");
+        expect(pauseEventsSent).to.equal(0);
+        expect(playEventsSent).to.equal(1);
+        expect(nbPlayingStates).to.equal(1);
       });
     });
 

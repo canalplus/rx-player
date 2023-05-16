@@ -26,7 +26,6 @@ import {
   Representation,
 } from "../../../manifest";
 import {
-  IAudioRepresentation,
   IAudioTrack,
   IAudioTrackPreference,
   IAvailableAudioTrack,
@@ -34,7 +33,6 @@ import {
   IAvailableVideoTrack,
   ITextTrack,
   ITextTrackPreference,
-  IVideoRepresentation,
   IVideoTrack,
   IVideoTrackPreference,
 } from "../../../public_types";
@@ -42,6 +40,7 @@ import arrayFind from "../../../utils/array_find";
 import arrayIncludes from "../../../utils/array_includes";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import normalizeLanguage from "../../../utils/languages";
+import objectAssign from "../../../utils/object_assign";
 import { ISharedReference } from "../../../utils/reference";
 import SortedList from "../../../utils/sorted_list";
 import takeFirstSet from "../../../utils/take_first_set";
@@ -618,19 +617,7 @@ export default class TrackChoiceManager {
     if (isNullOrUndefined(chosenTrack)) {
       return null;
     }
-
-    const audioTrack : IAudioTrack = {
-      language: takeFirstSet<string>(chosenTrack.language, ""),
-      normalized: takeFirstSet<string>(chosenTrack.normalizedLanguage, ""),
-      audioDescription: chosenTrack.isAudioDescription === true,
-      id: chosenTrack.id,
-      representations: chosenTrack.representations.map(parseAudioRepresentation),
-      label: chosenTrack.label,
-    };
-    if (chosenTrack.isDub === true) {
-      audioTrack.dub = true;
-    }
-    return audioTrack;
+    return chosenTrack.toAudioTrack();
   }
 
   /**
@@ -655,16 +642,7 @@ export default class TrackChoiceManager {
     if (isNullOrUndefined(chosenTextAdaptation)) {
       return null;
     }
-
-    const formatted : ITextTrack = {
-      language: takeFirstSet<string>(chosenTextAdaptation.language, ""),
-      normalized: takeFirstSet<string>(chosenTextAdaptation.normalizedLanguage, ""),
-      closedCaption: chosenTextAdaptation.isClosedCaption === true,
-      id: chosenTextAdaptation.id,
-      label: chosenTextAdaptation.label,
-      forced: chosenTextAdaptation.isForcedSubtitles,
-    };
-    return formatted;
+    return chosenTextAdaptation.toTextTrack();
   }
 
   /**
@@ -690,36 +668,7 @@ export default class TrackChoiceManager {
       return null;
     }
     const currAdaptation = chosenVideoAdaptation.adaptation;
-
-    const trickModeTracks = currAdaptation.trickModeTracks !== undefined ?
-      currAdaptation.trickModeTracks.map((trickModeAdaptation) => {
-        const representations = trickModeAdaptation.representations
-          .map(parseVideoRepresentation);
-        const trickMode : IVideoTrack = { id: trickModeAdaptation.id,
-                                          representations,
-                                          isTrickModeTrack: true };
-        if (trickModeAdaptation.isSignInterpreted === true) {
-          trickMode.signInterpreted = true;
-        }
-        return trickMode;
-      }) :
-      undefined;
-
-    const videoTrack: IVideoTrack = {
-      id: currAdaptation.id,
-      representations: currAdaptation.representations.map(parseVideoRepresentation),
-      label: currAdaptation.label,
-    };
-    if (currAdaptation.isSignInterpreted === true) {
-      videoTrack.signInterpreted = true;
-    }
-    if (currAdaptation.isTrickModeTrack === true) {
-      videoTrack.isTrickModeTrack = true;
-    }
-    if (trickModeTracks !== undefined) {
-      videoTrack.trickModeTracks = trickModeTracks;
-    }
-    return videoTrack;
+    return currAdaptation.toVideoTrack();
   }
 
   /**
@@ -743,20 +692,9 @@ export default class TrackChoiceManager {
 
     return audioInfos.adaptations
       .map((adaptation) => {
-        const formatted : IAvailableAudioTrack = {
-          language: takeFirstSet<string>(adaptation.language, ""),
-          normalized: takeFirstSet<string>(adaptation.normalizedLanguage, ""),
-          audioDescription: adaptation.isAudioDescription === true,
-          id: adaptation.id,
-          active: currentId === null ? false :
-                                       currentId === adaptation.id,
-          representations: adaptation.representations.map(parseAudioRepresentation),
-          label: adaptation.label,
-        };
-        if (adaptation.isDub === true) {
-          formatted.dub = true;
-        }
-        return formatted;
+        const active = currentId === null ? false :
+                                            currentId === adaptation.id;
+        return objectAssign(adaptation.toAudioTrack(), { active });
       });
   }
 
@@ -782,17 +720,9 @@ export default class TrackChoiceManager {
 
     return textInfos.adaptations
       .map((adaptation) => {
-        const formatted : IAvailableTextTrack = {
-          language: takeFirstSet<string>(adaptation.language, ""),
-          normalized: takeFirstSet<string>(adaptation.normalizedLanguage, ""),
-          closedCaption: adaptation.isClosedCaption === true,
-          id: adaptation.id,
-          active: currentId === null ? false :
-                                       currentId === adaptation.id,
-          label: adaptation.label,
-          forced: adaptation.isForcedSubtitles,
-        };
-        return formatted;
+        const active = currentId === null ? false :
+                                            currentId === adaptation.id;
+        return objectAssign(adaptation.toTextTrack(), { active });
       });
   }
 
@@ -817,37 +747,21 @@ export default class TrackChoiceManager {
 
     return videoInfos.adaptations
       .map((adaptation) => {
-        const trickModeTracks = adaptation.trickModeTracks !== undefined ?
-          adaptation.trickModeTracks.map((trickModeAdaptation) => {
+        const active = currentId === null ? false :
+                                            currentId === adaptation.id;
+        const track = adaptation.toVideoTrack();
+        const trickModeTracks = track.trickModeTracks !== undefined ?
+          track.trickModeTracks.map((trickModeAdaptation) => {
             const isActive = currentId === null ? false :
                                                   currentId === trickModeAdaptation.id;
-            const representations = trickModeAdaptation.representations
-              .map(parseVideoRepresentation);
-            const trickMode : IAvailableVideoTrack = { id: trickModeAdaptation.id,
-                                                       representations,
-                                                       isTrickModeTrack: true,
-                                                       active: isActive };
-            if (trickModeAdaptation.isSignInterpreted === true) {
-              trickMode.signInterpreted = true;
-            }
-            return trickMode;
+            return objectAssign(trickModeAdaptation, { active: isActive });
           }) :
-          undefined;
-
-        const formatted: IAvailableVideoTrack = {
-          id: adaptation.id,
-          active: currentId === null ? false :
-                                       currentId === adaptation.id,
-          representations: adaptation.representations.map(parseVideoRepresentation),
-          label: adaptation.label,
-        };
-        if (adaptation.isSignInterpreted === true) {
-          formatted.signInterpreted = true;
-        }
+          [];
+        const availableTrack = objectAssign(track, { active });
         if (trickModeTracks !== undefined) {
-          formatted.trickModeTracks = trickModeTracks;
+          availableTrack.trickModeTracks = trickModeTracks;
         }
-        return formatted;
+        return availableTrack;
       });
   }
 
@@ -1353,28 +1267,6 @@ function getPeriodItem(
       return periodI;
     }
   }
-}
-
-/**
- * Parse video Representation into a IVideoRepresentation.
- * @param {Object} representation
- * @returns {Object}
- */
-function parseVideoRepresentation(
-  { id, bitrate, frameRate, width, height, codec, hdrInfo } : Representation
-) : IVideoRepresentation {
-  return { id, bitrate, frameRate, width, height, codec, hdrInfo };
-}
-
-/**
- * Parse audio Representation into a ITMAudioRepresentation.
- * @param {Object} representation
- * @returns {Object}
- */
-function parseAudioRepresentation(
-  { id, bitrate, codec } : Representation
-)  : IAudioRepresentation {
-  return { id, bitrate, codec };
 }
 
 function getRightVideoTrack(

@@ -38,7 +38,7 @@ const videoElt = document.createElement("video");
 /* eslint-disable max-len */
 describe("core - decrypt - global tests - getLicense", () => {
 
-  beforeEach(() => {
+  afterEach(() => {
     jest.resetModules();
     jest.restoreAllMocks();
   });
@@ -344,7 +344,7 @@ function checkGetLicense(
     }
 
     // == test ==
-    const { ContentDecryptorState } = jest.requireActual("../../content_decryptor");
+    const { ContentDecryptorState } = jest.requireActual("../../types");
     const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
 
