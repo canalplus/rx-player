@@ -73,7 +73,7 @@ export default class MediaError extends Error {
     code : ICodeWithAdaptationType,
     reason : string,
     context: {
-      adaptation : Adaptation;
+      adaptation : Adaptation | undefined;
     }
   );
   constructor(
