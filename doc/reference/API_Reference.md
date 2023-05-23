@@ -406,9 +406,6 @@ properties, methods, events and so on.
   - [`isMute`](../api/Volume_Control/isMute.md):
     Return `true` if the audio volume is set to `0`.
 
-  - [`isMute`](../api/Volume_Control/isMute.md):
-    Return `true` if the audio volume is set to `0`.
-
   - [`unMute`](../api/Volume_Control/unMute.md):
     Restore the volume as it was before it was muted.
 
@@ -438,9 +435,18 @@ properties, methods, events and so on.
     Get the maximum memory the video buffer can take up in the memory, in
     kilobytes.
 
-  - [`getVideoBufferGap`](../api/Buffer_Information/getVideoBufferGap.md):
+  - [`getVideoBufferGap`](../api/Playback_Information/getVideoBufferGap.md):
     Returns in seconds the difference between the current position and the end
     of the current media time range.
+
+  - [`isContentLoaded`](../api/Playback_Information/isContentLoaded.md):
+    Returns `true` if a content is loaded.
+  
+  - [`isBuffering`](../api/Playback_Information/isBuffering.md):
+    Returns `true` if the player is buffering.
+  
+  - [`isPaused`](../api/Playback_Information/isPaused.md):
+    Returns `true` if the `<video>` element is paused.
 
   - [`getVideoLoadedTime`](../api/Deprecated/getVideoLoadedTime.md):
     [Deprecated] Returns in seconds the difference between the start and the end
@@ -462,6 +468,9 @@ properties, methods, events and so on.
   - [`getKeySystemConfiguration`](../api/Content_Information/getKeySystemConfiguration.md):
     Returns information on the key system currently attached to the
     HTMLMediaElement linked to the RxPlayer.
+
+  - [`getLastStoredContentPosition`](../api/Content_Information/getLastStoredContentPosition.md):
+    Returns the last stored content position, in seconds. 
 
   - [`getCurrentKeySystem`](../api/Deprecated/getCurrentKeySystem.md):
     [Deprecated] Returns the name of the current key system.

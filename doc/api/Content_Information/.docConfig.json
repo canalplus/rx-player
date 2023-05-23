@@ -19,6 +19,10 @@
     {
       "path": "./createDebugElement.md",
       "displayName": "createDebugElement"
+    },
+    {
+      "path": "./getLastStoredContentPosition.md",
+      "displayName": "getLastStoredContentPosition"
     }
   ]
 }

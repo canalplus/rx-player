@@ -1,0 +1,19 @@
+{
+  "pages": [
+    {
+      "path": "./getVideoBufferGap.md",
+      "displayName": "getVideoBufferGap"
+    },
+    {
+      "path": "./isContentLoaded.md",
+      "displayName": "isContentLoaded"
+    },
+    {
+      "path": "./isBuffering.md",
+      "displayName": "isBuffering"
+    },{
+      "path": "./isPaused.md",
+      "displayName": "isPaused"
+    }
+  ]
+}

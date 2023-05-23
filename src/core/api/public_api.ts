@@ -1314,7 +1314,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Get the last stored content position, in seconds.
+   * Returns the last stored content position, in seconds.
    *
    * @returns {number|undefined}
    */
