@@ -31,49 +31,69 @@ body {
   font-family: "icons", sans-serif;
 }
 
-.headers-title {
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 15px;
+  background-color: #323435;
+}
+
+header a {
+  color: #fff;
+  text-decoration: none;
+}
+
+header a:hover {
+  color: #d6d6d6
+}
+
+header > div {
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 
-.title-wrapper h1 {
+header .left {
+  gap: 35px;
+}
+
+.title {
   display: flex;
-  width: 100%;
   line-height: 1.05;
+  margin: 20px 0;
+  padding-bottom: 3px;
 }
 
-.title-wrapper a:hover {
-  color: rgb(128, 128, 128);
-}
-
-.title-wrapper a span:hover {
-  color: rgb(128, 128, 128);
-}
-
-.title > * {
-  text-decoration: none !important;
-}
-
-.title-logo {
-  display: inline-block;
-  height: 25px;
-  margin: 0px 15px 0px 0px;
-}
-
-.rxplayer-logo {
+.title .logo {
   display: inline-block;
   width: 150px;
 }
 
-.title-wrapper .name {
-  font-weight: bold;
-  font-size: 25px;
-}
-
-.title-wrapper .version {
+.title .version {
   font-weight: normal;
   font-size: 15px;
-  color: rgb(200, 200, 200);
+  color: #c8c8c8;
+  position: relative;
+  top: 12px;
+}
+
+.title a.version:hover {
+  color: #aaa;
+}
+
+nav {
+  display: flex;
+  gap: 25px;
+}
+
+header .right {
+  gap: 10px;
+}
+
+.canal-logo {
+  display: inline-block;
+  height: 25px;
 }
 
 .custom-input-wrapper {
@@ -1045,34 +1065,6 @@ input:checked + .slider:before {
   pointer-events: none;
 }
 
-.nav-header {
-  position: relative;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 15px 0 15px;
-  background-color: #323435;
-  color: #ffffff;
-  z-index: 10;
-}
-
-.nav-header a {
-  color: #ffffff;
-}
-
-.header-links-buttons {
-  display: flex;
-  align-items: baseline;
-}
-
-.header-links-buttons > * {
-  margin: 3px;
-}
-
-.button-gh {
-  margin: 5px;
-}
-
 .drm-button {
   margin: 5px 10px 5px 0;
   font-size: 1em;
@@ -1112,20 +1104,26 @@ input:checked + .slider:before {
   .update-control {
     flex-direction: column;
   }
-}
 
-@media only screen and (max-width: 650px) {
   .button-gh {
     display: none;
   }
+}
 
+@media only screen and (max-width: 650px) {
   .catch-up {
     display: none;
   }
 }
 
+@media only screen and (max-width: 600px) {
+  header .canal-logo {
+    display: none;
+  }
+}
+
 @media only screen and (max-width: 500px) {
-  .title-logo {
+  header nav {
     display: none;
   }
 }
@@ -1154,7 +1152,7 @@ input:checked + .slider:before {
   .position-infos {
     margin: 15px auto;
   }
-  .title-logo {
+  header .logo {
     display: none;
   }
 }

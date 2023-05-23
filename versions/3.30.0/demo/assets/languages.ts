@@ -7851,4 +7851,4 @@ export default {
   zyp: "Zyphe Chin",
   zza: "Zaza",
   zzj: "Zuojiang Zhuang",
-};
+} as Partial<Record<string, string>>;
