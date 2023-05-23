@@ -5,21 +5,29 @@ import Player from "./Player";
 
 function MainComponent(): JSX.Element {
   return (
-    <div>
-      <div className="nav-header">
-        <section className="title-wrapper">
+    <React.Fragment>
+      <header>
+        <div className="left">
           <h1 className="title">
             <a href="https://github.com/canalplus/rx-player">
-              <img className="rxplayer-logo" alt="RxPlayer" src="./assets/logo_white.png"/>
+              <img className="logo" alt="RxPlayer" src="./assets/logo_white.png"/>
             </a>
-            <a href="https://github.com/canalplus/rx-player/releases">
-              <span className="version">{" v" + RxPlayer.version}</span>
+            <a href="https://github.com/canalplus/rx-player/releases" className="version">
+              {" v" + RxPlayer.version}
             </a>
           </h1>
-        </section>
-        <div className="header-links-buttons">
+          <nav>
+            <a href="https://developers.canal-plus.com/rx-player/doc/Getting_Started/Welcome.html">
+              Getting Started
+            </a>
+            <a href="https://developers.canal-plus.com/rx-player/doc/api/Overview.html">
+              API Docs
+            </a>
+          </nav>
+        </div>
+        <div className="right">
           <a aria-label="Go to Canal+ website" href="https://canalplus.com">
-            <img className="title-logo" alt="CANAL+" src="./assets/canalp.svg"/>
+            <img className="canal-logo" alt="CANAL+" src="./assets/canalp.svg"/>
           </a>
           <GitHubButton
             href="https://github.com/canalplus/rx-player"
@@ -35,9 +43,9 @@ function MainComponent(): JSX.Element {
             dataText="Fork"
           />
         </div>
-      </div>
+      </header>
       <Player />
-    </div>
+    </React.Fragment>
   );
 }
 
