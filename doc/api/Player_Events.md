@@ -94,6 +94,33 @@ The object emitted as the following properties:
   That is the real live position (and not the position as announced by the
   video element).
 
+### play
+
+Emitted when the `RxPlayer`'s `videoElement` is no longer considered paused.
+
+This event is triggered when and if the [`play`](./Basic_Methods/play.md) method
+has succeeded or when auto-play succeeded if the `autoPlay` `loadVideo` option has
+been set to `true`.
+
+Note that this event can be sent even if the [player's state](./Player_States.md)
+doesn't currently allow playback, for example when in the `"LOADING"` or
+`"BUFFERING"` states, among other.
+It shouldn't be sent however when the player's state is `"STOPPED"` which is
+when no content is loading nor loaded.
+
+### pause
+
+Emitted when the `RxPlayer`'s `videoElement` is now considered paused.
+
+This event is triggered when and if the [`pause`](./Basic_Methods/play.md) method
+has succeeded or when the content has ended.
+
+Note that this event can be sent even if the [player's state](./Player_States.md)
+doesn't currently allow playback, for example when in the `"LOADING"` or
+`"BUFFERING"` states, among other.
+It shouldn't be sent however when the player's state is `"STOPPED"` which is
+when no content is loading nor loaded.
+
 ### seeking
 
 Emitted when a "seek" operation (to "move"/"skip" to another position) begins

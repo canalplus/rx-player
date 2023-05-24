@@ -122,9 +122,9 @@ import MediaElementTrackChoiceManager from "./tracks_management/media_element_tr
 import TrackChoiceManager from "./tracks_management/track_choice_manager";
 import {
   constructPlayerStateReference,
+  emitPlayPauseEvents,
   emitSeekEvents,
   isLoadedState,
-  // emitSeekEvents,
   PLAYER_STATES,
 } from "./utils";
 
@@ -955,6 +955,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           break;
       }
     };
+
+    emitPlayPauseEvents(videoElement,
+                        () => this.trigger("play", null),
+                        () => this.trigger("pause", null),
+                        currentContentCanceller.signal);
 
     /**
      * `TaskCanceller` allowing to stop emitting `"seeking"` and `"seeked"`
@@ -3066,6 +3071,8 @@ interface IPublicAPIEvent {
   availableTextTracksChange : IAvailableTextTrack[];
   availableVideoTracksChange : IAvailableVideoTrack[];
   decipherabilityUpdate : IDecipherabilityUpdateContent[];
+  play: null;
+  pause: null;
   seeking : null;
   seeked : null;
   streamEvent : IStreamEvent;
