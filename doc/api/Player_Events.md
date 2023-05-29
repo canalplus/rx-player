@@ -98,9 +98,8 @@ The object emitted as the following properties:
 
 Emitted when the `RxPlayer`'s `videoElement` is no longer considered paused.
 
-This event is triggered when and if the [`play`](./Basic_Methods/play.md) method
-has succeeded or when auto-play succeeded if the `autoPlay` `loadVideo` option has
-been set to `true`.
+This event is generally triggered when and if the
+[`play`](./Basic_Methods/play.md) method has succeeded.
 
 Note that this event can be sent even if the [player's state](./Player_States.md)
 doesn't currently allow playback, for example when in the `"LOADING"` or
@@ -113,7 +112,9 @@ when no content is loading nor loaded.
 Emitted when the `RxPlayer`'s `videoElement` is now considered paused.
 
 This event is triggered when and if the [`pause`](./Basic_Methods/play.md) method
-has succeeded or when the content has ended.
+has succeeded, when the content has ended or due to other rare occurences: for
+example if we could not automatically play after a `"LOADING"` or `"RELOADING"`
+state due to [the browser's autoplay policies](https://developer.mozilla.org/en-US/docs/Web/Media/Autoplay_guide).
 
 Note that this event can be sent even if the [player's state](./Player_States.md)
 doesn't currently allow playback, for example when in the `"LOADING"` or
