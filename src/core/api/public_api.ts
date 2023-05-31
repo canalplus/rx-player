@@ -308,6 +308,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     reloadPosition?: number;
   };
 
+  /**
+   * Store last value of autoPlay, coming from loadVideo or onReloadMediaSource.
+   */
+  private _priv_lastAutoPlay: boolean;
+
   /** All possible Error types emitted by the RxPlayer. */
   static get ErrorTypes() : Record<IErrorType, IErrorType> {
     return ErrorTypes;
@@ -482,6 +487,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_preferredVideoTracks = preferredVideoTracks;
 
     this._priv_reloadingMetadata = {};
+
+    this._priv_lastAutoPlay = false;
   }
 
   /**
@@ -552,6 +559,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     log.info("API: Calling loadvideo", options.url, options.transport);
     this._priv_reloadingMetadata = { options };
     this._priv_initializeContentPlayback(options);
+    this._priv_lastAutoPlay = options.autoPlay;
   }
 
   /**
@@ -840,11 +848,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       log.warn("API: Sending warning:", formattedError);
       this.trigger("warning", formattedError);
     });
-    initializer.addEventListener("reloadingMediaSource", () => {
+    initializer.addEventListener("reloadingMediaSource", (reloadAutoPlay) => {
       contentInfos.segmentBuffersStore = null;
       if (contentInfos.trackChoiceManager !== null) {
         contentInfos.trackChoiceManager.resetPeriods();
       }
+      this._priv_lastAutoPlay = reloadAutoPlay;
     });
     initializer.addEventListener("inbandEvents", (inbandEvents) =>
       this.trigger("inbandEvents", inbandEvents));
@@ -1127,11 +1136,23 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Returns true if the `<video>` element is paused.
-   * @returns {Boolean} - `true` if the `<video>` element is paused, `false` otherwise.
+   * Returns the play/pause status of the player :
+   *   - when `LOADING` or `RELOADING`, returns the scheduled play/pause condition
+   *     for when loading is over,
+   *   - in other states, returns the `<video>` element .paused value,
+   *   - if the player is disposed, returns `true`.
+   * @returns {Boolean} - `true` if the player is paused or will be after loading,
+   * `false` otherwise.
    */
   isPaused() : boolean {
-    return this.videoElement ? this.videoElement.paused : true;
+    if (this.videoElement) {
+      if (arrayIncludes(["LOADING", "RELOADING"], this.state)) {
+        return !this._priv_lastAutoPlay;
+      } else {
+        return this.videoElement.paused;
+      }
+    }
+    return true;
   }
 
   /**

@@ -117,7 +117,7 @@ export interface IContentInitializerEvents {
    * Event sent when we're starting attach a new MediaSource to the media element
    * (after removing the previous one).
    */
-  reloadingMediaSource: null;
+  reloadingMediaSource: boolean;
   /** Event sent after the player stalled. */
   stalled : IStallingSituation;
   /** Event sent when the player goes out of a stalling situation. */

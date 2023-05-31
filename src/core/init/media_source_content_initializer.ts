@@ -356,7 +356,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         if (initCanceller.isUsed()) {
           return;
         }
-        triggerEvent("reloadingMediaSource", null);
+        triggerEvent("reloadingMediaSource", autoPlay);
         if (initCanceller.isUsed()) {
           return;
         }
