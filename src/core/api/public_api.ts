@@ -2217,26 +2217,26 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           if (!isFound) {
             // Only consider the currently-selected tracks.
             // NOTE: Maybe there's room for optimizations? Unclear.
-            const { tracksStore } = contentInfos;
-            if (tracksStore === null) {
+            const tStore = contentInfos.tracksStore;
+            if (tStore === null) {
               return acc;
             }
             let isCurrent = false;
-            const periodRef = tracksStore.getPeriodObjectFromPeriod(elt.period);
+            const periodRef = tStore.getPeriodObjectFromPeriod(elt.period);
             if (periodRef === undefined) {
               return acc;
             }
             switch (elt.adaptation.type) {
               case "audio":
-                isCurrent = tracksStore
+                isCurrent = tStore
                   .getChosenAudioTrack(periodRef)?.id === elt.adaptation.id;
                 break;
               case "video":
-                isCurrent = tracksStore
+                isCurrent = tStore
                   .getChosenVideoTrack(periodRef)?.id === elt.adaptation.id;
                 break;
               case "text":
-                isCurrent = tracksStore
+                isCurrent = tStore
                   .getChosenTextTrack(periodRef)?.id === elt.adaptation.id;
                 break;
             }
