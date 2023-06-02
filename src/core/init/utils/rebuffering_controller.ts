@@ -67,6 +67,18 @@ export default class RebufferingController
   private _canceller : TaskCanceller;
 
   /**
+   * If set to something else than `null`, this is the DOMHighResTimestamp as
+   * outputed by `performance.now()` when playback begin to seem to not start
+   * despite having decipherable data in the buffer(s).
+   *
+   * If enough time in that condition is spent, special considerations are
+   * taken at which point `_currentFreezeTimestamp` is reset to `null`.
+   *
+   * It is also reset to `null` when and if there is no such issue anymore.
+   */
+  private _currentFreezeTimestamp : number | null;
+
+  /**
    * @param {object} playbackObserver - emit the current playback conditions.
    * @param {Object} manifest - The Manifest of the currently-played content.
    * @param {Object} speed - The last speed set by the user
@@ -85,6 +97,7 @@ export default class RebufferingController
     this._discontinuitiesStore = [];
     this._isStarted = false;
     this._canceller = new TaskCanceller();
+    this._currentFreezeTimestamp = null;
   }
 
   public start() : void {
@@ -367,8 +380,8 @@ export default class RebufferingController
   }
 
   /**
-   * Support of contents with DRM on all the platforms out there is a pain
-   * considering all the DRM-related bugs there are.
+   * Support of contents with DRM on all the platforms out there is a pain in
+   * the *ss considering all the DRM-related bugs there are.
    *
    * We found out a frequent issue which is to be unable to play despite having
    * all the decryption keys to play what is currently buffered.
@@ -401,16 +414,23 @@ export default class RebufferingController
       (rebuffering === null && freezing === null) ||
       readyState > 1
     ) {
+      this._currentFreezeTimestamp = null;
       return false;
     }
 
     const now = performance.now();
+    if (this._currentFreezeTimestamp === null) {
+      this._currentFreezeTimestamp = now;
+    }
     const rebufferingForTooLong =
       rebuffering !== null && now - rebuffering.timestamp > 4000;
     const frozenForTooLong =
       freezing !== null && now - freezing.timestamp > 4000;
 
-    if (rebufferingForTooLong || frozenForTooLong) {
+    if (
+      (rebufferingForTooLong || frozenForTooLong) &&
+      performance.now() - this._currentFreezeTimestamp > 4000
+    ) {
       const statusAudio = this._segmentBuffersStore.getStatus("audio");
       const statusVideo = this._segmentBuffersStore.getStatus("video");
       let hasOnlyDecipherableSegments = true;
@@ -423,6 +443,7 @@ export default class RebufferingController
               log.warn(
                 "Init: we have undecipherable segments left in the buffer, reloading"
               );
+              this._currentFreezeTimestamp = null;
               this.trigger("needsReload", null);
               return true;
             } else if (representation.contentProtections !== undefined) {
@@ -440,6 +461,7 @@ export default class RebufferingController
           "Init: we are frozen despite only having decipherable " +
           "segments left in the buffer, reloading"
         );
+        this._currentFreezeTimestamp = null;
         this.trigger("needsReload", null);
         return true;
       }
