@@ -122,9 +122,9 @@ import MediaElementTrackChoiceManager from "./tracks_management/media_element_tr
 import TrackChoiceManager from "./tracks_management/track_choice_manager";
 import {
   constructPlayerStateReference,
+  emitPlayPauseEvents,
   emitSeekEvents,
   isLoadedState,
-  // emitSeekEvents,
   PLAYER_STATES,
 } from "./utils";
 
@@ -955,6 +955,53 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           break;
       }
     };
+
+    /**
+     * `TaskCanceller` allowing to stop emitting `"play"` and `"pause"`
+     * events.
+     * `null` when such events are not emitted currently.
+     */
+    let playPauseEventsCanceller : TaskCanceller | null = null;
+
+    /**
+     * Callback emitting `"play"` and `"pause`" events once the content is
+     * loaded, starting from the state indicated in argument.
+     * @param {boolean} willAutoPlay - If `false`, we're currently paused.
+     */
+    const triggerPlayPauseEventsWhenReady = (willAutoPlay: boolean) => {
+      if (playPauseEventsCanceller !== null) {
+        playPauseEventsCanceller.cancel(); // cancel previous logic
+        playPauseEventsCanceller = null;
+      }
+      playerStateRef.onUpdate((val, stopListeningToStateUpdates) => {
+        if (!isLoadedState(val)) {
+          return; // content not loaded yet: no event
+        }
+        stopListeningToStateUpdates();
+        if (playPauseEventsCanceller !== null) {
+          playPauseEventsCanceller.cancel();
+        }
+        playPauseEventsCanceller = new TaskCanceller();
+        playPauseEventsCanceller.linkToSignal(currentContentCanceller.signal);
+        if (willAutoPlay !== !videoElement.paused) {
+          // paused status is not at the expected value on load: emit event
+          if (videoElement.paused) {
+            this.trigger("pause", null);
+          } else {
+            this.trigger("play", null);
+          }
+        }
+        emitPlayPauseEvents(videoElement,
+                            () => this.trigger("play", null),
+                            () => this.trigger("pause", null),
+                            currentContentCanceller.signal);
+      }, { emitCurrentValue: false, clearSignal: currentContentCanceller.signal });
+    };
+
+    triggerPlayPauseEventsWhenReady(autoPlay);
+    initializer.addEventListener("reloadingMediaSource", (payload) => {
+      triggerPlayPauseEventsWhenReady(payload.autoPlay);
+    });
 
     /**
      * `TaskCanceller` allowing to stop emitting `"seeking"` and `"seeked"`
@@ -3066,6 +3113,8 @@ interface IPublicAPIEvent {
   availableTextTracksChange : IAvailableTextTrack[];
   availableVideoTracksChange : IAvailableVideoTrack[];
   decipherabilityUpdate : IDecipherabilityUpdateContent[];
+  play: null;
+  pause: null;
   seeking : null;
   seeked : null;
   streamEvent : IStreamEvent;
