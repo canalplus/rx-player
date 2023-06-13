@@ -7,7 +7,7 @@ Returns `undefined` if no content was previously loaded.
 
 This method can be useful if you want to reload using `player.loadVideo()` and not
 `player.reload()`, after an error for example.
-It can also be used to stored the position of an error.
+It can also be used to store the position of an error.
 
 ## Syntax
 

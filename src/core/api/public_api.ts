@@ -848,12 +848,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       log.warn("API: Sending warning:", formattedError);
       this.trigger("warning", formattedError);
     });
-    initializer.addEventListener("reloadingMediaSource", (reloadAutoPlay) => {
+    initializer.addEventListener("reloadingMediaSource", (payload) => {
       contentInfos.segmentBuffersStore = null;
       if (contentInfos.trackChoiceManager !== null) {
         contentInfos.trackChoiceManager.resetPeriods();
       }
-      this._priv_lastAutoPlay = reloadAutoPlay;
+      this._priv_lastAutoPlay = payload.autoPlay;
     });
     initializer.addEventListener("inbandEvents", (inbandEvents) =>
       this.trigger("inbandEvents", inbandEvents));

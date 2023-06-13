@@ -57,10 +57,6 @@
       "displayName": "Playback Information"
     },
     {
-      "path": "./Content_Information",
-      "displayName": "Content Information"
-    },
-    {
       "path": "./Static_Properties.md",
       "displayName": "RxPlayer Static Properties"
     },

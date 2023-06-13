@@ -435,6 +435,19 @@ properties, methods, events and so on.
     Get the maximum memory the video buffer can take up in the memory, in
     kilobytes.
 
+  - [`getUrl`](../api/Playback_Information/getUrl.md):
+    Get URL of the currently-played content.
+
+  - [`updateContentUrls`](../api/Playback_Information/updateContentUrls.md):
+    Update URL(s) of the content currently being played.
+
+  - [`isLive`](../api/Playback_Information/isLive.md):
+    Returns `true` if the content is a "live" content.
+
+  - [`getKeySystemConfiguration`](../api/Playback_Information/getKeySystemConfiguration.md):
+    Returns information on the key system currently attached to the
+    HTMLMediaElement linked to the RxPlayer.
+
   - [`getVideoBufferGap`](../api/Playback_Information/getVideoBufferGap.md):
     Returns in seconds the difference between the current position and the end
     of the current media time range.
@@ -448,6 +461,9 @@ properties, methods, events and so on.
   - [`isPaused`](../api/Playback_Information/isPaused.md):
     Returns `true` if the `<video>` element is paused.
 
+  - [`getLastStoredContentPosition`](../api/Playback_Information/getLastStoredContentPosition.md):
+    Returns the last stored content position, in seconds. 
+
   - [`getVideoLoadedTime`](../api/Deprecated/getVideoLoadedTime.md):
     [Deprecated] Returns in seconds the difference between the start and the end
     of the current media time range.
@@ -455,22 +471,6 @@ properties, methods, events and so on.
   - [`getVideoPlayedTime`](../api/Deprecated/getVideoPlayedTime.md):
     [Deprecated] Returns in seconds the difference between the start of the
     current media time range and the current position.
-
-  - [`getUrl`](../api/Content_Information/getUrl.md):
-    Get URL of the currently-played content.
-
-  - [`updateContentUrls`](../api/Content_Information/updateContentUrls.md):
-    Update URL(s) of the content currently being played.
-
-  - [`isLive`](../api/Content_Information/isLive.md):
-    Returns `true` if the content is a "live" content.
-
-  - [`getKeySystemConfiguration`](../api/Content_Information/getKeySystemConfiguration.md):
-    Returns information on the key system currently attached to the
-    HTMLMediaElement linked to the RxPlayer.
-
-  - [`getLastStoredContentPosition`](../api/Content_Information/getLastStoredContentPosition.md):
-    Returns the last stored content position, in seconds. 
 
   - [`getCurrentKeySystem`](../api/Deprecated/getCurrentKeySystem.md):
     [Deprecated] Returns the name of the current key system.
