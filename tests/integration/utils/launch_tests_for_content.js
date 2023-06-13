@@ -781,6 +781,66 @@ export default function launchTestsForContent(manifestInfos) {
       });
     });
 
+    describe("isContentLoaded", () => {
+      it("should go from false to true when loading a content", async () => {
+        expect(player.getPlayerState()).to.equal("STOPPED");
+        expect(player.isContentLoaded()).to.equal(false);
+
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          autoPlay: false,
+        });
+        expect(player.getPlayerState()).to.equal("LOADING");
+        expect(player.isContentLoaded()).to.equal(false);
+
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPlayerState()).to.equal("LOADED");
+        expect(player.isContentLoaded()).to.equal(true);
+      });
+    });
+
+    describe("isBuffering", () => {
+      it("should go to true when loading", async () => {
+        expect(player.getPlayerState()).to.equal("STOPPED");
+        expect(player.isBuffering()).to.equal(false);
+
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          autoPlay: false,
+        });
+        expect(player.getPlayerState()).to.equal("LOADING");
+        expect(player.isBuffering()).to.equal(true);
+
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPlayerState()).to.equal("LOADED");
+        expect(player.isBuffering()).to.equal(false);
+      });
+    });
+
+    describe("isPaused", () => {
+      it("should return true when paused", async () => {
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          autoPlay: false,
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getVideoElement()).to.not.be.null;
+        expect(player.isPaused()).to.equal(true);
+
+        player.play();
+        await sleep(100);
+        expect(player.isPaused()).to.equal(false);
+
+        player.dispose();
+        await sleep(100);
+        expect(player.getVideoElement()).to.be.null;
+        expect(player.isPaused()).to.equal(true);
+      });
+    });
+
     describe("isLive", () => {
       if (isLive) {
         it("should return true", async () => {
@@ -1032,6 +1092,26 @@ export default function launchTestsForContent(manifestInfos) {
         await waitForLoadedStateAfterLoadVideo(player);
         player.seekTo(12);
         expect(player.getPosition()).to.equal(12);
+      });
+    });
+
+    describe("getLastStoredContentPosition", () => {
+      it("should return the last stored position", async () => {
+        player.setVideoBitrate(0);
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          startAt: { position: manifestInfos.minimumPosition }
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(player.getPosition())
+          .to.be.closeTo(manifestInfos.minimumPosition, 0.1);
+        player.seekTo({ position: manifestInfos.minimumPosition + 5 });
+        await sleep(0);
+        player.stop();
+        await sleep(100);
+        expect(player.getLastStoredContentPosition())
+          .to.be.closeTo(manifestInfos.minimumPosition + 5, 0.1);
       });
     });
 

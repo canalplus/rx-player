@@ -69,6 +69,7 @@ import {
   IVideoTrackPreference,
 } from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
+import arrayIncludes from "../../utils/array_includes";
 import assert from "../../utils/assert";
 import EventEmitter, {
   IEventPayload,
@@ -307,6 +308,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     reloadPosition?: number;
   };
 
+  /**
+   * Store last value of autoPlay, from the last load or reload.
+   */
+  private _priv_lastAutoPlay: boolean;
+
   /** All possible Error types emitted by the RxPlayer. */
   static get ErrorTypes() : Record<IErrorType, IErrorType> {
     return ErrorTypes;
@@ -481,6 +487,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_preferredVideoTracks = preferredVideoTracks;
 
     this._priv_reloadingMetadata = {};
+
+    this._priv_lastAutoPlay = false;
   }
 
   /**
@@ -551,6 +559,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     log.info("API: Calling loadvideo", options.url, options.transport);
     this._priv_reloadingMetadata = { options };
     this._priv_initializeContentPlayback(options);
+    this._priv_lastAutoPlay = options.autoPlay;
   }
 
   /**
@@ -839,11 +848,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       log.warn("API: Sending warning:", formattedError);
       this.trigger("warning", formattedError);
     });
-    initializer.addEventListener("reloadingMediaSource", () => {
+    initializer.addEventListener("reloadingMediaSource", (payload) => {
       contentInfos.segmentBuffersStore = null;
       if (contentInfos.trackChoiceManager !== null) {
         contentInfos.trackChoiceManager.resetPeriods();
       }
+      this._priv_lastAutoPlay = payload.autoPlay;
     });
     initializer.addEventListener("inbandEvents", (inbandEvents) =>
       this.trigger("inbandEvents", inbandEvents));
@@ -1110,6 +1120,42 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Returns true if a content is loaded.
+   * @returns {Boolean} - `true` if a content is loaded, `false` otherwise.
+   */
+  isContentLoaded() : boolean {
+    return !arrayIncludes(["LOADING", "RELOADING", "STOPPED"], this.state);
+  }
+
+  /**
+   * Returns true if the player is buffering.
+   * @returns {Boolean} - `true` if the player is buffering, `false` otherwise.
+   */
+  isBuffering() : boolean {
+    return arrayIncludes(["BUFFERING", "SEEKING", "LOADING", "RELOADING"], this.state);
+  }
+
+  /**
+   * Returns the play/pause status of the player :
+   *   - when `LOADING` or `RELOADING`, returns the scheduled play/pause condition
+   *     for when loading is over,
+   *   - in other states, returns the `<video>` element .paused value,
+   *   - if the player is disposed, returns `true`.
+   * @returns {Boolean} - `true` if the player is paused or will be after loading,
+   * `false` otherwise.
+   */
+  isPaused() : boolean {
+    if (this.videoElement) {
+      if (arrayIncludes(["LOADING", "RELOADING"], this.state)) {
+        return !this._priv_lastAutoPlay;
+      } else {
+        return this.videoElement.paused;
+      }
+    }
+    return true;
+  }
+
+  /**
    * Returns true if both:
    *   - a content is loaded
    *   - the content loaded is a live content
@@ -1286,6 +1332,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       throw new Error("Disposed player");
     }
     return this.videoElement.currentTime;
+  }
+
+  /**
+   * Returns the last stored content position, in seconds.
+   *
+   * @returns {number|undefined}
+   */
+  getLastStoredContentPosition() : number|undefined {
+    return this._priv_reloadingMetadata.reloadPosition;
   }
 
   /**
