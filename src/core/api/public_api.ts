@@ -309,7 +309,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   };
 
   /**
-   * Store last value of autoPlay, coming from loadVideo or onReloadMediaSource.
+   * Store last value of autoPlay, from the last load or reload.
    */
   private _priv_lastAutoPlay: boolean;
 
