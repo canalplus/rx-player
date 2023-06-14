@@ -79,6 +79,7 @@ function fastDemoBuild(options) {
   esbuild.context({
     entryPoints: [path.join(__dirname, "../demo/full/scripts/index.tsx")],
     bundle: true,
+    target: "es2017",
     minify,
     outfile: path.join(__dirname, "../demo/full/bundle.js"),
     plugins: [consolePlugin],
