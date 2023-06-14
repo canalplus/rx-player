@@ -1,11 +1,11 @@
 # Changelog
 
-## v3.31.0 (2023-06-13)
+## v3.31.0 (2023-06-14)
 
 ### Features
 
   - Add `isContentLoaded`, `isBuffering`, `isPaused`, and `getLastStoredContentPosition` methods [#1248]
-  - Add `play` and `paused` events [#1253 ]
+  - Add `play` and `paused` events [#1253]
   - Add `trackInfo` property to some `MediaError` to expose information on the track that caused the error [#1241]
 
 ### Bug fixes
