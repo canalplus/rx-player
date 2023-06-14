@@ -66,8 +66,8 @@ function fastDemoBuild(options) {
           const { errors, warnings } = result;
           console.log(`\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
             `Demo re-built with ${errors.length} error(s) and ` +
-            ` ${warnings.length} warning(s) ` +
-            `(in ${stats.endTime - stats.startTime} ms).`);
+            ` ${warnings.length} warning(s) `);
+          return;
         }
         console.log(`\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` +
           "Demo built!");
