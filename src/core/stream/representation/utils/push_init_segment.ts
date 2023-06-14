@@ -20,6 +20,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../../../manifest";
+import objectAssign from "../../../../utils/object_assign";
 import { CancellationSignal } from "../../../../utils/task_canceller";
 import { IReadOnlyPlaybackObserver } from "../../../api";
 import {
@@ -71,9 +72,14 @@ export default async function pushInitSegment<T>(
                                        timestampOffset: 0,
                                        appendWindow: [ undefined, undefined ],
                                        codec };
+  const inventoryInfos = objectAssign({ segment,
+                                        chunkSize: undefined,
+                                        start: 0,
+                                        end: 0 },
+                                      content);
   await appendSegmentToBuffer(playbackObserver,
                               segmentBuffer,
-                              { data, inventoryInfos: null },
+                              { data, inventoryInfos },
                               cancelSignal);
   const buffered = segmentBuffer.getBufferedRanges();
   return { content, segment, buffered, segmentData };
