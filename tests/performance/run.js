@@ -115,7 +115,11 @@ const servers = [];
  */
 let onFinished = () => {};
 
-start();
+start().catch((err) => {
+  // eslint-disable-next-line no-console
+  console.error("Error:", err);
+  return process.exit(1);
+});
 
 /** Initialize and start all tests on Chrome. */
 async function start() {
@@ -124,7 +128,10 @@ async function start() {
 
   onFinished = () => {
     const hasSucceededOnChrome = compareSamples();
-    shutdown();
+    shutdown().catch((err) => {
+      // eslint-disable-next-line no-console
+      console.error("Failed to shutdown:", err);
+    });
     if (!hasSucceededOnChrome) {
       // eslint-disable-next-line no-console
       console.error("Tests failed on Chrome");
@@ -149,7 +156,11 @@ async function start() {
     // startAllTestsOnFirefox();
   };
 
-  startAllTestsOnChrome();
+  startAllTestsOnChrome().catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error("Error:", err);
+    return process.exit(1);
+  });
 }
 
 /**
@@ -245,7 +256,11 @@ async function startAllTestsOnChrome() {
     console.error("Error: Chrome not found on the current platform");
     return process.exit(1);
   }
-  startNextTaskOrFinish();
+  startNextTaskOrFinish().catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error("Error:", err);
+    return process.exit(1);
+  });
 }
 
 /**
@@ -310,7 +325,11 @@ async function startCurrentPlayerTestsOnChrome(testNb, testTotal) {
   // eslint-disable-next-line no-console
   console.log("Running tests on Chrome on the current RxPlayer version " +
               `(${testNb}/${testTotal})`);
-  startPerfhomepageOnChrome("index1.html");
+  startPerfhomepageOnChrome("index1.html").catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error("Could not launch page on Chrome:", err);
+    process.exit(1);
+  });
 }
 
 /**
@@ -322,7 +341,11 @@ async function startCurrentPlayerTestsOnFirefox(testNb, testTotal) {
   // eslint-disable-next-line no-console
   console.log("Running tests on Firefox on the current RxPlayer version " +
               `(${testNb}/${testTotal})`);
-  startPerfhomepageOnFirefox("index1.html");
+  startPerfhomepageOnFirefox("index1.html").catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error("Could not launch page on Firefox:", err);
+    process.exit(1);
+  });
 }
 
 /**
@@ -334,7 +357,11 @@ async function startLastPlayerTestsOnChrome(testNb, testTotal) {
   // eslint-disable-next-line no-console
   console.log("Running tests on Chrome on the previous RxPlayer version " +
               `(${testNb}/${testTotal})`);
-  startPerfhomepageOnChrome("index2.html");
+  startPerfhomepageOnChrome("index2.html").catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error("Could not launch page on Chrome:", err);
+    process.exit(1);
+  });
 }
 
 /**
@@ -346,7 +373,11 @@ async function startLastPlayerTestsOnFirefox(testNb, testTotal) {
   // eslint-disable-next-line no-console
   console.log("Running tests on Firefox on the previous RxPlayer version " +
               `(${testNb}/${testTotal})`);
-  startPerfhomepageOnFirefox("index2.html");
+  startPerfhomepageOnFirefox("index2.html").catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error("Could not launch page on Firefox:", err);
+    process.exit(1);
+  });
 }
 
 /**
