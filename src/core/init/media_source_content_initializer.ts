@@ -622,19 +622,41 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
         addedSegment: (value) => self.trigger("addedSegment", value),
 
-        needsMediaSourceReload: (value) => onReloadOrder(value),
+        needsMediaSourceReload: (payload) => {
+          const lastObservation = streamObserver.getReference().getValue();
+          const currentPosition = lastObservation.position.pending ??
+                                  streamObserver.getCurrentTime();
+          const isPaused = lastObservation.paused.pending ??
+                           streamObserver.getIsPaused();
+          let position = currentPosition + payload.timeOffset;
+          if (payload.minimumPosition !== undefined) {
+            position = Math.max(payload.minimumPosition, position);
+          }
+          if (payload.maximumPosition !== undefined) {
+            position = Math.min(payload.maximumPosition, position);
+          }
+          onReloadOrder({ position, autoPlay: !isPaused });
+        },
 
-        needsDecipherabilityFlush(value) {
+        needsDecipherabilityFlush() {
           const keySystem = getKeySystemConfiguration(mediaElement);
           if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem?.[0])) {
-            onReloadOrder(value);
+            const lastObservation = streamObserver.getReference().getValue();
+            const position = lastObservation.position.pending ??
+                             streamObserver.getCurrentTime();
+            const isPaused = lastObservation.paused.pending ??
+                             streamObserver.getIsPaused();
+            onReloadOrder({ position, autoPlay: !isPaused });
           } else {
+            const lastObservation = streamObserver.getReference().getValue();
+            const position = lastObservation.position.pending ??
+                             streamObserver.getCurrentTime();
             // simple seek close to the current position
             // to flush the buffers
-            if (value.position + 0.001 < value.duration) {
+            if (position + 0.001 < lastObservation.duration) {
               playbackObserver.setCurrentTime(mediaElement.currentTime + 0.001);
             } else {
-              playbackObserver.setCurrentTime(value.position);
+              playbackObserver.setCurrentTime(position);
             }
           }
         },
