@@ -43,6 +43,9 @@ function sendLog(log) {
     headers: { "Content-Type": "application/json" },
     method: "POST",
     body: JSON.stringify({ type: "log", data: log }),
+  }).catch(err => {
+    // eslint-disable-next-line no-console
+    console.error("Error: Cannot send log due to a request error.", err);
   });
 }
 
