@@ -365,13 +365,13 @@
 
 ### Changes
 
-  - If all Representations from the current track become undecipherable, automatically switch to another track (also send a `trackUpdate` event) instead of stopping on error [#1240]
-  - Only send `MediaError` errors with the `NO_PLAYABLE_REPRESENTATION` error code when no Representation from all tracks of a given type can be played [#1240]
+  - If all Representations from the current track become undecipherable, automatically switch to another track (also send a `trackUpdate` event) instead of stopping on error [#1234]
+  - Only send `MediaError` errors with the `NO_PLAYABLE_REPRESENTATION` error code when no Representation from all tracks of a given type can be played [#1234]
 
 ### Features
 
-  - Add `representationListUpdate` event for when the list of available Representation for a current track changes [#877]
-  - Add `"no-playable-representation"` as a `reason` for `trackUpdate` events when the track switch is due to encrypted Representations [#1240]
+  - Add `representationListUpdate` event for when the list of available Representation for a current track changes [#1240]
+  - Add `"no-playable-representation"` as a `reason` for `trackUpdate` events when the track switch is due to encrypted Representations [#1234]
 
 ### Other improvements
 
