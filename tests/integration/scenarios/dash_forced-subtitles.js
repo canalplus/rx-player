@@ -85,7 +85,7 @@ describe("DASH forced-subtitles content (SegmentTimeline)", function () {
           reject(err);
         }
       });
-      loadContent();
+      loadContent().catch(reject);
     });
   });
 });
