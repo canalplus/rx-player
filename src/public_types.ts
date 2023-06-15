@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  IPreferredEmeApiType ,
-  ICustomMediaKeySession,
-} from "./compat/eme";
+import { ICustomMediaKeySession } from "./compat/eme";
 import {
   IPersistentSessionInfoV0,
   IPersistentSessionInfoV1,
@@ -38,8 +35,6 @@ import { ILocalManifest } from "./parsers/manifest/local";
 import { IMetaPlaylist } from "./parsers/manifest/metaplaylist/metaplaylist_parser";
 
 export { IMediaErrorTrackContext };
-
-export { IPreferredEmeApiType };
 
 /**
  * This file defines and exports types we want to expose to library users.
