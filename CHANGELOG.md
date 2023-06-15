@@ -361,6 +361,23 @@
 - doc: Update our documentation generator and fix all invalid anchors in it
 - npm: prevent the publishing of unnecessary files on the npm registry [#1377, #1378]
 
+## v4.0.0-beta.2 (2023-03-08)
+
+### Changes
+
+  - If all Representations from the current track become undecipherable, automatically switch to another track (also send a `trackUpdate` event) instead of stopping on error [#1240]
+  - Only send `MediaError` errors with the `NO_PLAYABLE_REPRESENTATION` error code when no Representation from all tracks of a given type can be played [#1240]
+
+### Features
+
+  - Add `representationListUpdate` event for when the list of available Representation for a current track changes [#877]
+  - Add `"no-playable-representation"` as a `reason` for `trackUpdate` events when the track switch is due to encrypted Representations [#1240]
+
+### Other improvements
+
+  - DRM: Reload when playback is unexpectedly frozen with encrypted but only decipherable data in the buffer to work-around rare encryption-related issues [#1236]
+
+
 ## v3.32.1 (2023-10-19)
 
 ### Features
