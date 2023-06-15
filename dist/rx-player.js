@@ -1222,11 +1222,12 @@ if (!_is_node__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z) {
 /* harmony export */   Dl: function() { return /* binding */ onKeyError; },
 /* harmony export */   M4: function() { return /* binding */ onEnded; },
 /* harmony export */   N8: function() { return /* binding */ onSourceEnded; },
-/* harmony export */   O0: function() { return /* binding */ getVideoWidthRef; },
 /* harmony export */   Q$: function() { return /* binding */ onSeeking; },
 /* harmony export */   RV: function() { return /* binding */ onKeyMessage; },
 /* harmony export */   Zl: function() { return /* binding */ onEncrypted; },
+/* harmony export */   bD: function() { return /* binding */ getElementResolutionRef; },
 /* harmony export */   bQ: function() { return /* binding */ onSeeked; },
+/* harmony export */   c9: function() { return /* binding */ getScreenResolutionRef; },
 /* harmony export */   it: function() { return /* binding */ getVideoVisibilityRef; },
 /* harmony export */   k6: function() { return /* binding */ onSourceClose; },
 /* harmony export */   kk: function() { return /* binding */ onKeyAdded; },
@@ -1237,13 +1238,12 @@ if (!_is_node__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z) {
 /* harmony export */   y4: function() { return /* binding */ onSourceBufferUpdate; }
 /* harmony export */ });
 /* unused harmony exports addEventListener, onLoadedMetadata, onTimeUpdate, onTextTrackAdded, onTextTrackRemoved */
-/* harmony import */ var _config__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(6872);
-/* harmony import */ var _utils_is_non_empty_string__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6923);
-/* harmony import */ var _utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(1946);
-/* harmony import */ var _utils_noop__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(8894);
-/* harmony import */ var _utils_reference__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5095);
-/* harmony import */ var _is_node__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2203);
-/* harmony import */ var _should_favour_custom_safari_EME__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(5059);
+/* harmony import */ var _config__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6872);
+/* harmony import */ var _utils_is_non_empty_string__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6923);
+/* harmony import */ var _utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(1946);
+/* harmony import */ var _utils_noop__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(8894);
+/* harmony import */ var _utils_reference__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5095);
+/* harmony import */ var _should_favour_custom_safari_EME__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(5059);
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -1266,9 +1266,7 @@ if (!_is_node__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z) {
 
 
 
-
 var BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
-var pixelRatio = _is_node__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z || window.devicePixelRatio == null || window.devicePixelRatio === 0 ? 1 : window.devicePixelRatio;
 /**
  * Find the first supported event from the list given.
  * @param {HTMLElement} element
@@ -1332,7 +1330,7 @@ function createCompatibleEventListener(eventNames, prefixes) {
       if (typeof mem === "undefined") {
         mem = findSupportedEvent(element, prefixedEvents);
       }
-      if ((0,_utils_is_non_empty_string__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .Z)(mem)) {
+      if ((0,_utils_is_non_empty_string__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z)(mem)) {
         element.addEventListener(mem, listener);
         cancelSignal.register(function () {
           if (mem !== undefined) {
@@ -1390,28 +1388,15 @@ function getDocumentVisibilityRef(stopListening) {
   } else if (doc.webkitHidden != null) {
     prefix = "webkit";
   }
-  var hidden = (0,_utils_is_non_empty_string__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .Z)(prefix) ? prefix + "Hidden" : "hidden";
-  var visibilityChangeEvent = (0,_utils_is_non_empty_string__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .Z)(prefix) ? prefix + "visibilitychange" : "visibilitychange";
+  var hidden = (0,_utils_is_non_empty_string__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z)(prefix) ? prefix + "Hidden" : "hidden";
+  var visibilityChangeEvent = (0,_utils_is_non_empty_string__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z)(prefix) ? prefix + "visibilitychange" : "visibilitychange";
   var isHidden = document[hidden];
-  var ref = (0,_utils_reference__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .ZP)(!isHidden, stopListening);
+  var ref = (0,_utils_reference__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .ZP)(!isHidden, stopListening);
   addEventListener(document, visibilityChangeEvent, function () {
     var isVisible = !document[hidden];
     ref.setValueIfChanged(isVisible);
   }, stopListening);
   return ref;
-}
-/**
- * Get video width from Picture-in-Picture window
- * @param {HTMLMediaElement} mediaElement
- * @param {Object} pipWindow
- * @returns {number}
- */
-function getVideoWidthFromPIPWindow(mediaElement, pipWindow) {
-  var width = pipWindow.width,
-    height = pipWindow.height;
-  var videoRatio = mediaElement.clientHeight / mediaElement.clientWidth;
-  var calcWidth = height / videoRatio;
-  return Math.min(width, calcWidth);
 }
 /**
  * Emit when video enters and leaves Picture-In-Picture mode.
@@ -1423,7 +1408,7 @@ function getPictureOnPictureStateRef(elt, stopListening) {
   var mediaElement = elt;
   if (mediaElement.webkitSupportsPresentationMode === true && typeof mediaElement.webkitSetPresentationMode === "function") {
     var isWebKitPIPEnabled = mediaElement.webkitPresentationMode === "picture-in-picture";
-    var _ref = (0,_utils_reference__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .ZP)({
+    var _ref = (0,_utils_reference__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .ZP)({
       isEnabled: isWebKitPIPEnabled,
       pipWindow: null
     }, stopListening);
@@ -1437,7 +1422,7 @@ function getPictureOnPictureStateRef(elt, stopListening) {
     return _ref;
   }
   var isPIPEnabled = document.pictureInPictureElement === mediaElement;
-  var ref = (0,_utils_reference__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .ZP)({
+  var ref = (0,_utils_reference__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .ZP)({
     isEnabled: isPIPEnabled,
     pipWindow: null
   }, stopListening);
@@ -1469,7 +1454,7 @@ function getPictureOnPictureStateRef(elt, stopListening) {
 function getVideoVisibilityRef(pipStatus, stopListening) {
   var isDocVisibleRef = getDocumentVisibilityRef(stopListening);
   var currentTimeout;
-  var ref = (0,_utils_reference__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .ZP)(true, stopListening);
+  var ref = (0,_utils_reference__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .ZP)(true, stopListening);
   stopListening.register(function () {
     clearTimeout(currentTimeout);
     currentTimeout = undefined;
@@ -1488,7 +1473,7 @@ function getVideoVisibilityRef(pipStatus, stopListening) {
     if (pipStatus.getValue().isEnabled || isDocVisibleRef.getValue()) {
       ref.setValueIfChanged(true);
     } else {
-      var _config$getCurrent = _config__WEBPACK_IMPORTED_MODULE_3__/* ["default"] */ .Z.getCurrent(),
+      var _config$getCurrent = _config__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .Z.getCurrent(),
         INACTIVITY_DELAY = _config$getCurrent.INACTIVITY_DELAY;
       currentTimeout = window.setTimeout(function () {
         ref.setValueIfChanged(false);
@@ -1497,46 +1482,104 @@ function getVideoVisibilityRef(pipStatus, stopListening) {
   }
 }
 /**
- * Get video width from HTML video element, or video estimated dimensions
- * when Picture-in-Picture is activated.
+ * Get video width and height from the screen dimensions.
+ * @param {Object} stopListening
+ * @returns {Object}
+ */
+function getScreenResolutionRef(stopListening) {
+  var pixelRatio = window.devicePixelRatio == null || window.devicePixelRatio === 0 ? 1 : window.devicePixelRatio;
+  var ref = (0,_utils_reference__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .ZP)({
+    width: window.screen.width,
+    height: window.screen.height,
+    pixelRatio: pixelRatio
+  }, stopListening);
+  var interval = window.setInterval(checkScreenResolution, 20000);
+  stopListening.register(function stopUpdating() {
+    clearInterval(interval);
+  });
+  return ref;
+  function checkScreenResolution() {
+    var oldVal = ref.getValue();
+    if (oldVal.width !== screen.width || oldVal.height !== screen.height || oldVal.pixelRatio !== pixelRatio) {
+      ref.setValue({
+        width: screen.width,
+        height: screen.height,
+        pixelRatio: pixelRatio
+      });
+    }
+  }
+}
+/**
+ * Get video width and height from HTML media element, or video estimated
+ * dimensions when Picture-in-Picture is activated.
  * @param {HTMLMediaElement} mediaElement
  * @param {Object} pipStatusRef
  * @param {Object} stopListening
  * @returns {Object}
  */
-function getVideoWidthRef(mediaElement, pipStatusRef, stopListening) {
-  var ref = (0,_utils_reference__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .ZP)(mediaElement.clientWidth * pixelRatio, stopListening);
-  var _clearPreviousEventListener = _utils_noop__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .Z;
-  pipStatusRef.onUpdate(checkVideoWidth, {
+function getElementResolutionRef(mediaElement, pipStatusRef, stopListening) {
+  var pixelRatio = window.devicePixelRatio == null || window.devicePixelRatio === 0 ? 1 : window.devicePixelRatio;
+  var ref = (0,_utils_reference__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .ZP)({
+    width: mediaElement.clientWidth,
+    height: mediaElement.clientHeight,
+    pixelRatio: pixelRatio
+  }, stopListening);
+  var _clearPreviousEventListener = _utils_noop__WEBPACK_IMPORTED_MODULE_3__/* ["default"] */ .Z;
+  pipStatusRef.onUpdate(checkElementResolution, {
     clearSignal: stopListening
   });
-  addEventListener(window, "resize", checkVideoWidth, stopListening);
-  var interval = window.setInterval(checkVideoWidth, 20000);
-  checkVideoWidth();
-  stopListening.register(function stopUpdatingVideoWidthRef() {
+  addEventListener(window, "resize", checkElementResolution, stopListening);
+  addEventListener(mediaElement, "enterpictureinpicture", checkElementResolution, stopListening);
+  addEventListener(mediaElement, "leavepictureinpicture", checkElementResolution, stopListening);
+  var interval = window.setInterval(checkElementResolution, 20000);
+  checkElementResolution();
+  stopListening.register(function stopUpdating() {
     _clearPreviousEventListener();
     clearInterval(interval);
   });
   return ref;
-  function checkVideoWidth() {
+  function checkElementResolution() {
     _clearPreviousEventListener();
     var pipStatus = pipStatusRef.getValue();
+    var pipWindow = pipStatus.pipWindow;
     if (!pipStatus.isEnabled) {
-      ref.setValueIfChanged(mediaElement.clientWidth * pixelRatio);
-    } else if (!(0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_5__/* ["default"] */ .Z)(pipStatus.pipWindow)) {
-      var pipWindow = pipStatus.pipWindow;
-      var firstWidth = getVideoWidthFromPIPWindow(mediaElement, pipWindow);
+      var oldVal = ref.getValue();
+      if (oldVal.width !== mediaElement.clientWidth || oldVal.height !== mediaElement.clientHeight || oldVal.pixelRatio !== pixelRatio) {
+        ref.setValue({
+          width: mediaElement.clientWidth,
+          height: mediaElement.clientHeight,
+          pixelRatio: pixelRatio
+        });
+      }
+    } else if (!(0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .Z)(pipWindow)) {
       var onPipResize = function onPipResize() {
-        ref.setValueIfChanged(getVideoWidthFromPIPWindow(mediaElement, pipWindow) * pixelRatio);
+        updateToPipWindowResolution();
       };
       pipWindow.addEventListener("resize", onPipResize);
       _clearPreviousEventListener = function clearPreviousEventListener() {
         pipWindow.removeEventListener("resize", onPipResize);
-        _clearPreviousEventListener = _utils_noop__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .Z;
+        _clearPreviousEventListener = _utils_noop__WEBPACK_IMPORTED_MODULE_3__/* ["default"] */ .Z;
       };
-      ref.setValueIfChanged(firstWidth * pixelRatio);
+      updateToPipWindowResolution();
     } else {
-      ref.setValueIfChanged(Infinity);
+      var _oldVal = ref.getValue();
+      if (_oldVal.width !== undefined || _oldVal.height !== undefined || _oldVal.pixelRatio !== pixelRatio) {
+        ref.setValue({
+          width: undefined,
+          height: undefined,
+          pixelRatio: pixelRatio
+        });
+      }
+    }
+    function updateToPipWindowResolution() {
+      var oldVal = ref.getValue();
+      if (oldVal.width !== (pipWindow === null || pipWindow === void 0 ? void 0 : pipWindow.width) || oldVal.height !== (pipWindow === null || pipWindow === void 0 ? void 0 : pipWindow.height) || oldVal.pixelRatio !== pixelRatio) {
+        ref.setValue({
+          width: pipWindow === null || pipWindow === void 0 ? void 0 : pipWindow.width,
+          height: pipWindow === null || pipWindow === void 0 ? void 0 : pipWindow.height,
+          pixelRatio: pixelRatio
+        });
+      }
     }
   }
 }
@@ -1589,7 +1632,7 @@ var onRemoveSourceBuffers = createCompatibleEventListener(["removesourcebuffer"]
 /**
  * @param {HTMLMediaElement} mediaElement
  */
-var onEncrypted = createCompatibleEventListener((0,_should_favour_custom_safari_EME__WEBPACK_IMPORTED_MODULE_6__/* ["default"] */ .Z)() ? ["needkey"] : ["encrypted", "needkey"]);
+var onEncrypted = createCompatibleEventListener((0,_should_favour_custom_safari_EME__WEBPACK_IMPORTED_MODULE_5__/* ["default"] */ .Z)() ? ["needkey"] : ["encrypted", "needkey"]);
 /**
  * @param {MediaKeySession} mediaKeySession
  */
@@ -1869,17 +1912,6 @@ var DEFAULT_CONFIG = {
    */
   DEFAULT_TEXT_TRACK_MODE: "native",
   /**
-   * Strategy to adopt when manually setting the current bitrate.
-   * Can be either:
-   *   - "seamless": transitions are very smooth but not immediate.
-   *   - "direct": the quality switch happens immediately but to achieve that,
-   *     the player will need to set a new MediaSource on the media element in
-   *     some cases. This often leads to a black screen + unavailable APIs
-   *     during a short moment.
-   * @type {string}
-   */
-  DEFAULT_MANUAL_BITRATE_SWITCHING_MODE: "seamless",
-  /**
    * Default behavior for the `enableFastSwitching` loadVideo options.
    *
    * Fast-switching allows to provide quicker transitions from lower quality
@@ -2018,54 +2050,7 @@ var DEFAULT_CONFIG = {
    * play will always take the last set one.
    * @type {Object}
    */
-  DEFAULT_INITIAL_BITRATES: {
-    audio: 0,
-    video: 0,
-    other: 0 // tracks which are not audio/video (like text).
-    // Though those are generally at a single bitrate, so no adaptive
-    // mechanism is triggered for them.
-  },
-
-  /* eslint-disable @typescript-eslint/consistent-type-assertions */
-  /**
-   * Default bitrate floor initially set to dictate the minimum bitrate the
-   * adaptive logic can automatically switch to.
-   *
-   * If no track is found with a quality superior or equal to the
-   * bitrate there, the lowest bitrate will be taken instead.
-   *
-   * Set to Infinity to discard any limit in the ABR strategy.
-   * @type {Object}
-   */
-  DEFAULT_MIN_BITRATES: {
-    audio: 0,
-    video: 0,
-    other: 0 // tracks which are not audio/video
-    // Though those are generally at a single bitrate, so no
-    // adaptive mechanism is triggered for them.
-  },
-
-  /* eslint-enable @typescript-eslint/consistent-type-assertions */
-  /* eslint-disable @typescript-eslint/consistent-type-assertions */
-  /**
-   * Default bitrate ceil initially set to dictate the maximum bitrate the
-   * adaptive logic can automatically switch to.
-   *
-   * If no track is found with a quality inferior or equal to the
-   * bitrate there, the lowest bitrate will be taken instead.
-   *
-   * Set to Infinity to discard any limit in the ABR strategy.
-   * @type {Object}
-   */
-  DEFAULT_MAX_BITRATES: {
-    audio: Infinity,
-    video: Infinity,
-    other: Infinity // tracks which are not audio/video
-    // Though those are generally at a single bitrate, so no
-    // adaptive mechanism is triggered for them.
-  },
-
-  /* eslint-enable @typescript-eslint/consistent-type-assertions */
+  DEFAULT_BASE_BANDWIDTH: 0,
   /**
    * Delay after which, if the page is hidden, the user is considered inactive
    * on the current video.
@@ -2083,14 +2068,15 @@ var DEFAULT_CONFIG = {
    */
   DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN: false,
   /**
-   * If true, the video representations you can switch to in adaptive mode
-   * are limited by the video element's width.
+   * Default video resolution limit behavior.
    *
-   * Basically in that case, we won't switch to a video Representation with
-   * a width higher than the current width of the video HTMLElement.
+   * This option allows for example to throttle the video resolution so it
+   * does not exceed the screen resolution.
+   *
+   * Here set to "none" by default to disable throttling.
    * @type {Boolean}
    */
-  DEFAULT_LIMIT_VIDEO_WIDTH: false,
+  DEFAULT_VIDEO_RESOLUTION_LIMIT: "none",
   /**
    * Default initial live gap considered if no presentation delay has been
    * suggested, in seconds.
@@ -2165,8 +2151,6 @@ var DEFAULT_CONFIG = {
    *   - if the error is not due to the xhr, no retry will be peformed
    *   - if the error is an HTTP error code, but not a 500-smthg or a 404, no
    *     retry will be performed.
-   *   - if it has a high chance of being due to the user being offline, a
-   *     separate counter is used (see DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE).
    * @type Number
    */
   DEFAULT_MAX_MANIFEST_REQUEST_RETRY: 4,
@@ -2189,23 +2173,9 @@ var DEFAULT_CONFIG = {
    *   - if the error is not due to the xhr, no retry will be peformed
    *   - if the error is an HTTP error code, but not a 500-smthg or a 404, no
    *     retry will be performed.
-   *   - if it has a high chance of being due to the user being offline, a
-   *     separate counter is used (see DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE).
    * @type Number
    */
   DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR: 4,
-  /**
-   * Under some circonstances, we're able to tell that the user is offline (see
-   * the compat files).
-   * When this happens, and xhr requests fails due to an error event (you might
-   * still be able to perform xhr offline, e.g. on localhost), you might want to
-   * retry indefinitely or with a higher number of retry than if the error is
-   * due to a CDN problem.
-   *
-   * A capped exponential backoff will still be used (like for an error code).
-   * @type {Number}
-   */
-  DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE: Infinity,
   /**
    * Initial backoff delay when a segment / manifest download fails, in
    * milliseconds.
@@ -2714,12 +2684,12 @@ var DEFAULT_CONFIG = {
    * Robustnesses used in the {audio,video}Capabilities of the
    * MediaKeySystemConfiguration (DRM).
    *
-   * Only used for "com.microsoft.playready.recommendation" key system.
+   * Only used for "com.microsoft.playready.recommendation" keysystems.
    *
    * Defined in order of importance (first will be tested first etc.)
    * @type {Array.<string>}
    */
-  EME_DEFAULT_PLAYREADY_ROBUSTNESSES: ["3000", "2000"],
+  EME_DEFAULT_PLAYREADY_RECOMMENDATION_ROBUSTNESSES: ["3000", "2000"],
   /**
    * Link canonical key systems names to their respective reverse domain name,
    * used in the EME APIs.
@@ -3821,7 +3791,7 @@ function disableVideoTracks(videoTracks) {
 
 /***/ }),
 
-/***/ 1960:
+/***/ 276:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4621,10 +4591,10 @@ function checkCachedMediaKeySystemAccess(keySystems, currentKeySystemAccess, cur
     if (ks.type !== currentKeySystemOptions.type) {
       return false;
     }
-    if ((ks.persistentLicense === true || ks.persistentStateRequired === true) && mksConfiguration.persistentState !== "required") {
+    if ((!(0,is_null_or_undefined/* default */.Z)(ks.persistentLicenseConfig) || ks.persistentState === "required") && mksConfiguration.persistentState !== "required") {
       return false;
     }
-    if (ks.distinctiveIdentifierRequired === true && mksConfiguration.distinctiveIdentifier !== "required") {
+    if (ks.distinctiveIdentifier === "required" && mksConfiguration.distinctiveIdentifier !== "required") {
       return false;
     }
     return true;
@@ -4656,65 +4626,32 @@ function findKeySystemCanonicalName(ksType) {
 /**
  * Build configuration for the requestMediaKeySystemAccess EME API, based
  * on the current keySystem object.
- * @param {string|undefined} ksName - Generic name for the key system. e.g.
- * "clearkey", "widevine", "playready". Can be used to make exceptions depending
- * on it.
- * @param {string|undefined} ksType - KeySystem complete type (e.g.
- * "com.widevine.alpha").
- * @param {Object} keySystem
+ * @param {Object} keySystemTypeInfo
  * @returns {Array.<Object>} - Configuration to give to the
  * requestMediaKeySystemAccess API.
  */
-function buildKeySystemConfigurations(ksName, ksType, keySystem) {
+function buildKeySystemConfigurations(keySystemTypeInfo) {
+  var keyName = keySystemTypeInfo.keyName,
+    keyType = keySystemTypeInfo.keyType,
+    keySystem = keySystemTypeInfo.keySystemOptions;
   var sessionTypes = ["temporary"];
   var persistentState = "optional";
   var distinctiveIdentifier = "optional";
-  if (keySystem.persistentLicense === true) {
+  if (!(0,is_null_or_undefined/* default */.Z)(keySystem.persistentLicenseConfig)) {
     persistentState = "required";
     sessionTypes.push("persistent-license");
   }
-  if (keySystem.persistentStateRequired === true) {
-    persistentState = "required";
+  if (!(0,is_null_or_undefined/* default */.Z)(keySystem.persistentState)) {
+    persistentState = keySystem.persistentState;
   }
-  if (keySystem.distinctiveIdentifierRequired === true) {
-    distinctiveIdentifier = "required";
+  if (!(0,is_null_or_undefined/* default */.Z)(keySystem.distinctiveIdentifier)) {
+    distinctiveIdentifier = keySystem.distinctiveIdentifier;
   }
   var _config$getCurrent2 = config/* default */.Z.getCurrent(),
     EME_DEFAULT_AUDIO_CODECS = _config$getCurrent2.EME_DEFAULT_AUDIO_CODECS,
     EME_DEFAULT_VIDEO_CODECS = _config$getCurrent2.EME_DEFAULT_VIDEO_CODECS,
     EME_DEFAULT_WIDEVINE_ROBUSTNESSES = _config$getCurrent2.EME_DEFAULT_WIDEVINE_ROBUSTNESSES,
-    EME_DEFAULT_PLAYREADY_ROBUSTNESSES = _config$getCurrent2.EME_DEFAULT_PLAYREADY_ROBUSTNESSES;
-  // Set robustness, in order of consideration:
-  //   1. the user specified its own robustnesses
-  //   2. a "widevine" key system is used, in that case set the default widevine
-  //      robustnesses as defined in the config
-  //   3. set an undefined robustness
-  var videoRobustnesses;
-  if (!(0,is_null_or_undefined/* default */.Z)(keySystem.videoRobustnesses)) {
-    videoRobustnesses = keySystem.videoRobustnesses;
-  } else if (ksName === "widevine") {
-    videoRobustnesses = EME_DEFAULT_WIDEVINE_ROBUSTNESSES;
-  } else if (ksType === "com.microsoft.playready.recommendation") {
-    videoRobustnesses = EME_DEFAULT_PLAYREADY_ROBUSTNESSES;
-  } else {
-    videoRobustnesses = [];
-  }
-  var audioRobustnesses;
-  if (!(0,is_null_or_undefined/* default */.Z)(keySystem.audioRobustnesses)) {
-    audioRobustnesses = keySystem.audioRobustnesses;
-  } else if (ksName === "widevine") {
-    audioRobustnesses = EME_DEFAULT_WIDEVINE_ROBUSTNESSES;
-  } else if (ksType === "com.microsoft.playready.recommendation") {
-    audioRobustnesses = EME_DEFAULT_PLAYREADY_ROBUSTNESSES;
-  } else {
-    audioRobustnesses = [];
-  }
-  if (videoRobustnesses.length === 0) {
-    videoRobustnesses.push(undefined);
-  }
-  if (audioRobustnesses.length === 0) {
-    audioRobustnesses.push(undefined);
-  }
+    EME_DEFAULT_PLAYREADY_RECOMMENDATION_ROBUSTNESSES = _config$getCurrent2.EME_DEFAULT_PLAYREADY_RECOMMENDATION_ROBUSTNESSES;
   // From the W3 EME spec, we have to provide videoCapabilities and
   // audioCapabilities.
   // These capabilities must specify a codec (even though you can use a
@@ -4726,26 +4663,66 @@ function buildKeySystemConfigurations(ksName, ksType, keySystem) {
   // More details here:
   // https://storage.googleapis.com/wvdocs/Chrome_EME_Changes_and_Best_Practices.pdf
   // https://www.w3.org/TR/encrypted-media/#get-supported-configuration-and-consent
-  var videoCapabilities = (0,flat_map/* default */.Z)(videoRobustnesses, function (robustness) {
-    return EME_DEFAULT_VIDEO_CODECS.map(function (contentType) {
-      return robustness === undefined ? {
-        contentType: contentType
-      } : {
-        contentType: contentType,
-        robustness: robustness
-      };
+  var audioCapabilities;
+  var videoCapabilities;
+  var audioCapabilitiesConfig = keySystem.audioCapabilitiesConfig,
+    videoCapabilitiesConfig = keySystem.videoCapabilitiesConfig;
+  if ((audioCapabilitiesConfig === null || audioCapabilitiesConfig === void 0 ? void 0 : audioCapabilitiesConfig.type) === "full") {
+    audioCapabilities = audioCapabilitiesConfig.value;
+  } else {
+    var audioRobustnesses;
+    if ((audioCapabilitiesConfig === null || audioCapabilitiesConfig === void 0 ? void 0 : audioCapabilitiesConfig.type) === "robustness") {
+      audioRobustnesses = audioCapabilitiesConfig.value;
+    } else if (keyName === "widevine") {
+      audioRobustnesses = EME_DEFAULT_WIDEVINE_ROBUSTNESSES;
+    } else if (keyType === "com.microsoft.playready.recommendation") {
+      audioRobustnesses = EME_DEFAULT_PLAYREADY_RECOMMENDATION_ROBUSTNESSES;
+    } else {
+      audioRobustnesses = [];
+    }
+    if (audioRobustnesses.length === 0) {
+      audioRobustnesses.push(undefined);
+    }
+    var audioCodecs = (audioCapabilitiesConfig === null || audioCapabilitiesConfig === void 0 ? void 0 : audioCapabilitiesConfig.type) === "contentType" ? audioCapabilitiesConfig.value : EME_DEFAULT_AUDIO_CODECS;
+    audioCapabilities = (0,flat_map/* default */.Z)(audioRobustnesses, function (robustness) {
+      return audioCodecs.map(function (contentType) {
+        return robustness !== undefined ? {
+          contentType: contentType,
+          robustness: robustness
+        } : {
+          contentType: contentType
+        };
+      });
     });
-  });
-  var audioCapabilities = (0,flat_map/* default */.Z)(audioRobustnesses, function (robustness) {
-    return EME_DEFAULT_AUDIO_CODECS.map(function (contentType) {
-      return robustness === undefined ? {
-        contentType: contentType
-      } : {
-        contentType: contentType,
-        robustness: robustness
-      };
+  }
+  if ((videoCapabilitiesConfig === null || videoCapabilitiesConfig === void 0 ? void 0 : videoCapabilitiesConfig.type) === "full") {
+    videoCapabilities = videoCapabilitiesConfig.value;
+  } else {
+    var videoRobustnesses;
+    if ((videoCapabilitiesConfig === null || videoCapabilitiesConfig === void 0 ? void 0 : videoCapabilitiesConfig.type) === "robustness") {
+      videoRobustnesses = videoCapabilitiesConfig.value;
+    } else if (keyName === "widevine") {
+      videoRobustnesses = EME_DEFAULT_WIDEVINE_ROBUSTNESSES;
+    } else if (keyType === "com.microsoft.playready.recommendation") {
+      videoRobustnesses = EME_DEFAULT_PLAYREADY_RECOMMENDATION_ROBUSTNESSES;
+    } else {
+      videoRobustnesses = [];
+    }
+    if (videoRobustnesses.length === 0) {
+      videoRobustnesses.push(undefined);
+    }
+    var videoCodecs = (videoCapabilitiesConfig === null || videoCapabilitiesConfig === void 0 ? void 0 : videoCapabilitiesConfig.type) === "contentType" ? videoCapabilitiesConfig.value : EME_DEFAULT_VIDEO_CODECS;
+    videoCapabilities = (0,flat_map/* default */.Z)(videoRobustnesses, function (robustness) {
+      return videoCodecs.map(function (contentType) {
+        return robustness !== undefined ? {
+          contentType: contentType,
+          robustness: robustness
+        } : {
+          contentType: contentType
+        };
+      });
     });
-  });
+  }
   var wantedMediaKeySystemConfiguration = {
     initDataTypes: ["cenc"],
     videoCapabilities: videoCapabilities,
@@ -4775,7 +4752,7 @@ function buildKeySystemConfigurations(ksName, ksType, keySystem) {
  *   - reject if no compatible key system has been found.
  *
  * @param {HTMLMediaElement} mediaElement
- * @param {Array.<Object>} keySystems - The keySystems you want to test.
+ * @param {Array.<Object>} keySystemsConfigs - The keySystems you want to test.
  * @param {Object} cancelSignal
  * @returns {Promise.<Object>}
  */
@@ -4846,7 +4823,7 @@ function getMediaKeySystemAccess(mediaElement, keySystemsConfigs, cancelSignal) 
   }
   function _recursivelyTestKeySystems() {
     _recursivelyTestKeySystems = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee(index) {
-      var _keySystemsType$index, keyName, keyType, keySystemOptions, keySystemConfigurations, keySystemAccess;
+      var chosenType, keyType, keySystemOptions, keySystemConfigurations, keySystemAccess;
       return regenerator_default().wrap(function _callee$(_context) {
         while (1) switch (_context.prev = _context.next) {
           case 0:
@@ -4862,13 +4839,14 @@ function getMediaKeySystemAccess(mediaElement, keySystemsConfigs, cancelSignal) 
             }
             throw new Error("requestMediaKeySystemAccess is not implemented in your browser.");
           case 4:
-            _keySystemsType$index = keySystemsType[index], keyName = _keySystemsType$index.keyName, keyType = _keySystemsType$index.keyType, keySystemOptions = _keySystemsType$index.keySystemOptions;
-            keySystemConfigurations = buildKeySystemConfigurations(keyName, keyType, keySystemOptions);
+            chosenType = keySystemsType[index];
+            keyType = chosenType.keyType, keySystemOptions = chosenType.keySystemOptions;
+            keySystemConfigurations = buildKeySystemConfigurations(chosenType);
             log/* default */.Z.debug("DRM: Request keysystem access " + keyType + "," + (index + 1 + " of " + keySystemsType.length));
-            _context.prev = 7;
-            _context.next = 10;
+            _context.prev = 8;
+            _context.next = 11;
             return (0,custom_media_keys/* requestMediaKeySystemAccess */.N)(keyType, keySystemConfigurations);
-          case 10:
+          case 11:
             keySystemAccess = _context.sent;
             log/* default */.Z.info("DRM: Found compatible keysystem", keyType, index + 1);
             return _context.abrupt("return", {
@@ -4878,22 +4856,22 @@ function getMediaKeySystemAccess(mediaElement, keySystemsConfigs, cancelSignal) 
                 mediaKeySystemAccess: keySystemAccess
               }
             });
-          case 15:
-            _context.prev = 15;
-            _context.t0 = _context["catch"](7);
+          case 16:
+            _context.prev = 16;
+            _context.t0 = _context["catch"](8);
             log/* default */.Z.debug("DRM: Rejected access to keysystem", keyType, index + 1);
             if (!(cancelSignal.cancellationError !== null)) {
-              _context.next = 20;
+              _context.next = 21;
               break;
             }
             throw cancelSignal.cancellationError;
-          case 20:
-            return _context.abrupt("return", recursivelyTestKeySystems(index + 1));
           case 21:
+            return _context.abrupt("return", recursivelyTestKeySystems(index + 1));
+          case 22:
           case "end":
             return _context.stop();
         }
-      }, _callee, null, [[7, 15]]);
+      }, _callee, null, [[8, 16]]);
     }));
     return _recursivelyTestKeySystems.apply(this, arguments);
   }
@@ -6046,8 +6024,49 @@ function _safelyCloseMediaKeySession() {
 }
 // EXTERNAL MODULE: ./src/utils/base64.ts
 var utils_base64 = __webpack_require__(9689);
-// EXTERNAL MODULE: ./src/utils/hash_buffer.ts
-var hash_buffer = __webpack_require__(2870);
+;// CONCATENATED MODULE: ./src/utils/hash_buffer.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/**
+ * Convert given buffer to a 32bit integer hash
+ *
+ * This algorithm is the same one that Java `String.hashCode()` one which
+ * is a fast hashing function adapted to short ASCII strings.
+ * This consequently might not be the most adapted to buffers of various length
+ * containing a various amount of data but still has the advantage of being
+ * fast.
+ *
+ * As this function is used in persistent MediaKeySession storage, we probably
+ * should keep this function somewhere as long as we want to support
+ * MediaKeySessions persisted in old versions of the RxPlayer.
+ *
+ * @param {Array.<number>|TypedArray} buffer
+ * @returns {number}
+ */
+function hashBuffer(buffer) {
+  var hash = 0;
+  var _char;
+  for (var i = 0; i < buffer.length; i++) {
+    _char = buffer[i];
+    hash = (hash << 5) - hash + _char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+
+  return hash;
+}
 // EXTERNAL MODULE: ./src/utils/is_non_empty_string.ts
 var is_non_empty_string = __webpack_require__(6923);
 ;// CONCATENATED MODULE: ./src/core/decrypt/utils/serializable_bytes.ts
@@ -6243,11 +6262,11 @@ function checkStorage(storage) {
   (0,assert/* assertInterface */.u)(storage, {
     save: "function",
     load: "function"
-  }, "licenseStorage");
+  }, "persistentLicenseConfig");
 }
 /**
- * Set representing persisted licenses. Depends on a simple local-
- * storage implementation with a `save`/`load` synchronous interface
+ * Set representing persisted licenses. Depends on a simple
+ * implementation with a `save`/`load` synchronous interface
  * to persist information on persisted sessions.
  *
  * This set is used only for a cdm/keysystem with license persistency
@@ -6426,7 +6445,7 @@ var PersistentSessionsStore = /*#__PURE__*/function () {
         var concatInitData = initData.values.constructRequestData();
         lazyConcatenatedData = {
           initData: concatInitData,
-          initDataHash: (0,hash_buffer/* default */.Z)(concatInitData)
+          initDataHash: hashBuffer(concatInitData)
         };
       }
       return lazyConcatenatedData;
@@ -6540,7 +6559,8 @@ var PersistentSessionsStore = /*#__PURE__*/function () {
     try {
       this._storage.save(this._entries);
     } catch (e) {
-      log/* default */.Z.warn("DRM-PSS: Could not save licenses in localStorage");
+      var err = e instanceof Error ? e : undefined;
+      log/* default */.Z.warn("DRM-PSS: Could not save MediaKeySession information", err);
     }
   };
   return PersistentSessionsStore;
@@ -6626,7 +6646,7 @@ var serverCertificateHashesMap = new WeakMap();
    */
   set: function set(mediaKeys, serverCertificate) {
     var formattedServerCertificate = serverCertificate instanceof Uint8Array ? serverCertificate : new Uint8Array(serverCertificate instanceof ArrayBuffer ? serverCertificate : serverCertificate.buffer);
-    var hash = (0,hash_buffer/* default */.Z)(formattedServerCertificate);
+    var hash = hashBuffer(formattedServerCertificate);
     serverCertificateHashesMap.set(mediaKeys, {
       hash: hash,
       serverCertificate: formattedServerCertificate
@@ -6661,7 +6681,7 @@ var serverCertificateHashesMap = new WeakMap();
     var oldHash = serverCertificateHash.hash,
       oldServerCertificate = serverCertificateHash.serverCertificate;
     var newServerCertificate = serverCertificate instanceof Uint8Array ? serverCertificate : new Uint8Array(serverCertificate instanceof ArrayBuffer ? serverCertificate : serverCertificate.buffer);
-    var newHash = (0,hash_buffer/* default */.Z)(newServerCertificate);
+    var newHash = hashBuffer(newServerCertificate);
     if (newHash !== oldHash || oldServerCertificate.length !== newServerCertificate.length) {
       return false;
     }
@@ -6706,15 +6726,15 @@ var serverCertificateHashesMap = new WeakMap();
  * @returns {Object|null}
  */
 function createPersistentSessionsStorage(keySystemOptions) {
-  if (keySystemOptions.persistentLicense !== true) {
+  if ((0,is_null_or_undefined/* default */.Z)(keySystemOptions.persistentLicenseConfig)) {
     return null;
   }
-  var licenseStorage = keySystemOptions.licenseStorage;
-  if (licenseStorage == null) {
-    throw new encrypted_media_error/* default */.Z("INVALID_KEY_SYSTEM", "No license storage found for persistent license.");
+  var persistentLicenseConfig = keySystemOptions.persistentLicenseConfig;
+  if (persistentLicenseConfig == null) {
+    throw new encrypted_media_error/* default */.Z("INVALID_KEY_SYSTEM", "No `persistentLicenseConfig` found for " + "persistent license.");
   }
   log/* default */.Z.debug("DRM: Set the given license storage");
-  return new PersistentSessionsStore(licenseStorage);
+  return new PersistentSessionsStore(persistentLicenseConfig);
 }
 /**
  * Create a MediaKeys instance and associated structures (or just return the
@@ -7111,9 +7131,8 @@ var KEY_STATUSES = {
  * @returns {Object} - Warnings to send, whitelisted and blacklisted key ids.
  */
 function checkKeyStatuses(session, options, keySystem) {
-  var _options$fallbackOn = options.fallbackOn,
-    fallbackOn = _options$fallbackOn === void 0 ? {} : _options$fallbackOn,
-    throwOnLicenseExpiration = options.throwOnLicenseExpiration,
+  var onKeyInternalError = options.onKeyInternalError,
+    onKeyOutputRestricted = options.onKeyOutputRestricted,
     onKeyExpiration = options.onKeyExpiration;
   var blacklistedKeyIds = [];
   var whitelistedKeyIds = [];
@@ -7140,7 +7159,7 @@ function checkKeyStatuses(session, options, keySystem) {
           var error = new encrypted_media_error/* default */.Z("KEY_STATUS_CHANGE_ERROR", "A decryption key expired (" + (0,string_parsing/* bytesToHex */.ci)(keyId) + ")", {
             keyStatuses: [keyStatusObj].concat(badKeyStatuses)
           });
-          if (onKeyExpiration === "error" || onKeyExpiration === undefined && throwOnLicenseExpiration === false) {
+          if (onKeyExpiration === "error" || onKeyExpiration === undefined) {
             throw error;
           }
           switch (onKeyExpiration) {
@@ -7165,24 +7184,58 @@ function checkKeyStatuses(session, options, keySystem) {
         }
       case KEY_STATUSES.INTERNAL_ERROR:
         {
-          if (fallbackOn.keyInternalError !== true) {
-            throw new encrypted_media_error/* default */.Z("KEY_STATUS_CHANGE_ERROR", "A \"" + keyStatus + "\" status has been encountered (" + (0,string_parsing/* bytesToHex */.ci)(keyId) + ")", {
-              keyStatuses: [keyStatusObj].concat(badKeyStatuses)
-            });
+          var _error = new encrypted_media_error/* default */.Z("KEY_STATUS_CHANGE_ERROR", "A \"" + keyStatus + "\" status has been encountered (" + (0,string_parsing/* bytesToHex */.ci)(keyId) + ")", {
+            keyStatuses: [keyStatusObj].concat(badKeyStatuses)
+          });
+          switch (onKeyInternalError) {
+            case undefined:
+            case "error":
+              throw _error;
+            case "close-session":
+              throw new DecommissionedSessionError(_error);
+            case "fallback":
+              blacklistedKeyIds.push(keyId);
+              break;
+            case "continue":
+              whitelistedKeyIds.push(keyId);
+              break;
+            default:
+              // Weirdly enough, TypeScript is not checking properly
+              // `case undefined` (bug?)
+              if (onKeyInternalError !== undefined) {
+                (0,assert_unreachable/* default */.Z)(onKeyInternalError);
+              } else {
+                throw _error;
+              }
           }
           badKeyStatuses.push(keyStatusObj);
-          blacklistedKeyIds.push(keyId);
           break;
         }
       case KEY_STATUSES.OUTPUT_RESTRICTED:
         {
-          if (fallbackOn.keyOutputRestricted !== true) {
-            throw new encrypted_media_error/* default */.Z("KEY_STATUS_CHANGE_ERROR", "A \"" + keyStatus + "\" status has been encountered (" + (0,string_parsing/* bytesToHex */.ci)(keyId) + ")", {
-              keyStatuses: [keyStatusObj].concat(badKeyStatuses)
-            });
+          var _error2 = new encrypted_media_error/* default */.Z("KEY_STATUS_CHANGE_ERROR", "A \"" + keyStatus + "\" status has been encountered (" + (0,string_parsing/* bytesToHex */.ci)(keyId) + ")", {
+            keyStatuses: [keyStatusObj].concat(badKeyStatuses)
+          });
+          switch (onKeyOutputRestricted) {
+            case undefined:
+            case "error":
+              throw _error2;
+            case "fallback":
+              blacklistedKeyIds.push(keyId);
+              break;
+            case "continue":
+              whitelistedKeyIds.push(keyId);
+              break;
+            default:
+              // Weirdly enough, TypeScript is not checking properly
+              // `case undefined` (bug?)
+              if (onKeyOutputRestricted !== undefined) {
+                (0,assert_unreachable/* default */.Z)(onKeyOutputRestricted);
+              } else {
+                throw _error2;
+              }
           }
           badKeyStatuses.push(keyStatusObj);
-          blacklistedKeyIds.push(keyId);
           break;
         }
       default:
@@ -7265,14 +7318,16 @@ function SessionEventsListener(session, keySystemOptions, keySystem, callbacks, 
     manualCanceller.cancel();
     callbacks.onError(new encrypted_media_error/* default */.Z("KEY_ERROR", evt.type));
   }, manualCanceller.signal);
-  onKeyStatusesChange(session, function (keyStatusesEvent) {
-    handleKeyStatusesChangeEvent(keyStatusesEvent)["catch"](function (error) {
+  onKeyStatusesChange(session, function () {
+    try {
+      checkAndHandleCurrentKeyStatuses();
+    } catch (error) {
       if (cancelSignal.isCancelled() || manualCanceller.isUsed() && error instanceof task_canceller/* CancellationSignal */.XG) {
         return;
       }
       manualCanceller.cancel();
       callbacks.onError(error);
-    });
+    }
   }, manualCanceller.signal);
   onKeyMessage(session, function (evt) {
     var messageEvent = evt;
@@ -7316,101 +7371,13 @@ function SessionEventsListener(session, keySystemOptions, keySystem, callbacks, 
   checkAndHandleCurrentKeyStatuses();
   return;
   /**
-   * @param {Event} keyStatusesEvent
-   * @returns {Promise}
-   */
-  function handleKeyStatusesChangeEvent(_x) {
-    return _handleKeyStatusesChangeEvent.apply(this, arguments);
-  }
-  /**
    * Check current MediaKeyStatus for each key in the given MediaKeySession and:
    *   - throw if at least one status is a non-recoverable error
    *   - call warning callback for recoverable errors
    *   - call onKeyUpdate callback when the MediaKeyStatus of any key is updated
    */
-  function _handleKeyStatusesChangeEvent() {
-    _handleKeyStatusesChangeEvent = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee2(keyStatusesEvent) {
-      var runOnKeyStatusesChangeCallback, _runOnKeyStatusesChangeCallback;
-      return regenerator_default().wrap(function _callee2$(_context2) {
-        while (1) switch (_context2.prev = _context2.next) {
-          case 0:
-            _runOnKeyStatusesChangeCallback = function _runOnKeyStatusesChan2() {
-              _runOnKeyStatusesChangeCallback = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee() {
-                var ret, err;
-                return regenerator_default().wrap(function _callee$(_context) {
-                  while (1) switch (_context.prev = _context.next) {
-                    case 0:
-                      if (!manualCanceller.isUsed()) {
-                        _context.next = 2;
-                        break;
-                      }
-                      return _context.abrupt("return");
-                    case 2:
-                      if (!(typeof keySystemOptions.onKeyStatusesChange === "function")) {
-                        _context.next = 24;
-                        break;
-                      }
-                      _context.prev = 3;
-                      _context.next = 6;
-                      return keySystemOptions.onKeyStatusesChange(keyStatusesEvent, session);
-                    case 6:
-                      ret = _context.sent;
-                      if (!manualCanceller.isUsed()) {
-                        _context.next = 9;
-                        break;
-                      }
-                      return _context.abrupt("return");
-                    case 9:
-                      _context.next = 18;
-                      break;
-                    case 11:
-                      _context.prev = 11;
-                      _context.t0 = _context["catch"](3);
-                      if (!cancelSignal.isCancelled()) {
-                        _context.next = 15;
-                        break;
-                      }
-                      return _context.abrupt("return");
-                    case 15:
-                      err = new encrypted_media_error/* default */.Z("KEY_STATUS_CHANGE_ERROR", "Unknown `onKeyStatusesChange` error");
-                      if (!(0,is_null_or_undefined/* default */.Z)(_context.t0) && (0,is_non_empty_string/* default */.Z)(_context.t0.message)) {
-                        err.message = _context.t0.message;
-                      }
-                      throw err;
-                    case 18:
-                      if (!(0,is_null_or_undefined/* default */.Z)(ret)) {
-                        _context.next = 22;
-                        break;
-                      }
-                      log/* default */.Z.info("DRM: No license given, skipping session.update");
-                      _context.next = 24;
-                      break;
-                    case 22:
-                      _context.next = 24;
-                      return updateSessionWithMessage(session, ret);
-                    case 24:
-                    case "end":
-                      return _context.stop();
-                  }
-                }, _callee, null, [[3, 11]]);
-              }));
-              return _runOnKeyStatusesChangeCallback.apply(this, arguments);
-            };
-            runOnKeyStatusesChangeCallback = function _runOnKeyStatusesChan() {
-              return _runOnKeyStatusesChangeCallback.apply(this, arguments);
-            };
-            log/* default */.Z.info("DRM: keystatuseschange event received", session.sessionId);
-            _context2.next = 5;
-            return Promise.all([runOnKeyStatusesChangeCallback(), Promise.resolve(checkAndHandleCurrentKeyStatuses())]);
-          case 5:
-          case "end":
-            return _context2.stop();
-        }
-      }, _callee2);
-    }));
-    return _handleKeyStatusesChangeEvent.apply(this, arguments);
-  }
   function checkAndHandleCurrentKeyStatuses() {
+    log/* default */.Z.info("DRM: keystatuseschange event received", session.sessionId);
     if (manualCanceller.isUsed() || session.keyStatuses.size === 0) {
       return;
     }
@@ -7501,7 +7468,7 @@ function formatGetLicenseError(error) {
  * @param {ArrayBuffer|TypedArray|null} message
  * @returns {Promise}
  */
-function updateSessionWithMessage(_x2, _x3) {
+function updateSessionWithMessage(_x, _x2) {
   return _updateSessionWithMessage.apply(this, arguments);
 }
 /**
@@ -7512,30 +7479,30 @@ function updateSessionWithMessage(_x2, _x3) {
  * @extends Error
  */
 function _updateSessionWithMessage() {
-  _updateSessionWithMessage = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee3(session, message) {
+  _updateSessionWithMessage = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee(session, message) {
     var reason;
-    return regenerator_default().wrap(function _callee3$(_context3) {
-      while (1) switch (_context3.prev = _context3.next) {
+    return regenerator_default().wrap(function _callee$(_context) {
+      while (1) switch (_context.prev = _context.next) {
         case 0:
           log/* default */.Z.info("DRM: Updating MediaKeySession with message");
-          _context3.prev = 1;
-          _context3.next = 4;
+          _context.prev = 1;
+          _context.next = 4;
           return session.update(message);
         case 4:
-          _context3.next = 10;
+          _context.next = 10;
           break;
         case 6:
-          _context3.prev = 6;
-          _context3.t0 = _context3["catch"](1);
-          reason = _context3.t0 instanceof Error ? _context3.t0.toString() : "`session.update` failed";
+          _context.prev = 6;
+          _context.t0 = _context["catch"](1);
+          reason = _context.t0 instanceof Error ? _context.t0.toString() : "`session.update` failed";
           throw new encrypted_media_error/* default */.Z("KEY_UPDATE_ERROR", reason);
         case 10:
           log/* default */.Z.info("DRM: MediaKeySession update succeeded.");
         case 11:
         case "end":
-          return _context3.stop();
+          return _context.stop();
       }
-    }, _callee3, null, [[1, 6]]);
+    }, _callee, null, [[1, 6]]);
   }));
   return _updateSessionWithMessage.apply(this, arguments);
 }
@@ -7878,7 +7845,7 @@ function formatInitDataValues(initialValues) {
     return {
       systemId: systemId,
       data: data,
-      hash: (0,hash_buffer/* default */.Z)(data)
+      hash: hashBuffer(data)
     };
   });
 }
@@ -7990,7 +7957,7 @@ var ContentDecryptor = /*#__PURE__*/function (_EventEmitter) {
        * MediaKeySessions persisted in older RxPlayer's versions.
        */
       var systemId;
-      if ((0,is_null_or_undefined/* default */.Z)(options.licenseStorage) || options.licenseStorage.disableRetroCompatibility === true) {
+      if ((0,is_null_or_undefined/* default */.Z)(options.persistentLicenseConfig) || options.persistentLicenseConfig.disableRetroCompatibility === true) {
         systemId = getDrmSystemId(mediaKeySystemAccess.keySystem);
       }
       _this.systemId = systemId;
@@ -8278,7 +8245,7 @@ var ContentDecryptor = /*#__PURE__*/function (_EventEmitter) {
             // persistent sessions.
             // Can we find a better strategy?
             this._lockInitDataQueue();
-            if (options.persistentLicense !== true) {
+            if ((0,is_null_or_undefined/* default */.Z)(options.persistentLicenseConfig)) {
               wantedSessionType = "temporary";
             } else if (!canCreatePersistentSession(mediaKeySystemAccess)) {
               log/* default */.Z.warn("DRM: Cannot create \"persistent-license\" session: not supported");
@@ -8905,7 +8872,7 @@ function addKeyIdsFromPeriod(set, period) {
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var _content_decryptor__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1960);
+/* harmony import */ var _content_decryptor__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(276);
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -9075,7 +9042,7 @@ var DirectFileContentInitializer = /*#__PURE__*/function (_ContentInitializer) {
      * Class trying to avoid various stalling situations, emitting "stalled"
      * events when it cannot, as well as "unstalled" events when it get out of one.
      */
-    var rebufferingController = new _utils_rebuffering_controller__WEBPACK_IMPORTED_MODULE_6__/* ["default"] */ .Z(playbackObserver, null, speed);
+    var rebufferingController = new _utils_rebuffering_controller__WEBPACK_IMPORTED_MODULE_6__/* ["default"] */ .Z(playbackObserver, null, null, speed);
     rebufferingController.addEventListener("stalled", function (evt) {
       return _this2.trigger("stalled", evt);
     });
@@ -9553,8 +9520,8 @@ var reference = __webpack_require__(5095);
 var task_canceller = __webpack_require__(288);
 // EXTERNAL MODULE: ./src/core/decrypt/index.ts
 var decrypt = __webpack_require__(1266);
-// EXTERNAL MODULE: ./src/core/decrypt/content_decryptor.ts + 31 modules
-var content_decryptor = __webpack_require__(1960);
+// EXTERNAL MODULE: ./src/core/decrypt/content_decryptor.ts + 32 modules
+var content_decryptor = __webpack_require__(276);
 ;// CONCATENATED MODULE: ./src/core/init/utils/initialize_content_decryption.ts
 
 
@@ -9756,6 +9723,9 @@ var ranges = __webpack_require__(2829);
 var task_canceller = __webpack_require__(288);
 ;// CONCATENATED MODULE: ./src/core/init/utils/rebuffering_controller.ts
 
+function _createForOfIteratorHelperLoose(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (it) return (it = it.call(o)).next.bind(it); if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -9798,15 +9768,17 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
    * @param {Object} manifest - The Manifest of the currently-played content.
    * @param {Object} speed - The last speed set by the user
    */
-  function RebufferingController(playbackObserver, manifest, speed) {
+  function RebufferingController(playbackObserver, manifest, segmentBuffersStore, speed) {
     var _this;
     _this = _EventEmitter.call(this) || this;
     _this._playbackObserver = playbackObserver;
     _this._manifest = manifest;
+    _this._segmentBuffersStore = segmentBuffersStore;
     _this._speed = speed;
     _this._discontinuitiesStore = [];
     _this._isStarted = false;
     _this._canceller = new task_canceller/* default */.ZP();
+    _this._currentFreezeTimestamp = null;
     return _this;
   }
   var _proto = RebufferingController.prototype;
@@ -9866,6 +9838,9 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
         ignoredStallTimeStamp = now;
       }
       lastSeekingPosition = observation.seeking ? Math.max((_a = observation.pendingInternalSeek) !== null && _a !== void 0 ? _a : 0, observation.position) : null;
+      if (_this2._checkDecipherabilityFreeze(observation)) {
+        return;
+      }
       if (freezing !== null) {
         var _now = performance.now();
         var referenceTimestamp = prevFreezingState === null ? freezing.timestamp : prevFreezingState.attemptTimestamp;
@@ -9916,7 +9891,7 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
           _this2.trigger("stalled", stalledReason);
           return;
         } else {
-          log/* default */.Z.warn("Init: ignored stall for too long, checking discontinuity", _now2 - ignoredStallTimeStamp);
+          log/* default */.Z.warn("Init: ignored stall for too long, considering it", _now2 - ignoredStallTimeStamp);
         }
       }
       ignoredStallTimeStamp = null;
@@ -10023,6 +9998,75 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
    */;
   _proto.destroy = function destroy() {
     this._canceller.cancel();
+  }
+  /**
+   * Support of contents with DRM on all the platforms out there is a pain in
+   * the *ss considering all the DRM-related bugs there are.
+   *
+   * We found out a frequent issue which is to be unable to play despite having
+   * all the decryption keys to play what is currently buffered.
+   * When this happens, re-creating the buffers from scratch, with a reload, is
+   * usually sufficient to unlock the situation.
+   *
+   * Although we prefer providing more targeted fixes or telling to platform
+   * developpers to fix their implementation, it's not always possible.
+   * We thus resorted to developping an heuristic which detects such situation
+   * and reload in that case.
+   *
+   * @param {Object} observation - The last playback observation produced, it
+   * has to be recent (just triggered for example).
+   * @returns {boolean} - Returns `true` if it seems to be such kind of
+   * decipherability freeze, in which case this method already performed the
+   * right handling steps.
+   */;
+  _proto._checkDecipherabilityFreeze = function _checkDecipherabilityFreeze(observation) {
+    var readyState = observation.readyState,
+      rebuffering = observation.rebuffering,
+      freezing = observation.freezing;
+    var bufferGap = observation.bufferGap !== undefined && isFinite(observation.bufferGap) ? observation.bufferGap : 0;
+    if (this._segmentBuffersStore === null || bufferGap < 6 || rebuffering === null && freezing === null || readyState > 1) {
+      this._currentFreezeTimestamp = null;
+      return false;
+    }
+    var now = performance.now();
+    if (this._currentFreezeTimestamp === null) {
+      this._currentFreezeTimestamp = now;
+    }
+    var rebufferingForTooLong = rebuffering !== null && now - rebuffering.timestamp > 4000;
+    var frozenForTooLong = freezing !== null && now - freezing.timestamp > 4000;
+    if ((rebufferingForTooLong || frozenForTooLong) && performance.now() - this._currentFreezeTimestamp > 4000) {
+      var statusAudio = this._segmentBuffersStore.getStatus("audio");
+      var statusVideo = this._segmentBuffersStore.getStatus("video");
+      var hasOnlyDecipherableSegments = true;
+      var isClear = true;
+      for (var _i = 0, _arr = [statusAudio, statusVideo]; _i < _arr.length; _i++) {
+        var status = _arr[_i];
+        if (status.type === "initialized") {
+          for (var _iterator = _createForOfIteratorHelperLoose(status.value.getInventory()), _step; !(_step = _iterator()).done;) {
+            var segment = _step.value;
+            var representation = segment.infos.representation;
+            if (representation.decipherable === false) {
+              log/* default */.Z.warn("Init: we have undecipherable segments left in the buffer, reloading");
+              this._currentFreezeTimestamp = null;
+              this.trigger("needsReload", null);
+              return true;
+            } else if (representation.contentProtections !== undefined) {
+              isClear = false;
+              if (representation.decipherable !== true) {
+                hasOnlyDecipherableSegments = false;
+              }
+            }
+          }
+        }
+      }
+      if (!isClear && hasOnlyDecipherableSegments) {
+        log/* default */.Z.warn("Init: we are frozen despite only having decipherable " + "segments left in the buffer, reloading");
+        this._currentFreezeTimestamp = null;
+        this.trigger("needsReload", null);
+        return true;
+      }
+    }
+    return false;
   };
   return RebufferingController;
 }(event_emitter/* default */.Z);
@@ -11036,11 +11080,23 @@ var HTMLTextSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
     return _this;
   }
   /**
+   * @param {string} uniqueId
+   */
+  var _proto = HTMLTextSegmentBuffer.prototype;
+  _proto.declareInitSegment = function declareInitSegment(uniqueId) {
+    log/* default */.Z.warn("ISB: Declaring initialization segment for image SegmentBuffer", uniqueId);
+  }
+  /**
+   * @param {string} uniqueId
+   */;
+  _proto.freeInitSegment = function freeInitSegment(uniqueId) {
+    log/* default */.Z.warn("ISB: Freeing initialization segment for image SegmentBuffer", uniqueId);
+  }
+  /**
    * Push text segment to the HTMLTextSegmentBuffer.
    * @param {Object} infos
    * @returns {Promise}
-   */
-  var _proto = HTMLTextSegmentBuffer.prototype;
+   */;
   _proto.pushChunk = function pushChunk(infos) {
     try {
       this.pushChunkSync(infos);
@@ -11574,10 +11630,22 @@ var NativeTextSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
     return _this;
   }
   /**
-   * @param {Object} infos
-   * @returns {Promise}
+   * @param {string} uniqueId
    */
   var _proto = NativeTextSegmentBuffer.prototype;
+  _proto.declareInitSegment = function declareInitSegment(uniqueId) {
+    log/* default */.Z.warn("ISB: Declaring initialization segment for image SegmentBuffer", uniqueId);
+  }
+  /**
+   * @param {string} uniqueId
+   */;
+  _proto.freeInitSegment = function freeInitSegment(uniqueId) {
+    log/* default */.Z.warn("ISB: Freeing initialization segment for image SegmentBuffer", uniqueId);
+  }
+  /**
+   * @param {Object} infos
+   * @returns {Promise}
+   */;
   _proto.pushChunk = function pushChunk(infos) {
     var _a, _b;
     log/* default */.Z.debug("NTSB: Appending new native text tracks");
@@ -12965,10 +13033,9 @@ var CustomLoaderError = /*#__PURE__*/function (_Error) {
   /**
    * @param {string} message
    * @param {boolean} canRetry
-   * @param {boolean} isOfflineError
    * @param {XMLHttpRequest} xhr
    */
-  function CustomLoaderError(message, canRetry, isOfflineError, xhr) {
+  function CustomLoaderError(message, canRetry, xhr) {
     var _this;
     _this = _Error.call(this) || this;
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
@@ -12976,7 +13043,6 @@ var CustomLoaderError = /*#__PURE__*/function (_Error) {
     _this.name = "CustomLoaderError";
     _this.message = message;
     _this.canRetry = canRetry;
-    _this.isOfflineError = isOfflineError;
     _this.xhr = xhr;
     return _this;
   }
@@ -13783,6 +13849,8 @@ function isCodecSupported(mimeType) {
 }
 // EXTERNAL MODULE: ./src/utils/are_arrays_of_numbers_equal.ts
 var are_arrays_of_numbers_equal = __webpack_require__(4791);
+// EXTERNAL MODULE: ./src/utils/id_generator.ts
+var id_generator = __webpack_require__(908);
 ;// CONCATENATED MODULE: ./src/manifest/representation.ts
 function _createForOfIteratorHelperLoose(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (it) return (it = it.call(o)).next.bind(it); if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
@@ -13805,6 +13873,8 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 
 
 
+
+var generateRepresentationUniqueId = (0,id_generator/* default */.Z)();
 /**
  * Normalized Representation structure.
  * @class Representation
@@ -13815,6 +13885,7 @@ var Representation = /*#__PURE__*/function () {
    */
   function Representation(args, opts) {
     this.id = args.id;
+    this.uniqueId = generateRepresentationUniqueId();
     this.bitrate = args.bitrate;
     this.codec = args.codecs;
     if (args.height !== undefined) {
@@ -14173,23 +14244,37 @@ var Adaptation = /*#__PURE__*/function () {
       var representation = new manifest_representation(argsRepresentations[i], {
         type: this.type
       });
-      var shouldAdd = (0,is_null_or_undefined/* default */.Z)(representationFilter) || representationFilter({
-        id: representation.id,
-        bitrate: representation.bitrate,
-        codec: representation.codec,
-        height: representation.height,
-        width: representation.width,
-        frameRate: representation.frameRate,
-        hdrInfo: representation.hdrInfo
-      }, {
-        bufferType: this.type,
-        language: this.language,
-        normalizedLanguage: this.normalizedLanguage,
-        isClosedCaption: this.isClosedCaption,
-        isDub: this.isDub,
-        isAudioDescription: this.isAudioDescription,
-        isSignInterpreted: this.isSignInterpreted
-      });
+      var shouldAdd = true;
+      if (!(0,is_null_or_undefined/* default */.Z)(representationFilter)) {
+        var reprObject = {
+          id: representation.id,
+          bitrate: representation.bitrate,
+          codec: representation.codec,
+          height: representation.height,
+          width: representation.width,
+          frameRate: representation.frameRate,
+          hdrInfo: representation.hdrInfo
+        };
+        if (representation.contentProtections !== undefined) {
+          reprObject.contentProtections = {};
+          if (representation.contentProtections.keyIds !== undefined) {
+            var keyIds = representation.contentProtections.keyIds.map(function (_ref) {
+              var keyId = _ref.keyId;
+              return keyId;
+            });
+            reprObject.contentProtections.keyIds = keyIds;
+          }
+        }
+        shouldAdd = representationFilter(reprObject, {
+          trackType: this.type,
+          language: this.language,
+          normalizedLanguage: this.normalizedLanguage,
+          isClosedCaption: this.isClosedCaption,
+          isDub: this.isDub,
+          isAudioDescription: this.isAudioDescription,
+          isSignInterpreted: this.isSignInterpreted
+        });
+      }
       if (shouldAdd) {
         representations.push(representation);
         if (!isSupported && representation.isSupported) {
@@ -14224,8 +14309,8 @@ var Adaptation = /*#__PURE__*/function () {
    * @returns {Object|undefined}
    */;
   _proto.getRepresentation = function getRepresentation(wantedId) {
-    return (0,array_find/* default */.Z)(this.representations, function (_ref) {
-      var id = _ref.id;
+    return (0,array_find/* default */.Z)(this.representations, function (_ref2) {
+      var id = _ref2.id;
       return wantedId === id;
     });
   }
@@ -14399,7 +14484,9 @@ var Period = /*#__PURE__*/function () {
       if (filteredAdaptations.every(function (adaptation) {
         return !adaptation.isSupported;
       }) && adaptationsForType.length > 0 && (type === "video" || type === "audio")) {
-        throw new media_error/* default */.Z("MANIFEST_PARSE_ERROR", "No supported " + type + " adaptations");
+        throw new media_error/* default */.Z("MANIFEST_INCOMPATIBLE_CODECS_ERROR", "No supported " + type + " adaptations", {
+          adaptation: undefined
+        });
       }
       if (filteredAdaptations.length > 0) {
         acc[type] = filteredAdaptations;
@@ -14961,10 +15048,10 @@ var Manifest = /*#__PURE__*/function (_EventEmitter) {
   /**
    * Returns the most important URL from which the Manifest can be refreshed.
    * `undefined` if no URL is found.
-   * @returns {string|undefined}
+   * @returns {Array.<string>}
    */;
-  _proto.getUrl = function getUrl() {
-    return this.uris[0];
+  _proto.getUrls = function getUrls() {
+    return this.uris;
   }
   /**
    * Update the current Manifest properties by giving a new updated version.
@@ -15241,7 +15328,7 @@ function updateDeciperability(manifest, isDecipherable) {
  * @returns {boolean}
  */
 function areSameContent(content1, content2) {
-  return content1.segment.id === content2.segment.id && content1.representation.id === content2.representation.id && content1.adaptation.id === content2.adaptation.id && content1.period.id === content2.period.id;
+  return content1.segment.id === content2.segment.id && content1.representation.uniqueId === content2.representation.uniqueId;
 }
 /**
  * Get string describing a given ISegment, useful for log functions.
@@ -28126,7 +28213,7 @@ function generateSegmentLoader(_ref) {
        * @param {*} err - The corresponding error encountered
        */
       var reject = function reject(err) {
-        var _a, _b, _c;
+        var _a, _b;
         if (hasFinished || cancelSignal.isCancelled()) {
           return;
         }
@@ -28135,7 +28222,7 @@ function generateSegmentLoader(_ref) {
         // Format error and send it
         var castedErr = err;
         var message = (_a = castedErr === null || castedErr === void 0 ? void 0 : castedErr.message) !== null && _a !== void 0 ? _a : "Unknown error when fetching a DASH segment through a " + "custom segmentLoader.";
-        var emittedErr = new custom_loader_error/* default */.Z(message, (_b = castedErr === null || castedErr === void 0 ? void 0 : castedErr.canRetry) !== null && _b !== void 0 ? _b : false, (_c = castedErr === null || castedErr === void 0 ? void 0 : castedErr.isOfflineError) !== null && _c !== void 0 ? _c : false, castedErr === null || castedErr === void 0 ? void 0 : castedErr.xhr);
+        var emittedErr = new custom_loader_error/* default */.Z(message, (_b = castedErr === null || castedErr === void 0 ? void 0 : castedErr.canRetry) !== null && _b !== void 0 ? _b : false, castedErr === null || castedErr === void 0 ? void 0 : castedErr.xhr);
         rej(emittedErr);
       };
       var progress = function progress(_args) {
@@ -28166,12 +28253,18 @@ function generateSegmentLoader(_ref) {
         progress: progress,
         fallback: fallback
       };
+      var byteRanges;
+      if (context.segment.range !== undefined) {
+        byteRanges = [context.segment.range];
+        if (context.segment.indexRange !== undefined) {
+          byteRanges.push(context.segment.indexRange);
+        }
+      }
       var args = {
         isInit: context.segment.isInit,
         timeout: options.timeout,
-        range: context.segment.range,
-        indexRange: context.segment.indexRange,
-        type: context.type,
+        byteRanges: byteRanges,
+        trackType: context.type,
         url: url
       };
       var abort = customSegmentLoader(args, customCallbacks);
@@ -32034,7 +32127,7 @@ var generateSegmentLoader = function generateSegmentLoader(_ref) {
          * @param {*} err - The corresponding error encountered
          */
         var reject = function reject(err) {
-          var _a, _b, _c;
+          var _a, _b;
           if (hasFinished || cancelSignal.isCancelled()) {
             return;
           }
@@ -32043,7 +32136,7 @@ var generateSegmentLoader = function generateSegmentLoader(_ref) {
           // Format error and send it
           var castedErr = err;
           var message = (_a = castedErr === null || castedErr === void 0 ? void 0 : castedErr.message) !== null && _a !== void 0 ? _a : "Unknown error when fetching a Smooth segment through a " + "custom segmentLoader.";
-          var emittedErr = new custom_loader_error/* default */.Z(message, (_b = castedErr === null || castedErr === void 0 ? void 0 : castedErr.canRetry) !== null && _b !== void 0 ? _b : false, (_c = castedErr === null || castedErr === void 0 ? void 0 : castedErr.isOfflineError) !== null && _c !== void 0 ? _c : false, castedErr === null || castedErr === void 0 ? void 0 : castedErr.xhr);
+          var emittedErr = new custom_loader_error/* default */.Z(message, (_b = castedErr === null || castedErr === void 0 ? void 0 : castedErr.canRetry) !== null && _b !== void 0 ? _b : false, castedErr === null || castedErr === void 0 ? void 0 : castedErr.xhr);
           rej(emittedErr);
         };
         var progress = function progress(_args) {
@@ -32070,12 +32163,18 @@ var generateSegmentLoader = function generateSegmentLoader(_ref) {
           fallback: fallback,
           progress: progress
         };
+        var byteRanges;
+        if (context.segment.range !== undefined) {
+          byteRanges = [context.segment.range];
+          if (context.segment.indexRange !== undefined) {
+            byteRanges.push(context.segment.indexRange);
+          }
+        }
         var args = {
           isInit: context.segment.isInit,
           timeout: loaderOptions.timeout,
-          range: context.segment.range,
-          indexRange: context.segment.indexRange,
-          type: context.type,
+          byteRanges: byteRanges,
+          trackType: context.type,
           url: url
         };
         var abort = customSegmentLoader(args, customCallbacks);
@@ -32688,7 +32787,7 @@ function callCustomManifestLoader(customManifestLoader, fallbackManifestLoader) 
        * @param {*} err - The corresponding error encountered
        */
       var reject = function reject(err) {
-        var _a, _b, _c;
+        var _a, _b;
         if (hasFinished || cancelSignal.isCancelled()) {
           return;
         }
@@ -32697,7 +32796,7 @@ function callCustomManifestLoader(customManifestLoader, fallbackManifestLoader) 
         // Format error and send it
         var castedErr = err;
         var message = (_a = castedErr === null || castedErr === void 0 ? void 0 : castedErr.message) !== null && _a !== void 0 ? _a : "Unknown error when fetching the Manifest through a " + "custom manifestLoader.";
-        var emittedErr = new custom_loader_error/* default */.Z(message, (_b = castedErr === null || castedErr === void 0 ? void 0 : castedErr.canRetry) !== null && _b !== void 0 ? _b : false, (_c = castedErr === null || castedErr === void 0 ? void 0 : castedErr.isOfflineError) !== null && _c !== void 0 ? _c : false, castedErr === null || castedErr === void 0 ? void 0 : castedErr.xhr);
+        var emittedErr = new custom_loader_error/* default */.Z(message, (_b = castedErr === null || castedErr === void 0 ? void 0 : castedErr.canRetry) !== null && _b !== void 0 ? _b : false, castedErr === null || castedErr === void 0 ? void 0 : castedErr.xhr);
         rej(emittedErr);
       };
       /**
@@ -33352,7 +33451,6 @@ function base64ToBytes(str) {
 /* harmony export */   O_: function() { return /* binding */ itole4; },
 /* harmony export */   QI: function() { return /* binding */ be3toi; },
 /* harmony export */   XT: function() { return /* binding */ itobe2; },
-/* harmony export */   _f: function() { return /* binding */ toUint8Array; },
 /* harmony export */   dN: function() { return /* binding */ le4toi; },
 /* harmony export */   el: function() { return /* binding */ itobe8; },
 /* harmony export */   kh: function() { return /* binding */ itobe4; },
@@ -33362,7 +33460,7 @@ function base64ToBytes(str) {
 /* harmony export */   zK: function() { return /* binding */ be2toi; },
 /* harmony export */   zo: function() { return /* binding */ concat; }
 /* harmony export */ });
-/* unused harmony exports le8toi, itole2, isABEqualBytes */
+/* unused harmony exports le8toi, itole2, isABEqualBytes, toUint8Array */
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -33855,58 +33953,6 @@ var FUZZ_FACTOR = 0.3;
 function getFuzzedDelay(retryDelay) {
   var fuzzingFactor = (Math.random() * 2 - 1) * FUZZ_FACTOR;
   return retryDelay * (fuzzingFactor + 1); // Max 1.3 Min 0.7
-}
-
-/***/ }),
-
-/***/ 2870:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ hashBuffer; }
-/* harmony export */ });
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-/**
- * Convert given buffer to a 32bit integer hash
- *
- * This algorithm is the same one that Java `String.hashCode()` one which
- * is a fast hashing function adapted to short ASCII strings.
- * This consequently might not be the most adapted to buffers of various length
- * containing a various amount of data but still has the advantage of being
- * fast.
- *
- * As this function is used in persistent MediaKeySession storage, we probably
- * should keep this function somewhere as long as we want to support
- * MediaKeySessions persisted in old versions of the RxPlayer.
- *
- * @param {Array.<number>|TypedArray} buffer
- * @returns {number}
- */
-function hashBuffer(buffer) {
-  var hash = 0;
-  var _char;
-  for (var i = 0; i < buffer.length; i++) {
-    _char = buffer[i];
-    hash = (hash << 5) - hash + _char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-
-  return hash;
 }
 
 /***/ }),
@@ -37289,6 +37335,8 @@ var media_error = __webpack_require__(3714);
 var error_codes = __webpack_require__(5992);
 // EXTERNAL MODULE: ./src/features/index.ts
 var features = __webpack_require__(7874);
+// EXTERNAL MODULE: ./src/utils/array_find.ts
+var array_find = __webpack_require__(3274);
 // EXTERNAL MODULE: ./src/utils/array_includes.ts
 var array_includes = __webpack_require__(7714);
 // EXTERNAL MODULE: ./src/utils/assert.ts
@@ -37309,8 +37357,6 @@ var ranges = __webpack_require__(2829);
 var utils_reference = __webpack_require__(5095);
 // EXTERNAL MODULE: ./src/utils/task_canceller.ts
 var task_canceller = __webpack_require__(288);
-// EXTERNAL MODULE: ./src/utils/warn_once.ts
-var warn_once = __webpack_require__(8806);
 // EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js
 var asyncToGenerator = __webpack_require__(5861);
 // EXTERNAL MODULE: ./node_modules/@babel/runtime/regenerator/index.js
@@ -37406,17 +37452,6 @@ function get_key_system_configuration_getKeySystemConfiguration(mediaElement) {
     return null;
   }
   return [currentState.mediaKeySystemAccess.keySystem, currentState.mediaKeySystemAccess.getConfiguration()];
-}
-/**
- * Returns the name of the current key system used, as originally indicated by
- * the user.
- * @deprecated
- * @param {HTMLMediaElement} mediaElement
- * @returns {string|null}
- */
-function get_key_system_configuration_getCurrentKeySystem(mediaElement) {
-  var currentState = media_keys_infos_store/* default */.Z.getState(mediaElement);
-  return currentState == null ? null : currentState.keySystemOptions.type;
 }
 ;// CONCATENATED MODULE: ./src/compat/should_unset_media_keys.ts
 /**
@@ -37744,8 +37779,6 @@ var BufferBasedChooser = /*#__PURE__*/function () {
   return BufferBasedChooser;
 }();
 
-// EXTERNAL MODULE: ./src/utils/array_find.ts
-var array_find = __webpack_require__(3274);
 ;// CONCATENATED MODULE: ./src/core/adaptive/utils/ewma.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -38489,7 +38522,7 @@ function filterByBitrate(representations, bitrate) {
 
   return representations.slice(0, firstSuperiorBitrateIndex);
 }
-;// CONCATENATED MODULE: ./src/core/adaptive/utils/filter_by_width.ts
+;// CONCATENATED MODULE: ./src/core/adaptive/utils/filter_by_resolution.ts
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -38508,20 +38541,26 @@ function filterByBitrate(representations, bitrate) {
 
 
 /**
- * Filter representations based on their width:
- *   - the highest width considered will be the one linked to the first
- *     representation which has a superior width to the one given.
+ * Filter representations based on their resolution.
+ *   - the highest resolution considered will be the one linked to the first
+ *     representation which has a superior resolution or equal to the one
+ *     given.
  * @param {Array.<Object>} representations - The representations array
- * @param {Number} width
+ * @param {Object} resolution
  * @returns {Array.<Object>}
  */
-function filterByWidth(representations, width) {
+function filterByResolution(representations, resolution) {
+  if (resolution.width === undefined || resolution.height === undefined) {
+    return representations;
+  }
+  var width = resolution.width * resolution.pixelRatio;
+  var height = resolution.height * resolution.pixelRatio;
   var sortedRepsByWidth = representations.slice() // clone
   .sort(function (a, b) {
     return (0,take_first_set/* default */.Z)(a.width, 0) - (0,take_first_set/* default */.Z)(b.width, 0);
   });
   var repWithMaxWidth = (0,array_find/* default */.Z)(sortedRepsByWidth, function (representation) {
-    return typeof representation.width === "number" && representation.width >= width;
+    return typeof representation.width === "number" && representation.width >= width && typeof representation.height === "number" && representation.height >= height;
   });
   if (repWithMaxWidth === undefined) {
     return representations;
@@ -38797,18 +38836,11 @@ var RepresentationScoreCalculator = /*#__PURE__*/function () {
  * bitrates.
  * @param {Array.<Representation>} representations - The representations array,
  * sorted in bitrate ascending order.
- * @param {Number} optimalBitrate - The optimal bitrate the Representation
+ * @param {Number} wantedBitrate - The optimal bitrate the Representation
  * should have under the current condition.
- * @param {Number} minBitrate - The minimum bitrate the chosen Representation
- * should have. We will take the Representation with the maximum bitrate if none
- * is found.
- * @param {Number} maxBitrate - The maximum bitrate the chosen Representation
- * should have. We will take the Representation with the minimum bitrate if none
- * is found.
  * @returns {Representation|undefined}
  */
-function selectOptimalRepresentation(representations, optimalBitrate, minBitrate, maxBitrate) {
-  var wantedBitrate = optimalBitrate <= minBitrate ? minBitrate : optimalBitrate >= maxBitrate ? maxBitrate : optimalBitrate;
+function selectOptimalRepresentation(representations, wantedBitrate) {
   var firstIndexTooHigh = (0,array_find_index/* default */.Z)(representations, function (representation) {
     return representation.bitrate > wantedBitrate;
   });
@@ -38853,12 +38885,6 @@ function selectOptimalRepresentation(representations, optimalBitrate, minBitrate
 
 
 // Create default shared references
-var manualBitrateDefaultRef = (0,utils_reference/* default */.ZP)(-1);
-manualBitrateDefaultRef.finish();
-var minAutoBitrateDefaultRef = (0,utils_reference/* default */.ZP)(0);
-minAutoBitrateDefaultRef.finish();
-var maxAutoBitrateDefaultRef = (0,utils_reference/* default */.ZP)(Infinity);
-maxAutoBitrateDefaultRef.finish();
 var limitWidthDefaultRef = (0,utils_reference/* default */.ZP)(undefined);
 limitWidthDefaultRef.finish();
 var throttleBitrateDefaultRef = (0,utils_reference/* default */.ZP)(Infinity);
@@ -38877,10 +38903,7 @@ function createAdaptiveRepresentationSelector(options) {
    * One per active media type.
    */
   var bandwidthEstimators = {};
-  var manualBitrates = options.manualBitrates,
-    minAutoBitrates = options.minAutoBitrates,
-    maxAutoBitrates = options.maxAutoBitrates,
-    initialBitrates = options.initialBitrates,
+  var initialBitrates = options.initialBitrates,
     throttlers = options.throttlers,
     lowLatencyMode = options.lowLatencyMode;
   /**
@@ -38898,12 +38921,9 @@ function createAdaptiveRepresentationSelector(options) {
   return function getEstimates(context, currentRepresentation, representations, playbackObserver, stopAllEstimates) {
     var type = context.adaptation.type;
     var bandwidthEstimator = _getBandwidthEstimator(type);
-    var manualBitrate = (0,take_first_set/* default */.Z)(manualBitrates[type], manualBitrateDefaultRef);
-    var minAutoBitrate = (0,take_first_set/* default */.Z)(minAutoBitrates[type], minAutoBitrateDefaultRef);
-    var maxAutoBitrate = (0,take_first_set/* default */.Z)(maxAutoBitrates[type], maxAutoBitrateDefaultRef);
     var initialBitrate = (0,take_first_set/* default */.Z)(initialBitrates[type], 0);
     var filters = {
-      limitWidth: (0,take_first_set/* default */.Z)(throttlers.limitWidth[type], limitWidthDefaultRef),
+      limitResolution: (0,take_first_set/* default */.Z)(throttlers.limitResolution[type], limitWidthDefaultRef),
       throttleBitrate: (0,take_first_set/* default */.Z)(throttlers.throttleBitrate[type], throttleBitrateDefaultRef)
     };
     return getEstimateReference({
@@ -38912,9 +38932,6 @@ function createAdaptiveRepresentationSelector(options) {
       currentRepresentation: currentRepresentation,
       filters: filters,
       initialBitrate: initialBitrate,
-      manualBitrate: manualBitrate,
-      minAutoBitrate: minAutoBitrate,
-      maxAutoBitrate: maxAutoBitrate,
       playbackObserver: playbackObserver,
       representations: representations,
       lowLatencyMode: lowLatencyMode
@@ -38962,9 +38979,6 @@ function getEstimateReference(_ref, stopAllEstimates) {
     filters = _ref.filters,
     initialBitrate = _ref.initialBitrate,
     lowLatencyMode = _ref.lowLatencyMode,
-    manualBitrate = _ref.manualBitrate,
-    maxAutoBitrate = _ref.maxAutoBitrate,
-    minAutoBitrate = _ref.minAutoBitrate,
     playbackObserver = _ref.playbackObserver,
     representationsRef = _ref.representations;
   var scoreCalculator = new RepresentationScoreCalculator();
@@ -38988,10 +39002,7 @@ function getEstimateReference(_ref, stopAllEstimates) {
   var currentEstimatesCanceller = new task_canceller/* default */.ZP();
   currentEstimatesCanceller.linkToSignal(stopAllEstimates);
   // Create `ISharedReference` on which estimates will be emitted.
-  var estimateRef = createEstimateReference(manualBitrate.getValue(), representationsRef.getValue(), currentEstimatesCanceller.signal);
-  manualBitrate.onUpdate(restartEstimatesProductionFromCurrentConditions, {
-    clearSignal: stopAllEstimates
-  });
+  var estimateRef = createEstimateReference(representationsRef.getValue(), currentEstimatesCanceller.signal);
   representationsRef.onUpdate(restartEstimatesProductionFromCurrentConditions, {
     clearSignal: stopAllEstimates
   });
@@ -38999,35 +39010,12 @@ function getEstimateReference(_ref, stopAllEstimates) {
     estimates: estimateRef,
     callbacks: callbacks
   };
-  function createEstimateReference(manualBitrateVal, representations, innerCancellationSignal) {
-    if (representations.length === 0) {
-      // No Representation given, return `null` as documented
-      return (0,utils_reference/* default */.ZP)({
-        representation: null,
-        bitrate: undefined,
-        knownStableBitrate: undefined,
-        manual: false,
-        urgent: true
-      });
-    }
-    if (manualBitrateVal >= 0) {
-      // A manual bitrate has been set. Just choose Representation according to it.
-      var manualRepresentation = selectOptimalRepresentation(representations, manualBitrateVal, 0, Infinity);
-      return (0,utils_reference/* default */.ZP)({
-        representation: manualRepresentation,
-        bitrate: undefined,
-        knownStableBitrate: undefined,
-        manual: true,
-        urgent: true // a manual bitrate switch should happen immediately
-      });
-    }
-
+  function createEstimateReference(representations, innerCancellationSignal) {
     if (representations.length === 1) {
       // There's only a single Representation. Just choose it.
       return (0,utils_reference/* default */.ZP)({
         bitrate: undefined,
         representation: representations[0],
-        manual: false,
         urgent: true,
         knownStableBitrate: undefined
       });
@@ -39092,16 +39080,10 @@ function getEstimateReference(_ref, stopAllEstimates) {
     innerCancellationSignal.register(function () {
       onAddedSegment = noop/* default */.Z;
     });
-    minAutoBitrate.onUpdate(updateEstimate, {
+    filters.throttleBitrate.onUpdate(updateEstimate, {
       clearSignal: innerCancellationSignal
     });
-    maxAutoBitrate.onUpdate(updateEstimate, {
-      clearSignal: innerCancellationSignal
-    });
-    filters.limitWidth.onUpdate(updateEstimate, {
-      clearSignal: innerCancellationSignal
-    });
-    filters.limitWidth.onUpdate(updateEstimate, {
+    filters.limitResolution.onUpdate(updateEstimate, {
       clearSignal: innerCancellationSignal
     });
     return innerEstimateRef;
@@ -39114,12 +39096,10 @@ function getEstimateReference(_ref, stopAllEstimates) {
         bufferGap = _lastPlaybackObservat2.bufferGap,
         position = _lastPlaybackObservat2.position,
         maximumPosition = _lastPlaybackObservat2.maximumPosition;
-      var widthLimit = filters.limitWidth.getValue();
+      var resolutionLimit = filters.limitResolution.getValue();
       var bitrateThrottle = filters.throttleBitrate.getValue();
       var currentRepresentationVal = currentRepresentation.getValue();
-      var minAutoBitrateVal = minAutoBitrate.getValue();
-      var maxAutoBitrateVal = maxAutoBitrate.getValue();
-      var filteredReps = getFilteredRepresentations(representations, widthLimit, bitrateThrottle);
+      var filteredReps = getFilteredRepresentations(representations, resolutionLimit, bitrateThrottle);
       var requests = requestsStore.getRequests();
       var _networkAnalyzer$getB = networkAnalyzer.getBandwidthEstimate(lastPlaybackObservation, bandwidthEstimator, currentRepresentationVal, requests, prevEstimate.bandwidth),
         bandwidthEstimate = _networkAnalyzer$getB.bandwidthEstimate,
@@ -39140,7 +39120,7 @@ function getEstimateReference(_ref, stopAllEstimates) {
        * This is a safe enough choice but might be lower than what the user
        * could actually profit from.
        */
-      var chosenRepFromBandwidth = selectOptimalRepresentation(filteredReps, bitrateChosen, minAutoBitrateVal, maxAutoBitrateVal);
+      var chosenRepFromBandwidth = selectOptimalRepresentation(filteredReps, bitrateChosen);
       var currentBestBitrate = chosenRepFromBandwidth.bitrate;
       /**
        * Representation chosen when considering the current buffer size.
@@ -39154,7 +39134,7 @@ function getEstimateReference(_ref, stopAllEstimates) {
        */
       var chosenRepFromBufferSize = null;
       if (allowBufferBasedEstimates && currentBufferBasedEstimate !== undefined && currentBufferBasedEstimate > currentBestBitrate) {
-        chosenRepFromBufferSize = selectOptimalRepresentation(filteredReps, currentBufferBasedEstimate, minAutoBitrateVal, maxAutoBitrateVal);
+        chosenRepFromBufferSize = selectOptimalRepresentation(filteredReps, currentBufferBasedEstimate);
         currentBestBitrate = chosenRepFromBufferSize.bitrate;
       }
       /**
@@ -39183,7 +39163,6 @@ function getEstimateReference(_ref, stopAllEstimates) {
           bitrate: bandwidthEstimate,
           representation: chosenRepFromGuessMode,
           urgent: currentRepresentationVal === null || chosenRepFromGuessMode.bitrate < currentRepresentationVal.bitrate,
-          manual: false,
           knownStableBitrate: knownStableBitrate
         };
       } else if (chosenRepFromBufferSize !== null) {
@@ -39193,7 +39172,6 @@ function getEstimateReference(_ref, stopAllEstimates) {
           bitrate: bandwidthEstimate,
           representation: chosenRepFromBufferSize,
           urgent: networkAnalyzer.isUrgent(chosenRepFromBufferSize.bitrate, currentRepresentationVal, requests, lastPlaybackObservation),
-          manual: false,
           knownStableBitrate: knownStableBitrate
         };
       } else {
@@ -39203,7 +39181,6 @@ function getEstimateReference(_ref, stopAllEstimates) {
           bitrate: bandwidthEstimate,
           representation: chosenRepFromBandwidth,
           urgent: networkAnalyzer.isUrgent(chosenRepFromBandwidth.bitrate, currentRepresentationVal, requests, lastPlaybackObservation),
-          manual: false,
           knownStableBitrate: knownStableBitrate
         };
       }
@@ -39211,15 +39188,14 @@ function getEstimateReference(_ref, stopAllEstimates) {
   }
   /**
    * Stop previous estimate production (if one) and restart it considering new
-   * conditions (such as a manual bitrate and/or a new list of Representations).
+   * conditions (such as a new list of Representations).
    */
   function restartEstimatesProductionFromCurrentConditions() {
-    var manualBitrateVal = manualBitrate.getValue();
     var representations = representationsRef.getValue();
     currentEstimatesCanceller.cancel();
     currentEstimatesCanceller = new task_canceller/* default */.ZP();
     currentEstimatesCanceller.linkToSignal(stopAllEstimates);
-    var newRef = createEstimateReference(manualBitrateVal, representations, currentEstimatesCanceller.signal);
+    var newRef = createEstimateReference(representations, currentEstimatesCanceller.signal);
     newRef.onUpdate(function onNewEstimate(newEstimate) {
       estimateRef.setValue(newEstimate);
     }, {
@@ -39266,16 +39242,17 @@ function getEstimateReference(_ref, stopAllEstimates) {
 /**
  * Filter representations given through filters options.
  * @param {Array.<Representation>} representations
- * @param {number | undefined} widthLimit - Filter Object.
+ * @param {Object | undefined} resolutionLimit
+ * @param {number | undefined} bitrateThrottle
  * @returns {Array.<Representation>}
  */
-function getFilteredRepresentations(representations, widthLimit, bitrateThrottle) {
+function getFilteredRepresentations(representations, resolutionLimit, bitrateThrottle) {
   var filteredReps = representations;
-  if (bitrateThrottle < Infinity) {
+  if (bitrateThrottle !== undefined && bitrateThrottle < Infinity) {
     filteredReps = filterByBitrate(filteredReps, bitrateThrottle);
   }
-  if (widthLimit !== undefined) {
-    filteredReps = filterByWidth(filteredReps, widthLimit);
+  if (resolutionLimit !== undefined) {
+    filteredReps = filterByResolution(filteredReps, resolutionLimit);
   }
   return filteredReps;
 }
@@ -39335,50 +39312,6 @@ function errorSelector(error) {
     defaultReason: "Unknown error when fetching the Manifest"
   });
 }
-;// CONCATENATED MODULE: ./src/compat/is_offline.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-/**
- * Some browsers have a builtin API to know if it's connected at least to a
- * LAN network, at most to the internet.
- *
- * /!\ This feature can be dangerous as you can both have false positives and
- * false negatives.
- *
- * False positives:
- *   - you can still play local contents (on localhost) if isOffline == true
- *   - on some browsers isOffline might be true even if we're connected to a LAN
- *     or a router (it would mean we're just not able to connect to the
- *     Internet). So we can eventually play LAN contents if isOffline == true
- *
- * False negatives:
- *   - in some cases, we even might have isOffline at false when we do not have
- *     any connection:
- *       - in browsers that do not support the feature
- *       - in browsers running in some virtualization softwares where the
- *         network adapters are always connected.
- *
- * Use with these cases in mind.
- * @returns {Boolean}
- */
-function isOffline() {
-  /* eslint-disable @typescript-eslint/no-unnecessary-boolean-literal-compare */
-  return navigator.onLine === false;
-  /* eslint-enable @typescript-eslint/no-unnecessary-boolean-literal-compare */
-}
 // EXTERNAL MODULE: ./src/errors/custom_loader_error.ts
 var custom_loader_error = __webpack_require__(7839);
 // EXTERNAL MODULE: ./src/errors/is_known_error.ts
@@ -39405,7 +39338,6 @@ var get_fuzzed_delay = __webpack_require__(2572);
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 
 
 
@@ -39448,28 +39380,6 @@ function shouldRetry(error) {
     return false;
   }
   return (0,is_known_error/* default */.Z)(error) && error.code === "INTEGRITY_ERROR";
-}
-/**
- * Returns true if we're pretty sure that the current error is due to the
- * user being offline.
- * @param {Error} error
- * @returns {Boolean}
- */
-function isOfflineRequestError(error) {
-  if (error instanceof request_error/* default */.Z) {
-    return error.type === error_codes/* NetworkErrorTypes */.br.ERROR_EVENT && isOffline();
-  } else if (error instanceof custom_loader_error/* default */.Z) {
-    return error.isOfflineError;
-  }
-  return false; // under doubt, return false
-}
-/**
- * Guess the type of error obtained.
- * @param {*} error
- * @returns {number}
- */
-function getRequestErrorType(error) {
-  return isOfflineRequestError(error) ? 2 /* REQUEST_ERROR_TYPES.Offline */ : 1 /* REQUEST_ERROR_TYPES.Regular */;
 }
 /**
  * Specific algorithm used to perform segment and manifest requests.
@@ -39534,7 +39444,7 @@ function scheduleRequestWithCdns(_x, _x2, _x3, _x4, _x5) {
  */
 function _scheduleRequestWithCdns() {
   _scheduleRequestWithCdns = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee3(cdns, cdnPrioritizer, performRequest, options, cancellationSignal) {
-    var baseDelay, maxDelay, maxRetryRegular, maxRetryOffline, onRetry, missedAttempts, initialCdnToRequest, getCdnToRequest, requestCdn, _requestCdn, retryWithNextCdn, _retryWithNextCdn, waitPotentialBackoffAndRequest, getPrioritaryRequestableCdnFromSortedList;
+    var baseDelay, maxDelay, maxRetry, onRetry, missedAttempts, initialCdnToRequest, getCdnToRequest, requestCdn, _requestCdn, retryWithNextCdn, _retryWithNextCdn, waitPotentialBackoffAndRequest, getPrioritaryRequestableCdnFromSortedList;
     return regenerator_default().wrap(function _callee3$(_context3) {
       while (1) switch (_context3.prev = _context3.next) {
         case 0:
@@ -39645,7 +39555,7 @@ function _scheduleRequestWithCdns() {
           };
           _requestCdn = function _requestCdn3() {
             _requestCdn = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee(cdn) {
-              var res, currentErrorType, missedAttemptsObj, maxRetry, errorCounter, delay, fuzzedDelay;
+              var res, missedAttemptsObj, errorCounter, delay, fuzzedDelay;
               return regenerator_default().wrap(function _callee$(_context) {
                 while (1) switch (_context.prev = _context.next) {
                   case 0:
@@ -39669,33 +39579,25 @@ function _scheduleRequestWithCdns() {
                       // Globally give priority to the next CDN through the CdnPrioritizer.
                       cdnPrioritizer.downgradeCdn(cdn);
                     }
-                    currentErrorType = getRequestErrorType(_context.t0);
                     missedAttemptsObj = missedAttempts.get(cdn);
                     if (missedAttemptsObj === undefined) {
                       missedAttemptsObj = {
                         errorCounter: 1,
-                        lastErrorType: currentErrorType,
                         blockedUntil: undefined,
                         isBlacklisted: false
                       };
                       missedAttempts.set(cdn, missedAttemptsObj);
                     } else {
-                      if (currentErrorType !== missedAttemptsObj.lastErrorType) {
-                        missedAttemptsObj.errorCounter = 1;
-                        missedAttemptsObj.lastErrorType = currentErrorType;
-                      } else {
-                        missedAttemptsObj.errorCounter++;
-                      }
+                      missedAttemptsObj.errorCounter++;
                     }
                     if (shouldRetry(_context.t0)) {
-                      _context.next = 19;
+                      _context.next = 18;
                       break;
                     }
                     missedAttemptsObj.blockedUntil = undefined;
                     missedAttemptsObj.isBlacklisted = true;
                     return _context.abrupt("return", retryWithNextCdn(_context.t0));
-                  case 19:
-                    maxRetry = currentErrorType === 2 /* REQUEST_ERROR_TYPES.Offline */ ? maxRetryOffline : maxRetryRegular;
+                  case 18:
                     if (missedAttemptsObj.errorCounter > maxRetry) {
                       missedAttemptsObj.blockedUntil = undefined;
                       missedAttemptsObj.isBlacklisted = true;
@@ -39706,7 +39608,7 @@ function _scheduleRequestWithCdns() {
                       missedAttemptsObj.blockedUntil = performance.now() + fuzzedDelay;
                     }
                     return _context.abrupt("return", retryWithNextCdn(_context.t0));
-                  case 22:
+                  case 20:
                   case "end":
                     return _context.stop();
                 }
@@ -39737,7 +39639,7 @@ function _scheduleRequestWithCdns() {
           }
           return _context3.abrupt("return", Promise.reject(cancellationSignal.cancellationError));
         case 9:
-          baseDelay = options.baseDelay, maxDelay = options.maxDelay, maxRetryRegular = options.maxRetryRegular, maxRetryOffline = options.maxRetryOffline, onRetry = options.onRetry;
+          baseDelay = options.baseDelay, maxDelay = options.maxDelay, maxRetry = options.maxRetry, onRetry = options.onRetry;
           if (cdns !== null && cdns.length === 0) {
             log/* default */.Z.warn("Fetchers: no CDN given to `scheduleRequestWithCdns`.");
           }
@@ -40110,23 +40012,19 @@ var ManifestFetcher = /*#__PURE__*/function (_EventEmitter) {
   _proto._getBackoffSetting = function _getBackoffSetting(onRetry) {
     var _config$getCurrent = config/* default */.Z.getCurrent(),
       DEFAULT_MAX_MANIFEST_REQUEST_RETRY = _config$getCurrent.DEFAULT_MAX_MANIFEST_REQUEST_RETRY,
-      DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE = _config$getCurrent.DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
       INITIAL_BACKOFF_DELAY_BASE = _config$getCurrent.INITIAL_BACKOFF_DELAY_BASE,
       MAX_BACKOFF_DELAY_BASE = _config$getCurrent.MAX_BACKOFF_DELAY_BASE;
     var _this$_settings = this._settings,
       lowLatencyMode = _this$_settings.lowLatencyMode,
-      ogRegular = _this$_settings.maxRetryRegular,
-      ogOffline = _this$_settings.maxRetryOffline;
+      ogRegular = _this$_settings.maxRetry;
     var baseDelay = lowLatencyMode ? INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY : INITIAL_BACKOFF_DELAY_BASE.REGULAR;
     var maxDelay = lowLatencyMode ? MAX_BACKOFF_DELAY_BASE.LOW_LATENCY : MAX_BACKOFF_DELAY_BASE.REGULAR;
-    var maxRetryRegular = ogRegular !== null && ogRegular !== void 0 ? ogRegular : DEFAULT_MAX_MANIFEST_REQUEST_RETRY;
-    var maxRetryOffline = ogOffline !== null && ogOffline !== void 0 ? ogOffline : DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE;
+    var maxRetry = ogRegular !== null && ogRegular !== void 0 ? ogRegular : DEFAULT_MAX_MANIFEST_REQUEST_RETRY;
     return {
       onRetry: onRetry,
       baseDelay: baseDelay,
       maxDelay: maxDelay,
-      maxRetryRegular: maxRetryRegular,
-      maxRetryOffline: maxRetryOffline
+      maxRetry: maxRetry
     };
   }
   /**
@@ -40278,7 +40176,7 @@ var ManifestFetcher = /*#__PURE__*/function (_EventEmitter) {
       this._prioritizedContentUrl = null;
     } else {
       fullRefresh = !enablePartialRefresh || manifestUpdateUrl === undefined;
-      refreshURL = fullRefresh ? manifest.getUrl() : manifestUpdateUrl;
+      refreshURL = fullRefresh ? manifest.getUrls()[0] : manifestUpdateUrl;
     }
     var externalClockOffset = manifest.clockOffset;
     if (unsafeMode) {
@@ -40984,19 +40882,16 @@ function segment_fetcher_createSegmentFetcher(bufferType, pipeline, cdnPrioritiz
  * @returns {Object}
  */
 function getSegmentFetcherOptions(_ref) {
-  var maxRetryRegular = _ref.maxRetryRegular,
-    maxRetryOffline = _ref.maxRetryOffline,
+  var maxRetry = _ref.maxRetry,
     lowLatencyMode = _ref.lowLatencyMode,
     requestTimeout = _ref.requestTimeout;
   var _config$getCurrent = config/* default */.Z.getCurrent(),
     DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR = _config$getCurrent.DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
     DEFAULT_REQUEST_TIMEOUT = _config$getCurrent.DEFAULT_REQUEST_TIMEOUT,
-    DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE = _config$getCurrent.DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
     INITIAL_BACKOFF_DELAY_BASE = _config$getCurrent.INITIAL_BACKOFF_DELAY_BASE,
     MAX_BACKOFF_DELAY_BASE = _config$getCurrent.MAX_BACKOFF_DELAY_BASE;
   return {
-    maxRetryRegular: maxRetryRegular !== null && maxRetryRegular !== void 0 ? maxRetryRegular : DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
-    maxRetryOffline: maxRetryOffline !== null && maxRetryOffline !== void 0 ? maxRetryOffline : DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
+    maxRetry: maxRetry !== null && maxRetry !== void 0 ? maxRetry : DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
     baseDelay: lowLatencyMode ? INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY : INITIAL_BACKOFF_DELAY_BASE.REGULAR,
     maxDelay: lowLatencyMode ? MAX_BACKOFF_DELAY_BASE.LOW_LATENCY : MAX_BACKOFF_DELAY_BASE.REGULAR,
     requestTimeout: (0,is_null_or_undefined/* default */.Z)(requestTimeout) ? DEFAULT_REQUEST_TIMEOUT : requestTimeout
@@ -41440,12 +41335,6 @@ function tryToChangeSourceBufferType(sourceBuffer, codec) {
   }
   return false;
 }
-// EXTERNAL MODULE: ./src/utils/are_arrays_of_numbers_equal.ts
-var are_arrays_of_numbers_equal = __webpack_require__(4791);
-// EXTERNAL MODULE: ./src/utils/byte_parsing.ts
-var byte_parsing = __webpack_require__(6968);
-// EXTERNAL MODULE: ./src/utils/hash_buffer.ts
-var hash_buffer = __webpack_require__(2870);
 // EXTERNAL MODULE: ./src/core/segment_buffers/implementations/types.ts + 3 modules
 var types = __webpack_require__(9612);
 ;// CONCATENATED MODULE: ./src/core/segment_buffers/implementations/audio_video/audio_video_segment_buffer.ts
@@ -41466,9 +41355,6 @@ var types = __webpack_require__(9612);
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
 
 
 
@@ -41507,8 +41393,9 @@ var AudioVideoSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
     _this._sourceBuffer = sourceBuffer;
     _this._queue = [];
     _this._pendingTask = null;
-    _this._lastInitSegment = null;
+    _this._lastInitSegmentUniqueId = null;
     _this.codec = codec;
+    _this._initSegmentsMap = new Map();
     var onError = _this._onPendingTaskError.bind((0,assertThisInitialized/* default */.Z)(_this));
     var reCheck = _this._flush.bind((0,assertThisInitialized/* default */.Z)(_this));
     // Some browsers (happened with firefox 66) sometimes "forget" to send us
@@ -41528,6 +41415,14 @@ var AudioVideoSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
       _this._sourceBuffer.removeEventListener("updateend", reCheck);
     });
     return _this;
+  }
+  var _proto = AudioVideoSegmentBuffer.prototype;
+  _proto.declareInitSegment = function declareInitSegment(uniqueId, initSegmentData) {
+    assertDataIsBufferSource(initSegmentData);
+    this._initSegmentsMap.set(uniqueId, initSegmentData);
+  };
+  _proto.freeInitSegment = function freeInitSegment(uniqueId) {
+    this._initSegmentsMap["delete"](uniqueId);
   }
   /**
    * Push a chunk of the media segment given to the attached SourceBuffer, in a
@@ -41555,10 +41450,9 @@ var AudioVideoSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
    * @param {Object} infos
    * @param {Object} cancellationSignal
    * @returns {Promise}
-   */
-  var _proto = AudioVideoSegmentBuffer.prototype;
+   */;
   _proto.pushChunk = function pushChunk(infos, cancellationSignal) {
-    assertPushedDataIsBufferSource(infos);
+    assertDataIsBufferSource(infos.data.chunk);
     log/* default */.Z.debug("AVSB: receiving order to push data to the SourceBuffer", this.bufferType, (0,utils/* getLoggableSegmentId */.K)(infos.inventoryInfos));
     return this._addToQueue({
       type: types/* SegmentBufferOperation */.f.Push,
@@ -41667,7 +41561,7 @@ var AudioVideoSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
    * @param {Event} err
    */;
   _proto._onPendingTaskError = function _onPendingTaskError(err) {
-    this._lastInitSegment = null; // initialize init segment as a security
+    this._lastInitSegmentUniqueId = null; // initialize init segment as a security
     if (this._pendingTask !== null) {
       var error = err instanceof Error ? err : new Error("An unknown error occured when doing operations " + "on the SourceBuffer");
       this._pendingTask.reject(error);
@@ -41757,7 +41651,7 @@ var AudioVideoSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
             inventoryData: itemValue.inventoryInfos
           }, nextItem);
           var error = e instanceof Error ? e : new Error("An unknown error occured when preparing a push operation");
-          this._lastInitSegment = null; // initialize init segment as a security
+          this._lastInitSegmentUniqueId = null; // initialize init segment as a security
           nextItem.reject(error);
           return;
         }
@@ -41847,15 +41741,14 @@ var AudioVideoSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
     } else if (appendWindow[1] !== this._sourceBuffer.appendWindowEnd) {
       this._sourceBuffer.appendWindowEnd = appendWindow[1];
     }
-    if (data.initSegment !== null && (hasUpdatedSourceBufferType || !this._isLastInitSegment(data.initSegment))) {
+    if (data.initSegmentUniqueId !== null && (hasUpdatedSourceBufferType || !this._isLastInitSegment(data.initSegmentUniqueId))) {
       // Push initialization segment before the media segment
-      var segmentData = data.initSegment;
+      var segmentData = this._initSegmentsMap.get(data.initSegmentUniqueId);
+      if (segmentData === undefined) {
+        throw new Error("Invalid initialization segment uniqueId");
+      }
       dataToPush.push(segmentData);
-      var initU8 = (0,byte_parsing/* toUint8Array */._f)(segmentData);
-      this._lastInitSegment = {
-        data: initU8,
-        hash: (0,hash_buffer/* default */.Z)(initU8)
-      };
+      this._lastInitSegmentUniqueId = data.initSegmentUniqueId;
     }
     if (data.chunk !== null) {
       dataToPush.push(data.chunk);
@@ -41863,26 +41756,16 @@ var AudioVideoSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
     return dataToPush;
   }
   /**
-   * Return `true` if the given `segmentData` is the same segment than the last
+   * Return `true` if the given `uniqueId` is the identifier of the last
    * initialization segment pushed to the `AudioVideoSegmentBuffer`.
-   * @param {BufferSource} segmentData
+   * @param {string} uniqueId
    * @returns {boolean}
    */;
-  _proto._isLastInitSegment = function _isLastInitSegment(segmentData) {
-    if (this._lastInitSegment === null) {
+  _proto._isLastInitSegment = function _isLastInitSegment(uniqueId) {
+    if (this._lastInitSegmentUniqueId === null) {
       return false;
     }
-    if (this._lastInitSegment.data === segmentData) {
-      return true;
-    }
-    var oldInit = this._lastInitSegment.data;
-    if (oldInit.byteLength === segmentData.byteLength) {
-      var newInitU8 = (0,byte_parsing/* toUint8Array */._f)(segmentData);
-      if ((0,hash_buffer/* default */.Z)(newInitU8) === this._lastInitSegment.hash && (0,are_arrays_of_numbers_equal/* default */.Z)(oldInit, newInitU8)) {
-        return true;
-      }
-    }
-    return false;
+    return this._lastInitSegmentUniqueId === uniqueId;
   };
   return AudioVideoSegmentBuffer;
 }(types/* SegmentBuffer */.C);
@@ -41890,17 +41773,14 @@ var AudioVideoSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
  * Throw if the given input is not in the expected format.
  * Allows to enforce runtime type-checking as compile-time type-checking here is
  * difficult to enforce.
- * @param {Object} pushedData
+ * @param {Object} data
  */
 
-function assertPushedDataIsBufferSource(pushedData) {
+function assertDataIsBufferSource(data) {
   if (true) {
     return;
   }
-  var _pushedData$data = pushedData.data,
-    chunk = _pushedData$data.chunk,
-    initSegment = _pushedData$data.initSegment;
-  if (typeof chunk !== "object" || typeof initSegment !== "object" || chunk !== null && !(chunk instanceof ArrayBuffer) && !(chunk.buffer instanceof ArrayBuffer) || initSegment !== null && !(initSegment instanceof ArrayBuffer) && !(initSegment.buffer instanceof ArrayBuffer)) {
+  if (typeof data !== "object" || data !== null && !(data instanceof ArrayBuffer) && !(data.buffer instanceof ArrayBuffer)) {
     throw new Error("Invalid data given to the AudioVideoSegmentBuffer");
   }
 }
@@ -44270,26 +44150,20 @@ function pushInitSegment(_x, _x2) {
 }
 function _pushInitSegment() {
   _pushInitSegment = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee(_ref, cancelSignal) {
-    var playbackObserver, content, segment, segmentData, segmentBuffer, codec, data, inventoryInfos, buffered;
+    var playbackObserver, content, initSegmentUniqueId, segment, segmentData, segmentBuffer, codec, data, inventoryInfos, buffered;
     return regenerator_default().wrap(function _callee$(_context) {
       while (1) switch (_context.prev = _context.next) {
         case 0:
-          playbackObserver = _ref.playbackObserver, content = _ref.content, segment = _ref.segment, segmentData = _ref.segmentData, segmentBuffer = _ref.segmentBuffer;
-          if (!(segmentData === null)) {
+          playbackObserver = _ref.playbackObserver, content = _ref.content, initSegmentUniqueId = _ref.initSegmentUniqueId, segment = _ref.segment, segmentData = _ref.segmentData, segmentBuffer = _ref.segmentBuffer;
+          if (!(cancelSignal.cancellationError !== null)) {
             _context.next = 3;
             break;
           }
-          return _context.abrupt("return", null);
-        case 3:
-          if (!(cancelSignal.cancellationError !== null)) {
-            _context.next = 5;
-            break;
-          }
           throw cancelSignal.cancellationError;
-        case 5:
+        case 3:
           codec = content.representation.getMimeTypeString();
           data = {
-            initSegment: segmentData,
+            initSegmentUniqueId: initSegmentUniqueId,
             chunk: null,
             timestampOffset: 0,
             appendWindow: [undefined, undefined],
@@ -44301,12 +44175,12 @@ function _pushInitSegment() {
             start: 0,
             end: 0
           }, content);
-          _context.next = 10;
+          _context.next = 8;
           return appendSegmentToBuffer(playbackObserver, segmentBuffer, {
             data: data,
             inventoryInfos: inventoryInfos
           }, cancelSignal);
-        case 10:
+        case 8:
           buffered = segmentBuffer.getBufferedRanges();
           return _context.abrupt("return", {
             content: content,
@@ -44314,7 +44188,7 @@ function _pushInitSegment() {
             buffered: buffered,
             segmentData: segmentData
           });
-        case 12:
+        case 10:
         case "end":
           return _context.stop();
       }
@@ -44354,11 +44228,11 @@ function pushMediaSegment(_x, _x2) {
 }
 function _pushMediaSegment() {
   _pushMediaSegment = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee(_ref, cancelSignal) {
-    var playbackObserver, content, initSegmentData, parsedSegment, segment, segmentBuffer, _a, _b, chunkData, chunkInfos, chunkOffset, chunkSize, appendWindow, codec, _config$getCurrent, APPEND_WINDOW_SECURITIES, safeAppendWindow, data, estimatedStart, estimatedDuration, estimatedEnd, inventoryInfos, buffered;
+    var playbackObserver, content, initSegmentUniqueId, parsedSegment, segment, segmentBuffer, _a, _b, chunkData, chunkInfos, chunkOffset, chunkSize, appendWindow, codec, _config$getCurrent, APPEND_WINDOW_SECURITIES, safeAppendWindow, data, estimatedStart, estimatedDuration, estimatedEnd, inventoryInfos, buffered;
     return regenerator_default().wrap(function _callee$(_context) {
       while (1) switch (_context.prev = _context.next) {
         case 0:
-          playbackObserver = _ref.playbackObserver, content = _ref.content, initSegmentData = _ref.initSegmentData, parsedSegment = _ref.parsedSegment, segment = _ref.segment, segmentBuffer = _ref.segmentBuffer;
+          playbackObserver = _ref.playbackObserver, content = _ref.content, initSegmentUniqueId = _ref.initSegmentUniqueId, parsedSegment = _ref.parsedSegment, segment = _ref.segment, segmentBuffer = _ref.segmentBuffer;
           if (!(parsedSegment.chunkData === null)) {
             _context.next = 3;
             break;
@@ -44378,7 +44252,7 @@ function _pushMediaSegment() {
           // To work-around that, we add a small offset before and after those.
           safeAppendWindow = [appendWindow[0] !== undefined ? Math.max(0, appendWindow[0] - APPEND_WINDOW_SECURITIES.START) : undefined, appendWindow[1] !== undefined ? appendWindow[1] + APPEND_WINDOW_SECURITIES.END : undefined];
           data = {
-            initSegment: initSegmentData,
+            initSegmentUniqueId: initSegmentUniqueId,
             chunk: chunkData,
             timestampOffset: chunkOffset,
             appendWindow: safeAppendWindow,
@@ -44520,9 +44394,15 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
   /** Saved initialization segment state for this representation. */
   var initSegmentState = {
     segment: representation.index.getInitSegment(),
-    segmentData: null,
+    uniqueId: null,
     isLoaded: false
   };
+  globalCanceller.signal.register(function () {
+    // Free initialization segment if one has been declared
+    if (initSegmentState.uniqueId !== null) {
+      segmentBuffer.freeInitSegment(initSegmentState.uniqueId);
+    }
+  });
   /** Emit the last scheduled downloading queue for segments. */
   var lastSegmentQueue = (0,utils_reference/* createSharedReference */.$l)({
     initSegment: null,
@@ -44531,7 +44411,6 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
   /** If `true`, the current Representation has a linked initialization segment. */
   var hasInitSegment = initSegmentState.segment !== null;
   if (!hasInitSegment) {
-    initSegmentState.segmentData = null;
     initSegmentState.isLoaded = true;
   }
   /**
@@ -44755,19 +44634,24 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
       if (!representation.index.isInitialized() && evt.segmentList !== undefined) {
         representation.index.initialize(evt.segmentList);
       }
-      initSegmentState.segmentData = evt.initializationData;
       initSegmentState.isLoaded = true;
-      pushInitSegment({
-        playbackObserver: playbackObserver,
-        content: content,
-        segment: evt.segment,
-        segmentData: evt.initializationData,
-        segmentBuffer: segmentBuffer
-      }, globalCanceller.signal).then(function (result) {
-        if (result !== null) {
-          callbacks.addedSegment(result);
-        }
-      })["catch"](onFatalBufferError);
+      if (evt.initializationData !== null) {
+        var initSegmentUniqueId = representation.uniqueId;
+        initSegmentState.uniqueId = initSegmentUniqueId;
+        segmentBuffer.declareInitSegment(initSegmentUniqueId, evt.initializationData);
+        pushInitSegment({
+          playbackObserver: playbackObserver,
+          content: content,
+          initSegmentUniqueId: initSegmentUniqueId,
+          segment: evt.segment,
+          segmentData: evt.initializationData,
+          segmentBuffer: segmentBuffer
+        }, globalCanceller.signal).then(function (result) {
+          if (result !== null) {
+            callbacks.addedSegment(result);
+          }
+        })["catch"](onFatalBufferError);
+      }
       // Sometimes the segment list is only known once the initialization segment
       // is parsed. Thus we immediately re-check if there's new segments to load.
       checkStatus();
@@ -44793,11 +44677,11 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
         }
       }
 
-      var initSegmentData = initSegmentState.segmentData;
+      var _initSegmentUniqueId = initSegmentState.uniqueId;
       pushMediaSegment({
         playbackObserver: playbackObserver,
         content: content,
-        initSegmentData: initSegmentData,
+        initSegmentUniqueId: _initSegmentUniqueId,
         parsedSegment: evt,
         segment: evt.segment,
         segmentBuffer: segmentBuffer
@@ -44844,6 +44728,67 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
 
 
 /* harmony default export */ var stream_representation = (RepresentationStream);
+;// CONCATENATED MODULE: ./src/core/stream/utils/create_reload_request.ts
+
+/**
+ * Function to facilitate the task of asking for the MediaSource to be reloaded.
+ *
+ * @param {Object} playbackObserver - Regularly emits the current playback
+ * conditions.
+ * @param {Function} fn - Function that will be called regularly with the
+ * position and auto-play status that you should ask to reload to.
+ * @param {number} deltaPos - This value, in seconds, will be added to the
+ * actual current position (respecting the `timeBounds` given) to indicate the
+ * position we should reload at.
+ * This value allows to give back context (by replaying some media data) after
+ * a switch.
+ * @param {Object} timeBounds - Bounds that should not be exceeded on the
+ * position to reload to. Both `start` and `end` bounds can be set to
+ * `undefined` to disable them.
+ * @param {Object} cancelSignal - When it emits, we stop asking for the
+ * MediaSource to be reloaded.
+ */
+function createReloadRequest(playbackObserver, fn, deltaPos, timeBounds, cancelSignal) {
+  if (cancelSignal.isCancelled()) {
+    return;
+  }
+  // We begin by scheduling a micro-task to reduce the possibility of race
+  // conditions.
+  //
+  // For example `createReloadRequest` could be called synchronously
+  // before the next observation (which may reflect very different
+  // playback conditions) is actually received. This can happen when
+  // `createReloadRequest` is called as a side-effect of the same event
+  // that triggers the playback observation to be emitted. In that situation,
+  // scheduling a micro task ensures that the true last observation is
+  // considered.
+  //
+  // Other races conditions could also happen for when example multiple
+  // modules of the player handle some events (I can think for example of the
+  // case where the `Adaptation` disappears on a Manifest update) where we
+  // want the reloading operation to be a last resort situation, so we prefer
+  // to postpone it after other potential synchronous solutions from other
+  // modules have been tested.
+  //
+  // At last, because reloading is such an aggressive situation, we prefer to
+  // trigger it always asynchronously so behavior is better predictible.
+  next_tick_default()(function () {
+    playbackObserver.listen(function (observation) {
+      var _a, _b, _c;
+      var currentTime = playbackObserver.getCurrentTime();
+      var position = currentTime + deltaPos;
+      position = Math.min(Math.max((_a = timeBounds.start) !== null && _a !== void 0 ? _a : 0, position), (_b = timeBounds.end) !== null && _b !== void 0 ? _b : Infinity);
+      var autoPlay = !((_c = observation.paused.pending) !== null && _c !== void 0 ? _c : playbackObserver.getIsPaused());
+      fn({
+        position: position,
+        autoPlay: autoPlay
+      });
+    }, {
+      includeLastObservation: true,
+      clearSignal: cancelSignal
+    });
+  });
+}
 ;// CONCATENATED MODULE: ./src/core/segment_buffers/inventory/utils.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -45143,11 +45088,57 @@ function AdaptationStream(_ref, callbacks, parentCancelSignal) {
   var currentRepresentation = (0,utils_reference/* createSharedReference */.$l)(null, adapStreamCanceller.signal);
   /** Stores the last emitted bitrate. */
   var previouslyEmittedBitrate;
-  /** When triggered, cancel all `RepresentationStream`s currently created. */
+  /** Emit the list of Representation for the adaptive logic. */
+  var representationsList = (0,utils_reference/* createSharedReference */.$l)(content.representations.getValue().representations, adapStreamCanceller.signal);
+  // Start-up Adaptive logic
+  var _representationEstima = representationEstimator({
+      manifest: manifest,
+      period: period,
+      adaptation: adaptation
+    }, currentRepresentation, representationsList, playbackObserver, adapStreamCanceller.signal),
+    estimateRef = _representationEstima.estimates,
+    abrCallbacks = _representationEstima.callbacks;
+  /** Allows a `RepresentationStream` to easily fetch media segments. */
+  var segmentFetcher = segmentFetcherCreator.createSegmentFetcher(adaptation.type, /* eslint-disable @typescript-eslint/unbound-method */
+  {
+    onRequestBegin: abrCallbacks.requestBegin,
+    onRequestEnd: abrCallbacks.requestEnd,
+    onProgress: abrCallbacks.requestProgress,
+    onMetrics: abrCallbacks.metrics
+  });
+  /* eslint-enable @typescript-eslint/unbound-method */
+  /** Used to determine when "fast-switching" is possible. */
+  var fastSwitchThreshold = (0,utils_reference/* createSharedReference */.$l)(0);
+  estimateRef.onUpdate(function (_ref2) {
+    var bitrate = _ref2.bitrate,
+      knownStableBitrate = _ref2.knownStableBitrate;
+    if (options.enableFastSwitching) {
+      fastSwitchThreshold.setValueIfChanged(knownStableBitrate);
+    }
+    if (bitrate === undefined || bitrate === previouslyEmittedBitrate) {
+      return;
+    }
+    previouslyEmittedBitrate = bitrate;
+    log/* default */.Z.debug("Stream: new " + adaptation.type + " bitrate estimate", bitrate);
+    callbacks.bitrateEstimateChange({
+      type: adaptation.type,
+      bitrate: bitrate
+    });
+  }, {
+    emitCurrentValue: true,
+    clearSignal: adapStreamCanceller.signal
+  });
+  /**
+   * When triggered, cancel all `RepresentationStream`s currently created.
+   * Set to `undefined` initially.
+   */
   var cancelCurrentStreams;
   // Each time the list of wanted Representations changes, we restart the logic
   content.representations.onUpdate(function (val) {
-    cancelCurrentStreams === null || cancelCurrentStreams === void 0 ? void 0 : cancelCurrentStreams.cancel();
+    if (cancelCurrentStreams !== undefined) {
+      cancelCurrentStreams.cancel();
+    }
+    representationsList.setValueIfChanged(val.representations);
     cancelCurrentStreams = new task_canceller/* default */.ZP();
     cancelCurrentStreams.linkToSignal(adapStreamCanceller.signal);
     onRepresentationsChoiceChange(val, cancelCurrentStreams.signal)["catch"](function (err) {
@@ -45181,16 +45172,12 @@ function AdaptationStream(_ref, callbacks, parentCancelSignal) {
    * estimate performed.
    * Each time a new estimate is made, this function will create a new
    * `RepresentationStream` corresponding to that new estimate.
-   * @param {Object} estimateRef - Reference through which ABR estimates are
-   * set. May be updated at any time.
-   * @param {Object} abrCallbacks - Callbacks defined by the ABR logic that have
-   * to be called at the right time.
    * @param {Object} fnCancelSignal - `CancellationSignal` which will abort
    * anything this function is doing and free allocated resources.
    */
   function _onRepresentationsChoiceChange() {
     _onRepresentationsChoiceChange = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee(choice, fnCancelSignal) {
-      var switchStrat, _iterator, _step, range, representationsList, _representationEstima, estimateRef, abrCallbacks;
+      var switchStrat, _config$getCurrent, DELTA_POSITION_AFTER_RELOAD, bufferType, _iterator3, _step3, range;
       return regenerator_default().wrap(function _callee$(_context) {
         while (1) switch (_context.prev = _context.next) {
           case 0:
@@ -45198,95 +45185,62 @@ function AdaptationStream(_ref, callbacks, parentCancelSignal) {
             // in the buffer
             switchStrat = getRepresentationsSwitchingStrategy(period, adaptation, choice, segmentBuffer, playbackObserver);
             _context.t0 = switchStrat.type;
-            _context.next = _context.t0 === "continue" ? 4 : _context.t0 === "needs-reload" ? 5 : _context.t0 === "flush-buffer" ? 6 : _context.t0 === "clean-buffer" ? 6 : 20;
+            _context.next = _context.t0 === "continue" ? 4 : _context.t0 === "needs-reload" ? 5 : _context.t0 === "flush-buffer" ? 8 : _context.t0 === "clean-buffer" ? 8 : 22;
             break;
           case 4:
-            return _context.abrupt("break", 21);
+            return _context.abrupt("break", 23);
           case 5:
-            return _context.abrupt("return", next_tick_default()(function () {
-              var _config$getCurrent = config/* default */.Z.getCurrent(),
-                DELTA_POSITION_AFTER_RELOAD = _config$getCurrent.DELTA_POSITION_AFTER_RELOAD;
-              playbackObserver.listen(function (observation) {
-                var _a, _b;
-                var currentTime = playbackObserver.getCurrentTime();
-                var pos = currentTime + DELTA_POSITION_AFTER_RELOAD.bitrateSwitch;
-                // Bind to Period start and end
-                var position = Math.min(Math.max(period.start, pos), (_a = period.end) !== null && _a !== void 0 ? _a : Infinity);
-                var autoPlay = !((_b = observation.paused.pending) !== null && _b !== void 0 ? _b : playbackObserver.getIsPaused());
-                callbacks.waitingMediaSourceReload({
-                  bufferType: adaptation.type,
-                  period: period,
-                  position: position,
-                  autoPlay: autoPlay
-                });
-              }, {
-                includeLastObservation: true,
-                clearSignal: fnCancelSignal
+            // Just ask to reload
+            _config$getCurrent = config/* default */.Z.getCurrent(), DELTA_POSITION_AFTER_RELOAD = _config$getCurrent.DELTA_POSITION_AFTER_RELOAD;
+            bufferType = adaptation.type;
+            return _context.abrupt("return", createReloadRequest(playbackObserver, function (_ref4) {
+              var position = _ref4.position,
+                autoPlay = _ref4.autoPlay;
+              callbacks.waitingMediaSourceReload({
+                bufferType: bufferType,
+                period: period,
+                position: position,
+                autoPlay: autoPlay
               });
-            }));
-          case 6:
-            _iterator = adaptation_stream_createForOfIteratorHelperLoose(switchStrat.value);
-          case 7:
-            if ((_step = _iterator()).done) {
+            }, DELTA_POSITION_AFTER_RELOAD.bitrateSwitch, period, fnCancelSignal));
+          case 8:
+            _iterator3 = adaptation_stream_createForOfIteratorHelperLoose(switchStrat.value);
+          case 9:
+            if ((_step3 = _iterator3()).done) {
+              _context.next = 17;
+              break;
+            }
+            range = _step3.value;
+            _context.next = 13;
+            return segmentBuffer.removeBuffer(range.start, range.end, fnCancelSignal);
+          case 13:
+            if (!fnCancelSignal.isCancelled()) {
               _context.next = 15;
               break;
             }
-            range = _step.value;
-            _context.next = 11;
-            return segmentBuffer.removeBuffer(range.start, range.end, fnCancelSignal);
-          case 11:
-            if (!fnCancelSignal.isCancelled()) {
-              _context.next = 13;
-              break;
-            }
             return _context.abrupt("return");
-          case 13:
-            _context.next = 7;
-            break;
           case 15:
+            _context.next = 9;
+            break;
+          case 17:
             if (!(switchStrat.type === "flush-buffer")) {
-              _context.next = 19;
+              _context.next = 21;
               break;
             }
             callbacks.needsBufferFlush();
             if (!fnCancelSignal.isCancelled()) {
-              _context.next = 19;
+              _context.next = 21;
               break;
             }
             return _context.abrupt("return");
-          case 19:
-            return _context.abrupt("break", 21);
-          case 20:
+          case 21:
+            return _context.abrupt("break", 23);
+          case 22:
             // Should be impossible
             (0,assert_unreachable/* default */.Z)(switchStrat);
-          case 21:
-            // TODO not as reference anymore? There seem to be no need anymore
-            representationsList = (0,utils_reference/* createSharedReference */.$l)(choice.representations);
-            representationsList.finish();
-            // Start-up Adaptive logic
-            _representationEstima = representationEstimator({
-              manifest: manifest,
-              period: period,
-              adaptation: adaptation
-            }, currentRepresentation, representationsList, playbackObserver, fnCancelSignal), estimateRef = _representationEstima.estimates, abrCallbacks = _representationEstima.callbacks;
-            /** Emit at each bitrate estimate done by the IRepresentationEstimator. */
-            estimateRef.onUpdate(function (_ref2) {
-              var bitrate = _ref2.bitrate;
-              if (bitrate === undefined || bitrate === previouslyEmittedBitrate) {
-                return;
-              }
-              previouslyEmittedBitrate = bitrate;
-              log/* default */.Z.debug("Stream: new " + adaptation.type + " bitrate estimate", bitrate);
-              callbacks.bitrateEstimationChange({
-                type: adaptation.type,
-                bitrate: bitrate
-              });
-            }, {
-              emitCurrentValue: true,
-              clearSignal: fnCancelSignal
-            });
-            recursivelyCreateRepresentationStreams(estimateRef, abrCallbacks, fnCancelSignal);
-          case 26:
+          case 23:
+            recursivelyCreateRepresentationStreams(fnCancelSignal);
+          case 24:
           case "end":
             return _context.stop();
         }
@@ -45294,16 +45248,7 @@ function AdaptationStream(_ref, callbacks, parentCancelSignal) {
     }));
     return _onRepresentationsChoiceChange.apply(this, arguments);
   }
-  function recursivelyCreateRepresentationStreams(estimateRef, abrCallbacks, fnCancelSignal) {
-    /** Allows a `RepresentationStream` to easily fetch media segments. */
-    var segmentFetcher = segmentFetcherCreator.createSegmentFetcher(adaptation.type, /* eslint-disable @typescript-eslint/unbound-method */
-    {
-      onRequestBegin: abrCallbacks.requestBegin,
-      onRequestEnd: abrCallbacks.requestEnd,
-      onProgress: abrCallbacks.requestProgress,
-      onMetrics: abrCallbacks.metrics
-    });
-    /* eslint-enable @typescript-eslint/unbound-method */
+  function recursivelyCreateRepresentationStreams(fnCancelSignal) {
     /**
      * `TaskCanceller` triggered when the current `RepresentationStream` is
      * terminating and as such the next one might be immediately created
@@ -45342,19 +45287,6 @@ function AdaptationStream(_ref, callbacks, parentCancelSignal) {
       clearSignal: repStreamTerminatingCanceller.signal,
       emitCurrentValue: true
     });
-    /**
-     * Recursively create `RepresentationStream`s according to the last
-     * Representation estimate.
-     */
-    var fastSwitchThreshold = (0,utils_reference/* createSharedReference */.$l)(0);
-    if (options.enableFastSwitching) {
-      estimateRef.onUpdate(function (estimate) {
-        fastSwitchThreshold.setValueIfChanged(estimate === null || estimate === void 0 ? void 0 : estimate.knownStableBitrate);
-      }, {
-        clearSignal: repStreamTerminatingCanceller.signal,
-        emitCurrentValue: true
-      });
-    }
     var repInfo = {
       type: adaptation.type,
       period: period,
@@ -45394,36 +45326,29 @@ function AdaptationStream(_ref, callbacks, parentCancelSignal) {
         }
 
         repStreamTerminatingCanceller.cancel();
-        return recursivelyCreateRepresentationStreams(estimateRef, abrCallbacks, fnCancelSignal);
+        return recursivelyCreateRepresentationStreams(fnCancelSignal);
       }
     };
-    createRepresentationStream(representation, segmentFetcher, terminateCurrentStream, fastSwitchThreshold, representationStreamCallbacks, fnCancelSignal);
+    createRepresentationStream(representation, terminateCurrentStream, representationStreamCallbacks, fnCancelSignal);
   }
   /**
    * Create and returns a new `RepresentationStream`, linked to the
    * given Representation.
    * @param {Object} representation - The Representation the
    * `RepresentationStream` has to be created for.
-   * @param {Object} segmentFetcher - Allows to easily fetch segments.
    * @param {Object} terminateCurrentStream - Gives termination orders,
    * indicating that the `RepresentationStream` should stop what it's doing.
-   * @param {Object} fastSwitchThreshold - Used to determine when
-   * "fast-switching" is possible.
    * @param {Object} representationStreamCallbacks - Callbacks to call on
    * various `RepresentationStream` events.
    * @param {Object} fnCancelSignal - `CancellationSignal` which will abort
    * anything this function is doing and free allocated resources.
    */
-  function createRepresentationStream(representation, segmentFetcher, terminateCurrentStream, fastSwitchThreshold, representationStreamCallbacks, fnCancelSignal) {
-    /**
-     * `TaskCanceller` triggered when the `RepresentationStream` calls its
-     * `terminating` callback.
-     */
-    var terminatingRepStreamCanceller = new task_canceller/* default */.ZP();
-    terminatingRepStreamCanceller.linkToSignal(fnCancelSignal);
+  function createRepresentationStream(representation, terminateCurrentStream, representationStreamCallbacks, fnCancelSignal) {
+    var bufferGoalCanceller = new task_canceller/* default */.ZP();
+    bufferGoalCanceller.linkToSignal(fnCancelSignal);
     var bufferGoal = (0,utils_reference/* createMappedReference */.lR)(wantedBufferAhead, function (prev) {
       return prev * getBufferGoalRatio(representation);
-    }, terminatingRepStreamCanceller.signal);
+    }, bufferGoalCanceller.signal);
     var maxBufferSize = adaptation.type === "video" ? maxVideoBufferSize : (0,utils_reference/* createSharedReference */.$l)(Infinity);
     log/* default */.Z.info("Stream: changing representation", adaptation.type, representation.id, representation.bitrate);
     var updatedCallbacks = (0,object_assign/* default */.Z)({}, representationStreamCallbacks, {
@@ -45447,12 +45372,12 @@ function AdaptationStream(_ref, callbacks, parentCancelSignal) {
           // We wait 4 seconds to let the situation evolve by itself before
           // retrying loading segments with a lower buffer goal
           (0,cancellable_sleep/* default */.Z)(4000, adapStreamCanceller.signal).then(function () {
-            return createRepresentationStream(representation, segmentFetcher, terminateCurrentStream, fastSwitchThreshold, representationStreamCallbacks, fnCancelSignal);
+            return createRepresentationStream(representation, terminateCurrentStream, representationStreamCallbacks, fnCancelSignal);
           })["catch"](noop/* default */.Z);
         }
       },
       terminating: function terminating() {
-        terminatingRepStreamCanceller.cancel();
+        bufferGoalCanceller.cancel();
         representationStreamCallbacks.terminating();
       }
     });
@@ -45474,6 +45399,38 @@ function AdaptationStream(_ref, callbacks, parentCancelSignal) {
         fastSwitchThreshold: fastSwitchThreshold
       }
     }, updatedCallbacks, fnCancelSignal);
+    // reload if the Representation disappears from the Manifest
+    manifest.addEventListener("manifestUpdate", function (updates) {
+      for (var _iterator = adaptation_stream_createForOfIteratorHelperLoose(updates.updatedPeriods), _step; !(_step = _iterator()).done;) {
+        var element = _step.value;
+        if (element.period.id === period.id) {
+          var _loop = function _loop() {
+            var adap = _step2.value;
+            if (adap.id === adaptation.id) {
+              var bufferType = adaptation.type;
+              return {
+                v: createReloadRequest(playbackObserver, function (_ref3) {
+                  var position = _ref3.position,
+                    autoPlay = _ref3.autoPlay;
+                  callbacks.waitingMediaSourceReload({
+                    bufferType: bufferType,
+                    period: period,
+                    position: position,
+                    autoPlay: autoPlay
+                  });
+                }, 0, period, fnCancelSignal)
+              };
+            }
+          };
+          for (var _iterator2 = adaptation_stream_createForOfIteratorHelperLoose(element.result.removedAdaptations), _step2; !(_step2 = _iterator2()).done;) {
+            var _ret = _loop();
+            if (typeof _ret === "object") return _ret.v;
+          }
+        } else if (element.period.start > period.start) {
+          break;
+        }
+      }
+    }, fnCancelSignal);
   }
   /**
    * @param {Object} representation
@@ -45860,7 +45817,7 @@ function PeriodStream(_ref, callbacks, parentCancelSignal) {
   adaptationRef.onUpdate(function (choice) {
     // As an IIFE to profit from async/await while respecting onUpdate's signature
     (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee() {
-      var _a, streamCanceller, segmentBufferStatus, periodEnd, _config$getCurrent, DELTA_POSITION_AFTER_RELOAD, relativePosAfterSwitch, adaptation, representations, readyState, segmentBuffer, playbackInfos, strategy, _iterator, _step, _step$value, start, end;
+      var _a, streamCanceller, segmentBufferStatus, periodEnd, _config$getCurrent, DELTA_POSITION_AFTER_RELOAD, relativePosAfterSwitch, adaptation, representations, readyState, segmentBuffer, playbackInfos, strategy, _iterator3, _step3, _step3$value, start, end;
       return regenerator_default().wrap(function _callee$(_context) {
         while (1) switch (_context.prev = _context.next) {
           case 0:
@@ -45890,7 +45847,16 @@ function PeriodStream(_ref, callbacks, parentCancelSignal) {
               _context.next = 15;
               break;
             }
-            return _context.abrupt("return", askForMediaSourceReload(0, streamCanceller.signal));
+            return _context.abrupt("return", createReloadRequest(playbackObserver, function (_ref3) {
+              var position = _ref3.position,
+                autoPlay = _ref3.autoPlay;
+              callbacks.waitingMediaSourceReload({
+                bufferType: bufferType,
+                period: period,
+                position: position,
+                autoPlay: autoPlay
+              });
+            }, 0, period, streamCanceller.signal));
           case 15:
             periodEnd = (_a = period.end) !== null && _a !== void 0 ? _a : Infinity;
             if (!(period.start > periodEnd)) {
@@ -45944,7 +45910,7 @@ function PeriodStream(_ref, callbacks, parentCancelSignal) {
              * delta to the current position so we can re-play back some media in the
              * new Adaptation to give some context back.
              * This value contains this relative position, in seconds.
-             * @see askForMediaSourceReload
+             * @see createMediaSourceReloadRequester
              */
             _config$getCurrent = config/* default */.Z.getCurrent(), DELTA_POSITION_AFTER_RELOAD = _config$getCurrent.DELTA_POSITION_AFTER_RELOAD;
             relativePosAfterSwitch = isFirstAdaptationSwitch ? 0 : bufferType === "audio" ? DELTA_POSITION_AFTER_RELOAD.trackSwitch.audio : bufferType === "video" ? DELTA_POSITION_AFTER_RELOAD.trackSwitch.video : DELTA_POSITION_AFTER_RELOAD.trackSwitch.other;
@@ -45953,8 +45919,43 @@ function PeriodStream(_ref, callbacks, parentCancelSignal) {
               _context.next = 39;
               break;
             }
-            return _context.abrupt("return", askForMediaSourceReload(relativePosAfterSwitch, streamCanceller.signal));
+            return _context.abrupt("return", createReloadRequest(playbackObserver, function (_ref4) {
+              var position = _ref4.position,
+                autoPlay = _ref4.autoPlay;
+              callbacks.waitingMediaSourceReload({
+                bufferType: bufferType,
+                period: period,
+                position: position,
+                autoPlay: autoPlay
+              });
+            }, relativePosAfterSwitch, period, streamCanceller.signal));
           case 39:
+            // Reload if the Adaptation disappears from the manifest
+            manifest.addEventListener("manifestUpdate", function (updates) {
+              // If current period has been unexpectedly removed, ask to reload
+              for (var _iterator = period_stream_createForOfIteratorHelperLoose(updates.updatedPeriods), _step; !(_step = _iterator()).done;) {
+                var element = _step.value;
+                if (element.period.id === period.id) {
+                  for (var _iterator2 = period_stream_createForOfIteratorHelperLoose(element.result.removedAdaptations), _step2; !(_step2 = _iterator2()).done;) {
+                    var adap = _step2.value;
+                    if (adap.id === adaptation.id) {
+                      return createReloadRequest(playbackObserver, function (_ref5) {
+                        var position = _ref5.position,
+                          autoPlay = _ref5.autoPlay;
+                        callbacks.waitingMediaSourceReload({
+                          bufferType: bufferType,
+                          period: period,
+                          position: position,
+                          autoPlay: autoPlay
+                        });
+                      }, relativePosAfterSwitch, period, streamCanceller.signal);
+                    }
+                  }
+                } else if (element.period.start > period.start) {
+                  break;
+                }
+              }
+            }, currentStreamCanceller.signal);
             adaptation = choice.adaptation, representations = choice.representations;
             log/* default */.Z.info("Stream: Updating " + bufferType + " adaptation", "A: " + adaptation.id, "P: " + period.start);
             callbacks.adaptationChange({
@@ -45963,11 +45964,11 @@ function PeriodStream(_ref, callbacks, parentCancelSignal) {
               period: period
             });
             if (!streamCanceller.isUsed()) {
-              _context.next = 44;
+              _context.next = 45;
               break;
             }
             return _context.abrupt("return");
-          case 44:
+          case 45:
             readyState = playbackObserver.getReadyState();
             segmentBuffer = createOrReuseSegmentBuffer(segmentBuffersStore, bufferType, adaptation, options);
             playbackInfos = {
@@ -45976,57 +45977,66 @@ function PeriodStream(_ref, callbacks, parentCancelSignal) {
             };
             strategy = getAdaptationSwitchStrategy(segmentBuffer, period, adaptation, choice.switchingMode, playbackInfos, options);
             if (!(strategy.type === "needs-reload")) {
-              _context.next = 50;
+              _context.next = 51;
               break;
             }
-            return _context.abrupt("return", askForMediaSourceReload(relativePosAfterSwitch, streamCanceller.signal));
-          case 50:
-            _context.next = 52;
+            return _context.abrupt("return", createReloadRequest(playbackObserver, function (_ref6) {
+              var position = _ref6.position,
+                autoPlay = _ref6.autoPlay;
+              callbacks.waitingMediaSourceReload({
+                bufferType: bufferType,
+                period: period,
+                position: position,
+                autoPlay: autoPlay
+              });
+            }, relativePosAfterSwitch, period, streamCanceller.signal));
+          case 51:
+            _context.next = 53;
             return segmentBuffersStore.waitForUsableBuffers(streamCanceller.signal);
-          case 52:
+          case 53:
             if (!streamCanceller.isUsed()) {
-              _context.next = 54;
+              _context.next = 55;
               break;
             }
             return _context.abrupt("return");
-          case 54:
+          case 55:
             if (!(strategy.type === "flush-buffer" || strategy.type === "clean-buffer")) {
-              _context.next = 68;
+              _context.next = 69;
               break;
             }
-            _iterator = period_stream_createForOfIteratorHelperLoose(strategy.value);
-          case 56:
-            if ((_step = _iterator()).done) {
-              _context.next = 64;
+            _iterator3 = period_stream_createForOfIteratorHelperLoose(strategy.value);
+          case 57:
+            if ((_step3 = _iterator3()).done) {
+              _context.next = 65;
               break;
             }
-            _step$value = _step.value, start = _step$value.start, end = _step$value.end;
-            _context.next = 60;
+            _step3$value = _step3.value, start = _step3$value.start, end = _step3$value.end;
+            _context.next = 61;
             return segmentBuffer.removeBuffer(start, end, streamCanceller.signal);
-          case 60:
+          case 61:
             if (!streamCanceller.isUsed()) {
-              _context.next = 62;
+              _context.next = 63;
               break;
             }
             return _context.abrupt("return");
-          case 62:
-            _context.next = 56;
+          case 63:
+            _context.next = 57;
             break;
-          case 64:
+          case 65:
             if (!(strategy.type === "flush-buffer")) {
-              _context.next = 68;
+              _context.next = 69;
               break;
             }
             callbacks.needsBufferFlush();
             if (!streamCanceller.isUsed()) {
-              _context.next = 68;
+              _context.next = 69;
               break;
             }
             return _context.abrupt("return");
-          case 68:
+          case 69:
             garbageCollectors.get(segmentBuffer)(streamCanceller.signal);
             createAdaptationStream(adaptation, representations, segmentBuffer, streamCanceller.signal);
-          case 70:
+          case 71:
           case "end":
             return _context.stop();
         }
@@ -46090,51 +46100,6 @@ function PeriodStream(_ref, callbacks, parentCancelSignal) {
       log/* default */.Z.error("Stream: " + bufferType + " Stream crashed. Stopping playback.", error instanceof Error ? error : "");
       callbacks.error(error);
     }
-  }
-  /**
-   * Regularly ask to reload the MediaSource on each playback observation
-   * performed by the playback observer.
-   *
-   * If and only if the Period currently played corresponds to the concerned
-   * Period, applies an offset to the reloaded position corresponding to
-   * `deltaPos`.
-   * This can be useful for example when switching the audio/video tracks, where
-   * you might want to give back some context if that was the currently played
-   * track.
-   *
-   * @param {number} deltaPos - If the concerned Period is playing at the time
-   * this function is called, we will add this value, in seconds, to the current
-   * position to indicate the position we should reload at.
-   * This value allows to give back context (by replaying some media data) after
-   * a switch.
-   * @param {Object} cancelSignal
-   */
-  function askForMediaSourceReload(deltaPos, cancelSignal) {
-    // We begin by scheduling a micro-task to reduce the possibility of race
-    // conditions where `askForMediaSourceReload` would be called synchronously before
-    // the next observation (which may reflect very different playback conditions)
-    // is actually received.
-    // It can happen when `askForMediaSourceReload` is called as a side-effect of
-    // the same event that triggers the playback observation to be emitted.
-    next_tick_default()(function () {
-      playbackObserver.listen(function (observation) {
-        var _a, _b;
-        var currentTime = playbackObserver.getCurrentTime();
-        var pos = currentTime + deltaPos;
-        // Bind to Period start and end
-        var position = Math.min(Math.max(period.start, pos), (_a = period.end) !== null && _a !== void 0 ? _a : Infinity);
-        var autoPlay = !((_b = observation.paused.pending) !== null && _b !== void 0 ? _b : playbackObserver.getIsPaused());
-        callbacks.waitingMediaSourceReload({
-          bufferType: bufferType,
-          period: period,
-          position: position,
-          autoPlay: autoPlay
-        });
-      }, {
-        includeLastObservation: true,
-        clearSignal: cancelSignal
-      });
-    });
   }
 }
 /**
@@ -46362,6 +46327,7 @@ function stream_orchestrator_arrayLikeToArray(arr, len) { if (len == null || len
 
 
 
+
 /**
  * Create and manage the various "Streams" needed for the content to
  * play:
@@ -46497,7 +46463,13 @@ function StreamOrchestrator(content, playbackObserver, representationEstimator, 
       includeLastObservation: true
     });
     manifest.addEventListener("decipherabilityUpdate", function (evt) {
+      if (orchestratorCancelSignal.isCancelled()) {
+        return;
+      }
       onDecipherabilityUpdates(evt)["catch"](function (err) {
+        if (orchestratorCancelSignal.isCancelled()) {
+          return;
+        }
         currentCanceller.cancel();
         callbacks.error(err);
       });
@@ -46510,7 +46482,7 @@ function StreamOrchestrator(content, playbackObserver, representationEstimator, 
       var consecutivePeriodStreamCb = Object.assign(Object.assign({}, callbacks), {
         waitingMediaSourceReload: function waitingMediaSourceReload(payload) {
           // Only reload the MediaSource when the more immediately required
-          // Period is the one asking for it
+          // Period is the one it is asked for
           var firstPeriod = periodList.head();
           if (firstPeriod === undefined || firstPeriod.id !== payload.period.id) {
             callbacks.lockedStream({
@@ -46791,6 +46763,7 @@ function StreamOrchestrator(content, playbackObserver, representationEstimator, 
       }
     });
     period(periodStreamArgs, periodStreamCallbacks, currentStreamCanceller.signal);
+    handleUnexpectedManifestUpdates(currentStreamCanceller.signal);
     /**
      * Create `PeriodStream` for the next Period, specified under `nextPeriod`.
      * @param {Object} nextPeriod
@@ -46815,6 +46788,62 @@ function StreamOrchestrator(content, playbackObserver, representationEstimator, 
         period: nextPeriod
       };
       manageConsecutivePeriodStreams(bufferType, nextPeriod, consecutivePeriodStreamCb, nextStreamInfo.canceller.signal);
+    }
+    /**
+     * Check on Manifest updates that the Manifest still appears coherent
+     * regarding its internal Period structure to what we created for now,
+     * handling cases where it does not.
+     * @param {Object} innerCancelSignal - When that cancel signal emits, stop
+     * performing checks.
+     */
+    function handleUnexpectedManifestUpdates(innerCancelSignal) {
+      manifest.addEventListener("manifestUpdate", function (updates) {
+        var _loop = function _loop() {
+          var period = _step2.value;
+          if (period.id === basePeriod.id) {
+            // Check that this was not just one  of the earliests Periods that
+            // was removed, in which case this is a normal cleanup scenario
+            if (manifest.periods.length > 0 && manifest.periods[0].start <= period.start) {
+              createReloadRequest(playbackObserver, function (_ref3) {
+                var position = _ref3.position,
+                  autoPlay = _ref3.autoPlay;
+                consecutivePeriodStreamCb.waitingMediaSourceReload({
+                  bufferType: bufferType,
+                  period: period,
+                  position: position,
+                  autoPlay: autoPlay
+                });
+              }, 0, {
+                start: undefined,
+                end: undefined
+              }, innerCancelSignal);
+            }
+          } else if (period.start > basePeriod.start) {
+            return "break";
+          }
+        };
+        // If current period has been unexpectedly removed, ask to reload
+        for (var _iterator2 = stream_orchestrator_createForOfIteratorHelperLoose(updates.removedPeriods), _step2; !(_step2 = _iterator2()).done;) {
+          var _ret = _loop();
+          if (_ret === "break") break;
+        }
+        if (updates.addedPeriods.length > 0) {
+          // If the next period changed, cancel the next created one if one
+          if (nextStreamInfo !== null) {
+            var newNextPeriod = manifest.getPeriodAfter(basePeriod);
+            if (newNextPeriod === null || nextStreamInfo.period.id !== newNextPeriod.id) {
+              log/* default */.Z.warn("Stream: Destroying next PeriodStream due to new one being added", bufferType, nextStreamInfo.period.start);
+              consecutivePeriodStreamCb.periodStreamCleared({
+                type: bufferType,
+                manifest: manifest,
+                period: nextStreamInfo.period
+              });
+              nextStreamInfo.canceller.cancel();
+              nextStreamInfo = null;
+            }
+          }
+        }
+      }, innerCancelSignal);
     }
   }
 }
@@ -48602,9 +48631,6 @@ var MediaSourceContentInitializer = /*#__PURE__*/function (_ContentInitializer) 
             manifest.addEventListener("manifestUpdate", function () {
               _this5.trigger("manifestUpdate", null);
             }, initCanceller.signal);
-            manifest.addEventListener("decipherabilityUpdate", function (args) {
-              _this5.trigger("decipherabilityUpdate", args);
-            }, initCanceller.signal);
             log/* default */.Z.debug("Init: Calculating initial time");
             initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
             log/* default */.Z.debug("Init: Initial time calculated:", initialTime);
@@ -48617,11 +48643,11 @@ var MediaSourceContentInitializer = /*#__PURE__*/function (_ContentInitializer) 
             segmentFetcherCreator = new segment(transport, segmentRequestOptions, initCanceller.signal);
             this.trigger("manifestReady", manifest);
             if (!initCanceller.isUsed()) {
-              _context.next = 25;
+              _context.next = 24;
               break;
             }
             return _context.abrupt("return");
-          case 25:
+          case 24:
             bufferOnMediaSource = this._startBufferingOnMediaSource.bind(this);
             triggerEvent = this.trigger.bind(this);
             onFatalError = this._onFatalError.bind(this); // handle initial load and reloads
@@ -48636,7 +48662,7 @@ var MediaSourceContentInitializer = /*#__PURE__*/function (_ContentInitializer) 
              * @param {Object} currentCanceller
              * @param {boolean} shouldPlay
              */
-          case 29:
+          case 28:
           case "end":
             return _context.stop();
         }
@@ -48707,7 +48733,17 @@ var MediaSourceContentInitializer = /*#__PURE__*/function (_ContentInitializer) 
       speed: speed,
       startTime: initialTime
     });
-    var rebufferingController = this._createRebufferingController(playbackObserver, manifest, speed, cancelSignal);
+    var rebufferingController = this._createRebufferingController(playbackObserver, manifest, segmentBuffersStore, speed, cancelSignal);
+    rebufferingController.addEventListener("needsReload", function () {
+      // NOTE couldn't both be always calculated at event destination?
+      // Maybe there are exceptions?
+      var position = initialSeekPerformed.getValue() ? playbackObserver.getCurrentTime() : initialTime;
+      var autoplay = initialPlayPerformed.getValue() ? !playbackObserver.getIsPaused() : autoPlay;
+      onReloadOrder({
+        position: position,
+        autoPlay: autoplay
+      });
+    }, cancelSignal);
     var contentTimeBoundariesObserver = this._createContentTimeBoundariesObserver(manifest, mediaSource, streamObserver, segmentBuffersStore, cancelSignal);
     /**
      * Emit a "loaded" events once the initial play has been performed and the
@@ -48855,8 +48891,8 @@ var MediaSourceContentInitializer = /*#__PURE__*/function (_ContentInitializer) 
 
           self.trigger("periodStreamCleared", value);
         },
-        bitrateEstimationChange: function bitrateEstimationChange(value) {
-          return self.trigger("bitrateEstimationChange", value);
+        bitrateEstimateChange: function bitrateEstimateChange(value) {
+          return self.trigger("bitrateEstimateChange", value);
         },
         addedSegment: function addedSegment(value) {
           return self.trigger("addedSegment", value);
@@ -48970,9 +49006,9 @@ var MediaSourceContentInitializer = /*#__PURE__*/function (_ContentInitializer) 
    * @param {Object} cancelSignal
    * @returns {Object}
    */;
-  _proto._createRebufferingController = function _createRebufferingController(playbackObserver, manifest, speed, cancelSignal) {
+  _proto._createRebufferingController = function _createRebufferingController(playbackObserver, manifest, segmentBuffersStore, speed, cancelSignal) {
     var _this8 = this;
-    var rebufferingController = new rebuffering_controller/* default */.Z(playbackObserver, manifest, speed);
+    var rebufferingController = new rebuffering_controller/* default */.Z(playbackObserver, manifest, segmentBuffersStore, speed);
     // Bubble-up events
     rebufferingController.addEventListener("stalled", function (evt) {
       return _this8.trigger("stalled", evt);
@@ -49020,7 +49056,6 @@ function option_utils_arrayLikeToArray(arr, len) { if (len == null || len > arr.
 
 
 
-
 /**
  * Parse options given to the API constructor and set default options as found
  * in the config.
@@ -49036,17 +49071,10 @@ function parseConstructorOptions(options) {
   var wantedBufferAhead;
   var maxVideoBufferSize;
   var videoElement;
-  var initialVideoBitrate;
-  var initialAudioBitrate;
-  var minAudioBitrate;
-  var minVideoBitrate;
-  var maxAudioBitrate;
-  var maxVideoBitrate;
+  var baseBandwidth;
   var _config$getCurrent = config/* default */.Z.getCurrent(),
-    DEFAULT_INITIAL_BITRATES = _config$getCurrent.DEFAULT_INITIAL_BITRATES,
-    DEFAULT_LIMIT_VIDEO_WIDTH = _config$getCurrent.DEFAULT_LIMIT_VIDEO_WIDTH,
-    DEFAULT_MIN_BITRATES = _config$getCurrent.DEFAULT_MIN_BITRATES,
-    DEFAULT_MAX_BITRATES = _config$getCurrent.DEFAULT_MAX_BITRATES,
+    DEFAULT_BASE_BANDWIDTH = _config$getCurrent.DEFAULT_BASE_BANDWIDTH,
+    DEFAULT_VIDEO_RESOLUTION_LIMIT = _config$getCurrent.DEFAULT_VIDEO_RESOLUTION_LIMIT,
     DEFAULT_MAX_BUFFER_AHEAD = _config$getCurrent.DEFAULT_MAX_BUFFER_AHEAD,
     DEFAULT_MAX_BUFFER_BEHIND = _config$getCurrent.DEFAULT_MAX_BUFFER_BEHIND,
     DEFAULT_MAX_VIDEO_BUFFER_SIZE = _config$getCurrent.DEFAULT_MAX_VIDEO_BUFFER_SIZE,
@@ -49090,7 +49118,7 @@ function parseConstructorOptions(options) {
     }
   }
 
-  var limitVideoWidth = (0,is_null_or_undefined/* default */.Z)(options.limitVideoWidth) ? DEFAULT_LIMIT_VIDEO_WIDTH : !!options.limitVideoWidth;
+  var videoResolutionLimit = (0,is_null_or_undefined/* default */.Z)(options.videoResolutionLimit) ? DEFAULT_VIDEO_RESOLUTION_LIMIT : options.videoResolutionLimit;
   var throttleVideoBitrateWhenHidden = (0,is_null_or_undefined/* default */.Z)(options.throttleVideoBitrateWhenHidden) ? DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN : !!options.throttleVideoBitrateWhenHidden;
   if ((0,is_null_or_undefined/* default */.Z)(options.videoElement)) {
     videoElement = document.createElement("video");
@@ -49102,78 +49130,26 @@ function parseConstructorOptions(options) {
     /* eslint-enable max-len */
   }
 
-  if ((0,is_null_or_undefined/* default */.Z)(options.initialVideoBitrate)) {
-    initialVideoBitrate = DEFAULT_INITIAL_BITRATES.video;
+  if ((0,is_null_or_undefined/* default */.Z)(options.baseBandwidth)) {
+    baseBandwidth = DEFAULT_BASE_BANDWIDTH;
   } else {
-    initialVideoBitrate = Number(options.initialVideoBitrate);
-    if (isNaN(initialVideoBitrate)) {
+    baseBandwidth = Number(options.baseBandwidth);
+    if (isNaN(baseBandwidth)) {
       /* eslint-disable max-len */
-      throw new Error("Invalid initialVideoBitrate parameter. Should be a number.");
+      throw new Error("Invalid baseBandwidth parameter. Should be a number.");
       /* eslint-enable max-len */
     }
   }
 
-  if ((0,is_null_or_undefined/* default */.Z)(options.initialAudioBitrate)) {
-    initialAudioBitrate = DEFAULT_INITIAL_BITRATES.audio;
-  } else {
-    initialAudioBitrate = Number(options.initialAudioBitrate);
-    if (isNaN(initialAudioBitrate)) {
-      /* eslint-disable max-len */
-      throw new Error("Invalid initialAudioBitrate parameter. Should be a number.");
-      /* eslint-enable max-len */
-    }
-  }
-
-  if ((0,is_null_or_undefined/* default */.Z)(options.minVideoBitrate)) {
-    minVideoBitrate = DEFAULT_MIN_BITRATES.video;
-  } else {
-    minVideoBitrate = Number(options.minVideoBitrate);
-    if (isNaN(minVideoBitrate)) {
-      throw new Error("Invalid maxVideoBitrate parameter. Should be a number.");
-    }
-  }
-  if ((0,is_null_or_undefined/* default */.Z)(options.minAudioBitrate)) {
-    minAudioBitrate = DEFAULT_MIN_BITRATES.audio;
-  } else {
-    minAudioBitrate = Number(options.minAudioBitrate);
-    if (isNaN(minAudioBitrate)) {
-      throw new Error("Invalid minAudioBitrate parameter. Should be a number.");
-    }
-  }
-  if ((0,is_null_or_undefined/* default */.Z)(options.maxVideoBitrate)) {
-    maxVideoBitrate = DEFAULT_MAX_BITRATES.video;
-  } else {
-    maxVideoBitrate = Number(options.maxVideoBitrate);
-    if (isNaN(maxVideoBitrate)) {
-      throw new Error("Invalid maxVideoBitrate parameter. Should be a number.");
-    } else if (minVideoBitrate > maxVideoBitrate) {
-      throw new Error("Invalid maxVideoBitrate parameter. Its value, \"" + (maxVideoBitrate + "\", is inferior to the set minVideoBitrate, \"") + (minVideoBitrate + "\""));
-    }
-  }
-  if ((0,is_null_or_undefined/* default */.Z)(options.maxAudioBitrate)) {
-    maxAudioBitrate = DEFAULT_MAX_BITRATES.audio;
-  } else {
-    maxAudioBitrate = Number(options.maxAudioBitrate);
-    if (isNaN(maxAudioBitrate)) {
-      throw new Error("Invalid maxAudioBitrate parameter. Should be a number.");
-    } else if (minAudioBitrate > maxAudioBitrate) {
-      throw new Error("Invalid maxAudioBitrate parameter. Its value, \"" + (maxAudioBitrate + "\", is inferior to the set minAudioBitrate, \"") + (minAudioBitrate + "\""));
-    }
-  }
   return {
     maxBufferAhead: maxBufferAhead,
     maxBufferBehind: maxBufferBehind,
-    limitVideoWidth: limitVideoWidth,
+    videoResolutionLimit: videoResolutionLimit,
     videoElement: videoElement,
     wantedBufferAhead: wantedBufferAhead,
     maxVideoBufferSize: maxVideoBufferSize,
     throttleVideoBitrateWhenHidden: throttleVideoBitrateWhenHidden,
-    initialAudioBitrate: initialAudioBitrate,
-    initialVideoBitrate: initialVideoBitrate,
-    minAudioBitrate: minAudioBitrate,
-    minVideoBitrate: minVideoBitrate,
-    maxAudioBitrate: maxAudioBitrate,
-    maxVideoBitrate: maxVideoBitrate
+    baseBandwidth: baseBandwidth
   };
 }
 /**
@@ -49205,11 +49181,10 @@ function checkReloadOptions(options) {
  *
  * Throws if any mandatory option is not set.
  * @param {Object|undefined} options
- * @param {Object} ctx - The player context, needed for some default values.
  * @returns {Object}
  */
 function parseLoadVideoOptions(options) {
-  var _a, _b, _c, _d, _e, _f, _g;
+  var _a, _b, _c;
   var url;
   var transport;
   var keySystems;
@@ -49220,15 +49195,14 @@ function parseLoadVideoOptions(options) {
     DEFAULT_AUTO_PLAY = _config$getCurrent2.DEFAULT_AUTO_PLAY,
     DEFAULT_CODEC_SWITCHING_BEHAVIOR = _config$getCurrent2.DEFAULT_CODEC_SWITCHING_BEHAVIOR,
     DEFAULT_ENABLE_FAST_SWITCHING = _config$getCurrent2.DEFAULT_ENABLE_FAST_SWITCHING,
-    DEFAULT_MANUAL_BITRATE_SWITCHING_MODE = _config$getCurrent2.DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
     DEFAULT_TEXT_TRACK_MODE = _config$getCurrent2.DEFAULT_TEXT_TRACK_MODE;
   if ((0,is_null_or_undefined/* default */.Z)(options)) {
     throw new Error("No option set on loadVideo");
   }
   if (!(0,is_null_or_undefined/* default */.Z)(options.url)) {
     url = String(options.url);
-  } else if ((0,is_null_or_undefined/* default */.Z)((_a = options.transportOptions) === null || _a === void 0 ? void 0 : _a.initialManifest) && (0,is_null_or_undefined/* default */.Z)((_b = options.transportOptions) === null || _b === void 0 ? void 0 : _b.manifestLoader)) {
-    throw new Error("Unable to load a content: no url set on loadVideo.\n" + "Please provide at least either an `url` argument, a " + "`transportOptions.initialManifest` option or a " + "`transportOptions.manifestLoader` option so the RxPlayer " + "can load the content.");
+  } else if ((0,is_null_or_undefined/* default */.Z)(options.initialManifest) && (0,is_null_or_undefined/* default */.Z)(options.manifestLoader)) {
+    throw new Error("Unable to load a content: no url set on loadVideo.\n" + "Please provide at least either an `url` argument, a " + "`initialManifest` option or a " + "`manifestLoader` option so the RxPlayer " + "can load the content.");
   }
   if ((0,is_null_or_undefined/* default */.Z)(options.transport)) {
     throw new Error("No transport set on loadVideo");
@@ -49245,29 +49219,21 @@ function parseLoadVideoOptions(options) {
       if (typeof keySystem.type !== "string" || typeof keySystem.getLicense !== "function") {
         throw new Error("Invalid key system given: Missing type string or " + "getLicense callback");
       }
-      if (!(0,is_null_or_undefined/* default */.Z)(keySystem.onKeyStatusesChange)) {
-        (0,warn_once/* default */.Z)("`keySystems[].onKeyStatusesChange` is deprecated and won't " + "be present in the next major version. " + "Please open an issue if you still need this.");
-      }
-      if (!(0,is_null_or_undefined/* default */.Z)(keySystem.throwOnLicenseExpiration)) {
-        (0,warn_once/* default */.Z)("`keySystems[].throwOnLicenseExpiration` is deprecated and won't " + "be present in the next major version. " + "Please open an issue if you still need this.");
-      }
     }
   }
   var lowLatencyMode = options.lowLatencyMode === undefined ? false : !!options.lowLatencyMode;
-  var transportOptsArg = typeof options.transportOptions === "object" && options.transportOptions !== null ? options.transportOptions : {};
-  var initialManifest = (_c = options.transportOptions) === null || _c === void 0 ? void 0 : _c.initialManifest;
-  var minimumManifestUpdateInterval = (_e = (_d = options.transportOptions) === null || _d === void 0 ? void 0 : _d.minimumManifestUpdateInterval) !== null && _e !== void 0 ? _e : 0;
+  var initialManifest = options.initialManifest;
+  var minimumManifestUpdateInterval = (_a = options.minimumManifestUpdateInterval) !== null && _a !== void 0 ? _a : 0;
+  var defaultAudioTrackSwitchingMode = (_b = options.defaultAudioTrackSwitchingMode) !== null && _b !== void 0 ? _b : undefined;
+  if (defaultAudioTrackSwitchingMode !== undefined && !(0,array_includes/* default */.Z)(["seamless", "direct", "reload"], defaultAudioTrackSwitchingMode)) {
+    log/* default */.Z.warn("The `defaultAudioTrackSwitchingMode` loadVideo option must match one of " + "the following strategy name:\n" + "- `seamless`\n" + "- `direct`\n" + "- `reload`");
+    defaultAudioTrackSwitchingMode = undefined;
+  }
   var onCodecSwitch = (0,is_null_or_undefined/* default */.Z)(options.onCodecSwitch) ? DEFAULT_CODEC_SWITCHING_BEHAVIOR : options.onCodecSwitch;
   if (!(0,array_includes/* default */.Z)(["continue", "reload"], onCodecSwitch)) {
     log/* default */.Z.warn("The `onCodecSwitch` loadVideo option must match one of " + "the following string:\n" + "- `continue`\n" + "- `reload`\n" + "If badly set, " + DEFAULT_CODEC_SWITCHING_BEHAVIOR + " will be used as default");
     onCodecSwitch = DEFAULT_CODEC_SWITCHING_BEHAVIOR;
   }
-  var transportOptions = (0,object_assign/* default */.Z)({}, transportOptsArg, {
-    lowLatencyMode: lowLatencyMode
-  });
-  // remove already parsed data to simplify the `transportOptions` object
-  delete transportOptions.initialManifest;
-  delete transportOptions.minimumManifestUpdateInterval;
   if ((0,is_null_or_undefined/* default */.Z)(options.textTrackMode)) {
     textTrackMode = DEFAULT_TEXT_TRACK_MODE;
   } else {
@@ -49276,7 +49242,6 @@ function parseLoadVideoOptions(options) {
     }
     textTrackMode = options.textTrackMode;
   }
-  var manualBitrateSwitchingMode = (_f = options.manualBitrateSwitchingMode) !== null && _f !== void 0 ? _f : DEFAULT_MANUAL_BITRATE_SWITCHING_MODE;
   var enableFastSwitching = (0,is_null_or_undefined/* default */.Z)(options.enableFastSwitching) ? DEFAULT_ENABLE_FAST_SWITCHING : options.enableFastSwitching;
   if (textTrackMode === "html") {
     // TODO Better way to express that in TypeScript?
@@ -49301,29 +49266,40 @@ function parseLoadVideoOptions(options) {
       startAt = options.startAt;
     }
   }
-  var networkConfig = (_g = options.networkConfig) !== null && _g !== void 0 ? _g : {};
-  // TODO without cast
-  /* eslint-disable @typescript-eslint/consistent-type-assertions */
+  var requestConfig = (_c = options.requestConfig) !== null && _c !== void 0 ? _c : {};
+  // All those eslint disable are needed because the option is voluntarily
+  // hidden from the base type to limit discovery of this hidden API.
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
   return {
+    __priv_patchLastSegmentInSidx: options.__priv_patchLastSegmentInSidx,
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+    checkMediaSegmentIntegrity: options.checkMediaSegmentIntegrity,
     autoPlay: autoPlay,
+    defaultAudioTrackSwitchingMode: defaultAudioTrackSwitchingMode,
     enableFastSwitching: enableFastSwitching,
-    keySystems: keySystems,
     initialManifest: initialManifest,
+    keySystems: keySystems,
     lowLatencyMode: lowLatencyMode,
-    manualBitrateSwitchingMode: manualBitrateSwitchingMode,
+    manifestLoader: options.manifestLoader,
+    manifestUpdateUrl: options.manifestUpdateUrl,
     minimumManifestUpdateInterval: minimumManifestUpdateInterval,
-    networkConfig: networkConfig,
+    requestConfig: requestConfig,
     onCodecSwitch: onCodecSwitch,
+    referenceDateTime: options.referenceDateTime,
+    representationFilter: options.representationFilter,
+    segmentLoader: options.segmentLoader,
+    serverSyncInfos: options.serverSyncInfos,
     startAt: startAt,
     textTrackElement: textTrackElement,
     textTrackMode: textTrackMode,
     transport: transport,
-    transportOptions: transportOptions,
     url: url
   };
-  /* eslint-enable @typescript-eslint/consistent-type-assertions */
 }
-
 
 ;// CONCATENATED MODULE: ./src/core/api/playback_observer.ts
 /**
@@ -49912,8 +49888,6 @@ function generateReadOnlyObserver(src, transform, cancellationSignal) {
 
 
 
-
-
 /**
  * Class handling track changes and quality locking for a single Period and
  * Adaptation type.
@@ -49928,42 +49902,55 @@ var TrackDispatcher = /*#__PURE__*/function (_EventEmitter) {
    * synchronously.
    * @param {Object} manifest
    * @param {Object} adaptationRef
-   * @param {Object|null} initialTrackInfo
    */
-  function TrackDispatcher(manifest, adaptationRef, initialTrackInfo) {
+  function TrackDispatcher(manifest, adaptationRef) {
     var _this;
     _this = _EventEmitter.call(this) || this;
     _this._canceller = new task_canceller/* default */.ZP();
     _this._manifest = manifest;
     _this._adaptationRef = adaptationRef;
+    _this._updateToken = false;
+    return _this;
+  }
+  /**
+   * @param {Object|null} initialTrackInfo
+   */
+  var _proto = TrackDispatcher.prototype;
+  _proto.start = function start(initialTrackInfo) {
+    this._updateToken = true;
     if (initialTrackInfo === null) {
-      _this._lastEmitted = initialTrackInfo;
-      adaptationRef.setValue(null);
-      return (0,assertThisInitialized/* default */.Z)(_this);
+      this._lastEmitted = null;
+      this._updateToken = false;
+      this._adaptationRef.setValue(null);
+      return;
     }
-    var reference = _this._constructLockedRepresentationsReference(initialTrackInfo);
-    _this._lastEmitted = {
+    var reference = this._constructLockedRepresentationsReference(initialTrackInfo);
+    if (!this._updateToken) {
+      return;
+    }
+    this._lastEmitted = {
       adaptation: initialTrackInfo.adaptation,
       switchingMode: initialTrackInfo.switchingMode,
       lockedRepresentations: null
     };
-    adaptationRef.setValue({
+    this._updateToken = false;
+    this._adaptationRef.setValue({
       adaptation: initialTrackInfo.adaptation,
       switchingMode: initialTrackInfo.switchingMode,
       representations: reference
     });
-    return _this;
   }
   /**
    * Update the wanted track on the Reference linked to this `TrackDispatcher`.
    * @param {Object|null} newTrackInfo
-   */
-  var _proto = TrackDispatcher.prototype;
+   */;
   _proto.updateTrack = function updateTrack(newTrackInfo) {
+    this._updateToken = true;
     if (newTrackInfo === null) {
       if (this._lastEmitted === null) {
         return;
       }
+      this._updateToken = false;
       this._canceller.cancel();
       // has no point but let's still create one for simplicity sake
       this._canceller = new task_canceller/* default */.ZP();
@@ -49976,11 +49963,15 @@ var TrackDispatcher = /*#__PURE__*/function (_EventEmitter) {
     this._canceller.cancel();
     this._canceller = new task_canceller/* default */.ZP();
     var reference = this._constructLockedRepresentationsReference(newTrackInfo);
+    if (!this._updateToken) {
+      return;
+    }
     this._lastEmitted = {
       adaptation: adaptation,
       switchingMode: switchingMode,
       lockedRepresentations: null
     };
+    this._updateToken = false;
     this._adaptationRef.setValue({
       adaptation: adaptation,
       switchingMode: switchingMode,
@@ -50034,11 +50025,9 @@ var TrackDispatcher = /*#__PURE__*/function (_EventEmitter) {
         }
       }
       if (playableRepresentations.length <= 0) {
-        var adaptationType = trackInfo.adaptation.type;
-        var noRepErr = new media_error/* default */.Z("NO_PLAYABLE_REPRESENTATION", "No Representation in the chosen " + adaptationType + " Adaptation can be played", {
-          adaptation: trackInfo.adaptation
-        });
-        throw noRepErr;
+        trackInfo.adaptation.isSupported = false;
+        self.trigger("noPlayableRepresentation", null);
+        return;
       }
       // Check if Locked Representations have changed
       var oldRef = reference.getValue();
@@ -50106,6 +50095,8 @@ var TrackDispatcher = /*#__PURE__*/function (_EventEmitter) {
 
 
 
+
+
 /**
  * Class helping with the management of the audio, video and text tracks and
  * qualities.
@@ -50119,11 +50110,13 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
   (0,inheritsLoose/* default */.Z)(TracksStore, _EventEmitter);
   function TracksStore(args) {
     var _this;
+    var _a;
     _this = _EventEmitter.call(this) || this;
     _this._storedPeriodInfo = [];
     _this._isDisposed = false;
     _this._cachedPeriodInfo = new WeakMap();
     _this._isTrickModeTrackEnabled = args.preferTrickModeTracks;
+    _this._defaultAudioTrackSwitchingMode = (_a = args.defaultAudioTrackSwitchingMode) !== null && _a !== void 0 ? _a : config/* default */.Z.getCurrent().DEFAULT_AUDIO_TRACK_SWITCHING_MODE;
     return _this;
   }
   /**
@@ -50148,6 +50141,8 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
   _proto.updatePeriodList = function updatePeriodList(manifest) {
     var _this2 = this;
     var _a, _b, _c;
+    var _config$getCurrent = config/* default */.Z.getCurrent(),
+      DEFAULT_VIDEO_TRACK_SWITCHING_MODE = _config$getCurrent.DEFAULT_VIDEO_TRACK_SWITCHING_MODE;
     var periods = manifest.periods;
     // We assume that they are always sorted chronologically
     // In dev mode, perform a runtime check that this is the case
@@ -50175,10 +50170,10 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
             return a.id === curWantedTextTrack.adaptation.id;
           });
           if (!stillHere) {
-            log/* default */.Z.warn("TracksStore: Chosen text Adaptation not available anymore");
+            log/* default */.Z.warn("TS: Chosen text Adaptation not available anymore");
             var periodInfo = _this2._storedPeriodInfo[_i2];
             periodInfo.text.storedSettings = null;
-            _this2.trigger("autoTrackSwitch", {
+            _this2.trigger("trackUpdate", {
               period: toExposedPeriod(newPeriod),
               trackType: "text",
               reason: "missing"
@@ -50203,7 +50198,7 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
             return a.id === curWantedVideoTrack.adaptation.id;
           });
           if (!_stillHere) {
-            log/* default */.Z.warn("TracksStore: Chosen video Adaptation not available anymore");
+            log/* default */.Z.warn("TS: Chosen video Adaptation not available anymore");
             var _periodItem = _this2._storedPeriodInfo[_i2];
             var storedSettings;
             if (videoAdaptations.length === 0) {
@@ -50215,12 +50210,12 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
               storedSettings = {
                 adaptationBase: adaptationBase,
                 adaptation: adaptation,
-                switchingMode: "seamless",
+                switchingMode: DEFAULT_VIDEO_TRACK_SWITCHING_MODE,
                 lockedRepresentations: lockedRepresentations
               };
             }
             _periodItem.video.storedSettings = storedSettings;
-            _this2.trigger("autoTrackSwitch", {
+            _this2.trigger("trackUpdate", {
               period: toExposedPeriod(newPeriod),
               trackType: "video",
               reason: "missing"
@@ -50245,15 +50240,15 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
             return a.id === curWantedAudioTrack.adaptation.id;
           });
           if (!_stillHere2) {
-            log/* default */.Z.warn("TracksStore: Chosen audio Adaptation not available anymore");
+            log/* default */.Z.warn("TS: Chosen audio Adaptation not available anymore");
             var _periodItem2 = _this2._storedPeriodInfo[_i2];
             var _storedSettings = audioAdaptations.length === 0 ? null : {
               adaptation: audioAdaptations[0],
-              switchingMode: "seamless",
+              switchingMode: _this2._defaultAudioTrackSwitchingMode,
               lockedRepresentations: (0,utils_reference/* default */.ZP)(null)
             };
             _periodItem2.audio.storedSettings = _storedSettings;
-            _this2.trigger("autoTrackSwitch", {
+            _this2.trigger("trackUpdate", {
               period: toExposedPeriod(newPeriod),
               trackType: "audio",
               reason: "missing"
@@ -50280,7 +50275,7 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
           _i2--;
         }
       } else {
-        var newPeriodInfo = generatePeriodInfo(newPeriod, true, _this2._isTrickModeTrackEnabled);
+        var newPeriodInfo = generatePeriodInfo(newPeriod, true, _this2._isTrickModeTrackEnabled, _this2._defaultAudioTrackSwitchingMode);
         // oldPeriod.start > newPeriod.start: insert newPeriod before
         _this2._storedPeriodInfo.splice(_i2, 0, newPeriodInfo);
         addedPeriods.push(newPeriodInfo);
@@ -50298,7 +50293,7 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
       var _this$_storedPeriodIn;
       // Add further new Period
       var periodsToAdd = periods.slice(newPListIdx).map(function (p) {
-        return generatePeriodInfo(p, true, _this2._isTrickModeTrackEnabled);
+        return generatePeriodInfo(p, true, _this2._isTrickModeTrackEnabled, _this2._defaultAudioTrackSwitchingMode);
       });
       (_this$_storedPeriodIn = this._storedPeriodInfo).push.apply(_this$_storedPeriodIn, periodsToAdd);
       addedPeriods.push.apply(addedPeriods, periodsToAdd);
@@ -50334,7 +50329,7 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
     var periodObj = getPeriodItem(this._storedPeriodInfo, period.id);
     if (periodObj === undefined) {
       // The Period has not yet been added.
-      periodObj = this._manuallyAddPeriod(period);
+      periodObj = this._addPeriod(period);
       this.trigger("newAvailablePeriods", [{
         id: period.id,
         start: period.start,
@@ -50342,13 +50337,57 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
       }]);
     }
     if (periodObj[bufferType].dispatcher !== null) {
-      log/* default */.Z.error("TracksStore: Subject already added for " + bufferType + " " + ("and Period " + period.start));
+      log/* default */.Z.error("TS: Subject already added for " + bufferType + " " + ("and Period " + period.start));
       return;
     }
     var trackSetting = periodObj[bufferType].storedSettings;
-    var dispatcher = new TrackDispatcher(manifest, adaptationRef, trackSetting);
+    var dispatcher = new TrackDispatcher(manifest, adaptationRef);
     periodObj[bufferType].dispatcher = dispatcher;
+    dispatcher.addEventListener("noPlayableRepresentation", function () {
+      var _a, _b, _c;
+      var nextAdaptation = (0,array_find/* default */.Z)(period.getAdaptationsForType(bufferType), function (a) {
+        var playableRepresentations = a.getPlayableRepresentations();
+        return playableRepresentations.length > 0;
+      });
+      if (nextAdaptation === undefined) {
+        var noRepErr = new media_error/* default */.Z("NO_PLAYABLE_REPRESENTATION", "No " + bufferType + " Representation can be played", {
+          adaptation: undefined
+        });
+        _this3.trigger("error", noRepErr);
+        _this3.dispose();
+        return;
+      }
+      var typeInfo = (_a = getPeriodItem(_this3._storedPeriodInfo, period.id)) === null || _a === void 0 ? void 0 : _a[bufferType];
+      if ((0,is_null_or_undefined/* default */.Z)(typeInfo)) {
+        return;
+      }
+      var switchingMode = bufferType === "audio" ? _this3._defaultAudioTrackSwitchingMode : "reload";
+      var storedSettings = {
+        adaptation: nextAdaptation,
+        switchingMode: switchingMode,
+        lockedRepresentations: (0,utils_reference/* default */.ZP)(null)
+      };
+      typeInfo.storedSettings = storedSettings;
+      _this3.trigger("trackUpdate", {
+        period: toExposedPeriod(period),
+        trackType: bufferType,
+        reason: "no-playable-representation"
+      });
+      // The previous event trigger could have had side-effects, so we
+      // re-check if we're still mostly in the same state
+      if (_this3._isDisposed) {
+        return; // Someone disposed the `TracksStore` on the previous side-effect
+      }
+
+      typeInfo = (_b = getPeriodItem(_this3._storedPeriodInfo, period.id)) === null || _b === void 0 ? void 0 : _b[bufferType];
+      if ((0,is_null_or_undefined/* default */.Z)(typeInfo) || typeInfo.storedSettings !== storedSettings) {
+        return;
+      }
+      (_c = typeInfo.dispatcher) === null || _c === void 0 ? void 0 : _c.updateTrack(storedSettings);
+    });
     dispatcher.addEventListener("noPlayableLockedRepresentation", function () {
+      // TODO check that it doesn't already lead to segment loading or MediaSource
+      // reloading
       trackSetting === null || trackSetting === void 0 ? void 0 : trackSetting.lockedRepresentations.setValue(null);
       _this3.trigger("brokenRepresentationsLock", {
         period: {
@@ -50359,6 +50398,7 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
         trackType: bufferType
       });
     });
+    dispatcher.start(trackSetting);
   }
   /**
    * Remove shared reference to choose an "audio", "video" or "text" Adaptation
@@ -50369,13 +50409,13 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
   _proto.removeTrackReference = function removeTrackReference(bufferType, period) {
     var periodIndex = findPeriodIndex(this._storedPeriodInfo, period);
     if (periodIndex === undefined) {
-      log/* default */.Z.warn("TracksStore: " + bufferType + " not found for period", period.start);
+      log/* default */.Z.warn("TS: " + bufferType + " not found for period", period.start);
       return;
     }
     var periodObj = this._storedPeriodInfo[periodIndex];
     var choiceItem = periodObj[bufferType];
     if ((choiceItem === null || choiceItem === void 0 ? void 0 : choiceItem.dispatcher) === null) {
-      log/* default */.Z.warn("TracksStore: TrackDispatcher already removed for " + bufferType + " " + ("and Period " + period.start));
+      log/* default */.Z.warn("TS: TrackDispatcher already removed for " + bufferType + " " + ("and Period " + period.start));
       return;
     }
     choiceItem.dispatcher.dispose();
@@ -50431,14 +50471,14 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
       return;
     }
     this._isTrickModeTrackEnabled = false;
-    this._resetVideoTrackChoices();
+    this._resetVideoTrackChoices("trickmode-disabled");
   };
   _proto.enableVideoTrickModeTracks = function enableVideoTrickModeTracks() {
     if (this._isTrickModeTrackEnabled) {
       return;
     }
     this._isTrickModeTrackEnabled = true;
-    this._resetVideoTrackChoices();
+    this._resetVideoTrackChoices("trickmode-enabled");
   }
   /**
    * Reset the TracksStore's Period objects:
@@ -50479,9 +50519,7 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
    * `null` if no Audio Representation should be locked.
    */;
   _proto.setAudioTrack = function setAudioTrack(periodObj, wantedId, switchingMode, reprsToLock) {
-    var _config$getCurrent = config/* default */.Z.getCurrent(),
-      DEFAULT_AUDIO_TRACK_SWITCHING_MODE = _config$getCurrent.DEFAULT_AUDIO_TRACK_SWITCHING_MODE;
-    return this._setAudioOrTextTrack("audio", periodObj, wantedId, switchingMode !== null && switchingMode !== void 0 ? switchingMode : DEFAULT_AUDIO_TRACK_SWITCHING_MODE, reprsToLock);
+    return this._setAudioOrTextTrack("audio", periodObj, wantedId, switchingMode !== null && switchingMode !== void 0 ? switchingMode : this._defaultAudioTrackSwitchingMode, reprsToLock);
   }
   /**
    * Set text track based on the ID of its Adaptation for a given added Period.
@@ -50502,6 +50540,7 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
    * `null` if no Audio Representation should be locked.
    */;
   _proto._setAudioOrTextTrack = function _setAudioOrTextTrack(bufferType, periodObj, wantedId, switchingMode, reprsToLock) {
+    var _a;
     var period = periodObj.period;
     var wantedAdaptation = (0,array_find/* default */.Z)(period.getSupportedAdaptations(bufferType), function (_ref) {
       var id = _ref.id;
@@ -50515,22 +50554,33 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
     if (reprsToLock === null) {
       lockedRepresentations = (0,utils_reference/* default */.ZP)(null);
     } else {
-      var _config$getCurrent2 = config/* default */.Z.getCurrent(),
-        DEFAULT_AUDIO_TRACK_SWITCHING_MODE = _config$getCurrent2.DEFAULT_AUDIO_TRACK_SWITCHING_MODE;
       var representationsToLock = this._getRepresentationsToLock(wantedAdaptation, reprsToLock);
-      var repSwitchingMode = bufferType === "audio" ? DEFAULT_AUDIO_TRACK_SWITCHING_MODE : "direct";
+      var repSwitchingMode = bufferType === "audio" ? this._defaultAudioTrackSwitchingMode : "direct";
       lockedRepresentations = (0,utils_reference/* default */.ZP)({
         representations: representationsToLock,
         switchingMode: repSwitchingMode
       });
     }
-    typeInfo.storedSettings = {
+    var storedSettings = {
       adaptation: wantedAdaptation,
       switchingMode: switchingMode,
       lockedRepresentations: lockedRepresentations
     };
-    if (typeInfo.dispatcher !== null) {
-      typeInfo.dispatcher.updateTrack(typeInfo.storedSettings);
+    typeInfo.storedSettings = storedSettings;
+    this.trigger("trackUpdate", {
+      period: toExposedPeriod(period),
+      trackType: bufferType,
+      reason: "manual"
+    });
+    // The previous event trigger could have had side-effects, so we
+    // re-check if we're still mostly in the same state
+    if (this._isDisposed) {
+      return; // Someone disposed the `TracksStore` on the previous side-effect
+    }
+
+    var newPeriodItem = getPeriodItem(this._storedPeriodInfo, period.id);
+    if (newPeriodItem !== undefined && newPeriodItem[bufferType].storedSettings === storedSettings) {
+      (_a = newPeriodItem[bufferType].dispatcher) === null || _a === void 0 ? void 0 : _a.updateTrack(storedSettings);
     }
   }
   /**
@@ -50544,6 +50594,7 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
    * `null` if no Video Representation should be locked.
    */;
   _proto.setVideoTrack = function setVideoTrack(periodObj, wantedId, switchingMode, reprsToLock) {
+    var _a;
     var period = periodObj.period;
     var wantedAdaptation = (0,array_find/* default */.Z)(period.getSupportedAdaptations("video"), function (_ref2) {
       var id = _ref2.id;
@@ -50552,8 +50603,8 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
     if (wantedAdaptation === undefined) {
       throw new Error("Wanted video track not found.");
     }
-    var _config$getCurrent3 = config/* default */.Z.getCurrent(),
-      DEFAULT_VIDEO_TRACK_SWITCHING_MODE = _config$getCurrent3.DEFAULT_VIDEO_TRACK_SWITCHING_MODE;
+    var _config$getCurrent2 = config/* default */.Z.getCurrent(),
+      DEFAULT_VIDEO_TRACK_SWITCHING_MODE = _config$getCurrent2.DEFAULT_VIDEO_TRACK_SWITCHING_MODE;
     var typeInfo = periodObj.video;
     var newAdaptation = getRightVideoTrack(wantedAdaptation, this._isTrickModeTrackEnabled);
     var lockedRepresentations;
@@ -50567,14 +50618,27 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
         switchingMode: repSwitchingMode
       });
     }
-    typeInfo.storedSettings = {
+    var storedSettings = {
       adaptationBase: wantedAdaptation,
       switchingMode: switchingMode !== null && switchingMode !== void 0 ? switchingMode : DEFAULT_VIDEO_TRACK_SWITCHING_MODE,
       adaptation: newAdaptation,
       lockedRepresentations: lockedRepresentations
     };
-    if (typeInfo.dispatcher !== null) {
-      typeInfo.dispatcher.updateTrack(typeInfo.storedSettings);
+    typeInfo.storedSettings = storedSettings;
+    this.trigger("trackUpdate", {
+      period: toExposedPeriod(period),
+      trackType: "video",
+      reason: "manual"
+    });
+    // The previous event trigger could have had side-effects, so we
+    // re-check if we're still mostly in the same state
+    if (this._isDisposed) {
+      return; // Someone disposed the `TracksStore` on the previous side-effect
+    }
+
+    var newPeriodItem = getPeriodItem(this._storedPeriodInfo, period.id);
+    if (newPeriodItem !== undefined && newPeriodItem.video.storedSettings === storedSettings) {
+      (_a = newPeriodItem.video.dispatcher) === null || _a === void 0 ? void 0 : _a.updateTrack(storedSettings);
     }
   }
   /**
@@ -50585,7 +50649,7 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
    * @throws Error - Throws if the period given has not been added
    */;
   _proto.disableTrack = function disableTrack(periodObj, bufferType) {
-    var _a;
+    var _a, _b;
     var trackInfo = periodObj[bufferType];
     if (trackInfo.storedSettings === null) {
       return;
@@ -50595,8 +50659,20 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
       (_a = periodObj[bufferType].storedSettings) === null || _a === void 0 ? void 0 : _a.lockedRepresentations.finish();
     }
     trackInfo.storedSettings = null;
-    if (trackInfo.dispatcher !== null) {
-      trackInfo.dispatcher.updateTrack(null);
+    this.trigger("trackUpdate", {
+      period: toExposedPeriod(periodObj.period),
+      trackType: bufferType,
+      reason: "manual"
+    });
+    // The previous event trigger could have had side-effects, so we
+    // re-check if we're still mostly in the same state
+    if (this._isDisposed) {
+      return; // Someone disposed the `TracksStore` on the previous side-effect
+    }
+
+    var newPeriodItem = getPeriodItem(this._storedPeriodInfo, periodObj.period.id);
+    if (newPeriodItem !== undefined && newPeriodItem[bufferType].storedSettings === null) {
+      (_b = newPeriodItem[bufferType].dispatcher) === null || _b === void 0 ? void 0 : _b.updateTrack(null);
     }
   }
   /**
@@ -50743,8 +50819,8 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
     if (storedSettings === null) {
       return;
     }
-    var _config$getCurrent4 = config/* default */.Z.getCurrent(),
-      DEFAULT_AUDIO_REPRESENTATIONS_SWITCHING_MODE = _config$getCurrent4.DEFAULT_AUDIO_REPRESENTATIONS_SWITCHING_MODE;
+    var _config$getCurrent3 = config/* default */.Z.getCurrent(),
+      DEFAULT_AUDIO_REPRESENTATIONS_SWITCHING_MODE = _config$getCurrent3.DEFAULT_AUDIO_REPRESENTATIONS_SWITCHING_MODE;
     var filtered = this._getRepresentationsToLock(storedSettings.adaptation, lockSettings.representations);
     var switchingMode = (_a = lockSettings.switchingMode) !== null && _a !== void 0 ? _a : DEFAULT_AUDIO_REPRESENTATIONS_SWITCHING_MODE;
     storedSettings.lockedRepresentations.setValue({
@@ -50758,8 +50834,8 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
     if (storedSettings === null) {
       return;
     }
-    var _config$getCurrent5 = config/* default */.Z.getCurrent(),
-      DEFAULT_VIDEO_REPRESENTATIONS_SWITCHING_MODE = _config$getCurrent5.DEFAULT_VIDEO_REPRESENTATIONS_SWITCHING_MODE;
+    var _config$getCurrent4 = config/* default */.Z.getCurrent(),
+      DEFAULT_VIDEO_REPRESENTATIONS_SWITCHING_MODE = _config$getCurrent4.DEFAULT_VIDEO_REPRESENTATIONS_SWITCHING_MODE;
     var filtered = this._getRepresentationsToLock(storedSettings.adaptation, lockSettings.representations);
     var switchingMode = (_a = lockSettings.switchingMode) !== null && _a !== void 0 ? _a : DEFAULT_VIDEO_REPRESENTATIONS_SWITCHING_MODE;
     storedSettings.lockedRepresentations.setValue({
@@ -50795,8 +50871,8 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
    * @param {Period} period
    * @returns {Object}
    */;
-  _proto._manuallyAddPeriod = function _manuallyAddPeriod(period) {
-    var periodObj = generatePeriodInfo(period, false, this._isTrickModeTrackEnabled);
+  _proto._addPeriod = function _addPeriod(period) {
+    var periodObj = generatePeriodInfo(period, false, this._isTrickModeTrackEnabled, this._defaultAudioTrackSwitchingMode);
     for (var i = 0; i < this._storedPeriodInfo.length; i++) {
       if (this._storedPeriodInfo[i].period.start > period.start) {
         this._storedPeriodInfo.splice(i, 0, periodObj);
@@ -50806,7 +50882,8 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
     this._storedPeriodInfo.push(periodObj);
     return periodObj;
   };
-  _proto._resetVideoTrackChoices = function _resetVideoTrackChoices() {
+  _proto._resetVideoTrackChoices = function _resetVideoTrackChoices(reason) {
+    var _a;
     for (var i = 0; i < this._storedPeriodInfo.length; i++) {
       var periodObj = this._storedPeriodInfo[i];
       if (periodObj.video.storedSettings !== null) {
@@ -50822,9 +50899,23 @@ var TracksStore = /*#__PURE__*/function (_EventEmitter) {
     // or added while the loop is running.
     var sliced = this._storedPeriodInfo.slice();
     for (var _i3 = 0; _i3 < sliced.length; _i3++) {
+      var period = sliced[_i3].period;
       var videoItem = sliced[_i3].video;
-      if (videoItem.dispatcher !== null) {
-        videoItem.dispatcher.updateTrack(videoItem.storedSettings);
+      var storedSettings = videoItem.storedSettings;
+      this.trigger("trackUpdate", {
+        period: toExposedPeriod(period),
+        trackType: "video",
+        reason: reason
+      });
+      // The previous event trigger could have had side-effects, so we
+      // re-check if we're still mostly in the same state
+      if (this._isDisposed) {
+        return; // Someone disposed the `TracksStore` on the previous side-effect
+      }
+
+      var newPeriodItem = getPeriodItem(this._storedPeriodInfo, period.id);
+      if (newPeriodItem !== undefined && newPeriodItem.video.storedSettings === storedSettings) {
+        (_a = newPeriodItem.video.dispatcher) === null || _a === void 0 ? void 0 : _a.updateTrack(storedSettings);
       }
     }
   };
@@ -50912,17 +51003,16 @@ function getRightVideoTrack(adaptation, isTrickModeEnabled) {
  * @param {boolean} isTrickModeTrackEnabled
  * @returns {object}
  */
-function generatePeriodInfo(period, inManifest, isTrickModeTrackEnabled) {
+function generatePeriodInfo(period, inManifest, isTrickModeTrackEnabled, defaultAudioTrackSwitchingMode) {
   var _a;
   var audioAdaptation = period.getSupportedAdaptations("audio")[0];
   var baseVideoAdaptation = period.getSupportedAdaptations("video")[0];
   var videoAdaptation = getRightVideoTrack(baseVideoAdaptation, isTrickModeTrackEnabled);
-  var _config$getCurrent6 = config/* default */.Z.getCurrent(),
-    DEFAULT_AUDIO_TRACK_SWITCHING_MODE = _config$getCurrent6.DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
-    DEFAULT_VIDEO_TRACK_SWITCHING_MODE = _config$getCurrent6.DEFAULT_VIDEO_TRACK_SWITCHING_MODE;
+  var _config$getCurrent5 = config/* default */.Z.getCurrent(),
+    DEFAULT_VIDEO_TRACK_SWITCHING_MODE = _config$getCurrent5.DEFAULT_VIDEO_TRACK_SWITCHING_MODE;
   var audioSettings = audioAdaptation !== undefined ? {
     adaptation: audioAdaptation,
-    switchingMode: DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
+    switchingMode: defaultAudioTrackSwitchingMode,
     lockedRepresentations: (0,utils_reference/* default */.ZP)(null)
   } : null;
   var videoSettings = videoAdaptation !== undefined ? {
@@ -51068,8 +51158,10 @@ function constructPlayerStateReference(initializer, mediaElement, playbackObserv
           playerStateRef.setValue(newState);
         }
       }
+    } else if (playerStateRef.getValue() === "RELOADING" /* PLAYER_STATES.RELOADING */) {
+      playerStateRef.setValue(getLoadedContentState(mediaElement, null));
     } else {
-      playerStateRef.setValueIfChanged(getLoadedContentState(mediaElement, null));
+      updateStateIfLoaded(null);
     }
   }, cancelSignal);
   initializer.addEventListener("reloadingMediaSource", function () {
@@ -51084,28 +51176,36 @@ function constructPlayerStateReference(initializer, mediaElement, playbackObserv
   var prevStallReason = null;
   initializer.addEventListener("stalled", function (s) {
     if (s !== prevStallReason) {
-      if (isLoadedState(playerStateRef.getValue())) {
-        playerStateRef.setValueIfChanged(getLoadedContentState(mediaElement, s));
-      }
+      updateStateIfLoaded(s);
       prevStallReason = s;
     }
   }, cancelSignal);
   initializer.addEventListener("unstalled", function () {
     if (prevStallReason !== null) {
-      if (isLoadedState(playerStateRef.getValue())) {
-        playerStateRef.setValueIfChanged(getLoadedContentState(mediaElement, null));
-      }
+      updateStateIfLoaded(null);
       prevStallReason = null;
     }
   }, cancelSignal);
   playbackObserver.listen(function (observation) {
-    if (isLoadedState(playerStateRef.getValue()) && (0,array_includes/* default */.Z)(["seeking", "ended", "play", "pause"], observation.event)) {
-      playerStateRef.setValueIfChanged(getLoadedContentState(mediaElement, prevStallReason));
+    if ((0,array_includes/* default */.Z)(["seeking", "ended", "play", "pause"], observation.event)) {
+      updateStateIfLoaded(prevStallReason);
     }
   }, {
     clearSignal: cancelSignal
   });
   return playerStateRef;
+  function updateStateIfLoaded(stallRes) {
+    if (!isLoadedState(playerStateRef.getValue())) {
+      return;
+    }
+    var newState = getLoadedContentState(mediaElement, stallRes);
+    var prevState = playerStateRef.getValue();
+    // Some safety checks to avoid having nonsense state switches
+    if (prevState === "LOADED" /* PLAYER_STATES.LOADED */ && newState === "PAUSED" /* PLAYER_STATES.PAUSED */) {
+      return;
+    }
+    playerStateRef.setValueIfChanged(newState);
+  }
 }
 /**
  * Get state string for a _loaded_ content.
@@ -51132,7 +51232,7 @@ function getLoadedContentState(mediaElement, stalledStatus) {
       return "ENDED" /* PLAYER_STATES.ENDED */;
     }
 
-    return stalledStatus === "seeking" ? "SEEKING" /* PLAYER_STATES.SEEKING */ : "BUFFERING" /* PLAYER_STATES.BUFFERING */;
+    return stalledStatus === "seeking" ? "SEEKING" /* PLAYER_STATES.SEEKING */ : stalledStatus === "freezing" ? "FREEZING" /* PLAYER_STATES.FREEZING */ : "BUFFERING" /* PLAYER_STATES.BUFFERING */;
   }
 
   return mediaElement.paused ? "PAUSED" /* PLAYER_STATES.PAUSED */ : "PLAYING" /* PLAYER_STATES.PLAYING */;
@@ -51150,7 +51250,7 @@ function public_api_arrayLikeToArray(arr, len) { if (len == null || len > arr.le
 /**
  * Copyright 2015 CANAL+ Group
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");publicapi
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -51194,7 +51294,8 @@ function public_api_arrayLikeToArray(arr, len) { if (len == null || len > arr.le
 var generateContentId = (0,id_generator/* default */.Z)();
 var getPictureOnPictureStateRef = event_listeners/* getPictureOnPictureStateRef */.w0,
   getVideoVisibilityRef = event_listeners/* getVideoVisibilityRef */.it,
-  getVideoWidthRef = event_listeners/* getVideoWidthRef */.O0;
+  getElementResolutionRef = event_listeners/* getElementResolutionRef */.bD,
+  getScreenResolutionRef = event_listeners/* getScreenResolutionRef */.c9;
 /**
  * @class Player
  * @extends EventEmitter
@@ -51212,15 +51313,10 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     }
     _this = _EventEmitter.call(this) || this;
     var _parseConstructorOpti = parseConstructorOptions(options),
-      initialAudioBitrate = _parseConstructorOpti.initialAudioBitrate,
-      initialVideoBitrate = _parseConstructorOpti.initialVideoBitrate,
-      limitVideoWidth = _parseConstructorOpti.limitVideoWidth,
-      minAudioBitrate = _parseConstructorOpti.minAudioBitrate,
-      minVideoBitrate = _parseConstructorOpti.minVideoBitrate,
-      maxAudioBitrate = _parseConstructorOpti.maxAudioBitrate,
+      baseBandwidth = _parseConstructorOpti.baseBandwidth,
+      videoResolutionLimit = _parseConstructorOpti.videoResolutionLimit,
       maxBufferAhead = _parseConstructorOpti.maxBufferAhead,
       maxBufferBehind = _parseConstructorOpti.maxBufferBehind,
-      maxVideoBitrate = _parseConstructorOpti.maxVideoBitrate,
       throttleVideoBitrateWhenHidden = _parseConstructorOpti.throttleVideoBitrateWhenHidden,
       videoElement = _parseConstructorOpti.videoElement,
       wantedBufferAhead = _parseConstructorOpti.wantedBufferAhead,
@@ -51230,7 +51326,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
-    _this.version = /* PLAYER_VERSION */"3.31.0";
+    _this.version = /* PLAYER_VERSION */"4.0.0-beta.2";
     _this.log = log/* default */.Z;
     _this.state = "STOPPED";
     _this.videoElement = videoElement;
@@ -51248,24 +51344,12 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     };
     _this._priv_bitrateInfos = {
       lastBitrates: {
-        audio: initialAudioBitrate,
-        video: initialVideoBitrate
-      },
-      minAutoBitrates: {
-        audio: (0,utils_reference/* default */.ZP)(minAudioBitrate, _this._destroyCanceller.signal),
-        video: (0,utils_reference/* default */.ZP)(minVideoBitrate, _this._destroyCanceller.signal)
-      },
-      maxAutoBitrates: {
-        audio: (0,utils_reference/* default */.ZP)(maxAudioBitrate, _this._destroyCanceller.signal),
-        video: (0,utils_reference/* default */.ZP)(maxVideoBitrate, _this._destroyCanceller.signal)
-      },
-      manualBitrates: {
-        audio: (0,utils_reference/* default */.ZP)(-1, _this._destroyCanceller.signal),
-        video: (0,utils_reference/* default */.ZP)(-1, _this._destroyCanceller.signal)
+        audio: baseBandwidth,
+        video: baseBandwidth
       }
     };
     _this._priv_throttleVideoBitrateWhenHidden = throttleVideoBitrateWhenHidden;
-    _this._priv_limitVideoWidth = limitVideoWidth;
+    _this._priv_videoResolutionLimit = videoResolutionLimit;
     _this._priv_mutedMemory = DEFAULT_UNMUTED_VOLUME;
     _this._priv_currentError = null;
     _this._priv_contentInfos = null;
@@ -51404,18 +51488,26 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
    */;
   _proto._priv_initializeContentPlayback = function _priv_initializeContentPlayback(options) {
     var _this2 = this;
+    var _a, _b, _c, _d;
     var autoPlay = options.autoPlay,
+      defaultAudioTrackSwitchingMode = options.defaultAudioTrackSwitchingMode,
       enableFastSwitching = options.enableFastSwitching,
       initialManifest = options.initialManifest,
       keySystems = options.keySystems,
       lowLatencyMode = options.lowLatencyMode,
-      manualBitrateSwitchingMode = options.manualBitrateSwitchingMode,
       minimumManifestUpdateInterval = options.minimumManifestUpdateInterval,
-      networkConfig = options.networkConfig,
+      requestConfig = options.requestConfig,
       onCodecSwitch = options.onCodecSwitch,
       startAt = options.startAt,
       transport = options.transport,
-      transportOptions = options.transportOptions,
+      checkMediaSegmentIntegrity = options.checkMediaSegmentIntegrity,
+      manifestLoader = options.manifestLoader,
+      manifestUpdateUrl = options.manifestUpdateUrl,
+      referenceDateTime = options.referenceDateTime,
+      representationFilter = options.representationFilter,
+      segmentLoader = options.segmentLoader,
+      serverSyncInfos = options.serverSyncInfos,
+      __priv_patchLastSegmentInSidx = options.__priv_patchLastSegmentInSidx,
       url = options.url;
     // Perform multiple checks on the given options
     if (this.videoElement === null) {
@@ -51435,25 +51527,29 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
         this._priv_currentError = null;
         throw new Error("transport \"" + transport + "\" not supported");
       }
-      var transportPipelines = transportFn(transportOptions);
-      var offlineRetry = networkConfig.offlineRetry,
-        segmentRetry = networkConfig.segmentRetry,
-        manifestRetry = networkConfig.manifestRetry,
-        manifestRequestTimeout = networkConfig.manifestRequestTimeout,
-        segmentRequestTimeout = networkConfig.segmentRequestTimeout;
+      var transportPipelines = transportFn({
+        lowLatencyMode: lowLatencyMode,
+        checkMediaSegmentIntegrity: checkMediaSegmentIntegrity,
+        manifestLoader: manifestLoader,
+        manifestUpdateUrl: manifestUpdateUrl,
+        referenceDateTime: referenceDateTime,
+        representationFilter: representationFilter,
+        segmentLoader: segmentLoader,
+        serverSyncInfos: serverSyncInfos,
+        __priv_patchLastSegmentInSidx: __priv_patchLastSegmentInSidx
+      });
       /** Interface used to load and refresh the Manifest. */
       var manifestRequestSettings = {
         lowLatencyMode: lowLatencyMode,
-        maxRetryRegular: manifestRetry,
-        maxRetryOffline: offlineRetry,
-        requestTimeout: manifestRequestTimeout,
+        maxRetry: (_a = requestConfig.manifest) === null || _a === void 0 ? void 0 : _a.maxRetry,
+        requestTimeout: (_b = requestConfig.manifest) === null || _b === void 0 ? void 0 : _b.timeout,
         minimumManifestUpdateInterval: minimumManifestUpdateInterval,
         initialManifest: initialManifest
       };
       var relyOnVideoVisibilityAndSize = canRelyOnVideoVisibilityAndSize();
       var throttlers = {
         throttleBitrate: {},
-        limitWidth: {}
+        limitResolution: {}
       };
       if (this._priv_throttleVideoBitrateWhenHidden) {
         if (!relyOnVideoVisibilityAndSize) {
@@ -51466,22 +51562,23 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
           };
         }
       }
-      if (this._priv_limitVideoWidth) {
+      if (this._priv_videoResolutionLimit === "videoElement") {
         if (!relyOnVideoVisibilityAndSize) {
-          log/* default */.Z.warn("API: Can't apply limitVideoWidth because browser can't be " + "trusted for video size.");
+          log/* default */.Z.warn("API: Can't apply videoResolutionLimit because browser can't be " + "trusted for video size.");
         } else {
-          throttlers.limitWidth = {
-            video: getVideoWidthRef(videoElement, this._priv_pictureInPictureRef, currentContentCanceller.signal)
+          throttlers.limitResolution = {
+            video: getElementResolutionRef(videoElement, this._priv_pictureInPictureRef, currentContentCanceller.signal)
           };
         }
+      } else if (this._priv_videoResolutionLimit === "screen") {
+        throttlers.limitResolution = {
+          video: getScreenResolutionRef(currentContentCanceller.signal)
+        };
       }
       /** Options used by the adaptive logic. */
       var adaptiveOptions = {
         initialBitrates: this._priv_bitrateInfos.lastBitrates,
         lowLatencyMode: lowLatencyMode,
-        manualBitrates: this._priv_bitrateInfos.manualBitrates,
-        minAutoBitrates: this._priv_bitrateInfos.minAutoBitrates,
-        maxAutoBitrates: this._priv_bitrateInfos.maxAutoBitrates,
         throttlers: throttlers
       };
       /** Options used by the TextTrack SegmentBuffer. */
@@ -51493,14 +51590,12 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       };
       var bufferOptions = (0,object_assign/* default */.Z)({
         enableFastSwitching: enableFastSwitching,
-        manualBitrateSwitchingMode: manualBitrateSwitchingMode,
         onCodecSwitch: onCodecSwitch
       }, this._priv_bufferOptions);
       var segmentRequestOptions = {
         lowLatencyMode: lowLatencyMode,
-        maxRetryRegular: segmentRetry,
-        requestTimeout: segmentRequestTimeout,
-        maxRetryOffline: offlineRetry
+        maxRetry: (_c = requestConfig.segment) === null || _c === void 0 ? void 0 : _c.maxRetry,
+        requestTimeout: (_d = requestConfig.segment) === null || _d === void 0 ? void 0 : _d.timeout
       };
       initializer = new MediaSourceContentInitializer({
         adaptiveOptions: adaptiveOptions,
@@ -51539,6 +51634,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       contentId: generateContentId(),
       originalUrl: url,
       currentContentCanceller: currentContentCanceller,
+      defaultAudioTrackSwitchingMode: defaultAudioTrackSwitchingMode,
       initializer: initializer,
       isDirectFile: isDirectFile,
       segmentBuffersStore: null,
@@ -51551,23 +51647,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     };
     // Bind events
     initializer.addEventListener("error", function (error) {
-      var formattedError = (0,format_error/* default */.Z)(error, {
-        defaultCode: "NONE",
-        defaultReason: "An unknown error stopped content playback."
-      });
-      formattedError.fatal = true;
-      contentInfos.currentContentCanceller.cancel();
-      _this2._priv_cleanUpCurrentContentState();
-      _this2._priv_currentError = formattedError;
-      log/* default */.Z.error("API: The player stopped because of an error", error instanceof Error ? error : "");
-      _this2._priv_setPlayerState("STOPPED" /* PLAYER_STATES.STOPPED */);
-      // TODO This condition is here because the eventual callback called when the
-      // player state is updated can launch a new content, thus the error will not
-      // be here anymore, in which case triggering the "error" event is unwanted.
-      // This is very ugly though, and we should probable have a better solution
-      if (_this2._priv_currentError === formattedError) {
-        _this2.trigger("error", formattedError);
-      }
+      _this2._priv_onFatalError(error, contentInfos);
     });
     initializer.addEventListener("warning", function (error) {
       var formattedError = (0,format_error/* default */.Z)(error, {
@@ -51593,21 +51673,6 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     initializer.addEventListener("streamEventSkip", function (streamEventSkip) {
       return _this2.trigger("streamEventSkip", streamEventSkip);
     });
-    initializer.addEventListener("decipherabilityUpdate", function (decipherabilityUpdate) {
-      return _this2.trigger("decipherabilityUpdate", decipherabilityUpdate.map(function (i) {
-        return {
-          periodInfo: {
-            start: i.period.start,
-            end: i.period.end,
-            id: i.period.id
-          },
-          trackType: i.adaptation.type,
-          trackId: i.adaptation.id,
-          representationId: i.representation.id,
-          isDecipherable: i.representation.decipherable
-        };
-      }));
-    });
     initializer.addEventListener("activePeriodChanged", function (periodInfo) {
       return _this2._priv_onActivePeriodChanged(contentInfos, periodInfo);
     });
@@ -51623,8 +51688,8 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     initializer.addEventListener("adaptationChange", function (adaptationInfo) {
       return _this2._priv_onAdaptationChange(contentInfos, adaptationInfo);
     });
-    initializer.addEventListener("bitrateEstimationChange", function (bitrateEstimationInfo) {
-      return _this2._priv_onBitrateEstimationChange(bitrateEstimationInfo);
+    initializer.addEventListener("bitrateEstimateChange", function (bitrateEstimateInfo) {
+      return _this2._priv_onBitrateEstimateChange(bitrateEstimateInfo);
     });
     initializer.addEventListener("manifestReady", function (manifest) {
       return _this2._priv_onManifestReady(contentInfos, manifest);
@@ -51871,12 +51936,12 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     return this._priv_preferTrickModeTracks;
   }
   /**
-   * Returns the url of the currently considered Manifest, or of the content for
+   * Returns the URL(s) of the currently considered Manifest, or of the content for
    * directfile content.
-   * @returns {string|undefined} - Current URL. `undefined` if not known or no
-   * URL yet.
+   * @returns {Array.<string>|undefined} - Current URL. `undefined` if not known
+   * or no URL yet.
    */;
-  _proto.getUrl = function getUrl() {
+  _proto.getContentUrls = function getContentUrls() {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
@@ -51885,10 +51950,10 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       manifest = _this$_priv_contentIn2.manifest,
       originalUrl = _this$_priv_contentIn2.originalUrl;
     if (isDirectFile) {
-      return originalUrl;
+      return originalUrl === undefined ? undefined : [originalUrl];
     }
     if (manifest !== null) {
-      return manifest.getUrl();
+      return manifest.getUrls();
     }
     return undefined;
   }
@@ -51929,7 +51994,11 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       throw new Error("Disposed player");
     }
     var videoElement = this.videoElement;
-    return (0,ranges/* getLeftSizeOfRange */.L7)(videoElement.buffered, videoElement.currentTime);
+    var bufferGap = (0,ranges/* getLeftSizeOfRange */.L7)(videoElement.buffered, videoElement.currentTime);
+    if (bufferGap === Infinity) {
+      return 0;
+    }
+    return bufferGap;
   }
   /**
    * Get the current position, in s, in wall-clock time.
@@ -52074,54 +52143,36 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     }
   }
   /**
-   * Returns currently considered bitrate for video segments.
-   * @returns {Number|undefined}
+   * Returns video Representation currently considered for the current Period.
+   *
+   * Returns `null` if no video track is playing for the current Period.
+   *
+   * Returns `undefined` either when are not currently playing any Period or
+   * when we don't know which Representation is playing.
+   * @returns {Object|null|undefined}
    */;
-  _proto.getVideoBitrate = function getVideoBitrate() {
+  _proto.getVideoRepresentation = function getVideoRepresentation() {
     var representations = this.__priv_getCurrentRepresentations();
-    if (representations === null || (0,is_null_or_undefined/* default */.Z)(representations.video)) {
+    if (representations === null) {
       return undefined;
     }
-    return representations.video.bitrate;
+    return representations.video;
   }
   /**
-   * Returns currently considered bitrate for audio segments.
-   * @returns {Number|undefined}
+   * Returns audio Representation currently considered for the current Period.
+   *
+   * Returns `null` if no audio track is playing for the current Period.
+   *
+   * Returns `undefined` either when are not currently playing any Period or
+   * when we don't know which Representation is playing.
+   * @returns {Object|null|undefined}
    */;
-  _proto.getAudioBitrate = function getAudioBitrate() {
+  _proto.getAudioRepresentation = function getAudioRepresentation() {
     var representations = this.__priv_getCurrentRepresentations();
-    if (representations === null || (0,is_null_or_undefined/* default */.Z)(representations.audio)) {
+    if (representations === null) {
       return undefined;
     }
-    return representations.audio.bitrate;
-  }
-  /**
-   * Returns minimum wanted video bitrate currently set.
-   * @returns {Number}
-   */;
-  _proto.getMinVideoBitrate = function getMinVideoBitrate() {
-    return this._priv_bitrateInfos.minAutoBitrates.video.getValue();
-  }
-  /**
-   * Returns minimum wanted audio bitrate currently set.
-   * @returns {Number}
-   */;
-  _proto.getMinAudioBitrate = function getMinAudioBitrate() {
-    return this._priv_bitrateInfos.minAutoBitrates.audio.getValue();
-  }
-  /**
-   * Returns maximum wanted video bitrate currently set.
-   * @returns {Number}
-   */;
-  _proto.getMaxVideoBitrate = function getMaxVideoBitrate() {
-    return this._priv_bitrateInfos.maxAutoBitrates.video.getValue();
-  }
-  /**
-   * Returns maximum wanted audio bitrate currently set.
-   * @returns {Number}
-   */;
-  _proto.getMaxAudioBitrate = function getMaxAudioBitrate() {
-    return this._priv_bitrateInfos.maxAutoBitrates.audio.getValue();
+    return representations.audio;
   }
   /**
    * Play/Resume the current video.
@@ -52259,50 +52310,6 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     }
   }
   /**
-   * Update the minimum video bitrate the user can switch to.
-   * @param {Number} btr
-   */;
-  _proto.setMinVideoBitrate = function setMinVideoBitrate(btr) {
-    var maxVideoBitrate = this._priv_bitrateInfos.maxAutoBitrates.video.getValue();
-    if (btr > maxVideoBitrate) {
-      throw new Error("Invalid minimum video bitrate given. " + ("Its value, \"" + btr + "\" is superior the current maximum ") + ("video birate, \"" + maxVideoBitrate + "\"."));
-    }
-    this._priv_bitrateInfos.minAutoBitrates.video.setValue(btr);
-  }
-  /**
-   * Update the minimum audio bitrate the user can switch to.
-   * @param {Number} btr
-   */;
-  _proto.setMinAudioBitrate = function setMinAudioBitrate(btr) {
-    var maxAudioBitrate = this._priv_bitrateInfos.maxAutoBitrates.audio.getValue();
-    if (btr > maxAudioBitrate) {
-      throw new Error("Invalid minimum audio bitrate given. " + ("Its value, \"" + btr + "\" is superior the current maximum ") + ("audio birate, \"" + maxAudioBitrate + "\"."));
-    }
-    this._priv_bitrateInfos.minAutoBitrates.audio.setValue(btr);
-  }
-  /**
-   * Update the maximum video bitrate the user can switch to.
-   * @param {Number} btr
-   */;
-  _proto.setMaxVideoBitrate = function setMaxVideoBitrate(btr) {
-    var minVideoBitrate = this._priv_bitrateInfos.minAutoBitrates.video.getValue();
-    if (btr < minVideoBitrate) {
-      throw new Error("Invalid maximum video bitrate given. " + ("Its value, \"" + btr + "\" is inferior the current minimum ") + ("video birate, \"" + minVideoBitrate + "\"."));
-    }
-    this._priv_bitrateInfos.maxAutoBitrates.video.setValue(btr);
-  }
-  /**
-   * Update the maximum audio bitrate the user can switch to.
-   * @param {Number} btr
-   */;
-  _proto.setMaxAudioBitrate = function setMaxAudioBitrate(btr) {
-    var minAudioBitrate = this._priv_bitrateInfos.minAutoBitrates.audio.getValue();
-    if (btr < minAudioBitrate) {
-      throw new Error("Invalid maximum audio bitrate given. " + ("Its value, \"" + btr + "\" is inferior the current minimum ") + ("audio birate, \"" + minAudioBitrate + "\"."));
-    }
-    this._priv_bitrateInfos.maxAutoBitrates.audio.setValue(btr);
-  }
-  /**
    * Set the max buffer size for the buffer behind the current position.
    * Every buffer data before will be removed.
    * @param {Number} depthInSeconds
@@ -52361,19 +52368,6 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
    */;
   _proto.getMaxVideoBufferSize = function getMaxVideoBufferSize() {
     return this._priv_bufferOptions.maxVideoBufferSize.getValue();
-  }
-  /**
-   * Returns type of current keysystem (e.g. playready, widevine) if the content
-   * is encrypted. null otherwise.
-   * @deprecated
-   * @returns {string|null}
-   */;
-  _proto.getCurrentKeySystem = function getCurrentKeySystem() {
-    (0,warn_once/* default */.Z)("`getCurrentKeySystem` is deprecated." + "Please use the `getKeySystemConfiguration` method instead.");
-    if (this.videoElement === null) {
-      throw new Error("Disposed player");
-    }
-    return get_key_system_configuration_getCurrentKeySystem(this.videoElement);
   };
   _proto.getCurrentPeriod = function getCurrentPeriod() {
     var _a;
@@ -52962,19 +52956,31 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     }
 
     contentInfos.manifest = manifest;
-    var cancelSignal = contentInfos.currentContentCanceller.signal;
     this._priv_reloadingMetadata.manifest = manifest;
-    contentInfos.tracksStore = new TracksStore({
-      preferTrickModeTracks: this._priv_preferTrickModeTracks
+    var tracksStore = new TracksStore({
+      preferTrickModeTracks: this._priv_preferTrickModeTracks,
+      defaultAudioTrackSwitchingMode: contentInfos.defaultAudioTrackSwitchingMode
     });
-    contentInfos.tracksStore.addEventListener("newAvailablePeriods", function (p) {
+    contentInfos.tracksStore = tracksStore;
+    tracksStore.addEventListener("newAvailablePeriods", function (p) {
       _this5.trigger("newAvailablePeriods", p);
     });
-    contentInfos.tracksStore.addEventListener("brokenRepresentationsLock", function (e) {
+    tracksStore.addEventListener("brokenRepresentationsLock", function (e) {
       _this5.trigger("brokenRepresentationsLock", e);
     });
-    contentInfos.tracksStore.addEventListener("autoTrackSwitch", function (e) {
-      _this5.trigger("autoTrackSwitch", e);
+    tracksStore.addEventListener("trackUpdate", function (e) {
+      var _a, _b;
+      _this5.trigger("trackUpdate", e);
+      var currentPeriod = (_b = (_a = _this5._priv_contentInfos) === null || _a === void 0 ? void 0 : _a.currentPeriod) !== null && _b !== void 0 ? _b : undefined;
+      if (e.reason === "no-playable-representation" && e.period.id === (currentPeriod === null || currentPeriod === void 0 ? void 0 : currentPeriod.id)) {
+        _this5._priv_onAvailableTracksMayHaveChanged(e.trackType);
+      }
+    });
+    contentInfos.tracksStore.addEventListener("warning", function (err) {
+      _this5.trigger("warning", err);
+    });
+    contentInfos.tracksStore.addEventListener("error", function (err) {
+      _this5._priv_onFatalError(err, contentInfos);
     });
     contentInfos.tracksStore.updatePeriodList(manifest);
     manifest.addEventListener("manifestUpdate", function (updates) {
@@ -52984,8 +52990,8 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
         contentInfos.tracksStore.updatePeriodList(manifest);
       }
       var currentPeriod = (_b = (_a = _this5._priv_contentInfos) === null || _a === void 0 ? void 0 : _a.currentPeriod) !== null && _b !== void 0 ? _b : undefined;
-      var tracksStore = (_c = _this5._priv_contentInfos) === null || _c === void 0 ? void 0 : _c.tracksStore;
-      if (currentPeriod === undefined || (0,is_null_or_undefined/* default */.Z)(tracksStore)) {
+      var currTracksStore = (_c = _this5._priv_contentInfos) === null || _c === void 0 ? void 0 : _c.tracksStore;
+      if (currentPeriod === undefined || (0,is_null_or_undefined/* default */.Z)(currTracksStore)) {
         return;
       }
       for (var _iterator = public_api_createForOfIteratorHelperLoose(updates.updatedPeriods), _step; !(_step = _iterator()).done;) {
@@ -52993,19 +52999,66 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
         if (update.period.id === currentPeriod.id) {
           if (update.result.addedAdaptations.length > 0 || update.result.removedAdaptations.length > 0) {
             // We might have new (or less) tracks, send events just to be sure
-            var periodRef = tracksStore.getPeriodObjectFromPeriod(currentPeriod);
+            var periodRef = currTracksStore.getPeriodObjectFromPeriod(currentPeriod);
             if (periodRef === undefined) {
               return;
             }
-            var audioTracks = tracksStore.getAvailableAudioTracks(periodRef);
-            _this5._priv_triggerEventIfNotStopped("availableAudioTracksChange", audioTracks !== null && audioTracks !== void 0 ? audioTracks : [], cancelSignal);
-            var textTracks = tracksStore.getAvailableTextTracks(periodRef);
-            _this5._priv_triggerEventIfNotStopped("availableTextTracksChange", textTracks !== null && textTracks !== void 0 ? textTracks : [], cancelSignal);
-            var videoTracks = tracksStore.getAvailableVideoTracks(periodRef);
-            _this5._priv_triggerEventIfNotStopped("availableVideoTracksChange", videoTracks !== null && videoTracks !== void 0 ? videoTracks : [], cancelSignal);
+            _this5._priv_onAvailableTracksMayHaveChanged("audio");
+            _this5._priv_onAvailableTracksMayHaveChanged("text");
+            _this5._priv_onAvailableTracksMayHaveChanged("video");
           }
         }
         return;
+      }
+    }, contentInfos.currentContentCanceller.signal);
+    manifest.addEventListener("decipherabilityUpdate", function (elts) {
+      /**
+       * Array of tuples only including once the Period/Track combination, and
+       * only when it concerns the currently-selected track.
+       */
+      var periodsAndTrackTypes = elts.reduce(function (acc, elt) {
+        var _a, _b, _c;
+        var isFound = (0,array_find/* default */.Z)(acc, function (x) {
+          return x[0].id === elt.period.id && x[1] === elt.adaptation.type;
+        }) === undefined;
+        if (!isFound) {
+          // Only consider the currently-selected tracks.
+          // NOTE: Maybe there's room for optimizations? Unclear.
+          var tStore = contentInfos.tracksStore;
+          if (tStore === null) {
+            return acc;
+          }
+          var isCurrent = false;
+          var periodRef = tStore.getPeriodObjectFromPeriod(elt.period);
+          if (periodRef === undefined) {
+            return acc;
+          }
+          switch (elt.adaptation.type) {
+            case "audio":
+              isCurrent = ((_a = tStore.getChosenAudioTrack(periodRef)) === null || _a === void 0 ? void 0 : _a.id) === elt.adaptation.id;
+              break;
+            case "video":
+              isCurrent = ((_b = tStore.getChosenVideoTrack(periodRef)) === null || _b === void 0 ? void 0 : _b.id) === elt.adaptation.id;
+              break;
+            case "text":
+              isCurrent = ((_c = tStore.getChosenTextTrack(periodRef)) === null || _c === void 0 ? void 0 : _c.id) === elt.adaptation.id;
+              break;
+          }
+          if (isCurrent) {
+            acc.push([elt.period, elt.adaptation.type]);
+          }
+        }
+        return acc;
+      }, []);
+      for (var _iterator2 = public_api_createForOfIteratorHelperLoose(periodsAndTrackTypes), _step2; !(_step2 = _iterator2()).done;) {
+        var _step2$value = _step2.value,
+          period = _step2$value[0],
+          trackType = _step2$value[1];
+        _this5._priv_triggerEventIfNotStopped("representationListUpdate", {
+          period: period,
+          trackType: trackType,
+          reason: "decipherability-update"
+        }, contentInfos.currentContentCanceller.signal);
       }
     }, contentInfos.currentContentCanceller.signal);
   }
@@ -53228,13 +53281,15 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
    *
    * @param {Object} value
    */;
-  _proto._priv_onBitrateEstimationChange = function _priv_onBitrateEstimationChange(_ref4) {
+  _proto._priv_onBitrateEstimateChange = function _priv_onBitrateEstimateChange(_ref4) {
     var type = _ref4.type,
       bitrate = _ref4.bitrate;
     if (bitrate !== undefined) {
       this._priv_bitrateInfos.lastBitrates[type] = bitrate;
     }
-    this.trigger("bitrateEstimationChange", {
+    // !!! undocumented API :O !!!
+    /* eslint-disable-next-line */
+    this.trigger("__priv_bitrateEstimateChange", {
       type: type,
       bitrate: bitrate
     });
@@ -53359,6 +53414,76 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       return defaultValue;
     }
     return cb(tracksStore, periodRef);
+  }
+  /**
+   * Method to call when some event lead to a high for possibility that the
+   * available tracks for the given type have changed.
+   * Send the corresponding `available*Tracks` change event with the last
+   * available tracks.
+   *
+   * @param {string} trackType
+   * @param {Object|undefined} [oPeriodRef] - optional period object used by the
+   * `tracksStore` API, allows to optimize the method by bypassing this step.
+   */;
+  _proto._priv_onAvailableTracksMayHaveChanged = function _priv_onAvailableTracksMayHaveChanged(trackType, oPeriodRef) {
+    var contentInfos = this._priv_contentInfos;
+    if (contentInfos === null) {
+      return;
+    }
+    var currentPeriod = contentInfos.currentPeriod,
+      tracksStore = contentInfos.tracksStore,
+      currentContentCanceller = contentInfos.currentContentCanceller;
+    var cancelSignal = currentContentCanceller.signal;
+    if ((0,is_null_or_undefined/* default */.Z)(currentPeriod) || tracksStore === null) {
+      return;
+    }
+    var periodRef = oPeriodRef !== null && oPeriodRef !== void 0 ? oPeriodRef : tracksStore.getPeriodObjectFromPeriod(currentPeriod);
+    if (periodRef === undefined) {
+      return;
+    }
+    switch (trackType) {
+      case "video":
+        var videoTracks = tracksStore.getAvailableVideoTracks(periodRef);
+        this._priv_triggerEventIfNotStopped("availableVideoTracksChange", videoTracks !== null && videoTracks !== void 0 ? videoTracks : [], cancelSignal);
+        break;
+      case "audio":
+        var audioTracks = tracksStore.getAvailableAudioTracks(periodRef);
+        this._priv_triggerEventIfNotStopped("availableAudioTracksChange", audioTracks !== null && audioTracks !== void 0 ? audioTracks : [], cancelSignal);
+        break;
+      case "text":
+        var textTracks = tracksStore.getAvailableTextTracks(periodRef);
+        this._priv_triggerEventIfNotStopped("availableTextTracksChange", textTracks !== null && textTracks !== void 0 ? textTracks : [], cancelSignal);
+        break;
+      default:
+        (0,assert_unreachable/* default */.Z)(trackType);
+    }
+  }
+  /**
+   * Method to call when a fatal error lead to the stopping of the current
+   * content.
+   *
+   * @param {*} err - The error encountered.
+   * @param {Object} contentInfos - The `IPublicApiContentInfos` object linked
+   * to the content for which the error was received.
+   */;
+  _proto._priv_onFatalError = function _priv_onFatalError(err, contentInfos) {
+    var formattedError = (0,format_error/* default */.Z)(err, {
+      defaultCode: "NONE",
+      defaultReason: "An unknown error stopped content playback."
+    });
+    formattedError.fatal = true;
+    contentInfos.currentContentCanceller.cancel();
+    this._priv_cleanUpCurrentContentState();
+    this._priv_currentError = formattedError;
+    log/* default */.Z.error("API: The player stopped because of an error", formattedError);
+    this._priv_setPlayerState("STOPPED" /* PLAYER_STATES.STOPPED */);
+    // TODO This condition is here because the eventual callback called when the
+    // player state is updated can launch a new content, thus the error will not
+    // be here anymore, in which case triggering the "error" event is unwanted.
+    // This is very ugly though, and we should probable have a better solution
+    if (this._priv_currentError === formattedError) {
+      this.trigger("error", formattedError);
+    }
   };
   (0,createClass/* default */.Z)(Player, null, [{
     key: "ErrorTypes",
@@ -53394,7 +53519,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
   }]);
   return Player;
 }(event_emitter/* default */.Z);
-Player.version = /* PLAYER_VERSION */"3.31.0";
+Player.version = /* PLAYER_VERSION */"4.0.0-beta.2";
 /* harmony default export */ var public_api = (Player);
 ;// CONCATENATED MODULE: ./src/core/api/index.ts
 /**
@@ -53426,7 +53551,7 @@ var features_object = __webpack_require__(7273);
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *j    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -53439,9 +53564,7 @@ var features_object = __webpack_require__(7273);
 /* eslint-disable @typescript-eslint/no-var-requires */
 
 /**
- * Selects the features to include based on environment variables.
- *
- * @param {Object} features
+ * Selects the features to include.
  */
 function initializeFeaturesObject() {
   if (true) {
@@ -53517,15 +53640,12 @@ function initializeFeaturesObject() {
  * limitations under the License.
  */
 /**
- * This file exports a Player class with a default feature set (depends on the
- * environment variables set at build).
- *
+ * This file exports a Player class with a default feature set.
  * This is the class used from a regular build.
  */
 
 
 
-// set initial features according to environment variables
 initializeFeaturesObject();
 if (typeof __RX_PLAYER_DEBUG_MODE__ === "boolean" && __RX_PLAYER_DEBUG_MODE__) {
   log/* default */.Z.setLevel("DEBUG");
