@@ -780,7 +780,7 @@ export default function launchTestsForContent(manifestInfos) {
 
     describe("getLastStoredContentPosition", () => {
       it("should return the last stored position", async () => {
-        player.setVideoBitrate(0);
+        lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
