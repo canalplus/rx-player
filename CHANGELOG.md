@@ -1,26 +1,20 @@
 # Changelog
 
-## Unreleased
+## v4.0.0-beta.2 (2023-03-08)
+
+### Changes
+
+  - If all Representations from the current track become undecipherable, automatically switch to another track (also send a `trackUpdate` event) instead of stopping on error [#1240]
+  - Only send `MediaError` errors with the `NO_PLAYABLE_REPRESENTATION` error code when no Representation from all tracks of a given type can be played [#1240]
 
 ### Features
 
-  - Add `getLivePosition` RxPlayer method [#1300]
-  - Add `startAt.fromLivePosition` `loadVideo` option [#1300]
-  - Add the possibility to set a new `keySystems` option on the `reload` API [#1308]
-
-### Bug Fixes
-
-  - Fix subtitles "blinking" in some specific conditions, especially with some DASH low-latency contents [#1314]
-  - DASH: Fix Period overlap resolution logic for when the first Period is removed [#1311]
-  - Fix export of the `LOCAL_MANIFEST` experimental feature [#1305]
+  - Add `representationListUpdate` event for when the list of available Representation for a current track changes [#877]
+  - Add `"no-playable-representation"` as a `reason` for `trackUpdate` events when the track switch is due to encrypted Representations [#1240]
 
 ### Other improvements
 
-  - DASH: rely on SCTE214 `supplementalCodecs` instead of `codecs` if it's supported to better support backward compatible Dolby Vision contents [#1307]
-  - DASH: Provide better support of the `availabilityTimeOffset` attribute [#1300]
-  - DEBUG_ELEMENT: Add unsupported and undecipherable bitrates to the debug element [#1321]
-  - DEBUG_ELEMENT: update buffer graph maximum size so it becomes more readable for lengthy contents [#1316]
-  - DEBUG_ELEMENT: always synchronize inventory of segments before rendering it [#1317]
+  - DRM: Reload when playback is unexpectedly frozen with encrypted but only decipherable data in the buffer to work-around rare encryption-related issues [#1236]
 
 
 ## v3.32.1 (2023-10-19)
