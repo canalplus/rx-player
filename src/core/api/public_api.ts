@@ -781,6 +781,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         this.stop();
         this._priv_currentError = null;
         throw new Error("DirectFile feature not activated in your build.");
+      } else if (isNullOrUndefined(url)) {
+        throw new Error("No URL for a DirectFile content");
       }
       mediaElementTrackChoiceManager =
         this._priv_initializeMediaElementTrackChoiceManager(
