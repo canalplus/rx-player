@@ -1,5 +1,5 @@
-import { hasEMEAPIs } from "../../../compat";
 import { EncryptedMediaError } from "../../../errors";
+import features from "../../../features";
 import log from "../../../log";
 import {
   IKeySystemOption,
@@ -12,7 +12,7 @@ import createSharedReference, {
 import TaskCanceller, {
   CancellationSignal,
 } from "../../../utils/task_canceller";
-import ContentDecryptor, {
+import {
   ContentDecryptorState,
   IContentProtection,
 } from "../../decrypt";
@@ -49,37 +49,9 @@ export default function initializeContentDecryption(
   cancelSignal : CancellationSignal
 ) : IReadOnlySharedReference<IDrmInitializationStatus> {
   if (keySystems.length === 0) {
-    protectionRef.onUpdate((data, stopListening) => {
-      if (data === null) { // initial value
-        return;
-      }
-      stopListening();
-      log.error("Init: Encrypted event but no `keySystems` given");
-      const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
-                                          "no `keySystems` given.");
-      callbacks.onError(err);
-    }, { clearSignal: cancelSignal });
-    const ref = createSharedReference({
-      initializationState: { type: "initialized" as const, value: null },
-      drmSystemId: undefined });
-    ref.finish(); // We know that no new value will be triggered
-    return ref;
-  } else if (!hasEMEAPIs()) {
-    protectionRef.onUpdate((data, stopListening) => {
-      if (data === null) { // initial value
-        return;
-      }
-      stopListening();
-      log.error("Init: Encrypted event but no EME API available");
-      const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
-                                          "Encryption APIs not found.");
-      callbacks.onError(err);
-    }, { clearSignal: cancelSignal });
-    const ref = createSharedReference({
-      initializationState: { type: "initialized" as const, value: null },
-      drmSystemId: undefined });
-    ref.finish(); // We know that no new value will be triggered
-    return ref;
+    return createEmeDisabledReference("No `keySystems` option given.");
+  } else if (features.decrypt === null) {
+    return createEmeDisabledReference("EME feature not activated.");
   }
 
   const decryptorCanceller = new TaskCanceller();
@@ -90,6 +62,11 @@ export default function initializeContentDecryption(
   }, cancelSignal);
 
   log.debug("Init: Creating ContentDecryptor");
+  const ContentDecryptor = features.decrypt;
+
+  if (!ContentDecryptor.hasEmeApis()) {
+    return createEmeDisabledReference("EME API not available on the current page.");
+  }
   const contentDecryptor = new ContentDecryptor(mediaElement, keySystems);
 
   contentDecryptor.addEventListener("stateChange", (state) => {
@@ -136,6 +113,22 @@ export default function initializeContentDecryption(
   });
 
   return drmStatusRef;
+
+  function createEmeDisabledReference(errMsg : string) {
+    protectionRef.onUpdate((data, stopListening) => {
+      if (data === null) { // initial value
+        return;
+      }
+      stopListening();
+      const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", errMsg);
+      callbacks.onError(err);
+    }, { clearSignal: cancelSignal });
+    const ref = createSharedReference({
+      initializationState: { type: "initialized" as const, value: null },
+      drmSystemId: undefined });
+    ref.finish(); // We know that no new value will be triggered
+    return ref;
+  }
 }
 
 /** Status of content decryption initialization. */

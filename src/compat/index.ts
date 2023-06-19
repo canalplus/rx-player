@@ -27,18 +27,6 @@ import tryToChangeSourceBufferType, {
   ICompatSourceBuffer,
 } from "./change_source_buffer_type";
 import clearElementSrc from "./clear_element_src";
-import {
-  closeSession,
-  CustomMediaKeySystemAccess,
-  generateKeyRequest,
-  getInitData,
-  ICustomMediaKeys,
-  ICustomMediaKeySession,
-  ICustomMediaKeySystemAccess,
-  loadSession,
-  requestMediaKeySystemAccess,
-  setMediaKeys,
-} from "./eme";
 import enableAudioTrack from "./enable_audio_track";
 import * as events from "./event_listeners";
 import {
@@ -47,7 +35,6 @@ import {
   requestFullscreen,
 } from "./fullscreen";
 import getStartDate from "./get_start_date";
-import hasEMEAPIs from "./has_eme_apis";
 import isCodecSupported from "./is_codec_supported";
 import isNode from "./is_node";
 import isOffline from "./is_offline";
@@ -74,33 +61,22 @@ export {
   canPatchISOBMFFSegment,
   canReuseMediaKeys,
   clearElementSrc,
-  closeSession,
-  CustomMediaKeySystemAccess,
   enableAudioTrack,
   events,
   exitFullscreen,
-  generateKeyRequest,
-  getInitData,
   getStartDate,
-  hasEMEAPIs,
   ICompatTextTrack,
   ICompatVTTCue,
-  ICustomMediaKeySession,
-  ICustomMediaKeySystemAccess,
-  ICustomMediaKeys,
   ICompatSourceBuffer,
   isCodecSupported,
   isFullscreen,
   isNode,
   isOffline,
   isVTTCue,
-  loadSession,
   makeVTTCue,
   MediaSource_,
   onHeightWidthChange,
   requestFullscreen,
-  requestMediaKeySystemAccess,
-  setMediaKeys,
   shouldReloadMediaSourceOnDecipherabilityUpdate,
   shouldRenewMediaKeySystemAccess,
   shouldUnsetMediaKeys,

@@ -213,10 +213,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
       /** Initialize decryption capabilities. */
       const drmInitRef =
-        initializeContentDecryption(mediaElement, keySystems, protectionRef, {
-          onWarning: (err : IPlayerError) => this.trigger("warning", err),
-          onError: (err : Error) => this._onFatalError(err),
-        }, initCanceller.signal);
+        initializeContentDecryption(
+          mediaElement,
+          keySystems,
+          protectionRef,
+          { onWarning: (err : IPlayerError) => this.trigger("warning", err),
+            onError: (err : Error) => this._onFatalError(err) },
+          initCanceller.signal);
 
       drmInitRef.onUpdate((drmStatus, stopListeningToDrmUpdates) => {
         if (drmStatus.initializationState.type === "uninitialized") {

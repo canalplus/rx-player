@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import getProbedConfiguration, { ICapabilitiesTypes } from "../capabilities";
 import log from "../log";
 import probers, {
@@ -53,11 +54,12 @@ export interface IProbedMediaConfiguration {
  * "Not Supported").
  *
  * @param {Object} config
- * @param {Array.<Object>} browserAPIs
+ * @param {Array.<Object>} browserAPIS
  * @returns {Promise}
  */
 function probeMediaConfiguration(
-  config: IMediaConfiguration, browserAPIS: IBrowserAPIS[]
+  config: IMediaConfiguration,
+  browserAPIS: IBrowserAPIS[]
 ): Promise<IProbedMediaConfiguration> {
   let globalStatus : ProberStatus|undefined;
   const resultsFromAPIS: Array<{
@@ -68,7 +70,7 @@ function probeMediaConfiguration(
   for (const browserAPI of browserAPIS) {
     const probeWithBrowser = probers[browserAPI];
     if (probeWithBrowser !== undefined) {
-      promises.push(probeWithBrowser(config).then(([currentStatus, result]) => {
+      const prom = probeWithBrowser(config).then(([currentStatus, result]) => {
         resultsFromAPIS.push({ APIName: browserAPI, result });
 
         if (globalStatus == null) {
@@ -97,7 +99,8 @@ function probeMediaConfiguration(
         if (error instanceof Error) {
           log.debug(error.message);
         }
-      }));
+      });
+      promises.push(prom);
     }
   }
 

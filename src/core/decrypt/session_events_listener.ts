@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-import {
-  events,
-  ICustomMediaKeySession,
-} from "../../compat";
+import { events } from "../../compat";
+import { ICustomMediaKeySession } from "../../compat/eme";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import {
