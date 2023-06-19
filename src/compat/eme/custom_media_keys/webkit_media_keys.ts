@@ -16,6 +16,7 @@
 
 import EventEmitter from "../../../utils/event_emitter";
 import noop from "../../../utils/noop";
+import startsWith from "../../../utils/starts_with";
 import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
 import getWebKitFairplayInitData from "../get_webkit_fairplay_initdata";
 import {
@@ -41,8 +42,7 @@ export interface ICustomWebKitMediaKeys {
  * @returns {boolean}
  */
 function isFairplayKeyType(keyType: string): boolean {
-  return keyType === "com.apple.fps.1_0" ||
-         keyType === "com.apple.fps.2_0";
+  return startsWith(keyType, "com.apple.fps");
 }
 
 /**

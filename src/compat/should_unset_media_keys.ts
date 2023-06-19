@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-import { isIE11 } from "./browser_detection";
+import {
+  isIE11,
+  isSafariDesktop,
+  isSafariMobile,
+} from "./browser_detection";
 
 /**
  * Returns true if the mediakeys associated to a media element should be
@@ -23,5 +27,5 @@ import { isIE11 } from "./browser_detection";
  * @returns {Boolean}
  */
 export default function shouldUnsetMediaKeys() : boolean {
-  return isIE11;
+  return isIE11 || isSafariDesktop || isSafariMobile;
 }

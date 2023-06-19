@@ -16,10 +16,11 @@
 
 import { MediaError } from "../../../errors";
 import assert from "../../../utils/assert";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
 import { isIE11 } from "../../browser_detection";
+import { createCompatibleEventListener } from "../../event_listeners";
 import isNode from "../../is_node";
-import shouldFavourCustomSafariEME from "../../should_favour_custom_safari_EME";
 import CustomMediaKeySystemAccess from "./../custom_key_system_access";
 import getIE11MediaKeysCallbacks, {
   MSMediaKeysConstructor,
@@ -43,6 +44,8 @@ type ICompatRequestMediaKeySystemAccessFn =
     Promise<MediaKeySystemAccess | CustomMediaKeySystemAccess>;
 
 let requestMediaKeySystemAccess : ICompatRequestMediaKeySystemAccessFn | null = null;
+
+let onEncrypted : ReturnType<typeof createCompatibleEventListener>;
 
 /**
  * Set the given MediaKeys on the given HTMLMediaElement.
@@ -88,38 +91,43 @@ let setMediaKeys :
  * Therefore, we prefer not to use requestMediaKeySystemAccess on Safari when webkit API
  * is available.
  */
-if (isNode ||
-    (navigator.requestMediaKeySystemAccess != null && !shouldFavourCustomSafariEME())
-) {
+// eslint-disable-next-line @typescript-eslint/unbound-method
+if (isNode || !isNullOrUndefined(navigator.requestMediaKeySystemAccess)) {
   requestMediaKeySystemAccess = (...args) =>
     navigator.requestMediaKeySystemAccess(...args);
+  onEncrypted = createCompatibleEventListener(["encrypted"]);
 } else {
   let isTypeSupported: (keyType: string) => boolean;
   let createCustomMediaKeys: (keyType: string) => ICustomMediaKeys;
 
   // This is for Chrome with unprefixed EME api
   if (isOldWebkitMediaElement(HTMLVideoElement.prototype)) {
+    onEncrypted = createCompatibleEventListener(["needkey"]);
     const callbacks = getOldKitWebKitMediaKeyCallbacks();
     isTypeSupported = callbacks.isTypeSupported;
     createCustomMediaKeys = callbacks.createCustomMediaKeys;
     setMediaKeys = callbacks.setMediaKeys;
   // This is for WebKit with prefixed EME api
   } else if (WebKitMediaKeysConstructor !== undefined) {
+    onEncrypted = createCompatibleEventListener(["needkey"]);
     const callbacks = getWebKitMediaKeysCallbacks();
     isTypeSupported = callbacks.isTypeSupported;
     createCustomMediaKeys = callbacks.createCustomMediaKeys;
     setMediaKeys = callbacks.setMediaKeys;
   } else if (isIE11 && MSMediaKeysConstructor !== undefined) {
+    onEncrypted = createCompatibleEventListener(["encrypted", "needkey"]);
     const callbacks = getIE11MediaKeysCallbacks();
     isTypeSupported = callbacks.isTypeSupported;
     createCustomMediaKeys = callbacks.createCustomMediaKeys;
     setMediaKeys = callbacks.setMediaKeys;
   } else if (MozMediaKeysConstructor !== undefined) {
+    onEncrypted = createCompatibleEventListener(["encrypted", "needkey"]);
     const callbacks = getMozMediaKeysCallbacks();
     isTypeSupported = callbacks.isTypeSupported;
     createCustomMediaKeys = callbacks.createCustomMediaKeys;
     setMediaKeys = callbacks.setMediaKeys;
   } else {
+    onEncrypted = createCompatibleEventListener(["encrypted", "needkey"]);
     const MK = window.MediaKeys as unknown as typeof MediaKeys & {
       isTypeSupported? : (keyType : string) => boolean;
       new(keyType? : string) : ICustomMediaKeys;
@@ -198,6 +206,7 @@ if (isNode ||
 
 export {
   requestMediaKeySystemAccess,
+  onEncrypted,
   setMediaKeys,
   ICustomMediaKeys,
   ICustomMediaKeySession,

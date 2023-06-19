@@ -21,6 +21,7 @@ import CustomMediaKeySystemAccess, {
 import {
   ICustomMediaKeys,
   ICustomMediaKeySession,
+  onEncrypted,
   requestMediaKeySystemAccess,
   setMediaKeys,
 } from "./custom_media_keys";
@@ -40,6 +41,7 @@ export {
   ICustomMediaKeySystemAccess,
   ICustomMediaKeys,
   IEncryptedEventData,
+  onEncrypted,
   requestMediaKeySystemAccess,
   setMediaKeys,
 };

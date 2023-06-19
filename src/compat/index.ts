@@ -36,6 +36,7 @@ import {
   ICustomMediaKeySession,
   ICustomMediaKeySystemAccess,
   loadSession,
+  onEncrypted,
   requestMediaKeySystemAccess,
   setMediaKeys,
 } from "./eme";
@@ -61,6 +62,8 @@ import shouldRenewMediaKeySystemAccess from "./should_renew_media_key_system_acc
 import shouldUnsetMediaKeys from "./should_unset_media_keys";
 import shouldValidateMetadata from "./should_validate_metadata";
 import shouldWaitForDataBeforeLoaded from "./should_wait_for_data_before_loaded";
+// eslint-disable-next-line max-len
+import shouldWaitForEncryptedBeforeAttachment from "./should_wait_for_encrypted_before_attachment";
 
 // TODO To remove. This seems to be the only side-effect done on import, which
 // we  would prefer to disallow (both for the understandability of the code and
@@ -96,6 +99,7 @@ export {
   loadSession,
   makeVTTCue,
   MediaSource_,
+  onEncrypted,
   onHeightWidthChange,
   requestFullscreen,
   requestMediaKeySystemAccess,
@@ -105,5 +109,6 @@ export {
   shouldUnsetMediaKeys,
   shouldValidateMetadata,
   shouldWaitForDataBeforeLoaded,
+  shouldWaitForEncryptedBeforeAttachment,
   tryToChangeSourceBufferType,
 };

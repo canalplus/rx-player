@@ -26,11 +26,13 @@ describe("compat - shouldUnsetMediaKeys", () => {
     jest.resetModules();
   });
 
-  it("should return false if we are not on IE11", () => {
+  it("should return false if we are not on IE11 nor Safari", () => {
     jest.mock("../browser_detection", () => {
       return {
         __esModule: true as const,
         isIE11: false,
+        isSafariMobile: false,
+        isSafariDesktop: false,
       };
     });
     const shouldUnsetMediaKeys = jest.requireActual("../should_unset_media_keys");
@@ -42,12 +44,37 @@ describe("compat - shouldUnsetMediaKeys", () => {
       return {
         __esModule: true as const,
         isIE11: true,
+        isSafariMobile: false,
+        isSafariDesktop: false,
       };
     });
     const shouldUnsetMediaKeys = jest.requireActual("../should_unset_media_keys");
     expect(shouldUnsetMediaKeys.default()).toBe(true);
   });
-  beforeEach(() => {
-    jest.resetModules();
+
+  it("should return true if we are on Safari Mobile", () => {
+    jest.mock("../browser_detection", () => {
+      return {
+        __esModule: true as const,
+        isIE11: false,
+        isSafariMobile: true,
+        isSafariDesktop: false,
+      };
+    });
+    const shouldUnsetMediaKeys = jest.requireActual("../should_unset_media_keys");
+    expect(shouldUnsetMediaKeys.default()).toBe(true);
+  });
+
+  it("should return true if we are on Safari Desktop", () => {
+    jest.mock("../browser_detection", () => {
+      return {
+        __esModule: true as const,
+        isIE11: false,
+        isSafariMobile: false,
+        isSafariDesktop: true,
+      };
+    });
+    const shouldUnsetMediaKeys = jest.requireActual("../should_unset_media_keys");
+    expect(shouldUnsetMediaKeys.default()).toBe(true);
   });
 });

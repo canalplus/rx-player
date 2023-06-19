@@ -321,22 +321,22 @@ class MockedDecryptorEventEmitter extends EventEmitter<{
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function mockCompat(exportedFunctions = {}) {
   const ee = new MockedDecryptorEventEmitter();
+  const onEncrypted = jest.fn((
+    elt : HTMLMediaElement,
+    fn : (x : unknown) => void,
+    signal : CancellationSignal
+  ) => {
+    elt.addEventListener("encrypted", fn);
+    signal.register(() => {
+      elt.removeEventListener("encrypted", fn);
+    });
+    ee.addEventListener("encrypted", (evt) => {
+      if (evt.elt === elt) {
+        fn(evt.value);
+      }
+    }, signal);
+  });
   const mockEvents : Record<string, jest.Mock> = {
-    onEncrypted: jest.fn((
-      elt : HTMLMediaElement,
-      fn : (x : unknown) => void,
-      signal : CancellationSignal
-    ) => {
-      elt.addEventListener("encrypted", fn);
-      signal.register(() => {
-        elt.removeEventListener("encrypted", fn);
-      });
-      ee.addEventListener("encrypted", (evt) => {
-        if (evt.elt === elt) {
-          fn(evt.value);
-        }
-      }, signal);
-    }),
     onKeyMessage: jest.fn((
       elt : MediaKeySessionImpl,
       fn : (x : unknown) => void,
@@ -392,11 +392,13 @@ export function mockCompat(exportedFunctions = {}) {
 
   jest.mock("../../../../compat", () => (
     { events: mockEvents,
+      onEncrypted,
       requestMediaKeySystemAccess: mockRmksa,
       setMediaKeys: mockSetMediaKeys,
       getInitData: mockGetInitData,
       generateKeyRequest: mockGenerateKeyRequest,
       shouldRenewMediaKeySystemAccess: jest.fn(() => false),
+      shouldWaitForEncryptedBeforeAttachment: jest.fn(() => false),
       canReuseMediaKeys: jest.fn(() => true),
       ...exportedFunctions }));
 

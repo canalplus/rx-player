@@ -15,10 +15,11 @@
  */
 
 import {
-  events,
+  onEncrypted,
   getInitData,
   ICustomMediaKeys,
   ICustomMediaKeySystemAccess,
+  shouldWaitForEncryptedBeforeAttachment,
 } from "../../compat/";
 import config from "../../config";
 import {
@@ -65,8 +66,6 @@ import {
   isKeyIdContainedIn,
 } from "./utils/key_id_comparison";
 import KeySessionRecord from "./utils/key_session_record";
-
-const { onEncrypted } = events;
 
 /**
  * Module communicating with the Content Decryption Module (or CDM) to be able
@@ -127,8 +126,9 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
   private _canceller : TaskCanceller;
 
   /**
-   * `true` once the `attach` method has been called`.
-   * Allows to avoid calling multiple times that function.
+   * `true` once the `attach` method has been called`. At that point, the
+   * `MediaKeys` instance can be attached to the HTMLMediaElement (whereas it
+   * cannot when `_wasAttachCalled` is `false`).
    */
   private _wasAttachCalled : boolean;
 
@@ -167,7 +167,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     this._wasAttachCalled = false;
     this._initDataQueue = [];
     this._stateData = { state: ContentDecryptorState.Initializing,
-                        isMediaKeysAttached: false,
+                        isMediaKeysAttached: MediaKeyAttachmentStatus.NotAttached,
                         isInitDataQueueLocked: true,
                         data: null };
     this.error = null;
@@ -204,7 +204,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
         if (this._stateData.state === ContentDecryptorState.Initializing) {
           this._stateData = { state: ContentDecryptorState.WaitingForAttachment,
                               isInitDataQueueLocked: true,
-                              isMediaKeysAttached: false,
+                              isMediaKeysAttached: MediaKeyAttachmentStatus.NotAttached,
                               data: { mediaKeysInfo,
                                       mediaElement } };
 
@@ -244,58 +244,24 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       return;
     }
     this._wasAttachCalled = true;
-
     const { mediaElement, mediaKeysInfo } = this._stateData.data;
-    const { options, mediaKeys, mediaKeySystemAccess, stores } = mediaKeysInfo;
-    const stateToAttatch = { loadedSessionsStore: stores.loadedSessionsStore,
-                             mediaKeySystemAccess,
-                             mediaKeys,
-                             keySystemOptions: options };
+    const shouldDisableLock =
+      mediaKeysInfo.options.disableMediaKeysAttachmentLock === true;
 
-    const shouldDisableLock = options.disableMediaKeysAttachmentLock === true;
-    if (shouldDisableLock) {
+    const waitForEncrypted = shouldWaitForEncryptedBeforeAttachment();
+    if (shouldDisableLock || waitForEncrypted) {
       this._stateData = { state: ContentDecryptorState.ReadyForContent,
                           isInitDataQueueLocked: true,
-                          isMediaKeysAttached: false,
-                          data: null };
+                          isMediaKeysAttached: MediaKeyAttachmentStatus.NotAttached,
+                          data: { mediaKeysInfo, mediaElement } };
       this.trigger("stateChange", this._stateData.state);
-      if (this._isStopped()) { // previous trigger might have lead to disposal
+
+      // previous trigger might have lead to disposal
+      if (this._isStopped() || waitForEncrypted) {
         return ;
       }
     }
-
-    log.debug("DRM: Attaching current MediaKeys");
-    attachMediaKeys(mediaElement, stateToAttatch, this._canceller.signal)
-      .then(async () => {
-        const { serverCertificate } = options;
-
-        if (!isNullOrUndefined(serverCertificate)) {
-          const resSsc = await setServerCertificate(mediaKeys, serverCertificate);
-          if (resSsc.type === "error") {
-            this.trigger("warning", resSsc.value);
-          }
-        }
-
-        if (this._isStopped()) { // We might be stopped since then
-          return;
-        }
-
-        const prevState = this._stateData.state;
-        this._stateData = { state: ContentDecryptorState.ReadyForContent,
-                            isMediaKeysAttached: true,
-                            isInitDataQueueLocked: false,
-                            data: { mediaKeysData: mediaKeysInfo } };
-        if (prevState !== ContentDecryptorState.ReadyForContent) {
-          this.trigger("stateChange", ContentDecryptorState.ReadyForContent);
-        }
-        if (!this._isStopped()) {
-          this._processCurrentInitDataQueue();
-        }
-      })
-
-      .catch((err) => {
-        this._onFatalError(err);
-      });
+    this._attachMediaKeysToMediaElement();
   }
 
   /**
@@ -332,6 +298,12 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
         throw new Error("ContentDecryptor either disposed or stopped.");
       }
       this._initDataQueue.push(initializationData);
+      if (
+        this._wasAttachCalled &&
+        this._stateData.isMediaKeysAttached === MediaKeyAttachmentStatus.NotAttached
+      ) {
+        this._attachMediaKeysToMediaElement();
+      }
       return;
     }
 
@@ -608,6 +580,61 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     return Promise.resolve();
   }
 
+  private _attachMediaKeysToMediaElement() : void {
+    if (
+      this._stateData.state !== ContentDecryptorState.WaitingForAttachment &&
+      this._stateData.state !== ContentDecryptorState.ReadyForContent
+    ) {
+      throw new Error("`_attachMediaKeysToMediaElement` should only be called when " +
+                      "in either the WaitingForAttachment state or the " +
+                      "ReadyForContent state");
+    }
+    if (this._stateData.isMediaKeysAttached === MediaKeyAttachmentStatus.Attached) {
+      return;
+    }
+    const mediaElement = this._stateData.data.mediaElement;
+    const mediaKeysInfo = this._stateData.data.mediaKeysInfo;
+    const { options, mediaKeys, mediaKeySystemAccess, stores } = mediaKeysInfo;
+    const stateToAttatch = { loadedSessionsStore: stores.loadedSessionsStore,
+                             mediaKeySystemAccess,
+                             mediaKeys,
+                             keySystemOptions: options };
+
+    log.debug("DRM: Attaching current MediaKeys");
+    this._stateData.isMediaKeysAttached = MediaKeyAttachmentStatus.Pending;
+    attachMediaKeys(mediaElement, stateToAttatch, this._canceller.signal)
+      .then(async () => {
+        const { serverCertificate } = options;
+
+        if (!isNullOrUndefined(serverCertificate)) {
+          const resSsc = await setServerCertificate(mediaKeys, serverCertificate);
+          if (resSsc.type === "error") {
+            this.trigger("warning", resSsc.value);
+          }
+        }
+
+        if (this._isStopped()) { // We might be stopped since then
+          return;
+        }
+
+        const prevState = this._stateData.state;
+        this._stateData = { state: ContentDecryptorState.ReadyForContent,
+                            isMediaKeysAttached: MediaKeyAttachmentStatus.Attached,
+                            isInitDataQueueLocked: false,
+                            data: { mediaKeysData: mediaKeysInfo } };
+        if (prevState !== ContentDecryptorState.ReadyForContent) {
+          this.trigger("stateChange", ContentDecryptorState.ReadyForContent);
+        }
+        if (!this._isStopped()) {
+          this._processCurrentInitDataQueue();
+        }
+      })
+
+      .catch((err) => {
+        this._onFatalError(err);
+      });
+  }
+
   private _tryToUseAlreadyCreatedSession(
     initializationData : IProcessedProtectionData,
     mediaKeysData : IAttachedMediaKeysData
@@ -791,7 +818,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    * Should have no effect if the `_initDataQueue` was not locked.
    */
   private _unlockInitDataQueue() : void {
-    if (this._stateData.isMediaKeysAttached !== true) {
+    if (this._stateData.isMediaKeysAttached !== MediaKeyAttachmentStatus.Attached) {
       log.error("DRM: Trying to unlock in the wrong state");
       return;
     }
@@ -979,11 +1006,17 @@ type IContentDecryptorStateData = IInitializingStateData |
                                   IDisposeStateData |
                                   IErrorStateData;
 
+const enum MediaKeyAttachmentStatus {
+  NotAttached,
+  Pending,
+  Attached,
+}
+
 /** Skeleton that all variants of `IContentDecryptorStateData` use. */
 interface IContentDecryptorStateBase<
   TStateName extends ContentDecryptorState,
   TIsQueueLocked extends boolean | undefined,
-  TIsMediaKeyAttached extends boolean | undefined,
+  TIsMediaKeyAttached extends MediaKeyAttachmentStatus | undefined,
   TData
 > {
   /** Identify the ContentDecryptor's state. */
@@ -1011,7 +1044,7 @@ interface IContentDecryptorStateBase<
 type IInitializingStateData = IContentDecryptorStateBase<
   ContentDecryptorState.Initializing,
   true, // isInitDataQueueLocked
-  false, // isMediaKeysAttached
+  MediaKeyAttachmentStatus.NotAttached, // isMediaKeysAttached
   null // data
 >;
 
@@ -1019,7 +1052,7 @@ type IInitializingStateData = IContentDecryptorStateBase<
 type IWaitingForAttachmentStateData = IContentDecryptorStateBase<
   ContentDecryptorState.WaitingForAttachment,
   true, // isInitDataQueueLocked
-  false, // isMediaKeysAttached
+  MediaKeyAttachmentStatus.NotAttached, // isMediaKeysAttached
   // data
   { mediaKeysInfo : IMediaKeysInfos;
     mediaElement : HTMLMediaElement; }
@@ -1032,8 +1065,10 @@ type IWaitingForAttachmentStateData = IContentDecryptorStateBase<
 type IReadyForContentStateDataUnattached = IContentDecryptorStateBase<
   ContentDecryptorState.ReadyForContent,
   true, // isInitDataQueueLocked
-  false, // isMediaKeysAttached
-  null // data
+  MediaKeyAttachmentStatus.NotAttached |
+  MediaKeyAttachmentStatus.Pending, // isMediaKeysAttached
+  { mediaKeysInfo : IMediaKeysInfos;
+    mediaElement : HTMLMediaElement; } // data
 >;
 
 /**
@@ -1043,7 +1078,7 @@ type IReadyForContentStateDataUnattached = IContentDecryptorStateBase<
 type IReadyForContentStateDataAttached = IContentDecryptorStateBase<
   ContentDecryptorState.ReadyForContent,
   boolean, // isInitDataQueueLocked
-  true, // isMediaKeysAttached
+  MediaKeyAttachmentStatus.Attached, // isMediaKeysAttached
   {
     /**
      * MediaKeys-related information linked to this instance of the
