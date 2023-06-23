@@ -54,9 +54,9 @@ export default function initializeContentDecryption(
         return;
       }
       stopListening();
-      log.error("Init: Encrypted event but EME feature not activated");
+      log.error("Init: Encrypted event but no `keySystems` given");
       const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR",
-                                          "EME feature not activated.");
+                                          "no `keySystems` given.");
       callbacks.onError(err);
     }, { clearSignal: cancelSignal });
     const ref = createSharedReference({
