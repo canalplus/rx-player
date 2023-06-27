@@ -297,7 +297,7 @@
   [#1341]
 - Demo: Fix reporting of live position in demo page [#1313]
 
-## v4.0.0-beta.2 (2023-03-08)
+## v4.0.0-beta.2 (2023-06-27)
 
 ### Changes
 
