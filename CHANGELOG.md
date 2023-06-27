@@ -361,7 +361,7 @@
 - doc: Update our documentation generator and fix all invalid anchors in it
 - npm: prevent the publishing of unnecessary files on the npm registry [#1377, #1378]
 
-## v4.0.0-beta.2 (2023-03-08)
+## v4.0.0-beta.2 (2023-06-27)
 
 ### Changes
 
