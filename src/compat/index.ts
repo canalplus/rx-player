@@ -61,6 +61,7 @@ import shouldRenewMediaKeySystemAccess from "./should_renew_media_key_system_acc
 import shouldUnsetMediaKeys from "./should_unset_media_keys";
 import shouldValidateMetadata from "./should_validate_metadata";
 import shouldWaitForDataBeforeLoaded from "./should_wait_for_data_before_loaded";
+import shouldWaitForHaveEnoughData from "./should_wait_for_have_enough_data";
 
 // TODO To remove. This seems to be the only side-effect done on import, which
 // we  would prefer to disallow (both for the understandability of the code and
@@ -105,5 +106,6 @@ export {
   shouldUnsetMediaKeys,
   shouldValidateMetadata,
   shouldWaitForDataBeforeLoaded,
+  shouldWaitForHaveEnoughData,
   tryToChangeSourceBufferType,
 };
