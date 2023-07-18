@@ -103,10 +103,13 @@ export default class DirectFileContentInitializer extends ContentInitializer {
     decryptionRef.finish();
 
     const drmInitRef =
-      initializeContentDecryption(mediaElement, keySystems, decryptionRef, {
-        onError: (err) =>  this._onFatalError(err),
-        onWarning: (err : IPlayerError) => this.trigger("warning", err),
-      }, cancelSignal);
+      initializeContentDecryption(
+        mediaElement,
+        keySystems,
+        decryptionRef,
+        { onError: (err) =>  this._onFatalError(err),
+          onWarning: (err : IPlayerError) => this.trigger("warning", err) },
+        cancelSignal);
 
     /** Translate errors coming from the media element into RxPlayer errors. */
     listenToMediaError(mediaElement,
