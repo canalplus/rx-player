@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
+import { MediaError } from "../errors";
 import log from "../log";
 import { IParsedManifest } from "../parsers/manifest";
 import {
   ITrackType,
-  IPlayerError,
   IRepresentationFilter,
+  IPlayerError,
 } from "../public_types";
 import arrayFind from "../utils/array_find";
 import EventEmitter from "../utils/event_emitter";
@@ -184,12 +185,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    */
   public publishTime: number | undefined;
 
-  /**
-   * Array containing every minor errors that happened when the Manifest has
-   * been created, in the order they have happened.
-   */
-  public contentWarnings : IPlayerError[];
-
   /*
    * Difference between the server's clock in milliseconds and the return of the
    * JS function `performance.now`.
@@ -297,22 +292,37 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * will contain all such errors, in the order they have been encountered.
    * @param {Object} parsedManifest
    * @param {Object} options
+   * @param {Array.<Object>} warnings - After construction, will be optionally
+   * filled by errors expressing minor issues seen while parsing the Manifest.
    */
-  constructor(parsedManifest : IParsedManifest, options : IManifestParsingOptions) {
+  constructor(
+    parsedManifest : IParsedManifest,
+    options : IManifestParsingOptions,
+    warnings : IPlayerError[]
+  ) {
     super();
     const { representationFilter,
             manifestUpdateUrl } = options;
-    this.contentWarnings = [];
     this.id = generateNewManifestId();
     this.expired = parsedManifest.expired ?? null;
     this.transport = parsedManifest.transportType;
     this.clockOffset = parsedManifest.clockOffset;
 
+    const unsupportedAdaptations: Adaptation[] = [];
     this.periods = parsedManifest.periods.map((parsedPeriod) => {
-      const period = new Period(parsedPeriod, representationFilter);
-      this.contentWarnings.push(...period.contentWarnings);
+      const period = new Period(parsedPeriod,
+                                unsupportedAdaptations,
+                                representationFilter);
       return period;
     }).sort((a, b) => a.start - b.start);
+
+    if (unsupportedAdaptations.length > 0) {
+      const error =
+        new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
+                       "An Adaptation contains only incompatible codecs.",
+                       { adaptations: unsupportedAdaptations });
+      warnings.push(error);
+    }
 
     /**
      * @deprecated It is here to ensure compatibility with the way the
@@ -562,7 +572,6 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.isLive = newManifest.isLive;
     this.isLastPeriodKnown = newManifest.isLastPeriodKnown;
     this.lifetime = newManifest.lifetime;
-    this.contentWarnings = newManifest.contentWarnings;
     this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
     this.transport = newManifest.transport;
     this.publishTime = newManifest.publishTime;
