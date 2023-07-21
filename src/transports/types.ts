@@ -26,6 +26,7 @@ import {
   IRepresentationFilter,
   ISegmentLoader as ICustomSegmentLoader,
   IServerSyncInfos,
+  IPlayerError,
 } from "../public_types";
 import TaskCanceller, {
   CancellationSignal,
@@ -352,6 +353,11 @@ export type IManifestParserRequestScheduler =
 export interface IManifestParserResult {
   /** The parsed Manifest Object itself. */
   manifest : Manifest;
+  /**
+   * Minor issues seen while constructing the Manifest object.
+   * Empty if no issue was seen.
+   */
+  warnings : IPlayerError[];
   /**
    * "Real" URL (post-redirection) at which the Manifest can be refreshed.
    *
