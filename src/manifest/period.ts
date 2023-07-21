@@ -20,7 +20,6 @@ import {
 } from "../parsers/manifest";
 import {
   ITrackType,
-  IPlayerError,
   IRepresentationFilter,
 } from "../public_types";
 import arrayFind from "../utils/array_find";
@@ -57,12 +56,6 @@ export default class Period {
    */
   public end : number | undefined;
 
-  /**
-   * Array containing every errors that happened when the Period has been
-   * created, in the order they have happened.
-   */
-  public readonly contentWarnings : IPlayerError[];
-
   /** Array containing every stream event happening on the period */
   public streamEvents : IManifestStreamEvent[];
 
@@ -73,9 +66,9 @@ export default class Period {
    */
   constructor(
     args : IParsedPeriod,
+    unsupportedAdaptations: Adaptation[],
     representationFilter? : IRepresentationFilter | undefined
   ) {
-    this.contentWarnings = [];
     this.id = args.id;
     this.adaptations = (Object.keys(args.adaptations) as ITrackType[])
       .reduce<IManifestAdaptations>((acc, type) => {
@@ -87,11 +80,7 @@ export default class Period {
           .map((adaptation) : Adaptation => {
             const newAdaptation = new Adaptation(adaptation, { representationFilter });
             if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
-              const error =
-                new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-                               "An Adaptation contains only incompatible codecs.",
-                               { adaptation: newAdaptation });
-              this.contentWarnings.push(error);
+              unsupportedAdaptations.push(newAdaptation);
             }
             return newAdaptation;
           })
@@ -104,7 +93,7 @@ export default class Period {
         ) {
           throw new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
                                "No supported " + type + " adaptations",
-                               { adaptation: undefined });
+                               { adaptations: undefined });
         }
 
         if (filteredAdaptations.length > 0) {
