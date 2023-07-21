@@ -348,7 +348,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       if (nextAdaptation === undefined) {
         const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION",
                                         `No ${bufferType} Representation can be played`,
-                                        { adaptation: undefined });
+                                        { adaptations: undefined });
         this.trigger("error", noRepErr);
         this.dispose();
         return;
