@@ -19,6 +19,7 @@ import Manifest from "../../manifest";
 import { getMDAT } from "../../parsers/containers/isobmff";
 import { ICdnMetadata } from "../../parsers/manifest";
 import createSmoothManifestParser from "../../parsers/manifest/smooth";
+import { IPlayerError } from "../../public_types";
 import request from "../../utils/request";
 import {
   strToUtf8,
@@ -77,10 +78,11 @@ export default function(transportOptions : ITransportOptions) : ITransportPipeli
                                                 url,
                                                 manifestReceivedTime);
 
+      const warnings : IPlayerError[] = [];
       const manifest = new Manifest(parserResult, {
         representationFilter: transportOptions.representationFilter,
-      });
-      return { manifest, url };
+      }, warnings);
+      return { manifest, url, warnings };
     },
   };
 
