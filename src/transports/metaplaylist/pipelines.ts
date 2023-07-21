@@ -27,6 +27,7 @@ import {
   ICdnMetadata,
   IParsedManifest,
 } from "../../parsers/manifest/types";
+import { IPlayerError } from "../../public_types";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import objectAssign from "../../utils/object_assign";
 import { CancellationSignal } from "../../utils/task_canceller";
@@ -153,8 +154,9 @@ export default function(options : ITransportOptions): ITransportPipelines {
         parsedResult : IMPLParserResponse<IParsedManifest>
       ) : Promise<IManifestParserResult> {
         if (parsedResult.type === "done") {
-          const manifest = new Manifest(parsedResult.value, options);
-          return Promise.resolve({ manifest });
+          const warnings : IPlayerError[] = [];
+          const manifest = new Manifest(parsedResult.value, options, warnings);
+          return Promise.resolve({ manifest, warnings });
         }
 
         const parsedValue = parsedResult.value;

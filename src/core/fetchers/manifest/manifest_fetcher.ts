@@ -302,10 +302,10 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
                                                 cancelSignal,
                                                 scheduleRequest);
       if (!isPromise(res)) {
-        return finish(res.manifest);
+        return finish(res.manifest, res.warnings);
       } else {
-        const { manifest } = await res;
-        return finish(manifest);
+        const { manifest, warnings } = await res;
+        return finish(manifest, warnings);
       }
     } catch (err) {
       const formattedError = formatError(err, {
@@ -356,8 +356,11 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
      * To call once the Manifest has been parsed.
      * @param {Object} manifest
      */
-    function finish(manifest : Manifest) : IManifestFetcherParsedResult {
-      onWarnings(manifest.contentWarnings);
+    function finish(
+      manifest : Manifest,
+      warnings: IPlayerError[]
+    ) : IManifestFetcherParsedResult {
+      onWarnings(warnings);
       const parsingTime = performance.now() - parsingTimeStart;
       log.info(`MF: Manifest parsed in ${parsingTime}ms`);
 
