@@ -23,7 +23,7 @@ import Manifest from "../../manifest";
 import parseLocalManifest, {
   ILocalManifest,
 } from "../../parsers/manifest/local";
-import { ILoadedManifestFormat } from "../../public_types";
+import { ILoadedManifestFormat, IPlayerError } from "../../public_types";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import { CancellationSignal } from "../../utils/task_canceller";
 import {
@@ -73,8 +73,9 @@ export default function getLocalManifestPipelines(
         throw new Error("Wrong format for the manifest data");
       }
       const parsed = parseLocalManifest(loadedManifest as ILocalManifest);
-      const manifest = new Manifest(parsed, transportOptions);
-      return { manifest, url: undefined };
+      const warnings : IPlayerError[] = [];
+      const manifest = new Manifest(parsed, transportOptions, warnings);
+      return { manifest, url: undefined, warnings };
     },
   };
 

@@ -23,6 +23,7 @@ import {
   IDashParserResponse,
   ILoadedResource,
 } from "../../parsers/manifest/dash/parsers_types";
+import { IPlayerError } from "../../public_types";
 import objectAssign from "../../utils/object_assign";
 import request from "../../utils/request";
 import {
@@ -139,8 +140,9 @@ export default function generateManifestParser(
         if (cancelSignal.isCancelled()) {
           return Promise.reject(cancelSignal.cancellationError);
         }
-        const manifest = new Manifest(parserResponse.value.parsed, options);
-        return { manifest, url };
+        const warnings : IPlayerError[] = [];
+        const manifest = new Manifest(parserResponse.value.parsed, options, warnings);
+        return { manifest, url, warnings };
       }
 
       const { value } = parserResponse;
