@@ -40,4 +40,4 @@ const periods = rxPlayer.getAvailablePeriods();
 ```
 
   - **return value** `Array.<Object>`: Information on all Periods currently
-    available in the content.
+    considered by the RxPlayer.
