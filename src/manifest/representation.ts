@@ -373,7 +373,7 @@ class Representation {
              bitrate,
              codec,
              isCodecSupported: isSupported,
-             seemsDecipherable: decipherable };
+             decipherable };
   }
 
   /**
@@ -398,7 +398,7 @@ class Representation {
              codec,
              hdrInfo,
              isCodecSupported: isSupported,
-             seemsDecipherable: decipherable };
+             decipherable };
   }
 
   /**

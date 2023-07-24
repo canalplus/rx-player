@@ -697,7 +697,7 @@ export interface IAudioRepresentation {
   bitrate? : number | undefined;
   codec? : string | undefined;
   isCodecSupported? : boolean | undefined;
-  seemsDecipherable? : boolean | undefined;
+  decipherable? : boolean | undefined;
 }
 
 /** Audio track returned by the RxPlayer. */
@@ -744,7 +744,7 @@ export interface IVideoRepresentation {
   frameRate? : number | undefined;
   hdrInfo?: IHDRInformation | undefined;
   isCodecSupported? : boolean | undefined;
-  seemsDecipherable? : boolean | undefined;
+  decipherable? : boolean | undefined;
 }
 
 /** Video track returned by the RxPlayer. */
