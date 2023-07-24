@@ -71,6 +71,10 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    */
   private _storedPeriodInfo : ITSPeriodObject[];
 
+  /**
+   * If `true`, the current `TracksStore` instance has been disposed. It
+   * shouldn't perform side-effects anymore.
+   */
   private _isDisposed : boolean;
 
   /**
@@ -86,6 +90,11 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   /** Tells if trick mode has been enabled by the RxPlayer user */
   private _isTrickModeTrackEnabled: boolean;
 
+  /**
+   * In absence of another setting, this is the default "switching mode" for the
+   * audio track.
+   * See type documentation.
+   */
   private _defaultAudioTrackSwitchingMode : IAudioTrackSwitchingMode;
 
   constructor(args : {
@@ -1201,10 +1210,21 @@ export interface ITSPeriodObject {
    * because some audio/video/text buffer still contains data of the given type.
    */
   inManifest : boolean;
+  /**
+   * Information on the selected audio track and Representations for this Period.
+   */
   audio : IAudioPeriodInfo;
+  /**
+   * Information on the selected text track and Representations for this Period.
+   */
   text : ITextPeriodInfo;
+  /**
+   * Information on the selected video track and Representations for this Period.
+   */
   video : IVideoPeriodInfo;
-
+  /**
+   * If `true`, this object was since cleaned-up.
+   */
   isRemoved : boolean;
 }
 
