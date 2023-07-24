@@ -197,11 +197,11 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
   }
 
   function updateTracks(
-    periods,
     audioTrackPreferences,
     textTrackPreferences,
     videoTrackPreferences
   ) {
+    const periods = player.getAvailablePeriods();
     for (let i = 0; i < periods.length; i++) {
       const period = periods[i];
 
@@ -292,19 +292,18 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
   });
 
-  it("should allow setting every tracks before loading segments", async function () {
+  it("should allow setting tracks BEFORE loading segments", async function () {
     player = new RxPlayer();
 
     let called = 0;
     let manifestRequestDone = false;
     let afterManifestResponse = false;
-    player.addEventListener("newAvailablePeriods", (periods) => {
+    player.addEventListener("newAvailablePeriods", () => {
       called++;
       expect(manifestRequestDone).to.equal(true);
-      expect(afterManifestResponse).to.equal(false);
+      expect(afterManifestResponse).to.equal(called > 1);
       expect(xhrMock.getLockedXHR()).to.have.lengthOf(0);
       updateTracks(
-        periods,
         [
           { language: "fr", audioDescription: false },
           { language: "de", audioDescription: true },
@@ -345,7 +344,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
 
     await goToSecondPeriod();
-    expect(called).to.equal(1);
+    expect(called).to.equal(2);
     checkAudioTrack("de", "deu", true);
     checkTextTrack("fr", "fra", true);
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
@@ -353,8 +352,8 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
 
   it("should allow the initial disabling of the video tracks", async () => {
     player = new RxPlayer();
-    player.addEventListener("newAvailablePeriods", (periods) => {
-      updateTracks(periods, [], [], [ null, null ]);
+    player.addEventListener("newAvailablePeriods", () => {
+      updateTracks([], [], [ null, null ]);
     });
     await loadContent();
     checkAudioTrack("de", "deu", false);
