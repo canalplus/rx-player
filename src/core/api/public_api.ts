@@ -123,7 +123,7 @@ import PlaybackObserver, {
 /* eslint-disable-next-line max-len */
 import MediaElementTracksStore from "./track_management/media_element_tracks_store";
 import TracksStore, {
-  ITMPeriodObject,
+  ITSPeriodObject,
 } from "./track_management/tracks_store";
 import {
   constructPlayerStateReference,
@@ -2649,7 +2649,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private _priv_callTracksStoreGetterSetter<T, U>(
     periodId : string | undefined,
     defaultValue : U,
-    cb : (tcm : TracksStore, periodRef : ITMPeriodObject) => T
+    cb : (tcm : TracksStore, periodRef : ITSPeriodObject) => T
   ) : T | U {
     if (this._priv_contentInfos === null ||
         this._priv_contentInfos.tracksStore === null)
@@ -2685,7 +2685,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onAvailableTracksMayHaveChanged(
     trackType : IBufferType,
-    oPeriodRef? : ITMPeriodObject
+    oPeriodRef? : ITSPeriodObject
   ): void {
     const contentInfos = this._priv_contentInfos;
     if (contentInfos === null) {
