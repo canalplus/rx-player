@@ -391,7 +391,7 @@ class Representation {
              codec,
              isSpatialAudio,
              isCodecSupported: isSupported,
-             seemsDecipherable: decipherable };
+             decipherable };
   }
 
   /**
@@ -416,7 +416,7 @@ class Representation {
              codec,
              hdrInfo,
              isCodecSupported: isSupported,
-             seemsDecipherable: decipherable };
+             decipherable };
   }
 
   /**
