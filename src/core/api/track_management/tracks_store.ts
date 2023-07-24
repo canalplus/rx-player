@@ -71,7 +71,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * Store track selection information, per Period.
    * Sorted by Period's start time ascending
    */
-  private _storedPeriodInfo : ITMPeriodObject[];
+  private _storedPeriodInfo : ITSPeriodObject[];
 
   private _isDisposed : boolean;
 
@@ -83,7 +83,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * for example not in the Manifest anymore as long as the same Period's
    * reference is still kept.
    */
-  private _cachedPeriodInfo : WeakMap<Period, ITMPeriodObject>;
+  private _cachedPeriodInfo : WeakMap<Period, ITSPeriodObject>;
 
   /** Tells if trick mode has been enabled by the RxPlayer user */
   private _isTrickModeTrackEnabled: boolean;
@@ -134,7 +134,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     }
 
     /** Periods which have just been added. */
-    const addedPeriods : ITMPeriodObject[] = [];
+    const addedPeriods : ITSPeriodObject[] = [];
 
     let newPListIdx = 0;
     for (let i = 0; i < this._storedPeriodInfo.length; i++) {
@@ -434,7 +434,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    */
   public getPeriodObjectFromPeriod(
     period : Period
-  ) : ITMPeriodObject | undefined {
+  ) : ITSPeriodObject | undefined {
     const periodObj = getPeriodItem(this._storedPeriodInfo, period.id);
     if (periodObj === undefined && period !== undefined) {
       return this._cachedPeriodInfo.get(period);
@@ -458,7 +458,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    */
   public getPeriodObjectFromId(
     periodId : string
-  ) : ITMPeriodObject | undefined {
+  ) : ITSPeriodObject | undefined {
     return getPeriodItem(this._storedPeriodInfo, periodId);
   }
 
@@ -518,7 +518,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * `null` if no Audio Representation should be locked.
    */
   public setAudioTrack(
-    periodObj : ITMPeriodObject,
+    periodObj : ITSPeriodObject,
     wantedId : string,
     switchingMode : IAudioTrackSwitchingMode | undefined,
     reprsToLock : string[] | null
@@ -536,7 +536,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * @param {Object} periodObj - The concerned Period's object.
    * @param {string} wantedId - adaptation id of the wanted track.
    */
-  public setTextTrack(periodObj : ITMPeriodObject, wantedId : string) : void {
+  public setTextTrack(periodObj : ITSPeriodObject, wantedId : string) : void {
     return this._setAudioOrTextTrack("text", periodObj, wantedId, "direct", null);
   }
 
@@ -552,7 +552,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    */
   private _setAudioOrTextTrack(
     bufferType : "audio" | "text",
-    periodObj : ITMPeriodObject,
+    periodObj : ITSPeriodObject,
     wantedId : string,
     switchingMode : IAudioTrackSwitchingMode,
     reprsToLock : string[] | null
@@ -614,7 +614,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * `null` if no Video Representation should be locked.
    */
   public setVideoTrack(
-    periodObj : ITMPeriodObject,
+    periodObj : ITSPeriodObject,
     wantedId : string,
     switchingMode : IVideoTrackSwitchingMode | undefined,
     reprsToLock : string[]| null
@@ -677,7 +677,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * @throws Error - Throws if the period given has not been added
    */
   public disableTrack(
-    periodObj : ITMPeriodObject,
+    periodObj : ITSPeriodObject,
     bufferType : "audio" | "video" | "text"
   ) : void {
     const trackInfo = periodObj[bufferType];
@@ -728,7 +728,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * known.
    */
   public getChosenAudioTrack(
-    periodObj : ITMPeriodObject
+    periodObj : ITSPeriodObject
   ) : IAudioTrack | null {
     return periodObj.audio.storedSettings === null ?
       null :
@@ -746,7 +746,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * @returns {Object|null} - The text track chosen for this Period
    */
   public getChosenTextTrack(
-    periodObj : ITMPeriodObject
+    periodObj : ITSPeriodObject
   ) : ITextTrack | null {
     return periodObj.text.storedSettings === null ?
       null :
@@ -764,7 +764,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * @returns {Object|null} - The video track chosen for this Period
    */
   public getChosenVideoTrack(
-    periodObj : ITMPeriodObject
+    periodObj : ITSPeriodObject
   ) : IVideoTrack | null {
     if (periodObj.video.storedSettings === null) {
       return null;
@@ -783,7 +783,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * @returns {Array.<Object>}
    */
   public getAvailableAudioTracks(
-    periodObj : ITMPeriodObject
+    periodObj : ITSPeriodObject
   ) : IAvailableAudioTrack[]|undefined {
     const storedSettings = periodObj.audio.storedSettings;
     const currentId = storedSettings !== null ?
@@ -807,7 +807,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * @returns {Array.<Object>}
    */
   public getAvailableTextTracks(
-    periodObj : ITMPeriodObject
+    periodObj : ITSPeriodObject
   ) : IAvailableTextTrack[]|undefined {
     const storedSettings = periodObj.text.storedSettings;
     const currentId = storedSettings !== null ?
@@ -832,7 +832,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * @returns {Array.<Object>}
    */
   public getAvailableVideoTracks(
-    periodObj : ITMPeriodObject
+    periodObj : ITSPeriodObject
   ) : IAvailableVideoTrack[]|undefined {
     const storedSettings = periodObj.video.storedSettings;
     const currentId = storedSettings === null ?
@@ -860,7 +860,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   }
 
   public getLockedAudioRepresentations(
-    periodObj : ITMPeriodObject
+    periodObj : ITSPeriodObject
   ) : string[] | null {
     const { storedSettings } = periodObj.audio;
     if (storedSettings === null) {
@@ -873,7 +873,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   }
 
   public getLockedVideoRepresentations(
-    periodObj : ITMPeriodObject
+    periodObj : ITSPeriodObject
   ) : string[] | null {
     const { storedSettings } = periodObj.video;
     if (storedSettings === null) {
@@ -886,7 +886,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   }
 
   public lockAudioRepresentations(
-    periodObj : ITMPeriodObject,
+    periodObj : ITSPeriodObject,
     lockSettings : IAudioRepresentationsLockSettings
   ) : void {
     const { storedSettings } = periodObj.audio;
@@ -904,7 +904,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   }
 
   public lockVideoRepresentations(
-    periodObj : ITMPeriodObject,
+    periodObj : ITSPeriodObject,
     lockSettings : IVideoRepresentationsLockSettings
   ) : void {
     const { storedSettings } = periodObj.video;
@@ -921,7 +921,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
                                                     switchingMode });
   }
 
-  public unlockAudioRepresentations(periodObj : ITMPeriodObject) : void {
+  public unlockAudioRepresentations(periodObj : ITSPeriodObject) : void {
     const { storedSettings } = periodObj.audio;
     if (storedSettings === null ||
         storedSettings.lockedRepresentations.getValue() === null)
@@ -931,7 +931,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     storedSettings.lockedRepresentations.setValue(null);
   }
 
-  public unlockVideoRepresentations(periodObj : ITMPeriodObject) : void {
+  public unlockVideoRepresentations(periodObj : ITSPeriodObject) : void {
     const { storedSettings } = periodObj.video;
     if (storedSettings === null ||
         storedSettings.lockedRepresentations.getValue() === null)
@@ -956,7 +956,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * @param {Period} period
    * @returns {Object}
    */
-  private _addPeriod(period : Period) : ITMPeriodObject {
+  private _addPeriod(period : Period) : ITSPeriodObject {
     const periodObj = generatePeriodInfo(period,
                                          false,
                                          this._isTrickModeTrackEnabled,
@@ -1057,7 +1057,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
  * @returns {number|undefined}
  */
 function findPeriodIndex(
-  periods : ITMPeriodObject[],
+  periods : ITSPeriodObject[],
   period : Period
 ) : number|undefined {
   for (let i = 0; i < periods.length; i++) {
@@ -1077,9 +1077,9 @@ function findPeriodIndex(
  * @returns {Object|undefined}
  */
 function getPeriodItem(
-  periods : ITMPeriodObject[],
+  periods : ITSPeriodObject[],
   periodId : string
-) : ITMPeriodObject|undefined {
+) : ITSPeriodObject|undefined {
   for (let i = 0; i < periods.length; i++) {
     const periodI = periods[i];
     if (periodI.period.id === periodId) {
@@ -1089,13 +1089,13 @@ function getPeriodItem(
 }
 
 /**
- * A `ITMPeriodObject` should only be removed once all References linked to it
+ * A `ITSPeriodObject` should only be removed once all References linked to it
  * do not exist anymore, to keep the possibility of making track choices.
  * @param {Object} periodObj
  * @returns {boolean}
  */
 function isPeriodItemRemovable(
-  periodObj : ITMPeriodObject
+  periodObj : ITSPeriodObject
 ) : boolean {
   return !periodObj.inManifest &&
          periodObj.text?.dispatcher === null &&
@@ -1116,7 +1116,7 @@ function getRightVideoTrack(
 }
 
 /**
- * Generate an `ITMPeriodObject` object for the given Period, selecting the
+ * Generate an `ITSPeriodObject` object for the given Period, selecting the
  * default track for each type.
  * @param {Object} period
  * @param {boolean} inManifest
@@ -1128,7 +1128,7 @@ function generatePeriodInfo(
   inManifest : boolean,
   isTrickModeTrackEnabled: boolean,
   defaultAudioTrackSwitchingMode : IAudioTrackSwitchingMode
-) : ITMPeriodObject {
+) : ITSPeriodObject {
   const audioAdaptation = period.getSupportedAdaptations("audio")[0];
   const baseVideoAdaptation = period.getSupportedAdaptations("video")[0];
   const videoAdaptation = getRightVideoTrack(baseVideoAdaptation,
@@ -1186,7 +1186,7 @@ function toExposedPeriod(p: Period) : IPeriod {
 }
 
 /** Every information stored for a single Period. */
-export interface ITMPeriodObject {
+export interface ITSPeriodObject {
   /** The Period in question. */
   period : Period;
   /**
