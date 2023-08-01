@@ -60,6 +60,10 @@ RxPlayer.addFeatures([
   DEBUG_ELEMENT,
 ]);
 
+/* eslint-disable */
+(window as any).RxPlayer = RxPlayer;
+/* eslint-enable */
+
 declare const __INCLUDE_WASM_PARSER__: boolean;
 
 /* eslint-disable no-undef */
@@ -204,7 +208,6 @@ const PlayerModule = declareModule(
 
     // facilitate DEV mode
     /* eslint-disable */
-    (window as any).RxPlayer = RxPlayer;
     (window as any).player = (window as any).rxPlayer = player;
     /* eslint-enable */
 
