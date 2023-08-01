@@ -144,6 +144,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
       log.info("Setting URL to HTMLMediaElement", url);
       mediaElement.src = url;
       cancelSignal.register(() => {
+        log.info("Init: Removing directfile src from media element", mediaElement.src);
         clearElementSrc(mediaElement);
       });
 

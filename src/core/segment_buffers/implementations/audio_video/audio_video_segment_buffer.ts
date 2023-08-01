@@ -166,6 +166,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
     mediaSource : MediaSource
   ) {
     super();
+    log.info("AVSB: calling `mediaSource.addSourceBuffer`", codec);
     const sourceBuffer = mediaSource.addSourceBuffer(codec);
 
     this._canceller = new TaskCanceller();
@@ -337,6 +338,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
 
     if (this._mediaSource.readyState === "open") {
       try {
+        log.debug("AVSB: Calling `abort` on the SourceBuffer");
         this._sourceBuffer.abort();
       } catch (e) {
         log.warn(`AVSB: Failed to abort a ${this.bufferType} SourceBuffer:`,
@@ -540,20 +542,26 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
 
     if (appendWindow[0] === undefined) {
       if (this._sourceBuffer.appendWindowStart > 0) {
+        log.debug("AVSB: re-setting `appendWindowStart` to `0`");
         this._sourceBuffer.appendWindowStart = 0;
       }
     } else if (appendWindow[0] !== this._sourceBuffer.appendWindowStart) {
       if (appendWindow[0] >= this._sourceBuffer.appendWindowEnd) {
-        this._sourceBuffer.appendWindowEnd = appendWindow[0] + 1;
+        const newTmpEnd = appendWindow[0] + 1;
+        log.debug("AVSB: pre-updating `appendWindowEnd`", newTmpEnd);
+        this._sourceBuffer.appendWindowEnd = newTmpEnd;
       }
+      log.debug("AVSB: setting `appendWindowStart`", appendWindow[0]);
       this._sourceBuffer.appendWindowStart = appendWindow[0];
     }
 
     if (appendWindow[1] === undefined) {
       if (this._sourceBuffer.appendWindowEnd !== Infinity) {
+        log.debug("AVSB: re-setting `appendWindowEnd` to `Infinity`");
         this._sourceBuffer.appendWindowEnd = Infinity;
       }
     } else if (appendWindow[1] !== this._sourceBuffer.appendWindowEnd) {
+      log.debug("AVSB: setting `appendWindowEnd`", appendWindow[1]);
       this._sourceBuffer.appendWindowEnd = appendWindow[1];
     }
 

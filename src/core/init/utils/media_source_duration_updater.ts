@@ -195,8 +195,9 @@ function setMediaSourceDuration(
       log.info("Init: Updating duration", newDuration);
       mediaSource.duration = newDuration;
       if (mediaSource.readyState === "open" && !isFinite(newDuration)) {
-        mediaSource.setLiveSeekableRange(0,
-                                         getMaximumLiveSeekablePosition(duration));
+        const maxSeekable = getMaximumLiveSeekablePosition(duration);
+        log.info("Init: calling `mediaSource.setLiveSeekableRange`", maxSeekable);
+        mediaSource.setLiveSeekableRange(0, maxSeekable);
       }
     } catch (err) {
       log.warn("Duration Updater: Can't update duration on the MediaSource.",
@@ -291,12 +292,15 @@ function createMediaSourceOpenReference(
   const isMediaSourceOpen = createSharedReference(mediaSource.readyState === "open",
                                                   cancelSignal);
   onSourceOpen(mediaSource, () => {
+    log.debug("Init: Reacting to MediaSource open in duration updater");
     isMediaSourceOpen.setValueIfChanged(true);
   }, cancelSignal);
   onSourceEnded(mediaSource, () => {
+    log.debug("Init: Reacting to MediaSource ended in duration updater");
     isMediaSourceOpen.setValueIfChanged(false);
   }, cancelSignal);
   onSourceClose(mediaSource, () => {
+    log.debug("Init: Reacting to MediaSource close in duration updater");
     isMediaSourceOpen.setValueIfChanged(false);
   }, cancelSignal);
   return isMediaSourceOpen;
