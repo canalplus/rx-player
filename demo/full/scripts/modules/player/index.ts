@@ -298,13 +298,15 @@ const PlayerModule = declareModule(
       },
 
       setAudioBitrate(bitrate: number | undefined) {
-        player.setAudioBitrate(bitrate || -1);
-        state.update("audioBitrateAuto", bitrate === undefined);
+        const bitrateSet = bitrate ?? 1;
+        player.setAudioBitrate(bitrateSet);
+        state.update("audioBitrateAuto", bitrateSet === -1);
       },
 
       setVideoBitrate(bitrate: number | undefined) {
-        player.setVideoBitrate(bitrate || -1);
-        state.update("videoBitrateAuto", bitrate === undefined);
+        const bitrateSet = bitrate ?? 1;
+        player.setVideoBitrate(bitrateSet);
+        state.update("videoBitrateAuto", bitrateSet === -1);
       },
 
       setAudioTrack(track: IAudioTrack) {
