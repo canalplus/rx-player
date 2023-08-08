@@ -177,6 +177,11 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
     const sourceBuffer = mediaSource.addSourceBuffer(codec);
 
     this._canceller = new TaskCanceller();
+    this._canceller.signal.register(() => {
+      if (bufferType === "video") {
+        deleteIdb();
+      }
+    });
     this.bufferType = bufferType;
     this._mediaSource = mediaSource;
     this._sourceBuffer = sourceBuffer;
