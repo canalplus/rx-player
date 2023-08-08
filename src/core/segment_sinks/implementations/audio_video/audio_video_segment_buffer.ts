@@ -31,6 +31,11 @@ import type {
 } from "../types";
 import { SegmentSink, SegmentSinkOperation } from "../types";
 
+let db: IDBDatabase | undefined;
+let counter = 0;
+let segUid = 0;
+let lastVideoSegmentData: BufferSource | null;
+
 /**
  * Allows to push and remove new segments to a SourceBuffer while keeping an
  * inventory of what has been pushed and what is being pushed.
@@ -90,6 +95,9 @@ export default class AudioVideoSegmentSink extends SegmentSink {
     mediaSource: IMediaSourceInterface,
   ) {
     super();
+    if (bufferType === "video") {
+      initIdb();
+    }
     log.info("AVSB: calling `mediaSource.addSourceBuffer`", codec);
     const sourceBuffer = mediaSource.addSourceBuffer(bufferType, codec);
 
@@ -175,6 +183,9 @@ export default class AudioVideoSegmentSink extends SegmentSink {
           this.bufferType,
           getLoggableSegmentId(infos.inventoryInfos),
         );
+        if (this.bufferType === "video") {
+          lastVideoSegmentData = data;
+        }
         return this._sourceBuffer.appendBuffer(data, {
           codec,
           timestampOffset,
@@ -369,4 +380,104 @@ function assertDataIsBufferSource(data: unknown): asserts data is BufferSource {
   ) {
     throw new Error("Invalid data given to the AudioVideoSegmentSink");
   }
+}
+
+function deleteIdb() {
+  db = undefined;
+  return new Promise((res, rej) => {
+    const deleteRequest = window.indexedDB.deleteDatabase("RxPlayerDB");
+
+    deleteRequest.onerror = () => {
+      log.warn("!!!! DELETE ERROR", deleteRequest.error);
+      rej(deleteRequest.error);
+    };
+
+    deleteRequest.onsuccess = () => {
+      log.warn("!!!! DELETE SUCCESS");
+      res(undefined);
+    };
+  });
+}
+
+setInterval(() => {
+  if (db !== undefined && lastVideoSegmentData !== null) {
+    const transaction = db.transaction("video", "readwrite");
+    const objectStore = transaction.objectStore("video");
+    const now = getMonotonicTimeStamp();
+    while (counter >= 10) {
+      const uidDeleted = segUid - counter;
+      log.warn("!!!! REMOVING", uidDeleted);
+      const deleteReq = objectStore.delete(uidDeleted);
+      deleteReq.onsuccess = () => {
+        log.warn(
+          "!!!! DELETE REQUEST SUCCESS",
+          getMonotonicTimeStamp() - now,
+          uidDeleted,
+        );
+      };
+      deleteReq.onerror = () => {
+        log.error("!!!! DELETE REQUEST ERROR", uidDeleted, deleteReq.error);
+      };
+      counter--;
+    }
+
+    const blob = new Blob([lastVideoSegmentData]);
+    const currUid = segUid++;
+    const addReq = objectStore.add({ segUid: currUid, segment: blob });
+    addReq.onsuccess = () => {
+      log.warn("!!!! ADD REQUEST SUCCESS", getMonotonicTimeStamp() - now, currUid);
+    };
+    addReq.onerror = () => {
+      log.error("!!!! ADD REQUEST ERROR", currUid, addReq.error);
+    };
+    counter++;
+    log.warn("!!!! ADDED", counter);
+  }
+}, 1500);
+
+setInterval(() => {
+  if (db !== undefined && segUid - 5 > 0) {
+    const currReadCnt = segUid - 5;
+    const transaction = db.transaction("video", "readonly");
+    const objectStore = transaction.objectStore("video");
+    const now = getMonotonicTimeStamp();
+    const req = objectStore.get(currReadCnt);
+    req.onsuccess = () => {
+      log.warn("!!!! READ REQUEST SUCCESS", currReadCnt);
+      const segment = req.result.segment;
+      new Response(segment).arrayBuffer().then((ab) => {
+        log.warn(
+          "!!!! READ REQUEST SUCCESS",
+          getMonotonicTimeStamp() - now,
+          currReadCnt,
+          ab.byteLength,
+        );
+      });
+    };
+    req.onerror = () => {
+      log.error("!!!! READ REQUEST ERROR", currReadCnt, req.error);
+    };
+  }
+}, 1500);
+
+function initIdb() {
+  deleteIdb().finally(() => {
+    const openRequest = window.indexedDB.open("RxPlayerDB", 1);
+    openRequest.onsuccess = () => {
+      log.warn("!!!! OPEN REQUEST SUCCESS");
+    };
+    openRequest.onerror = () => {
+      log.error("!!!! OPEN REQUEST ERROR", openRequest.error);
+    };
+
+    openRequest.onupgradeneeded = () => {
+      log.warn("!!!! UPGRADE NEEDED");
+      const initDb = openRequest.result;
+      const initObjectStore = initDb.createObjectStore("video", { keyPath: "segUid" });
+      initObjectStore.transaction.oncomplete = () => {
+        log.warn("!!!! UPGRADE NEEDED TRANSACTION COMPLETE", initObjectStore);
+        db = initDb;
+      };
+    };
+  });
 }
