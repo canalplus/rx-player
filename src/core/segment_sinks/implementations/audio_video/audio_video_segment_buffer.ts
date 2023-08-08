@@ -22,6 +22,7 @@ import type {
   SourceBufferType,
 } from "../../../../mse";
 import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
+import noop from "../../../../utils/noop";
 import type { IRange } from "../../../../utils/ranges";
 import type {
   ICompleteSegmentInfo,
@@ -277,6 +278,9 @@ export default class AudioVideoSegmentSink extends SegmentSink {
   public dispose(): void {
     try {
       log.debug("AVSB: Calling `dispose` on the SourceBufferInterface");
+      if (this.bufferType === "video") {
+        deleteIdb().catch(noop);
+      }
       this._sourceBuffer.dispose();
     } catch (e) {
       log.debug(
