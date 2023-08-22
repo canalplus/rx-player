@@ -225,10 +225,6 @@ npm run test
 npm run list
 ```
 
-Builds are included in the ``dist/`` directory (builds based on the last version
-are already included there).
-
-
 
 ## Why a new player? ###########################################################
 
