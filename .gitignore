@@ -22,8 +22,7 @@
 /tests/performance/package.json
 /tests/performance/package-lock.json
 
-/dist/_esm5.processed
-/dist/_esm5.raw
+/dist/
 
 /doc/generated
 
