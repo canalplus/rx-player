@@ -22,6 +22,7 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
+import noop from "../../utils/noop";
 import { getLeftSizeOfRange } from "../../utils/ranges";
 import createSharedReference, {
   IReadOnlySharedReference,
@@ -202,23 +203,17 @@ function getEstimateReference(
   const requestsStore = new PendingRequestsStore();
 
   /**
-   * Value updated each time a new segment is pushed, with the information on the
+   * Callback called each time a new segment is pushed, with the information on the
    * new pushed segment.
-   * Set to `null` initially.
    */
-  const addedSegmentRef = createSharedReference<IAddedSegmentCallbackPayload | null>(
-    null,
-    stopAllEstimates
-  );
+  let onAddedSegment : (val : IAddedSegmentCallbackPayload) => void = noop;
 
   const callbacks : IRepresentationEstimatorCallbacks = {
     metrics: onMetric,
     requestBegin: onRequestBegin,
     requestProgress: onRequestProgress,
     requestEnd: onRequestEnd,
-    addedSegment(val) {
-      addedSegmentRef.setValue(val);
-    },
+    addedSegment(val) { onAddedSegment(val); },
   };
 
   /**
@@ -260,6 +255,9 @@ function getEstimateReference(
                                      knownStableBitrate: undefined });
     }
 
+    /** If true, Representation estimates based on the buffer health might be used. */
+    let allowBufferBasedEstimates = false;
+
     /**
      * Module calculating the optimal Representation based on the current
      * buffer's health (i.e. whether enough data is buffered, history of
@@ -268,27 +266,6 @@ function getEstimateReference(
     const bufferBasedChooser = new BufferBasedChooser(
       representations.map(r => r.bitrate)
     );
-
-
-    // get initial observation for initial estimate
-    let lastPlaybackObservation = playbackObserver.getReference().getValue();
-
-    addedSegmentRef.onUpdate((val: IAddedSegmentCallbackPayload | null) => {
-      if (lastPlaybackObservation === null || val === null) {
-        return;
-      }
-      const { position, speed } = lastPlaybackObservation;
-      const timeRanges = val.buffered;
-      const bufferGap = getLeftSizeOfRange(timeRanges, position.last);
-      const { representation } = val.content;
-      const currentScore = scoreCalculator.getEstimate(representation);
-      const currentBitrate = representation.bitrate;
-      const observation = { bufferGap, currentBitrate, currentScore, speed };
-      bufferBasedChooser.onAddedSegment(observation);
-    }, { clearSignal: innerCancellationSignal });
-
-    /** If true, Representation estimates based on the buffer health might be used. */
-    let allowBufferBasedEstimates = false;
 
     /** Store the previous estimate made here. */
     const prevEstimate = new LastEstimateStorage();
@@ -300,6 +277,9 @@ function getEstimateReference(
      */
     const guessBasedChooser = new GuessBasedChooser(scoreCalculator, prevEstimate);
 
+    // get initial observation for initial estimate
+    let lastPlaybackObservation = playbackObserver.getReference().getValue();
+
     /** Reference through which estimates are emitted. */
     const innerEstimateRef = createSharedReference<IABREstimate>(getCurrentEstimate());
 
@@ -309,12 +289,29 @@ function getEstimateReference(
       updateEstimate();
     }, { includeLastObservation: false, clearSignal: innerCancellationSignal });
 
+    onAddedSegment = function (val : IAddedSegmentCallbackPayload) {
+      if (lastPlaybackObservation === null) {
+        return;
+      }
+      const { position, speed } = lastPlaybackObservation;
+      const timeRanges = val.buffered;
+      const bufferGap = getLeftSizeOfRange(timeRanges, position.last);
+      const { representation } = val.content;
+      const currentScore = scoreCalculator.getEstimate(representation);
+      const currentBitrate = representation.bitrate;
+      const observation = { bufferGap, currentBitrate, currentScore, speed };
+      bufferBasedChooser.onAddedSegment(observation);
+      updateEstimate();
+    };
+    innerCancellationSignal.register(() => {
+      onAddedSegment = noop;
+    });
+
     manualBitrate.onUpdate(updateEstimate, { clearSignal: innerCancellationSignal });
     minAutoBitrate.onUpdate(updateEstimate, { clearSignal: innerCancellationSignal });
     maxAutoBitrate.onUpdate(updateEstimate, { clearSignal: innerCancellationSignal });
     filters.limitWidth.onUpdate(updateEstimate, { clearSignal: innerCancellationSignal });
     filters.limitWidth.onUpdate(updateEstimate, { clearSignal: innerCancellationSignal });
-    addedSegmentRef.onUpdate(updateEstimate, { clearSignal: innerCancellationSignal });
 
     return innerEstimateRef;
 
