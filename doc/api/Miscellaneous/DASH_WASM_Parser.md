@@ -113,10 +113,7 @@ You can find it at any of the following places:
   the files linked to the RxPlayer's version you're using), as
   `mpd-parser.wasm`.
 
-- It is also available as `dist/mpd-parser.wasm` from the root directory of
-  the project.
-
-  This file is also published on npm, which mean they might already be
+- This file is also published on npm, which mean they might already be
   loaded in your project, for example in the node_modules directory (most
   probably in `node_modules/rx-player/dist/mpd-parser.wasm` depending on
   your project).
