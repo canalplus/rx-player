@@ -86,6 +86,14 @@ export default class BufferBasedChooser {
   private _bitrates : number[];
 
   /**
+   * Current last best Representation's bitrate estimate made by the
+   * `BufferBasedChooser` or `undefined` if it has no such guess for now.
+   *
+   * Might be updated each time `onAddedSegment` is called.
+   */
+  private _currentEstimate: number | undefined;
+
+  /**
    * Laast timestamp, in terms of `performance.now`, at which the current
    * quality was seen as too high by this algorithm.
    * Begins at `undefined`.
@@ -121,14 +129,15 @@ export default class BufferBasedChooser {
    * @param {Object} playbackObservation
    * @returns {number|undefined}
    */
-  public getEstimate(
+  public onAddedSegment(
     playbackObservation : IBufferBasedChooserPlaybackObservation
-  ) : number | undefined {
+  ) : void {
     const bufferLevels = this._levelsMap;
     const bitrates = this._bitrates;
     const { bufferGap, currentBitrate, currentScore, speed } = playbackObservation;
     if (currentBitrate == null) {
-      return bitrates[0];
+      this._currentEstimate = bitrates[0];
+      return ;
     }
 
     let currentBitrateIndex = -1;
@@ -144,7 +153,8 @@ export default class BufferBasedChooser {
 
     if (currentBitrateIndex < 0 || bitrates.length !== bufferLevels.length) {
       log.error("ABR: Current Bitrate not found in the calculated levels");
-      return bitrates[0];
+      this._currentEstimate = bitrates[0];
+      return ;
     }
 
     let scaledScore : number|undefined;
@@ -184,10 +194,12 @@ export default class BufferBasedChooser {
       const baseIndex = arrayFindIndex(bitrates, (b) => b === currentBitrate);
       for (let i = baseIndex - 1; i >= 0; i--) {
         if (actualBufferGap >= bufferLevels[i]) {
-          return bitrates[i];
+          this._currentEstimate =  bitrates[i];
+          return;
         }
       }
-      return bitrates[0];
+      this._currentEstimate = bitrates[0];
+      return ;
     }
 
     if (
@@ -198,7 +210,8 @@ export default class BufferBasedChooser {
       scaledScore === undefined || scaledScore < 1.15 ||
       currentScore?.confidenceLevel !== ScoreConfidenceLevel.HIGH
     ) {
-      return currentBitrate;
+      this._currentEstimate = currentBitrate;
+      return ;
     }
 
     const currentBufferLevel = bufferLevels[currentBitrateIndex];
@@ -213,10 +226,24 @@ export default class BufferBasedChooser {
       const nextBufferLevel = bufferLevels[nextIndex];
       if (bufferGap >= nextBufferLevel) {
         log.debug("ABR: Raising quality in BufferBasedChooser", bitrates[nextIndex]);
-        return bitrates[nextIndex];
+        this._currentEstimate = bitrates[nextIndex];
+        return ;
       }
     }
-    return currentBitrate;
+    this._currentEstimate = currentBitrate;
+    return ;
+  }
+
+  /**
+   * Returns the last best Representation's bitrate estimate made by the
+   * `BufferBasedChooser` or `undefined` if it has no such guess for now.
+   *
+   * Might be updated after `onAddedSegment` is called.
+   *
+   * @returns {number|undefined}
+   */
+  public getLastEstimate(): number | undefined {
+    return this._currentEstimate;
   }
 }
 

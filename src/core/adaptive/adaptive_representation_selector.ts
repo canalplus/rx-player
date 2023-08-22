@@ -22,7 +22,6 @@ import Manifest, {
   Period,
   Representation,
 } from "../../manifest";
-import noop from "../../utils/noop";
 import { getLeftSizeOfRange } from "../../utils/ranges";
 import createSharedReference, {
   IReadOnlySharedReference,
@@ -202,13 +201,24 @@ function getEstimateReference(
   const networkAnalyzer = new NetworkAnalyzer(initialBitrate ?? 0, lowLatencyMode);
   const requestsStore = new PendingRequestsStore();
 
-  let onAddedSegment : (val : IAddedSegmentCallbackPayload) => void = noop;
+  /**
+   * Value updated each time a new segment is pushed, with the information on the
+   * new pushed segment.
+   * Set to `null` initially.
+   */
+  const addedSegmentRef = createSharedReference<IAddedSegmentCallbackPayload | null>(
+    null,
+    stopAllEstimates
+  );
+
   const callbacks : IRepresentationEstimatorCallbacks = {
     metrics: onMetric,
     requestBegin: onRequestBegin,
     requestProgress: onRequestProgress,
     requestEnd: onRequestEnd,
-    addedSegment(val) { onAddedSegment(val); },
+    addedSegment(val) {
+      addedSegmentRef.setValue(val);
+    },
   };
 
   /**
@@ -220,19 +230,14 @@ function getEstimateReference(
   currentEstimatesCanceller.linkToSignal(stopAllEstimates);
 
   // Create `ISharedReference` on which estimates will be emitted.
-  const estimateRef = createEstimateReference(manualBitrate.getValue(),
-                                              representationsRef.getValue(),
+  const estimateRef = createEstimateReference(representationsRef.getValue(),
                                               currentEstimatesCanceller.signal);
-
-  manualBitrate.onUpdate(restartEstimatesProductionFromCurrentConditions,
-                         { clearSignal: stopAllEstimates });
   representationsRef.onUpdate(restartEstimatesProductionFromCurrentConditions,
                               { clearSignal: stopAllEstimates });
 
   return { estimates: estimateRef, callbacks };
 
   function createEstimateReference(
-    manualBitrateVal : number,
     representations : Representation[],
     innerCancellationSignal : CancellationSignal
   ) : ISharedReference<IABREstimate> {
@@ -246,21 +251,6 @@ function getEstimateReference(
         urgent: true,
       });
     }
-    if (manualBitrateVal >= 0) {
-      // A manual bitrate has been set. Just choose Representation according to it.
-      const manualRepresentation = selectOptimalRepresentation(representations,
-                                                               manualBitrateVal,
-                                                               0,
-                                                               Infinity);
-      return createSharedReference({
-        representation: manualRepresentation,
-        bitrate: undefined, // Bitrate estimation is deactivated here
-        knownStableBitrate: undefined,
-        manual: true,
-        urgent: true, // a manual bitrate switch should happen immediately
-      });
-    }
-
     if (representations.length === 1) {
       // There's only a single Representation. Just choose it.
       return createSharedReference({ bitrate: undefined,
@@ -270,22 +260,35 @@ function getEstimateReference(
                                      knownStableBitrate: undefined });
     }
 
-    /** If true, Representation estimates based on the buffer health might be used. */
-    let allowBufferBasedEstimates = false;
-
-    /**
-     * Current optimal Representation's bandwidth choosen by a buffer-based
-     * adaptive algorithm.
-     */
-    let currentBufferBasedEstimate : number | undefined;
-    const bitrates = representations.map(r => r.bitrate);
-
     /**
      * Module calculating the optimal Representation based on the current
      * buffer's health (i.e. whether enough data is buffered, history of
      * buffer size etc.).
      */
-    const bufferBasedChooser = new BufferBasedChooser(bitrates);
+    const bufferBasedChooser = new BufferBasedChooser(
+      representations.map(r => r.bitrate)
+    );
+
+
+    // get initial observation for initial estimate
+    let lastPlaybackObservation = playbackObserver.getReference().getValue();
+
+    addedSegmentRef.onUpdate((val: IAddedSegmentCallbackPayload | null) => {
+      if (lastPlaybackObservation === null || val === null) {
+        return;
+      }
+      const { position, speed } = lastPlaybackObservation;
+      const timeRanges = val.buffered;
+      const bufferGap = getLeftSizeOfRange(timeRanges, position.last);
+      const { representation } = val.content;
+      const currentScore = scoreCalculator.getEstimate(representation);
+      const currentBitrate = representation.bitrate;
+      const observation = { bufferGap, currentBitrate, currentScore, speed };
+      bufferBasedChooser.onAddedSegment(observation);
+    }, { clearSignal: innerCancellationSignal });
+
+    /** If true, Representation estimates based on the buffer health might be used. */
+    let allowBufferBasedEstimates = false;
 
     /** Store the previous estimate made here. */
     const prevEstimate = new LastEstimateStorage();
@@ -297,9 +300,6 @@ function getEstimateReference(
      */
     const guessBasedChooser = new GuessBasedChooser(scoreCalculator, prevEstimate);
 
-    // get initial observation for initial estimate
-    let lastPlaybackObservation = playbackObserver.getReference().getValue();
-
     /** Reference through which estimates are emitted. */
     const innerEstimateRef = createSharedReference<IABREstimate>(getCurrentEstimate());
 
@@ -309,28 +309,12 @@ function getEstimateReference(
       updateEstimate();
     }, { includeLastObservation: false, clearSignal: innerCancellationSignal });
 
-    onAddedSegment = function (val : IAddedSegmentCallbackPayload) {
-      if (lastPlaybackObservation === null) {
-        return;
-      }
-      const { position, speed } = lastPlaybackObservation;
-      const timeRanges = val.buffered;
-      const bufferGap = getLeftSizeOfRange(timeRanges, position.last);
-      const { representation } = val.content;
-      const currentScore = scoreCalculator.getEstimate(representation);
-      const currentBitrate = representation.bitrate;
-      const observation = { bufferGap, currentBitrate, currentScore, speed };
-      currentBufferBasedEstimate = bufferBasedChooser.getEstimate(observation);
-      updateEstimate();
-    };
-    innerCancellationSignal.register(() => {
-      onAddedSegment = noop;
-    });
-
+    manualBitrate.onUpdate(updateEstimate, { clearSignal: innerCancellationSignal });
     minAutoBitrate.onUpdate(updateEstimate, { clearSignal: innerCancellationSignal });
     maxAutoBitrate.onUpdate(updateEstimate, { clearSignal: innerCancellationSignal });
     filters.limitWidth.onUpdate(updateEstimate, { clearSignal: innerCancellationSignal });
     filters.limitWidth.onUpdate(updateEstimate, { clearSignal: innerCancellationSignal });
+    addedSegmentRef.onUpdate(updateEstimate, { clearSignal: innerCancellationSignal });
 
     return innerEstimateRef;
 
@@ -339,7 +323,23 @@ function getEstimateReference(
     }
 
     /** Returns the actual estimate based on all methods and algorithm available. */
-    function getCurrentEstimate() {
+    function getCurrentEstimate(): IABREstimate {
+      const manualBitrateVal = manualBitrate.getValue();
+      if (manualBitrateVal >= 0) {
+        // A manual bitrate has been set. Just choose Representation according to it.
+        const manualRepresentation = selectOptimalRepresentation(representations,
+                                                                 manualBitrateVal,
+                                                                 0,
+                                                                 Infinity);
+        return {
+          representation: manualRepresentation,
+          bitrate: undefined, // Bitrate estimation is deactivated here
+          knownStableBitrate: undefined,
+          manual: true,
+          urgent: true, // a manual bitrate switch should happen immediately
+        };
+      }
+
       const { bufferGap, position, maximumPosition } = lastPlaybackObservation;
       const widthLimit = filters.limitWidth.getValue();
       const bitrateThrottle = filters.throttleBitrate.getValue();
@@ -387,6 +387,12 @@ function getEstimateReference(
                                                                  bitrateChosen,
                                                                  minAutoBitrateVal,
                                                                  maxAutoBitrateVal);
+
+      /**
+       * Current optimal Representation's bandwidth choosen by a buffer-based
+       * adaptive algorithm.
+       */
+      const currentBufferBasedEstimate = bufferBasedChooser.getLastEstimate();
 
       let currentBestBitrate = chosenRepFromBandwidth.bitrate;
 
@@ -495,13 +501,11 @@ function getEstimateReference(
    * conditions (such as a manual bitrate and/or a new list of Representations).
    */
   function restartEstimatesProductionFromCurrentConditions() : void {
-    const manualBitrateVal = manualBitrate.getValue();
     const representations = representationsRef.getValue();
     currentEstimatesCanceller.cancel();
     currentEstimatesCanceller = new TaskCanceller();
     currentEstimatesCanceller.linkToSignal(stopAllEstimates);
     const newRef = createEstimateReference(
-      manualBitrateVal,
       representations,
       currentEstimatesCanceller.signal
     );
