@@ -33,42 +33,60 @@ describe("BufferBasedChooser", () => {
     jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
-    expect(new BufferBasedChooser([]).getEstimate({ bufferGap: 0, speed: 1 }))
+
+    let bbc = new BufferBasedChooser([]);
+    bbc.onAddedSegment({ bufferGap: 0, speed: 1 });
+    expect(bbc.getLastEstimate())
       .toEqual(undefined);
-    expect(new BufferBasedChooser([1, 2, 3]).getEstimate({
-      bufferGap: 0,
-      speed: 1,
-    })).toEqual(1);
-    expect(new BufferBasedChooser([10, 20]).getEstimate({
+
+    bbc = new BufferBasedChooser([1, 2, 3]);
+    bbc.onAddedSegment({ bufferGap: 0, speed: 1 });
+    expect(bbc.getLastEstimate()).toEqual(1);
+
+    bbc = new BufferBasedChooser([10, 20]);
+    bbc.onAddedSegment({
       bufferGap: 0,
       speed: 1,
       currentBitrate: undefined,
       currentScore: undefined,
-    })).toEqual(10);
-    expect(new BufferBasedChooser([1, 2, 3]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(10);
+
+    bbc = new BufferBasedChooser([1, 2, 3]);
+    bbc.onAddedSegment({
       bufferGap: 0,
       speed: 1,
       currentBitrate: undefined,
       currentScore: { score: 4, confidenceLevel: ScoreConfidenceLevel.LOW },
-    })).toEqual(1);
-    expect(new BufferBasedChooser([1, 2, 3]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(1);
+
+    bbc = new BufferBasedChooser([1, 2, 3]);
+    bbc.onAddedSegment({
       bufferGap: 0,
       speed: 1,
       currentBitrate: undefined,
       currentScore: { score: 4, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(1);
-    expect(new BufferBasedChooser([1, 2, 3]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(1);
+
+    bbc = new BufferBasedChooser([1, 2, 3]);
+    bbc.onAddedSegment({
       bufferGap: 0,
       speed: 1,
       currentBitrate: undefined,
       currentScore: { score: 1, confidenceLevel: ScoreConfidenceLevel.LOW },
-    })).toEqual(1);
-    expect(new BufferBasedChooser([1, 2, 3]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(1);
+
+    bbc = new BufferBasedChooser([1, 2, 3]);
+    bbc.onAddedSegment({
       bufferGap: 0,
       speed: 1,
       currentBitrate: undefined,
       currentScore: { score: 1, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(1);
+    });
+    expect(bbc.getLastEstimate()).toEqual(1);
   });
 
   /* eslint-disable max-len */
@@ -79,12 +97,14 @@ describe("BufferBasedChooser", () => {
                                        default: logger }));
     const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
 
-    expect(new BufferBasedChooser([10, 20]).getEstimate({
+    const bbc = new BufferBasedChooser([10, 20]);
+    bbc.onAddedSegment({
       bufferGap: 0,
       speed: 1,
       currentBitrate: 30,
       currentScore: undefined,
-    })).toEqual(10);
+    });
+    expect(bbc.getLastEstimate()).toEqual(10);
     expect(logger.error).toHaveBeenCalledTimes(1);
     expect(logger.error)
       .toHaveBeenCalledWith("ABR: Current Bitrate not found in the calculated levels");
@@ -97,42 +117,60 @@ describe("BufferBasedChooser", () => {
     jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+
+    let bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 16,
       speed: 1,
       currentBitrate: 10,
       currentScore: { score: 1.15, confidenceLevel: ScoreConfidenceLevel.LOW },
-    })).toEqual(10);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(10);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 30,
       speed: 1,
       currentBitrate: 20,
       currentScore: { score: 1.15, confidenceLevel: ScoreConfidenceLevel.LOW },
-    })).toEqual(20);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 30,
       speed: 1,
       currentBitrate: 20,
       currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.LOW },
-    })).toEqual(20);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 30,
       speed: 2,
       currentBitrate: 20,
       currentScore: { score: 2.30, confidenceLevel: ScoreConfidenceLevel.LOW },
-    })).toEqual(20);
-    expect(new BufferBasedChooser([10, 20, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
+
+    bbc = new BufferBasedChooser([10, 20, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 30,
       speed: 2,
       currentBitrate: 20,
       currentScore: { score: 2.30, confidenceLevel: ScoreConfidenceLevel.LOW },
-    })).toEqual(20);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 30,
       speed: 0, // 0 is a special case
       currentBitrate: 20,
       currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.LOW },
-    })).toEqual(20);
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
   });
 
   /* eslint-disable max-len */
@@ -142,42 +180,60 @@ describe("BufferBasedChooser", () => {
     jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+
+    let bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 16,
       speed: 1,
       currentBitrate: 10,
       currentScore: { score: 1.15, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(20);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 30,
       speed: 1,
       currentBitrate: 20,
       currentScore: { score: 1.15, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(40);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(40);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 30,
       speed: 1,
       currentBitrate: 20,
       currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(40);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(40);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 30,
       speed: 2,
       currentBitrate: 20,
       currentScore: { score: 2.30, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(40);
-    expect(new BufferBasedChooser([10, 20, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(40);
+
+    bbc = new BufferBasedChooser([10, 20, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 30,
       speed: 2,
       currentBitrate: 20,
       currentScore: { score: 2.30, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(40);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(40);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 30,
       speed: 0, // 0 is a special case
       currentBitrate: 20,
       currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(40);
+    });
+    expect(bbc.getLastEstimate()).toEqual(40);
   });
 
   /* eslint-disable max-len */
@@ -187,36 +243,51 @@ describe("BufferBasedChooser", () => {
     jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+
+    let bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 6,
       speed: 1,
       currentBitrate: 10,
       currentScore: { score: 1.15, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(10);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(10);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 13,
       speed: 1,
       currentBitrate: 20,
       currentScore: { score: 1.15, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(20);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 13,
       speed: 1,
       currentBitrate: 20,
       currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(20);
-    expect(new BufferBasedChooser([10, 20, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
+
+    bbc = new BufferBasedChooser([10, 20, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 13,
       speed: 1,
       currentBitrate: 20,
       currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(20);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 13,
       speed: 2,
       currentBitrate: 20,
       currentScore: { score: 2.30, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(20);
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
   });
 
   /* eslint-disable max-len */
@@ -227,18 +298,24 @@ describe("BufferBasedChooser", () => {
                                        default: logger }));
     const BufferBasedChooser = jest.requireActual("../buffer_based_chooser")
       .default;
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+
+    let bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 100000000000,
       speed: 1,
       currentBitrate: 40,
       currentScore: { score: 1000000, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(40);
-    expect(new BufferBasedChooser([10, 20, 40, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(40);
+
+    bbc = new BufferBasedChooser([10, 20, 40, 40]);
+    bbc.onAddedSegment({
       bufferGap: 100000000000,
       speed: 1,
       currentBitrate: 40,
       currentScore: { score: 1000000, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(40);
+    });
+    expect(bbc.getLastEstimate()).toEqual(40);
   });
 
   /* eslint-disable max-len */
@@ -248,36 +325,51 @@ describe("BufferBasedChooser", () => {
     jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+
+    let bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 15,
       speed: 2,
       currentBitrate: 10,
       currentScore: { score: 2, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(10);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(10);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 22,
       speed: 2,
       currentBitrate: 20,
       currentScore: { score: 2, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(20);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 22,
       speed: 100,
       currentBitrate: 20,
       currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(20);
-    expect(new BufferBasedChooser([10, 20, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
+
+    bbc = new BufferBasedChooser([10, 20, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 22,
       speed: 100,
       currentBitrate: 20,
       currentScore: { score: 100, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(20);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 22,
       speed: 3,
       currentBitrate: 20,
       currentScore: { score: 3, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(20);
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
   });
 
   /* eslint-disable max-len */
@@ -287,36 +379,51 @@ describe("BufferBasedChooser", () => {
     jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+
+    let bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 15,
       speed: 2,
       currentBitrate: 10,
       currentScore: { score: 1.9, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(10);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(10);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 22,
       speed: 2,
       currentBitrate: 20,
       currentScore: { score: 1.9, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(10);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(10);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 22,
       speed: 100,
       currentBitrate: 20,
       currentScore: { score: 99, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(10);
-    expect(new BufferBasedChooser([10, 20, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(10);
+
+    bbc = new BufferBasedChooser([10, 20, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 22,
       speed: 100,
       currentBitrate: 20,
       currentScore: { score: 99, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(10);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(10);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 22,
       speed: 3,
       currentBitrate: 20,
       currentScore: { score: 2.5, confidenceLevel: ScoreConfidenceLevel.HIGH },
-    })).toEqual(10);
+    });
+    expect(bbc.getLastEstimate()).toEqual(10);
   });
 
   /* eslint-disable max-len */
@@ -326,42 +433,60 @@ describe("BufferBasedChooser", () => {
     jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+
+    let bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 15,
       speed: 2,
       currentBitrate: 10,
       currentScore: { score: 1.9, confidenceLevel: ScoreConfidenceLevel.LOW },
-    })).toEqual(10);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(10);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 22,
       speed: 2,
       currentBitrate: 20,
       currentScore: undefined,
-    })).toEqual(20);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 22,
       speed: 2,
       currentBitrate: 20,
       currentScore: { score: 1.9, confidenceLevel: ScoreConfidenceLevel.LOW },
-    })).toEqual(20);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 22,
       speed: 100,
       currentBitrate: 20,
       currentScore: { score: 99, confidenceLevel: ScoreConfidenceLevel.LOW },
-    })).toEqual(20);
-    expect(new BufferBasedChooser([10, 20, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
+
+    bbc = new BufferBasedChooser([10, 20, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 22,
       speed: 100,
       currentBitrate: 20,
       currentScore: { score: 99, confidenceLevel: ScoreConfidenceLevel.LOW },
-    })).toEqual(20);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 22,
       speed: 3,
       currentBitrate: 20,
       currentScore: { score: 2.5, confidenceLevel: ScoreConfidenceLevel.LOW },
-    })).toEqual(20);
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
   });
 
   /* eslint-disable max-len */
@@ -371,35 +496,53 @@ describe("BufferBasedChooser", () => {
     jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+
+    let bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 15,
       speed: 1,
       currentBitrate: 10,
-    })).toEqual(10);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(10);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 20,
       speed: 1,
       currentBitrate: 20,
-    })).toEqual(20);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 20,
       speed: 1,
       currentBitrate: 20,
-    })).toEqual(20);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 20,
       speed: 2,
       currentBitrate: 20,
-    })).toEqual(20);
-    expect(new BufferBasedChooser([10, 20, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
+
+    bbc = new BufferBasedChooser([10, 20, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 20,
       speed: 2,
       currentBitrate: 20,
-    })).toEqual(20);
-    expect(new BufferBasedChooser([10, 20, 40]).getEstimate({
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
+
+    bbc = new BufferBasedChooser([10, 20, 40]);
+    bbc.onAddedSegment({
       bufferGap: 20,
       speed: 0, // 0 is a special case
       currentBitrate: 20,
-    })).toEqual(20);
+    });
+    expect(bbc.getLastEstimate()).toEqual(20);
   });
 });
