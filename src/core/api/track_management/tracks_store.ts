@@ -119,10 +119,12 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * @returns {Array.<Object>}
    */
   public getAvailablePeriods() : IPeriod[] {
-    // Note: We voluntarly do not include any Period from `_cachedPeriodInfo` here;
-    // because we do not want to allow the user switching tracks for older
-    // Periods.
-    return this._storedPeriodInfo.map(p => toExposedPeriod(p.period));
+    return this._storedPeriodInfo.reduce((acc: IPeriod[], p) => {
+      if (p.isPeriodAdvertised) {
+        acc.push(toExposedPeriod(p.period));
+      }
+      return acc;
+    }, []);
   }
 
   /**
@@ -293,17 +295,6 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       this._storedPeriodInfo.push(...periodsToAdd);
       addedPeriods.push(...periodsToAdd);
     }
-
-    const periodsAdded = addedPeriods.reduce((acc : IPeriod[], p) => {
-      if (!p.isRemoved) {
-        acc.push({ id: p.period.id, start: p.period.start, end: p.period.end });
-      }
-      return acc;
-    }, []);
-
-    if (periodsAdded.length > 0) {
-      this.trigger("newAvailablePeriods", periodsAdded);
-    }
   }
 
   /**
@@ -326,10 +317,30 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   ) : void {
     let periodObj = getPeriodItem(this._storedPeriodInfo, period.id);
     if (periodObj === undefined) { // The Period has not yet been added.
-      periodObj = this._addPeriod(period);
+      periodObj = generatePeriodInfo(period,
+                                     false,
+                                     this._isTrickModeTrackEnabled,
+                                     this._defaultAudioTrackSwitchingMode);
+      let found = false;
+      for (let i = 0; i < this._storedPeriodInfo.length; i++) {
+        if (this._storedPeriodInfo[i].period.start > period.start) {
+          this._storedPeriodInfo.splice(i, 0, periodObj);
+          found = true;
+        }
+      }
+      if (!found) {
+        this._storedPeriodInfo.push(periodObj);
+      }
+    }
+
+    if (!periodObj.isPeriodAdvertised) {
+      periodObj.isPeriodAdvertised = true;
       this.trigger("newAvailablePeriods", [{ id: period.id,
                                              start: period.start,
                                              end: period.end }]);
+      if (this._isDisposed) {
+        return;
+      }
     }
 
     if (periodObj[bufferType].dispatcher !== null) {
@@ -961,25 +972,6 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     }
   }
 
-  /**
-   * @param {Period} period
-   * @returns {Object}
-   */
-  private _addPeriod(period : Period) : ITSPeriodObject {
-    const periodObj = generatePeriodInfo(period,
-                                         false,
-                                         this._isTrickModeTrackEnabled,
-                                         this._defaultAudioTrackSwitchingMode);
-    for (let i = 0; i < this._storedPeriodInfo.length; i++) {
-      if (this._storedPeriodInfo[i].period.start > period.start) {
-        this._storedPeriodInfo.splice(i, 0, periodObj);
-        return periodObj;
-      }
-    }
-    this._storedPeriodInfo.push(periodObj);
-    return periodObj;
-  }
-
   private _resetVideoTrackChoices(reason : "trickmode-enabled" | "trickmode-disabled") {
     for (let i = 0; i < this._storedPeriodInfo.length; i++) {
       const periodObj = this._storedPeriodInfo[i];
@@ -1181,6 +1173,7 @@ function generatePeriodInfo(
   }
   return { period,
            inManifest,
+           isPeriodAdvertised: false,
            isRemoved: false,
            audio: { storedSettings: audioSettings,
                     dispatcher: null },
@@ -1206,6 +1199,11 @@ export interface ITSPeriodObject {
    * because some audio/video/text buffer still contains data of the given type.
    */
   inManifest : boolean;
+  /**
+   * Set to `true` once a `newAvailablePeriods` event has been sent for this
+   * particular Period.
+   */
+  isPeriodAdvertised : boolean;
   /**
    * Information on the selected audio track and Representations for this Period.
    */
