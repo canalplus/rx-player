@@ -55,7 +55,7 @@ function isFairplayKeyType(keyType: string): boolean {
  */
 function setWebKitMediaKeys(
   videoElement: HTMLMediaElement,
-  mediaKeys: IWebKitMediaKeys|null
+  mediaKeys: unknown
 ): Promise<unknown> {
   const elt : ICompatHTMLMediaElement = videoElement;
   return wrapInPromise(() => {

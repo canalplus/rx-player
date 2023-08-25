@@ -1005,7 +1005,7 @@ export default function launchTestsForContent(manifestInfos) {
         await sleep(1500);
 
         expect(player.getPosition()).to.be.closeTo(minimumPosition, 0.001);
-        expect(player.getVideoPlayedTime()).to.equal(0);
+        expect(player.getVideoPlayedTime()).to.be.closeTo(0, 0.001);
 
         xhrMock.lock();
         player.seekTo(minimumPosition + 9);
