@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import HTMLTextSegmentBuffer from "../../core/segment_buffers/implementations/text/html";
 import vttParser from "../../parsers/texttracks/webvtt/html";
+import HTMLTextDisplayer from "../../text_displayer/html";
 import { IFeaturesObject } from "../types";
 
 /**
@@ -24,7 +24,7 @@ import { IFeaturesObject } from "../types";
  */
 function addHTMLVTTFeature(features : IFeaturesObject) : void {
   features.htmlTextTracksParsers.vtt = vttParser;
-  features.htmlTextTracksBuffer = HTMLTextSegmentBuffer;
+  features.htmlTextDisplayer = HTMLTextDisplayer;
 }
 
 export { addHTMLVTTFeature as HTML_VTT_PARSER };

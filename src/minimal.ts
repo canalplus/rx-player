@@ -23,7 +23,11 @@
 
 import isDebugModeEnabled from "./compat/is_debug_mode_enabled";
 import Player from "./core/api";
+import features from "./features";
 import logger from "./log";
+import MainCodecSupportProber from "./mse/main_codec_support_prober";
+
+features.codecSupportProber = MainCodecSupportProber;
 
 if (isDebugModeEnabled()) {
   logger.setLevel("DEBUG");
@@ -31,4 +35,7 @@ if (isDebugModeEnabled()) {
   logger.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL);
 }
 
+/**
+ * Minimal Player which starts with no feature.
+ */
 export default Player;

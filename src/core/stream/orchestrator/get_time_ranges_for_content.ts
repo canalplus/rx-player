@@ -16,9 +16,9 @@
 
 import log from "../../../log";
 import {
-  Adaptation,
-  Period,
-  Representation,
+  IAdaptationMetadata,
+  IPeriodMetadata,
+  IRepresentationMetadata,
 } from "../../../manifest";
 import { IRange } from "../../../utils/ranges";
 import { SegmentBuffer } from "../../segment_buffers";
@@ -32,16 +32,15 @@ import { SegmentBuffer } from "../../segment_buffers";
  */
 export default function getTimeRangesForContent(
   segmentBuffer : SegmentBuffer,
-  contents : Array<{ adaptation : Adaptation;
-                     period : Period;
-                     representation : Representation; }>
+  contents : Array<{ adaptation : IAdaptationMetadata;
+                     period : IPeriodMetadata;
+                     representation : IRepresentationMetadata; }>
 ) : IRange[] {
   if (contents.length === 0) {
     return [];
   }
-  segmentBuffer.synchronizeInventory();
   const accumulator : IRange[] = [];
-  const inventory = segmentBuffer.getInventory();
+  const inventory = segmentBuffer.getLastKnownInventory();
 
   for (let i = 0; i < inventory.length; i++) {
     const chunk = inventory[i];

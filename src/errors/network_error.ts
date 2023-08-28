@@ -21,7 +21,9 @@ import {
   NetworkErrorTypes,
 } from "./error_codes";
 import errorMessage from "./error_message";
-import RequestError from "./request_error";
+import RequestError, {
+  ISerializedRequestError,
+} from "./request_error";
 
 /**
  * Error linked to network interactions (requests).
@@ -38,6 +40,7 @@ export default class NetworkError extends Error {
   public readonly status : number;
   public readonly errorType : INetworkErrorType;
   public fatal : boolean;
+  private _baseError : RequestError;
 
   /**
    * @param {string} code
@@ -54,6 +57,7 @@ export default class NetworkError extends Error {
     this.url = baseError.url;
     this.status = baseError.status;
     this.errorType = baseError.type;
+    this._baseError = baseError;
 
     this.code = code;
     this.message = errorMessage(this.code, baseError.message);
@@ -69,4 +73,23 @@ export default class NetworkError extends Error {
     return this.errorType === NetworkErrorTypes.ERROR_HTTP_CODE &&
            this.status === httpErrorCode;
   }
+
+  /**
+   * If that error has to be communicated through another thread, this method
+   * allows to obtain its main defining properties in an Object so the Error can
+   * be reconstructed in the other thread.
+   * @returns {Object}
+   */
+  public serialize(): ISerializedNetworkError {
+    return { name: this.name,
+             code: this.code,
+             baseError: this._baseError.serialize() };
+  }
+}
+
+/** Serializable object which allows to create a `NetworkError` later. */
+export interface ISerializedNetworkError {
+  name : "NetworkError";
+  code : INetworkErrorCode;
+  baseError : ISerializedRequestError;
 }

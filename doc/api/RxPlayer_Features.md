@@ -56,23 +56,23 @@ Here is the anotated exhaustive list (notes are at the bottom of the table):
 | Feature                     | Description of the feature                                |
 | --------------------------- | --------------------------------------------------------- |
 | `SMOOTH`                    | Enable Smooth streaming (HSS) playback                    |
-| `DASH` [1]                  | Enable DASH playback using a JavaScript-based MPD parser  |
+| `DASH` [1] [2]              | Enable DASH playback using a JavaScript-based MPD parser  |
 | `DIRECTFILE`                | Enable playback of "directfile" contents                  |
 | `EME`                       | Enable playback of encrypted contents                     |
-| `HTML_SRT_PARSER` [2]       | Parse SRT text tracks for the `"html"` `textTrackMode`    |
-| `HTML_VTT_PARSER` [2]       | Parse VTT text tracks for the `"html"` `textTrackMode`    |
-| `HTML_TTML_PARSER` [2]      | Parse TTML text tracks for the `"html"` `textTrackMode`   |
-| `HTML_SAMI_PARSER` [2]      | Parse SAMI text tracks for the `"html"` `textTrackMode`   |
-| `NATIVE_SRT_PARSER` [2]     | Parse SRT text tracks for the `"native"` `textTrackMode`  |
-| `NATIVE_VTT_PARSER` [2]     | Parse VTT text tracks for the `"native"` `textTrackMode`  |
-| `NATIVE_TTML_PARSER` [2]    | Parse TTML text tracks for the `"native"` `textTrackMode` |
-| `NATIVE_SAMI_PARSER` [2]    | Parse SAMI text tracks for the `"native"` `textTrackMode` |
+| `HTML_SRT_PARSER` [3]       | Parse SRT text tracks for the `"html"` `textTrackMode`    |
+| `HTML_VTT_PARSER` [3]       | Parse VTT text tracks for the `"html"` `textTrackMode`    |
+| `HTML_TTML_PARSER` [3]      | Parse TTML text tracks for the `"html"` `textTrackMode`   |
+| `HTML_SAMI_PARSER` [3]      | Parse SAMI text tracks for the `"html"` `textTrackMode`   |
+| `NATIVE_SRT_PARSER` [3]     | Parse SRT text tracks for the `"native"` `textTrackMode`  |
+| `NATIVE_VTT_PARSER` [3]     | Parse VTT text tracks for the `"native"` `textTrackMode`  |
+| `NATIVE_TTML_PARSER` [3]    | Parse TTML text tracks for the `"native"` `textTrackMode` |
+| `NATIVE_SAMI_PARSER` [3]    | Parse SAMI text tracks for the `"native"` `textTrackMode` |
 | `DEBUG_ELEMENT`             | Allows to use the `createDebugElement` RxPlayer method    |
-| `DASH_WASM` [1] [4]         | Enable DASH playback using a WebAssembly-based MPD parser |
-| `LOCAL_MANIFEST` [3]        | Enable playback of "local" contents                       |
-| `METAPLAYLIST` [3]          | Enable playback of "metaplaylist" contents                |
-| `NATIVE_TEXT_BUFFER` [5]    | (Deprecated) Base for the `"native"` `textTrackMode`.     |
-| `HTML_TEXT_BUFFER` [5]      | (Deprecated) Base for the `"html"` `textTrackMode`.       |
+| `DASH_WASM` [1] [2] [5]     | Enable DASH playback using a WebAssembly-based MPD parser |
+| `LOCAL_MANIFEST` [4]        | Enable playback of "local" contents                       |
+| `METAPLAYLIST` [4]          | Enable playback of "metaplaylist" contents                |
+| `NATIVE_TEXT_BUFFER` [6]    | (Deprecated) Base for the `"native"` `textTrackMode`.     |
+| `HTML_TEXT_BUFFER` [6]      | (Deprecated) Base for the `"html"` `textTrackMode`.       |
 
 ---
 
@@ -83,7 +83,12 @@ Here is the anotated exhaustive list (notes are at the bottom of the table):
 WebAssembly parser (provided by `DASH_WASM`) and fallback on the JavaScript
 parser (provided by `DASH`) when it cannot do so.
 
-**[2]**: The `"native"` and `"html"` `textTrackMode` are options set when
+**[2]**: Both the `DASH` and `DASH_WASM` features only concern DASH contents
+loaded in main thread. If you just want to load DASH content in [`"multithread"`
+mode](../api/Miscellaneous/MultiThreading.md), you don't need any of those
+features, but the `MULTI_THREAD` feature instead.
+
+**[3]**: The `"native"` and `"html"` `textTrackMode` are options set when
 loading a new content through the [`loadVideo` method](../api/Loading_a_Content.md).
 To help you choose between those two:
   - The `"native"` mode relies on HTMLTrackElement (`<track>` tags) to display
@@ -98,16 +103,18 @@ To help you choose between those two:
     page](../api/Loading_a_Content.md).
 
 
-**[3]**: Those features are experimental. They should be imported from
+**[4]**: Those features are experimental. They should be imported from
 `rx-player/experimental/features`.
 
-**[4]**: The `DASH_WASM` feature has its own setup, detailed in the
+**[5]**: The `DASH_WASM` feature has its own setup, detailed in the
 [corresponding documentation page](../api/Miscellaneous/DASH_WASM_Parser.md).
 
-**[5]**: The `NATIVE_TEXT_BUFFER`, `HTML_TEXT_BUFFER` and `IMAGE_BUFFER`
-features are deprecated.
-They are already implicitly imported when parsing any of the corresponding text
-or image parsers.
+**[6]**: Both the `NATIVE_TEXT_BUFFER` and `HTML_TEXT_BUFFER` features are
+deprecated. They are already implicitly imported when parsing any of the
+corresponding text parsers.
+
+**[7]**: The `MULTI_THREAD` feature has its own setup, detailed in the
+[corresponding documentation page](../api/Miscellaneous/MultiThreading.md).
 
 ---
 

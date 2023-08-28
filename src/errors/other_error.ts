@@ -30,6 +30,7 @@ export default class OtherError extends Error {
   public readonly message : string;
   public readonly code : IOtherErrorCode;
   public fatal : boolean;
+  private _originalMessage : string;
 
   /**
    * @param {string} code
@@ -46,5 +47,25 @@ export default class OtherError extends Error {
     this.code = code;
     this.message = errorMessage(this.code, reason);
     this.fatal = false;
+    this._originalMessage = reason;
   }
+
+  /**
+   * If that error has to be communicated through another thread, this method
+   * allows to obtain its main defining properties in an Object so the Error can
+   * be reconstructed in the other thread.
+   * @returns {Object}
+   */
+  public serialize(): ISerializedOtherError {
+    return { name: this.name,
+             code: this.code,
+             reason: this._originalMessage };
+  }
+}
+
+/** Serializable object which allows to create an `OtherError` later. */
+export interface ISerializedOtherError {
+  name : "OtherError";
+  code : IOtherErrorCode;
+  reason : string;
 }

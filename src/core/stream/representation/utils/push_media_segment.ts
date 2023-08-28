@@ -23,6 +23,7 @@ import Manifest, {
 } from "../../../../manifest";
 import { ISegmentParserParsedMediaChunk } from "../../../../transports";
 import objectAssign from "../../../../utils/object_assign";
+import { IReadOnlySharedReference } from "../../../../utils/reference";
 import { CancellationSignal } from "../../../../utils/task_canceller";
 import { IReadOnlyPlaybackObserver } from "../../../api";
 import { SegmentBuffer } from "../../../segment_buffers";
@@ -40,6 +41,7 @@ import appendSegmentToBuffer from "./append_segment_to_buffer";
  */
 export default async function pushMediaSegment<T>(
   { playbackObserver,
+    bufferGoal,
     content,
     initSegmentUniqueId,
     parsedSegment,
@@ -52,6 +54,7 @@ export default async function pushMediaSegment<T>(
                manifest : Manifest;
                period : Period;
                representation : Representation; };
+    bufferGoal : IReadOnlySharedReference<number>;
     initSegmentUniqueId : string | null;
     parsedSegment : ISegmentParserParsedMediaChunk<T>;
     segment : ISegment;
@@ -104,10 +107,10 @@ export default async function pushMediaSegment<T>(
                                         start: estimatedStart,
                                         end: estimatedEnd },
                                       content);
-  await appendSegmentToBuffer(playbackObserver,
-                              segmentBuffer,
-                              { data, inventoryInfos },
-                              cancelSignal);
-  const buffered = segmentBuffer.getBufferedRanges();
+  const buffered = await appendSegmentToBuffer(playbackObserver,
+                                               segmentBuffer,
+                                               { data, inventoryInfos },
+                                               bufferGoal,
+                                               cancelSignal);
   return { content, segment, buffered };
 }

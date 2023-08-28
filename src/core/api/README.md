@@ -1,5 +1,12 @@
 # The `API` ####################################################################
 
+| Consideration           | Status                    |
+|-------------------------|---------------------------|
+| Preferred import style  | No enforced import style  |
+| Multithread environment | Always run in main thread |
+
+## Overview ####################################################################
+
 The API is the front-facing part of the code.
 It will be the only layer used by applications integrating the RxPlayer library.
 

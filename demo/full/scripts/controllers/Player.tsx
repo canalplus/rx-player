@@ -48,6 +48,7 @@ function Player(): JSX.Element {
   );
   const [loadVideoOpts, setLoadVideoOpts] =
     useState<ILoadVideoSettings>(defaultOptionsValues.loadVideo);
+  const [relyOnWorker, setRelyOnWorker] = useState(false);
   const [hasUpdatedPlayerOptions, setHasUpdatedPlayerOptions] = useState(false);
   const displaySpinnerTimeoutRef = useRef<number|null>(null);
 
@@ -66,6 +67,13 @@ function Player(): JSX.Element {
       displaySpinnerTimeoutRef.current = null;
     }
   }, []);
+
+  useEffect(() => {
+    if (playerModule === null) {
+      return;
+    }
+    playerModule.actions.updateWorkerMode(relyOnWorker);
+  }, [relyOnWorker, playerModule]);
 
   // Bind events on player module creation and destroy old when it changes
   useEffect(() => {
@@ -191,11 +199,13 @@ function Player(): JSX.Element {
       if (created === undefined) {
         return;
       }
+      created.actions.updateWorkerMode(relyOnWorker);
       playerMod = created;
     }
     loadContent(playerMod, contentInfo, loadVideoOpts);
   }, [
     playerModule,
+    relyOnWorker,
     hasUpdatedPlayerOptions,
     createNewPlayerModule,
     loadVideoOpts,
@@ -270,6 +280,8 @@ function Player(): JSX.Element {
           updateDefaultVideoRepresentationsSwitchingMode={
             updateDefaultVideoRepresentationsSwitchingMode
           }
+          tryRelyOnWorker={relyOnWorker}
+          updateTryRelyOnWorker={setRelyOnWorker}
         />
         <div
           className="video-player-wrapper"

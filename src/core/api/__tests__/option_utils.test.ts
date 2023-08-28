@@ -232,15 +232,23 @@ describe("API - parseLoadVideoOptions", () => {
   });
 
   const defaultLoadVideoOptions = {
+    __priv_manifestUpdateUrl: undefined,
+    __priv_patchLastSegmentInSidx: undefined,
+    checkMediaSegmentIntegrity: undefined,
     defaultAudioTrackSwitchingMode: undefined,
     autoPlay: false,
     enableFastSwitching: true,
     initialManifest: undefined,
     keySystems: [],
     lowLatencyMode: false,
+    manifestLoader: undefined,
     minimumManifestUpdateInterval: 0,
+    mode: "auto",
     onCodecSwitch: "continue",
     requestConfig: {},
+    referenceDateTime: undefined,
+    representationFilter: undefined,
+    serverSyncInfos: undefined,
     startAt: undefined,
     textTrackElement: undefined,
     textTrackMode: "native",

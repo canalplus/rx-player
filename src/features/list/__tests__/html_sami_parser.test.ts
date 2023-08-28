@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line max-len
-import HTMLTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/html";
 import samiParser from "../../../parsers/texttracks/sami/html";
+import HTMLTextDisplayer from "../../../text_displayer/html";
 import { IFeaturesObject } from "../../types";
 import addHTMLsamiFeature from "../html_sami_parser";
 
@@ -26,8 +25,9 @@ describe("Features list - HTML sami Parser", () => {
     addHTMLsamiFeature(featureObject);
     expect(featureObject).toEqual({
       htmlTextTracksParsers: { sami: samiParser },
-      htmlTextTracksBuffer: HTMLTextSegmentBuffer,
+      htmlTextDisplayer: HTMLTextDisplayer,
     });
     expect(featureObject.htmlTextTracksParsers.sami).toBe(samiParser);
+    expect(featureObject.htmlTextDisplayer).toBe(HTMLTextDisplayer);
   });
 });

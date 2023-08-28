@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line max-len
-import HTMLTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/html";
 import vttParser from "../../../parsers/texttracks/webvtt/html";
+import HTMLTextDisplayer from "../../../text_displayer/html";
 import { IFeaturesObject } from "../../types";
 import addHTMLVTTFeature from "../html_vtt_parser";
 
@@ -26,7 +25,7 @@ describe("Features list - HTML VTT Parser", () => {
     addHTMLVTTFeature(featureObject);
     expect(featureObject).toEqual({
       htmlTextTracksParsers: { vtt: vttParser },
-      htmlTextTracksBuffer: HTMLTextSegmentBuffer,
+      htmlTextDisplayer: HTMLTextDisplayer,
     });
     expect(featureObject.htmlTextTracksParsers.vtt).toBe(vttParser);
   });

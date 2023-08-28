@@ -2,6 +2,7 @@ import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
 import { Representation } from "../../../manifest";
+import arrayIncludes from "../../../utils/array_includes";
 import assertUnreachable from "../../../utils/assert_unreachable";
 import cancellableSleep from "../../../utils/cancellable_sleep";
 import noop from "../../../utils/noop";
@@ -95,9 +96,16 @@ export default function AdaptationStream(
   /** Stores the last emitted bitrate. */
   let previouslyEmittedBitrate : number | undefined;
 
+  const initialRepIds = content.representations.getValue().representationIds;
+  const initialRepresentations = content.adaptation.representations.filter(
+    r => arrayIncludes(initialRepIds, r.id) &&
+    r.decipherable !== false &&
+    r.isSupported !== false
+  );
+
   /** Emit the list of Representation for the adaptive logic. */
   const representationsList = new SharedReference(
-    content.representations.getValue().representations,
+    initialRepresentations,
     adapStreamCanceller.signal);
 
   // Start-up Adaptive logic
@@ -145,7 +153,11 @@ export default function AdaptationStream(
     if (cancelCurrentStreams !== undefined) {
       cancelCurrentStreams.cancel();
     }
-    representationsList.setValueIfChanged(val.representations);
+    const newRepIds = content.representations.getValue().representationIds;
+    const newRepresentations = content.adaptation.representations.filter(
+      r => arrayIncludes(newRepIds, r.id)
+    );
+    representationsList.setValueIfChanged(newRepresentations);
     cancelCurrentStreams = new TaskCanceller();
     cancelCurrentStreams.linkToSignal(adapStreamCanceller.signal);
     onRepresentationsChoiceChange(val, cancelCurrentStreams.signal).catch((err) => {
@@ -209,7 +221,7 @@ export default function AdaptationStream(
       case "flush-buffer": // Clean + flush
       case "clean-buffer": // Just clean
         for (const range of switchStrat.value) {
-          await segmentBuffer.removeBuffer(range.start, range.end, fnCancelSignal);
+          await segmentBuffer.removeBuffer(range.start, range.end);
           if (fnCancelSignal.isCancelled()) {
             return;
           }
@@ -277,7 +289,7 @@ export default function AdaptationStream(
       }
     }, { clearSignal: repStreamTerminatingCanceller.signal, emitCurrentValue: true });
 
-    const repInfo = { type: adaptation.type, period, representation };
+    const repInfo = { type: adaptation.type, adaptation, period, representation };
     currentRepresentation.setValue(representation);
     if (adapStreamCanceller.isUsed()) {
       return ; // previous callback has stopped everything by side-effect
@@ -399,9 +411,9 @@ export default function AdaptationStream(
       for (const element of updates.updatedPeriods) {
         if (element.period.id === period.id) {
           for (const updated of element.result.updatedAdaptations) {
-            if (updated.adaptation.id === adaptation.id) {
+            if (updated.adaptation === adaptation.id) {
               for (const rep of updated.removedRepresentations) {
-                if (rep.id === representation.id) {
+                if (rep === representation.id) {
                   if (fnCancelSignal.isCancelled()) {
                     return;
                   }

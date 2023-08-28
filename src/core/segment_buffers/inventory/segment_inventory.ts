@@ -23,6 +23,7 @@ import {
   Period,
   Representation,
 } from "../../../manifest";
+import { IRange } from "../../../utils/ranges";
 import BufferedHistory, {
   IBufferedHistoryEntry,
 } from "./buffered_history";
@@ -195,22 +196,17 @@ export default class SegmentInventory {
 
   /**
    * Infer each segment's `bufferedStart` and `bufferedEnd` properties from the
-   * TimeRanges given.
+   * ranges given.
    *
-   * The TimeRanges object given should come from the media buffer linked to
-   * that SegmentInventory.
+   * The ranges object given should come from the media buffer linked to that
+   * SegmentInventory.
    *
    * /!\ A SegmentInventory should not be associated to multiple media buffers
-   * at a time, so each `synchronizeBuffered` call should be given a TimeRanges
-   * coming from the same buffer.
-   * @param {TimeRanges} buffered
-   * @param {boolean|undefined} [skipLog=false] - This method normally may
-   * trigger a voluminous debug log if debug logs are enabled.
-   * As this method might be called very often in some specific debugging
-   * situations, setting this value to `true` allows to prevent the call from
-   * triggering a log.
+   * at a time, so each `synchronizeBuffered` call should be given ranges coming
+   * from the same buffer.
+   * @param {Array.<Object>} ranges
    */
-  public synchronizeBuffered(buffered : TimeRanges, skipLog : boolean = false) : void {
+  public synchronizeBuffered(ranges : IRange[]) : void {
     const inventory = this._inventory;
     let inventoryIndex = 0; // Current index considered.
     let thisSegment = inventory[0]; // Current segmentInfos considered
@@ -218,24 +214,24 @@ export default class SegmentInventory {
     /** Type of buffer considered, used for logs */
     const bufferType : string | undefined = thisSegment?.infos.adaptation.type;
 
-    const rangesLength = buffered.length;
+    const rangesLength = ranges.length;
     for (let i = 0; i < rangesLength; i++) {
       if (thisSegment === undefined) { // we arrived at the end of our inventory
         return;
       }
 
-      // take the i'nth contiguous buffered TimeRange
-      const rangeStart = buffered.start(i);
-      const rangeEnd = buffered.end(i);
+      // take the i'nth contiguous buffered range
+      const rangeStart = ranges[i].start;
+      const rangeEnd = ranges[i].end;
       if (rangeEnd - rangeStart < MINIMUM_SEGMENT_SIZE) {
-        log.warn("SI: skipped TimeRange when synchronizing because it was too small",
+        log.warn("SI: skipped range when synchronizing because it was too small",
                  bufferType, rangeStart, rangeEnd);
         continue;
       }
 
       const indexBefore = inventoryIndex; // keep track of that number
 
-      // Find the first segment either within this TimeRange or completely past
+      // Find the first segment either within this range or completely past
       // it:
       // skip until first segment with at least `MINIMUM_SEGMENT_SIZE` past the
       // start of that range.
@@ -253,7 +249,7 @@ export default class SegmentInventory {
                                     null = null;
 
       // remove garbage-collected segments
-      // (Those not in that TimeRange nor in the previous one)
+      // (Those not in that range nor in the previous one)
       const numberOfSegmentToDelete = inventoryIndex - indexBefore;
       if (numberOfSegmentToDelete > 0) {
         const lastDeletedSegment = // last garbage-collected segment
@@ -302,8 +298,8 @@ export default class SegmentInventory {
 
         // Make contiguous until first segment outside that range
         let thisSegmentStart = thisSegment.bufferedStart ?? thisSegment.start;
-        let thisSegmentEnd = thisSegment.bufferedEnd ?? thisSegment.end;
-        const nextRangeStart = i < rangesLength - 1 ? buffered.start(i + 1) :
+        let thisSegmentEnd =  thisSegment.bufferedEnd ?? thisSegment.end;
+        const nextRangeStart = i < rangesLength - 1 ? ranges[i + 1].start :
                                                       undefined;
         while (thisSegment !== undefined &&
                (rangeEnd - thisSegmentStart) >= MINIMUM_SEGMENT_SIZE &&
@@ -353,7 +349,7 @@ export default class SegmentInventory {
         }
       }
     }
-    if (!skipLog && bufferType !== undefined && log.hasLevel("DEBUG")) {
+    if (bufferType !== undefined && log.hasLevel("DEBUG")) {
       log.debug(`SI: current ${bufferType} inventory timeline:\n` +
                 prettyPrintInventory(this._inventory));
     }
@@ -730,8 +726,7 @@ export default class SegmentInventory {
     content : { period: Period;
                 adaptation: Adaptation;
                 representation: Representation;
-                segment: ISegment; },
-    newBuffered : TimeRanges
+                segment: ISegment; }
   ) : void {
     if (content.segment.isInit) {
       return;
@@ -791,7 +786,6 @@ export default class SegmentInventory {
                content.segment.id,
                content.segment.time);
     } else {
-      this.synchronizeBuffered(newBuffered);
       for (const seg of resSegments) {
         if (seg.bufferedStart !== undefined && seg.bufferedEnd !== undefined) {
           if (seg.status !== ChunkStatus.Failed) {

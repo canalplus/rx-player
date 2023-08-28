@@ -32,6 +32,7 @@ import {
   IRepresentationFilter,
   ISegmentLoader,
   IServerSyncInfos,
+  IRxPlayerMode,
 } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
@@ -80,9 +81,10 @@ interface IParsedLoadVideoOptionsBase {
   checkMediaSegmentIntegrity? : boolean | undefined;
   manifestLoader?: IManifestLoader | undefined;
   referenceDateTime? : number | undefined;
-  representationFilter? : IRepresentationFilter | undefined;
+  representationFilter? : IRepresentationFilter | string | undefined;
   segmentLoader? : ISegmentLoader | undefined;
   serverSyncInfos? : IServerSyncInfos | undefined;
+  mode : IRxPlayerMode;
   __priv_manifestUpdateUrl? : string | undefined;
   __priv_patchLastSegmentInSidx? : boolean | undefined;
 }
@@ -272,6 +274,7 @@ function parseLoadVideoOptions(
   let transport : string;
   let keySystems : IKeySystemOption[];
   let textTrackMode : "native"|"html";
+  let mode : IRxPlayerMode;
   let textTrackElement : HTMLElement|undefined;
   let startAt : IParsedStartAtOption|undefined;
 
@@ -364,10 +367,6 @@ function parseLoadVideoOptions(
     textTrackMode = options.textTrackMode;
   }
 
-  const enableFastSwitching = isNullOrUndefined(options.enableFastSwitching) ?
-    DEFAULT_ENABLE_FAST_SWITCHING :
-    options.enableFastSwitching;
-
   if (textTrackMode === "html") {
     // TODO Better way to express that in TypeScript?
     if (isNullOrUndefined(options.textTrackElement)) {
@@ -382,6 +381,19 @@ function parseLoadVideoOptions(
     log.warn("API: You have set a textTrackElement without being in " +
              "an \"html\" textTrackMode. It will be ignored.");
   }
+
+  if (isNullOrUndefined(options.mode)) {
+    mode = "auto";
+  } else {
+    if (!arrayIncludes(["auto", "multithread", "main"], options.mode)) {
+      throw new Error("Invalid `mode` option.");
+    }
+    mode = options.mode;
+  }
+
+  const enableFastSwitching = isNullOrUndefined(options.enableFastSwitching) ?
+    DEFAULT_ENABLE_FAST_SWITCHING :
+    options.enableFastSwitching;
 
   if (!isNullOrUndefined(options.startAt)) {
     if ("wallClockTime" in options.startAt
@@ -425,10 +437,11 @@ function parseLoadVideoOptions(
            segmentLoader: options.segmentLoader,
            serverSyncInfos: options.serverSyncInfos,
            startAt,
-           textTrackElement,
+           textTrackElement: textTrackElement as HTMLElement,
            textTrackMode,
            transport,
-           url } as IParsedLoadVideoOptions;
+           mode,
+           url };
 }
 
 export {

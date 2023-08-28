@@ -25,12 +25,13 @@ import { IReadOnlyPlaybackObserver } from "../../../api";
 import SegmentBuffersStore, {
   ChunkStatus,
   IBufferedChunk,
-  IEndOfSegmentOperation,
+  ISignalCompleteSegmentOperation,
   SegmentBuffer,
   SegmentBufferOperation,
 } from "../../../segment_buffers";
 import {
   IBufferDiscontinuity,
+  IRepresentationStreamPlaybackObservation,
   IQueuedSegment,
 } from "../types";
 import checkForDiscontinuity from "./check_for_discontinuity";
@@ -92,19 +93,27 @@ export default function getBufferStatus(
              period : Period;
              representation : Representation; },
   initialWantedTime : number,
-  playbackObserver : IReadOnlyPlaybackObserver<unknown>,
+  playbackObserver : IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
   fastSwitchThreshold : number | undefined,
   bufferGoal : number,
   maxBufferSize : number,
   segmentBuffer : SegmentBuffer
 ) : IBufferStatus {
-  segmentBuffer.synchronizeInventory();
-
   const { representation } = content;
-  const askedStart = playbackObserver.getIsPaused() ||
-                     playbackObserver.getPlaybackRate() <= 0 ?
-    initialWantedTime - 0.1 :
-    initialWantedTime;
+  const isPaused =
+    playbackObserver.getIsPaused() ??
+    playbackObserver.getReference().getValue().paused.pending ??
+    playbackObserver.getReference().getValue().paused.last;
+  const playbackRate =
+    playbackObserver.getPlaybackRate() ??
+    playbackObserver.getReference().getValue().speed;
+  let askedStart = initialWantedTime;
+  if (isPaused === undefined ||
+      playbackRate === undefined ||
+      (isPaused || playbackRate <= 0))
+  {
+    askedStart -= 0.1;
+  }
   const neededRange = getRangeOfNeededSegments(content,
                                                askedStart,
                                                bufferGoal);
@@ -112,20 +121,25 @@ export default function getBufferStatus(
                                                                    neededRange.end);
 
   /**
-   * Every segment awaiting an "EndOfSegment" operation, which indicates that a
-   * completely-loaded segment is still being pushed to the SegmentBuffer.
+   * Every segment awaiting an "SignalSegmentComplete" operation, which
+   * indicates that a completely-loaded segment is still being pushed to the
+   * SegmentBuffer.
    */
   const segmentsBeingPushed = segmentBuffer.getPendingOperations()
-    .filter((operation) : operation is IEndOfSegmentOperation =>
-      operation.type === SegmentBufferOperation.EndOfSegment
+    .filter((operation) : operation is ISignalCompleteSegmentOperation =>
+      operation.type === SegmentBufferOperation.SignalSegmentComplete
     ).map(operation => operation.value);
 
   /** Data on every segments buffered around `neededRange`. */
   const bufferedSegments =
     getPlayableBufferedSegments({ start: Math.max(neededRange.start - 0.5, 0),
                                   end: neededRange.end + 0.5 },
-                                segmentBuffer.getInventory());
-  const currentPlaybackTime = playbackObserver.getCurrentTime();
+                                segmentBuffer.getLastKnownInventory());
+  let currentPlaybackTime = playbackObserver.getCurrentTime();
+  if (currentPlaybackTime === undefined) {
+    // We're in a WebWorker, just consider the last known position
+    currentPlaybackTime = playbackObserver.getReference().getValue().position.getWanted();
+  }
 
   /** Callback allowing to retrieve a segment's history in the buffer. */
   const getBufferedHistory = segmentBuffer.getSegmentHistory.bind(segmentBuffer);
@@ -303,7 +317,7 @@ function getPlayableBufferedSegments(
     const { representation } = eltInventory.infos;
     if (eltInventory.status === ChunkStatus.Complete &&
         representation.decipherable !== false &&
-        representation.isSupported)
+        representation.isSupported !== false)
     {
       const inventorySegment = eltInventory.infos.segment;
       const eltInventoryStart = inventorySegment.time /

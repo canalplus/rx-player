@@ -17,6 +17,10 @@
       "displayName": "getKeySystemConfiguration"
     },
     {
+      "path": "./getCurrentModeInformation.md",
+      "displayName": "getCurrentModeInformation"
+    },
+    {
       "path": "./createDebugElement.md",
       "displayName": "createDebugElement"
     },
