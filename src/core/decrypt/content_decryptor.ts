@@ -25,8 +25,9 @@ import {
   OtherError,
 } from "../../errors";
 import log from "../../log";
-import Manifest, {
-  Period,
+import {
+  IAdaptationMetadata,
+  IPeriodMetadata,
 } from "../../manifest";
 import {
   IKeySystemOption,
@@ -37,6 +38,7 @@ import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
 import EventEmitter from "../../utils/event_emitter";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import { objectValues } from "../../utils/object_values";
 import { bytesToHex } from "../../utils/string_parsing";
 import TaskCanceller from "../../utils/task_canceller";
 import attachMediaKeys from "./attach_media_keys";
@@ -385,8 +387,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
           if (initializationData.content === undefined) {
             log.warn("DRM: Unable to fallback from a non-decipherable quality.");
           } else {
-            blackListProtectionData(initializationData.content.manifest,
-                                    initializationData);
+            this.trigger("blackListProtectionData", initializationData);
           }
           return ;
         }
@@ -398,7 +399,11 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
               .reduce((acc, kid) => `${acc}, ${bytesToHex(kid)}`, "");
             log.debug("DRM: Blacklisting new key ids", hexKids);
           }
-          updateDecipherability(initializationData.content.manifest, [], keyIds, []);
+          this.trigger("keyIdsCompatibilityUpdate", {
+            whitelistedKeyIds: [],
+            blacklistedKeyIds: keyIds,
+            delistedKeyIds: [],
+          });
         }
         return ;
       }
@@ -429,10 +434,11 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
                 createdSess.keyStatuses.blacklisted.push(innerKid);
               }
             }
-            updateDecipherability(initializationData.content.manifest,
-                                  createdSess.keyStatuses.whitelisted,
-                                  createdSess.keyStatuses.blacklisted,
-                                  []);
+            this.trigger("keyIdsCompatibilityUpdate", {
+              whitelistedKeyIds: createdSess.keyStatuses.whitelisted,
+              blacklistedKeyIds: createdSess.keyStatuses.blacklisted,
+              delistedKeyIds: [],
+            });
             return;
           }
         }
@@ -523,10 +529,11 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
           }
 
           if (initializationData.content !== undefined) {
-            updateDecipherability(initializationData.content.manifest,
-                                  linkedKeys.whitelisted,
-                                  linkedKeys.blacklisted,
-                                  []);
+            this.trigger("keyIdsCompatibilityUpdate", {
+              whitelistedKeyIds: linkedKeys.whitelisted,
+              blacklistedKeyIds: linkedKeys.blacklisted,
+              delistedKeyIds: [],
+            });
           }
 
           this._unlockInitDataQueue();
@@ -543,10 +550,11 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
               this._currentSessions.splice(indexOf);
             }
             if (initializationData.content !== undefined) {
-              updateDecipherability(initializationData.content.manifest,
-                                    [],
-                                    [],
-                                    sessionInfo.record.getAssociatedKeyIds());
+              this.trigger("keyIdsCompatibilityUpdate", {
+                whitelistedKeyIds: [],
+                blacklistedKeyIds: [],
+                delistedKeyIds: sessionInfo.record.getAssociatedKeyIds(),
+              });
             }
             stores.persistentSessionsStore?.delete(mediaKeySession.sessionId);
             stores.loadedSessionsStore.closeSession(mediaKeySession)
@@ -571,10 +579,9 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
           sessionInfo.blacklistedSessionError = err;
 
           if (initializationData.content !== undefined) {
-            const { manifest } = initializationData.content;
             log.info("DRM: blacklisting Representations based on " +
                      "protection data.");
-            blackListProtectionData(manifest, initializationData);
+            this.trigger("blackListProtectionData", initializationData);
           }
 
           this._unlockInitDataQueue();
@@ -648,8 +655,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       } else {
         log.info("DRM: This initialization data has already been blacklisted. " +
                  "Blacklisting the related content.");
-        const { manifest } = initializationData.content;
-        blackListProtectionData(manifest, initializationData);
+        this.trigger("blackListProtectionData", initializationData);
         return true;
       }
     }
@@ -694,10 +700,11 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
         }
         log.info("DRM: Current initialization data is linked to blacklisted keys. " +
                  "Marking Representations as not decipherable");
-        updateDecipherability(initializationData.content.manifest,
-                              [],
-                              initializationData.keyIds,
-                              []);
+        this.trigger("keyIdsCompatibilityUpdate", {
+          whitelistedKeyIds: [],
+          blacklistedKeyIds: initializationData.keyIds,
+          delistedKeyIds: [],
+        });
         return true;
       }
     }
@@ -822,95 +829,6 @@ function canCreatePersistentSession(
   const { sessionTypes } = mediaKeySystemAccess.getConfiguration();
   return sessionTypes !== undefined &&
          arrayIncludes(sessionTypes, "persistent-license");
-}
-
-/**
- * Change the decipherability of Representations which have their key id in one
- * of the given Arrays:
- *
- *   - Those who have a key id listed in `whitelistedKeyIds` will have their
- *     decipherability updated to `true`
- *
- *   - Those who have a key id listed in `blacklistedKeyIds` will have their
- *     decipherability updated to `false`
- *
- *   - Those who have a key id listed in `delistedKeyIds` will have their
- *     decipherability updated to `undefined`.
- *
- * @param {Object} manifest
- * @param {Array.<Uint8Array>} whitelistedKeyIds
- * @param {Array.<Uint8Array>} blacklistedKeyIds
- * @param {Array.<Uint8Array>} delistedKeyIds
- */
-function updateDecipherability(
-  manifest : Manifest,
-  whitelistedKeyIds : Uint8Array[],
-  blacklistedKeyIds : Uint8Array[],
-  delistedKeyIds : Uint8Array[]
-) : void {
-  manifest.updateRepresentationsDeciperability((representation) => {
-    if (representation.contentProtections === undefined) {
-      return representation.decipherable;
-    }
-    const contentKIDs = representation.contentProtections.keyIds;
-    if (contentKIDs !== undefined) {
-      for (const elt of contentKIDs) {
-        for (const blacklistedKeyId of blacklistedKeyIds) {
-          if (areArraysOfNumbersEqual(blacklistedKeyId, elt.keyId)) {
-            return false;
-          }
-        }
-        for (const whitelistedKeyId of whitelistedKeyIds) {
-          if (areArraysOfNumbersEqual(whitelistedKeyId, elt.keyId)) {
-            return true;
-          }
-        }
-        for (const delistedKeyId of delistedKeyIds) {
-          if (areArraysOfNumbersEqual(delistedKeyId, elt.keyId)) {
-            return undefined;
-          }
-        }
-      }
-    }
-    return representation.decipherable;
-  });
-}
-
-/**
- * Update decipherability to `false` to any Representation which is linked to
- * the given initialization data.
- * @param {Object} manifest
- * @param {Object} initData
- */
-function blackListProtectionData(
-  manifest : Manifest,
-  initData : IProcessedProtectionData
-) : void {
-  manifest.updateRepresentationsDeciperability((representation) => {
-    if (representation.decipherable === false) {
-      return false;
-    }
-    const segmentProtections = representation.contentProtections?.initData ?? [];
-    for (const protection of segmentProtections) {
-      if (initData.type === undefined ||
-          protection.type === initData.type)
-      {
-        const containedInitData = initData.values.getFormattedValues()
-          .every(undecipherableVal => {
-            return protection.values.some(currVal => {
-              return (undecipherableVal.systemId === undefined ||
-                      currVal.systemId === undecipherableVal.systemId) &&
-                      areArraysOfNumbersEqual(currVal.data,
-                                              undecipherableVal.data);
-            });
-          });
-        if (containedInitData) {
-          return false;
-        }
-      }
-    }
-    return representation.decipherable;
-  });
 }
 
 /**
@@ -1069,9 +987,15 @@ function mergeKeyIdSetIntoArray(
  */
 function addKeyIdsFromPeriod(
   set : Set<Uint8Array>,
-  period : Period
+  period : IPeriodMetadata
 ) {
-  for (const adaptation of period.getAdaptations()) {
+  const adaptationsByType = period.adaptations;
+  const adaptations = objectValues(adaptationsByType).reduce<IAdaptationMetadata[]>(
+    // Note: the second case cannot happen. TS is just being dumb here
+    (acc, adaps) => adaps != null ? acc.concat(adaps) :
+                                    acc,
+    []);
+  for (const adaptation of adaptations) {
     for (const representation of adaptation.representations) {
       if (representation.contentProtections !== undefined &&
           representation.contentProtections.keyIds !== undefined)
@@ -1243,4 +1167,3 @@ interface IAttachedMediaKeysData {
   stores : IMediaKeySessionStores;
   options : IKeySystemOption;
 }
-

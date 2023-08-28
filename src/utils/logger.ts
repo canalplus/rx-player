@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import EventEmitter from "./event_emitter";
 import noop from "./noop";
 
 export type ILoggerLevel = "NONE" |
@@ -29,10 +30,18 @@ type IConsoleFn = (
 const DEFAULT_LOG_LEVEL : ILoggerLevel = "NONE";
 
 /**
+ * Events sent by `Logger` where the keys are the events' name and the values
+ * are the corresponding payloads.
+ */
+interface ILoggerEvents {
+  onLogLevelChange: ILoggerLevel;
+}
+
+/**
  * Logger implementation.
  * @class Logger
  */
-export default class Logger {
+export default class Logger extends EventEmitter<ILoggerEvents> {
   public error : IConsoleFn;
   public warn : IConsoleFn;
   public info : IConsoleFn;
@@ -41,6 +50,7 @@ export default class Logger {
   private readonly _levels : Record<ILoggerLevel, number>;
 
   constructor() {
+    super();
     this.error = noop;
     this.warn = noop;
     this.info = noop;
@@ -79,6 +89,8 @@ export default class Logger {
                                                  noop;
     /* eslint-enable no-console */
     /* eslint-enable no-invalid-this */
+
+    this.trigger("onLogLevelChange", this._currentLevel);
   }
 
   /**

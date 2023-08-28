@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line max-len
-import HTMLTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/html";
 import srtParser from "../../../parsers/texttracks/srt/html";
+import HTMLTextDisplayer from "../../../text_displayer/html";
 import { IFeaturesObject } from "../../types";
 import addHTMLsrtFeature from "../html_srt_parser";
 
@@ -26,7 +25,7 @@ describe("Features list - HTML srt Parser", () => {
     addHTMLsrtFeature(featureObject);
     expect(featureObject).toEqual({
       htmlTextTracksParsers: { srt: srtParser },
-      htmlTextTracksBuffer: HTMLTextSegmentBuffer,
+      htmlTextDisplayer: HTMLTextDisplayer,
     });
     expect(featureObject.htmlTextTracksParsers.srt).toBe(srtParser);
   });

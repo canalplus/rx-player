@@ -21,19 +21,16 @@ import {
 } from "../../../../manifest";
 import areCodecsCompatible from "../../../../utils/are_codecs_compatible";
 import {
-  convertToRanges,
   excludeFromRanges,
+  insertInto,
   IRange,
-  isTimeInRange,
-  isTimeInRanges,
-  keepRangeIntersection,
 } from "../../../../utils/ranges";
 import { IReadOnlyPlaybackObserver } from "../../../api";
 import {
   getFirstSegmentAfterPeriod,
   getLastSegmentBeforePeriod,
-  IBufferedChunk,
   SegmentBuffer,
+  SegmentBufferOperation,
 } from "../../../segment_buffers";
 import { ITrackSwitchingMode } from "../../adaptation";
 import { IPeriodStreamPlaybackObservation } from "../types";
@@ -85,56 +82,36 @@ export default function getAdaptationSwitchStrategy(
     return { type: "needs-reload", value: undefined };
   }
 
-  const buffered = segmentBuffer.getBufferedRanges();
-  if (buffered.length === 0) {
-    return { type: "continue", value: undefined };
-  }
-  const bufferedRanges = convertToRanges(buffered);
-  const start = period.start;
-  const end = period.end == null ? Infinity :
-                                   period.end;
-  const intersection = keepRangeIntersection(bufferedRanges, [{ start, end }]);
-  if (intersection.length === 0) {
-    return { type: "continue", value: undefined };
+  const inventory = segmentBuffer.getLastKnownInventory();
+
+  const unwantedRange: IRange[] = [];
+  for (const elt of inventory) {
+    if (elt.infos.period.id === period.id && elt.infos.adaptation.id !== adaptation.id) {
+      insertInto(unwantedRange, { start: elt.bufferedStart ?? elt.start,
+                                  end: elt.bufferedEnd ?? elt.end });
+    }
   }
 
-  segmentBuffer.synchronizeInventory();
-  const inventory = segmentBuffer.getInventory();
+  const pendingOperations = segmentBuffer.getPendingOperations();
+  for (const operation of pendingOperations) {
+    if (operation.type === SegmentBufferOperation.Push) {
+      const info = operation.value.inventoryInfos;
+      if (info.period.id === period.id && info.adaptation.id !== adaptation.id) {
+        const start = info.segment.time;
+        const end = start + info.segment.duration;
+        insertInto(unwantedRange, { start, end });
+      }
+    }
+  }
 
   // Continue if we have no other Adaptation buffered in the current Period
-  if (!inventory.some(buf => buf.infos.period.id === period.id &&
-                             buf.infos.adaptation.id !== adaptation.id))
-  {
-    return { type: "continue", value: undefined };
-  }
-
-  /** Data already in the right Adaptation */
-  const adaptationInBuffer =
-    getBufferedRangesFromAdaptation(inventory, period, adaptation);
-
-  /**
-   * Data different from the wanted Adaptation in the Period's range.
-   * /!\ Could contain some data at the end of the previous Period or at the
-   * beginning of the next one.
-   */
-  const unwantedRange = excludeFromRanges(intersection, adaptationInBuffer);
-
   if (unwantedRange.length === 0) {
     return { type: "continue", value: undefined };
   }
 
-  const currentTime = playbackObserver.getCurrentTime();
-  const readyState = playbackObserver.getReadyState();
-  if (switchingMode === "reload" && readyState > 1) {
-    const lastObservation = playbackObserver.getReference().getValue();
-    if (lastObservation.position.isAwaitingFuturePosition()) {
-      // We are not at the position we want to reach (e.g. initial seek, tizen
-      // seek-back...), just reload as checks here would be too complex
-      return { type: "needs-reload", value: undefined };
-    } else if (isTimeInRange({ start, end }, currentTime) &&
-               // We're not playing the current wanted video Adaptation
-               !isTimeInRanges(adaptationInBuffer, currentTime))
-    {
+  if (switchingMode === "reload") {
+    const readyState = playbackObserver.getReadyState();
+    if (readyState === undefined || readyState > 1) {
       return { type: "needs-reload", value: undefined };
     }
   }
@@ -160,21 +137,27 @@ export default function getAdaptationSwitchStrategy(
                            end: period.start + 1 });
   }
 
-  // Next, exclude data around current position to avoid decoding issues
-  const bufferType = adaptation.type;
-  const { ADAP_REP_SWITCH_BUFFER_PADDINGS } = config.getCurrent();
-
-  /** Ranges that won't be cleaned from the current buffer. */
-  let paddingBefore = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].before;
-  if (paddingBefore == null) {
-    paddingBefore = 0;
-  }
-  let paddingAfter = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].after;
-  if (paddingAfter == null) {
-    paddingAfter = 0;
-  }
-
   if (!shouldCleanAll) {
+    // Exclude data around current position to avoid decoding issues
+    const bufferType = adaptation.type;
+    const { ADAP_REP_SWITCH_BUFFER_PADDINGS } = config.getCurrent();
+    /** Ranges that won't be cleaned from the current buffer. */
+    let paddingBefore = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].before;
+    if (paddingBefore == null) {
+      paddingBefore = 0;
+    }
+    let paddingAfter = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].after;
+    if (paddingAfter == null) {
+      paddingAfter = 0;
+    }
+
+    let currentTime = playbackObserver.getCurrentTime();
+    if (currentTime === undefined) {
+      // TODO current position might be old. A better solution should be found.
+      const lastObservation = playbackObserver.getReference().getValue();
+      currentTime = lastObservation.position.getPolled();
+    }
+
     rangesToExclude.push({ start: currentTime - paddingBefore,
                            end: currentTime + paddingAfter });
   }
@@ -192,7 +175,6 @@ export default function getAdaptationSwitchStrategy(
                              end: Number.MAX_VALUE });
     }
   }
-
   const toRemove = excludeFromRanges(unwantedRange, rangesToExclude);
 
   if (toRemove.length === 0) {
@@ -215,34 +197,8 @@ function hasCompatibleCodec(
   adaptation : Adaptation,
   segmentBufferCodec : string
 ) : boolean {
-  return adaptation.getPlayableRepresentations().some(rep =>
+  return adaptation.representations.some(rep =>
+    rep.isSupported === true &&
+    rep.decipherable !== false &&
     areCodecsCompatible(rep.getMimeTypeString(), segmentBufferCodec));
-}
-
-/**
- * Returns buffered ranges of what we know correspond to the given `adaptation`
- * in the SegmentBuffer.
- * @param {Array.<Object>} inventory
- * @param {Object} period
- * @param {Object} adaptation
- * @returns {Array.<Object>}
- */
-function getBufferedRangesFromAdaptation(
-  inventory : IBufferedChunk[],
-  period : Period,
-  adaptation : Adaptation
-) : IRange[] {
-  return inventory.reduce<IRange[]>((acc : IRange[], chunk) : IRange[] => {
-    if (chunk.infos.period.id !== period.id ||
-        chunk.infos.adaptation.id !== adaptation.id)
-    {
-      return acc;
-    }
-    const { bufferedStart, bufferedEnd } = chunk;
-    if (bufferedStart === undefined || bufferedEnd === undefined) {
-      return acc;
-    }
-    acc.push({ start: bufferedStart, end: bufferedEnd });
-    return acc;
-  }, []);
 }

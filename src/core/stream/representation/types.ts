@@ -10,6 +10,7 @@ import {
   IPlayerError,
   IVideoRepresentationsSwitchingMode,
 } from "../../../public_types";
+import { IRange } from "../../../utils/ranges";
 import { IReadOnlySharedReference } from "../../../utils/reference";
 import { IObservationPosition, IReadOnlyPlaybackObserver } from "../../api";
 import { IContentProtection } from "../../decrypt";
@@ -134,8 +135,8 @@ export interface IStreamEventAddedSegmentPayload {
              representation : Representation; };
   /** The concerned Segment. */
   segment : ISegment;
-  /** TimeRanges of the concerned SegmentBuffer after the segment was pushed. */
-  buffered : TimeRanges;
+  /** Ranges of the concerned SegmentBuffer after the segment was pushed. */
+  buffered : IRange[];
 }
 
 /** Structure describing an "inband" event, as found in a media segment. */
@@ -181,6 +182,33 @@ export interface IRepresentationStreamPlaybackObservation {
    * Playback Observation.
    */
   position : IObservationPosition;
+  /**
+   * Information on whether the media element was paused at the time of the
+   * Observation.
+   */
+  paused : IPausedPlaybackObservation;
+  /** Last "playback rate" asked by the user. */
+  speed : number;
+}
+
+/** Pause-related information linked to an emitted Playback observation. */
+export interface IPausedPlaybackObservation {
+  /**
+   * Known paused state at the time the Observation was emitted.
+   *
+   * `true` indicating that the HTMLMediaElement was in a paused state.
+   *
+   * Note that it might have changed since. If you want truly precize
+   * information, you should recuperate it from the HTMLMediaElement directly
+   * through another mean.
+   */
+  last : boolean;
+  /**
+   * Actually wanted paused state not yet reached.
+   * This might for example be set to `false` when the content is currently
+   * loading (and thus paused) but with autoPlay enabled.
+   */
+  pending : boolean | undefined;
 }
 
 /** Position-related information linked to an emitted Playback observation. */
@@ -296,7 +324,7 @@ export interface IRepresentationStreamOptions {
 /** Object indicating a choice of allowed Representations made by the user. */
 export interface IRepresentationsChoice {
   /** `Representation`s wanted by the user. */
-  representations : Representation[];
+  representationIds : string[];
   /**
    * How the Streams should react if another, not currently authorized,
    * Representation was previously playing.

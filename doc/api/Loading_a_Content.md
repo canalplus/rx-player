@@ -530,26 +530,90 @@ call.
 
 ### representationFilter
 
-_type_: `Function|undefined`
+_type_: `Function|string|undefined`
 
 <div class="warning">
 This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
 transport option</a>)
 </div>
 
-Allows to filter out `Representation`s (i.e. media qualities) from the
-Manifest to avoid playing them.
+Allows to filter out `Representation`s (i.e. media qualities) seen in the
+Manifest, to prevent the RxPlayer from ever playing them but also from listing
+them through the tracks and `Representation` API.  It will be as if they weren't
+present in the content's Manifest in the first place.
 
+Note that you generally don't need to set this advanced option as it is
+possible to manually choose at any time the wanted tracks and Representation.
+This option only allows to simplify your code when you know a device
+has limitations based on some known characteristics (generally: a maximum
+decodable video resolution or a maximum bitrate tolerated by the device).
+
+Filtering them out through a `representationFilter` allows to skip having to
+avoid them by using other RxPlayer API like `setVideoTrack` and/or
+`lockVideoRepresentations`.
+
+This function receives information on each `Representation` encountered in
+a Manifest, and should return `true` if you want to keep such Representation or
+to `false` if you want to filter it out. For example:
 ```js
 rxPlayer.loadVideo({
-  // ...
-  representationFilter(representation, infos) {
-    // Filter function
-  },
+    // Filter out video content with a higher resolution than 1080p:
+    representationFilter(representation, infos) {
+        if (context.trackType !== "video") {
+            return true;
+        }
+        const height = representation.height;
+        return typeof height === "number" ? height <= 1080 : true;
+    },
 });
 ```
 
 More information on it can be found [here](../api/Miscellaneous/plugins.md#representationfilter).
+
+#### Important considerations when in "multithread" mode
+
+Note that if you're running in the "multithread" mode, the
+`representationFilter` function might be run in a WebWorker environment and
+thus face several restrictions.
+
+-   The function has to be defined as a string (note that defining a
+    `representationFilter` as a string also works in the regular "main" mode)
+    which contains the function.
+
+    For example to filter only video Representation which are 1080p or lower,
+    you should write it completely under string form, like this:
+
+    ```js
+    `function (representation, context) {
+        if (context.trackType !== 'video') {
+          return true;
+        }
+        const height = representation.height;
+        return typeof height === 'number' ? height <= 1080 : true;
+      }`;
+    ```
+
+    To explain succintly how it works, the RxPlayer is then transforming it to
+    a function when in the right environment (WebWorker or main thread) by
+    passing it through the `Function` constructor (new Function(...)).
+
+-   As you do not control the scope nor the realm in which it is run in,
+    this function should not use variables declared in its current outer
+    scope, only on its declared parameters.
+    This also means that you should not rely on variables declared in
+    things like `window`.
+
+-   It cannot access API that may not be available in a WebWorker or main
+    thread environment, as this function may run in one or the other.
+    In particular this means: no `document`, no `window`, no
+    `localStorage`.
+    Still note that many API are still available in both environments:
+    `JSON`, `Math`, `performance`, most JavaScript features...
+
+-   It probably won't be transpiled by your building dependencies.
+    This means that you should refrain from using too new JS features that may
+    not be supported natively by targeted devices.
+
 
 ### segmentLoader
 
@@ -560,20 +624,24 @@ This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
 transport option</a>)
 </div>
 
+<div class="warning">
+This option cannot be relied on in <i>Multithread</i> mode (see <a href="./Miscellaneous/MultiThreading.md">
+transport option</a>)
+</div>
+
 Defines a custom segment loader for when you want to perform the requests
 yourself.
 
 ```js
 rxPlayer.loadVideo({
-  // ...
-  segmentLoader(infos, callbacks) {
-    // logic to download a segment
-  },
+    // ...
+    segmentLoader(infos, callbacks) {
+        // logic to download a segment
+    },
 });
 ```
 
 More info on it can be found [here](../api/Miscellaneous/plugins.md#segmentloader).
-
 
 ### manifestLoader
 
@@ -584,20 +652,24 @@ This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
 transport option</a>)
 </div>
 
+<div class="warning">
+This option cannot be relied on in <i>Multithread</i> mode (see <a href="./Miscellaneous/MultiThreading.md">
+transport option</a>)
+</div>
+
 Defines a custom Manifest loader (allows to set a custom logic for the
 Manifest request).
 
 ```js
 rxPlayer.loadVideo({
-  // ...
-  manifestLoader(url, callbacks) {
-    // logic to fetch the Manifest
-  },
+    // ...
+    manifestLoader(url, callbacks) {
+        // logic to fetch the Manifest
+    },
 });
 ```
 
 More info on it can be found [here](../api/Miscellaneous/plugins.md#manifestloader).
-
 
 ### onCodecSwitch
 
@@ -753,6 +825,50 @@ Forbiding the RxPlayer to replace segments altogether is today not possible and
 would even break playback in some situations: when multi-Period DASH contents
 have overlapping segments, when the browser garbage-collect partially a
 segment...
+
+
+### mode
+
+_type_: `string|undefined`
+
+_defaults_: `"auto"`
+
+<div class="warning">
+This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
+transport option</a>)
+</div>
+
+Advanced setting to force the RxPlayer to run in a specific way.
+The default `"auto"` mode should be sufficient for most use cases.
+
+It can be set to the following values:
+
+-   `"main"`: the player's main logic will run on the main thread, even if
+    multithread features have been enabled.
+
+    If using the [minimal build](../Getting_Started/Minimal_Player.md) of the
+    RxPlayer, you will have to have imported at least one streaming protocol
+    parser (e.g. `DASH` or `SMOOTH`) for the `"main"` mode to be able to run.
+    In other cases, a `loadVideo` call will throw.
+
+-   `"multithread"`: the player's main logic will run on a WebWorker and
+    the player's API on the main thread alongside the application.
+    This hopefully improves your application's as well as the player's responsivity
+    on low-end devices while the content is playing.
+
+    Note that there is several requirements to be able to run on `"multithread"`
+    mode and several limitations, they are all documentend [in the
+    MultiThreading documentation page](Miscellaneous/MultiThreading.md).
+
+-   `"auto"`; the RxPlayer will select either of those modes based on
+    features enabled and options used. Basically it will run in `"multithread"`
+    mode if possible and the `"main"` mode in other cases, which should be what
+    you want in most cases.
+
+If not set or set to `"auto"`, you can see which mode is effective by calling
+the [`getCurrentModeInformation` method](./Playback_Information/getCurrentModeInformation.md).
+If the `useWorker` property is set to `false`, you're running in `"main"` mode,
+if set to `true`, you're running in `"multithread"` mode.
 
 
 ### checkMediaSegmentIntegrity

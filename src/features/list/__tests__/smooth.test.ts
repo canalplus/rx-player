@@ -16,21 +16,23 @@
 
 /* eslint-disable-next-line max-len */
 import MediaSourceContentInitializer from "../../../core/init/media_source_content_initializer";
+import mainCodecSupportProber from "../../../mse/main_codec_support_prober";
 import SmoothFeature from "../../../transports/smooth";
 import { IFeaturesObject } from "../../types";
 import addSmoothFeature from "../smooth";
 
 describe("Features list - Smooth", () => {
   it("should add Smooth in the current features", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject = { transports: {} } as unknown as IFeaturesObject;
     addSmoothFeature(featureObject);
     expect(featureObject).toEqual({
       transports: { smooth: SmoothFeature },
-      mediaSourceInit: MediaSourceContentInitializer,
+      mainThreadMediaSourceInit: MediaSourceContentInitializer,
+      codecSupportProber: mainCodecSupportProber,
     });
     expect(featureObject.transports.smooth).toBe(SmoothFeature);
-    expect(featureObject.mediaSourceInit)
+    expect(featureObject.mainThreadMediaSourceInit)
       .toBe(MediaSourceContentInitializer);
+    expect(featureObject.codecSupportProber).toBe(mainCodecSupportProber);
   });
 });

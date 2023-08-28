@@ -19,7 +19,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import log from "../../log";
 import EventEmitter from "../event_emitter";
 
 describe("utils - EventEmitter", () => {
@@ -551,29 +550,6 @@ describe("utils - EventEmitter", () => {
     eventEmitter.removeEventListener("test");
     eventEmitter.removeEventListener("test");
     eventEmitter.removeEventListener();
-    eventEmitter.removeEventListener();
-  });
-
-  it("should log if an event listener throws", () => {
-    const eventEmitter = new EventEmitter<{
-      t: undefined|"a"|{ a: string };
-      something: undefined|"a"|{ a: string };
-      nope: undefined|"a"|{ a: string };
-    }>();
-    const errMessage = "EventEmitter: listener error";
-    const thrownErr = new Error("Error thrown in callback");
-    const cb = function() {
-      throw thrownErr;
-    };
-    const spy = jest.fn();
-    jest.spyOn(log, "error").mockImplementation(spy);
-    eventEmitter.addEventListener("t", cb);
-
-    expect(spy).toHaveBeenCalledTimes(0);
-    (eventEmitter as any).trigger("t", undefined);
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith(errMessage, thrownErr);
     eventEmitter.removeEventListener();
   });
 });

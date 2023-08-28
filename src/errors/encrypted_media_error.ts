@@ -34,6 +34,7 @@ export default class EncryptedMediaError extends Error {
   public readonly keyStatuses? : IEncryptedMediaErrorKeyStatusObject[];
   public message : string;
   public fatal : boolean;
+  private _originalMessage : string;
 
   /**
    * @param {string} code
@@ -63,6 +64,7 @@ export default class EncryptedMediaError extends Error {
     this.type = ErrorTypes.ENCRYPTED_MEDIA_ERROR;
 
     this.code = code;
+    this._originalMessage = reason;
     this.message = errorMessage(this.code, reason);
     this.fatal = false;
 
@@ -70,4 +72,27 @@ export default class EncryptedMediaError extends Error {
       this.keyStatuses = supplementaryInfos.keyStatuses;
     }
   }
+
+  /**
+   * If that error has to be communicated through another thread, this method
+   * allows to obtain its main defining properties in an Object so the Error can
+   * be reconstructed in the other thread.
+   * @returns {Object}
+   */
+  public serialize(): ISerializedEncryptedMediaError {
+    return { name: this.name,
+             code: this.code,
+             reason: this._originalMessage,
+             keyStatuses: this.keyStatuses };
+  }
+}
+
+export interface ISerializedEncryptedMediaError {
+  name: "EncryptedMediaError";
+  code: IEncryptedMediaErrorCode;
+  reason: string;
+  keyStatuses: Array<{
+    keyStatus: MediaKeyStatus;
+    keyId: ArrayBuffer;
+  }> | undefined;
 }

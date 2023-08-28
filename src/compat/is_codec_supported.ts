@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import isWorker from "../compat/is_worker";
+import log from "../log";
 import { MediaSource_ } from "./browser_compatibility_types";
 
 /**
@@ -38,6 +40,9 @@ const supportMap: Map<string, boolean> = new Map();
  */
 export default function isCodecSupported(mimeType : string) : boolean {
   if (MediaSource_ == null) {
+    if (isWorker) {
+      log.error("Compat: Cannot request codec support in a worker without MSE.");
+    }
     return false;
   }
 

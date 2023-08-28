@@ -16,6 +16,7 @@
 
 /* eslint-disable-next-line max-len */
 import MediaSourceContentInitializer from "../../../core/init/media_source_content_initializer";
+import mainCodecSupportProber from "../../../mse/main_codec_support_prober";
 import dashJsParser from "../../../parsers/manifest/dash/js-parser";
 import DASHFeature from "../../../transports/dash";
 import { IFeaturesObject } from "../../types";
@@ -26,16 +27,19 @@ describe("Features list - DASH", () => {
     const featureObject = {
       transports: {},
       dashParsers: { js: null, wasm: null },
-      mediaSourceInit: null,
+      mainThreadMediaSourceInit: null,
     } as unknown as IFeaturesObject;
     addDASHFeature(featureObject);
     expect(featureObject).toEqual({
       transports: { dash: DASHFeature },
       dashParsers: { js: dashJsParser, wasm: null },
-      mediaSourceInit: MediaSourceContentInitializer,
+      mainThreadMediaSourceInit: MediaSourceContentInitializer,
+      codecSupportProber: mainCodecSupportProber,
     });
     expect(featureObject.transports.dash).toBe(DASHFeature);
-    expect(featureObject.mediaSourceInit)
+    expect(featureObject.mainThreadMediaSourceInit)
       .toBe(MediaSourceContentInitializer);
+    expect(featureObject.codecSupportProber)
+      .toBe(mainCodecSupportProber);
   });
 });

@@ -27,7 +27,11 @@ export interface IParsedStreamEventData {
   value: {
     schemeIdUri: string;
     timescale: number;
-    element: Element;
+    element?: Element | undefined;
+    xmlData?: {
+      namespaces: Array<{ key: string; value: string }>;
+      data: string;
+    } | undefined;
   };
 }
 

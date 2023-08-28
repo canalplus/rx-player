@@ -717,23 +717,38 @@ class ObservationPosition {
  * `IReadOnlyPlaybackObserver` to "remove" its right to update playback.
  */
 export interface IReadOnlyPlaybackObserver<TObservationType> {
-  /** Get the current playing position, in seconds. */
-  getCurrentTime() : number;
+  /**
+   * Get the current playing position, in seconds.
+   * Returns `undefined` when this cannot be known, such as when the playback
+   * observer is running in a WebWorker.
+   * @returns {number|undefined}
+   */
+  getCurrentTime() : number | undefined;
   /**
    * Returns the current playback rate advertised by the `HTMLMediaElement`.
-   * @returns {number}
+   * Returns `undefined` when this cannot be known, such as when the playback
+   * observer is running in a WebWorker.
+   * @returns {number|undefined}
    */
-  getPlaybackRate() : number;
-  /** Get the HTMLMediaElement's current `readyState`. */
-  getReadyState() : number;
+  getPlaybackRate() : number | undefined;
+  /**
+   * Get the HTMLMediaElement's current `readyState`.
+   * Returns `undefined` when this cannot be known, such as when the playback
+   * observer is running in a WebWorker.
+   * @returns {number|undefined}
+   */
+  getReadyState() : number | undefined;
   /**
    * Returns the current `paused` status advertised by the `HTMLMediaElement`.
    *
    * Use this instead of the same status emitted on an observation when you want
    * to be sure you're using the current value.
-   * @returns {boolean}
+   *
+   * Returns `undefined` when this cannot be known, such as when the playback
+   * observer is running in a WebWorker.
+   * @returns {boolean|undefined}
    */
-  getIsPaused() : boolean;
+  getIsPaused() : boolean | undefined;
   /**
    * Returns an `IReadOnlySharedReference` storing the last playback observation
    * produced by the `IReadOnlyPlaybackObserver` and updated each time a new one
@@ -1145,7 +1160,7 @@ function prettyPrintBuffered(
  * @param {Function} transform
  * @returns {Object}
  */
-function generateReadOnlyObserver<TSource, TDest>(
+export function generateReadOnlyObserver<TSource, TDest>(
   src : IReadOnlyPlaybackObserver<TSource>,
   transform : (
     observationRef : IReadOnlySharedReference<TSource>,
@@ -1161,7 +1176,7 @@ function generateReadOnlyObserver<TSource, TDest>(
     getReadyState() {
       return src.getReadyState();
     },
-    getPlaybackRate() : number {
+    getPlaybackRate() {
       return src.getPlaybackRate();
     },
     getIsPaused() {

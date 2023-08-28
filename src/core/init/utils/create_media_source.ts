@@ -16,14 +16,15 @@
 
 import {
   clearElementSrc,
-  events,
-  MediaSource_,
 } from "../../../compat";
-import { MediaError } from "../../../errors";
 import log from "../../../log";
+import MainMediaSourceInterface from "../../../mse/main_media_source_interface";
 import createCancellablePromise from "../../../utils/create_cancellable_promise";
+import idGenerator from "../../../utils/id_generator";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import { CancellationSignal } from "../../../utils/task_canceller";
+
+const generateMediaSourceId = idGenerator();
 
 /**
  * Dispose of ressources taken by the MediaSource:
@@ -31,38 +32,16 @@ import { CancellationSignal } from "../../../utils/task_canceller";
  *   - Clear the mediaElement's src (stop the mediaElement)
  *   - Revoke MediaSource' URL
  * @param {HTMLMediaElement} mediaElement
- * @param {MediaSource|null} mediaSource
  * @param {string|null} mediaSourceURL
  */
-export function resetMediaSource(
+export function resetMediaElement(
   mediaElement : HTMLMediaElement,
-  mediaSource : MediaSource | null,
   mediaSourceURL : string | null
 ) : void {
-  if (mediaSource !== null && mediaSource.readyState !== "closed") {
-    const { readyState, sourceBuffers } = mediaSource;
-    for (let i = sourceBuffers.length - 1; i >= 0; i--) {
-      const sourceBuffer = sourceBuffers[i];
-      try {
-        if (readyState === "open") {
-          log.info("Init: Aborting SourceBuffer before removing");
-          sourceBuffer.abort();
-        }
-        log.info("Init: Removing SourceBuffer from mediaSource");
-        mediaSource.removeSourceBuffer(sourceBuffer);
-      }
-      catch (e) {
-        log.warn("Init: Error while disposing SourceBuffer",
-                 e instanceof Error ? e : "");
-      }
-    }
-    if (sourceBuffers.length > 0) {
-      log.warn("Init: Not all SourceBuffers could have been removed.");
-    }
+  if (mediaSourceURL !== null && mediaElement.src === mediaSourceURL) {
+    log.info("Init: Clearing HTMLMediaElement's src");
+    clearElementSrc(mediaElement);
   }
-
-  log.info("Init: Clearing HTMLMediaElement's src");
-  clearElementSrc(mediaElement);
 
   if (mediaSourceURL !== null) {
     try {
@@ -91,26 +70,15 @@ export function resetMediaSource(
 function createMediaSource(
   mediaElement : HTMLMediaElement,
   unlinkSignal : CancellationSignal
-) : MediaSource {
-  if (MediaSource_ == null) {
-    throw new MediaError("MEDIA_SOURCE_NOT_SUPPORTED",
-                         "No MediaSource Object was found in the current browser.");
-  }
-
+) : MainMediaSourceInterface {
   // make sure the media has been correctly reset
-  const oldSrc = isNonEmptyString(mediaElement.src) ? mediaElement.src :
-                                                      null;
-  resetMediaSource(mediaElement, null, oldSrc);
-
-  log.info("Init: Creating MediaSource");
-  const mediaSource = new MediaSource_();
-  const objectURL = URL.createObjectURL(mediaSource);
-
-  log.info("Init: Attaching MediaSource URL to the media element", objectURL);
-  mediaElement.src = objectURL;
-
+  const oldSrc = isNonEmptyString(mediaElement.src) ?
+    mediaElement.src :
+    null;
+  resetMediaElement(mediaElement, oldSrc);
+  const mediaSource = new MainMediaSourceInterface(generateMediaSourceId());
   unlinkSignal.register(() => {
-    resetMediaSource(mediaElement, mediaSource, objectURL);
+    mediaSource.dispose();
   });
   return mediaSource;
 }
@@ -128,12 +96,26 @@ function createMediaSource(
 export default function openMediaSource(
   mediaElement : HTMLMediaElement,
   unlinkSignal : CancellationSignal
-) : Promise<MediaSource> {
+) : Promise<MainMediaSourceInterface> {
   return createCancellablePromise(unlinkSignal, (resolve) => {
     const mediaSource = createMediaSource(mediaElement, unlinkSignal);
-    events.onSourceOpen(mediaSource, () => {
+    mediaSource.addEventListener("mediaSourceOpen", () => {
       log.info("Init: MediaSource opened");
       resolve(mediaSource);
     }, unlinkSignal);
+
+    log.info("MTCI: Attaching MediaSource URL to the media element");
+    if (mediaSource.handle.type === "handle") {
+      mediaElement.srcObject = mediaSource.handle.value;
+      unlinkSignal.register(() => {
+        resetMediaElement(mediaElement, null);
+      });
+    } else {
+      const url = URL.createObjectURL(mediaSource.handle.value);
+      mediaElement.src = url;
+      unlinkSignal.register(() => {
+        resetMediaElement(mediaElement, url);
+      });
+    }
   });
 }

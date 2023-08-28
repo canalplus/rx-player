@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line max-len
-import HtmlTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/html";
+import HTMLTextDisplayer from "../../../text_displayer/html";
 import { IFeaturesObject } from "../../types";
 import addHtmlTextBuffer from "../html_text_buffer";
 
@@ -23,7 +22,7 @@ describe("Features list - html Text Buffer", () => {
   it("should add an html Text Buffer in the current features", () => {
     const featureObject = {} as unknown as IFeaturesObject;
     addHtmlTextBuffer(featureObject);
-    expect(featureObject).toEqual({ htmlTextTracksBuffer: HtmlTextSegmentBuffer });
-    expect(featureObject.htmlTextTracksBuffer).toBe(HtmlTextSegmentBuffer);
+    expect(featureObject).toEqual({ htmlTextDisplayer: HTMLTextDisplayer });
+    expect(featureObject.htmlTextDisplayer).toBe(HTMLTextDisplayer);
   });
 });

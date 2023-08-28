@@ -24,7 +24,7 @@ import Manifest, {
   Representation,
 } from "../../../../manifest";
 import objectAssign from "../../../../utils/object_assign";
-import { IBufferedChunk, IEndOfSegmentInfos } from "../../../segment_buffers";
+import { IBufferedChunk, ICompleteSegmentInfo } from "../../../segment_buffers";
 import {
   IBufferedHistoryEntry,
   IChunkContext,
@@ -61,7 +61,7 @@ export interface IGetNeededSegmentsArguments {
   /** The range we want to fill with segments. */
   neededRange : { start: number; end: number };
   /** The list of segments that are already in the process of being pushed. */
-  segmentsBeingPushed : IEndOfSegmentInfos[];
+  segmentsBeingPushed : ICompleteSegmentInfo[];
   /**
    * Information on the segments already in the buffer, in chronological order.
    *
@@ -301,7 +301,7 @@ export default function getNeededSegments({
  */
 function getAvailableBufferSize(
   bufferedSegments: IBufferedChunk[],
-  segmentsBeingPushed: IEndOfSegmentInfos[],
+  segmentsBeingPushed: ICompleteSegmentInfo[],
   maxVideoBufferSize: number
 ) : number {
   let availableBufferSize = maxVideoBufferSize * 8000; // in bits
@@ -362,7 +362,7 @@ function getLastContiguousSegment(
  * @returns {boolean}
  */
 function shouldContentBeReplaced(
-  oldContent : IEndOfSegmentInfos,
+  oldContent : ICompleteSegmentInfo,
   currentContent : { adaptation : Adaptation;
                      period : Period;
                      representation : Representation; },

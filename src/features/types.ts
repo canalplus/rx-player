@@ -20,7 +20,10 @@ import MediaElementTracksStore from "../core/api/track_management/media_element_
 import type ContentDecryptor from "../core/decrypt";
 import DirectFileContentInitializer from "../core/init/directfile_content_initializer";
 import MediaSourceContentInitializer from "../core/init/media_source_content_initializer";
+// eslint-disable-next-line max-len
+import MultiThreadContentInitializer from "../core/init/multithread/main_thread/multi_thread_content_initializer";
 import { SegmentBuffer } from "../core/segment_buffers";
+import { ICodecSupportProber } from "../mse";
 import {
   IDashParserResponse,
   IMPDParserArguments,
@@ -30,6 +33,8 @@ import {
   IHTMLTextTracksParserFn,
   INativeTextTracksParserFn,
 } from "../parsers/texttracks";
+import HTMLTextDisplayer from "../text_displayer/html";
+import NativeTextDisplayer from "../text_displayer/native/native_text_displayer";
 import { ITransportFunction } from "../transports";
 import { CancellationSignal } from "../utils/task_canceller";
 
@@ -53,7 +58,6 @@ export type IHTMLTextTracksBuffer =
  * @param {HTMLMediaElement} mediaElement - The `HTMLMediaElement` the text
  * tracks should be synced to. The `<track>` `HTMLElement` on which the text
  * tracks will be displayed will also be linked to this `HTMLMediaElement`.
- * @param {boolean} hideNativeSubtitle
  * @returns {Object} - `SegmentBuffer` implementation.
  */
 export type INativeTextTracksBuffer =
@@ -87,6 +91,14 @@ export type IDebugElementFn = (
  */
 export interface IFeaturesObject {
   /**
+   * Interface checking for codec support in an MSE (Media Source Extensions)
+   * context.
+   *
+   * Works both for environments with and without the necessary MSE API such
+   * as WebWorkers.
+   */
+  codecSupportProber: ICodecSupportProber | null;
+  /**
    * Feature allowing to load so-called "directfile" contents, which are
    * contents natively decodable by the browser.
    */
@@ -98,15 +110,26 @@ export interface IFeaturesObject {
   /** Optional debug element function (@see `IDebugElementFn`) */
   createDebugElement : IDebugElementFn | null;
   /** Implement text track rendering in the DOM. */
-  htmlTextTracksBuffer : IHTMLTextTracksBuffer|null;
+  htmlTextDisplayer : typeof HTMLTextDisplayer | null;
   /**
    * Parsers for various text track formats, by their name as set by the
    * RxPlayer.
    * Those parsers are specifically destined to be displayed in DOM elements.
    */
   htmlTextTracksParsers : Partial<Record<string, IHTMLTextTracksParserFn>>;
-  /** Feature allowing to load contents through MediaSource API. */
-  mediaSourceInit: typeof MediaSourceContentInitializer | null;
+  /**
+   * Feature allowing to load contents through MediaSource API through the
+   * main thread.
+   */
+  mainThreadMediaSourceInit: typeof MediaSourceContentInitializer | null;
+  /**
+   * Features allowing to load contents through MediaSource API through
+   * a WebWorker.
+   */
+  multithread: {
+    /** Class to load a content through MediaSource API via a WebWorker. */
+    init: typeof MultiThreadContentInitializer;
+  } | null;
   /**
    * Function for loading and parsing contents through various protocols, by
    * their name as set by the RxPlayer.
@@ -125,7 +148,8 @@ export interface IFeaturesObject {
      */
     js : IDashJsParser | null;
   };
-  nativeTextTracksBuffer : INativeTextTracksBuffer|null;
+  /** Implement text track rendering through `<track>` HTML elements. */
+  nativeTextDisplayer : typeof NativeTextDisplayer | null;
   /**
    * Parsers for various text track formats, by their name as set by the
    * RxPlayer.

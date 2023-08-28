@@ -14,6 +14,7 @@ import TaskCanceller, {
 import {
   ContentDecryptorState,
   IContentProtection,
+  IProcessedProtectionData,
 } from "../../decrypt";
 
 /**
@@ -43,8 +44,16 @@ export default function initializeContentDecryption(
   mediaElement : HTMLMediaElement,
   keySystems : IKeySystemOption[],
   protectionRef : IReadOnlySharedReference<null | IContentProtection>,
-  callbacks : { onWarning : (err : IPlayerError) => void;
-                onError : (err : Error) => void; },
+  callbacks : {
+    onWarning : (err : IPlayerError) => void;
+    onError : (err : Error) => void;
+    onBlackListProtectionData : (val: IProcessedProtectionData) => void;
+    onKeyIdsCompatibilityUpdate : (updates: {
+      whitelistedKeyIds : Uint8Array[];
+      blacklistedKeyIds : Uint8Array[];
+      delistedKeyIds : Uint8Array[];
+    }) => void;
+  },
   cancelSignal : CancellationSignal
 ) : IReadOnlySharedReference<IDrmInitializationStatus> {
   if (keySystems.length === 0) {
@@ -99,6 +108,14 @@ export default function initializeContentDecryption(
 
   contentDecryptor.addEventListener("warning", (error) => {
     callbacks.onWarning(error);
+  });
+
+  contentDecryptor.addEventListener("blackListProtectionData", (x) => {
+    callbacks.onBlackListProtectionData(x);
+  });
+
+  contentDecryptor.addEventListener("keyIdsCompatibilityUpdate", (x) => {
+    callbacks.onKeyIdsCompatibilityUpdate(x);
   });
 
   protectionRef.onUpdate((data) => {

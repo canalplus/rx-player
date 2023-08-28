@@ -67,4 +67,15 @@ export default class RequestError extends Error {
         break;
     }
   }
+
+  public serialize() : ISerializedRequestError {
+    return { url: this.url, status: this.status, type: this.type };
+  }
+}
+
+/** Serializable object which allows to create a `RequestError` later. */
+export interface ISerializedRequestError {
+  url : string;
+  status : number;
+  type : INetworkErrorType;
 }

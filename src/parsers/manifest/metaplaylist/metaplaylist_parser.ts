@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../../log";
 import Manifest, {
   StaticRepresentationIndex,
   SUPPORTED_ADAPTATIONS_TYPE,
@@ -212,6 +213,16 @@ function createManifest(
                                                            [contentOffset, contentEnd],
                                                            content.transport,
                                                            baseContentMetadata);
+              let supplementalCodecs: string | undefined;
+              if (currentRepresentation.codecs.length > 1) {
+                if (currentRepresentation.codecs.length > 2) {
+                  log.warn("MP: MetaPlaylist relying on more than 2 groups of " +
+                           "codecs with retro-compatibility");
+                }
+                supplementalCodecs = currentRepresentation.codecs[0];
+              }
+              const codecs = currentRepresentation
+                .codecs[currentRepresentation.codecs.length - 1];
               representations.push({
                 bitrate: currentRepresentation.bitrate,
                 index: newIndex,
@@ -221,7 +232,8 @@ function createManifest(
                 width: currentRepresentation.width,
                 mimeType: currentRepresentation.mimeType,
                 frameRate: currentRepresentation.frameRate,
-                codecs: currentRepresentation.codec,
+                codecs,
+                supplementalCodecs,
                 isSpatialAudio: currentRepresentation.isSpatialAudio,
                 contentProtections: currentRepresentation.contentProtections,
               });
