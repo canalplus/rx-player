@@ -19,7 +19,10 @@ import {
   HTML_VTT_PARSER,
   SMOOTH,
 } from "../../../../../src/features/list";
-import { METAPLAYLIST } from "../../../../../src/experimental/features";
+import {
+  METAPLAYLIST,
+  MULTI_THREAD,
+} from "../../../../../src/experimental/features";
 import RxPlayer from "../../../../../src/minimal";
 import { linkPlayerEventsToState } from "./events";
 import VideoThumbnailLoader, {
@@ -54,6 +57,7 @@ RxPlayer.addFeatures([
   SMOOTH,
   METAPLAYLIST,
   DEBUG_ELEMENT,
+  MULTI_THREAD,
 ]);
 
 /* eslint-disable */
@@ -65,7 +69,6 @@ declare const __INCLUDE_WASM_PARSER__: boolean;
 /* eslint-disable no-undef */
 if (__INCLUDE_WASM_PARSER__) {
 /* eslint-enable no-undef */
-
   RxPlayer.addFeatures([DASH_WASM]);
   DASH_WASM.initialize({ wasmUrl: "./mpd-parser.wasm" })
     .catch((err) => {
@@ -140,6 +143,10 @@ export interface IPlayerModuleState {
   maximumPosition: null | undefined | number;
   minimumPosition: null | undefined | number;
   playbackRate: number;
+  /** Try to play contents in "multithread" mode when possible. */
+  relyOnWorker: boolean;
+  /** Currently playing a content in "multithread" mode. */
+  useWorker: boolean;
   subtitle: ITextTrack | undefined | null;
   videoRepresentation: IVideoRepresentation | undefined | null;
   videoRepresentationsLocked: boolean;
@@ -194,6 +201,8 @@ const PlayerModule = declareModule(
     maximumPosition: undefined,
     minimumPosition: undefined,
     playbackRate: 1,
+    relyOnWorker: false,
+    useWorker: false,
     subtitle: undefined,
     videoRepresentation: undefined,
     videoRepresentationsLocked: false,
@@ -215,6 +224,7 @@ const PlayerModule = declareModule(
     state,
     abortSignal
   ) => {
+    let hasAttachedMultithread = false;
     const { debugElement, textTrackElement, ...constructorOpts } = initOpts;
     const player = new RxPlayer(constructorOpts);
     let debugEltInstance : { dispose(): void } | undefined;
@@ -262,9 +272,17 @@ const PlayerModule = declareModule(
         player.setVolume(volume);
       },
 
+      updateWorkerMode(enabled: boolean) {
+        if (enabled && !hasAttachedMultithread) {
+          attachMultithread(player);
+        }
+        state.update("relyOnWorker", enabled);
+      },
+
       load(arg: ILoadVideoOptions) {
         dettachVideoThumbnailLoader();
         player.loadVideo(Object.assign({
+          mode: state.get("relyOnWorker") ? "auto" : "main",
           textTrackElement,
           transportOptions: { checkMediaSegmentIntegrity: true },
         }, arg) as ILoadVideoOptions);
@@ -427,6 +445,14 @@ const PlayerModule = declareModule(
           videoThumbnailsElement: null,
         });
       }
+    }
+
+    function attachMultithread(player: RxPlayer) {
+      hasAttachedMultithread = true;
+      player.attachWorker({
+        workerUrl: "./worker.js",
+        dashWasmUrl : "./mpd-parser.wasm",
+      });
     }
   }
 );

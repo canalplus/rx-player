@@ -22,13 +22,15 @@ import { IFeaturesObject } from "./types";
  */
 const features : IFeaturesObject = { dashParsers: { wasm: null,
                                                     js: null },
+                                     codecSupportProber: null,
                                      createDebugElement: null,
                                      directfile: null,
                                      decrypt: null,
-                                     htmlTextTracksBuffer: null,
+                                     htmlTextDisplayer: null,
                                      htmlTextTracksParsers: {},
-                                     mediaSourceInit: null,
-                                     nativeTextTracksBuffer: null,
+                                     mainThreadMediaSourceInit: null,
+                                     multithread: null,
+                                     nativeTextDisplayer: null,
                                      nativeTextTracksParsers: {},
                                      transports: {} };
 

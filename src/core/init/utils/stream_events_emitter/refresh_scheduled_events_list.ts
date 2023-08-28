@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import Manifest from "../../../../manifest";
+import { IManifestMetadata } from "../../../../manifest";
 import areSameStreamEvents from "./are_same_stream_events";
 import {
   INonFiniteStreamEventPayload,
@@ -29,7 +29,7 @@ import {
  */
 function refreshScheduledEventsList(
   oldScheduledEvents: Array<IStreamEventPayload|INonFiniteStreamEventPayload>,
-  manifest: Manifest
+  manifest: IManifestMetadata
 ): Array<IStreamEventPayload|INonFiniteStreamEventPayload> {
   const scheduledEvents: Array<IStreamEventPayload|INonFiniteStreamEventPayload> = [];
   const { periods } = manifest;
@@ -45,7 +45,31 @@ function refreshScheduledEventsList(
         }
       }
 
-      const element = data.value.element;
+      let element: Element;
+      if (data.value.element !== undefined) {
+        element = data.value.element;
+      } else if (data.value.xmlData !== undefined) {
+        // First, we will create a parent Element defining all namespaces that
+        // should have been encountered until know.
+        // This is needed because the DOMParser API might throw when
+        // encountering unknown namespaced attributes or elements in the given
+        // `<Event>` xml subset.
+        let parentNode = data.value.xmlData.namespaces.reduce((acc, ns) => {
+          return acc + "xmlns:" + ns.key + "=\"" + ns.value + "\" ";
+        }, "<toremove ");
+        parentNode += ">";
+
+        const parsedDom = new DOMParser()
+          .parseFromString(parentNode + data.value.xmlData.data + "</toremove>",
+                           "application/xml")
+          .documentElement;
+
+        element = parsedDom.children.length > 0 ?
+          parsedDom.children[0] :
+          parsedDom.childNodes[0] as HTMLElement;
+      } else {
+        return;
+      }
       const actualData = { type: data.type,
                            value: { ...data.value, element } };
       if (end === undefined) {

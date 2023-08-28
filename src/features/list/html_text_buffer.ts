@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import HTMLTextSegmentBuffer from "../../core/segment_buffers/implementations/text/html";
+import HTMLTextDisplayer from "../../text_displayer/html";
 import { IFeaturesObject } from "../types";
 
 /**
@@ -22,7 +22,7 @@ import { IFeaturesObject } from "../types";
  * @param {Object} features
  */
 function addHTMLTextBuffer(features : IFeaturesObject) : void {
-  features.htmlTextTracksBuffer = HTMLTextSegmentBuffer;
+  features.htmlTextDisplayer = HTMLTextDisplayer;
 }
 
 export { addHTMLTextBuffer as HTML_TEXT_BUFFER };

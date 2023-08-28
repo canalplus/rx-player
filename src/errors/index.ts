@@ -16,7 +16,9 @@
 
 import AssertionError from "./assertion_error";
 import CustomLoaderError from "./custom_loader_error";
-import EncryptedMediaError from "./encrypted_media_error";
+import EncryptedMediaError, {
+  ISerializedEncryptedMediaError,
+} from "./encrypted_media_error";
 import {
   ErrorCodes,
   ErrorTypes,
@@ -27,21 +29,29 @@ import {
 import formatError from "./format_error";
 import isKnownError from "./is_known_error";
 import MediaError, {
-  IMediaErrorTrackContext,
+  ISerializedMediaError,
 } from "./media_error";
-import NetworkError from "./network_error";
-import OtherError from "./other_error";
-import RequestError from "./request_error";
+import NetworkError, {
+  ISerializedNetworkError,
+} from "./network_error";
+import OtherError, {
+  ISerializedOtherError,
+} from "./other_error";
+import RequestError, {
+  ISerializedRequestError,
+} from "./request_error";
+import SourceBufferError from "./source_buffer_error";
 
 export {
   AssertionError,
   CustomLoaderError,
   EncryptedMediaError,
+  SourceBufferError,
+
   ErrorCodes,
   ErrorTypes,
   IErrorCode,
   IErrorType,
-  IMediaErrorTrackContext,
   formatError,
   MediaError as MediaError,
   NetworkError,
@@ -49,4 +59,10 @@ export {
   RequestError,
   NetworkErrorTypes,
   isKnownError,
+
+  ISerializedMediaError,
+  ISerializedNetworkError,
+  ISerializedEncryptedMediaError,
+  ISerializedOtherError,
+  ISerializedRequestError,
 };

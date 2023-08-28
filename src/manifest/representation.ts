@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { isCodecSupported } from "../compat";
+import features from "../features";
 import log from "../log";
 import {
   ICdnMetadata,
@@ -22,14 +22,13 @@ import {
   IParsedRepresentation,
 } from "../parsers/manifest";
 import {
-  IAudioRepresentation,
   ITrackType,
   IHDRInformation,
-  IVideoRepresentation,
 } from "../public_types";
 import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
 import idGenerator from "../utils/id_generator";
 import { IRepresentationIndex } from "./representation_index";
+import { IRepresentationMetadata } from "./types";
 
 const generateRepresentationUniqueId = idGenerator();
 
@@ -37,38 +36,26 @@ const generateRepresentationUniqueId = idGenerator();
  * Normalized Representation structure.
  * @class Representation
  */
-class Representation {
-  /**
-   * ID uniquely identifying the `Representation` in its parent `Adaptation`.
-   *
-   * This identifier might be linked to an identifier present in the original
-   * Manifest file, it is thus the identifier to use to determine if a
-   * `Representation` from a refreshed `Manifest` is actually the same one than
-   * one in the previously loaded Manifest (as long as the `Adaptation` and
-   * `Period` are also the same).
-   *
-   * For a globally unique identifier regardless of the `Adaptation`, `Period`
-   * or even `Manifest`, you can rely on `uniqueId` instead.
-   */
+class Representation implements IRepresentationMetadata {
+  /** ID uniquely identifying the Representation in its parent Adaptation. */
   public readonly id : string;
-
   /**
-   * Globally unique identifier for this `Representation` object.
-   *
-   * This identifier is guaranteed to be unique for any `Representation`s of all
-   * `Manifest` objects created in the current JS Realm.
-   * As such, it can be used as an identifier for the JS object itself, whereas
-   * `id` is the identifier for the original Manifest's Representation in the
-   * scope of its parent `Adaptation`.
+   * @see IRepresentationMetadata
    */
   public readonly uniqueId : string;
-
+  /**
+   * @see IRepresentationMetadata
+   */
+  public bitrate : number;
+  /**
+   * @see IRepresentationMetadata
+   */
+  public frameRate? : number;
   /**
    * Interface allowing to get information about segments available for this
    * Representation.
    */
   public index : IRepresentationIndex;
-
   /**
    * Information on the CDN(s) on which requests should be done to request this
    * Representation's initialization and media segments.
@@ -80,84 +67,55 @@ class Representation {
    * no resource can be loaded in that situation.
    */
   public cdnMetadata : ICdnMetadata[] | null;
-
-  /** Bitrate this Representation is in, in bits per seconds. */
-  public bitrate : number;
-
   /**
-   * Frame-rate, when it can be applied, of this Representation, in any textual
-   * indication possible (often under a ratio form).
+   * @see IRepresentationMetadata
    */
-  public frameRate? : number;
-
+  public isSpatialAudio?: boolean | undefined;
   /**
-   * `true` if this `Representation` is linked to a spatial audio technology.
-   * For example, it may be set to `true` if the Representation relies on the
-   * "Dolby Atmos". technology.
-   *
-   * `false` if it is known that this `Representation` does not contain any
-   * spatial audio.
-   *
-   * `undefined` if we do not know whether this `Representation` contains
-   * spatial audio or not.
+   * @see IRepresentationMetadata
    */
-  public isSpatialAudio? : boolean | undefined;
-
+  public codecs : string[];
   /**
-   * A string describing the codec used for this Representation.
-   * undefined if we do not know.
-   */
-  public codec : string | undefined;
-
-  /**
-   * A string describing the mime-type for this Representation.
-   * Examples: audio/mp4, video/webm, application/mp4, text/plain
-   * undefined if we do not know.
+   * @see IRepresentationMetadata
    */
   public mimeType? : string;
-
   /**
-   * If this Representation is linked to video content, this value is the width
-   * in pixel of the corresponding video data.
+   * @see IRepresentationMetadata
    */
   public width? : number;
-
   /**
-   * If this Representation is linked to video content, this value is the height
-   * in pixel of the corresponding video data.
+   * @see IRepresentationMetadata
    */
   public height? : number;
-
-  /** Encryption information for this Representation. */
-  public contentProtections? : IContentProtections;
-
   /**
-   * If the track is HDR, give the characteristics of the content
+   * @see IRepresentationMetadata
+   */
+  public contentProtections? : IContentProtections;
+  /**
+   * @see IRepresentationMetadata
    */
   public hdrInfo?: IHDRInformation;
-
   /**
-   * Whether we are able to decrypt this Representation / unable to decrypt it or
-   * if we don't know yet:
-   *   - if `true`, it means that we know we were able to decrypt this
-   *     Representation in the current content.
-   *   - if `false`, it means that we know we were unable to decrypt this
-   *     Representation
-   *   - if `undefined` there is no certainty on this matter
+   * @see IRepresentationMetadata
    */
   public decipherable? : boolean  | undefined;
-
-  /** `true` if the Representation is in a supported codec, false otherwise. */
-  public isSupported : boolean;
+  /**
+   * @see IRepresentationMetadata
+   */
+  public isSupported : boolean | undefined;
 
   /**
    * @param {Object} args
+   * @param {string} trackType
    */
-  constructor(args : IParsedRepresentation, opts : { type : ITrackType }) {
+  constructor(
+    args : IParsedRepresentation,
+    trackType : ITrackType
+  ) {
     this.id = args.id;
     this.uniqueId = generateRepresentationUniqueId();
     this.bitrate = args.bitrate;
-    this.codec = args.codecs;
+    this.codecs = [];
 
     if (args.isSpatialAudio !== undefined) {
       this.isSpatialAudio = args.isSpatialAudio;
@@ -190,28 +148,96 @@ class Representation {
     this.cdnMetadata = args.cdnMetadata;
     this.index = args.index;
 
-    if (opts.type === "audio" || opts.type === "video") {
-      this.isSupported = false;
+    if (trackType === "audio" || trackType === "video") {
+      if (features.codecSupportProber !== null) {
         // Supplemental codecs are defined as backwards-compatible codecs enhancing
         // the experience of a base layer codec
-      if (args.supplementalCodecs !== undefined) {
-        const supplementalCodecMimeTypeStr =
-            `${this.mimeType ?? ""};codecs="${args.supplementalCodecs}"`;
-        if (isCodecSupported(supplementalCodecMimeTypeStr)) {
-          this.codec = args.supplementalCodecs;
-          this.isSupported = true;
+        if (args.supplementalCodecs !== undefined) {
+          const isSupplementaryCodecSupported = features.codecSupportProber.isSupported(
+            this.mimeType ?? "",
+            args.supplementalCodecs ?? ""
+          );
+          if (isSupplementaryCodecSupported !== false) {
+            this.codecs = [args.supplementalCodecs];
+            if (isSupplementaryCodecSupported === true) {
+              this.isSupported = true;
+            }
+          }
         }
-      }
-      if (!this.isSupported) {
-        const mimeTypeStr = this.getMimeTypeString();
-        const isSupported = isCodecSupported(mimeTypeStr);
-        if (!isSupported) {
-          log.info("Unsupported Representation", mimeTypeStr, this.id, this.bitrate);
+        if (this.isSupported !== true) {
+          if (this.codecs.length > 0) {
+            // We couldn't check for support of another supplemental codec.
+            // Just push that codec without testing support yet, we'll check
+            // support later.
+            this.codecs.push(args.codecs ?? "");
+          } else {
+            this.codecs = args.codecs === undefined ? [] : [args.codecs];
+            this.isSupported = features.codecSupportProber.isSupported(
+              this.mimeType ?? "",
+              args.codecs ?? ""
+            );
+          }
         }
-        this.isSupported = isSupported;
+
+      } else {
+        if (args.supplementalCodecs !== undefined) {
+          this.codecs.push(args.supplementalCodecs);
+        }
+        if (args.codecs !== undefined) {
+          this.codecs.push(args.codecs);
+        }
       }
     } else {
-      this.isSupported = true; // TODO for other types
+      if (args.codecs !== undefined) {
+        this.codecs.push(args.codecs);
+      }
+      this.isSupported = true;
+    }
+  }
+
+  /**
+   * Some environments (e.g. in a WebWorker) may not have the capability to know
+   * if a mimetype+codec combination is supported on the current platform.
+   *
+   * Calling `refreshCodecSupport` manually with a clear list of codecs supported
+   * once it has been requested on a compatible environment (e.g. in the main
+   * thread) allows to work-around this issue.
+   *
+   * If the right mimetype+codec combination is found in the provided object,
+   * this `Representation`'s `isSupported` property will be updated accordingly.
+   *
+   * @param {Array.<Object>} supportList
+   */
+  public refreshCodecSupport(supportList: ICodecSupportList): void {
+    const mimeType = this.mimeType ?? "";
+    let codecs = this.codecs;
+    if (codecs.length === 0) {
+      codecs = [""];
+    }
+
+    // Go through each codec, from the most detailed to the most compatible one
+    for (let codecIdx = 0; codecIdx < codecs.length; codecIdx++) {
+      // Find out if an entry is present for it in the support list
+      for (const obj of supportList) {
+        const codec = codecs[codecIdx];
+        if (obj.codec === codec && obj.mimeType === mimeType) {
+          if (obj.result) {
+            // We found that this codec was supported. Remove all reference to
+            // other codecs which are either unsupported, less detailed, or
+            // both and anounce support.
+            this.isSupported = true;
+            this.codecs = [codec];
+            return;
+          } else if (codecIdx === codecs.length) {
+            // The last more compatible codec, was still found unsupported,
+            // this Representation is not decodable.
+            // Put the more compatible codec only for the API.
+            this.isSupported = false;
+            this.codecs = [codec];
+            return;
+          }
+        }
+      }
     }
   }
 
@@ -221,7 +247,7 @@ class Representation {
    * @returns {string}
    */
   public getMimeTypeString() : string {
-    return `${this.mimeType ?? ""};codecs="${this.codec ?? ""}"`;
+    return `${this.mimeType ?? ""};codecs="${this.codecs?.[0] ?? ""}"`;
   }
 
   /**
@@ -394,51 +420,32 @@ class Representation {
   }
 
   /**
-   * Format Representation as an `IAudioRepresentation`.
+   * Format the current `Representation`'s properties into a
+   * `IRepresentationMetadata` format which can better be communicated through
+   * another thread.
+   *
+   * Please bear in mind however that the returned object will not be updated
+   * when the current `Representation` instance is updated, it is only a
+   * snapshot at the current time.
+   *
+   * If you want to keep that data up-to-date with the current `Representation`
+   * instance, you will have to do it yourself.
+   *
    * @returns {Object}
    */
-  public toAudioRepresentation(): IAudioRepresentation {
-    const { id, bitrate, codec, isSpatialAudio, isSupported, decipherable } = this;
-    return { id,
-             bitrate,
-             codec,
-             isSpatialAudio,
-             isCodecSupported: isSupported,
-             decipherable };
-  }
-
-  /**
-   * Format Representation as an `IVideoRepresentation`.
-   * @returns {Object}
-   */
-  public toVideoRepresentation(): IVideoRepresentation {
-    const { id,
-            bitrate,
-            frameRate,
-            width,
-            height,
-            codec,
-            hdrInfo,
-            isSupported,
-            decipherable } = this;
-    return { id,
-             bitrate,
-             frameRate,
-             width,
-             height,
-             codec,
-             hdrInfo,
-             isCodecSupported: isSupported,
-             decipherable };
-  }
-
-  /**
-   * Returns `true` if this Representation can be played (that is: not
-   * undecipherable and with a supported codec).
-   * @returns {Array.<Representation>}
-   */
-  public isPlayable() : boolean {
-    return this.isSupported && this.decipherable !== false;
+  public getMetadataSnapshot() : IRepresentationMetadata {
+    return { id: this.id,
+             uniqueId: this.uniqueId,
+             bitrate: this.bitrate,
+             codecs: this.codecs,
+             mimeType: this.mimeType,
+             width: this.width,
+             height: this.height,
+             frameRate: this.frameRate,
+             isSupported: this.isSupported,
+             hdrInfo: this.hdrInfo,
+             contentProtections: this.contentProtections,
+             decipherable: this.decipherable };
   }
 }
 
@@ -475,5 +482,11 @@ export interface IRepresentationProtectionData {
      data: Uint8Array;
   }>;
 }
+
+export type ICodecSupportList = Array<{
+  codec: string;
+  mimeType: string;
+  result: boolean;
+}>;
 
 export default Representation;

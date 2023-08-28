@@ -18,7 +18,15 @@
  * This file allows any Stream to push data to a SegmentBuffer.
  */
 
-import { MediaError } from "../../../../errors";
+import {
+  MediaError,
+  SourceBufferError,
+} from "../../../../errors";
+import log from "../../../../log";
+import { toTaggedTrack } from "../../../../manifest";
+import { IRange } from "../../../../utils/ranges";
+import { IReadOnlySharedReference } from "../../../../utils/reference";
+import sleep from "../../../../utils/sleep";
 import { CancellationError, CancellationSignal } from "../../../../utils/task_canceller";
 import { IReadOnlyPlaybackObserver } from "../../../api";
 import {
@@ -27,15 +35,15 @@ import {
   SegmentBuffer,
 } from "../../../segment_buffers";
 import { IRepresentationStreamPlaybackObservation } from "../types";
-import forceGarbageCollection from "./force_garbage_collection";
 
 /**
  * Append a segment to the given segmentBuffer.
- * If it leads to a QuotaExceededError, try to run our custom range
+ * If it leads to an Error due to a full buffer, try to run our custom range
  * _garbage collector_ then retry.
  * @param {Object} playbackObserver
  * @param {Object} segmentBuffer
  * @param {Object} dataInfos
+ * @param {number} bufferGoal
  * @param {Object} cancellationSignal
  * @returns {Promise}
  */
@@ -43,35 +51,45 @@ export default async function appendSegmentToBuffer<T>(
   playbackObserver : IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
   segmentBuffer : SegmentBuffer,
   dataInfos : IPushChunkInfos<T> & { inventoryInfos: IInsertedChunkInfos },
+  bufferGoal : IReadOnlySharedReference<number>,
   cancellationSignal : CancellationSignal
-) : Promise<void> {
+) : Promise<IRange[]> {
   try {
-    await segmentBuffer.pushChunk(dataInfos, cancellationSignal);
+    return await segmentBuffer.pushChunk(dataInfos);
   } catch (appendError : unknown) {
     if (cancellationSignal.isCancelled() && appendError instanceof CancellationError) {
       throw appendError;
-    } else if (!(appendError instanceof Error) ||
-               appendError.name !== "QuotaExceededError")
-    {
+    } else if (!(appendError instanceof SourceBufferError) || !appendError.isBufferFull) {
       const reason = appendError instanceof Error ?
         appendError.toString() :
         "An unknown error happened when pushing content";
-      throw new MediaError("BUFFER_APPEND_ERROR",
-                           reason,
-                           { adaptations: [dataInfos.inventoryInfos.adaptation] });
+      throw new MediaError("BUFFER_APPEND_ERROR", reason, {
+        tracks: [toTaggedTrack(dataInfos.inventoryInfos.adaptation)],
+      });
     }
     const { position } = playbackObserver.getReference().getValue();
     const currentPos = position.getWanted();
     try {
-      await forceGarbageCollection(currentPos, segmentBuffer, cancellationSignal);
-      await segmentBuffer.pushChunk(dataInfos, cancellationSignal);
+      log.warn("Stream: Running garbage collector");
+      const start = Math.max(currentPos - 5, 0);
+      const end = currentPos + bufferGoal.getValue() + 12;
+      await segmentBuffer.removeBuffer(0, start);
+      await segmentBuffer.removeBuffer(end, Number.MAX_VALUE);
+      await sleep(200);
+      if (cancellationSignal.cancellationError !== null) {
+        throw cancellationSignal.cancellationError;
+      }
+      return await segmentBuffer.pushChunk(dataInfos);
     } catch (err2) {
+      if (err2 instanceof CancellationError) {
+        throw err2;
+      }
       const reason = err2 instanceof Error ? err2.toString() :
                                              "Could not clean the buffer";
 
-      throw new MediaError("BUFFER_FULL_ERROR",
-                           reason,
-                           { adaptations: [dataInfos.inventoryInfos.adaptation] });
+      throw new MediaError("BUFFER_FULL_ERROR", reason, {
+        tracks: [toTaggedTrack(dataInfos.inventoryInfos.adaptation)],
+      });
     }
   }
 }

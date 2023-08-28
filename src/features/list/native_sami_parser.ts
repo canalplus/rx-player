@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line max-len
-import NativeTextSegmentBuffer from "../../core/segment_buffers/implementations/text/native";
 import samiParser from "../../parsers/texttracks/sami/native";
+import NativeTextDisplayer from "../../text_displayer/native";
 import { IFeaturesObject } from "../types";
 
 /**
@@ -25,7 +24,7 @@ import { IFeaturesObject } from "../types";
  */
 function addNativeSAMIFeature(features : IFeaturesObject) : void {
   features.nativeTextTracksParsers.sami = samiParser;
-  features.nativeTextTracksBuffer = NativeTextSegmentBuffer;
+  features.nativeTextDisplayer = NativeTextDisplayer;
 }
 
 export { addNativeSAMIFeature as NATIVE_SAMI_PARSER };

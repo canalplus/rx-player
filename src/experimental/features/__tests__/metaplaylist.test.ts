@@ -17,6 +17,7 @@
 /* eslint-disable-next-line max-len */
 import MediaSourceContentInitializer from "../../../core/init/media_source_content_initializer";
 import { IFeaturesObject } from "../../../features/types";
+import mainCodecSupportProber from "../../../mse/main_codec_support_prober";
 import metaplaylist from "../../../transports/metaplaylist";
 import addLocalManifestFeature from "../metaplaylist";
 
@@ -26,10 +27,13 @@ describe("Features list - METAPLAYLIST", () => {
     addLocalManifestFeature(featureObject);
     expect(featureObject).toEqual({
       transports: { metaplaylist },
-      mediaSourceInit: MediaSourceContentInitializer,
+      mainThreadMediaSourceInit: MediaSourceContentInitializer,
+      codecSupportProber: mainCodecSupportProber,
     });
     expect(featureObject.transports.metaplaylist).toBe(metaplaylist);
-    expect(featureObject.mediaSourceInit)
+    expect(featureObject.mainThreadMediaSourceInit)
       .toBe(MediaSourceContentInitializer);
+    expect(featureObject.codecSupportProber)
+      .toBe(mainCodecSupportProber);
   });
 });

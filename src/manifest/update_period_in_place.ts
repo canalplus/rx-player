@@ -15,11 +15,14 @@
  */
 
 import log from "../log";
+import { ITrackType } from "../public_types";
 import arrayFindIndex from "../utils/array_find_index";
-import Adaptation from "./adaptation";
 import Period from "./period";
-import Representation from "./representation";
-import { MANIFEST_UPDATE_TYPE } from "./types";
+import {
+  MANIFEST_UPDATE_TYPE,
+  IAdaptationMetadata,
+  IRepresentationMetadata,
+} from "./types";
 
 /**
  * Update oldPeriod attributes with the one from newPeriod (e.g. when updating
@@ -58,13 +61,17 @@ export default function updatePeriodInPlace(
                "\" not found when merging.");
       const [removed] = oldAdaptations.splice(j, 1);
       j--;
-      res.removedAdaptations.push(removed);
+      res.removedAdaptations.push({
+        id: removed.id,
+        trackType: removed.type,
+      });
     } else {
       const [newAdaptation] = newAdaptations.splice(newAdaptationIdx, 1);
-      const updatedRepresentations : Representation[] = [];
-      const addedRepresentations : Representation[] = [];
-      const removedRepresentations : Representation[] = [];
-      res.updatedAdaptations.push({ adaptation: oldAdaptation,
+      const updatedRepresentations : IRepresentationMetadata[] = [];
+      const addedRepresentations : IRepresentationMetadata[] = [];
+      const removedRepresentations : string[] = [];
+      res.updatedAdaptations.push({ adaptation: oldAdaptation.id,
+                                    trackType: oldAdaptation.type,
                                     updatedRepresentations,
                                     addedRepresentations,
                                     removedRepresentations });
@@ -82,10 +89,10 @@ export default function updatePeriodInPlace(
                    "not found when merging.");
           const [removed] = oldRepresentations.splice(k, 1);
           k--;
-          removedRepresentations.push(removed);
+          removedRepresentations.push(removed.id);
         } else {
           const [newRepresentation] = newRepresentations.splice(newRepresentationIdx, 1);
-          updatedRepresentations.push(oldRepresentation);
+          updatedRepresentations.push(oldRepresentation.getMetadataSnapshot());
           oldRepresentation.cdnMetadata = newRepresentation.cdnMetadata;
           if (updateType === MANIFEST_UPDATE_TYPE.Full) {
             oldRepresentation.index._replace(newRepresentation.index);
@@ -99,7 +106,9 @@ export default function updatePeriodInPlace(
         log.warn(`Manifest: ${newRepresentations.length} new Representations ` +
                  "found when merging.");
         oldAdaptation.representations.push(...newRepresentations);
-        addedRepresentations.push(...newRepresentations);
+        addedRepresentations.push(
+          ...newRepresentations.map(r => r.getMetadataSnapshot())
+        );
       }
     }
   }
@@ -113,7 +122,7 @@ export default function updatePeriodInPlace(
       } else {
         prevAdaps.push(adap);
       }
-      res.addedAdaptations.push(adap);
+      res.addedAdaptations.push(adap.getMetadataSnapshot());
     }
   }
   return res;
@@ -126,17 +135,21 @@ export default function updatePeriodInPlace(
 export interface IUpdatedPeriodResult {
   /** Information on Adaptations that have been updated. */
   updatedAdaptations : Array<{
+    trackType: ITrackType;
     /** The concerned Adaptation. */
-    adaptation: Adaptation;
+    adaptation: string;
     /** Representations that have been updated. */
-    updatedRepresentations : Representation[];
+    updatedRepresentations : IRepresentationMetadata[];
     /** Representations that have been removed from the Adaptation. */
-    removedRepresentations : Representation[];
+    removedRepresentations : string[];
     /** Representations that have been added to the Adaptation. */
-    addedRepresentations : Representation[];
+    addedRepresentations : IRepresentationMetadata[];
   }>;
   /** Adaptation that have been removed from the Period. */
-  removedAdaptations : Adaptation[];
+  removedAdaptations : Array<{
+    id: string;
+    trackType: ITrackType;
+  }>;
   /** Adaptation that have been added to the Period. */
-  addedAdaptations : Adaptation[];
+  addedAdaptations : IAdaptationMetadata[];
 }

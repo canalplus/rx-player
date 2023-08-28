@@ -19,11 +19,11 @@ import Player from "../../../core/api";
 import createSegmentFetcher, {
   ISegmentFetcher,
 } from "../../../core/fetchers/segment/segment_fetcher";
-import { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implementations";
 import log from "../../../log";
 import Manifest, {
   ISegment,
 } from "../../../manifest";
+import { MainSourceBufferInterface } from "../../../mse/main_media_source_interface";
 import arrayFind from "../../../utils/array_find";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import objectAssign from "../../../utils/object_assign";
@@ -90,6 +90,12 @@ export default class VideoThumbnailLoader {
       }
       return Promise.reject(
         new VideoThumbnailLoaderError("NO_MANIFEST", "No manifest available.")
+      );
+    }
+    if (!(manifest instanceof Manifest)) {
+      throw new Error(
+        "Impossible to run VideoThumbnailLoader in the current context.\n" +
+        "Are you running the RxPlayer in a WebWorker?"
       );
     }
     const content = getTrickModeInfo(time, manifest);
@@ -185,30 +191,26 @@ export default class VideoThumbnailLoader {
       const initSegmentUniqueId = initSegment !== null ?
         content.representation.uniqueId :
         null;
-      const segmentBufferProm = prepareSourceBuffer(
+      const sourceBufferProm = prepareSourceBuffer(
         this._videoElement,
         content.representation.getMimeTypeString(),
         lastRepInfoCleaner.signal
-      ).then(async (segmentBuffer) => {
+      ).then(async (sourceBufferInterface) => {
         if (initSegment === null || initSegmentUniqueId === null) {
           lastRepInfo.initSegmentUniqueId = null;
-          return segmentBuffer;
+          return sourceBufferInterface;
         }
         const segmentInfo = objectAssign({ segment: initSegment },
                                          content);
         await loadAndPushSegment(segmentInfo,
-                                 segmentBuffer,
+                                 sourceBufferInterface,
                                  lastRepInfo.segmentFetcher,
-                                 initSegmentUniqueId,
                                  lastRepInfoCleaner.signal);
-        lastRepInfoCleaner.signal.register(() => {
-          segmentBuffer.freeInitSegment(initSegmentUniqueId);
-        });
-        return segmentBuffer;
+        return sourceBufferInterface;
       });
       lastRepInfo = {
         cleaner: lastRepInfoCleaner,
-        segmentBuffer: segmentBufferProm,
+        sourceBuffer: sourceBufferProm,
         content,
         initSegmentUniqueId,
         segmentFetcher,
@@ -223,7 +225,7 @@ export default class VideoThumbnailLoader {
 
     const currentTaskCanceller = new TaskCanceller();
 
-    return lastRepInfo.segmentBuffer
+    return lastRepInfo.sourceBuffer
       .catch((err) => {
         if (this._lastRepresentationInfo !== null) {
           this._lastRepresentationInfo.cleaner.cancel();
@@ -235,16 +237,17 @@ export default class VideoThumbnailLoader {
             String(err)
         );
       })
-      .then(async (segmentBuffer) => {
+      .then(async (sourceBufferInterface) => {
         abortUnlistedSegmentRequests(lastRepInfo.pendingRequests, neededSegments);
 
         log.debug("VTL: Removing buffer around time.", time);
         await removeBufferAroundTime(this._videoElement,
-                                     segmentBuffer,
+                                     sourceBufferInterface,
                                      time,
-                                     undefined,
-                                     currentTaskCanceller.signal);
-
+                                     undefined);
+        if (currentTaskCanceller.signal.cancellationError !== null) {
+          throw currentTaskCanceller.signal.cancellationError;
+        }
 
         abortUnlistedSegmentRequests(lastRepInfo.pendingRequests, neededSegments);
         const promises : Array<Promise<unknown>> = [];
@@ -260,9 +263,8 @@ export default class VideoThumbnailLoader {
             const segmentInfo = objectAssign({ segment },
                                              content);
             const prom = loadAndPushSegment(segmentInfo,
-                                            segmentBuffer,
+                                            sourceBufferInterface,
                                             lastRepInfo.segmentFetcher,
-                                            lastRepInfo.initSegmentUniqueId,
                                             requestCanceller.signal)
               .then(unlinkSignal, (err) => {
                 unlinkSignal();
@@ -378,12 +380,12 @@ interface IVideoThumbnailLoaderRepresentationInfo {
   cleaner : TaskCanceller;
   /**
    * Promise encapsulating the task of creating the MediaSource, the video
-   * AudioVideoSegmentBuffer, and pushing the initialization segment of the
+   * `SourceBufferInterface`, and pushing the initialization segment of the
    * current content on it.
    *
    * Resolves when done, rejects if any of those steps fail.
    */
-  segmentBuffer : Promise<AudioVideoSegmentBuffer>;
+  sourceBuffer : Promise<MainSourceBufferInterface>;
   /**
    * Information on the content considered in this
    * `IVideoThumbnailLoaderRepresentationInfo`.

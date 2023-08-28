@@ -43,10 +43,11 @@ export interface IOldWebkitHTMLMediaElement extends HTMLVideoElement {
  * @returns {Boolean}
  */
 export function isOldWebkitMediaElement(
-  element : HTMLMediaElement|IOldWebkitHTMLMediaElement
+  element : unknown
 ) : element is IOldWebkitHTMLMediaElement {
-  return typeof (element as IOldWebkitHTMLMediaElement)
-    .webkitGenerateKeyRequest === "function";
+  return typeof (
+    element as IOldWebkitHTMLMediaElement
+  )?.webkitGenerateKeyRequest === "function";
 }
 
 /**

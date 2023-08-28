@@ -1,7 +1,8 @@
 import {
-  Adaptation,
-  Period,
-  Representation,
+  getPeriodForTime,
+  IAdaptationMetadata,
+  IPeriodMetadata,
+  IRepresentationMetadata,
 } from "../../../../manifest";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import { CancellationSignal } from "../../../../utils/task_canceller";
@@ -94,7 +95,7 @@ export default function createSegmentBufferGraph(
       const adap = instance.__priv_getCurrentAdaptation()?.[bufferType];
       const manifest = instance.__priv_getManifest();
       if (manifest !== null && !isNullOrUndefined(rep) && !isNullOrUndefined(adap)) {
-        const period = manifest.getPeriodForTime(currentTime);
+        const period = getPeriodForTime(manifest, currentTime);
         if (period !== undefined) {
           loadingRangeRepInfoElt.appendChild(createMetricTitle("load"));
           loadingRangeRepInfoElt.appendChild(createElement("span", {
@@ -112,9 +113,9 @@ export default function createSegmentBufferGraph(
 
 function constructRepresentationInfo(
   content : {
-    period : Period;
-    adaptation : Adaptation;
-    representation : Representation;
+    period : IPeriodMetadata;
+    adaptation : IAdaptationMetadata;
+    representation : IRepresentationMetadata;
   }
 ) : string {
   const period = content.period;
@@ -124,7 +125,7 @@ function constructRepresentationInfo(
           isTrickModeTrack,
           isSignInterpreted,
           type: bufferType } = content.adaptation;
-  const { id, height, width, bitrate, codec } = content.representation;
+  const { id, height, width, bitrate, codecs } = content.representation;
   let representationInfo = `"${id}" `;
   if (height !== undefined && width !== undefined) {
     representationInfo += `${width}x${height} `;
@@ -132,8 +133,8 @@ function constructRepresentationInfo(
   if (bitrate !== undefined) {
     representationInfo += `(${(bitrate / 1000).toFixed(0)}kbps) `;
   }
-  if (codec !== undefined) {
-    representationInfo += `c:"${codec}" `;
+  if (codecs !== undefined && codecs.length > 0) {
+    representationInfo += `c:"${codecs.join(" / ")}" `;
   }
   if (language !== undefined) {
     representationInfo += `l:"${language}" `;

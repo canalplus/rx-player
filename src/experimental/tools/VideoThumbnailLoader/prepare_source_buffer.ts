@@ -15,15 +15,21 @@
  */
 
 import { MediaSource_ } from "../../../compat";
-import { resetMediaSource } from "../../../core/init/utils/create_media_source";
-import { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implementations";
+import { resetMediaElement } from "../../../core/init/utils/create_media_source";
 import log from "../../../log";
+import { SourceBufferType } from "../../../mse";
+import MainMediaSourceInterface, {
+  MainSourceBufferInterface,
+} from "../../../mse/main_media_source_interface";
 import createCancellablePromise from "../../../utils/create_cancellable_promise";
+import idGenerator from "../../../utils/id_generator";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import { CancellationSignal } from "../../../utils/task_canceller";
 
+const generateMediaSourceId = idGenerator();
+
 /**
- * Open the media source and create the `AudioVideoSegmentBuffer`.
+ * Open the media source and create the `MainMediaSourceInterface`.
  * @param {HTMLVideoElement} videoElement
  * @param {string} codec
  * @param {Object} cleanUpSignal
@@ -33,7 +39,7 @@ export default function prepareSourceBuffer(
   videoElement: HTMLVideoElement,
   codec: string,
   cleanUpSignal: CancellationSignal
-): Promise<AudioVideoSegmentBuffer> {
+): Promise<MainSourceBufferInterface> {
   return createCancellablePromise(cleanUpSignal, (resolve, reject) => {
     if (MediaSource_ == null) {
       throw new Error("No MediaSource Object was found in the current browser.");
@@ -42,31 +48,34 @@ export default function prepareSourceBuffer(
     // make sure the media has been correctly reset
     const oldSrc = isNonEmptyString(videoElement.src) ? videoElement.src :
                                                         null;
-    resetMediaSource(videoElement, null, oldSrc);
+    resetMediaElement(videoElement, oldSrc);
 
     log.info("Init: Creating MediaSource");
-    const mediaSource = new MediaSource_();
-    const objectURL = URL.createObjectURL(mediaSource);
+    const mediaSource = new MainMediaSourceInterface(generateMediaSourceId());
+    if (mediaSource.handle.type === "handle") {
+      videoElement.srcObject = mediaSource.handle.value;
+      cleanUpSignal.register(() => {
+        resetMediaElement(videoElement, null);
+      });
+    } else {
+      const objectURL = URL.createObjectURL(mediaSource.handle.value);
 
-    log.info("Init: Attaching MediaSource URL to the media element", objectURL);
-    videoElement.src = objectURL;
-    cleanUpSignal.register(() => {
-      resetMediaSource(videoElement, mediaSource, objectURL);
-    });
+      log.info("Init: Attaching MediaSource URL to the media element", objectURL);
+      videoElement.src = objectURL;
+      cleanUpSignal.register(() => {
+        resetMediaElement(videoElement, objectURL);
+      });
+    }
 
-    mediaSource.addEventListener("sourceopen", onSourceOpen);
-    mediaSource.addEventListener("webkitsourceopen", onSourceOpen);
-
+    mediaSource.addEventListener("mediaSourceOpen", onSourceOpen);
     return () => {
-      mediaSource.removeEventListener("sourceopen", onSourceOpen);
-      mediaSource.removeEventListener("webkitsourceopen", onSourceOpen);
+      mediaSource.removeEventListener("mediaSourceOpen", onSourceOpen);
     };
 
     function onSourceOpen() {
       try {
-        mediaSource.removeEventListener("sourceopen", onSourceOpen);
-        mediaSource.removeEventListener("webkitsourceopen", onSourceOpen);
-        resolve(new AudioVideoSegmentBuffer("video", codec, mediaSource));
+        mediaSource.removeEventListener("mediaSourceOpen", onSourceOpen);
+        resolve(mediaSource.addSourceBuffer(SourceBufferType.Video, codec));
       } catch (err) {
         reject(err);
       }
