@@ -223,6 +223,10 @@ function linkPlayerEventsToState(
     };
 
     switch (playerState) {
+      case "LOADING":
+        stateUpdates.useWorker =
+          player.getCurrentModeInformation()?.useWorker === true;
+        break;
       case "ENDED":
         stateUpdates.autoPlayBlocked = false;
         stateUpdates.isPaused = true;
@@ -259,6 +263,7 @@ function linkPlayerEventsToState(
         stateUpdates.minimumPosition = undefined;
         stateUpdates.maximumPosition = undefined;
         stateUpdates.livePosition = undefined;
+        stateUpdates.useWorker = false;
         break;
     }
 

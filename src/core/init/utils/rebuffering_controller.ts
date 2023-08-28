@@ -17,8 +17,10 @@
 import config from "../../../config";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
-import Manifest, {
-  Period,
+import {
+  getPeriodAfter,
+  IManifestMetadata,
+  IPeriodMetadata,
 } from "../../../manifest";
 import { IPlayerError } from "../../../public_types";
 import EventEmitter from "../../../utils/event_emitter";
@@ -31,7 +33,7 @@ import {
   PlaybackObserver,
 } from "../../api";
 import { SeekingState } from "../../api/playback_observer";
-import SegmentBuffersStore, { IBufferType } from "../../segment_buffers";
+import { IBufferType } from "../../segment_buffers";
 import { IStallingSituation } from "../types";
 
 
@@ -54,8 +56,7 @@ export default class RebufferingController
 
   /** Emit the current playback conditions */
   private _playbackObserver : PlaybackObserver;
-  private _manifest : Manifest | null;
-  private _segmentBuffersStore : SegmentBuffersStore | null;
+  private _manifest : IManifestMetadata | null;
   private _speed : IReadOnlySharedReference<number>;
   private _isStarted : boolean;
 
@@ -68,37 +69,22 @@ export default class RebufferingController
   private _canceller : TaskCanceller;
 
   /**
-   * If set to something else than `null`, this is the monotonically-raising
-   * timestamp when playback begin to seem to not start despite having
-   * decipherable data in the buffer(s).
-   *
-   * If enough time in that condition is spent, special considerations are
-   * taken at which point `_currentFreezeTimestamp` is reset to `null`.
-   *
-   * It is also reset to `null` when and if there is no such issue anymore.
-   */
-  private _currentFreezeTimestamp : number | null;
-
-  /**
    * @param {object} playbackObserver - emit the current playback conditions.
    * @param {Object} manifest - The Manifest of the currently-played content.
    * @param {Object} speed - The last speed set by the user
    */
   constructor(
     playbackObserver : PlaybackObserver,
-    manifest : Manifest | null,
-    segmentBuffersStore : SegmentBuffersStore | null,
+    manifest : IManifestMetadata | null,
     speed : IReadOnlySharedReference<number>
   ) {
     super();
     this._playbackObserver = playbackObserver;
     this._manifest = manifest;
-    this._segmentBuffersStore = segmentBuffersStore;
     this._speed = speed;
     this._discontinuitiesStore = [];
     this._isStarted = false;
     this._canceller = new TaskCanceller();
-    this._currentFreezeTimestamp = null;
   }
 
   public start() : void {
@@ -127,10 +113,6 @@ export default class RebufferingController
               FREEZING_STALLED_DELAY,
               UNFREEZING_SEEK_DELAY,
               UNFREEZING_DELTA_POSITION } = config.getCurrent();
-
-      if (this._checkDecipherabilityFreeze(observation)) {
-        return ;
-      }
 
       if (freezing !== null) {
         const now = getMonotonicTimeStamp();
@@ -299,7 +281,7 @@ export default class RebufferingController
    * currently load.
    * @param {Object} period - Period for which no segment will currently load.
    */
-  public onLockedStream(bufferType : IBufferType, period : Period) : void {
+  public onLockedStream(bufferType : IBufferType, period : IPeriodMetadata) : void {
     if (!this._isStarted) {
       this.start();
     }
@@ -333,96 +315,6 @@ export default class RebufferingController
   public destroy() : void {
     this._canceller.cancel();
   }
-
-  /**
-   * Support of contents with DRM on all the platforms out there is a pain in
-   * the *ss considering all the DRM-related bugs there are.
-   *
-   * We found out a frequent issue which is to be unable to play despite having
-   * all the decryption keys to play what is currently buffered.
-   * When this happens, re-creating the buffers from scratch, with a reload, is
-   * usually sufficient to unlock the situation.
-   *
-   * Although we prefer providing more targeted fixes or telling to platform
-   * developpers to fix their implementation, it's not always possible.
-   * We thus resorted to developping an heuristic which detects such situation
-   * and reload in that case.
-   *
-   * @param {Object} observation - The last playback observation produced, it
-   * has to be recent (just triggered for example).
-   * @returns {boolean} - Returns `true` if it seems to be such kind of
-   * decipherability freeze, in which case this method already performed the
-   * right handling steps.
-   */
-  private _checkDecipherabilityFreeze(
-    observation : IPlaybackObservation
-  ): boolean {
-    const { readyState,
-            rebuffering,
-            freezing } = observation;
-    const bufferGap = observation.bufferGap !== undefined &&
-      isFinite(observation.bufferGap) ? observation.bufferGap :
-      0;
-    if (
-      this._segmentBuffersStore === null ||
-      bufferGap < 6 ||
-      (rebuffering === null && freezing === null) ||
-      readyState > 1
-    ) {
-      this._currentFreezeTimestamp = null;
-      return false;
-    }
-
-    const now = getMonotonicTimeStamp();
-    if (this._currentFreezeTimestamp === null) {
-      this._currentFreezeTimestamp = now;
-    }
-    const rebufferingForTooLong =
-      rebuffering !== null && now - rebuffering.timestamp > 4000;
-    const frozenForTooLong =
-      freezing !== null && now - freezing.timestamp > 4000;
-
-    if (
-      (rebufferingForTooLong || frozenForTooLong) &&
-      getMonotonicTimeStamp() - this._currentFreezeTimestamp > 4000
-    ) {
-      const statusAudio = this._segmentBuffersStore.getStatus("audio");
-      const statusVideo = this._segmentBuffersStore.getStatus("video");
-      let hasOnlyDecipherableSegments = true;
-      let isClear = true;
-      for (const status of [statusAudio, statusVideo]) {
-        if (status.type === "initialized") {
-          for (const segment of status.value.getInventory()) {
-            const { representation } = segment.infos;
-            if (representation.decipherable === false) {
-              log.warn(
-                "Init: we have undecipherable segments left in the buffer, reloading"
-              );
-              this._currentFreezeTimestamp = null;
-              this.trigger("needsReload", null);
-              return true;
-            } else if (representation.contentProtections !== undefined) {
-              isClear = false;
-              if (representation.decipherable !== true) {
-                hasOnlyDecipherableSegments = false;
-              }
-            }
-          }
-        }
-      }
-
-      if (!isClear && hasOnlyDecipherableSegments) {
-        log.warn(
-          "Init: we are frozen despite only having decipherable " +
-          "segments left in the buffer, reloading"
-        );
-        this._currentFreezeTimestamp = null;
-        this.trigger("needsReload", null);
-        return true;
-      }
-    }
-    return false;
-  }
 }
 
 /**
@@ -433,7 +325,7 @@ export default class RebufferingController
  */
 function findSeekableDiscontinuity(
   discontinuitiesStore : IDiscontinuityStoredInfo[],
-  manifest : Manifest,
+  manifest : IManifestMetadata,
   stalledPosition : number
 ) : number | null {
   if (discontinuitiesStore.length === 0) {
@@ -454,7 +346,7 @@ function findSeekableDiscontinuity(
       const discontinuityLowerLimit = start ?? position;
       if (stalledPosition >= (discontinuityLowerLimit - EPSILON)) {
         if (end === null) {
-          const nextPeriod = manifest.getPeriodAfter(period);
+          const nextPeriod = getPeriodAfter(manifest, period);
           if (nextPeriod !== null) {
             discontinuityEnd = nextPeriod.start + EPSILON;
           } else {
@@ -662,7 +554,7 @@ export interface IDiscontinuityEvent {
   /** Buffer type concerned by the discontinuity. */
   bufferType : IBufferType;
   /** Period concerned by the discontinuity. */
-  period : Period;
+  period : IPeriodMetadata;
   /**
    * Close discontinuity time information.
    * `null` if no discontinuity has been detected currently for that buffer
@@ -700,7 +592,7 @@ interface IDiscontinuityStoredInfo {
   /** Buffer type concerned by the discontinuity. */
   bufferType : IBufferType;
   /** Period concerned by the discontinuity. */
-  period : Period;
+  period : IPeriodMetadata;
   /** Discontinuity time information. */
   discontinuity : IDiscontinuityTimeInfo;
   /**

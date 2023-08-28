@@ -15,8 +15,8 @@
  */
 
 // eslint-disable-next-line max-len
-import NativeTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/native";
 import srtParser from "../../../parsers/texttracks/srt/native";
+import NativeTextDisplayer from "../../../text_displayer/native";
 import { IFeaturesObject } from "../../types";
 import addNativesrtFeature from "../native_srt_parser";
 
@@ -26,7 +26,7 @@ describe("Features list - native srt Parser", () => {
     addNativesrtFeature(featureObject);
     expect(featureObject).toEqual({
       nativeTextTracksParsers: { srt: srtParser },
-      nativeTextTracksBuffer: NativeTextSegmentBuffer,
+      nativeTextDisplayer: NativeTextDisplayer,
     });
     expect(featureObject.nativeTextTracksParsers.srt).toBe(srtParser);
   });

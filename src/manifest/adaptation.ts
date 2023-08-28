@@ -17,17 +17,20 @@
 import log from "../log";
 import { IParsedAdaptation } from "../parsers/manifest";
 import {
-  IAudioTrack,
   ITrackType,
   IRepresentationFilter,
-  ITextTrack,
-  IVideoTrack,
   IRepresentationFilterRepresentation,
 } from "../public_types";
 import arrayFind from "../utils/array_find";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import normalizeLanguage from "../utils/languages";
-import Representation from "./representation";
+import Representation, {
+  ICodecSupportList,
+} from "./representation";
+import {
+  IAdaptationMetadata,
+  IRepresentationMetadata,
+} from "./types";
 
 /** List in an array every possible value for the Adaptation's `type` property. */
 export const SUPPORTED_ADAPTATIONS_TYPE: ITrackType[] = ["audio", "video", "text"];
@@ -40,74 +43,81 @@ export const SUPPORTED_ADAPTATIONS_TYPE: ITrackType[] = ["audio", "video", "text
  * `Representation`.
  * @class Adaptation
  */
-export default class Adaptation {
+export default class Adaptation implements IAdaptationMetadata {
   /** ID uniquely identifying the Adaptation in the Period. */
   public readonly id : string;
-
-  /**
-   * Different `Representations` (e.g. qualities) this Adaptation is available
-   * in.
-   */
-  public readonly representations : Representation[];
-
-  /** Type of this Adaptation. */
-  public readonly type : ITrackType;
-
-  /** Whether this track contains an audio description for the visually impaired. */
-  public isAudioDescription? : boolean;
-
-  /** Whether this Adaptation contains closed captions for the hard-of-hearing. */
-  public isClosedCaption? : boolean;
-
-  /**
-   * If `true` this Adaptation are subtitles Meant for display when no other text
-   * Adaptation is selected. It is used to clarify dialogue, alternate
-   * languages, texted graphics or location/person IDs that are not otherwise
-   * covered in the dubbed/localized audio Adaptation.
-   */
-  public isForcedSubtitles? : boolean;
-
-  /** If true this Adaptation contains sign interpretation. */
-  public isSignInterpreted? : boolean;
-
-  /**
-   * If `true`, this Adaptation is a "dub", meaning it was recorded in another
-   * language than the original one.
-   */
-  public isDub? : boolean;
-
-  /** Language this Adaptation is in, as announced in the original Manifest. */
-  public language? : string;
-
-  /** Language this Adaptation is in, when translated into an ISO639-3 code. */
-  public normalizedLanguage? : string;
-
   /**
    * `true` if this Adaptation was not present in the original Manifest, but was
    * manually added after through the corresponding APIs.
    */
   public manuallyAdded? : boolean;
-
-  /** `true` if at least one Representation is in a supported codec. `false` otherwise. */
-  public isSupported : boolean;
-
-  /** Tells if the track is a trick mode track. */
+  /**
+   * @see IRepresentationMetadata
+   */
+  public readonly representations : Representation[];
+  /**
+   * @see IRepresentationMetadata
+   */
+  public readonly type : ITrackType;
+  /**
+   * @see IRepresentationMetadata
+   */
+  public isAudioDescription? : boolean;
+  /**
+   * @see IRepresentationMetadata
+   */
+  public isClosedCaption? : boolean;
+  /**
+   * @see IRepresentationMetadata
+   */
+  public isForcedSubtitles? : boolean;
+  /**
+   * @see IRepresentationMetadata
+   */
+  public isSignInterpreted? : boolean;
+  /**
+   * @see IRepresentationMetadata
+   */
+  public isDub? : boolean;
+  /**
+   * @see IRepresentationMetadata
+   */
+  public language? : string;
+  /**
+   * @see IRepresentationMetadata
+   */
+  public normalizedLanguage? : string;
+  /**
+   * @see IRepresentationMetadata
+   */
+  public isSupported : boolean | undefined;
+  /**
+   * @see IRepresentationMetadata
+   */
   public isTrickModeTrack? : boolean;
-
-  /** Label of the adaptionSet */
+  /**
+   * @see IRepresentationMetadata
+   */
   public label?: string;
-
+  /**
+   * @see IRepresentationMetadata
+   */
   public readonly trickModeTracks? : Adaptation[];
 
   /**
    * @constructor
    * @param {Object} parsedAdaptation
+   * @param {Object} codecSupportProber - Interface allowing to probe for codec
+   * support.
    * @param {Object|undefined} [options]
    */
-  constructor(parsedAdaptation : IParsedAdaptation, options : {
-    representationFilter? : IRepresentationFilter | undefined;
-    isManuallyAdded? : boolean | undefined;
-  } = {}) {
+  constructor(
+    parsedAdaptation : IParsedAdaptation,
+    options : {
+      representationFilter? : IRepresentationFilter | undefined;
+      isManuallyAdded? : boolean | undefined;
+    } = {}
+  ) {
     const { trickModeTracks } = parsedAdaptation;
     const { representationFilter, isManuallyAdded } = options;
     this.id = parsedAdaptation.id;
@@ -143,22 +153,22 @@ export default class Adaptation {
 
     if (trickModeTracks !== undefined &&
         trickModeTracks.length > 0) {
-      this.trickModeTracks = trickModeTracks.map((track) => new Adaptation(track));
+      this.trickModeTracks = trickModeTracks.map((track) =>
+        new Adaptation(track)
+      );
     }
 
     const argsRepresentations = parsedAdaptation.representations;
     const representations : Representation[] = [];
-    let isSupported : boolean = false;
+    let isSupported : boolean | undefined;
     for (let i = 0; i < argsRepresentations.length; i++) {
-      const representation = new Representation(argsRepresentations[i],
-                                                { type: this.type });
+      const representation = new Representation(argsRepresentations[i], this.type);
       let shouldAdd = true;
       if (!isNullOrUndefined(representationFilter)) {
         const reprObject : IRepresentationFilterRepresentation = {
           id: representation.id,
           bitrate: representation.bitrate,
-          codecs: representation.codec === undefined ? [] :
-                                                       [representation.codec],
+          codecs: representation.codecs,
           height: representation.height,
           width: representation.width,
           frameRate: representation.frameRate,
@@ -183,8 +193,12 @@ export default class Adaptation {
       }
       if (shouldAdd) {
         representations.push(representation);
-        if (!isSupported && representation.isSupported) {
-          isSupported = true;
+        if (isSupported === undefined) {
+          if (representation.isSupported === true) {
+            isSupported = true;
+          } else if (representation.isSupported === false) {
+            isSupported = false;
+          }
         }
       } else {
         log.debug("Filtering Representation due to representationFilter",
@@ -204,12 +218,33 @@ export default class Adaptation {
   }
 
   /**
-   * Returns all Representation in this Adaptation that can be played (that is:
-   * not undecipherable and with a supported codec).
-   * @returns {Array.<Representation>}
+   * Some environments (e.g. in a WebWorker) may not have the capability to know
+   * if a mimetype+codec combination is supported on the current platform.
+   *
+   * Calling `refreshCodecSupport` manually with a clear list of codecs supported
+   * once it has been requested on a compatible environment (e.g. in the main
+   * thread) allows to work-around this issue.
+   *
+   * If the right mimetype+codec combination is found in the provided object,
+   * this `Adaptation`'s `isSupported` property will be updated accordingly as
+   * well as all of its inner `Representation`'s `isSupported` attributes.
+   *
+   * @param {Array.<Object>} supportList
    */
-  getPlayableRepresentations() : Representation[] {
-    return this.representations.filter(rep => rep.isPlayable());
+  refreshCodecSupport(supportList: ICodecSupportList): void {
+    for (const representation of this.representations) {
+      if (representation.isSupported === undefined) {
+        representation.refreshCodecSupport(supportList);
+        if (this.isSupported !== true && representation.isSupported === true) {
+          this.isSupported = true;
+        } else if (
+          this.isSupported === undefined &&
+          representation.isSupported === false
+        ) {
+          this.isSupported = false;
+        }
+      }
+    }
   }
 
   /**
@@ -222,87 +257,37 @@ export default class Adaptation {
   }
 
   /**
-   * Format an `Adaptation`, generally of type `"audio"`, as an `IAudioTrack`.
-   * @param {boolean} filterPlayable - If `true` only "playable" Representation
-   * will be returned.
+   * Format the current `Adaptation`'s properties into a
+   * `IAdaptationMetadata` format which can better be communicated through
+   * another thread.
+   *
+   * Please bear in mind however that the returned object will not be updated
+   * when the current `Adaptation` instance is updated, it is only a
+   * snapshot at the current time.
+   *
+   * If you want to keep that data up-to-date with the current `Adaptation`
+   * instance, you will have to do it yourself.
+   *
    * @returns {Object}
    */
-  public toAudioTrack(filterPlayable: boolean) : IAudioTrack {
-    const formatted : IAudioTrack = {
-      language: this.language ?? "",
-      normalized: this.normalizedLanguage ?? "",
-      audioDescription: this.isAudioDescription === true,
-      id: this.id,
-      representations: (
-        filterPlayable ?
-          this.getPlayableRepresentations() :
-          this.representations
-      ).map(r => r.toAudioRepresentation()),
-      label: this.label,
-    };
-    if (this.isDub === true) {
-      formatted.dub = true;
+  getMetadataSnapshot() : IAdaptationMetadata {
+    const representations : IRepresentationMetadata[] = [];
+    const baseRepresentations = this.representations;
+    for (const representation of baseRepresentations) {
+      representations.push(representation.getMetadataSnapshot());
     }
-    return formatted;
-  }
-
-  /**
-   * Format an `Adaptation`, generally of type `"audio"`, as an `IAudioTrack`.
-   * @returns {Object}
-   */
-  public toTextTrack() : ITextTrack {
     return {
-      language: this.language ?? "",
-      normalized: this.normalizedLanguage ?? "",
-      closedCaption: this.isClosedCaption === true,
       id: this.id,
+      type: this.type,
+      isSupported: this.isSupported,
+      language: this.language,
+      isClosedCaption: this.isClosedCaption,
+      isAudioDescription: this.isAudioDescription,
+      isSignInterpreted: this.isSignInterpreted,
+      normalizedLanguage: this.normalizedLanguage,
+      representations,
       label: this.label,
-      forced: this.isForcedSubtitles,
+      isDub: this.isDub,
     };
-  }
-
-  /**
-   * Format an `Adaptation`, generally of type `"video"`, as an `IAudioTrack`.
-   * @param {boolean} filterPlayable - If `true` only "playable" Representation
-   * will be returned.
-   * @returns {Object}
-   */
-  public toVideoTrack(filterPlayable: boolean) : IVideoTrack {
-    const trickModeTracks = this.trickModeTracks !== undefined ?
-      this.trickModeTracks.map((trickModeAdaptation) => {
-        const representations = (
-          filterPlayable ?
-            trickModeAdaptation.getPlayableRepresentations() :
-            trickModeAdaptation.representations
-        ).map(r => r.toVideoRepresentation());
-        const trickMode : IVideoTrack = { id: trickModeAdaptation.id,
-                                          representations,
-                                          isTrickModeTrack: true };
-        if (trickModeAdaptation.isSignInterpreted === true) {
-          trickMode.signInterpreted = true;
-        }
-        return trickMode;
-      }) :
-      undefined;
-
-    const videoTrack: IVideoTrack = {
-      id: this.id,
-      representations: (
-        filterPlayable ?
-          this.getPlayableRepresentations() :
-          this.representations
-      ).map(r => r.toVideoRepresentation()),
-      label: this.label,
-    };
-    if (this.isSignInterpreted === true) {
-      videoTrack.signInterpreted = true;
-    }
-    if (this.isTrickModeTrack === true) {
-      videoTrack.isTrickModeTrack = true;
-    }
-    if (trickModeTracks !== undefined) {
-      videoTrack.trickModeTracks = trickModeTracks;
-    }
-    return videoTrack;
   }
 }

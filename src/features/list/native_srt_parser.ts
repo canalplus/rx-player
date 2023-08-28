@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line max-len
-import NativeTextSegmentBuffer from "../../core/segment_buffers/implementations/text/native";
 import srtParser from "../../parsers/texttracks/srt/native";
+import NativeTextDisplayer from "../../text_displayer/native";
 import { IFeaturesObject } from "../types";
 
 /**
@@ -25,7 +24,7 @@ import { IFeaturesObject } from "../types";
  */
 function addNativeSRTFeature(features : IFeaturesObject) : void {
   features.nativeTextTracksParsers.srt = srtParser;
-  features.nativeTextTracksBuffer = NativeTextSegmentBuffer;
+  features.nativeTextDisplayer = NativeTextDisplayer;
 }
 
 export { addNativeSRTFeature as NATIVE_SRT_PARSER };

@@ -1,5 +1,15 @@
 # RepresentationStream #########################################################
 
+| Consideration           | Status                            |
+|-------------------------|-----------------------------------|
+| Preferred import style  | Directory-only _[1]_              |
+| Multithread environment | Should be runnable in a WebWorker |
+
+_[1]_ Only the `representation` directory itself should be imported and relied
+on by the rest of the code, not its inner files (thus `./index.ts` should export
+everything that may be imported by outside code).
+
+
 
 ## Overview ####################################################################
 

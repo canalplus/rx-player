@@ -14,36 +14,12 @@
  * limitations under the License.
  */
 
-import { Adaptation } from "../manifest";
-import {
-  IAudioTrack,
-  ITextTrack,
-  IVideoTrack,
-} from "../public_types";
+import { ITaggedTrack } from "../manifest";
 import {
   ErrorTypes,
   IMediaErrorCode,
 } from "./error_codes";
 import errorMessage from "./error_message";
-
-interface IAudioTrackMediaErrorContext {
-  type : "audio";
-  track : IAudioTrack;
-}
-
-interface IVideoTrackMediaErrorContext {
-  type : "video";
-  track : IVideoTrack;
-}
-
-interface ITextTrackMediaErrorContext {
-  type : "text";
-  track : ITextTrack;
-}
-
-export type IMediaErrorTrackContext = IAudioTrackMediaErrorContext |
-                                      IVideoTrackMediaErrorContext |
-                                      ITextTrackMediaErrorContext;
 
 type ICodeWithAdaptationType = "BUFFER_APPEND_ERROR" |
                                "BUFFER_FULL_ERROR" |
@@ -61,8 +37,9 @@ export default class MediaError extends Error {
   public readonly type : "MEDIA_ERROR";
   public readonly message : string;
   public readonly code : IMediaErrorCode;
-  public readonly tracksInfo : IMediaErrorTrackContext[] | undefined;
+  public readonly tracksInfo : ITaggedTrack[] | undefined;
   public fatal : boolean;
+  private _originalMessage : string;
 
   /**
    * @param {string} code
@@ -73,18 +50,21 @@ export default class MediaError extends Error {
     code : ICodeWithAdaptationType,
     reason : string,
     context: {
-      adaptations : Adaptation[] | undefined;
+      tracks : ITaggedTrack[] | undefined;
     }
   );
   constructor(
     code : Exclude<IMediaErrorCode, ICodeWithAdaptationType>,
     reason : string,
+    context? : {
+      tracks? : undefined;
+    } | undefined
   );
   constructor(
     code : IMediaErrorCode,
     reason : string,
     context? : {
-      adaptations? : Adaptation[] | undefined;
+      tracks? : ITaggedTrack[] | undefined;
     } | undefined
   ) {
     super();
@@ -93,32 +73,34 @@ export default class MediaError extends Error {
 
     this.name = "MediaError";
     this.type = ErrorTypes.MEDIA_ERROR;
+    this._originalMessage = reason;
 
     this.code = code;
     this.message = errorMessage(this.code, reason);
     this.fatal = false;
-    const adaptations = context?.adaptations;
-    if (adaptations !== undefined && adaptations.length > 0) {
-      this.tracksInfo = adaptations.reduce((
-        acc: IMediaErrorTrackContext[],
-        adaptation: Adaptation
-      ) => {
-        switch (adaptation.type) {
-          case "audio":
-            acc.push({ type: "audio",
-                       track: adaptation.toAudioTrack(false) });
-            break;
-          case "video":
-            acc.push({ type: "video",
-                       track: adaptation.toVideoTrack(false) });
-            break;
-          case "text":
-            acc.push({ type: "text",
-                       track: adaptation.toTextTrack() });
-            break;
-        }
-        return acc;
-      }, []);
+    if (context?.tracks !== undefined && context?.tracks.length > 0) {
+      this.tracksInfo = context.tracks;
     }
   }
+
+  /**
+   * If that error has to be communicated through another thread, this method
+   * allows to obtain its main defining properties in an Object so the Error can
+   * be reconstructed in the other thread.
+   * @returns {Object}
+   */
+  public serialize(): ISerializedMediaError {
+    return { name: this.name,
+             code: this.code,
+             reason: this._originalMessage,
+             tracks: this.tracksInfo };
+  }
+}
+
+/** Serializable object which allows to create a `MediaError` later. */
+export interface ISerializedMediaError {
+  name : "MediaError";
+  code : IMediaErrorCode;
+  reason : string;
+  tracks : ITaggedTrack[] | undefined;
 }

@@ -1,3 +1,4 @@
+import hasMseInWorker from "../../../../compat/has_mse_in_worker";
 import { CancellationSignal } from "../../../../utils/task_canceller";
 import RxPlayer from "../../public_api";
 import { DEFAULT_REFRESH_INTERVAL } from "../constants";
@@ -54,6 +55,15 @@ export default function constructDebugGeneralInfo(
         ["wba", String(instance.getWantedBufferAhead())],
         ["st", `"${instance.getPlayerState()}"`],
       ];
+      if (instance.getCurrentModeInformation()?.useWorker === true) {
+        if (hasMseInWorker) {
+          valuesLine1.push(["wo", "2"]);
+        } else {
+          valuesLine1.push(["wo", "1"]);
+        }
+      } else {
+        valuesLine1.push(["wo", "0"]);
+      }
 
       const valuesLine2 : Array<[string, string]> = [];
       const ks = instance.getKeySystemConfiguration();
@@ -160,12 +170,12 @@ export default function constructDebugGeneralInfo(
       const adaptations = instance.__priv_getCurrentAdaptation();
       const videoBitratesStr = adaptations?.video?.representations.map((r) => {
         return String(r.bitrate ?? "N/A") +
-               (r.isSupported ? "" : " U!") +
+               (r.isSupported !== false ? "" : " U!") +
                (r.decipherable !== false ? "" : " E!");
       }) ?? [];
       const audioBitratesStr = adaptations?.audio?.representations.map((r) => {
         return String(r.bitrate ?? "N/A") +
-               (r.isSupported ? "" : " U!") +
+               (r.isSupported !== false ? "" : " U!") +
                (r.decipherable !== false ? "" : " E!");
       }) ?? [];
       representationsElt.innerHTML = "";

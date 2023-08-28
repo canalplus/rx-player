@@ -28,6 +28,7 @@ import {
 } from "../../public_types";
 import assert from "../../utils/assert";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import noop from "../../utils/noop";
 import SharedReference, {
   IReadOnlySharedReference,
 } from "../../utils/reference";
@@ -104,13 +105,12 @@ export default class DirectFileContentInitializer extends ContentInitializer {
     decryptionRef.finish();
 
     const drmInitRef =
-      initializeContentDecryption(
-        mediaElement,
-        keySystems,
-        decryptionRef,
-        { onError: (err) =>  this._onFatalError(err),
-          onWarning: (err : IPlayerError) => this.trigger("warning", err) },
-        cancelSignal);
+      initializeContentDecryption(mediaElement, keySystems, decryptionRef, {
+        onError: (err) =>  this._onFatalError(err),
+        onWarning: (err : IPlayerError) => this.trigger("warning", err),
+        onBlackListProtectionData: noop,
+        onKeyIdsCompatibilityUpdate: noop,
+      }, cancelSignal);
 
     /** Translate errors coming from the media element into RxPlayer errors. */
     listenToMediaError(mediaElement,
@@ -122,7 +122,6 @@ export default class DirectFileContentInitializer extends ContentInitializer {
      * events when it cannot, as well as "unstalled" events when it get out of one.
      */
     const rebufferingController = new RebufferingController(playbackObserver,
-                                                            null,
                                                             null,
                                                             speed);
     rebufferingController.addEventListener("stalled", (evt) =>

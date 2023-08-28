@@ -15,7 +15,7 @@
  */
 
 import config from "../../../../config";
-import Manifest from "../../../../manifest";
+import { IManifestMetadata } from "../../../../manifest";
 import EventEmitter from "../../../../utils/event_emitter";
 import SharedReference from "../../../../utils/reference";
 import TaskCanceller, { CancellationSignal } from "../../../../utils/task_canceller";
@@ -38,7 +38,7 @@ interface IStreamEventsEmitterEvent {
  * Get events from manifest and emit each time an event has to be emitted
  */
 export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitterEvent> {
-  private _manifest : Manifest;
+  private _manifest : IManifestMetadata;
   private _mediaElement : HTMLMediaElement;
   private _playbackObserver : IReadOnlyPlaybackObserver<IPlaybackObservation>;
   private _scheduledEventsRef : SharedReference<
@@ -56,7 +56,7 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
    * @param {Object} playbackObserver
    */
   constructor(
-    manifest : Manifest,
+    manifest : IManifestMetadata,
     mediaElement : HTMLMediaElement,
     playbackObserver : IReadOnlyPlaybackObserver<IPlaybackObservation>
   ) {
@@ -82,15 +82,10 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
     const playbackObserver = this._playbackObserver;
     const mediaElement = this._mediaElement;
 
-
     let isPollingEvents = false;
     let cancelCurrentPolling = new TaskCanceller();
     cancelCurrentPolling.linkToSignal(cancelSignal);
 
-    this._manifest.addEventListener("manifestUpdate", () => {
-      const prev = this._scheduledEventsRef.getValue();
-      this._scheduledEventsRef.setValue(refreshScheduledEventsList(prev, this._manifest));
-    }, this._canceller.signal);
     this._scheduledEventsRef.setValue(refreshScheduledEventsList([], this._manifest));
 
     this._scheduledEventsRef.onUpdate(({ length: scheduledEventsLength }) => {
@@ -135,6 +130,11 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
                  isSeeking };
       }
     }, { emitCurrentValue: true, clearSignal: cancelSignal });
+  }
+
+  public onManifestUpdate(man: IManifestMetadata) {
+    const prev = this._scheduledEventsRef.getValue();
+    this._scheduledEventsRef.setValue(refreshScheduledEventsList(prev, man));
   }
 
   public stop(): void {

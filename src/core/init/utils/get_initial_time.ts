@@ -16,7 +16,12 @@
 
 import config from "../../../config";
 import log from "../../../log";
-import Manifest from "../../../manifest";
+import {
+  IManifestMetadata,
+  getLivePosition,
+  getMaximumSafePosition,
+  getMinimumSafePosition,
+} from "../../../manifest";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 
@@ -81,13 +86,13 @@ export interface IInitialTimeOptions {
  * @returns {Number}
  */
 export default function getInitialTime(
-  manifest : Manifest,
+  manifest : IManifestMetadata,
   lowLatencyMode : boolean,
   startAt? : IInitialTimeOptions
 ) : number {
   if (!isNullOrUndefined(startAt)) {
-    const min = manifest.getMinimumSafePosition();
-    const max = manifest.getMaximumSafePosition();
+    const min = getMinimumSafePosition(manifest);
+    const max = getMaximumSafePosition(manifest);
     if (!isNullOrUndefined(startAt.position)) {
       log.debug("Init: using startAt.minimumPosition");
       return Math.max(Math.min(startAt.position, max), min);
@@ -112,7 +117,7 @@ export default function getInitialTime(
                                      Math.max(min, max + fromLastPosition);
     } else if (!isNullOrUndefined(startAt.fromLivePosition)) {
       log.debug("Init: using startAt.fromLivePosition");
-      const livePosition = manifest.getLivePosition() ?? max;
+      const livePosition = getLivePosition(manifest) ?? max;
       const { fromLivePosition } = startAt;
       return fromLivePosition >= 0 ? livePosition :
                                      Math.max(min, livePosition + fromLivePosition);
@@ -130,11 +135,11 @@ export default function getInitialTime(
     }
   }
 
-  const minimumPosition = manifest.getMinimumSafePosition();
+  const minimumPosition = getMinimumSafePosition(manifest);
   if (manifest.isLive) {
     const { suggestedPresentationDelay,
             clockOffset } = manifest;
-    const maximumPosition = manifest.getMaximumSafePosition();
+    const maximumPosition = getMaximumSafePosition(manifest);
     let liveTime : number;
     const { DEFAULT_LIVE_GAP } = config.getCurrent();
 
