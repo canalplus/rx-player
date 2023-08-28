@@ -28,6 +28,8 @@ function Settings({
   showOptions,
   updateDefaultAudioRepresentationsSwitchingMode,
   updateDefaultVideoRepresentationsSwitchingMode,
+  tryRelyOnWorker,
+  updateTryRelyOnWorker,
 }: {
   playerOptions: IConstructorSettings;
   updatePlayerOptions: (
@@ -45,6 +47,8 @@ function Settings({
   updateDefaultVideoRepresentationsSwitchingMode: (
     mode: IVideoRepresentationsSwitchingMode
   ) => void;
+  tryRelyOnWorker : boolean;
+  updateTryRelyOnWorker: (tryRelyOnWorker: boolean) => void;
   showOptions: boolean;
 }): JSX.Element | null {
   const {
@@ -83,6 +87,10 @@ function Settings({
       return Object.assign({}, prevOptions, { autoPlay });
     });
   }, [updateLoadVideoOptions]);
+
+  const onTryRelyOnWorkerChange = useCallback((tryRelyOnWorker: boolean) => {
+    updateTryRelyOnWorker(tryRelyOnWorker);
+  }, [updateTryRelyOnWorker]);
 
   const onLimitVideoWidthChange = useCallback((limitVideoWidth: boolean) => {
     updatePlayerOptions((prevOptions) => {
@@ -278,6 +286,8 @@ function Settings({
           <Playback
             autoPlay={autoPlay}
             onAutoPlayChange={onAutoPlayChange}
+            tryRelyOnWorker={tryRelyOnWorker}
+            onTryRelyOnWorkerChange={onTryRelyOnWorkerChange}
           />
         </Option>
         <Option title="Video adaptive settings">

@@ -18,26 +18,23 @@ import config from "../../../config";
 import {
   Adaptation,
   Period,
-  Representation,
 } from "../../../manifest";
+import arrayIncludes from "../../../utils/array_includes";
 import {
-  convertToRanges,
-  excludeFromRanges,
   IRange,
-  isTimeInRange,
-  isTimeInRanges,
-  keepRangeIntersection,
+  excludeFromRanges,
+  insertInto,
 } from "../../../utils/ranges";
 import { IReadOnlyPlaybackObserver } from "../../api";
 import {
   getFirstSegmentAfterPeriod,
   getLastSegmentBeforePeriod,
-  IBufferedChunk,
   SegmentBuffer,
+  SegmentBufferOperation,
 } from "../../segment_buffers";
 import {
-  IRepresentationStreamPlaybackObservation,
   IRepresentationsChoice,
+  IRepresentationStreamPlaybackObservation,
 } from "../representation";
 
 export default function getRepresentationsSwitchingStrategy(
@@ -50,55 +47,47 @@ export default function getRepresentationsSwitchingStrategy(
   if (settings.switchingMode === "lazy") {
     return { type: "continue", value: undefined };
   }
-  const buffered = segmentBuffer.getBufferedRanges();
-  if (buffered.length === 0) {
-    return { type: "continue", value: undefined };
+
+  const inventory = segmentBuffer.getLastKnownInventory();
+  const unwantedRange: IRange[] = [];
+  for (const elt of inventory) {
+    if (
+      elt.infos.period.id === period.id && (
+        elt.infos.adaptation.id !== adaptation.id ||
+        !arrayIncludes(settings.representationIds, elt.infos.representation.id)
+      )
+    ) {
+      insertInto(unwantedRange, { start: elt.bufferedStart ?? elt.start,
+                                  end: elt.bufferedEnd ?? elt.end });
+    }
   }
-  const bufferedRanges = convertToRanges(buffered);
-  const start = period.start;
-  const end = period.end == null ? Infinity :
-                                   period.end;
-  const intersection = keepRangeIntersection(bufferedRanges, [{ start, end }]);
-  if (intersection.length === 0) {
-    return { type: "continue", value: undefined };
+
+  const pendingOperations = segmentBuffer.getPendingOperations();
+  for (const operation of pendingOperations) {
+    if (operation.type === SegmentBufferOperation.Push) {
+      const info = operation.value.inventoryInfos;
+      if (
+        info.period.id === period.id && (
+          info.adaptation.id !== adaptation.id ||
+          !arrayIncludes(settings.representationIds, info.representation.id)
+        )
+      ) {
+        const start = info.segment.time;
+        const end = start + info.segment.duration;
+        insertInto(unwantedRange, { start, end });
+      }
+    }
   }
 
-  segmentBuffer.synchronizeInventory();
-  const inventory = segmentBuffer.getInventory();
-
-  /** Data already in the right Adaptation */
-  const rangesWithReps =
-    getBufferedRangesFromRepresentations(inventory,
-                                         period,
-                                         adaptation,
-                                         settings.representations);
-
-  /**
-   * Data different from the wanted Adaptation in the Period's range.
-   * /!\ Could contain some data at the end of the previous Period or at the
-   * beginning of the next one.
-   */
-  const unwantedRange = excludeFromRanges(intersection, rangesWithReps);
-
+  // Continue if we have no other Adaptation buffered in the current Period
   if (unwantedRange.length === 0) {
     return { type: "continue", value: undefined };
   }
 
-  const readyState = playbackObserver.getReadyState();
-  if (settings.switchingMode === "reload" && readyState > 1) {
-    const lastObservation = playbackObserver.getReference().getValue();
-    if (lastObservation.position.isAwaitingFuturePosition()) {
-      // We are not at the position we want to reach (e.g. initial seek, tizen
-      // seek-back...), just reload as checks here would be too complex
+  if (settings.switchingMode === "reload") {
+    const readyState = playbackObserver.getReadyState();
+    if (readyState === undefined || readyState > 1) {
       return { type: "needs-reload", value: undefined };
-    } else {
-      const currentTime = playbackObserver.getCurrentTime();
-      if (isTimeInRange({ start, end }, currentTime) &&
-          // We're not playing the current wanted video Adaptation
-          !isTimeInRanges(rangesWithReps, currentTime))
-      {
-        return { type: "needs-reload", value: undefined };
-      }
     }
   }
 
@@ -136,7 +125,14 @@ export default function getRepresentationsSwitchingStrategy(
     if (paddingAfter == null) {
       paddingAfter = 0;
     }
-    const currentTime = playbackObserver.getCurrentTime();
+
+    let currentTime = playbackObserver.getCurrentTime();
+    if (currentTime === undefined) {
+      // TODO current position might be old. A better solution should be found.
+      const lastObservation = playbackObserver.getReference().getValue();
+      currentTime = lastObservation.position.getPolled();
+    }
+
     rangesToExclude.push({ start: currentTime - paddingBefore,
                            end: currentTime + paddingAfter });
   }
@@ -167,37 +163,17 @@ export default function getRepresentationsSwitchingStrategy(
 }
 
 export type IRepresentationSwitchStrategy =
+  /** Do nothing special. */
   { type: "continue"; value: undefined } |
+  /**
+   * Clean the given ranges of time from the buffer, preferably avoiding time
+   * around the current position to continue playback smoothly.
+   */
   { type: "clean-buffer"; value: Array<{ start: number; end: number }> } |
+  /**
+   * Clean the given ranges of time from the buffer and try to flush the buffer
+   * so that it is taken in account directly.
+   */
   { type: "flush-buffer"; value: Array<{ start: number; end: number }> } |
+  /** Reload completely the media buffers. */
   { type: "needs-reload"; value: undefined };
-
-/**
- * Returns buffered ranges of what we know correspond to the given `adaptation`
- * in the SegmentBuffer.
- * @param {Array.<Object>} inventory
- * @param {Object} period
- * @param {Object} adaptation
- * @returns {Array.<Object>}
- */
-function getBufferedRangesFromRepresentations(
-  inventory : IBufferedChunk[],
-  period : Period,
-  adaptation : Adaptation,
-  representations : Representation[]
-) : IRange[] {
-  return inventory.reduce<IRange[]>((acc : IRange[], chunk) : IRange[] => {
-    if (chunk.infos.period.id !== period.id ||
-        chunk.infos.adaptation.id !== adaptation.id ||
-        !representations.some(rep => rep.id === chunk.infos.representation.id))
-    {
-      return acc;
-    }
-    const { bufferedStart, bufferedEnd } = chunk;
-    if (bufferedStart === undefined || bufferedEnd === undefined) {
-      return acc;
-    }
-    acc.push({ start: bufferedStart, end: bufferedEnd });
-    return acc;
-  }, []);
-}

@@ -2,6 +2,8 @@ import Manifest, {
   Adaptation,
   Period,
 } from "../../../manifest";
+import { ITrackType } from "../../../public_types";
+import { IRange } from "../../../utils/ranges";
 import SharedReference, {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
@@ -12,15 +14,14 @@ import { IObservationPosition, IReadOnlyPlaybackObserver } from "../../api";
 import { SegmentFetcherCreator } from "../../fetchers";
 import SegmentBuffersStore, {
   IBufferType,
-  ITextTrackSegmentBufferOptions,
   SegmentBuffer,
 } from "../../segment_buffers";
 import {
   IAdaptationChoice,
   IAdaptationStreamCallbacks,
   IAdaptationStreamOptions,
-  IPausedPlaybackObservation,
 } from "../adaptation";
+import { IPausedPlaybackObservation } from "../representation";
 
 /** Callbacks called by the `AdaptationStream` on various events. */
 export interface IPeriodStreamCallbacks extends
@@ -94,6 +95,11 @@ export interface IPeriodStreamPlaybackObservation {
   speed : number;
   /** Theoretical maximum position on the content that can currently be played. */
   maximumPosition : number;
+  /**
+   * Ranges of buffered data per type of media.
+   * `null` if no buffer exists for that type of media.
+   */
+  buffered : Record<ITrackType, IRange[] | null>;
 }
 
 /** Arguments required by the `PeriodStream`. */
@@ -118,8 +124,6 @@ export type IPeriodStreamOptions =
   {
     /** Behavior when a new video and/or audio codec is encountered. */
     onCodecSwitch : "continue" | "reload";
-    /** Options specific to the text SegmentBuffer. */
-    textTrackOptions? : ITextTrackSegmentBufferOptions;
   };
 
 export { IAudioTrackSwitchingMode } from "../../../public_types";

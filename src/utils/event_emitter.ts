@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import log from "../log";
 import isNullOrUndefined from "./is_null_or_undefined";
 import { CancellationSignal } from "./task_canceller";
 
@@ -140,7 +139,14 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
       try {
         listener(arg);
       } catch (e) {
-        log.error("EventEmitter: listener error", e instanceof Error ? e : null);
+        if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
+          throw e instanceof Error ? e :
+                                     new Error("EventEmitter: listener error");
+        }
+        // Cannot use our logger here sadly because our logger is an `EventEmitter`
+        // itself.
+        /* eslint-disable-next-line no-console */
+        console.error("RxPlayer: EventEmitter error", e instanceof Error ? e : null);
       }
     });
   }

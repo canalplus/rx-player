@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line max-len
-import HTMLTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/html";
 import ttmlParser from "../../../parsers/texttracks/ttml/html";
+import HTMLTextDisplayer from "../../../text_displayer/html";
 import { IFeaturesObject } from "../../types";
 import addHTMLttmlFeature from "../html_ttml_parser";
 
@@ -26,7 +25,7 @@ describe("Features list - HTML ttml Parser", () => {
     addHTMLttmlFeature(featureObject);
     expect(featureObject).toEqual({
       htmlTextTracksParsers: { ttml: ttmlParser },
-      htmlTextTracksBuffer: HTMLTextSegmentBuffer,
+      htmlTextDisplayer: HTMLTextDisplayer,
     });
     expect(featureObject.htmlTextTracksParsers.ttml).toBe(ttmlParser);
   });

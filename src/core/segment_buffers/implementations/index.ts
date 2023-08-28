@@ -15,6 +15,10 @@
  */
 
 import AudioVideoSegmentBuffer from "./audio_video";
+import { ITextDisplayerInterface } from "./text";
 export * from "./types";
 
-export { AudioVideoSegmentBuffer };
+export {
+  AudioVideoSegmentBuffer,
+  ITextDisplayerInterface,
+};

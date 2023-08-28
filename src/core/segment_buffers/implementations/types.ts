@@ -20,7 +20,7 @@ import {
   Period,
   Representation,
 } from "../../../manifest";
-import { CancellationSignal } from "../../../utils/task_canceller";
+import { IRange } from "../../../utils/ranges";
 import SegmentInventory, {
   IBufferedChunk,
   IBufferedHistoryEntry,
@@ -41,13 +41,13 @@ import SegmentInventory, {
  * already-pushed segments for that type.
  *
  * Because a segment can be divided into multiple chunks, one should call the
- * `endOfSegment` method once all chunks of a given segment have been pushed
- * (through the `pushChunk` method) to validate that a segment has been
+ * `signalSegmentComplete` method once all chunks of a given segment have been
+ * pushed (through the `pushChunk` method) to validate that a segment has been
  * completely pushed.
  * It is expected to push chunks from only one segment at a time before calling
- * the `endOfSegment` function for that segment. Pushing chunks from multiple
- * segments in parallel could have unexpected result depending on the underlying
- * implementation.
+ * the `signalSegmentComplete` function for that segment. Pushing chunks from
+ * multiple segments in parallel could have unexpected result depending on the
+ * underlying implementation.
  * TODO reflect that in the API?
  *
  * A SegmentBuffer also maintains an "inventory", which is the current
@@ -57,9 +57,9 @@ import SegmentInventory, {
  * `getInventory` method).
  *
  * Also depending on the underlying implementation, the various operations
- * performed on a `SegmentBuffer` (push/remove/endOfSegment) can happen
+ * performed on a `SegmentBuffer` (push/remove/segmentComplete) can happen
  * synchronously or asynchronously.
- * In the latter case, such operations are put in a FIFO Queue.
+ *
  * You can retrieve the current queue of operations by calling the
  * `getPendingOperations` method.
  * If operations happens synchronously, this method will just return an empty
@@ -95,12 +95,11 @@ export abstract class SegmentBuffer {
   public abstract freeInitSegment(uniqueId : string) : void;
 
   /**
-   * Push a chunk of the media segment given to the attached buffer, in a
-   * FIFO queue.
+   * Push a chunk of the media segment given to the attached buffer.
    *
    * Once all chunks of a single Segment have been given to `pushChunk`, you
-   * should call `endOfSegment` to indicate that the whole Segment has been
-   * pushed.
+   * should call `signalSegmentComplete` to indicate that the whole Segment has
+   * been pushed.
    *
    * Depending on the type of data appended, the pushed chunk might rely on an
    * initialization segment, which had to be previously declared through the
@@ -120,84 +119,74 @@ export abstract class SegmentBuffer {
    * `data.chunk` argument to null.
    *
    * @param {Object} infos
-   * @param {Object} cancellationSignal
    * @returns {Promise}
    */
   public abstract pushChunk(
-    infos : IPushChunkInfos<unknown>,
-    cancellationSignal : CancellationSignal
-  ) : Promise<void>;
+    infos : IPushChunkInfos<unknown>
+  ) : Promise<IRange[]>;
 
   /**
-   * Remove buffered data (added to the same FIFO queue than `pushChunk`).
+   * Remove buffered data.
    * @param {number} start - start position, in seconds
    * @param {number} end - end position, in seconds
-   * @param {Object} cancellationSignal
    * @returns {Promise}
    */
   public abstract removeBuffer(
     start : number,
-    end : number,
-    cancellationSignal : CancellationSignal
-  ) : Promise<void>;
+    end : number
+  ) : Promise<IRange[] | undefined>;
 
   /**
-   * Indicate that every chunks from a Segment has been given to pushChunk so
+   * Indicate that every chunks from a segment has been given to pushChunk so
    * far.
    * This will update our internal Segment inventory accordingly.
    * The returned Promise will resolve once the whole segment has been pushed
    * and this indication is acknowledged.
    * @param {Object} infos
-   * @param {Object} cancellationSignal
    * @returns {Promise}
+   *
+   * TODO since switching to worker, this abstraction doesn't really work.
+   * Find better.
    */
-  public abstract endOfSegment(
-    infos : IEndOfSegmentInfos,
-    cancellationSignal : CancellationSignal
+  public abstract signalSegmentComplete(
+    infos : ICompleteSegmentInfo
   ) : Promise<void>;
-
-  /**
-   * Returns the currently buffered data, in a TimeRanges object.
-   * @returns {TimeRanges}
-   */
-  public abstract getBufferedRanges() : TimeRanges;
 
   /**
    * The maintained inventory can fall out of sync from garbage collection or
    * other events.
    *
-   * This methods allow to manually trigger a synchronization. It should be
-   * called before retrieving Segment information from it (e.g. with
-   * `getInventory`).
+   * This methods allow to manually trigger a synchronization by providing the
+   * buffered time ranges of the real SourceBuffer implementation.
    */
-  public synchronizeInventory() : void {
+  public synchronizeInventory(ranges: IRange[]) : void {
     // The default implementation just use the SegmentInventory
-    this._segmentInventory.synchronizeBuffered(this.getBufferedRanges());
+    this._segmentInventory.synchronizeBuffered(ranges);
   }
 
   /**
-   * Returns the currently buffered data for which the content is known with
-   * the corresponding content information.
-   * /!\ This data can fall out of sync with the real buffered ranges. Please
-   * call `synchronizeInventory` before to make sure it is correctly
-   * synchronized.
+   * Returns an inventory of the last known segments to be currently contained in
+   * the SegmentBuffer.
+   *
+   * /!\ Note that this data may not be up-to-date with the real current content
+   * of the SegmentBuffer.
+   * Generally speaking, pushed segments are added right away to it but segments
+   * may have been since removed, which might not be known right away.
+   * Please consider this when using this method, by considering that it does
+   * not reflect the full reality of the underlying buffer.
    * @returns {Array.<Object>}
    */
-  public getInventory() : IBufferedChunk[] {
+  public getLastKnownInventory() : IBufferedChunk[] {
     // The default implementation just use the SegmentInventory
     return this._segmentInventory.getInventory();
   }
 
   /**
    * Returns the list of every operations that the `SegmentBuffer` is still
-   * processing. From the one with the highest priority (like the one being
-   * processed)
+   * processing. From the one with the highest priority to the lowest priority.
    * @returns {Array.<Object>}
    */
-  public getPendingOperations() : Array<ISBOperation<unknown>> {
-    // Return no pending operation by default (for synchronous SegmentBuffers)
-    return [];
-  }
+  public abstract getPendingOperations() : Array<ISBOperation<unknown>>;
 
   /**
    * Returns a recent history of registered operations performed and event
@@ -217,7 +206,7 @@ export abstract class SegmentBuffer {
   }
 
   /**
-   * Dispose of the resources used by this AudioVideoSegmentBuffer.
+   * Dispose of the resources used by this SegmentBuffer.
    * /!\ You won't be able to use the SegmentBuffer after calling this
    * function.
    */
@@ -290,9 +279,9 @@ export interface IPushedChunkData<T> {
 
 /**
  * Information to give when indicating a whole segment has been pushed via the
- * `endOfSegment` method.
+ * `signalSegmentComplete` method.
  */
-export interface IEndOfSegmentInfos {
+export interface ICompleteSegmentInfo {
   /** Adaptation object linked to the chunk. */
   adaptation : Adaptation;
   /** Period object linked to the chunk. */
@@ -313,22 +302,14 @@ export interface IPushChunkInfos<T> {
   /**
    * Context about the chunk that will be added to the inventory once it is
    * pushed.
-   *
-   * Can be set to `null` if you don't want to add an entry to the inventory
-   * after that segment is pushed (e.g. can be useful for initialization
-   * segments, as they take no place in a buffer).
-   * Please note that an inventory might become completely un-synchronized
-   * with the real media buffer if some buffered segments are not added to
-   * the inventory afterwise.
    */
-   inventoryInfos : IInsertedChunkInfos |
-                    null;
+   inventoryInfos : IInsertedChunkInfos;
 }
 
 /** "Operations" scheduled by a SegmentBuffer. */
 export type ISBOperation<T> = IPushOperation<T> |
                               IRemoveOperation |
-                              IEndOfSegmentOperation;
+                              ISignalCompleteSegmentOperation;
 
 /**
  * Enum used by a SegmentBuffer as a discriminant in its queue of
@@ -336,7 +317,7 @@ export type ISBOperation<T> = IPushOperation<T> |
  */
 export enum SegmentBufferOperation { Push,
                                      Remove,
-                                     EndOfSegment }
+                                     SignalSegmentComplete }
 
 /**
  * "Operation" created by a `SegmentBuffer` when asked to push a chunk.
@@ -368,13 +349,13 @@ export interface IRemoveOperation {
  * "Operation" created by a `SegmentBuffer` when asked to validate that a full
  * segment has been pushed through earlier `Push` operations.
  *
- * It represents a queued "EndOfSegment" operation (created due to a
- * `endOfSegment` method call) that is not yet fully processed by a
+ * It represents a queued "SignalSegmentComplete" operation (created due to a
+ * `signalSegmentComplete` method call) that is not yet fully processed by a
  * `SegmentBuffer.`
  */
-export interface IEndOfSegmentOperation {
-  /** Discriminant (allows to tell its an "EndOfSegment operation"). */
-  type : SegmentBufferOperation.EndOfSegment;
+export interface ISignalCompleteSegmentOperation {
+  /** Discriminant (allows to tell its an "SignalSegmentComplete operation"). */
+  type : SegmentBufferOperation.SignalSegmentComplete;
   /** Arguments for that operation. */
-  value : IEndOfSegmentInfos;
+  value : ICompleteSegmentInfo;
 }

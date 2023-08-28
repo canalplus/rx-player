@@ -23,10 +23,13 @@ import log from "../../../log";
 import {
   Adaptation,
   Period,
+  toTaggedTrack,
 } from "../../../manifest";
+import { ITrackType } from "../../../public_types";
+import arrayFind from "../../../utils/array_find";
 import objectAssign from "../../../utils/object_assign";
 import queueMicrotask from "../../../utils/queue_microtask";
-import { getLeftSizeOfBufferedTimeRange } from "../../../utils/ranges";
+import { getLeftSizeOfRange } from "../../../utils/ranges";
 import SharedReference, {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
@@ -37,7 +40,6 @@ import TaskCanceller, {
 import { IReadOnlyPlaybackObserver } from "../../api";
 import SegmentBuffersStore, {
   IBufferType,
-  ITextTrackSegmentBufferOptions,
   SegmentBuffer,
 } from "../../segment_buffers";
 import AdaptationStream, {
@@ -124,6 +126,7 @@ export default function PeriodStream(
       if (choice === undefined) {
         return;
       }
+
       const streamCanceller = new TaskCanceller();
       streamCanceller.linkToSignal(parentCancelSignal);
       currentStreamCanceller?.cancel(); // Cancel oreviously created stream if one
@@ -143,8 +146,7 @@ export default function PeriodStream(
               log.warn("Stream: Can't free buffer: period's start is after its end");
             } else {
               await segmentBufferStatus.value.removeBuffer(period.start,
-                                                           periodEnd,
-                                                           streamCanceller.signal);
+                                                           periodEnd);
               if (streamCanceller.isUsed()) {
                 return; // The stream has been cancelled
               }
@@ -168,6 +170,16 @@ export default function PeriodStream(
                                            { period },
                                            callbacks,
                                            streamCanceller.signal);
+      }
+
+      const adaptations = period.adaptations[bufferType];
+      const adaptation = arrayFind(adaptations ?? [], a =>
+        a.id === choice.adaptationId
+      );
+      if (adaptation === undefined) {
+        currentStreamCanceller.cancel();
+        log.warn("Stream: Unfound chosen Adaptation choice", choice.adaptationId);
+        return;
       }
 
       /**
@@ -211,7 +223,7 @@ export default function PeriodStream(
         }
       }, currentStreamCanceller.signal);
 
-      const { adaptation, representations } = choice;
+      const { representations } = choice;
       log.info(`Stream: Updating ${bufferType} adaptation`,
                `A: ${adaptation.id}`,
                `P: ${period.start}`);
@@ -223,8 +235,7 @@ export default function PeriodStream(
 
       const segmentBuffer = createOrReuseSegmentBuffer(segmentBuffersStore,
                                                        bufferType,
-                                                       adaptation,
-                                                       options);
+                                                       adaptation);
       const strategy = getAdaptationSwitchStrategy(segmentBuffer,
                                                    period,
                                                    adaptation,
@@ -243,7 +254,7 @@ export default function PeriodStream(
       }
       if (strategy.type === "flush-buffer" || strategy.type === "clean-buffer") {
         for (const { start, end } of strategy.value) {
-          await segmentBuffer.removeBuffer(start, end, streamCanceller.signal);
+          await segmentBuffer.removeBuffer(start, end);
           if (streamCanceller.isUsed()) {
             return; // The Stream has since been cancelled
           }
@@ -283,7 +294,7 @@ export default function PeriodStream(
     cancelSignal : CancellationSignal
   ) : void {
     const adaptationPlaybackObserver =
-      createAdaptationStreamPlaybackObserver(playbackObserver, segmentBuffer);
+      createAdaptationStreamPlaybackObserver(playbackObserver, adaptation.type);
 
     AdaptationStream({ content: { manifest,
                                   period,
@@ -381,8 +392,7 @@ export default function PeriodStream(
 function createOrReuseSegmentBuffer(
   segmentBuffersStore : SegmentBuffersStore,
   bufferType : IBufferType,
-  adaptation : Adaptation,
-  options: { textTrackOptions? : ITextTrackSegmentBufferOptions }
+  adaptation : Adaptation
 ) : SegmentBuffer {
   const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
   if (segmentBufferStatus.type === "initialized") {
@@ -391,9 +401,8 @@ function createOrReuseSegmentBuffer(
     return segmentBufferStatus.value;
   }
   const codec = getFirstDeclaredMimeType(adaptation);
-  const sbOptions = bufferType === "text" ?  options.textTrackOptions : undefined;
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  return segmentBuffersStore.createSegmentBuffer(bufferType, codec, sbOptions);
+  return segmentBuffersStore.createSegmentBuffer(bufferType, codec);
 }
 
 /**
@@ -403,12 +412,14 @@ function createOrReuseSegmentBuffer(
  * @returns {string}
  */
 function getFirstDeclaredMimeType(adaptation : Adaptation) : string {
-  const representations = adaptation.getPlayableRepresentations();
+  const representations = adaptation.representations.filter(r => {
+    return r.isSupported === true && r.decipherable !== false;
+  });
   if (representations.length === 0) {
     const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION",
                                     "No Representation in the chosen " +
                                     adaptation.type + " Adaptation can be played",
-                                    { adaptations: [adaptation] });
+                                    { tracks: [toTaggedTrack(adaptation)] });
     throw noRepErr;
   }
   return representations[0].getMimeTypeString();
@@ -417,12 +428,12 @@ function getFirstDeclaredMimeType(adaptation : Adaptation) : string {
 /**
  * Create AdaptationStream's version of a playback observer.
  * @param {Object} initialPlaybackObserver
- * @param {Object} segmentBuffer
+ * @param {string} trackType
  * @returns {Object}
  */
 function createAdaptationStreamPlaybackObserver(
   initialPlaybackObserver : IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>,
-  segmentBuffer : SegmentBuffer
+  trackType : ITrackType
 ) : IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation> {
   return initialPlaybackObserver.deriveReadOnlyObserver(function transform(
     observationRef : IReadOnlySharedReference<IPeriodStreamPlaybackObservation>,
@@ -440,12 +451,11 @@ function createAdaptationStreamPlaybackObserver(
     function constructAdaptationStreamPlaybackObservation(
     ) : IAdaptationStreamPlaybackObservation {
       const baseObservation = observationRef.getValue();
-      const buffered = segmentBuffer.getBufferedRanges();
-      const bufferGap = getLeftSizeOfBufferedTimeRange(
-        buffered,
-        baseObservation.position.getWanted()
-      );
-      return objectAssign({}, baseObservation, { bufferGap });
+      const buffered = baseObservation.buffered[trackType];
+      const bufferGap = buffered !== null ?
+        getLeftSizeOfRange(buffered, baseObservation.position.getWanted()) :
+        0;
+      return objectAssign({}, baseObservation, { bufferGap, buffered });
     }
 
     function emitAdaptationStreamPlaybackObservation() {

@@ -23,7 +23,7 @@ import Manifest, {
   Representation,
 } from "../../manifest";
 import noop from "../../utils/noop";
-import { getLeftSizeOfBufferedTimeRange } from "../../utils/ranges";
+import { getLeftSizeOfRange, IRange } from "../../utils/ranges";
 import SharedReference, {
   IReadOnlySharedReference,
 } from "../../utils/reference";
@@ -272,7 +272,7 @@ function getEstimateReference(
       }
       const { position, speed } = lastPlaybackObservation;
       const timeRanges = val.buffered;
-      const bufferGap = getLeftSizeOfBufferedTimeRange(timeRanges, position.getWanted());
+      const bufferGap = getLeftSizeOfRange(timeRanges, position.getWanted());
       const { representation } = val.content;
       const currentScore = scoreCalculator.getEstimate(representation);
       const currentBitrate = representation.bitrate;
@@ -327,7 +327,7 @@ function getEstimateReference(
         allowBufferBasedEstimates = false;
       } else if (!allowBufferBasedEstimates &&
                  isFinite(bufferGap) &&
-                  bufferGap >= ABR_ENTER_BUFFER_BASED_ALGO)
+                 bufferGap >= ABR_ENTER_BUFFER_BASED_ALGO)
       {
         allowBufferBasedEstimates = true;
       }
@@ -683,7 +683,7 @@ export interface IAddedSegmentCallbackPayload {
    * The buffered ranges of the related media buffer after that segment has
    * been pushed.
    */
-  buffered : TimeRanges;
+  buffered : IRange[];
   /** The context for the segment that has been pushed. */
   content : { representation : Representation };
 }

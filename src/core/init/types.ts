@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
+import {
+  IPeriodsUpdateResult,
+  IAdaptationMetadata,
+  IManifestMetadata,
+  IPeriodMetadata,
+  IRepresentationMetadata,
+  IDecipherabilityStatusChangedElement,
 } from "../../manifest";
 import { IPlayerError } from "../../public_types";
 import EventEmitter from "../../utils/event_emitter";
@@ -112,9 +115,14 @@ export interface IContentInitializerEvents {
   /** A fatal error occured, leading to the current content being stopped. */
   error : unknown;
   /** Event sent after the Manifest has been loaded and parsed for the first time. */
-  manifestReady : Manifest;
+  manifestReady : IManifestMetadata;
   /** Event sent after the Manifest has been updated. */
-  manifestUpdate: null;
+  manifestUpdate: IPeriodsUpdateResult;
+  /**
+   * Event sent after the decipherability status of at least one Representation
+   * in the Manifest has been updated.
+   */
+  decipherabilityUpdate: IDecipherabilityStatusChangedElement[];
   /**
    * Event sent when we're starting attach a new MediaSource to the media element
    * (after removing the previous one).
@@ -145,7 +153,7 @@ export interface IContentInitializerEvents {
   /** Emitted when a new `Period` is currently playing. */
   activePeriodChanged: {
     /** The Period we're now playing. */
-    period: Period;
+    period: IPeriodMetadata;
   };
   /**
    * A new `PeriodStream` is ready to start but needs an Adaptation (i.e. track)
@@ -154,10 +162,8 @@ export interface IContentInitializerEvents {
   periodStreamReady: {
     /** The type of buffer linked to the `PeriodStream` we want to create. */
     type : IBufferType;
-    /** The `Manifest` linked to the `PeriodStream` we have created. */
-    manifest : Manifest;
     /** The `Period` linked to the `PeriodStream` we have created. */
-    period : Period;
+    period : IPeriodMetadata;
     /**
      * The Reference through which any Adaptation (i.e. track) choice should be
      * emitted for that `PeriodStream`.
@@ -191,7 +197,7 @@ export interface IContentInitializerEvents {
      * The combination of this and `Period` should give you enough information
      * about which `PeriodStream` has been removed.
      */
-    period : Period;
+    period : IPeriodMetadata;
   };
   /** Emitted when a new `Adaptation` is being considered. */
   adaptationChange: IAdaptationChangeEventPayload;
@@ -210,12 +216,12 @@ export interface IContentInitializerEvents {
     /** The type of buffer linked to that `RepresentationStream`. */
     type : IBufferType;
     /** The `Period` linked to the `RepresentationStream` we're creating. */
-    period : Period;
+    period : IPeriodMetadata;
     /**
      * The `Representation` linked to the `RepresentationStream` we're creating.
      * `null` when we're choosing no Representation at all.
      */
-    representation : Representation |
+    representation : IRepresentationMetadata |
                      null;
   };
   /**
@@ -229,12 +235,12 @@ export interface IAdaptationChangeEventPayload {
   /** The type of buffer for which the Representation is changing. */
   type : IBufferType;
   /** The `Period` linked to the `RepresentationStream` we're creating. */
-  period : Period;
+  period : IPeriodMetadata;
   /**
    * The `Adaptation` linked to the `AdaptationStream` we're creating.
    * `null` when we're choosing no Adaptation at all.
    */
-  adaptation : Adaptation |
+  adaptation : IAdaptationMetadata |
     null;
 }
 
@@ -245,3 +251,7 @@ export type IStallingSituation =
   "buffering" | // Other rebuffering cases
   "freezing"; // stalled for an unknown reason (might be waiting for
               // a decryption key)
+
+export type ITextDisplayerOptions = { textTrackMode? : "native" } |
+                                    { textTrackMode : "html";
+                                      textTrackElement : HTMLElement; };

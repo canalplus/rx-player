@@ -25,6 +25,8 @@ import {
 } from "../../compat";
 /* eslint-disable-next-line max-len */
 import canRelyOnVideoVisibilityAndSize from "../../compat/can_rely_on_video_visibility_and_size";
+import hasMseInWorker from "../../compat/has_mse_in_worker";
+import hasWebassembly from "../../compat/has_webassembly";
 import config from "../../config";
 import {
   ErrorCodes,
@@ -40,10 +42,19 @@ import features, {
 } from "../../features";
 import log from "../../log";
 import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
+  getLivePosition,
+  getMaximumSafePosition,
+  getMinimumSafePosition,
+  IDecipherabilityStatusChangedElement,
+  IPeriodsUpdateResult,
+  IAdaptationMetadata,
+  IManifestMetadata,
+  IPeriodMetadata,
+  IRepresentationMetadata,
+  ManifestMetadataFormat,
+  createRepresentationFilterFromFnString,
 } from "../../manifest";
+import { MainThreadMessageType } from "../../multithread_types";
 import {
   IAudioRepresentation,
   IAudioRepresentationsSwitchingMode,
@@ -76,6 +87,8 @@ import {
   IVideoTrackSetting,
   IVideoTrackSwitchingMode,
   ITrackType,
+  IModeInformation,
+  IWorkerSettings,
 } from "../../public_types";
 import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
@@ -88,6 +101,7 @@ import EventEmitter, {
 import idGenerator from "../../utils/id_generator";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import Logger from "../../utils/logger";
+import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import objectAssign from "../../utils/object_assign";
 import { getLeftSizeOfBufferedTimeRange } from "../../utils/ranges";
 import SharedReference, {
@@ -143,6 +157,17 @@ const { getPictureOnPictureStateRef,
         getVideoVisibilityRef,
         getElementResolutionRef,
         getScreenResolutionRef } = events;
+
+/**
+ * Options of a `loadVideo` call which are for now not supported when running
+ * in a "multithread" mode.
+ *
+ * TODO support those?
+ */
+const MULTI_THREAD_UNSUPPORTED_LOAD_VIDEO_OPTIONS = [
+  "manifestLoader",
+  "segmentLoader",
+] as const;
 
 /**
  * @class Player
@@ -213,6 +238,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                      video? : number;
                      text? : number; };
   };
+
+  private _priv_worker : Worker | null;
 
   /**
    * Current fatal error which STOPPED the player.
@@ -393,6 +420,67 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_reloadingMetadata = {};
 
     this._priv_lastAutoPlay = false;
+
+    this._priv_worker = null;
+  }
+
+  /**
+   * TODO returns promise?
+   * @param {Object} workerSettings
+   */
+  public attachWorker(
+    workerSettings : IWorkerSettings
+  ) : void {
+    if (!hasWebassembly) {
+      log.warn("API: Cannot rely on a WebWorker: WebAssembly unavailable");
+    } else {
+      this._priv_worker = new Worker(workerSettings.workerUrl);
+      this._priv_worker.onerror = (evt: ErrorEvent) => {
+        this._priv_worker = null;
+        log.error("Unexpected worker error",
+                  evt.error instanceof Error ? evt.error : undefined);
+      };
+      log.debug("---> Sending To Worker:", MainThreadMessageType.Init);
+      this._priv_worker.postMessage({
+        type: MainThreadMessageType.Init,
+        value: {
+          dashWasmUrl: workerSettings.dashWasmUrl,
+          logLevel: log.getLevel(),
+          date: Date.now(),
+          timestamp: getMonotonicTimeStamp(),
+          hasVideo: this.videoElement?.nodeName.toLowerCase() === "video",
+          hasMseInWorker,
+        },
+      });
+      log.addEventListener("onLogLevelChange", (logLevel) => {
+        if (this._priv_worker === null) {
+          return;
+        }
+        log.debug("---> Sending To Worker:", MainThreadMessageType.LogLevelUpdate);
+        this._priv_worker.postMessage({
+          type: MainThreadMessageType.LogLevelUpdate,
+          value: {
+            logLevel,
+          },
+        });
+      }, this._destroyCanceller.signal);
+    }
+  }
+
+  /**
+   * Returns information on which "mode" the RxPlayer is running for the current
+   * content (e.g. main logic running in a WebWorker or not, are we in
+   * directfile mode...).
+   *
+   * Returns `null` if no content is loaded.
+   * @returns {Object|null}
+   */
+  public getCurrentModeInformation(): IModeInformation | null {
+    if (this._priv_contentInfos === null) {
+      return null;
+    }
+    return { isDirectFile: this._priv_contentInfos.isDirectFile,
+             useWorker: this._priv_contentInfos.useWorker };
   }
 
   /**
@@ -452,6 +540,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     // un-attach video element
     this.videoElement = null;
+
+    if (this._priv_worker !== null) {
+      this._priv_worker.terminate();
+      this._priv_worker = null;
+    }
   }
 
   /**
@@ -560,9 +653,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             checkMediaSegmentIntegrity,
             manifestLoader,
             referenceDateTime,
-            representationFilter,
             segmentLoader,
             serverSyncInfos,
+            mode,
             __priv_manifestUpdateUrl,
             __priv_patchLastSegmentInSidx,
             url } = options;
@@ -581,31 +674,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     let initializer : ContentInitializer;
 
+    let useWorker = false;
     let mediaElementTracksStore : MediaElementTracksStore | null =
       null;
     if (!isDirectFile) {
-      const transportFn = features.transports[transport];
-      if (typeof transportFn !== "function") {
-        // Stop previous content and reset its state
-        this.stop();
-        this._priv_currentError = null;
-        throw new Error(`transport "${transport}" not supported`);
-      }
-
-      if (features.mediaSourceInit === null) {
-        throw new Error("MediaSource streaming not supported");
-      }
-
-      const transportPipelines = transportFn({ lowLatencyMode,
-                                               checkMediaSegmentIntegrity,
-                                               manifestLoader,
-                                               referenceDateTime,
-                                               representationFilter,
-                                               segmentLoader,
-                                               serverSyncInfos,
-                                               __priv_manifestUpdateUrl,
-                                               __priv_patchLastSegmentInSidx });
-
       /** Interface used to load and refresh the Manifest. */
       const manifestRequestSettings = { lowLatencyMode,
                                         maxRetry : requestConfig.manifest?.maxRetry,
@@ -672,20 +744,89 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                       requestTimeout: requestConfig.segment?.timeout,
                                       connectionTimeout:
                                         requestConfig.segment?.connectionTimeout };
-      initializer = new features.mediaSourceInit({
-        adaptiveOptions,
-        autoPlay,
-        bufferOptions,
-        keySystems,
-        lowLatencyMode,
-        manifestRequestSettings,
-        transport: transportPipelines,
-        segmentRequestOptions,
-        speed: this._priv_speed,
-        startAt,
-        textTrackOptions,
-        url,
-      });
+
+      const canRunInMultiThread = features.multithread !== null &&
+        this._priv_worker !== null &&
+        transport === "dash" &&
+        MULTI_THREAD_UNSUPPORTED_LOAD_VIDEO_OPTIONS.every(option =>
+          isNullOrUndefined(options[option])
+        ) &&
+        typeof options.representationFilter !== "function";
+      if (mode === "main" || (mode === "auto" && !canRunInMultiThread)) {
+        if (features.mainThreadMediaSourceInit === null) {
+          throw new Error("Cannot load video, neither in a WebWorker nor with the " +
+                          "`MEDIA_SOURCE_MAIN` feature");
+        }
+        const transportFn = features.transports[transport];
+        if (typeof transportFn !== "function") {
+          // Stop previous content and reset its state
+          this.stop();
+          this._priv_currentError = null;
+          throw new Error(`transport "${transport}" not supported`);
+        }
+
+        const representationFilter = typeof options.representationFilter === "string" ?
+          createRepresentationFilterFromFnString(options.representationFilter) :
+          options.representationFilter;
+
+        log.info("API: Initializing MediaSource mode in the main thread");
+        const transportPipelines = transportFn({ lowLatencyMode,
+                                                 checkMediaSegmentIntegrity,
+                                                 manifestLoader,
+                                                 referenceDateTime,
+                                                 representationFilter,
+                                                 segmentLoader,
+                                                 serverSyncInfos,
+                                                 __priv_manifestUpdateUrl,
+                                                 __priv_patchLastSegmentInSidx });
+        initializer = new features.mainThreadMediaSourceInit({
+          adaptiveOptions,
+          autoPlay,
+          bufferOptions,
+          keySystems,
+          lowLatencyMode,
+          transport: transportPipelines,
+          manifestRequestSettings,
+          segmentRequestOptions,
+          speed: this._priv_speed,
+          startAt,
+          textTrackOptions,
+          url,
+        });
+      } else {
+        if (features.multithread === null) {
+          throw new Error("Cannot load video in multithread mode: `MULTI_THREAD` " +
+                          "feature not imported.");
+        } else if (this._priv_worker === null) {
+          throw new Error("Cannot load video in multithread mode: `attachWorker` " +
+                          "method not called.");
+        }
+        assert(typeof options.representationFilter !== "function");
+        useWorker = true;
+        log.info("API: Initializing MediaSource mode in a WebWorker");
+        const transportOptions = { lowLatencyMode,
+                                   checkMediaSegmentIntegrity,
+                                   referenceDateTime,
+                                   serverSyncInfos,
+                                   manifestLoader: undefined,
+                                   segmentLoader: undefined,
+                                   representationFilter: options.representationFilter,
+                                   __priv_manifestUpdateUrl,
+                                   __priv_patchLastSegmentInSidx };
+        initializer = new features.multithread.init({ adaptiveOptions,
+                                                      autoPlay,
+                                                      bufferOptions,
+                                                      keySystems,
+                                                      lowLatencyMode,
+                                                      transportOptions,
+                                                      manifestRequestSettings,
+                                                      segmentRequestOptions,
+                                                      speed: this._priv_speed,
+                                                      startAt,
+                                                      textTrackOptions,
+                                                      worker: this._priv_worker,
+                                                      url });
+      }
     } else {
       if (features.directfile === null) {
         this.stop();
@@ -694,6 +835,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       } else if (isNullOrUndefined(url)) {
         throw new Error("No URL for a DirectFile content");
       }
+
+      log.info("API: Initializing DirectFile mode in the main thread");
       mediaElementTracksStore =
         this._priv_initializeMediaElementTracksStore(currentContentCanceller.signal);
       if (currentContentCanceller.isUsed()) {
@@ -721,6 +864,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       activeRepresentations: null,
       tracksStore: null,
       mediaElementTracksStore,
+      useWorker,
     };
 
     // Bind events
@@ -762,6 +906,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_onBitrateEstimateChange(bitrateEstimateInfo));
     initializer.addEventListener("manifestReady", (manifest) =>
       this._priv_onManifestReady(contentInfos, manifest));
+    initializer.addEventListener("manifestUpdate", (updates) =>
+      this._priv_onManifestUpdate(contentInfos, updates));
+    initializer.addEventListener("decipherabilityUpdate", (updates) =>
+      this._priv_onDecipherabilityUpdate(contentInfos, updates));
     initializer.addEventListener("loaded", (evt) => {
       contentInfos.segmentBuffersStore = evt.segmentBuffersStore;
     });
@@ -871,6 +1019,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       triggerPlayPauseEventsWhenReady(payload.autoPlay);
     });
 
+    this._priv_currentError = null;
+    this._priv_contentInfos = contentInfos;
+
     /**
      * `TaskCanceller` allowing to stop emitting `"seeking"` and `"seeked"`
      * events.
@@ -908,9 +1059,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       updateReloadingMetadata(this.state);
       this._priv_triggerPositionUpdate(contentInfos, observation);
     }, { clearSignal: currentContentCanceller.signal });
-
-    this._priv_currentError = null;
-    this._priv_contentInfos = contentInfos;
 
     currentContentCanceller.signal.register(() => {
       initializer.removeEventListener();
@@ -1034,7 +1182,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                          [originalUrl];
     }
     if (manifest !== null) {
-      return manifest.getUrls();
+      return manifest.uris;
     }
     return undefined;
   }
@@ -1956,7 +2104,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     const { manifest } = this._priv_contentInfos;
     if (manifest !== null) {
-      return manifest.getMinimumSafePosition();
+      return getMinimumSafePosition(manifest);
     }
     return null;
   }
@@ -1981,7 +2129,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (manifest?.isLive !== true) {
       return null;
     }
-    return manifest.getLivePosition();
+    return getLivePosition(manifest);
   }
 
   /**
@@ -2006,7 +2154,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       if (!manifest.isDynamic && this.videoElement !== null) {
         return this.videoElement.duration;
       }
-      return manifest.getMaximumSafePosition();
+      return getMaximumSafePosition(manifest);
     }
     return null;
   }
@@ -2035,8 +2183,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const segmentBufferStatus = this._priv_contentInfos
       .segmentBuffersStore.getStatus(bufferType);
     if (segmentBufferStatus.type === "initialized") {
-      segmentBufferStatus.value.synchronizeInventory();
-      return segmentBufferStatus.value.getInventory();
+      return segmentBufferStatus.value.getLastKnownInventory();
     }
     return null;
   }
@@ -2049,7 +2196,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Manifest|null} - The current Manifest (`null` when not known).
    */
   // TODO remove the need for that public method
-  __priv_getManifest() : Manifest|null {
+  __priv_getManifest() : IManifestMetadata|null {
     if (this._priv_contentInfos === null) {
       return null;
     }
@@ -2058,7 +2205,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   // TODO remove the need for that public method
   __priv_getCurrentAdaptation(
-  ) : Partial<Record<IBufferType, Adaptation|null>> | null {
+  ) : Partial<Record<IBufferType, IAdaptationMetadata|null>> | null {
     if (this._priv_contentInfos === null) {
       return null;
     }
@@ -2074,7 +2221,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   // TODO remove the need for that public method
   __priv_getCurrentRepresentations(
-  ) : Partial<Record<IBufferType, Representation|null>> | null {
+  ) : Partial<Record<IBufferType, IRepresentationMetadata|null>> | null {
     if (this._priv_contentInfos === null) {
       return null;
     }
@@ -2138,13 +2285,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onManifestReady(
     contentInfos : IPublicApiContentInfos,
-    manifest : Manifest
+    manifest : Manifest | IManifestMetadata
   ) : void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
     }
     contentInfos.manifest = manifest;
-    this._priv_reloadingMetadata.manifest = manifest;
+
+    if (manifest.manifestFormat === ManifestMetadataFormat.Class) {
+      this._priv_reloadingMetadata.manifest = manifest as Manifest;
+    }
 
     const tracksStore = new TracksStore({
       preferTrickModeTracks: this._priv_preferTrickModeTracks,
@@ -2174,90 +2324,117 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_onFatalError(err, contentInfos);
     });
 
-    contentInfos.tracksStore.updatePeriodList(manifest);
+    contentInfos.tracksStore.onManifestUpdate(manifest);
+  }
 
-    manifest.addEventListener("manifestUpdate", (updates) => {
-      // Update the tracks chosen if it changed
-      if (!isNullOrUndefined(contentInfos?.tracksStore)) {
-        contentInfos.tracksStore.updatePeriodList(manifest);
+  /**
+   * Triggered when the Manifest has been updated for the current content.
+   * Initialize various private properties and emit initial event.
+   * @param {Object} contentInfos
+   * @param {Object} updates
+   */
+  private _priv_onManifestUpdate(
+    contentInfos : IPublicApiContentInfos,
+    updates : IPeriodsUpdateResult
+  ) : void {
+    if (this._priv_contentInfos === null || this._priv_contentInfos.manifest === null) {
+      return;
+    }
+
+    // Update the tracks chosen if it changed
+    if (!isNullOrUndefined(contentInfos?.tracksStore)) {
+      contentInfos.tracksStore.onManifestUpdate(this._priv_contentInfos.manifest);
+    }
+    const currentPeriod = this._priv_contentInfos?.currentPeriod ?? undefined;
+    const currTracksStore = this._priv_contentInfos?.tracksStore;
+    if (currentPeriod === undefined || isNullOrUndefined(currTracksStore)) {
+      return;
+    }
+    for (const update of updates.updatedPeriods) {
+      if (update.period.id === currentPeriod.id) {
+        if (update.result.addedAdaptations.length > 0 ||
+            update.result.removedAdaptations.length > 0)
+        {
+          // We might have new (or less) tracks, send events just to be sure
+          const periodRef = currTracksStore.getPeriodObjectFromPeriod(currentPeriod);
+          if (periodRef === undefined) {
+            return;
+          }
+          this._priv_onAvailableTracksMayHaveChanged("audio");
+          this._priv_onAvailableTracksMayHaveChanged("text");
+          this._priv_onAvailableTracksMayHaveChanged("video");
+        }
       }
-      const currentPeriod = this._priv_contentInfos?.currentPeriod ?? undefined;
-      const currTracksStore = this._priv_contentInfos?.tracksStore;
-      if (currentPeriod === undefined || isNullOrUndefined(currTracksStore)) {
-        return;
-      }
-      for (const update of updates.updatedPeriods) {
-        if (update.period.id === currentPeriod.id) {
-          if (update.result.addedAdaptations.length > 0 ||
-              update.result.removedAdaptations.length > 0)
-          {
-            // We might have new (or less) tracks, send events just to be sure
-            const periodRef = currTracksStore.getPeriodObjectFromPeriod(currentPeriod);
-            if (periodRef === undefined) {
-              return;
-            }
-            this._priv_onAvailableTracksMayHaveChanged("audio");
-            this._priv_onAvailableTracksMayHaveChanged("text");
-            this._priv_onAvailableTracksMayHaveChanged("video");
+    }
+  }
+
+  private _priv_onDecipherabilityUpdate(
+    contentInfos : IPublicApiContentInfos,
+    elts: IDecipherabilityStatusChangedElement[]
+  ): void {
+    if (contentInfos === null || contentInfos.manifest === null) {
+      return;
+    }
+
+    if (!isNullOrUndefined(contentInfos?.tracksStore)) {
+      contentInfos.tracksStore.onDecipherabilityUpdates();
+    }
+
+    /**
+     * Array of tuples only including once the Period/Track combination, and
+     * only when it concerns the currently-selected track.
+     */
+    const periodsAndTrackTypes = elts.reduce(
+      (acc: Array<[IPeriodMetadata, ITrackType]>, elt) => {
+        const isFound = arrayFind(
+          acc,
+          (x) => x[0].id === elt.period.id &&
+                 x[1] === elt.adaptation.type
+        ) === undefined;
+
+        if (!isFound) {
+          // Only consider the currently-selected tracks.
+          // NOTE: Maybe there's room for optimizations? Unclear.
+          const tStore = contentInfos.tracksStore;
+          if (tStore === null) {
+            return acc;
+          }
+          let isCurrent = false;
+          const periodRef = tStore.getPeriodObjectFromPeriod(elt.period);
+          if (periodRef === undefined) {
+            return acc;
+          }
+          switch (elt.adaptation.type) {
+            case "audio":
+              isCurrent = tStore
+                .getChosenAudioTrack(periodRef)?.id === elt.adaptation.id;
+              break;
+            case "video":
+              isCurrent = tStore
+                .getChosenVideoTrack(periodRef)?.id === elt.adaptation.id;
+              break;
+            case "text":
+              isCurrent = tStore
+                .getChosenTextTrack(periodRef)?.id === elt.adaptation.id;
+              break;
+          }
+          if (isCurrent) {
+            acc.push([elt.period, elt.adaptation.type]);
           }
         }
-        return;
-      }
-    }, contentInfos.currentContentCanceller.signal);
-
-    manifest.addEventListener("decipherabilityUpdate", (elts) => {
-      /**
-       * Array of tuples only including once the Period/Track combination, and
-       * only when it concerns the currently-selected track.
-       */
-      const periodsAndTrackTypes = elts.reduce(
-        (acc: Array<[Period, ITrackType]>, elt) => {
-          const isFound = arrayFind(
-            acc,
-            (x) => x[0].id === elt.period.id &&
-                   x[1] === elt.adaptation.type
-          ) === undefined;
-
-          if (!isFound) {
-            // Only consider the currently-selected tracks.
-            // NOTE: Maybe there's room for optimizations? Unclear.
-            const tStore = contentInfos.tracksStore;
-            if (tStore === null) {
-              return acc;
-            }
-            let isCurrent = false;
-            const periodRef = tStore.getPeriodObjectFromPeriod(elt.period);
-            if (periodRef === undefined) {
-              return acc;
-            }
-            switch (elt.adaptation.type) {
-              case "audio":
-                isCurrent = tStore
-                  .getChosenAudioTrack(periodRef)?.id === elt.adaptation.id;
-                break;
-              case "video":
-                isCurrent = tStore
-                  .getChosenVideoTrack(periodRef)?.id === elt.adaptation.id;
-                break;
-              case "text":
-                isCurrent = tStore
-                  .getChosenTextTrack(periodRef)?.id === elt.adaptation.id;
-                break;
-            }
-            if (isCurrent) {
-              acc.push([elt.period, elt.adaptation.type]);
-            }
-          }
-          return acc;
-        }, []);
-      for (const [period, trackType] of periodsAndTrackTypes) {
-        this._priv_triggerEventIfNotStopped(
-          "representationListUpdate",
-          { period, trackType, reason: "decipherability-update" },
-          contentInfos.currentContentCanceller.signal
-        );
-      }
-    }, contentInfos.currentContentCanceller.signal);
+        return acc;
+      }, []);
+    for (const [period, trackType] of periodsAndTrackTypes) {
+      this._priv_triggerEventIfNotStopped(
+        "representationListUpdate",
+        { period: { start: period.start,
+                    end: period.end,
+                    id: period.id },
+          trackType,
+          reason: "decipherability-update" },
+        contentInfos.currentContentCanceller.signal
+      );
+    }
   }
 
   /**
@@ -2269,7 +2446,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onActivePeriodChanged(
     contentInfos : IPublicApiContentInfos,
-    { period } : { period : Period }
+    { period } : { period : IPeriodMetadata }
   ) : void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
@@ -2341,15 +2518,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     contentInfos : IPublicApiContentInfos,
     value : {
       type : IBufferType;
-      manifest : Manifest;
-      period : Period;
+      period : IPeriodMetadata;
       adaptationRef : SharedReference<IAdaptationChoice|null|undefined>;
     }
   ) : void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
     }
-    const { type, manifest, period, adaptationRef } = value;
+    const { type, period, adaptationRef } = value;
     const tracksStore = contentInfos.tracksStore;
 
     switch (type) {
@@ -2361,7 +2537,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           log.error(`API: TracksStore not instanciated for a new ${type} period`);
           adaptationRef.setValue(null);
         } else {
-          tracksStore.addTrackReference(type, manifest, period, adaptationRef);
+          tracksStore.addTrackReference(type, period, adaptationRef);
         }
         break;
       default:
@@ -2376,7 +2552,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onPeriodStreamCleared(
     contentInfos : IPublicApiContentInfos,
-    value : { type : IBufferType; period : Period }
+    value : { type : IBufferType; period : IPeriodMetadata }
   ) : void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
@@ -2428,8 +2604,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private _priv_onAdaptationChange(
     contentInfos : IPublicApiContentInfos,
     { type, adaptation, period } : { type : IBufferType;
-                                     adaptation : Adaptation|null;
-                                     period : Period; }
+                                     adaptation : IAdaptationMetadata|null;
+                                     period : IPeriodMetadata; }
   ) : void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
@@ -2492,8 +2668,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private _priv_onRepresentationChange(
     contentInfos : IPublicApiContentInfos,
     { type, period, representation }: { type : IBufferType;
-                                        period : Period;
-                                        representation : Representation|null; }
+                                        period : IPeriodMetadata;
+                                        representation : IRepresentationMetadata|null; }
   ) : void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
@@ -2587,7 +2763,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return;
     }
 
-    const maximumPosition = manifest !== null ? manifest.getMaximumSafePosition() :
+    const maximumPosition = manifest !== null ? getMaximumSafePosition(manifest) :
                                                 undefined;
     const positionData : IPositionUpdate = {
       position: observation.position.getPolled(),
@@ -2608,7 +2784,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     ) {
       const ast = manifest.availabilityStartTime ?? 0;
       positionData.wallClockTime = observation.position.getPolled() + ast;
-      const livePosition = manifest.getLivePosition();
+      const livePosition = getLivePosition(manifest);
       if (livePosition !== undefined) {
         positionData.liveGap = livePosition - observation.position.getPolled();
       }
@@ -2869,25 +3045,25 @@ interface IPublicApiContentInfos {
    * `null` if the current content loaded has no manifest or if the content is
    * not yet loaded.
    */
-  manifest : Manifest|null;
+  manifest : IManifestMetadata|null;
   /**
    * Current Period being played.
    * `null` if no Period is being played.
    */
-  currentPeriod : Period|null;
+  currentPeriod : IPeriodMetadata|null;
   /**
    * Store currently considered adaptations, per active period.
    * `null` if no Adaptation is active
    */
   activeAdaptations : {
-    [periodId : string] : Partial<Record<IBufferType, Adaptation|null>>;
+    [periodId : string] : Partial<Record<IBufferType, IAdaptationMetadata|null>>;
   } | null;
   /**
    * Store currently considered representations, per active period.
    * `null` if no Representation is active
    */
   activeRepresentations : {
-    [periodId : string] : Partial<Record<IBufferType, Representation|null>>;
+    [periodId : string] : Partial<Record<IBufferType, IRepresentationMetadata|null>>;
   } | null;
   /** Keep information on the active SegmentBuffers. */
   segmentBuffersStore : SegmentBuffersStore | null;
@@ -2903,6 +3079,11 @@ interface IPublicApiContentInfos {
    * has no MediaElementTracksStore.
    */
   mediaElementTracksStore : MediaElementTracksStore|null;
+  /**
+   * If `true`, the RxPlayer's main logic is running in a WebWorker for this
+   * content.
+   */
+  useWorker : boolean;
 }
 
 export default Player;
