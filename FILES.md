@@ -114,6 +114,14 @@ Defines a common `Manifest` class, regardless of the streaming technology (DASH,
 HSS...). This class is then used by the rest of the RxPlayer, to allow
 interaction with it without considering the underlying technology used.
 
+### `src/mse/`: MSE abstractions
+
+Abstraction over Media Source Extensions API, which are the browser API allowing
+to buffer media.
+
+This allows to provide a common API to the rest of the RxPlayer's code
+regardless of the environment (e.g. in a WebWorker without MSE API or in an
+environment with MSE API).
 
 ### `src/transports/`: Streaming protocols implementation
 
@@ -139,12 +147,6 @@ The parsed data being either:
   - containers: ISOBMFF (CMAF, fMP4, MP4), Matroska (MKV, WEBM)
   - text tracks: TTML, SAMI, SRT, WebVTT
   - image containers: BIF
-
-
-### `src/typings/`: Typescript typings
-
-This directory contains only declaration files for TypeScript. It is
-automatically added as a `typeRoots` when the TypeScript code is transpiled.
 
 
 ### `src/utils/`: Util functions

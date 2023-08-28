@@ -41,26 +41,6 @@ function generateParsedRepresentation(id: string) {
   return { id, bitrate: 100 };
 }
 
-// TODO we may want to refactor the Manifest structure's unit tests to avoid
-// weird subclasses implementations like the one below - which will probably be
-// a pain to maintain...
-function generateAdaptationInstance(
-  parsed: ReturnType<typeof generateParsedAudioAdaptation>
-) {
-  return {
-    id: parsed.id,
-    type: "audio",
-    representations: [],
-    toAudioTrack() {
-      return { language: "",
-               normalized: "",
-               audioDescription: false,
-               id: parsed.id,
-               representations: parsed.representations };
-    },
-  };
-}
-
 describe("Manifest - Manifest", () => {
   const fakeLogger = { warn: jest.fn(() => undefined),
                        info: jest.fn(() => undefined) };
@@ -255,7 +235,14 @@ describe("Manifest - Manifest", () => {
 
     const fakePeriod = jest.fn((period, unsupportedAdaptations) => {
       unsupportedAdaptations
-        .push(generateAdaptationInstance(period.adaptations.audio[0]));
+        .push({
+          type: "audio",
+          language: "",
+          normalized: "",
+          audioDescription: false,
+          id: period.adaptations.audio[0].id,
+          representations: period.adaptations.audio[0].representations,
+        });
       return { ...period,
                id: `foo${period.id}` };
     });
@@ -272,11 +259,23 @@ describe("Manifest - Manifest", () => {
     expect(warnings[0].code).toEqual("MANIFEST_INCOMPATIBLE_CODECS_ERROR");
     expect((warnings[0] as unknown as { tracksInfo: unknown }).tracksInfo).toEqual([
       {
-        track: generateAdaptationInstance(period1.adaptations.audio[0]).toAudioTrack(),
+        track: {
+          language: "",
+          normalized: "",
+          audioDescription: false,
+          id: period1.adaptations.audio[0].id,
+          representations: period1.adaptations.audio[0].representations,
+        },
         type: "audio",
       },
       {
-        track: generateAdaptationInstance(period2.adaptations.audio[0]).toAudioTrack(),
+        track: {
+          language: "",
+          normalized: "",
+          audioDescription: false,
+          id: period2.adaptations.audio[0].id,
+          representations: period2.adaptations.audio[0].representations,
+        },
         type: "audio",
       },
     ]);
@@ -308,7 +307,11 @@ describe("Manifest - Manifest", () => {
 
     const fakePeriod = jest.fn((period, unsupportedAdaptations) => {
       unsupportedAdaptations
-        .push(generateAdaptationInstance(period.adaptations.audio[0]));
+        .push({
+          id: period.adaptations.audio[0].id,
+          type: "audio",
+          representations: [],
+        });
       return { ...period,
                id: `foo${period.id}` };
     });
@@ -346,7 +349,11 @@ describe("Manifest - Manifest", () => {
   it("should return all URLs given with `getContentUrls`", () => {
     const fakePeriod = jest.fn((period, unsupportedAdaptations) => {
       unsupportedAdaptations
-        .push(generateAdaptationInstance(period.adaptations.audio[0]));
+        .push({
+          id: period.adaptations.audio[0].id,
+          type: "audio",
+          representations: [],
+        });
       return { ...period,
                id: `foo${period.id}` };
     });
@@ -406,7 +413,11 @@ describe("Manifest - Manifest", () => {
   it("should replace with a new Manifest when calling `replace`", () => {
     const fakePeriod = jest.fn((period, unsupportedAdaptations) => {
       unsupportedAdaptations
-        .push(generateAdaptationInstance(period.adaptations.audio[0]));
+        .push({
+          id: period.adaptations.audio[0].id,
+          type: "audio",
+          representations: [],
+        });
       return { ...period,
                id: `foo${period.id}` };
     });

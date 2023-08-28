@@ -25,19 +25,36 @@ import {
 import arrayFind from "../utils/array_find";
 import EventEmitter from "../utils/event_emitter";
 import idGenerator from "../utils/id_generator";
-import getMonotonicTimeStamp from "../utils/monotonic_timestamp";
 import warnOnce from "../utils/warn_once";
 import Adaptation from "./adaptation";
 import Period, {
   IManifestAdaptations,
 } from "./period";
-import Representation from "./representation";
-import { MANIFEST_UPDATE_TYPE } from "./types";
+import Representation, {
+  ICodecSupportList,
+} from "./representation";
+import {
+  IAdaptationMetadata,
+  // IAdaptationMetadata,
+  IManifestMetadata,
+  IPeriodMetadata,
+  IRepresentationMetadata,
+  ManifestMetadataFormat,
+  MANIFEST_UPDATE_TYPE,
+} from "./types";
 import {
   IPeriodsUpdateResult,
   replacePeriods,
   updatePeriods,
 } from "./update_periods";
+import {
+  getLivePosition,
+  getMaximumSafePosition,
+  getMinimumSafePosition,
+  getPeriodForTime,
+  getPeriodAfter,
+  toTaggedTrack,
+} from "./utils";
 
 const generateNewManifestId = idGenerator();
 
@@ -54,10 +71,12 @@ interface IManifestParsingOptions {
 }
 
 /** Representation affected by a `decipherabilityUpdate` event. */
-export interface IDecipherabilityUpdateElement { manifest : Manifest;
-                                                 period : Period;
-                                                 adaptation : Adaptation;
-                                                 representation : Representation; }
+export interface IDecipherabilityUpdateElement {
+  manifest : IManifestMetadata;
+  period : IPeriodMetadata;
+  adaptation : IAdaptationMetadata;
+  representation : IRepresentationMetadata;
+}
 
 /** Events emitted by a `Manifest` instance */
 export interface IManifestEvents {
@@ -86,7 +105,11 @@ export interface IManifestEvents {
  *
  * @class Manifest
  */
-export default class Manifest extends EventEmitter<IManifestEvents> {
+export default class Manifest extends EventEmitter<IManifestEvents>
+  implements IManifestMetadata
+{
+  public manifestFormat: ManifestMetadataFormat.Class;
+
   /**
    * ID uniquely identifying this Manifest.
    * No two Manifests should have this ID.
@@ -198,7 +221,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * Data allowing to calculate the minimum and maximum seekable positions at
    * any given time.
    */
-  private _timeBounds : {
+  public timeBounds : {
     /**
      * This is the theoretical minimum playable position on the content
      * regardless of the current Adaptation chosen, as estimated at parsing
@@ -289,7 +312,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * Construct a Manifest instance from a parsed Manifest object (as returned by
    * Manifest parsers) and options.
    *
-   * Some minor errors can arise during that construction. `this.contentWarnings`
+   * Some minor errors can arise during that construction. `warnings`
    * will contain all such errors, in the order they have been encountered.
    * @param {Object} parsedManifest
    * @param {Object} options
@@ -304,6 +327,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     super();
     const { representationFilter,
             manifestUpdateUrl } = options;
+    this.manifestFormat = ManifestMetadataFormat.Class;
     this.id = generateNewManifestId();
     this.expired = parsedManifest.expired ?? null;
     this.transport = parsedManifest.transportType;
@@ -321,7 +345,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
       const error =
         new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
                        "An Adaptation contains only incompatible codecs.",
-                       { adaptations: unsupportedAdaptations });
+                       { tracks: unsupportedAdaptations.map(toTaggedTrack) });
       warnings.push(error);
     }
 
@@ -334,7 +358,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
                                                        this.periods[0].adaptations;
     /* eslint-enable import/no-deprecated */
 
-    this._timeBounds = parsedManifest.timeBounds;
+    this.timeBounds = parsedManifest.timeBounds;
     this.isDynamic = parsedManifest.isDynamic;
     this.isLive = parsedManifest.isLive;
     this.isLastPeriodKnown = parsedManifest.isLastPeriodKnown;
@@ -346,6 +370,33 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     this.suggestedPresentationDelay = parsedManifest.suggestedPresentationDelay;
     this.availabilityStartTime = parsedManifest.availabilityStartTime;
     this.publishTime = parsedManifest.publishTime;
+  }
+
+  /**
+   * Some environments (e.g. in a WebWorker) may not have the capability to know
+   * if a mimetype+codec combination is supported on the current platform.
+   *
+   * Calling `refreshCodecSupport` manually with a clear list of codecs supported
+   * once it has been requested on a compatible environment (e.g. in the main
+   * thread) allows to work-around this issue.
+   *
+   * @param {Array.<Object>} supportList
+   * @returns {Error|null} - Refreshing codec support might reveal that some
+   * `Adaptation` don't have any of their `Representation`s supported.
+   * In that case, an error object will be created and returned, so you can
+   * e.g. later emit it as a warning through the RxPlayer API.
+   */
+  public refreshCodecSupport(supportList: ICodecSupportList) : MediaError | null {
+    const unsupportedAdaptations: Adaptation[] = [];
+    for (const period of this.periods) {
+      period.refreshCodecSupport(supportList, unsupportedAdaptations);
+    }
+    if (unsupportedAdaptations.length > 0) {
+      return new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
+                            "An Adaptation contains only incompatible codecs.",
+                            { tracks: unsupportedAdaptations.map(toTaggedTrack) });
+    }
+    return null;
   }
 
   /**
@@ -367,14 +418,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @returns {Object|undefined}
    */
   public getPeriodForTime(time : number) : Period | undefined {
-    let nextPeriod = null;
-    for (let i = this.periods.length - 1; i >= 0; i--) {
-      const period = this.periods[i];
-      if (period.containsTime(time, nextPeriod)) {
-        return period;
-      }
-      nextPeriod = period;
-    }
+    return getPeriodForTime(this, time);
   }
 
   /**
@@ -398,15 +442,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   public getPeriodAfter(
     period : Period
   ) : Period | null {
-    const endOfPeriod = period.end;
-    if (endOfPeriod === undefined) {
-      return null;
-    }
-    const nextPeriod = arrayFind(this.periods, (_period) => {
-      return _period.end === undefined || endOfPeriod < _period.end;
-    });
-    return nextPeriod === undefined ? null :
-                                      nextPeriod;
+    return getPeriodAfter(this, period);
   }
 
   /**
@@ -448,21 +484,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @returns {number}
    */
   public getMinimumSafePosition() : number {
-    const windowData = this._timeBounds;
-    if (windowData.timeshiftDepth === null) {
-      return windowData.minimumSafePosition ?? 0;
-    }
-
-    const { maximumTimeData } = windowData;
-    let maximumTime : number;
-    if (!windowData.maximumTimeData.isLinear) {
-      maximumTime = maximumTimeData.maximumSafePosition;
-    } else {
-      const timeDiff = getMonotonicTimeStamp() - maximumTimeData.time;
-      maximumTime = maximumTimeData.maximumSafePosition + timeDiff / 1000;
-    }
-    const theoricalMinimum = maximumTime - windowData.timeshiftDepth;
-    return Math.max(windowData.minimumSafePosition ?? 0, theoricalMinimum);
+    return getMinimumSafePosition(this);
   }
 
   /**
@@ -471,15 +493,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @returns {number|undefined}
    */
   public getLivePosition() : number | undefined {
-    const { maximumTimeData } = this._timeBounds;
-    if (!this.isLive || maximumTimeData.livePosition === undefined) {
-      return undefined;
-    }
-    if (!maximumTimeData.isLinear) {
-      return maximumTimeData.livePosition;
-    }
-    const timeDiff = getMonotonicTimeStamp() - maximumTimeData.time;
-    return maximumTimeData.livePosition + timeDiff / 1000;
+    return getLivePosition(this);
   }
 
   /**
@@ -488,12 +502,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * time.
    */
   public getMaximumSafePosition() : number {
-    const { maximumTimeData } = this._timeBounds;
-    if (!maximumTimeData.isLinear) {
-      return maximumTimeData.maximumSafePosition;
-    }
-    const timeDiff = getMonotonicTimeStamp() - maximumTimeData.time;
-    return maximumTimeData.maximumSafePosition + timeDiff / 1000;
+    return getMaximumSafePosition(this);
   }
 
   /**
@@ -504,7 +513,12 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
    * @param {Function} isDecipherableCb
    */
   public updateRepresentationsDeciperability(
-    isDecipherableCb : (rep : Representation) => boolean | undefined
+    isDecipherableCb : (content : {
+      manifest : Manifest;
+      period : Period;
+      adaptation : Adaptation;
+      representation : Representation;
+    }) => boolean | undefined
   ) : void {
     const updates = updateDeciperability(this, isDecipherableCb);
     if (updates.length > 0) {
@@ -564,6 +578,41 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   }
 
   /**
+   * Format the current `Manifest`'s properties into a
+   * `IManifestMetadata` format which can better be communicated through
+   * another thread.
+   *
+   * Please bear in mind however that the returned object will not be updated
+   * when the current `Manifest` instance is updated, it is only a
+   * snapshot at the current time.
+   *
+   * If you want to keep that data up-to-date with the current `Manifest`
+   * instance, you will have to do it yourself.
+   *
+   * @returns {Object}
+   */
+  public getMetadataSnapshot() : IManifestMetadata {
+    const periods : IPeriodMetadata[] = [];
+    for (const period of this.periods) {
+      periods.push(period.getMetadataSnapshot());
+    }
+
+    return {
+      manifestFormat: ManifestMetadataFormat.MetadataObject,
+      id: this.id,
+      periods,
+      isDynamic: this.isDynamic,
+      isLive: this.isLive,
+      isLastPeriodKnown: this.isLastPeriodKnown,
+      suggestedPresentationDelay: this.suggestedPresentationDelay,
+      clockOffset: this.clockOffset,
+      uris: this.uris,
+      availabilityStartTime: this.availabilityStartTime,
+      timeBounds: this.timeBounds,
+    };
+  }
+
+  /**
    * @param {Object} newManifest
    * @param {number} updateType
    */
@@ -583,11 +632,11 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
 
     let updatedPeriodsResult;
     if (updateType === MANIFEST_UPDATE_TYPE.Full) {
-      this._timeBounds = newManifest._timeBounds;
+      this.timeBounds = newManifest.timeBounds;
       this.uris = newManifest.uris;
       updatedPeriodsResult = replacePeriods(this.periods, newManifest.periods);
     } else {
-      this._timeBounds.maximumTimeData = newManifest._timeBounds.maximumTimeData;
+      this.timeBounds.maximumTimeData = newManifest.timeBounds.maximumTimeData;
       this.updateUrl = newManifest.uris[0];
       updatedPeriodsResult = updatePeriods(this.periods, newManifest.periods);
 
@@ -631,15 +680,21 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
  */
 function updateDeciperability(
   manifest : Manifest,
-  isDecipherable : (rep : Representation) => boolean | undefined
+  isDecipherable : (content : {
+    manifest : Manifest;
+    period : Period;
+    adaptation : Adaptation;
+    representation : Representation;
+  }) => boolean | undefined
 ) : IDecipherabilityUpdateElement[] {
   const updates : IDecipherabilityUpdateElement[] = [];
   for (const period of manifest.periods) {
     for (const adaptation of period.getAdaptations()) {
       for (const representation of adaptation.representations) {
-        const result = isDecipherable(representation);
+        const content = { manifest, period, adaptation, representation };
+        const result = isDecipherable(content);
         if (result !== representation.decipherable) {
-          updates.push({ manifest, period, adaptation, representation });
+          updates.push(content);
           representation.decipherable = result;
           log.debug(`Decipherability changed for "${representation.id}"`,
                     `(${representation.bitrate})`,

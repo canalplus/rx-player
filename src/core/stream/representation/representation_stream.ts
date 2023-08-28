@@ -189,7 +189,7 @@ export default function RepresentationStream<TSegmentDataType>(
     }
   });
   downloadingQueue.addEventListener("fullyLoadedSegment", (segment) => {
-    segmentBuffer.endOfSegment(objectAssign({ segment }, content), globalCanceller.signal)
+    segmentBuffer.signalSegmentComplete(objectAssign({ segment }, content))
       .catch(onFatalBufferError);
   });
   downloadingQueue.start();
@@ -320,7 +320,7 @@ export default function RepresentationStream<TSegmentDataType>(
         0,
         initialWantedTime - UPTO_CURRENT_POSITION_CLEANUP);
       if (gcedPosition > 0) {
-        segmentBuffer.removeBuffer(0, gcedPosition, globalCanceller.signal)
+        segmentBuffer.removeBuffer(0, gcedPosition)
           .catch(onFatalBufferError);
       }
     }
@@ -385,6 +385,7 @@ export default function RepresentationStream<TSegmentDataType>(
         segmentBuffer.declareInitSegment(initSegmentUniqueId,
                                          evt.initializationData);
         pushInitSegment({ playbackObserver,
+                          bufferGoal,
                           content,
                           initSegmentUniqueId,
                           segment: evt.segment,
@@ -426,6 +427,7 @@ export default function RepresentationStream<TSegmentDataType>(
 
       const initSegmentUniqueId = initSegmentState.uniqueId;
       pushMediaSegment({ playbackObserver,
+                         bufferGoal,
                          content,
                          initSegmentUniqueId,
                          parsedSegment: evt,

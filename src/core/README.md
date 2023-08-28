@@ -1,5 +1,12 @@
 # RxPlayer core ################################################################
 
+| Consideration           | Status                                              |
+|-------------------------|-----------------------------------------------------|
+| Preferred import style  | The `core` directory shouldn't be imported directly |
+| Multithread environment | Depends, see inner directories' `README.md` files   |
+
+## Overview ####################################################################
+
 The "core" regroups multiple modules constituting the central logic of the
 RxPlayer.
 

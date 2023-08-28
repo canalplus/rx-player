@@ -13,6 +13,10 @@
       "displayName": "DASH WASM Parser"
     },
     {
+      "path": "./MultiThreading.md",
+      "displayName": "Running in MultiThreading mode"
+    },
+    {
       "path": "./hdr.md",
       "displayName": "HDR"
     },

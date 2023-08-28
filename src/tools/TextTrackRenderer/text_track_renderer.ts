@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-/* eslint-disable max-len */
-import HTMLTextSegmentBuffer from "../../core/segment_buffers/implementations/text/html";
-/* eslint-enable max-len */
 import {
   addFeatures,
   IFeature,
 } from "../../features";
+import HTMLTextDisplayer from "../../text_displayer/html";
 
 /** Argument for the `setTextTrack` method. */
 export interface ISetTextTrackArguments {
@@ -51,7 +49,7 @@ export default class TextTrackRenderer {
     addFeatures(parsersList);
   }
 
-  private _segmentBuffer : HTMLTextSegmentBuffer;
+  private _displayer : HTMLTextDisplayer;
 
   /**
    * @param {Object} opts
@@ -65,7 +63,7 @@ export default class TextTrackRenderer {
       textTrackElement } : { videoElement : HTMLMediaElement;
                              textTrackElement : HTMLElement; }
   ) {
-    this._segmentBuffer = new HTMLTextSegmentBuffer(videoElement, textTrackElement);
+    this._displayer = new HTMLTextDisplayer(videoElement, textTrackElement);
   }
 
   /**
@@ -74,27 +72,24 @@ export default class TextTrackRenderer {
    * @param {Object} args
    */
   public setTextTrack(args : ISetTextTrackArguments) : void {
-    this._segmentBuffer.removeBufferSync(0, Number.MAX_VALUE);
+    this._displayer.reset();
     const timestampOffset = typeof args.timeOffset === "number" ?
       args.timeOffset :
       0;
-    this._segmentBuffer.pushChunkSync({ inventoryInfos: null,
-                                        data: { initSegmentUniqueId: null,
-                                                codec: args.type,
-                                                timestampOffset,
-                                                appendWindow: [0, Infinity],
-                                                chunk : { start: 0,
-                                                          end: Number.MAX_VALUE,
-                                                          data: args.data,
-                                                          language: args.language,
-                                                          type: args.type } } });
+    this._displayer.pushTextData({ timestampOffset,
+                                   appendWindow: [0, Infinity],
+                                   chunk : { start: 0,
+                                             end: Number.MAX_VALUE,
+                                             data: args.data,
+                                             language: args.language,
+                                             type: args.type } });
   }
 
   /**
    * Completely remove the current text track.
    */
   public removeTextTrack() : void {
-    this._segmentBuffer.removeBufferSync(0, Number.MAX_VALUE);
+    this._displayer.removeBuffer(0, Number.MAX_VALUE);
   }
 
   /**
@@ -103,6 +98,6 @@ export default class TextTrackRenderer {
    * called.
    */
   public dispose() : void {
-    this._segmentBuffer.dispose();
+    this._displayer.stop();
   }
 }

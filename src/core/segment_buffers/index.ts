@@ -17,13 +17,14 @@
 import BufferGarbageCollector from "./garbage_collector";
 import {
   IBufferType,
-  IEndOfSegmentInfos,
-  IEndOfSegmentOperation,
+  ICompleteSegmentInfo,
+  ISignalCompleteSegmentOperation,
   IPushChunkInfos,
   IPushedChunkData,
   IPushOperation,
   IRemoveOperation,
   ISBOperation,
+  ITextDisplayerInterface,
   SegmentBuffer,
   SegmentBufferOperation,
 } from "./implementations";
@@ -35,18 +36,12 @@ import {
   getFirstSegmentAfterPeriod,
   getLastSegmentBeforePeriod,
 } from "./inventory";
-import SegmentBuffersStore, {
-  ISegmentBufferOptions,
-  ITextTrackSegmentBufferOptions,
-} from "./segment_buffers_store";
+import SegmentBuffersStore from "./segment_buffers_store";
 
 export default SegmentBuffersStore;
 export {
   BufferGarbageCollector,
   ChunkStatus,
-
-  ISegmentBufferOptions,
-  ITextTrackSegmentBufferOptions,
 
   SegmentBuffer,
 
@@ -59,14 +54,16 @@ export {
   IPushChunkInfos,
   IPushedChunkData,
 
-  IEndOfSegmentInfos,
+  ICompleteSegmentInfo,
 
   SegmentBufferOperation,
   ISBOperation,
-  IEndOfSegmentOperation,
+  ISignalCompleteSegmentOperation,
   IPushOperation,
   IRemoveOperation,
 
   getFirstSegmentAfterPeriod,
   getLastSegmentBeforePeriod,
+
+  ITextDisplayerInterface,
 };

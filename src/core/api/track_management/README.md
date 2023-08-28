@@ -1,5 +1,12 @@
 # Track Management #############################################################
 
+| Consideration           | Status                    |
+|-------------------------|---------------------------|
+| Preferred import style  | No enforced import style  |
+| Multithread environment | Always run in main thread |
+
+## Overview ####################################################################
+
 The API has a "Track Management" subpart written specifically to facilitate
 the choosing of a specific Adaptation/track and Representations/qualities.
 

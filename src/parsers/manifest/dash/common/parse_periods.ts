@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import isWorker from "../../../../compat/is_worker";
 import log from "../../../../log";
 import Manifest from "../../../../manifest";
 import flatMap from "../../../../utils/flat_map";
@@ -297,25 +298,20 @@ function generateStreamEvents(
           start + (eventIr.duration / timescale);
 
         let element;
-        if (eventIr.eventStreamData instanceof Element) {
+        let xmlData;
+        if (!isWorker && eventIr.eventStreamData instanceof Element) {
           element = eventIr.eventStreamData;
         } else {
-          // First, we will create a parent Element defining all namespaces that
-          // should have been encountered until know.
-          // This is needed because the DOMParser API might throw when
-          // encountering unknown namespaced attributes or elements in the given
-          // `<Event>` xml subset.
-          let parentNode = allNamespaces.reduce((acc, ns) => {
-            return acc + "xmlns:" + ns.key + "=\"" + ns.value + "\" ";
-          }, "<toremove ");
-          parentNode += ">";
-
-          const elementToString = utf8ToStr(new Uint8Array(eventIr.eventStreamData));
-          element = new DOMParser()
-            .parseFromString(parentNode + elementToString + "</toremove>",
-                             "application/xml")
-            .documentElement
-            .childNodes[0] as Element; // unwrap from the `<toremove>` element
+          try {
+            xmlData = {
+              namespaces: allNamespaces,
+              data: utf8ToStr(new Uint8Array(eventIr.eventStreamData as ArrayBuffer)),
+            };
+          } catch (err) {
+            log.error("DASH: Error while parsing event-stream:",
+                      err instanceof Error ? err.message :
+                                             "Unknown error");
+          }
         }
         res.push({ start,
                    end,
@@ -323,7 +319,8 @@ function generateStreamEvents(
                    data: { type: "dash-event-stream",
                            value: { schemeIdUri,
                                     timescale,
-                                    element } } });
+                                    element,
+                                    xmlData } } });
       }
     }
   }

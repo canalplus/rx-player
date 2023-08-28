@@ -253,34 +253,6 @@ const DEFAULT_CONFIG = {
   BITRATE_REBUFFERING_RATIO: 1.5,
 
     /**
-     * Those are used when a "QuotaExceededError" error is received after
-     * appending a new segment in the SourceBuffer.
-     *
-     * This error can arise when the browser's buffer is considered full.
-     * In this case, the player goes into manual garbage collection (GC) mode.
-     * @type {Object}
-     */
-  BUFFER_GC_GAPS: {
-      /**
-       * _Low_ gap (from current position) from which the buffer will be _garbage
-       * collected_ (read removed from the buffer) when a QuotaExceededError is
-       * received.
-       * In seconds.
-       * @type {Number}
-       */
-    CALM: 240,
-
-      /**
-       * _High_ gap (from current position) from which the buffer will be _garbage
-       * collected_ (read removed from the buffer) when a QuotaExceededError is
-       * received, if the low one does not clean up any buffer.
-       * In seconds.
-       * @type {Number}
-       */
-    BEEFY: 30,
-  },
-
-    /**
      * The default number of times a manifest request will be re-performed
      * when loaded/refreshed if the request finishes on an error which
      * justify an retry.
@@ -362,7 +334,7 @@ const DEFAULT_CONFIG = {
      * Same than SAMPLING_INTERVAL_MEDIASOURCE but for lowLatency mode.
      * @type {Number}
      */
-  SAMPLING_INTERVAL_LOW_LATENCY: 250,
+  SAMPLING_INTERVAL_LOW_LATENCY: 500,
 
     /**
      * Same than SAMPLING_INTERVAL_MEDIASOURCE but for the directfile API.

@@ -18,53 +18,47 @@ import {
   ISegmentFetcher,
   ISegmentLoaderContent,
 } from "../../../core/fetchers/segment/segment_fetcher";
-import { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implementations";
 import log from "../../../log";
+import { MainSourceBufferInterface } from "../../../mse/main_media_source_interface";
 import { CancellationSignal } from "../../../utils/task_canceller";
 
 /**
  * @param {Object} segmentInfo
- * @param {Object} segmentBuffer
+ * @param {Object} sourceBufferInterface
  * @param {Object} segmentFetcher
  * @param {Object} cancelSignal
  * @returns {Promise}
  */
 export default function loadAndPushSegment(
   segmentInfo : ISegmentLoaderContent,
-  segmentBuffer: AudioVideoSegmentBuffer,
+  sourceBufferInterface: MainSourceBufferInterface,
   segmentFetcher: ISegmentFetcher<ArrayBuffer | Uint8Array>,
-  initSegmentUniqueId : string | null,
   cancelSignal: CancellationSignal
 ): Promise<unknown> {
   const pushOperations : Array<Promise<unknown>> = [];
   return segmentFetcher(segmentInfo, {
     onChunk(parseChunk) {
       const parsed = parseChunk(undefined);
-      let isInitSegment : boolean;
       let data : BufferSource | null;
       let timestampOffset : number;
       const codec = segmentInfo.representation.getMimeTypeString();
       if (parsed.segmentType === "init") {
-        isInitSegment = true;
         data = parsed.initializationData;
         timestampOffset = 0;
-        if (initSegmentUniqueId !== null) {
-          segmentBuffer.declareInitSegment(initSegmentUniqueId, data);
-        }
       } else {
-        isInitSegment = false;
         data = parsed.chunkData;
         timestampOffset = parsed.chunkOffset;
       }
-      const pushOperation = segmentBuffer.pushChunk({
-        data: { initSegmentUniqueId,
-                chunk: isInitSegment ? null :
-                                       data,
-                appendWindow: [segmentInfo.period.start, segmentInfo.period.end],
-                timestampOffset,
-                codec },
-        inventoryInfos: null,
-      }, cancelSignal);
+      let pushOperation;
+      if (data === null) {
+        pushOperation = Promise.resolve(null);
+      } else {
+        pushOperation = sourceBufferInterface.appendBuffer(data, {
+          appendWindow: [segmentInfo.period.start, segmentInfo.period.end],
+          timestampOffset,
+          codec,
+        });
+      }
       pushOperations.push(pushOperation);
     },
     onAllChunksReceived() {

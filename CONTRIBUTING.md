@@ -47,6 +47,17 @@ the `features` object exported at `/src/features`. This is to reduce bundle size
 when an application doesn't need all of the RxPlayer's features.
 
 
+### Multithreading
+
+Some parts of the code are intented to be runnable in a WebWorker. In that
+environment some API, more specifically DOM-related API, are not available
+directly (if some interaction with the DOM is needed, it will have to go through
+an asynchronous `postMessage` round-trip).
+
+Whether the code needs to be runnable or not in a WebWorker is generally
+documented in the `README.md` of concerned directories.
+
+
 
 ## Code style
 

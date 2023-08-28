@@ -17,7 +17,6 @@
     "moduleResolution": "node",
     "module": "esnext",
     "typeRoots": [
-      "./src/typings/",
       "./src/globals.prod.d.ts",
       "./node_modules/@types"
     ]

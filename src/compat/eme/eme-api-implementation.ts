@@ -158,7 +158,7 @@ function getEmeApiImplementation(
       implementation = "webkit";
     } else {
       // This is for Chrome with unprefixed EME api
-      if (isOldWebkitMediaElement(HTMLVideoElement.prototype)) {
+      if (isOldWebkitMediaElement(globalScope.HTMLVideoElement?.prototype)) {
         onEncrypted = createCompatibleEventListener(["needkey"]);
         const callbacks = getOldKitWebKitMediaKeyCallbacks();
         isTypeSupported = callbacks.isTypeSupported;

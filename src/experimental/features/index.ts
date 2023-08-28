@@ -16,3 +16,4 @@
 
 export { METAPLAYLIST } from "./metaplaylist";
 export { LOCAL_MANIFEST } from "./local";
+export { MULTI_THREAD } from "./multi_thread";
