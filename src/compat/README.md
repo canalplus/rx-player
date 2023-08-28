@@ -1,5 +1,12 @@
 # Compatibility files ##########################################################
 
+| Consideration           | Status                                      |
+|-------------------------|---------------------------------------------|
+| Preferred import style  | Compat files should be imported directly    |
+| Multithread environment | Main thread or WebWorker depending on file  |
+
+## Overview ####################################################################
+
 Those are "Compat" files, which regroups any compatibility-related logic.
 
 All those files try to make the RxPlayer work the exact same way on different

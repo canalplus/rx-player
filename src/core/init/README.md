@@ -1,5 +1,20 @@
 # The `ContentInitializer` #####################################################
 
+| Consideration           | Status                                            |
+|-------------------------|---------------------------------------------------|
+| Preferred import style  | Either through `features` or directory-only _[1]_ |
+| Multithread environment | Main thread, WebWorker or both depending on file  |
+
+_[1]_ The right `ContentInitializer` implementation wanted should be imported
+through the global `features` object. This improves feature-switching and thus
+may reduce bundle size for an application.
+Other imports should be performed through the `init` directory itself - which
+means that inner files of that directory shouldn't be imported by outside code
+(thus `./index.ts` should export everything that may be imported directly by
+outside code).
+
+## Overview ####################################################################
+
 The ContentInitializer is the part of the code actually starting and running the
 logic behind playing a content.
 

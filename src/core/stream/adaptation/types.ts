@@ -7,7 +7,9 @@ import {
   IAudioTrackSwitchingMode,
   IVideoTrackSwitchingMode,
 } from "../../../public_types";
-import { IReadOnlySharedReference } from "../../../utils/reference";
+import SharedReference, {
+  IReadOnlySharedReference,
+} from "../../../utils/reference";
 import { IRepresentationEstimator } from "../../adaptive";
 import { IReadOnlyPlaybackObserver } from "../../api";
 import { SegmentFetcherCreator } from "../../fetchers";
@@ -67,6 +69,8 @@ export interface IRepresentationChangePayload {
   type : IBufferType;
   /** The `Period` linked to the `RepresentationStream` we're creating. */
   period : Period;
+  /** The `Adaptation` linked to the `RepresentationStream` we're creating. */
+  adaptation : Adaptation;
   /**
    * The `Representation` linked to the `RepresentationStream` we're creating.
    * `null` when we're choosing no Representation at all.
@@ -115,36 +119,9 @@ export interface IAdaptationStreamPlaybackObservation extends
     bufferGap : number;
     /** `duration` property of the HTMLMediaElement on which the content plays. */
     duration : number;
-    /**
-     * Information on whether the media element was paused at the time of the
-     * Observation.
-     */
-    paused : IPausedPlaybackObservation;
-    /** Last "playback rate" asked by the user. */
-    speed : number;
     /** Theoretical maximum position on the content that can currently be played. */
     maximumPosition : number;
   }
-
-/** Pause-related information linked to an emitted Playback observation. */
-export interface IPausedPlaybackObservation {
-  /**
-   * Known paused state at the time the Observation was emitted.
-   *
-   * `true` indicating that the HTMLMediaElement was in a paused state.
-   *
-   * Note that it might have changed since. If you want truly precize
-   * information, you should recuperate it from the HTMLMediaElement directly
-   * through another mean.
-   */
-  last : boolean;
-  /**
-   * Actually wanted paused state not yet reached.
-   * This might for example be set to `false` when the content is currently
-   * loading (and thus paused) but with autoPlay enabled.
-   */
-  pending : boolean | undefined;
-}
 
 /** Arguments given when creating a new `AdaptationStream`. */
 export interface IAdaptationStreamArguments {
@@ -213,7 +190,7 @@ export interface IAdaptationStreamOptions {
 /** Object indicating a choice of Adaptation made by the user. */
 export interface IAdaptationChoice {
   /** The Adaptation choosen. */
-  adaptation : Adaptation;
+  adaptationId : string;
 
   /** "Switching mode" in which the track switch should happen. */
   switchingMode : ITrackSwitchingMode;
@@ -221,8 +198,9 @@ export interface IAdaptationChoice {
   /**
    * Shared reference allowing to indicate which Representations from
    * that Adaptation are allowed.
+   * TODO Read-only?
    */
-  representations : IReadOnlySharedReference<IRepresentationsChoice>;
+  representations : SharedReference<IRepresentationsChoice>;
 }
 
 export type ITrackSwitchingMode = IAudioTrackSwitchingMode |

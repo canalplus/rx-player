@@ -22,7 +22,9 @@ import Manifest, {
   IManifestParsingOptions,
 } from "./manifest";
 import Period from "./period";
-import Representation from "./representation";
+import Representation, {
+  ICodecSupportList,
+} from "./representation";
 import {
   IMetaPlaylistPrivateInfos,
   IRepresentationIndex,
@@ -31,17 +33,49 @@ import {
 } from "./representation_index";
 import {
   areSameContent,
+  createRepresentationFilterFromFnString,
   getLoggableSegmentId,
+  getLivePosition,
+  getMinimumSafePosition,
+  getMaximumSafePosition,
+  getSupportedAdaptations,
+  getAdaptations,
+  getPeriodForTime,
+  getPeriodAfter,
   IBufferedChunkInfos,
+  toAudioTrack,
+  toVideoTrack,
+  toTextTrack,
+  toTaggedTrack,
+  updateDecipherabilityFromKeyIds,
+  updateDecipherabilityFromProtectionData,
+  IDecipherabilityStatusChangedElement,
+  ITaggedTrack,
+  replicateUpdatesOnManifestMetadata,
 } from "./utils";
 
 export default Manifest;
 export * from "./types";
+export { IPeriodsUpdateResult } from "./update_periods";
 export {
   // utils
   areSameContent,
+  createRepresentationFilterFromFnString,
   getLoggableSegmentId,
-  IBufferedChunkInfos,
+  getPeriodForTime,
+  getPeriodAfter,
+  getLivePosition,
+  getMinimumSafePosition,
+  getMaximumSafePosition,
+  getSupportedAdaptations,
+  getAdaptations,
+  replicateUpdatesOnManifestMetadata,
+  toAudioTrack,
+  toVideoTrack,
+  toTextTrack,
+  toTaggedTrack,
+  updateDecipherabilityFromKeyIds,
+  updateDecipherabilityFromProtectionData,
 
   // classes
   Period,
@@ -49,6 +83,10 @@ export {
   Representation,
 
   // types
+  IBufferedChunkInfos,
+  IDecipherabilityStatusChangedElement,
+  ITaggedTrack,
+  ICodecSupportList,
   IDecipherabilityUpdateElement,
   IManifestParsingOptions,
   IMetaPlaylistPrivateInfos,

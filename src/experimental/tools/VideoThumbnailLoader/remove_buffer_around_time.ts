@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implementations";
-import { CancellationSignal } from "../../../utils/task_canceller";
+import { MainSourceBufferInterface } from "../../../mse/main_media_source_interface";
 
 /**
  * Remove buffer around wanted time, considering a margin around
@@ -23,18 +22,16 @@ import { CancellationSignal } from "../../../utils/task_canceller";
  * If time is 10 and margin is 2, cleaned ranges will be :
  * [0, 8] and [12, videoElement.duration]
  * @param {HTMLMediaElement} videoElement
- * @param {Object} sourceBuffer
+ * @param {Object} sourceBufferInterface
  * @param {Number} time
  * @param {Number|undefined} margin
- * @param {Object} cancelSignal
  * @returns {Promise}
  */
 export default function removeBufferAroundTime(
   videoElement: HTMLMediaElement,
-  sourceBuffer: AudioVideoSegmentBuffer,
+  sourceBufferInterface: MainSourceBufferInterface,
   time: number,
-  margin: number | undefined,
-  cancelSignal: CancellationSignal
+  margin: number | undefined
 ): Promise<unknown> {
   const removalMargin = margin ?? 10 * 60;
   if (videoElement.buffered.length === 0) {
@@ -42,13 +39,11 @@ export default function removeBufferAroundTime(
   }
   const bufferRemovals = [];
   if ((time - removalMargin) > 0) {
-    bufferRemovals.push(
-      sourceBuffer.removeBuffer(0, time - removalMargin, cancelSignal));
+    bufferRemovals.push(sourceBufferInterface.remove(0, time - removalMargin));
   }
   if ((time + removalMargin) < videoElement.duration) {
-    bufferRemovals.push(sourceBuffer.removeBuffer(time + removalMargin,
-                                                  videoElement.duration,
-                                                  cancelSignal));
+    bufferRemovals.push(sourceBufferInterface.remove(time + removalMargin,
+                                                     videoElement.duration));
   }
   return Promise.all(bufferRemovals);
 }

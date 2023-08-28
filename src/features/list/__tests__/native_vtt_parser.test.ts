@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line max-len
-import NativeTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/native";
 import vttParser from "../../../parsers/texttracks/webvtt/native";
+import NativeTextDisplayer from "../../../text_displayer/native";
 import { IFeaturesObject } from "../../types";
 import addNativevttFeature from "../native_vtt_parser";
 
@@ -26,7 +25,7 @@ describe("Features list - native vtt Parser", () => {
     addNativevttFeature(featureObject);
     expect(featureObject).toEqual({
       nativeTextTracksParsers: { vtt: vttParser },
-      nativeTextTracksBuffer: NativeTextSegmentBuffer,
+      nativeTextDisplayer: NativeTextDisplayer,
     });
     expect(featureObject.nativeTextTracksParsers.vtt).toBe(vttParser);
   });

@@ -145,11 +145,11 @@ describe("Manifest - Adaptation", () => {
     const parsedRepresentations = adaptation.representations;
     expect(mockDefaultRepresentationImpl).toHaveBeenCalledTimes(3);
     expect(mockDefaultRepresentationImpl)
-      .toHaveBeenNthCalledWith(1, rep1, { type: "text" });
+      .toHaveBeenNthCalledWith(1, rep1, "text");
     expect(mockDefaultRepresentationImpl)
-      .toHaveBeenNthCalledWith(2, rep2, { type: "text" });
+      .toHaveBeenNthCalledWith(2, rep2, "text");
     expect(mockDefaultRepresentationImpl)
-      .toHaveBeenNthCalledWith(3, rep3, { type: "text" });
+      .toHaveBeenNthCalledWith(3, rep3, "text");
 
     expect(parsedRepresentations.length).toBe(3);
     expect(parsedRepresentations[0].id).toEqual("rep1");
@@ -385,64 +385,5 @@ describe("Manifest - Adaptation", () => {
     const adaptation = new Adaptation(args);
 
     expect(adaptation.getRepresentation("rep5")).toBe(undefined);
-  });
-
-  /* eslint-disable max-len */
-  it("should return only playable representations when calling `getPlayableRepresentations`", () => {
-  /* eslint-enable max-len */
-    const mockRepresentation = jest.fn(arg => {
-      return { bitrate: arg.bitrate,
-               id: arg.id,
-               isPlayable() { return arg.id !== "rep3"; },
-               index: arg.index };
-    });
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: mockRepresentation }));
-
-    const Adaptation = jest.requireActual("../adaptation").default;
-    const rep1 = { bitrate: 10,
-                   id: "rep1",
-                   index: minimalRepresentationIndex };
-    const rep2 = { bitrate: 20,
-                   id: "rep2",
-                   index: minimalRepresentationIndex };
-    const rep3 = { bitrate: 30,
-                   id: "rep3",
-                   index: minimalRepresentationIndex };
-    const rep4 = { bitrate: 40,
-                   id: "rep4",
-                   index: minimalRepresentationIndex };
-    const rep5 = { bitrate: 50,
-                   id: "rep5",
-                   index: minimalRepresentationIndex };
-    const rep6 = { bitrate: 60,
-                   id: "rep6",
-                   index: minimalRepresentationIndex };
-    const rep7 = { bitrate: 70,
-                   id: "rep7",
-                   index: minimalRepresentationIndex };
-    const rep8 = { bitrate: 80,
-                   id: "rep8",
-                   index: minimalRepresentationIndex };
-    const representations = [rep1,
-                             rep2,
-                             rep3,
-                             rep4,
-                             rep5,
-                             rep6,
-                             rep7,
-                             rep8];
-    const args = { id: "12", representations, type: "text" as const };
-    const adaptation = new Adaptation(args);
-
-    const playableRepresentations = adaptation.getPlayableRepresentations();
-    expect(playableRepresentations.length).toEqual(7);
-    expect(playableRepresentations[0].id).toEqual("rep1");
-    expect(playableRepresentations[1].id).toEqual("rep2");
-    expect(playableRepresentations[2].id).toEqual("rep4");
-    expect(playableRepresentations[3].id).toEqual("rep5");
-    expect(playableRepresentations[4].id).toEqual("rep6");
-    expect(playableRepresentations[5].id).toEqual("rep7");
-    expect(playableRepresentations[6].id).toEqual("rep8");
   });
 });

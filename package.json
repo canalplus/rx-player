@@ -21,6 +21,20 @@
       "import": "./dist/es2017/experimental/index.js",
       "default": "./dist/es2017/experimental/index.js"
     },
+    "./experimental/inline-worker": {
+      "node": "./experimental/inline-worker.commonjs.js",
+      "es2015": "./experimental/inline-worker.js",
+      "require": "./experimental/inline-worker.commonjs.js",
+      "import": "./experimental/inline-worker.js",
+      "default": "./experimental/inline-worker.js"
+    },
+    "./experimental/inline-mpd-parser": {
+      "node": "./experimental/inline-mpd-parser.commonjs.js",
+      "es2015": "./experimental/inline-mpd-parser.js",
+      "require": "./experimental/inline-mpd-parser.commonjs.js",
+      "import": "./experimental/inline-mpd-parser.js",
+      "default": "./experimental/inline-mpd-parser.js"
+    },
     "./experimental/features": {
       "node": "./dist/commonjs/experimental/features/index.js",
       "es2015": "./dist/es2017/experimental/features/index.js",
@@ -119,11 +133,13 @@
   "sideEffects": false,
   "scripts": {
     "build": "./scripts/build/generate_build.mjs",
-    "build:all": "npm run build:rxp:all && npm run build:wasm:release",
-    "build:rxp:all": "npm run bundle && npm run bundle:min && npm run build",
+    "build:all": "npm run build:wasm:release && npm run build:rxp:all",
+    "build:rxp:all": "npm run bundle && npm run bundle:min && npm run build && npm run build:worker:prod",
     "build:wasm:debug": "cd ./src/parsers/manifest/dash/wasm-parser && cargo build --target wasm32-unknown-unknown && cp target/wasm32-unknown-unknown/debug/mpd_node_parser.wasm ../../../../../dist/mpd-parser.wasm",
     "build:wasm:release": "cd ./src/parsers/manifest/dash/wasm-parser && cargo build --target wasm32-unknown-unknown --release && node ../../../../../scripts/wasm-optimize.mjs target/wasm32-unknown-unknown/release/mpd_node_parser.wasm ../../../../../dist/mpd-parser.wasm && cd ../../../../../ && npm run wasm-strip",
     "bundle": "webpack --progress --config webpack.config.mjs --env production",
+    "build:worker": "esbuild ./src/worker_entry_point.ts --target=es2017 --bundle --outfile=dist/worker.js --define:__ENVIRONMENT__=\"{ \\\"PRODUCTION\\\": 0, \\\"DEV\\\": 1, \\\"CURRENT_ENV\\\": 1 }\" && node scripts/generate_inline_worker.mjs && node scripts/generate_inline_dash_wasm.mjs",
+    "build:worker:prod": "esbuild --minify ./src/worker_entry_point.ts --target=es2017 --bundle --outfile=dist/worker.js --define:__ENVIRONMENT__=\"{ \\\"PRODUCTION\\\": 0, \\\"DEV\\\": 1, \\\"CURRENT_ENV\\\": 0 }\" && node scripts/generate_inline_worker.mjs && node scripts/generate_inline_dash_wasm.mjs",
     "bundle:min": "webpack --progress --config webpack.config.mjs --env minify --env production",
     "bundle:min:watch": "webpack --progress --config webpack.config.mjs -w --env production --env minify",
     "bundle:watch": "webpack --progress --config webpack.config.mjs -w --env production",
@@ -270,6 +286,10 @@
         "bundle:min": "Build the player and minify it in dist/rx-player.min.js",
         "bundle:min:watch": "Build the player in dist/rx-player.js each times the files update",
         "bundle:watch": "Build the player as a minified version in dist/rx-player.min.js each times the files update"
+      },
+      "Worker builds (relied on in \"multithread\" mode)": {
+        "build:worker": "Build the RxPlayer's worker code when running in \"multithread\" mode, in a development context.",
+        "build:worker:prod": "Build the RxPlayer's worker code when running in \"multithread\" mode, minified and some checks removed, used for a release."
       },
       "WebAssembly MPD parser builds (needs Rust, Cargo and binaryen)": {
         "build:wasm:debug": "Build the DASH MPD parser written in rust as WebAssembly into debug mode, and output the result as dist/mpd-parser.wasm",

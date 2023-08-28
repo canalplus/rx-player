@@ -21,6 +21,7 @@ import Manifest, {
   Representation,
 } from "../../../../manifest";
 import objectAssign from "../../../../utils/object_assign";
+import { IReadOnlySharedReference } from "../../../../utils/reference";
 import { CancellationSignal } from "../../../../utils/task_canceller";
 import { IReadOnlyPlaybackObserver } from "../../../api";
 import {
@@ -46,6 +47,7 @@ export default async function pushInitSegment<T>(
     initSegmentUniqueId,
     segment,
     segmentBuffer,
+    bufferGoal,
   } : {
     playbackObserver : IReadOnlyPlaybackObserver<
       IRepresentationStreamPlaybackObservation
@@ -58,6 +60,7 @@ export default async function pushInitSegment<T>(
     segmentData : T;
     segment : ISegment;
     segmentBuffer : SegmentBuffer;
+    bufferGoal : IReadOnlySharedReference<number>;
   },
   cancelSignal : CancellationSignal
 ) : Promise< IStreamEventAddedSegmentPayload | null > {
@@ -75,10 +78,10 @@ export default async function pushInitSegment<T>(
                                         start: 0,
                                         end: 0 },
                                       content);
-  await appendSegmentToBuffer(playbackObserver,
-                              segmentBuffer,
-                              { data, inventoryInfos },
-                              cancelSignal);
-  const buffered = segmentBuffer.getBufferedRanges();
+  const buffered = await appendSegmentToBuffer(playbackObserver,
+                                               segmentBuffer,
+                                               { data, inventoryInfos },
+                                               bufferGoal,
+                                               cancelSignal);
   return { content, segment, buffered };
 }

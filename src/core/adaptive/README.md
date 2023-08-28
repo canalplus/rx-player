@@ -1,5 +1,16 @@
 # `AdaptiveRepresentationSelector` #############################################
 
+| Consideration           | Status                          |
+|-------------------------|---------------------------------|
+| Preferred import style  | Directory-only _[1]_            |
+| Multithread environment | Should be runnable in WebWorker |
+
+_[1]_ Only the `adaptive` directory itself should be imported and relied on by
+the rest of the code, not its inner files (thus `./index.ts` should export
+everything that may be imported by outside code).
+
+## Overview ####################################################################
+
 The `AdaptiveRepresentationSelector` is a function which facilitates the choice
 between multiple audio/video qualities in function of the network capabilities
 and other specific settings set by the client.

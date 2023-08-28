@@ -15,6 +15,12 @@
  */
 
 import Manifest from "../../../manifest";
+import { SourceBufferType } from "../../../mse";
+import MainMediaSourceInterface from "../../../mse/main_media_source_interface";
+import { ITrackType } from "../../../public_types";
+import { ITextDisplayer } from "../../../text_displayer";
+import arrayFind from "../../../utils/array_find";
+import { IRange } from "../../../utils/ranges";
 import SharedReference, {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
@@ -38,6 +44,14 @@ export interface IStreamPlaybackObserverArguments {
   initialPlayPerformed : IReadOnlySharedReference<boolean>;
   /** The last speed requested by the user. */
   speed : IReadOnlySharedReference<number>;
+  /**
+   * Used abstraction to implement text track displaying.
+   *
+   * `null` if text tracks are disabled
+   */
+  textDisplayer : ITextDisplayer | null;
+  /** Used abstraction for MSE API. */
+  mediaSource : MainMediaSourceInterface;
 }
 
 /**
@@ -54,7 +68,9 @@ export default function createStreamPlaybackObserver(
   { autoPlay,
     initialPlayPerformed,
     manifest,
-    speed } : IStreamPlaybackObserverArguments,
+    mediaSource,
+    speed,
+    textDisplayer } : IStreamPlaybackObserverArguments,
   fnCancelSignal : CancellationSignal
 ) : IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation> {
   return srcPlaybackObserver.deriveReadOnlyObserver(function transform(
@@ -67,6 +83,8 @@ export default function createStreamPlaybackObserver(
     const newRef = new SharedReference(constructStreamPlaybackObservation(),
                                        canceller.signal);
 
+    // TODO there might be subtle unexpected behavior here as updating the
+    // speed will send observation which may be outdated at the time it is sent
     speed.onUpdate(emitStreamPlaybackObservation, {
       clearSignal: canceller.signal,
       emitCurrentValue: false,
@@ -108,10 +126,31 @@ export default function createStreamPlaybackObserver(
         }
       }
 
+      const buffered: Record<ITrackType, IRange[] | null> = {
+        audio: null,
+        video: null,
+        text: null,
+      };
+
+      const audioBuffer = arrayFind(mediaSource.sourceBuffers,
+                                    s => s.type === SourceBufferType.Audio);
+      const videoBuffer = arrayFind(mediaSource.sourceBuffers,
+                                    s => s.type === SourceBufferType.Video);
+      if (audioBuffer !== undefined) {
+        buffered.audio = audioBuffer.getBuffered();
+      }
+      if (videoBuffer !== undefined) {
+        buffered.video = videoBuffer.getBuffered();
+      }
+      if (textDisplayer !== null) {
+        buffered.text = textDisplayer.getBufferedRanges();
+      }
+
       return {
         // TODO more exact according to the current Adaptation chosen?
         maximumPosition: manifest.getMaximumSafePosition(),
         position: observation.position,
+        buffered,
         duration: observation.duration,
         paused: {
           last: observation.paused,

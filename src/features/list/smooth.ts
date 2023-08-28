@@ -14,18 +14,23 @@
  * limitations under the License.
  */
 
+
 // eslint-disable-next-line max-len
 import MediaSourceContentInitializer from "../../core/init/media_source_content_initializer";
+import mainCodecSupportProber from "../../mse/main_codec_support_prober";
 import smooth from "../../transports/smooth";
 import { IFeaturesObject } from "../types";
 
 /**
- * Add ability to play Microsoft Smooth Streaming contents.
+ * Add ability to play smooth contents.
  * @param {Object} features
  */
 function addSmoothFeature(features : IFeaturesObject) : void {
-  features.transports.smooth = smooth;
-  features.mediaSourceInit = MediaSourceContentInitializer;
+  if (features.transports.smooth === undefined) {
+    features.transports.smooth = smooth;
+  }
+  features.mainThreadMediaSourceInit = MediaSourceContentInitializer;
+  features.codecSupportProber = mainCodecSupportProber;
 }
 
 export { addSmoothFeature as SMOOTH };

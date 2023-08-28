@@ -1,5 +1,12 @@
 # Parsers ######################################################################
 
+| Consideration           | Status                                       |
+|-------------------------|----------------------------------------------|
+| Preferred import style  | Specific parsers can be imported explicitely |
+| Multithread environment | May run in WebWorker depending on the parser |
+
+## Overview ####################################################################
+
 This directory regroups "parsers", which translate a given format (either a
 Manifest format, a text track format, a media container etc.) into more
 exploitable properties for the rest of the RxPlayer.

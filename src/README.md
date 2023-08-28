@@ -97,7 +97,7 @@ Stream (./core/stream)           |                                              
 +-------------------------|---------------|--------------|-------+
                           |               |              |
                 +---------|---------------|--------------|-------+
-                |  (audio)V        (video)V              V       |
+                |  (audio)V        (video)V        (text)V       |
                 |  +------------+  +------------+  +-----------+ |
  Media buffers  |  | Audio/Video|  | Audio/Video|  |   Text    | |
  on which media |  |   Segment  |  |   Segment  |  |  Segment  | |
@@ -125,6 +125,13 @@ For the directories not represented in that schema:
 
   - `manifest` (_./manifest_): Defines a `Manifest` structure and its
     properties, a central structure of the player describing a content.
+
+  - `mse` (_./mse_): Abstraction over Media Source Extensions API, which are the
+    browser API allowing to buffer media.
+
+  - `multithread` (_./multithread_): Global code specific to the multithreaded
+    "flavor" of the RxPlayer, that is a specific RxPlayer class which may run
+    its main logic in a WebWorker to improve performance.
 
   - `parsers` (_./parsers_): Various parsers for several formats
 

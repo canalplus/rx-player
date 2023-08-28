@@ -15,6 +15,7 @@
  */
 
 import globalScope from "../../../../../compat/global_scope";
+import hasWebassembly from "../../../../../compat/has_webassembly";
 import log from "../../../../../log";
 import assertUnreachable from "../../../../../utils/assert_unreachable";
 import noop from "../../../../../utils/noop";
@@ -317,8 +318,7 @@ export default class DashWasmParser {
    * @returns {boolean}
    */
   public isCompatible() : boolean {
-    return typeof WebAssembly === "object" &&
-           typeof WebAssembly.instantiate === "function" &&
+    return hasWebassembly &&
            typeof globalScope.TextDecoder === "function";
   }
 

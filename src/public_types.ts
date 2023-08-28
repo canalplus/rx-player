@@ -1,17 +1,6 @@
 /**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * This file defines and exports types we want to expose to library users.
+ * Those types are considered as part of the API.
  */
 
 import { IPreferredEmeApiType } from "./compat/eme";
@@ -23,24 +12,31 @@ import {
   IPersistentSessionInfoV4,
 } from "./core/decrypt";
 import {
-  IMediaErrorTrackContext,
   EncryptedMediaError,
   MediaError,
   NetworkError,
   OtherError,
 } from "./errors";
-import Manifest from "./manifest";
+import Manifest, {
+  ITaggedTrack,
+} from "./manifest";
 import { ILocalManifest } from "./parsers/manifest/local";
 import { IMetaPlaylist } from "./parsers/manifest/metaplaylist/metaplaylist_parser";
 
-export { IMediaErrorTrackContext };
+export { ITaggedTrack as IMediaErrorTrackContext };
 
 export { IPreferredEmeApiType };
 
-/**
- * This file defines and exports types we want to expose to library users.
- * Those types are considered as part of the API.
- */
+/** `mode` option for the `loadVideo` method */
+export type IRxPlayerMode = "auto" |
+                            "main" |
+                            "multithread";
+
+/** Argument of the `attachWorker` method. */
+export interface IWorkerSettings {
+  workerUrl : string;
+  dashWasmUrl : string;
+};
 
 /** Every options that can be given to the RxPlayer's constructor. */
 export interface IConstructorOptions {
@@ -152,13 +148,19 @@ export interface ILoadVideoOptions {
   segmentLoader? : ISegmentLoader;
 
   /** Custom logic to filter out unwanted qualities. */
-  representationFilter? : IRepresentationFilter;
+  representationFilter? : IRepresentationFilter | string;
 
   /** Base time for the segments in case it is not found in the Manifest. */
   referenceDateTime? : number;
 
   /** Allows to synchronize the server's time with the client's. */
   serverSyncInfos? : IServerSyncInfos;
+
+  /**
+   * Allows to force the RxPlayer to run in a specific "mode" (e.g.
+   * in "multithread" mode) for that content.
+   */
+  mode? : IRxPlayerMode | undefined;
 }
 
 /** Value of the `serverSyncInfos` transport option. */
@@ -1037,4 +1039,9 @@ export interface ITextTrackSetting {
    * Keeping it undefined means it will apply to the currently-playing Period.
    */
   periodId? : string | undefined;
+}
+
+export interface IModeInformation {
+  isDirectFile : boolean;
+  useWorker : boolean;
 }

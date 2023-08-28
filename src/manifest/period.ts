@@ -23,8 +23,17 @@ import {
   IRepresentationFilter,
 } from "../public_types";
 import arrayFind from "../utils/array_find";
-import objectValues from "../utils/object_values";
 import Adaptation from "./adaptation";
+import { ICodecSupportList } from "./representation";
+import {
+  IAdaptationMetadata,
+  IPeriodMetadata,
+} from "./types";
+import {
+  getAdaptations,
+  getSupportedAdaptations,
+  periodContainsTime,
+} from "./utils";
 
 /** Structure listing every `Adaptation` in a Period. */
 export type IManifestAdaptations = Partial<Record<ITrackType, Adaptation[]>>;
@@ -34,7 +43,7 @@ export type IManifestAdaptations = Partial<Record<ITrackType, Adaptation[]>>;
  * period in the the Manifest.
  * @class Period
  */
-export default class Period {
+export default class Period implements IPeriodMetadata {
   /** ID uniquely identifying the Period in the Manifest. */
   public readonly id : string;
 
@@ -62,6 +71,10 @@ export default class Period {
   /**
    * @constructor
    * @param {Object} args
+   * @param {Array.<Object>} unsupportedAdaptations - Array on which
+   * `Adaptation`s objects which have no supported `Representation` will be
+   * pushed.
+   * This array might be useful for minor error reporting.
    * @param {function|undefined} [representationFilter]
    */
   constructor(
@@ -78,8 +91,12 @@ export default class Period {
         }
         const filteredAdaptations = adaptationsForType
           .map((adaptation) : Adaptation => {
-            const newAdaptation = new Adaptation(adaptation, { representationFilter });
-            if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
+            const newAdaptation = new Adaptation(adaptation,
+                                                 { representationFilter });
+            if (
+              newAdaptation.representations.length > 0
+              && newAdaptation.isSupported === false
+            ) {
               unsupportedAdaptations.push(newAdaptation);
             }
             return newAdaptation;
@@ -87,13 +104,13 @@ export default class Period {
           .filter((adaptation) : adaptation is Adaptation =>
             adaptation.representations.length > 0
           );
-        if (filteredAdaptations.every(adaptation => !adaptation.isSupported) &&
+        if (filteredAdaptations.every(adaptation => adaptation.isSupported === false) &&
             adaptationsForType.length > 0 &&
             (type === "video" || type === "audio")
         ) {
           throw new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
                                "No supported " + type + " adaptations",
-                               { adaptations: undefined });
+                               { tracks: undefined });
         }
 
         if (filteredAdaptations.length > 0) {
@@ -121,17 +138,63 @@ export default class Period {
   }
 
   /**
+   * Some environments (e.g. in a WebWorker) may not have the capability to know
+   * if a mimetype+codec combination is supported on the current platform.
+   *
+   * Calling `refreshCodecSupport` manually with a clear list of codecs supported
+   * once it has been requested on a compatible environment (e.g. in the main
+   * thread) allows to work-around this issue.
+   *
+   * @param {Array.<Object>} supportList
+   * @param {Array.<Object>} unsupportedAdaptations - Array on which
+   * `Adaptation`s objects which are now known to have no supported
+   * `Representation` will be pushed.
+   * This array might be useful for minor error reporting.
+   */
+  refreshCodecSupport(
+    supportList: ICodecSupportList,
+    unsupportedAdaptations: Adaptation[]
+  ) {
+    (Object.keys(this.adaptations) as ITrackType[]).forEach((ttype) => {
+      const adaptationsForType = this.adaptations[ttype];
+      if (adaptationsForType === undefined) {
+        return;
+      }
+      let hasSupportedAdaptations: boolean | undefined = false;
+      for (const adaptation of adaptationsForType) {
+        const wasSupported = adaptation.isSupported;
+        adaptation.refreshCodecSupport(supportList);
+        if (wasSupported !== false && adaptation.isSupported === false) {
+          unsupportedAdaptations.push(adaptation);
+        }
+
+        if (hasSupportedAdaptations === false) {
+          hasSupportedAdaptations = adaptation.isSupported;
+        } else if (
+          hasSupportedAdaptations === undefined &&
+          adaptation.isSupported === true
+        ) {
+          hasSupportedAdaptations = true;
+        }
+      }
+      if (
+        (ttype === "video" || ttype === "audio") &&
+        hasSupportedAdaptations === false
+      ) {
+        throw new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
+                             "No supported " + ttype + " adaptations",
+                             { tracks: undefined });
+      }
+    }, {});
+  }
+
+  /**
    * Returns every `Adaptations` (or `tracks`) linked to that Period, in an
    * Array.
    * @returns {Array.<Object>}
    */
   getAdaptations() : Adaptation[] {
-    const adaptationsByType = this.adaptations;
-    return objectValues(adaptationsByType).reduce<Adaptation[]>(
-      // Note: the second case cannot happen. TS is just being dumb here
-      (acc, adaptations) => adaptations != null ? acc.concat(adaptations) :
-                                                  acc,
-      []);
+    return getAdaptations(this);
   }
 
   /**
@@ -161,19 +224,8 @@ export default class Period {
    * type. Will return for all types if `undefined`.
    * @returns {Array.<Adaptation>}
    */
-  getSupportedAdaptations(type? : ITrackType) : Adaptation[] {
-    if (type === undefined) {
-      return this.getAdaptations().filter(ada => {
-        return ada.isSupported;
-      });
-    }
-    const adaptationsForType = this.adaptations[type];
-    if (adaptationsForType === undefined) {
-      return [];
-    }
-    return adaptationsForType.filter(ada => {
-      return ada.isSupported;
-    });
+  getSupportedAdaptations(type? : ITrackType | undefined) : Adaptation[] {
+    return getSupportedAdaptations(this, type);
   }
 
   /**
@@ -184,18 +236,38 @@ export default class Period {
    * @returns {boolean}
    */
   containsTime(time : number, nextPeriod : Period | null) : boolean {
-    if (time >= this.start && (this.end === undefined || time < this.end)) {
-      return true;
-    } else if (time === this.end && (nextPeriod === null ||
-                                     nextPeriod.start > this.end))
-    {
-      // The last possible timed position of a Period is ambiguous as it is
-      // frequently in common with the start of the next one: is it part of
-      // the current or of the next Period?
-      // Here we only consider it part of the current Period if it is the
-      // only one with that position.
-      return true;
+    return periodContainsTime(this, time, nextPeriod);
+  }
+
+  /**
+   * Format the current `Period`'s properties into a
+   * `IPeriodMetadata` format which can better be communicated through
+   * another thread.
+   *
+   * Please bear in mind however that the returned object will not be updated
+   * when the current `Period` instance is updated, it is only a
+   * snapshot at the current time.
+   *
+   * If you want to keep that data up-to-date with the current `Period`
+   * instance, you will have to do it yourself.
+   *
+   * @returns {Object}
+   */
+  public getMetadataSnapshot() : IPeriodMetadata {
+    const adaptations : Partial<Record<ITrackType, IAdaptationMetadata[]>> = {};
+    const baseAdaptations = this.getAdaptations();
+    for (const adaptation of baseAdaptations) {
+      let currentAdaps : IAdaptationMetadata[] | undefined = adaptations[adaptation.type];
+      if (currentAdaps === undefined) {
+        currentAdaps = [];
+        adaptations[adaptation.type] = currentAdaps;
+      }
+      currentAdaps.push(adaptation.getMetadataSnapshot());
     }
-    return false;
+    return { start: this.start,
+             end: this.end,
+             id: this.id,
+             streamEvents: this.streamEvents,
+             adaptations };
   }
 }

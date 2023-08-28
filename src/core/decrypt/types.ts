@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
+import {
+  IAdaptationMetadata,
+  IManifestMetadata,
+  IPeriodMetadata,
+  IRepresentationMetadata,
 } from "../../manifest";
 import { IPlayerError } from "../../public_types";
 import InitDataValuesContainer from "./utils/init_data_values_container";
@@ -46,6 +47,14 @@ export interface IContentDecryptorEvent {
    * ContentDecryptorState type.
    */
   stateChange: ContentDecryptorState;
+
+  blackListProtectionData : IProcessedProtectionData;
+
+  keyIdsCompatibilityUpdate : {
+    whitelistedKeyIds : Uint8Array[];
+    blacklistedKeyIds : Uint8Array[];
+    delistedKeyIds : Uint8Array[];
+  };
 }
 
 /** Enumeration of the various "state" the `ContentDecryptor` can be in. */
@@ -184,13 +193,13 @@ export interface IContentProtection {
 /** Content linked to protection data. */
 export interface IContent {
   /** Manifest object associated to the protection data. */
-  manifest : Manifest;
+  manifest : IManifestMetadata;
   /** Period object associated to the protection data. */
-  period : Period;
+  period : IPeriodMetadata;
   /** Adaptation object associated to the protection data. */
-  adaptation : Adaptation;
+  adaptation : IAdaptationMetadata;
   /** Representation object associated to the protection data. */
-  representation : Representation;
+  representation : IRepresentationMetadata;
 }
 
 /** Stores helping to create and retrieve MediaKeySessions. */
