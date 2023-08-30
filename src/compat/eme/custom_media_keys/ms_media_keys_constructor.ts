@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import isNode from "../../is_node";
+import globalScope from "../../global_scope";
 
 export interface MSMediaKeyError {
     readonly code: number;
@@ -51,19 +51,17 @@ interface IMSMediaKeysConstructor {
 }
 
 let MSMediaKeysConstructor: IMSMediaKeysConstructor|undefined;
-if (!isNode) {
-  const { MSMediaKeys } = (window as Window & {
-    MSMediaKeys? : IMSMediaKeysConstructor;
-  });
-  if (
-    MSMediaKeys !== undefined &&
-    MSMediaKeys.prototype !== undefined &&
-    typeof MSMediaKeys.isTypeSupported === "function" &&
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    typeof MSMediaKeys.prototype.createSession === "function"
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-  ) {
-    MSMediaKeysConstructor = MSMediaKeys;
-  }
+const { MSMediaKeys } = (globalScope as typeof globalThis & {
+  MSMediaKeys? : IMSMediaKeysConstructor;
+});
+if (
+  MSMediaKeys !== undefined &&
+  MSMediaKeys.prototype !== undefined &&
+  typeof MSMediaKeys.isTypeSupported === "function" &&
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+  typeof MSMediaKeys.prototype.createSession === "function"
+  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+) {
+  MSMediaKeysConstructor = MSMediaKeys;
 }
 export { MSMediaKeysConstructor };
