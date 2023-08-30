@@ -14,14 +14,21 @@
  * limitations under the License.
  */
 
+import globalScope from "./global_scope";
 import isNode from "./is_node";
 
-interface IIE11WindowObject extends Window {
+type GlobalScope = typeof globalScope;
+
+interface IIE11WindowObject extends GlobalScope {
   MSInputMethodContext? : unknown;
 }
 
 interface IIE11Document extends Document {
   documentMode? : unknown;
+}
+
+interface ISafariWindowObject extends GlobalScope {
+  safari? : { pushNotification? : { toString() : string } };
 }
 
 /** Edge Chromium, regardless of the device */
@@ -70,7 +77,7 @@ let isPlayStation5 = false;
 
   // 1 - Find out browser between IE/Edge Legacy/Edge Chromium/Firefox/Safari
 
-  if (typeof (window as IIE11WindowObject).MSInputMethodContext !== "undefined" &&
+  if (typeof (globalScope as IIE11WindowObject).MSInputMethodContext !== "undefined" &&
       typeof (document as IIE11Document).documentMode !== "undefined")
   {
     isIE11 = true;
@@ -90,8 +97,8 @@ let isPlayStation5 = false;
   {
     isSafariMobile = true;
   } else if (
-    Object.prototype.toString.call(window.HTMLElement).indexOf("Constructor") >= 0 ||
-    (window as ISafariWindowObject).safari?.pushNotification?.toString() ===
+    Object.prototype.toString.call(globalScope.HTMLElement).indexOf("Constructor") >= 0 ||
+    (globalScope as ISafariWindowObject).safari?.pushNotification?.toString() ===
       "[object SafariRemoteNotification]"
   ) {
     isSafariDesktop = true;
@@ -130,10 +137,6 @@ let isPlayStation5 = false;
     isPanasonic = true;
   }
 })());
-
-interface ISafariWindowObject extends Window {
-  safari? : { pushNotification? : { toString() : string } };
-}
 
 export {
   isEdgeChromium,
