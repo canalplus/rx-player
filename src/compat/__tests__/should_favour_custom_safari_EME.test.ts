@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import globalScope from "../global_scope";
+
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
@@ -22,19 +24,19 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
 describe("compat - shouldFavourSafariMediaKeys", () => {
-  const win = window as unknown as Window & {
+  const gs = globalScope as unknown as typeof globalThis & {
     WebKitMediaKeys? : unknown;
     HTMLMediaElement : typeof HTMLMediaElement;
   };
 
-  const originalWebKitMediaKeys = win.WebKitMediaKeys;
+  const originalWebKitMediaKeys = gs.WebKitMediaKeys;
 
   beforeEach(() => {
     jest.resetModules();
   });
 
   afterEach(() => {
-    win.WebKitMediaKeys = originalWebKitMediaKeys;
+    gs.WebKitMediaKeys = originalWebKitMediaKeys;
   });
 
   it("should return false if we are not on Safari", () => {
@@ -52,7 +54,7 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
   it("should return false if we are on Safari Desktop but WekitMediaKeys is not available", () => {
   /* eslint-enable max-len */
 
-    win.WebKitMediaKeys = undefined;
+    gs.WebKitMediaKeys = undefined;
     jest.mock("../browser_detection", () => {
       return { __esModule: true as const,
                isSafariDesktop: true,
@@ -67,7 +69,7 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
   it("should return false if we are on Safari Mobile but WekitMediaKeys is not available", () => {
   /* eslint-enable max-len */
 
-    win.WebKitMediaKeys = undefined;
+    gs.WebKitMediaKeys = undefined;
     jest.mock("../browser_detection", () => {
       return { __esModule: true as const,
                isSafariDesktop: false,
@@ -82,13 +84,13 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
   it("should return true if we are on Safari Desktop and a WebKitMediaKeys implementation is available", () => {
   /* eslint-enable max-len */
 
-    win.WebKitMediaKeys = {
+    gs.WebKitMediaKeys = {
       isTypeSupported: () => ({}),
       prototype: {
         createSession: () => ({}),
       },
     };
-    const proto = win.HTMLMediaElement.prototype as unknown as {
+    const proto = gs.HTMLMediaElement.prototype as unknown as {
       webkitSetMediaKeys : () => Record<string, never>;
     };
     proto.webkitSetMediaKeys = () => ({});
@@ -106,13 +108,13 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
   it("should return true if we are on Safari Mobile and a WebKitMediaKeys implementation is available", () => {
   /* eslint-enable max-len */
 
-    win.WebKitMediaKeys = {
+    gs.WebKitMediaKeys = {
       isTypeSupported: () => ({}),
       prototype: {
         createSession: () => ({}),
       },
     };
-    const proto = win.HTMLMediaElement.prototype as unknown as {
+    const proto = gs.HTMLMediaElement.prototype as unknown as {
       webkitSetMediaKeys : () => Record<string, never>;
     };
     proto.webkitSetMediaKeys = () => ({});
