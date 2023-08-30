@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
+import globalScope from "../compat/global_scope";
 import log from "../log";
 import assert from "./assert";
 
-const hasTextDecoder = typeof window === "object" &&
-                       typeof window.TextDecoder === "function";
+const hasTextDecoder = typeof globalScope === "object" &&
+                       typeof globalScope.TextDecoder === "function";
 
-const hasTextEncoder = typeof window === "object" &&
-                       typeof window.TextEncoder === "function";
+const hasTextEncoder = typeof globalScope === "object" &&
+                       typeof globalScope.TextEncoder === "function";
 
 /**
  * Convert a string to an Uint8Array containing the corresponding UTF-16 code
