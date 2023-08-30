@@ -80,7 +80,7 @@ export default function request<T>(
     const xhr = new XMLHttpRequest();
     xhr.open("GET", url, true);
 
-    let timeoutId : undefined | number;
+    let timeoutId : undefined | number | NodeJS.Timeout;
     if (timeout !== undefined) {
       xhr.timeout = timeout;
 
@@ -90,7 +90,7 @@ export default function request<T>(
       // That's why we also start a manual timeout. We do this a little later
       // than the "native one" performed on the xhr assuming that the latter
       // is more precise, it might also be more efficient.
-      timeoutId = window.setTimeout(() => {
+      timeoutId = setTimeout(() => {
         clearCancellingProcess();
         reject(new RequestError(url, xhr.status, "TIMEOUT"));
       }, timeout + 3000);
