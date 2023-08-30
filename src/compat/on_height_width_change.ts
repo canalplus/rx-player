@@ -19,7 +19,7 @@ import SharedReference, {
   IReadOnlySharedReference,
 } from "../utils/reference";
 import { CancellationSignal } from "../utils/task_canceller";
-import isNode from "./is_node";
+import globalScope from "./global_scope";
 
 export interface IResolution { width : number;
                                height : number; }
@@ -49,13 +49,8 @@ interface IDOMRectReadOnly { readonly x: number;
                              readonly bottom: number;
                              readonly left: number; }
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 const _ResizeObserver : IResizeObserverConstructor |
-                        undefined = isNode ? undefined :
-                                             window.ResizeObserver;
-/* eslint-enable @typescript-eslint/no-unsafe-member-access */
-/* eslint-enable @typescript-eslint/no-unsafe-assignment */
+                        undefined = globalScope.ResizeObserver;
 
 /**
  * Emit the current height and width of the given `element` each time it
