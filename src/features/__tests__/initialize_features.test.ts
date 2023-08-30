@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import globalScope from "../../compat/global_scope";
+
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
@@ -28,13 +30,13 @@ describe("Features - initializeFeaturesObject", () => {
   });
 
   /* eslint-disable @typescript-eslint/naming-convention */
-  const win = window as unknown as {
+  const gs = globalScope as unknown as {
     __FEATURES__: unknown;
   };
   /* eslint-enable @typescript-eslint/naming-convention */
 
   it("should set no feature if nothing is enabled", () => {
-    win.__FEATURES__ = {
+    gs.__FEATURES__ = {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
@@ -60,11 +62,11 @@ describe("Features - initializeFeaturesObject", () => {
     const initializeFeaturesObject = jest.requireActual("../initialize_features").default;
     initializeFeaturesObject();
     expect<unknown>(feat).toEqual({});
-    delete win.__FEATURES__;
+    delete gs.__FEATURES__;
   });
 
   it("should set the right features when everything is enabled", () => {
-    win.__FEATURES__ = {
+    gs.__FEATURES__ = {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
@@ -136,11 +138,11 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete win.__FEATURES__;
+    delete gs.__FEATURES__;
   });
 
   it("should add the html text buffer if the html vtt parser is added", () => {
-    win.__FEATURES__ = {
+    gs.__FEATURES__ = {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
@@ -178,11 +180,11 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete win.__FEATURES__;
+    delete gs.__FEATURES__;
   });
 
   it("should add the html text buffer if the html sami parser is added", () => {
-    win.__FEATURES__ = {
+    gs.__FEATURES__ = {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
@@ -220,11 +222,11 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete win.__FEATURES__;
+    delete gs.__FEATURES__;
   });
 
   it("should add the html text buffer if the html ttml parser is added", () => {
-    win.__FEATURES__ = {
+    gs.__FEATURES__ = {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
@@ -262,11 +264,11 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete win.__FEATURES__;
+    delete gs.__FEATURES__;
   });
 
   it("should add the html text buffer if the html srt parser is added", () => {
-    win.__FEATURES__ = {
+    gs.__FEATURES__ = {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
@@ -304,11 +306,11 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete win.__FEATURES__;
+    delete gs.__FEATURES__;
   });
 
   it("should add the native text buffer if the native vtt parser is added", () => {
-    win.__FEATURES__ = {
+    gs.__FEATURES__ = {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
@@ -346,11 +348,11 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete win.__FEATURES__;
+    delete gs.__FEATURES__;
   });
 
   it("should add the native text buffer if the native sami parser is added", () => {
-    win.__FEATURES__ = {
+    gs.__FEATURES__ = {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
@@ -388,11 +390,11 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete win.__FEATURES__;
+    delete gs.__FEATURES__;
   });
 
   it("should add the native text buffer if the native ttml parser is added", () => {
-    win.__FEATURES__ = {
+    gs.__FEATURES__ = {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
@@ -430,11 +432,11 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete win.__FEATURES__;
+    delete gs.__FEATURES__;
   });
 
   it("should add the native text buffer if the native srt parser is added", () => {
-    win.__FEATURES__ = {
+    gs.__FEATURES__ = {
       IS_DISABLED: 0,
       IS_ENABLED: 1,
 
@@ -472,6 +474,6 @@ describe("Features - initializeFeaturesObject", () => {
       },
     });
 
-    delete win.__FEATURES__;
+    delete gs.__FEATURES__;
   });
 });
