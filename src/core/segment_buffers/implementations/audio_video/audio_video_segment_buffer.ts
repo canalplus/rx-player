@@ -623,22 +623,10 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
  * difficult to enforce.
  * @param {Object} data
  */
-<<<<<<< HEAD
-function assertPushedDataIsBufferSource(
-  pushedData : IPushChunkInfos<unknown>
-) : asserts pushedData is IPushChunkInfos<BufferSource> {
-  if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.PRODUCTION as number) {
-||||||| 700a3d067
-function assertPushedDataIsBufferSource(
-  pushedData : IPushChunkInfos<unknown>
-) : asserts pushedData is IPushChunkInfos<BufferSource> {
-  if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.PRODUCTION as number) {
-=======
 function assertDataIsBufferSource(
   data : unknown
 ) : asserts data is BufferSource {
-  if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.PRODUCTION as number) {
->>>>>>> refs/rewritten/canalplus-misc-declareInitSegment
+  if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.PRODUCTION as number) {
     return;
   }
   if (
