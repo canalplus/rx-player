@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import globalScope from "../../../../compat/global_scope";
 import {
   IMediaConfiguration,
   ProberStatus,
@@ -28,7 +29,7 @@ export default function probeMatchMedia(
 ): Promise<[ProberStatus]> {
   return new Promise((resolve) => {
     /* eslint-disable @typescript-eslint/unbound-method */
-    if (typeof window.matchMedia !== "function") {
+    if (typeof globalScope.matchMedia !== "function") {
     /* eslint-enable @typescript-eslint/unbound-method */
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "matchMedia not available");
@@ -40,7 +41,7 @@ export default function probeMatchMedia(
         "Not enough arguments for calling matchMedia.");
     }
 
-    const match = window.matchMedia(`(color-gamut: ${config.display.colorSpace})`);
+    const match = globalScope.matchMedia(`(color-gamut: ${config.display.colorSpace})`);
     if (match.media === "not all") {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "Bad arguments for calling matchMedia.");
