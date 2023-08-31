@@ -29,6 +29,7 @@ import {
   ICompatHTMLMediaElement,
   ICompatPictureInPictureWindow,
 } from "./browser_compatibility_types";
+import globalScope from "./global_scope";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
@@ -124,7 +125,7 @@ function createCompatibleEventListener(
 
     // if the element is a HTMLElement we can detect
     // the supported event, and memoize it in `mem`
-    if (element instanceof HTMLElement) {
+    if (typeof HTMLElement !== "undefined" && element instanceof HTMLElement) {
       if (typeof mem === "undefined") {
         mem = findSupportedEvent(element, prefixedEvents);
       }
@@ -286,7 +287,7 @@ function getVideoVisibilityRef(
   stopListening : CancellationSignal
 ) : IReadOnlySharedReference<boolean> {
   const isDocVisibleRef = getDocumentVisibilityRef(stopListening);
-  let currentTimeout : number | undefined;
+  let currentTimeout : number | NodeJS.Timeout | undefined;
   const ref = new SharedReference(true, stopListening);
   stopListening.register(() => {
     clearTimeout(currentTimeout);
@@ -307,7 +308,7 @@ function getVideoVisibilityRef(
       ref.setValueIfChanged(true);
     } else {
       const { INACTIVITY_DELAY } = config.getCurrent();
-      currentTimeout = window.setTimeout(() => {
+      currentTimeout = setTimeout(() => {
         ref.setValueIfChanged(false);
       }, INACTIVITY_DELAY);
     }
@@ -324,18 +325,18 @@ function getScreenResolutionRef(
 ) : IReadOnlySharedReference<{ width : number | undefined;
                                height : number | undefined;
                                pixelRatio : number; }> {
-  const pixelRatio = window.devicePixelRatio == null ||
-                     window.devicePixelRatio === 0 ? 1 :
-                                                     window.devicePixelRatio;
+  const pixelRatio = globalScope.devicePixelRatio == null ||
+                     globalScope.devicePixelRatio === 0 ? 1 :
+                                                          globalScope.devicePixelRatio;
   const ref = new SharedReference<{
     width : number | undefined;
     height : number | undefined;
     pixelRatio : number;
-  }>({ width: window.screen.width,
-       height: window.screen.height,
+  }>({ width: globalScope.screen?.width,
+       height: globalScope.screen?.height,
        pixelRatio },
      stopListening);
-  const interval = window.setInterval(checkScreenResolution, 20000);
+  const interval = setInterval(checkScreenResolution, 20000);
   stopListening.register(function stopUpdating() {
     clearInterval(interval);
   });
@@ -369,9 +370,9 @@ function getElementResolutionRef(
                                height : number | undefined;
                                pixelRatio : number; }> {
 
-  const pixelRatio = window.devicePixelRatio == null ||
-                     window.devicePixelRatio === 0 ? 1 :
-                                                     window.devicePixelRatio;
+  const pixelRatio = globalScope.devicePixelRatio == null ||
+                     globalScope.devicePixelRatio === 0 ? 1 :
+                                                          globalScope.devicePixelRatio;
   const ref = new SharedReference<{
     width : number | undefined;
     height : number | undefined;
@@ -382,7 +383,7 @@ function getElementResolutionRef(
      stopListening);
   let clearPreviousEventListener = noop;
   pipStatusRef.onUpdate(checkElementResolution, { clearSignal: stopListening });
-  addEventListener(window, "resize", checkElementResolution, stopListening);
+  addEventListener(globalScope, "resize", checkElementResolution, stopListening);
   addEventListener(mediaElement,
                    "enterpictureinpicture",
                    checkElementResolution,
@@ -391,7 +392,7 @@ function getElementResolutionRef(
                    "leavepictureinpicture",
                    checkElementResolution,
                    stopListening);
-  const interval = window.setInterval(checkElementResolution, 20000);
+  const interval = setInterval(checkElementResolution, 20000);
 
   checkElementResolution();
 
