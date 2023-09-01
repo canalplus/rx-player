@@ -57,7 +57,7 @@ export default async function pushMediaSegment<T>(
     segment : ISegment;
     segmentBuffer : SegmentBuffer; },
   cancelSignal : CancellationSignal
-) : Promise< IStreamEventAddedSegmentPayload<T> | null > {
+) : Promise< IStreamEventAddedSegmentPayload | null > {
   if (parsedSegment.chunkData === null) {
     return null;
   }
@@ -109,5 +109,5 @@ export default async function pushMediaSegment<T>(
                               { data, inventoryInfos },
                               cancelSignal);
   const buffered = segmentBuffer.getBufferedRanges();
-  return { content, segment, buffered, segmentData: chunkData };
+  return { content, segment, buffered };
 }
