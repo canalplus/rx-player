@@ -89,7 +89,7 @@ export default function RepresentationStream<TSegmentDataType>(
     segmentBuffer,
     segmentFetcher,
     terminate } : IRepresentationStreamArguments<TSegmentDataType>,
-  callbacks : IRepresentationStreamCallbacks<TSegmentDataType>,
+  callbacks : IRepresentationStreamCallbacks,
   parentCancelSignal : CancellationSignal
 ) : void {
   const { period, adaptation, representation } = content;
