@@ -229,8 +229,6 @@ export interface IContentInitializerEvents {
     segment : ISegment;
     /** TimeRanges of the concerned SegmentBuffer after the segment was pushed. */
     buffered : TimeRanges;
-    /* The data pushed */
-    segmentData : unknown;
   };
   /**
    * Event emitted when one or multiple inband events (i.e. events inside a

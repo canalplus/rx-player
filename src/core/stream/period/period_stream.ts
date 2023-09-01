@@ -471,7 +471,7 @@ function createEmptyAdaptationStream(
   wantedBufferAhead : IReadOnlySharedReference<number>,
   bufferType : IBufferType,
   content : { period : Period },
-  callbacks : Pick<IAdaptationStreamCallbacks<unknown>, "streamStatusUpdate">,
+  callbacks : Pick<IAdaptationStreamCallbacks, "streamStatusUpdate">,
   cancelSignal : CancellationSignal
 ) : void {
   const { period } = content;

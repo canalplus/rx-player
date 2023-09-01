@@ -23,7 +23,7 @@ import { IPositionPlaybackObservation } from "../representation";
 
 /** Callbacks called by the `AdaptationStream` on various events. */
 export interface IPeriodStreamCallbacks extends
-  IAdaptationStreamCallbacks<unknown>
+  IAdaptationStreamCallbacks
 {
   /**
    * Called when a new `PeriodStream` is ready to start but needs an Adaptation

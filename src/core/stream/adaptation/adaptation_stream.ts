@@ -56,7 +56,7 @@ import {
  * triggered, to immediately stop all operations the `AdaptationStream` is
  * doing.
  */
-export default function AdaptationStream<T>(
+export default function AdaptationStream(
   { playbackObserver,
     content,
     options,
@@ -65,7 +65,7 @@ export default function AdaptationStream<T>(
     segmentFetcherCreator,
     wantedBufferAhead,
     maxVideoBufferSize } : IAdaptationStreamArguments,
-  callbacks : IAdaptationStreamCallbacks<T>,
+  callbacks : IAdaptationStreamCallbacks,
   parentCancelSignal : CancellationSignal
 ) : void {
   const { manifest, period, adaptation } = content;
@@ -288,7 +288,7 @@ export default function AdaptationStream<T>(
       return ; // previous callback has stopped everything by side-effect
     }
 
-    const representationStreamCallbacks : IRepresentationStreamCallbacks<T> = {
+    const representationStreamCallbacks : IRepresentationStreamCallbacks = {
       streamStatusUpdate: callbacks.streamStatusUpdate,
       encryptionDataEncountered: callbacks.encryptionDataEncountered,
       manifestMightBeOufOfSync: callbacks.manifestMightBeOufOfSync,
@@ -336,7 +336,7 @@ export default function AdaptationStream<T>(
   function createRepresentationStream(
     representation : Representation,
     terminateCurrentStream : IReadOnlySharedReference<ITerminationOrder | null>,
-    representationStreamCallbacks : IRepresentationStreamCallbacks<T>,
+    representationStreamCallbacks : IRepresentationStreamCallbacks,
     fnCancelSignal : CancellationSignal
   ) : void {
     const bufferGoalCanceller = new TaskCanceller();
