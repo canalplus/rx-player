@@ -20,7 +20,7 @@ import {
 } from "../../segment_buffers";
 
 /** Callbacks called by the `RepresentationStream` on various events. */
-export interface IRepresentationStreamCallbacks<TSegmentDataType> {
+export interface IRepresentationStreamCallbacks {
   /**
    * Called to announce the current status regarding the buffer for its
    * associated Period and type (e.g. "audio", "video", "text" etc.).
@@ -30,7 +30,7 @@ export interface IRepresentationStreamCallbacks<TSegmentDataType> {
    */
   streamStatusUpdate(payload : IStreamStatusPayload) : void;
   /** Called after a new segment has been succesfully added to the SegmentBuffer */
-  addedSegment(payload : IStreamEventAddedSegmentPayload<TSegmentDataType>) : void;
+  addedSegment(payload : IStreamEventAddedSegmentPayload) : void;
   /** Called when a segment with protection information has been encountered. */
   encryptionDataEncountered(payload : IContentProtection[]) : void;
   /**
@@ -127,7 +127,7 @@ export interface IStreamStatusPayload {
 }
 
 /** Payload for the `addedSegment` callback. */
-export interface IStreamEventAddedSegmentPayload<T> {
+export interface IStreamEventAddedSegmentPayload {
   /** Context about the content that has been added. */
   content: { period : Period;
              adaptation : Adaptation;
@@ -136,8 +136,6 @@ export interface IStreamEventAddedSegmentPayload<T> {
   segment : ISegment;
   /** TimeRanges of the concerned SegmentBuffer after the segment was pushed. */
   buffered : TimeRanges;
-  /* The data pushed */
-  segmentData : T;
 }
 
 /** Structure describing an "inband" event, as found in a media segment. */
