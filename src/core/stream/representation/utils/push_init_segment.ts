@@ -45,7 +45,6 @@ export default async function pushInitSegment<T>(
     content,
     initSegmentUniqueId,
     segment,
-    segmentData,
     segmentBuffer,
   } : {
     playbackObserver : IReadOnlyPlaybackObserver<
@@ -61,7 +60,7 @@ export default async function pushInitSegment<T>(
     segmentBuffer : SegmentBuffer;
   },
   cancelSignal : CancellationSignal
-) : Promise< IStreamEventAddedSegmentPayload<T> | null > {
+) : Promise< IStreamEventAddedSegmentPayload | null > {
   if (cancelSignal.cancellationError !== null) {
     throw cancelSignal.cancellationError;
   }
@@ -81,5 +80,5 @@ export default async function pushInitSegment<T>(
                               { data, inventoryInfos },
                               cancelSignal);
   const buffered = segmentBuffer.getBufferedRanges();
-  return { content, segment, buffered, segmentData };
+  return { content, segment, buffered };
 }

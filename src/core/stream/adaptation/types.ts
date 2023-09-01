@@ -22,8 +22,8 @@ import {
 } from "../representation";
 
 /** Callbacks called by the `AdaptationStream` on various events. */
-export interface IAdaptationStreamCallbacks<T>
-  extends Omit<IRepresentationStreamCallbacks<T>, "terminating">
+export interface IAdaptationStreamCallbacks
+  extends Omit<IRepresentationStreamCallbacks, "terminating">
 {
   /** Called as new bitrate estimates are done. */
   bitrateEstimateChange(payload : IBitrateEstimateChangePayload) : void;
