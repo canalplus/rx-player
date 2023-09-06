@@ -67,6 +67,9 @@ class Representation {
    */
   public frameRate? : string;
 
+  /** `true` if audio has Dolby Atmos. */
+  public isSpatialAudio? : boolean | undefined;
+
   /**
    * A string describing the codec used for this Representation.
    * undefined if we do not know.
@@ -121,6 +124,7 @@ class Representation {
     this.id = args.id;
     this.bitrate = args.bitrate;
     this.codec = args.codecs;
+    this.isSpatialAudio = args.isSpatialAudio;
 
     if (args.height !== undefined) {
       this.height = args.height;
