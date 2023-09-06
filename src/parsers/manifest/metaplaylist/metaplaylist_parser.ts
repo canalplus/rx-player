@@ -221,6 +221,7 @@ function createManifest(
                 mimeType: currentRepresentation.mimeType,
                 frameRate: currentRepresentation.frameRate,
                 codecs: currentRepresentation.codec,
+                isSpatialAudio: currentRepresentation.isSpatialAudio,
                 contentProtections: currentRepresentation.contentProtections,
               });
             }
