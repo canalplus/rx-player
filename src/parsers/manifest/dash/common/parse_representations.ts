@@ -185,11 +185,16 @@ export default function parseRepresentations(
       [ { baseUrl: "", id: undefined } ] :
       representationBaseURLs.map(x => ({ baseUrl: x.url, id: x.serviceLocation }));
 
+    const isSpatialAudio =
+      !!(representation.children.supplementalProperties &&
+      arrayFind(representation.children.supplementalProperties, r => r.value === "JOC"));
+
     // Construct Representation Base
     const parsedRepresentation : IParsedRepresentation =
       { bitrate: representationBitrate,
         cdnMetadata,
         index: representationIndex,
+        isSpatialAudio,
         id: representationID };
 
     // Add optional attributes
