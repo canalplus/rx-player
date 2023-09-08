@@ -348,8 +348,8 @@ class Representation {
    * @returns {Object}
    */
   public toAudioRepresentation(): IAudioRepresentation {
-    const { id, bitrate, codec } = this;
-    return { id, bitrate, codec };
+    const { id, isSpatialAudio, bitrate, codec } = this;
+    return { id, isSpatialAudio, bitrate, codec };
   }
 
   /**
