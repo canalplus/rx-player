@@ -148,10 +148,6 @@ properties, methods, events and so on.
   - [`initialManifest`](../api/Loading_a_Content.md#initialmanifest):
     Allows to provide an initial Manifest to speed-up the content loading
 
-  - [`manifestUpdateUrl`](../api/Loading_a_Content.md#manifestupdateurl):
-    Provide another URL, potentially to a shorter Manifest, used only for
-    Manifest updates
-
   - [`representationFilter`](../api/Loading_a_Content.md#representationfilter):
     Filter out qualities from the Manifest based on its characteristics.
 
