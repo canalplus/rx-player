@@ -83,7 +83,7 @@ interface IParsedLoadVideoOptionsBase {
   representationFilter? : IRepresentationFilter | undefined;
   segmentLoader? : ISegmentLoader | undefined;
   serverSyncInfos? : IServerSyncInfos | undefined;
-  manifestUpdateUrl? : string | undefined;
+  __priv_manifestUpdateUrl? : string | undefined;
   __priv_patchLastSegmentInSidx? : boolean | undefined;
 }
 
@@ -355,11 +355,6 @@ function parseLoadVideoOptions(
     onCodecSwitch = DEFAULT_CODEC_SWITCHING_BEHAVIOR;
   }
 
-  if (!isNullOrUndefined(options.manifestUpdateUrl)) {
-    warnOnce("`manifestUpdateUrl` API is deprecated, please open an issue if you" +
-             " still rely on this.");
-  }
-
   if (isNullOrUndefined(options.textTrackMode)) {
     textTrackMode = DEFAULT_TEXT_TRACK_MODE;
   } else {
@@ -410,6 +405,7 @@ function parseLoadVideoOptions(
   /* eslint-disable @typescript-eslint/no-unsafe-assignment */
   /* eslint-disable @typescript-eslint/no-unsafe-member-access */
   return { __priv_patchLastSegmentInSidx: (options as any).__priv_patchLastSegmentInSidx,
+           __priv_manifestUpdateUrl: (options as any).__priv_manifestUpdateUrl,
   /* eslint-enable @typescript-eslint/no-explicit-any */
   /* eslint-enable @typescript-eslint/no-unsafe-assignment */
   /* eslint-enable @typescript-eslint/no-unsafe-member-access */
@@ -421,7 +417,6 @@ function parseLoadVideoOptions(
            keySystems,
            lowLatencyMode,
            manifestLoader: options.manifestLoader,
-           manifestUpdateUrl: options.manifestUpdateUrl,
            minimumManifestUpdateInterval,
            requestConfig,
            onCodecSwitch,
