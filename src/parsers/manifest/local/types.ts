@@ -194,7 +194,7 @@ export interface ILocalRepresentation {
   /** Interface allowing to retrieve media segments for this quality. */
   index : ILocalIndex;
   /** `true` if audio has Dolby Atmos. */
-  isSpatialAudio : boolean;
+  isSpatialAudio? : boolean;
 }
 
 /** A "track"" of a "local" Manifest. */
