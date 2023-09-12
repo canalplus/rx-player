@@ -487,51 +487,6 @@ contents if its request was done immediately before the `loadVideo`
 call.
 
 
-### manifestUpdateUrl
-
-_type_: `string|undefined`
-
-<div class="warning">
-This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
-transport option</a>)
-</div>
-
-Set a custom Manifest URL for Manifest updates.
-This URL can point to another version of the Manifest with a shorter
-timeshift window, to lighten the CPU, memory and bandwidth impact of
-Manifest updates.
-
-Example:
-
-```js
-rxPlayer.loadVideo({
-  transport: "dash",
-  url: "https://example.com/full-content.mpd",
-  manifestUpdateUrl: "https://example.com/content-with-shorter-window.mpd",
-});
-```
-
-When the RxPlayer plays a live content, it may have to refresh frequently
-the Manifest to be aware of where to find new media segments.
-It generally uses the regular Manifest URL when doing so, meaning that the
-information about the whole content is downloaded again.
-
-This is generally not a problem though: The Manifest is generally short
-enough meaning that this process won't waste much bandwidth memory or
-parsing time.
-However, we found that for huge Manifests (multiple MB uncompressed), this
-behavior could be a problem on some low-end devices (some set-top-boxes,
-chromecasts) where slowdowns can be observed when Manifest refresh are
-taking place.
-
-The `manifestUpdateUrl` will thus allow an application to provide a second
-URL, specifically used for Manifest updates, which can represent the same
-content with a shorter timeshift window (e.g. using only 5 minutes of
-timeshift window instead of 10 hours for the full Manifest). The content
-will keep its original timeshift window and the RxPlayer will be able to get
-information about new segments at a lower cost.
-
-
 ### representationFilter
 
 _type_: `Function|undefined`

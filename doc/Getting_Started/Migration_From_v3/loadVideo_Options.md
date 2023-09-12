@@ -35,6 +35,19 @@ If you still need that option for a valid use case, you are welcomed to open an
 issue.
 
 
+### `transportOptions.manifestUpdateUrl`
+
+The `manifestUpdateUrl` option has been removed without replacement.
+
+It was previously used as a non-standard DASH optimization to be able to refresh
+a DASH MPD (its Manifest document) through an URL containing a shorter version
+of the full DASH MPD.
+As we knew, it was only used at Canal+, though we now use (and we always
+preferred) more standard solutions both on the packaging-side (use of repeat
+attributes) and on the RxPlayer-side (usage of WebAssembly, internal
+optimizations like "unsafeMode").
+
+
 ### `transportOptions.aggressiveMode`
 
 The `aggressiveMode` option has been removed without replacement.
