@@ -145,9 +145,6 @@ export interface ILoadVideoOptions {
   /** Custom implementation for performing Manifest requests. */
   manifestLoader? : IManifestLoader;
 
-  /** Possible custom URL pointing to a shorter form of the Manifest. */
-  manifestUpdateUrl? : string;
-
   /** Minimum bound for Manifest updates, in milliseconds. */
   minimumManifestUpdateInterval? : number;
 
