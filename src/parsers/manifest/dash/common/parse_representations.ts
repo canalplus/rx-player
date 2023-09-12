@@ -185,17 +185,22 @@ export default function parseRepresentations(
       [ { baseUrl: "", id: undefined } ] :
       representationBaseURLs.map(x => ({ baseUrl: x.url, id: x.serviceLocation }));
 
-    const isSpatialAudio =
-      !!(representation.children.supplementalProperties &&
-      arrayFind(representation.children.supplementalProperties, r => r.value === "JOC"));
-
     // Construct Representation Base
     const parsedRepresentation : IParsedRepresentation =
       { bitrate: representationBitrate,
         cdnMetadata,
         index: representationIndex,
-        isSpatialAudio,
         id: representationID };
+
+    if (
+      representation.children.supplementalProperties !== undefined &&
+      arrayFind(representation.children.supplementalProperties, r =>
+        r.schemeIdUri === "tag:dolby.com,2018:dash:EC3_ExtensionType:2018" &&
+        r.value === "JOC"
+      )
+    ) {
+      parsedRepresentation.isSpatialAudio = true;
+    }
 
     // Add optional attributes
     let codecs : string|undefined;

@@ -201,7 +201,6 @@ export interface IAdaptationSetChildren {
   segmentList? : ISegmentListIntermediateRepresentation | undefined;
   segmentTemplate? : ISegmentTemplateIntermediateRepresentation | undefined;
   label? : string | undefined;
-  isSpatialAudio? : boolean | undefined;
 }
 
 /* Intermediate representation for An AdaptationSet node's attributes. */

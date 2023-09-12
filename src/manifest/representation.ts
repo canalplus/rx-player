@@ -67,7 +67,17 @@ class Representation {
    */
   public frameRate? : string;
 
-  /** `true` if audio has Dolby Atmos. */
+  /**
+   * `true` if this `Representation` is linked to a spatial audio technology.
+   * For example, it may be set to `true` if the Representation relies on the
+   * "Dolby Atmos". technology.
+   *
+   * `false` if it is known that this `Representation` does not contain any
+   * spatial audio.
+   *
+   * `undefined` if we do not know whether this `Representation` contains
+   * spatial audio or not.
+   */
   public isSpatialAudio? : boolean | undefined;
 
   /**
@@ -124,7 +134,10 @@ class Representation {
     this.id = args.id;
     this.bitrate = args.bitrate;
     this.codec = args.codecs;
-    this.isSpatialAudio = args.isSpatialAudio;
+
+    if (args.isSpatialAudio !== undefined) {
+      this.isSpatialAudio = args.isSpatialAudio;
+    }
 
     if (args.height !== undefined) {
       this.height = args.height;
