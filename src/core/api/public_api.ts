@@ -547,11 +547,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             transport,
             checkMediaSegmentIntegrity,
             manifestLoader,
-            manifestUpdateUrl,
             referenceDateTime,
             representationFilter,
             segmentLoader,
             serverSyncInfos,
+            __priv_manifestUpdateUrl,
             __priv_patchLastSegmentInSidx,
             url } = options;
 
@@ -587,11 +587,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       const transportPipelines = transportFn({ lowLatencyMode,
                                                checkMediaSegmentIntegrity,
                                                manifestLoader,
-                                               manifestUpdateUrl,
                                                referenceDateTime,
                                                representationFilter,
                                                segmentLoader,
                                                serverSyncInfos,
+                                               __priv_manifestUpdateUrl,
                                                __priv_patchLastSegmentInSidx });
 
       /** Interface used to load and refresh the Manifest. */
