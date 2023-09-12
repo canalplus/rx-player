@@ -138,7 +138,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
 
     // We assume that they are always sorted chronologically
     // In dev mode, perform a runtime check that this is the case
-    if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
+    if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
       for (let i = 1; i < periods.length; i++) {
         assert(periods[i - 1].start <= periods[i].start);
       }
@@ -1015,7 +1015,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   private _removePeriodObject(
     index : number
   ) {
-    if (__ENVIRONMENT__.CURRENT_ENV === __ENVIRONMENT__.DEV as number) {
+    if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
       assert(index < this._storedPeriodInfo.length, "Invalid index for Period removal");
     }
     const oldPeriodItem = this._storedPeriodInfo[index];

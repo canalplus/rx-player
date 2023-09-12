@@ -180,8 +180,10 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
 
     function updateReferenceIfNeeded() : void {
       const repSettings = trackInfo.lockedRepresentations.getValue();
+      /* eslint-disable @typescript-eslint/no-duplicate-type-constituents */
       let switchingMode : IAudioRepresentationsSwitchingMode |
                           IVideoRepresentationsSwitchingMode;
+      /* eslint-enable @typescript-eslint/no-duplicate-type-constituents */
 
       /** Representations for which a `RepresentationStream` can be created. */
       let playableRepresentations;
