@@ -1,5 +1,5 @@
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-declare const WorkerGlobalScope : any | undefined;
+declare const WorkerGlobalScope : any;
 
 /**
  * `true` if the current code is running in a WebWorker.
