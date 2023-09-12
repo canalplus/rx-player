@@ -40,6 +40,6 @@ describe("errors - RequestError", () => {
     expect(requestError.xhr).toBe(undefined);
     expect(requestError.status).toBe(355);
     expect(requestError.type).toBe("TIMEOUT");
-    expect(requestError.message).toBe("The request timeouted");
+    expect(requestError.message).toBe("The request timed out");
   });
 });

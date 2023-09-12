@@ -59,7 +59,7 @@ export default class RequestError extends Error {
 
     switch (type) {
       case "TIMEOUT":
-        this.message = "The request timeouted";
+        this.message = "The request timed out";
         break;
       case "ERROR_EVENT":
         this.message = "An error prevented the request to be performed successfully";
