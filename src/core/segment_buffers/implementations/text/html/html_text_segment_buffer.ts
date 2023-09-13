@@ -449,8 +449,8 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
   }
 }
 
-/** Data of chunks that should be pushed to the NativeTextSegmentBuffer. */
-export interface INativeTextTracksBufferSegmentData {
+/** Data of chunks that should be pushed to the HTMLTextSegmentBuffer. */
+export interface IHTMLTextTracksBufferSegmentData {
   /** The text track data, in the format indicated in `type`. */
   data : string;
   /** The format of `data` (examples: "ttml", "srt" or "vtt") */
@@ -475,36 +475,36 @@ export interface INativeTextTracksBufferSegmentData {
  */
 function assertChunkIsTextTrackSegmentData(
   chunk : unknown
-) : asserts chunk is INativeTextTracksBufferSegmentData {
+) : asserts chunk is IHTMLTextTracksBufferSegmentData {
   if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.PRODUCTION as number) {
     return;
   }
   if (
     typeof chunk !== "object" ||
     chunk === null ||
-    typeof (chunk as INativeTextTracksBufferSegmentData).data !== "string" ||
-    typeof (chunk as INativeTextTracksBufferSegmentData).type !== "string" ||
+    typeof (chunk as IHTMLTextTracksBufferSegmentData).data !== "string" ||
+    typeof (chunk as IHTMLTextTracksBufferSegmentData).type !== "string" ||
     (
-      (chunk as INativeTextTracksBufferSegmentData).language !== undefined &&
-      typeof (chunk as INativeTextTracksBufferSegmentData).language !== "string"
+      (chunk as IHTMLTextTracksBufferSegmentData).language !== undefined &&
+      typeof (chunk as IHTMLTextTracksBufferSegmentData).language !== "string"
     ) ||
     (
-      (chunk as INativeTextTracksBufferSegmentData).start !== undefined &&
-      typeof (chunk as INativeTextTracksBufferSegmentData).start !== "number"
+      (chunk as IHTMLTextTracksBufferSegmentData).start !== undefined &&
+      typeof (chunk as IHTMLTextTracksBufferSegmentData).start !== "number"
     ) ||
     (
-      (chunk as INativeTextTracksBufferSegmentData).end !== undefined &&
-      typeof (chunk as INativeTextTracksBufferSegmentData).end !== "number"
+      (chunk as IHTMLTextTracksBufferSegmentData).end !== undefined &&
+      typeof (chunk as IHTMLTextTracksBufferSegmentData).end !== "number"
     )
   ) {
-    throw new Error("Invalid format given to a NativeTextSegmentBuffer");
+    throw new Error("Invalid format given to a HTMLTextSegmentBuffer");
   }
 }
 
 /*
  * The following ugly code is here to provide a compile-time check that an
- * `INativeTextTracksBufferSegmentData` (type of data pushed to a
- * `NativeTextSegmentBuffer`) can be derived from a `ITextTrackSegmentData`
+ * `IHTMLTextTracksBufferSegmentData` (type of data pushed to a
+ * `HTMLTextSegmentBuffer`) can be derived from a `ITextTrackSegmentData`
  * (text track data parsed from a segment).
  *
  * It doesn't correspond at all to real code that will be called. This is just
@@ -517,7 +517,7 @@ if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
   function _checkType(
     input : ITextTrackSegmentData
   ) : void {
-    function checkEqual(_arg : INativeTextTracksBufferSegmentData) : void {
+    function checkEqual(_arg : IHTMLTextTracksBufferSegmentData) : void {
       /* nothing */
     }
     checkEqual(input);
