@@ -27,6 +27,7 @@ import {
 import canRelyOnVideoVisibilityAndSize from "../../compat/can_rely_on_video_visibility_and_size";
 import hasMseInWorker from "../../compat/has_mse_in_worker";
 import hasWebassembly from "../../compat/has_webassembly";
+import isDebugModeEnabled from "../../compat/is_debug_mode_enabled";
 import {
   ErrorCodes,
   ErrorTypes,
@@ -449,6 +450,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         value: {
           dashWasmUrl: workerSettings.dashWasmUrl,
           logLevel: log.getLevel(),
+          sendBackLogs: isDebugModeEnabled(),
           date: Date.now(),
           timestamp: getMonotonicTimeStamp(),
           hasVideo: this.videoElement?.nodeName.toLowerCase() === "video",
@@ -464,6 +466,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           type: MainThreadMessageType.LogLevelUpdate,
           value: {
             logLevel,
+            sendBackLogs: isDebugModeEnabled(),
           },
         });
       }, this._destroyCanceller.signal);

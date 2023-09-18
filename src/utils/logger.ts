@@ -23,9 +23,9 @@ export type ILoggerLevel = "NONE" |
                            "INFO" |
                            "DEBUG";
 
-type IConsoleFn = (
-  ...args : Array<boolean | string | number | Error | null | undefined>
-) => void;
+type IAcceptedLogValue = boolean | string | number | Error | null | undefined;
+
+type IConsoleFn = (...args : IAcceptedLogValue[]) => void;
 
 const DEFAULT_LOG_LEVEL : ILoggerLevel = "NONE";
 
@@ -66,7 +66,13 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
   /**
    * @param {string} levelStr
    */
-  public setLevel(levelStr : string) : void {
+  public setLevel(
+    levelStr : string,
+    logFn? : (
+      levelStr: ILoggerLevel,
+      logs: Array<boolean | string | number | Error | null | undefined>
+    ) => void
+  ) : void {
     let level : number;
     const foundLevel = this._levels[levelStr as ILoggerLevel];
     if (typeof foundLevel === "number") {
@@ -77,18 +83,29 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
       this._currentLevel = "NONE";
     }
 
-    /* eslint-disable no-invalid-this */
-    /* eslint-disable no-console */
-    this.error = (level >= this._levels.ERROR) ? console.error.bind(console) :
+    if (logFn === undefined) {
+      /* eslint-disable no-invalid-this */
+      /* eslint-disable no-console */
+      this.error = (level >= this._levels.ERROR) ? console.error.bind(console) :
+                                                   noop;
+      this.warn = (level >= this._levels.WARNING) ? console.warn.bind(console) :
+                                                    noop;
+      this.info = (level >= this._levels.INFO) ? console.info.bind(console) :
                                                  noop;
-    this.warn = (level >= this._levels.WARNING) ? console.warn.bind(console) :
-                                                  noop;
-    this.info = (level >= this._levels.INFO) ? console.info.bind(console) :
-                                               noop;
-    this.debug = (level >= this._levels.DEBUG) ? console.log.bind(console) :
+      this.debug = (level >= this._levels.DEBUG) ? console.log.bind(console) :
+                                                   noop;
+      /* eslint-enable no-console */
+      /* eslint-enable no-invalid-this */
+    } else {
+      this.error = (level >= this._levels.ERROR) ? (...args) => logFn("ERROR", args) :
+                                                   noop;
+      this.warn = (level >= this._levels.WARNING) ? (...args) => logFn("WARNING", args) :
+                                                    noop;
+      this.info = (level >= this._levels.INFO) ? (...args) => logFn("INFO", args) :
                                                  noop;
-    /* eslint-enable no-console */
-    /* eslint-enable no-invalid-this */
+      this.debug = (level >= this._levels.DEBUG) ? (...args) => logFn("DEBUG", args) :
+                                                   noop;
+    }
 
     this.trigger("onLogLevelChange", this._currentLevel);
   }
