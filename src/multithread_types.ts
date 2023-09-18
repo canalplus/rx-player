@@ -75,6 +75,7 @@ export interface IInitMessage {
     hasMseInWorker: boolean;
     /** Initial logging level that should be set. */
     logLevel: ILoggerLevel;
+    sendBackLogs: boolean;
     /**
      * Value of `Date.now()` at the time the `timestamp` property was generated.
      *
@@ -142,15 +143,12 @@ export interface IContentInitializationData {
   segmentRetryOptions : ISegmentFetcherCreatorBackoffOptions;
 }
 
-/**
- * Message coming from the main thread to update the logging level performed
- * by the WebWorker.
- */
 export interface ILogLevelUpdateMessage {
   type : MainThreadMessageType.LogLevelUpdate;
   value :  {
     /** The new logger level that should be set. */
     logLevel: ILoggerLevel;
+    sendBackLogs: boolean;
   };
 }
 
@@ -823,6 +821,14 @@ export interface IResetTextDisplayerWorkerMessage {
   value : null;
 }
 
+export interface ILogMessageWorkerMessage {
+  type : WorkerMessageType.LogMessage;
+  value : {
+    logLevel: ILoggerLevel;
+    logs: Array<boolean | string | number | ISentError | null | undefined>;
+  };
+}
+
 export interface IDiscontinuityUpdateWorkerMessage {
   type : WorkerMessageType.DiscontinuityUpdate;
   contentId : string;
@@ -869,6 +875,7 @@ export const enum WorkerMessageType {
   InterruptEndOfStream = "stop-end-of-stream",
   InterruptMediaSourceDurationUpdate = "stop-media-source-duration",
   LockedStream = "locked-stream",
+  LogMessage = "log",
   ManifestReady = "manifest-ready",
   ManifestUpdate = "manifest-update",
   NeedsBufferFlush = "needs-buffer-flush",
@@ -905,6 +912,7 @@ export type IWorkerMessage = IAbortBufferWorkerMessage |
                              IInbandEventWorkerMessage |
                              IInterruptMediaSourceDurationWorkerMessage |
                              ILockedStreamWorkerMessage |
+                             ILogMessageWorkerMessage |
                              IManifestReadyWorkerMessage |
                              IManifestUpdateWorkerMessage |
                              INeedsBufferFlushWorkerMessage |

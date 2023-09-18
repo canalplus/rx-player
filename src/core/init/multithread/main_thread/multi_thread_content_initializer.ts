@@ -1002,6 +1002,44 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         }
           break;
 
+        case WorkerMessageType.LogMessage: {
+          const formatted = msgData.value.logs.map(l => {
+            switch (typeof l) {
+              case "string":
+              case "number":
+              case "boolean":
+              case "undefined":
+                return l;
+              case "object":
+                if (l === null) {
+                  return null;
+                }
+                return formatWorkerError(l);
+              default:
+                assertUnreachable(l);
+            }
+          });
+          switch (msgData.value.logLevel) {
+            case "NONE":
+              break;
+            case "ERROR":
+              log.error(...formatted);
+              break;
+            case "WARNING":
+              log.warn(...formatted);
+              break;
+            case "INFO":
+              log.info(...formatted);
+              break;
+            case "DEBUG":
+              log.debug(...formatted);
+              break;
+            default:
+              assertUnreachable(msgData.value.logLevel);
+          }
+          break;
+        }
+
         default:
           assertUnreachable(msgData);
       }
