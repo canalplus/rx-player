@@ -27,6 +27,7 @@ import createDashPipelines from "../../../../transports/dash";
 import arrayFind from "../../../../utils/array_find";
 import assert from "../../../../utils/assert";
 import assertUnreachable from "../../../../utils/assert_unreachable";
+import { ILoggerLevel } from "../../../../utils/logger";
 import { mainThreadTimestampDiff } from "../../../../utils/monotonic_timestamp";
 import SharedReference from "../../../../utils/reference";
 import TaskCanceller, {
@@ -102,7 +103,7 @@ export default function initializeWorkerPortal() {
         /* eslint-disable-next-line no-restricted-properties */
         const diffWorker = Date.now() - performance.now();
         mainThreadTimestampDiff.setValueIfChanged(diffWorker - diffMain);
-        log.setLevel(msg.value.logLevel);
+        updateLoggerLevel(msg.value.logLevel, msg.value.sendBackLogs);
         dashWasmParser.initialize({ wasmUrl: msg.value.dashWasmUrl }).catch((err) => {
           const error = err instanceof Error ?
             err.toString() :
@@ -124,7 +125,7 @@ export default function initializeWorkerPortal() {
         break;
 
       case MainThreadMessageType.LogLevelUpdate:
-        log.setLevel(msg.value.logLevel);
+        updateLoggerLevel(msg.value.logLevel, msg.value.sendBackLogs);
         break;
 
       case MainThreadMessageType.PrepareContent:
@@ -819,5 +820,28 @@ function loadOrReloadPreparedContent(
                       value: formatErrorForSender(err) });
       }
     );
+  }
+}
+
+function updateLoggerLevel(logLevel: ILoggerLevel, sendBackLogs: boolean): void {
+  if (!sendBackLogs) {
+    log.setLevel(logLevel);
+  } else {
+    log.setLevel(logLevel, (levelStr, logs) => {
+      const sentLogs = logs.map((e) => {
+        if (e instanceof Error) {
+          return formatErrorForSender(e);
+        }
+        return e;
+      });
+      // Not relying on `sendMessage` as it also logs
+      postMessage({
+        type: WorkerMessageType.LogMessage,
+        value: {
+          logLevel: levelStr,
+          logs: sentLogs,
+        },
+      });
+    });
   }
 }
